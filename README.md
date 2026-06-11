@@ -1,19 +1,25 @@
 # cv-siddharth
 
+**Live: [darkpandawarrior.github.io/cv-siddharth](https://darkpandawarrior.github.io/cv-siddharth/)**
+
 Interactive CV for **Siddharth Pandalai** — Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
-production metrics and an AI assistant ("Sid") that answers questions about
+production metrics, a 3D pointer-tracked phone mockup, a print-perfect
+[résumé view](https://darkpandawarrior.github.io/cv-siddharth/#resume) (PDF via
+the print dialog), and an AI assistant ("Sid") that answers questions about
 his experience in first person.
 
 Inspired by [santifer/cv-santiago](https://github.com/santifer/cv-santiago),
-rebuilt and simplified: the entire CV fits in Claude's context, so there is no
+rebuilt and simplified: the entire CV fits in an LLM's context, so there is no
 RAG pipeline — knowledge lives in a single system prompt
 ([api/_lib/system-prompt.ts](api/_lib/system-prompt.ts)).
 
 ## Stack
 
-React 19 · TypeScript · Vite 7 · Tailwind v4 · Claude Sonnet (streaming) ·
-Vercel Edge Functions
+React 19 · TypeScript · Vite 7 · Tailwind v4 · Vercel Edge Functions ·
+**provider-agnostic chat backend** — streams from Groq (Llama 3.3, free tier),
+Google Gemini, or Anthropic Claude, whichever key is configured, normalized to
+one SSE format so the widget never knows the difference.
 
 ## Quick start
 
@@ -24,9 +30,10 @@ npm run dev
 ```
 
 Open http://localhost:5173. The site works without a key; the chat widget
-shows a contact fallback until `ANTHROPIC_API_KEY` is set. In dev, a Vite
-middleware ([vite.config.ts](vite.config.ts)) serves `/api/chat` with the same
-handler Vercel runs in production — no `vercel dev` needed.
+shows a contact fallback until one of `GROQ_API_KEY` / `GEMINI_API_KEY` /
+`ANTHROPIC_API_KEY` is set. In dev, a Vite middleware
+([vite.config.ts](vite.config.ts)) serves `/api/chat` with the same handler
+Vercel runs in production — no `vercel dev` needed.
 
 ## Deploy
 
