@@ -1,5 +1,5 @@
 import { ArrowLeft, Printer } from "lucide-react";
-import { profile, metrics, experience, education, skills } from "./data/profile.ts";
+import { profile, metrics, experience, education, skills, languages } from "./data/profile.ts";
 
 /**
  * Print-perfect single-page résumé rendered from the same data as the
@@ -24,10 +24,13 @@ export function ResumeView() {
       <article className="resume mx-auto max-w-[210mm] bg-white px-10 py-9 text-zinc-900 shadow-xl print:max-w-none print:px-0 print:py-0 print:shadow-none">
         <header className="border-b-2 border-zinc-900 pb-4">
           <h1 className="font-display text-3xl font-bold tracking-tight">{profile.name}</h1>
-          <p className="mt-0.5 text-lg font-medium text-zinc-700">{profile.title}</p>
+          <p className="mt-0.5 text-lg font-medium text-zinc-700">{profile.resumeTitle}</p>
           <p className="mt-1.5 text-sm text-zinc-600">
-            {profile.location} · {profile.email} · {profile.github.replace("https://", "")} ·{" "}
+            {profile.phone} · {profile.email} · {profile.github.replace("https://", "")} ·{" "}
             {profile.linkedin.replace("https://", "")}
+          </p>
+          <p className="mt-0.5 text-sm text-zinc-600">
+            {profile.location} · {profile.availability}
           </p>
         </header>
 
@@ -82,6 +85,9 @@ export function ResumeView() {
             Skills
           </h2>
           <div className="mt-1.5 space-y-1">
+            <p className="text-sm leading-snug text-zinc-700">
+              <span className="font-semibold text-zinc-900">Languages:</span> {languages.join(", ")}
+            </p>
             {skills.map((s) => (
               <p key={s.group} className="text-sm leading-snug text-zinc-700">
                 <span className="font-semibold text-zinc-900">{s.group}:</span> {s.items.join(", ")}

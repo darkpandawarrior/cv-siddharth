@@ -62,3 +62,123 @@ html.resume-mode body {
     font-size: 11px;
   }
 }
+
+/* --- Motion ------------------------------------------------------------ */
+
+/* Hero phone: gentle idle float */
+@keyframes phone-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.phone-float {
+  animation: phone-float 5s ease-in-out infinite;
+}
+
+/* GPS track draws itself in a loop */
+@keyframes gps-draw {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  60%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.gps-draw {
+  stroke-dasharray: 200;
+  animation: gps-draw 4s ease-in-out infinite;
+}
+
+/* Location dot pulse */
+@keyframes gps-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    r: 4;
+  }
+  50% {
+    opacity: 0.45;
+    r: 6;
+  }
+}
+
+.gps-pulse {
+  animation: gps-pulse 1.6s ease-in-out infinite;
+}
+
+/* Navigation icon wiggle */
+@keyframes nav-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-14deg);
+  }
+  75% {
+    transform: rotate(14deg);
+  }
+}
+
+.nav-wiggle {
+  animation: nav-wiggle 2.4s ease-in-out infinite;
+}
+
+/* Scroll bot: walking bob layered under the scroll-driven swing */
+@keyframes bot-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -4px;
+  }
+}
+
+.bot-bob {
+  animation: bot-bob 0.9s ease-in-out infinite;
+}
+
+/* Hero entrance */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise-in {
+  animation: rise-in 0.7s ease-out both;
+}
+
+.rise-in-1 {
+  animation-delay: 0.08s;
+}
+.rise-in-2 {
+  animation-delay: 0.16s;
+}
+.rise-in-3 {
+  animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-float,
+  .gps-draw,
+  .gps-pulse,
+  .nav-wiggle,
+  .bot-bob,
+  .rise-in {
+    animation: none;
+  }
+}

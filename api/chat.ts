@@ -1,4 +1,4 @@
-import { handleChat } from "./_lib/chat-handler.ts";
+import { handleChat } from "./_lib/chat-handler";
 
 export const config = { runtime: "edge" };
 

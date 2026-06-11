@@ -3,6 +3,8 @@ import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github, Linkedin }
 import { profile, metrics, experience, education, caseStudies, skills } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { TiltPhone } from "./TiltPhone.tsx";
+import { TiltCard } from "./TiltCard.tsx";
+import { ScrollBot } from "./ScrollBot.tsx";
 import { ResumeView } from "./ResumeView.tsx";
 
 const NAV_LINKS = [
@@ -22,8 +24,16 @@ function useHashRoute(): string {
   return hash;
 }
 
-/** Fades sections in as they scroll into view. */
-function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+/** Fades sections in as they scroll into view; `delay` staggers siblings. */
+function Reveal({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -41,7 +51,7 @@ function Reveal({ children, className = "" }: { children: React.ReactNode; class
     return () => observer.disconnect();
   }, []);
   return (
-    <div ref={ref} className={`reveal ${className}`}>
+    <div ref={ref} className={`reveal ${className}`} style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
       {children}
     </div>
   );
@@ -52,7 +62,7 @@ function Nav() {
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <a href="#top" className="font-display text-lg font-bold tracking-tight">
-          siddharth<span className="text-accent">.</span>
+          sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </a>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 sm:flex">
           {NAV_LINKS.map((l) => (
@@ -79,14 +89,14 @@ function Hero() {
   return (
     <section id="top" className="mx-auto grid max-w-5xl items-center gap-10 px-6 pb-20 pt-20 lg:grid-cols-[1fr_280px]">
       <div>
-        <p className="mb-4 flex items-center gap-2 text-sm text-zinc-400">
+        <p className="rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
         </p>
-        <h1 className="font-display max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+        <h1 className="rise-in rise-in-1 font-display max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
           I take Android apps from <span className="text-accent">prototype to platform.</span>
         </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <p className="rise-in rise-in-2 mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
             onClick={openChat}
             className="rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
@@ -100,6 +110,7 @@ function Hero() {
             View résumé
           </a>
         </div>
+        <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
       </div>
       <TiltPhone />
     </section>
@@ -132,9 +143,10 @@ function CaseStudies() {
         </p>
       </Reveal>
       <div className="grid gap-6 sm:grid-cols-2">
-        {caseStudies.map((cs) => (
-          <Reveal key={cs.slug} className="h-full">
-            <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+        {caseStudies.map((cs, i) => (
+          <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
+            <TiltCard>
+            <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
               <p className="font-display text-sm font-semibold text-accent">{cs.metric}</p>
               <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
@@ -155,6 +167,7 @@ function CaseStudies() {
                 ))}
               </div>
             </article>
+            </TiltCard>
           </Reveal>
         ))}
       </div>
@@ -215,8 +228,8 @@ function Skills() {
         <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Skills</h2>
       </Reveal>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {skills.map((s) => (
-          <Reveal key={s.group}>
+        {skills.map((s, i) => (
+          <Reveal key={s.group} delay={i * 90}>
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-accent">{s.group}</h3>
             <ul className="space-y-2 text-sm text-zinc-300">
               {s.items.map((i) => (
@@ -302,6 +315,7 @@ export default function App() {
         <Skills />
         <Contact />
       </main>
+      <ScrollBot />
       <FloatingChat />
     </div>
   );

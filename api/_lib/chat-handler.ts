@@ -1,4 +1,4 @@
-import { SYSTEM_PROMPT } from "./system-prompt.ts";
+import { SYSTEM_PROMPT } from "./system-prompt";
 
 const MAX_HISTORY = 20;
 const MAX_MESSAGE_CHARS = 2000;

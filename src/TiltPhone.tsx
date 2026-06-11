@@ -1,31 +1,74 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { MapPin, Navigation, Zap } from "lucide-react";
 
 const MAX_TILT_DEG = 14;
+const BASE = { rx: 8, ry: -12 };
 
 /**
- * 3D pointer-tracked Android phone mockup for the hero. Pure CSS
- * perspective transforms — no WebGL payload for a decorative element.
+ * 3D Android phone mockup for the hero. Pure CSS perspective transforms —
+ * no WebGL payload for a decorative element. Three motion sources compose:
+ * an idle float (CSS keyframes on the wrapper), scroll-driven sway, and
+ * pointer tilt — the latter two write transforms directly to the DOM via
+ * rAF so scrolling never re-renders React.
  */
 export function TiltPhone() {
   const frameRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState("rotateX(8deg) rotateY(-12deg)");
-  const [glare, setGlare] = useState({ x: 30, y: 20, opacity: 0.12 });
+  const phoneRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+  const pointer = useRef<{ rx: number; ry: number } | null>(null);
+  const raf = useRef(0);
+
+  useEffect(() => {
+    const phone = phoneRef.current;
+    if (!phone) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const apply = () => {
+      raf.current = 0;
+      // Pointer wins while hovering; otherwise sway back and forth with scroll.
+      const sway = Math.sin(window.scrollY / 180) * 10;
+      const { rx, ry } = pointer.current ?? { rx: BASE.rx, ry: BASE.ry + sway };
+      phone.style.transform = `rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`;
+    };
+    const schedule = () => {
+      if (!raf.current) raf.current = requestAnimationFrame(apply);
+    };
+
+    apply();
+    if (reduced) return;
+    window.addEventListener("scroll", schedule, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      cancelAnimationFrame(raf.current);
+    };
+  }, []);
 
   function onPointerMove(e: React.PointerEvent) {
     const rect = frameRef.current?.getBoundingClientRect();
     if (!rect) return;
     const px = (e.clientX - rect.left) / rect.width; // 0..1
     const py = (e.clientY - rect.top) / rect.height;
-    const ry = (px - 0.5) * 2 * MAX_TILT_DEG;
-    const rx = (0.5 - py) * 2 * MAX_TILT_DEG;
-    setTransform(`rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`);
-    setGlare({ x: px * 100, y: py * 100, opacity: 0.2 });
+    pointer.current = {
+      rx: (0.5 - py) * 2 * MAX_TILT_DEG,
+      ry: (px - 0.5) * 2 * MAX_TILT_DEG,
+    };
+    if (phoneRef.current) {
+      phoneRef.current.style.transform = `rotateX(${pointer.current.rx.toFixed(1)}deg) rotateY(${pointer.current.ry.toFixed(1)}deg)`;
+    }
+    if (glareRef.current) {
+      glareRef.current.style.background = `radial-gradient(circle at ${px * 100}% ${py * 100}%, rgba(255,255,255,0.2), transparent 60%)`;
+    }
   }
 
   function onPointerLeave() {
-    setTransform("rotateX(8deg) rotateY(-12deg)");
-    setGlare({ x: 30, y: 20, opacity: 0.12 });
+    pointer.current = null;
+    if (phoneRef.current) {
+      phoneRef.current.style.transform = `rotateX(${BASE.rx}deg) rotateY(${BASE.ry}deg)`;
+    }
+    if (glareRef.current) {
+      glareRef.current.style.background =
+        "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 60%)";
+    }
   }
 
   return (
@@ -33,19 +76,21 @@ export function TiltPhone() {
       ref={frameRef}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      className="hidden select-none justify-center lg:flex"
+      className="phone-float hidden select-none justify-center lg:flex"
       style={{ perspective: "1100px" }}
       aria-hidden
     >
       <div
+        ref={phoneRef}
         className="relative h-[420px] w-[210px] rounded-[2rem] border border-line bg-card shadow-2xl shadow-accent/10 transition-transform duration-150 ease-out"
-        style={{ transform, transformStyle: "preserve-3d" }}
+        style={{ transform: `rotateX(${BASE.rx}deg) rotateY(${BASE.ry}deg)`, transformStyle: "preserve-3d" }}
       >
         {/* glare */}
         <div
+          ref={glareRef}
           className="pointer-events-none absolute inset-0 rounded-[2rem]"
           style={{
-            background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,${glare.opacity}), transparent 60%)`,
+            background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 60%)",
           }}
         />
         {/* punch-hole camera */}
@@ -59,18 +104,26 @@ export function TiltPhone() {
 
           <div className="rounded-xl bg-card p-2.5">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-accent">
-              <Navigation size={11} /> Live trip · dead reckoning
+              <Navigation size={11} className="nav-wiggle" /> Live trip · dead reckoning
             </div>
-            {/* fake GPS track */}
+            {/* GPS track draws itself in a loop */}
             <svg viewBox="0 0 160 56" className="mt-1.5 w-full">
               <path
+                d="M4 48 C 30 40, 38 18, 64 22 S 110 44, 132 26 S 152 10, 156 8"
+                fill="none"
+                stroke="var(--color-line)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <path
+                className="gps-draw"
                 d="M4 48 C 30 40, 38 18, 64 22 S 110 44, 132 26 S 152 10, 156 8"
                 fill="none"
                 stroke="var(--color-accent)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
-              <circle cx="156" cy="8" r="4" fill="var(--color-accent)" />
+              <circle className="gps-pulse" cx="156" cy="8" r="4" fill="var(--color-accent)" />
             </svg>
             <p className="mt-1 text-[9px] text-zinc-500">accuracy 95% · spike-filtered</p>
           </div>
