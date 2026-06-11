@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --color-accent: #3ddc84; /* Android green */
+  --color-accent-dim: #2bb86c;
+  --color-ink: #0b0f0d;
+  --color-surface: #111613;
+  --color-card: #171e1a;
+  --color-line: #243029;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-ink);
+  color: #e8efe9;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-ink);
+}
+
+/* Résumé route renders on light background */
+html.resume-mode body {
+  background-color: #e4e4e7;
+}
+
+/* Scroll-reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  .resume {
+    font-size: 11px;
+  }
+}

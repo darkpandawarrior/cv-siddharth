@@ -1,0 +1,300 @@
+import { useEffect, useRef, useState } from "react";
+import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github } from "lucide-react";
+import { profile, metrics, experience, education, caseStudies, skills } from "./data/profile.ts";
+import { FloatingChat, openChat } from "./FloatingChat.tsx";
+import { TiltPhone } from "./TiltPhone.tsx";
+import { ResumeView } from "./ResumeView.tsx";
+
+const NAV_LINKS = [
+  { href: "#work", label: "Case studies" },
+  { href: "#experience", label: "Experience" },
+  { href: "#skills", label: "Skills" },
+  { href: "#contact", label: "Contact" },
+];
+
+function useHashRoute(): string {
+  const [hash, setHash] = useState(window.location.hash);
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return hash;
+}
+
+/** Fades sections in as they scroll into view. */
+function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("revealed");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={`reveal ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function Nav() {
+  return (
+    <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <a href="#top" className="font-display text-lg font-bold tracking-tight">
+          siddharth<span className="text-accent">.</span>
+        </a>
+        <div className="hidden items-center gap-6 text-sm text-zinc-400 sm:flex">
+          {NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="transition hover:text-accent">
+              {l.label}
+            </a>
+          ))}
+          <a href="#resume" className="flex items-center gap-1 transition hover:text-accent">
+            <FileText size={13} /> Résumé
+          </a>
+        </div>
+        <button
+          onClick={openChat}
+          className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+        >
+          <MessageCircle size={15} /> Ask my AI
+        </button>
+      </nav>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section id="top" className="mx-auto grid max-w-5xl items-center gap-10 px-6 pb-20 pt-20 lg:grid-cols-[1fr_280px]">
+      <div>
+        <p className="mb-4 flex items-center gap-2 text-sm text-zinc-400">
+          <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
+        </p>
+        <h1 className="font-display max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+          I take Android apps from <span className="text-accent">prototype to platform.</span>
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button
+            onClick={openChat}
+            className="rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            Chat with my AI assistant
+          </button>
+          <a
+            href="#resume"
+            className="rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
+          >
+            View résumé
+          </a>
+        </div>
+      </div>
+      <TiltPhone />
+    </section>
+  );
+}
+
+function Metrics() {
+  return (
+    <section className="border-y border-line bg-surface">
+      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px px-6 py-10 sm:grid-cols-4">
+        {metrics.map((m) => (
+          <div key={m.label} className="px-4 py-3">
+            <p className="font-display text-3xl font-bold text-accent sm:text-4xl">{m.value}</p>
+            <p className="mt-1 text-sm font-medium text-zinc-200">{m.label}</p>
+            <p className="mt-1 text-xs leading-snug text-zinc-500">{m.detail}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CaseStudies() {
+  return (
+    <section id="work" className="mx-auto max-w-5xl px-6 py-20">
+      <Reveal>
+        <h2 className="font-display mb-2 text-3xl font-bold tracking-tight">Case studies</h2>
+        <p className="mb-10 text-zinc-400">
+          The work behind the numbers. Ask the chatbot for more depth on any of these.
+        </p>
+      </Reveal>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {caseStudies.map((cs) => (
+          <Reveal key={cs.slug} className="h-full">
+            <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+              <p className="font-display text-sm font-semibold text-accent">{cs.metric}</p>
+              <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
+              <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
+                {cs.approach.map((a) => (
+                  <li key={a} className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                    {a}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-sm font-medium text-zinc-200">{cs.outcome}</p>
+              <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                {cs.tags.map((t) => (
+                  <span key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </article>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExperienceSection() {
+  return (
+    <section id="experience" className="border-t border-line bg-surface">
+      <div className="mx-auto max-w-5xl px-6 py-20">
+        <Reveal>
+          <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Experience</h2>
+        </Reveal>
+        <div className="space-y-12">
+          {experience.map((job) => (
+            <Reveal key={job.company}>
+              <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:gap-8">
+                <div>
+                  <p className="text-sm text-zinc-500">{job.period}</p>
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold">
+                    {job.role} <span className="text-accent">@ {job.company}</span>
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
+                    {job.points.map((p) => (
+                      <li key={p} className="flex gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+          <Reveal>
+            <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:gap-8">
+              <p className="text-sm text-zinc-500">{education.period}</p>
+              <div>
+                <h3 className="font-display text-xl font-bold">
+                  {education.degree} <span className="text-accent">@ {education.school}</span>
+                </h3>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Skills() {
+  return (
+    <section id="skills" className="mx-auto max-w-5xl px-6 py-20">
+      <Reveal>
+        <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Skills</h2>
+      </Reveal>
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {skills.map((s) => (
+          <Reveal key={s.group}>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-accent">{s.group}</h3>
+            <ul className="space-y-2 text-sm text-zinc-300">
+              {s.items.map((i) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Contact() {
+  return (
+    <section id="contact" className="border-t border-line bg-surface">
+      <div className="mx-auto max-w-5xl px-6 py-20 text-center">
+        <h2 className="font-display text-3xl font-bold tracking-tight">
+          Hiring for a senior Android role?
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-zinc-400">
+          Ask my AI assistant anything about my work, or reach out directly — I reply fast.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <a
+            href={`mailto:${profile.email}`}
+            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            <Mail size={16} /> {profile.email}
+          </a>
+          <a
+            href="#resume"
+            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
+          >
+            <FileText size={16} /> Résumé / PDF
+          </a>
+          <a
+            href={profile.github}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
+          >
+            <Github size={16} /> GitHub
+          </a>
+        </div>
+      </div>
+      <footer className="border-t border-line py-6 text-center text-xs text-zinc-600">
+        <p className="flex items-center justify-center gap-1">
+          Built with React 19, Tailwind v4 and an LLM-agnostic chat backend
+          <ArrowUpRight size={12} /> {new Date().getFullYear()}
+        </p>
+      </footer>
+    </section>
+  );
+}
+
+export default function App() {
+  const hash = useHashRoute();
+
+  useEffect(() => {
+    // The portfolio is dark; the résumé prints on white.
+    document.documentElement.classList.toggle("resume-mode", hash === "#resume");
+  }, [hash]);
+
+  if (hash === "#resume") return <ResumeView />;
+
+  return (
+    <div className="min-h-screen">
+      <Nav />
+      <main>
+        <Hero />
+        <Metrics />
+        <CaseStudies />
+        <ExperienceSection />
+        <Skills />
+        <Contact />
+      </main>
+      <FloatingChat />
+    </div>
+  );
+}
