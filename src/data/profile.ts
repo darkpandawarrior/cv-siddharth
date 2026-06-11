@@ -5,6 +5,7 @@ export const profile = {
   location: "Pune, India",
   email: "siddharthpandalai990@gmail.com",
   github: "https://github.com/darkpandawarrior",
+  linkedin: "https://linkedin.com/in/siddharth-pandalai-3712b215a",
   intro:
     "5+ years building production Android. Platform owner of a 738k-LOC, 92%-Compose SaaS app serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
 };

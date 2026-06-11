@@ -26,7 +26,8 @@ export function ResumeView() {
           <h1 className="font-display text-3xl font-bold tracking-tight">{profile.name}</h1>
           <p className="mt-0.5 text-lg font-medium text-zinc-700">{profile.title}</p>
           <p className="mt-1.5 text-sm text-zinc-600">
-            {profile.location} · {profile.email} · {profile.github.replace("https://", "")}
+            {profile.location} · {profile.email} · {profile.github.replace("https://", "")} ·{" "}
+            {profile.linkedin.replace("https://", "")}
           </p>
         </header>
 
