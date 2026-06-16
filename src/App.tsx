@@ -195,9 +195,12 @@ function ExperienceSection() {
                   </h3>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
                     {job.points.map((p) => (
-                      <li key={p} className="flex gap-2">
+                      <li key={p.text} className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                        {p}
+                        <span>
+                          {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
+                          {p.text}
+                        </span>
                       </li>
                     ))}
                   </ul>
