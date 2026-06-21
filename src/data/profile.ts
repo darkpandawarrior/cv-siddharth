@@ -134,6 +134,25 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
+    slug: "mileway",
+    title: "Mileway — offline-first tracking in Kotlin Multiplatform",
+    metric: "23 modules · KMP",
+    summary:
+      "An original open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase.",
+    problem:
+      "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state and a real location engine — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
+    approach: [
+      "23-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "Shared commonMain core — design system, Room (KMP) + DataStore, platform services behind expect/actual — compiling for Android, iOS and Wear OS.",
+      "A location pipeline that treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting and accelerometer fusion, with a deterministic simulated-drive source so the whole engine is unit-testable.",
+      "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor.",
+      "Quality gates: 50 Roborazzi screenshot tests on the JVM (no emulator), detekt, ktlint, Kover and CI.",
+    ],
+    outcome:
+      "A self-contained, fully-offline app and an interactive engineering case study — explore it at darkpandawarrior.github.io/mileway, with architecture diagrams, live demos and every screen.",
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Clean architecture", "Offline-first", "Open source"],
+  },
+  {
     slug: "gps-accuracy",
     title: "GPS accuracy from 50% to 95%",
     metric: "50% → 95%",
