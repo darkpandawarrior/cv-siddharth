@@ -7,6 +7,13 @@ import { TiltCard } from "./TiltCard.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
 import { ResumeView } from "./ResumeView.tsx";
 
+const SKILL_ICONS: Record<string, string> = {
+  "UI & Architecture": "🎨",
+  "Concurrency & Data": "⚡",
+  "Platform & Systems": "🛰️",
+  "Security & Ops": "🔐",
+};
+
 const NAV_LINKS = [
   { href: "#work", label: "Case studies" },
   { href: "#experience", label: "Experience" },
@@ -109,6 +116,12 @@ function Hero() {
           >
             View résumé
           </a>
+          <a
+            href="#work"
+            className="flex items-center gap-1.5 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
+          >
+            See my work ↓
+          </a>
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
       </div>
@@ -137,6 +150,7 @@ function CaseStudies() {
   return (
     <section id="work" className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// featured work</p>
         <h2 className="font-display mb-2 text-3xl font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
@@ -147,7 +161,10 @@ function CaseStudies() {
           <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
             <TiltCard>
             <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
-              <p className="font-display text-sm font-semibold text-accent">{cs.metric}</p>
+              <span className="font-display select-none text-5xl font-black leading-none text-accent/10">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p className="font-display mt-1 text-sm font-semibold text-accent">{cs.metric}</p>
               <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
               <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
@@ -180,6 +197,7 @@ function ExperienceSection() {
     <section id="experience" className="border-t border-line bg-surface">
       <div className="mx-auto max-w-5xl px-6 py-20">
         <Reveal>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// background</p>
           <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div className="space-y-12">
@@ -228,15 +246,19 @@ function Skills() {
   return (
     <section id="skills" className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
         <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Skills</h2>
       </Reveal>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {skills.map((s, i) => (
           <Reveal key={s.group} delay={i * 90}>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-accent">{s.group}</h3>
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-accent">
+              {SKILL_ICONS[s.group] && <span>{SKILL_ICONS[s.group]}</span>}
+              {s.group}
+            </h3>
             <ul className="space-y-2 text-sm text-zinc-300">
-              {s.items.map((i) => (
-                <li key={i}>{i}</li>
+              {s.items.map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
           </Reveal>

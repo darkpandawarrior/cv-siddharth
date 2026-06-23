@@ -15,7 +15,7 @@ export const profile = {
     "5+ years building production Android. Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Expert in Jetpack Compose migration (92% coverage), Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: sensor-fusion location engineering (GPS accuracy 50% to 95%), on-device security (SQLCipher, Android Keystore, SSL pinning), and an 80% production crash reduction across 22,000+ DAU.",
+    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Expert in Jetpack Compose migration (92% coverage), Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: sensor-fusion location engineering (GPS accuracy 50% to 95%), on-device security (SQLCipher, Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
 };
 
 export const education = {
@@ -75,15 +75,19 @@ export const experience: Experience[] = [
       },
       {
         label: "Performance & Stability",
-        text: "Reduced production crashes by 80% through Kotlin Coroutines structured-concurrency fixes, thread-safety optimization, and Firebase Crashlytics monitoring.",
+        text: "Reduced production crashes by 80% through structured-concurrency fixes and thread-safety optimization; implemented dual production monitoring with Firebase Crashlytics and Sentry (programmatic init, ProGuard mapping automation, ANR detection, environment-aware trace sampling).",
       },
       {
         label: "Security Engineering",
-        text: "Hardened the app to VAPT compliance: SQLCipher database encryption, AES-256 with hardware-backed Android Keystore, EncryptedSharedPreferences, SSL pinning (OkHttp CertificatePinner), and biometric authentication (BiometricPrompt).",
+        text: "Hardened the app to VAPT/banking compliance: SQLCipher + AES-256 Android Keystore, EncryptedSharedPreferences, biometric authentication (BiometricPrompt), and SSL certificate pinning implemented as dual build flavors (pinned/unpinned) — enforced in production, bypassed in debug for proxy tooling.",
       },
       {
         label: "Data Layer",
-        text: "Own the Room (SQLite) persistence layer with 15+ production schema migrations, DataStore, and offline-resilient sync via WorkManager.",
+        text: "Own the Room (SQLite) persistence layer with 16+ production schema migrations, DataStore, and offline-resilient sync via WorkManager.",
+      },
+      {
+        label: "Travel Platform (Trip V2)",
+        text: "Shipped the Android side of a comprehensive Trip V2 overhaul: mileage submission linked to Trip V2 + Itinerary V2, GIN (Goods Issue Notes) screens, approval re-entry guards, and full Mixpanel analytics instrumentation across the SavedTracks mileage ecosystem.",
       },
       {
         label: "UI Platform",
@@ -91,7 +95,7 @@ export const experience: Experience[] = [
       },
       {
         label: "CI/CD & Automation",
-        text: "Automated build, signing, and Play Store releases with Fastlane; built agentic development workflows (Firebender, MCP) to rapidly generate MVPs.",
+        text: "Automated build, signing, and Play Store releases with Fastlane; upgraded to AGP 9.0 with Gradle KTS for faster incremental builds; built agentic development workflows (Firebender, MCP) to rapidly generate MVPs.",
       },
       {
         label: "Product Growth",
@@ -135,22 +139,23 @@ export interface CaseStudy {
 export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
-    title: "Mileway — offline-first tracking in Kotlin Multiplatform",
-    metric: "23 modules · KMP",
+    title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS)",
+    metric: "23 modules · iOS live (V19)",
     summary:
-      "An original open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase.",
+      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase. V19 milestone: iOS is now fully functional.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state and a real location engine — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
       "23-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
-      "Shared commonMain core — design system, Room (KMP) + DataStore, platform services behind expect/actual — compiling for Android, iOS and Wear OS.",
-      "A location pipeline that treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting and accelerometer fusion, with a deterministic simulated-drive source so the whole engine is unit-testable.",
+      "Shared commonMain core — design system, Room (KMP) + DataStore, all check-in and hardware-event screens migrated to commonMain — running live on Android, iOS (V19: full gate green) and Wear OS.",
+      "iOS background scheduling via kmpworkmanager (dev.brewkits), replacing a custom BackgroundTask layer; AppDelegate integration + BGTask dispatcher make background trip tracking work natively on iOS.",
+      "A location pipeline that treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting and accelerometer fusion, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor.",
-      "Quality gates: 50 Roborazzi screenshot tests on the JVM (no emulator), detekt, ktlint, Kover and CI.",
+      "Quality gates: 96 Roborazzi screenshot tests on the JVM (no emulator, no network), Napier structured logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "A self-contained, fully-offline app and an interactive engineering case study — explore it at darkpandawarrior.github.io/mileway, with architecture diagrams, live demos and every screen.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Clean architecture", "Offline-first", "Open source"],
+      "V19 milestone complete — iOS and Android build, run, and pass all quality gates from one shared Kotlin codebase. Explore the app, architecture diagrams and all 96 rendered screens at github.com/darkpandawarrior/MileTrackerDemo.",
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "iOS · Android · Wear OS", "23 modules", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -228,7 +233,7 @@ export const skills: { group: string; items: string[] }[] = [
   },
   {
     group: "Platform & Systems",
-    items: ["Android SDK", "Location engineering + sensor fusion", "Foreground services", "Hilt / Dagger", "Firebase (Crashlytics, FCM) + Mixpanel"],
+    items: ["Android SDK", "Location engineering + sensor fusion", "Foreground services", "Hilt / Dagger", "Firebase Crashlytics + Sentry + Mixpanel"],
   },
   {
     group: "Security & Ops",
@@ -256,7 +261,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   },
   {
     group: "Platform",
-    items: ["Android SDK", "WorkManager", "Foreground Services", "Location / sensor fusion", "Firebase (Crashlytics, FCM)", "Mixpanel"],
+    items: ["Android SDK", "WorkManager", "Foreground Services", "Location / sensor fusion", "Firebase Crashlytics + Sentry", "Mixpanel"],
   },
   {
     group: "Security",

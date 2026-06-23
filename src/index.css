@@ -15,6 +15,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Subtle dot-grid in hero section */
+#top {
+  background-image: radial-gradient(circle, rgba(61, 220, 132, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
