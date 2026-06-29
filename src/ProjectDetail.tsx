@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
@@ -47,7 +47,7 @@ function AutoVideo({ src, caption }: { src: string; caption: string }) {
 
 /** Renders a Mermaid diagram, dark-themed. mermaid is dynamically imported so
  *  it stays out of the main bundle (loads only on project detail pages). */
-function Mermaid({ code, id }: { code: string; id: string }) {
+function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: string; id: string; accent?: string; card?: string }) {
   const [svg, setSvg] = useState("");
   useEffect(() => {
     let alive = true;
@@ -62,10 +62,10 @@ function Mermaid({ code, id }: { code: string; id: string }) {
           themeVariables: {
             fontFamily: "Inter, system-ui, sans-serif",
             background: "#171e1a",
-            primaryColor: "#10231a",
-            primaryBorderColor: "#3ddc84",
+            primaryColor: card,
+            primaryBorderColor: accent,
             primaryTextColor: "#e8efe9",
-            lineColor: "#3ddc84",
+            lineColor: accent,
             secondaryColor: "#0f1512",
             tertiaryColor: "#0f1512",
             clusterBkg: "#0f1512",
@@ -79,7 +79,7 @@ function Mermaid({ code, id }: { code: string; id: string }) {
       }
     })();
     return () => { alive = false; };
-  }, [code, id]);
+  }, [code, id, accent, card]);
   if (!svg) return null;
   return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
@@ -124,9 +124,21 @@ export function ProjectDetail({ slug }: { slug: string }) {
     );
   }
   const d = project.detail;
+  const t = project.theme;
+  const themeVars: Record<string, string> = {};
+  if (t) {
+    themeVars["--color-accent"] = t.accent;
+    themeVars["--color-accent-dim"] = t.accentDim;
+    if (t.ink) themeVars["--color-ink"] = t.ink;
+    if (t.surface) themeVars["--color-surface"] = t.surface;
+    if (t.card) themeVars["--color-card"] = t.card;
+    if (t.line) themeVars["--color-line"] = t.line;
+    if (t.displayFont) themeVars["--font-display"] = t.displayFont;
+  }
+  const themeStyle = t ? (themeVars as unknown as CSSProperties) : undefined;
 
   return (
-    <div ref={root} className="min-h-screen">
+    <div ref={root} className="min-h-screen bg-ink" style={themeStyle}>
       {/* Hero with animated aurora wash */}
       <div className="relative overflow-hidden border-b border-line">
         <div className="aurora pointer-events-none absolute inset-0 opacity-80" />
@@ -216,6 +228,31 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
+      {/* Roster (e.g. Kursi's six roles) */}
+      {d?.roles && d.roles.length > 0 && (
+        <section className="border-t border-line bg-surface">
+          <div className="mx-auto max-w-5xl px-6 py-14">
+            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
+              The roster
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {d.roles.map((r) => (
+                <div key={r.name} className="reveal gallery-item flex gap-3 rounded-2xl border border-line bg-card p-4">
+                  <span
+                    className="mt-1 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/40"
+                    style={{ backgroundColor: r.color }}
+                  />
+                  <div>
+                    <h3 className="font-display text-base font-bold">{r.name}</h3>
+                    <p className="mt-0.5 text-sm leading-snug text-zinc-400">{r.power}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Architecture diagrams (Mermaid) */}
       {d?.diagrams && d.diagrams.length > 0 && (
         <section className="border-t border-line">
@@ -227,7 +264,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
               {d.diagrams.map((dg, i) => (
                 <div key={dg.title} className="reveal rounded-2xl border border-line bg-card p-5">
                   <h3 className="mb-4 text-sm font-semibold text-zinc-200">{dg.title}</h3>
-                  <Mermaid code={dg.code} id={`mmd-${slug}-${i}`} />
+                  <Mermaid code={dg.code} id={`mmd-${slug}-${i}`} accent={t?.accent} card={t?.card} />
                 </div>
               ))}
             </div>

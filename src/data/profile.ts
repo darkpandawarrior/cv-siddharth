@@ -295,6 +295,8 @@ export interface ProjectDetailData {
   extraLinks?: { label: string; url: string }[];
   // Mermaid diagram sources, rendered (dark-themed) on the detail page.
   diagrams?: { title: string; code: string }[];
+  // Optional roster (e.g. Kursi's six roles), rendered as a colour-coded grid.
+  roles?: { name: string; power: string; color: string }[];
 }
 
 export interface Project {
@@ -314,6 +316,17 @@ export interface Project {
   // public/projects/<slug>/screenshots/). If present, the carousel uses this
   // instead of the full auto-generated gallery.
   screens?: { file: string; caption: string }[];
+  // Optional per-project palette — overrides the site accent on this project's
+  // detail page (e.g. Kursi's teak/brass/cream "License Raj Deco" identity).
+  theme?: {
+    accent: string;
+    accentDim: string;
+    ink?: string;
+    surface?: string;
+    card?: string;
+    line?: string;
+    displayFont?: string;
+  };
 }
 
 export const projects: Project[] = [
@@ -333,9 +346,18 @@ export const projects: Project[] = [
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
     status: "Shipped Jun 2026 · CC BY-NC-SA 4.0",
     badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
+    theme: {
+      accent: "#E8C874",
+      accentDim: "#C99A3B",
+      ink: "#1E1008",
+      surface: "#291a12",
+      card: "#33241c",
+      line: "#4a3724",
+      displayFont: "'Rozha One', Georgia, serif",
+    },
     detail: {
       overview:
-        "Kursi is a Hinglish social-deduction bluffing game — a satirical take on India's corporate-political underworld where the throne (kursi) is never safe. I built it as a serious engineering exercise: a single deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a future authoritative server from the same code.",
+        "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair — the Gaddi — and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
       sections: [
         {
           heading: "Deterministic engine",
@@ -355,20 +377,49 @@ export const projects: Project[] = [
         },
         {
           heading: "Game modes",
-          body: "Single-player vs bots, a KISSA story campaign, GAUNTLET (a 5-rung expert ladder), TAMASHA spectator demos of AI-vs-AI, Team mode, an interactive tutorial, and local pass-and-play. Online multiplayer is wired but gated until a server key is present.",
+          body: "New Game (1v1–1v9, Easy→Grandmaster), a KISSA story campaign, GAUNTLET (Tarakki ki Seedhi — a 5-rung ladder ending in 6-player Grandmaster), TAMASHA (spectate ten AI personas scheme and betray), Team Khel (faction play with un-targetable allies), a Tutorial you can't leave until you catch a bluff, local pass-and-play with a handoff screen guard, and online + LAN multiplayer.",
         },
+        {
+          heading: "DARBAR — four live story arcs",
+          body: "Four narrative arcs run at once, fuelled or suppressed by your chat suggestions: GATHBANDHAN (a quiet coalition — watch who breaks first), AFWAAH (a rumour the table acts on even when false), STING (a leaked claim that forces a read), and BADLA (a vendetta that outlives the round). They run on a separate deterministic narrative RNG that never touches card state and resumes byte-for-byte.",
+        },
+        {
+          heading: "Built for everyone",
+          body: "All six roles use the Okabe-Ito colourblind-safe palette plus a unique engraved bezel pattern (ring, hatch, dots, weave, double-rule, ticks) so identity reads without colour. Reduced-motion mode swaps every beat for a bespoke static end-frame (GHOTALA = held stamp, SUPARI = tipped chair) — accessibility never flattens the narrative.",
+        },
+        {
+          heading: "Provider-agnostic AI",
+          body: "An AiProvider interface abstracts Anthropic, OpenAI, Gemini, on-device Gemini Nano (Android) and Apple FoundationModels (iOS 18); ISMCTS is the always-available offline fallback. Bring-your-own-key, stored in each platform's encrypted storage.",
+        },
+        {
+          heading: "Server-authoritative online",
+          body: "Online and LAN play (private room codes, quick-match, Bonjour/mDNS discovery) run on a Ktor/Netty server that holds all state; clients receive only their redacted PlayerView, so another player's face-down roles can't appear on the wire by construction.",
+        },
+        {
+          heading: "Seven toggle variants",
+          body: "Seven additive rule variants (Bail Pe Bahar, Bali Khel, Hawala, Adhyadesh, Khazana Raj, Mehengai, Tangi) combine freely and default off — the engine is byte-for-byte unchanged when they're disabled, expanding the surface without touching core logic.",
+        },
+      ],
+      roles: [
+        { name: "Netaji Vachan", power: "The Politician — Tax +3 (GHOTALA); blocks Foreign Aid", color: "#0072B2" },
+        { name: "Bhai Teja", power: "The Don — Assassinate −3 (SUPARI); unblockable except by the Vakil", color: "#D55E00" },
+        { name: "Babu Filewala", power: "The Bureaucrat — Steal 2 (VASOOLI); blocks Steal", color: "#009E73" },
+        { name: "Jugaadu Chhotu", power: "The Fixer — Exchange cards (SETTING); blocks Steal", color: "#E69F00" },
+        { name: "Vakil Saab", power: "The Lawyer — no action; blocks Assassinate only (power through procedure)", color: "#CC79A7" },
+        { name: "Patrakaar Devi", power: "The Journalist — Investigate a card (JAANCH); unblockable", color: "#56B4E9" },
       ],
       metrics: [
         { value: "4", label: "platforms · one engine" },
         { value: "10", label: "AI bot personas" },
-        { value: "8k", label: "ISMCTS iterations" },
-        { value: "1:1", label: "byte-for-byte replay" },
+        { value: "6", label: "roles · 4 story arcs" },
+        { value: "7", label: "toggle rule variants" },
       ],
       techStack: [
-        { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Canvas rendering"] },
-        { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "ISMCTS"] },
-        { group: "AI", items: ["10 personas", "optional cloud LLM (Claude / OpenAI / Gemini)"] },
-        { group: "Platforms", items: ["Android", "iOS", "Desktop (JVM)", "Web (Wasm)"] },
+        { group: "Language & UI", items: ["Kotlin 2.4", "Compose Multiplatform 1.11", "Canvas-drawn role glyphs"] },
+        { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "replay from (seed, intentLog)"] },
+        { group: "AI", items: ["ISMCTS (offline)", "Anthropic / OpenAI / Gemini", "on-device Gemini Nano · Apple FoundationModels", "BYOK (encrypted)"] },
+        { group: "Online", items: ["Ktor / Netty server", "server-authoritative", "Bonjour/mDNS LAN"] },
+        { group: "Platforms", items: ["Android", "iOS (arm64)", "Desktop (JVM)", "Web (Wasm)"] },
         { group: "Build & quality", items: ["Koin", "Fastlane", "CI"] },
       ],
       extraLinks: [
