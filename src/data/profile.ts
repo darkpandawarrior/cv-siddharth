@@ -290,6 +290,9 @@ export interface ProjectDetailData {
   overview: string;
   sections: ProjectDetailSection[];
   videos?: ProjectVideo[];
+  metrics?: { value: string; label: string }[];
+  techStack?: { group: string; items: string[] }[];
+  extraLinks?: { label: string; url: string }[];
 }
 
 export interface Project {
@@ -346,10 +349,54 @@ export const projects: Project[] = [
         },
         {
           heading: "“License Raj Deco” identity",
-          body: "A bespoke visual language — teak/brass/cream palette, Rozha One display type, five Canvas-drawn intaglio role glyphs, and stamped-instrument UI motifs. Gauntlet (5-rung ladder), Team mode, spectator demo and an interactive tutorial round out the experience, all behind a full Fastlane + CI pipeline.",
+          body: "A bespoke visual language — teak/brass/cream palette, Rozha One display type, five Canvas-drawn intaglio role glyphs, and stamped-instrument UI motifs, all behind a full Fastlane + CI pipeline.",
+        },
+        {
+          heading: "Game modes",
+          body: "Single-player vs bots, a KISSA story campaign, GAUNTLET (a 5-rung expert ladder), TAMASHA spectator demos of AI-vs-AI, Team mode, an interactive tutorial, and local pass-and-play. Online multiplayer is wired but gated until a server key is present.",
         },
       ],
+      metrics: [
+        { value: "4", label: "platforms · one engine" },
+        { value: "10", label: "AI bot personas" },
+        { value: "8k", label: "ISMCTS iterations" },
+        { value: "1:1", label: "byte-for-byte replay" },
+      ],
+      techStack: [
+        { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Canvas rendering"] },
+        { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "ISMCTS"] },
+        { group: "AI", items: ["10 personas", "optional cloud LLM (Claude / OpenAI / Gemini)"] },
+        { group: "Platforms", items: ["Android", "iOS", "Desktop (JVM)", "Web (Wasm)"] },
+        { group: "Build & quality", items: ["Koin", "Fastlane", "CI"] },
+      ],
+      extraLinks: [
+        { label: "README (full rules)", url: "https://github.com/darkpandawarrior/Kursi#readme" },
+      ],
     },
+    screens: [
+      { file: "home.png", caption: "Home — mode grid" },
+      { file: "home_ranked.png", caption: "Ranked & daily challenge" },
+      { file: "home_mode_gauntlet.png", caption: "Gauntlet mode" },
+      { file: "home_mode_story.png", caption: "KISSA story campaign" },
+      { file: "setup.png", caption: "Game setup — players" },
+      { file: "setup_teams.png", caption: "Team mode setup" },
+      { file: "tutorial_intro.png", caption: "Interactive tutorial" },
+      { file: "gazette_roles.png", caption: "Niyam Gazette — the roles" },
+      { file: "4p_pick_action.png", caption: "Your turn — pick an action" },
+      { file: "4p_confirm.png", caption: "Declare, then confirm" },
+      { file: "4p_reaction.png", caption: "Block, challenge or pass" },
+      { file: "4p_reaction_block.png", caption: "Block — with odds" },
+      { file: "4p_exchange.png", caption: "Card exchange on loss" },
+      { file: "4p_pick_target.png", caption: "Target selection" },
+      { file: "darbar_table.png", caption: "DARBAR arc at the table" },
+      { file: "4p_coach_action.png", caption: "AI coach — suggested action" },
+      { file: "4p_coach_reaction.png", caption: "AI coach — reaction" },
+      { file: "4p_game_over.png", caption: "Game over — winner revealed" },
+      { file: "results.png", caption: "Match results" },
+      { file: "review_replay.png", caption: "Byte-for-byte replay" },
+      { file: "leaderboard.png", caption: "ELO leaderboard" },
+      { file: "career.png", caption: "Career overview" },
+    ],
   },
   {
     slug: "mileway",
@@ -390,6 +437,32 @@ export const projects: Project[] = [
           heading: "FOSS-safe distribution & quality gates",
           body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 96 Roborazzi JVM screenshot tests (no emulator, no network), plus Napier logging, detekt, ktlint, Kover and CI.",
         },
+        {
+          heading: "Four-theme system",
+          body: "Four built-in themes — Matrix, Amoled, Ion and Daybreak — switchable at runtime and persisted via DataStore, all driven from a shared design-system module in commonMain.",
+        },
+        {
+          heading: "Built to a few hard rules",
+          body: "Features never depend on features; everything shared lives in commonMain; mock data is its own Gradle module so the whole app (and the 96 screenshot tests) runs with zero network; and convention plugins keep every module's build consistent. All three platforms — Android, iOS and Wear OS — share one codebase.",
+        },
+      ],
+      metrics: [
+        { value: "23", label: "Gradle modules" },
+        { value: "11", label: "isolated feature modules" },
+        { value: "3", label: "platforms · one codebase" },
+        { value: "0", label: "backend calls" },
+      ],
+      techStack: [
+        { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Material 3"] },
+        { group: "Data", items: ["Room (KMP)", "DataStore", "Coroutines + Flow"] },
+        { group: "DI", items: ["Koin"] },
+        { group: "Maps", items: ["MapLibre (F-Droid)", "KrossMap (Play)"] },
+        { group: "Build & quality", items: ["AGP + convention plugins", "detekt", "ktlint", "Kover"] },
+        { group: "Testing", items: ["Roborazzi (96 JVM screenshot tests)", "JUnit"] },
+      ],
+      extraLinks: [
+        { label: "Feature modules", url: "https://github.com/darkpandawarrior/MileTrackerDemo/tree/main/feature" },
+        { label: "README", url: "https://github.com/darkpandawarrior/MileTrackerDemo#readme" },
       ],
     },
     screens: [

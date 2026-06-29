@@ -129,6 +129,20 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </div>
       </div>
 
+      {/* Metrics band */}
+      {d?.metrics && d.metrics.length > 0 && (
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px px-6 py-8 sm:grid-cols-4">
+            {d.metrics.map((m) => (
+              <div key={m.label} className="px-4 py-2">
+                <p className="font-display text-3xl font-bold text-accent sm:text-4xl">{m.value}</p>
+                <p className="mt-1 text-xs leading-snug text-zinc-400">{m.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Videos — device-framed, autoplay on view */}
       {d?.videos && d.videos.length > 0 && (
         <section className="border-b border-line bg-surface">
@@ -159,6 +173,32 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Tech stack */}
+      {d?.techStack && d.techStack.length > 0 && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-6 py-14">
+            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
+              Under the hood
+            </h2>
+            <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+              {d.techStack.map((t) => (
+                <div key={t.group} className="reveal">
+                  <h3 className="mb-2 text-sm font-semibold text-accent">{t.group}</h3>
+                  <ul className="space-y-1 text-sm text-zinc-300">
+                    {t.items.map((it) => (
+                      <li key={it} className="flex gap-2">
+                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent/60" />
+                        {it}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -208,6 +248,29 @@ export function ProjectDetail({ slug }: { slug: string }) {
               ))}
             </div>
             <p className="mt-3 text-center text-xs text-zinc-600 sm:text-left">Swipe or use the arrows · tap a screen to enlarge</p>
+          </div>
+        </section>
+      )}
+
+      {/* Explore more */}
+      {d?.extraLinks && d.extraLinks.length > 0 && (
+        <section className="border-t border-line bg-surface">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-8">
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent/60">Explore more</span>
+            {d.extraLinks.map((l) => (
+              <a
+                key={l.url}
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-zinc-300 transition hover:text-accent"
+              >
+                {l.label} <ArrowUpRight size={14} />
+              </a>
+            ))}
+            <a href="#resume" className="inline-flex items-center gap-1 text-sm font-semibold text-zinc-300 transition hover:text-accent">
+              Résumé
+            </a>
           </div>
         </section>
       )}
