@@ -293,6 +293,8 @@ export interface ProjectDetailData {
   metrics?: { value: string; label: string }[];
   techStack?: { group: string; items: string[] }[];
   extraLinks?: { label: string; url: string }[];
+  // Mermaid diagram sources, rendered (dark-themed) on the detail page.
+  diagrams?: { title: string; code: string }[];
 }
 
 export interface Project {
@@ -371,6 +373,21 @@ export const projects: Project[] = [
       ],
       extraLinks: [
         { label: "README (full rules)", url: "https://github.com/darkpandawarrior/Kursi#readme" },
+      ],
+      diagrams: [
+        {
+          title: "Deterministic engine — one pure function",
+          code: `graph LR
+  s["GameState"] -->|"+ Intent"| r["reduce()<br/>pure · RNG in state"] --> s2["GameState'"]
+  s2 -.->|"byte-for-byte replay"| s`,
+        },
+        {
+          title: "Secrecy boundary — redact per viewer",
+          code: `graph TD
+  full["Full GameState<br/>(authoritative)"] -->|"redact(state, viewer)"| pv1["PlayerView — seat 1"]
+  full -->|"redact(state, viewer)"| pv2["PlayerView — seat 2"]
+  full -->|"redact(state, viewer)"| pv3["PlayerView — seat N"]`,
+        },
       ],
     },
     screens: [
@@ -463,6 +480,28 @@ export const projects: Project[] = [
       extraLinks: [
         { label: "Feature modules", url: "https://github.com/darkpandawarrior/MileTrackerDemo/tree/main/feature" },
         { label: "README", url: "https://github.com/darkpandawarrior/MileTrackerDemo#readme" },
+      ],
+      videos: [
+        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard — live capture" },
+      ],
+      diagrams: [
+        {
+          title: "23-module architecture",
+          code: `graph TD
+  app[":app composition root"]
+  t["feature: tracking"]
+  s["feature: spends"]
+  tr["feature: travel"]
+  ap["feature: approvals"]
+  core["commonMain core<br/>design system · Room(KMP) · DataStore"]
+  app --> t & s & tr & ap
+  t & s & tr & ap --> core`,
+        },
+        {
+          title: "Location pipeline — GPS treated as a noisy signal",
+          code: `graph LR
+  gps["Raw GPS"] --> jit["Jitter<br/>suppression"] --> spk["Spike<br/>detection"] --> fus["Accelerometer<br/>fusion"] --> acc["Four-bucket<br/>distance"] --> out["Clean track"]`,
+        },
       ],
     },
     screens: [

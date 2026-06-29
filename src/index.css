@@ -252,6 +252,9 @@ html.resume-mode body {
 }
 .fade-in { animation: fade-in 0.2s ease-out both; }
 
+/* Mermaid diagrams scale to their container */
+.mermaid-wrap svg { max-width: 100%; height: auto; }
+
 /* Hide scrollbar on the screenshot carousel (keep scroll/swipe) */
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }

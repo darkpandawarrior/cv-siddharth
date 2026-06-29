@@ -45,6 +45,45 @@ function AutoVideo({ src, caption }: { src: string; caption: string }) {
   );
 }
 
+/** Renders a Mermaid diagram, dark-themed. mermaid is dynamically imported so
+ *  it stays out of the main bundle (loads only on project detail pages). */
+function Mermaid({ code, id }: { code: string; id: string }) {
+  const [svg, setSvg] = useState("");
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const mermaid = (await import("mermaid")).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "loose",
+          theme: "base",
+          flowchart: { htmlLabels: true, curve: "basis", padding: 12 },
+          themeVariables: {
+            fontFamily: "Inter, system-ui, sans-serif",
+            background: "#171e1a",
+            primaryColor: "#10231a",
+            primaryBorderColor: "#3ddc84",
+            primaryTextColor: "#e8efe9",
+            lineColor: "#3ddc84",
+            secondaryColor: "#0f1512",
+            tertiaryColor: "#0f1512",
+            clusterBkg: "#0f1512",
+            clusterBorder: "#243029",
+          },
+        });
+        const { svg } = await mermaid.render(id, code);
+        if (alive) setSvg(svg);
+      } catch {
+        /* ignore render errors — diagram simply won't show */
+      }
+    })();
+    return () => { alive = false; };
+  }, [code, id]);
+  if (!svg) return null;
+  return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
 export function ProjectDetail({ slug }: { slug: string }) {
   const project = projects.find((p) => p.slug === slug);
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
@@ -173,6 +212,25 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Architecture diagrams (Mermaid) */}
+      {d?.diagrams && d.diagrams.length > 0 && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-6 py-14">
+            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
+              How it's built
+            </h2>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {d.diagrams.map((dg, i) => (
+                <div key={dg.title} className="reveal rounded-2xl border border-line bg-card p-5">
+                  <h3 className="mb-4 text-sm font-semibold text-zinc-200">{dg.title}</h3>
+                  <Mermaid code={dg.code} id={`mmd-${slug}-${i}`} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
