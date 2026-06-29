@@ -276,6 +276,22 @@ export const resumeSkills: { group: string; items: string[] }[] = [
 // ── Projects & open source ────────────────────────────────────────────────
 // Single source of truth for everything I've built outside employer work.
 // Rendered on the homepage + résumé and fed to the "Sid" chat assistant.
+export interface ProjectDetailSection {
+  heading: string;
+  body: string;
+}
+
+export interface ProjectVideo {
+  src: string;
+  caption: string;
+}
+
+export interface ProjectDetailData {
+  overview: string;
+  sections: ProjectDetailSection[];
+  videos?: ProjectVideo[];
+}
+
 export interface Project {
   slug: string;
   name: string;
@@ -286,6 +302,9 @@ export interface Project {
   links: { label: string; url: string }[];
   status: string;
   badges: string[];
+  // Optional deep-dive page at /#project/<slug>. Screenshots come from the
+  // auto-generated galleries.ts (public/projects/<slug>/screenshots/).
+  detail?: ProjectDetailData;
 }
 
 export const projects: Project[] = [
@@ -305,6 +324,28 @@ export const projects: Project[] = [
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
     status: "Shipped Jun 2026 · CC BY-NC-SA 4.0",
     badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
+    detail: {
+      overview:
+        "Kursi is a Hinglish social-deduction bluffing game — a satirical take on India's corporate-political underworld where the throne (kursi) is never safe. I built it as a serious engineering exercise: a single deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a future authoritative server from the same code.",
+      sections: [
+        {
+          heading: "Deterministic engine",
+          body: "The whole game is a pure function: (GameState, Intent) → GameState, with the RNG seed living inside the state. The same module drives single-player, the bots and a future server — and any match can be replayed byte-for-byte from its seed and intent log.",
+        },
+        {
+          heading: "ISMCTS expert AI + DARBAR social layer",
+          body: "Bots use Information Set Monte Carlo Tree Search (8k iterations) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs — social manipulation that never breaks engine determinism.",
+        },
+        {
+          heading: "Secrecy boundary",
+          body: "A hidden-information game needs strict secrecy: redact(state, viewer) → PlayerView guarantees a client only ever sees what its player should. Two independent narrative RNG streams keep flavour separate from game logic.",
+        },
+        {
+          heading: "“License Raj Deco” identity",
+          body: "A bespoke visual language — teak/brass/cream palette, Rozha One display type, five Canvas-drawn intaglio role glyphs, and stamped-instrument UI motifs. Gauntlet (5-rung ladder), Team mode, spectator demo and an interactive tutorial round out the experience, all behind a full Fastlane + CI pipeline.",
+        },
+      ],
+    },
   },
   {
     slug: "mileway",
@@ -325,6 +366,33 @@ export const projects: Project[] = [
     ],
     status: "V19 · iOS live",
     badges: ["Kotlin Multiplatform", "23 modules", "Open source"],
+    detail: {
+      overview:
+        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS and Wear OS from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale.",
+      sections: [
+        {
+          heading: "23-module clean architecture",
+          body: "Eleven feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual.",
+        },
+        {
+          heading: "Location engine",
+          body: "GPS is treated as a noisy signal: jitter suppression, spike detection to reject impossible fixes, four-bucket distance accounting and accelerometer fusion. A deterministic simulated-drive source makes the whole engine unit-testable without hardware.",
+        },
+        {
+          heading: "iOS fully live (V19)",
+          body: "Background trip tracking on iOS via kmpworkmanager (dev.brewkits) with AppDelegate integration and a BGTask dispatcher, replacing a custom background layer. All quality gates green on iOS and Android from the shared codebase.",
+        },
+        {
+          heading: "FOSS-safe distribution & quality gates",
+          body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 96 Roborazzi JVM screenshot tests (no emulator, no network), plus Napier logging, detekt, ktlint, Kover and CI.",
+        },
+      ],
+      videos: [
+        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard" },
+        { src: "/projects/mileway/video/clipB_nav.mp4", caption: "Navigation" },
+        { src: "/projects/mileway/video/clipC_tracking.mp4", caption: "Live trip tracking" },
+      ],
+    },
   },
   {
     slug: "hiresignal",

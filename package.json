@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "gen:galleries": "node scripts/gen-galleries.mjs",
+    "predev": "node scripts/gen-galleries.mjs",
+    "prebuild": "node scripts/gen-galleries.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",

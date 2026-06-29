@@ -6,6 +6,7 @@ import { TiltPhone } from "./TiltPhone.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
 import { ResumeView } from "./ResumeView.tsx";
+import { ProjectDetail } from "./ProjectDetail.tsx";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -231,13 +232,21 @@ function Projects() {
                     ))}
                   </div>
                   <div className="mt-auto flex flex-wrap gap-3 pt-5">
+                    {p.detail && (
+                      <a
+                        href={`#project/${p.slug}`}
+                        className="flex items-center gap-1 text-sm font-semibold text-accent transition hover:text-accent-dim"
+                      >
+                        Deep dive →
+                      </a>
+                    )}
                     {p.links.map((l) => (
                       <a
                         key={l.url}
                         href={l.url}
                         target={l.url.startsWith("#") ? undefined : "_blank"}
                         rel="noreferrer"
-                        className="flex items-center gap-1 text-sm font-semibold text-accent transition hover:text-accent-dim"
+                        className="flex items-center gap-1 text-sm font-semibold text-zinc-400 transition hover:text-accent"
                       >
                         {l.label} <ArrowUpRight size={14} />
                       </a>
@@ -421,6 +430,15 @@ export default function App() {
   }, [hash]);
 
   if (hash === "#resume") return <ResumeView />;
+
+  if (hash.startsWith("#project/")) {
+    return (
+      <div className="min-h-screen">
+        <ProjectDetail slug={hash.slice("#project/".length)} />
+        <FloatingChat />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
