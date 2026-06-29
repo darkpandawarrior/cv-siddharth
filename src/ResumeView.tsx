@@ -1,5 +1,5 @@
 import { ArrowLeft, Printer } from "lucide-react";
-import { profile, metrics, experience, education, resumeSkills, languages, competencies } from "./data/profile.ts";
+import { profile, metrics, experience, education, resumeSkills, languages, competencies, projects, openSource } from "./data/profile.ts";
 
 /**
  * Print-perfect résumé rendered from the same data as the portfolio.
@@ -93,6 +93,28 @@ export function ResumeView() {
               </ul>
             </div>
           ))}
+        </section>
+
+        {/* Projects & Open Source */}
+        <section className="mt-4 break-inside-avoid">
+          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+            Projects & Open Source
+          </h2>
+          {projects.map((p) => (
+            <div key={p.slug} className="mt-2 break-inside-avoid">
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-sm font-bold">{p.name}</h3>
+                <p className="shrink-0 text-xs text-zinc-500">{p.stack.slice(0, 3).join(" · ")}</p>
+              </div>
+              <p className="text-sm leading-snug text-zinc-700">
+                {p.tagline} {p.highlights[0]}
+              </p>
+            </div>
+          ))}
+          <p className="mt-2 text-sm leading-snug text-zinc-700">
+            <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
+            {openSource.length} merged PRs to HireSignal (career-ops) — incl. the 1.14 System-Layer sync, multi-profile switcher, and dashboard tabs.
+          </p>
         </section>
 
         {/* Education */}

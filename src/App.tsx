@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github, Linkedin } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills } from "./data/profile.ts";
+import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { TiltPhone } from "./TiltPhone.tsx";
 import { TiltCard } from "./TiltCard.tsx";
@@ -16,6 +16,7 @@ const SKILL_ICONS: Record<string, string> = {
 
 const NAV_LINKS = [
   { href: "#work", label: "Case studies" },
+  { href: "#projects", label: "Projects" },
   { href: "#experience", label: "Experience" },
   { href: "#skills", label: "Skills" },
   { href: "#contact", label: "Contact" },
@@ -192,6 +193,98 @@ function CaseStudies() {
   );
 }
 
+function Projects() {
+  return (
+    <section id="projects" className="border-t border-line bg-surface">
+      <div className="mx-auto max-w-5xl px-6 py-20">
+        <Reveal>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// projects & open source</p>
+          <h2 className="font-display mb-2 text-3xl font-bold tracking-tight">Things I've built</h2>
+          <p className="mb-10 text-zinc-400">
+            Open-source projects and tooling outside employer work — shipped end-to-end.
+          </p>
+        </Reveal>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {projects.map((p, i) => (
+            <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
+              <TiltCard>
+                <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="font-display text-xl font-bold">{p.name}</h3>
+                    <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
+                  </div>
+                  <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
+                  <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
+                    {p.highlights.map((h) => (
+                      <li key={h} className="flex gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {p.badges.map((b) => (
+                      <span key={b} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
+                        {b}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex flex-wrap gap-3 pt-5">
+                    {p.links.map((l) => (
+                      <a
+                        key={l.url}
+                        href={l.url}
+                        target={l.url.startsWith("#") ? undefined : "_blank"}
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-sm font-semibold text-accent transition hover:text-accent-dim"
+                      >
+                        {l.label} <ArrowUpRight size={14} />
+                      </a>
+                    ))}
+                  </div>
+                </article>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
+            Open-source contributions
+          </h3>
+          <ul className="space-y-2">
+            {openSource.map((c) => (
+              <li key={c.url} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+                <a href={c.url} target="_blank" rel="noreferrer" className="font-medium text-zinc-200 transition hover:text-accent">
+                  {c.title}
+                </a>
+                <span className="text-xs text-zinc-500">{c.repo}</span>
+                <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        <Reveal>
+          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
+            Recently shipped
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {recentGrowth.map((g) => (
+              <div key={g.title} className="rounded-xl border border-line bg-card p-4">
+                <p className="text-xs text-zinc-500">{g.date}</p>
+                <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
+                <p className="mt-1 text-sm leading-snug text-zinc-400">{g.detail}</p>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 function ExperienceSection() {
   return (
     <section id="experience" className="border-t border-line bg-surface">
@@ -336,6 +429,7 @@ export default function App() {
         <Hero />
         <Metrics />
         <CaseStudies />
+        <Projects />
         <ExperienceSection />
         <Skills />
         <Contact />

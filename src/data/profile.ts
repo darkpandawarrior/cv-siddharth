@@ -272,3 +272,125 @@ export const resumeSkills: { group: string; items: string[] }[] = [
     items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "Git", "Play Store release management", "Android Studio", "Jira", "Figma", "Postman", "Firebender + MCP agentic workflows"],
   },
 ];
+
+// ── Projects & open source ────────────────────────────────────────────────
+// Single source of truth for everything I've built outside employer work.
+// Rendered on the homepage + résumé and fed to the "Sid" chat assistant.
+export interface Project {
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  stack: string[];
+  highlights: string[];
+  links: { label: string; url: string }[];
+  status: string;
+  badges: string[];
+}
+
+export const projects: Project[] = [
+  {
+    slug: "kursi",
+    name: "Kursi",
+    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances — Gaddi kisiki nahi rehti.",
+    description:
+      "A multiplayer game built as a pure deterministic engine that runs identically on every platform and powers both the AI and a future server. Shipped end-to-end across four targets from one Kotlin codebase.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Desktop", "Web (Wasm)"],
+    highlights: [
+      "Pure deterministic engine — (GameState, Intent) → GameState with RNG in state, so the same module drives the AI, the UI and a future server.",
+      "ISMCTS expert AI: 10 bot personas with distinct aggression, bluff rate and risk tolerance, plus a DARBAR social layer for bot chat and alliances.",
+      "Secrecy boundary by design — redact(state, viewer) → PlayerView, two-stream narrative RNG, and byte-for-byte resume of any match.",
+      "Bespoke \"License Raj Deco\" identity: teak/brass/cream palette, Rozha One type, Canvas-drawn intaglio role glyphs.",
+    ],
+    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
+    status: "Shipped Jun 2026 · CC BY-NC-SA 4.0",
+    badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
+  },
+  {
+    slug: "mileway",
+    name: "Mileway",
+    tagline: "Offline-first mileage, travel & expense tracker — one Kotlin codebase across Android, iOS & Wear OS.",
+    description:
+      "An open-source app I designed and built end-to-end as a clean, inspectable reference for the Compose Multiplatform + strict-module architecture I advocate at scale. Zero backend, fully reproducible.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "Room (KMP)", "Koin"],
+    highlights: [
+      "23-module clean architecture — 11 isolated feature modules meeting only at the :app composition root.",
+      "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket accounting and accelerometer fusion, unit-testable via a simulated-drive source.",
+      "Dual gms / noGms distribution (Play + F-Droid) with a dependency-guard that fails the build if proprietary libs leak into the FOSS flavor.",
+      "96 Roborazzi JVM screenshot tests (no emulator, no network); V19 milestone — iOS fully live.",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/MileTrackerDemo" },
+      { label: "Case study", url: "#work" },
+    ],
+    status: "V19 · iOS live",
+    badges: ["Kotlin Multiplatform", "23 modules", "Open source"],
+  },
+  {
+    slug: "hiresignal",
+    name: "HireSignal",
+    tagline: "Local-first AI career-intelligence dashboard.",
+    description:
+      "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — built on the open-source career-ops project, which I actively contribute to upstream.",
+    stack: ["Node.js", "Vite", "Playwright", "Multi-profile", "23 ATS/board providers"],
+    highlights: [
+      "Resume onboarding → profile inference → trust-validated job scanning → fit scoring → tailored résumés.",
+      "Single-server multi-profile architecture (per-candidate routing) over a strict User/System data contract.",
+      "23 ATS & job-board provider integrations via a dynamic, zero-token provider loader.",
+      "Contributor upstream — 4 merged PRs including the career-ops 1.14 sync and the dashboard tabs.",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/career-ops" },
+      { label: "Upstream", url: "https://github.com/kirklazar-android/hiresignal" },
+    ],
+    status: "Active · 4 PRs merged upstream",
+    badges: ["Node.js", "Job-search automation", "Open source"],
+  },
+  {
+    slug: "portfolio",
+    name: "This portfolio + “Sid” AI assistant",
+    tagline: "The site you're reading — a provider-agnostic LLM chat that answers as me, grounded in my real CV.",
+    description:
+      "An interactive résumé with a built-in AI assistant. React 19 + Vite + Tailwind on Vercel Edge, with a provider-agnostic chat backend (Groq / Gemini / Claude) and prompt-injection guards.",
+    stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM"],
+    highlights: [
+      "3D scroll-driven hero, printable résumé view, and case studies with real production metrics.",
+      "Provider-agnostic chat backend — the assistant is grounded in this same source-of-truth profile data.",
+    ],
+    links: [
+      { label: "Live", url: "https://cv-siddharth.vercel.app" },
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/cv-siddharth" },
+    ],
+    status: "Live",
+    badges: ["React 19", "Vercel", "LLM chat"],
+  },
+];
+
+export interface Contribution {
+  repo: string;
+  title: string;
+  url: string;
+  status: "merged" | "open" | "closed";
+  date: string;
+}
+
+export const openSource: Contribution[] = [
+  { repo: "kirklazar-android/hiresignal", title: "Port career-ops 1.14 System-Layer updates (trust-validator, providers, evaluators)", url: "https://github.com/kirklazar-android/hiresignal/pull/8", status: "merged", date: "2026-06-29" },
+  { repo: "kirklazar-android/hiresignal", title: "Production-grade README — architecture diagram, scoring tables", url: "https://github.com/kirklazar-android/hiresignal/pull/7", status: "merged", date: "2026-06-28" },
+  { repo: "kirklazar-android/hiresignal", title: "Profile switcher dropdown with Add-new-profile modal", url: "https://github.com/kirklazar-android/hiresignal/pull/5", status: "merged", date: "2026-06-27" },
+  { repo: "kirklazar-android/hiresignal", title: "Dashboard: tracker, coach, console, scanner & profile tabs", url: "https://github.com/kirklazar-android/hiresignal/pull/4", status: "merged", date: "2026-06-27" },
+];
+
+export interface GrowthItem {
+  date: string;
+  title: string;
+  detail: string;
+}
+
+// Recent shipping timeline — "what I've built in the last few weeks".
+export const recentGrowth: GrowthItem[] = [
+  { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
+  { date: "Jun 2026", title: "HireSignal 1.14 + dashboard", detail: "4 merged PRs upstream: 1.14 System-Layer sync, multi-profile switcher, and the tracker/coach/scanner dashboard tabs." },
+  { date: "Jun 2026", title: "Mileway V19 — iOS live", detail: "iOS fully functional from the shared codebase; kmpworkmanager background scheduling; 96 Roborazzi tests green." },
+  { date: "Jun 2026", title: "Interactive AI portfolio", detail: "Rebuilt this site on React 19 + Vercel Edge with a provider-agnostic “Sid” chat assistant grounded in my CV." },
+];
