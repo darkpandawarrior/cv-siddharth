@@ -1,17 +1,71 @@
-import { useState } from "react";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 
-/**
- * Data-driven project deep-dive at /#project/<slug>.
- * Content comes from projects[].detail in profile.ts; screenshots come from the
- * auto-generated galleries.ts. Add a project + drop screenshots → page exists.
- */
+/** Adds `.revealed` to `.reveal` children as they scroll into view. */
+function useScrollReveal(dep: unknown) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const nodes = root.current?.querySelectorAll<HTMLElement>(".reveal");
+    if (!nodes?.length) return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add("revealed")),
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 },
+    );
+    nodes.forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, [dep]);
+  return root;
+}
+
+/** Plays a muted video only while it's on screen — alive, but light. */
+function AutoVideo({ src, caption }: { src: string; caption: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <figure className="float-soft">
+      <div className="device glow-pulse">
+        <video ref={ref} src={src} muted loop playsInline preload="metadata" className="block w-full" />
+      </div>
+      <figcaption className="mt-3 text-center text-xs text-zinc-500">{caption}</figcaption>
+    </figure>
+  );
+}
+
 export function ProjectDetail({ slug }: { slug: string }) {
   const project = projects.find((p) => p.slug === slug);
   const shots = galleries[slug] ?? [];
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [idx, setIdx] = useState<number | null>(null);
+  const root = useScrollReveal(slug);
+
+  const close = useCallback(() => setIdx(null), []);
+  const step = useCallback(
+    (d: number) => setIdx((i) => (i === null ? i : (i + d + shots.length) % shots.length)),
+    [shots.length],
+  );
+  useEffect(() => {
+    if (idx === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [idx, close, step]);
 
   if (!project) {
     return (
@@ -23,75 +77,77 @@ export function ProjectDetail({ slug }: { slug: string }) {
       </div>
     );
   }
-
   const d = project.detail;
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-6 pt-10">
-        <a href="#projects" className="inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-          <ArrowLeft size={16} /> All projects
-        </a>
+    <div ref={root} className="min-h-screen">
+      {/* Hero with animated aurora wash */}
+      <div className="relative overflow-hidden border-b border-line">
+        <div className="aurora pointer-events-none absolute inset-0 opacity-80" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-ink" />
+        <div className="relative mx-auto max-w-5xl px-6 pb-14 pt-10">
+          <a href="#projects" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+            <ArrowLeft size={16} /> All projects
+          </a>
+          <p className="rise-in mt-8 text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
+          <h1 className="rise-in rise-in-1 font-display mt-2 text-4xl font-bold tracking-tight sm:text-6xl">
+            {project.name}
+          </h1>
+          <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
+          <p className="rise-in rise-in-2 mt-4 max-w-3xl text-lg text-accent">{project.tagline}</p>
+          <p className="rise-in rise-in-2 mt-4 max-w-3xl leading-relaxed text-zinc-300">
+            {d?.overview ?? project.description}
+          </p>
+          <div className="rise-in rise-in-3 mt-5 flex flex-wrap gap-2">
+            {project.stack.map((s) => (
+              <span key={s} className="rounded-full border border-accent/25 bg-accent/5 px-2.5 py-0.5 text-xs text-accent/90">
+                {s}
+              </span>
+            ))}
+          </div>
+          <div className="rise-in rise-in-3 mt-6 flex flex-wrap items-center gap-4">
+            {project.links.map((l) => (
+              <a
+                key={l.url}
+                href={l.url}
+                target={l.url.startsWith("#") ? undefined : "_blank"}
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink shadow-[0_0_30px_-8px_rgba(61,220,132,0.6)] transition hover:bg-accent-dim"
+              >
+                {l.label} <ArrowUpRight size={14} />
+              </a>
+            ))}
+            <span className="text-sm text-zinc-500">{project.status}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Hero */}
-      <header className="mx-auto max-w-5xl px-6 pb-10 pt-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent/60">// project</p>
-        <h1 className="font-display mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{project.name}</h1>
-        <p className="mt-3 max-w-3xl text-lg text-accent">{project.tagline}</p>
-        <p className="mt-4 max-w-3xl leading-relaxed text-zinc-300">{d?.overview ?? project.description}</p>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {project.stack.map((s) => (
-            <span key={s} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{s}</span>
-          ))}
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-4">
-          {project.links.map((l) => (
-            <a
-              key={l.url}
-              href={l.url}
-              target={l.url.startsWith("#") ? undefined : "_blank"}
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
-            >
-              {l.label} <ArrowUpRight size={14} />
-            </a>
-          ))}
-          <span className="text-sm text-zinc-500">{project.status}</span>
-        </div>
-      </header>
-
-      {/* Videos */}
+      {/* Videos — device-framed, autoplay on view */}
       {d?.videos && d.videos.length > 0 && (
-        <section className="border-y border-line bg-surface">
-          <div className="mx-auto max-w-5xl px-6 py-12">
-            <h2 className="font-display mb-6 text-sm font-semibold uppercase tracking-widest text-accent/60">In motion</h2>
-            <div className="grid gap-6 sm:grid-cols-3">
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto max-w-5xl px-6 py-14">
+            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
+              In motion
+            </h2>
+            <div className="reveal grid gap-8 sm:grid-cols-3">
               {d.videos.map((v) => (
-                <figure key={v.src}>
-                  <video
-                    src={v.src}
-                    controls
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="w-full rounded-2xl border border-line bg-black"
-                  />
-                  <figcaption className="mt-2 text-center text-xs text-zinc-500">{v.caption}</figcaption>
-                </figure>
+                <AutoVideo key={v.src} src={v.src} caption={v.caption} />
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Deep-dive sections */}
+      {/* Deep-dive sections — scroll-revealed cards */}
       {d?.sections && d.sections.length > 0 && (
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <div className="grid gap-8 sm:grid-cols-2">
-            {d.sections.map((s) => (
-              <div key={s.heading} className="rounded-2xl border border-line bg-card p-6">
+        <section className="mx-auto max-w-5xl px-6 py-16">
+          <div className="grid gap-6 sm:grid-cols-2">
+            {d.sections.map((s, i) => (
+              <div
+                key={s.heading}
+                className="reveal gallery-item rounded-2xl border border-line bg-card p-6"
+                style={{ transitionDelay: `${(i % 2) * 80}ms` }}
+              >
                 <h3 className="font-display text-lg font-bold text-accent">{s.heading}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
               </div>
@@ -100,21 +156,22 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Gallery */}
+      {/* Gallery — phone-framed thumbs, hover glow, navigable lightbox */}
       {shots.length > 0 && (
         <section className="border-t border-line bg-surface">
-          <div className="mx-auto max-w-6xl px-6 py-14">
-            <h2 className="font-display mb-6 text-sm font-semibold uppercase tracking-widest text-accent/60">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
               Screens <span className="text-zinc-600">({shots.length})</span>
             </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {shots.map((src) => (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {shots.map((src, i) => (
                 <button
                   key={src}
-                  onClick={() => setLightbox(src)}
-                  className="overflow-hidden rounded-xl border border-line bg-card transition hover:border-accent/50"
+                  onClick={() => setIdx(i)}
+                  className="gallery-item reveal overflow-hidden rounded-2xl border border-line bg-card"
+                  style={{ transitionDelay: `${(i % 5) * 50}ms` }}
                 >
-                  <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  <img src={src} alt="" loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -128,12 +185,32 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </a>
       </div>
 
-      {lightbox && (
-        <div
-          onClick={() => setLightbox(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-6"
-        >
-          <img src={lightbox} alt="" className="max-h-[90vh] max-w-full rounded-lg" />
+      {/* Lightbox */}
+      {idx !== null && (
+        <div className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={close}>
+          <button onClick={close} className="absolute right-5 top-5 rounded-full bg-white/10 p-2 text-white hover:bg-white/20">
+            <X size={20} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); step(-1); }}
+            className="absolute left-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 sm:left-8"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <img
+            key={shots[idx]}
+            src={shots[idx]}
+            alt=""
+            className="lb-in max-h-[88vh] max-w-full rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); step(1); }}
+            className="absolute right-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 sm:right-8"
+          >
+            <ChevronRight size={22} />
+          </button>
+          <span className="absolute bottom-5 text-xs text-zinc-400">{idx + 1} / {shots.length}</span>
         </div>
       )}
     </div>
