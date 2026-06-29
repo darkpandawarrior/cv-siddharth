@@ -305,6 +305,10 @@ export interface Project {
   // Optional deep-dive page at /#project/<slug>. Screenshots come from the
   // auto-generated galleries.ts (public/projects/<slug>/screenshots/).
   detail?: ProjectDetailData;
+  // Optional curated, captioned screenshot set (filenames under
+  // public/projects/<slug>/screenshots/). If present, the carousel uses this
+  // instead of the full auto-generated gallery.
+  screens?: { file: string; caption: string }[];
 }
 
 export const projects: Project[] = [
@@ -387,12 +391,44 @@ export const projects: Project[] = [
           body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 96 Roborazzi JVM screenshot tests (no emulator, no network), plus Napier logging, detekt, ktlint, Kover and CI.",
         },
       ],
-      videos: [
-        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard" },
-        { src: "/projects/mileway/video/clipB_nav.mp4", caption: "Navigation" },
-        { src: "/projects/mileway/video/clipC_tracking.mp4", caption: "Live trip tracking" },
-      ],
     },
+    screens: [
+      { file: "track_miles_idle_screen.png", caption: "Track Miles — ready to start" },
+      { file: "tracking_success_screen.png", caption: "Tracking success + reimbursement" },
+      { file: "track_detail_screen.png", caption: "Track detail — route stats" },
+      { file: "track_insights_screen.png", caption: "Track insights — quality score" },
+      { file: "geo_check_in_screen.png", caption: "Geo check-in with map overlay" },
+      { file: "manual_check_in_screen.png", caption: "Manual check-in" },
+      { file: "check_in_history_screen.png", caption: "Check-in history" },
+      { file: "track_settings_screen.png", caption: "Tracking settings" },
+      { file: "hardware_events_log_screen.png", caption: "Hardware-events log" },
+      { file: "tracking_setup_guide_screen.png", caption: "Tracking setup guide" },
+      { file: "spends_home_screen.png", caption: "Spends home" },
+      { file: "log_miles_step1_screen.png", caption: "Log miles — location search" },
+      { file: "log_miles_step2_screen.png", caption: "Log miles — travelled legs" },
+      { file: "expense_entry_screen.png", caption: "Expense entry" },
+      { file: "expense_detail_screen.png", caption: "Expense detail + receipt" },
+      { file: "expense_history_screen.png", caption: "Expense history" },
+      { file: "travel_home_screen.png", caption: "Travel hub" },
+      { file: "create_trip_screen.png", caption: "Create trip request" },
+      { file: "trip_history_screen.png", caption: "Trip history" },
+      { file: "approvals_screen_pending_tab.png", caption: "Approvals — policy badges" },
+      { file: "payables_home_screen.png", caption: "Payables hub" },
+      { file: "create_payment_screen.png", caption: "Pay or request (UPI)" },
+      { file: "payments_history_screen.png", caption: "Payments history" },
+      { file: "cards_home_screen.png", caption: "Cards home" },
+      { file: "profile_account_hub.png", caption: "Account hub" },
+      { file: "settings_screen.png", caption: "Settings" },
+      { file: "analytics_home_screen.png", caption: "Analytics — Canvas charts" },
+      { file: "notification_centre_screen.png", caption: "Notification centre" },
+      { file: "search_masterSearch_results.png", caption: "Master search" },
+      { file: "media_attachment_selection_screen.png", caption: "Attachment sources" },
+      { file: "media_cloud_library_screen.png", caption: "Media library" },
+      { file: "agent_chat_screen.png", caption: "AI assistant chat" },
+      { file: "home_screen_loaded.png", caption: "Home dashboard" },
+      { file: "login_screen.png", caption: "Login (demo credentials)" },
+      { file: "root_guard_screen_clean.png", caption: "Root guard — secure device" },
+    ],
   },
   {
     slug: "hiresignal",

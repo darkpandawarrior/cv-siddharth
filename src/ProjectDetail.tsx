@@ -47,15 +47,21 @@ function AutoVideo({ src, caption }: { src: string; caption: string }) {
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const project = projects.find((p) => p.slug === slug);
-  const shots = galleries[slug] ?? [];
+  // Prefer a curated, captioned set; fall back to the auto-generated gallery.
+  const items: { src: string; caption: string }[] = project?.screens?.length
+    ? project.screens.map((s) => ({ src: `/projects/${slug}/screenshots/${s.file}`, caption: s.caption }))
+    : (galleries[slug] ?? []).map((src) => ({ src, caption: "" }));
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
+  const railRef = useRef<HTMLDivElement>(null);
+  const scrollRail = (dir: number) =>
+    railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
   const close = useCallback(() => setIdx(null), []);
   const step = useCallback(
-    (d: number) => setIdx((i) => (i === null ? i : (i + d + shots.length) % shots.length)),
-    [shots.length],
+    (d: number) => setIdx((i) => (i === null ? i : (i + d + items.length) % items.length)),
+    [items.length],
   );
   useEffect(() => {
     if (idx === null) return;
@@ -157,25 +163,51 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Gallery — phone-framed thumbs, hover glow, navigable lightbox */}
-      {shots.length > 0 && (
+      {/* Gallery — horizontal carousel (space-saving), hover glow, navigable lightbox */}
+      {items.length > 0 && (
         <section className="border-t border-line bg-surface">
           <div className="mx-auto max-w-6xl px-6 py-16">
-            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
-              Screens <span className="text-zinc-600">({shots.length})</span>
-            </h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {shots.map((src, i) => (
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-accent/60">
+                Screens <span className="text-zinc-600">({items.length})</span>
+              </h2>
+              <div className="flex gap-2">
                 <button
-                  key={src}
-                  onClick={() => setIdx(i)}
-                  className="gallery-item reveal overflow-hidden rounded-2xl border border-line bg-card"
-                  style={{ transitionDelay: `${(i % 5) * 50}ms` }}
+                  onClick={() => scrollRail(-1)}
+                  aria-label="Scroll left"
+                  className="rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent"
                 >
-                  <img src={src} alt="" loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={() => scrollRail(1)}
+                  aria-label="Scroll right"
+                  className="rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+            <div ref={railRef} className="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+              {items.map((it, i) => (
+                <button
+                  key={it.src}
+                  onClick={() => setIdx(i)}
+                  className="group/shot w-40 shrink-0 snap-start sm:w-44"
+                  title={it.caption}
+                >
+                  <span className="gallery-item block overflow-hidden rounded-2xl border border-line bg-card">
+                    <img src={it.src} alt={it.caption} loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />
+                  </span>
+                  {it.caption && (
+                    <span className="mt-2 block truncate text-center text-xs text-zinc-500 transition group-hover/shot:text-accent">
+                      {it.caption}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+            <p className="mt-3 text-center text-xs text-zinc-600 sm:text-left">Swipe or use the arrows · tap a screen to enlarge</p>
           </div>
         </section>
       )}
@@ -199,10 +231,10 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <ChevronLeft size={22} />
           </button>
           <img
-            key={shots[idx]}
-            src={shots[idx]}
-            alt=""
-            className="lb-in max-h-[88vh] max-w-full rounded-xl shadow-2xl"
+            key={items[idx].src}
+            src={items[idx].src}
+            alt={items[idx].caption}
+            className="lb-in max-h-[85vh] max-w-full rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
           <button
@@ -211,7 +243,10 @@ export function ProjectDetail({ slug }: { slug: string }) {
           >
             <ChevronRight size={22} />
           </button>
-          <span className="absolute bottom-5 text-xs text-zinc-400">{idx + 1} / {shots.length}</span>
+          <span className="absolute bottom-5 flex flex-col items-center gap-1 text-xs text-zinc-400">
+            {items[idx].caption && <span className="text-zinc-200">{items[idx].caption}</span>}
+            <span>{idx + 1} / {items.length}</span>
+          </span>
         </div>
       )}
     </div>

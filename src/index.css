@@ -252,6 +252,10 @@ html.resume-mode body {
 }
 .fade-in { animation: fade-in 0.2s ease-out both; }
 
+/* Hide scrollbar on the screenshot carousel (keep scroll/swipe) */
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Animated accent underline / sheen */
 @keyframes sheen {
   0% { background-position: -150% 0; }
