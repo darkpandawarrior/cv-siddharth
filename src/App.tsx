@@ -23,9 +23,28 @@ const NAV_LINKS = [
   { href: "#contact", label: "Contact" },
 ];
 
+/**
+ * Resolve the active route. Hash wins, but we also accept `?project=<slug>`
+ * because link-preview crawlers (e.g. LinkedIn Featured) strip the URL
+ * #fragment — a query param survives, so deep links into a project page work.
+ */
+function resolveInitialHash(): string {
+  if (window.location.hash) return window.location.hash;
+  const project = new URLSearchParams(window.location.search).get("project");
+  return project ? `#project/${project}` : "";
+}
+
 function useHashRoute(): string {
-  const [hash, setHash] = useState(window.location.hash);
+  const [hash, setHash] = useState(resolveInitialHash);
   useEffect(() => {
+    // Normalize ?project=<slug> into the canonical hash route and drop the query.
+    if (!window.location.hash) {
+      const project = new URLSearchParams(window.location.search).get("project");
+      if (project) {
+        window.history.replaceState(null, "", `${window.location.pathname}#project/${project}`);
+        setHash(`#project/${project}`);
+      }
+    }
     const onChange = () => setHash(window.location.hash);
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
