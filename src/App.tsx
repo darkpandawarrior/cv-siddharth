@@ -206,12 +206,25 @@ function Projects() {
           </p>
         </Reveal>
         <div className="grid gap-6 sm:grid-cols-2">
-          {projects.map((p, i) => (
+          {projects.map((p, i) => {
+            const href = p.detail ? `#project/${p.slug}` : p.links[0]?.url;
+            const go = () => {
+              if (!href) return;
+              if (p.detail) { window.location.hash = href; window.scrollTo({ top: 0 }); }
+              else window.open(href, "_blank", "noreferrer");
+            };
+            return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
-                <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
+                <article
+                  onClick={go}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
+                  className="group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-6 transition hover:-translate-y-1 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/10"
+                >
                   <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="font-display text-xl font-bold">{p.name}</h3>
+                    <h3 className="font-display text-xl font-bold transition group-hover:text-accent">{p.name}</h3>
                     <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
                   </div>
                   <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
@@ -231,14 +244,11 @@ function Projects() {
                       </span>
                     ))}
                   </div>
-                  <div className="mt-auto flex flex-wrap gap-3 pt-5">
+                  <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
                     {p.detail && (
-                      <a
-                        href={`#project/${p.slug}`}
-                        className="flex items-center gap-1 text-sm font-semibold text-accent transition hover:text-accent-dim"
-                      >
-                        Deep dive →
-                      </a>
+                      <span className="flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
+                        View case study →
+                      </span>
                     )}
                     {p.links.map((l) => (
                       <a
@@ -246,6 +256,7 @@ function Projects() {
                         href={l.url}
                         target={l.url.startsWith("#") ? undefined : "_blank"}
                         rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="flex items-center gap-1 text-sm font-semibold text-zinc-400 transition hover:text-accent"
                       >
                         {l.label} <ArrowUpRight size={14} />
@@ -255,7 +266,8 @@ function Projects() {
                 </article>
               </TiltCard>
             </Reveal>
-          ))}
+            );
+          })}
         </div>
 
         <Reveal>

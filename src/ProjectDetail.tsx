@@ -50,6 +50,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const shots = galleries[slug] ?? [];
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
+  useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
   const close = useCallback(() => setIdx(null), []);
   const step = useCallback(
