@@ -140,22 +140,23 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
     title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS)",
-    metric: "23 modules · iOS live (V19)",
+    metric: "23 modules · offline AI assistant (V20)",
     summary:
-      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase. V19 milestone: iOS is now fully functional.",
+      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase. V19 shipped full iOS parity; V20 added an on-device, retrieval-grounded AI assistant with voice I/O — still zero backend.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state and a real location engine — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
       "23-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core — design system, Room (KMP) + DataStore, all check-in and hardware-event screens migrated to commonMain — running live on Android, iOS (V19: full gate green) and Wear OS.",
       "iOS background scheduling via kmpworkmanager (dev.brewkits), replacing a custom BackgroundTask layer; AppDelegate integration + BGTask dispatcher make background trip tracking work natively on iOS.",
+      "An on-device AI assistant (V20): retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, on-device speech I/O — no remote LLM, no server.",
       "A location pipeline that treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting and accelerometer fusion, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor.",
-      "Quality gates: 96 Roborazzi screenshot tests on the JVM (no emulator, no network), Napier structured logging, detekt, ktlint, Kover and CI.",
+      "Quality gates: 96+ Roborazzi screenshot tests on the JVM (no emulator, no network), Napier structured logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "V19 milestone complete — iOS and Android build, run, and pass all quality gates from one shared Kotlin codebase. Explore the app, architecture diagrams and all 96 rendered screens at github.com/darkpandawarrior/MileTrackerDemo.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "iOS · Android · Wear OS", "23 modules", "Open source"],
+      "V20 milestone complete — iOS and Android build, run, and pass all quality gates from one shared Kotlin codebase, now with an on-device AI assistant layered on top of the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "iOS · Android · Wear OS", "23 modules", "Offline AI", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -477,13 +478,13 @@ export const projects: Project[] = [
       "23-module clean architecture — 11 isolated feature modules meeting only at the :app composition root.",
       "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket accounting and accelerometer fusion, unit-testable via a simulated-drive source.",
       "Dual gms / noGms distribution (Play + F-Droid) with a dependency-guard that fails the build if proprietary libs leak into the FOSS flavor.",
-      "96 Roborazzi JVM screenshot tests (no emulator, no network); V19 milestone — iOS fully live.",
+      "96+ Roborazzi JVM screenshot tests (no emulator, no network); V19 shipped full iOS parity, V20 added an offline AI assistant.",
     ],
     links: [
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/MileTrackerDemo" },
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/Mileway" },
       { label: "Case study", url: "#work" },
     ],
-    status: "V19 · iOS live",
+    status: "V20 · offline AI assistant",
     badges: ["Kotlin Multiplatform", "23 modules", "Open source"],
     detail: {
       overview:
@@ -500,6 +501,10 @@ export const projects: Project[] = [
         {
           heading: "iOS fully live (V19)",
           body: "Background trip tracking on iOS via kmpworkmanager (dev.brewkits) with AppDelegate integration and a BGTask dispatcher, replacing a custom background layer. All quality gates green on iOS and Android from the shared codebase.",
+        },
+        {
+          heading: "Offline AI assistant (V20)",
+          body: "A chat assistant grounded entirely in local Room data — trips, expenses, cards — with real chunked streaming (not a fake typing animation), persistent history with a 5-minute session-resume window, on-device speech-to-text/text-to-speech, and local usage analytics. No remote LLM, no server, same offline guarantee as the rest of the app.",
         },
         {
           heading: "FOSS-safe distribution & quality gates",
@@ -529,8 +534,8 @@ export const projects: Project[] = [
         { group: "Testing", items: ["Roborazzi (96 JVM screenshot tests)", "JUnit"] },
       ],
       extraLinks: [
-        { label: "Feature modules", url: "https://github.com/darkpandawarrior/MileTrackerDemo/tree/main/feature" },
-        { label: "README", url: "https://github.com/darkpandawarrior/MileTrackerDemo#readme" },
+        { label: "Feature modules", url: "https://github.com/darkpandawarrior/Mileway/tree/main/feature" },
+        { label: "README", url: "https://github.com/darkpandawarrior/Mileway#readme" },
       ],
       videos: [
         { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard — live capture" },
@@ -572,8 +577,11 @@ export const projects: Project[] = [
       { file: "expense_entry_screen.png", caption: "Expense entry" },
       { file: "expense_detail_screen.png", caption: "Expense detail + receipt" },
       { file: "expense_history_screen.png", caption: "Expense history" },
+      { file: "voucher_history_screen.png", caption: "Voucher history" },
+      { file: "advance_history_screen.png", caption: "Advance-request history" },
       { file: "travel_home_screen.png", caption: "Travel hub" },
       { file: "create_trip_screen.png", caption: "Create trip request" },
+      { file: "booking_history_screen.png", caption: "Booking history" },
       { file: "trip_history_screen.png", caption: "Trip history" },
       { file: "approvals_screen_pending_tab.png", caption: "Approvals — policy badges" },
       { file: "payables_home_screen.png", caption: "Payables hub" },
@@ -588,6 +596,9 @@ export const projects: Project[] = [
       { file: "media_attachment_selection_screen.png", caption: "Attachment sources" },
       { file: "media_cloud_library_screen.png", caption: "Media library" },
       { file: "agent_chat_screen.png", caption: "AI assistant chat" },
+      { file: "agent_history_screen.png", caption: "AI assistant history" },
+      { file: "assistant_home_sheet.png", caption: "Assistant home sheet" },
+      { file: "theme_picker_matrix.png", caption: "Theme picker — Matrix" },
       { file: "home_screen_loaded.png", caption: "Home dashboard" },
       { file: "login_screen.png", caption: "Login (demo credentials)" },
       { file: "root_guard_screen_clean.png", caption: "Root guard — secure device" },
@@ -659,5 +670,6 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
   { date: "Jun 2026", title: "HireSignal 1.14 + dashboard", detail: "4 merged PRs upstream: 1.14 System-Layer sync, multi-profile switcher, and the tracker/coach/scanner dashboard tabs." },
   { date: "Jun 2026", title: "Mileway V19 — iOS live", detail: "iOS fully functional from the shared codebase; kmpworkmanager background scheduling; 96 Roborazzi tests green." },
+  { date: "Jul 2026", title: "Mileway V20 — offline AI assistant", detail: "Retrieval-grounded chat over local trip/expense/card data, Room-backed history + session resume, on-device voice I/O — still zero backend." },
   { date: "Jun 2026", title: "Interactive AI portfolio", detail: "Rebuilt this site on React 19 + Vercel Edge with a provider-agnostic “Sid” chat assistant grounded in my CV." },
 ];

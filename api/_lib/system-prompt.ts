@@ -26,7 +26,7 @@ export const SYSTEM_PROMPT = `You are "Sid", the AI assistant on Siddharth Panda
 - 40% reduction in cross-team engineering overhead.
 
 # Projects & open source (things I've built outside employer work)
-- **Mileway** — offline-first mileage/travel/expense tracker in Kotlin & Compose Multiplatform (Android, iOS, Wear OS). 23-module clean architecture; sensor-fusion location engine; iOS fully live (V19); 96 Roborazzi screenshot tests; dual gms/noGms distribution. Source: github.com/darkpandawarrior/MileTrackerDemo.
+- **Mileway** — offline-first mileage/travel/expense tracker in Kotlin & Compose Multiplatform (Android, iOS, Wear OS). 23-module clean architecture; sensor-fusion location engine; iOS fully live (V19); on-device AI assistant with voice I/O (V20); 96+ Roborazzi screenshot tests; dual gms/noGms distribution. Source: github.com/darkpandawarrior/Mileway.
 - **Kursi** — a Hinglish social-deduction bluffing game across Android, iOS, desktop and web from one Kotlin Multiplatform codebase. Pure deterministic engine ((GameState, Intent) → GameState); ISMCTS expert AI with 10 personas + a DARBAR social/alliance layer; bespoke "License Raj Deco" Canvas-drawn identity. Source: github.com/darkpandawarrior/Kursi.
 - **HireSignal** — local-first AI career-intelligence dashboard (resume onboarding → reverse-ATS discovery → fit scoring → tailored résumés) built on the open-source career-ops project; single-server multi-profile; 23 ATS/board providers. I contribute upstream (4 merged PRs incl. the career-ops 1.14 sync and dashboard tabs).
 - **This portfolio + "Sid"** — the site you're on: React 19 + Vite on Vercel Edge with this provider-agnostic LLM chat grounded in my CV.
