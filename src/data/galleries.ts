@@ -113,5 +113,25 @@ export const galleries: Record<string, string[]> = {
     "/projects/mileway/screenshots/trip_history_screen.png",
     "/projects/mileway/screenshots/voice_waveform_listening.png",
     "/projects/mileway/screenshots/voucher_history_screen.png"
+  ],
+  "paymentslab": [
+    "/projects/paymentslab/screenshots/animated_amount.png",
+    "/projects/paymentslab/screenshots/failure_shake.png",
+    "/projects/paymentslab/screenshots/gateway_badges.png",
+    "/projects/paymentslab/screenshots/ios_catalog.png",
+    "/projects/paymentslab/screenshots/ios_catalog_all_native.png",
+    "/projects/paymentslab/screenshots/ios_catalog_stripe.png",
+    "/projects/paymentslab/screenshots/lab_home_screen_catalog.png",
+    "/projects/paymentslab/screenshots/mock_mode_badge_shimmer.png",
+    "/projects/paymentslab/screenshots/payload_card.png",
+    "/projects/paymentslab/screenshots/payment_flow_diagram_unverified.png",
+    "/projects/paymentslab/screenshots/payment_flow_diagram_verified.png",
+    "/projects/paymentslab/screenshots/primary_button.png",
+    "/projects/paymentslab/screenshots/provider_lab_screen_running.png",
+    "/projects/paymentslab/screenshots/provider_lab_screen_settled_success.png",
+    "/projects/paymentslab/screenshots/redaction_reveal.png",
+    "/projects/paymentslab/screenshots/step_timeline_dark.png",
+    "/projects/paymentslab/screenshots/step_timeline_light.png",
+    "/projects/paymentslab/screenshots/success_burst.png"
   ]
 };

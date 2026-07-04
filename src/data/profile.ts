@@ -605,6 +605,73 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "paymentslab",
+    name: "PaymentsLab",
+    tagline: "An Integration Lab for the Android payments ecosystem — every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
+    description:
+      "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
+    highlights: [
+      "19-module KMP architecture — one Gradle module per provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code.",
+      "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise, PayPal and a generic hosted-webview archetype covering the rest, bridged into coroutines by a PaymentHost that never leaks an Activity.",
+      "Server is the source of truth — a companion Ktor server creates orders, verifies payments with real HMAC-SHA256, and reconciles idempotent, signature-checked webhooks; the client callback is only ever treated as a hint.",
+      "Process-death recovery, for real — every in-flight payment is journaled to Room before the SDK opens; on cold start the orchestrator finds and reconciles anything unresolved.",
+      "Pure, replayable state machine — the lifecycle is a (State, Event) → Effects reducer with zero coroutines/DI/IO; a payment's path is a recorded event log that replays byte-for-byte identically.",
+      "VAPT-grade security suite — Android Keystore AES-256-GCM at rest, FLAG_SECURE + tapjacking guards, device-integrity checks (root/emulator/debugger/hook detection), certificate pinning.",
+    ],
+    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" }],
+    status: "v1 shipped Jul 2026 · 19 modules",
+    badges: ["Kotlin Multiplatform", "Payments", "Open source"],
+    detail: {
+      overview:
+        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across multiple providers, all behind a single PaymentGateway abstraction, backed by a small Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires.",
+      sections: [
+        {
+          heading: "The one idea worth stealing",
+          body: "A client-side Success is a hint, never proof. Only the server — after signature verification and webhook reconciliation — decides the true state. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
+        },
+        {
+          heading: "One contract, real SDKs",
+          body: "Razorpay, Cashfree, Stripe (+ Google Pay) and a raw UPI intent flow all implement the same tiny PaymentGateway interface. The Activity-callback SDKs are bridged into suspending coroutines by a PaymentHost that never leaks an Activity upward. A generic hosted-webview archetype covers the whole class of gateways with no native SDK behind the same contract — env-backed credentials auto-degrade from SANDBOX_READY to MOCK_MODE honestly instead of silently pretending to work.",
+        },
+        {
+          heading: "Pure, replayable state machine",
+          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants.",
+        },
+        {
+          heading: "VAPT-grade security",
+          body: "core:security — real Android Keystore AES-256-GCM at-rest encryption, FLAG_SECURE + recursive tapjacking protection, device-integrity checks (root, emulator, debugger, Frida/Xposed hook detection, SSL-pinning-bypass detection), and a certificate-pinning config, with detection kept deliberately separate from enforcement policy.",
+        },
+      ],
+      techStack: [
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "19 Gradle modules", "Koin"] },
+        { group: "Backend", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation"] },
+        { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning"] },
+        { group: "Build & quality", items: ["Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
+      ],
+      extraLinks: [{ label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab#readme" }],
+    },
+    screens: [
+      { file: "lab_home_screen_catalog.png", caption: "Provider catalog" },
+      { file: "provider_lab_screen_running.png", caption: "Live payment flow timeline" },
+      { file: "provider_lab_screen_settled_success.png", caption: "Settled — verified success" },
+      { file: "payment_flow_diagram_verified.png", caption: "Server-verified flow diagram" },
+      { file: "payment_flow_diagram_unverified.png", caption: "Unverified — client hint only" },
+      { file: "step_timeline_dark.png", caption: "Step timeline (dark)" },
+      { file: "step_timeline_light.png", caption: "Step timeline (light)" },
+      { file: "payload_card.png", caption: "Redacted payload card" },
+      { file: "redaction_reveal.png", caption: "Redaction reveal" },
+      { file: "mock_mode_badge_shimmer.png", caption: "MOCK_MODE badge" },
+      { file: "gateway_badges.png", caption: "Gateway badges" },
+      { file: "success_burst.png", caption: "Success animation" },
+      { file: "failure_shake.png", caption: "Failure animation" },
+      { file: "animated_amount.png", caption: "Animated amount" },
+      { file: "ios_catalog.png", caption: "iOS — provider catalog" },
+      { file: "ios_catalog_stripe.png", caption: "iOS — Stripe native SDK" },
+      { file: "ios_catalog_all_native.png", caption: "iOS — all native-SDK gateways" },
+    ],
+  },
+  {
     slug: "hiresignal",
     name: "HireSignal",
     tagline: "Local-first AI career-intelligence dashboard.",
