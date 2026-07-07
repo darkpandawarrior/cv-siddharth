@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github, Linkedin } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth } from "./data/profile.ts";
+import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth, sharedFoundation } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { TiltPhone } from "./TiltPhone.tsx";
 import { TiltCard } from "./TiltCard.tsx";
@@ -288,6 +288,39 @@ function Projects() {
             );
           })}
         </div>
+
+        <Reveal>
+          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
+            Shared foundation
+          </h3>
+          <div className="rounded-2xl border border-line bg-card p-6">
+            <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {sharedFoundation.libs.map((lib) => (
+                <a
+                  key={lib.name}
+                  href={lib.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex flex-col rounded-xl border border-line bg-surface p-4 transition hover:border-accent/50"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-sm font-semibold text-accent">{lib.name}</span>
+                    <ArrowUpRight size={14} className="text-zinc-500 transition group-hover:text-accent" />
+                  </div>
+                  <p className="mt-2 text-sm leading-snug text-zinc-400">{lib.role}</p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {lib.usedBy.map((app) => (
+                      <span key={app} className="rounded-full border border-accent/25 bg-accent/5 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">
+                        {app}
+                      </span>
+                    ))}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </Reveal>
 
         <Reveal>
           <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">

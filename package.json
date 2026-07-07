@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "gen:galleries": "node scripts/gen-galleries.mjs",
+    "sync:media": "node scripts/sync-project-media.mjs",
+    "gen:stats": "node scripts/gen-project-stats.mjs",
+    "refresh": "npm run sync:media && npm run gen:stats && npm run gen:galleries",
     "predev": "node scripts/gen-galleries.mjs",
     "prebuild": "node scripts/gen-galleries.mjs",
     "dev": "vite",

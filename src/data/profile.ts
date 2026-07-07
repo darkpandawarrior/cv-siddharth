@@ -139,24 +139,24 @@ export interface CaseStudy {
 export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
-    title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS)",
-    metric: "23 modules · offline AI assistant (V20)",
+    title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
+    metric: "27 modules · 5 platforms · offline AI",
     summary:
-      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS and Wear OS from one shared Kotlin codebase. V19 shipped full iOS parity; V20 added an on-device, retrieval-grounded AI assistant with voice I/O — still zero backend.",
+      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend — Room + DataStore only — so the whole thing is reproducible and reviewable by anyone.",
     problem:
-      "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state and a real location engine — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
+      "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
-      "23-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
-      "Shared commonMain core — design system, Room (KMP) + DataStore, all check-in and hardware-event screens migrated to commonMain — running live on Android, iOS (V19: full gate green) and Wear OS.",
-      "iOS background scheduling via kmpworkmanager (dev.brewkits), replacing a custom BackgroundTask layer; AppDelegate integration + BGTask dispatcher make background trip tracking work natively on iOS.",
-      "An on-device AI assistant (V20): retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, on-device speech I/O — no remote LLM, no server.",
-      "A location pipeline that treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting and accelerometer fusion, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
-      "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor.",
-      "Quality gates: 96+ Roborazzi screenshot tests on the JVM (no emulator, no network), Napier structured logging, detekt, ktlint, Kover and CI.",
+      "27-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "Shared commonMain core — design system, Room (KMP) + DataStore, and every check-in / hardware-event screen — driving Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
+      "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
+      "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals — the real logic a live expense platform needs, all local.",
+      "A durable submit-outbox: a track/voucher submission is journaled locally and reconciled deterministically, so a kill mid-submit never loses or double-counts a record — the repository already looks one implementation-swap away from a real API.",
+      "An on-device AI assistant: retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, chunked streaming and on-device speech I/O — no remote LLM, no server.",
+      "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 130+ Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "V20 milestone complete — iOS and Android build, run, and pass all quality gates from one shared Kotlin codebase, now with an on-device AI assistant layered on top of the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "iOS · Android · Wear OS", "23 modules", "Offline AI", "Open source"],
+      "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "27 modules", "Offline AI", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -470,71 +470,74 @@ export const projects: Project[] = [
   {
     slug: "mileway",
     name: "Mileway",
-    tagline: "Offline-first mileage, travel & expense tracker — one Kotlin codebase across Android, iOS & Wear OS.",
+    tagline: "Offline-first mileage, travel & expense tracker — one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
     description:
-      "An open-source app I designed and built end-to-end as a clean, inspectable reference for the Compose Multiplatform + strict-module architecture I advocate at scale. Zero backend, fully reproducible.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "Room (KMP)", "Koin"],
+      "An open-source app I designed and built end-to-end as a clean, inspectable reference for the Compose Multiplatform + strict-module architecture I advocate at scale. Zero backend (Room + DataStore only), fully reproducible — with a real location engine, a policy/reimbursement layer and a durable submit-outbox.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "23-module clean architecture — 11 isolated feature modules meeting only at the :app composition root.",
-      "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket accounting and accelerometer fusion, unit-testable via a simulated-drive source.",
-      "Dual gms / noGms distribution (Play + F-Droid) with a dependency-guard that fails the build if proprietary libs leak into the FOSS flavor.",
-      "96+ Roborazzi JVM screenshot tests (no emulator, no network); V19 shipped full iOS parity, V20 added an offline AI assistant.",
+      "27-module clean architecture — 11 isolated feature modules meeting only at the :app composition root; the same shared snapshot model drives phone, watch and desktop.",
+      "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting, IMU fusion and device-tier-adaptive sampling, unit-testable via a deterministic simulated-drive source.",
+      "A real policy layer: a reimbursement-rate engine computes payouts from per-vehicle rate rules and flags approval-side policy violations — plus a durable submit-outbox that journals a submission so a mid-submit kill never loses or double-counts it.",
+      "Runs on Android, iOS, Wear OS, a watchOS SwiftUI app and Compose Desktop — with home-screen widgets (Glance + WidgetKit) and an iOS Live Activity / Dynamic Island over the same shared snapshot.",
+      "Dual gms / noGms distribution (Play + F-Droid) with a dependency-guard; 130+ Roborazzi JVM screenshot tests (no emulator, no network); an on-device, retrieval-grounded AI assistant over local data.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/Mileway" },
       { label: "Case study", url: "#work" },
+      { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
     ],
-    status: "V20 · offline AI assistant",
-    badges: ["Kotlin Multiplatform", "23 modules", "Open source"],
+    status: "5 platforms · offline AI · 27 modules",
+    badges: ["Kotlin Multiplatform", "27 modules", "5 platforms", "Open source"],
     detail: {
       overview:
-        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS and Wear OS from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale.",
+        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
-          heading: "23-module clean architecture",
-          body: "Eleven feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual.",
+          heading: "27-module clean architecture",
+          body: "Eleven feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
           heading: "Location engine",
-          body: "GPS is treated as a noisy signal: jitter suppression, spike detection to reject impossible fixes, four-bucket distance accounting and accelerometer fusion. A deterministic simulated-drive source makes the whole engine unit-testable without hardware.",
+          body: "GPS is treated as a noisy signal: jitter suppression, spike detection to reject impossible fixes, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling that trades battery against precision by hardware class. A deterministic simulated-drive source makes the whole engine unit-testable without hardware.",
         },
         {
-          heading: "iOS fully live (V19)",
-          body: "Background trip tracking on iOS via kmpworkmanager (dev.brewkits) with AppDelegate integration and a BGTask dispatcher, replacing a custom background layer. All quality gates green on iOS and Android from the shared codebase.",
+          heading: "Policy & reimbursement engine",
+          body: "A reimbursement-rate engine computes a payout from configurable per-vehicle rate rules, and the approvals flow flags policy violations against those rules — the real expense-platform logic a live product needs, implemented entirely against local data rather than stubbed with a snackbar.",
         },
         {
-          heading: "Offline AI assistant (V20)",
+          heading: "Durable submit-outbox",
+          body: "Submitting a track or voucher journals the intent locally and reconciles it deterministically, so a process kill mid-submit never loses a record or double-counts one. Repositories are written to look one implementation-swap away from a real API — the backend is deferred, not designed out.",
+        },
+        {
+          heading: "Five targets, one snapshot model",
+          body: "Beyond Android and iOS phones, the same shared SurfaceSnapshot drives a Wear OS app, a watchOS SwiftUI app and a Compose Desktop window, plus Android Glance + iOS WidgetKit home-screen widgets and an iOS Live Activity / Dynamic Island for an in-progress trip. Each surface has its own design-system skinning but reads the identical shared state.",
+        },
+        {
+          heading: "Offline AI assistant",
           body: "A chat assistant grounded entirely in local Room data — trips, expenses, cards — with real chunked streaming (not a fake typing animation), persistent history with a 5-minute session-resume window, on-device speech-to-text/text-to-speech, and local usage analytics. No remote LLM, no server, same offline guarantee as the rest of the app.",
         },
         {
           heading: "FOSS-safe distribution & quality gates",
-          body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 96 Roborazzi JVM screenshot tests (no emulator, no network), plus Napier logging, detekt, ktlint, Kover and CI.",
-        },
-        {
-          heading: "Four-theme system",
-          body: "Four built-in themes — Matrix, Amoled, Ion and Daybreak — switchable at runtime and persisted via DataStore, all driven from a shared design-system module in commonMain.",
-        },
-        {
-          heading: "Built to a few hard rules",
-          body: "Features never depend on features; everything shared lives in commonMain; mock data is its own Gradle module so the whole app (and the 96 screenshot tests) runs with zero network; and convention plugins keep every module's build consistent. All three platforms — Android, iOS and Wear OS — share one codebase.",
+          body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 130+ Roborazzi JVM screenshot tests (no emulator, no network) covering phone, watch and desktop, plus Napier logging, detekt, ktlint, Kover and CI.",
         },
       ],
       metrics: [
-        { value: "23", label: "Gradle modules" },
+        { value: "27", label: "Gradle modules" },
         { value: "11", label: "isolated feature modules" },
-        { value: "3", label: "platforms · one codebase" },
+        { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls" },
       ],
       techStack: [
-        { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Material 3"] },
-        { group: "Data", items: ["Room (KMP)", "DataStore", "Coroutines + Flow"] },
-        { group: "DI", items: ["Koin"] },
-        { group: "Maps", items: ["MapLibre (F-Droid)", "KrossMap (Play)"] },
-        { group: "Build & quality", items: ["AGP + convention plugins", "detekt", "ktlint", "Kover"] },
-        { group: "Testing", items: ["Roborazzi (96 JVM screenshot tests)", "JUnit"] },
+        { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Material 3", "SwiftUI (watchOS)"] },
+        { group: "Data", items: ["Room (KMP)", "DataStore", "Coroutines + Flow", "Durable submit-outbox"] },
+        { group: "Domain", items: ["Location engine (jitter · spike · IMU fusion)", "Reimbursement-rate policy engine"] },
+        { group: "DI & build", items: ["Koin", "kmp-build-logic convention plugins", "AGP", "Gradle KTS"] },
+        { group: "Maps & platform", items: ["MapLibre (F-Droid)", "KrossMap (Play)", "Glance + WidgetKit widgets", "Live Activity / Dynamic Island"] },
+        { group: "Quality", items: ["Roborazzi (130+ JVM screenshot tests)", "detekt", "ktlint", "Kover", "CI"] },
       ],
       extraLinks: [
         { label: "Feature modules", url: "https://github.com/darkpandawarrior/Mileway/tree/main/feature" },
+        { label: "kmp-build-logic (shared)", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
         { label: "README", url: "https://github.com/darkpandawarrior/Mileway#readme" },
       ],
       videos: [
@@ -542,21 +545,33 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "23-module architecture",
+          title: "27-module architecture — features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
-  s["feature: spends"]
+  s["feature: logging"]
   tr["feature: travel"]
   ap["feature: approvals"]
-  core["commonMain core<br/>design system · Room(KMP) · DataStore"]
-  app --> t & s & tr & ap
-  t & s & tr & ap --> core`,
+  pa["feature: payables"]
+  ag["feature: agent"]
+  core["core: common · data · ui · network · security · maps<br/>design system · Room(KMP) · DataStore"]
+  app --> t & s & tr & ap & pa & ag
+  t & s & tr & ap & pa & ag --> core`,
         },
         {
           title: "Location pipeline — GPS treated as a noisy signal",
           code: `graph LR
-  gps["Raw GPS"] --> jit["Jitter<br/>suppression"] --> spk["Spike<br/>detection"] --> fus["Accelerometer<br/>fusion"] --> acc["Four-bucket<br/>distance"] --> out["Clean track"]`,
+  gps["Raw GPS"] --> jit["Jitter<br/>suppression"] --> spk["Spike<br/>detection"] --> fus["IMU<br/>fusion"] --> tier["Device-tier<br/>sampling"] --> acc["Four-bucket<br/>distance"] --> out["Clean track"]`,
+        },
+        {
+          title: "One shared snapshot → five targets",
+          code: `graph TD
+  snap["commonMain<br/>SurfaceSnapshot"]
+  snap --> a["Android phone"]
+  snap --> i["iOS phone"]
+  snap --> w["Wear OS"]
+  snap --> wo["watchOS (SwiftUI)"]
+  snap --> d["Compose Desktop"]`,
         },
       ],
     },
@@ -600,7 +615,18 @@ export const projects: Project[] = [
       { file: "assistant_home_sheet.png", caption: "Assistant home sheet" },
       { file: "theme_picker_matrix.png", caption: "Theme picker — Matrix" },
       { file: "home_screen_loaded.png", caption: "Home dashboard" },
+      { file: "wear_dashboard.png", caption: "Wear OS — dashboard" },
+      { file: "wear_trip_list.png", caption: "Wear OS — recent trips" },
+      { file: "watchos_app.png", caption: "watchOS (SwiftUI) app" },
+      { file: "widget_glance.png", caption: "Android widget (Glance)" },
+      { file: "widget_ios_home.png", caption: "iOS home-screen widget" },
+      { file: "widget_ios_lockscreen.png", caption: "iOS Lock Screen widget" },
+      { file: "live_activity.png", caption: "iOS Live Activity" },
+      { file: "live_activity_dynamic_island.png", caption: "Dynamic Island — tracking" },
+      { file: "desktop_dashboard.png", caption: "Compose Desktop window" },
+      { file: "route_map.png", caption: "Route map — tracked trip" },
       { file: "login_screen.png", caption: "Login (demo credentials)" },
+      { file: "set_pin_screen.png", caption: "Set PIN — app lock" },
       { file: "root_guard_screen_clean.png", caption: "Root guard — secure device" },
     ],
   },
@@ -612,46 +638,100 @@ export const projects: Project[] = [
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
     highlights: [
-      "19-module KMP architecture — one Gradle module per provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code.",
-      "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise, PayPal and a generic hosted-webview archetype covering the rest, bridged into coroutines by a PaymentHost that never leaks an Activity.",
+      "35-module KMP architecture — one Gradle module per native-SDK provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways (7 native-SDK, 47 hosted-webview, 8 mobile-money, 4 catalog-only/KYC-gated).",
+      "More than pay-in — five money-movement rails plus split payments: payouts (money out to a beneficiary), mandates & subscriptions (recurring debits), a card vault (tokenize once, charge later), marketplace Connect onboarding (sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (seed / debit / refund against a running balance). Each rail is idempotency-keyed like the pay-in path.",
+      "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a generic hosted-webview archetype covering the rest, bridged into coroutines by a PaymentHost that never leaks an Activity; MOCK_MODE-honest when no sandbox keys are set.",
       "Server is the source of truth — a companion Ktor server creates orders, verifies payments with real HMAC-SHA256, and reconciles idempotent, signature-checked webhooks; the client callback is only ever treated as a hint.",
-      "Process-death recovery, for real — every in-flight payment is journaled to Room before the SDK opens; on cold start the orchestrator finds and reconciles anything unresolved.",
-      "Pure, replayable state machine — the lifecycle is a (State, Event) → Effects reducer with zero coroutines/DI/IO; a payment's path is a recorded event log that replays byte-for-byte identically.",
+      "Process-death recovery, for real — every in-flight payment is journaled to Room before the SDK opens; on cold start the orchestrator finds and reconciles anything unresolved. The lifecycle is a pure (State, Event) → Effects reducer that replays byte-for-byte.",
       "VAPT-grade security suite — Android Keystore AES-256-GCM at rest, FLAG_SECURE + tapjacking guards, device-integrity checks (root/emulator/debugger/hook detection), certificate pinning.",
     ],
-    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" }],
-    status: "v1 shipped Jul 2026 · 19 modules",
-    badges: ["Kotlin Multiplatform", "Payments", "Open source"],
+    links: [
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" },
+      { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
+    ],
+    status: "35 modules · 66 gateways · 5 rails",
+    badges: ["Kotlin Multiplatform", "35 modules", "66 gateways", "Open source"],
     detail: {
       overview:
-        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across multiple providers, all behind a single PaymentGateway abstraction, backed by a small Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires.",
+        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
       sections: [
         {
           heading: "The one idea worth stealing",
           body: "A client-side Success is a hint, never proof. Only the server — after signature verification and webhook reconciliation — decides the true state. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
+          heading: "35 modules, 66 gateways",
+          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries — each with its own status badge and region.",
+        },
+        {
+          heading: "Five money-movement rails + split payments",
+          body: "Beyond one-shot checkout the server models payouts (/payouts — money out to a beneficiary), mandates & subscriptions (/mandates + scheduled debits and cancel), a card vault (/vault — tokenize once, charge later by id), marketplace Connect onboarding (/connect — sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (/wallet — seed / debit / refund against a real running balance) — plus split payments, a two-leg orchestration that compensates if one leg fails. Ten provider modules ride these rails (Paystack, Flutterwave, Paytm, Xendit, M-Pesa, Peach, NMI, plus wallet and a record-only cash gateway), every one MOCK_MODE-honest until real sandbox keys are set.",
+        },
+        {
           heading: "One contract, real SDKs",
-          body: "Razorpay, Cashfree, Stripe (+ Google Pay) and a raw UPI intent flow all implement the same tiny PaymentGateway interface. The Activity-callback SDKs are bridged into suspending coroutines by a PaymentHost that never leaks an Activity upward. A generic hosted-webview archetype covers the whole class of gateways with no native SDK behind the same contract — env-backed credentials auto-degrade from SANDBOX_READY to MOCK_MODE honestly instead of silently pretending to work.",
+          body: "Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a raw UPI intent flow all implement the same tiny PaymentGateway interface. The Activity-callback SDKs are bridged into suspending coroutines by a PaymentHost that never leaks an Activity upward. A generic hosted-webview archetype covers the whole class of gateways with no native SDK behind the same contract — env-backed credentials auto-degrade from SANDBOX_READY to MOCK_MODE honestly instead of silently pretending to work.",
         },
         {
           heading: "Pure, replayable state machine",
-          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants.",
+          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants. The MVI base comes from my own kmp-mvi-core library, shared with other apps.",
         },
         {
           heading: "VAPT-grade security",
           body: "core:security — real Android Keystore AES-256-GCM at-rest encryption, FLAG_SECURE + recursive tapjacking protection, device-integrity checks (root, emulator, debugger, Frida/Xposed hook detection, SSL-pinning-bypass detection), and a certificate-pinning config, with detection kept deliberately separate from enforcement policy.",
         },
       ],
-      techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "19 Gradle modules", "Koin"] },
-        { group: "Backend", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation"] },
-        { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning"] },
-        { group: "Build & quality", items: ["Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
+      metrics: [
+        { value: "35", label: "Gradle modules" },
+        { value: "66", label: "gateways cataloged" },
+        { value: "5", label: "money-movement rails" },
+        { value: "1", label: "PaymentGateway contract" },
       ],
-      extraLinks: [{ label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab#readme" }],
+      techStack: [
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "35 Gradle modules", "Koin registry (getAll)", "kmp-mvi-core (shared MVI base)"] },
+        { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
+        { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
+        { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
+      ],
+      diagrams: [
+        {
+          title: "Gateway registry — adding provider N+1 touches no existing code",
+          code: `graph TD
+  reg["PaymentGateway registry<br/>Koin getAll()"]
+  p1["provider: razorpay"] --> reg
+  p2["provider: stripe"] --> reg
+  p3["provider: cashfree"] --> reg
+  p4["provider: hosted-webview<br/>(covers 47 gateways)"] --> reg
+  pn["provider: N+1"] --> reg
+  reg --> orch["PaymentOrchestrator"]`,
+        },
+        {
+          title: "Client Success is a hint — the server decides truth",
+          code: `graph LR
+  cl["Client SDK<br/>callback"] -->|"hint only"| orch["Orchestrator"]
+  orch -->|"confirm"| srv["Ktor server"]
+  srv -->|"HMAC verify"| wh["Webhook<br/>reconcile"]
+  wh -->|"true state"| orch`,
+        },
+        {
+          title: "Five rails beyond one-shot pay-in",
+          code: `graph TD
+  srv["Ktor server<br/>(idempotency-keyed)"]
+  srv --> pay["Pay-in /orders"]
+  srv --> out["Payouts /payouts"]
+  srv --> man["Mandates /mandates"]
+  srv --> vlt["Card vault /vault"]
+  srv --> con["Connect /connect"]
+  srv --> wal["Wallet ledger /wallet"]`,
+        },
+      ],
+      extraLinks: [
+        { label: "kmp-mvi-core (shared)", url: "https://github.com/darkpandawarrior/kmp-mvi-core" },
+        { label: "kmp-build-logic (shared)", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
+        { label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab#readme" },
+      ],
     },
     screens: [
+      { file: "home_screen_dashboard.png", caption: "Home dashboard — live stats" },
       { file: "lab_home_screen_catalog.png", caption: "Provider catalog" },
       { file: "provider_lab_screen_running.png", caption: "Live payment flow timeline" },
       { file: "provider_lab_screen_settled_success.png", caption: "Settled — verified success" },
@@ -666,6 +746,10 @@ export const projects: Project[] = [
       { file: "success_burst.png", caption: "Success animation" },
       { file: "failure_shake.png", caption: "Failure animation" },
       { file: "animated_amount.png", caption: "Animated amount" },
+      { file: "checkout_screen_order_summary.png", caption: "Checkout — order summary" },
+      { file: "history_screen_with_filters.png", caption: "Payment history + filters" },
+      { file: "gateway_brand_badges.png", caption: "Gateway brand badges" },
+      { file: "shield_pulse.png", caption: "Security shield pulse" },
       { file: "ios_catalog.png", caption: "iOS — provider catalog" },
       { file: "ios_catalog_stripe.png", caption: "iOS — Stripe native SDK" },
       { file: "ios_catalog_all_native.png", caption: "iOS — all native-SDK gateways" },
@@ -711,6 +795,39 @@ export const projects: Project[] = [
   },
 ];
 
+// ── Shared foundation ─────────────────────────────────────────────────────
+// Two of my own KMP libraries that both Mileway and PaymentsLab consume as
+// composite builds — the "systems engineering" thread that ties the apps
+// together. Verified in each app's settings.gradle.kts.
+export interface SharedLib {
+  name: string;
+  url: string;
+  role: string;
+  usedBy: string[];
+}
+
+export const sharedFoundation: {
+  blurb: string;
+  libs: SharedLib[];
+} = {
+  blurb:
+    "Mileway and PaymentsLab aren't two isolated demos — they're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
+  libs: [
+    {
+      name: "kmp-build-logic",
+      url: "https://github.com/darkpandawarrior/kmp-build-logic",
+      role: "Gradle convention plugins — one place that configures every KMP module's targets, Compose, lint and test wiring.",
+      usedBy: ["Mileway", "PaymentsLab"],
+    },
+    {
+      name: "kmp-mvi-core",
+      url: "https://github.com/darkpandawarrior/kmp-mvi-core",
+      role: "A tiny (State, Event) → Effects MVI base — the reducer/store contract the payment state machine is built on.",
+      usedBy: ["PaymentsLab"],
+    },
+  ],
+};
+
 export interface Contribution {
   repo: string;
   title: string;
@@ -736,7 +853,8 @@ export interface GrowthItem {
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
   { date: "Jun 2026", title: "HireSignal 1.14 + dashboard", detail: "4 merged PRs upstream: 1.14 System-Layer sync, multi-profile switcher, and the tracker/coach/scanner dashboard tabs." },
-  { date: "Jun 2026", title: "Mileway V19 — iOS live", detail: "iOS fully functional from the shared codebase; kmpworkmanager background scheduling; 96 Roborazzi tests green." },
-  { date: "Jul 2026", title: "Mileway V20 — offline AI assistant", detail: "Retrieval-grounded chat over local trip/expense/card data, Room-backed history + session resume, on-device voice I/O — still zero backend." },
-  { date: "Jun 2026", title: "Interactive AI portfolio", detail: "Rebuilt this site on React 19 + Vercel Edge with a provider-agnostic “Sid” chat assistant grounded in my CV." },
+  { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 130+ Roborazzi tests green." },
+  { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
+  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "35-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
+  { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-mvi-core (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
 ];

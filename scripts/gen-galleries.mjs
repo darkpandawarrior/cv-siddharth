@@ -14,7 +14,7 @@ if (existsSync(projectsDir)) {
     const shots = join(projectsDir, slug, "screenshots");
     if (existsSync(shots)) {
       out[slug] = readdirSync(shots)
-        .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
+        .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
         .sort()
         .map((f) => `/projects/${slug}/screenshots/${f}`);
     }
