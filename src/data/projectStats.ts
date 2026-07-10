@@ -6,14 +6,18 @@ export const projectStats = {
     "modules": 28,
     "features": 11,
     "cores": 9,
-    "dbVersion": 18,
-    "screenshots": 131
+    "dbVersion": 39,
+    "screenshots": 149
   },
   "paymentslab": {
     "modules": 35,
     "providers": 19,
     "features": 4,
     "cores": 9,
-    "screenshots": 23
+    "screenshots": 26
+  },
+  "kursi": {
+    "modules": 14,
+    "screenshots": 47
   }
 } as const;

@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)"><rect width="108" height="108" fill="#1A1A2E"/></g>
+  <!-- Chair-R monogram per docs/brand/BRAND.md: cream glyph on deep teak, brass coin under the short leg -->
+  <text x="41" y="79" text-anchor="middle" font-family="Georgia, 'Rozha One', serif" font-size="66" font-weight="700" fill="#F4ECD8">R</text>
+  <circle cx="76" cy="80" r="7" fill="#C99A3B"/>
+</svg>

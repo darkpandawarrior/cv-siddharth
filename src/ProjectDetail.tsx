@@ -97,6 +97,18 @@ export function ProjectDetail({ slug }: { slug: string }) {
     railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
+  // Swap the browser-tab favicon to this project's brand icon while its page is
+  // open; restore the site default on unmount (e.g. navigating back to #work).
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link || !project?.icon) return;
+    const original = link.href;
+    link.href = project.icon;
+    return () => {
+      link.href = original;
+    };
+  }, [project]);
+
   const close = useCallback(() => setIdx(null), []);
   const step = useCallback(
     (d: number) => setIdx((i) => (i === null ? i : (i + d + items.length) % items.length)),

@@ -34,10 +34,12 @@ const count = (s, re) => (s.match(re) || []).length;
 async function build() {
   const mRepo = "darkpandawarrior/Mileway";
   const pRepo = "darkpandawarrior/PaymentsLab";
+  const kRepo = "darkpandawarrior/Kursi";
 
   const mSettings = await getText(raw(mRepo, "main", "settings.gradle.kts"));
   const mDb = await getText(raw(mRepo, "main", "core/data/src/commonMain/kotlin/com/mileway/core/data/database/MilewayDatabase.kt"));
   const pSettings = await getText(raw(pRepo, "main", "settings.gradle.kts"));
+  const kSettings = await getText(raw(kRepo, "main", "settings.gradle.kts"));
 
   const dbMatch = mDb.match(/version\s*=\s*(\d+)/);
   if (!dbMatch) throw new Error("could not parse Mileway DB version");
@@ -57,6 +59,10 @@ async function build() {
       cores: count(pSettings, /^include\(":core:/gm),
       screenshots: await pngCount(pRepo, "main", "docs/screenshots"),
     },
+    kursi: {
+      modules: count(kSettings, /^include\(/gm),
+      screenshots: await pngCount(kRepo, "main", "docs/screenshots"),
+    },
   };
 }
 
@@ -68,7 +74,7 @@ const banner =
 try {
   const stats = await build();
   // Sanity guard: a parse that silently returns 0 modules is a bad fetch, not real.
-  if (!stats.mileway.modules || !stats.paymentslab.modules) throw new Error("parsed 0 modules — refusing to overwrite");
+  if (!stats.mileway.modules || !stats.paymentslab.modules || !stats.kursi.modules) throw new Error("parsed 0 modules — refusing to overwrite");
   writeFileSync(outFile, banner + `export const projectStats = ${JSON.stringify(stats, null, 2)} as const;\n`);
   console.log("[gen-project-stats]", JSON.stringify(stats));
 } catch (err) {

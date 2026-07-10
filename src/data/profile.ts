@@ -140,23 +140,24 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
     title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
-    metric: "27 modules · 5 platforms · offline AI",
+    metric: "28 modules · 5 platforms · offline AI",
     summary:
       "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend — Room + DataStore only — so the whole thing is reproducible and reviewable by anyone.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
-      "27-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "28-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core — design system, Room (KMP) + DataStore, and every check-in / hardware-event screen — driving Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
       "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals — the real logic a live expense platform needs, all local.",
       "A durable submit-outbox: a track/voucher submission is journaled locally and reconciled deterministically, so a kill mid-submit never loses or double-counts a record — the repository already looks one implementation-swap away from a real API.",
       "An on-device AI assistant: retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, chunked streaming and on-device speech I/O — no remote LLM, no server.",
-      "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 130+ Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
+      "A super-profile & plugin-composition platform (V24, in progress): a single plugin registry — every tile, capability and tunable value gates through it, resolved by layering FORCED > USER > PRESET > DEFAULT — drives four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) that reshape hubs, auth flows and tracking behaviour from one account, plus act-on-behalf session delegation, a verification centre, growth/membership surfaces and wallet/payout identity.",
+      "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 149 Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "27 modules", "Offline AI", "Open source"],
+      "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "28 modules", "Offline AI", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -328,13 +329,16 @@ export interface Project {
     line?: string;
     displayFont?: string;
   };
+  // Optional brand icon (public/projects/<slug>/brand/*.svg) — swapped into the
+  // browser tab favicon while viewing this project's detail page.
+  icon?: string;
 }
 
 export const projects: Project[] = [
   {
     slug: "kursi",
     name: "Kursi",
-    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances — Gaddi kisiki nahi rehti.",
+    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances — Kursi ke liye kuch bhi karega.",
     description:
       "A multiplayer game built as a pure deterministic engine that runs identically on every platform and powers both the AI and a future server. Shipped end-to-end across four targets from one Kotlin codebase.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Desktop", "Web (Wasm)"],
@@ -345,7 +349,7 @@ export const projects: Project[] = [
       "Bespoke \"License Raj Deco\" identity: teak/brass/cream palette, Rozha One type, Canvas-drawn intaglio role glyphs.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
-    status: "Shipped Jun 2026 · CC BY-NC-SA 4.0",
+    status: "14 modules · 4 platforms · CC BY-NC-SA 4.0",
     badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
     theme: {
       accent: "#E8C874",
@@ -356,6 +360,7 @@ export const projects: Project[] = [
       line: "#4a3724",
       displayFont: "'Rozha One', Georgia, serif",
     },
+    icon: "/projects/kursi/brand/kursi-icon.svg",
     detail: {
       overview:
         "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair — the Gaddi — and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
@@ -366,7 +371,7 @@ export const projects: Project[] = [
         },
         {
           heading: "ISMCTS expert AI + DARBAR social layer",
-          body: "Bots use Information Set Monte Carlo Tree Search (8k iterations) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs — social manipulation that never breaks engine determinism.",
+          body: "Bots use Information Set Monte Carlo Tree Search (1.5k–16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs — social manipulation that never breaks engine determinism.",
         },
         {
           heading: "Secrecy boundary",
@@ -390,7 +395,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Provider-agnostic AI",
-          body: "An AiProvider interface abstracts Anthropic, OpenAI, Gemini, on-device Gemini Nano (Android) and Apple FoundationModels (iOS 18); ISMCTS is the always-available offline fallback. Bring-your-own-key, stored in each platform's encrypted storage.",
+          body: "An AiProvider interface abstracts Anthropic, OpenAI, Gemini, on-device Gemini Nano (Android) and Apple FoundationModels (iOS 26); ISMCTS is the always-available offline fallback. Bring-your-own-key, stored in each platform's encrypted storage.",
         },
         {
           heading: "Server-authoritative online",
@@ -404,10 +409,10 @@ export const projects: Project[] = [
       roles: [
         { name: "Netaji Vachan", power: "The Politician — Tax +3 (GHOTALA); blocks Foreign Aid", color: "#0072B2" },
         { name: "Bhai Teja", power: "The Don — Assassinate −3 (SUPARI); unblockable except by the Vakil", color: "#D55E00" },
-        { name: "Babu Filewala", power: "The Bureaucrat — Steal 2 (VASOOLI); blocks Steal", color: "#009E73" },
-        { name: "Jugaadu Chhotu", power: "The Fixer — Exchange cards (SETTING); blocks Steal", color: "#E69F00" },
-        { name: "Vakil Saab", power: "The Lawyer — no action; blocks Assassinate only (power through procedure)", color: "#CC79A7" },
-        { name: "Patrakaar Devi", power: "The Journalist — Investigate a card (JAANCH); unblockable", color: "#56B4E9" },
+        { name: "Babu Filewala", power: "The Bureaucrat — Steal 2 (VASOOLI); blocks Steal", color: "#E69F00" },
+        { name: "Jugaadu Chhotu", power: "The Fixer — Exchange cards (SETTING); blocks Steal", color: "#56B4E9" },
+        { name: "Vakil Loophole", power: "The Lawyer — no action; blocks Assassinate only (power through procedure)", color: "#CC79A7" },
+        { name: "Patrakaar", power: "The Journalist — Investigate a card (JAANCH); unblockable", color: "#009E73" },
       ],
       metrics: [
         { value: "4", label: "platforms · one engine" },
@@ -443,12 +448,23 @@ export const projects: Project[] = [
       ],
     },
     screens: [
+      { file: "home.gif", caption: "Home — live flow" },
+      { file: "onboarding.gif", caption: "Onboarding — live flow" },
+      { file: "modes.gif", caption: "Game modes — live flow" },
+      { file: "turn.gif", caption: "A turn — claim, block, challenge" },
+      { file: "darbar.gif", caption: "DARBAR arc — live flow" },
+      { file: "coach.gif", caption: "AI coach — live flow" },
+      { file: "online.gif", caption: "Online & LAN — live flow" },
+      { file: "table_sizes.gif", caption: "Table sizes — 2p to 10p" },
+      { file: "career.gif", caption: "Career — live flow" },
+      { file: "reference.gif", caption: "In-game reference — live flow" },
       { file: "home.png", caption: "Home — mode grid" },
       { file: "home_ranked.png", caption: "Ranked & daily challenge" },
       { file: "home_mode_gauntlet.png", caption: "Gauntlet mode" },
       { file: "home_mode_story.png", caption: "KISSA story campaign" },
       { file: "setup.png", caption: "Game setup — players" },
       { file: "setup_teams.png", caption: "Team mode setup" },
+      { file: "profile_setup.png", caption: "Profile setup" },
       { file: "tutorial_intro.png", caption: "Interactive tutorial" },
       { file: "gazette_roles.png", caption: "Niyam Gazette — the roles" },
       { file: "4p_pick_action.png", caption: "Your turn — pick an action" },
@@ -475,7 +491,7 @@ export const projects: Project[] = [
       "An open-source app I designed and built end-to-end as a clean, inspectable reference for the Compose Multiplatform + strict-module architecture I advocate at scale. Zero backend (Room + DataStore only), fully reproducible — with a real location engine, a policy/reimbursement layer and a durable submit-outbox.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "27-module clean architecture — 11 isolated feature modules meeting only at the :app composition root; the same shared snapshot model drives phone, watch and desktop.",
+      "28-module clean architecture — 11 isolated feature modules meeting only at the :app composition root; the same shared snapshot model drives phone, watch and desktop.",
       "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting, IMU fusion and device-tier-adaptive sampling, unit-testable via a deterministic simulated-drive source.",
       "A real policy layer: a reimbursement-rate engine computes payouts from per-vehicle rate rules and flags approval-side policy violations — plus a durable submit-outbox that journals a submission so a mid-submit kill never loses or double-counts it.",
       "Runs on Android, iOS, Wear OS, a watchOS SwiftUI app and Compose Desktop — with home-screen widgets (Glance + WidgetKit) and an iOS Live Activity / Dynamic Island over the same shared snapshot.",
@@ -486,14 +502,15 @@ export const projects: Project[] = [
       { label: "Case study", url: "#work" },
       { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
     ],
-    status: "5 platforms · offline AI · 27 modules",
-    badges: ["Kotlin Multiplatform", "27 modules", "5 platforms", "Open source"],
+    status: "5 platforms · offline AI · 28 modules",
+    badges: ["Kotlin Multiplatform", "28 modules", "5 platforms", "Open source"],
+    icon: "/projects/mileway/brand/mileway-icon.svg",
     detail: {
       overview:
         "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
-          heading: "27-module clean architecture",
+          heading: "28-module clean architecture",
           body: "Eleven feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
@@ -517,12 +534,16 @@ export const projects: Project[] = [
           body: "A chat assistant grounded entirely in local Room data — trips, expenses, cards — with real chunked streaming (not a fake typing animation), persistent history with a 5-minute session-resume window, on-device speech-to-text/text-to-speech, and local usage analytics. No remote LLM, no server, same offline guarantee as the rest of the app.",
         },
         {
+          heading: "Super-profile & plugin-composition platform (V24)",
+          body: "The newest depth wave: a single plugin registry is the app's composition mechanism — TILE / CAPABILITY / VALUE plugins resolved by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR) — still landing, still zero backend.",
+        },
+        {
           heading: "FOSS-safe distribution & quality gates",
-          body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 130+ Roborazzi JVM screenshot tests (no emulator, no network) covering phone, watch and desktop, plus Napier logging, detekt, ktlint, Kover and CI.",
+          body: "Dual gms / noGms builds (Google Play + F-Droid) with a dependency-prefix guard that fails the build if proprietary libraries leak into the FOSS flavor. 149 Roborazzi JVM screenshot tests (no emulator, no network) covering phone, watch and desktop, plus Napier logging, detekt, ktlint, Kover and CI.",
         },
       ],
       metrics: [
-        { value: "27", label: "Gradle modules" },
+        { value: "28", label: "Gradle modules" },
         { value: "11", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls" },
@@ -533,7 +554,7 @@ export const projects: Project[] = [
         { group: "Domain", items: ["Location engine (jitter · spike · IMU fusion)", "Reimbursement-rate policy engine"] },
         { group: "DI & build", items: ["Koin", "kmp-build-logic convention plugins", "AGP", "Gradle KTS"] },
         { group: "Maps & platform", items: ["MapLibre (F-Droid)", "KrossMap (Play)", "Glance + WidgetKit widgets", "Live Activity / Dynamic Island"] },
-        { group: "Quality", items: ["Roborazzi (130+ JVM screenshot tests)", "detekt", "ktlint", "Kover", "CI"] },
+        { group: "Quality", items: ["Roborazzi (149 JVM screenshot tests)", "detekt", "ktlint", "Kover", "CI"] },
       ],
       extraLinks: [
         { label: "Feature modules", url: "https://github.com/darkpandawarrior/Mileway/tree/main/feature" },
@@ -545,7 +566,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "27-module architecture — features meet only at :app",
+          title: "28-module architecture — features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -576,6 +597,18 @@ export const projects: Project[] = [
       ],
     },
     screens: [
+      { file: "super_profile_personas.gif", caption: "Super-profile & persona presets (V24)" },
+      { file: "track_a_trip.gif", caption: "Track a trip — live flow" },
+      { file: "delegation_manager.gif", caption: "Delegation — acting as a manager" },
+      { file: "log_and_expense.gif", caption: "Log & expense — live flow" },
+      { file: "approvals_payables.gif", caption: "Approvals & payables — live flow" },
+      { file: "verification_growth.gif", caption: "Verification & growth — live flow" },
+      { file: "membership.gif", caption: "Membership & subscription — live flow" },
+      { file: "ai_assistant.gif", caption: "AI assistant — live flow" },
+      { file: "onboarding_auth.gif", caption: "Onboarding & auth — live flow" },
+      { file: "wallet_payout.gif", caption: "Wallet & payout — live flow" },
+      { file: "account_sessions.gif", caption: "Account & sessions — live flow" },
+      { file: "log_miles.gif", caption: "Log miles — live flow" },
       { file: "track_miles_idle_screen.png", caption: "Track Miles — ready to start" },
       { file: "tracking_success_screen.png", caption: "Tracking success + reimbursement" },
       { file: "track_detail_screen.png", caption: "Track detail — route stats" },
@@ -640,7 +673,7 @@ export const projects: Project[] = [
     highlights: [
       "35-module KMP architecture — one Gradle module per native-SDK provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways (7 native-SDK, 47 hosted-webview, 8 mobile-money, 4 catalog-only/KYC-gated).",
       "More than pay-in — five money-movement rails plus split payments: payouts (money out to a beneficiary), mandates & subscriptions (recurring debits), a card vault (tokenize once, charge later), marketplace Connect onboarding (sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (seed / debit / refund against a running balance). Each rail is idempotency-keyed like the pay-in path.",
-      "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a generic hosted-webview archetype covering the rest, bridged into coroutines by a PaymentHost that never leaks an Activity; MOCK_MODE-honest when no sandbox keys are set.",
+      "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a UPI intent flow, plus two generic archetypes (hosted-webview covering 47 gateways, mobile-money covering 8) bridged into coroutines by a PaymentHost that never leaks an Activity; MOCK_MODE-honest when no sandbox keys are set.",
       "Server is the source of truth — a companion Ktor server creates orders, verifies payments with real HMAC-SHA256, and reconciles idempotent, signature-checked webhooks; the client callback is only ever treated as a hint.",
       "Process-death recovery, for real — every in-flight payment is journaled to Room before the SDK opens; on cold start the orchestrator finds and reconciles anything unresolved. The lifecycle is a pure (State, Event) → Effects reducer that replays byte-for-byte.",
       "VAPT-grade security suite — Android Keystore AES-256-GCM at rest, FLAG_SECURE + tapjacking guards, device-integrity checks (root/emulator/debugger/hook detection), certificate pinning.",
@@ -651,6 +684,15 @@ export const projects: Project[] = [
     ],
     status: "35 modules · 66 gateways · 5 rails",
     badges: ["Kotlin Multiplatform", "35 modules", "66 gateways", "Open source"],
+    theme: {
+      accent: "#A78BFA",
+      accentDim: "#7C3AED",
+      ink: "#120A1F",
+      surface: "#1B1130",
+      card: "#241844",
+      line: "#3F2B66",
+    },
+    icon: "/projects/paymentslab/brand/paymentslab-icon.svg",
     detail: {
       overview:
         "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
@@ -665,7 +707,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Five money-movement rails + split payments",
-          body: "Beyond one-shot checkout the server models payouts (/payouts — money out to a beneficiary), mandates & subscriptions (/mandates + scheduled debits and cancel), a card vault (/vault — tokenize once, charge later by id), marketplace Connect onboarding (/connect — sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (/wallet — seed / debit / refund against a real running balance) — plus split payments, a two-leg orchestration that compensates if one leg fails. Ten provider modules ride these rails (Paystack, Flutterwave, Paytm, Xendit, M-Pesa, Peach, NMI, plus wallet and a record-only cash gateway), every one MOCK_MODE-honest until real sandbox keys are set.",
+          body: "Beyond one-shot checkout the server models payouts (/payouts — money out to a beneficiary), mandates & subscriptions (/mandates + scheduled debits and cancel), a card vault (/vault — tokenize once, charge later by id), marketplace Connect onboarding (/connect — sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (/wallet — seed / debit / refund against a real running balance) — plus split payments, a two-leg orchestration that compensates if one leg fails. Ten provider modules ride these rails (Paystack, Flutterwave, Paytm, Xendit, M-Pesa, Peach, NMI, Stripe Connect, plus wallet and a record-only cash gateway), every one MOCK_MODE-honest until real sandbox keys are set.",
         },
         {
           heading: "One contract, real SDKs",
@@ -731,6 +773,9 @@ export const projects: Project[] = [
       ],
     },
     screens: [
+      { file: "activity_flow.gif", caption: "Live activity flow" },
+      { file: "checkout_flow.gif", caption: "Checkout flow" },
+      { file: "explore_verify_flow.gif", caption: "Explore & verify flow" },
       { file: "home_screen_dashboard.png", caption: "Home dashboard — live stats" },
       { file: "lab_home_screen_catalog.png", caption: "Provider catalog" },
       { file: "provider_lab_screen_running.png", caption: "Live payment flow timeline" },
@@ -749,6 +794,9 @@ export const projects: Project[] = [
       { file: "checkout_screen_order_summary.png", caption: "Checkout — order summary" },
       { file: "history_screen_with_filters.png", caption: "Payment history + filters" },
       { file: "gateway_brand_badges.png", caption: "Gateway brand badges" },
+      { file: "checkout_screen_paying.png", caption: "Checkout — paying" },
+      { file: "checkout_screen_settled_success.png", caption: "Checkout — settled success" },
+      { file: "history_screen_all.png", caption: "Payment history — all" },
       { file: "shield_pulse.png", caption: "Security shield pulse" },
       { file: "ios_catalog.png", caption: "iOS — provider catalog" },
       { file: "ios_catalog_stripe.png", caption: "iOS — Stripe native SDK" },
@@ -761,18 +809,18 @@ export const projects: Project[] = [
     tagline: "Local-first AI career-intelligence dashboard.",
     description:
       "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — built on the open-source career-ops project, which I actively contribute to upstream.",
-    stack: ["Node.js", "Vite", "Playwright", "Multi-profile", "23 ATS/board providers"],
+    stack: ["Node.js", "Vite", "Playwright", "Multi-profile", "62 ATS/board providers"],
     highlights: [
       "Resume onboarding → profile inference → trust-validated job scanning → fit scoring → tailored résumés.",
       "Single-server multi-profile architecture (per-candidate routing) over a strict User/System data contract.",
-      "23 ATS & job-board provider integrations via a dynamic, zero-token provider loader.",
-      "Contributor upstream — 4 merged PRs including the career-ops 1.14 sync and the dashboard tabs.",
+      "62 ATS & job-board provider integrations (upstream hiresignal) via a dynamic, zero-token provider loader.",
+      "Contributor upstream — 30 merged PRs, including HireSignal 2.0's multi-profile/scoring/onboarding fusion and a production-grade README refresh.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/career-ops" },
       { label: "Upstream", url: "https://github.com/kirklazar-android/hiresignal" },
     ],
-    status: "Active · 4 PRs merged upstream",
+    status: "Active · 30 PRs merged upstream",
     badges: ["Node.js", "Job-search automation", "Open source"],
   },
   {
@@ -836,7 +884,11 @@ export interface Contribution {
   date: string;
 }
 
+// Curated highlights, not the full list — 30 PRs merged upstream as of 2026-07-10.
+// See https://github.com/kirklazar-android/hiresignal/pulls?q=author%3Adarkpandawarrior for all of them.
 export const openSource: Contribution[] = [
+  { repo: "kirklazar-android/hiresignal", title: "docs: production-grade README refresh — visuals, versioning, deep dive", url: "https://github.com/kirklazar-android/hiresignal/pull/48", status: "merged", date: "2026-07-10" },
+  { repo: "kirklazar-android/hiresignal", title: "HireSignal 2.0 fusion — multi-profile, scoring, onboarding, board, branding (Phases 0–5)", url: "https://github.com/kirklazar-android/hiresignal/pull/9", status: "merged", date: "2026-07-01" },
   { repo: "kirklazar-android/hiresignal", title: "Port career-ops 1.14 System-Layer updates (trust-validator, providers, evaluators)", url: "https://github.com/kirklazar-android/hiresignal/pull/8", status: "merged", date: "2026-06-29" },
   { repo: "kirklazar-android/hiresignal", title: "Production-grade README — architecture diagram, scoring tables", url: "https://github.com/kirklazar-android/hiresignal/pull/7", status: "merged", date: "2026-06-28" },
   { repo: "kirklazar-android/hiresignal", title: "Profile switcher dropdown with Add-new-profile modal", url: "https://github.com/kirklazar-android/hiresignal/pull/5", status: "merged", date: "2026-06-27" },
@@ -852,9 +904,10 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jun 2026", title: "HireSignal 1.14 + dashboard", detail: "4 merged PRs upstream: 1.14 System-Layer sync, multi-profile switcher, and the tracker/coach/scanner dashboard tabs." },
-  { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 130+ Roborazzi tests green." },
+  { date: "Jul 2026", title: "HireSignal — 30 PRs merged upstream", detail: "From the 1.14 System-Layer sync and dashboard tabs through the HireSignal 2.0 multi-profile/scoring/onboarding fusion (PR #9) to a production-grade README refresh (PR #48)." },
+  { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 149 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "35-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-mvi-core (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
+  { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — still landing." },
 ];

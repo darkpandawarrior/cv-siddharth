@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pg" x1="6" y1="6" x2="102" y2="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)"><rect width="108" height="108" fill="url(#pg)"/></g>
+  <!-- Shield = "a client success is a hint, the server is truth" verification motif from the banner -->
+  <path d="M54,22 L78,31 C78,52 68,68 54,78 C40,68 30,52 30,31 Z" fill="#fff" fill-opacity="0.14" stroke="#fff" stroke-width="4"/>
+  <path d="M43,51 L51,60 L67,40" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
