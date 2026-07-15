@@ -6,14 +6,14 @@ export const projectStats = {
     "modules": 31,
     "features": 11,
     "cores": 12,
-    "dbVersion": 47,
+    "dbVersion": 48,
     "screenshots": 149
   },
   "paymentslab": {
-    "modules": 34,
-    "providers": 19,
+    "modules": 14,
+    "providers": 0,
     "features": 4,
-    "cores": 8,
+    "cores": 7,
     "screenshots": 26
   },
   "kursi": {
