@@ -1,10 +1,23 @@
 # cv-siddharth
 
+<p align="center">
+  <img src="./public/assets/readme/hero.gif" width="100%" alt="cv-siddharth — an interactive résumé with an AI assistant">
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0b0f0d">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white">
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white">
+  <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white">
+  <a href="https://github.com/darkpandawarrior/cv-siddharth/actions/workflows/deploy-pages.yml"><img alt="Deploy" src="https://github.com/darkpandawarrior/cv-siddharth/actions/workflows/deploy-pages.yml/badge.svg"></a>
+</p>
+
 **Live: [darkpandawarrior.github.io/cv-siddharth](https://darkpandawarrior.github.io/cv-siddharth/)**
 
 Interactive CV for **Siddharth Pandalai** — Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
-production metrics, a 3D pointer-tracked phone mockup, a print-perfect
+production metrics, a pointer-tracked phone mockup (pure CSS 3D transforms, no
+WebGL), a print-perfect
 [résumé view](https://darkpandawarrior.github.io/cv-siddharth/#resume) (PDF via
 the print dialog), and an AI assistant ("Sid") that answers questions about
 his experience in first person.
