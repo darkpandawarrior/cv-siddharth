@@ -3,11 +3,11 @@
 // raw.githubusercontent. Run `npm run gen:stats` to refresh.
 export const projectStats = {
   "mileway": {
-    "modules": 33,
-    "features": 11,
+    "modules": 35,
+    "features": 13,
     "cores": 12,
     "dbVersion": 48,
-    "screenshots": 155
+    "screenshots": 159
   },
   "paymentslab": {
     "modules": 14,
