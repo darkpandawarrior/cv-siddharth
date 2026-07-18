@@ -9,6 +9,25 @@
   --color-surface: #111613;
   --color-card: #171e1a;
   --color-line: #243029;
+
+  /* --- SID//OS control-room tokens (additive — old vars above still work) - */
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+  /* Second accent: cool cyan for telemetry/depth, distinct from the green signal */
+  --color-accent2: #5ee6ff;
+  --color-accent2-dim: #2fb8d6;
+  /* Deeper space-ink ground with a hint of blue, used behind the OS workspace */
+  --color-void: #05070a;
+  --color-void-deep: #020304;
+  /* Glass surfaces (backdrop-blur panels — windows, dock, palette) */
+  --color-glass: rgba(17, 22, 25, 0.66);
+  --color-glass-border: rgba(93, 230, 255, 0.14);
+  /* Elevation shadows — stack for higher z windows */
+  --shadow-elevation-1: 0 4px 16px -6px rgba(0, 0, 0, 0.5);
+  --shadow-elevation-2: 0 14px 40px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-elevation-3: 0 28px 80px -16px rgba(0, 0, 0, 0.8), 0 0 40px -12px rgba(61, 220, 132, 0.25);
+  /* Glow gradients — signal (green) and depth (cyan) */
+  --gradient-glow-signal: radial-gradient(60% 60% at 50% 0%, rgba(61, 220, 132, 0.28), transparent 70%);
+  --gradient-glow-depth: radial-gradient(60% 60% at 50% 100%, rgba(94, 230, 255, 0.22), transparent 70%);
 }
 
 html {
@@ -275,6 +294,71 @@ html.resume-mode body {
   .glow-pulse,
   .float-soft,
   .sheen {
+    animation: none;
+  }
+}
+
+/* --- SID//OS: boot sequence, workspace, windows ------------------------ */
+
+.sidos-ground {
+  background-color: var(--color-void);
+  background-image:
+    var(--gradient-glow-signal),
+    var(--gradient-glow-depth),
+    radial-gradient(circle, rgba(94, 230, 255, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px;
+}
+
+.glass-panel {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-elevation-2);
+}
+
+.font-mono-os {
+  font-family: var(--font-mono);
+}
+
+/* Static CSS starfield — used when WebGL is unavailable or reduced-motion
+   is requested, so the ambient layer never depends on three.js loading. */
+.starfield-static {
+  background-color: var(--color-void);
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 70% 15%, rgba(94, 230, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 85% 60%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 40% 80%, rgba(61, 220, 132, 0.45), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 10% 70%, rgba(94, 230, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 92% 35%, rgba(255, 255, 255, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 340px 340px;
+}
+
+@keyframes boot-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.boot-caret {
+  animation: boot-caret 1s step-end infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-caret {
+    animation: none;
+  }
+}
+
+@keyframes boot-line-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.boot-line {
+  animation: boot-line-in 0.25s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-line {
     animation: none;
   }
 }
