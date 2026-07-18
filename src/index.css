@@ -28,6 +28,18 @@
   /* Glow gradients — signal (green) and depth (cyan) */
   --gradient-glow-signal: radial-gradient(60% 60% at 50% 0%, rgba(61, 220, 132, 0.28), transparent 70%);
   --gradient-glow-depth: radial-gradient(60% 60% at 50% 100%, rgba(94, 230, 255, 0.22), transparent 70%);
+
+  /* Fluid type scale — clamp(min, preferred, max), scales smoothly 375px→1920px.
+     Tailwind v4 turns --text-* theme keys into `text-*` utilities directly. */
+  --text-hero: clamp(2.25rem, 1.7rem + 2.75vw, 3.75rem);
+  --text-hero--line-height: 1.05;
+  --text-h2: clamp(1.75rem, 1.55rem + 1vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-metric: clamp(1.875rem, 1.6rem + 1.4vw, 2.5rem);
+  --text-metric--line-height: 1.1;
+
+  /* Fluid spacing — section rhythm breathes with viewport instead of a fixed 80px everywhere */
+  --space-section-y: clamp(3.5rem, 2.75rem + 3.5vw, 6rem);
 }
 
 html {
@@ -43,8 +55,19 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
+  background-image:
+    radial-gradient(50% 40% at 85% -5%, rgba(94, 230, 255, 0.07), transparent 70%),
+    radial-gradient(60% 45% at 10% 0%, rgba(61, 220, 132, 0.08), transparent 70%);
+  background-attachment: fixed;
   color: #e8efe9;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Fluid section rhythm — swap in for fixed py-20 where sections want to breathe
+   with viewport size instead of a constant 80px top/bottom. */
+.section-y {
+  padding-top: var(--space-section-y);
+  padding-bottom: var(--space-section-y);
 }
 
 ::selection {

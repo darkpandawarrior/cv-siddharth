@@ -76,13 +76,13 @@ export function TiltPhone() {
       ref={frameRef}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      className="phone-float hidden select-none justify-center lg:flex"
+      className="phone-float mt-2 flex select-none justify-center lg:mt-0"
       style={{ perspective: "1100px" }}
       aria-hidden
     >
       <div
         ref={phoneRef}
-        className="relative h-[420px] w-[210px] rounded-[2rem] border border-line bg-card shadow-2xl shadow-accent/10 transition-transform duration-150 ease-out"
+        className="glow-pulse relative h-[360px] w-[180px] rounded-[2rem] border border-line bg-card shadow-2xl shadow-accent/10 transition-transform duration-150 ease-out sm:h-[420px] sm:w-[210px]"
         style={{ transform: `rotateX(${BASE.rx}deg) rotateY(${BASE.ry}deg)`, transformStyle: "preserve-3d" }}
       >
         {/* glare */}

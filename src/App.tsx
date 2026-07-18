@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github, Linkedin } from "lucide-react";
 import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth, sharedFoundation } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
+import { AmbientBackground } from "./AmbientBackground.tsx";
 import { TiltPhone } from "./TiltPhone.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
@@ -92,7 +93,7 @@ function Nav() {
         <a href="#top" className="font-display text-lg font-bold tracking-tight">
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </a>
-        <div className="hidden items-center gap-6 text-sm text-zinc-400 sm:flex">
+        <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
           {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} className="transition hover:text-accent">
               {l.label}
@@ -115,12 +116,12 @@ function Nav() {
 
 function Hero() {
   return (
-    <section id="top" className="mx-auto grid max-w-5xl items-center gap-10 px-6 pb-20 pt-20 lg:grid-cols-[1fr_280px]">
+    <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <div>
         <p className="rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
         </p>
-        <h1 className="rise-in rise-in-1 font-display max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+        <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="text-accent">prototype to platform.</span>
         </h1>
         <p className="rise-in rise-in-2 mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
@@ -157,7 +158,7 @@ function Metrics() {
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px px-6 py-10 sm:grid-cols-4">
         {metrics.map((m) => (
           <div key={m.label} className="px-4 py-3">
-            <p className="font-display text-3xl font-bold text-accent sm:text-4xl">{m.value}</p>
+            <p className="font-display text-metric font-bold text-accent">{m.value}</p>
             <p className="mt-1 text-sm font-medium text-zinc-200">{m.label}</p>
             <p className="mt-1 text-xs leading-snug text-zinc-500">{m.detail}</p>
           </div>
@@ -169,10 +170,10 @@ function Metrics() {
 
 function CaseStudies() {
   return (
-    <section id="work" className="mx-auto max-w-5xl px-6 py-20">
+    <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// featured work</p>
-        <h2 className="font-display mb-2 text-3xl font-bold tracking-tight">Case studies</h2>
+        <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
         </p>
@@ -216,10 +217,10 @@ function CaseStudies() {
 function Projects() {
   return (
     <section id="projects" className="border-t border-line bg-surface">
-      <div className="mx-auto max-w-5xl px-6 py-20">
+      <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// projects & open source</p>
-          <h2 className="font-display mb-2 text-3xl font-bold tracking-tight">Things I've built</h2>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
             Open-source projects and tooling outside employer work — shipped end-to-end.
           </p>
@@ -242,7 +243,7 @@ function Projects() {
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
                   className="group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-6 transition hover:-translate-y-1 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/10"
                 >
-                  <div className="flex items-baseline justify-between gap-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="font-display text-xl font-bold transition group-hover:text-accent">{p.name}</h3>
                     <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
                   </div>
@@ -361,10 +362,10 @@ function Projects() {
 function ExperienceSection() {
   return (
     <section id="experience" className="border-t border-line bg-surface">
-      <div className="mx-auto max-w-5xl px-6 py-20">
+      <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// background</p>
-          <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Experience</h2>
+          <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div className="space-y-12">
           {experience.map((job) => (
@@ -410,10 +411,10 @@ function ExperienceSection() {
 
 function Skills() {
   return (
-    <section id="skills" className="mx-auto max-w-5xl px-6 py-20">
+    <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
-        <h2 className="font-display mb-10 text-3xl font-bold tracking-tight">Skills</h2>
+        <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Skills</h2>
       </Reveal>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {skills.map((s, i) => (
@@ -437,8 +438,8 @@ function Skills() {
 function Contact() {
   return (
     <section id="contact" className="border-t border-line bg-surface">
-      <div className="mx-auto max-w-5xl px-6 py-20 text-center">
-        <h2 className="font-display text-3xl font-bold tracking-tight">
+      <div className="section-y mx-auto max-w-5xl px-6 text-center">
+        <h2 className="font-display text-h2 font-bold tracking-tight">
           Hiring for a senior Android role?
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
@@ -506,6 +507,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      <AmbientBackground />
       <Nav />
       <main>
         <Hero />
