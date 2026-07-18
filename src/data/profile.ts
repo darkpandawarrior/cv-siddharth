@@ -301,6 +301,17 @@ export interface ProjectDetailData {
   roles?: { name: string; power: string; color: string }[];
 }
 
+// One codebase, N surfaces — the multiplatform thesis, made data-driven.
+// deviceFrame picks which chrome DeviceWall renders the screens in; liveUrl
+// (Web only) embeds the deployed build live instead of showing screenshots.
+export interface ProjectTarget {
+  platform: "Android" | "iOS" | "Wear OS" | "watchOS" | "Desktop" | "Web";
+  deviceFrame: "phone" | "watch" | "desktop" | "browser";
+  screens: string[]; // filenames under public/projects/<slug>/screenshots/
+  liveUrl?: string;
+  note?: string; // shown under the frame — e.g. "same Compose UI, Android capture shown"
+}
+
 export interface Project {
   slug: string;
   name: string;
@@ -314,6 +325,9 @@ export interface Project {
   // Optional deep-dive page at /#project/<slug>. Screenshots come from the
   // auto-generated galleries.ts (public/projects/<slug>/screenshots/).
   detail?: ProjectDetailData;
+  // Optional device-wall target switcher on the detail page — "one codebase,
+  // N surfaces" shown per-platform with the right device chrome.
+  targets?: ProjectTarget[];
   // Optional curated, captioned screenshot set (filenames under
   // public/projects/<slug>/screenshots/). If present, the carousel uses this
   // instead of the full auto-generated gallery.
@@ -361,6 +375,31 @@ export const projects: Project[] = [
       displayFont: "'Rozha One', Georgia, serif",
     },
     icon: "/projects/kursi/brand/kursi-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["home.png", "4p_pick_action.png", "darbar_table.png", "tutorial_intro.png", "gazette_roles.png", "results.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["4p_reaction_block.png", "4p_coach_action.png", "career.png", "leaderboard.png"],
+        note: "Compose Multiplatform renders pixel-identical UI on iOS — Android capture shown.",
+      },
+      {
+        platform: "Desktop",
+        deviceFrame: "desktop",
+        screens: ["review_replay.png", "home_ranked.png"],
+        note: "Same engine, windowed — Compose Desktop (JVM) build.",
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: ["home.png"],
+        note: "Wasm build compiles locally but isn't deployed yet — deploy to go live.",
+      },
+    ],
     detail: {
       overview:
         "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair — the Gaddi — and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
@@ -512,7 +551,53 @@ export const projects: Project[] = [
     ],
     status: "5 platforms · offline AI · 35 modules",
     badges: ["Kotlin Multiplatform", "35 modules", "5 platforms", "Open source"],
+    // Telemetry-cyan — the site's own "depth" accent, reused rather than
+    // invented: fitting for a location/tracking app, distinct from Kursi's
+    // teak/brass and PaymentsLab's violet.
+    theme: {
+      accent: "#5ee6ff",
+      accentDim: "#2fb8d6",
+      ink: "#05070a",
+      surface: "#0a1016",
+      card: "#0f1720",
+      line: "#1c2733",
+    },
     icon: "/projects/mileway/brand/mileway-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["track_miles_idle_screen.png", "tracking_success_screen.png", "home_screen_loaded.png", "expense_entry_screen.png", "approvals_screen_pending_tab.png", "analytics_home_screen.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["widget_ios_home.png", "widget_ios_lockscreen.png", "live_activity.png", "live_activity_dynamic_island.png"],
+        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces.",
+      },
+      {
+        platform: "Wear OS",
+        deviceFrame: "watch",
+        screens: ["wear_dashboard.png", "wear_trip_list.png"],
+      },
+      {
+        platform: "watchOS",
+        deviceFrame: "watch",
+        screens: ["watchos_app.png"],
+        note: "Native SwiftUI app, same shared snapshot model.",
+      },
+      {
+        platform: "Desktop",
+        deviceFrame: "desktop",
+        screens: ["desktop_dashboard.png"],
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: ["home_screen_loaded.png"],
+        note: "The Compose Wasm build isn't hosted live right now — GitHub Pages redirects here instead. Screens shown.",
+      },
+    ],
     detail: {
       overview:
         "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
@@ -701,6 +786,25 @@ export const projects: Project[] = [
       line: "#3F2B66",
     },
     icon: "/projects/paymentslab/brand/paymentslab-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["home_screen_dashboard.png", "lab_home_screen_catalog.png", "provider_lab_screen_running.png", "checkout_screen_order_summary.png", "history_screen_with_filters.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["ios_catalog.png", "ios_catalog_stripe.png", "ios_catalog_all_native.png"],
+        note: "Native Stripe iOS SDK alongside the shared KMP gateway contract.",
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: [],
+        note: "Web target coming — the Ktor server already speaks HTTP, a browser client isn't built yet.",
+      },
+    ],
     detail: {
       overview:
         "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
