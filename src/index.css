@@ -385,3 +385,112 @@ html.resume-mode body {
     animation: none;
   }
 }
+
+/* --- Level-100 revamp: alive metrics, tilt glow, timeline, tags, palette - */
+
+/* TiltCard pointer-tracked spotlight (case studies + project cards) */
+.tilt-glow {
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(61, 220, 132, 0.16), transparent 70%);
+}
+
+/* Elevation on hover — layers with the existing border/shadow hover states */
+.card-elevated {
+  box-shadow: var(--shadow-elevation-1);
+  transition: box-shadow 0.3s ease;
+}
+.card-elevated:hover {
+  box-shadow: var(--shadow-elevation-2);
+}
+
+/* Metrics: circular gauge fill draws in once revealed */
+.metric-gauge circle.metric-gauge-fill {
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-gauge circle.metric-gauge-fill {
+    transition: none;
+  }
+}
+
+/* Metrics: sparkline draws in once revealed (dasharray/offset set from JS
+   via getTotalLength() — length varies per path, so only the transition
+   timing lives in CSS). */
+.metric-spark path.metric-spark-line {
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-spark path.metric-spark-line {
+    transition: none;
+  }
+}
+
+/* Skills: tag-cloud chips with hover depth */
+.tag-chip {
+  transition: transform 0.2s ease, opacity 0.25s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+.tag-chip:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tag-chip:hover {
+    transform: none;
+  }
+}
+
+/* Experience: living timeline spine + progress fill */
+.timeline-spine {
+  background: linear-gradient(to bottom, var(--color-line), transparent);
+}
+.timeline-fill {
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-accent2));
+  transition: height 0.1s linear;
+  box-shadow: 0 0 12px -2px rgba(61, 220, 132, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-fill {
+    transition: none;
+  }
+}
+.timeline-dot {
+  box-shadow: 0 0 0 4px rgba(61, 220, 132, 0.14);
+}
+
+/* "Live" badge shimmer on multiplatform teasers with a playable web build */
+.live-badge {
+  background: linear-gradient(100deg, var(--color-accent) 0%, var(--color-accent2) 45%, var(--color-accent) 100%);
+  background-size: 220% 100%;
+  animation: sheen 3.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-badge {
+    animation: none;
+  }
+}
+
+/* Command palette entrance */
+@keyframes palette-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.palette-in {
+  animation: palette-in 0.18s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .palette-in {
+    animation: none;
+  }
+}
+
+/* Contact: status pulse dot */
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(61, 220, 132, 0); }
+}
+.status-pulse {
+  animation: status-pulse 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-pulse {
+    animation: none;
+  }
+}

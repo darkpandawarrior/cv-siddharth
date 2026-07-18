@@ -1,5 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { Mail, MapPin, ArrowUpRight, MessageCircle, FileText, Github, Linkedin } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Mail,
+  MapPin,
+  ArrowUpRight,
+  MessageCircle,
+  FileText,
+  Github,
+  Linkedin,
+  Smartphone,
+  Watch,
+  Monitor,
+  Globe,
+  Play,
+} from "lucide-react";
 import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth, sharedFoundation } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
@@ -8,6 +21,7 @@ import { TiltCard } from "./TiltCard.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
 import { ResumeView } from "./ResumeView.tsx";
 import { ProjectDetail } from "./ProjectDetail.tsx";
+import { CommandPalette } from "./CommandPalette.tsx";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -15,6 +29,28 @@ const SKILL_ICONS: Record<string, string> = {
   "Platform & Systems": "🛰️",
   "Security & Ops": "🔐",
 };
+
+// Known multiplatform targets a project's `stack` might declare — matched in
+// declared order so the badge row reads like a device lineup, not a bag of tags.
+const PLATFORM_ICONS: { match: (s: string) => boolean; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
+  { match: (s) => s === "Android", label: "Android", icon: Smartphone },
+  { match: (s) => s === "iOS", label: "iOS", icon: Smartphone },
+  { match: (s) => s === "Wear OS", label: "Wear OS", icon: Watch },
+  { match: (s) => s === "watchOS", label: "watchOS", icon: Watch },
+  { match: (s) => s === "Desktop", label: "Desktop", icon: Monitor },
+  { match: (s) => s.startsWith("Web"), label: "Web", icon: Globe },
+];
+
+function platformsOf(stack: string[]) {
+  return stack.flatMap((s) => {
+    const hit = PLATFORM_ICONS.find((p) => p.match(s));
+    return hit ? [hit] : [];
+  });
+}
+
+// Projects with a playable web build — hints the "▶ Live" badge on the card;
+// the detail page is where it's actually embedded/linked.
+const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway"]);
 
 const NAV_LINKS = [
   { href: "#work", label: "Case studies" },
@@ -103,12 +139,15 @@ function Nav() {
             <FileText size={13} /> Résumé
           </a>
         </div>
-        <button
-          onClick={openChat}
-          className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
-        >
-          <MessageCircle size={15} /> Ask my AI
-        </button>
+        <div className="flex items-center gap-2">
+          <CommandPalette />
+          <button
+            onClick={openChat}
+            className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
+          </button>
+        </div>
       </nav>
     </header>
   );
@@ -152,16 +191,132 @@ function Hero() {
   );
 }
 
+const GAUGE_R = 26;
+const GAUGE_CIRC = 2 * Math.PI * GAUGE_R;
+
+function parseMetricValue(raw: string): { num: number; suffix: string } | null {
+  const m = /^(\d+(?:\.\d+)?)(.*)$/.exec(raw.trim());
+  return m ? { num: parseFloat(m[1]), suffix: m[2] } : null;
+}
+
+/**
+ * One metric tile: count-up on scroll-into-view (reduced-motion → instant
+ * final value) plus a live micro-viz — a circular gauge for percentages, an
+ * ascending sparkline otherwise. The "career as a running system-monitor"
+ * read, kept readable: real numbers first, motion is the accent.
+ */
+function AnimatedMetric({ metric }: { metric: (typeof metrics)[number] }) {
+  const parsed = useMemo(() => parseMetricValue(metric.value), [metric.value]);
+  const isGauge = !!parsed && parsed.suffix.trim().startsWith("%");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const valueRef = useRef<HTMLParagraphElement>(null);
+  const gaugeRef = useRef<SVGCircleElement>(null);
+  const sparkRef = useRef<SVGPathElement>(null);
+
+  useEffect(() => {
+    if (isGauge || !sparkRef.current) return;
+    const len = sparkRef.current.getTotalLength();
+    sparkRef.current.style.strokeDasharray = String(len);
+    sparkRef.current.style.strokeDashoffset = String(len);
+  }, [isGauge]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !parsed) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const reveal = () => {
+      if (valueRef.current) valueRef.current.textContent = metric.value;
+      if (isGauge && gaugeRef.current) {
+        gaugeRef.current.style.strokeDashoffset = String(GAUGE_CIRC * (1 - Math.min(parsed.num, 100) / 100));
+      } else if (sparkRef.current) {
+        sparkRef.current.style.strokeDashoffset = "0";
+      }
+    };
+
+    if (reduced) {
+      reveal();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        const start = performance.now();
+        const duration = 1000;
+        const tick = (now: number) => {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - (1 - t) ** 3;
+          const current = parsed.num * eased;
+          if (valueRef.current) {
+            valueRef.current.textContent = `${Number.isInteger(parsed.num) ? Math.round(current) : current.toFixed(1)}${parsed.suffix}`;
+          }
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        // Kick the gauge/spark draw-in one frame later so the CSS transition
+        // actually fires (it needs an initial style to transition *from*).
+        requestAnimationFrame(reveal);
+      },
+      { threshold: 0.4 },
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [metric.value, parsed, isGauge]);
+
+  return (
+    <div ref={rootRef} className="flex items-center gap-4 px-4 py-3">
+      <div className="min-w-0">
+        <p ref={valueRef} className="font-display text-metric font-bold text-accent">
+          {parsed ? `0${parsed.suffix}` : metric.value}
+        </p>
+        <p className="mt-1 text-sm font-medium text-zinc-200">{metric.label}</p>
+        <p className="mt-1 text-xs leading-snug text-zinc-500">{metric.detail}</p>
+      </div>
+      <div className="ml-auto shrink-0">
+        {isGauge ? (
+          <svg className="metric-gauge h-12 w-12 -rotate-90 sm:h-14 sm:w-14" viewBox="0 0 60 60" aria-hidden>
+            <circle cx="30" cy="30" r={GAUGE_R} fill="none" stroke="var(--color-line)" strokeWidth="5" />
+            <circle
+              ref={gaugeRef}
+              className="metric-gauge-fill"
+              cx="30"
+              cy="30"
+              r={GAUGE_R}
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeDasharray={GAUGE_CIRC}
+              strokeDashoffset={GAUGE_CIRC}
+            />
+          </svg>
+        ) : (
+          <svg className="metric-spark h-9 w-14 sm:h-10 sm:w-16" viewBox="0 0 64 24" fill="none" aria-hidden>
+            <path
+              ref={sparkRef}
+              className="metric-spark-line"
+              d="M2,20 L14,16 L26,18 L38,10 L50,12 L62,4"
+              stroke="var(--color-accent)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="62" cy="4" r="2.5" fill="var(--color-accent)" className="gps-pulse" />
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Metrics() {
   return (
     <section className="border-y border-line bg-surface">
-      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px px-6 py-10 sm:grid-cols-4">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-10 lg:grid-cols-4">
         {metrics.map((m) => (
-          <div key={m.label} className="px-4 py-3">
-            <p className="font-display text-metric font-bold text-accent">{m.value}</p>
-            <p className="mt-1 text-sm font-medium text-zinc-200">{m.label}</p>
-            <p className="mt-1 text-xs leading-snug text-zinc-500">{m.detail}</p>
-          </div>
+          <AnimatedMetric key={m.label} metric={m} />
         ))}
       </div>
     </section>
@@ -169,6 +324,7 @@ function Metrics() {
 }
 
 function CaseStudies() {
+  const [featured, ...rest] = caseStudies;
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
@@ -178,34 +334,73 @@ function CaseStudies() {
           The work behind the numbers. Ask the chatbot for more depth on any of these.
         </p>
       </Reveal>
-      <div className="grid gap-6 sm:grid-cols-2">
-        {caseStudies.map((cs, i) => (
-          <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
-            <TiltCard>
-            <article className="group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
-              <span className="font-display select-none text-5xl font-black leading-none text-accent/10">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <p className="font-display mt-1 text-sm font-semibold text-accent">{cs.metric}</p>
-              <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
-              <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                {cs.approach.map((a) => (
-                  <li key={a} className="flex gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                    {a}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 text-sm font-medium text-zinc-200">{cs.outcome}</p>
-              <div className="mt-auto flex flex-wrap gap-2 pt-5">
-                {cs.tags.map((t) => (
-                  <span key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
-                    {t}
-                  </span>
-                ))}
+
+      {featured && (
+        <Reveal className="mb-6">
+          <TiltCard maxTilt={2.5}>
+            <article className="card-elevated grid gap-6 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 sm:p-8 lg:grid-cols-[1.6fr_1fr]">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
+                  <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> Flagship build
+                </div>
+                <h3 className="font-display mt-2 text-2xl font-bold sm:text-3xl">{featured.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">{featured.problem}</p>
+                <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-zinc-300">
+                  {featured.approach.slice(0, 5).map((a) => (
+                    <li key={a} className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                      {a}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-5 text-sm font-medium text-zinc-100">{featured.outcome}</p>
+              </div>
+              <div className="flex flex-col justify-between gap-6 rounded-xl border border-line bg-surface/70 p-5">
+                <div>
+                  <p className="font-display text-metric font-bold text-accent">{featured.metric}</p>
+                  <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">at a glance</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {featured.tags.map((t) => (
+                    <span key={t} className="rounded-full border border-accent/25 bg-accent/5 px-2.5 py-1 text-xs text-accent/90">
+                      {t}
+                    </span>
+                  ))}
+                </div>
               </div>
             </article>
+          </TiltCard>
+        </Reveal>
+      )}
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        {rest.map((cs, i) => (
+          <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
+            <TiltCard>
+              <article className="card-elevated group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+                <span className="font-display select-none text-5xl font-black leading-none text-accent/10">
+                  {String(i + 2).padStart(2, "0")}
+                </span>
+                <p className="font-display mt-1 text-sm font-semibold text-accent">{cs.metric}</p>
+                <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
+                <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
+                  {cs.approach.map((a) => (
+                    <li key={a} className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                      {a}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-sm font-medium text-zinc-200">{cs.outcome}</p>
+                <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                  {cs.tags.map((t) => (
+                    <span key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </article>
             </TiltCard>
           </Reveal>
         ))}
@@ -233,6 +428,8 @@ function Projects() {
               if (p.detail) { window.location.hash = href; window.scrollTo({ top: 0 }); }
               else window.open(href, "_blank", "noreferrer");
             };
+            const platforms = platformsOf(p.stack);
+            const isLive = LIVE_WEB_PROJECTS.has(p.slug);
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
@@ -241,13 +438,35 @@ function Projects() {
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
-                  className="group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-6 transition hover:-translate-y-1 hover:border-accent/50 hover:shadow-xl hover:shadow-accent/10"
+                  className="card-elevated group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-6 transition hover:-translate-y-1 hover:border-accent/50"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="font-display text-xl font-bold transition group-hover:text-accent">{p.name}</h3>
                     <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
                   </div>
                   <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
+                  {platforms.length > 0 && (
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      {platforms.map(({ label, icon: Icon }) => (
+                        <span
+                          key={label}
+                          title={label}
+                          className="flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-1 text-[10px] font-medium text-zinc-400"
+                        >
+                          <Icon size={11} />
+                          {label}
+                        </span>
+                      ))}
+                      {isLive && (
+                        <span
+                          title="Playable web build"
+                          className="live-badge flex items-center gap-1 rounded-full border border-accent/40 px-2 py-1 text-[10px] font-semibold text-ink"
+                        >
+                          <Play size={10} fill="currentColor" /> Live
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
                   <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
                     {p.highlights.map((h) => (
@@ -359,7 +578,51 @@ function Projects() {
   );
 }
 
+/**
+ * The vertical spine's accent fill tracks scroll progress through the
+ * timeline — a lightweight rAF-to-DOM readout, same pattern as ScrollBot.
+ */
+function TimelineSpine({ trackRef }: { trackRef: React.RefObject<HTMLDivElement | null> }) {
+  const fillRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    const fill = fillRef.current;
+    if (!track || !fill) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      fill.style.height = "100%";
+      return;
+    }
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const rect = track.getBoundingClientRect();
+      const progressed = Math.min(Math.max(window.innerHeight * 0.7 - rect.top, 0), rect.height);
+      fill.style.height = `${((progressed / rect.height) * 100).toFixed(1)}%`;
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      cancelAnimationFrame(raf);
+    };
+  }, [trackRef]);
+
+  return (
+    <div className="pointer-events-none absolute bottom-3 left-3 top-3 w-px" aria-hidden>
+      <div className="timeline-spine absolute inset-0" />
+      <div ref={fillRef} className="timeline-fill absolute left-0 top-0 w-px" style={{ height: 0 }} />
+    </div>
+  );
+}
+
 function ExperienceSection() {
+  const trackRef = useRef<HTMLDivElement>(null);
   return (
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
@@ -367,17 +630,19 @@ function ExperienceSection() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
-        <div className="space-y-12">
+        <div ref={trackRef} className="relative space-y-10 pl-8 sm:pl-10">
+          <TimelineSpine trackRef={trackRef} />
           {experience.map((job) => (
             <Reveal key={job.company}>
-              <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:gap-8">
-                <div>
-                  <p className="text-sm text-zinc-500">{job.period}</p>
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-bold">
-                    {job.role} <span className="text-accent">@ {job.company}</span>
-                  </h3>
+              <div className="relative">
+                <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent bg-ink sm:-left-10" />
+                <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent/40 sm:p-6">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <h3 className="font-display text-xl font-bold">
+                      {job.role} <span className="text-accent">@ {job.company}</span>
+                    </h3>
+                    <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{job.period}</span>
+                  </div>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
                     {job.points.map((p) => (
                       <li key={p.text} className="flex gap-2">
@@ -394,12 +659,15 @@ function ExperienceSection() {
             </Reveal>
           ))}
           <Reveal>
-            <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:gap-8">
-              <p className="text-sm text-zinc-500">{education.period}</p>
-              <div>
-                <h3 className="font-display text-xl font-bold">
-                  {education.degree} <span className="text-accent">@ {education.school}</span>
-                </h3>
+            <div className="relative">
+              <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent2 bg-ink sm:-left-10" />
+              <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent2/40 sm:p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <h3 className="font-display text-xl font-bold">
+                    {education.degree} <span className="text-accent2">@ {education.school}</span>
+                  </h3>
+                  <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{education.period}</span>
+                </div>
               </div>
             </div>
           </Reveal>
@@ -410,45 +678,80 @@ function ExperienceSection() {
 }
 
 function Skills() {
+  const [active, setActive] = useState<string | null>(null);
+  const chips = useMemo(() => skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group }))), []);
+
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
-        <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Skills</h2>
+        <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
+        <p className="mb-8 text-zinc-400">Filter by area, or just hover the cloud.</p>
       </Reveal>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {skills.map((s, i) => (
-          <Reveal key={s.group} delay={i * 90}>
-            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-accent">
-              {SKILL_ICONS[s.group] && <span>{SKILL_ICONS[s.group]}</span>}
+
+      <Reveal>
+        <div className="flex flex-wrap gap-2">
+          {skills.map((s) => (
+            <button
+              key={s.group}
+              type="button"
+              aria-pressed={active === s.group}
+              onClick={() => setActive((v) => (v === s.group ? null : s.group))}
+              className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                active === s.group
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+              }`}
+            >
+              {SKILL_ICONS[s.group] && <span aria-hidden>{SKILL_ICONS[s.group]}</span>}
               {s.group}
-            </h3>
-            <ul className="space-y-2 text-sm text-zinc-300">
-              {s.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </Reveal>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
+      </Reveal>
+
+      <Reveal delay={100}>
+        <div className="mt-6 flex flex-wrap gap-2.5">
+          {chips.map(({ item, group }) => {
+            const dimmed = active !== null && active !== group;
+            const highlighted = active === group;
+            return (
+              <span
+                key={item}
+                className={`tag-chip rounded-full border px-3.5 py-1.5 text-sm ${
+                  highlighted
+                    ? "border-accent/60 bg-accent/10 text-accent"
+                    : "border-line bg-card text-zinc-300 hover:border-accent/40 hover:text-zinc-100"
+                }`}
+                style={{ opacity: dimmed ? 0.32 : 1 }}
+              >
+                {item}
+              </span>
+            );
+          })}
+        </div>
+      </Reveal>
     </section>
   );
 }
 
 function Contact() {
   return (
-    <section id="contact" className="border-t border-line bg-surface">
-      <div className="section-y mx-auto max-w-5xl px-6 text-center">
-        <h2 className="font-display text-h2 font-bold tracking-tight">
-          Hiring for a senior Android role?
-        </h2>
+    <section id="contact" className="relative overflow-hidden border-t border-line">
+      <div className="aurora pointer-events-none absolute inset-0" aria-hidden />
+      <div className="section-y relative mx-auto max-w-5xl px-6 text-center">
+        <span className="mx-auto flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
+          <span className="status-pulse h-2 w-2 rounded-full bg-accent" />
+          {profile.availability}
+        </span>
+        <h2 className="font-display mt-6 text-h2 font-bold tracking-tight">Hiring for a senior Android role?</h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
           Ask my AI assistant anything about my work, or reach out directly — I reply fast.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a
             href={`mailto:${profile.email}`}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            className="card-elevated flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
           >
             <Mail size={16} /> {profile.email}
           </a>
@@ -476,7 +779,7 @@ function Contact() {
           </a>
         </div>
       </div>
-      <footer className="border-t border-line py-6 text-center text-xs text-zinc-600">
+      <footer className="relative border-t border-line py-6 text-center text-xs text-zinc-600">
         <p className="flex items-center justify-center gap-1">
           Built with React 19, Tailwind v4 and an LLM-agnostic chat backend
           <ArrowUpRight size={12} /> {new Date().getFullYear()}
