@@ -370,6 +370,14 @@ export const projects: Project[] = [
           body: "The whole game is a pure function: (GameState, Intent) → GameState, with the RNG seed living inside the state. The same module drives single-player, the bots and a future server — and any match can be replayed byte-for-byte from its seed and intent log.",
         },
         {
+          heading: "Same game, three depths (launch overhaul)",
+          body: "The board reveals itself in three density layers so a first-timer isn't handed an expert's dashboard. FOCUS shows only whose turn it is, one plain-language line of what just happened, your hand and your legal moves; GUIDED adds gentle coaching; ANALYST is the full instrument panel (suspicion pips, odds, teleprinter log). Players graduate FOCUS → GUIDED → ANALYST by playing. Paired with a tap-to-continue beat gate so the round never resolves faster than you can read it, and a tutorial-first onboarding funnel that teaches one mechanic at a time.",
+        },
+        {
+          heading: "AI Munshi narrator",
+          body: "A diegetic court-scribe turns raw engine events into one calm in-character line — grounded strictly on the redacted PlayerView so it narrates the beat without ever leaking a hidden card or inventing the board. It renders the deterministic templated line instantly and upgrades in place if an LLM is available (on-device Gemini Nano / Apple FoundationModels / BYOK cloud), never enters the intent log, and leaves byte-for-byte replay untouched.",
+        },
+        {
           heading: "ISMCTS expert AI + DARBAR social layer",
           body: "Bots use Information Set Monte Carlo Tree Search (1.5k–16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs — social manipulation that never breaks engine determinism.",
         },
@@ -378,8 +386,8 @@ export const projects: Project[] = [
           body: "A hidden-information game needs strict secrecy: redact(state, viewer) → PlayerView guarantees a client only ever sees what its player should. Two independent narrative RNG streams keep flavour separate from game logic.",
         },
         {
-          heading: "“License Raj Deco” identity",
-          body: "A bespoke visual language — teak/brass/cream palette, Rozha One display type, five Canvas-drawn intaglio role glyphs, and stamped-instrument UI motifs, all behind a full Fastlane + CI pipeline.",
+          heading: "“Sarkari Noir” visual system",
+          body: "A bespoke lamplit visual language — teak/brass/cream palette, Rozha One display type, Canvas-drawn intaglio role glyphs and stamped-instrument motifs — pushed to an AAA bar in the launch overhaul: every screen dissolved from bordered boxes into one continuous lit table (depth via shadow, never outline), a shared component vocabulary, and an AGSL/Skia runtime-shader material layer (film grain + warm bloom on the felt) with a graceful no-shader fallback. All behind a full Fastlane + CI pipeline with headless screenshot rendering.",
         },
         {
           heading: "Game modes",
@@ -421,7 +429,7 @@ export const projects: Project[] = [
         { value: "7", label: "toggle rule variants" },
       ],
       techStack: [
-        { group: "Language & UI", items: ["Kotlin 2.4", "Compose Multiplatform 1.11", "Canvas-drawn role glyphs"] },
+        { group: "Language & UI", items: ["Kotlin 2.4.20-Beta1", "Compose Multiplatform 1.12", "Canvas + AGSL/Skia runtime shaders"] },
         { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "replay from (seed, intentLog)"] },
         { group: "AI", items: ["ISMCTS (offline)", "Anthropic / OpenAI / Gemini", "on-device Gemini Nano · Apple FoundationModels", "BYOK (encrypted)"] },
         { group: "Online", items: ["Ktor / Netty server", "server-authoritative", "Bonjour/mDNS LAN"] },
