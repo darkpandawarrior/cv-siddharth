@@ -72,6 +72,39 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
   );
 }
 
+/** Renders `src` filling the frame edge-to-edge (`object-cover`) when its
+ *  real aspect ratio is close to the frame's `targetAspect`, and falls back
+ *  to a letterboxed `object-contain` on a black backdrop when it isn't —
+ *  so a wrong-shaped capture (e.g. a landscape desktop grab) is never
+ *  silently cropped into a misleading sliver inside a mismatched frame. */
+function FitImage({
+  src,
+  alt,
+  targetAspect,
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  targetAspect: number;
+  className?: string;
+}) {
+  const [contain, setContain] = useState(false);
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onLoad={(e) => {
+        const img = e.currentTarget;
+        const aspect = img.naturalWidth / img.naturalHeight;
+        // ponytail: >20% aspect delta means this capture doesn't match the
+        // frame's shape — letterbox instead of cropping it.
+        setContain(Math.abs(aspect - targetAspect) / targetAspect > 0.2);
+      }}
+      className={`${className} ${contain ? "bg-black object-contain" : "object-cover object-top"}`}
+    />
+  );
+}
+
 /** Device chrome around the active target's screens — phone bezel, round
  *  watch face, desktop title bar, or full browser chrome (with the live
  *  embed inside, for Web targets that have shipped a build). `shot` (the
@@ -100,7 +133,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
         {target.liveUrl ? (
           <LiveEmbed url={target.liveUrl} fallback={shots[0] ? src(shots[0]) : undefined} />
         ) : shots.length > 0 ? (
-          <img src={src(shots[shot])} alt={`${target.platform} — web`} className="aspect-video w-full object-cover object-top" />
+          <FitImage src={src(shots[shot])} alt={`${target.platform} — web`} targetAspect={16 / 9} className="aspect-video w-full" />
         ) : (
           <div className="font-mono-os flex aspect-video w-full flex-col items-center justify-center gap-2 bg-black/40 text-xs text-zinc-500">
             <Globe size={20} className="text-zinc-600" />
@@ -112,26 +145,53 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
   }
 
   if (target.deviceFrame === "desktop") {
+    // Also doubles as an honest stand-in for phone platforms that don't yet
+    // have a real portrait capture (see Kursi's Android/iOS targets) — a
+    // landscape capture shown at its real shape, never stuffed into a phone
+    // bezel it doesn't match.
+    const isNativeDesktop = target.platform === "Desktop";
     return (
       <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-xl border border-line bg-[#0c100e] shadow-[0_22px_60px_-22px_rgba(0,0,0,0.85)]">
         <div className="flex items-center gap-2 border-b border-line/80 bg-card px-3 py-2">
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-          <span className="ml-2 text-[10px] text-zinc-500">{target.platform} window</span>
+          <span className="ml-2 text-[10px] text-zinc-500">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
         </div>
         {shots.length > 0 && (
-          <img src={src(shots[shot])} alt={`${target.platform} window`} className="aspect-video w-full bg-black object-contain" />
+          <FitImage src={src(shots[shot])} alt={`${target.platform} window`} targetAspect={16 / 9} className="aspect-video w-full" />
+        )}
+      </div>
+    );
+  }
+
+  if (target.deviceFrame === "widget") {
+    // For widget / Live Activity captures — genuinely wide-short surfaces,
+    // not full device screens. No bezel: a plain card, letterboxed so the
+    // real widget shape is never cropped down to a sliver.
+    return (
+      <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-line bg-[#0c100e] p-3 shadow-[0_22px_60px_-22px_rgba(0,0,0,0.85)]">
+        {shots.length > 0 && (
+          <FitImage src={src(shots[shot])} alt={`${target.platform} widget`} targetAspect={16 / 9} className="aspect-video w-full rounded-lg" />
         )}
       </div>
     );
   }
 
   if (target.deviceFrame === "watch") {
+    // watchOS (Apple Watch) is a rounded rectangle, not a circle — Wear OS
+    // faces are genuinely round. Forcing an Apple Watch capture into a
+    // circular mask both misrepresents the device and crops the corners.
+    const isAppleWatch = target.platform === "watchOS";
     return (
-      <div className="device glow-pulse mx-auto aspect-square w-40 !rounded-full sm:w-48">
+      <div className={`device glow-pulse mx-auto w-40 sm:w-48 ${isAppleWatch ? "aspect-[4/5] !rounded-[2.5rem]" : "aspect-square !rounded-full"}`}>
         {shots.length > 0 && (
-          <img src={src(shots[shot])} alt={`${target.platform} watch face`} className="h-full w-full object-cover" />
+          <FitImage
+            src={src(shots[shot])}
+            alt={`${target.platform} watch face`}
+            targetAspect={isAppleWatch ? 4 / 5 : 1}
+            className="h-full w-full"
+          />
         )}
       </div>
     );
@@ -141,7 +201,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
   return (
     <div className="device glow-pulse mx-auto aspect-[9/19] w-40 sm:w-48">
       {shots.length > 0 && (
-        <img src={src(shots[shot])} alt={`${target.platform} screen`} className="h-full w-full object-cover" />
+        <FitImage src={src(shots[shot])} alt={`${target.platform} screen`} targetAspect={9 / 19} className="h-full w-full" />
       )}
     </div>
   );

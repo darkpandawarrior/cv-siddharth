@@ -306,7 +306,10 @@ export interface ProjectDetailData {
 // (Web only) embeds the deployed build live instead of showing screenshots.
 export interface ProjectTarget {
   platform: "Android" | "iOS" | "Wear OS" | "watchOS" | "Desktop" | "Web";
-  deviceFrame: "phone" | "watch" | "desktop" | "browser";
+  // "widget" = a bezel-less card for wide-short widget/Live-Activity
+  // captures — never stuff those into a phone bezel, they aren't full
+  // device screens.
+  deviceFrame: "phone" | "watch" | "desktop" | "browser" | "widget";
   screens: string[]; // filenames under public/projects/<slug>/screenshots/
   liveUrl?: string;
   note?: string; // shown under the frame — e.g. "same Compose UI, Android capture shown"
@@ -378,14 +381,22 @@ export const projects: Project[] = [
     targets: [
       {
         platform: "Android",
-        deviceFrame: "phone",
+        // TODO(kursi-phone-captures): every Kursi screenshot today is a
+        // 1440x900 desktop-harness capture — there are no real portrait
+        // Android grabs yet. Once they exist (~1080x2400 or similar),
+        // swap `screens` for the portrait set and flip deviceFrame back to
+        // "phone" — do NOT put a landscape capture in a phone bezel.
+        deviceFrame: "desktop",
         screens: ["home.png", "4p_pick_action.png", "darbar_table.png", "tutorial_intro.png", "gazette_roles.png", "results.png"],
+        note: "Compose renders pixel-identical across platforms — native Android phone captures are being generated; desktop-harness capture shown honestly for now.",
       },
       {
         platform: "iOS",
-        deviceFrame: "phone",
+        // TODO(kursi-phone-captures): same swap as Android above, once
+        // genuine portrait iOS captures exist.
+        deviceFrame: "desktop",
         screens: ["4p_reaction_block.png", "4p_coach_action.png", "career.png", "leaderboard.png"],
-        note: "Compose Multiplatform renders pixel-identical UI on iOS — Android capture shown.",
+        note: "Compose Multiplatform renders pixel-identical UI on iOS — native iOS phone captures are being generated; desktop-harness capture shown honestly for now.",
       },
       {
         platform: "Desktop",
@@ -568,13 +579,20 @@ export const projects: Project[] = [
       {
         platform: "Android",
         deviceFrame: "phone",
-        screens: ["track_miles_idle_screen.png", "tracking_success_screen.png", "home_screen_loaded.png", "expense_entry_screen.png", "approvals_screen_pending_tab.png", "analytics_home_screen.png"],
+        // ponytail: dropped track_miles_idle_screen / expense_entry_screen /
+        // approvals_screen_pending_tab / analytics_home_screen — an older
+        // capture batch (Jun 29) taken in the app's green Matrix theme,
+        // inconsistent against the current amber theme used everywhere
+        // else in this carousel. Replaced with the current-theme set below.
+        screens: ["home_screen_loaded.png", "tracking_success_screen.png", "track_detail_screen.png", "set_pin_screen.png", "hardware_events_log_screen.png"],
       },
       {
         platform: "iOS",
-        deviceFrame: "phone",
+        // Widget/Live-Activity captures are genuinely wide-short — a
+        // bezel-less "widget" frame, not a phone bezel that would crop them.
+        deviceFrame: "widget",
         screens: ["widget_ios_home.png", "widget_ios_lockscreen.png", "live_activity.png", "live_activity_dynamic_island.png"],
-        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces.",
+        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces, shown at their real widget shape.",
       },
       {
         platform: "Wear OS",
