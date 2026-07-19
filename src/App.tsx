@@ -21,6 +21,7 @@ import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
 import { ResumeView } from "./ResumeView.tsx";
+import { WritingView } from "./WritingView.tsx";
 import { ProjectDetail } from "./ProjectDetail.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 
@@ -58,6 +59,7 @@ const NAV_LINKS = [
   { href: "#projects", label: "Projects" },
   { href: "#experience", label: "Experience" },
   { href: "#skills", label: "Skills" },
+  { href: "#writing", label: "Writing" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -679,6 +681,16 @@ export default function App() {
   }, [hash]);
 
   if (hash === "#resume") return <ResumeView />;
+
+  if (hash === "#writing") {
+    return (
+      <div className="min-h-screen">
+        <AmbientBackground />
+        <WritingView />
+        <FloatingChat />
+      </div>
+    );
+  }
 
   if (hash.startsWith("#project/")) {
     return (
