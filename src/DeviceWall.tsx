@@ -25,48 +25,63 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
   return [ref, inView] as const;
 }
 
-/** The live web build, mounted only once its frame scrolls into view. Falls
- *  back to a screenshot if the iframe hasn't loaded within a few seconds
- *  (e.g. blocked by the host, or offline) — never a dead grey box. */
+/** The live web build. A screenshot floor sits underneath at all times, so the
+ *  frame is never a dead box; the live iframe (lazy-mounted on first scroll into
+ *  view) reveals over it *only* once the Wasm build genuinely starts painting.
+ *
+ *  Keying "ready" off the iframe's HTML `onLoad` was the bug — that fires the
+ *  instant the ~2 KB index.html loads, long before the ~14 MB Wasm downloads,
+ *  compiles and paints (and it fires even when the canvas never paints at all),
+ *  leaving a dark box with no way to fall back. Instead we poll the (same-origin)
+ *  child canvas: Skiko only grows its backing buffer past the default 300×150
+ *  once it's actually rendering. Reveal on that; otherwise keep the screenshot. */
 function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
   const [ref, inView] = useInView<HTMLDivElement>();
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [painted, setPainted] = useState(false);
+  const [gaveUp, setGaveUp] = useState(false);
 
   useEffect(() => {
-    if (!inView || loaded) return;
-    const t = window.setTimeout(() => setFailed((f) => f || !loaded), 8000);
-    return () => window.clearTimeout(t);
-  }, [inView, loaded]);
+    if (!inView || painted || gaveUp) return;
+    const started = Date.now();
+    const iv = window.setInterval(() => {
+      try {
+        const c = iframeRef.current?.contentDocument?.getElementById("ComposeTarget") as HTMLCanvasElement | null;
+        if (c && (c.width > 300 || c.height > 150)) {
+          setPainted(true);
+          window.clearInterval(iv);
+          return;
+        }
+      } catch {
+        /* cross-origin guard — first-party same-origin, so this shouldn't hit */
+      }
+      if (Date.now() - started > 18000) {
+        setGaveUp(true); // slow link or unsupported browser — keep the screenshot floor
+        window.clearInterval(iv);
+      }
+    }, 400);
+    return () => window.clearInterval(iv);
+  }, [inView, painted, gaveUp]);
 
   return (
     <div ref={ref} className="relative aspect-video w-full overflow-hidden bg-black">
-      {!inView && (
-        <div className="font-mono-os flex h-full flex-col items-center justify-center gap-2 text-xs text-accent/70">
-          <span className="status-pulse h-2 w-2 rounded-full bg-accent" />
-          scroll to boot live build…
+      {fallback && (
+        <img src={fallback} alt="Live build preview" className="absolute inset-0 h-full w-full object-cover" />
+      )}
+      {inView && (
+        <iframe
+          ref={iframeRef}
+          src={url}
+          title="Live web build"
+          loading="lazy"
+          allow="fullscreen"
+          className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${painted ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
+      {inView && !painted && !gaveUp && (
+        <div className="font-mono-os absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-gradient-to-t from-black/85 to-transparent px-3 pb-3 pt-10 text-xs text-accent/80">
+          <span className="boot-caret">▍</span> booting live build — first load pulls the ~14&nbsp;MB Wasm…
         </div>
-      )}
-      {inView && !failed && (
-        <>
-          <iframe
-            src={url}
-            title="Live web build"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-pointer-lock"
-            className={`h-full w-full border-0 transition-opacity duration-700 ${loaded ? "opacity-100" : "opacity-0"}`}
-            onLoad={() => setLoaded(true)}
-            onError={() => setFailed(true)}
-          />
-          {!loaded && (
-            <div className="font-mono-os absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black text-xs text-accent/70">
-              <span className="boot-caret">▍</span> booting live build…
-            </div>
-          )}
-        </>
-      )}
-      {failed && fallback && (
-        <img src={fallback} alt="Live build unavailable — fallback capture" className="h-full w-full object-cover" />
       )}
     </div>
   );
