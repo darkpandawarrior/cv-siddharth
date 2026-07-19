@@ -16,6 +16,12 @@ const SERIES_COLOR: Record<string, string> = {
   "ghosts-in-the-recomposition": "#db61ff",
   "one-brain-two-bodies": "#38bdf8",
 };
+const PLATFORMS: { key: "devto" | "linkedin" | "medium" | "hashnode"; label: string }[] = [
+  { key: "devto", label: "dev.to" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "medium", label: "Medium" },
+  { key: "hashnode", label: "Hashnode" },
+];
 const accentOf = (id?: string) => (id && SERIES_COLOR[id]) || "#7c5cff";
 const titleize = (id?: string) =>
   (id || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -62,10 +68,12 @@ export function WritingView() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {sorted.map((l) => {
               const accent = accentOf(l.series);
-              const live = l.status === "published" && l.live;
-              const inner = (
+              const live = l.status === "published";
+              const links = PLATFORMS.filter((p) => l.links?.[p.key]);
+              return (
                 <div
-                  className="card-elevated h-full rounded-xl border border-line bg-card p-5 transition hover:border-accent/40"
+                  key={l.slug}
+                  className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-5"
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -84,17 +92,24 @@ export function WritingView() {
                       <span key={t} className="rounded border border-line px-2 py-0.5 text-[11px] text-zinc-400">{t}</span>
                     ))}
                   </div>
-                  {live && (
-                    <span className="mt-4 flex items-center gap-1 text-sm font-medium" style={{ color: accent }}>
-                      Read on dev.to <ArrowUpRight size={14} />
-                    </span>
+                  {links.length > 0 && (
+                    <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-4">
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Read on</span>
+                      {links.map((p) => (
+                        <a
+                          key={p.key}
+                          href={l.links![p.key]}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-0.5 text-xs font-medium transition hover:underline"
+                          style={{ color: accent }}
+                        >
+                          {p.label} <ArrowUpRight size={12} />
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
-              );
-              return live ? (
-                <a key={l.slug} href={l.live} target="_blank" rel="noreferrer" className="block">{inner}</a>
-              ) : (
-                <div key={l.slug}>{inner}</div>
               );
             })}
           </div>
