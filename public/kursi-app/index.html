@@ -29,11 +29,8 @@
             background: #1A1A2E;
             overflow: hidden;
         }
-        #ComposeTarget {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        /* ComposeViewport(document.body) injects its own full-size <canvas>. */
+        body > canvas { display: block; }
         /* Loading screen — shown until Compose takes over */
         #loader {
             position: fixed;
@@ -54,21 +51,21 @@
 </head>
 <body>
     <div id="loader">Sab mile hue hain&hellip;</div>
-    <canvas id="ComposeTarget"></canvas>
     <script src="cmp-web.js"></script>
     <script>
-        // Hide loader once Compose canvas is painting
-        const canvas = document.getElementById('ComposeTarget');
+        // Main.kt uses ComposeViewport(document.body!!), which creates and appends
+        // its OWN <canvas>. Do NOT add a manual <canvas id="ComposeTarget"> here —
+        // that belongs to the older CanvasBasedWindow API, and a stray full-size
+        // canvas sits over Compose's real one and swallows all pointer input (the
+        // game renders but never responds). Hide the loader as soon as Compose's
+        // canvas is inserted; 8s hard fallback for a slow link.
         const loader = document.getElementById('loader');
+        const hide = () => loader.classList.add('hidden');
         const obs = new MutationObserver(() => {
-            if (canvas.width > 0) {
-                loader.classList.add('hidden');
-                obs.disconnect();
-            }
+            if (document.querySelector('body > canvas')) { hide(); obs.disconnect(); }
         });
-        obs.observe(canvas, { attributes: true, attributeFilter: ['width'] });
-        // Fallback: hide after 5s regardless
-        setTimeout(() => loader.classList.add('hidden'), 5000);
+        obs.observe(document.body, { childList: true });
+        setTimeout(hide, 8000);
     </script>
 </body>
 </html>
