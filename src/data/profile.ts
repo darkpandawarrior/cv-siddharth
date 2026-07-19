@@ -381,22 +381,15 @@ export const projects: Project[] = [
     targets: [
       {
         platform: "Android",
-        // TODO(kursi-phone-captures): every Kursi screenshot today is a
-        // 1440x900 desktop-harness capture — there are no real portrait
-        // Android grabs yet. Once they exist (~1080x2400 or similar),
-        // swap `screens` for the portrait set and flip deviceFrame back to
-        // "phone" — do NOT put a landscape capture in a phone bezel.
-        deviceFrame: "desktop",
-        screens: ["home.png", "4p_pick_action.png", "darbar_table.png", "tutorial_intro.png", "gazette_roles.png", "results.png"],
-        note: "Compose renders pixel-identical across platforms — native Android phone captures are being generated; desktop-harness capture shown honestly for now.",
+        deviceFrame: "phone",
+        screens: ["home_phone.png", "4p_focus_phone.png", "setup_phone.png", "darbar_table_phone.png", "gazette_roles_phone.png", "results_phone.png"],
+        note: "Rendered at phone dimensions from the shared Compose UI.",
       },
       {
         platform: "iOS",
-        // TODO(kursi-phone-captures): same swap as Android above, once
-        // genuine portrait iOS captures exist.
-        deviceFrame: "desktop",
-        screens: ["4p_reaction_block.png", "4p_coach_action.png", "career.png", "leaderboard.png"],
-        note: "Compose Multiplatform renders pixel-identical UI on iOS — native iOS phone captures are being generated; desktop-harness capture shown honestly for now.",
+        deviceFrame: "phone",
+        screens: ["4p_coach_action_phone.png", "tutorial_coup_phone.png", "career_phone.png", "settings_phone.png"],
+        note: "Compose Multiplatform renders pixel-identical UI on iOS — the same composables at phone size.",
       },
       {
         platform: "Desktop",
@@ -846,7 +839,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Pure, replayable state machine",
-          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants. The MVI base comes from my own kmp-mvi-core library, shared with other apps.",
+          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants. The MVI base comes from my own kmp-toolkit library, shared with other apps.",
         },
         {
           heading: "VAPT-grade security",
@@ -860,7 +853,7 @@ export const projects: Project[] = [
         { value: "1", label: "PaymentGateway contract" },
       ],
       techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "14 Gradle modules", "Koin registry (getAll)", "kmp-mvi-core (shared MVI base)"] },
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "14 Gradle modules", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
         { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
         { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
         { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
@@ -898,7 +891,7 @@ export const projects: Project[] = [
         },
       ],
       extraLinks: [
-        { label: "kmp-mvi-core (shared)", url: "https://github.com/darkpandawarrior/kmp-mvi-core" },
+        { label: "kmp-toolkit (shared)", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
         { label: "kmp-build-logic (shared)", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
         { label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab#readme" },
       ],
@@ -944,14 +937,14 @@ export const projects: Project[] = [
     highlights: [
       "Resume onboarding → profile inference → trust-validated job scanning → fit scoring → tailored résumés.",
       "Single-server multi-profile architecture (per-candidate routing) over a strict User/System data contract.",
-      "62 ATS & job-board provider integrations (upstream hiresignal) via a dynamic, zero-token provider loader.",
-      "Contributor upstream — 30 merged PRs, including HireSignal 2.0's multi-profile/scoring/onboarding fusion and a production-grade README refresh.",
+      "62 ATS & job-board provider integrations via a dynamic, zero-token provider loader, built on the open-source career-ops engine.",
+      "Contributor to the public career-ops project (⭐60k+) — merged PRs adding ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/career-ops" },
-      { label: "Upstream", url: "https://github.com/kirklazar-android/hiresignal" },
+      { label: "Upstream (career-ops)", url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · 30 PRs merged upstream",
+    status: "Active · built on the open-source career-ops engine",
     badges: ["Node.js", "Job-search automation", "Open source"],
   },
   {
@@ -999,10 +992,10 @@ export const sharedFoundation: {
       usedBy: ["Mileway", "PaymentsLab"],
     },
     {
-      name: "kmp-mvi-core",
-      url: "https://github.com/darkpandawarrior/kmp-mvi-core",
-      role: "A tiny (State, Event) → Effects MVI base — the reducer/store contract the payment state machine is built on.",
-      usedBy: ["PaymentsLab"],
+      name: "kmp-toolkit",
+      url: "https://github.com/darkpandawarrior/kmp-toolkit",
+      role: "A vendored KMP toolkit — the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules.",
+      usedBy: ["Mileway", "PaymentsLab"],
     },
   ],
 };
@@ -1015,15 +1008,13 @@ export interface Contribution {
   date: string;
 }
 
-// Curated highlights, not the full list — 30 PRs merged upstream as of 2026-07-10.
-// See https://github.com/kirklazar-android/hiresignal/pulls?q=author%3Adarkpandawarrior for all of them.
+// Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐60k+).
+// See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
 export const openSource: Contribution[] = [
-  { repo: "kirklazar-android/hiresignal", title: "docs: production-grade README refresh — visuals, versioning, deep dive", url: "https://github.com/kirklazar-android/hiresignal/pull/48", status: "merged", date: "2026-07-10" },
-  { repo: "kirklazar-android/hiresignal", title: "HireSignal 2.0 fusion — multi-profile, scoring, onboarding, board, branding (Phases 0–5)", url: "https://github.com/kirklazar-android/hiresignal/pull/9", status: "merged", date: "2026-07-01" },
-  { repo: "kirklazar-android/hiresignal", title: "Port career-ops 1.14 System-Layer updates (trust-validator, providers, evaluators)", url: "https://github.com/kirklazar-android/hiresignal/pull/8", status: "merged", date: "2026-06-29" },
-  { repo: "kirklazar-android/hiresignal", title: "Production-grade README — architecture diagram, scoring tables", url: "https://github.com/kirklazar-android/hiresignal/pull/7", status: "merged", date: "2026-06-28" },
-  { repo: "kirklazar-android/hiresignal", title: "Profile switcher dropdown with Add-new-profile modal", url: "https://github.com/kirklazar-android/hiresignal/pull/5", status: "merged", date: "2026-06-27" },
-  { repo: "kirklazar-android/hiresignal", title: "Dashboard: tracker, coach, console, scanner & profile tabs", url: "https://github.com/kirklazar-android/hiresignal/pull/4", status: "merged", date: "2026-06-27" },
+  { repo: "santifer/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/santifer/career-ops/pull/1472", status: "merged", date: "2026-07-03" },
+  { repo: "santifer/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/santifer/career-ops/pull/1186", status: "merged", date: "2026-06-23" },
+  { repo: "santifer/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/santifer/career-ops/pull/1185", status: "merged", date: "2026-06-23" },
+  { repo: "santifer/career-ops", title: "feat(providers): add BambooHR provider", url: "https://github.com/santifer/career-ops/pull/1141", status: "merged", date: "2026-06-20" },
 ];
 
 export interface GrowthItem {
@@ -1035,10 +1026,10 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jul 2026", title: "HireSignal — 30 PRs merged upstream", detail: "From the 1.14 System-Layer sync and dashboard tabs through the HireSignal 2.0 multi-profile/scoring/onboarding fusion (PR #9) to a production-grade README refresh (PR #48)." },
+  { date: "Jun–Jul 2026", title: "career-ops — public OSS contributions", detail: "Merged PRs to the public career-ops project (⭐60k+): ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature." },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 149 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "14-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
-  { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-mvi-core (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
+  { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — still landing." },
 ];
