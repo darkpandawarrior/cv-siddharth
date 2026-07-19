@@ -140,13 +140,13 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
     title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
-    metric: "28 modules · 5 platforms · offline AI",
+    metric: "35 modules · 5 platforms · offline AI",
     summary:
       "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend — Room + DataStore only — so the whole thing is reproducible and reviewable by anyone.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
-      "28-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "35-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core — design system, Room (KMP) + DataStore, and every check-in / hardware-event screen — driving Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
       "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals — the real logic a live expense platform needs, all local.",
@@ -157,7 +157,7 @@ export const caseStudies: CaseStudy[] = [
     ],
     outcome:
       "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "28 modules", "Offline AI", "Open source"],
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "35 modules", "Offline AI", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -301,6 +301,17 @@ export interface ProjectDetailData {
   roles?: { name: string; power: string; color: string }[];
 }
 
+// One codebase, N surfaces — the multiplatform thesis, made data-driven.
+// deviceFrame picks which chrome DeviceWall renders the screens in; liveUrl
+// (Web only) embeds the deployed build live instead of showing screenshots.
+export interface ProjectTarget {
+  platform: "Android" | "iOS" | "Wear OS" | "watchOS" | "Desktop" | "Web";
+  deviceFrame: "phone" | "watch" | "desktop" | "browser";
+  screens: string[]; // filenames under public/projects/<slug>/screenshots/
+  liveUrl?: string;
+  note?: string; // shown under the frame — e.g. "same Compose UI, Android capture shown"
+}
+
 export interface Project {
   slug: string;
   name: string;
@@ -314,6 +325,9 @@ export interface Project {
   // Optional deep-dive page at /#project/<slug>. Screenshots come from the
   // auto-generated galleries.ts (public/projects/<slug>/screenshots/).
   detail?: ProjectDetailData;
+  // Optional device-wall target switcher on the detail page — "one codebase,
+  // N surfaces" shown per-platform with the right device chrome.
+  targets?: ProjectTarget[];
   // Optional curated, captioned screenshot set (filenames under
   // public/projects/<slug>/screenshots/). If present, the carousel uses this
   // instead of the full auto-generated gallery.
@@ -349,7 +363,7 @@ export const projects: Project[] = [
       "Bespoke \"License Raj Deco\" identity: teak/brass/cream palette, Rozha One type, Canvas-drawn intaglio role glyphs.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
-    status: "14 modules · 4 platforms · CC BY-NC-SA 4.0",
+    status: "13 modules · 4 platforms · CC BY-NC-SA 4.0",
     badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
     theme: {
       accent: "#E8C874",
@@ -361,6 +375,32 @@ export const projects: Project[] = [
       displayFont: "'Rozha One', Georgia, serif",
     },
     icon: "/projects/kursi/brand/kursi-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["home.png", "4p_pick_action.png", "darbar_table.png", "tutorial_intro.png", "gazette_roles.png", "results.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["4p_reaction_block.png", "4p_coach_action.png", "career.png", "leaderboard.png"],
+        note: "Compose Multiplatform renders pixel-identical UI on iOS — Android capture shown.",
+      },
+      {
+        platform: "Desktop",
+        deviceFrame: "desktop",
+        screens: ["review_replay.png", "home_ranked.png"],
+        note: "Same engine, windowed — Compose Desktop (JVM) build.",
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: ["home.png"],
+        liveUrl: "/kursi-app/index.html",
+        note: "Live — the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
+      },
+    ],
     detail: {
       overview:
         "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair — the Gaddi — and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
@@ -368,6 +408,14 @@ export const projects: Project[] = [
         {
           heading: "Deterministic engine",
           body: "The whole game is a pure function: (GameState, Intent) → GameState, with the RNG seed living inside the state. The same module drives single-player, the bots and a future server — and any match can be replayed byte-for-byte from its seed and intent log.",
+        },
+        {
+          heading: "Same game, three depths (launch overhaul)",
+          body: "The board reveals itself in three density layers so a first-timer isn't handed an expert's dashboard. FOCUS shows only whose turn it is, one plain-language line of what just happened, your hand and your legal moves; GUIDED adds gentle coaching; ANALYST is the full instrument panel (suspicion pips, odds, teleprinter log). Players graduate FOCUS → GUIDED → ANALYST by playing. Paired with a tap-to-continue beat gate so the round never resolves faster than you can read it, and a tutorial-first onboarding funnel that teaches one mechanic at a time.",
+        },
+        {
+          heading: "AI Munshi narrator",
+          body: "A diegetic court-scribe turns raw engine events into one calm in-character line — grounded strictly on the redacted PlayerView so it narrates the beat without ever leaking a hidden card or inventing the board. It renders the deterministic templated line instantly and upgrades in place if an LLM is available (on-device Gemini Nano / Apple FoundationModels / BYOK cloud), never enters the intent log, and leaves byte-for-byte replay untouched.",
         },
         {
           heading: "ISMCTS expert AI + DARBAR social layer",
@@ -378,8 +426,8 @@ export const projects: Project[] = [
           body: "A hidden-information game needs strict secrecy: redact(state, viewer) → PlayerView guarantees a client only ever sees what its player should. Two independent narrative RNG streams keep flavour separate from game logic.",
         },
         {
-          heading: "“License Raj Deco” identity",
-          body: "A bespoke visual language — teak/brass/cream palette, Rozha One display type, five Canvas-drawn intaglio role glyphs, and stamped-instrument UI motifs, all behind a full Fastlane + CI pipeline.",
+          heading: "“Sarkari Noir” visual system",
+          body: "A bespoke lamplit visual language — teak/brass/cream palette, Rozha One display type, Canvas-drawn intaglio role glyphs and stamped-instrument motifs — pushed to an AAA bar in the launch overhaul: every screen dissolved from bordered boxes into one continuous lit table (depth via shadow, never outline), a shared component vocabulary, and an AGSL/Skia runtime-shader material layer (film grain + warm bloom on the felt) with a graceful no-shader fallback. All behind a full Fastlane + CI pipeline with headless screenshot rendering.",
         },
         {
           heading: "Game modes",
@@ -421,7 +469,7 @@ export const projects: Project[] = [
         { value: "7", label: "toggle rule variants" },
       ],
       techStack: [
-        { group: "Language & UI", items: ["Kotlin 2.4", "Compose Multiplatform 1.11", "Canvas-drawn role glyphs"] },
+        { group: "Language & UI", items: ["Kotlin 2.4.20-Beta1", "Compose Multiplatform 1.12", "Canvas + AGSL/Skia runtime shaders"] },
         { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "replay from (seed, intentLog)"] },
         { group: "AI", items: ["ISMCTS (offline)", "Anthropic / OpenAI / Gemini", "on-device Gemini Nano · Apple FoundationModels", "BYOK (encrypted)"] },
         { group: "Online", items: ["Ktor / Netty server", "server-authoritative", "Bonjour/mDNS LAN"] },
@@ -491,7 +539,7 @@ export const projects: Project[] = [
       "An open-source app I designed and built end-to-end as a clean, inspectable reference for the Compose Multiplatform + strict-module architecture I advocate at scale. Zero backend (Room + DataStore only), fully reproducible — with a real location engine, a policy/reimbursement layer and a durable submit-outbox.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "28-module clean architecture — 11 isolated feature modules meeting only at the :app composition root; the same shared snapshot model drives phone, watch and desktop.",
+      "35-module clean architecture — 11 isolated feature modules meeting only at the :app composition root; the same shared snapshot model drives phone, watch and desktop.",
       "Location engine treats GPS as a noisy signal: jitter suppression, spike detection, four-bucket distance accounting, IMU fusion and device-tier-adaptive sampling, unit-testable via a deterministic simulated-drive source.",
       "A real policy layer: a reimbursement-rate engine computes payouts from per-vehicle rate rules and flags approval-side policy violations — plus a durable submit-outbox that journals a submission so a mid-submit kill never loses or double-counts it.",
       "Runs on Android, iOS, Wear OS, a watchOS SwiftUI app and Compose Desktop — with home-screen widgets (Glance + WidgetKit) and an iOS Live Activity / Dynamic Island over the same shared snapshot.",
@@ -502,15 +550,61 @@ export const projects: Project[] = [
       { label: "Case study", url: "#work" },
       { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
     ],
-    status: "5 platforms · offline AI · 28 modules",
-    badges: ["Kotlin Multiplatform", "28 modules", "5 platforms", "Open source"],
+    status: "5 platforms · offline AI · 35 modules",
+    badges: ["Kotlin Multiplatform", "35 modules", "5 platforms", "Open source"],
+    // Telemetry-cyan — the site's own "depth" accent, reused rather than
+    // invented: fitting for a location/tracking app, distinct from Kursi's
+    // teak/brass and PaymentsLab's violet.
+    theme: {
+      accent: "#5ee6ff",
+      accentDim: "#2fb8d6",
+      ink: "#05070a",
+      surface: "#0a1016",
+      card: "#0f1720",
+      line: "#1c2733",
+    },
     icon: "/projects/mileway/brand/mileway-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["track_miles_idle_screen.png", "tracking_success_screen.png", "home_screen_loaded.png", "expense_entry_screen.png", "approvals_screen_pending_tab.png", "analytics_home_screen.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["widget_ios_home.png", "widget_ios_lockscreen.png", "live_activity.png", "live_activity_dynamic_island.png"],
+        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces.",
+      },
+      {
+        platform: "Wear OS",
+        deviceFrame: "watch",
+        screens: ["wear_dashboard.png", "wear_trip_list.png"],
+      },
+      {
+        platform: "watchOS",
+        deviceFrame: "watch",
+        screens: ["watchos_app.png"],
+        note: "Native SwiftUI app, same shared snapshot model.",
+      },
+      {
+        platform: "Desktop",
+        deviceFrame: "desktop",
+        screens: ["desktop_dashboard.png"],
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: ["home_screen_loaded.png"],
+        note: "The Compose Wasm build isn't hosted live right now — GitHub Pages redirects here instead. Screens shown.",
+      },
+    ],
     detail: {
       overview:
         "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
-          heading: "28-module clean architecture",
+          heading: "35-module clean architecture",
           body: "Eleven feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
@@ -543,7 +637,7 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "28", label: "Gradle modules" },
+        { value: "35", label: "Gradle modules" },
         { value: "11", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls" },
@@ -566,7 +660,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "28-module architecture — features meet only at :app",
+          title: "35-module architecture — features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -671,7 +765,7 @@ export const projects: Project[] = [
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
     highlights: [
-      "35-module KMP architecture — one Gradle module per native-SDK provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways (7 native-SDK, 47 hosted-webview, 8 mobile-money, 4 catalog-only/KYC-gated).",
+      "14-module KMP architecture — one Gradle module per native-SDK provider, contributed into a registry via Koin's getAll<PaymentGateway>(); adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways (7 native-SDK, 47 hosted-webview, 8 mobile-money, 4 catalog-only/KYC-gated).",
       "More than pay-in — five money-movement rails plus split payments: payouts (money out to a beneficiary), mandates & subscriptions (recurring debits), a card vault (tokenize once, charge later), marketplace Connect onboarding (sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (seed / debit / refund against a running balance). Each rail is idempotency-keyed like the pay-in path.",
       "One contract, real SDKs — Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a UPI intent flow, plus two generic archetypes (hosted-webview covering 47 gateways, mobile-money covering 8) bridged into coroutines by a PaymentHost that never leaks an Activity; MOCK_MODE-honest when no sandbox keys are set.",
       "Server is the source of truth — a companion Ktor server creates orders, verifies payments with real HMAC-SHA256, and reconciles idempotent, signature-checked webhooks; the client callback is only ever treated as a hint.",
@@ -682,8 +776,8 @@ export const projects: Project[] = [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" },
       { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
     ],
-    status: "35 modules · 66 gateways · 5 rails",
-    badges: ["Kotlin Multiplatform", "35 modules", "66 gateways", "Open source"],
+    status: "14 modules · 66 gateways · 5 rails",
+    badges: ["Kotlin Multiplatform", "14 modules", "66 gateways", "Open source"],
     theme: {
       accent: "#A78BFA",
       accentDim: "#7C3AED",
@@ -693,6 +787,25 @@ export const projects: Project[] = [
       line: "#3F2B66",
     },
     icon: "/projects/paymentslab/brand/paymentslab-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["home_screen_dashboard.png", "lab_home_screen_catalog.png", "provider_lab_screen_running.png", "checkout_screen_order_summary.png", "history_screen_with_filters.png"],
+      },
+      {
+        platform: "iOS",
+        deviceFrame: "phone",
+        screens: ["ios_catalog.png", "ios_catalog_stripe.png", "ios_catalog_all_native.png"],
+        note: "Native Stripe iOS SDK alongside the shared KMP gateway contract.",
+      },
+      {
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: [],
+        note: "Web target coming — the Ktor server already speaks HTTP, a browser client isn't built yet.",
+      },
+    ],
     detail: {
       overview:
         "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
@@ -702,7 +815,7 @@ export const projects: Project[] = [
           body: "A client-side Success is a hint, never proof. Only the server — after signature verification and webhook reconciliation — decides the true state. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
-          heading: "35 modules, 66 gateways",
+          heading: "14 modules, 66 gateways",
           body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. The in-app catalog spans 66 gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries — each with its own status badge and region.",
         },
         {
@@ -723,13 +836,13 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "35", label: "Gradle modules" },
+        { value: "14", label: "Gradle modules" },
         { value: "66", label: "gateways cataloged" },
         { value: "5", label: "money-movement rails" },
         { value: "1", label: "PaymentGateway contract" },
       ],
       techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "35 Gradle modules", "Koin registry (getAll)", "kmp-mvi-core (shared MVI base)"] },
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "14 Gradle modules", "Koin registry (getAll)", "kmp-mvi-core (shared MVI base)"] },
         { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
         { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
         { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
@@ -907,7 +1020,7 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jul 2026", title: "HireSignal — 30 PRs merged upstream", detail: "From the 1.14 System-Layer sync and dashboard tabs through the HireSignal 2.0 multi-profile/scoring/onboarding fusion (PR #9) to a production-grade README refresh (PR #48)." },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 149 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
-  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "35-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
+  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "14-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-mvi-core (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — still landing." },
 ];

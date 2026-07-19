@@ -9,6 +9,37 @@
   --color-surface: #111613;
   --color-card: #171e1a;
   --color-line: #243029;
+
+  /* --- SID//OS control-room tokens (additive — old vars above still work) - */
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+  /* Second accent: cool cyan for telemetry/depth, distinct from the green signal */
+  --color-accent2: #5ee6ff;
+  --color-accent2-dim: #2fb8d6;
+  /* Deeper space-ink ground with a hint of blue, used behind the OS workspace */
+  --color-void: #05070a;
+  --color-void-deep: #020304;
+  /* Glass surfaces (backdrop-blur panels — windows, dock, palette) */
+  --color-glass: rgba(17, 22, 25, 0.66);
+  --color-glass-border: rgba(93, 230, 255, 0.14);
+  /* Elevation shadows — stack for higher z windows */
+  --shadow-elevation-1: 0 4px 16px -6px rgba(0, 0, 0, 0.5);
+  --shadow-elevation-2: 0 14px 40px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-elevation-3: 0 28px 80px -16px rgba(0, 0, 0, 0.8), 0 0 40px -12px rgba(61, 220, 132, 0.25);
+  /* Glow gradients — signal (green) and depth (cyan) */
+  --gradient-glow-signal: radial-gradient(60% 60% at 50% 0%, rgba(61, 220, 132, 0.28), transparent 70%);
+  --gradient-glow-depth: radial-gradient(60% 60% at 50% 100%, rgba(94, 230, 255, 0.22), transparent 70%);
+
+  /* Fluid type scale — clamp(min, preferred, max), scales smoothly 375px→1920px.
+     Tailwind v4 turns --text-* theme keys into `text-*` utilities directly. */
+  --text-hero: clamp(2.25rem, 1.7rem + 2.75vw, 3.75rem);
+  --text-hero--line-height: 1.05;
+  --text-h2: clamp(1.75rem, 1.55rem + 1vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-metric: clamp(1.875rem, 1.6rem + 1.4vw, 2.5rem);
+  --text-metric--line-height: 1.1;
+
+  /* Fluid spacing — section rhythm breathes with viewport instead of a fixed 80px everywhere */
+  --space-section-y: clamp(3.5rem, 2.75rem + 3.5vw, 6rem);
 }
 
 html {
@@ -24,8 +55,19 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
+  background-image:
+    radial-gradient(50% 40% at 85% -5%, rgba(94, 230, 255, 0.07), transparent 70%),
+    radial-gradient(60% 45% at 10% 0%, rgba(61, 220, 132, 0.08), transparent 70%);
+  background-attachment: fixed;
   color: #e8efe9;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Fluid section rhythm — swap in for fixed py-20 where sections want to breathe
+   with viewport size instead of a constant 80px top/bottom. */
+.section-y {
+  padding-top: var(--space-section-y);
+  padding-bottom: var(--space-section-y);
 }
 
 ::selection {
@@ -275,6 +317,180 @@ html.resume-mode body {
   .glow-pulse,
   .float-soft,
   .sheen {
+    animation: none;
+  }
+}
+
+/* --- SID//OS: boot sequence, workspace, windows ------------------------ */
+
+.sidos-ground {
+  background-color: var(--color-void);
+  background-image:
+    var(--gradient-glow-signal),
+    var(--gradient-glow-depth),
+    radial-gradient(circle, rgba(94, 230, 255, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px;
+}
+
+.glass-panel {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-elevation-2);
+}
+
+.font-mono-os {
+  font-family: var(--font-mono);
+}
+
+/* Static CSS starfield — used when WebGL is unavailable or reduced-motion
+   is requested, so the ambient layer never depends on three.js loading. */
+.starfield-static {
+  background-color: var(--color-void);
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 70% 15%, rgba(94, 230, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 85% 60%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 40% 80%, rgba(61, 220, 132, 0.45), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 10% 70%, rgba(94, 230, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 92% 35%, rgba(255, 255, 255, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 340px 340px;
+}
+
+@keyframes boot-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.boot-caret {
+  animation: boot-caret 1s step-end infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-caret {
+    animation: none;
+  }
+}
+
+@keyframes boot-line-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.boot-line {
+  animation: boot-line-in 0.25s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-line {
+    animation: none;
+  }
+}
+
+/* --- Level-100 revamp: alive metrics, tilt glow, timeline, tags, palette - */
+
+/* TiltCard pointer-tracked spotlight (case studies + project cards) */
+.tilt-glow {
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(61, 220, 132, 0.16), transparent 70%);
+}
+
+/* Elevation on hover — layers with the existing border/shadow hover states */
+.card-elevated {
+  box-shadow: var(--shadow-elevation-1);
+  transition: box-shadow 0.3s ease;
+}
+.card-elevated:hover {
+  box-shadow: var(--shadow-elevation-2);
+}
+
+/* Metrics: circular gauge fill draws in once revealed */
+.metric-gauge circle.metric-gauge-fill {
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-gauge circle.metric-gauge-fill {
+    transition: none;
+  }
+}
+
+/* Metrics: sparkline draws in once revealed (dasharray/offset set from JS
+   via getTotalLength() — length varies per path, so only the transition
+   timing lives in CSS). */
+.metric-spark path.metric-spark-line {
+  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-spark path.metric-spark-line {
+    transition: none;
+  }
+}
+
+/* Skills: tag-cloud chips with hover depth */
+.tag-chip {
+  transition: transform 0.2s ease, opacity 0.25s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+.tag-chip:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tag-chip:hover {
+    transform: none;
+  }
+}
+
+/* Experience: living timeline spine + progress fill */
+.timeline-spine {
+  background: linear-gradient(to bottom, var(--color-line), transparent);
+}
+.timeline-fill {
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-accent2));
+  transition: height 0.1s linear;
+  box-shadow: 0 0 12px -2px rgba(61, 220, 132, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-fill {
+    transition: none;
+  }
+}
+.timeline-dot {
+  box-shadow: 0 0 0 4px rgba(61, 220, 132, 0.14);
+}
+
+/* "Live" badge shimmer on multiplatform teasers with a playable web build */
+.live-badge {
+  background: linear-gradient(100deg, var(--color-accent) 0%, var(--color-accent2) 45%, var(--color-accent) 100%);
+  background-size: 220% 100%;
+  animation: sheen 3.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-badge {
+    animation: none;
+  }
+}
+
+/* Command palette entrance */
+@keyframes palette-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.palette-in {
+  animation: palette-in 0.18s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .palette-in {
+    animation: none;
+  }
+}
+
+/* Contact: status pulse dot */
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(61, 220, 132, 0); }
+}
+.status-pulse {
+  animation: status-pulse 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-pulse {
     animation: none;
   }
 }

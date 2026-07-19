@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
+import { AnimatedMetric } from "./AnimatedMetric.tsx";
+import { TiltCard } from "./TiltCard.tsx";
+import { DeviceWall } from "./DeviceWall.tsx";
 
 /** Adds `.revealed` to `.reveal` children as they scroll into view. */
 function useScrollReveal(dep: unknown) {
@@ -84,6 +87,16 @@ function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: str
   return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+/** Section eyebrow + heading, matching the homepage's "// label" rhythm. */
+function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="reveal mb-8">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// {eyebrow}</p>
+      <h2 className="font-display text-h2 font-bold tracking-tight">{title}</h2>
+    </div>
+  );
+}
+
 export function ProjectDetail({ slug }: { slug: string }) {
   const project = projects.find((p) => p.slug === slug);
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
@@ -160,7 +173,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <ArrowLeft size={16} /> All projects
           </a>
           <p className="rise-in mt-8 text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
-          <h1 className="rise-in rise-in-1 font-display mt-2 text-4xl font-bold tracking-tight sm:text-6xl">
+          <h1 className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight">
             {project.name}
           </h1>
           <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
@@ -192,16 +205,28 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* Metrics band */}
+      {/* Metrics band — same animated count-up/gauge as the homepage */}
       {d?.metrics && d.metrics.length > 0 && (
         <section className="border-b border-line bg-surface">
-          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px px-6 py-8 sm:grid-cols-4">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-8 lg:grid-cols-4">
             {d.metrics.map((m) => (
-              <div key={m.label} className="px-4 py-2">
-                <p className="font-display text-3xl font-bold text-accent sm:text-4xl">{m.value}</p>
-                <p className="mt-1 text-xs leading-snug text-zinc-400">{m.label}</p>
-              </div>
+              <AnimatedMetric key={m.label} metric={m} />
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Multiplatform device-wall — "one codebase, N surfaces", the thesis */}
+      {project.targets && project.targets.length > 0 && (
+        <section className="section-y border-b border-line">
+          <div className="mx-auto max-w-4xl px-6">
+            <SectionHeader eyebrow="multiplatform" title="One codebase, every surface" />
+            <p className="reveal -mt-4 mb-10 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              The real screens (and, where it's live, the running build) per platform — not a mockup.
+            </p>
+            <div className="reveal">
+              <DeviceWall key={slug} targets={project.targets} slug={slug} accent={t?.accent} />
+            </div>
           </div>
         </section>
       )}
@@ -209,10 +234,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Videos — device-framed, autoplay on view */}
       {d?.videos && d.videos.length > 0 && (
         <section className="border-b border-line bg-surface">
-          <div className="mx-auto max-w-5xl px-6 py-14">
-            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
-              In motion
-            </h2>
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <SectionHeader eyebrow="in motion" title="Watch it run" />
             <div className="reveal grid gap-8 sm:grid-cols-3">
               {d.videos.map((v) => (
                 <AutoVideo key={v.src} src={v.src} caption={v.caption} />
@@ -222,18 +245,19 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Deep-dive sections — scroll-revealed cards */}
+      {/* Deep-dive sections — tilt-glow cards, same signature hover as the homepage */}
       {d?.sections && d.sections.length > 0 && (
-        <section className="mx-auto max-w-5xl px-6 py-16">
+        <section className="section-y mx-auto max-w-5xl px-6">
+          <SectionHeader eyebrow="deep dive" title="How it works" />
           <div className="grid gap-6 sm:grid-cols-2">
             {d.sections.map((s, i) => (
-              <div
-                key={s.heading}
-                className="reveal gallery-item rounded-2xl border border-line bg-card p-6"
-                style={{ transitionDelay: `${(i % 2) * 80}ms` }}
-              >
-                <h3 className="font-display text-lg font-bold text-accent">{s.heading}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
+              <div key={s.heading} className="reveal h-full" style={{ transitionDelay: `${(i % 2) * 100}ms` }}>
+                <TiltCard>
+                  <article className="card-elevated h-full rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+                    <h3 className="font-display text-lg font-bold text-accent">{s.heading}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
+                  </article>
+                </TiltCard>
               </div>
             ))}
           </div>
@@ -243,21 +267,23 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Roster (e.g. Kursi's six roles) */}
       {d?.roles && d.roles.length > 0 && (
         <section className="border-t border-line bg-surface">
-          <div className="mx-auto max-w-5xl px-6 py-14">
-            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
-              The roster
-            </h2>
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <SectionHeader eyebrow="cast" title="The roster" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {d.roles.map((r) => (
-                <div key={r.name} className="reveal gallery-item flex gap-3 rounded-2xl border border-line bg-card p-4">
-                  <span
-                    className="mt-1 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/40"
-                    style={{ backgroundColor: r.color }}
-                  />
-                  <div>
-                    <h3 className="font-display text-base font-bold">{r.name}</h3>
-                    <p className="mt-0.5 text-sm leading-snug text-zinc-400">{r.power}</p>
-                  </div>
+              {d.roles.map((r, i) => (
+                <div key={r.name} className="reveal h-full" style={{ transitionDelay: `${(i % 3) * 80}ms` }}>
+                  <TiltCard maxTilt={3}>
+                    <div className="card-elevated flex h-full gap-3 rounded-2xl border border-line bg-card p-4">
+                      <span
+                        className="mt-1 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/40"
+                        style={{ backgroundColor: r.color }}
+                      />
+                      <div>
+                        <h3 className="font-display text-base font-bold">{r.name}</h3>
+                        <p className="mt-0.5 text-sm leading-snug text-zinc-400">{r.power}</p>
+                      </div>
+                    </div>
+                  </TiltCard>
                 </div>
               ))}
             </div>
@@ -268,13 +294,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Architecture diagrams (Mermaid) */}
       {d?.diagrams && d.diagrams.length > 0 && (
         <section className="border-t border-line">
-          <div className="mx-auto max-w-5xl px-6 py-14">
-            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
-              How it's built
-            </h2>
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <SectionHeader eyebrow="architecture" title="How it's built" />
             <div className="grid gap-6 lg:grid-cols-2">
               {d.diagrams.map((dg, i) => (
-                <div key={dg.title} className="reveal rounded-2xl border border-line bg-card p-5">
+                <div key={dg.title} className="reveal card-elevated rounded-2xl border border-line bg-card p-5">
                   <h3 className="mb-4 text-sm font-semibold text-zinc-200">{dg.title}</h3>
                   <Mermaid code={dg.code} id={`mmd-${slug}-${i}`} accent={t?.accent} card={t?.card} />
                 </div>
@@ -286,17 +310,15 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Tech stack */}
       {d?.techStack && d.techStack.length > 0 && (
-        <section className="border-t border-line">
-          <div className="mx-auto max-w-5xl px-6 py-14">
-            <h2 className="reveal font-display mb-8 text-sm font-semibold uppercase tracking-widest text-accent/60">
-              Under the hood
-            </h2>
-            <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-              {d.techStack.map((t) => (
-                <div key={t.group} className="reveal">
-                  <h3 className="mb-2 text-sm font-semibold text-accent">{t.group}</h3>
+        <section className="border-t border-line bg-surface">
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <SectionHeader eyebrow="under the hood" title="Tech stack" />
+            <div className="card-elevated grid gap-x-6 gap-y-8 rounded-2xl border border-line bg-card p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
+              {d.techStack.map((ts) => (
+                <div key={ts.group} className="reveal">
+                  <h3 className="mb-2 text-sm font-semibold text-accent">{ts.group}</h3>
                   <ul className="space-y-1 text-sm text-zinc-300">
-                    {t.items.map((it) => (
+                    {ts.items.map((it) => (
                       <li key={it} className="flex gap-2">
                         <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent/60" />
                         {it}
@@ -312,12 +334,15 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Gallery — horizontal carousel (space-saving), hover glow, navigable lightbox */}
       {items.length > 0 && (
-        <section className="border-t border-line bg-surface">
-          <div className="mx-auto max-w-6xl px-6 py-16">
+        <section className="border-t border-line">
+          <div className="section-y mx-auto max-w-6xl px-6">
             <div className="mb-8 flex items-center justify-between gap-4">
-              <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-accent/60">
-                Screens <span className="text-zinc-600">({items.length})</span>
-              </h2>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// gallery</p>
+                <h2 className="font-display text-h2 font-bold tracking-tight">
+                  Screens <span className="text-zinc-600">({items.length})</span>
+                </h2>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => scrollRail(-1)}

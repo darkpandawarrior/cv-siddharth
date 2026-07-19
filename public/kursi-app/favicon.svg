@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Deep teak background -->
+  <rect width="108" height="108" fill="#1A1A2E" rx="14"/>
+  <!-- Chair-R glyph: cream strokes -->
+  <!-- Back post + back leg -->
+  <line x1="33" y1="20" x2="33" y2="90" stroke="#F4ECD8" stroke-width="9" stroke-linecap="round"/>
+  <!-- Chair-back rail + bowl -->
+  <path d="M 33,20 L 63,20 Q 81,20 81,37 Q 81,54 65,55 L 33,55"
+        fill="none" stroke="#F4ECD8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Front leg (shorter — the wobble) -->
+  <line x1="66" y1="55" x2="76" y2="80" stroke="#F4ECD8" stroke-width="9" stroke-linecap="round"/>
+  <!-- Brass coin propping the short leg -->
+  <circle cx="78" cy="83" r="6" fill="#C99A3B"/>
+</svg>
