@@ -397,7 +397,8 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home.png"],
-        note: "Wasm build compiles locally but isn't deployed yet — deploy to go live.",
+        liveUrl: "/kursi-app/index.html",
+        note: "Live — the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
       },
     ],
     detail: {
