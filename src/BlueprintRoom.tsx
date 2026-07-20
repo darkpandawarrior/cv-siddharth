@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AssetRecordType,
   Box,
@@ -16,8 +16,36 @@ import {
 import "tldraw/tldraw.css";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
-import { ArrowLeft, Compass, Play } from "lucide-react";
+import { ArrowLeft, Compass, Play, RotateCcw } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
+
+/* Cheap one-shot WebGL capability probe. The 3D hologram shape only mounts a
+ * three.js <Canvas> when this passes — otherwise it shows a static fallback,
+ * so a machine without WebGL (or one that's exhausted its context budget after
+ * repeated visits) never blanks the whole whiteboard. */
+let webglOK: boolean | null = null;
+function hasWebGL(): boolean {
+  if (webglOK !== null) return webglOK;
+  try {
+    const c = document.createElement("canvas");
+    webglOK = !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    webglOK = false;
+  }
+  return webglOK;
+}
+
+/* Local boundary so a crash *inside* a single custom shape (e.g. a lost WebGL
+ * context in the hologram) can't propagate up and take the canvas down. */
+class ShapeBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 /**
  * The Blueprint Room — the portfolio as an infinite tldraw canvas, now with
@@ -146,6 +174,24 @@ class HoloShapeUtil extends ShapeUtil<HoloShape> {
   }
 
   component(shape: HoloShape) {
+    const holoFallback = (
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          background: "radial-gradient(circle at 50% 40%, rgba(94,230,255,0.18), transparent 70%)",
+          color: "rgba(94, 230, 255, 0.7)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+        }}
+      >
+        3D preview
+      </div>
+    );
     return (
       <HTMLContainer
         style={{
@@ -158,9 +204,19 @@ class HoloShapeUtil extends ShapeUtil<HoloShape> {
           boxShadow: "0 0 40px -12px rgba(94, 230, 255, 0.5)",
         }}
       >
-        <Canvas dpr={1} camera={{ position: [0, 0, 4.4], fov: 45 }} gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}>
-          <HoloCore />
-        </Canvas>
+        {hasWebGL() ? (
+          <ShapeBoundary fallback={holoFallback}>
+            <Canvas
+              dpr={1}
+              camera={{ position: [0, 0, 4.4], fov: 45 }}
+              gl={{ antialias: true, alpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: false }}
+            >
+              <HoloCore />
+            </Canvas>
+          </ShapeBoundary>
+        ) : (
+          holoFallback
+        )}
         <span
           style={{
             position: "absolute",
@@ -353,7 +409,66 @@ function seed(editor: Editor) {
 
 const shapeUtils = [MetricShapeUtil, HoloShapeUtil];
 
-export default function BlueprintRoom() {
+const PERSISTENCE_KEY = "sid-blueprint-room-v2";
+
+/**
+ * Wipe the locally-persisted whiteboard. tldraw keeps each `persistenceKey`
+ * in its own IndexedDB database; if a stale or half-written snapshot is what's
+ * blanking the canvas, deleting the DB and reloading rebuilds it from `seed()`.
+ * We match defensively on name rather than hard-coding tldraw's internal
+ * scheme, then reload.
+ */
+async function clearBlueprintPersistence(): Promise<void> {
+  try {
+    const anyIDB = indexedDB as IDBFactory & { databases?: () => Promise<{ name?: string }[]> };
+    const dbs = (await anyIDB.databases?.()) ?? [];
+    await Promise.all(
+      dbs
+        .map((d) => d.name)
+        .filter((n): n is string => !!n && (/tldraw/i.test(n) || n.includes(PERSISTENCE_KEY)))
+        .map(
+          (name) =>
+            new Promise<void>((resolve) => {
+              const req = indexedDB.deleteDatabase(name);
+              req.onsuccess = req.onerror = req.onblocked = () => resolve();
+            }),
+        ),
+    );
+  } catch {
+    /* best effort — reload still gives the visitor a clean shot */
+  }
+}
+
+/** Top-level recovery: if anything in the tldraw subtree throws, offer a way
+ *  out instead of a dead blank screen. */
+class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-void px-6 text-center">
+        <p className="font-mono text-sm text-zinc-400">The Blueprint Room hit a snag loading your saved canvas.</p>
+        <button
+          onClick={async () => {
+            await clearBlueprintPersistence();
+            window.location.reload();
+          }}
+          className="flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+        >
+          <RotateCcw size={15} /> Reset the canvas & reload
+        </button>
+        <a href="#top" className="text-sm text-zinc-500 transition hover:text-accent">
+          ← Back to the portfolio
+        </a>
+      </div>
+    );
+  }
+}
+
+function BlueprintRoomInner() {
   const editorRef = useRef<Editor | null>(null);
   const [stop, setStop] = useState(-1);
 
@@ -366,47 +481,87 @@ export default function BlueprintRoom() {
     editor.zoomToBounds(new Box(x, y, w, h), { animation: { duration: 900 }, targetZoom: 1 });
   };
 
+  // Re-seed in place: clear the current page, drop the persisted DB, reseed.
+  // Recovers a blanked/half-loaded canvas without a full reload where possible.
+  const resetCanvas = async () => {
+    const editor = editorRef.current;
+    if (editor) {
+      try {
+        const ids = [...editor.getCurrentPageShapeIds()];
+        if (ids.length) editor.deleteShapes(ids);
+        seed(editor);
+        setStop(-1);
+        return;
+      } catch {
+        /* fall through to the hard reset */
+      }
+    }
+    await clearBlueprintPersistence();
+    window.location.reload();
+  };
+
   return (
     <div className="flex h-screen flex-col">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <a href="#top" className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-            <ArrowLeft size={16} /> Back to portfolio
+            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
           </a>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 sm:flex">
+          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — live shapes on an infinite canvas
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={tourNext}
-              className="flex items-center gap-1.5 rounded-full border border-accent2/40 px-4 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+              className="flex items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10 sm:px-4"
             >
-              <Play size={13} /> {stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}
+              <Play size={13} /> <span className="hidden sm:inline">{stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}</span>
             </button>
-            <a href="#map" className="hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
-              3D Storyboard
-            </a>
+            <button
+              onClick={resetCanvas}
+              title="Reset the canvas to its original layout"
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+            >
+              <RotateCcw size={13} /> <span className="hidden sm:inline">Reset</span>
+            </button>
             <button
               onClick={() => openChat()}
-              className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask my AI
+              Ask <span className="hidden sm:inline">my AI</span>
             </button>
           </div>
         </nav>
       </header>
       <div className="relative min-h-0 flex-1">
         <Tldraw
-          persistenceKey="sid-blueprint-room-v2"
+          persistenceKey={PERSISTENCE_KEY}
           shapeUtils={shapeUtils}
           onMount={(editor) => {
             editorRef.current = editor;
             editor.user.updateUserPreferences({ colorScheme: "dark" });
-            if (editor.getCurrentPageShapeIds().size === 0) seed(editor);
-            else editor.zoomToFit();
+            try {
+              if (editor.getCurrentPageShapeIds().size === 0) seed(editor);
+              else editor.zoomToFit();
+            } catch {
+              // A corrupt restore can throw here; a fresh seed is the recovery.
+              try {
+                seed(editor);
+              } catch {
+                /* the RoomBoundary / Reset button is the last resort */
+              }
+            }
           }}
         />
       </div>
     </div>
+  );
+}
+
+export default function BlueprintRoom() {
+  return (
+    <RoomBoundary>
+      <BlueprintRoomInner />
+    </RoomBoundary>
   );
 }

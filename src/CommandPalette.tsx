@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine } from "lucide-react";
+import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, TerminalSquare } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
@@ -47,6 +47,7 @@ export function CommandPalette() {
       { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#contact") },
       { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => goHash("#loopdown") },
       { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => goHash("#blueprint") },
+      { id: "terminal", label: "The Terminal — a faux shell you can type in", hint: "Open", keywords: "shell console cli command line easter egg bash", icon: <TerminalSquare size={15} />, run: () => goHash("#terminal") },
       {
         id: "books-before-bros",
         label: `${BOOKS_BEFORE_BROS.name} — the origin blog`,

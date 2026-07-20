@@ -93,6 +93,36 @@ src/
 └── index.css                # Tailwind v4 theme tokens
 ```
 
+## Interactive surfaces
+
+Beyond the scroll, the site is navigable as an environment:
+
+- **`#terminal`** — a faux shell ([src/Terminal.tsx](src/Terminal.tsx)) that's
+  a real interface: `help`, `projects`, `open mileway`, `cat resume.txt`,
+  `skills`, `ask <question>` (hands off to the AI), `hire`, `theme <name>`,
+  with ↑/↓ history and Tab completion. Everything reads `profile.ts`, so it
+  can't drift. Reachable from ⌘K, the footer, and the mobile menu.
+- **`#blueprint`** — the portfolio as an infinite tldraw canvas with live
+  React/three.js custom shapes. Ships with a **Reset** button and a recovery
+  boundary so a stale local snapshot or a lost WebGL context is never a dead
+  blank screen.
+- **Per-project share cards** — each build has a crawlable page at
+  `/p/<slug>/` carrying its own Open Graph / Twitter meta and a branded
+  1200×630 card, so a shared link previews the project, not the generic site.
+
+## Generators
+
+Content and assets are generated from `profile.ts` / the source repos so
+nothing is hand-mirrored:
+
+```bash
+npm run gen:og        # branded per-project OG cards + /p/<slug>/ share pages
+npm run refresh       # media sync + all generators (stats, galleries, og, prompt…)
+```
+
+`gen:og` rasterizes the cards with a headless Chromium at author time and
+commits the PNGs — the Vercel build needs no browser.
+
 ## Updating content
 
 Edit [src/data/profile.ts](src/data/profile.ts) for the page and

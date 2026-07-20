@@ -33,6 +33,7 @@ import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 import { LabBench, openLab, type LabKey } from "./LabBench.tsx";
+import { Terminal } from "./Terminal.tsx";
 import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
@@ -171,6 +172,7 @@ const DRAWER_EXTRAS = [
   { href: "#map", label: "3D Storyboard" },
   { href: "#loopdown", label: "The Loopdown" },
   { href: "#blueprint", label: "Blueprint Room" },
+  { href: "#terminal", label: "Terminal" },
   { href: "#resume", label: "Résumé" },
 ];
 
@@ -1046,6 +1048,16 @@ export default function App() {
   }, [hash]);
 
   if (hash === "#resume") return <ResumeView />;
+
+  // The faux-shell easter egg — a real, typeable interface into the whole site.
+  if (hash === "#terminal") {
+    return (
+      <>
+        <Terminal />
+        <FloatingChat />
+      </>
+    );
+  }
 
   if (hash === "#blueprint") {
     return (

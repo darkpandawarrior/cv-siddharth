@@ -636,6 +636,61 @@ html.resume-mode body {
   }
 }
 
+/* --- #terminal faux shell ---------------------------------------------- */
+
+/* Each output block eases in from the prompt — the "just printed" feel. */
+@keyframes term-line-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+.term-line {
+  animation: term-line-in 0.14s ease-out both;
+}
+
+/* The shell input is always the focus target and the blinking caret marks
+   the cursor, so the global focus box would just read as a stray search
+   field. Suppress it here (only here). */
+.term-root input:focus-visible {
+  outline: none;
+}
+
+/* Faint CRT scanlines + vignette over the void ground. Purely decorative,
+   pointer-events:none, and dropped entirely for reduced motion below. */
+.term-scanlines {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(120% 80% at 50% 0%, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+  mix-blend-mode: screen;
+}
+.term-root::after {
+  /* slow signal sweep across the glass */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(61, 220, 132, 0.05), transparent);
+  background-size: 100% 40%;
+  background-repeat: no-repeat;
+  animation: term-sweep 7s linear infinite;
+  opacity: 0.6;
+}
+@keyframes term-sweep {
+  0% { background-position: 0 -40%; }
+  100% { background-position: 0 140%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .term-line { animation: none; }
+  .term-root::after { animation: none; display: none; }
+  .term-scanlines { display: none; }
+}
+
 /* Contact: status pulse dot */
 @keyframes status-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5); }

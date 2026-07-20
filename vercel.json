@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!api/|p/).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/kursi-app/(.*)\\.wasm",
