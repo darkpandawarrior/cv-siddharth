@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Command, CornerDownLeft, MessageCircle, FileText, Compass } from "lucide-react";
+import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { openChat } from "./FloatingChat.tsx";
+import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 
 interface PaletteCommand {
   id: string;
@@ -13,8 +14,11 @@ interface PaletteCommand {
 }
 
 function goHash(href: string) {
+  // In-page section anchors scroll natively on hash change; only route-style
+  // hashes (#resume, #loopdown, #project/…) need the manual reset to top.
+  const isSection = !!document.getElementById(href.slice(1));
   window.location.hash = href;
-  window.scrollTo({ top: 0 });
+  if (!isSection) window.scrollTo({ top: 0 });
 }
 
 /**
@@ -37,7 +41,18 @@ export function CommandPalette() {
       { id: "projects-section", label: "Projects", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#projects") },
       { id: "experience", label: "Experience", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#experience") },
       { id: "skills", label: "Skills", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#skills") },
+      { id: "writing", label: "Writing", hint: "Jump", keywords: "loopdown blog lessons", icon: <PenLine size={15} />, run: () => goHash("#writing") },
+      { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => goHash("#map") },
       { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#contact") },
+      { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => goHash("#loopdown") },
+      {
+        id: "books-before-bros",
+        label: `${BOOKS_BEFORE_BROS.name} — the origin blog`,
+        hint: "External",
+        keywords: "wordpress blog essays fiction origin",
+        icon: <PenLine size={15} />,
+        run: () => window.open(BOOKS_BEFORE_BROS.url, "_blank", "noreferrer"),
+      },
       { id: "resume", label: "Résumé", hint: "Open", icon: <FileText size={15} />, run: () => goHash("#resume") },
       {
         id: "chat",

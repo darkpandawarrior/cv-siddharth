@@ -3,40 +3,21 @@ import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
+import {
+  BOOKS_BEFORE_BROS,
+  LOOPDOWN_REPO,
+  PLATFORMS,
+  SERIES_PROJECT,
+  accentOf,
+  titleize,
+} from "./data/writingMeta.ts";
 
 /**
- * The Loopdown — writing hub at /#writing. Field notes (dev content) plus the
- * creative archive, pulled from github.com/darkpandawarrior/the-loopdown via
+ * The Loopdown — full writing hub at /#loopdown (teased in the home scroll
+ * flow at /#writing). Field notes (dev content) plus the creative archive,
+ * pulled from github.com/darkpandawarrior/the-loopdown via
  * scripts/gen-loopdown.mjs so it stays in sync with what's published.
  */
-const LOOPDOWN_REPO = "https://github.com/darkpandawarrior/the-loopdown";
-
-// series accent colors mirror the generated post cards
-const SERIES_COLOR: Record<string, string> = {
-  "sensors-who-lie": "#7c5cff",
-  "the-coroutine-court": "#4ec9b0",
-  "the-night-shift": "#f0883e",
-  "ghosts-in-the-recomposition": "#db61ff",
-  "one-brain-two-bodies": "#38bdf8",
-};
-const PLATFORMS: { key: "devto" | "linkedin" | "medium" | "hashnode"; label: string }[] = [
-  { key: "devto", label: "dev.to" },
-  { key: "linkedin", label: "LinkedIn" },
-  { key: "medium", label: "Medium" },
-  { key: "hashnode", label: "Hashnode" },
-];
-const accentOf = (id?: string) => (id && SERIES_COLOR[id]) || "#7c5cff";
-
-// Each series is field notes from a real build — link the reader straight to it.
-const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
-  "sensors-who-lie": { label: "Built in: Mileway's location engine", href: "#project/mileway" },
-  "the-coroutine-court": { label: "From: the -80% crashes work", href: "#work" },
-  "the-night-shift": { label: "From: the 50%→95% GPS work", href: "#work" },
-  "ghosts-in-the-recomposition": { label: "From: the 92% Compose migration", href: "#work" },
-  "one-brain-two-bodies": { label: "Built in: Mileway across 5 platforms", href: "#project/mileway" },
-};
-const titleize = (id?: string) =>
-  (id || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
 export function WritingView() {
   const { lessons, series, archive } = writing;
@@ -178,6 +159,24 @@ export function WritingView() {
             Archive <span className="text-zinc-600">· earlier writing</span>
           </h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <a
+              href={BOOKS_BEFORE_BROS.url}
+              target="_blank"
+              rel="noreferrer"
+              className="group rounded-xl border border-accent2/30 bg-accent2/5 p-4 transition hover:border-accent2/60 sm:col-span-2"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="flex items-center gap-2 font-semibold text-zinc-100">
+                  <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
+                  <ArrowUpRight size={13} className="text-zinc-500 transition group-hover:text-accent2" />
+                </h3>
+                <span className="shrink-0 font-mono text-[11px] text-accent2/80">the origin blog</span>
+              </div>
+              <p className="mt-1.5 text-sm leading-snug text-zinc-400">
+                {BOOKS_BEFORE_BROS.blurb} Most of the pieces below were first published there —
+                booksbeforebros.wordpress.com.
+              </p>
+            </a>
             {archive.map((a) => (
               <div key={a.slug} className="rounded-xl border border-line bg-surface p-4">
                 <div className="flex items-baseline justify-between gap-3">

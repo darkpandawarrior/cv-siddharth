@@ -205,7 +205,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
               </a>
             ))}
             <a
-              href="#writing"
+              href="#loopdown"
+              onClick={() => window.scrollTo({ top: 0 })}
               className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
             >
               Field notes on this work <ArrowUpRight size={13} />

@@ -26,6 +26,8 @@ import { ProjectDetail } from "./ProjectDetail.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
+import { WritingSection } from "./WritingSection.tsx";
+import { StoryMap } from "./StoryMap.tsx";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -713,7 +715,9 @@ export default function App() {
 
   if (hash === "#resume") return <ResumeView />;
 
-  if (hash === "#writing") {
+  // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
+  // section, so old /#writing links land on it naturally.
+  if (hash === "#loopdown") {
     return (
       <div className="min-h-screen">
         <AmbientBackground />
@@ -743,6 +747,8 @@ export default function App() {
         <Projects />
         <ExperienceSection />
         <Skills />
+        <WritingSection />
+        <StoryMap />
         <Contact />
       </main>
       <ScrollBot />
