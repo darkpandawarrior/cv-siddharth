@@ -111,6 +111,23 @@ html.resume-mode body {
   }
 }
 
+/* Progressive-disclosure expanders (native <details>) */
+.expander summary {
+  list-style: none;
+}
+.expander summary::-webkit-details-marker {
+  display: none;
+}
+.expander summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.4em;
+  transition: transform 0.2s ease;
+}
+.expander[open] summary::before {
+  transform: rotate(90deg);
+}
+
 /* --- Motion ------------------------------------------------------------ */
 
 /* Hero phone: gentle idle float */

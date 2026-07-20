@@ -29,7 +29,7 @@ export function AmbientBackground() {
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isSmallScreen = window.matchMedia("(max-width: 767px)").matches;
-    if (!reduced && !isSmallScreen && supportsWebGL()) setEnable3D(true);
+    if (!reduced && !isSmallScreen && supportsWebGL() && !location.search.includes("noambient")) setEnable3D(true);
   }, []);
 
   return (

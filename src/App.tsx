@@ -16,7 +16,7 @@ import {
 import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth, sharedFoundation } from "./data/profile.ts";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
-import { TiltPhone } from "./TiltPhone.tsx";
+import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
@@ -53,6 +53,14 @@ function platformsOf(stack: string[]) {
 // Projects with a playable web build — hints the "▶ Live" badge on the card;
 // the detail page is where it's actually embedded/linked.
 const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway"]);
+
+// Card-top media per project — the daily-synced gifs finally surface on the
+// home page instead of living only inside detail-page galleries.
+const CARD_MEDIA: Record<string, { src: string; alt: string }> = {
+  kursi: { src: "/projects/kursi/screenshots/home.gif", alt: "Kursi home screen" },
+  mileway: { src: "/projects/mileway/screenshots/track_a_trip.gif", alt: "Mileway trip tracking flow" },
+  paymentslab: { src: "/projects/paymentslab/screenshots/checkout_flow.gif", alt: "PaymentsLab checkout flow" },
+};
 
 const NAV_LINKS = [
   { href: "#work", label: "Case studies" },
@@ -189,7 +197,7 @@ function Hero() {
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
       </div>
-      <TiltPhone />
+      <Phone3D />
     </section>
   );
 }
@@ -206,7 +214,28 @@ function Metrics() {
   );
 }
 
+/** Native-disclosure expander: approach bullets stay one click away. */
+function HowExpander({ items }: { items: string[] }) {
+  return (
+    <details className="expander mt-4">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-accent/80 transition hover:text-accent">
+        How I did it
+      </summary>
+      <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
+        {items.map((a) => (
+          <li key={a} className="flex gap-2">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+            {a}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 function CaseStudies() {
+  // Mileway leads as a media banner (full story lives at #project/mileway);
+  // the Dice-era studies render as compact stat-led cards.
   const [featured, ...rest] = caseStudies;
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
@@ -221,35 +250,38 @@ function CaseStudies() {
       {featured && (
         <Reveal className="mb-6">
           <TiltCard maxTilt={2.5}>
-            <article className="card-elevated grid gap-6 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50 sm:p-8 lg:grid-cols-[1.6fr_1fr]">
-              <div>
+            <article
+              onClick={() => { window.location.hash = "#project/mileway"; window.scrollTo({ top: 0 }); }}
+              role="link"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.hash = "#project/mileway"; window.scrollTo({ top: 0 }); } }}
+              className="card-elevated group grid cursor-pointer gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
+            >
+              <div className="relative min-h-[220px] overflow-hidden border-b border-line bg-void lg:border-b-0 lg:border-r">
+                <img
+                  src="/projects/mileway/screenshots/multiplatform.gif"
+                  alt="Mileway running on phone, watch and desktop"
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className="p-6 sm:p-8">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
                   <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> Flagship build
                 </div>
-                <h3 className="font-display mt-2 text-2xl font-bold sm:text-3xl">{featured.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">{featured.problem}</p>
-                <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-zinc-300">
-                  {featured.approach.slice(0, 5).map((a) => (
-                    <li key={a} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                      {a}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-5 text-sm font-medium text-zinc-100">{featured.outcome}</p>
-              </div>
-              <div className="flex flex-col justify-between gap-6 rounded-xl border border-line bg-surface/70 p-5">
-                <div>
-                  <p className="font-display text-metric font-bold text-accent">{featured.metric}</p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">at a glance</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="font-display mt-2 text-2xl font-bold sm:text-3xl">Mileway</h3>
+                <p className="font-display mt-1 text-sm font-semibold text-accent">{featured.metric}</p>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">{featured.summary}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
                   {featured.tags.map((t) => (
                     <span key={t} className="rounded-full border border-accent/25 bg-accent/5 px-2.5 py-1 text-xs text-accent/90">
                       {t}
                     </span>
                   ))}
                 </div>
+                <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
+                  Full case study →
+                </span>
               </div>
             </article>
           </TiltCard>
@@ -261,21 +293,16 @@ function CaseStudies() {
           <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
             <TiltCard>
               <article className="card-elevated group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
-                <span className="font-display select-none text-5xl font-black leading-none text-accent/10">
-                  {String(i + 2).padStart(2, "0")}
-                </span>
-                <p className="font-display mt-1 text-sm font-semibold text-accent">{cs.metric}</p>
-                <h3 className="font-display mt-1 text-xl font-bold">{cs.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
-                <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                  {cs.approach.map((a) => (
-                    <li key={a} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                      {a}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-sm font-medium text-zinc-200">{cs.outcome}</p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
+                  <span className="font-display select-none text-4xl font-black leading-none text-accent/10">
+                    {String(i + 2).padStart(2, "0")}
+                  </span>
+                </div>
+                <h3 className="font-display mt-2 text-lg font-bold">{cs.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
+                <p className="mt-3 text-sm font-medium text-zinc-200">{cs.outcome}</p>
+                <HowExpander items={cs.approach} />
                 <div className="mt-auto flex flex-wrap gap-2 pt-5">
                   {cs.tags.map((t) => (
                     <span key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
@@ -313,6 +340,7 @@ function Projects() {
             };
             const platforms = platformsOf(p.stack);
             const isLive = LIVE_WEB_PROJECTS.has(p.slug);
+            const media = CARD_MEDIA[p.slug];
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
@@ -321,8 +349,19 @@ function Projects() {
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
-                  className="card-elevated group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-6 transition hover:-translate-y-1 hover:border-accent/50"
+                  className="card-elevated group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-line bg-card transition hover:-translate-y-1 hover:border-accent/50"
                 >
+                  {media && (
+                    <div className="relative h-44 shrink-0 overflow-hidden border-b border-line bg-void">
+                      <img
+                        src={media.src}
+                        alt={media.alt}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                      />
+                    </div>
+                  )}
+                  <div className="flex grow flex-col p-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="font-display text-xl font-bold transition group-hover:text-accent">{p.name}</h3>
                     <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
@@ -352,7 +391,7 @@ function Projects() {
                   )}
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
                   <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {p.highlights.map((h) => (
+                    {p.highlights.slice(0, 2).map((h) => (
                       <li key={h} className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
                         {h}
@@ -384,6 +423,7 @@ function Projects() {
                         {l.label} <ArrowUpRight size={14} />
                       </a>
                     ))}
+                  </div>
                   </div>
                 </article>
               </TiltCard>
@@ -447,7 +487,7 @@ function Projects() {
             Recently shipped
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {recentGrowth.map((g) => (
+            {recentGrowth.slice(-4).reverse().map((g) => (
               <div key={g.title} className="rounded-xl border border-line bg-card p-4">
                 <p className="text-xs text-zinc-500">{g.date}</p>
                 <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
@@ -527,7 +567,7 @@ function ExperienceSection() {
                     <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{job.period}</span>
                   </div>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {job.points.map((p) => (
+                    {job.points.slice(0, 4).map((p) => (
                       <li key={p.text} className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
                         <span>
@@ -537,6 +577,24 @@ function ExperienceSection() {
                       </li>
                     ))}
                   </ul>
+                  {job.points.length > 4 && (
+                    <details className="expander mt-3">
+                      <summary className="cursor-pointer select-none text-sm font-semibold text-accent/80 transition hover:text-accent">
+                        + {job.points.length - 4} more
+                      </summary>
+                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-300">
+                        {job.points.slice(4).map((p) => (
+                          <li key={p.text} className="flex gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                            <span>
+                              {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
+                              {p.text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </div>
               </div>
             </Reveal>
