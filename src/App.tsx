@@ -32,6 +32,7 @@ import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
+import { LabBench, openLab, type LabKey } from "./LabBench.tsx";
 import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
@@ -434,6 +435,14 @@ function HowExpander({ items }: { items: string[] }) {
   );
 }
 
+// Case study → its Lab Bench experiment.
+const LAB_OF: Record<string, LabKey> = {
+  "gps-accuracy": "signal",
+  "crash-reduction": "crashes",
+  "compose-migration": "recompose",
+  "white-label": "theme",
+};
+
 function CaseStudies() {
   // Mileway leads as a media banner (full story lives at #project/mileway);
   // the Dice-era studies render as compact stat-led cards.
@@ -505,12 +514,22 @@ function CaseStudies() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
                 <p className="mt-3 text-sm font-medium text-zinc-200">{cs.outcome}</p>
                 <HowExpander items={cs.approach} />
-                <button
-                  onClick={(e) => { e.stopPropagation(); openChat(`Tell me more about "${cs.title}" — what was the hardest part?`); }}
-                  className="mt-4 flex w-fit items-center gap-1.5 rounded-full border border-accent2/30 bg-accent2/5 px-3 py-1 text-[11px] font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
-                >
-                  <MessageCircle size={11} /> ask my AI about this
-                </button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openChat(`Tell me more about "${cs.title}" — what was the hardest part?`); }}
+                    className="flex items-center gap-1.5 rounded-full border border-accent2/30 bg-accent2/5 px-3 py-1 text-[11px] font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+                  >
+                    <MessageCircle size={11} /> ask my AI about this
+                  </button>
+                  {LAB_OF[cs.slug] && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openLab(LAB_OF[cs.slug]); }}
+                      className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
+                    >
+                      ▶ watch it work, live
+                    </button>
+                  )}
+                </div>
                 <FieldNotes slug={cs.slug} className="mt-4" />
                 <div className="mt-auto flex flex-wrap gap-2 pt-5">
                   {cs.tags.map((t) => (
@@ -1075,6 +1094,7 @@ export default function App() {
         <Hero />
         <Metrics />
         <CaseStudies />
+        <LabBench />
         <Projects />
         <ExperienceSection />
         <Circuit />
