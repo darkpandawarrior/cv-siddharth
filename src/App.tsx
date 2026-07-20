@@ -24,6 +24,7 @@ import { ResumeView } from "./ResumeView.tsx";
 import { WritingView } from "./WritingView.tsx";
 import { ProjectDetail } from "./ProjectDetail.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
+import { FoundationGraph } from "./FoundationGraph.tsx";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -59,7 +60,9 @@ const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway"]);
 const CARD_MEDIA: Record<string, { src: string; alt: string }> = {
   kursi: { src: "/projects/kursi/screenshots/home.gif", alt: "Kursi home screen" },
   mileway: { src: "/projects/mileway/screenshots/track_a_trip.gif", alt: "Mileway trip tracking flow" },
-  paymentslab: { src: "/projects/paymentslab/screenshots/checkout_flow.gif", alt: "PaymentsLab checkout flow" },
+  // ponytail: checkout_flow.gif opens on the FLAG_SECURE "screenshots blocked"
+  // frame — great security story, terrible thumbnail. Static catalog shot instead.
+  paymentslab: { src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", alt: "PaymentsLab gateway catalog" },
 };
 
 const NAV_LINKS = [
@@ -438,6 +441,7 @@ function Projects() {
           </h3>
           <div className="rounded-2xl border border-line bg-card p-6">
             <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
+            <FoundationGraph />
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {sharedFoundation.libs.map((lib) => (
                 <a
