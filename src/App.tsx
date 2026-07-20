@@ -66,7 +66,7 @@ function platformsOf(stack: string[]) {
 
 // Projects with a playable web build — hints the "▶ Live" badge on the card;
 // the detail page is where it's actually embedded/linked.
-const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway"]);
+const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway", "paymentslab"]);
 
 // Card-top media per project — the daily-synced gifs finally surface on the
 // home page instead of living only inside detail-page galleries.
