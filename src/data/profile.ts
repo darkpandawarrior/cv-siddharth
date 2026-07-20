@@ -602,7 +602,8 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home_screen_loaded.png"],
-        note: "The Compose Wasm build isn't hosted live right now — GitHub Pages redirects here instead. Screens shown.",
+        liveUrl: "/mileway-app/index.html",
+        note: "Live — a Compose/Wasm preview shell: dashboard, live simulated tracking and the expense log, running the real design system and location math in your browser.",
       },
     ],
     detail: {
