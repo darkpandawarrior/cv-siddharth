@@ -111,9 +111,12 @@ export function ResumeView() {
               </p>
             </div>
           ))}
+          {/* Rendered from the same openSource data as the homepage so this
+              line can never drift from the real merged-PR list again. */}
           <p className="mt-2 text-sm leading-snug text-zinc-700">
             <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
-            {openSource.length} merged PRs to HireSignal (career-ops) — incl. the 1.14 System-Layer sync, multi-profile switcher, and dashboard tabs.
+            {openSource.length} merged PRs to career-ops (public OSS, 60k+ stars) —{" "}
+            {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.
           </p>
         </section>
 

@@ -204,6 +204,12 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
+            <a
+              href="#writing"
+              className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
+            >
+              Field notes on this work <ArrowUpRight size={13} />
+            </a>
             <span className="text-sm text-zinc-500">{project.status}</span>
           </div>
         </div>
