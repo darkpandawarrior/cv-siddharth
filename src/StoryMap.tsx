@@ -299,7 +299,7 @@ export function StoryMap() {
             n.target === "chat" ? (
               <button
                 key={n.id}
-                onClick={openChat}
+                onClick={() => openChat()}
                 className="tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100"
                 style={{ borderColor: `${n.color}44` }}
               >

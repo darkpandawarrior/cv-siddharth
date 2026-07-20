@@ -4,6 +4,7 @@ import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 import { PROJECT_ORDER } from "./data/connections.ts";
 import { FieldNotes } from "./FieldNotes.tsx";
+import { openChat } from "./FloatingChat.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
@@ -232,6 +233,12 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
+            <button
+              onClick={() => openChat(`Walk me through the ${project.name} build — the architecture and the hardest problems.`)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent2/40 px-4 py-2 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+            >
+              ✦ Ask my AI about {project.name}
+            </button>
             <a
               href="#loopdown"
               onClick={() => window.scrollTo({ top: 0 })}

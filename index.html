@@ -11,6 +11,10 @@
     <meta name="author" content="Siddharth Pandalai" />
     <link rel="canonical" href="https://cv-siddharth.vercel.app/" />
     <meta name="theme-color" content="#0b0f0d" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="Agent-readable profile" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://cv-siddharth.vercel.app/" />
     <meta property="og:site_name" content="sid.android" />
@@ -70,9 +74,40 @@
         ]
       }
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        "name": "Siddharth Pandalai | Senior Android Engineer",
+        "url": "https://cv-siddharth.vercel.app/",
+        "mainEntity": { "@type": "Person", "name": "Siddharth Pandalai" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "sid.android",
+          "url": "https://cv-siddharth.vercel.app/"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main style="max-width: 640px; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui; color: #e8efe9">
+        <h1>Siddharth Pandalai — Senior Android Engineer</h1>
+        <p>
+          Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users.
+          GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.
+        </p>
+        <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
+        <ul>
+          <li><a href="/llms.txt" style="color: #3ddc84">Profile summary (llms.txt)</a></li>
+          <li><a href="/llms-full.txt" style="color: #3ddc84">Full profile (llms-full.txt)</a></li>
+          <li><a href="https://github.com/darkpandawarrior" style="color: #3ddc84">GitHub</a></li>
+          <li><a href="https://linkedin.com/in/siddharth-pandalai-3712b215a" style="color: #3ddc84">LinkedIn</a></li>
+          <li><a href="mailto:siddharthpandalai990@gmail.com" style="color: #3ddc84">siddharthpandalai990@gmail.com</a></li>
+        </ul>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

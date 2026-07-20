@@ -31,6 +31,7 @@ import { StoryMap } from "./StoryMap.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
+import { SkillsOrbit } from "./SkillsOrbit.tsx";
 import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
@@ -106,7 +107,15 @@ function useHashRoute(): string {
         setHash(`#project/${project}`);
       }
     }
-    const onChange = () => setHash(window.location.hash);
+    const onChange = () => {
+      const apply = () => setHash(window.location.hash);
+      // View Transitions API: cross-fade between routes where supported.
+      if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.startViewTransition(apply);
+      } else {
+        apply();
+      }
+    };
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
@@ -182,7 +191,7 @@ function Nav() {
         <div className="flex items-center gap-2">
           <CommandPalette />
           <button
-            onClick={openChat}
+            onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
             <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
@@ -207,10 +216,11 @@ function Hero() {
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
-        <p className="rise-in rise-in-2 mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        <Typewriter />
+        <p className="rise-in rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
-            onClick={openChat}
+            onClick={() => openChat()}
             className="btn-primary rounded-full bg-accent px-6 py-2.5 font-semibold text-ink hover:bg-accent-dim"
           >
             Chat with my AI assistant
@@ -233,6 +243,62 @@ function Hero() {
       </div>
       <Phone3D />
     </section>
+  );
+}
+
+const IDENTITY_LINES = [
+  "platform owner · 50k+ MAU fintech",
+  "5 platforms · one Kotlin codebase",
+  "GPS 50% → 95% · crashes -80%",
+  "an engineer who writes",
+];
+
+/** Cycling typewriter identity line; reduced motion gets the first line, static. */
+function Typewriter() {
+  const [text, setText] = useState(IDENTITY_LINES[0]);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let line = 0;
+    let len = IDENTITY_LINES[0].length;
+    let deleting = false;
+    let timer = 0;
+    const tick = () => {
+      const current = IDENTITY_LINES[line];
+      len += deleting ? -1 : 1;
+      setText(current.slice(0, len));
+      let delay = deleting ? 26 : 44;
+      if (!deleting && len === current.length) {
+        deleting = true;
+        delay = 2600;
+      } else if (deleting && len === 0) {
+        deleting = false;
+        line = (line + 1) % IDENTITY_LINES.length;
+        delay = 350;
+      }
+      timer = window.setTimeout(tick, delay);
+    };
+    timer = window.setTimeout(tick, 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <p className="rise-in rise-in-2 mt-4 h-5 font-mono text-sm text-accent2" aria-label={IDENTITY_LINES.join(" · ")}>
+      <span aria-hidden>
+        {"> "}
+        {text}
+        <span className="boot-caret">▌</span>
+      </span>
+    </p>
+  );
+}
+
+/** Animated circuit divider — a signal pulse traveling the seam between sections. */
+function Circuit() {
+  return (
+    <div aria-hidden className="mx-auto max-w-5xl px-6">
+      <div className="circuit-line" />
+    </div>
   );
 }
 
@@ -372,6 +438,12 @@ function CaseStudies() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
                 <p className="mt-3 text-sm font-medium text-zinc-200">{cs.outcome}</p>
                 <HowExpander items={cs.approach} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); openChat(`Tell me more about "${cs.title}" — what was the hardest part?`); }}
+                  className="mt-4 flex w-fit items-center gap-1.5 rounded-full border border-accent2/30 bg-accent2/5 px-3 py-1 text-[11px] font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+                >
+                  <MessageCircle size={11} /> ask my AI about this
+                </button>
                 <FieldNotes slug={cs.slug} className="mt-4" />
                 <div className="mt-auto flex flex-wrap gap-2 pt-5">
                   {cs.tags.map((t) => (
@@ -727,14 +799,17 @@ const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
 function Skills() {
   const [active, setActive] = useState<string | null>(null);
   const chips = useMemo(() => skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group }))), []);
+  const toggle = (group: string) => setActive((v) => (v === group ? null : group));
 
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
-        <p className="mb-8 text-zinc-400">Filter by area, or just hover the cloud.</p>
+        <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
+
+      <SkillsOrbit active={active} onSelect={toggle} />
 
       <Reveal>
         <div className="flex flex-wrap gap-2">
@@ -743,7 +818,7 @@ function Skills() {
               key={s.group}
               type="button"
               aria-pressed={active === s.group}
-              onClick={() => setActive((v) => (v === s.group ? null : s.group))}
+              onClick={() => toggle(s.group)}
               className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                 active === s.group
                   ? "border-accent bg-accent/15 text-accent"
@@ -913,8 +988,10 @@ export default function App() {
         <CaseStudies />
         <Projects />
         <ExperienceSection />
+        <Circuit />
         <Skills />
         <WritingSection />
+        <Circuit />
         <StoryMap />
         <Contact />
       </main>

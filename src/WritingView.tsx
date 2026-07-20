@@ -47,7 +47,7 @@ export function WritingView() {
               <Github size={15} /> the-loopdown
             </a>
             <button
-              onClick={openChat}
+              onClick={() => openChat()}
               className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
             >
               Ask my AI
