@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:07.400
+This is Mileway — an offline-first mileage and expense tracker, one Kotlin codebase, forty-five modules.
+
+00:00:07.400 --> 00:00:13.800
+It starts like any app — sign in, or continue as a guest, no account required to explore.
+
+00:00:13.800 --> 00:00:21.400
+The home screen surfaces mileage, cards and quick actions, reading straight from Room on-device — no network required.
+
+00:00:21.400 --> 00:00:24.700
+Tap start, and the location engine takes over.
+
+00:00:24.700 --> 00:00:33.800
+GPS fixes and accelerometer data fuse in real time, with spike detection filtering jitter so the route stays accurate even when the signal doesn't.
+
+00:00:33.800 --> 00:00:41.600
+When the trip ends, a shared policy-rate engine computes the reimbursement on the spot — no spreadsheet, no manual math.
+
+00:00:41.600 --> 00:00:50.000
+Manual entries go through the same rigor — a guided wizard, receipt capture, and a durable Room submit-outbox that survives a killed app.
+
+00:00:50.000 --> 00:00:57.500
+On the other side, a manager reviews the queue — policy violations flagged automatically, before anyone has to ask.
+
+00:00:57.500 --> 00:01:01.600
+Purchase requests and invoices route through that same approval spine.
+
+00:01:01.600 --> 00:01:09.200
+An on-device AI assistant answers policy questions instantly — the model runs on the phone, no data leaving the device.
+
+00:01:09.200 --> 00:01:16.200
+Every feature is a plugin, toggled live — the same app reshapes itself into four different personas from one account.
+
+00:01:16.200 --> 00:01:27.000
+And it isn't just the phone — the same core runs on iOS, Wear OS, watchOS and Desktop, one codebase, five platforms, zero backend required.
