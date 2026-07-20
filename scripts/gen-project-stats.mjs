@@ -40,6 +40,12 @@ async function build() {
   const mDb = await getText(raw(mRepo, "main", "core/data/src/commonMain/kotlin/com/mileway/core/data/database/MilewayDatabase.kt"));
   const pSettings = await getText(raw(pRepo, "main", "settings.gradle.kts"));
   const kSettings = await getText(raw(kRepo, "main", "settings.gradle.kts"));
+  // Gateway registry + composed toolkit modules — the two numbers that went
+  // stale by hand (7/47/8/4 lingered after providers were promoted).
+  const pApp = await getText(raw(pRepo, "main", "app/src/main/kotlin/com/paymentslab/app/PaymentsLabApplication.kt"));
+  const pStubs = await getText(raw(pRepo, "main", "app/src/main/kotlin/com/paymentslab/app/StubGatewayConfigs.kt"));
+  // external/kmp-toolkit is a submodule on GitHub — read the library repo directly.
+  const pToolkit = await getText(raw("darkpandawarrior/kmp-toolkit", "main", "settings.gradle.kts"));
 
   const dbMatch = mDb.match(/version\s*=\s*(\d+)/);
   if (!dbMatch) throw new Error("could not parse Mileway DB version");
@@ -54,9 +60,20 @@ async function build() {
     },
     paymentslab: {
       modules: count(pSettings, /^include\(/gm),
+      composedModules: count(pToolkit, /^include\(/gm),
       providers: count(pSettings, /^include\(":provider:/gm),
       features: count(pSettings, /^include\(":feature:/gm),
       cores: count(pSettings, /^include\(":core:/gm),
+      // Registry wiring in PaymentsLabApplication.kt is the source of truth
+      // for the catalog: standalone provider modules arrive as imports, the
+      // hosted-webview archetype takes a listOf(*HostedGatewayConfig), the
+      // mobile-money archetype a listOf(*Config), stubs live in their own file.
+      gatewaysNative:
+        count(pApp, /^import com\.siddharth\.kmp\.provider\.\w+\.di\./gm) -
+        count(pApp, /^import com\.siddharth\.kmp\.provider\.(?:hostedwebview|mobilemoney)\./gm),
+      gatewaysHosted: count(pApp, /\w+HostedGatewayConfig\b/g),
+      gatewaysMobileMoney: count(pApp.match(/mobileMoneyModule\(\s*listOf\(([\s\S]*?)\)/)?.[1] ?? "", /\w+Config\b/g),
+      gatewaysStub: count(pStubs, /^\s*val \w+StubConfig\b/gm),
       screenshots: await pngCount(pRepo, "main", "docs/screenshots"),
     },
     kursi: {

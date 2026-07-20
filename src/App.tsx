@@ -145,7 +145,7 @@ function Nav() {
         </a>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="transition hover:text-accent">
+            <a key={l.href} href={l.href} className="nav-link transition hover:text-accent">
               {l.label}
             </a>
           ))}
@@ -175,13 +175,13 @@ function Hero() {
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
         </p>
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
-          I take Android apps from <span className="text-accent">prototype to platform.</span>
+          I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
         <p className="rise-in rise-in-2 mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
             onClick={openChat}
-            className="rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            className="btn-primary rounded-full bg-accent px-6 py-2.5 font-semibold text-ink hover:bg-accent-dim"
           >
             Chat with my AI assistant
           </button>
