@@ -19,8 +19,11 @@ import {
  * scripts/gen-loopdown.mjs so it stays in sync with what's published.
  */
 
+// Cast accents cycle through the series palette — the characters roam between series.
+const CAST_COLORS = ["#7c5cff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
+
 export function WritingView() {
-  const { lessons, series, archive } = writing;
+  const { lessons, series, archive, cast } = writing;
   const sorted = [...lessons].sort((a, b) => {
     if ((a.status === "published") !== (b.status === "published")) return a.status === "published" ? -1 : 1;
     return (b.created || "").localeCompare(a.created || "");
@@ -156,6 +159,38 @@ export function WritingView() {
           </div>
         </section>
 
+        {/* the recurring cast */}
+        {cast.length > 0 && (
+          <section className="border-t border-line pb-16 pt-12">
+            <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+              The cast <span className="text-zinc-600">· the bugs, personified</span>
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm text-zinc-400">
+              Every lesson stars a recurring character — the bug itself, given a face and a motive.
+              Appearances so far:
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {cast.map((c, i) => {
+                const color = CAST_COLORS[i % CAST_COLORS.length];
+                return (
+                  <span
+                    key={c.id}
+                    className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-zinc-200"
+                    style={{ borderColor: `${color}55` }}
+                  >
+                    <span className="font-display font-bold" style={{ color }}>
+                      {titleize(c.id)}
+                    </span>
+                    <span className="rounded-full border border-line px-1.5 text-[10px] text-zinc-500">
+                      ×{c.appearances}
+                    </span>
+                  </span>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* archive */}
         <section className="border-t border-line pb-24 pt-12">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
@@ -181,12 +216,17 @@ export function WritingView() {
               </p>
             </a>
             {archive.map((a) => (
-              <div key={a.slug} className="rounded-xl border border-line bg-surface p-4">
+              <div key={a.slug} className="rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-semibold text-zinc-100">{a.title}</h3>
                   <span className="shrink-0 font-mono text-[11px] text-zinc-500">{a.form}</span>
                 </div>
                 {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+                  {a.era && <span>{a.era}</span>}
+                  {a.words && <span>{Number(a.words).toLocaleString()} words</span>}
+                  {a.words && <span>~{Math.max(1, Math.round(Number(a.words) / 220))} min read</span>}
+                </div>
               </div>
             ))}
           </div>

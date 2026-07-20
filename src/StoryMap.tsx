@@ -43,6 +43,7 @@ export const NODES: Node[] = [
   { id: "writing", label: "The Loopdown", sub: "field notes", x: 0.78, y: 0.34, r: 15, color: PURPLE, target: "#loopdown" },
   { id: "books", label: "Books Before Bros", sub: "the origin blog", x: 0.9, y: 0.64, r: 13, color: ORANGE, target: BOOKS_BEFORE_BROS.url },
   { id: "chat", label: "Ask my AI", sub: "knows all of this", x: 0.66, y: 0.84, r: 13, color: CYAN, target: "chat" },
+  { id: "blueprint", label: "Blueprint Room", sub: "infinite canvas", x: 0.52, y: 0.16, r: 12, color: ORANGE, target: "#blueprint" },
 ];
 
 // Wiring: hub feeds everything; the work feeds the writing; the writing
@@ -53,6 +54,7 @@ export const EDGES: [string, string][] = [
   ["mileway", "writing"], ["work", "writing"], ["books", "writing"],
   ["mileway", "kursi"], ["kursi", "paymentslab"],
   ["chat", "writing"], ["chat", "work"],
+  ["sid", "blueprint"],
 ];
 
 export function navigate(target: string) {
