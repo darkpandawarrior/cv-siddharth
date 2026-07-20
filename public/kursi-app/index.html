@@ -51,7 +51,10 @@
 </head>
 <body>
     <div id="loader">Sab mile hue hain&hellip;</div>
-    <script src="cmp-web.js"></script>
+    <!-- type="module" is REQUIRED: the Kotlin/Wasm webpack bundle uses
+         import.meta and throws a parse-time SyntaxError as a classic script,
+         so the app silently never boots without it. -->
+    <script type="module" src="cmp-web.js"></script>
     <script>
         // Main.kt uses ComposeViewport(document.body!!), which creates and appends
         // its OWN <canvas>. Do NOT add a manual <canvas id="ComposeTarget"> here —
