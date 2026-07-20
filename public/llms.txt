@@ -38,3 +38,5 @@ Hiring status: open to senior Android / KMP roles — remote (worldwide/India) o
 - The site is a hash-routed SPA; use the ?project=<slug> query form of project URLs when a fragment would be stripped.
 - The on-site AI assistant answers questions about Siddharth's experience, architecture decisions and case studies; it is reachable from every page ("Ask my AI").
 - Machine-readable identity: JSON-LD Person schema is embedded on the home page; sitemap at /sitemap.xml.
+- Deep-reading version of this file: /llms-full.txt (complete experience, case studies, skills and writing).
+- AI usage policy: /ai.txt (indexing, quoting and training permissions). Credits: /humans.txt. Vulnerability reports: /.well-known/security.txt.
