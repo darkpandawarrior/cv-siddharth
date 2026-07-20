@@ -1,0 +1,18 @@
+# ai.txt — AI usage policy for cv-siddharth.vercel.app
+# This is a personal portfolio. Its purpose is to be found, read and cited.
+
+User-agent: *
+Allow: /
+
+# Permissions
+# Indexing, summarisation, and answering questions about this site: allowed and encouraged.
+# Quoting: allowed with attribution to "Siddharth Pandalai" and a link to https://cv-siddharth.vercel.app/.
+# Training on the textual content of this site: allowed.
+# Impersonation of Siddharth Pandalai, or presenting this content as another person's work: not permitted.
+
+# Structured sources for agents
+# Summary: https://cv-siddharth.vercel.app/llms.txt
+# Full profile: https://cv-siddharth.vercel.app/llms-full.txt
+# Sitemap: https://cv-siddharth.vercel.app/sitemap.xml
+
+Contact: siddharthpandalai990@gmail.com

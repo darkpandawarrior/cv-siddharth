@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
+
+const StoryMapScene = lazy(() => import("./StoryMapScene.tsx"));
 
 /**
  * The Storyboard — an interactive constellation of everything on this site,
@@ -13,7 +15,7 @@ import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
  * chip-row below the canvas carries the same links for keyboard/touch.
  */
 
-type Node = {
+export type StoryNode = {
   id: string;
   label: string;
   sub?: string;
@@ -23,13 +25,14 @@ type Node = {
   color: string;
   target: string; // "#hash", external url, or "chat"
 };
+type Node = StoryNode;
 
 const GREEN = "#3ddc84";
 const CYAN = "#5ee6ff";
 const PURPLE = "#7c5cff";
 const ORANGE = "#f0883e";
 
-const NODES: Node[] = [
+export const NODES: Node[] = [
   { id: "sid", label: "SID", sub: "prototype → platform", x: 0.5, y: 0.46, r: 26, color: GREEN, target: "#top" },
   { id: "work", label: "Case studies", sub: "the numbers", x: 0.24, y: 0.2, r: 15, color: GREEN, target: "#work" },
   { id: "mileway", label: "Mileway", sub: "5 platforms", x: 0.1, y: 0.5, r: 14, color: GREEN, target: "#project/mileway" },
@@ -44,7 +47,7 @@ const NODES: Node[] = [
 
 // Wiring: hub feeds everything; the work feeds the writing; the writing
 // descends from the blog; the AI has read the lot.
-const EDGES: [string, string][] = [
+export const EDGES: [string, string][] = [
   ["sid", "work"], ["sid", "mileway"], ["sid", "kursi"], ["sid", "paymentslab"],
   ["sid", "experience"], ["sid", "skills"], ["sid", "writing"], ["sid", "chat"],
   ["mileway", "writing"], ["work", "writing"], ["books", "writing"],
@@ -52,7 +55,7 @@ const EDGES: [string, string][] = [
   ["chat", "writing"], ["chat", "work"],
 ];
 
-function navigate(target: string) {
+export function navigate(target: string) {
   if (target === "chat") return openChat();
   if (target.startsWith("#")) {
     const inPage = document.getElementById(target.slice(1));
@@ -217,17 +220,33 @@ function StoryMapCanvas() {
   return <canvas ref={canvasRef} className="h-full w-full" aria-hidden />;
 }
 
+function supportsWebGL(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
 export function StoryMap() {
   const holder = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  // Capable, motion-friendly desktops get the full 3D constellation;
+  // everyone else keeps the (already animated) 2D canvas.
+  const [use3D, setUse3D] = useState(false);
 
   useEffect(() => {
     const el = holder.current;
     if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
+    const wants3D = !reduced && !isSmallScreen && supportsWebGL();
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setMounted(true);
+          setUse3D(wants3D);
           observer.disconnect();
         }
       },
@@ -252,15 +271,35 @@ export function StoryMap() {
           ref={holder}
           className="card-elevated relative hidden h-[420px] overflow-hidden rounded-2xl border border-line bg-void/60 sm:block"
         >
-          {mounted && <StoryMapCanvas />}
+          {mounted &&
+            (use3D ? (
+              <Suspense fallback={<StoryMapCanvas />}>
+                <StoryMapScene />
+              </Suspense>
+            ) : (
+              <StoryMapCanvas />
+            ))}
+          {use3D && (
+            <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+              drag to orbit
+            </span>
+          )}
         </div>
+        <a
+          href="#blueprint"
+          onClick={() => window.scrollTo({ top: 0 })}
+          className="group mt-4 flex items-center justify-between rounded-xl border border-accent2/30 bg-accent2/5 px-4 py-3 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+        >
+          <span>Enter the Blueprint Room — the same map as an infinite, editable canvas</span>
+          <span className="transition group-hover:translate-x-1">→</span>
+        </a>
         {/* Same destinations as real links — keyboard, touch and small screens. */}
         <div className="mt-4 flex flex-wrap gap-2">
           {NODES.filter((n) => n.id !== "sid").map((n) =>
             n.target === "chat" ? (
               <button
                 key={n.id}
-                onClick={openChat}
+                onClick={() => openChat()}
                 className="tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100"
                 style={{ borderColor: `${n.color}44` }}
               >

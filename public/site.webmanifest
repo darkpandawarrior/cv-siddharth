@@ -1,0 +1,13 @@
+{
+  "name": "Siddharth Pandalai — Senior Android Engineer",
+  "short_name": "sid.android",
+  "description": "Interactive portfolio: case studies, 3D storyboard, infinite blueprint canvas and an AI assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f0d",
+  "theme_color": "#0b0f0d",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

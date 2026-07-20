@@ -37,6 +37,9 @@ export function WritingView() {
             <a href="#projects" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Projects
             </a>
+            <a href="#map" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+              Storyboard
+            </a>
             <a href="#resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Résumé
             </a>
@@ -44,7 +47,7 @@ export function WritingView() {
               <Github size={15} /> the-loopdown
             </a>
             <button
-              onClick={openChat}
+              onClick={() => openChat()}
               className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
             >
               Ask my AI

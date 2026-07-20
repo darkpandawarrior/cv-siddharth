@@ -1,0 +1,18 @@
+/* TEAM */
+Engineer, designer, writer: Siddharth Pandalai
+Site: https://cv-siddharth.vercel.app/
+GitHub: https://github.com/darkpandawarrior
+Location: Pune, India
+
+/* THANKS */
+AI pair-engineering: Claude (Anthropic)
+
+/* SITE */
+Stack: React 19 · TypeScript · Vite · Tailwind CSS v4
+Graphics: three.js + @react-three/fiber + drei (3D storyboard, ambient starfield, hero phone)
+Canvas: tldraw (the Blueprint Room)
+Icons: Lucide
+Fonts: Space Grotesk · Inter · JetBrains Mono · Rozha One
+Chat: LLM-agnostic assistant backend (see /api)
+Hosting: Vercel
+Standards: /robots.txt · /sitemap.xml · /llms.txt · /llms-full.txt · /ai.txt · /.well-known/security.txt

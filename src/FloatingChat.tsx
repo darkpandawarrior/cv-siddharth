@@ -27,9 +27,11 @@ const FALLBACK =
 const CHAT_API_URL: string = import.meta.env.VITE_CHAT_API_URL || "/api/chat";
 
 // Lets any button on the page open the widget without prop drilling.
+// Pass a question to have the assistant asked it immediately — every card
+// can deep-link straight into a conversation about itself.
 const OPEN_CHAT_EVENT = "open-chat";
-export function openChat() {
-  window.dispatchEvent(new Event(OPEN_CHAT_EVENT));
+export function openChat(question?: string) {
+  window.dispatchEvent(new CustomEvent(OPEN_CHAT_EVENT, { detail: question }));
 }
 
 /** Consumes the server's normalized SSE stream: `data: {"text": "…"}` events. */
@@ -70,11 +72,16 @@ export function FloatingChat() {
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const onOpen = () => setOpen(true);
+    const onOpen = (e: Event) => {
+      setOpen(true);
+      const q = (e as CustomEvent).detail;
+      if (typeof q === "string" && q.trim()) setPendingAsk(q);
+    };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
   }, []);
@@ -86,6 +93,16 @@ export function FloatingChat() {
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  // Fire a deep-linked question once the widget is open and idle.
+  useEffect(() => {
+    if (open && pendingAsk && !busy) {
+      const q = pendingAsk;
+      setPendingAsk(null);
+      void send(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, pendingAsk, busy]);
 
   async function send(text: string) {
     const content = text.trim();

@@ -1,0 +1,92 @@
+# Siddharth Pandalai — Senior Android Engineer (full profile for deep reading)
+
+> This is the complete, agent-readable profile behind https://cv-siddharth.vercel.app/. The condensed map is at /llms.txt. Machine-readable identity: JSON-LD Person on the home page; sitemap at /sitemap.xml; AI usage policy at /ai.txt.
+
+Siddharth Pandalai (GitHub: darkpandawarrior). Senior Android Engineer based in Pune, India. 5+ years building production Android. Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly active users. Focus: the unglamorous engineering that makes apps feel reliable — location accuracy, crash-free sessions, and architecture a team can move fast in.
+
+Hiring status: open to senior Android / KMP roles — remote (worldwide/India) or hybrid Pune/Bengaluru. Notice period 15 days.
+Contact: siddharthpandalai990@gmail.com
+
+## Experience
+
+### Dice.tech — SDE-2, Android & Product Owner (Jun 2023 — present)
+
+- Platform ownership: owns Android architecture and platform decisions across a 738k-LOC Kotlin app serving 50,000+ MAU.
+- Compose migration: led legacy Java/XML to 92% Jetpack Compose migration with zero regressions across mission-critical workflows.
+- Location engineering: built a predictive dead-reckoning location engine, lifting GPS accuracy from 50% to 95% for 22,000+ DAU.
+- Crash reduction: cut production crashes 80% via structured-concurrency fixes and dual Crashlytics + Sentry monitoring.
+- Security hardening: hardened the app to VAPT/banking compliance — SQLCipher, AES-256 Keystore, biometrics, SSL-pinning build flavors.
+- Data layer: owns the Room persistence layer across two databases with 24 verified production schema migrations.
+- Product growth: shipped intelligent in-app review flows, lifting Play Store rating 85% and reviews 80x.
+- Travel platform: shipped the Android side of Trip V2 — Itinerary V2, GIN screens, full Mixpanel instrumentation.
+- UI platform: designed a Dynamic Theme Engine for client branding, cutting UI development friction 60%.
+- CI/CD: automated Fastlane builds and Play Store releases; upgraded to AGP 9 with agentic MCP workflows.
+
+### Jugnoo / Tookan / Jungleworks — Software Engineer, Android & Vertical Owner (Jan 2021 — May 2023)
+
+- Owned Android development across multi-tenant SaaS platforms for customer, driver and merchant apps.
+- Built modular white-label templates, cutting delivery time 80% across 20+ clients.
+- Refactored core modules and REST integrations (Retrofit, OkHttp), including secure payment gateways.
+- Unified P2P Carpool and Trucking verticals into one super-app platform.
+- Cross-team roadmap collaboration with product and backend, cutting engineering overhead 40%.
+
+### John Deere India — GET Intern (May — Jul 2020)
+
+- Proof of concept integrating social-media sentiment analysis into financial lending systems for credit-risk modeling.
+
+Education: B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT), 2017–2021.
+
+## Case studies
+
+### Mileway — offline-first mileage tracker (35 modules · 5 platforms · offline AI)
+
+Open-source app designed and built end-to-end: mileage, travel & expense tracking running entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend (Room + DataStore), so everything is reproducible and reviewable. Key engineering: 35-module clean architecture with 11 isolated feature modules meeting only at the :app composition root (Koin-wired); shared commonMain core driving all five targets from one snapshot model; a location engine treating GPS as a noisy signal (jitter suppression, spike detection, four-bucket distance accumulator, IMU fusion, device-tier-adaptive sampling, deterministic simulated-drive source for hardware-free unit tests); a policy engine computing reimbursement from per-vehicle rate rules; a durable submit-outbox journaling submissions so a mid-submit kill never loses or double-counts; an on-device AI assistant doing retrieval-grounded chat over local trip/expense data with on-device speech I/O; a super-profile & plugin-composition platform (single plugin registry, FORCED > USER > PRESET > DEFAULT resolution, four persona presets); dual gms/noGms distribution (Play + F-Droid) with a dependency guard; 159 Roborazzi JVM screenshot tests. Repo: https://github.com/darkpandawarrior/Mileway · Case study: https://cv-siddharth.vercel.app/?project=mileway
+
+### Predictive dead reckoning for billing-grade mileage (GPS 50% → 95%)
+
+Problem: field users' trip distances were off by large margins from urban canyons, tunnels and OEM-throttled location updates. Approach: fused accelerometer and GPS data to estimate position between fixes; rejected physically impossible fixes with spike detection plus gap-filling; ran a foreground service with a floating bubble UI to survive OEM battery restrictions. Outcome: tracking accuracy rose from 50% to 95% — reliable enough for expense reimbursement.
+
+### Systematic crash triage at 50k-MAU scale (-80% crashes)
+
+Problem: a fast-growing 738k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs. Approach: clustered crashes to collapse dozens of stack traces into a handful of root bugs; reconstructed pre-crash user journeys with structured breadcrumbs; hunted concurrency bugs — main-thread violations, coroutine races, lifecycle leaks. Outcome: crashes fell 80%; Play Store rating rose 85% with 80x more reviews.
+
+### Zero-regression migration to a Compose theme platform (92% Compose)
+
+Problem: XML views made UI changes slow, and theming requests meant touching dozens of files. Approach: incremental migration via interop while Expenses, Travel and Invoices kept shipping; one immutable UiState per screen (StateFlow + MVI); a Dynamic Theme Engine on CompositionLocal. Outcome: 92% Compose coverage, zero regressions, UI friction down 60%.
+
+### Configuration-driven pipeline for multi-tenant Android (80% faster delivery)
+
+Problem: every white-label client meant weeks of manual forking, rebranding and re-releasing. Approach: configuration-driven theming and feature flags; automated per-client signing, asset generation and Play Store packaging; unified brand tokens and vertical flows into one template. Outcome: 20+ client apps shipped with delivery time cut 80%.
+
+## Other builds
+
+- Kursi (https://cv-siddharth.vercel.app/?project=kursi): multiplayer social-deduction game — Android + playable web build, 10 AI bot personas, 6 roles, 4 story arcs, one engine across 4 platforms. Repo: https://github.com/darkpandawarrior/Kursi
+- PaymentsLab (https://cv-siddharth.vercel.app/?project=paymentslab): payment-gateway integration lab with real security hardening (FLAG_SECURE, SSL pinning, SQLCipher). Repo: https://github.com/darkpandawarrior/PaymentsLab
+- kmp-toolkit: shared KMP foundation (MVI core, security, design system, feedback) used by Mileway and PaymentsLab. https://github.com/darkpandawarrior/kmp-toolkit
+- kmp-build-logic: convention plugins powering the multi-module builds. https://github.com/darkpandawarrior/kmp-build-logic
+
+## Skills
+
+UI: Jetpack Compose (92% production coverage), Material 3, Compose-View interop, Compose Multiplatform.
+Architecture: Clean Architecture, MVVM, MVI, modular architecture, repository pattern, Kotlin Multiplatform.
+Concurrency & DI: Kotlin Coroutines, Flow, StateFlow/SharedFlow, structured concurrency, Hilt, Dagger.
+Data & networking: Room (24 schema migrations, 2 databases), DataStore, SQLCipher, Retrofit, OkHttp, REST.
+Platform: Android SDK, WorkManager, foreground services, location/sensor fusion, Crashlytics + Sentry, Mixpanel.
+Security: Android Keystore (AES-256), SSL pinning, BiometricPrompt, EncryptedSharedPreferences, VAPT compliance.
+Build & tools: Gradle KTS, AGP 9, Fastlane, Play Store release management, Figma, agentic workflows (Firebender, MCP).
+Languages: Kotlin, Java, Dart, C++.
+
+## Writing — The Loopdown
+
+Field notes from real Android/KMP work, told through recurring personified-bug characters. Hub: https://cv-siddharth.vercel.app/#loopdown · Registry: https://github.com/darkpandawarrior/the-loopdown
+
+Series: Sensors Who Lie (location/sensor fusion, from Mileway's location engine) · The Coroutine Court (concurrency, from the -80% crashes work) · The Night Shift (background execution, from the GPS work) · Ghosts In The Recomposition (Compose performance, from the 92% migration) · One Brain Two Bodies (KMP architecture, from Mileway's 5-platform build).
+
+Published: "Teaching a phone to disbelieve its own GPS" — https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip (also on Medium, Hashnode, LinkedIn).
+Queued: "collectAsState is quietly leaking your work", "expect/actual is the wrong default in KMP", "Your LazyColumn recomposes on every scroll", "The 5-second window that crashes your service", "CancellationException is not an assassin".
+
+Creative archive (pre-code writing, originally on https://booksbeforebros.wordpress.com/): Chronicles Of An NRE Kid (essay), CTC: Cost To Company (2069 climate-dystopia satire), Deadline (memento-mori sci-fi), The Loopdown (time-loop story the repo is named for), Pointer Games and Prophecy #201112003 (campus lore), It's A Doggone Life (essay), Honest College Fests and The Pun Force (humor), College Clubs (opinion).
+
+## Profiles
+
+GitHub https://github.com/darkpandawarrior · LinkedIn https://linkedin.com/in/siddharth-pandalai-3712b215a · dev.to https://dev.to/darkpandawarrior · Medium https://medium.com/@darkpandawarrior · Hashnode https://darkpandawarrior.hashnode.dev · Books Before Bros https://booksbeforebros.wordpress.com

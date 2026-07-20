@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   Mail,
   MapPin,
@@ -28,6 +28,14 @@ import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { StoryMap } from "./StoryMap.tsx";
+import { FieldNotes } from "./FieldNotes.tsx";
+import { CursorAura } from "./CursorAura.tsx";
+import { SiteFooter } from "./SiteFooter.tsx";
+import { SkillsOrbit } from "./SkillsOrbit.tsx";
+import { writing } from "./data/writing.ts";
+
+// The tldraw SDK loads only when someone actually enters the Blueprint Room.
+const BlueprintRoom = lazy(() => import("./BlueprintRoom.tsx"));
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -99,7 +107,15 @@ function useHashRoute(): string {
         setHash(`#project/${project}`);
       }
     }
-    const onChange = () => setHash(window.location.hash);
+    const onChange = () => {
+      const apply = () => setHash(window.location.hash);
+      // View Transitions API: cross-fade between routes where supported.
+      if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.startViewTransition(apply);
+      } else {
+        apply();
+      }
+    };
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
@@ -107,7 +123,50 @@ function useHashRoute(): string {
 }
 
 
+/**
+ * Reads scroll per frame (same rAF-to-DOM pattern as TimelineSpine): fills
+ * the progress beam under the nav and marks the section currently in view,
+ * so the top bar doubles as a live map of the scroll journey.
+ */
+function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; active: string } {
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState("");
+
+  useEffect(() => {
+    let raf = 0;
+    const ids = NAV_LINKS.map((l) => l.href.slice(1));
+    const apply = () => {
+      raf = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (progressRef.current) {
+        progressRef.current.style.width = `${max > 0 ? Math.min((window.scrollY / max) * 100, 100) : 0}%`;
+      }
+      // Current section: the last one whose top has crossed the upper third.
+      let current = "";
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.34) current = id;
+      }
+      setActive(current);
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return { progressRef, active };
+}
+
 function Nav() {
+  const { progressRef, active } = useScrollSpy();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -116,7 +175,12 @@ function Nav() {
         </a>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="nav-link transition hover:text-accent">
+            <a
+              key={l.href}
+              href={l.href}
+              aria-current={active === l.href.slice(1) ? "true" : undefined}
+              className={`nav-link transition hover:text-accent ${active === l.href.slice(1) ? "nav-link-active text-accent" : ""}`}
+            >
               {l.label}
             </a>
           ))}
@@ -127,13 +191,17 @@ function Nav() {
         <div className="flex items-center gap-2">
           <CommandPalette />
           <button
-            onClick={openChat}
+            onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
             <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
           </button>
         </div>
       </nav>
+      {/* Scroll-progress beam: the journey, measured. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" aria-hidden>
+        <div ref={progressRef} className="nav-progress h-full" style={{ width: 0 }} />
+      </div>
     </header>
   );
 }
@@ -148,10 +216,11 @@ function Hero() {
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
-        <p className="rise-in rise-in-2 mt-6 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        <Typewriter />
+        <p className="rise-in rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
-            onClick={openChat}
+            onClick={() => openChat()}
             className="btn-primary rounded-full bg-accent px-6 py-2.5 font-semibold text-ink hover:bg-accent-dim"
           >
             Chat with my AI assistant
@@ -170,18 +239,109 @@ function Hero() {
           </a>
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
+        <LiveTicker />
       </div>
       <Phone3D />
     </section>
   );
 }
 
+const IDENTITY_LINES = [
+  "platform owner · 50k+ MAU fintech",
+  "5 platforms · one Kotlin codebase",
+  "GPS 50% → 95% · crashes -80%",
+  "an engineer who writes",
+];
+
+/** Cycling typewriter identity line; reduced motion gets the first line, static. */
+function Typewriter() {
+  const [text, setText] = useState(IDENTITY_LINES[0]);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let line = 0;
+    let len = IDENTITY_LINES[0].length;
+    let deleting = false;
+    let timer = 0;
+    const tick = () => {
+      const current = IDENTITY_LINES[line];
+      len += deleting ? -1 : 1;
+      setText(current.slice(0, len));
+      let delay = deleting ? 26 : 44;
+      if (!deleting && len === current.length) {
+        deleting = true;
+        delay = 2600;
+      } else if (deleting && len === 0) {
+        deleting = false;
+        line = (line + 1) % IDENTITY_LINES.length;
+        delay = 350;
+      }
+      timer = window.setTimeout(tick, delay);
+    };
+    timer = window.setTimeout(tick, 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <p className="rise-in rise-in-2 mt-4 h-5 font-mono text-sm text-accent2" aria-label={IDENTITY_LINES.join(" · ")}>
+      <span aria-hidden>
+        {"> "}
+        {text}
+        <span className="boot-caret">▌</span>
+      </span>
+    </p>
+  );
+}
+
+/** Animated circuit divider — a signal pulse traveling the seam between sections. */
+function Circuit() {
+  return (
+    <div aria-hidden className="mx-auto max-w-5xl px-6">
+      <div className="circuit-line" />
+    </div>
+  );
+}
+
+/** Live pulse under the hero: the latest ship and the latest field note. */
+function LiveTicker() {
+  const latestShip = recentGrowth[recentGrowth.length - 1];
+  const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
+  if (!latestShip && !latestPost) return null;
+  return (
+    <div className="rise-in rise-in-3 mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[11px] text-zinc-500">
+      <span className="flex items-center gap-1.5">
+        <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> live
+      </span>
+      {latestShip && (
+        <a href="#projects" className="transition hover:text-accent">
+          ▲ shipped · {latestShip.title}
+        </a>
+      )}
+      {latestPost && (
+        <a href={latestPost.live} target="_blank" rel="noreferrer" className="transition hover:text-accent2">
+          ✎ latest note · {latestPost.title}
+        </a>
+      )}
+    </div>
+  );
+}
+
+// Every headline number links to the section that proves it.
+const METRIC_TARGETS = ["#experience", "#work", "#work", "#work"];
+
 function Metrics() {
   return (
     <section className="border-y border-line bg-surface">
       <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-10 lg:grid-cols-4">
-        {metrics.map((m) => (
-          <AnimatedMetric key={m.label} metric={m} />
+        {metrics.map((m, i) => (
+          <a
+            key={m.label}
+            href={METRIC_TARGETS[i] ?? "#work"}
+            title="See the work behind this number"
+            className="group block rounded-xl transition hover:bg-card/60"
+          >
+            <AnimatedMetric metric={m} />
+          </a>
         ))}
       </div>
     </section>
@@ -253,6 +413,7 @@ function CaseStudies() {
                     </span>
                   ))}
                 </div>
+                <FieldNotes slug="mileway" className="mt-4" />
                 <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
                   Full case study →
                 </span>
@@ -277,6 +438,13 @@ function CaseStudies() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
                 <p className="mt-3 text-sm font-medium text-zinc-200">{cs.outcome}</p>
                 <HowExpander items={cs.approach} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); openChat(`Tell me more about "${cs.title}" — what was the hardest part?`); }}
+                  className="mt-4 flex w-fit items-center gap-1.5 rounded-full border border-accent2/30 bg-accent2/5 px-3 py-1 text-[11px] font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+                >
+                  <MessageCircle size={11} /> ask my AI about this
+                </button>
+                <FieldNotes slug={cs.slug} className="mt-4" />
                 <div className="mt-auto flex flex-wrap gap-2 pt-5">
                   {cs.tags.map((t) => (
                     <span key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
@@ -379,6 +547,7 @@ function Projects() {
                       </span>
                     ))}
                   </div>
+                  <FieldNotes slug={p.slug} className="mt-3" />
                   <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
                     {p.detail && (
                       <span className="flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
@@ -552,6 +721,20 @@ function ExperienceSection() {
                       </li>
                     ))}
                   </ul>
+                  {job.company.toLowerCase().includes("dice") && (
+                    <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">receipts</span>
+                      {["50% → 95% GPS", "-80% crashes", "92% Compose"].map((r) => (
+                        <a
+                          key={r}
+                          href="#work"
+                          className="rounded-full border border-accent/30 bg-accent/5 px-2.5 py-0.5 text-[11px] text-accent/90 transition hover:border-accent hover:text-accent"
+                        >
+                          {r}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   {job.points.length > 4 && (
                     <details className="expander mt-3">
                       <summary className="cursor-pointer select-none text-sm font-semibold text-accent/80 transition hover:text-accent">
@@ -593,17 +776,40 @@ function ExperienceSection() {
   );
 }
 
+// Each skill group points at the work that proves it — synergy, not a tag soup.
+const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
+  "UI & Architecture": [
+    { label: "92% Compose migration", href: "#work" },
+    { label: "Mileway · 35 modules", href: "#project/mileway" },
+  ],
+  "Concurrency & Data": [
+    { label: "-80% crashes", href: "#work" },
+    { label: "The Coroutine Court", href: "#loopdown" },
+  ],
+  "Platform & Systems": [
+    { label: "Mileway · 5 platforms", href: "#project/mileway" },
+    { label: "Shared foundation", href: "#projects" },
+  ],
+  "Security & Ops": [
+    { label: "PaymentsLab", href: "#project/paymentslab" },
+    { label: "White-label · 80% faster", href: "#work" },
+  ],
+};
+
 function Skills() {
   const [active, setActive] = useState<string | null>(null);
   const chips = useMemo(() => skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group }))), []);
+  const toggle = (group: string) => setActive((v) => (v === group ? null : group));
 
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
-        <p className="mb-8 text-zinc-400">Filter by area, or just hover the cloud.</p>
+        <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
+
+      <SkillsOrbit active={active} onSelect={toggle} />
 
       <Reveal>
         <div className="flex flex-wrap gap-2">
@@ -612,7 +818,7 @@ function Skills() {
               key={s.group}
               type="button"
               aria-pressed={active === s.group}
-              onClick={() => setActive((v) => (v === s.group ? null : s.group))}
+              onClick={() => toggle(s.group)}
               className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                 active === s.group
                   ? "border-accent bg-accent/15 text-accent"
@@ -625,6 +831,22 @@ function Skills() {
           ))}
         </div>
       </Reveal>
+
+      {active && PROVEN_IN[active] && (
+        <div className="fade-in mt-5 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">proven in</span>
+          {PROVEN_IN[active].map((p) => (
+            <a
+              key={p.label}
+              href={p.href}
+              onClick={() => { if (!document.getElementById(p.href.slice(1))) window.scrollTo({ top: 0 }); }}
+              className="rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent"
+            >
+              {p.label} →
+            </a>
+          ))}
+        </div>
+      )}
 
       <Reveal delay={100}>
         <div className="mt-6 flex flex-wrap gap-2.5">
@@ -693,14 +915,16 @@ function Contact() {
           >
             <Linkedin size={16} /> LinkedIn
           </a>
+          <a
+            href="#loopdown"
+            onClick={() => window.scrollTo({ top: 0 })}
+            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent2 hover:text-accent2"
+          >
+            ✎ My writing
+          </a>
         </div>
       </div>
-      <footer className="relative border-t border-line py-6 text-center text-xs text-zinc-600">
-        <p className="flex items-center justify-center gap-1">
-          Built with React 19, Tailwind v4 and an LLM-agnostic chat backend
-          <ArrowUpRight size={12} /> {new Date().getFullYear()}
-        </p>
-      </footer>
+      <SiteFooter />
     </section>
   );
 }
@@ -715,12 +939,28 @@ export default function App() {
 
   if (hash === "#resume") return <ResumeView />;
 
+  if (hash === "#blueprint") {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center font-mono text-sm text-zinc-500">
+            drafting the blueprint room…
+          </div>
+        }
+      >
+        <BlueprintRoom />
+        <FloatingChat />
+      </Suspense>
+    );
+  }
+
   // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
   // section, so old /#writing links land on it naturally.
   if (hash === "#loopdown") {
     return (
       <div className="min-h-screen">
         <AmbientBackground />
+        <CursorAura />
         <WritingView />
         <FloatingChat />
       </div>
@@ -730,6 +970,7 @@ export default function App() {
   if (hash.startsWith("#project/")) {
     return (
       <div className="min-h-screen">
+        <CursorAura />
         <ProjectDetail slug={hash.slice("#project/".length)} />
         <FloatingChat />
       </div>
@@ -739,6 +980,7 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <AmbientBackground />
+      <CursorAura />
       <Nav />
       <main>
         <Hero />
@@ -746,8 +988,10 @@ export default function App() {
         <CaseStudies />
         <Projects />
         <ExperienceSection />
+        <Circuit />
         <Skills />
         <WritingSection />
+        <Circuit />
         <StoryMap />
         <Contact />
       </main>

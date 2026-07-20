@@ -1,0 +1,42 @@
+# Siddharth Pandalai — Senior Android Engineer
+
+> Interactive portfolio of Siddharth Pandalai (darkpandawarrior): Senior Android Engineer at Dice.tech, Pune, India. Platform owner of a 50k+ MAU fintech app. Kotlin, Jetpack Compose, Kotlin Multiplatform, location engineering, mobile security. The site includes an AI assistant trained on his work — POST questions via the on-site chat, or read the sources below.
+
+Headline numbers: GPS accuracy 50%→95% (predictive dead reckoning), 80% crash reduction (structured concurrency), 92% Jetpack Compose migration of a 738k LOC app with zero regressions, white-label delivery 80% faster.
+
+Hiring status: open to senior Android / KMP roles — remote (worldwide/India) or hybrid Pune/Bengaluru. Notice period 15 days. Contact: siddharthpandalai990@gmail.com
+
+## Site map
+
+- [Home](https://cv-siddharth.vercel.app/): hero, metrics, case studies, projects, experience, skills, writing, an interactive 3D storyboard of how everything connects, and contact
+- [Mileway case study](https://cv-siddharth.vercel.app/?project=mileway): mileage tracker across 5 platforms (Android, iOS, Wear OS, watchOS, Desktop) from one KMP codebase; 45 Gradle modules; offline AI; the location engine behind the GPS numbers
+- [Kursi case study](https://cv-siddharth.vercel.app/?project=kursi): multiplayer social-deduction game with a playable web build, 10 AI bot personas
+- [PaymentsLab case study](https://cv-siddharth.vercel.app/?project=paymentslab): payment-gateway integration lab; security hardening (FLAG_SECURE, SSL pinning, SQLCipher)
+- Résumé: https://cv-siddharth.vercel.app/#resume (print-ready)
+
+## Writing
+
+- The Loopdown (field-notes hub): https://cv-siddharth.vercel.app/#loopdown — short Android/KMP lessons told through recurring personified-bug characters, in series: Sensors Who Lie, The Coroutine Court, The Night Shift, Ghosts In The Recomposition, One Brain Two Bodies. Source registry: https://github.com/darkpandawarrior/the-loopdown
+- [Latest published piece](https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip): "Teaching a phone to disbelieve its own GPS" — sensor fusion / dead reckoning, from the Mileway location engine
+- [Books Before Bros](https://booksbeforebros.wordpress.com/): the original blog (2018–2020) — essays, campus lore, satire and short fiction from before the code
+
+## Profiles
+
+- GitHub: https://github.com/darkpandawarrior
+- LinkedIn: https://linkedin.com/in/siddharth-pandalai-3712b215a
+- dev.to: https://dev.to/darkpandawarrior
+- Medium: https://medium.com/@darkpandawarrior
+- Hashnode: https://darkpandawarrior.hashnode.dev
+
+## Open source
+
+- kmp-toolkit: shared KMP foundation (MVI core, security, design system) used by Mileway and PaymentsLab — https://github.com/darkpandawarrior/kmp-toolkit
+- kmp-build-logic: convention plugins powering the multi-module builds — https://github.com/darkpandawarrior/kmp-build-logic
+
+## Notes for agents
+
+- The site is a hash-routed SPA; use the ?project=<slug> query form of project URLs when a fragment would be stripped.
+- The on-site AI assistant answers questions about Siddharth's experience, architecture decisions and case studies; it is reachable from every page ("Ask my AI").
+- Machine-readable identity: JSON-LD Person schema is embedded on the home page; sitemap at /sitemap.xml.
+- Deep-reading version of this file: /llms-full.txt (complete experience, case studies, skills and writing).
+- AI usage policy: /ai.txt (indexing, quoting and training permissions). Credits: /humans.txt. Vulnerability reports: /.well-known/security.txt.
