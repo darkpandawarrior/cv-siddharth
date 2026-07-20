@@ -1,5 +1,8 @@
 import { ArrowLeft, ArrowUpRight, Github, PenLine } from "lucide-react";
 import { writing } from "./data/writing.ts";
+import { Reveal } from "./Reveal.tsx";
+import { TiltCard } from "./TiltCard.tsx";
+import { openChat } from "./FloatingChat.tsx";
 
 /**
  * The Loopdown — writing hub at /#writing. Field notes (dev content) plus the
@@ -23,6 +26,15 @@ const PLATFORMS: { key: "devto" | "linkedin" | "medium" | "hashnode"; label: str
   { key: "hashnode", label: "Hashnode" },
 ];
 const accentOf = (id?: string) => (id && SERIES_COLOR[id]) || "#7c5cff";
+
+// Each series is field notes from a real build — link the reader straight to it.
+const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
+  "sensors-who-lie": { label: "Built in: Mileway's location engine", href: "#project/mileway" },
+  "the-coroutine-court": { label: "From: the -80% crashes work", href: "#work" },
+  "the-night-shift": { label: "From: the 50%→95% GPS work", href: "#work" },
+  "ghosts-in-the-recomposition": { label: "From: the 92% Compose migration", href: "#work" },
+  "one-brain-two-bodies": { label: "Built in: Mileway across 5 platforms", href: "#project/mileway" },
+};
 const titleize = (id?: string) =>
   (id || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
@@ -40,9 +52,23 @@ export function WritingView() {
           <a href="#top" className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> Back to portfolio
           </a>
-          <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent">
-            <Github size={15} /> the-loopdown
-          </a>
+          <div className="flex items-center gap-5">
+            <a href="#projects" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+              Projects
+            </a>
+            <a href="#resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+              Résumé
+            </a>
+            <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent">
+              <Github size={15} /> the-loopdown
+            </a>
+            <button
+              onClick={openChat}
+              className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+            >
+              Ask my AI
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -53,7 +79,7 @@ export function WritingView() {
             <PenLine size={13} className="text-accent" /> The Loopdown
           </span>
           <h1 className="font-display mt-5 text-h2 font-bold tracking-tight">
-            Field notes from an engineer who writes<span className="text-accent">.</span>
+            Field notes from an engineer who <span className="hero-shimmer">writes.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-zinc-400">
             Short, sharp lessons pulled from real Android and KMP work, each with a recurring cast of
@@ -66,13 +92,14 @@ export function WritingView() {
         <section className="pb-16">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">Lessons</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {sorted.map((l) => {
+            {sorted.map((l, i) => {
               const accent = accentOf(l.series);
               const live = l.status === "published";
               const links = PLATFORMS.filter((p) => l.links?.[p.key]);
               return (
+                <Reveal key={l.slug} className="h-full" delay={(i % 2) * 100}>
+                <TiltCard>
                 <div
-                  key={l.slug}
                   className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-5"
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
@@ -92,24 +119,36 @@ export function WritingView() {
                       <span key={t} className="rounded border border-line px-2 py-0.5 text-[11px] text-zinc-400">{t}</span>
                     ))}
                   </div>
-                  {links.length > 0 && (
-                    <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-4">
-                      <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Read on</span>
-                      {links.map((p) => (
-                        <a
-                          key={p.key}
-                          href={l.links![p.key]}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-0.5 text-xs font-medium transition hover:underline"
-                          style={{ color: accent }}
-                        >
-                          {p.label} <ArrowUpRight size={12} />
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  <div className="mt-auto pt-4">
+                    {links.length > 0 && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Read on</span>
+                        {links.map((p) => (
+                          <a
+                            key={p.key}
+                            href={l.links![p.key]}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-0.5 text-xs font-medium transition hover:underline"
+                            style={{ color: accent }}
+                          >
+                            {p.label} <ArrowUpRight size={12} />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {l.series && SERIES_PROJECT[l.series] && (
+                      <a
+                        href={SERIES_PROJECT[l.series].href}
+                        className="mt-2.5 inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-[11px] text-zinc-400 transition hover:border-accent/50 hover:text-accent"
+                      >
+                        {SERIES_PROJECT[l.series].label} →
+                      </a>
+                    )}
+                  </div>
                 </div>
+                </TiltCard>
+                </Reveal>
               );
             })}
           </div>

@@ -5,6 +5,10 @@ import { galleries } from "./data/galleries.ts";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
+import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
+
+// Projects with a narrated showcase film under public/projects/<slug>/showcase/.
+const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
 
 /** Adds `.revealed` to `.reveal` children as they scroll into view. */
 function useScrollReveal(dep: unknown) {
@@ -200,10 +204,31 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
+            <a
+              href="#writing"
+              className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
+            >
+              Field notes on this work <ArrowUpRight size={13} />
+            </a>
             <span className="text-sm text-zinc-500">{project.status}</span>
           </div>
         </div>
       </div>
+
+      {/* Narrated product tour — storyboarded from real screens */}
+      {FILM_PROJECTS.has(slug) && (
+        <section className="border-b border-line bg-surface">
+          <div className="section-y mx-auto max-w-4xl px-6">
+            <SectionHeader eyebrow="guided tour" title="Two minutes, narrated" />
+            <p className="reveal -mt-4 mb-8 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              A storyboarded walkthrough of the real app — tap the speaker for the voiceover, or read along with the captions.
+            </p>
+            <div className="reveal">
+              <ShowcaseFilm slug={slug} title={project.name} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Metrics band — same animated count-up/gauge as the homepage */}
       {d?.metrics && d.metrics.length > 0 && (

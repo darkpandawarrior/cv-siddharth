@@ -11,9 +11,14 @@ export const projectStats = {
   },
   "paymentslab": {
     "modules": 14,
+    "composedModules": 36,
     "providers": 0,
     "features": 4,
     "cores": 7,
+    "gatewaysNative": 17,
+    "gatewaysHosted": 44,
+    "gatewaysMobileMoney": 7,
+    "gatewaysStub": 3,
     "screenshots": 26
   },
   "kursi": {

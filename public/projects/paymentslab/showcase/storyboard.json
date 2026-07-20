@@ -1,0 +1,14 @@
+{
+  "slug": "paymentslab",
+  "voice": "Karen",
+  "shots": [
+    { "src": "home_screen_dashboard.png", "caption": "71 gateways, one abstraction", "narration": "One abstraction sits behind seventy-one payment gateways, and this dashboard tracks every one of them live.", "seconds": 5 },
+    { "src": "lab_home_screen_catalog.png", "caption": "Every gateway, an honest status", "narration": "Every provider carries its real status — sandbox-ready, mock mode, or KYC-gated — nothing here is faked.", "seconds": 4 },
+    { "src": "provider_lab_screen_running.png", "caption": "Journaled before the SDK opens", "narration": "Tap a gateway and the run begins — the payment is journaled to Room before the SDK even opens.", "seconds": 5 },
+    { "src": "provider_lab_screen_settled_success.png", "caption": "Client hints; server verifies", "narration": "The client reports success, but that's only a hint — the timeline won't settle until the server verifies it.", "seconds": 5 },
+    { "src": "checkout_screen_order_summary.png", "caption": "Same engine, everyday checkout", "narration": "The everyday checkout runs through that same orchestrator, just wrapped in a cart.", "seconds": 4 },
+    { "src": "history_screen_with_filters.png", "caption": "A filterable transaction journal", "narration": "Every transaction lands in that same Room journal, filterable by status — success, failed, refunded, all streamed live.", "seconds": 4 },
+    { "src": "gateway_brand_badges.png", "caption": "Real logos, honest fallbacks", "narration": "Real logos where they're licensed, a generated monogram everywhere else — seventy-one gateways, zero broken badges.", "seconds": 4 },
+    { "src": "ios_catalog_all_native.png", "caption": "Native on iOS too", "narration": "And it isn't Android-only — the same contract, the same guarantees, running natively on iOS as well.", "seconds": 5 }
+  ]
+}

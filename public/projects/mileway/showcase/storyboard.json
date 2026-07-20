@@ -1,0 +1,18 @@
+{
+  "slug": "mileway",
+  "voice": "Samantha",
+  "shots": [
+    { "src": "splash_screen.png", "caption": "One codebase. Offline-first. Zero backend.", "narration": "This is Mileway — an offline-first mileage and expense tracker, one Kotlin codebase, forty-five modules.", "seconds": 3 },
+    { "src": "login_screen.png", "caption": "Sign in, or skip it entirely", "narration": "It starts like any app — sign in, or continue as a guest, no account required to explore.", "seconds": 3 },
+    { "src": "home_screen_loaded.png", "caption": "Everything at a glance", "narration": "The home screen surfaces mileage, cards and quick actions, reading straight from Room on-device — no network required.", "seconds": 4 },
+    { "src": "track_miles_idle_screen.png", "caption": "Tap start to begin tracking", "narration": "Tap start, and the location engine takes over.", "seconds": 3 },
+    { "src": "track_data_preview_overview_tab.png", "caption": "GPS fusion, live and accurate", "narration": "GPS fixes and accelerometer data fuse in real time, with spike detection filtering jitter so the route stays accurate even when the signal doesn't.", "seconds": 5 },
+    { "src": "tracking_success_screen.png", "caption": "Distance to money, instantly", "narration": "When the trip ends, the policy engine turns distance into money — reimbursement computed from per-vehicle rate rules, instantly and offline.", "seconds": 4 },
+    { "src": "expense_entry_screen.png", "caption": "Expenses, receipts, vouchers", "narration": "Expenses, receipts and vouchers live in the same offline data model.", "seconds": 3 },
+    { "src": "approvals_screen_pending_tab.png", "caption": "Approvals with policy checks", "narration": "Approvals flag policy violations automatically, before a manager ever taps approve.", "seconds": 3 },
+    { "src": "payables_home_screen.png", "caption": "Payables, journaled durably", "narration": "Every submission is journaled to a durable outbox first — kill the app mid-submit, and nothing is lost or double-counted.", "seconds": 4 },
+    { "src": "agent_chat_screen.png", "caption": "An AI assistant, fully offline", "narration": "An on-device AI assistant answers questions over your own trips and expenses — no remote model, no server, still offline.", "seconds": 4 },
+    { "src": "plugin_manager_screen.png", "caption": "A plugin platform, per persona", "narration": "Under it all sits a plugin-composition platform — four personas reshape the entire app from one account.", "seconds": 4 },
+    { "src": "desktop_tracking.png", "caption": "Phone, watch, desktop — one core", "narration": "And the same shared Kotlin core drives the phone, the watch, and this desktop window — five platforms, one codebase, zero backend.", "seconds": 4 }
+  ]
+}
