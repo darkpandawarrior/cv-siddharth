@@ -155,6 +155,23 @@ html.resume-mode body {
   }
 }
 
+/* Nav scroll-progress beam */
+.nav-progress {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent2));
+  box-shadow: 0 0 10px -1px rgba(61, 220, 132, 0.7);
+  transition: width 0.1s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress {
+    transition: none;
+  }
+}
+
+/* Nav link for the section currently in view keeps its underline lit */
+.nav-link-active::after {
+  right: 0 !important;
+}
+
 /* Nav links: accent underline slides in */
 .nav-link {
   position: relative;

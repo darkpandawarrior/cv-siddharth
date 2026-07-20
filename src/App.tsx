@@ -107,7 +107,50 @@ function useHashRoute(): string {
 }
 
 
+/**
+ * Reads scroll per frame (same rAF-to-DOM pattern as TimelineSpine): fills
+ * the progress beam under the nav and marks the section currently in view,
+ * so the top bar doubles as a live map of the scroll journey.
+ */
+function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; active: string } {
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState("");
+
+  useEffect(() => {
+    let raf = 0;
+    const ids = NAV_LINKS.map((l) => l.href.slice(1));
+    const apply = () => {
+      raf = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (progressRef.current) {
+        progressRef.current.style.width = `${max > 0 ? Math.min((window.scrollY / max) * 100, 100) : 0}%`;
+      }
+      // Current section: the last one whose top has crossed the upper third.
+      let current = "";
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.34) current = id;
+      }
+      setActive(current);
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return { progressRef, active };
+}
+
 function Nav() {
+  const { progressRef, active } = useScrollSpy();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -116,7 +159,12 @@ function Nav() {
         </a>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="nav-link transition hover:text-accent">
+            <a
+              key={l.href}
+              href={l.href}
+              aria-current={active === l.href.slice(1) ? "true" : undefined}
+              className={`nav-link transition hover:text-accent ${active === l.href.slice(1) ? "nav-link-active text-accent" : ""}`}
+            >
               {l.label}
             </a>
           ))}
@@ -134,6 +182,10 @@ function Nav() {
           </button>
         </div>
       </nav>
+      {/* Scroll-progress beam: the journey, measured. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" aria-hidden>
+        <div ref={progressRef} className="nav-progress h-full" style={{ width: 0 }} />
+      </div>
     </header>
   );
 }
