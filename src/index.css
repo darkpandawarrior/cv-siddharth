@@ -46,6 +46,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Anchored sections land below the sticky nav instead of under it */
+[id] {
+  scroll-margin-top: 76px;
+}
+
 /* Route changes cross-fade via the View Transitions API where supported */
 ::view-transition-old(root),
 ::view-transition-new(root) {

@@ -165,6 +165,72 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
   return { progressRef, active };
 }
 
+// Everything reachable from the phone drawer — sections plus the sub-worlds.
+const DRAWER_EXTRAS = [
+  { href: "#map", label: "3D Storyboard" },
+  { href: "#loopdown", label: "The Loopdown" },
+  { href: "#blueprint", label: "Blueprint Room" },
+  { href: "#resume", label: "Résumé" },
+];
+
+function MobileMenu() {
+  const [open, setOpen] = useState(false);
+  const go = (href: string) => {
+    setOpen(false);
+    if (!document.getElementById(href.slice(1))) window.scrollTo({ top: 0 });
+    window.location.hash = href;
+  };
+  return (
+    <div className="lg:hidden">
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        aria-expanded={open}
+        className="flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
+      >
+        <span className="h-px w-4 bg-zinc-300" />
+        <span className="h-px w-4 bg-zinc-300" />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[70] bg-ink/85 backdrop-blur-md" onClick={() => setOpen(false)} role="presentation">
+          <nav
+            className="palette-in glass-panel absolute inset-x-4 top-4 rounded-2xl p-5"
+            style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
+            aria-label="Site menu"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-display text-sm font-bold">
+                sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
+              </span>
+              <button onClick={() => setOpen(false)} aria-label="Close menu" className="rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
+                esc
+              </button>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {[...NAV_LINKS, ...DRAWER_EXTRAS].map((l) => (
+                <button
+                  key={l.href}
+                  onClick={() => go(l.href)}
+                  className="rounded-xl border border-line bg-card px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
+                >
+                  {l.label}
+                </button>
+              ))}
+              <button
+                onClick={() => { setOpen(false); openChat(); }}
+                className="col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
+              >
+                Ask my AI
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Nav() {
   const { progressRef, active } = useScrollSpy();
   return (
@@ -189,6 +255,7 @@ function Nav() {
           </a>
         </div>
         <div className="flex items-center gap-2">
+          <MobileMenu />
           <CommandPalette />
           <button
             onClick={() => openChat()}
@@ -873,6 +940,27 @@ function Skills() {
   );
 }
 
+function CopyEmail() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(profile.email);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1800);
+        } catch {
+          // clipboard unavailable — the mailto button next door still works
+        }
+      }}
+      className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+      aria-live="polite"
+    >
+      {copied ? "✓ copied" : "copy email"}
+    </button>
+  );
+}
+
 function Contact() {
   return (
     <section id="contact" className="relative overflow-hidden border-t border-line">
@@ -893,6 +981,7 @@ function Contact() {
           >
             <Mail size={16} /> {profile.email}
           </a>
+          <CopyEmail />
           <a
             href="#resume"
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
