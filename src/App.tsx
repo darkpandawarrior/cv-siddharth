@@ -1047,6 +1047,23 @@ export default function App() {
     document.documentElement.classList.toggle("resume-mode", hash === "#resume");
   }, [hash]);
 
+  // Backtick summons the terminal from anywhere — unless you're typing in a
+  // field (including the terminal's own input, so ` types normally there).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      if (window.location.hash !== "#terminal") {
+        window.scrollTo({ top: 0 });
+        window.location.hash = "#terminal";
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (hash === "#resume") return <ResumeView />;
 
   // The faux-shell easter egg — a real, typeable interface into the whole site.

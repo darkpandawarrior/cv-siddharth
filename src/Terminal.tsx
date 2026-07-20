@@ -9,8 +9,12 @@ import {
   projects,
   caseStudies,
   recentGrowth,
+  sharedFoundation,
+  openSource,
 } from "./data/profile.ts";
 import { writing } from "./data/writing.ts";
+import { RELATED_SERIES } from "./data/connections.ts";
+import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { openChat } from "./FloatingChat.tsx";
 
@@ -122,14 +126,17 @@ function buildCommands(): Cmd[] {
               </div>
             ))}
           <div className="mt-2 sm:col-span-2">
-            <Dim>tip: ↑/↓ history · Tab completes · try </Dim>
-            <Hi>projects</Hi>
-            <Dim>, </Dim>
+            <Dim>tip: ↑/↓ history · Tab completes · </Dim>
+            <Hi>graph</Hi>
+            <Dim> maps the connections · try </Dim>
             <Hi>open mileway</Hi>
             <Dim>, </Dim>
             <Hi>ask how did you cut crashes 80%</Hi>
             <Dim> or </Dim>
             <Hi>hire</Hi>
+            <Dim> · press </Dim>
+            <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
+            <Dim> anywhere to summon this shell</Dim>
           </div>
         </div>
       ),
@@ -507,6 +514,106 @@ function buildCommands(): Cmd[] {
         go("#top");
         return <span>logging out…</span>;
       },
+    },
+    {
+      name: "graph",
+      usage: "graph",
+      help: "the synergy map — how the work, apps & writing connect",
+      run: () => {
+        const foundationUsers = Array.from(new Set(sharedFoundation.libs.flatMap((l) => l.usedBy)));
+        return (
+          <div className="space-y-2">
+            <div>
+              <Hi>shared foundation</Hi> <Dim>— written once, reused</Dim>
+              {sharedFoundation.libs.map((lib) => (
+                <div key={lib.name} className="ml-3">
+                  <Dim>└─ </Dim>
+                  <A href={lib.url} ext>{lib.name}</A>
+                  <Dim> → {lib.usedBy.join(", ")}</Dim>
+                </div>
+              ))}
+              <div className="ml-3 text-zinc-500">
+                so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
+              </div>
+            </div>
+            <div>
+              <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
+              {Object.entries(RELATED_SERIES).map(([slug, series]) => (
+                <div key={slug} className="ml-3">
+                  <button onClick={() => go(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
+                    {slug}
+                  </button>
+                  <Dim> → {series.map(titleize).join(" · ")}</Dim>
+                </div>
+              ))}
+            </div>
+            <Dim>every arrow is real. see it drawn: <A href="#map">3D storyboard</A> · <A href="#blueprint">blueprint room</A></Dim>
+          </div>
+        );
+      },
+    },
+    {
+      name: "repos",
+      usage: "repos",
+      help: "the public GitHub repositories",
+      run: () => {
+        const repos = [
+          ...projects.flatMap((p) => p.links.filter((l) => l.url.includes("github.com/")).map((l) => ({ name: p.name, url: l.url }))),
+          ...sharedFoundation.libs.map((l) => ({ name: l.name, url: l.url })),
+        ];
+        const seen = new Set<string>();
+        const unique = repos.filter((r) => !seen.has(r.url) && seen.add(r.url));
+        return (
+          <div className="space-y-0.5">
+            {unique.map((r) => (
+              <div key={r.url}>
+                <Dim>git clone </Dim>
+                <A href={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      name: "oss",
+      usage: "oss",
+      help: "merged open-source contributions",
+      run: () => (
+        <div className="space-y-0.5">
+          {openSource.map((c) => (
+            <div key={c.url}>
+              <Hi>[{c.status}]</Hi> <A href={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      name: "sitemap",
+      usage: "sitemap",
+      help: "every room in the site",
+      run: () => (
+        <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+          {Object.entries(SECTION_ROUTES).map(([k, v]) => (
+            <div key={k}>
+              <button onClick={() => go(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
+                {v.hash}
+              </button>{" "}
+              <Dim>{v.label}</Dim>
+            </div>
+          ))}
+          {projects
+            .filter((p) => p.detail)
+            .map((p) => (
+              <div key={p.slug}>
+                <button onClick={() => go(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
+                  #project/{p.slug}
+                </button>
+              </div>
+            ))}
+        </div>
+      ),
     },
     /* ── Easter eggs (hidden from help) ─────────────────────────────────── */
     {

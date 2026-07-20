@@ -19,7 +19,8 @@ import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { inflateSync, deflateSync } from "node:zlib";
-import { projects, profile } from "../src/data/profile.ts";
+import { projects, profile, metrics, competencies } from "../src/data/profile.ts";
+import { writing } from "../src/data/writing.ts";
 
 /* ── Minimal PNG top-crop (no image lib) ──────────────────────────────────
  * Chromium emits 8-bit, non-interlaced RGB/RGBA PNGs. We inflate the IDAT,
@@ -161,30 +162,25 @@ function rasterize(htmlPath, pngPath) {
 const esc = (s = "") => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // A shorter, punchier line for the card + share title than the full tagline.
-function shortTagline(p) {
-  const first = p.tagline.split(/[—–·]/)[0].trim();
-  return first.length > 92 ? `${first.slice(0, 89)}…` : first;
+function short(str = "", max = 92) {
+  const first = str.split(/[—–·]/)[0].trim();
+  return first.length > max ? `${first.slice(0, max - 1)}…` : first;
 }
 
-// The 1200×630 card. System fonts only (headless render, no network) with a
-// serif fallback for serif-identity projects like Kursi.
-function cardHtml(p) {
-  const t = p.theme ?? {};
-  const accent = t.accent ?? "#3ddc84";
-  const ink = t.ink ?? "#05070a";
-  const surface = t.surface ?? "#0b0f0d";
-  const line = t.line ?? "#243029";
-  const serif = t.displayFont && /serif|Rozha|Georgia/i.test(t.displayFont);
-  const display = serif
+// The 1200×630 card, from a generic spec so projects and site pages share one
+// renderer. System fonts only (headless render, no network) with a serif
+// fallback for serif-identity cards like Kursi.
+//   spec = { accent, ink, surface, line, serif, eyebrow, name, tagline, stats[], chips[] }
+// Headless Chromium reserves ~82px of window height, so the content viewport
+// (100vh) is shorter than the 1200×630 screenshot: we paint the full frame via
+// `html` backgrounds, vertically-center in 100vh, then the caller crops the
+// exact 1200×630 off the top — nothing can clip regardless of the reserved band.
+function cardHtml(spec) {
+  const { accent, ink, surface, line } = spec;
+  const display = spec.serif
     ? "'Iowan Old Style', 'Palatino Linotype', Georgia, serif"
     : "'Space Grotesk', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif";
-  const stats = (p.status ?? "").split("·").map((s) => s.trim()).filter(Boolean).slice(0, 4);
-  const chips = (p.stack ?? []).slice(0, 5);
-  // Headless Chromium reserves ~82px of window height, so the content viewport
-  // (100vh) is shorter than the 1200×630 screenshot. We paint the full frame
-  // via `html` backgrounds and vertically-center the content in 100vh with a
-  // compensating top pad, so the block lands at the true center of the 630 png
-  // and nothing can clip regardless of the exact reserved height.
+  const nameSize = spec.name.length > 12 ? 76 : 88;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   *{margin:0;box-sizing:border-box}
   html,body{
@@ -208,7 +204,7 @@ function cardHtml(p) {
   .who b{color:#e8efe9}
   .eyebrow{margin-top:30px;font-family:'JetBrains Mono',ui-monospace,monospace;
     font-size:15px;letter-spacing:3px;text-transform:uppercase;color:${accent}}
-  .name{font-family:${display};font-weight:800;font-size:88px;line-height:1;margin-top:12px}
+  .name{font-family:${display};font-weight:800;font-size:${nameSize}px;line-height:1;margin-top:12px}
   .tag{margin-top:20px;font-size:29px;line-height:1.26;color:#cfe3d7;max-width:1000px}
   .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
   .stat{border:1px solid ${accent}66;background:${accent}14;color:${accent};
@@ -221,21 +217,18 @@ function cardHtml(p) {
       <div class="brandl"><div class="badge">S</div><div class="brand">sid<span class="dot">.</span>android</div></div>
       <div class="who"><b>Siddharth Pandalai</b><br/>Senior Android Engineer</div>
     </div>
-    <div class="eyebrow">// project · one codebase, every surface</div>
-    <div class="name">${esc(p.name)}</div>
-    <div class="tag">${esc(shortTagline(p))}</div>
-    <div class="stats">${stats.map((s) => `<div class="stat">${esc(s)}</div>`).join("")}</div>
-    <div class="chips">${chips.map((c) => `<div class="chip">${esc(c)}</div>`).join("")}</div>
+    <div class="eyebrow">${esc(spec.eyebrow)}</div>
+    <div class="name">${esc(spec.name)}</div>
+    <div class="tag">${esc(spec.tagline)}</div>
+    <div class="stats">${(spec.stats ?? []).map((s) => `<div class="stat">${esc(s)}</div>`).join("")}</div>
+    <div class="chips">${(spec.chips ?? []).map((c) => `<div class="chip">${esc(c)}</div>`).join("")}</div>
   </div>
   </body></html>`;
 }
 
-function sharePage(p) {
-  const url = `${SITE}/p/${p.slug}`;
-  const img = `${url}/og.png`;
-  const title = `${p.name} — ${shortTagline(p)} · Siddharth Pandalai`;
-  const desc = p.description;
-  const deep = `/#project/${p.slug}`;
+// A crawler-facing share page: per-surface OG/Twitter meta + optional JSON-LD,
+// then a redirect to the in-app deep link.
+function sharePage({ url, img, title, desc, deep, ink = "#0b0f0d", accent = "#3ddc84", label = "page", jsonld }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -244,7 +237,7 @@ function sharePage(p) {
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(desc)}" />
   <link rel="canonical" href="${url}" />
-  <meta name="theme-color" content="${esc(p.theme?.ink ?? "#0b0f0d")}" />
+  <meta name="theme-color" content="${esc(ink)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="sid.android" />
   <meta property="og:url" content="${url}" />
@@ -257,49 +250,163 @@ function sharePage(p) {
   <meta name="twitter:title" content="${esc(title)}" />
   <meta name="twitter:description" content="${esc(desc)}" />
   <meta name="twitter:image" content="${img}" />
+  ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}
   <meta http-equiv="refresh" content="0; url=${deep}" />
   <script>window.location.replace(${JSON.stringify(deep)});</script>
   <style>
-    html,body{margin:0;height:100%;background:${p.theme?.ink ?? "#0b0f0d"};color:#e8efe9;
+    html,body{margin:0;height:100%;background:${ink};color:#e8efe9;
       font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
     .w{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:1.5rem}
-    a{color:${p.theme?.accent ?? "#3ddc84"}}
+    a{color:${accent}}
   </style>
 </head>
 <body>
   <div class="w">
-    <p>Opening <strong>${esc(p.name)}</strong> …</p>
-    <p><a href="${deep}">Continue to the ${esc(p.name)} case study →</a></p>
-    <noscript><p><a href="${deep}">View the ${esc(p.name)} case study</a></p></noscript>
+    <p>Opening <strong>${esc(title.split("—")[0].trim())}</strong> …</p>
+    <p><a href="${deep}">Continue to the ${esc(label)} →</a></p>
+    <noscript><p><a href="${deep}">Open the ${esc(label)}</a></p></noscript>
   </div>
 </body>
 </html>`;
 }
 
-const targets = projects.filter((p) => p.detail);
+// ── Surfaces: every project + a few site-level pages ─────────────────────────
+function projectSurface(p) {
+  const t = p.theme ?? {};
+  const accent = t.accent ?? "#3ddc84";
+  const ink = t.ink ?? "#05070a";
+  return {
+    slug: p.slug,
+    deep: `/#project/${p.slug}`,
+    label: `${p.name} case study`,
+    title: `${p.name} — ${short(p.tagline)} · Siddharth Pandalai`,
+    desc: p.description,
+    ink,
+    accent,
+    card: {
+      accent,
+      ink,
+      surface: t.surface ?? "#0b0f0d",
+      line: t.line ?? "#243029",
+      serif: !!(t.displayFont && /serif|Rozha|Georgia/i.test(t.displayFont)),
+      eyebrow: "// project · one codebase, every surface",
+      name: p.name,
+      tagline: short(p.tagline),
+      stats: (p.status ?? "").split("·").map((s) => s.trim()).filter(Boolean).slice(0, 4),
+      chips: (p.stack ?? []).slice(0, 5),
+    },
+    jsonld: {
+      "@context": "https://schema.org",
+      "@type": "SoftwareSourceCode",
+      name: p.name,
+      description: p.description,
+      codeRepository: p.links.find((l) => l.url.includes("github.com"))?.url,
+      programmingLanguage: "Kotlin",
+      author: { "@type": "Person", name: profile.name, url: SITE },
+      url: `${SITE}/p/${p.slug}`,
+    },
+  };
+}
+
+const publishedPosts = writing.lessons.filter((l) => l.status === "published").length;
+const siteSurfaces = [
+  {
+    slug: "home",
+    out: join(root, "public", "og-image.png"), // the site-wide OG image
+    card: {
+      accent: "#3ddc84",
+      ink: "#05070a",
+      surface: "#0b0f0d",
+      line: "#243029",
+      eyebrow: "// senior android engineer",
+      name: profile.name,
+      tagline: profile.tagline,
+      stats: ["50k+ MAU", "95% GPS accuracy", "-80% crashes", "92% Compose"],
+      chips: ["Kotlin", "Jetpack Compose", "KMP", "Coroutines", "Security"],
+    },
+  },
+  {
+    slug: "resume",
+    deep: "/#resume",
+    label: "résumé",
+    title: `${profile.name} — Résumé · Senior Android Engineer`,
+    desc: profile.summary,
+    ink: "#05070a",
+    accent: "#3ddc84",
+    card: {
+      accent: "#3ddc84",
+      ink: "#05070a",
+      surface: "#0b0f0d",
+      line: "#243029",
+      eyebrow: "// résumé · print-ready",
+      name: "Résumé",
+      tagline: short(profile.resumeTitle, 70),
+      stats: metrics.map((m) => `${m.value} ${short(m.label, 16)}`),
+      chips: competencies.slice(0, 5),
+    },
+  },
+  {
+    slug: "writing",
+    deep: "/#loopdown",
+    label: "Loopdown",
+    title: "The Loopdown — field notes from production Android · Siddharth Pandalai",
+    desc: "Engineering field notes that read like stories — sensor fusion, structured concurrency, Compose recomposition, and the bugs behind the metrics.",
+    ink: "#0b0a14",
+    accent: "#7c5cff",
+    card: {
+      accent: "#7c5cff",
+      ink: "#0b0a14",
+      surface: "#141024",
+      line: "#2a2440",
+      eyebrow: "// the loopdown · writing",
+      name: "The Loopdown",
+      tagline: "Field notes that read like stories — the bugs behind the metrics.",
+      stats: [`${publishedPosts} field note${publishedPosts === 1 ? "" : "s"}`, `${writing.series.length} series`],
+      chips: writing.series.slice(0, 4).map((s) => s.title),
+    },
+  },
+];
+
+const projectTargets = projects.filter((p) => p.detail).map(projectSurface);
 mkdirSync(outRoot, { recursive: true });
 const tmp = join(tmpdir(), "sid-og");
 mkdirSync(tmp, { recursive: true });
 
 let pngs = 0;
-for (const p of targets) {
-  const dir = join(outRoot, p.slug);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "index.html"), sharePage(p));
 
-  const html = cardHtml(p);
-  const htmlPath = join(tmp, `${p.slug}.html`);
-  writeFileSync(htmlPath, html);
+// Project + site share pages under /p/<slug>/, each with its own OG card.
+for (const s of projectTargets.concat(siteSurfaces.filter((s) => s.deep))) {
+  const dir = join(outRoot, s.slug);
+  mkdirSync(dir, { recursive: true });
+  const url = `${SITE}/p/${s.slug}`;
+  const img = `${url}/og.png`;
+  writeFileSync(join(dir, "index.html"), sharePage({ ...s, url, img }));
+  const htmlPath = join(tmp, `${s.slug}.html`);
+  writeFileSync(htmlPath, cardHtml(s.card));
   const pngPath = join(dir, "og.png");
   if (CHROMIUM) {
     try {
       rasterize(htmlPath, pngPath);
       pngs++;
     } catch (e) {
-      console.warn(`  ! chromium failed for ${p.slug}: ${e.message}`);
+      console.warn(`  ! chromium failed for ${s.slug}: ${e.message}`);
     }
   }
-  console.log(`  ✓ /p/${p.slug}/  (share page${existsSync(pngPath) ? " + og.png" : ""})`);
+  console.log(`  ✓ /p/${s.slug}/  (share page${existsSync(pngPath) ? " + og.png" : ""})`);
+}
+
+// Site-wide OG image (og-image.png) — surfaces with an explicit `out`.
+for (const s of siteSurfaces.filter((s) => s.out)) {
+  if (!CHROMIUM) continue;
+  const htmlPath = join(tmp, `${s.slug}.html`);
+  writeFileSync(htmlPath, cardHtml(s.card));
+  try {
+    rasterize(htmlPath, s.out);
+    pngs++;
+    console.log(`  ✓ ${s.out.replace(root + "/", "")}  (site OG image)`);
+  } catch (e) {
+    console.warn(`  ! chromium failed for ${s.slug}: ${e.message}`);
+  }
 }
 rmSync(tmp, { recursive: true, force: true });
 
@@ -307,4 +414,5 @@ if (!CHROMIUM) {
   console.warn("\n! No Chromium found — share pages written, but og.png NOT regenerated.");
   console.warn("  Set CHROMIUM_BIN or run where a headless Chromium is available, then commit the PNGs.");
 }
-console.log(`\ngen-og: ${targets.length} share pages, ${pngs} OG images · site ${SITE} · owner ${profile.name}`);
+const sharePages = projectTargets.length + siteSurfaces.filter((s) => s.deep).length;
+console.log(`\ngen-og: ${sharePages} share pages, ${pngs} OG images · site ${SITE} · owner ${profile.name}`);

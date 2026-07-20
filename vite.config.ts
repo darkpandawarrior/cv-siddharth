@@ -45,4 +45,27 @@ export default defineConfig({
   // GitHub Pages project sites serve from /<repo>/ — set BASE_PATH there.
   base: process.env.BASE_PATH ?? "/",
   plugins: [react(), tailwindcss(), chatApiDevPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the always-loaded vendors into their own long-lived chunks so
+        // an app-code change doesn't invalidate them. The heavy libraries
+        // (three / mermaid / tldraw) are dynamically imported already and stay
+        // in their own lazy chunks — deliberately NOT matched here, so grouping
+        // them can't pull them into the eager path.
+        manualChunks(id) {
+          if (!id.includes("/node_modules/")) return;
+          if (id.includes("/node_modules/react-dom/") || id.includes("/node_modules/scheduler/")) return "react-dom";
+          if (id.includes("/node_modules/react/")) return "react";
+          if (id.includes("/node_modules/lucide-react/")) return "icons";
+          if (
+            /\/node_modules\/(react-markdown|remark|rehype|micromark|mdast|hast|unist|unified|vfile|bail|trough|devlop|property-information|space-separated-tokens|comma-separated-tokens|decode-named-character-reference|character-entities|zwitch|html-void-elements|estree|is-plain-obj|trim-lines|ccount|escape-string-regexp|markdown-table|longest-streak)/.test(
+              id,
+            )
+          )
+            return "markdown";
+        },
+      },
+    },
+  },
 });
