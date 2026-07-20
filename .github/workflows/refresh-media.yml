@@ -26,6 +26,11 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
+      # rebuild-showcase re-stitches the narrated films whenever synced frames
+      # change (ubuntu ffmpeg + PIL captions; voiceover comes from the committed
+      # content-addressed cache — a narration TEXT change must be re-recorded
+      # locally on macOS via `npm run showcase`, and this job fails loudly then).
+      - run: pip install --quiet pillow
       - name: Sync media + regenerate stats & galleries
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public

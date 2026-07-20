@@ -1,33 +1,25 @@
 WEBVTT
 
-1
-00:00:00.000 --> 00:00:06.500
-One abstraction sits behind sixty-eight payment gateways, and this dashboard tracks every one of them live.
+00:00:00.000 --> 00:00:06.563
+One abstraction sits behind seventy-one payment gateways, and this dashboard tracks every one of them live.
 
-2
-00:00:06.500 --> 00:00:14.100
+00:00:06.563 --> 00:00:14.252
 Every provider carries its real status — sandbox-ready, mock mode, or KYC-gated — nothing here is faked.
 
-3
-00:00:14.100 --> 00:00:20.100
+00:00:14.252 --> 00:00:20.364
 Tap a gateway and the run begins — the payment is journaled to Room before the SDK even opens.
 
-4
-00:00:20.100 --> 00:00:26.800
+00:00:20.364 --> 00:00:27.284
 The client reports success, but that's only a hint — the timeline won't settle until the server verifies it.
 
-5
-00:00:26.800 --> 00:00:31.600
+00:00:27.284 --> 00:00:32.195
 The everyday checkout runs through that same orchestrator, just wrapped in a cart.
 
-6
-00:00:31.600 --> 00:00:40.200
+00:00:32.195 --> 00:00:40.882
 Every transaction lands in that same Room journal, filterable by status — success, failed, refunded, all streamed live.
 
-7
-00:00:40.200 --> 00:00:48.000
-Real logos where they're licensed, a generated monogram everywhere else — sixty-eight gateways, zero broken badges.
+00:00:40.882 --> 00:00:48.808
+Real logos where they're licensed, a generated monogram everywhere else — seventy-one gateways, zero broken badges.
 
-8
-00:00:48.000 --> 00:00:54.900
+00:00:48.808 --> 00:00:55.760
 And it isn't Android-only — the same contract, the same guarantees, running natively on iOS as well.

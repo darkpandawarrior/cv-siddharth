@@ -1,28 +1,28 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:09.160
+00:00:00.000 --> 00:00:09.238
 This is Kursi — a bluffing game set in a satirical Indian corporate-political underworld, where everyone at the table is lying about what they hold.
 
-00:00:09.160 --> 00:00:14.950
+00:00:09.238 --> 00:00:14.984
 You start by stamping your own seat at the Darbar — a name, an avatar, a colour.
 
-00:00:14.950 --> 00:00:21.800
+00:00:14.984 --> 00:00:21.830
 The tutorial doesn't just explain the rules — it walks you through catching a live bluff, card by card.
 
-00:00:21.800 --> 00:00:29.020
+00:00:21.830 --> 00:00:29.051
 At the table, every turn is a claim — declare a role, take the action, and dare the room to call you on it.
 
-00:00:29.020 --> 00:00:38.660
+00:00:29.051 --> 00:00:38.687
 Every claim can be blocked or challenged, and underneath it all sits a fully deterministic engine — any match replays byte-for-byte from nothing but a seed and its move log.
 
-00:00:38.660 --> 00:00:49.650
+00:00:38.687 --> 00:00:49.680
 Long-press a rival and the same search algorithm driving the ten bot personas — Information Set Monte Carlo Tree Search — builds you a live dossier on what they're probably holding.
 
-00:00:49.650 --> 00:01:00.180
+00:00:49.680 --> 00:01:00.210
 Above the engine runs Darbar, the social layer — bots gossip, form pacts, and hold grudges across four story arcs on their own separate deterministic clock.
 
-00:01:00.180 --> 00:01:09.210
+00:01:00.210 --> 00:01:09.241
 Climb the Tarakki ki Seedhi ladder through five rungs of rising difficulty, or drop into ranked, team play, or a loud ten-player table.
 
-00:01:09.210 --> 00:01:20.550
+00:01:09.241 --> 00:01:20.583
 Every match ends with a stamped verdict — bluffs held, bluffs caught, decision quality graded against the bot's own best move — because the chair only ever holds one person at a time.

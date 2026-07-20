@@ -7,7 +7,7 @@ const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 // Real shipped UI cycled on the 3D screen. Phone-aspect portraits only —
 // PaymentsLab's frames are 320x470 card crops, so it sits this one out.
 const SHOTS: PhoneShot[] = [
-  { src: "/projects/mileway/screenshots/live_tracking.png", label: "Mileway" },
+  { src: "/projects/mileway/screenshots/track_data_preview_overview_tab.png", label: "Mileway" },
   { src: "/projects/kursi/screenshots/home_phone.png", label: "Kursi" },
   { src: "/projects/mileway/screenshots/tracking_success_screen.png", label: "Mileway" },
 ];
