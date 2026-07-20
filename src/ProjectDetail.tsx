@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
+import { PROJECT_ORDER } from "./data/connections.ts";
+import { FieldNotes } from "./FieldNotes.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
@@ -9,6 +11,32 @@ import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
+
+/** "Next build" pager — project pages loop into each other instead of dead-ending. */
+function NextProject({ slug }: { slug: string }) {
+  const i = PROJECT_ORDER.indexOf(slug);
+  if (i === -1) return null;
+  const next = projects.find((p) => p.slug === PROJECT_ORDER[(i + 1) % PROJECT_ORDER.length]);
+  if (!next) return null;
+  return (
+    <section className="border-t border-line bg-surface">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <a
+          href={`#project/${next.slug}`}
+          onClick={() => window.scrollTo({ top: 0 })}
+          className="card-elevated group flex items-center justify-between gap-4 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50"
+        >
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-widest text-accent/60">next build</p>
+            <p className="font-display mt-1 text-xl font-bold transition group-hover:text-accent">{next.name}</p>
+            <p className="mt-1 text-sm text-zinc-400">{next.tagline}</p>
+          </div>
+          <span className="text-2xl text-accent transition group-hover:translate-x-1.5">→</span>
+        </a>
+      </div>
+    </section>
+  );
+}
 
 /** Adds `.revealed` to `.reveal` children as they scroll into view. */
 function useScrollReveal(dep: unknown) {
@@ -213,6 +241,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             </a>
             <span className="text-sm text-zinc-500">{project.status}</span>
           </div>
+          <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
         </div>
       </div>
 
@@ -433,9 +462,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      <div className="mx-auto max-w-5xl px-6 py-12 text-center">
+      {/* Keep the journey moving: next build in the loop + ways back. */}
+      <NextProject slug={slug} />
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-6 px-6 py-12 text-center">
         <a href="#projects" className="inline-flex items-center gap-2 text-sm text-accent transition hover:text-accent-dim">
           <ArrowLeft size={16} /> Back to all projects
+        </a>
+        <a href="#map" className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent2">
+          See how everything connects →
         </a>
       </div>
 

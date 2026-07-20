@@ -285,6 +285,14 @@ export function StoryMap() {
             </span>
           )}
         </div>
+        <a
+          href="#blueprint"
+          onClick={() => window.scrollTo({ top: 0 })}
+          className="group mt-4 flex items-center justify-between rounded-xl border border-accent2/30 bg-accent2/5 px-4 py-3 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+        >
+          <span>Enter the Blueprint Room — the same map as an infinite, editable canvas</span>
+          <span className="transition group-hover:translate-x-1">→</span>
+        </a>
         {/* Same destinations as real links — keyboard, touch and small screens. */}
         <div className="mt-4 flex flex-wrap gap-2">
           {NODES.filter((n) => n.id !== "sid").map((n) =>

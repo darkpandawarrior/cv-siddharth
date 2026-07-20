@@ -37,6 +37,9 @@ export function WritingView() {
             <a href="#projects" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Projects
             </a>
+            <a href="#map" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+              Storyboard
+            </a>
             <a href="#resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Résumé
             </a>
