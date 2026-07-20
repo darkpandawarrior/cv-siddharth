@@ -26,6 +26,7 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
       { label: "PaymentsLab", href: "#project/paymentslab" },
       { label: "3D Storyboard", href: "#map" },
       { label: "Blueprint Room", href: "#blueprint" },
+      { label: "Terminal ⌘", href: "#terminal" },
     ],
   },
   {

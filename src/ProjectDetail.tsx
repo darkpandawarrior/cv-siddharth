@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight, Share2, Check } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 import { PROJECT_ORDER } from "./data/connections.ts";
@@ -120,6 +120,41 @@ function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: str
   return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+/** Share the project via its crawlable /p/<slug> page — the URL whose OG card
+ *  is this project's own. Uses the native share sheet on mobile, clipboard
+ *  everywhere else. */
+function ShareProject({ slug, name }: { slug: string; name: string }) {
+  const [copied, setCopied] = useState(false);
+  const url = `${window.location.origin}/p/${slug}`;
+  const onShare = async () => {
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+    if (nav.share) {
+      try {
+        await nav.share({ title: name, url });
+        return;
+      } catch {
+        /* user dismissed — fall through to copy */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked — nothing else to do */
+    }
+  };
+  return (
+    <button
+      onClick={onShare}
+      className="inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
+      aria-live="polite"
+    >
+      {copied ? <Check size={14} /> : <Share2 size={14} />} {copied ? "Link copied" : "Share"}
+    </button>
+  );
+}
+
 /** Section eyebrow + heading, matching the homepage's "// label" rhythm. */
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
@@ -152,6 +187,22 @@ export function ProjectDetail({ slug }: { slug: string }) {
     link.href = project.icon;
     return () => {
       link.href = original;
+    };
+  }, [project]);
+
+  // Per-project tab title + description while the page is open. (Social-crawler
+  // previews come from the static /p/<slug>/ share pages, which don't run JS;
+  // this keeps the live tab and in-app history entry project-specific.)
+  useEffect(() => {
+    if (!project) return;
+    const prevTitle = document.title;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    const prevDesc = meta?.content;
+    document.title = `${project.name} — ${project.tagline.split(/[—–·]/)[0].trim()} | Siddharth Pandalai`;
+    if (meta) meta.content = project.description;
+    return () => {
+      document.title = prevTitle;
+      if (meta && prevDesc !== undefined) meta.content = prevDesc;
     };
   }, [project]);
 
@@ -239,6 +290,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             >
               ✦ Ask my AI about {project.name}
             </button>
+            <ShareProject slug={slug} name={project.name} />
             <a
               href="#loopdown"
               onClick={() => window.scrollTo({ top: 0 })}

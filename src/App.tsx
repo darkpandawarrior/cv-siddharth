@@ -33,6 +33,7 @@ import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 import { LabBench, openLab, type LabKey } from "./LabBench.tsx";
+import { Terminal } from "./Terminal.tsx";
 import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
@@ -171,6 +172,7 @@ const DRAWER_EXTRAS = [
   { href: "#map", label: "3D Storyboard" },
   { href: "#loopdown", label: "The Loopdown" },
   { href: "#blueprint", label: "Blueprint Room" },
+  { href: "#terminal", label: "Terminal" },
   { href: "#resume", label: "Résumé" },
 ];
 
@@ -1045,7 +1047,34 @@ export default function App() {
     document.documentElement.classList.toggle("resume-mode", hash === "#resume");
   }, [hash]);
 
+  // Backtick summons the terminal from anywhere — unless you're typing in a
+  // field (including the terminal's own input, so ` types normally there).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      if (window.location.hash !== "#terminal") {
+        window.scrollTo({ top: 0 });
+        window.location.hash = "#terminal";
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (hash === "#resume") return <ResumeView />;
+
+  // The faux-shell easter egg — a real, typeable interface into the whole site.
+  if (hash === "#terminal") {
+    return (
+      <>
+        <Terminal />
+        <FloatingChat />
+      </>
+    );
+  }
 
   if (hash === "#blueprint") {
     return (
