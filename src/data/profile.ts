@@ -779,7 +779,7 @@ export const projects: Project[] = [
       { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
     ],
     status: "39 modules · ~71 gateways · 5 rails",
-    badges: ["Kotlin Multiplatform", "39 modules", "71 gateways", "Open source"],
+    badges: ["Kotlin Multiplatform", "40 modules", "71 gateways", "Open source"],
     theme: {
       accent: "#A78BFA",
       accentDim: "#7C3AED",
@@ -805,7 +805,8 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: [],
-        note: "Web target coming — the Ktor server already speaks HTTP, a browser client isn't built yet.",
+        liveUrl: "/paymentslab-app/index.html",
+        note: "Live — a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
       },
     ],
     detail: {
@@ -844,7 +845,7 @@ export const projects: Project[] = [
         { value: "1", label: "PaymentGateway contract" },
       ],
       techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "39 Gradle modules (14 + 25 composed)", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "40 Gradle modules (15 + 25 composed)", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
         { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
         { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
         { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
