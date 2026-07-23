@@ -27,6 +27,10 @@ rebuilt and simplified: the entire CV fits in an LLM's context, so there is no
 RAG pipeline — knowledge lives in a single system prompt
 ([api/_lib/system-prompt.ts](api/_lib/system-prompt.ts)).
 
+<p align="center">
+  <b><a href="#stack">Stack</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#quick-start">Quick start</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#deploy">Deploy</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#structure">Structure</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#interactive-surfaces">Interactive surfaces</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#generators">Generators</a></b>
+</p>
+
 ## Stack
 
 React 19 · TypeScript · Vite 7 · Tailwind v4 · Vercel Edge Functions ·
@@ -49,6 +53,10 @@ shows a contact fallback until one of `GROQ_API_KEY` / `GEMINI_API_KEY` /
 Vercel runs in production — no `vercel dev` needed.
 
 ## Deploy
+
+<details>
+<summary><b>Two paths</b> — Vercel all-in-one, or GitHub Pages with the chat hosted separately</summary>
+<br/>
 
 ### Option A — Vercel (site + chat in one place)
 
@@ -78,7 +86,13 @@ backend split:
 3. Without `CHAT_API_URL`, the site still deploys fine — the chat widget
    shows the email fallback.
 
+</details>
+
 ## Structure
+
+<details>
+<summary><b>The map</b> — where the API, the chat handler, and the single source of truth live</summary>
+<br/>
 
 ```
 api/
@@ -92,6 +106,8 @@ src/
 ├── data/profile.ts          # CV content (single source of truth)
 └── index.css                # Tailwind v4 theme tokens
 ```
+
+</details>
 
 ## Interactive surfaces
 
@@ -112,8 +128,9 @@ Beyond the scroll, the site is navigable as an environment:
 
 ## Generators
 
-Content and assets are generated from `profile.ts` / the source repos so
-nothing is hand-mirrored:
+<details>
+<summary><b>Nothing is hand-mirrored</b> — content and assets generate from <code>profile.ts</code> and the source repos</summary>
+<br/>
 
 ```bash
 npm run gen:og        # branded per-project OG cards + /p/<slug>/ share pages
@@ -122,6 +139,8 @@ npm run refresh       # media sync + all generators (stats, galleries, og, promp
 
 `gen:og` rasterizes the cards with a headless Chromium at author time and
 commits the PNGs — the Vercel build needs no browser.
+
+</details>
 
 ## Updating content
 
