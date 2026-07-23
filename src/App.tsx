@@ -19,6 +19,7 @@ import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
+import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
@@ -306,6 +307,7 @@ function Nav() {
 function Hero() {
   return (
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
+      <ParticleHero />
       <div>
         <p className="rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
