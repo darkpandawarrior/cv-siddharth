@@ -63,6 +63,41 @@ html {
   background-size: 28px 28px;
 }
 
+/* ParticleHero backdrop — deliberately NOT `inset: 0` of the whole #top
+   section. The section stacks headline -> body copy -> CTA row -> phone
+   mockup on mobile (single column) and pairs a wide text column with a
+   narrow phone column on desktop; a canvas centered on that full, lopsided
+   box put the sphere right on top of the CTA buttons on mobile and across
+   the body paragraph on desktop. Mobile: a short band pinned to the top,
+   behind the headline only, faded out before body copy starts. Desktop:
+   a narrow column pinned to the right, behind the phone mockup only, never
+   reaching into the 656px text column (which ends at 680px inside the
+   1024px `max-w-5xl` section — the cap that makes this fixed-px anchor
+   stable across every desktop viewport width). */
+.particle-hero {
+  position: absolute;
+  z-index: -10;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22rem;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 45%, transparent 90%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 45%, transparent 90%);
+}
+@media (min-width: 1024px) {
+  .particle-hero {
+    left: auto;
+    right: -3.5rem;
+    top: 0;
+    bottom: 0;
+    height: auto;
+    width: 24rem;
+    -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
+  }
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);

@@ -46,7 +46,7 @@ export function ParticleHero() {
   if (!ready) return null;
 
   return (
-    <div ref={hostRef} className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
+    <div ref={hostRef} className="particle-hero pointer-events-none" aria-hidden>
       <Suspense fallback={null}>
         <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} />
       </Suspense>
