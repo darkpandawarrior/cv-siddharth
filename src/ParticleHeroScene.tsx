@@ -1,7 +1,8 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { AdditiveBlending, Color } from "three";
-import type { BufferAttribute, Points as ThreePoints } from "three";
+import type { ThreeEvent } from "@react-three/fiber";
+import { AdditiveBlending, Color, MathUtils } from "three";
+import type { BufferAttribute, Group, Points as ThreePoints } from "three";
 
 /**
  * Dense emissive point-swarm hero visual (style ref: particles.casberry.in,
@@ -19,6 +20,7 @@ import type { BufferAttribute, Points as ThreePoints } from "three";
 
 const HOLD_S = 4; // seconds a formation sits still before the next morph starts
 const MORPH_S = 5; // seconds a morph transition takes (4-6s ask)
+const KICK_SCALE = 0.9; // peak outward offset (world units) from a tap/click
 
 // Low-discrepancy 2D sequence (plastic-ratio R2) — gives even coverage of a
 // parametric (u, v) surface without a grid or Math.random(), so sampling
@@ -129,11 +131,22 @@ function readColor(varName: string, fallback: string): Color {
   return new Color(v || fallback);
 }
 
-function Swarm({ count, reducedMotion }: { count: number; reducedMotion: boolean }) {
+function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMotion: boolean; interactive: boolean }) {
   const pointsRef = useRef<ThreePoints>(null);
+  const groupRef = useRef<Group>(null);
   const positionAttrRef = useRef<BufferAttribute>(null);
   const phase = useRef(0); // seconds elapsed in the current hold+morph cycle
   const formationIdx = useRef(0);
+  // Desktop drag-to-spin — same shape as SkillsOrbitScene/FoundationGraphScene's
+  // drag ref, reused rather than reinvented.
+  const drag = useRef({ on: false, x: 0, startX: 0, startY: 0, moved: false, vel: 0 });
+  const parallax = useRef(0);
+  // Tap/click kick: a single decaying scalar (0..1), not a per-point buffer —
+  // ponytail: pulses every point outward from the swarm's own center rather
+  // than raycasting the exact tap position onto a morphing point cloud (points
+  // are sparse and hard to hit-test precisely); upgrade to a localized kick if
+  // that precision is ever worth the raycast cost.
+  const kickAmp = useRef(0);
 
   // Five pre-baked N-point buffers — computed once per mount, reused for
   // every morph. Cycling through them again from the top after Lorenz keeps
@@ -164,42 +177,107 @@ function Swarm({ count, reducedMotion }: { count: number; reducedMotion: boolean
     return arr;
   }, [count]);
 
-  useFrame((_, delta) => {
+  useFrame(({ pointer }, delta) => {
     if (reducedMotion) return; // static frame only — frameloop="demand" never asks for another
 
     const pts = pointsRef.current;
     phase.current += delta;
+    drag.current.vel = MathUtils.damp(drag.current.vel, 0, 2, delta);
+    kickAmp.current = MathUtils.damp(kickAmp.current, 0, 3, delta);
     if (pts) {
-      pts.rotation.y += delta * 0.045;
-      pts.rotation.x = Math.sin(phase.current * 0.12) * 0.07; // slight wobble, not a full tumble
+      pts.rotation.y += delta * 0.045 + drag.current.vel;
+      const leanTarget = interactive ? pointer.y * -0.09 : 0;
+      parallax.current = MathUtils.damp(parallax.current, leanTarget, 4, delta);
+      pts.rotation.x = Math.sin(phase.current * 0.12) * 0.07 + parallax.current; // wobble + cursor lean
+      pts.rotation.z = interactive ? MathUtils.damp(pts.rotation.z, pointer.x * -0.05, 4, delta) : 0;
     }
 
-    if (phase.current <= HOLD_S) return; // holding — positions already match `from`
+    const morphing = phase.current > HOLD_S;
+    const kicking = kickAmp.current > 0.001;
+    if (!morphing && !kicking) return; // nothing to rewrite this frame
 
     const from = formationIdx.current;
     const to = (from + 1) % formations.length;
-    const t = Math.min((phase.current - HOLD_S) / MORPH_S, 1);
-    const eased = easeInOutCubic(t);
     const a = formations[from];
-    const b = formations[to];
-    for (let i = 0; i < positions.length; i++) positions[i] = a[i] + (b[i] - a[i]) * eased;
-    if (positionAttrRef.current) positionAttrRef.current.needsUpdate = true;
+    const kick = kickAmp.current * KICK_SCALE;
 
-    if (t >= 1) {
-      formationIdx.current = to;
-      phase.current = 0;
-      positions.set(formations[to]);
+    if (morphing) {
+      const t = Math.min((phase.current - HOLD_S) / MORPH_S, 1);
+      const eased = easeInOutCubic(t);
+      const b = formations[to];
+      for (let i = 0; i < positions.length; i += 3) {
+        let x = a[i] + (b[i] - a[i]) * eased;
+        let y = a[i + 1] + (b[i + 1] - a[i + 1]) * eased;
+        let z = a[i + 2] + (b[i + 2] - a[i + 2]) * eased;
+        if (kicking) {
+          const len = Math.hypot(x, y, z) || 1;
+          x += (x / len) * kick;
+          y += (y / len) * kick;
+          z += (z / len) * kick;
+        }
+        positions[i] = x;
+        positions[i + 1] = y;
+        positions[i + 2] = z;
+      }
+      if (t >= 1) {
+        formationIdx.current = to;
+        phase.current = 0;
+      }
+    } else {
+      // Holding, but a kick is still decaying — rebuild from the resting
+      // formation each frame instead of leaving positions stale.
+      for (let i = 0; i < positions.length; i += 3) {
+        const bx = a[i];
+        const by = a[i + 1];
+        const bz = a[i + 2];
+        const len = Math.hypot(bx, by, bz) || 1;
+        positions[i] = bx + (bx / len) * kick;
+        positions[i + 1] = by + (by / len) * kick;
+        positions[i + 2] = bz + (bz / len) * kick;
+      }
     }
+    if (positionAttrRef.current) positionAttrRef.current.needsUpdate = true;
   });
 
+  const triggerKick = () => {
+    kickAmp.current = 1;
+  };
+
+  const onDown = (e: ThreeEvent<PointerEvent>) => {
+    drag.current.on = true;
+    drag.current.x = e.clientX;
+    drag.current.startX = e.clientX;
+    drag.current.startY = e.clientY;
+    drag.current.moved = false;
+  };
+  const onMove = (e: ThreeEvent<PointerEvent>) => {
+    if (!drag.current.on) return;
+    if (Math.abs(e.clientX - drag.current.startX) > 4 || Math.abs(e.clientY - drag.current.startY) > 4) drag.current.moved = true;
+    if (interactive) drag.current.vel = (e.clientX - drag.current.x) * 0.0004;
+    drag.current.x = e.clientX;
+  };
+  const onUp = () => {
+    if (drag.current.on && !drag.current.moved) triggerKick(); // stationary press == tap, never a swipe
+    drag.current.on = false;
+  };
+
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute ref={positionAttrRef} attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.045} vertexColors transparent opacity={0.85} blending={AdditiveBlending} depthWrite={false} sizeAttenuation />
-    </points>
+    <group ref={groupRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp}>
+      {/* Invisible hit target — THREE.Points raycasting against sparse points
+          is unreliable, so a plain transparent sphere sized to the widest
+          formation (~2.2 units) catches drag/tap over the whole swarm. */}
+      <mesh visible>
+        <sphereGeometry args={[2.3, 12, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute ref={positionAttrRef} attach="attributes-position" args={[positions, 3]} />
+          <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+        </bufferGeometry>
+        <pointsMaterial size={0.045} vertexColors transparent opacity={0.85} blending={AdditiveBlending} depthWrite={false} sizeAttenuation />
+      </points>
+    </group>
   );
 }
 
@@ -207,6 +285,10 @@ export interface ParticleHeroSceneProps {
   count: number;
   reducedMotion: boolean;
   paused: boolean; // driven by the parent's IntersectionObserver
+  // Desktop fine-pointer + motion-safe: enables idle cursor-lean + drag-to-spin.
+  // Tap-to-kick works regardless of this flag — a stationary press is never a
+  // scroll gesture, so it's safe on touch too.
+  interactive: boolean;
 }
 
 /**
@@ -215,7 +297,7 @@ export interface ParticleHeroSceneProps {
  * internal rAF loop entirely), "demand" for reduced-motion (paints exactly
  * once on mount, then nothing — invalidate() is never called again).
  */
-export default function ParticleHeroScene({ count, reducedMotion, paused }: ParticleHeroSceneProps) {
+export default function ParticleHeroScene({ count, reducedMotion, paused, interactive }: ParticleHeroSceneProps) {
   const frameloop = reducedMotion ? "demand" : paused ? "never" : "always";
   return (
     <Canvas
@@ -225,7 +307,7 @@ export default function ParticleHeroScene({ count, reducedMotion, paused }: Part
       gl={{ antialias: false, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
     >
-      <Swarm count={count} reducedMotion={reducedMotion} />
+      <Swarm count={count} reducedMotion={reducedMotion} interactive={interactive} />
     </Canvas>
   );
 }

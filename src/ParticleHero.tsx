@@ -20,11 +20,19 @@ function supportsWebGL(): boolean {
  * and the phone mockup only, and — unlike AmbientBackground — runs on
  * mobile too (point count just adapts). An IntersectionObserver stops the
  * render loop once the section scrolls out of view.
+ *
+ * Interactive on motion-safe devices: desktop (fine pointer) gets cursor-lean
+ * + drag-to-spin, the same idiom SkillsOrbit/FoundationGraph already use.
+ * Touch gets a tap-to-kick pulse instead of continuous drag, so it can never
+ * hijack the page's first scroll gesture — see docs/superpowers/specs/
+ * 2026-07-24-particle-hero-interactivity-design.md. Pointer events stay off
+ * for reduced-motion visitors, matching the rest of the site.
  */
 export function ParticleHero() {
   const [ready, setReady] = useState(false);
   const [count, setCount] = useState(6000);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [dragEnabled, setDragEnabled] = useState(false);
   const [visible, setVisible] = useState(true);
   const hostRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +40,7 @@ export function ParticleHero() {
     if (!supportsWebGL() || location.search.includes("noambient")) return;
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCount(window.matchMedia("(max-width: 767px)").matches ? 2000 : 6000);
+    setDragEnabled(window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 1024px)").matches);
     setReady(true);
   }, []);
 
@@ -46,10 +55,15 @@ export function ParticleHero() {
   if (!ready) return null;
 
   return (
-    <div ref={hostRef} className="particle-hero pointer-events-none" aria-hidden>
+    <div ref={hostRef} className={`particle-hero ${reducedMotion ? "pointer-events-none" : ""}`} aria-hidden>
       <Suspense fallback={null}>
-        <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} />
+        <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
       </Suspense>
+      {dragEnabled && (
+        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+          drag to spin
+        </span>
+      )}
     </div>
   );
 }
