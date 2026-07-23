@@ -64,6 +64,30 @@ export const sync = {
       ["screenshots/ios_catalog_all_native.png", "ios_catalog_all_native.png"],
     ],
   },
+  // Private repos (deadlock, HireSignal) — code stays unlinked from the site,
+  // but the existing GITHUB_TOKEN CI secret already needs private-repo read
+  // access for gen-hiresignal-stats.mjs (santifer/career-ops fork chain), and
+  // a personal PAT with `repo` scope always covers its own owner's private
+  // repos too, so this daily sync "just works" the same way as the public ones.
+  deadlock: {
+    repo: "darkpandawarrior/deadlock",
+    files: [
+      ["assets/readme/screenshots/title.webp", "title.webp"],
+      ["assets/readme/screenshots/echo-cooperation.webp", "echo-cooperation.webp"],
+      ["assets/readme/screenshots/the-sense.webp", "the-sense.webp"],
+      ["assets/readme/screenshots/pull.webp", "pull.webp"],
+      ["assets/readme/journey.gif", "journey.gif"],
+      ["assets/readme/pipeline.gif", "pipeline.gif"],
+      ["assets/readme/echo-stutter.svg", "echo-stutter.svg"],
+    ],
+  },
+  hiresignal: {
+    repo: "darkpandawarrior/HireSignal",
+    // v1 is still in progress upstream — no in-app screenshots exist yet
+    // (its own docs/screenshots/ and docs/gifs/ are placeholder READMEs).
+    // The banner is real; screens land here the day the app has any.
+    files: [["assets/banner.gif", "banner.gif"]],
+  },
   kursi: {
     repo: "darkpandawarrior/Kursi",
     files: [

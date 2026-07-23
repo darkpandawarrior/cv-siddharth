@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)"><rect width="108" height="108" fill="#1F0F13"/></g>
+  <!-- D monogram + an echo ring — the recorded-intent replay that drives every system -->
+  <circle cx="54" cy="52" r="30" fill="none" stroke="#B3223C" stroke-opacity="0.35" stroke-width="3"/>
+  <text x="54" y="76" text-anchor="middle" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#F4E4E7">D</text>
+  <circle cx="80" cy="76" r="6" fill="#B3223C"/>
+</svg>

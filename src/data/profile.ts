@@ -923,22 +923,108 @@ export const projects: Project[] = [
   {
     slug: "hiresignal",
     name: "HireSignal",
-    tagline: "Local-first AI career-intelligence dashboard.",
+    tagline: "A native, multiplatform AI career-intelligence engine — and the open-source project it's built on.",
     description:
-      "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — built on the open-source career-ops project, which I actively contribute to upstream.",
-    stack: ["Node.js", "Vite", "Playwright", "Multi-profile", "62 ATS/board providers"],
+      "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — rebuilt from scratch in Kotlin Multiplatform, with its scoring engine ported and verified against the open-source career-ops project I actively contribute to upstream.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "62 ATS/board providers"],
     highlights: [
-      "Resume onboarding → profile inference → trust-validated job scanning → fit scoring → tailored résumés.",
-      "Single-server multi-profile architecture (per-candidate routing) over a strict User/System data contract.",
-      "62 ATS & job-board provider integrations via a dynamic, zero-token provider loader, built on the open-source career-ops engine.",
-      "Contributor to the public career-ops project (⭐60k+) — merged PRs adding ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature.",
+      "25-module Kotlin Multiplatform clean architecture — 12 feature + 6 core modules — targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
+      "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
+      "62 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "4 merged PRs to the public career-ops project (⭐60k+) — two new ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature — real, verifiable upstream contributions.",
     ],
+    // The native app (darkpandawarrior/HireSignal) is a private, v1-in-progress
+    // repo with no screenshots yet — case study shown via the site's own
+    // detail page instead of a code link. The career-ops fork and its public
+    // upstream are real, public, and safe to link directly.
     links: [
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/career-ops" },
-      { label: "Upstream (career-ops)", url: "https://github.com/santifer/career-ops" },
+      { label: "My career-ops fork", url: "https://github.com/darkpandawarrior/career-ops" },
+      { label: "Upstream (career-ops, ⭐60k+)", url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · built on the open-source career-ops engine",
-    badges: ["Node.js", "Job-search automation", "Open source"],
+    status: "Active · 4 PRs merged upstream",
+    badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
+    theme: {
+      accent: "#3B82F6",
+      accentDim: "#1D4ED8",
+      ink: "#0A1120",
+      surface: "#0F1B2E",
+      card: "#16233A",
+      line: "#28405E",
+    },
+    icon: "/projects/hiresignal/brand/hiresignal-icon.svg",
+    detail: {
+      overview:
+        "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐60k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+      sections: [
+        {
+          heading: "One engine, five targets",
+          body: "A 25-module clean-architecture split — 12 feature modules and 6 core modules — targets Android, iOS, Desktop, Web (wasmJs) and a Spring Boot 4 server from one shared Kotlin codebase: 543 files, ~45,000 lines. core:designsystem, core:protocol, core:engine, core:data, core:network and core:ai sit underneath feature modules for dashboard, pipeline, explore, intel, ops, profile, auth, assistant and more.",
+        },
+        {
+          heading: "A no-IO engine, ported and verified",
+          body: "core:engine holds the A–F fit-scoring rubric, ATS search, SimHash fingerprinting for duplicate-listing detection, a liveness classifier, and the funnel math — none of it touches the network or disk. It's ported 1:1 from career-ops's original JavaScript implementation and checked against that implementation's own test vectors, so the scoring behaves identically whether it's running on Android, in a browser tab, or on the server.",
+        },
+        {
+          heading: "Offline-first, agent-reachable",
+          body: "Room (KMP) plus DataStore caches everything locally over a Ktor REST + NDJSON/SSE sync layer, so the dashboard stays usable offline and catches up when connectivity returns. An agent-interop surface — Android AppFunctions, iOS App Intents/Shortcuts, hiresignal:// deep links, and a documented OpenAPI contract — lets other agents (and the OS itself) drive the app without going through the UI.",
+        },
+        {
+          heading: "On-device AI, with a fallback that always works",
+          body: "Where an LLM adds real value, it runs on-device first: ML Kit GenAI / Gemini Nano on Android, Apple Foundation Models on iOS. Every AI-assisted step has a deterministic-heuristic fallback, so fit scoring and résumé tailoring keep working with zero model available — the same discipline career-ops applies with its zero-token scan path.",
+        },
+        {
+          heading: "Zero tokens until an LLM is actually needed",
+          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker — 62 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
+        },
+        {
+          heading: "One engine, many candidates",
+          body: "career-ops's multi-profile architecture — a profiles.yml registry mapping each candidate to a private data root while sharing one engine install — is the same shape the native app's per-candidate routing follows: one server, N profiles, a strict User/System data contract between them.",
+        },
+        {
+          heading: "Genuine upstream contribution, not a personal fork",
+          body: "Four merged pull requests against the public career-ops repository (⭐60k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — and an agent-inbox feature for queuing requests across sessions.",
+        },
+      ],
+      metrics: [
+        { value: "25", label: "KMP modules · 5 targets" },
+        { value: "45k", label: "lines of Kotlin · 543 files" },
+        { value: "62", label: "ATS & job-board providers" },
+        { value: "4", label: "PRs merged upstream" },
+      ],
+      techStack: [
+        { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
+        { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
+        { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "hiresignal:// deep links", "OpenAPI contract"] },
+        { group: "Open-source engine (career-ops)", items: ["Node.js", "62 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A–F fit rubric"] },
+      ],
+      extraLinks: [
+        { label: "PR: agent-inbox feature", url: "https://github.com/santifer/career-ops/pull/1472" },
+        { label: "PR: dashboard Status-cell fix", url: "https://github.com/santifer/career-ops/pull/1186" },
+        { label: "PR: Breezy HR provider", url: "https://github.com/santifer/career-ops/pull/1185" },
+        { label: "PR: BambooHR provider", url: "https://github.com/santifer/career-ops/pull/1141" },
+      ],
+      diagrams: [
+        {
+          title: "One engine, five targets",
+          code: `graph LR
+  eng["core:engine<br/>ported + verified vs career-ops test vectors"] --> and["Android"]
+  eng --> ios["iOS"]
+  eng --> desk["Desktop"]
+  eng --> web["Web (wasmJs)"]
+  eng --> srv["Spring Boot 4 server"]
+  eng -.->|"no IO — pure scoring"| rules["A-F fit rubric · SimHash · funnel math"]`,
+        },
+        {
+          title: "Zero tokens until an LLM is actually needed",
+          code: `graph LR
+  scan["scan"] --> apis["Greenhouse / Ashby / Lever APIs<br/>+ local parsers — zero LLM cost"]
+  apis --> trust["shared trust-validator"]
+  trust --> tracker["tracker"]
+  scan -.->|"no structured source"| agent["agent-driven search — fallback only"] --> trust`,
+        },
+      ],
+    },
+    screens: [{ file: "banner.gif", caption: "HireSignal — v1 in active development, native app UI not public yet" }],
   },
   {
     slug: "portfolio",
@@ -964,14 +1050,103 @@ export const projects: Project[] = [
     tagline: "A first-person time-loop game about a moment someone could not let end.",
     description:
       "Godot 4.7 in GDScript. A deterministic echo-replay spine — recorded input intent replays through the same physics step — powers cooperative echoes, ghosts, and boss desync from one system. Built solo as an AI-orchestrated dev crew.",
-    stack: ["Godot 4.7", "GDScript", "Deterministic sim"],
+    stack: ["Godot 4.7", "GDScript", "Deterministic fixed-timestep sim", "gdUnit4", "AI-orchestrated content pipeline"],
     highlights: [
-      "One deterministic time system reused five ways: cooperative echoes, ghosts, leaderboard replays, the Hunter, and boss desync.",
-      "Run as a model-tiered AI dev crew — content lands only after a generator/critic pass for frame, voice, and fairness.",
+      "One deterministic (state, InputFrame) → state step reused five ways: cooperative Echoes, ghosts, leaderboard replays, the Hunter, and boss desync.",
+      "A bit-exact determinism gate guards every change to the time systems, wired into a hook that reruns it automatically on every edit.",
+      "Design-first build: a 4,300+ line, 7-document codex and 24 animated SVG design boards, generated by a checked-in AI dev-crew script — 39 agents, 0 failures, one session.",
     ],
-    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/deadlock" }],
-    status: "In development",
-    badges: ["Godot 4.7", "GDScript", "Time-loop"],
+    // Repo is private — early solo build, not ready for public code review yet.
+    // The case study below is real: verified against the actual source, not marketing copy.
+    links: [],
+    status: "In development · private repo, public case study",
+    badges: ["Godot 4.7", "GDScript", "Time-loop", "Solo + AI dev crew"],
+    theme: {
+      accent: "#B3223C",
+      accentDim: "#6B1226",
+      ink: "#140A0C",
+      surface: "#1F0F13",
+      card: "#2A151A",
+      line: "#4A2530",
+    },
+    icon: "/projects/deadlock/brand/deadlock-icon.svg",
+    detail: {
+      overview:
+        "DEADLOCK is a first-person time-loop game about a moment someone could not let end — a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea — record intent, replay deterministically — is reused, unmodified, five different ways across the game's core systems.",
+      sections: [
+        {
+          heading: "Record intent, never position",
+          body: "The determinism contract in one line: an InputFrame stores a move vector, jump, and dash — never a position. Motion.step(state, frame) replays it through the same fixed-timestep physics tick every time, so the same state plus the same frame always produces the same state out. Positions are outputs, never inputs, which is what makes an Echo standing on a pressure pad, a ghost racing a past run, and the Hunter's prediction the same handful of lines wearing three different narrative masks.",
+        },
+        {
+          heading: "One spine, five faces",
+          body: "Recorder is a ring buffer of InputFrames; Echo replays a slice of it tick-for-tick, either incrementally (once per physics tick, for a live cooperating Echo holding a pressure pad open) or in one shot (for ghosts, tests, and the Hunter's prediction). Cooperative Echoes hold a bridge open, ghosts race a past run, the leaderboard replays a full match, and the Hunter — the thing hunting you — predicts your position off the same replay math. No branch of that list touches a second system.",
+        },
+        {
+          heading: "The gate that can't be skipped",
+          body: "tests/test_determinism.gd asserts bit-exact field equality with no tolerance, plus a perturbation check that fails if a changed input ever produces an identical output — the test that would catch a gate that silently stopped testing anything. A PostToolUse hook reruns it automatically on any edit to the time or player systems, so drift surfaces the moment it's introduced, not at playtest.",
+        },
+        {
+          heading: "The Hunter, built on the same replay math",
+          body: "The Hunter wakes once the player's attention score crosses a threshold, can be frozen by the Stutter ability, and catches the player by proximity — a CharacterBody3D whose prediction runs on the exact same recorded-intent pipeline as the cooperative-Echo and boss-desync mechanics. It isn't a second AI system bolted on; it's the same fifteen lines of replay code with a different narrative job.",
+        },
+        {
+          heading: "Design bible before geometry",
+          body: "52 logged iterations, 10 entity dossiers, 24 hand-authored animated-SVG design boards, and a 4,300+ line, seven-document codex — written before most of the game's rooms exist. The frame test for every addition is one question: would a grieving mind hold this?",
+        },
+        {
+          heading: "An AI dev crew, checked in, not described",
+          body: "The codex wasn't hand-written — it was generated by a workflow script checked into the repo: three readers distill source material, seven documents generate in a pipeline where critique starts the moment each one finishes its own draft, the four widest creative documents run dual-lens ensembles merged by a judge pass, and every draft clears adversarial critics for frame, fairness, originality, and voice before a reviser is allowed to touch the file. One session: 39 agents, zero failures, ~4.8M tokens.",
+        },
+        {
+          heading: "Honesty as a design constraint",
+          body: "The project's own README states plainly which systems are playable versus designed-but-unbuilt, and backs every specific number with a literal command a reader could run against the source. The in-fiction lesson — an unreliable room lies about the floor; sending an Echo reveals the truth — is asked of the documentation too.",
+        },
+      ],
+      metrics: [
+        { value: "5", label: "systems · one deterministic spine" },
+        { value: "2,026", label: "lines of GDScript · 36 files" },
+        { value: "39", label: "AI agents · one dev-crew session" },
+        { value: "0", label: "tolerance in the determinism gate" },
+      ],
+      techStack: [
+        { group: "Engine", items: ["Godot 4.7 (Forward+)", "GDScript", "fixed-timestep _physics_process"] },
+        { group: "Determinism core", items: ["InputFrame (intent, not position)", "Recorder ring buffer", "Echo (incremental + one-shot replay)"] },
+        { group: "Testing", items: ["gdUnit4", "bit-exact determinism gate", "PostToolUse re-run hook"] },
+        { group: "Build", items: ["Single-threaded WASM web export", "Git LFS for binary assets"] },
+        { group: "Content pipeline", items: ["Checked-in AI dev-crew workflow script", "voice/dash deterministic lints", "pre-commit enforced"] },
+      ],
+      diagrams: [
+        {
+          title: "One deterministic step, five uses",
+          code: `graph LR
+  s["state"] -->|"InputFrame (intent)"| step["Motion.step()<br/>pure · fixed timestep"] --> s2["state'"]
+  step -.-> echo["Echo — cooperative"]
+  step -.-> ghost["Ghost replay"]
+  step -.-> board["Leaderboard replay"]
+  step -.-> hunter["The Hunter — prediction"]
+  step -.-> boss["Boss desync"]`,
+        },
+        {
+          title: "The gate that can't be skipped",
+          code: `graph TD
+  edit["Edit to core/time/ or core/player/"] --> hook["PostToolUse hook"]
+  hook --> gate["tests/test_determinism.gd<br/>bit-exact · zero tolerance"]
+  gate -->|"pass"| ok["Change accepted"]
+  gate -->|"fail"| block["Drift caught before playtest"]
+  gate --> perturb["Perturbation check<br/>changed input -> must change output"]`,
+        },
+      ],
+    },
+    screens: [
+      { file: "title.webp", caption: "Title — dark maroon, a room that lies about its own floor" },
+      { file: "journey.gif", caption: "Title → false-floor room → two-Echo cooperation → Sense HUD → Pull ability" },
+      { file: "echo-cooperation.webp", caption: "Two Echoes holding a bridge open — same replay math, cooperative use" },
+      { file: "the-sense.webp", caption: "The Sense — reading the room for what it's hiding" },
+      { file: "pull.webp", caption: "Pull ability — one verb, reused across encounters" },
+      { file: "echo-stutter.svg", caption: "Echo / Stutter — the core verb, diagrammed" },
+      { file: "pipeline.gif", caption: "The AI dev-crew pipeline that generated the design codex — 39 agents, one session" },
+    ],
   },
 ];
 

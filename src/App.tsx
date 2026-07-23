@@ -99,6 +99,8 @@ const CARD_MEDIA: Record<string, { src: string; alt: string }> = {
   // ponytail: checkout_flow.gif opens on the FLAG_SECURE "screenshots blocked"
   // frame — great security story, terrible thumbnail. Static catalog shot instead.
   paymentslab: { src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", alt: "PaymentsLab gateway catalog" },
+  deadlock: { src: "/projects/deadlock/screenshots/journey.gif", alt: "DEADLOCK — title through the first cooperative Echo" },
+  hiresignal: { src: "/projects/hiresignal/screenshots/banner.gif", alt: "HireSignal banner" },
 };
 
 const NAV_LINKS = [

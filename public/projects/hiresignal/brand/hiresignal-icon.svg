@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HireSignal">
+  <defs>
+    <linearGradient id="bg" x1="6" y1="6" x2="102" y2="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#141B24"/>
+      <stop offset="1" stop-color="#0A0E14"/>
+    </linearGradient>
+    <linearGradient id="sig" x1="30" y1="78" x2="86" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1F8F6B"/>
+      <stop offset="0.55" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#4ADE80"/>
+    </linearGradient>
+    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)"><rect width="108" height="108" fill="url(#bg)"/></g>
+  <!-- Signal source dot at lower-left, broadcasting concentric arcs up-right. -->
+  <circle cx="34" cy="74" r="6" fill="url(#sig)"/>
+  <g fill="none" stroke="url(#sig)" stroke-linecap="round">
+    <path d="M34,56 A18,18 0 0 1 52,74" stroke-width="6.5"/>
+    <path d="M34,42 A32,32 0 0 1 66,74" stroke-width="6.5"/>
+    <path d="M34,28 A46,46 0 0 1 80,74" stroke-width="6.5"/>
+  </g>
+</svg>
