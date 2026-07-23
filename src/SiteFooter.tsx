@@ -12,9 +12,11 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
     links: [
       { label: "Case studies", href: "#work" },
       { label: "Projects", href: "#projects" },
+      { label: "The Source (repos)", href: "#source" },
       { label: "Experience", href: "#experience" },
       { label: "Skills", href: "#skills" },
       { label: "Writing", href: "#writing" },
+      { label: "The Workshop", href: "#workshop" },
       { label: "Résumé", href: "#resume" },
     ],
   },

@@ -374,7 +374,9 @@ export function LabBench() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
-            One live experiment per case study — the actual ideas, running in your browser. Poke them.
+            Four instruments, one per case study — the actual idea behind each headline metric, running live
+            in your browser. Flip a switch and watch the number happen. The full toolshed is in the{" "}
+            <a href="#workshop" className="text-accent transition hover:text-accent-dim">Workshop</a>.
           </p>
         </Reveal>
         <Reveal>
