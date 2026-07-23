@@ -28,6 +28,7 @@ import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { StoryMap } from "./StoryMap.tsx";
+import { ParticleWordmark } from "./ParticleWordmark.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -38,6 +39,9 @@ import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
 const BlueprintRoom = lazy(() => import("./BlueprintRoom.tsx"));
+// The Compose Playground ships its interpreter in its own chunk, loaded only
+// when a visitor opens #compose.
+const ComposePlayground = lazy(() => import("./ComposePlayground.tsx"));
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -171,6 +175,7 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 const DRAWER_EXTRAS = [
   { href: "#map", label: "3D Storyboard" },
   { href: "#loopdown", label: "The Loopdown" },
+  { href: "#compose", label: "Compose Playground" },
   { href: "#blueprint", label: "Blueprint Room" },
   { href: "#terminal", label: "Terminal" },
   { href: "#resume", label: "Résumé" },
@@ -392,6 +397,14 @@ function LiveTicker() {
           ✎ latest note · {latestPost.title}
         </a>
       )}
+      <a
+        href="#compose"
+        onClick={() => window.scrollTo({ top: 0 })}
+        className="transition hover:text-accent"
+        title="A live Jetpack Compose editor, built into this page"
+      >
+        ▶ play · live Compose editor
+      </a>
     </div>
   );
 }
@@ -1091,6 +1104,21 @@ export default function App() {
     );
   }
 
+  if (hash === "#compose") {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-zinc-500">
+            spinning up the compose playground…
+          </div>
+        }
+      >
+        <ComposePlayground />
+        <FloatingChat />
+      </Suspense>
+    );
+  }
+
   // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
   // section, so old /#writing links land on it naturally.
   if (hash === "#loopdown") {
@@ -1131,6 +1159,7 @@ export default function App() {
         <WritingSection />
         <Circuit />
         <StoryMap />
+        <ParticleWordmark />
         <Contact />
       </main>
       <ScrollBot />

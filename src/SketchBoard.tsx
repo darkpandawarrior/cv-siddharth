@@ -122,6 +122,17 @@ class HoloShapeUtil extends ShapeUtil<HoloShape> {
               dpr={1}
               camera={{ position: [0, 0, 4.4], fov: 45 }}
               gl={{ antialias: true, alpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: false }}
+              onCreated={({ gl, invalidate }) => {
+                // A live WebGL canvas embedded in the whiteboard can have its
+                // context reclaimed by the GPU after a while (throttling, GPU
+                // switch, or too many contexts across the site). Calling
+                // preventDefault() tells the browser we intend to recover, so
+                // it fires `webglcontextrestored` instead of leaving a dead,
+                // blank canvas — the classic "it disappeared after a while".
+                const el = gl.domElement;
+                el.addEventListener("webglcontextlost", (e) => e.preventDefault(), false);
+                el.addEventListener("webglcontextrestored", () => invalidate(), false);
+              }}
             >
               <HoloCore />
             </Canvas>
@@ -241,6 +252,37 @@ function whenViewportReady(editor: Editor, cb: () => void, framesLeft = 30) {
   requestAnimationFrame(() => whenViewportReady(editor, cb, framesLeft - 1));
 }
 
+/** Axis-aligned overlap test between two tldraw Boxes (page coordinates). */
+function boxesOverlap(a: Box, b: Box): boolean {
+  return a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY;
+}
+
+/**
+ * The whiteboard drifting blank "after a while" is the camera ending up
+ * somewhere the shapes aren't. When the viewport momentarily collapses to 0
+ * (a backgrounded tab, an off-screen route, a layout reflow), tldraw's zoom
+ * math divides by that zero and clamps to a zoom-step extreme (~0.05 or 8) —
+ * the exact failure the initial-mount guard already documents — leaving a
+ * page full of shapes with a blank screen.
+ *
+ * The trigger is deliberately narrow: a zoom pinned to a step limit *while
+ * the shapes have scrolled fully off-screen*. That combination doesn't happen
+ * from ordinary use — panning to an empty patch of the infinite canvas to
+ * sketch keeps a sane zoom, so this never yanks the camera out from under a
+ * visitor mid-draw. It only fires on the genuine collapse-and-clamp. When the
+ * board is healthy every check is a cheap no-op.
+ */
+function boardLooksBlank(editor: Editor): boolean {
+  if (editor.getCurrentPageShapeIds().size === 0) return false; // legitimately empty
+  const screen = editor.getViewportScreenBounds();
+  if (screen.width < 1 || screen.height < 1) return false; // not laid out yet — don't fight it
+  const zoom = editor.getZoomLevel();
+  if (zoom > 0.06 && zoom < 7.9) return false; // sane zoom → trust the visitor's camera
+  const content = editor.getCurrentPageBounds();
+  if (!content) return false;
+  return !boxesOverlap(content, editor.getViewportPageBounds());
+}
+
 const shapeUtils = [MetricShapeUtil, HoloShapeUtil];
 
 /** The tldraw whiteboard view — draw, drag, leave a note, all persisted locally.
@@ -256,6 +298,31 @@ export default function SketchBoard({ tourStop, resetTick }: { tourStop: number;
     const [x, y, w, h] = TOUR[tourStop].bounds;
     editor.zoomToBounds(new Box(x, y, w, h), { animation: { duration: 900 }, targetZoom: 1 });
   }, [tourStop]);
+
+  // Watchdog: whenever the tab/route comes back into view — and on a slow
+  // idle poll — re-fit the board if it has silently drifted blank. This is the
+  // fix for "the sketch canvas disappears after a while": recover in place
+  // instead of leaving a page of shapes stranded off-screen.
+  useEffect(() => {
+    const recover = () => {
+      const editor = editorRef.current;
+      if (editor && boardLooksBlank(editor)) editor.zoomToFit({ animation: { duration: 200 } });
+    };
+    // rAF defers to after tldraw has re-measured its viewport on becoming visible.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") requestAnimationFrame(recover);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    const poll = window.setInterval(recover, 5000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+      clearInterval(poll);
+    };
+  }, []);
 
   // Re-seed in place: clear the current page, drop the persisted DB, reseed.
   // Recovers a blanked/half-loaded canvas without a full reload where possible.
@@ -283,6 +350,12 @@ export default function SketchBoard({ tourStop, resetTick }: { tourStop: number;
     <Tldraw
       persistenceKey={PERSISTENCE_KEY}
       shapeUtils={shapeUtils}
+      // The "Get a license for production" badge is tldraw's licensing
+      // watermark. Their terms only let you remove it with a business license
+      // key — hiding it any other way violates the SDK license. Drop a key in
+      // VITE_TLDRAW_LICENSE_KEY and it's passed here to remove it compliantly;
+      // without one, the free-tier watermark stays (as it must).
+      licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY || undefined}
       onMount={(editor) => {
         editorRef.current = editor;
         editor.user.updateUserPreferences({ colorScheme: "dark" });
