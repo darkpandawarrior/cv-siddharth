@@ -12,6 +12,7 @@ import {
   Monitor,
   Globe,
   Play,
+  LayoutGrid,
 } from "lucide-react";
 import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation } from "./data/profile.ts";
 import { projectStats } from "./data/projectStats.ts";
@@ -31,7 +32,7 @@ import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { StoryMap } from "./StoryMap.tsx";
 import { ParticleWordmark } from "./ParticleWordmark.tsx";
-import { Workshop } from "./Workshop.tsx";
+import Playground, { RoomFrame, ROOMS } from "./Playground.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -105,7 +106,6 @@ const NAV_LINKS = [
   { href: "#experience", label: "Experience" },
   { href: "#skills", label: "Skills" },
   { href: "#writing", label: "Writing" },
-  { href: "#workshop", label: "Workshop" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -191,11 +191,8 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 
 // Everything reachable from the phone drawer — sections plus the sub-worlds.
 const DRAWER_EXTRAS = [
-  { href: "#map", label: "3D Storyboard" },
+  { href: "#playground", label: "▶ The Playground" },
   { href: "#loopdown", label: "The Loopdown" },
-  { href: "#compose", label: "Compose Playground" },
-  { href: "#blueprint", label: "Blueprint Room" },
-  { href: "#terminal", label: "Terminal" },
   { href: "#resume", label: "Résumé" },
 ];
 
@@ -276,6 +273,13 @@ function Nav() {
               {l.label}
             </a>
           ))}
+          <a
+            href="#playground"
+            onClick={() => window.scrollTo({ top: 0 })}
+            className="flex items-center gap-1 transition hover:text-accent"
+          >
+            <LayoutGrid size={13} /> Playground
+          </a>
           <a href="#resume" className="flex items-center gap-1 transition hover:text-accent">
             <FileText size={13} /> Résumé
           </a>
@@ -1040,6 +1044,48 @@ function Contact() {
   );
 }
 
+/**
+ * A light in-page teaser for the Playground hub — no canvases, so it costs the
+ * main scroll nothing. It advertises the interactive rooms and funnels into the
+ * full-screen hub (where each room renders one at a time).
+ */
+function PlaygroundTeaser() {
+  return (
+    <section id="explore" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the playground</p>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
+          <p className="mb-6 max-w-2xl text-zinc-400">
+            Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
+            engineering above. They live behind one door now.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {ROOMS.map(({ href, label, icon: Icon, tint }) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => window.scrollTo({ top: 0 })}
+                className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-zinc-300 transition hover:border-accent/50 hover:text-zinc-100"
+              >
+                <Icon size={13} style={{ color: tint }} />
+                {label}
+              </a>
+            ))}
+          </div>
+          <a
+            href="#playground"
+            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0 }); window.location.hash = "#playground"; }}
+            className="btn-primary mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            Enter the Playground →
+          </a>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const hash = useHashRoute();
 
@@ -1107,6 +1153,52 @@ export default function App() {
     );
   }
 
+  // The Playground hub and its rooms. Each interactive lives on its own route
+  // and renders one at a time, so only a single canvas / WebGL context is ever
+  // live — and the main scroll page stays light (this is what un-stutters it).
+  if (hash === "#playground") {
+    return (
+      <>
+        <CursorAura />
+        <Playground />
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#lab") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The Lab Bench" tagline="four instruments, running live">
+          <LabBench />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#map") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The 3D Storyboard" tagline="the projects as a constellation">
+          <StoryMap />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#forge") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The Particle Forge" tagline="physics on a canvas">
+          <ParticleWordmark />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+
   // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
   // section, so old /#writing links land on it naturally.
   if (hash === "#loopdown") {
@@ -1139,16 +1231,13 @@ export default function App() {
         <Hero />
         <Metrics />
         <CaseStudies />
-        <LabBench />
         <Projects />
         <ExperienceSection />
         <Circuit />
         <Skills />
         <WritingSection />
         <Circuit />
-        <StoryMap />
-        <Workshop />
-        <ParticleWordmark />
+        <PlaygroundTeaser />
         <Contact />
       </main>
       <ScrollBot />

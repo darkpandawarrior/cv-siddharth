@@ -12,9 +12,18 @@ import { SignalLabPane } from "./SignalLab.tsx";
 export type LabKey = "signal" | "crashes" | "recompose" | "theme";
 
 const OPEN_LAB_EVENT = "open-lab";
+// The Lab Bench now lives on its own #lab route (inside the Playground hub), so
+// a deep-link from a case-study card navigates there and hands the desired tab
+// across — via an event if the bench is already mounted, or this pending slot
+// for a fresh mount after the route change.
+let pendingLab: LabKey | null = null;
 export function openLab(tab: LabKey) {
+  pendingLab = tab;
   window.dispatchEvent(new CustomEvent(OPEN_LAB_EVENT, { detail: tab }));
-  document.getElementById("lab")?.scrollIntoView({ behavior: "smooth" });
+  if (window.location.hash !== "#lab") {
+    window.scrollTo({ top: 0 });
+    window.location.hash = "#lab";
+  }
 }
 
 /* ── Crash Triage Lab ────────────────────────────────────────────────── */
@@ -356,9 +365,10 @@ const TABS: { key: LabKey; label: string; metric: string }[] = [
 ];
 
 export function LabBench() {
-  const [tab, setTab] = useState<LabKey>("signal");
+  const [tab, setTab] = useState<LabKey>(() => pendingLab ?? "signal");
 
   useEffect(() => {
+    pendingLab = null; // consumed by the initial state above
     const onOpen = (e: Event) => {
       const t = (e as CustomEvent).detail as LabKey;
       if (TABS.some((x) => x.key === t)) setTab(t);
@@ -375,8 +385,8 @@ export function LabBench() {
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
             Four instruments, one per case study — the actual idea behind each headline metric, running live
-            in your browser. Flip a switch and watch the number happen. The full toolshed is in the{" "}
-            <a href="#workshop" className="text-accent transition hover:text-accent-dim">Workshop</a>.
+            in your browser. Flip a switch and watch the number happen. Every other room is one door away in
+            the <a href="#playground" onClick={() => window.scrollTo({ top: 0 })} className="text-accent transition hover:text-accent-dim">Playground</a>.
           </p>
         </Reveal>
         <Reveal>
