@@ -958,6 +958,21 @@ export const projects: Project[] = [
     status: "Live",
     badges: ["React 19", "Vercel", "LLM chat"],
   },
+  {
+    slug: "deadlock",
+    name: "DEADLOCK",
+    tagline: "A first-person time-loop game about a moment someone could not let end.",
+    description:
+      "Godot 4.7 in GDScript. A deterministic echo-replay spine — recorded input intent replays through the same physics step — powers cooperative echoes, ghosts, and boss desync from one system. Built solo as an AI-orchestrated dev crew.",
+    stack: ["Godot 4.7", "GDScript", "Deterministic sim"],
+    highlights: [
+      "One deterministic time system reused five ways: cooperative echoes, ghosts, leaderboard replays, the Hunter, and boss desync.",
+      "Run as a model-tiered AI dev crew — content lands only after a generator/critic pass for frame, voice, and fairness.",
+    ],
+    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/deadlock" }],
+    status: "In development",
+    badges: ["Godot 4.7", "GDScript", "Time-loop"],
+  },
 ];
 
 // ── Shared foundation ─────────────────────────────────────────────────────

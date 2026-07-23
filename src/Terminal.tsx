@@ -61,6 +61,10 @@ const SECTION_ROUTES: Record<string, { hash: string; label: string }> = {
   blueprint: { hash: "#blueprint", label: "The Blueprint Room" },
   map: { hash: "#map", label: "The 3D Storyboard" },
   lab: { hash: "#lab", label: "The Signal Lab" },
+  forge: { hash: "#forge", label: "The Particle Forge" },
+  compose: { hash: "#compose", label: "The Compose Playground" },
+  playground: { hash: "#playground", label: "The Playground" },
+  source: { hash: "#source", label: "The Source" },
 };
 
 /* Small presentational helpers so command output stays declarative. */

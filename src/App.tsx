@@ -12,10 +12,14 @@ import {
   Monitor,
   Globe,
   Play,
+  LayoutGrid,
 } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, openSource, recentGrowth, sharedFoundation } from "./data/profile.ts";
+import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation } from "./data/profile.ts";
+import { projectStats } from "./data/projectStats.ts";
+import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
+import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
@@ -28,6 +32,8 @@ import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { StoryMap } from "./StoryMap.tsx";
+import { ParticleWordmark } from "./ParticleWordmark.tsx";
+import Playground, { RoomFrame, ROOMS } from "./Playground.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -38,6 +44,9 @@ import { writing } from "./data/writing.ts";
 
 // The tldraw SDK loads only when someone actually enters the Blueprint Room.
 const BlueprintRoom = lazy(() => import("./BlueprintRoom.tsx"));
+// The Compose Playground ships its interpreter in its own chunk, loaded only
+// when a visitor opens #compose.
+const ComposePlayground = lazy(() => import("./ComposePlayground.tsx"));
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -67,6 +76,20 @@ function platformsOf(stack: string[]) {
 // Projects with a playable web build — hints the "▶ Live" badge on the card;
 // the detail page is where it's actually embedded/linked.
 const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway", "paymentslab"]);
+
+// Real repo stats surfaced on the card, drawn from projectStats.ts (generated
+// from each repo). Only the apps with generated stats get a strip.
+function repoStatLine(slug: string): string | null {
+  const s = projectStats[slug as keyof typeof projectStats];
+  if (!s) return null;
+  if (slug === "mileway" && "features" in s) return `${s.modules} modules · ${s.features} features · ${s.screenshots} tests`;
+  if (slug === "paymentslab" && "gatewaysNative" in s) {
+    const gateways = s.gatewaysNative + s.gatewaysHosted + s.gatewaysMobileMoney + s.gatewaysStub;
+    return `${s.modules + s.composedModules} modules · ${gateways} gateways`;
+  }
+  if (slug === "kursi") return `${s.modules} modules · 4 platforms`;
+  return `${s.modules} modules`;
+}
 
 // Card-top media per project — the daily-synced gifs finally surface on the
 // home page instead of living only inside detail-page galleries.
@@ -169,10 +192,8 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 
 // Everything reachable from the phone drawer — sections plus the sub-worlds.
 const DRAWER_EXTRAS = [
-  { href: "#map", label: "3D Storyboard" },
+  { href: "#playground", label: "▶ The Playground" },
   { href: "#loopdown", label: "The Loopdown" },
-  { href: "#blueprint", label: "Blueprint Room" },
-  { href: "#terminal", label: "Terminal" },
   { href: "#resume", label: "Résumé" },
 ];
 
@@ -253,6 +274,13 @@ function Nav() {
               {l.label}
             </a>
           ))}
+          <a
+            href="#playground"
+            onClick={() => window.scrollTo({ top: 0 })}
+            className="flex items-center gap-1 transition hover:text-accent"
+          >
+            <LayoutGrid size={13} /> Playground
+          </a>
           <a href="#resume" className="flex items-center gap-1 transition hover:text-accent">
             <FileText size={13} /> Résumé
           </a>
@@ -279,6 +307,7 @@ function Nav() {
 function Hero() {
   return (
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
+      <ParticleHero />
       <div>
         <p className="rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
@@ -392,6 +421,14 @@ function LiveTicker() {
           ✎ latest note · {latestPost.title}
         </a>
       )}
+      <a
+        href="#compose"
+        onClick={() => window.scrollTo({ top: 0 })}
+        className="transition hover:text-accent"
+        title="A live Jetpack Compose editor, built into this page"
+      >
+        ▶ play · live Compose editor
+      </a>
     </div>
   );
 }
@@ -570,6 +607,7 @@ function Projects() {
             };
             const platforms = platformsOf(p.stack);
             const isLive = LIVE_WEB_PROJECTS.has(p.slug);
+            const statLine = repoStatLine(p.slug);
             const media = CARD_MEDIA[p.slug];
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
@@ -597,6 +635,11 @@ function Projects() {
                     <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
                   </div>
                   <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
+                  {statLine && (
+                    <p className="mt-2 font-mono text-[11px] text-zinc-500">
+                      <span className="text-accent2">◇</span> {statLine}
+                    </p>
+                  )}
                   {platforms.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
                       {platforms.map(({ label, icon: Icon }) => (
@@ -670,49 +713,13 @@ function Projects() {
           <div className="rounded-2xl border border-line bg-card p-6">
             <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
             <FoundationGraph />
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {sharedFoundation.libs.map((lib) => (
-                <a
-                  key={lib.name}
-                  href={lib.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex flex-col rounded-xl border border-line bg-surface p-4 transition hover:border-accent/50"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-sm font-semibold text-accent">{lib.name}</span>
-                    <ArrowUpRight size={14} className="text-zinc-500 transition group-hover:text-accent" />
-                  </div>
-                  <p className="mt-2 text-sm leading-snug text-zinc-400">{lib.role}</p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {lib.usedBy.map((app) => (
-                      <span key={app} className="rounded-full border border-accent/25 bg-accent/5 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">
-                        {app}
-                      </span>
-                    ))}
-                  </div>
-                </a>
-              ))}
-            </div>
+            <p className="mt-4 font-mono text-[11px] text-zinc-500">
+              ↓ both libraries are in <a href="#source" className="text-accent transition hover:text-accent-dim">The Source</a>, one click from the code.
+            </p>
           </div>
         </Reveal>
 
-        <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
-            Open-source contributions
-          </h3>
-          <ul className="space-y-2">
-            {openSource.map((c) => (
-              <li key={c.url} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
-                <a href={c.url} target="_blank" rel="noreferrer" className="font-medium text-zinc-200 transition hover:text-accent">
-                  {c.title}
-                </a>
-                <span className="text-xs text-zinc-500">{c.repo}</span>
-                <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+        <ReposShowcase />
 
         <Reveal>
           <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
@@ -1039,6 +1046,48 @@ function Contact() {
   );
 }
 
+/**
+ * A light in-page teaser for the Playground hub — no canvases, so it costs the
+ * main scroll nothing. It advertises the interactive rooms and funnels into the
+ * full-screen hub (where each room renders one at a time).
+ */
+function PlaygroundTeaser() {
+  return (
+    <section id="explore" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the playground</p>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
+          <p className="mb-6 max-w-2xl text-zinc-400">
+            Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
+            engineering above. They live behind one door now.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {ROOMS.map(({ href, label, icon: Icon, tint }) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => window.scrollTo({ top: 0 })}
+                className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-zinc-300 transition hover:border-accent/50 hover:text-zinc-100"
+              >
+                <Icon size={13} style={{ color: tint }} />
+                {label}
+              </a>
+            ))}
+          </div>
+          <a
+            href="#playground"
+            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0 }); window.location.hash = "#playground"; }}
+            className="btn-primary mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            Enter the Playground →
+          </a>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const hash = useHashRoute();
 
@@ -1091,6 +1140,67 @@ export default function App() {
     );
   }
 
+  if (hash === "#compose") {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-zinc-500">
+            spinning up the compose playground…
+          </div>
+        }
+      >
+        <ComposePlayground />
+        <FloatingChat />
+      </Suspense>
+    );
+  }
+
+  // The Playground hub and its rooms. Each interactive lives on its own route
+  // and renders one at a time, so only a single canvas / WebGL context is ever
+  // live — and the main scroll page stays light (this is what un-stutters it).
+  if (hash === "#playground") {
+    return (
+      <>
+        <CursorAura />
+        <Playground />
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#lab") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The Lab Bench" tagline="four instruments, running live">
+          <LabBench />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#map") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The 3D Storyboard" tagline="the projects as a constellation">
+          <StoryMap />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+  if (hash === "#forge") {
+    return (
+      <>
+        <CursorAura />
+        <RoomFrame title="The Particle Forge" tagline="physics on a canvas">
+          <ParticleWordmark />
+        </RoomFrame>
+        <FloatingChat />
+      </>
+    );
+  }
+
   // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
   // section, so old /#writing links land on it naturally.
   if (hash === "#loopdown") {
@@ -1123,14 +1233,13 @@ export default function App() {
         <Hero />
         <Metrics />
         <CaseStudies />
-        <LabBench />
         <Projects />
         <ExperienceSection />
         <Circuit />
         <Skills />
         <WritingSection />
         <Circuit />
-        <StoryMap />
+        <PlaygroundTeaser />
         <Contact />
       </main>
       <ScrollBot />

@@ -66,12 +66,37 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
-  background-image:
-    radial-gradient(50% 40% at 85% -5%, rgba(94, 230, 255, 0.07), transparent 70%),
-    radial-gradient(60% 45% at 10% 0%, rgba(61, 220, 132, 0.08), transparent 70%);
-  background-attachment: fixed;
   color: #e8efe9;
   -webkit-font-smoothing: antialiased;
+}
+
+/* The ambient gradient wash lives on a fixed, GPU-composited layer instead of
+   `background-attachment: fixed` on the body — that attachment forces a full
+   background repaint on every scroll frame, which is what made scrolling from
+   the top stutter. A fixed pseudo-element just composites, no repaint. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(50% 40% at 85% -5%, rgba(94, 230, 255, 0.07), transparent 70%),
+    radial-gradient(60% 45% at 10% 0%, rgba(61, 220, 132, 0.08), transparent 70%);
+}
+
+html.resume-mode body::before {
+  display: none;
+}
+
+/* Playground hub cards animate in on load, staggered via inline animation-delay */
+.playground-card {
+  animation: lb-in 0.5s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .playground-card {
+    animation: none;
+  }
 }
 
 /* Fluid section rhythm — swap in for fixed py-20 where sections want to breathe

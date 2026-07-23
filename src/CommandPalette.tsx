@@ -44,9 +44,13 @@ export function CommandPalette() {
       { id: "writing", label: "Writing", hint: "Jump", keywords: "loopdown blog lessons", icon: <PenLine size={15} />, run: () => goHash("#writing") },
       { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => goHash("#map") },
       { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => goHash("#lab") },
+      { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => goHash("#forge") },
+      { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => goHash("#playground") },
+      { id: "source", label: "The Source — every public repo", hint: "Jump", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} />, run: () => goHash("#source") },
       { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#contact") },
       { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => goHash("#loopdown") },
       { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => goHash("#blueprint") },
+      { id: "compose", label: "The Compose Playground — write Compose, live", hint: "Open", keywords: "jetpack compose kotlin android code editor playground live preview", icon: <TerminalSquare size={15} />, run: () => goHash("#compose") },
       { id: "terminal", label: "The Terminal — a faux shell you can type in", hint: "Open", keywords: "shell console cli command line easter egg bash", icon: <TerminalSquare size={15} />, run: () => goHash("#terminal") },
       {
         id: "books-before-bros",
