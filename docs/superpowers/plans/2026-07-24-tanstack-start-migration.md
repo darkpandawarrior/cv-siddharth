@@ -27,7 +27,7 @@
 - `maplibre-gl` was replaced by Leaflet in the merge and is no longer imported; its Vite worker/optimizeDeps config is dead and gets dropped.
 - Tailwind v4 (`@tailwindcss/vite ^4.1.18`) stays unchanged.
 - `src/routeTree.gen.ts` is committed (not gitignored) so `tsc --noEmit` works standalone without a pre-generate step.
-- **Dev vs. prod SSR (discovered during Task 7 execution):** `npm run dev` in this TanStack Start version does NOT server-render full document bodies — the raw dev response is the `<head>` + `<noscript>` shell + a client-entry script that hydrates in the browser. Real per-route SSR (body content in the raw HTTP response) is only produced by the **production build**. The build emits a self-listening Node server at `dist/server/server.js` that serves real SSR on **port 3000**. Therefore any task that must assert *server-rendered HTML* (Task 10) or measure *production performance* (Task 23), or wants a representative browser run (Task 22), MUST verify against `npm run build` + the production server (`npm run serve`, added in Task 9), NOT against `npm run dev`. Browser-based checks that assert on the post-hydration DOM (Playwright's `toContainText` after `networkidle`) work in either mode, but prod is more representative.
+- **Dev vs. prod SSR (discovered during Task 7 execution; serve command corrected during Task 9/10):** `npm run dev` in this TanStack Start version does NOT server-render full document bodies — the raw dev response is the `<head>` + `<noscript>` shell + a client-entry script that hydrates in the browser. Real per-route SSR (body content in the raw HTTP response) is only produced by the **production build** served through TanStack Start's preview server. NOTE: `node dist/server/server.js` does NOT self-listen (the bundle only exports a bare `{ fetch }` handler) — the working local prod-serve command is **`vite preview`** (its `previewServerPlugin` drives that same SSR fetch handler). Use port **4173** with `--strictPort` (vite preview's own default port; deliberately NOT 3000 or 5173, which the owner's other dev servers — e.g. career-ops on :3000 — routinely occupy, which would make a curl-based check silently hit the wrong app and false-pass). So `npm run serve` (added in Task 9) = `vite preview --port 4173 --strictPort`. Any task that must assert *server-rendered HTML* (Task 10) or measure *production performance* (Task 23), or wants a representative browser run (Task 22), MUST run `npm run build` then verify against `npm run serve` on port 4173 — NOT `npm run dev`. Two gotchas: (1) the SSR HTML embeds a NUL byte (serialized router state), so `grep` treats it as binary — use `grep -a`; (2) browser checks asserting on the post-hydration DOM (Playwright's `toContainText` after `networkidle`) work in either mode, but prod is more representative.
 
 ---
 
@@ -426,25 +426,25 @@ Start owns the document (Task 5) and provides the client bootstrap.
   ```
   (Only add if `npm run dev` errors about a missing client entry — Start auto-provides defaults per its config schema; prefer the default and delete this file if unused.)
 - [ ] Remove the now-obsolete `HomePage` default-export bridge in `src/App.tsx` (added in Task 6 solely to keep `src/main.tsx` compiling — with `main.tsx` deleted, `App.tsx` no longer needs a default export; keep the named `export function HomePage`).
-- [ ] Establish the local production-serve command. `vite preview` only serves static client assets, not the SSR server, so it cannot exercise real SSR. Add `"serve": "node dist/server/server.js"` to `package.json` scripts (the build emits a self-listening Node server there, port 3000) and repoint `"preview"` at the same (`"preview": "node dist/server/server.js"`) so nothing references the stale static-only preview. This is the command Tasks 10/22/23 verify against per the dev-vs-prod SSR note in Global Constraints.
-- [ ] Verify: `npm run build` completes; then `npm run serve` and confirm `curl -s http://localhost:3000/ | grep -qi "Senior Android Engineer"` finds server-rendered body content (proving real SSR from the prod server). Also confirm `npm run dev` still boots without a missing-client-entry error (dev won't full-SSR, per the note — that's expected).
+- [ ] Establish the local production-serve command. `node dist/server/server.js` does NOT self-listen (the bundle only exports a `{ fetch }` handler); the working command is `vite preview` (its `previewServerPlugin` drives the SSR fetch handler). Set both `"serve"` and `"preview"` to `"vite preview --port 4173 --strictPort"` in `package.json` scripts (port 4173 = vite preview's default; deliberately not 3000/5173, which the owner's other dev servers occupy — see the Global Constraints SSR note). This is the command Tasks 10/22/23 verify against.
+- [ ] Verify: `npm run build` completes; then `npm run serve` and confirm `curl -s http://localhost:4173/ | grep -aqi "Senior Android Engineer"` finds server-rendered body content (proving real SSR — note `grep -a`, the HTML has a NUL byte). Also confirm `npm run dev` still boots without a missing-client-entry error (dev won't full-SSR, per the note — that's expected).
 - [ ] Commit: `refactor(shell): remove index.html/main.tsx; Start owns the entry`
 
 ### Group D — SSR/CSR classification verification
 
 #### Task 10 — Prove SSR routes emit content HTML and CSR routes emit only the shell
-Verify against the **production server**, not `npm run dev` (see the dev-vs-prod SSR note in Global Constraints — dev never full-SSRs, so it can't distinguish the classes). Run `npm run build` then `npm run serve` (production Node server on port 3000), and in another shell:
+Verify against the **production server**, not `npm run dev` (see the dev-vs-prod SSR note in Global Constraints — dev never full-SSRs, so it can't distinguish the classes). Run `npm run build` then `npm run serve` (`vite preview --port 4173 --strictPort`), and in another shell. NOTE `grep -a`: the SSR HTML embeds a NUL byte so plain `grep` treats it as binary and false-negatives.
   ```bash
   # SSR: server HTML contains route content in the RAW response (no JS executed)
-  curl -s http://localhost:3000/         | grep -qi "Senior Android Engineer" && echo HOME-SSR
-  curl -s http://localhost:3000/resume   | grep -qi "Experience" && echo RESUME-SSR
-  curl -s http://localhost:3000/project/mileway | grep -qi "mileway" && echo PROJECT-SSR
+  curl -s http://localhost:4173/         | grep -aqi "Senior Android Engineer" && echo HOME-SSR
+  curl -s http://localhost:4173/resume   | grep -aqi "Experience" && echo RESUME-SSR
+  curl -s http://localhost:4173/project/mileway | grep -aqi "mileway" && echo PROJECT-SSR
   # CSR: raw server HTML is the shell only; the route's interactive content is NOT
   # pre-rendered (arrives via the client bundle). Assert the shell is present AND
-  # the route's signature content is ABSENT from the raw response.
-  curl -s http://localhost:3000/terminal | grep -qi "html" && ! curl -s http://localhost:3000/terminal | grep -qi "boot sequence" && echo terminal-CSR-SHELL
-  for r in blueprint compose playground lab map forge loopdown; do
-    curl -s "http://localhost:3000/$r" | grep -qi "<html" && echo "$r-CSR-SHELL"
+  # the route's signature body content is ABSENT from the raw response.
+  curl -s http://localhost:4173/lab | grep -aqi "<html" && ! curl -s http://localhost:4173/lab | grep -aqi "nine instruments" && echo lab-CSR-SHELL
+  for r in terminal blueprint compose playground map forge loopdown; do
+    curl -s "http://localhost:4173/$r" | grep -aqi "<html" && echo "$r-CSR-SHELL"
   done
   ```
 - [ ] Expected: `HOME-SSR`, `RESUME-SSR`, `PROJECT-SSR`, and `<name>-CSR-SHELL` for each CSR route. (The CSR assertion is that the shell renders; because these routes are `ssr:false`, their interactive bodies are intentionally absent from the raw HTML — contrast with the three SSR routes whose bodies ARE present.)
@@ -692,15 +692,18 @@ The Google Fonts `<link>` (old `index.html:40-45`) is already gone (index.html d
   import { defineConfig } from "@playwright/test";
   export default defineConfig({
     testDir: "./e2e",
-    use: { baseURL: "http://localhost:3000" },
+    use: { baseURL: "http://localhost:4173" },
     webServer: {
-      // Run against the production SSR server, not `npm run dev` — dev doesn't
-      // full-SSR in this Start version (see Global Constraints), and the prod
-      // build is the representative target anyway. Playwright asserts on the
-      // post-hydration DOM, which works either way, but prod is honest.
+      // Run against the production SSR server (`npm run serve` = vite preview
+      // --port 4173 --strictPort), not `npm run dev` — dev doesn't full-SSR in
+      // this Start version (see Global Constraints), and the prod build is the
+      // representative target anyway. Playwright asserts on the post-hydration
+      // DOM, which works either way, but prod is honest. reuseExistingServer is
+      // false in CI; locally, --strictPort makes a stale 4173 error loudly
+      // rather than silently serving a different app.
       command: "npm run build && npm run serve",
-      url: "http://localhost:3000",
-      reuseExistingServer: !process.env.CI,
+      url: "http://localhost:4173",
+      reuseExistingServer: false,
       timeout: 180_000,
     },
   });
@@ -741,7 +744,7 @@ The Google Fonts `<link>` (old `index.html:40-45`) is already gone (index.html d
     "ci": {
       "collect": {
         "startServerCommand": "npm run serve",
-        "url": ["http://localhost:3000/", "http://localhost:3000/resume", "http://localhost:3000/project/mileway"],
+        "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/mileway"],
         "numberOfRuns": 3
       },
       "assert": {
