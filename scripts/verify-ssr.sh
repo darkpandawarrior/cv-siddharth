@@ -12,7 +12,7 @@
 # SSR is working.
 set -uo pipefail
 
-BASE="http://localhost:3000"
+BASE="http://localhost:4173"
 
 if ! curl -sf -o /dev/null "$BASE/"; then
   echo "ERROR: $BASE is not reachable. Run 'npm run build && npm run serve' first." >&2
