@@ -106,7 +106,11 @@ const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "com
 // hrefs as their only "back to portfolio" control, but they don't own the
 // section — left alone, the hash just changes the URL to e.g. `/lab#top`
 // with nothing on the page to scroll to. Route home instead.
-const SECTION_ANCHORS = new Set(["top", "work", "projects", "experience", "skills", "contact"]);
+// All home-page section ids (App.tsx: top/work/projects/experience/skills/
+// contact; ReposShowcase: source; WritingSection: writing). Footer + command
+// palette link to every one of these from non-home routes, so all must route
+// home — omitting `source`/`writing` stranded those two.
+const SECTION_ANCHORS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
 
 // ponytail: bounded setTimeout poll (~3s), not requestAnimationFrame and not
 // a MutationObserver — rAF gets throttled or fully paused on backgrounded/
