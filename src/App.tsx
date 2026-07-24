@@ -531,9 +531,17 @@ function CaseStudies() {
                   ))}
                 </div>
                 <FieldNotes slug="mileway" className="mt-4" />
-                <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
-                  Full case study →
-                </span>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
+                    Full case study →
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openLab("modules"); }}
+                    className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
+                  >
+                    ▶ Open in Lab Bench
+                  </button>
+                </div>
               </div>
             </article>
           </TiltCard>
@@ -1173,7 +1181,7 @@ export default function App() {
     return (
       <>
         <CursorAura />
-        <RoomFrame title="The Lab Bench" tagline="four instruments, running live">
+        <RoomFrame title="The Lab Bench" tagline="nine instruments, running live">
           <LabBench />
         </RoomFrame>
         <FloatingChat />

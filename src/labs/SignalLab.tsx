@@ -1,20 +1,73 @@
 import { useEffect, useRef, useState } from "react";
+import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { useCanvasLoop } from "./useCanvasLoop.ts";
+
+// maplibre-gl can't auto-detect its worker's URL under Vite, and the worker
+// bundle itself has a relative sibling import ("./maplibre-gl-shared.mjs")
+// that Vite's asset pipeline (?url/?worker, dev pre-bundling) hashes and
+// breaks independently — the worker fails to load and the map never renders
+// a tile. scripts/copy-maplibre-worker.mjs vendors both files into public/
+// verbatim (predev/prebuild) so the relative import stays intact. Must run
+// before the first Map is constructed.
+setWorkerUrl(`${import.meta.env.BASE_URL}vendor/maplibre/maplibre-gl-worker.mjs`);
+
+// Pune, India — the real HQ location behind the Dice.tech numbers this lab
+// is built on (see profile.ts). The route drawn on the canvas above this map
+// is NOT georeferenced to these coordinates — it's a fixed decorative loop —
+// so the map is deliberately non-interactive (no pan/zoom) to keep the two
+// layers from drifting apart visually.
+const MAP_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const MAP_CENTER: [number, number] = [73.8567, 18.5204];
 
 /**
- * The Signal Lab — the "50% → 95%" claim, running live. A vehicle drives a
- * figure-eight test track; raw GPS samples arrive noisy, spiking near the
- * tunnel and dropping out inside it. The filter lane applies the same ideas
- * as the production engine — spike rejection against a predicted position,
- * dead reckoning through dropouts, exponential smoothing — and both lanes
- * score themselves against ground truth in real time. Plain canvas, no deps;
- * reduced motion gets a single pre-run frame instead of animation.
+ * The Signal Lab — the "50% → 95%" claim, running live, twice: this is the
+ * production location engine from Dice.tech, rebuilt from scratch as
+ * Mileway's location engine. A vehicle drives a five-zone loop — open road,
+ * urban canyon, tunnel, highway on-ramp, parking structure — each modeling a
+ * documented real-world way GPS lies. Four pipeline stages (jitter
+ * suppression, spike rejection, IMU fusion, device-tier sampling) are
+ * independently toggleable, and a four-bucket distance accumulator —
+ * confirmed / reckoned / rejected against ground truth — scores the trip
+ * live. Plain canvas, no deps; reduced motion gets a single pre-run frame.
  */
 
 type V = { x: number; y: number };
+type Tier = "flagship" | "budget";
 
-const SAMPLE_MS = 420; // GPS cadence
-const TRAIL = 46; // samples kept per lane
-const HIT_PX = 16; // "accurate" = within this of truth
+type Zone = {
+  id: string;
+  label: string;
+  color: string;
+  tSpan: number; // fraction of the loop this zone occupies (sums to 1 across all zones)
+  durationSec: number; // wall-clock dwell time per lap — short + a big tSpan = high effective speed
+  dropoutChance: number; // probability a given GPS tick produces no fix at all
+  spikeChance: number; // probability an arriving fix is a multipath spike
+  noiseMul: number; // gaussian scatter multiplier for a clean (non-spike) fix
+  confirmFidelity: number; // fraction of this tick's true distance credited when a fix is cleanly accepted
+  reckonFidelity: number; // fraction credited when IMU fusion coasts through a gap
+};
+
+// Five zones in sequence, each modeling one documented failure mode of the
+// real engine ("Field users' trip distances were off by large margins from
+// urban canyons, tunnels, and OEM-throttled location updates" — the
+// gps-accuracy case study). tSpan sums to exactly 1.0.
+const ZONES: Zone[] = [
+  { id: "open", label: "OPEN ROAD", color: "#8ff0b4", tSpan: 0.2, durationSec: 9, dropoutChance: 0, spikeChance: 0, noiseMul: 1.0, confirmFidelity: 0.99, reckonFidelity: 0.9 },
+  { id: "canyon", label: "URBAN CANYON", color: "#f0883e", tSpan: 0.2, durationSec: 8, dropoutChance: 0, spikeChance: 0.42, noiseMul: 1.8, confirmFidelity: 0.97, reckonFidelity: 0.92 },
+  { id: "tunnel", label: "TUNNEL", color: "#5ee6ff", tSpan: 0.16, durationSec: 5, dropoutChance: 1.0, spikeChance: 0, noiseMul: 1.0, confirmFidelity: 0.99, reckonFidelity: 0.92 },
+  { id: "ramp", label: "HIGHWAY ON-RAMP", color: "#db61ff", tSpan: 0.2, durationSec: 4, dropoutChance: 0, spikeChance: 0.08, noiseMul: 1.0, confirmFidelity: 0.96, reckonFidelity: 0.92 },
+  { id: "parking", label: "PARKING STRUCTURE", color: "#ff5c5c", tSpan: 0.24, durationSec: 16, dropoutChance: 0.5, spikeChance: 0.22, noiseMul: 1.4, confirmFidelity: 0.94, reckonFidelity: 0.85 },
+];
+
+const SAMPLE_MS_FLAGSHIP = 420;
+const SAMPLE_MS_BUDGET = 900; // budget tier = sparser cadence
+const LAP_METERS = 1200; // arbitrary trip length for the live odometer, not a claimed real distance
+const BASE_NOISE_PX = 9;
+const JITTER_OFF_PENALTY = 0.9; // extra fidelity hit on accepted fixes when jitter suppression is off
+const BUDGET_CONFIRM_PENALTY = 0.9; // sparser sampling degrades confirmed fixes; reckoning is tier-insensitive
+const SPIKE_ACCEPTED_FIDELITY = 0.12; // a spike blindly trusted (rejection off) barely represents real progress
+const TRAIL = 60;
 
 // Mulberry32 — deterministic noise so the lab tells the same story every visit.
 function rng(seed: number) {
@@ -28,276 +81,421 @@ function rng(seed: number) {
   };
 }
 
-// Ground truth: a figure-eight demo road, parameterized by time.
-function truthAt(t: number, w: number, h: number): V {
-  return {
-    x: w * 0.5 + w * 0.38 * Math.sin(t),
-    y: h * 0.52 + h * 0.34 * Math.sin(2 * t + Math.PI / 3),
-  };
+// Ground truth: a single closed loop (not the old figure-eight), parameterized by u ∈ [0,1).
+function trackAt(u: number, w: number, h: number): V {
+  const cx = w * 0.5;
+  const cy = h * 0.52;
+  const rx = w * 0.38;
+  const ry = h * 0.34;
+  const theta = u * Math.PI * 2 - Math.PI / 2;
+  return { x: cx + rx * Math.cos(theta), y: cy + ry * Math.sin(theta) };
 }
 
-// The tunnel: right-hand lobe of the eight. No fixes inside; multipath at the mouths.
-function inTunnel(p: V, w: number): boolean {
-  return p.x > w * 0.72;
-}
-function nearTunnel(p: V, w: number): boolean {
-  return p.x > w * 0.62 && p.x <= w * 0.72;
+function zoneAt(u: number): Zone {
+  const uu = ((u % 1) + 1) % 1;
+  let acc = 0;
+  for (const z of ZONES) {
+    acc += z.tSpan;
+    if (uu < acc) return z;
+  }
+  return ZONES[ZONES.length - 1];
 }
 
 const dist = (a: V, b: V) => Math.hypot(a.x - b.x, a.y - b.y);
 
-export function SignalLabPane() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const holderRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [showRaw, setShowRaw] = useState(true);
-  const [showFiltered, setShowFiltered] = useState(true);
-  const [noise, setNoise] = useState(26);
-  const controls = useRef({ showRaw: true, showFiltered: true, noise: 26 });
-  controls.current = { showRaw, showFiltered, noise };
-  const [score, setScore] = useState({ raw: 0, filtered: 0 });
+type Stats = {
+  confirmed: number;
+  reckoned: number;
+  rejected: number;
+  truth: number;
+  accuracy: number;
+  avgRawErr: number;
+  avgFilteredErr: number;
+};
 
+const ERROR_TRAIL = 80; // ring buffer length for the convergence sparkline, same TRAIL-style pattern as rawTrail/engineTrail
+
+export function SignalLabPane() {
+  const [jitter, setJitter] = useState(true);
+  const [spikeRejection, setSpikeRejection] = useState(true);
+  const [imuFusion, setImuFusion] = useState(true);
+  const [tier, setTier] = useState<Tier>("flagship");
+  const controlsRef = useRef({ jitter, spikeRejection, imuFusion, tier });
+  controlsRef.current = { jitter, spikeRejection, imuFusion, tier };
+  const [stats, setStats] = useState<Stats>({
+    confirmed: 0,
+    reckoned: 0,
+    rejected: 0,
+    truth: 0,
+    accuracy: 0,
+    avgRawErr: 0,
+    avgFilteredErr: 0,
+  });
+
+  // Real, non-interactive MapLibre basemap behind the canvas — decorative
+  // backdrop only, the canvas-drawn route above it is not georeferenced.
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = holderRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setMounted(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const container = mapContainerRef.current;
+    if (!container) return;
+    const map = new MapLibreMap({
+      container,
+      style: MAP_STYLE,
+      center: MAP_CENTER,
+      zoom: 14,
+      interactive: false,
+      attributionControl: { compact: true },
+    });
+    const ro = new ResizeObserver(() => map.resize());
+    ro.observe(container);
+    return () => {
+      ro.disconnect();
+      map.remove();
+    };
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    let width = 0;
-    let height = 0;
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = rect.width;
-      height = rect.height;
-      canvas.width = Math.round(rect.width * dpr);
-      canvas.height = Math.round(rect.height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-    resize();
-
-    const rand = rng(20260720);
+  const canvasRef = useCanvasLoop((_canvas, ctx, getSize) => {
+    const rand = rng(20260724);
     const gauss = () => (rand() + rand() + rand() - 1.5) * 2; // approx N(0,1)
 
-    // Sim state
-    let simT = 0; // road parameter
+    let u = 0; // loop phase
     let sinceSample = 0;
-    const raw: { p: V; truth: V; spike: boolean }[] = [];
-    const filtered: { p: V; truth: V; reckoned: boolean }[] = [];
+    let statsAcc = 0;
     let est: V | null = null;
     let vel: V = { x: 0, y: 0 };
-    let lastRaf = 0;
-    let raf = 0;
+    const rawTrail: { p: V; spike: boolean }[] = [];
+    const engineTrail: { p: V; gap: boolean }[] = [];
+    // Convergence sparkline ring buffer: raw-sample error vs filtered-estimate
+    // error against ground truth, one entry per GPS tick that has both.
+    const errorTrail: { raw: number; filtered: number }[] = [];
+
+    let confirmed = 0;
+    let reckoned = 0;
+    let rejected = 0;
+    let truth = 0;
+    let lastCfg = { ...controlsRef.current };
+
+    const resetBuckets = () => {
+      confirmed = 0;
+      reckoned = 0;
+      rejected = 0;
+      truth = 0;
+      errorTrail.length = 0;
+    };
+
+    const updateStats = () => {
+      const accuracy = truth > 0 ? Math.min(100, Math.round(((confirmed + reckoned) / truth) * 100)) : 0;
+      const avgRawErr = errorTrail.length ? errorTrail.reduce((s, e) => s + e.raw, 0) / errorTrail.length : 0;
+      const avgFilteredErr = errorTrail.length ? errorTrail.reduce((s, e) => s + e.filtered, 0) / errorTrail.length : 0;
+      setStats({
+        confirmed: Math.round(confirmed),
+        reckoned: Math.round(reckoned),
+        rejected: Math.round(rejected),
+        truth: Math.round(truth),
+        accuracy,
+        avgRawErr: Math.round(avgRawErr),
+        avgFilteredErr: Math.round(avgFilteredErr),
+      });
+    };
 
     const step = (dtMs: number) => {
       const dt = Math.min(dtMs, 64) / 1000;
-      simT += dt * 0.55; // vehicle speed
-      sinceSample += dtMs;
-      const truth = truthAt(simT, width, height);
-
-      if (sinceSample >= SAMPLE_MS) {
+      const cfg = controlsRef.current;
+      if (cfg.jitter !== lastCfg.jitter || cfg.spikeRejection !== lastCfg.spikeRejection || cfg.imuFusion !== lastCfg.imuFusion || cfg.tier !== lastCfg.tier) {
+        resetBuckets();
         sinceSample = 0;
-        const dropout = inTunnel(truth, width);
-        const n = controls.current.noise;
+        lastCfg = { ...cfg };
+      }
 
-        if (!dropout) {
-          // Raw lane: gaussian scatter, multipath spikes near the tunnel mouths.
-          let sample: V = { x: truth.x + gauss() * n * 0.45, y: truth.y + gauss() * n * 0.45 };
-          let spike = false;
-          if (nearTunnel(truth, width) && rand() < 0.4) {
-            spike = true;
-            const ang = rand() * Math.PI * 2;
-            const throwPx = n * (2.2 + rand() * 2.6);
-            sample = { x: truth.x + Math.cos(ang) * throwPx, y: truth.y + Math.sin(ang) * throwPx };
+      const zone = zoneAt(u);
+      u = (u + (zone.tSpan / zone.durationSec) * dt) % 1;
+
+      sinceSample += dtMs;
+      const sampleMs = cfg.tier === "budget" ? SAMPLE_MS_BUDGET : SAMPLE_MS_FLAGSHIP;
+      if (sinceSample >= sampleMs) {
+        const dtSec = sampleMs / 1000;
+        sinceSample -= sampleMs;
+
+        const { width, height } = getSize();
+        const truthPx = trackAt(u, width, height);
+        const truthTick = ((zone.tSpan * LAP_METERS) / zone.durationSec) * dtSec;
+        truth += truthTick;
+
+        const isDropout = rand() < zone.dropoutChance;
+        if (isDropout) {
+          if (cfg.imuFusion && est) {
+            est = { x: est.x + vel.x * dtSec, y: est.y + vel.y * dtSec };
+            vel = { x: vel.x * 0.985, y: vel.y * 0.985 };
+            reckoned += truthTick * zone.reckonFidelity;
+            engineTrail.push({ p: { ...est }, gap: true });
+            if (engineTrail.length > TRAIL) engineTrail.shift();
           }
-          raw.push({ p: sample, truth, spike });
-          if (raw.length > TRAIL) raw.shift();
-
-          // Filter lane: trust the sample only if it lands near the prediction.
-          if (!est) {
-            est = { ...sample };
+        } else {
+          const isSpike = rand() < zone.spikeChance;
+          const noiseAmp = BASE_NOISE_PX * zone.noiseMul;
+          let rawPx: V;
+          if (isSpike) {
+            const ang = rand() * Math.PI * 2;
+            const throwPx = noiseAmp * (3.5 + rand() * 3.5);
+            rawPx = { x: truthPx.x + Math.cos(ang) * throwPx, y: truthPx.y + Math.sin(ang) * throwPx };
           } else {
-            const predicted = { x: est.x + vel.x * (SAMPLE_MS / 1000), y: est.y + vel.y * (SAMPLE_MS / 1000) };
-            const maxJump = 90 + n * 2.4; // physically plausible travel per fix
-            if (dist(sample, predicted) > maxJump) {
-              est = predicted; // rejected — dead-reckon instead
+            rawPx = { x: truthPx.x + gauss() * noiseAmp, y: truthPx.y + gauss() * noiseAmp };
+          }
+          rawTrail.push({ p: rawPx, spike: isSpike });
+          if (rawTrail.length > TRAIL) rawTrail.shift();
+
+          const predicted = est ? { x: est.x + vel.x * dtSec, y: est.y + vel.y * dtSec } : rawPx;
+          const velMag = Math.hypot(vel.x, vel.y);
+          const maxJump = 50 + velMag * dtSec * 2.4 + 20;
+          const rejectedFix = cfg.spikeRejection && est !== null && dist(rawPx, predicted) > maxJump;
+
+          if (rejectedFix) {
+            rejected += truthTick;
+            if (cfg.imuFusion) {
+              est = predicted;
+              vel = { x: vel.x * 0.985, y: vel.y * 0.985 };
+              reckoned += truthTick * zone.reckonFidelity;
+            }
+            if (est) {
+              engineTrail.push({ p: { ...est }, gap: true });
+              if (engineTrail.length > TRAIL) engineTrail.shift();
+            }
+          } else {
+            const prevRaw = rawTrail[rawTrail.length - 2];
+            const sample = cfg.jitter && prevRaw ? { x: (rawPx.x + prevRaw.p.x) / 2, y: (rawPx.y + prevRaw.p.y) / 2 } : rawPx;
+            if (!est) {
+              est = { ...sample };
             } else {
               const alpha = 0.42;
               const next = { x: est.x + (sample.x - est.x) * alpha, y: est.y + (sample.y - est.y) * alpha };
-              vel = { x: (next.x - est.x) / (SAMPLE_MS / 1000), y: (next.y - est.y) / (SAMPLE_MS / 1000) };
+              vel = { x: (next.x - est.x) / dtSec, y: (next.y - est.y) / dtSec };
               est = next;
             }
+            let fidelity = isSpike ? SPIKE_ACCEPTED_FIDELITY : zone.confirmFidelity;
+            if (!cfg.jitter) fidelity *= JITTER_OFF_PENALTY;
+            if (cfg.tier === "budget") fidelity *= BUDGET_CONFIRM_PENALTY;
+            confirmed += truthTick * fidelity;
+            engineTrail.push({ p: { ...est }, gap: false });
+            if (engineTrail.length > TRAIL) engineTrail.shift();
           }
-          filtered.push({ p: { ...est }, truth, reckoned: false });
-        } else if (est) {
-          // Tunnel: no fix at all — coast on the last velocity estimate.
-          est = { x: est.x + vel.x * (SAMPLE_MS / 1000), y: est.y + vel.y * (SAMPLE_MS / 1000) };
-          vel = { x: vel.x * 0.985, y: vel.y * 0.985 };
-          filtered.push({ p: { ...est }, truth, reckoned: true });
+
+          // Both a raw sample and the engine's current estimate exist this
+          // tick — record how far each sits from ground truth, for the
+          // convergence sparkline.
+          if (est) {
+            errorTrail.push({ raw: dist(rawPx, truthPx), filtered: dist(est, truthPx) });
+            if (errorTrail.length > ERROR_TRAIL) errorTrail.shift();
+          }
         }
-        if (filtered.length > TRAIL) filtered.shift();
+      }
+
+      statsAcc += dtMs;
+      if (statsAcc > 500) {
+        statsAcc = 0;
+        updateStats();
       }
     };
 
     const draw = () => {
+      const { width, height } = getSize();
       ctx.clearRect(0, 0, width, height);
 
-      // road (ground truth), dashed
+      // zone-colored track, sampled along the loop
+      const STEPS = 240;
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+      let prevZone: Zone | null = null;
+      for (let i = 0; i <= STEPS; i++) {
+        const uu = i / STEPS;
+        const z = zoneAt(uu);
+        const p = trackAt(uu, width, height);
+        if (z !== prevZone) {
+          if (prevZone) ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.strokeStyle = `${z.color}22`;
+          prevZone = z;
+        } else {
+          ctx.lineTo(p.x, p.y);
+        }
+      }
+      ctx.stroke();
+
+      // dashed centerline
       ctx.beginPath();
-      for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.04) {
-        const p = truthAt(a, width, height);
-        if (a === 0) ctx.moveTo(p.x, p.y);
+      for (let i = 0; i <= STEPS; i++) {
+        const p = trackAt(i / STEPS, width, height);
+        if (i === 0) ctx.moveTo(p.x, p.y);
         else ctx.lineTo(p.x, p.y);
       }
       ctx.setLineDash([3, 7]);
-      ctx.strokeStyle = "rgba(232, 239, 233, 0.16)";
+      ctx.strokeStyle = "rgba(232, 239, 233, 0.14)";
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // tunnel zone
-      ctx.fillStyle = "rgba(94, 230, 255, 0.05)";
-      ctx.fillRect(width * 0.72, 0, width * 0.28, height);
-      ctx.strokeStyle = "rgba(94, 230, 255, 0.16)";
-      ctx.strokeRect(width * 0.72, -1, width * 0.28 + 2, height + 2);
+      // zone labels, placed radially outside the loop
       ctx.font = '10px "JetBrains Mono", ui-monospace, monospace';
-      ctx.fillStyle = "rgba(94, 230, 255, 0.5)";
-      ctx.fillText("TUNNEL — NO FIXES", width * 0.74, 18);
+      const cx = width * 0.5;
+      const cy = height * 0.52;
+      let acc = 0;
+      for (const z of ZONES) {
+        const midU = acc + z.tSpan / 2;
+        acc += z.tSpan;
+        const p = trackAt(midU, width, height);
+        const dx = p.x - cx;
+        const dy = p.y - cy;
+        const len = Math.hypot(dx, dy) || 1;
+        const lx = p.x + (dx / len) * 18;
+        const ly = p.y + (dy / len) * 18;
+        ctx.textAlign = dx > 10 ? "left" : dx < -10 ? "right" : "center";
+        ctx.textBaseline = dy > 10 ? "top" : dy < -10 ? "bottom" : "middle";
+        ctx.fillStyle = `${z.color}bb`;
+        ctx.fillText(z.label, lx, ly);
+      }
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
 
-      // raw lane
-      if (controls.current.showRaw && raw.length > 1) {
+      // raw GPS samples
+      for (const s of rawTrail) {
         ctx.beginPath();
-        raw.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
-        ctx.strokeStyle = "rgba(240, 136, 62, 0.4)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        for (const s of raw) {
-          ctx.beginPath();
-          ctx.arc(s.p.x, s.p.y, s.spike ? 3 : 2, 0, Math.PI * 2);
-          ctx.fillStyle = s.spike ? "#ff5c5c" : "#f0883e";
-          ctx.fill();
-        }
+        ctx.arc(s.p.x, s.p.y, s.spike ? 3 : 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = s.spike ? "#ff5c5c" : "rgba(240, 136, 62, 0.55)";
+        ctx.fill();
       }
 
-      // filtered lane
-      if (controls.current.showFiltered && filtered.length > 1) {
+      // engine trail (Mileway cyan — the location engine's own visualization)
+      if (engineTrail.length > 1) {
         ctx.beginPath();
-        filtered.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
-        ctx.strokeStyle = "#3ddc84";
+        engineTrail.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
+        ctx.strokeStyle = "#5ee6ff";
         ctx.lineWidth = 2;
-        ctx.shadowColor = "rgba(61, 220, 132, 0.6)";
+        ctx.shadowColor = "rgba(94, 230, 255, 0.55)";
         ctx.shadowBlur = 6;
         ctx.stroke();
         ctx.shadowBlur = 0;
-        for (const s of filtered) {
-          if (!s.reckoned) continue;
+        for (const s of engineTrail) {
+          if (!s.gap) continue;
           ctx.beginPath();
-          ctx.arc(s.p.x, s.p.y, 2.4, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(61, 220, 132, 0.8)";
+          ctx.arc(s.p.x, s.p.y, 2.2, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(94, 230, 255, 0.85)";
           ctx.lineWidth = 1;
-          ctx.stroke(); // hollow dots = dead-reckoned, no fix received
+          ctx.stroke(); // hollow dots = no trustworthy fix — dead-reckoned or frozen
         }
       }
 
-      // vehicle
-      const v = truthAt(simT, width, height);
+      // vehicle (ground truth)
+      const v = trackAt(u, width, height);
       ctx.beginPath();
       ctx.arc(v.x, v.y, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = "#e8efe9";
       ctx.fill();
-    };
 
-    const updateScore = () => {
-      const pct = (arr: { p: V; truth: V }[]) =>
-        arr.length ? Math.round((arr.filter((s) => dist(s.p, s.truth) <= HIT_PX).length / arr.length) * 100) : 0;
-      setScore({ raw: pct(raw), filtered: pct(filtered) });
-    };
+      // convergence inset — raw vs filtered position error over time. Pixel-
+      // space magnitudes from the same sim, not a claimed real-world unit.
+      const ix = 10;
+      const iy = 10;
+      const iw = 130;
+      const ih = 50;
+      ctx.fillStyle = "rgba(5, 7, 10, 0.72)";
+      ctx.fillRect(ix, iy, iw, ih);
+      ctx.strokeStyle = "rgba(232, 239, 233, 0.14)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
 
-    if (reduced) {
-      // One silent pre-run, then a single frame.
-      for (let i = 0; i < 1400; i++) step(16);
-      draw();
-      updateScore();
-      return () => ro.disconnect();
-    }
+      ctx.font = '8px "JetBrains Mono", ui-monospace, monospace';
+      ctx.fillStyle = "rgba(232, 239, 233, 0.6)";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("error — raw vs filtered (relative)", ix + 5, iy + 4);
 
-    let sinceScore = 0;
-    const loop = (now: number) => {
-      const dt = lastRaf ? now - lastRaf : 16;
-      lastRaf = now;
-      step(dt);
-      draw();
-      sinceScore += dt;
-      if (sinceScore > 500) {
-        sinceScore = 0;
-        updateScore();
+      if (errorTrail.length > 1) {
+        const plotLeft = ix + 5;
+        const plotTop = iy + 16;
+        const plotW = iw - 10;
+        const plotH = ih - 20;
+        let maxErr = 1;
+        for (const e of errorTrail) maxErr = Math.max(maxErr, e.raw, e.filtered);
+        const plotLine = (key: "raw" | "filtered", color: string) => {
+          ctx.beginPath();
+          errorTrail.forEach((e, i) => {
+            const x = plotLeft + (i / (errorTrail.length - 1)) * plotW;
+            const y = plotTop + plotH - (e[key] / maxErr) * plotH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.3;
+          ctx.stroke();
+        };
+        plotLine("raw", "rgba(240, 136, 62, 0.9)");
+        plotLine("filtered", "#5ee6ff");
       }
-      raf = requestAnimationFrame(loop);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
     };
-    raf = requestAnimationFrame(loop);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-    };
-  }, [mounted]);
+
+    return { step, draw };
+  });
 
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        The idea behind the production location engine, running live: raw GPS scatters and spikes near
-        the tunnel, then dies inside it. The filter rejects impossible fixes against a predicted
-        position and dead-reckons through the gap. Hollow dots are positions the engine produced with
-        no fix at all.
+        At Dice.tech, field users' trip distances were off by large margins — urban canyons, tunnels and
+        OEM-throttled location updates all lied to the GPS chip in different ways. The fix was predictive
+        dead reckoning, and the same engine got rebuilt from scratch as Mileway's location engine: GPS
+        treated as a noisy signal, with jitter suppression, spike detection, IMU (accelerometer) fusion and
+        device-tier-adaptive sampling all feeding a four-bucket distance accumulator. Drive the loop below —
+        five zones, five ways GPS breaks — and flip each stage to watch the accuracy number move.
       </p>
-      <div ref={holderRef} className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
-            <div className="relative h-[340px] sm:h-[400px]">
-              {mounted && <canvas ref={canvasRef} className="h-full w-full" aria-label="Live GPS filtering simulation" />}
-            </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
-              <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-                <input type="checkbox" checked={showRaw} onChange={(e) => setShowRaw(e.target.checked)} className="accent-[#f0883e]" />
-                <span className="h-2 w-2 rounded-full bg-[#f0883e]" /> raw gps
-                <span className="text-zinc-500">{score.raw}% on track</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-                <input type="checkbox" checked={showFiltered} onChange={(e) => setShowFiltered(e.target.checked)} className="accent-[#3ddc84]" />
-                <span className="h-2 w-2 rounded-full bg-accent" /> filtered
-                <span className="text-accent">{score.filtered}% on track</span>
-              </label>
-              <label className="flex items-center gap-2 font-mono text-xs text-zinc-400">
-                noise
-                <input
-                  type="range"
-                  min={8}
-                  max={60}
-                  value={noise}
-                  onChange={(e) => setNoise(Number(e.target.value))}
-                  className="w-28 accent-[#3ddc84]"
-                />
-              </label>
-              <a href="#loopdown" onClick={() => window.scrollTo({ top: 0 })} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
-                the full story → sensors who lie
-              </a>
-            </div>
+      <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
+        <div className="relative h-[340px] sm:h-[400px]">
+          <div ref={mapContainerRef} className="signal-lab-map absolute inset-0" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-0 bg-void/55" />
+          <canvas
+            ref={canvasRef}
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            aria-label="Live GPS journey simulation across five zones, over a map of Pune, India"
+          />
+          <style>{`
+            .signal-lab-map .maplibregl-ctrl-attrib { font-size: 9px; opacity: 0.55; background: transparent; }
+            .signal-lab-map .maplibregl-ctrl-bottom-right { bottom: 2px; right: 2px; }
+          `}</style>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
+          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
+            <input type="checkbox" checked={jitter} onChange={(e) => setJitter(e.target.checked)} className="accent-[#3ddc84]" />
+            jitter suppression
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
+            <input type="checkbox" checked={spikeRejection} onChange={(e) => setSpikeRejection(e.target.checked)} className="accent-[#3ddc84]" />
+            spike rejection
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
+            <input type="checkbox" checked={imuFusion} onChange={(e) => setImuFusion(e.target.checked)} className="accent-[#3ddc84]" />
+            IMU fusion
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
+            <input type="checkbox" checked={tier === "budget"} onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")} className="accent-[#3ddc84]" />
+            device tier: {tier}
+          </label>
+          <span className="font-mono text-xs text-zinc-500">
+            confirmed {stats.confirmed}m · reckoned {stats.reckoned}m · rejected {stats.rejected}m
+          </span>
+          <span className="font-mono text-xs text-accent">accuracy {stats.accuracy}%</span>
+          <span className="font-mono text-xs text-zinc-500">
+            avg error — raw {stats.avgRawErr} · filtered {stats.avgFilteredErr} (relative)
+          </span>
+          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-zinc-500">
+            <a href="#work" onClick={() => window.scrollTo({ top: 0 })} className="transition hover:text-accent">
+              the full story → Dice.tech
+            </a>
+            <span className="text-zinc-700">·</span>
+            <a href="#project/mileway" onClick={() => window.scrollTo({ top: 0 })} className="transition hover:text-accent">
+              rebuilt again at Mileway
+            </a>
+          </span>
+        </div>
       </div>
     </div>
   );

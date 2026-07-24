@@ -33,7 +33,7 @@ export const ROOMS: Room[] = [
   {
     href: "#lab",
     label: "The Lab Bench",
-    blurb: "Four experiments that prove the case-study numbers — crash clustering, recomposition, GPS filtering, white-label theming — running in your browser.",
+    blurb: "Nine experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.",
     tag: "canvas · physics",
     icon: FlaskConical,
     tint: "#5ee6ff",

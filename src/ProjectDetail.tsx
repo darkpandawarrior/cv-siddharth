@@ -9,9 +9,19 @@ import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
+import { openLab, type LabKey } from "./LabBench.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
+
+// Project → its Lab Bench experiment.
+const LAB_OF: Record<string, LabKey> = {
+  mileway: "modules",
+  paymentslab: "gateways",
+  kursi: "search",
+  hiresignal: "fanout",
+  deadlock: "replay",
+};
 
 /** "Next build" pager — project pages loop into each other instead of dead-ending. */
 function NextProject({ slug }: { slug: string }) {
@@ -284,6 +294,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
+            {LAB_OF[slug] && (
+              <button
+                onClick={() => openLab(LAB_OF[slug])}
+                className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
+              >
+                Open in Lab Bench →
+              </button>
+            )}
             <button
               onClick={() => openChat(`Walk me through the ${project.name} build — the architecture and the hardest problems.`)}
               className={
