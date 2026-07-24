@@ -188,6 +188,36 @@ html.resume-mode body {
   .resume {
     font-size: 11px;
   }
+
+  /* Project case-study pages print like the résumé: white paper, dark ink,
+     none of the dark-theme surfaces or interactive chrome. The `print:hidden`
+     utility (aurora, action buttons, gallery arrows, next-build pager, chat)
+     already removes the controls; this normalises the colours that survive. */
+  .project-detail,
+  .project-detail [class*="bg-ink"],
+  .project-detail [class*="bg-surface"],
+  .project-detail [class*="bg-card"],
+  .project-detail [class*="bg-accent"] {
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .project-detail,
+  .project-detail h1,
+  .project-detail h2,
+  .project-detail h3,
+  .project-detail p,
+  .project-detail li,
+  .project-detail span,
+  .project-detail a,
+  .project-detail figcaption {
+    color: #111 !important;
+  }
+  .project-detail [class*="border"] {
+    border-color: #ccc !important;
+  }
+  .project-detail img {
+    max-width: 100% !important;
+  }
 }
 
 /* --- A11y ---------------------------------------------------------------- */

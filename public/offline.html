@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0f0d" />
+    <title>Offline — Siddharth Pandalai</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        background: #05070a;
+        color: #e8efe9;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        text-align: center;
+      }
+      .panel {
+        max-width: 30rem;
+        border: 1px solid #243029;
+        border-radius: 16px;
+        background: #0b0f0d;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 28px 80px -16px rgba(0, 0, 0, 0.8);
+      }
+      .eyebrow {
+        font-family: ui-monospace, "JetBrains Mono", monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #3ddc84;
+      }
+      h1 { margin: 0.75rem 0 0; font-size: 1.6rem; }
+      p { margin: 0.75rem 0 1.5rem; color: #9aa7a0; line-height: 1.5; }
+      button {
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        border: 0;
+        border-radius: 999px;
+        padding: 0.65rem 1.4rem;
+        background: #3ddc84;
+        color: #0b0f0d;
+      }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #5ee6ff; margin-left: 6px; vertical-align: middle; }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <p class="eyebrow">// no carrier<span class="dot"></span></p>
+      <h1>You're offline</h1>
+      <p>This page needs a connection. Reconnect and it'll pick up right where the signal dropped.</p>
+      <button onclick="location.reload()">Retry</button>
+    </main>
+  </body>
+</html>

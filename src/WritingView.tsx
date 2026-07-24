@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight, Github, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
@@ -51,6 +51,9 @@ export function WritingView() {
             </Link>
             <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent">
               <Github size={15} /> the-loopdown
+            </a>
+            <a href="/feed.xml" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent" title="Atom feed of the field notes">
+              <Rss size={15} /> RSS
             </a>
             <button
               onClick={() => openChat()}

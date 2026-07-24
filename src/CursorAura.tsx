@@ -59,7 +59,7 @@ export function CursorAura() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-[1] opacity-0 transition-opacity duration-500"
+      className="pointer-events-none fixed inset-0 z-[1] opacity-0 transition-opacity duration-500 print:hidden"
       style={{ mixBlendMode: "screen" }}
     />
   );

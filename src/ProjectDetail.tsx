@@ -33,7 +33,7 @@ function NextProject({ slug }: { slug: string }) {
   const next = projects.find((p) => p.slug === PROJECT_ORDER[(i + 1) % PROJECT_ORDER.length]);
   if (!next) return null;
   return (
-    <section className="border-t border-line bg-surface">
+    <section className="border-t border-line bg-surface print:hidden">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <Link
           to="/project/$slug"
@@ -281,11 +281,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const themeStyle = t ? (themeVars as unknown as CSSProperties) : undefined;
 
   return (
-    <main ref={root} id="main-content" tabIndex={-1} className="min-h-screen bg-ink" style={themeStyle}>
+    <main ref={root} id="main-content" tabIndex={-1} className="project-detail min-h-screen bg-ink" style={themeStyle}>
       {/* Hero with animated aurora wash */}
       <div className="relative overflow-hidden border-b border-line">
-        <div className="aurora pointer-events-none absolute inset-0 opacity-80" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-ink" />
+        <div className="aurora pointer-events-none absolute inset-0 opacity-80 print:hidden" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-ink print:hidden" />
         <div className="relative mx-auto max-w-5xl px-6 pb-14 pt-10">
           <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
             <ArrowLeft size={16} /> All projects
@@ -306,7 +306,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
               </span>
             ))}
           </div>
-          <div className="rise-in rise-in-3 mt-6 flex flex-wrap items-center gap-4">
+          <div className="rise-in rise-in-3 mt-6 flex flex-wrap items-center gap-4 print:hidden">
             {project.links.map((l) => {
               const ctaClass = "cta-glow inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim";
               if (!l.url.startsWith("#")) {
@@ -516,7 +516,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   Screens <span className="text-zinc-600">({items.length})</span>
                 </h2>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 print:hidden">
                 <button
                   onClick={() => scrollRail(-1)}
                   aria-label="Scroll left"
@@ -582,7 +582,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Keep the journey moving: next build in the loop + ways back. */}
       <NextProject slug={slug} />
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-6 px-6 py-12 text-center">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-6 px-6 py-12 text-center print:hidden">
         <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-accent transition hover:text-accent-dim">
           <ArrowLeft size={16} /> Back to all projects
         </button>

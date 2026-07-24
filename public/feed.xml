@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>The Loopdown — Siddharth Pandalai</title>
+  <subtitle>Field notes from an engineer who writes — Android, Kotlin, and KMP, each lesson starring a personified bug.</subtitle>
+  <link href="https://cv-siddharth.vercel.app/feed.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://cv-siddharth.vercel.app/loopdown" rel="alternate" type="text/html"/>
+  <id>https://cv-siddharth.vercel.app/loopdown</id>
+  <updated>2026-07-31T00:00:00Z</updated>
+  <author><name>Siddharth Pandalai</name></author>
+  <entry>
+    <title>collectAsState is quietly leaking your work</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#collectasstate-leak" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#collectasstate-leak</id>
+    <published>2026-07-31T00:00:00Z</published>
+    <updated>2026-07-31T00:00:00Z</updated>
+    <summary>Field notes from “Ghosts In The Recomposition” on compose-performance. Topics: android, jetpack-compose, flow, lifecycle, collectAsStateWithLifecycle.</summary>
+  </entry>
+  <entry>
+    <title>expect/actual is the wrong default in KMP</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#kmp-expect-actual-default" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#kmp-expect-actual-default</id>
+    <published>2026-07-29T00:00:00Z</published>
+    <updated>2026-07-29T00:00:00Z</updated>
+    <summary>Field notes from “One Brain Two Bodies” on kmp. Topics: kotlin, kmp, multiplatform, architecture, expect-actual, di.</summary>
+  </entry>
+  <entry>
+    <title>Your LazyColumn recomposes on every scroll</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#lazycolumn-recomposition" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#lazycolumn-recomposition</id>
+    <published>2026-07-24T00:00:00Z</published>
+    <updated>2026-07-24T00:00:00Z</updated>
+    <summary>Field notes from “Ghosts In The Recomposition” on compose-performance. Topics: android, jetpack-compose, recomposition, stability, performance.</summary>
+  </entry>
+  <entry>
+    <title>The 5-second window that crashes your service</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#foreground-service-five-seconds" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#foreground-service-five-seconds</id>
+    <published>2026-07-22T00:00:00Z</published>
+    <updated>2026-07-22T00:00:00Z</updated>
+    <summary>Field notes from “The Night Shift” on background-execution. Topics: android, foreground-service, workmanager, lifecycle, doze.</summary>
+  </entry>
+  <entry>
+    <title>CancellationException is not an assassin</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#coroutine-cancellation-messenger" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#coroutine-cancellation-messenger</id>
+    <published>2026-07-20T00:00:00Z</published>
+    <updated>2026-07-20T00:00:00Z</updated>
+    <summary>Field notes from “The Coroutine Court” on concurrency. Topics: kotlin, coroutines, cancellation, structured-concurrency, android.</summary>
+  </entry>
+  <entry>
+    <title>Teaching a phone to disbelieve its own GPS</title>
+    <link href="https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#mileway-dead-reckoning</id>
+    <published>2026-07-19T00:00:00Z</published>
+    <updated>2026-07-19T00:00:00Z</updated>
+    <summary>Field notes from “Sensors Who Lie” on location. Topics: android, location, sensor-fusion, dead-reckoning, kalman.</summary>
+  </entry>
+</feed>
