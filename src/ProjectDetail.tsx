@@ -10,6 +10,7 @@ import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
+import { useNavigate } from "@tanstack/react-router";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
@@ -177,6 +178,7 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
 }
 
 export function ProjectDetail({ slug }: { slug: string }) {
+  const navigate = useNavigate();
   const project = projects.find((p) => p.slug === slug);
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
   const items: { src: string; caption: string }[] = project?.screens?.length
@@ -297,7 +299,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             ))}
             {LAB_OF[slug] && (
               <button
-                onClick={() => openLab(LAB_OF[slug])}
+                onClick={() => { openLab(LAB_OF[slug]); navigate({ to: "/lab" }); }}
                 className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
               >
                 Open in Lab Bench →

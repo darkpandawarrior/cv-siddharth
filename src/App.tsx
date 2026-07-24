@@ -35,6 +35,7 @@ import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
 import { writing } from "./data/writing.ts";
+import { useNavigate } from "@tanstack/react-router";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -437,6 +438,7 @@ const LAB_OF: Record<string, LabKey> = {
 function CaseStudies() {
   // Mileway leads as a media banner (full story lives at #project/mileway);
   // the Dice-era studies render as compact stat-led cards.
+  const navigate = useNavigate();
   const [featured, ...rest] = caseStudies;
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
@@ -486,7 +488,7 @@ function CaseStudies() {
                     Full case study →
                   </span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); openLab("modules"); }}
+                    onClick={(e) => { e.stopPropagation(); openLab("modules"); navigate({ to: "/lab" }); }}
                     className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
                   >
                     ▶ Open in Lab Bench
@@ -522,7 +524,7 @@ function CaseStudies() {
                   </button>
                   {LAB_OF[cs.slug] && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); openLab(LAB_OF[cs.slug]); }}
+                      onClick={(e) => { e.stopPropagation(); openLab(LAB_OF[cs.slug]); navigate({ to: "/lab" }); }}
                       className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
                     >
                       ▶ watch it work, live

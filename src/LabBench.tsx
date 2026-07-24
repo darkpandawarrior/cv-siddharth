@@ -34,18 +34,18 @@ export type LabKey =
   | "replay";
 
 const OPEN_LAB_EVENT = "open-lab";
-// The Lab Bench now lives on its own #lab route (inside the Playground hub), so
+// The Lab Bench now lives on its own /lab route (inside the Playground hub), so
 // a deep-link from a case-study card navigates there and hands the desired tab
 // across — via an event if the bench is already mounted, or this pending slot
-// for a fresh mount after the route change.
+// for a fresh mount after the route change. The actual SPA navigation happens
+// at the call site via useNavigate() (router.navigate would need the mounted
+// router instance, which isn't available here); this just records the tab and
+// notifies an already-mounted bench.
 let pendingLab: LabKey | null = null;
 export function openLab(tab: LabKey) {
   pendingLab = tab;
+  window.scrollTo({ top: 0 });
   window.dispatchEvent(new CustomEvent(OPEN_LAB_EVENT, { detail: tab }));
-  if (window.location.hash !== "#lab") {
-    window.scrollTo({ top: 0 });
-    window.location.hash = "#lab";
-  }
 }
 
 /* ── The bench ───────────────────────────────────────────────────────── */
