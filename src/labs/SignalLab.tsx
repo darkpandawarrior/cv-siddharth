@@ -188,6 +188,14 @@ export function SignalLabPane() {
       attributionControl: true,
     });
     L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: "abcd", maxZoom: 20 }).addTo(map);
+    // The map container is aria-hidden (it's a decorative backdrop — the
+    // canvas above carries the real aria-label), but Leaflet still injects a
+    // real, mouse-clickable <a> into its attribution control. Left alone
+    // that's a focusable element trapped inside an aria-hidden subtree — a
+    // keyboard user could Tab onto a control no AT can ever announce.
+    // tabIndex -1 pulls it out of the Tab sequence while leaving the link
+    // itself (and CARTO's required attribution) intact for anyone who clicks it.
+    map.attributionControl?.getContainer()?.querySelectorAll("a").forEach((a) => a.setAttribute("tabindex", "-1"));
     const ro = new ResizeObserver(() => map.invalidateSize());
     ro.observe(container);
     return () => {

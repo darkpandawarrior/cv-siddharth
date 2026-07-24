@@ -156,15 +156,29 @@ function MobileMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const go = (href: string) => {
     setOpen(false);
     const c = classifyHash(href);
     if (c.kind === "section") { goToSection(c.id); return; }
     navigate(c.kind === "project" ? { to: "/project/$slug", params: { slug: c.slug } } : { to: c.to });
   };
+  // Esc closes the drawer and hands focus back to the toggle — same
+  // escapable-and-don't-strand-focus contract as the lightbox/command palette.
+  const closeMenu = () => {
+    setOpen(false);
+    toggleRef.current?.focus();
+  };
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeMenu(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   return (
     <div className="lg:hidden">
       <button
+        ref={toggleRef}
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
@@ -174,7 +188,7 @@ function MobileMenu() {
         <span className="h-px w-4 bg-zinc-300" />
       </button>
       {open && (
-        <div className="fixed inset-0 z-[70] bg-ink/85 backdrop-blur-md" onClick={() => setOpen(false)} role="presentation">
+        <div className="fixed inset-0 z-[70] bg-ink/85 backdrop-blur-md" onClick={closeMenu} role="presentation">
           <nav
             className="palette-in glass-panel absolute inset-x-4 top-4 rounded-2xl p-5"
             style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
@@ -185,7 +199,7 @@ function MobileMenu() {
               <span className="font-display text-sm font-bold">
                 sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
               </span>
-              <button onClick={() => setOpen(false)} aria-label="Close menu" className="rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
+              <button onClick={closeMenu} aria-label="Close menu" className="rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
                 esc
               </button>
             </div>
@@ -340,7 +354,11 @@ function Typewriter() {
   }, []);
 
   return (
-    <p className="rise-in rise-in-2 mt-4 h-5 font-mono text-sm text-accent2" aria-label={IDENTITY_LINES.join(" · ")}>
+    <p className="rise-in rise-in-2 mt-4 h-5 font-mono text-sm text-accent2">
+      {/* aria-label isn't a permitted attribute on a plain <p> (no naming
+          role) — a genuine sr-only text node reads the same to AT without
+          fighting the ARIA-in-HTML spec. */}
+      <span className="sr-only">{IDENTITY_LINES.join(" · ")}</span>
       <span aria-hidden>
         {"> "}
         {text}
@@ -1099,7 +1117,7 @@ export function HomePage() {
       <AmbientBackground />
       <CursorAura />
       <Nav />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Hero />
         <Metrics />
         <CaseStudies />

@@ -108,7 +108,15 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
           </button>
         </nav>
       </header>
-      <div className="min-h-0 flex-1">{children}</div>
+      <main id="main-content" tabIndex={-1} className="min-h-0 flex-1">
+        {/* Every room route is single-purpose full-screen chrome (no scrollable
+            page around it), so it never gets its own visible <h1> — this one
+            is screen-reader-only, keeping heading order sane (the room's own
+            content, e.g. LabBench's h2, follows it) without duplicating the
+            title bar's visible text above. */}
+        <h1 className="sr-only">{title} — {tagline}</h1>
+        {children}
+      </main>
     </div>
   );
 }
@@ -166,7 +174,7 @@ export default function Playground() {
         </nav>
       </header>
 
-      <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 sm:py-16">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 sm:py-16">
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the playground</p>
         <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
@@ -184,7 +192,7 @@ export default function Playground() {
           tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}
           <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">`</kbd> to jump anywhere.
         </p>
-      </div>
+      </main>
     </div>
   );
 }

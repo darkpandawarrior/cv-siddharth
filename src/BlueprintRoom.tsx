@@ -119,6 +119,8 @@ function BlueprintRoomInner() {
                     onClick={() => setModeFresh(id)}
                     disabled={disabled}
                     title={disabled ? "Needs WebGL — try Sketch mode" : hint}
+                    aria-label={disabled ? `${label} — needs WebGL, try Sketch mode` : hint}
+                    aria-pressed={mode === id}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition disabled:cursor-not-allowed disabled:opacity-40 ${
                       mode === id ? "bg-accent text-ink" : "text-zinc-400 hover:text-accent"
                     }`}
@@ -130,6 +132,7 @@ function BlueprintRoomInner() {
             </div>
             <button
               onClick={tourNext}
+              aria-label={stop === -1 ? "Start guided tour" : `Guided tour: next stop, ${TOUR[(stop + 1) % TOUR.length].title}`}
               className="flex items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10 sm:px-4"
             >
               <Play size={13} /> <span className="hidden sm:inline">{stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}</span>
@@ -139,6 +142,7 @@ function BlueprintRoomInner() {
                 <button
                   onClick={() => setZoomOutTick((t) => t + 1)}
                   title="Zoom out"
+                  aria-label="Zoom out"
                   className="rounded-full p-2 text-zinc-400 transition hover:text-accent"
                 >
                   <ZoomOut size={14} />
@@ -146,6 +150,7 @@ function BlueprintRoomInner() {
                 <button
                   onClick={() => setZoomInTick((t) => t + 1)}
                   title="Zoom in"
+                  aria-label="Zoom in"
                   className="rounded-full p-2 text-zinc-400 transition hover:text-accent"
                 >
                   <ZoomIn size={14} />
@@ -155,6 +160,7 @@ function BlueprintRoomInner() {
             <button
               onClick={resetView}
               title="Reset the camera and layout"
+              aria-label="Reset the camera and layout"
               className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
             >
               <RotateCcw size={13} /> <span className="hidden sm:inline">Reset</span>
@@ -168,7 +174,8 @@ function BlueprintRoomInner() {
           </div>
         </nav>
       </header>
-      <div className="relative min-h-0 flex-1">
+      <main id="main-content" tabIndex={-1} className="relative min-h-0 flex-1">
+        <h1 className="sr-only">The Blueprint Room — {activeMode.tagline}</h1>
         <Suspense fallback={loadingFallback}>
           {mode === "sketch" ? (
             <SketchBoard tourStop={stop} resetTick={resetTick} />
@@ -190,7 +197,7 @@ function BlueprintRoomInner() {
             </>
           )}
         </Suspense>
-      </div>
+      </main>
     </div>
   );
 }

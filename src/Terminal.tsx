@@ -750,7 +750,7 @@ export function Terminal() {
   });
   const [histCursor, setHistCursor] = useState<number | null>(null);
   const [ghost, setGhost] = useState(""); // inline autocomplete preview
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const reduce = useRef(false);
@@ -966,7 +966,15 @@ export function Terminal() {
       </header>
 
       {/* Output log */}
-      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto px-4 py-4 sm:px-6" aria-live="polite" aria-label="terminal output">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        ref={scrollRef}
+        className="relative z-10 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
+        aria-live="polite"
+        aria-label="terminal output"
+      >
+        <h1 className="sr-only">The Terminal — a faux shell you can type in</h1>
         <div className="mx-auto max-w-4xl space-y-1.5">
           {blocks.map((b) => (
             <div key={b.id} className={reduce.current ? "" : "term-line"}>
@@ -998,7 +1006,7 @@ export function Terminal() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

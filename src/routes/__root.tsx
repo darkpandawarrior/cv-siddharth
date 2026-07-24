@@ -178,6 +178,16 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* First focusable element on every route: hidden until Tab reveals it,
+            jumps keyboard/screen-reader users past the nav straight to the
+            route's <main id="main-content">. Tailwind's built-in sr-only /
+            focus:not-sr-only utilities do the hide/reveal — no bespoke CSS. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-accent focus:px-5 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-lg"
+        >
+          Skip to content
+        </a>
         <HashCompat />
         {children}
         <SpeedInsights />

@@ -62,7 +62,7 @@ export function WritingView() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6">
         {/* hero */}
         <section className="section-y">
           <span className="flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300">

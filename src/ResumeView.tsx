@@ -10,7 +10,7 @@ import { useSectionNav } from "./lib/navigation.ts";
 export function ResumeView() {
   const { goToSection } = useSectionNav();
   return (
-    <div className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
       <div className="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
         <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900">
           <ArrowLeft size={16} /> Back to portfolio
@@ -154,6 +154,6 @@ export function ResumeView() {
           </div>
         </section>
       </article>
-    </div>
+    </main>
   );
 }

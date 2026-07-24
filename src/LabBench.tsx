@@ -86,7 +86,14 @@ export function LabBench() {
             Nine instruments spanning Dice.tech's production case studies and five personal open-source
             builds — the actual idea behind each headline metric, running live in your browser. Flip a
             switch and watch the number happen. Every other room is one door away in
-            the <Link to="/playground" className="text-accent transition hover:text-accent-dim">Playground</Link>.
+            the{" "}
+            <Link
+              to="/playground"
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim hover:decoration-accent-dim"
+            >
+              Playground
+            </Link>
+            .
           </p>
         </Reveal>
         <Reveal>

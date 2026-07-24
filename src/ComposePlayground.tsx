@@ -776,7 +776,8 @@ export default function ComposePlayground() {
         )}
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
+      <main id="main-content" tabIndex={-1} className="grid min-h-0 flex-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
+        <h1 className="sr-only">The Compose Playground — write it, watch it recompose</h1>
         {/* Editor */}
         <div className="relative flex min-h-0 flex-col border-b border-line lg:border-b-0 lg:border-r">
           <div className="flex min-h-0 flex-1">
@@ -843,7 +844,7 @@ export default function ComposePlayground() {
             <p className="mt-4 text-center font-mono text-[10px] text-zinc-600">simulated preview · state is live</p>
           </div>
         </div>
-      </div>
+      </main>
 
       <div className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
         <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-zinc-600" title={SUPPORTED}>

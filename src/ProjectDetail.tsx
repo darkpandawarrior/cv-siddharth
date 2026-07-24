@@ -190,6 +190,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
   const railRef = useRef<HTMLDivElement>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
   const scrollRail = (dir: number) =>
     railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
@@ -239,6 +241,21 @@ export function ProjectDetail({ slug }: { slug: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [idx, close, step]);
 
+  // Focus management for the lightbox overlay: it visually covers the whole
+  // viewport but nothing traps Tab inside it, so a keyboard user needs a
+  // clear entry point (the close button) and their focus handed back to
+  // whatever they were on (the gallery thumbnail) once it closes — otherwise
+  // Escape/click-away "closes" a dialog that's still holding their focus.
+  const lightboxOpen = idx !== null;
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    lightboxTriggerRef.current = document.activeElement as HTMLElement | null;
+    lightboxCloseRef.current?.focus();
+    return () => {
+      lightboxTriggerRef.current?.focus();
+    };
+  }, [lightboxOpen]);
+
   if (!project) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-24 text-center">
@@ -264,7 +281,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const themeStyle = t ? (themeVars as unknown as CSSProperties) : undefined;
 
   return (
-    <div ref={root} className="min-h-screen bg-ink" style={themeStyle}>
+    <main ref={root} id="main-content" tabIndex={-1} className="min-h-screen bg-ink" style={themeStyle}>
       {/* Hero with animated aurora wash */}
       <div className="relative overflow-hidden border-b border-line">
         <div className="aurora pointer-events-none absolute inset-0 opacity-80" />
@@ -576,12 +593,24 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Lightbox */}
       {idx !== null && (
-        <div className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={close}>
-          <button onClick={close} className="absolute right-5 top-5 rounded-full bg-white/10 p-2 text-white hover:bg-white/20">
+        <div
+          className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={close}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Screenshot ${idx + 1} of ${items.length}${items[idx].caption ? `: ${items[idx].caption}` : ""}`}
+        >
+          <button
+            ref={lightboxCloseRef}
+            onClick={close}
+            aria-label="Close screenshot viewer"
+            className="absolute right-5 top-5 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+          >
             <X size={20} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); step(-1); }}
+            aria-label="Previous screenshot"
             className="absolute left-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 sm:left-8"
           >
             <ChevronLeft size={22} />
@@ -596,6 +625,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
           />
           <button
             onClick={(e) => { e.stopPropagation(); step(1); }}
+            aria-label="Next screenshot"
             className="absolute right-3 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 sm:right-8"
           >
             <ChevronRight size={22} />
@@ -606,6 +636,6 @@ export function ProjectDetail({ slug }: { slug: string }) {
           </span>
         </div>
       )}
-    </div>
+    </main>
   );
 }

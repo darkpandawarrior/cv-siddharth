@@ -23,7 +23,7 @@ export function ErrorPanel({
   extraLinks?: { label: string; to: string; params?: { slug: string } }[];
 }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
+    <main id="main-content" tabIndex={-1} className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
       <AmbientBackground />
       <div className="glass-panel relative w-full max-w-lg rounded-2xl px-8 py-10 text-center">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent2/80">{code}</p>

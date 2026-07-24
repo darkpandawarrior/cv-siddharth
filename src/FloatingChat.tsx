@@ -75,6 +75,7 @@ export function FloatingChat() {
   const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -90,8 +91,26 @@ export function FloatingChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, open]);
 
+  // Focus management: whichever control opened the widget (the launcher
+  // button, a card's "ask my AI" link, ...) gets focus back once it closes —
+  // the panel covers it visually but nothing traps Tab inside it, so a
+  // keyboard user must not be left focused on a hidden element.
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+      inputRef.current?.focus();
+      return;
+    }
+    previouslyFocusedRef.current?.focus();
+  }, [open]);
+
+  // Esc closes the widget — same escapable contract as the lightbox and
+  // command palette.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   // Fire a deep-linked question once the widget is open and idle.

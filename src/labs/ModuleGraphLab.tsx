@@ -55,7 +55,8 @@ export function ModuleGraphLab() {
   const [isolate, setIsolate] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
-  const active = pinned ?? hover;
+  const [focused, setFocused] = useState<number | null>(null);
+  const active = pinned ?? hover ?? focused;
   const crossDeps = isolate ? 0 : crossEdges.length;
 
   const togglePin = (i: number) => setPinned((p) => (p === i ? null : i));
@@ -127,9 +128,15 @@ export function ModuleGraphLab() {
                   tabIndex={0}
                   aria-label={`feature module: ${f.label}${f.named ? "" : " (unconfirmed name)"}`}
                   aria-pressed={pinned === i}
+                  // outline-none is paired with a visible alternative: focus
+                  // (like hover/pinned) drives `active`, which brightens this
+                  // node's circle + label below — an SVG <g> doesn't reliably
+                  // render the browser's default focus ring anyway.
                   className="cursor-pointer outline-none"
                   onMouseEnter={() => setHover(i)}
                   onMouseLeave={() => setHover(null)}
+                  onFocus={() => setFocused(i)}
+                  onBlur={() => setFocused(null)}
                   onClick={() => togglePin(i)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
