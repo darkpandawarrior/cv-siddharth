@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /**
@@ -257,13 +258,13 @@ export function FanoutLab() {
               : `62 providers queried · ${stats.total} listings, 0 de-duped`}
           </span>
           <span className="font-mono text-xs text-accent">0 LLM tokens spent</span>
-          <a
-            href="/#project/hiresignal"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/project/$slug"
+            params={{ slug: "hiresignal" }}
             className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
           >
             the full story → HireSignal's 62 providers
-          </a>
+          </Link>
         </div>
       </div>
     </div>

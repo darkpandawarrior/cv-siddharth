@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /* ── Deadlock Replay Lab ─────────────────────────────────────────────── */
@@ -227,13 +228,13 @@ export function ReplayLab() {
           <span className={`font-mono text-xs ${stat.blocked ? "text-[#ff5c5c]" : "text-accent"}`}>
             drift: {stat.drift.toFixed(stat.blocked ? 3 : 6)} · gate: {stat.blocked ? "BLOCKED — change rejected" : "PASS"}
           </span>
-          <a
-            href="/#project/deadlock"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/project/$slug"
+            params={{ slug: "deadlock" }}
             className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
           >
             the full story → Deadlock's determinism gate
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /* ── Kursi ISMCTS Search Tree Lab ────────────────────────────────────── */
@@ -252,13 +253,13 @@ export function SearchTreeLab() {
               role: {result.role}, chosen
             </span>
           )}
-          <a
-            href="/#project/kursi"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/project/$slug"
+            params={{ slug: "kursi" }}
             className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
           >
             the full story → Kursi's ISMCTS AI
-          </a>
+          </Link>
         </div>
       </div>
     </div>

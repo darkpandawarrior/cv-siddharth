@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 /**
  * The Module Graph Lab — Mileway's 46-module clean architecture, drawn as a
@@ -174,13 +175,13 @@ export function ModuleGraphLab() {
             cross-feature dependencies: {crossDeps}
           </span>
           <span className="font-mono text-xs text-zinc-500">46 modules total · 36 local + 10 composed</span>
-          <a
-            href="/#project/mileway"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/project/$slug"
+            params={{ slug: "mileway" }}
             className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
           >
             the full story → Mileway's 46 modules
-          </a>
+          </Link>
         </div>
       </div>
     </div>

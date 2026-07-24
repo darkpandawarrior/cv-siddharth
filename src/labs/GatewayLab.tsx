@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /* ── PaymentsLab Gateway Lab ─────────────────────────────────────────── */
@@ -184,13 +185,13 @@ export function GatewayLab() {
           ) : (
             <span className="font-mono text-xs text-zinc-500">{stats.blocked} calls blocked · custom integration required per gateway</span>
           )}
-          <a
-            href="/#project/paymentslab"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/project/$slug"
+            params={{ slug: "paymentslab" }}
             className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
           >
             the full story → PaymentsLab's 66 gateways
-          </a>
+          </Link>
         </div>
       </div>
     </div>
