@@ -2,7 +2,7 @@
 # Verifies per-route SSR/CSR classification against the PRODUCTION server.
 # `npm run dev` never full-SSRs in this TanStack Start version (it only
 # serves the shell + client-entry script), so it can't distinguish SSR routes
-# from CSR routes. Run `npm run build && npm run serve` (port 3000) first,
+# from CSR routes. Run `npm run build && npm run serve` (port 4173) first,
 # then run this script in another shell.
 #
 # ponytail: `grep` (no -a) treats the response as binary and silently

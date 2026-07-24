@@ -75,7 +75,11 @@ export const Route = createRootRoute({
       { name: "twitter:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
     ],
     links: [
-      { rel: "canonical", href: "https://cv-siddharth.vercel.app/" },
+      // No hardcoded canonical here — see src/routes/index.tsx for why:
+      // the router's `links` array concatenates instead of deduping by
+      // `rel`, so a root-level canonical would double up with every
+      // per-route override (resume.tsx, project.$slug.tsx) instead of
+      // being replaced by it.
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "Agent-readable profile" },

@@ -13,6 +13,11 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     defaultPreload: "intent",
+    // Cross-fade between route changes via the View Transitions API (skipped
+    // automatically where unsupported). prefers-reduced-motion is handled in
+    // index.css, not here — the API still runs, but the ::view-transition-*
+    // animations are neutralized for reduced-motion users.
+    defaultViewTransition: true,
   });
 }
 

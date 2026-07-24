@@ -9,7 +9,14 @@ export const Route = createFileRoute("/project/$slug")({
     const p = projects.find((x) => x.slug === params.slug);
     const title = p ? `${p.name} — Siddharth Pandalai` : "Project — Siddharth Pandalai";
     const desc = p?.description ?? "A build from Siddharth Pandalai's portfolio.";
-    const og = `https://cv-siddharth.vercel.app/p/${params.slug}/og.png`;
+    // scripts/gen-og.mjs only rasterizes /p/<slug>/og.png for projects with a
+    // `detail` case-study page (`projects.filter((p) => p.detail)`) — same
+    // predicate reused here so this can't silently drift from what's on disk.
+    // Everything else (e.g. the "portfolio" entry) falls back to the
+    // site-default OG image, which always exists.
+    const og = p?.detail
+      ? `https://cv-siddharth.vercel.app/p/${params.slug}/og.png`
+      : "https://cv-siddharth.vercel.app/og-image.png";
     return {
       meta: [
         { title },

@@ -57,6 +57,13 @@ html {
 ::view-transition-new(root) {
   animation-duration: 0.22s;
 }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
 
 /* Subtle dot-grid in hero section */
 #top {
