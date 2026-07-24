@@ -10,7 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlueprintRouteImport } from './routes/blueprint'
+import { Route as ComposeRouteImport } from './routes/compose'
+import { Route as ForgeRouteImport } from './routes/forge'
+import { Route as LabRouteImport } from './routes/lab'
+import { Route as LoopdownRouteImport } from './routes/loopdown'
+import { Route as MapRouteImport } from './routes/map'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as ProjectSlugRouteImport } from './routes/project.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +26,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlueprintRoute = BlueprintRouteImport.update({
+  id: '/blueprint',
+  path: '/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComposeRoute = ComposeRouteImport.update({
+  id: '/compose',
+  path: '/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgeRoute = ForgeRouteImport.update({
+  id: '/forge',
+  path: '/forge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabRoute = LabRouteImport.update({
+  id: '/lab',
+  path: '/lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoopdownRoute = LoopdownRouteImport.update({
+  id: '/loopdown',
+  path: '/loopdown',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResumeRoute = ResumeRouteImport.update({
   id: '/resume',
   path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminalRoute = TerminalRouteImport.update({
+  id: '/terminal',
+  path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectSlugRoute = ProjectSlugRouteImport.update({
@@ -31,31 +79,97 @@ const ProjectSlugRoute = ProjectSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/blueprint': typeof BlueprintRoute
+  '/compose': typeof ComposeRoute
+  '/forge': typeof ForgeRoute
+  '/lab': typeof LabRoute
+  '/loopdown': typeof LoopdownRoute
+  '/map': typeof MapRoute
+  '/playground': typeof PlaygroundRoute
   '/resume': typeof ResumeRoute
+  '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/blueprint': typeof BlueprintRoute
+  '/compose': typeof ComposeRoute
+  '/forge': typeof ForgeRoute
+  '/lab': typeof LabRoute
+  '/loopdown': typeof LoopdownRoute
+  '/map': typeof MapRoute
+  '/playground': typeof PlaygroundRoute
   '/resume': typeof ResumeRoute
+  '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/blueprint': typeof BlueprintRoute
+  '/compose': typeof ComposeRoute
+  '/forge': typeof ForgeRoute
+  '/lab': typeof LabRoute
+  '/loopdown': typeof LoopdownRoute
+  '/map': typeof MapRoute
+  '/playground': typeof PlaygroundRoute
   '/resume': typeof ResumeRoute
+  '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/resume' | '/project/$slug'
+  fullPaths:
+    | '/'
+    | '/blueprint'
+    | '/compose'
+    | '/forge'
+    | '/lab'
+    | '/loopdown'
+    | '/map'
+    | '/playground'
+    | '/resume'
+    | '/terminal'
+    | '/project/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/resume' | '/project/$slug'
-  id: '__root__' | '/' | '/resume' | '/project/$slug'
+  to:
+    | '/'
+    | '/blueprint'
+    | '/compose'
+    | '/forge'
+    | '/lab'
+    | '/loopdown'
+    | '/map'
+    | '/playground'
+    | '/resume'
+    | '/terminal'
+    | '/project/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/blueprint'
+    | '/compose'
+    | '/forge'
+    | '/lab'
+    | '/loopdown'
+    | '/map'
+    | '/playground'
+    | '/resume'
+    | '/terminal'
+    | '/project/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BlueprintRoute: typeof BlueprintRoute
+  ComposeRoute: typeof ComposeRoute
+  ForgeRoute: typeof ForgeRoute
+  LabRoute: typeof LabRoute
+  LoopdownRoute: typeof LoopdownRoute
+  MapRoute: typeof MapRoute
+  PlaygroundRoute: typeof PlaygroundRoute
   ResumeRoute: typeof ResumeRoute
+  TerminalRoute: typeof TerminalRoute
   ProjectSlugRoute: typeof ProjectSlugRoute
 }
 
@@ -68,11 +182,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blueprint': {
+      id: '/blueprint'
+      path: '/blueprint'
+      fullPath: '/blueprint'
+      preLoaderRoute: typeof BlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compose': {
+      id: '/compose'
+      path: '/compose'
+      fullPath: '/compose'
+      preLoaderRoute: typeof ComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forge': {
+      id: '/forge'
+      path: '/forge'
+      fullPath: '/forge'
+      preLoaderRoute: typeof ForgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab': {
+      id: '/lab'
+      path: '/lab'
+      fullPath: '/lab'
+      preLoaderRoute: typeof LabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loopdown': {
+      id: '/loopdown'
+      path: '/loopdown'
+      fullPath: '/loopdown'
+      preLoaderRoute: typeof LoopdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resume': {
       id: '/resume'
       path: '/resume'
       fullPath: '/resume'
       preLoaderRoute: typeof ResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminal': {
+      id: '/terminal'
+      path: '/terminal'
+      fullPath: '/terminal'
+      preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/project/$slug': {
@@ -87,7 +257,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BlueprintRoute: BlueprintRoute,
+  ComposeRoute: ComposeRoute,
+  ForgeRoute: ForgeRoute,
+  LabRoute: LabRoute,
+  LoopdownRoute: LoopdownRoute,
+  MapRoute: MapRoute,
+  PlaygroundRoute: PlaygroundRoute,
   ResumeRoute: ResumeRoute,
+  TerminalRoute: TerminalRoute,
   ProjectSlugRoute: ProjectSlugRoute,
 }
 export const routeTree = rootRouteImport
