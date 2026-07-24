@@ -49,7 +49,8 @@
   "devDependencies": {
     "@babel/core": "8.0.1",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.61.1",
+    "@lhci/cli": "0.15.1",
+    "@playwright/test": "1.61.1",
     "@rolldown/plugin-babel": "0.2.3",
     "@tailwindcss/vite": "^4.1.18",
     "@types/leaflet": "^1.9.21",
