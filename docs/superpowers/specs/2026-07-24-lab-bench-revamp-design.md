@@ -73,12 +73,15 @@ justify one.
    (`naive 100% vs optimized 2.5%`) next to the existing wasted/needed
    render counters — same data, legible as a percentage.
 
-3. **Signal Lab → full journey simulation** (near-total rewrite). Replace
-   the single repeating figure-eight + one tunnel with a longer looping
-   route with five labeled zones, each modeling a documented Mileway
-   location-engine challenge: open road (clean) → urban canyon (multipath
-   spikes) → tunnel (total dropout) → highway on-ramp (high speed, sparse
-   sampling) → parking structure (intermittent weak signal).
+3. **Signal Lab → full journey simulation on a real map** (near-total
+   rewrite, revised after first pass — see Addendum below for why). A
+   longer looping route with five labeled zones, each modeling a documented
+   Mileway location-engine challenge: open road (clean) → urban canyon
+   (multipath spikes) → tunnel (total dropout) → highway on-ramp (high
+   speed, sparse sampling) → parking structure (intermittent weak signal).
+   The route renders over a real MapLibre GL JS basemap (CARTO's free
+   dark-matter vector style, no API key) anchored on Pune, India — the
+   real location in `profile.ts` — instead of an abstract canvas track.
 
    Independently toggleable pipeline stages (checkboxes, not one combined
    switch):
@@ -89,12 +92,26 @@ justify one.
    - Device-tier adaptive sampling (toggle flagship/budget — changes sample
      cadence, shows fusion compensating for sparser data)
 
-   New live readout: a **four-bucket distance accumulator** (named after
-   Mileway's real one) — running trip distance split into
-   confirmed / reckoned / rejected buckets vs. ground-truth distance, with a
-   live accuracy % so toggling stages visibly moves the number the way spike
-   rejection actually moved 50%→95% in production. Footer links to both the
-   Dice.tech case study and `/#project/mileway`, credited to both.
+   Two live readouts:
+   - A **four-bucket distance accumulator** (named after Mileway's real
+     one) — running trip distance split into confirmed / reckoned /
+     rejected buckets vs. ground-truth distance, with a live accuracy %.
+   - An **optimization convergence chart** — a small live sparkline of raw
+     vs. filtered position error over time, so the "optimization" in
+     "predictive dead reckoning" is visible as an error curve actually
+     being minimized, not just a single end percentage.
+
+   Toggling stages should visibly move both readouts the way spike
+   rejection actually moved GPS accuracy 50%→95% in production. Footer
+   links to both the Dice.tech case study and `/#project/mileway`, credited
+   to both.
+
+   **Addendum (post-approval revision):** the first implementation pass
+   built this as an abstract canvas route per the original text above. On
+   review, that didn't read as a real "live journey simulation" or make
+   the optimization visible as a process — revised to add a real MapLibre
+   basemap + convergence chart on top of (not replacing) that first pass's
+   zone/pipeline logic, via a follow-up workflow.
 
 4. **White-label → real theme tokens + layout engine** (near-total rewrite).
    Replace the 5 fictional brand colors (mint/ocean/grape/ember/rose) with
@@ -137,8 +154,10 @@ No new content/data files — every number above already exists in
 
 ## Non-goals
 
-- No new npm dependencies (no map/graph libraries — everything stays plain
-  canvas/SVG, matching the existing labs).
+- No new npm dependencies except `maplibre-gl` for the Signal Lab basemap
+  (see Addendum above) — every other instrument stays plain canvas/SVG,
+  matching the existing labs, with no additional libraries and no runtime
+  network calls.
 - No changes to `profile.ts` / `projectStats.ts` content — this is a new UI
   layer over existing data.
 - No changes to the AI chat assistant's system-prompt generation
