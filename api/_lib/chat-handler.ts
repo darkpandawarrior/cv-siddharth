@@ -21,7 +21,7 @@ interface Provider {
   extractDelta: (event: unknown) => string | undefined;
 }
 
-const PROVIDERS: Provider[] = [
+export const PROVIDERS: Provider[] = [
   {
     name: "groq",
     key: () => process.env.GROQ_API_KEY,
@@ -89,7 +89,7 @@ const PROVIDERS: Provider[] = [
   },
 ];
 
-function pickProvider(): { provider: Provider; key: string } | null {
+export function pickProvider(): { provider: Provider; key: string } | null {
   const forced = process.env.CHAT_PROVIDER;
   const candidates = forced ? PROVIDERS.filter((p) => p.name === forced) : PROVIDERS;
   for (const provider of candidates) {
@@ -124,7 +124,7 @@ function jsonError(status: number, message: string): Response {
  * Re-emits an upstream SSE body as a provider-independent stream the widget
  * understands: `data: {"text":"…"}` events terminated by `data: [DONE]`.
  */
-function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDelta: Provider["extractDelta"]): ReadableStream<Uint8Array> {
+export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDelta: Provider["extractDelta"]): ReadableStream<Uint8Array> {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let buffer = "";
