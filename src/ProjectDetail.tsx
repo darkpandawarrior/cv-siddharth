@@ -132,14 +132,14 @@ function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: str
   return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-/** Share the project via its crawlable /p/<slug> page — the URL whose OG card
- *  is this project's own. Uses the native share sheet on mobile, clipboard
- *  everywhere else. */
+/** Share the project via its SSR'd /project/<slug> route — the URL whose
+ *  canonical + OG card are this project's own. Uses the native share sheet on
+ *  mobile, clipboard everywhere else. */
 function ShareProject({ slug, name }: { slug: string; name: string }) {
   const [copied, setCopied] = useState(false);
   const onShare = async () => {
     // Computed on click, not at render time — `window` isn't available during SSR.
-    const url = `${window.location.origin}/p/${slug}`;
+    const url = `${window.location.origin}/project/${slug}`;
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
     if (nav.share) {
       try {
@@ -205,8 +205,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
   }, [project]);
 
   // Per-project tab title + description while the page is open. (Social-crawler
-  // previews come from the static /p/<slug>/ share pages, which don't run JS;
-  // this keeps the live tab and in-app history entry project-specific.)
+  // previews come from the SSR'd /project/<slug> route's own head() meta,
+  // which doesn't run JS; this keeps the live tab and in-app history entry
+  // project-specific.)
   useEffect(() => {
     if (!project) return;
     const prevTitle = document.title;

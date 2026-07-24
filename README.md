@@ -105,9 +105,10 @@ Beyond the scroll, the site is navigable as an environment:
   React/three.js custom shapes. Ships with a **Reset** button and a recovery
   boundary so a stale local snapshot or a lost WebGL context is never a dead
   blank screen.
-- **Per-project share cards** — each build has a crawlable page at
-  `/p/<slug>/` carrying its own Open Graph / Twitter meta and a branded
-  1200×630 card, so a shared link previews the project, not the generic site.
+- **Per-project share cards** — each project route (`/project/<slug>`) is
+  server-rendered with its own Open Graph / Twitter meta and a branded
+  1200×630 card (`/p/<slug>/og.png`), so a shared link previews the project,
+  not the generic site. (Legacy `/p/<slug>` links 301-redirect to the route.)
 
 ## Generators
 
@@ -116,7 +117,7 @@ Beyond the scroll, the site is navigable as an environment:
 <br/>
 
 ```bash
-npm run gen:og        # branded per-project OG cards + /p/<slug>/ share pages
+npm run gen:og        # branded per-project OG cards (/p/<slug>/og.png)
 npm run refresh       # media sync + all generators (stats, galleries, og, prompt…)
 ```
 

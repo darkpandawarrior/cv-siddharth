@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Hash routes are invisible to crawlers. Each project has a static share
-     page at /p/<slug>/ carrying its own OG/Twitter card, then redirecting to
-     the in-app #project/<slug> route — so shared links preview per-project. -->
+<!-- Every route below is genuinely SSR'd (TanStack Start) with its own
+     canonical + OG meta, so it's directly crawlable and listed at its real
+     URL — no more hash-route share-page redirects. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://cv-siddharth.vercel.app/</loc>
@@ -9,37 +9,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/mileway</loc>
+    <loc>https://cv-siddharth.vercel.app/project/mileway</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/kursi</loc>
+    <loc>https://cv-siddharth.vercel.app/project/kursi</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/paymentslab</loc>
+    <loc>https://cv-siddharth.vercel.app/project/paymentslab</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/hiresignal</loc>
+    <loc>https://cv-siddharth.vercel.app/project/hiresignal</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/deadlock</loc>
+    <loc>https://cv-siddharth.vercel.app/project/deadlock</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/resume</loc>
+    <loc>https://cv-siddharth.vercel.app/resume</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/p/writing</loc>
+    <loc>https://cv-siddharth.vercel.app/loopdown</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

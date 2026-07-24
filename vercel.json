@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["bom1"],
+  "redirects": [
+    { "source": "/p/resume", "destination": "/resume", "permanent": true },
+    { "source": "/p/writing", "destination": "/loopdown", "permanent": true },
+    { "source": "/p/:slug", "destination": "/project/:slug", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/kursi-app/(.*)\\.wasm",

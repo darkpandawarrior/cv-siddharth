@@ -1,13 +1,18 @@
-// Generates per-project Open Graph assets so a shared build link renders its
-// OWN card (title, blurb, art) instead of the one generic site image.
+// Generates per-project Open Graph cards so a shared link renders its OWN
+// preview (title, blurb, art) instead of the one generic site image.
 //
-// For each project with a detail page it emits two static, crawler-friendly
-// artifacts under public/p/<slug>/:
-//   • og.png            — a branded 1200×630 card, rasterized from an HTML
-//                         template with the pre-installed headless Chromium
-//                         (no runtime dep; Vercel just serves the committed PNG)
-//   • index.html        — a tiny share page carrying the per-project OG/Twitter
-//                         meta, then redirecting humans to /#project/<slug>
+// For each project with a detail page (plus résumé + writing) it emits one
+// crawler-facing artifact under public/p/<slug>/:
+//   • og.png — a branded 1200×630 card, rasterized from an HTML template with
+//              the pre-installed headless Chromium (no runtime dep; Vercel
+//              just serves the committed PNG).
+//
+// A sibling index.html used to live here too — a share page carrying OG/
+// Twitter meta and redirecting to /#project/<slug>, needed back when project
+// detail was a JS-only hash route invisible to crawlers. /project/<slug> is
+// now genuinely SSR'd with its own canonical + OG meta (see
+// src/routes/project.$slug.tsx), so those stub pages were retired; this
+// script only rasterizes the image they used to reference.
 //
 // Facts come from src/data/profile.ts (the single source of truth), so the
 // cards can't drift from the site. Chromium is only needed HERE (author time);
@@ -226,50 +231,6 @@ function cardHtml(spec) {
   </body></html>`;
 }
 
-// A crawler-facing share page: per-surface OG/Twitter meta + optional JSON-LD,
-// then a redirect to the in-app deep link.
-function sharePage({ url, img, title, desc, deep, ink = "#0b0f0d", accent = "#3ddc84", label = "page", jsonld }) {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(desc)}" />
-  <link rel="canonical" href="${url}" />
-  <meta name="theme-color" content="${esc(ink)}" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="sid.android" />
-  <meta property="og:url" content="${url}" />
-  <meta property="og:title" content="${esc(title)}" />
-  <meta property="og:description" content="${esc(desc)}" />
-  <meta property="og:image" content="${img}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${esc(title)}" />
-  <meta name="twitter:description" content="${esc(desc)}" />
-  <meta name="twitter:image" content="${img}" />
-  ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}
-  <meta http-equiv="refresh" content="0; url=${deep}" />
-  <script>window.location.replace(${JSON.stringify(deep)});</script>
-  <style>
-    html,body{margin:0;height:100%;background:${ink};color:#e8efe9;
-      font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
-    .w{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:1.5rem}
-    a{color:${accent}}
-  </style>
-</head>
-<body>
-  <div class="w">
-    <p>Opening <strong>${esc(title.split("—")[0].trim())}</strong> …</p>
-    <p><a href="${deep}">Continue to the ${esc(label)} →</a></p>
-    <noscript><p><a href="${deep}">Open the ${esc(label)}</a></p></noscript>
-  </div>
-</body>
-</html>`;
-}
-
 // ── Surfaces: every project + a few site-level pages ─────────────────────────
 function projectSurface(p) {
   const t = p.theme ?? {};
@@ -277,12 +238,6 @@ function projectSurface(p) {
   const ink = t.ink ?? "#05070a";
   return {
     slug: p.slug,
-    deep: `/#project/${p.slug}`,
-    label: `${p.name} case study`,
-    title: `${p.name} — ${short(p.tagline)} · Siddharth Pandalai`,
-    desc: p.description,
-    ink,
-    accent,
     card: {
       accent,
       ink,
@@ -294,16 +249,6 @@ function projectSurface(p) {
       tagline: short(p.tagline),
       stats: (p.status ?? "").split("·").map((s) => s.trim()).filter(Boolean).slice(0, 4),
       chips: (p.stack ?? []).slice(0, 5),
-    },
-    jsonld: {
-      "@context": "https://schema.org",
-      "@type": "SoftwareSourceCode",
-      name: p.name,
-      description: p.description,
-      codeRepository: p.links.find((l) => l.url.includes("github.com"))?.url,
-      programmingLanguage: "Kotlin",
-      author: { "@type": "Person", name: profile.name, url: SITE },
-      url: `${SITE}/p/${p.slug}`,
     },
   };
 }
@@ -327,12 +272,7 @@ const siteSurfaces = [
   },
   {
     slug: "resume",
-    deep: "/#resume",
-    label: "résumé",
-    title: `${profile.name} — Résumé · Senior Android Engineer`,
-    desc: profile.summary,
-    ink: "#05070a",
-    accent: "#3ddc84",
+    deep: true, // ponytail: was the /#resume hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#3ddc84",
       ink: "#05070a",
@@ -347,12 +287,7 @@ const siteSurfaces = [
   },
   {
     slug: "writing",
-    deep: "/#loopdown",
-    label: "Loopdown",
-    title: "The Loopdown — field notes from production Android · Siddharth Pandalai",
-    desc: "Engineering field notes that read like stories — sensor fusion, structured concurrency, Compose recomposition, and the bugs behind the metrics.",
-    ink: "#0b0a14",
-    accent: "#7c5cff",
+    deep: true, // ponytail: was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#7c5cff",
       ink: "#0b0a14",
@@ -374,13 +309,10 @@ mkdirSync(tmp, { recursive: true });
 
 let pngs = 0;
 
-// Project + site share pages under /p/<slug>/, each with its own OG card.
+// Per-project + a couple of site-level og.png cards under public/p/<slug>/.
 for (const s of projectTargets.concat(siteSurfaces.filter((s) => s.deep))) {
   const dir = join(outRoot, s.slug);
   mkdirSync(dir, { recursive: true });
-  const url = `${SITE}/p/${s.slug}`;
-  const img = `${url}/og.png`;
-  writeFileSync(join(dir, "index.html"), sharePage({ ...s, url, img }));
   const htmlPath = join(tmp, `${s.slug}.html`);
   writeFileSync(htmlPath, cardHtml(s.card));
   const pngPath = join(dir, "og.png");
@@ -392,7 +324,7 @@ for (const s of projectTargets.concat(siteSurfaces.filter((s) => s.deep))) {
       console.warn(`  ! chromium failed for ${s.slug}: ${e.message}`);
     }
   }
-  console.log(`  ✓ /p/${s.slug}/  (share page${existsSync(pngPath) ? " + og.png" : ""})`);
+  console.log(`  ${existsSync(pngPath) ? "✓" : "!"} /p/${s.slug}/og.png`);
 }
 
 // Site-wide OG image (og-image.png) — surfaces with an explicit `out`.
@@ -411,8 +343,7 @@ for (const s of siteSurfaces.filter((s) => s.out)) {
 rmSync(tmp, { recursive: true, force: true });
 
 if (!CHROMIUM) {
-  console.warn("\n! No Chromium found — share pages written, but og.png NOT regenerated.");
+  console.warn("\n! No Chromium found — og.png files NOT regenerated (nothing else for this script to do).");
   console.warn("  Set CHROMIUM_BIN or run where a headless Chromium is available, then commit the PNGs.");
 }
-const sharePages = projectTargets.length + siteSurfaces.filter((s) => s.deep).length;
-console.log(`\ngen-og: ${sharePages} share pages, ${pngs} OG images · site ${SITE} · owner ${profile.name}`);
+console.log(`\ngen-og: ${pngs} OG images written · site ${SITE} · owner ${profile.name}`);

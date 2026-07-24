@@ -11,6 +11,8 @@ export const Route = createFileRoute("/resume")({
         { name: "description", content: desc },
         { property: "og:url", content: "https://cv-siddharth.vercel.app/resume" },
         { property: "og:description", content: desc },
+        { property: "og:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
+        { name: "twitter:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
       ],
       links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
     };
