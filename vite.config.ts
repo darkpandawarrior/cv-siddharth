@@ -1,8 +1,49 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
+import { config as loadEnv } from "dotenv";
+import type { IncomingMessage, ServerResponse } from "node:http";
+
+loadEnv({ path: ".env.local" });
+
+/**
+ * Serves /api/chat during local dev with the same web-standard handler
+ * that Vercel runs in production, so the chat widget works under `vite`
+ * (and under Start's dev server, which doesn't natively serve api/) without
+ * `vercel dev`. Requires GROQ_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY
+ * in .env.local — without one, handleChat itself replies 503.
+ */
+function chatApiDevPlugin(): Plugin {
+  return {
+    name: "chat-api-dev",
+    configureServer(server) {
+      server.middlewares.use("/api/chat", async (req: IncomingMessage, res: ServerResponse) => {
+        const { handleChat } = await server.ssrLoadModule("/api/_lib/chat-handler.ts");
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) chunks.push(chunk as Buffer);
+        const request = new Request("http://localhost/api/chat", {
+          method: req.method ?? "POST",
+          headers: { "content-type": "application/json" },
+          body: chunks.length ? Buffer.concat(chunks) : undefined,
+        });
+        const response: Response = await handleChat(request);
+        res.statusCode = response.status;
+        response.headers.forEach((value, key) => res.setHeader(key, value));
+        if (response.body) {
+          const reader = response.body.getReader();
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(value);
+          }
+        }
+        res.end();
+      });
+    },
+  };
+}
 
 // React Compiler 1.0 runs through the rolldown->babel bridge, since
 // @vitejs/plugin-react v6 moved its own JSX transform off Babel onto oxc.
@@ -22,5 +63,10 @@ export default defineConfig(async () => ({
     viteReact(),
     await babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
+    // Registered last but its /api/chat middleware is still installed as a
+    // Vite "pre" middleware (configureServer doesn't return a post-hook),
+    // so it runs ahead of Start's own catch-all SSR handler — same ordering
+    // that let this plugin work before the migration.
+    chatApiDevPlugin(),
   ],
 }));
