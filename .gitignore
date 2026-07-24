@@ -6,3 +6,7 @@ dist
 .DS_Store
 .vercel
 .showcase-work/
+
+# build-time image derivatives (scripts/gen-images.mjs, regenerated in prebuild)
+public/**/*.avif
+public/**/*.webp

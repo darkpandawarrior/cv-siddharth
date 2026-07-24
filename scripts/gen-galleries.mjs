@@ -2,19 +2,32 @@
 // Runs as a prebuild step, so adding/removing a screenshot auto-updates the
 // project detail galleries — no manual list to maintain.
 import { readdirSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const projectsDir = join(root, "public", "projects");
 const out = {};
 
+// A .webp/.avif next to a same-basename .png/.jpg/.jpeg is a derivative made
+// by gen-images.mjs (which runs after us in prebuild/predev), not a source —
+// skip it so repeated runs don't list both the raster and its own sibling.
+// Same detection gen-images.mjs uses for its own idempotency (see its
+// `ext === ".webp" && raster sibling exists` check).
+function isDerivative(dir, file) {
+  const ext = extname(file).toLowerCase();
+  if (ext === ".avif") return true; // always a derivative here
+  if (ext !== ".webp") return false;
+  const base = file.slice(0, -ext.length);
+  return [".png", ".jpg", ".jpeg"].some((e) => existsSync(join(dir, base + e)));
+}
+
 if (existsSync(projectsDir)) {
   for (const slug of readdirSync(projectsDir)) {
     const shots = join(projectsDir, slug, "screenshots");
     if (existsSync(shots)) {
       out[slug] = readdirSync(shots)
-        .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
+        .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f) && !isDerivative(shots, f))
         .sort()
         .map((f) => `/projects/${slug}/screenshots/${f}`);
     }
