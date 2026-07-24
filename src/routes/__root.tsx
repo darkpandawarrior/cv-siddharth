@@ -104,7 +104,26 @@ export const Route = createRootRoute({
   // (shellComponent is the only root option rendered outside the boundary).
   shellComponent: RootDocument,
   errorComponent: RootErrorComponent,
+  // Root-level notFound handler so ANY `throw notFound()` (e.g. an unknown
+  // project slug in project.$slug's beforeLoad) renders the on-brand 404 —
+  // not just the `$` splat route's own. The framework still returns a real
+  // 404 status; this only replaces the generic default body.
+  notFoundComponent: RootNotFoundComponent,
 });
+
+function RootNotFoundComponent() {
+  return (
+    <ErrorPanel
+      code="404 // NO CARRIER"
+      title="Signal lost"
+      message="That route doesn't exist."
+      extraLinks={[
+        { label: "Mileway", to: "/project/$slug", params: { slug: "mileway" } },
+        { label: "Résumé", to: "/resume" },
+      ]}
+    />
+  );
+}
 
 function RootErrorComponent({ error }: ErrorComponentProps) {
   return (

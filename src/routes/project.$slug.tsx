@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { projects } from "../data/profile.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { ProjectDetail } from "../ProjectDetail.tsx";
@@ -6,6 +6,11 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
 
 export const Route = createFileRoute("/project/$slug")({
+  // Unknown slug → the designed 404 (real 404 status + noindex + landmarks),
+  // not a bare 200 "not found" div. Reuses the root notFoundComponent (C1).
+  beforeLoad: ({ params }) => {
+    if (!projects.some((x) => x.slug === params.slug)) throw notFound();
+  },
   head: ({ params }) => {
     const p = projects.find((x) => x.slug === params.slug);
     const title = p ? `${p.name} — Siddharth Pandalai` : "Project — Siddharth Pandalai";
