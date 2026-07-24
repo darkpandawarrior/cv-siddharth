@@ -38,6 +38,8 @@ React 19 · TypeScript · Vite 7 · Tailwind v4 · Vercel Edge Functions ·
 Google Gemini, or Anthropic Claude, whichever key is configured, normalized to
 one SSE format so the widget never knows the difference.
 
+**TypeScript 7.0.2 compatibility note:** The repo runs TypeScript 7.0.2 for compilation (`npx tsc --version` confirms it). Because `typescript-eslint` doesn't support TS 7's compiler API yet (support lands in 7.1), `package.json` uses Microsoft's documented side-by-side pattern: `@typescript/native` (real TS 7.0.2) + `@typescript/typescript6` (TS 6.0-API shim for lint). If lint ever fails with "typescript-eslint does not support TS 7.0" after an `npm install`, check `npx tsc --version` first — if it's not 7.0.2, run `npm install` again to resolve the `tsc` binary race.
+
 ## Quick start
 
 ```bash
