@@ -1091,8 +1091,3 @@ export function HomePage() {
     </div>
   );
 }
-
-// ponytail: src/main.tsx (pre-TanStack-Start entry, deleted in Task 9) still
-// does `import App from "./App.tsx"` — this bridges it to HomePage so tsc -b
-// stays clean until that file goes. Remove alongside main.tsx.
-export default HomePage;
