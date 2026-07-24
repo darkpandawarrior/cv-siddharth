@@ -12,6 +12,10 @@ import { PERSISTENCE_KEY } from "./blueprintData.ts";
  * and BlueprintRoom.tsx must not pull tldraw into its own chunk just to offer
  * a reset button.
  */
+export function isBlueprintDb(name: string | undefined): name is string {
+  return !!name && (/tldraw/i.test(name) || name.includes(PERSISTENCE_KEY));
+}
+
 export async function clearBlueprintPersistence(): Promise<void> {
   try {
     const anyIDB = indexedDB as IDBFactory & { databases?: () => Promise<{ name?: string }[]> };
@@ -19,7 +23,7 @@ export async function clearBlueprintPersistence(): Promise<void> {
     await Promise.all(
       dbs
         .map((d) => d.name)
-        .filter((n): n is string => !!n && (/tldraw/i.test(n) || n.includes(PERSISTENCE_KEY)))
+        .filter(isBlueprintDb)
         .map(
           (name) =>
             new Promise<void>((resolve) => {
