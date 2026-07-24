@@ -1,39 +1,57 @@
 import { useEffect, useRef, useState } from "react";
-import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
-
-// maplibre-gl can't auto-detect its worker's URL under Vite, and the worker
-// bundle itself has a relative sibling import ("./maplibre-gl-shared.mjs")
-// that Vite's asset pipeline (?url/?worker, dev pre-bundling) hashes and
-// breaks independently — the worker fails to load and the map never renders
-// a tile. scripts/copy-maplibre-worker.mjs vendors both files into public/
-// verbatim (predev/prebuild) so the relative import stays intact. Must run
-// before the first Map is constructed.
-setWorkerUrl(`${import.meta.env.BASE_URL}vendor/maplibre/maplibre-gl-worker.mjs`);
-
-// Pune, India — the real HQ location behind the Dice.tech numbers this lab
-// is built on (see profile.ts). The route drawn on the canvas above this map
-// is NOT georeferenced to these coordinates — it's a fixed decorative loop —
-// so the map is deliberately non-interactive (no pan/zoom) to keep the two
-// layers from drifting apart visually.
-const MAP_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
-const MAP_CENTER: [number, number] = [73.8567, 18.5204];
 
 /**
  * The Signal Lab — the "50% → 95%" claim, running live, twice: this is the
  * production location engine from Dice.tech, rebuilt from scratch as
- * Mileway's location engine. A vehicle drives a five-zone loop — open road,
+ * Mileway's location engine. A vehicle drives a five-zone route — open road,
  * urban canyon, tunnel, highway on-ramp, parking structure — each modeling a
  * documented real-world way GPS lies. Four pipeline stages (jitter
  * suppression, spike rejection, IMU fusion, device-tier sampling) are
  * independently toggleable, and a four-bucket distance accumulator —
  * confirmed / reckoned / rejected against ground truth — scores the trip
- * live. Plain canvas, no deps; reduced motion gets a single pre-run frame.
+ * live. Reduced motion gets a single pre-run frame.
+ *
+ * Runs over a real Leaflet + CARTO dark-tiles basemap (raster <img> tiles,
+ * no WebGL, no Web Worker) anchored on Pune, India — Siddharth's real
+ * location per profile.ts. An earlier pass tried MapLibre GL JS (vector,
+ * WebGL, Worker-based); its worker silently never acknowledged the main
+ * thread's setup messages in production despite loading correctly (no
+ * error, no tile ever requested) — a WebKit/bundled-worker interaction we
+ * couldn't pin down in the time available. Leaflet has no such moving part:
+ * tiles are plain images, so this can't hit the same failure mode. The map
+ * is non-interactive (no pan/zoom) — the route drawn on the canvas above it
+ * is a decorative path, not georeferenced to real streets.
  */
 
 type V = { x: number; y: number };
 type Tier = "flagship" | "budget";
+
+const MAP_CENTER: [number, number] = [18.5204, 73.8567]; // Pune, India (lat, lng)
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+// A winding waypoint route (city-block turns, not a smooth ellipse) so the
+// simulation reads as a real journey. Normalized to the canvas box; each
+// zone below claims a contiguous arc of these points. Catmull-Rom
+// interpolation (see trackAt) gives it road-like curved turns.
+const WAYPOINTS: [number, number][] = [
+  [0.12, 0.28],
+  [0.42, 0.2],
+  [0.68, 0.28],
+  [0.82, 0.42],
+  [0.88, 0.58],
+  [0.78, 0.7],
+  [0.7, 0.82],
+  [0.6, 0.9],
+  [0.4, 0.92],
+  [0.2, 0.86],
+  [0.1, 0.68],
+  [0.08, 0.5],
+  [0.14, 0.38],
+];
 
 type Zone = {
   id: string;
@@ -81,14 +99,29 @@ function rng(seed: number) {
   };
 }
 
-// Ground truth: a single closed loop (not the old figure-eight), parameterized by u ∈ [0,1).
+// Catmull-Rom spline through 4 control points — gives the route curved,
+// road-like turns at each waypoint instead of sharp polyline corners.
+function catmullRom(p0: V, p1: V, p2: V, p3: V, t: number): V {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return {
+    x: 0.5 * (2 * p1.x + (p2.x - p0.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (3 * p1.x - p0.x - 3 * p2.x + p3.x) * t3),
+    y: 0.5 * (2 * p1.y + (p2.y - p0.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (3 * p1.y - p0.y - 3 * p2.y + p3.y) * t3),
+  };
+}
+
+// Ground truth: a winding waypoint route (city-block turns), parameterized by u ∈ [0,1).
 function trackAt(u: number, w: number, h: number): V {
-  const cx = w * 0.5;
-  const cy = h * 0.52;
-  const rx = w * 0.38;
-  const ry = h * 0.34;
-  const theta = u * Math.PI * 2 - Math.PI / 2;
-  return { x: cx + rx * Math.cos(theta), y: cy + ry * Math.sin(theta) };
+  const uu = ((u % 1) + 1) % 1;
+  const n = WAYPOINTS.length;
+  const scaled = uu * n;
+  const i = Math.floor(scaled);
+  const t = scaled - i;
+  const at = (k: number) => {
+    const p = WAYPOINTS[((k % n) + n) % n];
+    return { x: p[0] * w, y: p[1] * h };
+  };
+  return catmullRom(at(i - 1), at(i), at(i + 1), at(i + 2), t);
 }
 
 function zoneAt(u: number): Zone {
@@ -132,21 +165,27 @@ export function SignalLabPane() {
     avgFilteredErr: 0,
   });
 
-  // Real, non-interactive MapLibre basemap behind the canvas — decorative
-  // backdrop only, the canvas-drawn route above it is not georeferenced.
+  // Real, non-interactive Leaflet + CARTO dark-tiles basemap behind the
+  // canvas — plain raster <img> tiles, no WebGL/Worker, so this can't hit
+  // the failure mode that broke the earlier MapLibre attempt.
   const mapContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container) return;
-    const map = new MapLibreMap({
-      container,
-      style: MAP_STYLE,
+    const map = L.map(container, {
       center: MAP_CENTER,
       zoom: 14,
-      interactive: false,
-      attributionControl: { compact: true },
+      zoomControl: false,
+      dragging: false,
+      touchZoom: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      attributionControl: true,
     });
-    const ro = new ResizeObserver(() => map.resize());
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: "abcd", maxZoom: 20 }).addTo(map);
+    const ro = new ResizeObserver(() => map.invalidateSize());
     ro.observe(container);
     return () => {
       ro.disconnect();
@@ -313,7 +352,7 @@ export function SignalLabPane() {
           if (prevZone) ctx.stroke();
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
-          ctx.strokeStyle = `${z.color}22`;
+          ctx.strokeStyle = `${z.color}55`;
           prevZone = z;
         } else {
           ctx.lineTo(p.x, p.y);
@@ -356,11 +395,20 @@ export function SignalLabPane() {
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
 
-      // raw GPS samples
+      // raw GPS trail — a jagged connecting line, not just dots, so the
+      // "noisy path" reads clearly at a glance against the smooth filtered
+      // trail below it (that contrast IS the optimization story).
+      if (rawTrail.length > 1) {
+        ctx.beginPath();
+        rawTrail.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
+        ctx.strokeStyle = "rgba(240, 136, 62, 0.45)";
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+      }
       for (const s of rawTrail) {
         ctx.beginPath();
         ctx.arc(s.p.x, s.p.y, s.spike ? 3 : 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = s.spike ? "#ff5c5c" : "rgba(240, 136, 62, 0.55)";
+        ctx.fillStyle = s.spike ? "#ff5c5c" : "rgba(240, 136, 62, 0.7)";
         ctx.fill();
       }
 
@@ -445,21 +493,21 @@ export function SignalLabPane() {
         OEM-throttled location updates all lied to the GPS chip in different ways. The fix was predictive
         dead reckoning, and the same engine got rebuilt from scratch as Mileway's location engine: GPS
         treated as a noisy signal, with jitter suppression, spike detection, IMU (accelerometer) fusion and
-        device-tier-adaptive sampling all feeding a four-bucket distance accumulator. Drive the loop below —
+        device-tier-adaptive sampling all feeding a four-bucket distance accumulator. Drive the route below —
         five zones, five ways GPS breaks — and flip each stage to watch the accuracy number move.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
           <div ref={mapContainerRef} className="signal-lab-map absolute inset-0" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-0 bg-void/55" />
+          <div className="pointer-events-none absolute inset-0 bg-void/35" />
           <canvas
             ref={canvasRef}
             className="pointer-events-none absolute inset-0 h-full w-full"
             aria-label="Live GPS journey simulation across five zones, over a map of Pune, India"
           />
           <style>{`
-            .signal-lab-map .maplibregl-ctrl-attrib { font-size: 9px; opacity: 0.55; background: transparent; }
-            .signal-lab-map .maplibregl-ctrl-bottom-right { bottom: 2px; right: 2px; }
+            .signal-lab-map .leaflet-control-attribution { font-size: 9px; opacity: 0.6; background: rgba(5,7,10,0.5); color: #a1a1aa; }
+            .signal-lab-map .leaflet-control-attribution a { color: #d4d4d8; }
           `}</style>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">

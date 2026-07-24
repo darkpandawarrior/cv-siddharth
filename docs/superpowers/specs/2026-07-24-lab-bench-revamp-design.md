@@ -79,9 +79,11 @@ justify one.
    Mileway location-engine challenge: open road (clean) → urban canyon
    (multipath spikes) → tunnel (total dropout) → highway on-ramp (high
    speed, sparse sampling) → parking structure (intermittent weak signal).
-   The route renders over a real MapLibre GL JS basemap (CARTO's free
-   dark-matter vector style, no API key) anchored on Pune, India — the
-   real location in `profile.ts` — instead of an abstract canvas track.
+   The route renders over a real Leaflet + CARTO dark raster-tile basemap
+   (no API key) anchored on Pune, India — the real location in
+   `profile.ts` — instead of an abstract canvas track. The route itself is
+   a hand-authored, winding waypoint path (Catmull-Rom spline, city-block
+   turns) rather than a smooth ellipse, so it reads as a real journey.
 
    Independently toggleable pipeline stages (checkboxes, not one combined
    switch):
@@ -106,12 +108,26 @@ justify one.
    links to both the Dice.tech case study and `/#project/mileway`, credited
    to both.
 
-   **Addendum (post-approval revision):** the first implementation pass
-   built this as an abstract canvas route per the original text above. On
-   review, that didn't read as a real "live journey simulation" or make
-   the optimization visible as a process — revised to add a real MapLibre
-   basemap + convergence chart on top of (not replacing) that first pass's
-   zone/pipeline logic, via a follow-up workflow.
+   **Addendum (post-approval revisions):** the first implementation pass
+   built this as an abstract canvas route. On review, that didn't read as a
+   real "live journey simulation" or make the optimization visible as a
+   process — a follow-up workflow added a MapLibre GL JS (vector, WebGL,
+   Worker-based) basemap + convergence chart on top of the zone/pipeline
+   logic. That shipped to production but never rendered any tiles: MapLibre's
+   worker loaded correctly (confirmed via resource-timing byte transfers) but
+   silently never acknowledged the main thread's setup messages — a
+   WebKit/bundled-worker interaction that took extensive debugging to even
+   characterize precisely (patched `Worker.prototype.postMessage` to confirm
+   messages were sent and never answered) and couldn't be root-caused in the
+   time available. Confirmed broken in the user's own real browser, not just
+   the test tooling. Replaced MapLibre with **Leaflet** — raster `<img>`
+   tiles, no WebGL, no Worker, so it can't hit the same failure mode — and
+   replaced the ellipse `trackAt()` with a waypoint-based Catmull-Rom route
+   so the path itself reads as a real journey, not a geometric shape. Also
+   restored a raw-GPS connecting line (dropped in the MapLibre-era rewrite)
+   so the noisy-raw-vs-smooth-filtered contrast — the actual optimization
+   story — is visible at a glance instead of requiring the reader to
+   interpret scattered dots.
 
 4. **White-label → real theme tokens + layout engine** (near-total rewrite).
    Replace the 5 fictional brand colors (mint/ocean/grape/ember/rose) with
@@ -154,10 +170,10 @@ No new content/data files — every number above already exists in
 
 ## Non-goals
 
-- No new npm dependencies except `maplibre-gl` for the Signal Lab basemap
-  (see Addendum above) — every other instrument stays plain canvas/SVG,
-  matching the existing labs, with no additional libraries and no runtime
-  network calls.
+- No new npm dependencies except `leaflet` (+ `@types/leaflet`) for the
+  Signal Lab basemap (see Addendum above) — every other instrument stays
+  plain canvas/SVG, matching the existing labs, with no additional
+  libraries and no runtime network calls.
 - No changes to `profile.ts` / `projectStats.ts` content — this is a new UI
   layer over existing data.
 - No changes to the AI chat assistant's system-prompt generation
