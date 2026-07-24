@@ -10,3 +10,7 @@ dist
 # build-time image derivatives (scripts/gen-images.mjs, regenerated in prebuild)
 public/**/*.avif
 public/**/*.webp
+
+# Playwright output
+test-results/
+playwright-report/
