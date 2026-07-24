@@ -3,6 +3,7 @@ import { projects } from "../data/profile.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { ProjectDetail } from "../ProjectDetail.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
 
 export const Route = createFileRoute("/project/$slug")({
   head: ({ params }) => {
@@ -17,6 +18,12 @@ export const Route = createFileRoute("/project/$slug")({
     const og = p?.detail
       ? `https://cv-siddharth.vercel.app/p/${params.slug}/og.png`
       : "https://cv-siddharth.vercel.app/og-image.png";
+    // Guard: an unknown slug (p undefined) still needs valid meta above, but
+    // gets no JSON-LD at all — schema.org data must describe a real project,
+    // not a placeholder.
+    const scripts = p
+      ? Object.values(buildProjectJsonLd(p)).map((jsonLd) => ({ type: "application/ld+json", children: JSON.stringify(jsonLd) }))
+      : undefined;
     return {
       meta: [
         { title },
@@ -28,6 +35,7 @@ export const Route = createFileRoute("/project/$slug")({
         { name: "twitter:image", content: og },
       ],
       links: [{ rel: "canonical", href: `https://cv-siddharth.vercel.app/project/${params.slug}` }],
+      scripts,
     };
   },
   component: ProjectPage,
