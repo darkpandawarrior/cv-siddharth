@@ -278,7 +278,7 @@ This moves all of `index.html`'s `<head>` into the root route and installs the b
     );
   }
   ```
-- [ ] `@fontsource` packages are installed in Task 21; if running this task first, temporarily comment the `@fontsource/*` imports and restore them in Task 21. (Prefer running Task 21 before first `npm run dev`.)
+- [ ] `@fontsource` packages are installed in Task 17; if running this task first, temporarily comment the `@fontsource/*` imports and restore them in Task 17. (Prefer running Task 17 before first `npm run dev`.)
 - [ ] Commit (with Task 4): `feat(shell): TanStack Start root document, head, and hash-compat shim`
 
 ### Group C — Routing migration (repeatable procedure)
