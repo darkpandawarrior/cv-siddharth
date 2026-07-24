@@ -20,7 +20,8 @@ export type Expr =
   | { t: "num"; value: number; unit?: "dp" | "sp"; ref?: string } // ref → read the number from state (e.g. size.dp)
   | { t: "bool"; value: boolean }
   | { t: "ident"; name: string }
-  | { t: "member"; path: string }; // Color.Green, Arrangement.Center, FontWeight.Bold…
+  | { t: "member"; path: string } // Color.Green, Arrangement.Center, FontWeight.Bold, password.isEmpty…
+  | { t: "logic"; op: "and" | "or"; left: Expr; right: Expr }; // a || b, a && b
 
 export type Modifier = { name: string; args: Expr[] };
 
@@ -35,6 +36,10 @@ export type Node =
   | { kind: "button"; onClick: Action[]; named: Record<string, Expr>; modifiers: Modifier[]; children: Node[] }
   | { kind: "spacer"; modifiers: Modifier[] }
   | { kind: "animated"; visible: Expr; modifiers: Modifier[]; children: Node[] }
+  // bindTo is the state var an `onValueChange = { name = it }` lambda assigns
+  // to — null if the AI wrote something the parser doesn't recognize, in
+  // which case the field still renders but won't feed back into state.
+  | { kind: "textfield"; value: Expr; bindTo: string | null; named: Record<string, Expr>; modifiers: Modifier[] }
   | { kind: "unknown"; name: string };
 
 export type StateDecl = { name: string; init: number | boolean | string };
@@ -104,7 +109,7 @@ function tokenize(src: string): Tok[] {
     }
     // multi-char punctuation
     const two = src.slice(i, i + 2);
-    if (["++", "--", "+=", "-=", "==", "!=", "->"].includes(two)) { toks.push({ k: "punc", v: two }); i += 2; continue; }
+    if (["++", "--", "+=", "-=", "==", "!=", "->", "||", "&&"].includes(two)) { toks.push({ k: "punc", v: two }); i += 2; continue; }
     // single-char punctuation
     if ("{}()[].,=!+-*/:<>".includes(c)) { toks.push({ k: "punc", v: c }); i++; continue; }
     // anything else — skip so a stray char never wedges the parser
@@ -180,6 +185,7 @@ class Parser {
     if (name === "Button") return this.parseButton();
     if (name === "Spacer") return this.parseSpacer();
     if (name === "AnimatedVisibility") return this.parseAnimated();
+    if (name === "TextField" || name === "OutlinedTextField" || name === "BasicTextField") return this.parseTextField();
     if (CONTAINERS.has(name)) return this.parseContainer(name as "Column");
     // Unknown composable: consume its call + trailing lambda so we can keep going.
     this.next();
@@ -208,6 +214,13 @@ class Parser {
     return { kind: "spacer", modifiers };
   }
 
+  private parseTextField(): Node {
+    this.next(); // TextField / OutlinedTextField / BasicTextField
+    const { named, modifiers, onValueChange } = this.parseArgs();
+    const value = named.value ?? { t: "str", parts: [""] };
+    return { kind: "textfield", value, bindTo: onValueChange ?? null, named, modifiers };
+  }
+
   private parseAnimated(): Node {
     this.next(); // AnimatedVisibility
     const { named, modifiers, positional } = this.parseArgs();
@@ -224,12 +237,14 @@ class Parser {
   }
 
   /** Parse an optional (...) argument list: positional exprs, named k=v, a bare
-   *  Modifier chain, and onClick = { actions }. All parts optional. */
-  private parseArgs(): { positional: Expr[]; named: Record<string, Expr>; modifiers: Modifier[]; onClick?: Action[] } {
+   *  Modifier chain, onClick = { actions }, and onValueChange = { name = it }.
+   *  All parts optional. */
+  private parseArgs(): { positional: Expr[]; named: Record<string, Expr>; modifiers: Modifier[]; onClick?: Action[]; onValueChange?: string | null } {
     const positional: Expr[] = [];
     const named: Record<string, Expr> = {};
     let modifiers: Modifier[] = [];
     let onClick: Action[] | undefined;
+    let onValueChange: string | null | undefined;
     if (!this.atPunc("(")) return { positional, named, modifiers };
     this.eatPunc("(");
     while (!this.atPunc(")") && this.peek()) {
@@ -239,6 +254,7 @@ class Parser {
         this.next(); // =
         if (key === "onClick") onClick = this.parseActionLambda();
         else if (key === "modifier") modifiers = this.parseModifierChain();
+        else if (key === "onValueChange") onValueChange = this.parseValueChangeBinding();
         else named[key] = this.parseExpr();
       } else if (this.atId("Modifier")) {
         modifiers = this.parseModifierChain();
@@ -249,7 +265,28 @@ class Parser {
       else break;
     }
     this.eatPunc(")");
-    return { positional, named, modifiers, onClick };
+    return { positional, named, modifiers, onClick, onValueChange };
+  }
+
+  // { username = it } — the one shape that matters: bind the field straight
+  // to a state var. Anything else in the lambda is skipped, not fatal.
+  private parseValueChangeBinding(): string | null {
+    if (!this.atPunc("{")) return null;
+    this.eatPunc("{");
+    let bound: string | null = null;
+    if (this.peek()?.k === "id" && this.atPunc("=", 1) && this.atId("it", 2)) {
+      bound = (this.next() as Tok).v; // the state var name
+      this.next(); // =
+      this.next(); // it
+    }
+    let depth = 1;
+    while (depth > 0 && this.peek()) {
+      if (this.atPunc("{")) depth++;
+      else if (this.atPunc("}")) { depth--; if (depth === 0) break; }
+      this.next();
+    }
+    this.eatPunc("}");
+    return bound;
   }
 
   // Modifier.padding(16.dp).fillMaxWidth()...
@@ -316,7 +353,18 @@ class Parser {
     return children;
   }
 
+  // a.isEmpty() || b.isEmpty() — left-associative, no precedence between
+  // && and || (this subset never needs it); each side is a plain atom.
   private parseExpr(): Expr {
+    let left = this.parseAtom();
+    while (this.atPunc("||") || this.atPunc("&&")) {
+      const op: "and" | "or" = (this.next() as Tok).v === "||" ? "or" : "and";
+      left = { t: "logic", op, left, right: this.parseAtom() };
+    }
+    return left;
+  }
+
+  private parseAtom(): Expr {
     const t = this.peek();
     if (!t) return { t: "str", parts: [""] };
     if (t.k === "str") { this.next(); return { t: "str", parts: parseInterpolation(t.v) }; }

@@ -112,6 +112,17 @@ function resolveBool(expr: Expr | undefined, state: StateMap): boolean {
   if (expr.t === "num") return expr.value !== 0;
   if (expr.t === "ident") return !!state[expr.name];
   if (expr.t === "str") return resolveText(expr, state) === "true";
+  if (expr.t === "logic") return expr.op === "and" ? resolveBool(expr.left, state) && resolveBool(expr.right, state) : resolveBool(expr.left, state) || resolveBool(expr.right, state);
+  if (expr.t === "member") {
+    // stateVar.isEmpty() / stateVar.isNotEmpty() — the one method-call shape
+    // AI-generated visibility conditions actually reach for (see GEN_RULES).
+    const m = expr.path.match(/^(\w+)\.(isEmpty|isNotEmpty)$/);
+    if (m) {
+      const v = state[m[1]];
+      const empty = typeof v === "string" ? v.length === 0 : !v;
+      return m[2] === "isEmpty" ? empty : !empty;
+    }
+  }
   return true;
 }
 
@@ -184,7 +195,7 @@ function arrangementStyle(name: string, named: Record<string, Expr>): CSSPropert
 
 /* ── AST → Android-styled React ──────────────────────────────────────── */
 
-function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, key: number): ReactNode {
+function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, key: number, onTextChange: (name: string, value: string) => void): ReactNode {
   switch (node.kind) {
     case "container": {
       const base: CSSProperties = { display: "flex", boxSizing: "border-box", transition: TRANSITION };
@@ -199,12 +210,12 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
         base.overflow = "hidden";
       }
       const style = { ...base, ...arrangementStyle(node.name, node.named), ...modifierStyle(node.modifiers, state) };
-      const kids = node.children.map((c, i) => renderNode(c, state, dispatch, i));
+      const kids = node.children.map((c, i) => renderNode(c, state, dispatch, i, onTextChange));
       if (node.name === "Box") {
         return (
           <div key={key} style={style}>
             {node.children.map((c, i) => (
-              <div key={i} style={{ gridArea: "1 / 1" }}>{renderNode(c, state, dispatch, i)}</div>
+              <div key={i} style={{ gridArea: "1 / 1" }}>{renderNode(c, state, dispatch, i, onTextChange)}</div>
             ))}
           </div>
         );
@@ -282,9 +293,36 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
       return (
         <div key={key} style={style}>
           <div style={{ overflow: "hidden", minHeight: 0 }}>
-            {node.children.map((c, i) => renderNode(c, state, dispatch, i))}
+            {node.children.map((c, i) => renderNode(c, state, dispatch, i, onTextChange))}
           </div>
         </div>
+      );
+    }
+    case "textfield": {
+      const bound = node.bindTo;
+      const shown = bound ? String(state[bound] ?? "") : resolveText(node.value, state);
+      const isPassword = !!bound && /pass/i.test(bound);
+      const style: CSSProperties = {
+        padding: "10px 14px",
+        borderRadius: 10,
+        border: "1px solid #243029",
+        background: "#0f1512",
+        color: "#e8efe9",
+        fontSize: 14,
+        fontFamily: "var(--font-body)",
+        outline: "none",
+        transition: TRANSITION,
+        ...modifierStyle(node.modifiers, state),
+      };
+      return (
+        <input
+          key={key}
+          type={isPassword ? "password" : "text"}
+          value={shown}
+          onChange={(e) => bound && onTextChange(bound, e.target.value)}
+          placeholder={bound ?? "text field"}
+          style={style}
+        />
       );
     }
     case "unknown":
@@ -495,8 +533,9 @@ Use ONLY this subset:
 - Layout: Column(...) { }, Row(...) { }, Box(...) { }, Card(...) { }
 - Text("literal or \$stateVar", color = Color.X, fontSize = N.sp, fontWeight = FontWeight.Bold)
 - Button(onClick = { STATE_MUTATION }) { Text("...") }
+- TextField(value = stateVar, onValueChange = { stateVar = it }, modifier = Modifier...) — stateVar MUST be a string var declared with mutableStateOf(""); onValueChange MUST be exactly "{ stateVar = it }", no other form. Name the var "password"/"confirmPassword" etc. (containing "pass") to get a masked field automatically — do not add a visualTransformation param, it's not supported.
 - Spacer(Modifier.height(N.dp)) or Spacer(Modifier.width(N.dp))
-- AnimatedVisibility(visible = boolState) { ... }
+- AnimatedVisibility(visible = CONDITION) { ... } — CONDITION is a bool state var, OR stringStateVar.isEmpty() / .isNotEmpty(), optionally combined with || or && (e.g. password.isEmpty() || username.isEmpty()). No other method calls or comparisons are supported.
 - Modifier chain: .padding(N.dp).fillMaxWidth().fillMaxSize().size(N.dp).height(N.dp).width(N.dp).background(COLOR).clip(RoundedCornerShape(N.dp)) or .clip(CircleShape).weight(N.dp)
 - State: var name by remember { mutableStateOf(0) } (or false, or "text"); mutate in onClick as name++, name--, name += 2, name = !name; a size can be state: Modifier.size(name.dp)
 - COLOR is Color.Green/Red/Blue/Cyan/Magenta/Yellow/White/Black/Gray/LightGray/DarkGray or Color(0xFFRRGGBB)
@@ -581,7 +620,7 @@ function applyActions(node: Node, state: StateMap): StateMap {
 
 /* ── component ───────────────────────────────────────────────────────── */
 
-const SUPPORTED = `Column · Row · Box · Card · Text · Button · Spacer · AnimatedVisibility · Modifier(padding, size, fillMax…, background, clip, weight) · remember { mutableStateOf() } · state-driven size.dp · onClick + haptics · imported themes: ${DS_APPS.map((n) => `${n}.accent`).join(", ")}`;
+const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField · Spacer · AnimatedVisibility · Modifier(padding, size, fillMax…, background, clip, weight) · remember { mutableStateOf() } · state-driven size.dp · onClick + haptics · imported themes: ${DS_APPS.map((n) => `${n}.accent`).join(", ")}`;
 
 export default function ComposePlayground() {
   const [code, setCode] = useState(PRESETS[0].code);
@@ -638,6 +677,7 @@ export default function ComposePlayground() {
   }, [sig, program]);
 
   const dispatch = (node: Node) => setState((s) => applyActions(node, s));
+  const onTextChange = (name: string, value: string) => setState((s) => ({ ...s, [name]: value }));
 
   const lineCount = code.split("\n").length;
 
@@ -793,7 +833,7 @@ export default function ComposePlayground() {
                   </div>
                 ) : program ? (
                   <div className="flex h-full flex-col">
-                    {program.tree.map((n, i) => renderNode(n, state, dispatch, i))}
+                    {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
                   </div>
                 ) : null}
               </div>
