@@ -47,6 +47,7 @@
     "tldraw": "^5.2.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
     "@babel/core": "8.0.1",
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "0.15.1",
