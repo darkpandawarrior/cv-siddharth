@@ -50,7 +50,7 @@ class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean 
         >
           <RotateCcw size={15} /> Reset the canvas & reload
         </button>
-        <BackToPortfolio className="text-sm text-zinc-500 transition hover:text-accent">
+        <BackToPortfolio className="text-sm text-muted transition hover:text-accent">
           ← Back to the portfolio
         </BackToPortfolio>
       </div>
@@ -76,7 +76,7 @@ const MODES: { id: Mode; label: string; icon: typeof Orbit; needsWebGL: boolean;
   { id: "sketch", label: "Sketch", icon: Pencil, needsWebGL: false, tagline: "an infinite sketch canvas", hint: "Draw, drag and leave notes on a 2D whiteboard" },
 ];
 
-const loadingFallback = <div className="flex h-full items-center justify-center font-mono text-sm text-zinc-500">loading…</div>;
+const loadingFallback = <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading…</div>;
 
 function BlueprintRoomInner() {
   const [mode, setMode] = useState<Mode>(() => (hasWebGL() ? "fly" : "sketch"));
@@ -106,7 +106,7 @@ function BlueprintRoomInner() {
           <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
           </BackToPortfolio>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
+          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
           </span>
           <div className="flex items-center gap-2 sm:gap-3">

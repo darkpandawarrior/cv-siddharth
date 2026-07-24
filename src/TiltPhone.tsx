@@ -125,17 +125,17 @@ export function TiltPhone() {
               />
               <circle className="gps-pulse" cx="156" cy="8" r="4" fill="var(--color-accent)" />
             </svg>
-            <p className="mt-1 text-[9px] text-zinc-500">accuracy 95% · spike-filtered</p>
+            <p className="mt-1 text-[9px] text-muted">accuracy 95% · spike-filtered</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-card p-2.5">
               <p className="font-display text-base font-bold text-accent">50k+</p>
-              <p className="text-[9px] leading-tight text-zinc-500">monthly users</p>
+              <p className="text-[9px] leading-tight text-muted">monthly users</p>
             </div>
             <div className="rounded-xl bg-card p-2.5">
               <p className="font-display text-base font-bold text-accent">-80%</p>
-              <p className="text-[9px] leading-tight text-zinc-500">crashes</p>
+              <p className="text-[9px] leading-tight text-muted">crashes</p>
             </div>
           </div>
 

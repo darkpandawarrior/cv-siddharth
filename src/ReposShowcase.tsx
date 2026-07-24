@@ -127,14 +127,14 @@ function RepoCard({ r }: { r: Repo }) {
           <GitBranch size={14} style={{ color: r.accent }} className="shrink-0" />
           <span className="truncate font-mono text-sm font-semibold text-zinc-100">{r.path}</span>
         </div>
-        <ArrowUpRight size={15} className="shrink-0 text-zinc-600 transition group-hover:text-accent" />
+        <ArrowUpRight size={15} className="shrink-0 text-muted transition group-hover:text-accent" />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
         <span className="flex items-center gap-1.5 font-mono text-zinc-400">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: LANG[r.lang] ?? "#8b96a0" }} />
           {r.lang}
         </span>
-        <span className="rounded-full border border-line px-2 py-0.5 font-mono text-zinc-500">{r.kind}</span>
+        <span className="rounded-full border border-line px-2 py-0.5 font-mono text-muted">{r.kind}</span>
       </div>
       <p className="mt-3 grow text-sm leading-relaxed text-zinc-400">{r.role}</p>
       <p className="mt-4 font-mono text-[11px]" style={{ color: r.accent }}>
@@ -149,7 +149,7 @@ function RepoGroup({ label, hint, repos }: { label: string; hint: string; repos:
     <div className="mt-8 first:mt-0">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h4 className="font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">{label}</h4>
-        <span className="font-mono text-[11px] text-zinc-600">{hint}</span>
+        <span className="font-mono text-[11px] text-muted">{hint}</span>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {repos.map((r) => (
@@ -166,7 +166,7 @@ export function ReposShowcase() {
       <div id="source" className="mt-14 scroll-mt-24">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the source</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the source</p>
             <h3 className="font-display text-h2 font-bold tracking-tight">It's all public</h3>
             <p className="mt-2 max-w-2xl text-zinc-400">
               Every app, the libraries they share, the tooling, and the upstream PRs — open, and one click away.
@@ -190,7 +190,7 @@ export function ReposShowcase() {
         <div className="mt-8">
           <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h4 className="font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">Merged upstream</h4>
-            <span className="font-mono text-[11px] text-zinc-600">career-ops · a public OSS project (⭐60k+)</span>
+            <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐60k+)</span>
           </div>
           <ul className="space-y-2">
             {openSource.map((c) => (
@@ -203,10 +203,10 @@ export function ReposShowcase() {
                 >
                   <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
                   <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
-                  <span className="font-mono text-xs text-zinc-500">{c.repo}</span>
+                  <span className="font-mono text-xs text-muted">{c.repo}</span>
                   <span className="ml-auto flex items-center gap-2">
                     <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
-                    <span className="font-mono text-[11px] text-zinc-600">{c.date}</span>
+                    <span className="font-mono text-[11px] text-muted">{c.date}</span>
                   </span>
                 </a>
               </li>
@@ -216,7 +216,7 @@ export function ReposShowcase() {
             href="https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior"
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-zinc-500 transition hover:text-accent"
+            className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
           >
             <Star size={11} /> all my PRs on career-ops <ArrowUpRight size={11} />
           </a>

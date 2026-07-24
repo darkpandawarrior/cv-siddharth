@@ -33,7 +33,7 @@ export function WritingSection() {
     <section id="writing" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the loopdown</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
           <p className="mb-10 max-w-2xl text-zinc-400">
             Field notes from real Android and KMP work, told through a recurring cast of personified
@@ -69,7 +69,7 @@ export function WritingSection() {
                   <div className="mt-auto pt-5">
                     {featuredLinks.length > 0 && (
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Read on</span>
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Read on</span>
                         {featuredLinks.map((p) => (
                           <a
                             key={p.key}
@@ -113,7 +113,7 @@ export function WritingSection() {
                       <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: accent }}>
                         {titleize(l.series) || l.pillar}
                       </span>
-                      <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-zinc-500">
+                      <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-muted">
                         SOON
                       </span>
                     </div>
@@ -146,7 +146,7 @@ export function WritingSection() {
               >
                 <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
                 {s.title}
-                <span className="text-xs text-zinc-500">{s.episodes}</span>
+                <span className="text-xs text-muted">{s.episodes}</span>
               </Link>
             ))}
           </div>
@@ -163,7 +163,7 @@ export function WritingSection() {
                 <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
                   <BookOpen size={15} className="text-accent" /> The archive
                 </span>
-                <ArrowRight size={14} className="text-zinc-500 transition group-hover:translate-x-1 group-hover:text-accent" />
+                <ArrowRight size={14} className="text-muted transition group-hover:translate-x-1 group-hover:text-accent" />
               </div>
               <p className="mt-2 text-sm leading-snug text-zinc-400">
                 {archive.length} pieces of short fiction, campus lore, satire and essays — everything I
@@ -180,7 +180,7 @@ export function WritingSection() {
                 <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
                   <PenLine size={15} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
                 </span>
-                <ArrowUpRight size={14} className="text-zinc-500 transition group-hover:text-accent2" />
+                <ArrowUpRight size={14} className="text-muted transition group-hover:text-accent2" />
               </div>
               <p className="mt-2 text-sm leading-snug text-zinc-400">{BOOKS_BEFORE_BROS.blurb}</p>
             </a>
@@ -188,7 +188,7 @@ export function WritingSection() {
         </Reveal>
 
         <Reveal delay={140}>
-          <p className="mt-6 text-xs text-zinc-500">
+          <p className="mt-6 text-xs text-muted">
             Synced from{" "}
             <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="text-zinc-400 underline decoration-line underline-offset-2 transition hover:text-accent">
               github.com/darkpandawarrior/the-loopdown

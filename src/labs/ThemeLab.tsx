@@ -37,7 +37,7 @@ function HeroPreview({ client, brand }: { client: string; brand: BrandToken }) {
             {client}
           </span>
         </div>
-        <div className="hidden gap-5 font-mono text-xs text-zinc-500 sm:flex">
+        <div className="hidden gap-5 font-mono text-xs text-muted sm:flex">
           <span>Rides</span>
           <span>Fleet</span>
           <span>Support</span>
@@ -70,11 +70,11 @@ function HeroPreview({ client, brand }: { client: string; brand: BrandToken }) {
           <div className="flex gap-5">
             <div>
               <div className="text-lg font-bold" style={{ color: brand.color }}>20+</div>
-              <div className="font-mono text-[10px] text-zinc-500">clients, one token</div>
+              <div className="font-mono text-[10px] text-muted">clients, one token</div>
             </div>
             <div>
               <div className="text-lg font-bold" style={{ color: brand.color }}>80%</div>
-              <div className="font-mono text-[10px] text-zinc-500">faster delivery</div>
+              <div className="font-mono text-[10px] text-muted">faster delivery</div>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function ThemeLab() {
               ))}
             </div>
             <div className="border-t border-line px-5 py-3">
-              <p className="mb-2 font-mono text-[10px] text-zinc-600">+16 more clients on the same brand token</p>
+              <p className="mb-2 font-mono text-[10px] text-muted">+16 more clients on the same brand token</p>
               <div className="flex flex-wrap gap-1.5">
                 {MORE_CLIENTS.map((code, i) => (
                   <span
@@ -156,14 +156,14 @@ export function ThemeLab() {
         ) : (
           <>
             <div className="flex flex-wrap gap-2 border-b border-line px-5 py-3">
-              <span className="font-mono text-[10px] text-zinc-600">preview client:</span>
+              <span className="font-mono text-[10px] text-muted">preview client:</span>
               {CLIENTS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setHeroClient(c)}
                   aria-pressed={heroClient === c}
                   className={`rounded-full border px-2.5 py-1 font-mono text-[10px] transition ${
-                    heroClient === c ? "border-accent text-accent" : "border-line text-zinc-500 hover:text-zinc-300"
+                    heroClient === c ? "border-accent text-accent" : "border-line text-muted hover:text-zinc-300"
                   }`}
                 >
                   {c}
@@ -176,17 +176,17 @@ export function ThemeLab() {
 
         {/* Static — anchors the 80% claim in the actual before/after, not just the label. */}
         <div className="border-t border-line px-5 py-4">
-          <p className="mb-2 font-mono text-[10px] text-zinc-600">delivery time, per client</p>
+          <p className="mb-2 font-mono text-[10px] text-muted">delivery time, per client</p>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="w-14 shrink-0 font-mono text-[10px] text-zinc-500">manual</span>
+              <span className="w-14 shrink-0 font-mono text-[10px] text-muted">manual</span>
               <div className="h-2 flex-1 rounded-full bg-zinc-800">
                 <div className="h-2 rounded-full bg-zinc-600" style={{ width: "100%" }} />
               </div>
               <span className="w-16 shrink-0 text-right font-mono text-[10px] text-zinc-400">~3 weeks</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-14 shrink-0 font-mono text-[10px] text-zinc-500">pipeline</span>
+              <span className="w-14 shrink-0 font-mono text-[10px] text-muted">pipeline</span>
               <div className="h-2 flex-1 rounded-full bg-zinc-800">
                 <div className="h-2 rounded-full" style={{ width: "14%", background: brand.color }} />
               </div>
@@ -206,7 +206,7 @@ export function ThemeLab() {
             hero layout
           </label>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs text-zinc-500">brand token:</span>
+            <span className="font-mono text-xs text-muted">brand token:</span>
             {BRANDS.map((b) => (
               <button
                 key={b.name}
@@ -230,7 +230,7 @@ export function ThemeLab() {
               {flips} {flips === 1 ? "change" : "changes"} · {flips * (CLIENTS.length + MORE_CLIENTS.length)} client updates · 0 forks
             </span>
           )}
-          <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
             the full story → 20+ clients, one pipeline
           </button>
         </div>

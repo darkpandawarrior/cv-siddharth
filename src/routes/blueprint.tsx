@@ -10,7 +10,7 @@ export const Route = createFileRoute("/blueprint")({
   component: () => (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center font-mono text-sm text-zinc-500">
+        <div className="flex h-screen items-center justify-center font-mono text-sm text-muted">
           drafting the blueprint room…
         </div>
       }

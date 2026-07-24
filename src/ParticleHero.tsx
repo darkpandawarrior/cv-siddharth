@@ -60,7 +60,7 @@ export function ParticleHero() {
         <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
       </Suspense>
       {dragEnabled && (
-        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-muted">
           drag to spin
         </span>
       )}

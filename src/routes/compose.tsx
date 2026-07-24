@@ -11,7 +11,7 @@ export const Route = createFileRoute("/compose")({
   component: () => (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-zinc-500">
+        <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-muted">
           spinning up the compose playground…
         </div>
       }

@@ -13,7 +13,7 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
   if (notes.length === 0) return null;
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
-      <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+      <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted">
         <PenLine size={10} /> field notes
       </span>
       {notes.map((n) => (
@@ -26,7 +26,7 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
         >
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
           {n.title}
-          <span className="text-[10px] text-zinc-500">{n.episodes}</span>
+          <span className="text-[10px] text-muted">{n.episodes}</span>
         </Link>
       ))}
     </div>

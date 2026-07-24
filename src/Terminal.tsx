@@ -102,7 +102,7 @@ function A({ dest, children, ext }: { dest: string; children: ReactNode; ext?: b
     </Link>
   );
 }
-const Dim = ({ children }: { children: ReactNode }) => <span className="text-zinc-500">{children}</span>;
+const Dim = ({ children }: { children: ReactNode }) => <span className="text-muted">{children}</span>;
 const Hi = ({ children }: { children: ReactNode }) => <span className="text-[var(--t-accent)]">{children}</span>;
 
 /* The signature — kept ASCII so it renders in the terminal's mono grid. */
@@ -554,7 +554,7 @@ function buildCommands(jump: Go): Cmd[] {
                   <Dim> → {lib.usedBy.join(", ")}</Dim>
                 </div>
               ))}
-              <div className="ml-3 text-zinc-500">
+              <div className="ml-3 text-muted">
                 so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
               </div>
             </div>
@@ -954,7 +954,7 @@ export function Terminal() {
         <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
           <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to portfolio</span>
         </button>
-        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
           <TerminalSquare size={13} className="text-[var(--t-accent)]" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh
         </span>
@@ -998,7 +998,7 @@ export function Terminal() {
                 className="w-full bg-transparent text-zinc-100 caret-[var(--t-accent)] outline-none"
               />
               {ghost && (
-                <span className="pointer-events-none absolute left-0 top-0 whitespace-pre text-zinc-600">
+                <span className="pointer-events-none absolute left-0 top-0 whitespace-pre text-muted">
                   <span className="invisible">{value}</span>
                   {ghost}
                 </span>
@@ -1024,7 +1024,7 @@ function Caret() {
   return (
     <span className="mr-2 shrink-0 select-none whitespace-pre">
       <span className="text-[var(--t-accent)]">{PROMPT_USER}@{PROMPT_HOST}</span>
-      <span className="text-zinc-500">:~$</span>
+      <span className="text-muted">:~$</span>
     </span>
   );
 }

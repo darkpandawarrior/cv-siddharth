@@ -181,11 +181,11 @@ export function ModuleGraphLab() {
           <span className={`font-mono text-xs ${isolate ? "text-accent" : "text-[#ff5c5c]"}`}>
             cross-feature dependencies: {crossDeps}
           </span>
-          <span className="font-mono text-xs text-zinc-500">46 modules total · 36 local + 10 composed</span>
+          <span className="font-mono text-xs text-muted">46 modules total · 36 local + 10 composed</span>
           <Link
             to="/project/$slug"
             params={{ slug: "mileway" }}
-            className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
+            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
             the full story → Mileway's 46 modules
           </Link>

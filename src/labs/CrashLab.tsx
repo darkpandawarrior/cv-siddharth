@@ -139,11 +139,11 @@ export function CrashLab() {
             <input type="checkbox" checked={triage} onChange={(e) => setTriage(e.target.checked)} className="accent-[#3ddc84]" />
             cluster by root cause
           </label>
-          <span className="font-mono text-xs text-zinc-500">{stats.total} traces seen</span>
+          <span className="font-mono text-xs text-muted">{stats.total} traces seen</span>
           {triage && (
             <span className="font-mono text-xs text-accent">top 2 clusters = {stats.top}% of all crashes</span>
           )}
-          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
             the full story → the coroutine court
           </Link>
         </div>

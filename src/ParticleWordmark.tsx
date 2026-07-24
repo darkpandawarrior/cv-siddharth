@@ -238,7 +238,7 @@ export function ParticleWordmark() {
     <section id="forge" className="border-t border-line bg-void/40">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the particle forge</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the particle forge</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Move your cursor through it</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
             Every experiment on this page is physics on a canvas. So is this — a few thousand particles,

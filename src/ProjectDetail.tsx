@@ -41,7 +41,7 @@ function NextProject({ slug }: { slug: string }) {
           className="card-elevated group flex items-center justify-between gap-4 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50"
         >
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-accent/60">next build</p>
+            <p className="font-mono text-[11px] uppercase tracking-widest text-accent/70">next build</p>
             <p className="font-display mt-1 text-xl font-bold transition group-hover:text-accent">{next.name}</p>
             <p className="mt-1 text-sm text-zinc-400">{next.tagline}</p>
           </div>
@@ -89,7 +89,7 @@ function AutoVideo({ src, caption }: { src: string; caption: string }) {
       <div className="device glow-pulse">
         <video ref={ref} src={src} muted loop playsInline preload="metadata" className="block w-full" />
       </div>
-      <figcaption className="mt-3 text-center text-xs text-zinc-500">{caption}</figcaption>
+      <figcaption className="mt-3 text-center text-xs text-muted">{caption}</figcaption>
     </figure>
   );
 }
@@ -173,7 +173,7 @@ function ShareProject({ slug, name }: { slug: string; name: string }) {
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="reveal mb-8">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// {eyebrow}</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// {eyebrow}</p>
       <h2 className="font-display text-h2 font-bold tracking-tight">{title}</h2>
     </div>
   );
@@ -291,7 +291,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <ArrowLeft size={16} /> All projects
           </button>
           <p className="rise-in mt-8 text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
-          <h1 className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight">
+          {/* Shared-element morph target: the home projects-grid card title of
+              the same `project-title-<slug>` name lifts into this hero heading
+              on card→detail navigation (View Transitions). rise-in stays for
+              direct loads, where no morph occurs. */}
+          <h1
+            className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight"
+            style={{ viewTransitionName: `project-title-${slug}` }}
+          >
             {project.name}
           </h1>
           <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
@@ -357,7 +364,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             >
               Field notes on this work <ArrowUpRight size={13} />
             </Link>
-            <span className="text-sm text-zinc-500">{project.status}</span>
+            <span className="text-sm text-muted">{project.status}</span>
           </div>
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
         </div>
@@ -511,9 +518,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <div className="section-y mx-auto max-w-6xl px-6">
             <div className="mb-8 flex items-center justify-between gap-4">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// gallery</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// gallery</p>
                 <h2 className="font-display text-h2 font-bold tracking-tight">
-                  Screens <span className="text-zinc-600">({items.length})</span>
+                  Screens <span className="text-muted">({items.length})</span>
                 </h2>
               </div>
               <div className="flex gap-2 print:hidden">
@@ -545,14 +552,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
                     <Picture src={it.src} alt={it.caption} className="aspect-[9/19] h-full w-full object-cover" />
                   </span>
                   {it.caption && (
-                    <span className="mt-2 line-clamp-2 block text-center text-xs text-zinc-500 transition group-hover/shot:text-accent">
+                    <span className="mt-2 line-clamp-2 block text-center text-xs text-muted transition group-hover/shot:text-accent">
                       {it.caption}
                     </span>
                   )}
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-center text-xs text-zinc-600 sm:text-left">Swipe or use the arrows · tap a screen to enlarge</p>
+            <p className="mt-3 text-center text-xs text-muted sm:text-left">Swipe or use the arrows · tap a screen to enlarge</p>
           </div>
         </section>
       )}
@@ -561,7 +568,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {d?.extraLinks && d.extraLinks.length > 0 && (
         <section className="border-t border-line bg-surface">
           <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-8">
-            <span className="text-xs font-semibold uppercase tracking-widest text-accent/60">Explore more</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent/70">Explore more</span>
             {d.extraLinks.map((l) => (
               <a
                 key={l.url}

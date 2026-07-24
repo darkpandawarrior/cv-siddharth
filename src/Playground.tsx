@@ -92,12 +92,12 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             <button
               type="button"
               onClick={() => goToSection("top")}
-              className="flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-accent"
+              className="flex items-center gap-1.5 text-sm text-muted transition hover:text-accent"
             >
               <ArrowLeft size={14} /> <span className="hidden sm:inline">Portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
+          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             {title} — {tagline}
           </span>
           <button
@@ -138,7 +138,7 @@ function RoomCard({ r, i }: { r: Room; i: number }) {
         >
           <Icon size={20} />
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">{r.tag}</span>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted">{r.tag}</span>
       </div>
       <h3 className="font-display mt-4 text-lg font-bold transition group-hover:text-accent">{r.label}</h3>
       <p className="mt-2 grow text-sm leading-relaxed text-zinc-400">{r.blurb}</p>
@@ -162,7 +162,7 @@ export default function Playground() {
           >
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
           </button>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
+          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
           <button
@@ -175,7 +175,7 @@ export default function Playground() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 sm:py-16">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the playground</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
         <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
@@ -188,7 +188,7 @@ export default function Playground() {
           ))}
         </div>
 
-        <p className="mt-10 font-mono text-[11px] text-zinc-600">
+        <p className="mt-10 font-mono text-[11px] text-muted">
           tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}
           <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">`</kbd> to jump anywhere.
         </p>

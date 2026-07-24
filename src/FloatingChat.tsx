@@ -168,11 +168,11 @@ export function FloatingChat() {
           <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
             <div>
               <p className="font-display text-sm font-bold">
-                Sid <span className="font-normal text-zinc-500">· AI assistant</span>
+                Sid <span className="font-normal text-muted">· AI assistant</span>
               </p>
-              <p className="text-xs text-zinc-500">Answers as Siddharth, powered by Claude</p>
+              <p className="text-xs text-muted">Answers as Siddharth, powered by Claude</p>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-zinc-500 hover:text-zinc-200">
+            <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-muted hover:text-zinc-200">
               <X size={18} />
             </button>
           </header>
@@ -188,7 +188,7 @@ export function FloatingChat() {
                 }
               >
                 {m.content === "" && busy && i === messages.length - 1 ? (
-                  <span className="animate-pulse text-zinc-500">thinking…</span>
+                  <span className="animate-pulse text-muted">thinking…</span>
                 ) : (
                   <Markdown>{m.content}</Markdown>
                 )}
@@ -222,7 +222,7 @@ export function FloatingChat() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about my work…"
               maxLength={2000}
-              className="flex-1 rounded-full border border-line bg-ink px-4 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-accent"
+              className="flex-1 rounded-full border border-line bg-ink px-4 py-2 text-sm text-zinc-100 placeholder-muted outline-none focus:border-accent"
             />
             <button
               type="submit"

@@ -189,12 +189,12 @@ export function CommandPalette() {
                 aria-expanded="true"
                 aria-controls="palette-list"
                 aria-activedescendant={filtered[activeIndex] ? `cmd-${filtered[activeIndex].id}` : undefined}
-                className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder-muted outline-none"
               />
-              <kbd className="hidden shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px] text-zinc-500 sm:block">esc</kbd>
+              <kbd className="hidden shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px] text-muted sm:block">esc</kbd>
             </div>
             <div ref={listRef} id="palette-list" role="listbox" className="max-h-[50vh] overflow-y-auto p-2">
-              {filtered.length === 0 && <p className="px-3 py-6 text-center text-sm text-zinc-500">No matches.</p>}
+              {filtered.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">No matches.</p>}
               {filtered.map((c, i) => (
                 <button
                   key={c.id}
@@ -213,9 +213,9 @@ export function CommandPalette() {
                     i === activeIndex ? "bg-accent/15 text-zinc-100" : "text-zinc-300"
                   }`}
                 >
-                  <span className={i === activeIndex ? "text-accent" : "text-zinc-500"}>{c.icon}</span>
+                  <span className={i === activeIndex ? "text-accent" : "text-muted"}>{c.icon}</span>
                   <span className="flex-1">{c.label}</span>
-                  <span className="flex items-center gap-1 text-xs text-zinc-500">
+                  <span className="flex items-center gap-1 text-xs text-muted">
                     {i === activeIndex && <CornerDownLeft size={12} />}
                     {c.hint}
                   </span>

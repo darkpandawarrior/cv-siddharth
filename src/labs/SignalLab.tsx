@@ -541,14 +541,14 @@ export function SignalLabPane() {
             <input type="checkbox" checked={tier === "budget"} onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")} className="accent-[#3ddc84]" />
             device tier: {tier}
           </label>
-          <span className="font-mono text-xs text-zinc-500">
+          <span className="font-mono text-xs text-muted">
             confirmed {stats.confirmed}m · reckoned {stats.reckoned}m · rejected {stats.rejected}m
           </span>
           <span className="font-mono text-xs text-accent">accuracy {stats.accuracy}%</span>
-          <span className="font-mono text-xs text-zinc-500">
+          <span className="font-mono text-xs text-muted">
             avg error — raw {stats.avgRawErr} · filtered {stats.avgFilteredErr} (relative)
           </span>
-          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-zinc-500">
+          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted">
             <button type="button" onClick={() => goToSection("work")} className="transition hover:text-accent">
               the full story → Dice.tech
             </button>

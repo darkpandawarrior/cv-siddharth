@@ -183,12 +183,12 @@ export function GatewayLab() {
               {stats.routed} calls routed · 66 gateways reachable · 0 gateway-specific code touched
             </span>
           ) : (
-            <span className="font-mono text-xs text-zinc-500">{stats.blocked} calls blocked · custom integration required per gateway</span>
+            <span className="font-mono text-xs text-muted">{stats.blocked} calls blocked · custom integration required per gateway</span>
           )}
           <Link
             to="/project/$slug"
             params={{ slug: "paymentslab" }}
-            className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
+            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
             the full story → PaymentsLab's 66 gateways
           </Link>

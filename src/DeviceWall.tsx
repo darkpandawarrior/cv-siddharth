@@ -136,7 +136,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-          <span className="ml-2 flex-1 truncate rounded-full bg-surface px-3 py-1 text-center font-mono text-[10px] text-zinc-500">
+          <span className="ml-2 flex-1 truncate rounded-full bg-surface px-3 py-1 text-center font-mono text-[10px] text-muted">
             {target.liveUrl ?? `${slug}.web (not deployed)`}
           </span>
           {target.liveUrl && (
@@ -150,8 +150,8 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
         ) : shots.length > 0 ? (
           <FitImage src={src(shots[shot])} alt={`${target.platform} — web`} targetAspect={16 / 9} className="aspect-video w-full" />
         ) : (
-          <div className="font-mono-os flex aspect-video w-full flex-col items-center justify-center gap-2 bg-black/40 text-xs text-zinc-500">
-            <Globe size={20} className="text-zinc-600" />
+          <div className="font-mono-os flex aspect-video w-full flex-col items-center justify-center gap-2 bg-black/40 text-xs text-muted">
+            <Globe size={20} className="text-muted" />
             web target coming
           </div>
         )}
@@ -171,7 +171,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-          <span className="ml-2 text-[10px] text-zinc-500">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
+          <span className="ml-2 text-[10px] text-muted">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
         </div>
         {shots.length > 0 && (
           <FitImage src={src(shots[shot])} alt={`${target.platform} window`} targetAspect={16 / 9} className="aspect-video w-full" />
@@ -313,7 +313,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
             ))}
           </div>
         )}
-        {target.note && <p className="mt-4 max-w-md text-center text-xs leading-relaxed text-zinc-500 mx-auto">{target.note}</p>}
+        {target.note && <p className="mt-4 max-w-md text-center text-xs leading-relaxed text-muted mx-auto">{target.note}</p>}
       </div>
     </div>
   );

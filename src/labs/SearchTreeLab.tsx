@@ -223,7 +223,7 @@ export function SearchTreeLab() {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-mono text-xs text-zinc-500">difficulty:</span>
+            <span className="font-mono text-xs text-muted">difficulty:</span>
             {TIERS.map((t, i) => (
               <button
                 key={t.label}
@@ -256,7 +256,7 @@ export function SearchTreeLab() {
           <Link
             to="/project/$slug"
             params={{ slug: "kursi" }}
-            className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent"
+            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
             the full story → Kursi's ISMCTS AI
           </Link>

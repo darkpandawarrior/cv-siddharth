@@ -80,7 +80,7 @@ export function LabBench() {
     <section id="lab" className="border-t border-line bg-void/40">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the lab bench</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
             Nine instruments spanning Dice.tech's production case studies and five personal open-source
@@ -98,7 +98,7 @@ export function LabBench() {
         </Reveal>
         <Reveal>
           <div className="mb-2">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-500 font-mono">Dice.tech — production</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Dice.tech — production</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "production").map((t) => (
                 <button
@@ -112,11 +112,11 @@ export function LabBench() {
                   }`}
                 >
                   {t.label}
-                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-zinc-600"}`}>{t.metric}</span>
+                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                 </button>
               ))}
             </div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-500 font-mono">Personal builds</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Personal builds</p>
             <div className="mb-6 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "personal").map((t) => (
                 <button
@@ -130,13 +130,13 @@ export function LabBench() {
                   }`}
                 >
                   {t.label}
-                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-zinc-600"}`}>{t.metric}</span>
+                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                 </button>
               ))}
             </div>
           </div>
           {tab === "signal" && (
-            <Suspense fallback={<div className="py-10 text-center font-mono text-sm text-zinc-500">loading signal lab…</div>}>
+            <Suspense fallback={<div className="py-10 text-center font-mono text-sm text-muted">loading signal lab…</div>}>
               <SignalLabPane />
             </Suspense>
           )}

@@ -610,7 +610,7 @@ function Scene({
 }
 
 const noWebGLFallback = (
-  <div className="flex h-full flex-col items-center justify-center gap-2 bg-void px-6 text-center font-mono text-sm text-zinc-500">
+  <div className="flex h-full flex-col items-center justify-center gap-2 bg-void px-6 text-center font-mono text-sm text-muted">
     <p>This browser can't run the 3D fly-through (no WebGL).</p>
     <p>Switch to Sketch mode above to explore the whiteboard instead.</p>
   </div>

@@ -12,24 +12,13 @@ for (const path of ROUTES) {
     await page.goto(path, { waitUntil: "networkidle" });
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      // ALLOWLIST (Phase C2, justified): `text-zinc-500`/`text-zinc-600`
-      // (#71717b / #52525c) are the site's pre-existing muted-caption/
-      // metadata text tokens, used site-wide (timestamps, eyebrows, tab
-      // labels, screenshot captions, "swipe to see more" hints, ...) —
-      // confirmed via a full axe dump across all 4 routes that every single
-      // color-contrast violation traces back to just these two tokens
-      // against the dark grounds (3.78–4.17:1 / 2.61:1 vs the 4.5:1 / 3:1
-      // AA floor). This is a sitewide design-token decision predating this
-      // pass, not something C2 introduced or can fix by editing one
-      // component — retuning it ripples through the whole muted-text
-      // hierarchy and is explicitly Phase B's call per the bold-overhaul
-      // plan ("contrast/color changes are Phase B's call"). Every other a11y
-      // issue axe found here (missing aria-labels, a prohibited aria-label
-      // on a <p>, a focusable Leaflet control trapped in an aria-hidden
-      // region, a color-only inline link) was fixed directly in this pass —
-      // see the C2 report for the full list. Flagged for Phase B, not
-      // silently dropped.
-      .disableRules(["color-contrast"])
+      // color-contrast is ENFORCED (no allowlist). Phase B1 retired the
+      // C2 exception: the failing muted-text tokens (text-zinc-500/600,
+      // 3.5–2.2:1 on the dark grounds) were replaced sitewide with a single
+      // `text-muted` token (#8b909a) that passes AA (>=4.5:1) on every dark
+      // ground incl. the lightest themed card (#33241c → 4.65:1). The résumé
+      // (dark-on-light) already passed and was left untouched. If this
+      // regresses, a new muted-on-dark or accent-on-dark pairing slipped in.
       .analyze();
 
     const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");

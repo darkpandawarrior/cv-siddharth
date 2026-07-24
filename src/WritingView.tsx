@@ -83,7 +83,7 @@ export function WritingView() {
 
         {/* lessons */}
         <section className="pb-16">
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">Lessons</h2>
+          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Lessons</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {sorted.map((l, i) => {
               const accent = accentOf(l.series);
@@ -100,7 +100,7 @@ export function WritingView() {
                     <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: accent }}>
                       {titleize(l.series) || l.pillar}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${live ? "bg-accent/15 text-accent" : "border border-line text-zinc-500"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${live ? "bg-accent/15 text-accent" : "border border-line text-muted"}`}>
                       {live ? "LIVE" : "SOON"}
                     </span>
                   </div>
@@ -115,7 +115,7 @@ export function WritingView() {
                   <div className="mt-auto pt-4">
                     {links.length > 0 && (
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
-                        <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">Read on</span>
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Read on</span>
                         {links.map((p) => (
                           <a
                             key={p.key}
@@ -149,7 +149,7 @@ export function WritingView() {
 
         {/* series */}
         <section className="border-t border-line pb-16 pt-12">
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">Series</h2>
+          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Series</h2>
           <div className="mt-5 flex flex-wrap gap-3">
             {series.map((s) => (
               <span
@@ -159,7 +159,7 @@ export function WritingView() {
               >
                 <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
                 {s.title}
-                <span className="text-xs text-zinc-500">{s.episodes}</span>
+                <span className="text-xs text-muted">{s.episodes}</span>
               </span>
             ))}
           </div>
@@ -168,8 +168,8 @@ export function WritingView() {
         {/* the recurring cast */}
         {cast.length > 0 && (
           <section className="border-t border-line pb-16 pt-12">
-            <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
-              The cast <span className="text-zinc-600">· the bugs, personified</span>
+            <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
+              The cast <span className="text-muted">· the bugs, personified</span>
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-zinc-400">
               Every lesson stars a recurring character — the bug itself, given a face and a motive.
@@ -187,7 +187,7 @@ export function WritingView() {
                     <span className="font-display font-bold" style={{ color }}>
                       {titleize(c.id)}
                     </span>
-                    <span className="rounded-full border border-line px-1.5 text-[10px] text-zinc-500">
+                    <span className="rounded-full border border-line px-1.5 text-[10px] text-muted">
                       ×{c.appearances}
                     </span>
                   </span>
@@ -199,8 +199,8 @@ export function WritingView() {
 
         {/* archive */}
         <section className="border-t border-line pb-24 pt-12">
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
-            Archive <span className="text-zinc-600">· earlier writing</span>
+          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
+            Archive <span className="text-muted">· earlier writing</span>
           </h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <a
@@ -212,7 +212,7 @@ export function WritingView() {
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="flex items-center gap-2 font-semibold text-zinc-100">
                   <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
-                  <ArrowUpRight size={13} className="text-zinc-500 transition group-hover:text-accent2" />
+                  <ArrowUpRight size={13} className="text-muted transition group-hover:text-accent2" />
                 </h3>
                 <span className="shrink-0 font-mono text-[11px] text-accent2/80">the origin blog</span>
               </div>
@@ -225,10 +225,10 @@ export function WritingView() {
               <div key={a.slug} className="rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-semibold text-zinc-100">{a.title}</h3>
-                  <span className="shrink-0 font-mono text-[11px] text-zinc-500">{a.form}</span>
+                  <span className="shrink-0 font-mono text-[11px] text-muted">{a.form}</span>
                 </div>
                 {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted">
                   {a.era && <span>{a.era}</span>}
                   {a.words && <span>{Number(a.words).toLocaleString()} words</span>}
                   {a.words && <span>~{Math.max(1, Math.round(Number(a.words) / 220))} min read</span>}

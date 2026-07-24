@@ -82,7 +82,7 @@ export function AnimatedMetric({ metric }: { metric: { value: string; label: str
           {parsed ? `0${parsed.suffix}` : metric.value}
         </p>
         <p className="mt-1 text-sm font-medium text-zinc-200">{metric.label}</p>
-        {metric.detail && <p className="mt-1 text-xs leading-snug text-zinc-500">{metric.detail}</p>}
+        {metric.detail && <p className="mt-1 text-xs leading-snug text-muted">{metric.detail}</p>}
       </div>
       <div className="ml-auto shrink-0">
         {isGauge ? (

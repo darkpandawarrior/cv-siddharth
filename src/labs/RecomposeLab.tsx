@@ -63,10 +63,10 @@ export function RecomposeLab() {
           </label>
           <span className="font-mono text-xs text-[#ff5c5c]">wasted renders: {renders.naive}</span>
           <span className="font-mono text-xs text-accent">needed renders: {renders.smart}</span>
-          <span className="font-mono text-xs text-zinc-500">
+          <span className="font-mono text-xs text-muted">
             avg cells touched: naive {avgTouched.naive} · optimized {avgTouched.optimized}
           </span>
-          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
             the full story → ghosts in the recomposition
           </Link>
         </div>

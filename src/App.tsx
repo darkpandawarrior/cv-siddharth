@@ -233,7 +233,12 @@ function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur print:hidden">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <button type="button" onClick={() => goToSection("top")} className="font-display text-lg font-bold tracking-tight">
+        <button
+          type="button"
+          onClick={() => goToSection("top")}
+          className="font-display text-lg font-bold tracking-tight"
+          style={{ viewTransitionName: "nav-wordmark" }}
+        >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
@@ -309,7 +314,7 @@ function Hero() {
             See my work ↓
           </button>
         </div>
-        <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
+        <p className="rise-in rise-in-3 mt-6 text-xs text-muted">{profile.availability}</p>
         <LiveTicker />
       </div>
       <Phone3D />
@@ -384,7 +389,7 @@ function LiveTicker() {
   const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
   if (!latestShip && !latestPost) return null;
   return (
-    <div className="rise-in rise-in-3 mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[11px] text-zinc-500">
+    <div className="rise-in rise-in-3 mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[11px] text-muted">
       <span className="flex items-center gap-1.5">
         <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> live
       </span>
@@ -416,19 +421,21 @@ function Metrics() {
   const { goToSection } = useSectionNav();
   return (
     <section className="border-y border-line bg-surface">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-10 lg:grid-cols-4">
-        {metrics.map((m, i) => (
-          <button
-            key={m.label}
-            type="button"
-            onClick={() => goToSection((METRIC_TARGETS[i] ?? "#work").slice(1))}
-            title="See the work behind this number"
-            className="group block w-full rounded-xl text-left transition hover:bg-card/60"
-          >
-            <AnimatedMetric metric={m} />
-          </button>
-        ))}
-      </div>
+      <Reveal>
+        <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-10 lg:grid-cols-4">
+          {metrics.map((m, i) => (
+            <button
+              key={m.label}
+              type="button"
+              onClick={() => goToSection((METRIC_TARGETS[i] ?? "#work").slice(1))}
+              title="See the work behind this number"
+              className="group block w-full rounded-xl text-left transition hover:bg-card/60"
+            >
+              <AnimatedMetric metric={m} />
+            </button>
+          ))}
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -468,7 +475,7 @@ function CaseStudies() {
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// featured work</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
@@ -580,7 +587,7 @@ function Projects() {
     <section id="projects" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// projects & open source</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
             Open-source projects and tooling outside employer work — shipped end-to-end.
@@ -618,12 +625,22 @@ function Projects() {
                   )}
                   <div className="flex grow flex-col p-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h3 className="font-display text-xl font-bold transition group-hover:text-accent">{p.name}</h3>
-                    <span className="shrink-0 text-xs text-zinc-500">{p.status}</span>
+                    {/* Shared-element morph: this title lifts into the /project/$slug
+                        hero <h1> of the same name. Keyed by slug so each card morphs
+                        to its own detail; unique across the grid (only grid cards
+                        carry it — the featured Mileway case-study card does not, so
+                        `project-title-mileway` is never duplicated on the page). */}
+                    <h3
+                      className="font-display text-xl font-bold transition group-hover:text-accent"
+                      style={{ viewTransitionName: `project-title-${p.slug}` }}
+                    >
+                      {p.name}
+                    </h3>
+                    <span className="shrink-0 text-xs text-muted">{p.status}</span>
                   </div>
                   <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
-                    <p className="mt-2 font-mono text-[11px] text-zinc-500">
+                    <p className="mt-2 font-mono text-[11px] text-muted">
                       <span className="text-accent2">◇</span> {statLine}
                     </p>
                   )}
@@ -707,13 +724,13 @@ function Projects() {
         </div>
 
         <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
+          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
             Shared foundation
           </h3>
           <div className="rounded-2xl border border-line bg-card p-6">
             <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
             <FoundationGraph />
-            <p className="mt-4 font-mono text-[11px] text-zinc-500">
+            <p className="mt-4 font-mono text-[11px] text-muted">
               ↓ both libraries are in <button type="button" onClick={() => goToSection("source")} className="text-accent transition hover:text-accent-dim">The Source</button>, one click from the code.
             </p>
           </div>
@@ -722,13 +739,13 @@ function Projects() {
         <ReposShowcase />
 
         <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/60">
+          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
             Recently shipped
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {recentGrowth.slice(-4).reverse().map((g) => (
               <div key={g.title} className="rounded-xl border border-line bg-card p-4">
-                <p className="text-xs text-zinc-500">{g.date}</p>
+                <p className="text-xs text-muted">{g.date}</p>
                 <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
                 <p className="mt-1 text-sm leading-snug text-zinc-400">{g.detail}</p>
               </div>
@@ -790,7 +807,7 @@ function ExperienceSection() {
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// background</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div ref={trackRef} className="relative space-y-10 pl-8 sm:pl-10">
@@ -819,7 +836,7 @@ function ExperienceSection() {
                   </ul>
                   {job.company.toLowerCase().includes("dice") && (
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">receipts</span>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted">receipts</span>
                       {["50% → 95% GPS", "-80% crashes", "92% Compose"].map((r) => (
                         <button
                           key={r}
@@ -902,7 +919,7 @@ function Skills() {
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// tech stack</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
         <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
@@ -932,7 +949,7 @@ function Skills() {
 
       {active && PROVEN_IN[active] && (
         <div className="fade-in mt-5 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">proven in</span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted">proven in</span>
           {PROVEN_IN[active].map((p) => {
             const provenClass = "rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent";
             const c = classifyHash(p.href);
@@ -1004,7 +1021,7 @@ function Contact() {
   return (
     <section id="contact" className="relative overflow-hidden border-t border-line">
       <div className="aurora pointer-events-none absolute inset-0" aria-hidden />
-      <div className="section-y relative mx-auto max-w-5xl px-6 text-center">
+      <Reveal className="section-y relative mx-auto max-w-5xl px-6 text-center">
         <span className="mx-auto flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur">
           <span className="status-pulse h-2 w-2 rounded-full bg-accent" />
           {profile.availability}
@@ -1050,7 +1067,7 @@ function Contact() {
             ✎ My writing
           </Link>
         </div>
-      </div>
+      </Reveal>
       <SiteFooter />
     </section>
   );
@@ -1066,7 +1083,7 @@ function PlaygroundTeaser() {
     <section id="explore" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/60">// the playground</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
             Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the

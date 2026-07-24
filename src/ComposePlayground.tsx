@@ -690,7 +690,7 @@ export default function ComposePlayground() {
           <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
           </button>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
+          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -712,7 +712,7 @@ export default function ComposePlayground() {
 
       <div className="border-b border-line bg-ink/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
-          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-zinc-500">examples</span>
+          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-muted">examples</span>
           {PRESETS.map((p) => (
             <button
               key={p.label}
@@ -784,7 +784,7 @@ export default function ComposePlayground() {
             <div
               ref={gutterRef}
               aria-hidden
-              className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-[1.6] text-zinc-600"
+              className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-[1.6] text-muted"
             >
               {Array.from({ length: lineCount }, (_, i) => (
                 <div key={i}>{i + 1}</div>
@@ -813,7 +813,7 @@ export default function ComposePlayground() {
               aria-label="Compose code editor"
             />
           </div>
-          <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-zinc-500">
+          <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
             <Play size={11} className="text-accent" /> live · renders as you type
           </div>
         </div>
@@ -823,7 +823,7 @@ export default function ComposePlayground() {
           <div className="relative">
             <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
               {/* status bar */}
-              <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-zinc-500">
+              <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
                 <span>9:41</span>
                 <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
                 <span>▮▮▮ 100%</span>
@@ -832,7 +832,7 @@ export default function ComposePlayground() {
                 {error ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
                     <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                    <span className="font-mono text-[11px] leading-relaxed text-zinc-500">{error}</span>
+                    <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
                   </div>
                 ) : program ? (
                   <div className="flex h-full flex-col">
@@ -841,13 +841,13 @@ export default function ComposePlayground() {
                 ) : null}
               </div>
             </div>
-            <p className="mt-4 text-center font-mono text-[10px] text-zinc-600">simulated preview · state is live</p>
+            <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
           </div>
         </div>
       </main>
 
       <div className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
-        <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-zinc-600" title={SUPPORTED}>
+        <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-muted" title={SUPPORTED}>
           supported: {SUPPORTED}
         </p>
       </div>
