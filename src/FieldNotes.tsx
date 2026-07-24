@@ -20,7 +20,7 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
           key={n.id}
           href="#loopdown"
           onClick={(e) => { e.stopPropagation(); window.scrollTo({ top: 0 }); }}
-          className="flex items-center gap-1.5 rounded-full border bg-card/60 px-2.5 py-0.5 text-[11px] text-zinc-300 transition hover:text-zinc-100"
+          className="flex items-center gap-1.5 rounded-full border bg-card/60 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:text-zinc-100"
           style={{ borderColor: `${n.color}55` }}
         >
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />

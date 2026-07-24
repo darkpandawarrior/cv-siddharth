@@ -95,8 +95,10 @@ export function ResumeView() {
           ))}
         </section>
 
-        {/* Projects & Open Source */}
-        <section className="mt-4 break-inside-avoid">
+        {/* Projects & Open Source — break-inside-avoid lives on each entry
+            below, not here: 6 projects is taller than one page, so avoiding
+            a break on the whole section would just force one giant gap. */}
+        <section className="mt-4">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
             Projects & Open Source
           </h2>

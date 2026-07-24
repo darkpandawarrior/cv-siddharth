@@ -48,7 +48,7 @@ export function ScrollBot() {
 
   return (
     <div
-      className="pointer-events-none fixed right-3 top-6 z-30 hidden lg:block motion-reduce:hidden"
+      className="pointer-events-none fixed right-3 top-6 z-30 hidden lg:block motion-reduce:hidden print:hidden"
       aria-hidden
     >
       <div ref={trackRef} style={{ willChange: "transform" }}>

@@ -1074,9 +1074,13 @@ export const projects: Project[] = [
     links: [],
     status: "In development · private repo, public case study",
     badges: ["Godot 4.7", "GDScript", "Time-loop", "Solo + AI dev crew"],
+    // Brightened from the original #B3223C pick — that failed WCAG AA against
+    // ink/surface/card (2.6-3.0:1) and its hover state was nearly invisible
+    // (1.6:1). These clear AA everywhere they're used as text/CTA color
+    // (5.1-7.1:1), verified with the real relative-luminance formula.
     theme: {
-      accent: "#B3223C",
-      accentDim: "#6B1226",
+      accent: "#FF5C7A",
+      accentDim: "#EE5577",
       ink: "#140A0C",
       surface: "#1F0F13",
       card: "#2A151A",

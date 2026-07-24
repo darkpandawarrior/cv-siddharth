@@ -138,14 +138,14 @@ export function FloatingChat() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
         >
           <MessageCircle size={24} />
         </button>
       )}
 
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[560px] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl">
+        <div className="fixed bottom-6 right-6 z-50 flex h-[560px] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl print:hidden">
           <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
             <div>
               <p className="font-display text-sm font-bold">

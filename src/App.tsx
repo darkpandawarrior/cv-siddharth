@@ -212,7 +212,7 @@ function MobileMenu() {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
+        className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
       >
         <span className="h-px w-4 bg-zinc-300" />
         <span className="h-px w-4 bg-zinc-300" />
@@ -260,7 +260,7 @@ function MobileMenu() {
 function Nav() {
   const { progressRef, active } = useScrollSpy();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur print:hidden">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <a href="#top" className="font-display text-lg font-bold tracking-tight">
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
@@ -292,7 +292,7 @@ function Nav() {
           <CommandPalette />
           <button
             onClick={() => openChat()}
-            className="flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+            className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
             <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
           </button>

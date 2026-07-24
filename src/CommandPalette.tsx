@@ -158,9 +158,10 @@ export function CommandPalette() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Open command palette (Cmd+K)"
-        className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+        className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
       >
         <Command size={13} />
+        <span className="sm:hidden">Search</span>
         <span className="hidden sm:inline">⌘K</span>
       </button>
 

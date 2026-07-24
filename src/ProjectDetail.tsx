@@ -279,14 +279,18 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 href={l.url}
                 target={l.url.startsWith("#") ? undefined : "_blank"}
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink shadow-[0_0_30px_-8px_rgba(61,220,132,0.6)] transition hover:bg-accent-dim"
+                className="cta-glow inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
               >
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
             <button
               onClick={() => openChat(`Walk me through the ${project.name} build — the architecture and the hardest problems.`)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-accent2/40 px-4 py-2 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+              className={
+                t
+                  ? "inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/10"
+                  : "inline-flex items-center gap-1.5 rounded-full border border-accent2/40 px-4 py-2 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+              }
             >
               ✦ Ask my AI about {project.name}
             </button>
@@ -486,7 +490,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                     <img src={it.src} alt={it.caption} loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />
                   </span>
                   {it.caption && (
-                    <span className="mt-2 block truncate text-center text-xs text-zinc-500 transition group-hover/shot:text-accent">
+                    <span className="mt-2 line-clamp-2 block text-center text-xs text-zinc-500 transition group-hover/shot:text-accent">
                       {it.caption}
                     </span>
                   )}
@@ -527,7 +531,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <a href="#projects" className="inline-flex items-center gap-2 text-sm text-accent transition hover:text-accent-dim">
           <ArrowLeft size={16} /> Back to all projects
         </a>
-        <a href="#map" className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent2">
+        <a href="#map" className={`inline-flex items-center gap-1 text-sm text-zinc-400 transition ${t ? "hover:text-accent" : "hover:text-accent2"}`}>
           See how everything connects →
         </a>
       </div>
