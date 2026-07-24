@@ -7,18 +7,18 @@
 <p align="center">
   <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0b0f0d">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white">
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
   <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white">
-  <a href="https://github.com/darkpandawarrior/cv-siddharth/actions/workflows/deploy-pages.yml"><img alt="Deploy" src="https://github.com/darkpandawarrior/cv-siddharth/actions/workflows/deploy-pages.yml/badge.svg"></a>
+  <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
 </p>
 
-**Live: [darkpandawarrior.github.io/cv-siddharth](https://darkpandawarrior.github.io/cv-siddharth/)**
+**Live: [cv-siddharth.vercel.app](https://cv-siddharth.vercel.app/)**
 
 Interactive CV for **Siddharth Pandalai** — Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
 production metrics, a pointer-tracked phone mockup (pure CSS 3D transforms, no
 WebGL), a print-perfect
-[résumé view](https://darkpandawarrior.github.io/cv-siddharth/#resume) (PDF via
+[résumé view](https://cv-siddharth.vercel.app/resume) (PDF via
 the print dialog), and an AI assistant ("Sid") that answers questions about
 his experience in first person.
 
@@ -33,7 +33,7 @@ RAG pipeline — knowledge lives in a single system prompt
 
 ## Stack
 
-React 19 · TypeScript · Vite 7 · Tailwind v4 · Vercel Edge Functions ·
+React 19 · TypeScript 7 · Vite 8 · TanStack Start · Tailwind v4 · Vercel ·
 **provider-agnostic chat backend** — streams from Groq (Llama 3.3, free tier),
 Google Gemini, or Anthropic Claude, whichever key is configured, normalized to
 one SSE format so the widget never knows the difference.
@@ -56,39 +56,20 @@ Vercel runs in production — no `vercel dev` needed.
 
 ## Deploy
 
-<details>
-<summary><b>Two paths</b> — Vercel all-in-one, or GitHub Pages with the chat hosted separately</summary>
-<br/>
-
-### Option A — Vercel (site + chat in one place)
+Single target: Vercel hosts the TanStack Start server and the chat function
+together.
 
 ```bash
 npx vercel
 ```
 
-Set `ANTHROPIC_API_KEY` in the Vercel project's environment variables.
-`api/chat.ts` runs on the Edge runtime and streams Anthropic SSE straight
-through to the widget.
-
-### Option B — GitHub Pages (static) + chat hosted elsewhere
-
-GitHub Pages can't run serverless functions, so the site and the chat
-backend split:
-
-1. Push this repo to GitHub and enable **Settings → Pages → Source: GitHub
-   Actions**. The included workflow
-   ([.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml))
-   builds and deploys on every push to `main`, handling the `/repo/` base
-   path automatically.
-2. For the chatbot, deploy the same repo to Vercel (free tier) for the
-   `/api/chat` function only, then set a repo **variable** `CHAT_API_URL`
-   (e.g. `https://cv-siddharth.vercel.app/api/chat`). On Vercel, set
-   `ALLOWED_ORIGIN` to your Pages origin (e.g.
-   `https://darkpandawarrior.github.io`) to scope CORS.
-3. Without `CHAT_API_URL`, the site still deploys fine — the chat widget
-   shows the email fallback.
-
-</details>
+Set `ANTHROPIC_API_KEY` (or `GROQ_API_KEY` / `GEMINI_API_KEY`) in the Vercel
+project's environment variables. `api/chat.ts` runs on the Edge runtime and
+streams SSE straight through to the widget — no separate chat host, no CORS
+configuration needed. `vercel.json` pins the SSR function to `bom1` (Mumbai)
+and sets long-lived immutable caching for the WASM lab bundles; TanStack
+Start's own router handles all page routing, so there's no rewrite rule to
+maintain.
 
 ## Structure
 
