@@ -83,10 +83,15 @@ export const sync = {
   },
   hiresignal: {
     repo: "darkpandawarrior/HireSignal",
-    // v1 is still in progress upstream — no in-app screenshots exist yet
-    // (its own docs/screenshots/ and docs/gifs/ are placeholder READMEs).
-    // The banner is real; screens land here the day the app has any.
-    files: [["assets/banner.gif", "banner.gif"]],
+    // First three real Roborazzi captures (2026-07-24) — dashboard, board,
+    // pipeline. More land here as the rest of the app's 13 screens get the
+    // same screenshot-test treatment.
+    files: [
+      ["assets/banner.gif", "banner.gif"],
+      ["screenshots/dashboard_screen.png", "dashboard_screen.png"],
+      ["screenshots/board_screen.png", "board_screen.png"],
+      ["screenshots/pipeline_screen.png", "pipeline_screen.png"],
+    ],
   },
   kursi: {
     repo: "darkpandawarrior/Kursi",

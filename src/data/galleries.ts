@@ -10,7 +10,10 @@ export const galleries: Record<string, string[]> = {
     "/projects/deadlock/screenshots/title.webp"
   ],
   "hiresignal": [
-    "/projects/hiresignal/screenshots/banner.gif"
+    "/projects/hiresignal/screenshots/banner.gif",
+    "/projects/hiresignal/screenshots/board_screen.png",
+    "/projects/hiresignal/screenshots/dashboard_screen.png",
+    "/projects/hiresignal/screenshots/pipeline_screen.png"
   ],
   "kursi": [
     "/projects/kursi/screenshots/10p_pick_action.png",

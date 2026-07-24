@@ -952,6 +952,14 @@ export const projects: Project[] = [
       line: "#28405E",
     },
     icon: "/projects/hiresignal/brand/hiresignal-icon.svg",
+    targets: [
+      {
+        platform: "Android",
+        deviceFrame: "phone",
+        screens: ["dashboard_screen.png", "board_screen.png", "pipeline_screen.png"],
+        note: "Real Roborazzi captures — first screenshots off the actual Compose UI, not mockups.",
+      },
+    ],
     detail: {
       overview:
         "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐60k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
@@ -1024,7 +1032,12 @@ export const projects: Project[] = [
         },
       ],
     },
-    screens: [{ file: "banner.gif", caption: "HireSignal — v1 in active development, native app UI not public yet" }],
+    screens: [
+      { file: "banner.gif", caption: "HireSignal banner" },
+      { file: "dashboard_screen.png", caption: "Dashboard — today's action queue, follow-ups due, awaiting decision" },
+      { file: "board_screen.png", caption: "Job board — scored roles, re-scored live against your profile" },
+      { file: "pipeline_screen.png", caption: "Pipeline inbox — keep/discard triage on freshly scanned roles" },
+    ],
   },
   {
     slug: "portfolio",
