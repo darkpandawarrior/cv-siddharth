@@ -531,7 +531,7 @@ const CHAT_API_URL: string = import.meta.env.VITE_CHAT_API_URL || "/api/chat";
 const GEN_RULES = `You are a code generator for an in-browser Jetpack Compose playground with a LIMITED interpreter. Output ONLY Kotlin Compose code inside one \`\`\`kotlin fence. No prose, no imports, no @Composable function wrapper.
 Use ONLY this subset:
 - Layout: Column(...) { }, Row(...) { }, Box(...) { }, Card(...) { }
-- Text("literal or \$stateVar", color = Color.X, fontSize = N.sp, fontWeight = FontWeight.Bold)
+- Text("literal or $stateVar", color = Color.X, fontSize = N.sp, fontWeight = FontWeight.Bold)
 - Button(onClick = { STATE_MUTATION }) { Text("...") }
 - TextField(value = stateVar, onValueChange = { stateVar = it }, modifier = Modifier...) — stateVar MUST be a string var declared with mutableStateOf(""); onValueChange MUST be exactly "{ stateVar = it }", no other form. Name the var "password"/"confirmPassword" etc. (containing "pass") to get a masked field automatically — do not add a visualTransformation param, it's not supported.
 - Spacer(Modifier.height(N.dp)) or Spacer(Modifier.width(N.dp))

@@ -387,9 +387,10 @@ function ImagePin({ pin, ascii }: { pin: (typeof PINS)[number]; ascii: boolean }
   return (
     <Float speed={1} rotationIntensity={0.2} floatIntensity={0.5}>
       <Html transform position={pos} distanceFactor={8} rotation={[0, 0, pin.rot]}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text -- decorative moodboard pin, gif keeps animating (unlike a WebGL texture) */}
+        {/* decorative moodboard pin, gif keeps animating (unlike a WebGL texture) */}
         <img
           src={pin.src}
+          alt=""
           style={{
             width: pin.w * 0.5,
             borderRadius: ascii ? 0 : 10,

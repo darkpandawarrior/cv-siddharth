@@ -120,7 +120,7 @@ function buildCommands(): Cmd[] {
     {
       name: "help",
       help: "list everything you can type",
-      run: (_a, _c) => (
+      run: () => (
         <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
           {cmds
             .filter((c) => !c.hidden)
