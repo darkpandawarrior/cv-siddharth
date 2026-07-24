@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { useSectionNav } from "../lib/navigation.ts";
 
 /**
  * The Signal Lab — the "50% → 95%" claim, running live, twice: this is the
@@ -149,6 +151,7 @@ type Stats = {
 const ERROR_TRAIL = 80; // ring buffer length for the convergence sparkline, same TRAIL-style pattern as rawTrail/engineTrail
 
 export function SignalLabPane() {
+  const { goToSection } = useSectionNav();
   const [jitter, setJitter] = useState(true);
   const [spikeRejection, setSpikeRejection] = useState(true);
   const [imuFusion, setImuFusion] = useState(true);
@@ -538,13 +541,13 @@ export function SignalLabPane() {
             avg error — raw {stats.avgRawErr} · filtered {stats.avgFilteredErr} (relative)
           </span>
           <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-zinc-500">
-            <a href="#work" onClick={() => window.scrollTo({ top: 0 })} className="transition hover:text-accent">
+            <button type="button" onClick={() => goToSection("work")} className="transition hover:text-accent">
               the full story → Dice.tech
-            </a>
+            </button>
             <span className="text-zinc-700">·</span>
-            <a href="#project/mileway" onClick={() => window.scrollTo({ top: 0 })} className="transition hover:text-accent">
+            <Link to="/project/$slug" params={{ slug: "mileway" }} className="transition hover:text-accent">
               rebuilt again at Mileway
-            </a>
+            </Link>
           </span>
         </div>
       </div>

@@ -1,7 +1,9 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
+import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 
 const StoryMapScene = lazy(() => import("./StoryMapScene.tsx"));
 
@@ -60,22 +62,32 @@ export const EDGES: [string, string][] = [
   ["sid", "blueprint"],
 ];
 
-export function navigate(target: string) {
-  if (target === "chat") return openChat();
-  if (target.startsWith("#")) {
-    const inPage = document.getElementById(target.slice(1));
-    window.location.hash = target;
-    if (!inPage) window.scrollTo({ top: 0 });
-    return;
-  }
-  window.open(target, "_blank", "noreferrer");
+/** A node's `target` is "chat", a `#hash` (section, project, or route), or an
+ *  external URL — classified once here so the 2D canvas, the 3D scene, and
+ *  the keyboard/touch chip row can't drift on what a click does. */
+export type NodeTarget =
+  | { kind: "chat" }
+  | { kind: "external"; url: string }
+  | { kind: "section"; id: string }
+  | { kind: "project"; slug: string }
+  | { kind: "route"; to: string };
+
+export function classifyNodeTarget(target: string): NodeTarget {
+  if (target === "chat") return { kind: "chat" };
+  if (!target.startsWith("#")) return { kind: "external", url: target };
+  return classifyHash(target);
 }
 
-function StoryMapCanvas() {
+function StoryMapCanvas({ onNavigate }: { onNavigate: (target: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const hoveredRef = useRef<string | null>(null);
   hoveredRef.current = hovered;
+  // Persistent effect below (registered once) always reads the latest
+  // callback through this ref — same pattern as hoveredRef — rather than
+  // tearing down the rAF loop / ResizeObserver whenever the identity changes.
+  const onNavigateRef = useRef(onNavigate);
+  onNavigateRef.current = onNavigate;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -207,7 +219,7 @@ function StoryMapCanvas() {
     };
     const onClick = (e: PointerEvent) => {
       const hit = hitTest(e);
-      if (hit) navigate(hit.target);
+      if (hit) onNavigateRef.current(hit.target);
     };
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerleave", onLeave);
@@ -240,6 +252,23 @@ export function StoryMap() {
   // Capable, motion-friendly desktops get the full 3D constellation;
   // everyone else keeps the (already animated) 2D canvas.
   const [use3D, setUse3D] = useState(false);
+
+  // Single router-aware navigation decision, shared by the 2D canvas, the
+  // lazy 3D scene (StoryMapScene.tsx, via prop) and the chip row below — one
+  // classifyNodeTarget call per node target, not three copies of the switch.
+  const routerNavigate = useNavigate();
+  const { goToSection } = useSectionNav();
+  const go = useCallback(
+    (target: string) => {
+      const c = classifyNodeTarget(target);
+      if (c.kind === "chat") { openChat(); return; }
+      if (c.kind === "external") { window.open(c.url, "_blank", "noreferrer"); return; }
+      if (c.kind === "section") { goToSection(c.id); return; }
+      if (c.kind === "project") { routerNavigate({ to: "/project/$slug", params: { slug: c.slug } }); return; }
+      routerNavigate({ to: c.to });
+    },
+    [routerNavigate, goToSection],
+  );
 
   useEffect(() => {
     const el = holder.current;
@@ -278,11 +307,11 @@ export function StoryMap() {
         >
           {mounted &&
             (use3D ? (
-              <Suspense fallback={<StoryMapCanvas />}>
-                <StoryMapScene />
+              <Suspense fallback={<StoryMapCanvas onNavigate={go} />}>
+                <StoryMapScene onNavigate={go} />
               </Suspense>
             ) : (
-              <StoryMapCanvas />
+              <StoryMapCanvas onNavigate={go} />
             ))}
           {use3D && (
             <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
@@ -290,45 +319,46 @@ export function StoryMap() {
             </span>
           )}
         </div>
-        <a
-          href="#blueprint"
-          onClick={() => window.scrollTo({ top: 0 })}
+        <Link
+          to="/blueprint"
           className="group mt-4 flex items-center justify-between rounded-xl border border-accent2/30 bg-accent2/5 px-4 py-3 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
         >
           <span>Enter the Blueprint Room — the same map as an infinite, editable canvas</span>
           <span className="transition group-hover:translate-x-1">→</span>
-        </a>
+        </Link>
         {/* Same destinations as real links — keyboard, touch and small screens. */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {NODES.filter((n) => n.id !== "sid").map((n) =>
-            n.target === "chat" ? (
-              <button
-                key={n.id}
-                onClick={() => openChat()}
-                className="tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100"
-                style={{ borderColor: `${n.color}44` }}
-              >
+          {NODES.filter((n) => n.id !== "sid").map((n) => {
+            const chipClass = "tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100";
+            const c = classifyNodeTarget(n.target);
+            if (c.kind === "chat" || c.kind === "section") {
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => go(n.target)}
+                  className={chipClass}
+                  style={{ borderColor: `${n.color}44` }}
+                >
+                  {n.label}
+                </button>
+              );
+            }
+            if (c.kind === "external") {
+              return (
+                <a key={n.id} href={c.url} target="_blank" rel="noreferrer" className={chipClass} style={{ borderColor: `${n.color}44` }}>
+                  {n.label}
+                </a>
+              );
+            }
+            const to = c.kind === "project" ? "/project/$slug" : c.to;
+            const params = c.kind === "project" ? { slug: c.slug } : undefined;
+            return (
+              <Link key={n.id} to={to} params={params} className={chipClass} style={{ borderColor: `${n.color}44` }}>
                 {n.label}
-              </button>
-            ) : (
-              <a
-                key={n.id}
-                href={n.target}
-                target={n.target.startsWith("#") ? undefined : "_blank"}
-                rel="noreferrer"
-                onClick={(e) => {
-                  if (n.target.startsWith("#")) {
-                    e.preventDefault();
-                    navigate(n.target);
-                  }
-                }}
-                className="tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100"
-                style={{ borderColor: `${n.color}44` }}
-              >
-                {n.label}
-              </a>
-            ),
-          )}
+              </Link>
+            );
+          })}
         </div>
       </Reveal>
     </section>

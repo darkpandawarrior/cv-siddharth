@@ -40,6 +40,32 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+// Home-page section ids — mirrors __root.tsx's SECTION_ANCHORS (that copy
+// guards *inbound* legacy `#hash` links; this one classifies *outbound*
+// internal targets so render sites can pick goToSection vs <Link>). Kept as
+// a separate small constant rather than importing from the route file, so
+// this module has no dependency on __root.tsx's HashCompat safety net.
+const SECTION_IDS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
+
+export type HashTarget =
+  | { kind: "section"; id: string }
+  | { kind: "project"; slug: string }
+  | { kind: "route"; to: string };
+
+/**
+ * Classifies an internal `#hash`-shaped target into a section, a project
+ * route, or a plain route, so a render site can decide between calling
+ * `goToSection`, or rendering a `<Link>`. Callers that also allow external
+ * URLs check `!href.startsWith("#")` themselves before calling this — it
+ * only ever sees internal targets.
+ */
+export function classifyHash(href: string): HashTarget {
+  const id = href.replace(/^#/, "");
+  if (id.startsWith("project/")) return { kind: "project", slug: id.slice("project/".length) };
+  if (SECTION_IDS.has(id)) return { kind: "section", id };
+  return { kind: "route", to: `/${id}` };
+}
+
 /**
  * Shared home-page-section navigation for internal nav surfaces (footer,
  * command palette, ...). From "/" it smooth-scrolls in place; from any other

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSectionNav } from "../lib/navigation.ts";
 
 /**
  * The White-label Lab — the "80% faster delivery" claim, running live. Brand
@@ -83,6 +84,7 @@ function HeroPreview({ client, brand }: { client: string; brand: BrandToken }) {
 }
 
 export function ThemeLab() {
+  const { goToSection } = useSectionNav();
   const [brand, setBrand] = useState<BrandToken>(BRANDS[0]);
   const [flips, setFlips] = useState(0);
   const [layout, setLayout] = useState<"card" | "hero">("card");
@@ -228,9 +230,9 @@ export function ThemeLab() {
               {flips} {flips === 1 ? "change" : "changes"} · {flips * (CLIENTS.length + MORE_CLIENTS.length)} client updates · 0 forks
             </span>
           )}
-          <a href="#work" onClick={() => window.scrollTo({ top: 0 })} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
             the full story → 20+ clients, one pipeline
-          </a>
+          </button>
         </div>
       </div>
     </div>

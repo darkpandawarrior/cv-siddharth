@@ -3,7 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Line, Html } from "@react-three/drei";
 import { MathUtils, Vector3 } from "three";
 import type { Group, Mesh } from "three";
-import { EDGES, NODES, navigate, type StoryNode } from "./StoryMap.tsx";
+import { EDGES, NODES, type StoryNode } from "./StoryMap.tsx";
 
 /**
  * The Storyboard, in depth — the same node/edge data as the 2D canvas
@@ -38,7 +38,19 @@ const pos3 = (n: StoryNode): [number, number, number] => [
 
 const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
 
-function Star({ node, active, dim, onHover }: { node: StoryNode; active: boolean; dim: boolean; onHover: (id: string | null) => void }) {
+function Star({
+  node,
+  active,
+  dim,
+  onHover,
+  onNavigate,
+}: {
+  node: StoryNode;
+  active: boolean;
+  dim: boolean;
+  onHover: (id: string | null) => void;
+  onNavigate: (target: string) => void;
+}) {
   const mesh = useRef<Mesh>(null);
   const base = useMemo(() => pos3(node), [node]);
   const seed = useMemo(() => node.x * 11 + node.y * 5, [node]);
@@ -57,7 +69,7 @@ function Star({ node, active, dim, onHover }: { node: StoryNode; active: boolean
       position={base}
       onPointerOver={(e) => { e.stopPropagation(); onHover(node.id); document.body.style.cursor = "pointer"; }}
       onPointerOut={() => { onHover(null); document.body.style.cursor = "default"; }}
-      onClick={(e) => { e.stopPropagation(); document.body.style.cursor = "default"; navigate(node.target); }}
+      onClick={(e) => { e.stopPropagation(); document.body.style.cursor = "default"; onNavigate(node.target); }}
     >
       <sphereGeometry args={[Math.max(r, 0.16), 24, 24]} />
       <meshStandardMaterial
@@ -111,7 +123,7 @@ function Pulse({ a, b, offset, lit }: { a: [number, number, number]; b: [number,
   );
 }
 
-function Constellation() {
+function Constellation({ onNavigate }: { onNavigate: (target: string) => void }) {
   const group = useRef<Group>(null);
   const [hover, setHover] = useState<string | null>(null);
   const drag = useRef({ on: false, x: 0, vel: 0 });
@@ -168,13 +180,14 @@ function Constellation() {
           active={hover === n.id}
           dim={!!neighbourhood && !neighbourhood.has(n.id)}
           onHover={setHover}
+          onNavigate={onNavigate}
         />
       ))}
     </group>
   );
 }
 
-export default function StoryMapScene() {
+export default function StoryMapScene({ onNavigate }: { onNavigate: (target: string) => void }) {
   return (
     <Canvas
       dpr={[1, 1.5]}
@@ -185,7 +198,7 @@ export default function StoryMapScene() {
       <ambientLight intensity={0.55} />
       <pointLight position={[4, 3, 4]} intensity={9} color="#5ee6ff" />
       <pointLight position={[-4, -2, 3]} intensity={9} color="#3ddc84" />
-      <Constellation />
+      <Constellation onNavigate={onNavigate} />
     </Canvas>
   );
 }

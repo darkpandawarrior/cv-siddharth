@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 /* ── Recomposition Lab ───────────────────────────────────────────────── */
 
@@ -65,9 +66,9 @@ export function RecomposeLab() {
           <span className="font-mono text-xs text-zinc-500">
             avg cells touched: naive {avgTouched.naive} · optimized {avgTouched.optimized}
           </span>
-          <a href="#loopdown" onClick={() => window.scrollTo({ top: 0 })} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
             the full story → ghosts in the recomposition
-          </a>
+          </Link>
         </div>
       </div>
     </div>

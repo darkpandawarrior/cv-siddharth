@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import {
   profile,
   metrics,
@@ -67,17 +69,37 @@ const SECTION_ROUTES: Record<string, { hash: string; label: string }> = {
   source: { hash: "#source", label: "The Source" },
 };
 
-/* Small presentational helpers so command output stays declarative. */
-function A({ href, children, ext }: { href: string; children: ReactNode; ext?: boolean }) {
+/* Small presentational helpers so command output stays declarative. `A` is a
+ * real component (not a plain tag) so it can go router-native: external links
+ * stay a real <a>, internal `#hash` destinations resolve via classifyHash
+ * into a goToSection button or a <Link>. Prop is named `dest`, not `href` —
+ * it's a symbolic destination the component classifies, not a literal DOM
+ * href (mirrors StoryNode's `target` field in StoryMap.tsx for the same
+ * "#hash | url | sentinel" shape). */
+function A({ dest, children, ext }: { dest: string; children: ReactNode; ext?: boolean }) {
+  const { goToSection } = useSectionNav();
+  const cls = "text-[var(--t-accent)] underline decoration-dotted underline-offset-2 hover:decoration-solid";
+  if (ext) {
+    return (
+      <a href={dest} target="_blank" rel="noreferrer" className={cls}>
+        {children}
+      </a>
+    );
+  }
+  const c = classifyHash(dest);
+  if (c.kind === "section") {
+    return (
+      <button type="button" onClick={() => goToSection(c.id)} className={cls}>
+        {children}
+      </button>
+    );
+  }
+  const to = c.kind === "project" ? "/project/$slug" : c.to;
+  const params = c.kind === "project" ? { slug: c.slug } : undefined;
   return (
-    <a
-      href={href}
-      target={ext ? "_blank" : undefined}
-      rel={ext ? "noreferrer" : undefined}
-      className="text-[var(--t-accent)] underline decoration-dotted underline-offset-2 hover:decoration-solid"
-    >
+    <Link to={to} params={params} className={cls}>
       {children}
-    </a>
+    </Link>
   );
 }
 const Dim = ({ children }: { children: ReactNode }) => <span className="text-zinc-500">{children}</span>;
@@ -106,16 +128,12 @@ interface Cmd {
   run: (args: string[], ctx: Ctx) => ReactNode | void | Promise<ReactNode | void>;
 }
 
-function go(hash: string) {
-  const isSection = !!document.getElementById(hash.slice(1));
-  window.location.hash = hash;
-  if (!isSection) window.scrollTo({ top: 0 });
-}
+type Go = (hash: string) => void;
 
 /* ── Command table ───────────────────────────────────────────────────────
  * Ordered roughly by how often a visitor reaches for it. `help` renders from
  * this same list, so a new command is documented the moment it's added. */
-function buildCommands(): Cmd[] {
+function buildCommands(jump: Go): Cmd[] {
   const cmds: Cmd[] = [
     {
       name: "help",
@@ -209,7 +227,7 @@ function buildCommands(): Cmd[] {
                 <p className="max-w-2xl leading-relaxed text-zinc-300">{profile.summary}</p>
                 <div className="pt-1">
                   <Dim>full résumé (print-ready): </Dim>
-                  <A href="#resume">open resume →</A>
+                  <A dest="#resume">open resume →</A>
                 </div>
               </div>
             );
@@ -227,9 +245,9 @@ function buildCommands(): Cmd[] {
           case "contact":
             return (
               <div className="space-y-0.5">
-                <div><Dim>email  </Dim> <A href={`mailto:${profile.email}`} ext>{profile.email}</A></div>
-                <div><Dim>github </Dim> <A href={profile.github} ext>{profile.github.replace("https://", "")}</A></div>
-                <div><Dim>linked </Dim> <A href={profile.linkedin} ext>linkedin.com/in/siddharth-pandalai</A></div>
+                <div><Dim>email  </Dim> <A dest={`mailto:${profile.email}`} ext>{profile.email}</A></div>
+                <div><Dim>github </Dim> <A dest={profile.github} ext>{profile.github.replace("https://", "")}</A></div>
+                <div><Dim>linked </Dim> <A dest={profile.linkedin} ext>linkedin.com/in/siddharth-pandalai</A></div>
                 <div><Dim>where  </Dim> {profile.location}</div>
               </div>
             );
@@ -253,7 +271,7 @@ function buildCommands(): Cmd[] {
             return (
               <div key={p.slug}>
                 <button
-                  onClick={() => go(`#project/${p.slug}`)}
+                  onClick={() => jump(`#project/${p.slug}`)}
                   className="text-left font-semibold text-[var(--t-accent)] hover:underline"
                 >
                   {p.name}
@@ -277,7 +295,7 @@ function buildCommands(): Cmd[] {
         const p = projects.find((x) => x.slug === slug);
         if (!slug) return <Dim>usage: open &lt;slug&gt; — {projects.map((x) => x.slug).join(", ")}</Dim>;
         if (!p) return <span className="text-red-400">open: no build "{slug}". Try `projects`.</span>;
-        go(`#project/${p.slug}`);
+        jump(`#project/${p.slug}`);
         return (
           <span>
             opening <Hi>{p.name}</Hi> …
@@ -364,11 +382,11 @@ function buildCommands(): Cmd[] {
           <div className="space-y-1">
             {posts.map((p) => (
               <div key={p.slug}>
-                {p.live ? <A href={p.live} ext>{p.title}</A> : <span className="text-zinc-300">{p.title}</span>}
+                {p.live ? <A dest={p.live} ext>{p.title}</A> : <span className="text-zinc-300">{p.title}</span>}
                 {p.series && <Dim> · {p.series}</Dim>}
               </div>
             ))}
-            <Dim>→ the full hub: <A href="#loopdown">the loopdown →</A></Dim>
+            <Dim>→ the full hub: <A dest="#loopdown">the loopdown →</A></Dim>
           </div>
         );
       },
@@ -416,9 +434,9 @@ function buildCommands(): Cmd[] {
           </div>
           <div className="text-zinc-400">{profile.availability}</div>
           <div className="pt-1">
-            <A href={`mailto:${profile.email}?subject=Senior%20Android%20role`} ext>email me →</A>
+            <A dest={`mailto:${profile.email}?subject=Senior%20Android%20role`} ext>email me →</A>
             <Dim> · </Dim>
-            <A href="#resume">résumé</A>
+            <A dest="#resume">résumé</A>
             <Dim> · </Dim>
             <button onClick={() => openChat("Why should we hire Siddharth for a senior Android role?")} className="text-[var(--t-accent)] underline decoration-dotted underline-offset-2 hover:decoration-solid">ask the AI</button>
           </div>
@@ -433,7 +451,7 @@ function buildCommands(): Cmd[] {
           await navigator.clipboard.writeText(profile.email);
           return <span><Hi>✓ copied</Hi> {profile.email}</span>;
         } catch {
-          return <span><A href={`mailto:${profile.email}`} ext>{profile.email}</A> <Dim>(clipboard unavailable)</Dim></span>;
+          return <span><A dest={`mailto:${profile.email}`} ext>{profile.email}</A> <Dim>(clipboard unavailable)</Dim></span>;
         }
       },
     },
@@ -442,9 +460,9 @@ function buildCommands(): Cmd[] {
       help: "links elsewhere",
       run: () => (
         <div className="space-y-0.5">
-          <div><A href={profile.github} ext>github.com/darkpandawarrior</A></div>
-          <div><A href={profile.linkedin} ext>linkedin.com/in/siddharth-pandalai</A></div>
-          <div><A href="https://dev.to/darkpandawarrior" ext>dev.to/darkpandawarrior</A></div>
+          <div><A dest={profile.github} ext>github.com/darkpandawarrior</A></div>
+          <div><A dest={profile.linkedin} ext>linkedin.com/in/siddharth-pandalai</A></div>
+          <div><A dest="https://dev.to/darkpandawarrior" ext>dev.to/darkpandawarrior</A></div>
         </div>
       ),
     },
@@ -515,7 +533,7 @@ function buildCommands(): Cmd[] {
       usage: "exit",
       help: "back to the portfolio",
       run: () => {
-        go("#top");
+        jump("#top");
         return <span>logging out…</span>;
       },
     },
@@ -532,7 +550,7 @@ function buildCommands(): Cmd[] {
               {sharedFoundation.libs.map((lib) => (
                 <div key={lib.name} className="ml-3">
                   <Dim>└─ </Dim>
-                  <A href={lib.url} ext>{lib.name}</A>
+                  <A dest={lib.url} ext>{lib.name}</A>
                   <Dim> → {lib.usedBy.join(", ")}</Dim>
                 </div>
               ))}
@@ -544,14 +562,14 @@ function buildCommands(): Cmd[] {
               <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
               {Object.entries(RELATED_SERIES).map(([slug, series]) => (
                 <div key={slug} className="ml-3">
-                  <button onClick={() => go(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
+                  <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
                     {slug}
                   </button>
                   <Dim> → {series.map(titleize).join(" · ")}</Dim>
                 </div>
               ))}
             </div>
-            <Dim>every arrow is real. see it drawn: <A href="#map">3D storyboard</A> · <A href="#blueprint">blueprint room</A></Dim>
+            <Dim>every arrow is real. see it drawn: <A dest="#map">3D storyboard</A> · <A dest="#blueprint">blueprint room</A></Dim>
           </div>
         );
       },
@@ -572,7 +590,7 @@ function buildCommands(): Cmd[] {
             {unique.map((r) => (
               <div key={r.url}>
                 <Dim>git clone </Dim>
-                <A href={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
+                <A dest={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
               </div>
             ))}
           </div>
@@ -587,7 +605,7 @@ function buildCommands(): Cmd[] {
         <div className="space-y-0.5">
           {openSource.map((c) => (
             <div key={c.url}>
-              <Hi>[{c.status}]</Hi> <A href={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
+              <Hi>[{c.status}]</Hi> <A dest={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
             </div>
           ))}
         </div>
@@ -601,7 +619,7 @@ function buildCommands(): Cmd[] {
         <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
           {Object.entries(SECTION_ROUTES).map(([k, v]) => (
             <div key={k}>
-              <button onClick={() => go(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
+              <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
                 {v.hash}
               </button>{" "}
               <Dim>{v.label}</Dim>
@@ -611,7 +629,7 @@ function buildCommands(): Cmd[] {
             .filter((p) => p.detail)
             .map((p) => (
               <div key={p.slug}>
-                <button onClick={() => go(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
+                <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
                   #project/{p.slug}
                 </button>
               </div>
@@ -626,10 +644,10 @@ function buildCommands(): Cmd[] {
       help: "",
       run: (args) => {
         if (args.join(" ").includes("hire")) {
-          go("#contact");
-          return <span><Hi>access granted.</Hi> routing you to the hiring channel → <A href={`mailto:${profile.email}`} ext>{profile.email}</A></span>;
+          jump("#contact");
+          return <span><Hi>access granted.</Hi> routing you to the hiring channel → <A dest={`mailto:${profile.email}`} ext>{profile.email}</A></span>;
         }
-        if (args.join(" ").startsWith("rm")) return <span className="text-red-400">nice try. this shell is read-only — the code is all on <A href={profile.github} ext>GitHub</A> though.</span>;
+        if (args.join(" ").startsWith("rm")) return <span className="text-red-400">nice try. this shell is read-only — the code is all on <A dest={profile.github} ext>GitHub</A> though.</span>;
         return <Dim>{PROMPT_USER} is not in the sudoers file. This incident will be reported. (try `sudo hire`)</Dim>;
       },
     },
@@ -704,7 +722,22 @@ function Neofetch() {
 let blockId = 0;
 
 export function Terminal() {
-  const commands = useMemo(buildCommands, []);
+  const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
+  // Router-native replacement for the old bare-hash-assignment helper: used
+  // both by commands (open/exit/sudo hire/graph/sitemap) and by the bare
+  // room-name dispatch in `run()` below. Classifies via the same classifyHash
+  // shared with every other file's internal-nav conversion, so it can't drift.
+  const jump = useCallback<Go>(
+    (hash: string) => {
+      const c = classifyHash(hash);
+      if (c.kind === "section") { goToSection(c.id); return; }
+      if (c.kind === "project") { navigate({ to: "/project/$slug", params: { slug: c.slug } }); return; }
+      navigate({ to: c.to });
+    },
+    [navigate, goToSection],
+  );
+  const commands = useMemo(() => buildCommands(jump), [jump]);
   const cmdMap = useMemo(() => new Map(commands.map((c) => [c.name, c])), [commands]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [value, setValue] = useState("");
@@ -851,13 +884,13 @@ export function Terminal() {
         return;
       }
       if (SECTION_ROUTES[lname]) {
-        go(SECTION_ROUTES[lname].hash);
+        jump(SECTION_ROUTES[lname].hash);
         push("out", <span>→ {SECTION_ROUTES[lname].label}</span>);
         return;
       }
       push("out", <span className="text-red-400">{name}: command not found. Type <Hi>help</Hi>.</span>);
     },
-    [cmdMap, history, push, runBanner, setTheme],
+    [cmdMap, history, push, runBanner, setTheme, jump],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -918,9 +951,9 @@ export function Terminal() {
       <div className="term-scanlines pointer-events-none absolute inset-0 z-0" aria-hidden />
       {/* Title bar */}
       <header className="relative z-10 flex items-center justify-between border-b border-line bg-ink/80 px-4 py-2.5 backdrop-blur">
-        <a href="#top" className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
+        <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
           <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to portfolio</span>
-        </a>
+        </button>
         <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-zinc-500">
           <TerminalSquare size={13} className="text-[var(--t-accent)]" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh

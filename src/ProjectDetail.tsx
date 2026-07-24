@@ -10,8 +10,9 @@ import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
+import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
@@ -34,9 +35,9 @@ function NextProject({ slug }: { slug: string }) {
   return (
     <section className="border-t border-line bg-surface">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <a
-          href={`#project/${next.slug}`}
-          onClick={() => window.scrollTo({ top: 0 })}
+        <Link
+          to="/project/$slug"
+          params={{ slug: next.slug }}
           className="card-elevated group flex items-center justify-between gap-4 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50"
         >
           <div>
@@ -45,7 +46,7 @@ function NextProject({ slug }: { slug: string }) {
             <p className="mt-1 text-sm text-zinc-400">{next.tagline}</p>
           </div>
           <span className="text-2xl text-accent transition group-hover:translate-x-1.5">→</span>
-        </a>
+        </Link>
       </div>
     </section>
   );
@@ -180,6 +181,7 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
 
 export function ProjectDetail({ slug }: { slug: string }) {
   const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
   const project = projects.find((p) => p.slug === slug);
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
   const items: { src: string; caption: string }[] = project?.screens?.length
@@ -241,9 +243,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-24 text-center">
         <p className="text-zinc-400">Project not found.</p>
-        <a href="#projects" className="mt-4 inline-flex items-center gap-1 text-accent">
+        <button type="button" onClick={() => goToSection("projects")} className="mt-4 inline-flex items-center gap-1 text-accent">
           <ArrowLeft size={16} /> Back to projects
-        </a>
+        </button>
       </div>
     );
   }
@@ -268,9 +270,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <div className="aurora pointer-events-none absolute inset-0 opacity-80" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-ink" />
         <div className="relative mx-auto max-w-5xl px-6 pb-14 pt-10">
-          <a href="#projects" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
             <ArrowLeft size={16} /> All projects
-          </a>
+          </button>
           <p className="rise-in mt-8 text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
           <h1 className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight">
             {project.name}
@@ -288,17 +290,31 @@ export function ProjectDetail({ slug }: { slug: string }) {
             ))}
           </div>
           <div className="rise-in rise-in-3 mt-6 flex flex-wrap items-center gap-4">
-            {project.links.map((l) => (
-              <a
-                key={l.url}
-                href={l.url}
-                target={l.url.startsWith("#") ? undefined : "_blank"}
-                rel="noreferrer"
-                className="cta-glow inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
-              >
-                {l.label} <ArrowUpRight size={14} />
-              </a>
-            ))}
+            {project.links.map((l) => {
+              const ctaClass = "cta-glow inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim";
+              if (!l.url.startsWith("#")) {
+                return (
+                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className={ctaClass}>
+                    {l.label} <ArrowUpRight size={14} />
+                  </a>
+                );
+              }
+              const c = classifyHash(l.url);
+              if (c.kind === "section") {
+                return (
+                  <button key={l.url} type="button" onClick={() => goToSection(c.id)} className={ctaClass}>
+                    {l.label} <ArrowUpRight size={14} />
+                  </button>
+                );
+              }
+              const to = c.kind === "project" ? "/project/$slug" : c.to;
+              const params = c.kind === "project" ? { slug: c.slug } : undefined;
+              return (
+                <Link key={l.url} to={to} params={params} className={ctaClass}>
+                  {l.label} <ArrowUpRight size={14} />
+                </Link>
+              );
+            })}
             {LAB_OF[slug] && (
               <button
                 onClick={() => { openLab(LAB_OF[slug]); navigate({ to: "/lab" }); }}
@@ -318,13 +334,12 @@ export function ProjectDetail({ slug }: { slug: string }) {
               ✦ Ask my AI about {project.name}
             </button>
             <ShareProject slug={slug} name={project.name} />
-            <a
-              href="#loopdown"
-              onClick={() => window.scrollTo({ top: 0 })}
+            <Link
+              to="/loopdown"
               className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
             >
               Field notes on this work <ArrowUpRight size={13} />
-            </a>
+            </Link>
             <span className="text-sm text-zinc-500">{project.status}</span>
           </div>
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
@@ -541,9 +556,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 {l.label} <ArrowUpRight size={14} />
               </a>
             ))}
-            <a href="#resume" className="inline-flex items-center gap-1 text-sm font-semibold text-zinc-300 transition hover:text-accent">
+            <Link to="/resume" className="inline-flex items-center gap-1 text-sm font-semibold text-zinc-300 transition hover:text-accent">
               Résumé
-            </a>
+            </Link>
           </div>
         </section>
       )}
@@ -551,12 +566,12 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Keep the journey moving: next build in the loop + ways back. */}
       <NextProject slug={slug} />
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-6 px-6 py-12 text-center">
-        <a href="#projects" className="inline-flex items-center gap-2 text-sm text-accent transition hover:text-accent-dim">
+        <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-accent transition hover:text-accent-dim">
           <ArrowLeft size={16} /> Back to all projects
-        </a>
-        <a href="#map" className={`inline-flex items-center gap-1 text-sm text-zinc-400 transition ${t ? "hover:text-accent" : "hover:text-accent2"}`}>
+        </button>
+        <Link to="/map" className={`inline-flex items-center gap-1 text-sm text-zinc-400 transition ${t ? "hover:text-accent" : "hover:text-accent2"}`}>
           See how everything connects →
-        </a>
+        </Link>
       </div>
 
       {/* Lightbox */}

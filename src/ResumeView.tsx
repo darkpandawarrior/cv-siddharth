@@ -1,5 +1,6 @@
 import { ArrowLeft, Printer } from "lucide-react";
 import { profile, metrics, experience, education, resumeSkills, languages, competencies, projects, openSource } from "./data/profile.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 
 /**
  * Print-perfect résumé rendered from the same data as the portfolio.
@@ -7,12 +8,13 @@ import { profile, metrics, experience, education, resumeSkills, languages, compe
  * shareable document.
  */
 export function ResumeView() {
+  const { goToSection } = useSectionNav();
   return (
     <div className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
       <div className="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
-        <a href="#top" className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900">
+        <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900">
           <ArrowLeft size={16} /> Back to portfolio
-        </a>
+        </button>
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-700"

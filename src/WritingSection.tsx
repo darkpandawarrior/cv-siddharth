@@ -1,4 +1,5 @@
 import { ArrowRight, ArrowUpRight, BookOpen, PenLine } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
@@ -120,15 +121,15 @@ export function WritingSection() {
                   </div>
                 );
               })}
-              <a
-                href="#loopdown"
+              <Link
+                to="/loopdown"
                 className="group mt-auto flex items-center justify-between rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/10"
               >
                 <span className="flex items-center gap-2">
                   <PenLine size={15} /> Enter the full Loopdown
                 </span>
                 <ArrowRight size={15} className="transition group-hover:translate-x-1" />
-              </a>
+              </Link>
             </div>
           </Reveal>
         </div>
@@ -137,16 +138,16 @@ export function WritingSection() {
         <Reveal>
           <div className="mt-8 flex flex-wrap gap-2.5">
             {series.map((s) => (
-              <a
+              <Link
                 key={s.id}
-                href="#loopdown"
+                to="/loopdown"
                 className="tag-chip flex items-center gap-2 rounded-full border bg-card px-3.5 py-1.5 text-sm text-zinc-300 transition hover:text-zinc-100"
                 style={{ borderColor: `${accentOf(s.id)}55` }}
               >
                 <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
                 {s.title}
                 <span className="text-xs text-zinc-500">{s.episodes}</span>
-              </a>
+              </Link>
             ))}
           </div>
         </Reveal>
@@ -154,8 +155,8 @@ export function WritingSection() {
         {/* lineage: the archive + Books Before Bros */}
         <Reveal delay={100}>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <a
-              href="#loopdown"
+            <Link
+              to="/loopdown"
               className="card-elevated group flex flex-col rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
             >
               <div className="flex items-center justify-between gap-2">
@@ -168,7 +169,7 @@ export function WritingSection() {
                 {archive.length} pieces of short fiction, campus lore, satire and essays — everything I
                 wrote before I wrote code.
               </p>
-            </a>
+            </Link>
             <a
               href={BOOKS_BEFORE_BROS.url}
               target="_blank"

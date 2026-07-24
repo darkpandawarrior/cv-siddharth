@@ -1,8 +1,10 @@
 import { ArrowLeft, ArrowUpRight, Github, PenLine } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
+import { useSectionNav } from "./lib/navigation.ts";
 import {
   BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
@@ -23,6 +25,7 @@ import {
 const CAST_COLORS = ["#7c5cff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
 
 export function WritingView() {
+  const { goToSection } = useSectionNav();
   const { lessons, series, archive, cast } = writing;
   const sorted = [...lessons].sort((a, b) => {
     if ((a.status === "published") !== (b.status === "published")) return a.status === "published" ? -1 : 1;
@@ -33,19 +36,19 @@ export function WritingView() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
         <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <a href="#top" className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> Back to portfolio
-          </a>
+          </button>
           <div className="flex items-center gap-5">
-            <a href="#projects" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            <button type="button" onClick={() => goToSection("projects")} className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Projects
-            </a>
-            <a href="#map" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            </button>
+            <Link to="/map" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Storyboard
-            </a>
-            <a href="#resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            </Link>
+            <Link to="/resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Résumé
-            </a>
+            </Link>
             <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent">
               <Github size={15} /> the-loopdown
             </a>

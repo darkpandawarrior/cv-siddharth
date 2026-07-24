@@ -36,7 +36,8 @@ import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
 import { writing } from "./data/writing.ts";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -153,10 +154,13 @@ const DRAWER_EXTRAS = [
 
 function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
   const go = (href: string) => {
     setOpen(false);
-    if (!document.getElementById(href.slice(1))) window.scrollTo({ top: 0 });
-    window.location.hash = href;
+    const c = classifyHash(href);
+    if (c.kind === "section") { goToSection(c.id); return; }
+    navigate(c.kind === "project" ? { to: "/project/$slug", params: { slug: c.slug } } : { to: c.to });
   };
   return (
     <div className="lg:hidden">
@@ -211,33 +215,31 @@ function MobileMenu() {
 
 function Nav() {
   const { progressRef, active } = useScrollSpy();
+  const { goToSection } = useSectionNav();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur print:hidden">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <a href="#top" className="font-display text-lg font-bold tracking-tight">
+        <button type="button" onClick={() => goToSection("top")} className="font-display text-lg font-bold tracking-tight">
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
-        </a>
+        </button>
         <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
           {NAV_LINKS.map((l) => (
-            <a
+            <button
               key={l.href}
-              href={l.href}
+              type="button"
+              onClick={() => goToSection(l.href.slice(1))}
               aria-current={active === l.href.slice(1) ? "true" : undefined}
               className={`nav-link transition hover:text-accent ${active === l.href.slice(1) ? "nav-link-active text-accent" : ""}`}
             >
               {l.label}
-            </a>
+            </button>
           ))}
-          <a
-            href="#playground"
-            onClick={() => window.scrollTo({ top: 0 })}
-            className="flex items-center gap-1 transition hover:text-accent"
-          >
+          <Link to="/playground" className="flex items-center gap-1 transition hover:text-accent">
             <LayoutGrid size={13} /> Playground
-          </a>
-          <a href="#resume" className="flex items-center gap-1 transition hover:text-accent">
+          </Link>
+          <Link to="/resume" className="flex items-center gap-1 transition hover:text-accent">
             <FileText size={13} /> Résumé
-          </a>
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <MobileMenu />
@@ -259,6 +261,7 @@ function Nav() {
 }
 
 function Hero() {
+  const { goToSection } = useSectionNav();
   return (
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
@@ -278,18 +281,19 @@ function Hero() {
           >
             Chat with my AI assistant
           </button>
-          <a
-            href="#resume"
+          <Link
+            to="/resume"
             className="rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             View résumé
-          </a>
-          <a
-            href="#work"
+          </Link>
+          <button
+            type="button"
+            onClick={() => goToSection("work")}
             className="flex items-center gap-1.5 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
           >
             See my work ↓
-          </a>
+          </button>
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-zinc-500">{profile.availability}</p>
         <LiveTicker />
@@ -357,6 +361,7 @@ function Circuit() {
 
 /** Live pulse under the hero: the latest ship and the latest field note. */
 function LiveTicker() {
+  const { goToSection } = useSectionNav();
   const latestShip = recentGrowth[recentGrowth.length - 1];
   const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
   if (!latestShip && !latestPost) return null;
@@ -366,23 +371,22 @@ function LiveTicker() {
         <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> live
       </span>
       {latestShip && (
-        <a href="#projects" className="transition hover:text-accent">
+        <button type="button" onClick={() => goToSection("projects")} className="transition hover:text-accent">
           ▲ shipped · {latestShip.title}
-        </a>
+        </button>
       )}
       {latestPost && (
         <a href={latestPost.live} target="_blank" rel="noreferrer" className="transition hover:text-accent2">
           ✎ latest note · {latestPost.title}
         </a>
       )}
-      <a
-        href="#compose"
-        onClick={() => window.scrollTo({ top: 0 })}
+      <Link
+        to="/compose"
         className="transition hover:text-accent"
         title="A live Jetpack Compose editor, built into this page"
       >
         ▶ play · live Compose editor
-      </a>
+      </Link>
     </div>
   );
 }
@@ -391,18 +395,20 @@ function LiveTicker() {
 const METRIC_TARGETS = ["#experience", "#work", "#work", "#work"];
 
 function Metrics() {
+  const { goToSection } = useSectionNav();
   return (
     <section className="border-y border-line bg-surface">
       <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-10 lg:grid-cols-4">
         {metrics.map((m, i) => (
-          <a
+          <button
             key={m.label}
-            href={METRIC_TARGETS[i] ?? "#work"}
+            type="button"
+            onClick={() => goToSection((METRIC_TARGETS[i] ?? "#work").slice(1))}
             title="See the work behind this number"
-            className="group block rounded-xl transition hover:bg-card/60"
+            className="group block w-full rounded-xl text-left transition hover:bg-card/60"
           >
             <AnimatedMetric metric={m} />
-          </a>
+          </button>
         ))}
       </div>
     </section>
@@ -455,10 +461,10 @@ function CaseStudies() {
         <Reveal className="mb-6">
           <TiltCard maxTilt={2.5}>
             <article
-              onClick={() => { window.location.hash = "#project/mileway"; window.scrollTo({ top: 0 }); }}
+              onClick={() => navigate({ to: "/project/$slug", params: { slug: "mileway" } })}
               role="link"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.hash = "#project/mileway"; window.scrollTo({ top: 0 }); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
               className="card-elevated group grid cursor-pointer gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
             >
               <div className="relative min-h-[220px] overflow-hidden border-b border-line bg-void lg:border-b-0 lg:border-r">
@@ -550,6 +556,8 @@ function CaseStudies() {
 }
 
 function Projects() {
+  const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
   return (
     <section id="projects" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
@@ -562,11 +570,10 @@ function Projects() {
         </Reveal>
         <div className="grid gap-6 sm:grid-cols-2">
           {projects.map((p, i) => {
-            const href = p.detail ? `#project/${p.slug}` : p.links[0]?.url;
+            const externalHref = p.links[0]?.url;
             const go = () => {
-              if (!href) return;
-              if (p.detail) { window.location.hash = href; window.scrollTo({ top: 0 }); }
-              else window.open(href, "_blank", "noreferrer");
+              if (p.detail) { navigate({ to: "/project/$slug", params: { slug: p.slug } }); return; }
+              if (externalHref) window.open(externalHref, "_blank", "noreferrer");
             };
             const platforms = platformsOf(p.stack);
             const isLive = LIVE_WEB_PROJECTS.has(p.slug);
@@ -647,18 +654,31 @@ function Projects() {
                         View case study →
                       </span>
                     )}
-                    {p.links.map((l) => (
-                      <a
-                        key={l.url}
-                        href={l.url}
-                        target={l.url.startsWith("#") ? undefined : "_blank"}
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1 text-sm font-semibold text-zinc-400 transition hover:text-accent"
-                      >
-                        {l.label} <ArrowUpRight size={14} />
-                      </a>
-                    ))}
+                    {p.links.map((l) => {
+                      const linkClass = "flex items-center gap-1 text-sm font-semibold text-zinc-400 transition hover:text-accent";
+                      if (!l.url.startsWith("#")) {
+                        return (
+                          <a key={l.url} href={l.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className={linkClass}>
+                            {l.label} <ArrowUpRight size={14} />
+                          </a>
+                        );
+                      }
+                      const c = classifyHash(l.url);
+                      if (c.kind === "section") {
+                        return (
+                          <button key={l.url} type="button" onClick={(e) => { e.stopPropagation(); goToSection(c.id); }} className={linkClass}>
+                            {l.label} <ArrowUpRight size={14} />
+                          </button>
+                        );
+                      }
+                      const to = c.kind === "project" ? "/project/$slug" : c.to;
+                      const params = c.kind === "project" ? { slug: c.slug } : undefined;
+                      return (
+                        <Link key={l.url} to={to} params={params} onClick={(e) => e.stopPropagation()} className={linkClass}>
+                          {l.label} <ArrowUpRight size={14} />
+                        </Link>
+                      );
+                    })}
                   </div>
                   </div>
                 </article>
@@ -676,7 +696,7 @@ function Projects() {
             <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
             <FoundationGraph />
             <p className="mt-4 font-mono text-[11px] text-zinc-500">
-              ↓ both libraries are in <a href="#source" className="text-accent transition hover:text-accent-dim">The Source</a>, one click from the code.
+              ↓ both libraries are in <button type="button" onClick={() => goToSection("source")} className="text-accent transition hover:text-accent-dim">The Source</button>, one click from the code.
             </p>
           </div>
         </Reveal>
@@ -747,6 +767,7 @@ function TimelineSpine({ trackRef }: { trackRef: React.RefObject<HTMLDivElement 
 
 function ExperienceSection() {
   const trackRef = useRef<HTMLDivElement>(null);
+  const { goToSection } = useSectionNav();
   return (
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
@@ -782,13 +803,14 @@ function ExperienceSection() {
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
                       <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">receipts</span>
                       {["50% → 95% GPS", "-80% crashes", "92% Compose"].map((r) => (
-                        <a
+                        <button
                           key={r}
-                          href="#work"
+                          type="button"
+                          onClick={() => goToSection("work")}
                           className="rounded-full border border-accent/30 bg-accent/5 px-2.5 py-0.5 text-[11px] text-accent/90 transition hover:border-accent hover:text-accent"
                         >
                           {r}
-                        </a>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -857,6 +879,7 @@ function Skills() {
   const [active, setActive] = useState<string | null>(null);
   const chips = useMemo(() => skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group }))), []);
   const toggle = (group: string) => setActive((v) => (v === group ? null : group));
+  const { goToSection } = useSectionNav();
 
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
@@ -892,16 +915,24 @@ function Skills() {
       {active && PROVEN_IN[active] && (
         <div className="fade-in mt-5 flex flex-wrap items-center gap-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">proven in</span>
-          {PROVEN_IN[active].map((p) => (
-            <a
-              key={p.label}
-              href={p.href}
-              onClick={() => { if (!document.getElementById(p.href.slice(1))) window.scrollTo({ top: 0 }); }}
-              className="rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent"
-            >
-              {p.label} →
-            </a>
-          ))}
+          {PROVEN_IN[active].map((p) => {
+            const provenClass = "rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent";
+            const c = classifyHash(p.href);
+            if (c.kind === "section") {
+              return (
+                <button key={p.label} type="button" onClick={() => goToSection(c.id)} className={provenClass}>
+                  {p.label} →
+                </button>
+              );
+            }
+            const to = c.kind === "project" ? "/project/$slug" : c.to;
+            const params = c.kind === "project" ? { slug: c.slug } : undefined;
+            return (
+              <Link key={p.label} to={to} params={params} className={provenClass}>
+                {p.label} →
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -972,12 +1003,12 @@ function Contact() {
             <Mail size={16} /> {profile.email}
           </a>
           <CopyEmail />
-          <a
-            href="#resume"
+          <Link
+            to="/resume"
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             <FileText size={16} /> Résumé / PDF
-          </a>
+          </Link>
           <a
             href={profile.github}
             target="_blank"
@@ -994,13 +1025,12 @@ function Contact() {
           >
             <Linkedin size={16} /> LinkedIn
           </a>
-          <a
-            href="#loopdown"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <Link
+            to="/loopdown"
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent2 hover:text-accent2"
           >
             ✎ My writing
-          </a>
+          </Link>
         </div>
       </div>
       <SiteFooter />
@@ -1025,25 +1055,23 @@ function PlaygroundTeaser() {
             engineering above. They live behind one door now.
           </p>
           <div className="flex flex-wrap gap-2">
-            {ROOMS.map(({ href, label, icon: Icon, tint }) => (
-              <a
-                key={href}
-                href={href}
-                onClick={() => window.scrollTo({ top: 0 })}
+            {ROOMS.map(({ to, label, icon: Icon, tint }) => (
+              <Link
+                key={to}
+                to={to}
                 className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-zinc-300 transition hover:border-accent/50 hover:text-zinc-100"
               >
                 <Icon size={13} style={{ color: tint }} />
                 {label}
-              </a>
+              </Link>
             ))}
           </div>
-          <a
-            href="#playground"
-            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0 }); window.location.hash = "#playground"; }}
+          <Link
+            to="/playground"
             className="btn-primary mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
           >
             Enter the Playground →
-          </a>
+          </Link>
         </Reveal>
       </div>
     </section>
@@ -1051,6 +1079,7 @@ function PlaygroundTeaser() {
 }
 
 export function HomePage() {
+  const navigate = useNavigate();
   // Backtick summons the terminal from anywhere — unless you're typing in a
   // field (including the terminal's own input, so ` types normally there).
   useEffect(() => {
@@ -1059,14 +1088,11 @@ export function HomePage() {
       const el = e.target as HTMLElement | null;
       if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
       e.preventDefault();
-      if (window.location.hash !== "#terminal") {
-        window.scrollTo({ top: 0 });
-        window.location.hash = "#terminal";
-      }
+      navigate({ to: "/terminal" });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen">

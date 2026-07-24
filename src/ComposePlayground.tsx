@@ -3,6 +3,7 @@ import { ArrowLeft, Play, RotateCcw, Smartphone, Wand2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
 import { projects } from "./data/profile.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 
 /**
  * The Compose Playground — write a slice of Jetpack Compose, watch it render
@@ -623,6 +624,7 @@ function applyActions(node: Node, state: StateMap): StateMap {
 const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField · Spacer · AnimatedVisibility · Modifier(padding, size, fillMax…, background, clip, weight) · remember { mutableStateOf() } · state-driven size.dp · onClick + haptics · imported themes: ${DS_APPS.map((n) => `${n}.accent`).join(", ")}`;
 
 export default function ComposePlayground() {
+  const { goToSection } = useSectionNav();
   const [code, setCode] = useState(PRESETS[0].code);
   const [live, setLive] = useState(code);
   const gutterRef = useRef<HTMLDivElement>(null);
@@ -685,9 +687,9 @@ export default function ComposePlayground() {
     <div className="flex h-screen flex-col bg-void">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <a href="#top" className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
-          </a>
+          </button>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
             <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
           </span>

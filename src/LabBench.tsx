@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
 // time — harmless client-side, but fatal during SSR now that the home route
@@ -85,7 +86,7 @@ export function LabBench() {
             Nine instruments spanning Dice.tech's production case studies and five personal open-source
             builds — the actual idea behind each headline metric, running live in your browser. Flip a
             switch and watch the number happen. Every other room is one door away in
-            the <a href="#playground" onClick={() => window.scrollTo({ top: 0 })} className="text-accent transition hover:text-accent-dim">Playground</a>.
+            the <Link to="/playground" className="text-accent transition hover:text-accent-dim">Playground</Link>.
           </p>
         </Reveal>
         <Reveal>

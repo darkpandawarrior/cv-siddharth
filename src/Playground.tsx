@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
+import { useSectionNav } from "./lib/navigation.ts";
 
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
@@ -13,7 +15,7 @@ import { openChat } from "./FloatingChat.tsx";
  */
 
 type Room = {
-  href: string;
+  to: string;
   label: string;
   blurb: string;
   tag: string;
@@ -23,7 +25,7 @@ type Room = {
 
 export const ROOMS: Room[] = [
   {
-    href: "#compose",
+    to: "/compose",
     label: "Compose Playground",
     blurb: "Write Jetpack Compose, watch it recompose live in a phone frame — reactive state, animation, and an AI that writes it for you.",
     tag: "live editor · AI",
@@ -31,7 +33,7 @@ export const ROOMS: Room[] = [
     tint: "#3ddc84",
   },
   {
-    href: "#lab",
+    to: "/lab",
     label: "The Lab Bench",
     blurb: "Nine experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.",
     tag: "canvas · physics",
@@ -39,7 +41,7 @@ export const ROOMS: Room[] = [
     tint: "#5ee6ff",
   },
   {
-    href: "#blueprint",
+    to: "/blueprint",
     label: "The Blueprint Room",
     blurb: "The whole portfolio as an infinite canvas — a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.",
     tag: "3D · WebGL",
@@ -47,7 +49,7 @@ export const ROOMS: Room[] = [
     tint: "#db61ff",
   },
   {
-    href: "#map",
+    to: "/map",
     label: "The 3D Storyboard",
     blurb: "The projects and the ideas that connect them, as a constellation you can orbit — every edge is a real dependency.",
     tag: "3D · graph",
@@ -55,7 +57,7 @@ export const ROOMS: Room[] = [
     tint: "#f0883e",
   },
   {
-    href: "#forge",
+    to: "/forge",
     label: "The Particle Forge",
     blurb: "A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.",
     tag: "canvas · interactive",
@@ -63,7 +65,7 @@ export const ROOMS: Room[] = [
     tint: "#3ddc84",
   },
   {
-    href: "#terminal",
+    to: "/terminal",
     label: "The Terminal",
     blurb: "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
     tag: "text · easter egg",
@@ -75,24 +77,25 @@ export const ROOMS: Room[] = [
 /** Shared full-screen chrome for every room route (Lab Bench, Storyboard,
  *  Forge). Keeps a consistent way back to the hub and the portfolio. */
 export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
+  const { goToSection } = useSectionNav();
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="#playground"
+            <Link
+              to="/playground"
               className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent"
             >
               <LayoutGrid size={14} /> <span className="hidden sm:inline">Playground</span>
-            </a>
-            <a
-              href="#top"
-              onClick={() => window.scrollTo({ top: 0 })}
+            </Link>
+            <button
+              type="button"
+              onClick={() => goToSection("top")}
               className="flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-accent"
             >
               <ArrowLeft size={14} /> <span className="hidden sm:inline">Portfolio</span>
-            </a>
+            </button>
           </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
             {title} — {tagline}
@@ -113,9 +116,8 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
 function RoomCard({ r, i }: { r: Room; i: number }) {
   const Icon = r.icon;
   return (
-    <a
-      href={r.href}
-      onClick={() => window.scrollTo({ top: 0 })}
+    <Link
+      to={r.to}
       className="playground-card group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1"
       style={{ animationDelay: `${i * 60}ms` }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.tint}66`)}
@@ -135,22 +137,23 @@ function RoomCard({ r, i }: { r: Room; i: number }) {
       <span className="mt-4 inline-flex items-center gap-1 font-mono text-[11px] font-semibold" style={{ color: r.tint }}>
         enter →
       </span>
-    </a>
+    </Link>
   );
 }
 
 export default function Playground() {
+  const { goToSection } = useSectionNav();
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <a
-            href="#top"
-            onClick={() => window.scrollTo({ top: 0 })}
+          <button
+            type="button"
+            onClick={() => goToSection("top")}
             className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent"
           >
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
-          </a>
+          </button>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
@@ -173,7 +176,7 @@ export default function Playground() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ROOMS.map((r, i) => (
-            <RoomCard key={r.href} r={r} i={i} />
+            <RoomCard key={r.to} r={r} i={i} />
           ))}
         </div>
 

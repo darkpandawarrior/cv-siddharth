@@ -1,4 +1,5 @@
 import { PenLine } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { fieldNotesFor } from "./data/connections.ts";
 
 /**
@@ -16,17 +17,17 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
         <PenLine size={10} /> field notes
       </span>
       {notes.map((n) => (
-        <a
+        <Link
           key={n.id}
-          href="#loopdown"
-          onClick={(e) => { e.stopPropagation(); window.scrollTo({ top: 0 }); }}
+          to="/loopdown"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-1.5 rounded-full border bg-card/60 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:text-zinc-100"
           style={{ borderColor: `${n.color}55` }}
         >
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
           {n.title}
           <span className="text-[10px] text-zinc-500">{n.episodes}</span>
-        </a>
+        </Link>
       ))}
     </div>
   );

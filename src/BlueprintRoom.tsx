@@ -4,6 +4,19 @@ import { openChat } from "./FloatingChat.tsx";
 import { TOUR } from "./blueprintData.ts";
 import { hasWebGL } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
+import { useSectionNav } from "./lib/navigation.ts";
+
+/** Class components (RoomBoundary below) can't call hooks directly — this
+ *  wraps the router-aware "back to portfolio" control so both the error
+ *  fallback and the normal header can use it. */
+function BackToPortfolio({ className, children }: { className: string; children: ReactNode }) {
+  const { goToSection } = useSectionNav();
+  return (
+    <button type="button" onClick={() => goToSection("top")} className={className}>
+      {children}
+    </button>
+  );
+}
 
 /**
  * The Blueprint Room — the portfolio as an infinite canvas, in three coupled
@@ -37,9 +50,9 @@ class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean 
         >
           <RotateCcw size={15} /> Reset the canvas & reload
         </button>
-        <a href="#top" className="text-sm text-zinc-500 transition hover:text-accent">
+        <BackToPortfolio className="text-sm text-zinc-500 transition hover:text-accent">
           ← Back to the portfolio
-        </a>
+        </BackToPortfolio>
       </div>
     );
   }
@@ -90,9 +103,9 @@ function BlueprintRoomInner() {
     <div className="flex h-screen flex-col">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <a href="#top" className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+          <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
-          </a>
+          </BackToPortfolio>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-zinc-500 lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
           </span>

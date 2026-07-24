@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /* ── Crash Triage Lab ────────────────────────────────────────────────── */
@@ -142,9 +143,9 @@ export function CrashLab() {
           {triage && (
             <span className="font-mono text-xs text-accent">top 2 clusters = {stats.top}% of all crashes</span>
           )}
-          <a href="#loopdown" onClick={() => window.scrollTo({ top: 0 })} className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-zinc-500 transition hover:text-accent">
             the full story → the coroutine court
-          </a>
+          </Link>
         </div>
       </div>
     </div>
