@@ -14,7 +14,12 @@ const LANGUAGE_HINTS = ["Kotlin", "GDScript", "Swift", "TypeScript", "JavaScript
  */
 export function buildProjectJsonLd(p: Project) {
   const url = `${SITE_URL}/project/${p.slug}`;
-  const programmingLanguage = LANGUAGE_HINTS.filter((lang) => p.stack.some((s) => s.includes(lang)));
+  // Word-boundary match, not substring: "JavaScript".includes("Java") is true,
+  // which would wrongly tag a JS project as also using Java. `\bJava\b` has no
+  // boundary inside "JavaScript" (Java|Script), so it correctly won't match.
+  const programmingLanguage = LANGUAGE_HINTS.filter((lang) =>
+    p.stack.some((s) => new RegExp(`\\b${lang}\\b`).test(s)),
+  );
   const repo = p.links.find((l) => /github\.com|gitlab\.com|bitbucket\.org/.test(l.url));
 
   const softwareSourceCode: Record<string, unknown> = {

@@ -25,6 +25,12 @@ describe("buildProjectJsonLd", () => {
     expect(softwareSourceCode.programmingLanguage).toEqual(["GDScript"]);
   });
 
+  it("does not tag a JavaScript stack as also using Java (word-boundary match)", () => {
+    const fake = { ...mileway, slug: "x", name: "X", stack: ["JavaScript", "React"], links: [] };
+    const { softwareSourceCode } = buildProjectJsonLd(fake);
+    expect(softwareSourceCode.programmingLanguage).toEqual(["JavaScript"]);
+  });
+
   it("builds a valid 3-level BreadcrumbList ending at the project", () => {
     const { breadcrumbList } = buildProjectJsonLd(mileway);
     expect(breadcrumbList["@type"]).toBe("BreadcrumbList");
