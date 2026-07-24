@@ -28,6 +28,7 @@ import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
+import { Picture } from "./Picture.tsx";
 import { ROOMS } from "./Playground.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
@@ -583,10 +584,9 @@ function Projects() {
                 >
                   {media && (
                     <div className="relative h-44 shrink-0 overflow-hidden border-b border-line bg-void">
-                      <img
+                      <Picture
                         src={media.src}
                         alt={media.alt}
-                        loading="lazy"
                         className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
                       />
                     </div>

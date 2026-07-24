@@ -11,6 +11,7 @@ import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
 import { useNavigate } from "@tanstack/react-router";
+import { Picture } from "./Picture.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
@@ -508,7 +509,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   title={it.caption}
                 >
                   <span className="gallery-item block overflow-hidden rounded-2xl border border-line bg-card">
-                    <img src={it.src} alt={it.caption} loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />
+                    <Picture src={it.src} alt={it.caption} className="aspect-[9/19] h-full w-full object-cover" />
                   </span>
                   {it.caption && (
                     <span className="mt-2 line-clamp-2 block text-center text-xs text-zinc-500 transition group-hover/shot:text-accent">
@@ -569,10 +570,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
           >
             <ChevronLeft size={22} />
           </button>
-          <img
+          <Picture
             key={items[idx].src}
             src={items[idx].src}
             alt={items[idx].caption}
+            loading="eager"
             className="lb-in max-h-[85vh] max-w-full rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
