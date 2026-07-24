@@ -26,6 +26,8 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
       { label: "Mileway", href: "#project/mileway" },
       { label: "Kursi", href: "#project/kursi" },
       { label: "PaymentsLab", href: "#project/paymentslab" },
+      { label: "HireSignal", href: "#project/hiresignal" },
+      { label: "DEADLOCK", href: "#project/deadlock" },
       { label: "▶ The Playground", href: "#playground" },
       { label: "Compose Playground", href: "#compose" },
       { label: "Blueprint Room", href: "#blueprint" },

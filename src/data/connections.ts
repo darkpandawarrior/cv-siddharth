@@ -27,4 +27,4 @@ export function fieldNotesFor(slug: string): FieldNoteLink[] {
 }
 
 // Reading order for the "next build" pager on project detail pages.
-export const PROJECT_ORDER = ["mileway", "kursi", "paymentslab"];
+export const PROJECT_ORDER = ["mileway", "kursi", "paymentslab", "hiresignal", "deadlock"];

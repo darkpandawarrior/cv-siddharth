@@ -38,6 +38,8 @@ export const NODES: Node[] = [
   { id: "mileway", label: "Mileway", sub: "5 platforms", x: 0.1, y: 0.5, r: 14, color: GREEN, target: "#project/mileway" },
   { id: "kursi", label: "Kursi", sub: "live web build", x: 0.2, y: 0.8, r: 12, color: GREEN, target: "#project/kursi" },
   { id: "paymentslab", label: "PaymentsLab", sub: "gateway lab", x: 0.38, y: 0.88, r: 12, color: GREEN, target: "#project/paymentslab" },
+  { id: "hiresignal", label: "HireSignal", sub: "25-module KMP", x: 0.56, y: 0.68, r: 12, color: GREEN, target: "#project/hiresignal" },
+  { id: "deadlock", label: "DEADLOCK", sub: "time-loop game", x: 0.7, y: 0.58, r: 12, color: GREEN, target: "#project/deadlock" },
   { id: "experience", label: "Experience", x: 0.62, y: 0.12, r: 11, color: CYAN, target: "#experience" },
   { id: "skills", label: "Skills", x: 0.4, y: 0.08, r: 11, color: CYAN, target: "#skills" },
   { id: "writing", label: "The Loopdown", sub: "field notes", x: 0.78, y: 0.34, r: 15, color: PURPLE, target: "#loopdown" },
@@ -50,9 +52,10 @@ export const NODES: Node[] = [
 // descends from the blog; the AI has read the lot.
 export const EDGES: [string, string][] = [
   ["sid", "work"], ["sid", "mileway"], ["sid", "kursi"], ["sid", "paymentslab"],
+  ["sid", "hiresignal"], ["sid", "deadlock"],
   ["sid", "experience"], ["sid", "skills"], ["sid", "writing"], ["sid", "chat"],
   ["mileway", "writing"], ["work", "writing"], ["books", "writing"],
-  ["mileway", "kursi"], ["kursi", "paymentslab"],
+  ["mileway", "kursi"], ["kursi", "paymentslab"], ["paymentslab", "hiresignal"], ["hiresignal", "deadlock"],
   ["chat", "writing"], ["chat", "work"],
   ["sid", "blueprint"],
 ];

@@ -21,6 +21,8 @@ const DEPTH: Record<string, number> = {
   mileway: 0.5,
   kursi: -0.4,
   paymentslab: 0.6,
+  hiresignal: -0.3,
+  deadlock: 0.45,
   experience: -0.8,
   skills: 0.4,
   writing: 0.7,
