@@ -29,11 +29,24 @@ curl -s "$BASE/project/mileway" | grep -aqi "mileway" && echo PROJECT-SSR || { e
 # CSR: raw server HTML is the shell only; the route's interactive content is
 # NOT pre-rendered (arrives via the client bundle). Assert the shell is
 # present AND the route's signature content is ABSENT from the raw response.
-curl -s "$BASE/terminal" | grep -aqi "<html" && ! curl -s "$BASE/terminal" | grep -aqi "boot sequence" \
-  && echo terminal-CSR-SHELL || { echo "FAIL: terminal-CSR-SHELL"; fail=1; }
-
-for r in blueprint compose playground lab map forge loopdown; do
-  curl -s "$BASE/$r" | grep -aqi "<html" && echo "$r-CSR-SHELL" || { echo "FAIL: $r-CSR-SHELL"; fail=1; }
-done
+# Each signature string below is real client-only rendered content (verified
+# against dist/client/ after `npm run build` — see task-9-10-report.md), so
+# these checks actually fail if a CSR route starts SSR'ing its body.
+#
+# ponytail: no associative array (macOS ships bash 3.2 — no -A support, and
+# `set -u` makes unquoted `[key]` subscripts blow up as "unbound variable").
+# Eight plain lines, same shape as the SSR checks above.
+csr_check() {
+  curl -s "$BASE/$1" | grep -aqi "<html" && ! curl -s "$BASE/$1" | grep -aFqi "$2" \
+    && echo "$1-CSR-SHELL" || { echo "FAIL: $1-CSR-SHELL"; fail=1; }
+}
+csr_check lab "nine instruments"
+csr_check map "Everything connects"
+csr_check forge "Move your cursor through it"
+csr_check loopdown "Field notes from an engineer who"
+csr_check playground "every interactive room, one door"
+csr_check terminal "booting sid.android"
+csr_check blueprint "Reset the camera and layout"
+csr_check compose "write it, watch it recompose"
 
 exit $fail
