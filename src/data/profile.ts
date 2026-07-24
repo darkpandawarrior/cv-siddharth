@@ -140,24 +140,24 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
     title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
-    metric: "35 modules · 5 platforms · offline AI",
+    metric: "46 modules · 5 platforms · offline AI",
     summary:
       "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend — Room + DataStore only — so the whole thing is reproducible and reviewable by anyone.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
     approach: [
-      "35-module clean architecture: 11 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "46-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core — design system, Room (KMP) + DataStore, and every check-in / hardware-event screen — driving Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
       "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals — the real logic a live expense platform needs, all local.",
       "A durable submit-outbox: a track/voucher submission is journaled locally and reconciled deterministically, so a kill mid-submit never loses or double-counts a record — the repository already looks one implementation-swap away from a real API.",
       "An on-device AI assistant: retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, chunked streaming and on-device speech I/O — no remote LLM, no server.",
-      "A super-profile & plugin-composition platform (V24, shipped — with a V25→V32 on-device intelligence and feature-parity series landed on top): a single plugin registry — every tile, capability and tunable value gates through it, resolved by layering FORCED > USER > PRESET > DEFAULT — drives four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) that reshape hubs, auth flows and tracking behaviour from one account, plus act-on-behalf session delegation, a verification centre, growth/membership surfaces and wallet/payout identity.",
+      "A super-profile & plugin-composition platform (V24, shipped — with a V25→V37 series landed on top spanning on-device intelligence, JWT auth, closeout hardening, home-screen cards/advances and a What's New feature): a single plugin registry — every tile, capability and tunable value gates through it, resolved by layering FORCED > USER > PRESET > DEFAULT — drives four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) that reshape hubs, auth flows and tracking behaviour from one account, plus act-on-behalf session delegation, a verification centre, growth/membership surfaces and wallet/payout identity.",
       "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 159 Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
       "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
-    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "45 modules", "Offline AI", "Open source"],
+    tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "46 modules", "Offline AI", "Open source"],
   },
   {
     slug: "gps-accuracy",
@@ -541,7 +541,7 @@ export const projects: Project[] = [
       "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, zero backend.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "45-module clean architecture: 13 feature modules meeting only at the composition root.",
+      "46-module clean architecture: 13 feature modules meeting only at the composition root.",
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant.",
     ],
     links: [
@@ -549,8 +549,8 @@ export const projects: Project[] = [
       { label: "Case study", url: "#work" },
       { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
     ],
-    status: "45 modules · 5 platforms · 159 tests",
-    badges: ["Kotlin Multiplatform", "45 modules", "5 platforms", "Open source"],
+    status: "46 modules · 5 platforms · 159 tests",
+    badges: ["Kotlin Multiplatform", "46 modules", "5 platforms", "Open source"],
     // Telemetry-cyan — the site's own "depth" accent, reused rather than
     // invented: fitting for a location/tracking app, distinct from Kursi's
     // teak/brass and PaymentsLab's violet.
@@ -611,7 +611,7 @@ export const projects: Project[] = [
         "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
-          heading: "45-module clean architecture (35 local + 10 composed)",
+          heading: "46-module clean architecture (36 local + 10 composed)",
           body: "Thirteen feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
@@ -636,7 +636,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Super-profile & plugin-composition platform (V24, shipped)",
-          body: "The newest depth wave: a single plugin registry is the app's composition mechanism — TILE / CAPABILITY / VALUE plugins resolved by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR) — shipped, with a V25→V32 on-device intelligence series landed on top, still zero backend.",
+          body: "The newest depth wave: a single plugin registry is the app's composition mechanism — TILE / CAPABILITY / VALUE plugins resolved by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR) — shipped, with a V25→V37 series landed on top (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New), still zero backend.",
         },
         {
           heading: "FOSS-safe distribution & quality gates",
@@ -644,7 +644,7 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "45", label: "Gradle modules (35 local + 10 composed)" },
+        { value: "46", label: "Gradle modules (36 local + 10 composed)" },
         { value: "13", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls" },
@@ -667,7 +667,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "35-module architecture — features meet only at :app",
+          title: "46-module architecture — features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -772,15 +772,15 @@ export const projects: Project[] = [
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
     highlights: [
-      "39-module registry (14 local + 25 composed) spans roughly 71 cataloged payment gateways.",
+      "40-module registry (15 local + 25 composed) spans 66 cataloged payment gateways.",
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" },
       { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
     ],
-    status: "39 modules · ~71 gateways · 5 rails",
-    badges: ["Kotlin Multiplatform", "40 modules", "71 gateways", "Open source"],
+    status: "40 modules · 66 gateways · 5 rails",
+    badges: ["Kotlin Multiplatform", "40 modules", "66 gateways", "Open source"],
     theme: {
       accent: "#A78BFA",
       accentDim: "#7C3AED",
@@ -812,15 +812,15 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a ~71-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
+        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
       sections: [
         {
           heading: "The one idea worth stealing",
           body: "A client-side Success is a hint, never proof. Only the server — after signature verification and webhook reconciliation — decides the true state. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
-          heading: "39 modules, ~71 gateways",
-          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code — 14 local modules plus 25 composed from kmp-toolkit. The in-app catalog spans roughly 71 registered gateways: 17 standalone provider modules (Razorpay through Stripe Connect), 44 hosted-webview gateways behind one archetype, 7 mobile-money flows and 3 catalog-only / KYC-gated entries — each with its own status badge and region.",
+          heading: "40 modules, 66 gateways",
+          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code — 15 local modules plus 25 composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans 66 registered gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries — each with its own status badge and region.",
         },
         {
           heading: "Five money-movement rails + split payments",
@@ -840,8 +840,8 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "39", label: "Gradle modules (14 local + 25 composed)" },
-        { value: "~71", label: "gateways cataloged" },
+        { value: "40", label: "Gradle modules (15 local + 25 composed)" },
+        { value: "66", label: "gateways cataloged" },
         { value: "5", label: "money-movement rails" },
         { value: "1", label: "PaymentGateway contract" },
       ],
@@ -1229,7 +1229,7 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jun–Jul 2026", title: "career-ops — public OSS contributions", detail: "Merged PRs to the public career-ops project (⭐60k+): ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature." },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
-  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 71 gateways", detail: "39-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
+  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
-  { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with V25→V32 landed on top." },
+  { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
 ];

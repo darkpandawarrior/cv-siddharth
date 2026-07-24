@@ -40,12 +40,14 @@ async function build() {
   const mDb = await getText(raw(mRepo, "main", "core/data/src/commonMain/kotlin/com/mileway/core/data/database/MilewayDatabase.kt"));
   const pSettings = await getText(raw(pRepo, "main", "settings.gradle.kts"));
   const kSettings = await getText(raw(kRepo, "main", "settings.gradle.kts"));
-  // Gateway registry + composed toolkit modules — the two numbers that went
-  // stale by hand (7/47/8/4 lingered after providers were promoted).
-  const pApp = await getText(raw(pRepo, "main", "app/src/main/kotlin/com/paymentslab/app/PaymentsLabApplication.kt"));
-  const pStubs = await getText(raw(pRepo, "main", "app/src/main/kotlin/com/paymentslab/app/StubGatewayConfigs.kt"));
-  // external/kmp-toolkit is a submodule on GitHub — read the library repo directly.
-  const pToolkit = await getText(raw("darkpandawarrior/kmp-toolkit", "main", "settings.gradle.kts"));
+  // Gateway breakdown used to be re-derived from raw source (Application.kt
+  // import counting) — that broke silently when providers got reorganized
+  // into their own config files (2026-07-24: was reporting 71 gateways,
+  // repo's own README already said 66). PaymentsLab's own gen-readme.sh
+  // keeps its README banner honest against settings.gradle.kts on every
+  // commit, so trust that instead of re-deriving from files whose shape we
+  // don't control.
+  const pReadme = await getText(raw(pRepo, "main", "README.md"));
 
   const dbMatch = mDb.match(/version\s*=\s*(\d+)/);
   if (!dbMatch) throw new Error("could not parse Mileway DB version");
@@ -60,20 +62,16 @@ async function build() {
     },
     paymentslab: {
       modules: count(pSettings, /^include\(/gm),
-      composedModules: count(pToolkit, /^include\(/gm),
+      composedModules: Number(pReadme.match(/(\d+)\s*composed/i)?.[1] ?? 0),
       providers: count(pSettings, /^include\(":provider:/gm),
       features: count(pSettings, /^include\(":feature:/gm),
       cores: count(pSettings, /^include\(":core:/gm),
-      // Registry wiring in PaymentsLabApplication.kt is the source of truth
-      // for the catalog: standalone provider modules arrive as imports, the
-      // hosted-webview archetype takes a listOf(*HostedGatewayConfig), the
-      // mobile-money archetype a listOf(*Config), stubs live in their own file.
-      gatewaysNative:
-        count(pApp, /^import com\.siddharth\.kmp\.provider\.\w+\.di\./gm) -
-        count(pApp, /^import com\.siddharth\.kmp\.provider\.(?:hostedwebview|mobilemoney)\./gm),
-      gatewaysHosted: count(pApp, /\w+HostedGatewayConfig\b/g),
-      gatewaysMobileMoney: count(pApp.match(/mobileMoneyModule\(\s*listOf\(([\s\S]*?)\)/)?.[1] ?? "", /\w+Config\b/g),
-      gatewaysStub: count(pStubs, /^\s*val \w+StubConfig\b/gm),
+      // Pulled from the README's own "Modular KMP architecture, N gateways
+      // behind it" highlight bullet — see the note above on why.
+      gatewaysNative: Number(pReadme.match(/catalog spans (\d+) native-SDK integrations/i)?.[1] ?? 0),
+      gatewaysHosted: Number(pReadme.match(/(\d+) hosted-webview gateways/i)?.[1] ?? 0),
+      gatewaysMobileMoney: Number(pReadme.match(/(\d+) mobile-money flows/i)?.[1] ?? 0),
+      gatewaysStub: Number(pReadme.match(/(\d+) catalog-only\/KYC-gated entries/i)?.[1] ?? 0),
       screenshots: await pngCount(pRepo, "main", "docs/screenshots"),
     },
     kursi: {

@@ -9,9 +9,11 @@ Hiring status: open to senior Android / KMP roles — remote (worldwide/India) o
 ## Site map
 
 - [Home](https://cv-siddharth.vercel.app/): hero, metrics, case studies, projects, experience, skills, writing, an interactive 3D storyboard of how everything connects, and contact
-- [Mileway case study](https://cv-siddharth.vercel.app/?project=mileway): mileage tracker across 5 platforms (Android, iOS, Wear OS, watchOS, Desktop) from one KMP codebase; 45 Gradle modules; offline AI; the location engine behind the GPS numbers
+- [Mileway case study](https://cv-siddharth.vercel.app/?project=mileway): mileage tracker across 5 platforms (Android, iOS, Wear OS, watchOS, Desktop) from one KMP codebase; 46 Gradle modules; offline AI; the location engine behind the GPS numbers
 - [Kursi case study](https://cv-siddharth.vercel.app/?project=kursi): multiplayer social-deduction game with a playable web build, 10 AI bot personas
 - [PaymentsLab case study](https://cv-siddharth.vercel.app/?project=paymentslab): payment-gateway integration lab; security hardening (FLAG_SECURE, SSL pinning, SQLCipher)
+- [HireSignal case study](https://cv-siddharth.vercel.app/?project=hiresignal): local-first AI career-intelligence engine, 25-module Kotlin Multiplatform rebuild of an open-source Node.js job-search engine (career-ops) Siddharth contributes to upstream
+- [DEADLOCK case study](https://cv-siddharth.vercel.app/?project=deadlock): first-person time-loop game in Godot 4.7, one deterministic echo-replay system reused five ways
 - Résumé: https://cv-siddharth.vercel.app/#resume (print-ready)
 
 ## Writing
