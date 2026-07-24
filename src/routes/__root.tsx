@@ -100,20 +100,15 @@ function HashCompat() {
     const apply = () => {
       const hash = window.location.hash.replace(/^#/, "");
       if (hash.startsWith("project/")) {
-        // @ts-expect-error -- "/project/$slug" isn't in the route registry until Task 6
-        // adds it; this directive self-clears (tsc -b fails on it) once that route exists.
         router.navigate({ to: "/project/$slug", params: { slug: hash.slice("project/".length) }, replace: true });
         return;
       }
       if (HASH_ROUTES.has(hash)) {
-        // @ts-expect-error -- dynamic `/${hash}` targets aren't in the route registry
-        // until Tasks 6/7 add them; self-clears once they exist.
         router.navigate({ to: `/${hash}`, replace: true });
         return;
       }
       // LinkedIn Featured strips the #fragment but keeps ?project=<slug>.
       const project = new URLSearchParams(window.location.search).get("project");
-      // @ts-expect-error -- see "/project/$slug" note above.
       if (project) router.navigate({ to: "/project/$slug", params: { slug: project }, replace: true });
     };
     apply();

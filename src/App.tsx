@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Mail,
   MapPin,
@@ -24,29 +24,17 @@ import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
-import { ResumeView } from "./ResumeView.tsx";
-import { WritingView } from "./WritingView.tsx";
-import { ProjectDetail } from "./ProjectDetail.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
-import { StoryMap } from "./StoryMap.tsx";
-import { ParticleWordmark } from "./ParticleWordmark.tsx";
-import Playground, { RoomFrame, ROOMS } from "./Playground.tsx";
+import { ROOMS } from "./Playground.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
-import { LabBench, openLab, type LabKey } from "./LabBench.tsx";
-import { Terminal } from "./Terminal.tsx";
+import { openLab, type LabKey } from "./LabBench.tsx";
 import { writing } from "./data/writing.ts";
-
-// The tldraw SDK loads only when someone actually enters the Blueprint Room.
-const BlueprintRoom = lazy(() => import("./BlueprintRoom.tsx"));
-// The Compose Playground ships its interpreter in its own chunk, loaded only
-// when a visitor opens #compose.
-const ComposePlayground = lazy(() => import("./ComposePlayground.tsx"));
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -111,44 +99,6 @@ const NAV_LINKS = [
   { href: "#writing", label: "Writing" },
   { href: "#contact", label: "Contact" },
 ];
-
-/**
- * Resolve the active route. Hash wins, but we also accept `?project=<slug>`
- * because link-preview crawlers (e.g. LinkedIn Featured) strip the URL
- * #fragment — a query param survives, so deep links into a project page work.
- */
-function resolveInitialHash(): string {
-  if (window.location.hash) return window.location.hash;
-  const project = new URLSearchParams(window.location.search).get("project");
-  return project ? `#project/${project}` : "";
-}
-
-function useHashRoute(): string {
-  const [hash, setHash] = useState(resolveInitialHash);
-  useEffect(() => {
-    // Normalize ?project=<slug> into the canonical hash route and drop the query.
-    if (!window.location.hash) {
-      const project = new URLSearchParams(window.location.search).get("project");
-      if (project) {
-        window.history.replaceState(null, "", `${window.location.pathname}#project/${project}`);
-        setHash(`#project/${project}`);
-      }
-    }
-    const onChange = () => {
-      const apply = () => setHash(window.location.hash);
-      // View Transitions API: cross-fade between routes where supported.
-      if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        document.startViewTransition(apply);
-      } else {
-        apply();
-      }
-    };
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
-  }, []);
-  return hash;
-}
-
 
 /**
  * Reads scroll per frame (same rAF-to-DOM pattern as TimelineSpine): fills
@@ -1098,14 +1048,7 @@ function PlaygroundTeaser() {
   );
 }
 
-export default function App() {
-  const hash = useHashRoute();
-
-  useEffect(() => {
-    // The portfolio is dark; the résumé prints on white.
-    document.documentElement.classList.toggle("resume-mode", hash === "#resume");
-  }, [hash]);
-
+export function HomePage() {
   // Backtick summons the terminal from anywhere — unless you're typing in a
   // field (including the terminal's own input, so ` types normally there).
   useEffect(() => {
@@ -1122,117 +1065,6 @@ export default function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  if (hash === "#resume") return <ResumeView />;
-
-  // The faux-shell easter egg — a real, typeable interface into the whole site.
-  if (hash === "#terminal") {
-    return (
-      <>
-        <Terminal />
-        <FloatingChat />
-      </>
-    );
-  }
-
-  if (hash === "#blueprint") {
-    return (
-      <Suspense
-        fallback={
-          <div className="flex h-screen items-center justify-center font-mono text-sm text-zinc-500">
-            drafting the blueprint room…
-          </div>
-        }
-      >
-        <BlueprintRoom />
-        <FloatingChat />
-      </Suspense>
-    );
-  }
-
-  if (hash === "#compose") {
-    return (
-      <Suspense
-        fallback={
-          <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-zinc-500">
-            spinning up the compose playground…
-          </div>
-        }
-      >
-        <ComposePlayground />
-        <FloatingChat />
-      </Suspense>
-    );
-  }
-
-  // The Playground hub and its rooms. Each interactive lives on its own route
-  // and renders one at a time, so only a single canvas / WebGL context is ever
-  // live — and the main scroll page stays light (this is what un-stutters it).
-  if (hash === "#playground") {
-    return (
-      <>
-        <CursorAura />
-        <Playground />
-        <FloatingChat />
-      </>
-    );
-  }
-  if (hash === "#lab") {
-    return (
-      <>
-        <CursorAura />
-        <RoomFrame title="The Lab Bench" tagline="nine instruments, running live">
-          <LabBench />
-        </RoomFrame>
-        <FloatingChat />
-      </>
-    );
-  }
-  if (hash === "#map") {
-    return (
-      <>
-        <CursorAura />
-        <RoomFrame title="The 3D Storyboard" tagline="the projects as a constellation">
-          <StoryMap />
-        </RoomFrame>
-        <FloatingChat />
-      </>
-    );
-  }
-  if (hash === "#forge") {
-    return (
-      <>
-        <CursorAura />
-        <RoomFrame title="The Particle Forge" tagline="physics on a canvas">
-          <ParticleWordmark />
-        </RoomFrame>
-        <FloatingChat />
-      </>
-    );
-  }
-
-  // Full Loopdown hub moved to #loopdown; #writing is now an in-flow home
-  // section, so old /#writing links land on it naturally.
-  if (hash === "#loopdown") {
-    return (
-      <div className="min-h-screen">
-        <AmbientBackground />
-        <CursorAura />
-        <WritingView />
-        <FloatingChat />
-      </div>
-    );
-  }
-
-  if (hash.startsWith("#project/")) {
-    return (
-      <div className="min-h-screen">
-        <CursorAura />
-        <ProjectDetail slug={hash.slice("#project/".length)} />
-        <FloatingChat />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -1257,3 +1089,8 @@ export default function App() {
     </div>
   );
 }
+
+// ponytail: src/main.tsx (pre-TanStack-Start entry, deleted in Task 9) still
+// does `import App from "./App.tsx"` — this bridges it to HomePage so tsc -b
+// stays clean until that file goes. Remove alongside main.tsx.
+export default HomePage;

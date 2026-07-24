@@ -135,8 +135,9 @@ function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: str
  *  everywhere else. */
 function ShareProject({ slug, name }: { slug: string; name: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `${window.location.origin}/p/${slug}`;
   const onShare = async () => {
+    // Computed on click, not at render time — `window` isn't available during SSR.
+    const url = `${window.location.origin}/p/${slug}`;
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
     if (nav.share) {
       try {

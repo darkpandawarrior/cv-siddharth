@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Reveal } from "./Reveal.tsx";
-import { SignalLabPane } from "./labs/SignalLab.tsx";
+// ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
+// time — harmless client-side, but fatal during SSR now that the home route
+// (which imports LabBench for openLab/LabKey) is server-rendered (Task 6).
+// Lazy-loading defers that eval to the client, same pattern as BlueprintRoom/
+// ComposePlayground in App.tsx.
+const SignalLabPane = lazy(() => import("./labs/SignalLab.tsx").then((m) => ({ default: m.SignalLabPane })));
 import { CrashLab } from "./labs/CrashLab.tsx";
 import { RecomposeLab } from "./labs/RecomposeLab.tsx";
 import { ThemeLab } from "./labs/ThemeLab.tsx";
@@ -122,7 +127,11 @@ export function LabBench() {
               ))}
             </div>
           </div>
-          {tab === "signal" && <SignalLabPane />}
+          {tab === "signal" && (
+            <Suspense fallback={<div className="py-10 text-center font-mono text-sm text-zinc-500">loading signal lab…</div>}>
+              <SignalLabPane />
+            </Suspense>
+          )}
           {tab === "crashes" && <CrashLab />}
           {tab === "recompose" && <RecomposeLab />}
           {tab === "theme" && <ThemeLab />}
