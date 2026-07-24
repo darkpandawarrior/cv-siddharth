@@ -1,7 +1,9 @@
-import { createRootRoute, HeadContent, Outlet, Scripts, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady } from "../lib/navigation.ts";
+import { ErrorPanel } from "../ErrorPanel.tsx";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -93,8 +95,28 @@ export const Route = createRootRoute({
       { type: "application/ld+json", children: JSON.stringify(PROFILEPAGE_LD) },
     ],
   }),
-  component: RootDocument,
+  // shellComponent (not component): it wraps everything, INCLUDING the
+  // CatchBoundary that errorComponent renders inside. A plain `component`
+  // here would put the <html>/<head>/<body> shell itself inside that
+  // boundary, so a render error anywhere in the tree would replace the
+  // whole document (losing HeadContent/Scripts/fonts) instead of just the
+  // routed content — verified against @tanstack/react-router's Match.js
+  // (shellComponent is the only root option rendered outside the boundary).
+  shellComponent: RootDocument,
+  errorComponent: RootErrorComponent,
 });
+
+function RootErrorComponent({ error }: ErrorComponentProps) {
+  return (
+    <ErrorPanel
+      code="ERR // TELEMETRY LOST"
+      title="Something broke"
+      message={error instanceof Error && error.message ? error.message : "An unexpected error interrupted this page."}
+      onReload={() => window.location.reload()}
+      extraLinks={[{ label: "Résumé", to: "/resume" }]}
+    />
+  );
+}
 
 // Real route paths this site owns. Any legacy `#hash` matching one of these
 // (or `?project=<slug>`) is redirected to the real path; on-page section
@@ -149,7 +171,7 @@ function HashCompat() {
   return null;
 }
 
-function RootDocument() {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
       <head>
@@ -157,7 +179,7 @@ function RootDocument() {
       </head>
       <body>
         <HashCompat />
-        <Outlet />
+        {children}
         <SpeedInsights />
         <Scripts />
         <noscript>
