@@ -1,60 +1,71 @@
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { profile } from "./data/profile.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
+import { useSectionNav } from "./lib/navigation.ts";
+
+type FooterLink =
+  | { label: string; kind: "route"; to: string; params?: { slug: string } }
+  | { label: string; kind: "section"; id: string }
+  | { label: string; kind: "external"; href: string };
 
 /**
  * Sitemap footer — every surface of the site (and its satellites) reachable
  * from one place, so no page is a dead end. External links open new tabs.
  */
-const COLUMNS: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
     links: [
-      { label: "Case studies", href: "#work" },
-      { label: "Projects", href: "#projects" },
-      { label: "The Source (repos)", href: "#source" },
-      { label: "Experience", href: "#experience" },
-      { label: "Skills", href: "#skills" },
-      { label: "Writing", href: "#writing" },
-      { label: "The Playground", href: "#playground" },
-      { label: "Résumé", href: "#resume" },
+      { label: "Case studies", kind: "section", id: "work" },
+      { label: "Projects", kind: "section", id: "projects" },
+      { label: "The Source (repos)", kind: "section", id: "source" },
+      { label: "Experience", kind: "section", id: "experience" },
+      { label: "Skills", kind: "section", id: "skills" },
+      { label: "Writing", kind: "section", id: "writing" },
+      { label: "The Playground", kind: "route", to: "/playground" },
+      { label: "Résumé", kind: "route", to: "/resume" },
     ],
   },
   {
     title: "Builds",
     links: [
-      { label: "Mileway", href: "#project/mileway" },
-      { label: "Kursi", href: "#project/kursi" },
-      { label: "PaymentsLab", href: "#project/paymentslab" },
-      { label: "HireSignal", href: "#project/hiresignal" },
-      { label: "DEADLOCK", href: "#project/deadlock" },
-      { label: "▶ The Playground", href: "#playground" },
-      { label: "Compose Playground", href: "#compose" },
-      { label: "Blueprint Room", href: "#blueprint" },
-      { label: "3D Storyboard", href: "#map" },
-      { label: "Terminal ⌘", href: "#terminal" },
+      { label: "Mileway", kind: "route", to: "/project/$slug", params: { slug: "mileway" } },
+      { label: "Kursi", kind: "route", to: "/project/$slug", params: { slug: "kursi" } },
+      { label: "PaymentsLab", kind: "route", to: "/project/$slug", params: { slug: "paymentslab" } },
+      { label: "HireSignal", kind: "route", to: "/project/$slug", params: { slug: "hiresignal" } },
+      { label: "DEADLOCK", kind: "route", to: "/project/$slug", params: { slug: "deadlock" } },
+      { label: "▶ The Playground", kind: "route", to: "/playground" },
+      { label: "Compose Playground", kind: "route", to: "/compose" },
+      { label: "Blueprint Room", kind: "route", to: "/blueprint" },
+      { label: "3D Storyboard", kind: "route", to: "/map" },
+      { label: "Terminal ⌘", kind: "route", to: "/terminal" },
     ],
   },
   {
     title: "Writing",
     links: [
-      { label: "The Loopdown", href: "#loopdown" },
-      { label: BOOKS_BEFORE_BROS.name, href: BOOKS_BEFORE_BROS.url, external: true },
-      { label: "the-loopdown repo", href: LOOPDOWN_REPO, external: true },
-      { label: "dev.to", href: "https://dev.to/darkpandawarrior", external: true },
+      { label: "The Loopdown", kind: "route", to: "/loopdown" },
+      { label: BOOKS_BEFORE_BROS.name, kind: "external", href: BOOKS_BEFORE_BROS.url },
+      { label: "the-loopdown repo", kind: "external", href: LOOPDOWN_REPO },
+      { label: "dev.to", kind: "external", href: "https://dev.to/darkpandawarrior" },
     ],
   },
   {
     title: "Elsewhere",
     links: [
-      { label: "GitHub", href: profile.github, external: true },
-      { label: "LinkedIn", href: profile.linkedin, external: true },
-      { label: "Email", href: `mailto:${profile.email}`, external: true },
+      { label: "GitHub", kind: "external", href: profile.github },
+      { label: "LinkedIn", kind: "external", href: profile.linkedin },
+      { label: "Email", kind: "external", href: `mailto:${profile.email}` },
     ],
   },
 ];
 
+const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent";
+
 export function SiteFooter() {
+  const { goToSection } = useSectionNav();
+
   return (
     <footer className="relative border-t border-line">
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 py-10 sm:grid-cols-4">
@@ -64,15 +75,22 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <a
-                    href={l.href}
-                    target={l.external ? "_blank" : undefined}
-                    rel={l.external ? "noreferrer" : undefined}
-                    className="group inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
-                  >
-                    {l.label}
-                    {l.external && <ArrowUpRight size={11} className="opacity-0 transition group-hover:opacity-100" />}
-                  </a>
+                  {l.kind === "route" && (
+                    <Link to={l.to} params={l.params} className={LINK_CLASS}>
+                      {l.label}
+                    </Link>
+                  )}
+                  {l.kind === "section" && (
+                    <button type="button" onClick={() => goToSection(l.id)} className={LINK_CLASS}>
+                      {l.label}
+                    </button>
+                  )}
+                  {l.kind === "external" && (
+                    <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+                      {l.label}
+                      <ArrowUpRight size={11} className="opacity-0 transition group-hover:opacity-100" />
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

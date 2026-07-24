@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { scrollToSectionWhenReady } from "../lib/navigation.ts";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -112,27 +113,6 @@ const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "com
 // home — omitting `source`/`writing` stranded those two.
 const SECTION_ANCHORS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
 
-// ponytail: bounded setTimeout poll (~3s), not requestAnimationFrame and not
-// a MutationObserver — rAF gets throttled or fully paused on backgrounded/
-// non-painting tabs (verified: it can silently stop firing altogether after
-// the first call), and the section ids are static markup in App.tsx, so
-// once the lazy chunk mounts they're there for good; a bounded poll is
-// enough to clear the load race and cheaper than watching the whole DOM.
-function scrollSectionIntoView(id: string, attemptsLeft = 60) {
-  const el = document.getElementById(id);
-  if (el) {
-    // `instant`, not the default `auto`: index.css sets `html { scroll-behavior:
-    // smooth }`, and a smooth scroll started while the rest of the (still
-    // hydrating/lazy-loading) home page keeps shifting layout underneath it
-    // gets cancelled mid-flight — verified in-browser landing short of the
-    // target. Instant is unaffected by later layout shifts.
-    el.scrollIntoView({ behavior: "instant", block: "start" });
-    return;
-  }
-  if (attemptsLeft <= 0) return;
-  setTimeout(() => scrollSectionIntoView(id, attemptsLeft - 1), 50);
-}
-
 function HashCompat() {
   const router = useRouter();
   useEffect(() => {
@@ -155,7 +135,7 @@ function HashCompat() {
         // without this, landing from /project/<slug> via "#projects" stops
         // at the top of "/" instead of scrolling down. Retry once the
         // navigation (incl. lazy chunk) has actually settled.
-        router.navigate({ to: "/", hash, replace: true }).then(() => scrollSectionIntoView(hash));
+        router.navigate({ to: "/", hash, replace: true }).then(() => scrollToSectionWhenReady(hash));
         return;
       }
       // LinkedIn Featured strips the #fragment but keeps ?project=<slug>.

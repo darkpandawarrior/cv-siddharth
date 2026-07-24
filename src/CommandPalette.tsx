@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, TerminalSquare } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 
 interface PaletteCommand {
   id: string;
@@ -11,14 +13,6 @@ interface PaletteCommand {
   keywords?: string;
   icon: React.ReactNode;
   run: () => void;
-}
-
-function goHash(href: string) {
-  // In-page section anchors scroll natively on hash change; only route-style
-  // hashes (#resume, #loopdown, #project/…) need the manual reset to top.
-  const isSection = !!document.getElementById(href.slice(1));
-  window.location.hash = href;
-  if (!isSection) window.scrollTo({ top: 0 });
 }
 
 /**
@@ -34,24 +28,27 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
+
   const commands = useMemo<PaletteCommand[]>(
     () => [
-      { id: "top", label: "Top / Hero", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#top") },
-      { id: "work", label: "Case studies", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#work") },
-      { id: "projects-section", label: "Projects", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#projects") },
-      { id: "experience", label: "Experience", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#experience") },
-      { id: "skills", label: "Skills", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#skills") },
-      { id: "writing", label: "Writing", hint: "Jump", keywords: "loopdown blog lessons", icon: <PenLine size={15} />, run: () => goHash("#writing") },
-      { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => goHash("#map") },
-      { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => goHash("#lab") },
-      { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => goHash("#forge") },
-      { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => goHash("#playground") },
-      { id: "source", label: "The Source — every public repo", hint: "Jump", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} />, run: () => goHash("#source") },
-      { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goHash("#contact") },
-      { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => goHash("#loopdown") },
-      { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => goHash("#blueprint") },
-      { id: "compose", label: "The Compose Playground — write Compose, live", hint: "Open", keywords: "jetpack compose kotlin android code editor playground live preview", icon: <TerminalSquare size={15} />, run: () => goHash("#compose") },
-      { id: "terminal", label: "The Terminal — a faux shell you can type in", hint: "Open", keywords: "shell console cli command line easter egg bash", icon: <TerminalSquare size={15} />, run: () => goHash("#terminal") },
+      { id: "top", label: "Top / Hero", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("top") },
+      { id: "work", label: "Case studies", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("work") },
+      { id: "projects-section", label: "Projects", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("projects") },
+      { id: "experience", label: "Experience", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("experience") },
+      { id: "skills", label: "Skills", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("skills") },
+      { id: "writing", label: "Writing", hint: "Jump", keywords: "loopdown blog lessons", icon: <PenLine size={15} />, run: () => goToSection("writing") },
+      { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => navigate({ to: "/map" }) },
+      { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => navigate({ to: "/lab" }) },
+      { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => navigate({ to: "/forge" }) },
+      { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => navigate({ to: "/playground" }) },
+      { id: "source", label: "The Source — every public repo", hint: "Jump", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} />, run: () => goToSection("source") },
+      { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("contact") },
+      { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => navigate({ to: "/loopdown" }) },
+      { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => navigate({ to: "/blueprint" }) },
+      { id: "compose", label: "The Compose Playground — write Compose, live", hint: "Open", keywords: "jetpack compose kotlin android code editor playground live preview", icon: <TerminalSquare size={15} />, run: () => navigate({ to: "/compose" }) },
+      { id: "terminal", label: "The Terminal — a faux shell you can type in", hint: "Open", keywords: "shell console cli command line easter egg bash", icon: <TerminalSquare size={15} />, run: () => navigate({ to: "/terminal" }) },
       {
         id: "books-before-bros",
         label: `${BOOKS_BEFORE_BROS.name} — the origin blog`,
@@ -60,7 +57,7 @@ export function CommandPalette() {
         icon: <PenLine size={15} />,
         run: () => window.open(BOOKS_BEFORE_BROS.url, "_blank", "noreferrer"),
       },
-      { id: "resume", label: "Résumé", hint: "Open", icon: <FileText size={15} />, run: () => goHash("#resume") },
+      { id: "resume", label: "Résumé", hint: "Open", icon: <FileText size={15} />, run: () => navigate({ to: "/resume" }) },
       {
         id: "chat",
         label: "Ask my AI assistant",
@@ -77,10 +74,10 @@ export function CommandPalette() {
           hint: "Case study",
           keywords: `${p.tagline} ${p.stack.join(" ")}`,
           icon: <Compass size={15} />,
-          run: () => goHash(`#project/${p.slug}`),
+          run: () => navigate({ to: "/project/$slug", params: { slug: p.slug } }),
         })),
     ],
-    [],
+    [navigate, goToSection],
   );
 
   const filtered = useMemo(() => {
