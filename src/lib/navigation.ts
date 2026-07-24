@@ -53,7 +53,10 @@ export function useSectionNav() {
   const goToSection = useCallback(
     (id: string) => {
       if (resolveSectionAction(pathname) === "scroll") {
-        document.getElementById(id)?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+        // "instant", not "auto": index.css sets `html { scroll-behavior: smooth }`
+        // with no reduced-motion override, and behavior:"auto" defers to that CSS
+        // property — so "auto" would still animate. "instant" forces no animation.
+        document.getElementById(id)?.scrollIntoView({ behavior: prefersReducedMotion() ? "instant" : "smooth", block: "start" });
         return;
       }
       navigate({ to: "/", hash: id }).then(() => scrollToSectionWhenReady(id));
