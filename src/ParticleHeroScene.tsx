@@ -21,11 +21,12 @@ import type { BufferAttribute, Group, Points as ThreePoints } from "three";
 const HOLD_S = 4; // seconds a formation sits still before the next morph starts
 const MORPH_S = 5; // seconds a morph transition takes (4-6s ask)
 const KICK_SCALE = 0.9; // peak outward offset (world units) from a tap/click
+const SPHERE_SPAN = 3.8; // widest formation's diameter (Klein bottle) — the fit-to-container reference
 
 // Low-discrepancy 2D sequence (plastic-ratio R2) — gives even coverage of a
 // parametric (u, v) surface without a grid or Math.random(), so sampling
 // stays deterministic across the desktop/mobile point counts.
-const PLASTIC = 1.32471795724474602596;
+const PLASTIC = 1.324717957244746; // trimmed to double precision (~16 sig figs) — more digits get silently truncated anyway
 const R2_A = 1 / PLASTIC;
 const R2_B = 1 / (PLASTIC * PLASTIC);
 function r2(i: number): [number, number] {
@@ -162,25 +163,27 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
 
   // Theme-aware: read the site's own accent/accent2 CSS variables once, so
   // this stays in sync with whatever palette is active (light or dark).
+  const themeColors = useMemo(() => ({ c1: readColor("--color-accent", "#3ddc84"), c2: readColor("--color-accent2", "#5ee6ff") }), []);
+  const colorAttrRef = useRef<BufferAttribute>(null);
+  const colorPhase = useRef(0);
   const colors = useMemo(() => {
-    const c1 = readColor("--color-accent", "#3ddc84");
-    const c2 = readColor("--color-accent2", "#5ee6ff");
     const arr = new Float32Array(count * 3);
     const mixed = new Color();
     for (let i = 0; i < count; i++) {
       const t = (Math.sin((i / count) * Math.PI * 3) + 1) / 2;
-      mixed.copy(c1).lerp(c2, t);
+      mixed.copy(themeColors.c1).lerp(themeColors.c2, t);
       arr[i * 3] = mixed.r;
       arr[i * 3 + 1] = mixed.g;
       arr[i * 3 + 2] = mixed.b;
     }
     return arr;
-  }, [count]);
+  }, [count, themeColors]);
 
-  useFrame(({ pointer }, delta) => {
+  useFrame(({ pointer, viewport }, delta) => {
     if (reducedMotion) return; // static frame only — frameloop="demand" never asks for another
 
     const pts = pointsRef.current;
+    const group = groupRef.current;
     phase.current += delta;
     drag.current.vel = MathUtils.damp(drag.current.vel, 0, 2, delta);
     kickAmp.current = MathUtils.damp(kickAmp.current, 0, 3, delta);
@@ -191,6 +194,28 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
       pts.rotation.x = Math.sin(phase.current * 0.12) * 0.07 + parallax.current; // wobble + cursor lean
       pts.rotation.z = interactive ? MathUtils.damp(pts.rotation.z, pointer.x * -0.05, 4, delta) : 0;
     }
+    // Fit-to-container: the host box's aspect swings wildly (a short wide
+    // band on mobile, a tall narrow strip on desktop behind the phone) — a
+    // fixed camera/geometry size clips on one shape or looks lost in the
+    // other. Scale to whichever viewport dimension is tighter so the full
+    // formation is always visible, never cropped by the box's own overflow.
+    if (group) {
+      const fitDiameter = Math.min(viewport.width, viewport.height) * 0.82;
+      const target = MathUtils.clamp(fitDiameter / SPHERE_SPAN, 0.32, 1.15);
+      group.scale.setScalar(MathUtils.damp(group.scale.x, target, 3, delta));
+    }
+    // Slow color drift — the accent/accent2 bands sweep across the swarm
+    // instead of sitting static, so the palette itself feels alive.
+    colorPhase.current += delta * 0.15;
+    const mixed = new Color();
+    for (let i = 0; i < count; i++) {
+      const t = (Math.sin((i / count) * Math.PI * 3 + colorPhase.current) + 1) / 2;
+      mixed.copy(themeColors.c1).lerp(themeColors.c2, t);
+      colors[i * 3] = mixed.r;
+      colors[i * 3 + 1] = mixed.g;
+      colors[i * 3 + 2] = mixed.b;
+    }
+    if (colorAttrRef.current) colorAttrRef.current.needsUpdate = true;
 
     const morphing = phase.current > HOLD_S;
     const kicking = kickAmp.current > 0.001;
@@ -273,7 +298,7 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute ref={positionAttrRef} attach="attributes-position" args={[positions, 3]} />
-          <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+          <bufferAttribute ref={colorAttrRef} attach="attributes-color" args={[colors, 3]} />
         </bufferGeometry>
         <pointsMaterial size={0.045} vertexColors transparent opacity={0.85} blending={AdditiveBlending} depthWrite={false} sizeAttenuation />
       </points>

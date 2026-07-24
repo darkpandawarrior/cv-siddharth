@@ -44,6 +44,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden; /* decorative layers (e.g. .particle-hero) intentionally bleed past their section on wide viewports — never a page scrollbar */
 }
 
 /* Anchored sections land below the sticky nav instead of under it */
@@ -88,11 +89,11 @@ html {
 @media (min-width: 1024px) {
   .particle-hero {
     left: auto;
-    right: -3.5rem;
+    right: -7.75rem;
     top: 0;
     bottom: 0;
     height: auto;
-    width: 24rem;
+    width: 28rem;
     -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
     mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
   }
