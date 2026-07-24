@@ -497,7 +497,10 @@ export function SignalLabPane() {
         five zones, five ways GPS breaks — and flip each stage to watch the accuracy number move.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
-        <div className="relative h-[340px] sm:h-[400px]">
+        <div className="relative isolate h-[340px] sm:h-[400px]">
+          {/* isolate: Leaflet's internal panes/controls carry their own z-index
+              (up to 800+); without a stacking context here they can paint over
+              the canvas below regardless of DOM order. */}
           <div ref={mapContainerRef} className="signal-lab-map absolute inset-0" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0 bg-void/35" />
           <canvas
