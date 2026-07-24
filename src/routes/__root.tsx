@@ -2,19 +2,20 @@ import { createRootRoute, HeadContent, Outlet, Scripts, useRouter } from "@tanst
 import { useEffect } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import "../index.css";
-// ponytail: @fontsource packages install in Task 17 — until then these imports
-// would fail to resolve, so they're deferred here. Restore in Task 17.
-// import "@fontsource/space-grotesk/400.css";
-// import "@fontsource/space-grotesk/500.css";
-// import "@fontsource/space-grotesk/600.css";
-// import "@fontsource/space-grotesk/700.css";
-// import "@fontsource/inter/400.css";
-// import "@fontsource/inter/500.css";
-// import "@fontsource/inter/600.css";
-// import "@fontsource/rozha-one/400.css";
-// import "@fontsource/jetbrains-mono/400.css";
-// import "@fontsource/jetbrains-mono/500.css";
-// import "@fontsource/jetbrains-mono/600.css";
+// Self-hosted fonts (replaces the old Google Fonts CDN <link>).
+import "@fontsource/space-grotesk/400.css";
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/600.css";
+import "@fontsource/space-grotesk/700.css";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/rozha-one/400.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
+import "@fontsource/jetbrains-mono/600.css";
+import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url";
+import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 const PERSON_LD = {
   "@context": "https://schema.org",
@@ -79,6 +80,8 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "Agent-readable profile" },
       { rel: "icon", href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' fill='%233ddc84' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E" },
+      { rel: "preload", as: "font", type: "font/woff2", href: spaceGrotesk700, crossOrigin: "anonymous" },
+      { rel: "preload", as: "font", type: "font/woff2", href: inter400, crossOrigin: "anonymous" },
     ],
     scripts: [
       { type: "application/ld+json", children: JSON.stringify(PERSON_LD) },
