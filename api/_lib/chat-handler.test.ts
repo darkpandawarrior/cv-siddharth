@@ -545,6 +545,62 @@ async function callHandler(body: unknown, ip = `192.0.2.${++ipCounter}`) {
   return { res, sent: sent as { messages: { role: string; content: string }[] } | null };
 }
 
+// Groq's free tier throttles by tokens-per-minute, and the JD analyser sends a
+// large prompt — so "the provider is throttling my key" is the FAILURE A REAL
+// VISITOR ACTUALLY HITS (verified in production). Reporting it as 502
+// "model unavailable" reads as "this site is broken" when the truth is
+// "wait ~30s", so it must surface as a retryable 429 instead.
+describe("upstream throttling is reported as retryable, not as an outage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  async function callWithUpstreamStatus(status: number, retryAfter?: string) {
+    vi.stubEnv("CHAT_PROVIDER", "groq");
+    vi.stubEnv("GROQ_API_KEY", "test-key");
+    vi.stubGlobal("fetch", async () =>
+      new Response("upstream said no", {
+        status,
+        headers: retryAfter ? { "retry-after": retryAfter } : {},
+      }),
+    );
+    return handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://cv-siddharth.vercel.app",
+          "x-vercel-forwarded-for": `198.51.100.${++ipCounter}`,
+        },
+        body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      }),
+    );
+  }
+
+  it("maps an upstream 429 to a retryable 429 with Retry-After", async () => {
+    const res = await callWithUpstreamStatus(429, "37");
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("37");
+    expect(await res.json()).toMatchObject({ error: expect.stringMatching(/free tier|minute/i) });
+  });
+
+  it("falls back to Retry-After 60 when the provider sends none", async () => {
+    const res = await callWithUpstreamStatus(429);
+    expect(res.headers.get("retry-after")).toBe("60");
+  });
+
+  it("still reports a genuine upstream failure as 502", async () => {
+    const res = await callWithUpstreamStatus(500);
+    expect(res.status).toBe(502);
+  });
+
+  it("never leaks the upstream body to the client", async () => {
+    const res = await callWithUpstreamStatus(429, "5");
+    expect(JSON.stringify(await res.json())).not.toContain("upstream said no");
+  });
+});
+
 describe("the Compose generator prompt is server-side (no message-content authority)", () => {
   afterEach(() => {
     vi.unstubAllGlobals();

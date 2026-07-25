@@ -560,6 +560,20 @@ export async function handleChat(request: Request): Promise<Response> {
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");
     console.error(`${picked.provider.name} API error`, upstream.status, detail);
+    // The provider throttling OUR key is not the same failure as the provider
+    // being down, and it's the likely one on a free tier: the JD analyser sends
+    // a large prompt, so a couple of analyses back-to-back can trip a
+    // tokens-per-minute cap. Saying "unavailable" there reads as "this site is
+    // broken" when the truth is "wait ~30s". Surface it as a 429 so the client's
+    // existing 429 branch shows the retry wording (and Retry-After is honoured).
+    if (upstream.status === 429) {
+      return jsonError(
+        429,
+        "I'm getting more questions than my free tier allows right now — give me about a minute and ask again.",
+        allowedOrigin,
+        { "retry-after": upstream.headers.get("retry-after") ?? "60" },
+      );
+    }
     return jsonError(502, "The model is unavailable right now. Please try again.", allowedOrigin);
   }
 
