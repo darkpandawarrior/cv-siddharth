@@ -3,6 +3,7 @@
 import { SYSTEM_PROMPT, ROUTE_PHRASES } from "./system-prompt.js";
 import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt.js";
+import { condenseJd } from "./jd-condense.js";
 
 // Vercel's builder type-checks this file WITHOUT @types/node, so bare `process`
 // errors there (TS2591) even though our own tsconfig has the node types. This
@@ -429,26 +430,64 @@ export function systemPromptFor(mode: ChatMode, route?: string): string {
   return SYSTEM_PROMPT + routeNote(route);
 }
 
+/**
+ * How hard a reasoning model is allowed to think before it answers.
+ *
+ * THIS IS THE FIX FOR THE EMPTY-BUBBLE BUG, and it is worth being precise about
+ * why, because the obvious diagnosis was wrong. gpt-oss-120b is a REASONING
+ * model, and on Groq `reasoning_effort` defaults to "medium". A reasoning model
+ * streams its chain-of-thought in `delta.reasoning` and its answer in
+ * `delta.content` — two different fields. Given a real 40-requirement job
+ * description it would think its way through every one of them, exhaust the
+ * whole token ceiling in `delta.reasoning`, and terminate having never emitted
+ * a single `content` token. The visitor got a 200, an SSE body that was
+ * literally just `data: [DONE]`, and an empty bubble.
+ *
+ * That is why raising max_tokens didn't help: the budget wasn't being overrun
+ * by the answer, it was being spent before the answer started. More headroom is
+ * just more room to think.
+ *
+ * The two families Groq serves take different vocabularies here, and sending
+ * the wrong token is a 400:
+ *   - gpt-oss  accepts "low" | "medium" | "high"      → "low"
+ *   - qwen3    accepts only "none" | "default"        → "none" (truly off)
+ * Anything else (a future non-reasoning model) gets the parameter omitted
+ * entirely rather than guessed at.
+ *
+ * Docs: console.groq.com/docs/reasoning
+ */
+export function reasoningEffortFor(model: string): string | undefined {
+  if (model.includes("gpt-oss")) return "low";
+  if (model.includes("qwen3")) return "none";
+  return undefined;
+}
+
 export const PROVIDERS: Provider[] = [
   {
     name: "groq",
     key: () => process.env.GROQ_API_KEY,
-    request: (key, messages, system, maxTokens) =>
-      fetch("https://api.groq.com/openai/v1/chat/completions", {
+    request: (key, messages, system, maxTokens) => {
+      // llama-3.3-70b-versatile was deprecated by Groq (announced 2026-06-17,
+      // decommissioned Aug 2026) and started 502-ing this endpoint in prod.
+      // gpt-oss-120b is Groq's own recommended successor. Override with
+      // GROQ_MODEL if this one is ever retired too — that env var is the
+      // fix that needs no deploy.
+      const model = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b";
+      const effort = reasoningEffortFor(model);
+      return fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          // llama-3.3-70b-versatile was deprecated by Groq (announced 2026-06-17,
-          // decommissioned Aug 2026) and started 502-ing this endpoint in prod.
-          // gpt-oss-120b is Groq's own recommended successor. Override with
-          // GROQ_MODEL if this one is ever retired too — that env var is the
-          // fix that needs no deploy.
-          model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
+          model,
           messages: [{ role: "system", content: system }, ...messages],
           max_tokens: maxTokens,
           stream: true,
+          // Omitted, not null, when the model isn't a known reasoning family —
+          // an unrecognised value here is rejected outright.
+          ...(effort ? { reasoning_effort: effort } : {}),
         }),
-      }),
+      });
+    },
     extractDelta: (e) => (e as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content,
   },
   {
@@ -540,13 +579,30 @@ function jsonError(
 }
 
 /**
+ * What the visitor sees if a provider streams us a technically-valid response
+ * containing no text at all. Written to be true whatever the cause, and to give
+ * a recruiter something to do next instead of a dead end.
+ */
+export const EMPTY_STREAM_FALLBACK =
+  "I didn't manage to get that one out — the model returned nothing. Please try again; if you were analysing a job description, pasting just the requirements section usually does it.";
+
+/**
  * Re-emits an upstream SSE body as a provider-independent stream the widget
  * understands: `data: {"text":"…"}` events terminated by `data: [DONE]`.
+ *
+ * GUARANTEE: this never terminates a stream having emitted zero text. A model
+ * that spends its entire budget reasoning (see reasoningEffortFor), a content
+ * filter that drops every token, an upstream that closes early — all of them
+ * used to surface identically as a blank bubble, which reads as a broken site
+ * rather than a failed request. `reasoning_effort` fixes the cause we know
+ * about; this covers the ones we don't, at the single point every provider's
+ * stream funnels through.
  */
 export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDelta: Provider["extractDelta"]): ReadableStream<Uint8Array> {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let buffer = "";
+  let sawText = false;
 
   return upstream.pipeThrough(
     new TransformStream<Uint8Array, Uint8Array>({
@@ -558,13 +614,19 @@ export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDel
           if (!line.startsWith("data: ") || line.includes("[DONE]")) continue;
           try {
             const delta = extractDelta(JSON.parse(line.slice(6)));
-            if (delta) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`));
+            if (delta) {
+              sawText = true;
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`));
+            }
           } catch {
             // partial or non-JSON event — skip
           }
         }
       },
       flush(controller) {
+        if (!sawText) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: EMPTY_STREAM_FALLBACK })}\n\n`));
+        }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       },
     }),
@@ -638,9 +700,17 @@ export async function handleChat(request: Request): Promise<Response> {
     }
   }
 
+  // JD mode is validated above to be exactly one user turn, so this rewrites
+  // the pasted document and nothing else. Boilerplate out, requirements in —
+  // see jd-condense.ts for why this is a focusing pass and not a size fix.
+  const outgoing =
+    parsed.mode === "jd"
+      ? [{ ...parsed.messages[0], content: condenseJd(parsed.messages[0].content) }]
+      : selectHistory(parsed.messages);
+
   const upstream = await picked.provider.request(
     picked.key,
-    selectHistory(parsed.messages),
+    outgoing,
     systemPromptFor(parsed.mode, parsed.route),
     maxOutputTokensFor(parsed.mode),
   );

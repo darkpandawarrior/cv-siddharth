@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
+  EMPTY_STREAM_FALLBACK,
   PROVIDERS,
   checkRateLimit,
   clientIp,
   handleChat,
   isAllowedOrigin,
   normalizeStream,
+  reasoningEffortFor,
   rateLimitKey,
   readBoundedBody,
   selectHistory,
@@ -907,6 +909,70 @@ describe("normalizeStream", () => {
     ]);
     const out = await collect(normalizeStream(upstream, anthropic.extractDelta));
     expect(out).toBe('data: {"text":"hi"}\n\ndata: [DONE]\n\n');
+  });
+
+  /* THE REGRESSION TEST FOR THE EMPTY BUBBLE.
+   * Production returned exactly this — HTTP 200 and a body of `data: [DONE]`,
+   * 14 bytes, because gpt-oss-120b spent its whole ceiling in `delta.reasoning`
+   * and emitted no `content`. The visitor saw a blank bubble and a site that
+   * looked broken. Whatever empties a stream, something must come out. */
+  it("never ends a stream having emitted nothing", async () => {
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    const out = await collect(normalizeStream(sse(["data: [DONE]\n"]), groq.extractDelta));
+    expect(out).toBe(`data: ${JSON.stringify({ text: EMPTY_STREAM_FALLBACK })}\n\ndata: [DONE]\n\n`);
+  });
+
+  it("emits reasoning-only streams as the fallback, not as silence", async () => {
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    // What a thinking model actually sends: text, but in the wrong field.
+    const upstream = sse([
+      'data: {"choices":[{"delta":{"reasoning":"Let me weigh each requirement…"}}]}\n',
+      'data: {"choices":[{"delta":{"reasoning":"…and now I am out of budget."}}]}\n',
+      "data: [DONE]\n",
+    ]);
+    const out = await collect(normalizeStream(upstream, groq.extractDelta));
+    expect(out).toContain(EMPTY_STREAM_FALLBACK);
+    expect(out).not.toContain("weigh each requirement"); // never leak chain-of-thought
+  });
+
+  it("stays silent-free without adding a fallback to streams that did emit", async () => {
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    const upstream = sse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n', "data: [DONE]\n"]);
+    const out = await collect(normalizeStream(upstream, groq.extractDelta));
+    expect(out).not.toContain(EMPTY_STREAM_FALLBACK);
+  });
+});
+
+/* ── Reasoning budget ──────────────────────────────────────────────────────
+ * The root cause of the empty bubble. Groq's two reasoning families take
+ * different vocabularies and reject each other's, so getting this wrong is a
+ * 400 on every request rather than a silent degradation. */
+describe("reasoningEffortFor", () => {
+  it("holds gpt-oss to a low budget so tokens reach the answer", () => {
+    expect(reasoningEffortFor("openai/gpt-oss-120b")).toBe("low");
+    expect(reasoningEffortFor("openai/gpt-oss-20b")).toBe("low");
+  });
+
+  it("turns qwen3 thinking fully off — it takes none/default, not low/high", () => {
+    expect(reasoningEffortFor("qwen/qwen3.6-27b")).toBe("none");
+  });
+
+  it("omits the parameter for models it doesn't recognise", () => {
+    // An unrecognised value is rejected outright, so a guess would 502 the
+    // endpoint for every visitor. Sending nothing is always accepted.
+    expect(reasoningEffortFor("llama-3.3-70b-versatile")).toBeUndefined();
+    expect(reasoningEffortFor("some-future-model")).toBeUndefined();
+  });
+
+  it("is actually applied to the outgoing Groq request", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    await groq.request("k", [{ role: "user", content: "hi" }], "sys", 2048);
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.reasoning_effort).toBe("low");
+    expect(body.max_tokens).toBe(2048);
+    vi.unstubAllGlobals();
   });
 });
 
