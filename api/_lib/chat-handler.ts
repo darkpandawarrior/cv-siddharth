@@ -1,6 +1,7 @@
 // `.js` extension: Vercel's @vercel/node builder type-checks this with its own
 // tsconfig (moduleResolution "node16"), which requires explicit ESM extensions.
 import { SYSTEM_PROMPT } from "./system-prompt.js";
+import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
 
 // Vercel's builder type-checks this file WITHOUT @types/node, so bare `process`
 // errors there (TS2591) even though our own tsconfig has the node types. This
@@ -20,6 +21,19 @@ const MAX_BODY_BYTES = 64 * 1024;
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+/**
+ * Which system prompt a request gets. The ONLY way to select the Compose
+ * Playground's generator prompt is this server-validated field — never a magic
+ * prefix inside a message, which any visitor can copy out of the public bundle
+ * and type back (that was the jailbreak this replaced).
+ */
+type ChatMode = "chat" | "compose";
+
+interface ChatRequest {
+  messages: ChatMessage[];
+  mode: ChatMode;
 }
 
 // ---------------------------------------------------------------------------
@@ -90,10 +104,48 @@ const MAX_TRACKED_IPS = 5000; // bounded: ~60 timestamps per IP worst case
 
 const hits = new Map<string, number[]>();
 
-/** First hop of `x-forwarded-for` (Vercel sets it), else `x-real-ip`. */
+/**
+ * Most-trustworthy header first. Vercel overwrites `x-forwarded-for` today, so
+ * it can't be spoofed in production — but that guarantee is one CDN away from
+ * being false (and vite.config.ts's dev middleware forwards client headers
+ * verbatim, which IS spoofable), so the platform's own header wins.
+ * `x-vercel-forwarded-for` is set by Vercel's edge and never by the client;
+ * `x-forwarded-for` is the last resort and only its first hop is read.
+ */
 export function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || request.headers.get("x-real-ip")?.trim() || "unknown";
+  const h = (name: string) => request.headers.get(name)?.trim();
+  return (
+    h("x-vercel-forwarded-for") ||
+    h("x-real-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}
+
+/**
+ * The bucket an address counts against.
+ *
+ * IPv4 (and "unknown") key on the whole address. IPv6 keys on the /64 prefix:
+ * a residential IPv6 allocation IS a /64, so one machine can rotate through
+ * 2^64 addresses it legitimately owns — keying on the full address turns
+ * "10 per minute" into "unlimited". IPv4-mapped forms (`::ffff:1.2.3.4`) are
+ * left alone: collapsing those to a prefix would put every IPv4 visitor in one
+ * shared bucket, which is a denial of service against real people.
+ */
+export function rateLimitKey(ip: string): string {
+  const bare = ip.replace(/^\[([^\]]+)\](:\d+)?$/, "$1"); // [2001:db8::1]:443
+  if (!bare.includes(":") || bare.includes(".")) return bare;
+  const [head, tail] = bare.split("::", 2);
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups =
+    tail === undefined
+      ? bare.split(":")
+      : [...left, ...new Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups
+    .slice(0, 4)
+    .map((g) => (g || "0").toLowerCase().replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
 }
 
 /**
@@ -106,25 +158,32 @@ export function checkRateLimit(
   now: number = Date.now(),
   store: Map<string, number[]> = hits,
 ): { allowed: boolean; retryAfter: number } {
+  const key = rateLimitKey(ip);
   if (store.size > MAX_TRACKED_IPS) {
-    for (const [key, times] of store) {
-      if (times[times.length - 1] <= now - LONGEST_WINDOW_MS) store.delete(key);
+    for (const [k, times] of store) {
+      if (times[times.length - 1] <= now - LONGEST_WINDOW_MS) store.delete(k);
     }
-    // Still oversized (a burst of distinct IPs): drop everything rather than
-    // grow without bound. Worst case a few clients get a free window.
-    if (store.size > MAX_TRACKED_IPS) store.clear();
+    // Still oversized (a burst of distinct addresses): evict the oldest half by
+    // last hit. NOT `store.clear()` — that let anyone rotating through 5000
+    // addresses wipe the map and hand every real visitor a fresh window, i.e.
+    // switch the limiter off on demand. Halving degrades it instead: the
+    // clients that were just here (the ones actually being limited) survive.
+    if (store.size > MAX_TRACKED_IPS) {
+      const oldestFirst = [...store].sort((a, b) => a[1][a[1].length - 1] - b[1][b[1].length - 1]);
+      for (const [k] of oldestFirst.slice(0, Math.ceil(oldestFirst.length / 2))) store.delete(k);
+    }
   }
 
-  const times = (store.get(ip) ?? []).filter((t) => t > now - LONGEST_WINDOW_MS);
+  const times = (store.get(key) ?? []).filter((t) => t > now - LONGEST_WINDOW_MS);
   for (const rule of RATE_WINDOWS) {
     const inWindow = times.filter((t) => t > now - rule.ms);
     if (inWindow.length >= rule.max) {
-      store.set(ip, times);
+      store.set(key, times);
       return { allowed: false, retryAfter: Math.max(1, Math.ceil((inWindow[0] + rule.ms - now) / 1000)) };
     }
   }
   times.push(now);
-  store.set(ip, times);
+  store.set(key, times);
   return { allowed: true, retryAfter: 0 };
 }
 
@@ -146,6 +205,63 @@ export function validateMessages(body: unknown): ChatMessage[] | null {
   // Length first: `.every()` over an arbitrarily long array is a free DoS.
   if (messages.length > MAX_MESSAGES) return null;
   return messages.every(isValidMessage) ? (messages as ChatMessage[]) : null;
+}
+
+/**
+ * Parsed body → { messages, mode }, or null (→ 400).
+ *
+ * `mode` is absent (normal chat) or the exact string "compose". Anything else
+ * — a different string, a number, an object, `null` — is a 400 rather than a
+ * silent fallback: an allowlist of one, so a future third mode can't be
+ * reached by guessing and a typo fails loudly instead of quietly billing the
+ * full CV prompt.
+ */
+export function validateRequest(body: unknown): ChatRequest | null {
+  const messages = validateMessages(body);
+  if (!messages) return null;
+  const mode = (body as { mode?: unknown }).mode;
+  if (mode !== undefined && mode !== "compose") return null;
+  return { messages, mode: mode === "compose" ? "compose" : "chat" };
+}
+
+/**
+ * Reads the body with a hard ceiling, then hands back the text.
+ *
+ * `content-length` on its own is not a check: a chunked body has none
+ * (`Number(null)` → 0) and a garbage one gives NaN — both sail past a `>`
+ * comparison, after which `request.json()` reads however much the client
+ * sends. So the declared length is only a cheap early out; the stream itself
+ * is counted as it arrives. Returns null when the ceiling is hit (→ 413).
+ * Web-standard streams only — this runs on Edge.
+ */
+export async function readBoundedBody(request: Request, max: number = MAX_BODY_BYTES): Promise<string | null> {
+  const declared = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > max) return null;
+  if (!request.body) return ""; // no body at all — let JSON parsing 400 it
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > max) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -175,21 +291,27 @@ export function selectHistory(messages: ChatMessage[]): ChatMessage[] {
 interface Provider {
   name: string;
   key: () => string | undefined;
-  request: (key: string, messages: ChatMessage[]) => Promise<Response>;
+  /** `system` is chosen by the server from `mode` — never from message text. */
+  request: (key: string, messages: ChatMessage[], system: string) => Promise<Response>;
   extractDelta: (event: unknown) => string | undefined;
+}
+
+/** The system prompt a validated mode selects. */
+export function systemPromptFor(mode: ChatMode): string {
+  return mode === "compose" ? COMPOSE_SYSTEM_PROMPT : SYSTEM_PROMPT;
 }
 
 export const PROVIDERS: Provider[] = [
   {
     name: "groq",
     key: () => process.env.GROQ_API_KEY,
-    request: (key, messages) =>
+    request: (key, messages, system) =>
       fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
         body: JSON.stringify({
           model: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
-          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+          messages: [{ role: "system", content: system }, ...messages],
           max_tokens: 1024,
           stream: true,
         }),
@@ -199,14 +321,14 @@ export const PROVIDERS: Provider[] = [
   {
     name: "gemini",
     key: () => process.env.GEMINI_API_KEY,
-    request: (key, messages) =>
+    request: (key, messages, system) =>
       fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"}:streamGenerateContent?alt=sse`,
         {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": key },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            systemInstruction: { parts: [{ text: system }] },
             contents: messages.map((m) => ({
               role: m.role === "assistant" ? "model" : "user",
               parts: [{ text: m.content }],
@@ -222,7 +344,7 @@ export const PROVIDERS: Provider[] = [
   {
     name: "anthropic",
     key: () => process.env.ANTHROPIC_API_KEY,
-    request: (key, messages) =>
+    request: (key, messages, system) =>
       fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -233,7 +355,7 @@ export const PROVIDERS: Provider[] = [
         body: JSON.stringify({
           model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
           max_tokens: 1024,
-          system: SYSTEM_PROMPT,
+          system,
           messages,
           stream: true,
         }),
@@ -317,8 +439,12 @@ export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDel
 }
 
 /**
- * POST { messages: [{role, content}, ...] } → SSE stream of
+ * POST { messages: [{role, content}, ...], mode?: "compose" } → SSE stream of
  * `data: {"text": "…"}` events, regardless of the underlying LLM provider.
+ *
+ * `mode` only selects a system prompt (see systemPromptFor). Every guard —
+ * origin allowlist, rate limit, body ceiling, array/char caps — runs before it
+ * is even read, so the Compose Playground's path is not a second, softer door.
  */
 export async function handleChat(request: Request): Promise<Response> {
   // A request with NO Origin header is rejected. This endpoint exists for one
@@ -348,24 +474,27 @@ export async function handleChat(request: Request): Promise<Response> {
     });
   }
 
-  // Cheap pre-parse ceiling. Chunked bodies have no content-length; the array
-  // and per-message caps below bound those after parsing.
-  const declaredLength = Number(request.headers.get("content-length") ?? 0);
-  if (declaredLength > MAX_BODY_BYTES) return jsonError(413, "That message is too large.", allowedOrigin);
+  // Bounded read: the ceiling is enforced on the bytes that actually arrive,
+  // not on a content-length header the client controls (or omits).
+  const raw = await readBoundedBody(request);
+  if (raw === null) return jsonError(413, "That message is too large.", allowedOrigin);
 
   const picked = pickProvider();
   if (!picked) {
-    return jsonError(
-      503,
-      "Chat is not configured: set GROQ_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY.",
-      allowedOrigin,
-    );
+    // The visitor gets nothing operational — naming the env vars told an
+    // attacker exactly which providers to look for. The fix stays in the logs.
+    console.error("chat: no provider key configured (set GROQ_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY)");
+    return jsonError(503, "Chat is not configured right now.", allowedOrigin);
   }
 
-  const messages = validateMessages(await request.json().catch(() => null));
-  if (!messages) return jsonError(400, "Expected { messages: [{role, content}, ...] }.", allowedOrigin);
+  const parsed = validateRequest(parseJson(raw));
+  if (!parsed) return jsonError(400, 'Expected { messages: [{role, content}, ...], mode?: "compose" }.', allowedOrigin);
 
-  const upstream = await picked.provider.request(picked.key, selectHistory(messages));
+  const upstream = await picked.provider.request(
+    picked.key,
+    selectHistory(parsed.messages),
+    systemPromptFor(parsed.mode),
+  );
 
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");

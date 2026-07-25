@@ -24,9 +24,31 @@ export const CHAT_FALLBACK =
  * problem (no key, upstream down) and get the contact fallback; a 429 from the
  * endpoint's rate limiter is the one case where the server's own message is
  * written for the visitor and actually actionable ("wait a moment").
+ *
+ * 400/413 get their own line: they mean "this request was too big", which is
+ * neither the contact fallback's fault nor something waiting fixes. Telling
+ * someone the backend isn't configured when the real problem is a long
+ * transcript left them stuck with no way out.
  */
 export function chatErrorText(err: unknown): string {
-  return err instanceof Error && err.cause === 429 ? err.message : CHAT_FALLBACK;
+  const status = err instanceof Error ? err.cause : undefined;
+  if (status === 429) return (err as Error).message;
+  if (status === 400 || status === 413)
+    return "That was too long for me to take in one go — try a shorter message, or `/clear` to start a fresh conversation.";
+  return CHAT_FALLBACK;
+}
+
+/**
+ * How many turns actually go up the wire. The server keeps the last 20
+ * (selectHistory) and 400s past 60, so sending a whole session was a slow
+ * fuse: around 30 exchanges the array tripped MAX_MESSAGES and every further
+ * question failed — showing the "not configured" fallback, which is a lie.
+ * Trimming here loses nothing the server wouldn't have dropped anyway.
+ */
+export const MAX_SENT_TURNS = 20;
+
+export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
+  return messages.slice(-MAX_SENT_TURNS);
 }
 
 /** Consumes the server's normalized SSE stream: `data: {"text": "…"}` events. */
@@ -34,7 +56,9 @@ export async function streamReply(messages: ChatMessage[], onDelta: (text: strin
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ messages }),
+    // Trimmed HERE, at the one place every surface streams through, rather
+    // than in each caller — a future third caller can't reintroduce the bug.
+    body: JSON.stringify({ messages: trimHistory(messages) }),
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);

@@ -405,10 +405,12 @@ export function FloatingChat() {
             <div className={`space-y-3 ${expanded ? "mx-auto w-full max-w-2xl" : ""}`}>
               {messages.map((m, i) => {
                 const streaming = busy && i === messages.length - 1 && m.role === "assistant";
-                // A user turn renders as plain text — deliberately NOT through
-                // ChatMessageBody. Widget directives are assistant-only, so a
-                // visitor typing `[[rooms]]` sees those characters back rather
-                // than spoofing site UI inside the conversation.
+                // LOAD-BEARING: a user turn renders as plain text and must
+                // NEVER go through parseChatBlocks / ChatMessageBody. Widget
+                // directives are assistant-only; the moment visitor text is
+                // parsed, typing `[[rooms]]` (or any future directive) spoofs
+                // real site UI inside the conversation. If you refactor these
+                // two branches into one renderer, this invariant dies silently.
                 if (m.role === "user")
                   return (
                     <div
@@ -512,7 +514,9 @@ export function FloatingChat() {
                 autoComplete="off"
                 role="combobox"
                 aria-expanded={menuOpen}
-                aria-controls="chat-slash-menu"
+                // Only while the listbox exists — aria-controls pointing at a
+                // missing id is a dangling reference to a screen reader.
+                aria-controls={menuOpen ? "chat-slash-menu" : undefined}
                 aria-autocomplete="list"
                 aria-activedescendant={menuOpen ? `chat-slash-${selected.name}` : undefined}
                 aria-label="Ask Sid, or type a slash command"

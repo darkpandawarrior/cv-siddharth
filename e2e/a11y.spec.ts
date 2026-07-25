@@ -28,3 +28,30 @@ for (const path of ROUTES) {
     expect(bad, report).toEqual([]);
   });
 }
+
+// The chat console is closed on load, so the loop above never sees it — its
+// combobox/listbox wiring (aria-expanded, aria-controls, aria-activedescendant,
+// role="option") was shipped unverified. Open it, then open the slash menu, and
+// axe the panel in both states.
+test("the chat console has no serious/critical axe violations, closed menu or open", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open chat" }).click();
+
+  const input = page.getByRole("combobox", { name: /Ask Sid/i });
+  await expect(input).toBeVisible();
+
+  const scan = async (label: string) => {
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(bad, `${label}: ${bad.map((v) => `${v.id} — ${v.help}`).join("; ")}`).toEqual([]);
+  };
+
+  await scan("chat open, slash menu closed");
+
+  // "/" pops the command listbox — the state that owns the ARIA under test.
+  await input.fill("/");
+  await expect(page.getByRole("listbox", { name: "Console commands" })).toBeVisible();
+  await scan("chat open, slash menu open");
+});

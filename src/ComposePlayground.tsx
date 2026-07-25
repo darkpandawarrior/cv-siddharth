@@ -116,7 +116,8 @@ function resolveBool(expr: Expr | undefined, state: StateMap): boolean {
   if (expr.t === "logic") return expr.op === "and" ? resolveBool(expr.left, state) && resolveBool(expr.right, state) : resolveBool(expr.left, state) || resolveBool(expr.right, state);
   if (expr.t === "member") {
     // stateVar.isEmpty() / stateVar.isNotEmpty() — the one method-call shape
-    // AI-generated visibility conditions actually reach for (see GEN_RULES).
+    // AI-generated visibility conditions actually reach for (see the grammar in
+    // api/_lib/compose-prompt.ts).
     const m = expr.path.match(/^(\w+)\.(isEmpty|isNotEmpty)$/);
     if (m) {
       const v = state[m[1]];
@@ -524,24 +525,24 @@ Column(
 
 /* ── AI scenario generation ──────────────────────────────────────────── */
 
-// Same endpoint the chat widget uses; the server always applies its own CV
-// system prompt and only accepts user/assistant roles, so the grammar has to
-// ride inside the user message.
+// Same endpoint the chat widget uses. The generator grammar is NOT sent from
+// here: it's a system prompt the server selects from `mode: "compose"`
+// (api/_lib/compose-prompt.ts). It used to ride inside the user message, which
+// (a) made the site's own prompt trust any message starting with that public,
+// copy-pasteable preamble, and (b) ate 1870 of the 2000-char per-turn budget,
+// so anything but a terse scenario 400'd. Both went away with the move.
 const CHAT_API_URL: string = import.meta.env.VITE_CHAT_API_URL || "/api/chat";
 
-const GEN_RULES = `You are a code generator for an in-browser Jetpack Compose playground with a LIMITED interpreter. Output ONLY Kotlin Compose code inside one \`\`\`kotlin fence. No prose, no imports, no @Composable function wrapper.
-Use ONLY this subset:
-- Layout: Column(...) { }, Row(...) { }, Box(...) { }, Card(...) { }
-- Text("literal or $stateVar", color = Color.X, fontSize = N.sp, fontWeight = FontWeight.Bold)
-- Button(onClick = { STATE_MUTATION }) { Text("...") }
-- TextField(value = stateVar, onValueChange = { stateVar = it }, modifier = Modifier...) — stateVar MUST be a string var declared with mutableStateOf(""); onValueChange MUST be exactly "{ stateVar = it }", no other form. Name the var "password"/"confirmPassword" etc. (containing "pass") to get a masked field automatically — do not add a visualTransformation param, it's not supported.
-- Spacer(Modifier.height(N.dp)) or Spacer(Modifier.width(N.dp))
-- AnimatedVisibility(visible = CONDITION) { ... } — CONDITION is a bool state var, OR stringStateVar.isEmpty() / .isNotEmpty(), optionally combined with || or && (e.g. password.isEmpty() || username.isEmpty()). No other method calls or comparisons are supported.
-- Modifier chain: .padding(N.dp).fillMaxWidth().fillMaxSize().size(N.dp).height(N.dp).width(N.dp).background(COLOR).clip(RoundedCornerShape(N.dp)) or .clip(CircleShape).weight(N.dp)
-- State: var name by remember { mutableStateOf(0) } (or false, or "text"); mutate in onClick as name++, name--, name += 2, name = !name; a size can be state: Modifier.size(name.dp)
-- COLOR is Color.Green/Red/Blue/Cyan/Magenta/Yellow/White/Black/Gray/LightGray/DarkGray or Color(0xFFRRGGBB)
-- Arrangement.Center / Arrangement.SpaceBetween / Arrangement.spacedBy(N.dp); Alignment.CenterHorizontally / Alignment.CenterVertically
-Keep it under ~40 lines and make it visually appealing on a dark surface. Screen to build: `;
+/** The server's per-user-turn cap (MAX_MESSAGE_CHARS in api/_lib/chat-handler.ts).
+ *  The whole budget is the scenario's now — nothing else shares the turn. */
+export const MAX_SCENARIO_CHARS = 2000;
+
+/** The exact user turn `generate()` posts. Capping here — not just via the
+ *  input's maxLength — is what guarantees it: the idea chips call generate()
+ *  directly, bypassing the field. */
+export function buildGenPrompt(scenario: string): string {
+  return scenario.trim().slice(0, MAX_SCENARIO_CHARS);
+}
 
 /** Pull the Kotlin out of a fenced (or bare) model reply. Forgiving — the
  *  interpreter tolerates the rest, so worst case it renders a placeholder. */
@@ -555,7 +556,9 @@ async function streamChat(userContent: string, onDelta?: (full: string) => void)
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ messages: [{ role: "user", content: userContent }] }),
+    // `mode` is validated server-side against a one-value allowlist; it swaps
+    // the CV system prompt for the Compose generator one.
+    body: JSON.stringify({ messages: [{ role: "user", content: userContent }], mode: "compose" }),
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
@@ -638,7 +641,7 @@ export default function ComposePlayground() {
     setAiBusy(true);
     setAiNote(null);
     try {
-      const full = await streamChat(GEN_RULES + s, (partial) => {
+      const full = await streamChat(buildGenPrompt(s), (partial) => {
         // Live-type the code as it streams once a fence opens, so the preview
         // materialises in real time.
         const gen = extractCode(partial);
@@ -746,6 +749,7 @@ export default function ComposePlayground() {
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="describe a screen — e.g. a login form"
+              maxLength={MAX_SCENARIO_CHARS}
               disabled={aiBusy}
               aria-label="Describe a screen for the AI to build in Compose"
               className="min-w-0 flex-1 rounded-full border border-line bg-ink/60 px-4 py-1.5 text-xs text-zinc-100 outline-none transition focus:border-accent2/60 disabled:opacity-50"
