@@ -7,6 +7,7 @@ import {
   handleChat,
   isAllowedOrigin,
   normalizeStream,
+  pickProviders,
   reasoningEffortFor,
   rateLimitKey,
   readBoundedBody,
@@ -940,6 +941,149 @@ describe("normalizeStream", () => {
     const upstream = sse(['data: {"choices":[{"delta":{"content":"ok"}}]}\n', "data: [DONE]\n"]);
     const out = await collect(normalizeStream(upstream, groq.extractDelta));
     expect(out).not.toContain(EMPTY_STREAM_FALLBACK);
+  });
+});
+
+/* ── Provider failover ─────────────────────────────────────────────────────
+ * A second free-tier key is worth nothing unless the handler actually reaches
+ * for it. Groq's free allowance is 8K tokens/minute and this endpoint spends
+ * ~5K on the system prompt alone, so "Groq is throttled" is the ORDINARY case,
+ * not the exotic one. These assert the handover happens and that it never
+ * spends the reserve on a request that cannot succeed. */
+describe("provider failover", () => {
+  const env = { ...process.env };
+  afterEach(() => {
+    process.env = { ...env };
+    vi.unstubAllGlobals();
+  });
+
+  function sseResponse(text: string) {
+    return new Response(
+      new ReadableStream({
+        start(c) {
+          c.enqueue(new TextEncoder().encode(`data: {"choices":[{"delta":{"content":"${text}"}}]}\n`));
+          c.close();
+        },
+      }),
+      { status: 200 },
+    );
+  }
+
+  const ask = () =>
+    handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://cv-siddharth.vercel.app" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      }),
+    );
+
+  it("lists every configured provider, in preference order", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    expect(pickProviders().map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+  });
+
+  it("still honours CHAT_PROVIDER as a hard pin", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    process.env.CHAT_PROVIDER = "gemini";
+    expect(pickProviders().map((p) => p.provider.name)).toEqual(["gemini"]);
+  });
+
+  it("falls over to the second provider when the first is rate limited", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("rate limit", { status: 429 }))
+      .mockResolvedValueOnce(sseResponse("from gemini"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await ask();
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1][0])).toContain("generativelanguage.googleapis.com");
+  });
+
+  it("falls over when the first provider's key is rejected", async () => {
+    process.env.GROQ_API_KEY = "stale";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("bad key", { status: 401 }))
+      .mockResolvedValueOnce(sseResponse("ok"));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await ask()).status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls over when the first provider throws outright", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("ECONNRESET"))
+      .mockResolvedValueOnce(sseResponse("ok"));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await ask()).status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does NOT spend the reserve provider on a malformed request", async () => {
+    // A 400 is our bug: it will be just as malformed at the next provider, and
+    // retrying would burn the reserve quota to reproduce the same error.
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi.fn().mockResolvedValue(new Response("bad request", { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await ask()).status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports 429 only once EVERY provider is throttled", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi.fn().mockResolvedValue(new Response("", { status: 429, headers: { "retry-after": "42" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await ask();
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("42");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("decodes the second provider's format, not the first's", async () => {
+    // The failover is worthless if the stream comes back unreadable: each
+    // provider names its delta field differently, so the extractDelta that
+    // ships must be the one belonging to the provider that actually answered.
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const geminiFrame =
+      'data: {"candidates":[{"content":{"parts":[{"text":"hello from gemini"}]}}]}\n';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("", { status: 429 }))
+      .mockResolvedValueOnce(
+        new Response(
+          new ReadableStream({
+            start(c) {
+              c.enqueue(new TextEncoder().encode(geminiFrame));
+              c.close();
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const body = await (await ask()).text();
+    expect(body).toContain("hello from gemini");
+    expect(body).not.toContain(EMPTY_STREAM_FALLBACK);
   });
 });
 

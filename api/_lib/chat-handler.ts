@@ -541,14 +541,38 @@ export const PROVIDERS: Provider[] = [
   },
 ];
 
-export function pickProvider(): { provider: Provider; key: string } | null {
+/**
+ * Every configured provider, in preference order — not just the first.
+ *
+ * Returning the whole list is what makes failover possible: a second free-tier
+ * key is worth nothing if the handler only ever reaches for the first one.
+ * Groq leads because it is by far the fastest; the rest are the reserve tank
+ * for when its (small) free allowance is spent.
+ *
+ * CHAT_PROVIDER still pins a single provider, which is how you force a
+ * specific one for testing without unsetting keys.
+ */
+export function pickProviders(): { provider: Provider; key: string }[] {
   const forced = process.env.CHAT_PROVIDER;
   const candidates = forced ? PROVIDERS.filter((p) => p.name === forced) : PROVIDERS;
-  for (const provider of candidates) {
-    const key = provider.key();
-    if (key) return { provider, key };
-  }
-  return null;
+  return candidates
+    .map((provider) => ({ provider, key: provider.key() }))
+    .filter((c): c is { provider: Provider; key: string } => !!c.key);
+}
+
+/**
+ * Is this upstream failure worth spending a different provider's quota on?
+ *
+ * Yes for anything that is about THIS key or THIS provider — exhausted quota
+ * (429), a rejected or unfunded key (401/402/403), a timeout, or the provider
+ * being down (5xx). Those are exactly the cases a second key exists to cover.
+ *
+ * No for 400. A 400 means the request itself is malformed, which is our bug and
+ * will be just as malformed at the next provider — retrying would burn the
+ * reserve quota to produce the same error, and hide the defect while doing it.
+ */
+export function shouldFailOver(status: number): boolean {
+  return status !== 400;
 }
 
 // ---------------------------------------------------------------------------
@@ -678,8 +702,8 @@ export async function handleChat(request: Request): Promise<Response> {
   const raw = await readBoundedBody(request);
   if (raw === null) return jsonError(413, "That message is too large.", allowedOrigin);
 
-  const picked = pickProvider();
-  if (!picked) {
+  const providers = pickProviders();
+  if (providers.length === 0) {
     // The visitor gets nothing operational — naming the env vars told an
     // attacker exactly which providers to look for. The fix stays in the logs.
     console.error("chat: no provider key configured (set GROQ_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY)");
@@ -708,34 +732,74 @@ export async function handleChat(request: Request): Promise<Response> {
       ? [{ ...parsed.messages[0], content: condenseJd(parsed.messages[0].content) }]
       : selectHistory(parsed.messages);
 
-  const upstream = await picked.provider.request(
-    picked.key,
-    outgoing,
-    systemPromptFor(parsed.mode, parsed.route),
-    maxOutputTokensFor(parsed.mode),
-  );
+  /* Try each configured provider in turn.
+   *
+   * Failing over is only possible HERE, before a single byte has gone to the
+   * client — once the stream's headers are out we are committed to whichever
+   * provider we opened. (An upstream that connects and then yields nothing is
+   * past this point; normalizeStream's EMPTY_STREAM_FALLBACK is what covers
+   * that half.)
+   *
+   * This is what makes a second free-tier key actually worth adding. Groq's
+   * free allowance for gpt-oss-120b is 8K tokens/MINUTE and 200K/day, and this
+   * endpoint spends ~5K of them on the system prompt alone — so a couple of
+   * back-to-back analyses can exhaust a minute, and a busy afternoon can
+   * exhaust a day. Before this loop, that was a dead chat. Now it's a handover. */
+  let upstream: Response | null = null;
+  let served: Provider | null = null;
+  let lastStatus = 502;
+  let lastRetryAfter: string | null = null;
 
-  if (!upstream.ok || !upstream.body) {
-    const detail = await upstream.text().catch(() => "");
-    console.error(`${picked.provider.name} API error`, upstream.status, detail);
+  for (const candidate of providers) {
+    let res: Response;
+    try {
+      res = await candidate.provider.request(
+        candidate.key,
+        outgoing,
+        systemPromptFor(parsed.mode, parsed.route),
+        maxOutputTokensFor(parsed.mode),
+      );
+    } catch (err) {
+      // A thrown request never reached the provider (DNS, TLS, timeout). That
+      // says nothing about the next one, so it is always worth trying.
+      console.error(`${candidate.provider.name} request threw`, err);
+      lastStatus = 502;
+      continue;
+    }
+
+    if (res.ok && res.body) {
+      upstream = res;
+      served = candidate.provider;
+      break;
+    }
+
+    const detail = await res.text().catch(() => "");
+    console.error(`${candidate.provider.name} API error`, res.status, detail);
+    lastStatus = res.status;
+    lastRetryAfter = res.headers.get("retry-after");
+    if (!shouldFailOver(res.status)) break;
+  }
+
+  if (!upstream || !served) {
     // The provider throttling OUR key is not the same failure as the provider
     // being down, and it's the likely one on a free tier: the JD analyser sends
     // a large prompt, so a couple of analyses back-to-back can trip a
     // tokens-per-minute cap. Saying "unavailable" there reads as "this site is
     // broken" when the truth is "wait ~30s". Surface it as a 429 so the client's
     // existing 429 branch shows the retry wording (and Retry-After is honoured).
-    if (upstream.status === 429) {
+    // Reaching here with a 429 now means EVERY configured provider is throttled.
+    if (lastStatus === 429) {
       return jsonError(
         429,
         "I'm getting more questions than my free tier allows right now — give me about a minute and ask again.",
         allowedOrigin,
-        { "retry-after": upstream.headers.get("retry-after") ?? "60" },
+        { "retry-after": lastRetryAfter ?? "60" },
       );
     }
     return jsonError(502, "The model is unavailable right now. Please try again.", allowedOrigin);
   }
 
-  return new Response(normalizeStream(upstream.body, picked.provider.extractDelta), {
+  return new Response(normalizeStream(upstream.body!, served.extractDelta), {
     headers: {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
