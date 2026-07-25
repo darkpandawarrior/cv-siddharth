@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { roomHead } from "../lib/routeHead.ts";
 import { Suspense, lazy } from "react";
 import { FloatingChat } from "../FloatingChat.tsx";
 
@@ -6,6 +7,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 const BlueprintRoom = lazy(() => import("../BlueprintRoom.tsx"));
 
 export const Route = createFileRoute("/blueprint")({
+  head: () => roomHead("/blueprint"),
   ssr: false,
   component: () => (
     <Suspense

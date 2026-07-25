@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { RoomFrame } from "../Playground.tsx";
 import { StoryMap } from "../StoryMap.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 
 export const Route = createFileRoute("/map")({
+  head: () => roomHead("/map"),
   ssr: false,
   component: () => (
     <>

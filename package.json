@@ -14,9 +14,9 @@
     "gen:og": "node scripts/gen-og.mjs",
     "gen:images": "node scripts/gen-images.mjs",
     "showcase": "node scripts/rebuild-showcase.mjs",
-    "refresh": "npm run sync:media && npm run showcase && npm run gen:stats && npm run gen:hiresignal && npm run gen:galleries && npm run gen:images && npm run gen:loopdown && npm run gen:feed && npm run gen:heroes && npm run gen:og && npm run gen:system-prompt",
-    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
-    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
+    "refresh": "npm run sync:media && npm run showcase && npm run gen:stats && npm run gen:hiresignal && npm run gen:galleries && npm run gen:images && npm run gen:loopdown && npm run gen:feed && npm run gen:sitemap && npm run gen:heroes && npm run gen:og && npm run gen:system-prompt",
+    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
+    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4173 --strictPort",
@@ -25,7 +25,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "gen:heroes": "node scripts/gen-project-heroes.mjs"
+    "gen:heroes": "node scripts/gen-project-heroes.mjs",
+    "gen:sitemap": "node scripts/gen-sitemap.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
