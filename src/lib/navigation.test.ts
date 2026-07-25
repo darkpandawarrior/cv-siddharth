@@ -41,7 +41,17 @@ describe("classifyChatHref", () => {
   it("routes site paths, including per-project case studies", () => {
     expect(classifyChatHref("/lab")).toEqual({ kind: "route", to: "/lab" });
     expect(classifyChatHref("/project/mileway")).toEqual({ kind: "route", to: "/project/mileway" });
-    expect(classifyChatHref("/feed.xml")).toEqual({ kind: "route", to: "/feed.xml" });
+  });
+
+  // The prompt explicitly offers /feed.xml. It's a static file in public/, not
+  // a router route — feeding it to navigate() hits the catch-all splat and
+  // renders the "Signal lost" 404 instead of the feed.
+  it("bypasses the router for static assets (file extension), not 404s them", () => {
+    expect(classifyChatHref("/feed.xml")).toEqual({ kind: "external", href: "/feed.xml" });
+    expect(classifyChatHref("/llms.txt")).toEqual({ kind: "external", href: "/llms.txt" });
+    expect(classifyChatHref("/og-image.png")).toEqual({ kind: "external", href: "/og-image.png" });
+    // ...but a real route that merely contains a dot-free segment still routes.
+    expect(classifyChatHref("/project/paymentslab")).toEqual({ kind: "route", to: "/project/paymentslab" });
   });
 
   it("scrolls home-page sections written as /#id or #id", () => {

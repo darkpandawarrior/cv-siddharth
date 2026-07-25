@@ -45,7 +45,10 @@ function prefersReducedMotion() {
 // internal targets so render sites can pick goToSection vs <Link>). Kept as
 // a separate small constant rather than importing from the route file, so
 // this module has no dependency on __root.tsx's HashCompat safety net.
-const SECTION_IDS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
+// Exported so scripts/gen-system-prompt.mjs derives the assistant's list of
+// linkable home sections from here instead of hand-mirroring it (this file's
+// generator warns that hand-mirroring is how a past drift bug happened).
+export const SECTION_IDS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
 
 export type HashTarget =
   | { kind: "section"; id: string }
@@ -87,6 +90,12 @@ export function classifyChatHref(href: string): ChatLinkTarget {
     const target = classifyHash(hash[1]);
     return target.kind === "project" ? { kind: "route", to: `/project/${target.slug}` } : target;
   }
+  // A path ending in a file extension is a static asset served from public/
+  // (/feed.xml, /llms.txt, /og-image.png), NOT a router route — the prompt
+  // explicitly offers /feed.xml, and handing it to navigate() hits the
+  // catch-all splat and renders the "Signal lost" 404 instead of the file.
+  // Same treatment WritingView.tsx already gives its own /feed.xml anchor.
+  if (/\.[a-z0-9]{2,5}$/i.test(url)) return { kind: "external", href: url };
   return { kind: "route", to: url.startsWith("/") ? url : `/${url}` };
 }
 

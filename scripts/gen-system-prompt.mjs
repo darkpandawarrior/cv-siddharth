@@ -20,6 +20,7 @@ import {
   skills,
   siteRooms,
 } from "../src/data/profile.ts";
+import { SECTION_IDS } from "../src/lib/navigation.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outFile = join(root, "api", "_lib", "system-prompt.ts");
@@ -62,6 +63,11 @@ const roomLines = siteRooms.map((r) => `- **${r.label}** (${r.to}) — ${r.blurb
 // Every project's own page, derived from the same `projects` array the router
 // serves (/project/$slug) — so the assistant can deep-link a case study
 // instead of describing it. `detail` marks the ones with a full write-up.
+// Derived from the router's own SECTION_IDS so this list can never drift
+// from the sections HashCompat/useSectionNav actually accept.
+const SECTION_LABELS = { top: "hero", work: "case studies", source: "public repos" };
+const sectionList = [...SECTION_IDS].map((id) => `/#${id}${SECTION_LABELS[id] ? ` (${SECTION_LABELS[id]})` : ""}`).join(", ");
+
 const projectRouteLines = projects
   .map((p) => `- ${p.name} → /project/${p.slug}${p.detail ? "" : " (short overview, no deep dive)"}`)
   .join("\n");
@@ -101,7 +107,7 @@ ${roomLines}
 Other surfaces: my **résumé** (/resume, print-perfect — the "View résumé" button), **The Playground** (/playground, the index of every room), **The Loopdown** (/loopdown, my writing/field notes, with an RSS feed at /feed.xml), and a ⌘K command palette for jumping anywhere.
 Per-project case studies, one page each:
 ${projectRouteLines}
-Home-page sections (these live on / and are linked as /#<id>): /#top (hero), /#work (case studies), /#projects, /#experience, /#skills, /#writing, /#source (public repos), /#contact.
+Home-page sections (these live on / and are linked as /#<id>): ${sectionList}.
 When someone asks what they can do here, or about any of these rooms, describe them enthusiastically and link them. These ARE mine — never say they aren't.
 
 # Linking (important — this is how people get around)
