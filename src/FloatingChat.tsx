@@ -38,6 +38,12 @@ const COLLAPSE_TURN_CHARS = 400;
 // The panel is mounted per route, so without this a conversation died the
 // moment the assistant navigated you somewhere. Capped: this is a chat about a
 // portfolio, not a document store.
+//
+// sessionStorage, NOT localStorage: the need above is "survive navigation and
+// reload within one visit", which is exactly what sessionStorage scopes to.
+// localStorage has no expiry, so a recruiter's half-finished JD paste — or a
+// stale "nothing came back that time" error — greeted them again days later,
+// as if the site had been sitting there waiting. A new visit starts clean.
 const STORE_KEY = "sid-chat-v1";
 const MAX_STORED = 24;
 
@@ -225,7 +231,10 @@ export function FloatingChat() {
    * exist and any mismatch would be a hydration error. */
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? "null");
+      // Anyone who visited while this used localStorage is still carrying that
+      // conversation; drop it rather than leave it orphaned in their browser.
+      localStorage.removeItem(STORE_KEY);
+      const saved = JSON.parse(sessionStorage.getItem(STORE_KEY) ?? "null");
       if (Array.isArray(saved?.messages) && saved.messages.length) setMessages([GREETING, ...saved.messages]);
       if (typeof saved?.expanded === "boolean") setExpanded(saved.expanded);
     } catch {
@@ -243,7 +252,7 @@ export function FloatingChat() {
     if (busy) return; // don't write once per streamed token
     try {
       const stored = messages.filter((m) => m !== GREETING).slice(-MAX_STORED);
-      localStorage.setItem(STORE_KEY, JSON.stringify({ messages: stored, expanded }));
+      sessionStorage.setItem(STORE_KEY, JSON.stringify({ messages: stored, expanded }));
     } catch {
       /* quota or private mode — the conversation just won't survive a reload */
     }
