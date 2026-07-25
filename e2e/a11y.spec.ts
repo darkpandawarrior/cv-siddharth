@@ -37,7 +37,7 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open chat" }).click();
 
-  const input = page.getByRole("combobox", { name: /Ask Sid/i });
+  const input = page.getByRole("combobox", { name: /Ask Panda/i });
   await expect(input).toBeVisible();
 
   const scan = async (label: string) => {

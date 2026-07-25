@@ -585,7 +585,18 @@ export function FloatingChat() {
             </div>
           </header>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+          {/* tabIndex + role: a scrollable region has to be reachable by
+              keyboard, or a visitor who cannot use a pointer has no way to
+              read back a long answer (WCAG 2.1.1). The transcript is also a
+              live region, so replies are announced as they settle. */}
+          <div
+            ref={scrollRef}
+            tabIndex={0}
+            role="log"
+            aria-live="polite"
+            aria-label="Conversation transcript"
+            className="flex-1 overflow-y-auto px-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+          >
             <div className={`space-y-3 ${expanded ? "mx-auto w-full max-w-2xl" : ""}`}>
               {messages.map((m, i) => {
                 const streaming = busy && i === messages.length - 1 && m.role === "assistant";

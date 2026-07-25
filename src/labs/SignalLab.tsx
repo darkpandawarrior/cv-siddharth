@@ -1,568 +1,508 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Link } from "@tanstack/react-router";
-import { useCanvasLoop } from "./useCanvasLoop.ts";
-import { useSectionNav } from "../lib/navigation.ts";
+import {
+  ROUTE,
+  ROUTE_LENGTH_M,
+  ZONES,
+  toLatLng,
+  type LatLng,
+  type XY,
+  type ZoneId,
+} from "./signalRoute.ts";
+import {
+  CADENCE_S,
+  STAGES,
+  configForStages,
+  ladder,
+  runPipeline,
+  simulate,
+  type Tier,
+} from "./signalEngine.ts";
 
 /**
- * The Signal Lab — the "50% → 95%" claim, running live, twice: this is the
- * production location engine from Dice.tech, rebuilt from scratch as
- * Mileway's location engine. A vehicle drives a five-zone route — open road,
- * urban canyon, tunnel, highway on-ramp, parking structure — each modeling a
- * documented real-world way GPS lies. Four pipeline stages (jitter
- * suppression, spike rejection, IMU fusion, device-tier sampling) are
- * independently toggleable, and a four-bucket distance accumulator —
- * confirmed / reckoned / rejected against ground truth — scores the trip
- * live. Reduced motion gets a single pre-run frame.
+ * The Signal Lab — the "trip distances were off by large margins" bug from
+ * Dice.tech, rebuilt as Mileway's location engine, running live over the real
+ * roads it would have run on.
  *
- * Runs over a real Leaflet + CARTO dark-tiles basemap (raster <img> tiles,
- * no WebGL, no Web Worker) anchored on Pune, India — Siddharth's real
- * location per profile.ts. An earlier pass tried MapLibre GL JS (vector,
- * WebGL, Worker-based); its worker silently never acknowledged the main
- * thread's setup messages in production despite loading correctly (no
- * error, no tile ever requested) — a WebKit/bundled-worker interaction we
- * couldn't pin down in the time available. Leaflet has no such moving part:
- * tiles are plain images, so this can't hit the same failure mode. The map
- * is non-interactive (no pan/zoom) — the route drawn on the canvas above it
- * is a decorative path, not georeferenced to real streets.
+ * What it demonstrates is a DISTANCE claim, so distance is what it measures:
+ * raw GPS inflates a 17.4 km drive to roughly 40 km, because every jitter adds
+ * length to the polyline. Switch the pipeline on a stage at a time and watch
+ * that come back to within a few percent. Every number on screen is summed
+ * haversine over the positions a stage actually accepted — src/labs/
+ * signalEngine.ts holds the whole engine as a pure function, and
+ * signalEngine.test.ts asserts these headlines so they cannot quietly rot.
+ *
+ * Rendering: the canvas sits over a Leaflet basemap and every point is
+ * projected through Leaflet's own projection, so the track is georeferenced —
+ * it pans and zooms with the map rather than floating above it. `isolate` on
+ * the map container keeps Leaflet's internal pane z-indexes (400, and 800+ for
+ * controls) inside that subtree; on the wrapper they outrank the sibling
+ * canvas and the whole track paints underneath the tiles.
  */
 
-type V = { x: number; y: number };
-type Tier = "flagship" | "budget";
-
-const MAP_CENTER: [number, number] = [18.5204, 73.8567]; // Pune, India (lat, lng)
 const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+const TILE_ATTRIBUTION = '&copy; <a href="https://carto.com/attributions">CARTO</a> · route &copy; OpenStreetMap contributors';
 
-// A winding waypoint route (city-block turns, not a smooth ellipse) so the
-// simulation reads as a real journey. Normalized to the canvas box; each
-// zone below claims a contiguous arc of these points. Catmull-Rom
-// interpolation (see trackAt) gives it road-like curved turns.
-const WAYPOINTS: [number, number][] = [
-  [0.12, 0.28],
-  [0.42, 0.2],
-  [0.68, 0.28],
-  [0.82, 0.42],
-  [0.88, 0.58],
-  [0.78, 0.7],
-  [0.7, 0.82],
-  [0.6, 0.9],
-  [0.4, 0.92],
-  [0.2, 0.86],
-  [0.1, 0.68],
-  [0.08, 0.5],
-  [0.14, 0.38],
-];
+/** Named seeds — the same engine, different luck. */
+const SCENARIOS = [
+  { seed: 20260726, label: "run A" },
+  { seed: 8814, label: "run B" },
+  { seed: 175523, label: "run C" },
+] as const;
 
-type Zone = {
-  id: string;
-  label: string;
-  color: string;
-  tSpan: number; // fraction of the loop this zone occupies (sums to 1 across all zones)
-  durationSec: number; // wall-clock dwell time per lap — short + a big tSpan = high effective speed
-  dropoutChance: number; // probability a given GPS tick produces no fix at all
-  spikeChance: number; // probability an arriving fix is a multipath spike
-  noiseMul: number; // gaussian scatter multiplier for a clean (non-spike) fix
-  confirmFidelity: number; // fraction of this tick's true distance credited when a fix is cleanly accepted
-  reckonFidelity: number; // fraction credited when IMU fusion coasts through a gap
-};
+const PLAYBACK_SECONDS = 26; // how long a full run takes to draw, regardless of length
 
-// Five zones in sequence, each modeling one documented failure mode of the
-// real engine ("Field users' trip distances were off by large margins from
-// urban canyons, tunnels, and OEM-throttled location updates" — the
-// gps-accuracy case study). tSpan sums to exactly 1.0.
-const ZONES: Zone[] = [
-  { id: "open", label: "OPEN ROAD", color: "#8ff0b4", tSpan: 0.2, durationSec: 9, dropoutChance: 0, spikeChance: 0, noiseMul: 1.0, confirmFidelity: 0.99, reckonFidelity: 0.9 },
-  { id: "canyon", label: "URBAN CANYON", color: "#f0883e", tSpan: 0.2, durationSec: 8, dropoutChance: 0, spikeChance: 0.42, noiseMul: 1.8, confirmFidelity: 0.97, reckonFidelity: 0.92 },
-  { id: "tunnel", label: "TUNNEL", color: "#5ee6ff", tSpan: 0.16, durationSec: 5, dropoutChance: 1.0, spikeChance: 0, noiseMul: 1.0, confirmFidelity: 0.99, reckonFidelity: 0.92 },
-  { id: "ramp", label: "HIGHWAY ON-RAMP", color: "#db61ff", tSpan: 0.2, durationSec: 4, dropoutChance: 0, spikeChance: 0.08, noiseMul: 1.0, confirmFidelity: 0.96, reckonFidelity: 0.92 },
-  { id: "parking", label: "PARKING STRUCTURE", color: "#ff5c5c", tSpan: 0.24, durationSec: 16, dropoutChance: 0.5, spikeChance: 0.22, noiseMul: 1.4, confirmFidelity: 0.94, reckonFidelity: 0.85 },
-];
-
-const SAMPLE_MS_FLAGSHIP = 420;
-const SAMPLE_MS_BUDGET = 900; // budget tier = sparser cadence
-const LAP_METERS = 1200; // arbitrary trip length for the live odometer, not a claimed real distance
-const BASE_NOISE_PX = 9;
-const JITTER_OFF_PENALTY = 0.9; // extra fidelity hit on accepted fixes when jitter suppression is off
-const BUDGET_CONFIRM_PENALTY = 0.9; // sparser sampling degrades confirmed fixes; reckoning is tier-insensitive
-const SPIKE_ACCEPTED_FIDELITY = 0.12; // a spike blindly trusted (rejection off) barely represents real progress
-const TRAIL = 60;
-
-// Mulberry32 — deterministic noise so the lab tells the same story every visit.
-function rng(seed: number) {
-  let a = seed;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// Catmull-Rom spline through 4 control points — gives the route curved,
-// road-like turns at each waypoint instead of sharp polyline corners.
-function catmullRom(p0: V, p1: V, p2: V, p3: V, t: number): V {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  return {
-    x: 0.5 * (2 * p1.x + (p2.x - p0.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (3 * p1.x - p0.x - 3 * p2.x + p3.x) * t3),
-    y: 0.5 * (2 * p1.y + (p2.y - p0.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (3 * p1.y - p0.y - 3 * p2.y + p3.y) * t3),
-  };
-}
-
-// Ground truth: a winding waypoint route (city-block turns), parameterized by u ∈ [0,1).
-function trackAt(u: number, w: number, h: number): V {
-  const uu = ((u % 1) + 1) % 1;
-  const n = WAYPOINTS.length;
-  const scaled = uu * n;
-  const i = Math.floor(scaled);
-  const t = scaled - i;
-  const at = (k: number) => {
-    const p = WAYPOINTS[((k % n) + n) % n];
-    return { x: p[0] * w, y: p[1] * h };
-  };
-  return catmullRom(at(i - 1), at(i), at(i + 1), at(i + 2), t);
-}
-
-function zoneAt(u: number): Zone {
-  const uu = ((u % 1) + 1) % 1;
-  let acc = 0;
-  for (const z of ZONES) {
-    acc += z.tSpan;
-    if (uu < acc) return z;
-  }
-  return ZONES[ZONES.length - 1];
-}
-
-const dist = (a: V, b: V) => Math.hypot(a.x - b.x, a.y - b.y);
-
-type Stats = {
-  confirmed: number;
-  reckoned: number;
-  rejected: number;
-  truth: number;
-  accuracy: number;
-  avgRawErr: number;
-  avgFilteredErr: number;
-};
-
-const ERROR_TRAIL = 80; // ring buffer length for the convergence sparkline, same TRAIL-style pattern as rawTrail/engineTrail
+const fmtKm = (m: number) => `${(m / 1000).toFixed(2)} km`;
+const fmtPct = (p: number) => `${p > 0 ? "+" : ""}${p.toFixed(1)}%`;
 
 export function SignalLabPane() {
-  const { goToSection } = useSectionNav();
-  const [jitter, setJitter] = useState(true);
-  const [spikeRejection, setSpikeRejection] = useState(true);
-  const [imuFusion, setImuFusion] = useState(true);
+  const [stages, setStages] = useState(STAGES.length);
   const [tier, setTier] = useState<Tier>("flagship");
-  const controlsRef = useRef({ jitter, spikeRejection, imuFusion, tier });
-  controlsRef.current = { jitter, spikeRejection, imuFusion, tier };
-  const [stats, setStats] = useState<Stats>({
-    confirmed: 0,
-    reckoned: 0,
-    rejected: 0,
-    truth: 0,
-    accuracy: 0,
-    avgRawErr: 0,
-    avgFilteredErr: 0,
-  });
+  const [laps, setLaps] = useState(1);
+  const [scenario, setScenario] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [playhead, setPlayhead] = useState(1);
 
-  // Real, non-interactive Leaflet + CARTO dark-tiles basemap behind the
-  // canvas — plain raster <img> tiles, no WebGL/Worker, so this can't hit
-  // the failure mode that broke the earlier MapLibre attempt.
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  /* ── The engine run. Pure, memoised, and the single source of every number
+   *    and every pixel below. */
+  const run = useMemo(() => {
+    const samples = simulate({
+      seed: SCENARIOS[scenario].seed,
+      tier,
+      distanceM: ROUTE_LENGTH_M * laps,
+    });
+    const engine = runPipeline(samples, configForStages(stages), tier);
+    const rawPath = runPipeline(samples, configForStages(0), tier);
+    // `ladder` measures ground truth the same way, so take its value rather
+    // than computing a second one that could drift from the table's.
+    const { truthM, rows } = ladder(samples, tier);
+    return { samples, truthM, rows, engine, rawPath };
+  }, [scenario, tier, laps, stages]);
+
+  const total = run.samples.length;
+
+  /* ── Playback ─────────────────────────────────────────────────────────── */
+  const reduced = useRef(false);
   useEffect(() => {
-    const container = mapContainerRef.current;
-    if (!container) return;
-    const map = L.map(container, {
-      center: MAP_CENTER,
-      zoom: 14,
+    reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced.current) setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    setPlayhead(reduced.current ? total : 1);
+  }, [total]);
+
+  useEffect(() => {
+    if (!playing) return;
+    let raf = 0;
+    let last = performance.now();
+    const perMs = total / (PLAYBACK_SECONDS * 1000);
+    const tick = (now: number) => {
+      const dt = now - last;
+      last = now;
+      setPlayhead((p) => (p >= total ? 1 : Math.min(total, p + dt * perMs)));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, total]);
+
+  /* ── Map ──────────────────────────────────────────────────────────────── */
+  const mapHostRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const [, setProjectionTick] = useState(0);
+
+  useEffect(() => {
+    const host = mapHostRef.current;
+    if (!host) return;
+    const map = L.map(host, {
       zoomControl: false,
-      dragging: false,
-      touchZoom: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
       attributionControl: true,
+      // Scroll must keep scrolling the PAGE — a map that swallows the wheel
+      // traps a visitor halfway down a long room. Same reasoning for dragging
+      // on touch, where a one-finger drag is how you scroll: panning is worth
+      // having with a mouse, and not worth stealing the page scroll for.
+      scrollWheelZoom: false,
+      dragging: !L.Browser.mobile,
+      doubleClickZoom: true,
+      keyboard: false,
     });
     L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: "abcd", maxZoom: 20 }).addTo(map);
-    // The map container is aria-hidden (it's a decorative backdrop — the
-    // canvas above carries the real aria-label), but Leaflet still injects a
-    // real, mouse-clickable <a> into its attribution control. Left alone
-    // that's a focusable element trapped inside an aria-hidden subtree — a
-    // keyboard user could Tab onto a control no AT can ever announce.
-    // tabIndex -1 pulls it out of the Tab sequence while leaving the link
-    // itself (and CARTO's required attribution) intact for anyone who clicks it.
-    map.attributionControl?.getContainer()?.querySelectorAll("a").forEach((a) => a.setAttribute("tabindex", "-1"));
-    const ro = new ResizeObserver(() => map.invalidateSize());
-    ro.observe(container);
+    map.fitBounds(L.latLngBounds(ROUTE.map((p) => L.latLng(p[0], p[1]))), { padding: [24, 24] });
+    mapRef.current = map;
+
+    const reproject = () => setProjectionTick((t) => t + 1);
+    map.on("move zoom resize", reproject);
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+      reproject();
+    });
+    ro.observe(host);
     return () => {
       ro.disconnect();
+      map.off("move zoom resize", reproject);
       map.remove();
+      mapRef.current = null;
     };
   }, []);
 
-  const canvasRef = useCanvasLoop((_canvas, ctx, getSize) => {
-    const rand = rng(20260724);
-    const gauss = () => (rand() + rand() + rand() - 1.5) * 2; // approx N(0,1)
+  /* ── Draw ─────────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const map = mapRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !map || !ctx) return;
 
-    let u = 0; // loop phase
-    let sinceSample = 0;
-    let statsAcc = 0;
-    let est: V | null = null;
-    let vel: V = { x: 0, y: 0 };
-    const rawTrail: { p: V; spike: boolean }[] = [];
-    const engineTrail: { p: V; gap: boolean }[] = [];
-    // Convergence sparkline ring buffer: raw-sample error vs filtered-estimate
-    // error against ground truth, one entry per GPS tick that has both.
-    const errorTrail: { raw: number; filtered: number }[] = [];
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
-    let confirmed = 0;
-    let reckoned = 0;
-    let rejected = 0;
-    let truth = 0;
-    let lastCfg = { ...controlsRef.current };
+    // Everything is drawn through Leaflet's projection, so the track sits on
+    // the actual roads at any zoom.
+    const project = (ll: LatLng) => map.latLngToContainerPoint(L.latLng(ll[0], ll[1]));
+    const projectXY = (p: XY) => project(toLatLng(p));
 
-    const resetBuckets = () => {
-      confirmed = 0;
-      reckoned = 0;
-      rejected = 0;
-      truth = 0;
-      errorTrail.length = 0;
-    };
+    const head = Math.floor(playhead);
 
-    const updateStats = () => {
-      const accuracy = truth > 0 ? Math.min(100, Math.round(((confirmed + reckoned) / truth) * 100)) : 0;
-      const avgRawErr = errorTrail.length ? errorTrail.reduce((s, e) => s + e.raw, 0) / errorTrail.length : 0;
-      const avgFilteredErr = errorTrail.length ? errorTrail.reduce((s, e) => s + e.filtered, 0) / errorTrail.length : 0;
-      setStats({
-        confirmed: Math.round(confirmed),
-        reckoned: Math.round(reckoned),
-        rejected: Math.round(rejected),
-        truth: Math.round(truth),
-        accuracy,
-        avgRawErr: Math.round(avgRawErr),
-        avgFilteredErr: Math.round(avgFilteredErr),
-      });
-    };
-
-    const step = (dtMs: number) => {
-      const dt = Math.min(dtMs, 64) / 1000;
-      const cfg = controlsRef.current;
-      if (cfg.jitter !== lastCfg.jitter || cfg.spikeRejection !== lastCfg.spikeRejection || cfg.imuFusion !== lastCfg.imuFusion || cfg.tier !== lastCfg.tier) {
-        resetBuckets();
-        sinceSample = 0;
-        lastCfg = { ...cfg };
-      }
-
-      const zone = zoneAt(u);
-      u = (u + (zone.tSpan / zone.durationSec) * dt) % 1;
-
-      sinceSample += dtMs;
-      const sampleMs = cfg.tier === "budget" ? SAMPLE_MS_BUDGET : SAMPLE_MS_FLAGSHIP;
-      if (sinceSample >= sampleMs) {
-        const dtSec = sampleMs / 1000;
-        sinceSample -= sampleMs;
-
-        const { width, height } = getSize();
-        const truthPx = trackAt(u, width, height);
-        const truthTick = ((zone.tSpan * LAP_METERS) / zone.durationSec) * dtSec;
-        truth += truthTick;
-
-        const isDropout = rand() < zone.dropoutChance;
-        if (isDropout) {
-          if (cfg.imuFusion && est) {
-            est = { x: est.x + vel.x * dtSec, y: est.y + vel.y * dtSec };
-            vel = { x: vel.x * 0.985, y: vel.y * 0.985 };
-            reckoned += truthTick * zone.reckonFidelity;
-            engineTrail.push({ p: { ...est }, gap: true });
-            if (engineTrail.length > TRAIL) engineTrail.shift();
-          }
-        } else {
-          const isSpike = rand() < zone.spikeChance;
-          const noiseAmp = BASE_NOISE_PX * zone.noiseMul;
-          let rawPx: V;
-          if (isSpike) {
-            const ang = rand() * Math.PI * 2;
-            const throwPx = noiseAmp * (3.5 + rand() * 3.5);
-            rawPx = { x: truthPx.x + Math.cos(ang) * throwPx, y: truthPx.y + Math.sin(ang) * throwPx };
-          } else {
-            rawPx = { x: truthPx.x + gauss() * noiseAmp, y: truthPx.y + gauss() * noiseAmp };
-          }
-          rawTrail.push({ p: rawPx, spike: isSpike });
-          if (rawTrail.length > TRAIL) rawTrail.shift();
-
-          const predicted = est ? { x: est.x + vel.x * dtSec, y: est.y + vel.y * dtSec } : rawPx;
-          const velMag = Math.hypot(vel.x, vel.y);
-          const maxJump = 50 + velMag * dtSec * 2.4 + 20;
-          const rejectedFix = cfg.spikeRejection && est !== null && dist(rawPx, predicted) > maxJump;
-
-          if (rejectedFix) {
-            rejected += truthTick;
-            if (cfg.imuFusion) {
-              est = predicted;
-              vel = { x: vel.x * 0.985, y: vel.y * 0.985 };
-              reckoned += truthTick * zone.reckonFidelity;
-            }
-            if (est) {
-              engineTrail.push({ p: { ...est }, gap: true });
-              if (engineTrail.length > TRAIL) engineTrail.shift();
-            }
-          } else {
-            const prevRaw = rawTrail[rawTrail.length - 2];
-            const sample = cfg.jitter && prevRaw ? { x: (rawPx.x + prevRaw.p.x) / 2, y: (rawPx.y + prevRaw.p.y) / 2 } : rawPx;
-            if (!est) {
-              est = { ...sample };
-            } else {
-              const alpha = 0.42;
-              const next = { x: est.x + (sample.x - est.x) * alpha, y: est.y + (sample.y - est.y) * alpha };
-              vel = { x: (next.x - est.x) / dtSec, y: (next.y - est.y) / dtSec };
-              est = next;
-            }
-            let fidelity = isSpike ? SPIKE_ACCEPTED_FIDELITY : zone.confirmFidelity;
-            if (!cfg.jitter) fidelity *= JITTER_OFF_PENALTY;
-            if (cfg.tier === "budget") fidelity *= BUDGET_CONFIRM_PENALTY;
-            confirmed += truthTick * fidelity;
-            engineTrail.push({ p: { ...est }, gap: false });
-            if (engineTrail.length > TRAIL) engineTrail.shift();
-          }
-
-          // Both a raw sample and the engine's current estimate exist this
-          // tick — record how far each sits from ground truth, for the
-          // convergence sparkline.
-          if (est) {
-            errorTrail.push({ raw: dist(rawPx, truthPx), filtered: dist(est, truthPx) });
-            if (errorTrail.length > ERROR_TRAIL) errorTrail.shift();
-          }
-        }
-      }
-
-      statsAcc += dtMs;
-      if (statsAcc > 500) {
-        statsAcc = 0;
-        updateStats();
-      }
-    };
-
-    const draw = () => {
-      const { width, height } = getSize();
-      ctx.clearRect(0, 0, width, height);
-
-      // zone-colored track, sampled along the loop
-      const STEPS = 240;
-      ctx.lineWidth = 10;
-      ctx.lineCap = "round";
-      let prevZone: Zone | null = null;
-      for (let i = 0; i <= STEPS; i++) {
-        const uu = i / STEPS;
-        const z = zoneAt(uu);
-        const p = trackAt(uu, width, height);
-        if (z !== prevZone) {
-          if (prevZone) ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.strokeStyle = `${z.color}55`;
-          prevZone = z;
-        } else {
-          ctx.lineTo(p.x, p.y);
-        }
-      }
-      ctx.stroke();
-
-      // dashed centerline
+    // 1. Ground truth, coloured by zone — the road actually driven.
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    for (const zone of ZONES) {
+      const from = Math.floor(zone.from * (ROUTE.length - 1));
+      const to = Math.ceil(zone.to * (ROUTE.length - 1));
       ctx.beginPath();
-      for (let i = 0; i <= STEPS; i++) {
-        const p = trackAt(i / STEPS, width, height);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
+      for (let i = from; i <= to; i++) {
+        const pt = project(ROUTE[i]);
+        if (i === from) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
       }
-      ctx.setLineDash([3, 7]);
-      ctx.strokeStyle = "rgba(232, 239, 233, 0.14)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = `${zone.color}44`;
       ctx.stroke();
+    }
+
+    // 2. Raw GPS — the jagged mess that reads as 40 km.
+    const raw = run.rawPath.path;
+    ctx.beginPath();
+    let started = false;
+    for (const pp of raw) {
+      if (pp.i > head) break;
+      const pt = projectXY(pp.p);
+      if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.strokeStyle = "rgba(240, 136, 62, 0.5)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // 3. The engine's track. Dashed where it is coasting on the IMU with no
+    //    satellites at all — the tunnel is visible as a dashed run.
+    const path = run.engine.path;
+    const drawRun = (bridged: boolean) => {
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i < path.length; i++) {
+        if (path[i].i > head) break;
+        const pt = projectXY(path[i].p);
+        const match = path[i].bridged === bridged;
+        if (match && !pen) { ctx.moveTo(pt.x, pt.y); pen = true; }
+        else if (match) ctx.lineTo(pt.x, pt.y);
+        else pen = false;
+      }
+      ctx.setLineDash(bridged ? [4, 4] : []);
+      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : "#5ee6ff";
+      ctx.lineWidth = bridged ? 1.8 : 2.4;
+      ctx.shadowColor = "rgba(94, 230, 255, 0.5)";
+      ctx.shadowBlur = 5;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
       ctx.setLineDash([]);
+    };
+    drawRun(false);
+    drawRun(true);
 
-      // zone labels, placed radially outside the loop
-      ctx.font = '10px "JetBrains Mono", ui-monospace, monospace';
-      const cx = width * 0.5;
-      const cy = height * 0.52;
-      let acc = 0;
-      for (const z of ZONES) {
-        const midU = acc + z.tSpan / 2;
-        acc += z.tSpan;
-        const p = trackAt(midU, width, height);
-        const dx = p.x - cx;
-        const dy = p.y - cy;
-        const len = Math.hypot(dx, dy) || 1;
-        const lx = p.x + (dx / len) * 18;
-        const ly = p.y + (dy / len) * 18;
-        ctx.textAlign = dx > 10 ? "left" : dx < -10 ? "right" : "center";
-        ctx.textBaseline = dy > 10 ? "top" : dy < -10 ? "bottom" : "middle";
-        ctx.fillStyle = `${z.color}bb`;
-        ctx.fillText(z.label, lx, ly);
-      }
-      ctx.textAlign = "left";
-      ctx.textBaseline = "alphabetic";
-
-      // raw GPS trail — a jagged connecting line, not just dots, so the
-      // "noisy path" reads clearly at a glance against the smooth filtered
-      // trail below it (that contrast IS the optimization story).
-      if (rawTrail.length > 1) {
-        ctx.beginPath();
-        rawTrail.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
-        ctx.strokeStyle = "rgba(240, 136, 62, 0.45)";
-        ctx.lineWidth = 1.3;
-        ctx.stroke();
-      }
-      for (const s of rawTrail) {
-        ctx.beginPath();
-        ctx.arc(s.p.x, s.p.y, s.spike ? 3 : 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = s.spike ? "#ff5c5c" : "rgba(240, 136, 62, 0.7)";
-        ctx.fill();
-      }
-
-      // engine trail (Mileway cyan — the location engine's own visualization)
-      if (engineTrail.length > 1) {
-        ctx.beginPath();
-        engineTrail.forEach((s, i) => (i === 0 ? ctx.moveTo(s.p.x, s.p.y) : ctx.lineTo(s.p.x, s.p.y)));
-        ctx.strokeStyle = "#5ee6ff";
-        ctx.lineWidth = 2;
-        ctx.shadowColor = "rgba(94, 230, 255, 0.55)";
-        ctx.shadowBlur = 6;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        for (const s of engineTrail) {
-          if (!s.gap) continue;
-          ctx.beginPath();
-          ctx.arc(s.p.x, s.p.y, 2.2, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(94, 230, 255, 0.85)";
-          ctx.lineWidth = 1;
-          ctx.stroke(); // hollow dots = no trustworthy fix — dead-reckoned or frozen
-        }
-      }
-
-      // vehicle (ground truth)
-      const v = trackAt(u, width, height);
+    // 4. The vehicle, at ground truth.
+    const here = run.samples[Math.min(head, total - 1)];
+    if (here) {
+      const pt = projectXY(here.truth);
       ctx.beginPath();
-      ctx.arc(v.x, v.y, 4.5, 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
       ctx.fillStyle = "#e8efe9";
       ctx.fill();
+      ctx.strokeStyle = "rgba(5,7,10,0.8)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
 
-      // convergence inset — raw vs filtered position error over time. Pixel-
-      // space magnitudes from the same sim, not a claimed real-world unit.
-      const ix = 10;
-      const iy = 10;
-      const iw = 130;
-      const ih = 50;
-      ctx.fillStyle = "rgba(5, 7, 10, 0.72)";
-      ctx.fillRect(ix, iy, iw, ih);
-      ctx.strokeStyle = "rgba(232, 239, 233, 0.14)";
+    // 5. The magnifier. At city zoom a 13 m scatter is two pixels wide, so the
+    //    headline ("raw GPS reads 40 km") is true but invisible. This window
+    //    follows the vehicle at ~9x and is where the claim becomes something
+    //    you can see: orange thrashing either side of the road, cyan riding
+    //    down the middle of it.
+    if (here) {
+      const IW = Math.min(210, rect.width * 0.34);
+      const IH = Math.min(150, rect.height * 0.36);
+      const IX = rect.width - IW - 12;
+      const IY = 12;
+      const SPAN_M = 130; // metres across the window
+      const k = IW / SPAN_M;
+      const c = here.truth;
+      const toInset = (p: XY) => ({
+        x: IX + IW / 2 + (p.x - c.x) * k,
+        y: IY + IH / 2 - (p.y - c.y) * k, // canvas y grows downward, north does not
+      });
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(IX, IY, IW, IH);
+      ctx.fillStyle = "rgba(5, 7, 10, 0.86)";
+      ctx.fill();
+      ctx.clip();
+
+      const strokeThrough = <T,>(items: T[], pt: (t: T) => XY, style: string, width: number) => {
+        ctx.beginPath();
+        let pen = false;
+        for (const it of items) {
+          const q = toInset(pt(it));
+          if (!pen) { ctx.moveTo(q.x, q.y); pen = true; } else ctx.lineTo(q.x, q.y);
+        }
+        ctx.strokeStyle = style;
+        ctx.lineWidth = width;
+        ctx.stroke();
+      };
+
+      // Only the samples near the playhead, or the window is a smear.
+      const from = Math.max(0, head - 90);
+      const near = run.samples.slice(from, head + 1);
+      strokeThrough(near, (s) => s.truth, "rgba(232, 239, 233, 0.30)", 7);
+      strokeThrough(
+        near.filter((s) => s.fix),
+        (s) => s.fix as XY,
+        "rgba(240, 136, 62, 0.9)",
+        1.4,
+      );
+      const nearPath = path.filter((pp) => pp.i >= from && pp.i <= head);
+      strokeThrough(nearPath, (pp) => pp.p, "#5ee6ff", 2.2);
+
+      const v = toInset(here.truth);
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#e8efe9";
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = "rgba(232, 239, 233, 0.22)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
-
-      ctx.font = '8px "JetBrains Mono", ui-monospace, monospace';
-      ctx.fillStyle = "rgba(232, 239, 233, 0.6)";
+      ctx.strokeRect(IX + 0.5, IY + 0.5, IW - 1, IH - 1);
+      ctx.font = '9px "JetBrains Mono", ui-monospace, monospace';
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
-      ctx.fillText("error — raw vs filtered (relative)", ix + 5, iy + 4);
+      ctx.fillStyle = "rgba(232, 239, 233, 0.62)";
+      ctx.fillText(`${SPAN_M} m across · raw vs engine`, IX + 6, IY + 5);
+    }
 
-      if (errorTrail.length > 1) {
-        const plotLeft = ix + 5;
-        const plotTop = iy + 16;
-        const plotW = iw - 10;
-        const plotH = ih - 20;
-        let maxErr = 1;
-        for (const e of errorTrail) maxErr = Math.max(maxErr, e.raw, e.filtered);
-        const plotLine = (key: "raw" | "filtered", color: string) => {
-          ctx.beginPath();
-          errorTrail.forEach((e, i) => {
-            const x = plotLeft + (i / (errorTrail.length - 1)) * plotW;
-            const y = plotTop + plotH - (e[key] / maxErr) * plotH;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          });
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1.3;
-          ctx.stroke();
-        };
-        plotLine("raw", "rgba(240, 136, 62, 0.9)");
-        plotLine("filtered", "#5ee6ff");
-      }
-      ctx.textAlign = "left";
-      ctx.textBaseline = "alphabetic";
-    };
-
-    return { step, draw };
+    // 6. Zone labels, on the road they belong to.
+    ctx.font = '10px "JetBrains Mono", ui-monospace, monospace';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const zone of ZONES) {
+      const mid = ROUTE[Math.floor(((zone.from + zone.to) / 2) * (ROUTE.length - 1))];
+      const pt = project(mid);
+      ctx.fillStyle = "rgba(5,7,10,0.75)";
+      const w = ctx.measureText(zone.label).width + 8;
+      ctx.fillRect(pt.x - w / 2, pt.y - 7, w, 14);
+      ctx.fillStyle = `${zone.color}dd`;
+      ctx.fillText(zone.label, pt.x, pt.y);
+    }
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   });
+
+  /* ── Numbers ──────────────────────────────────────────────────────────── */
+  const engineErrPct = ((run.engine.distanceM - run.truthM) / run.truthM) * 100;
+  const rawErrPct = ((run.rawPath.distanceM - run.truthM) / run.truthM) * 100;
+  const zoneTruth = (id: ZoneId) => {
+    const z = ZONES.find((x) => x.id === id)!;
+    return (z.to - z.from) * ROUTE_LENGTH_M * laps;
+  };
 
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
         At Dice.tech, field users' trip distances were off by large margins — urban canyons, tunnels and
-        OEM-throttled location updates all lied to the GPS chip in different ways. The fix was predictive
-        dead reckoning, and the same engine got rebuilt from scratch as Mileway's location engine: GPS
-        treated as a noisy signal, with jitter suppression, spike detection, IMU (accelerometer) fusion and
-        device-tier-adaptive sampling all feeding a four-bucket distance accumulator. Drive the route below —
-        five zones, five ways GPS breaks — and flip each stage to watch the accuracy number move.
+        OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
+        fix, rebuilt from scratch as Mileway's location engine and running over a real 17.4 km loop through
+        Pune. Raw GPS reads the drive as roughly <span className="text-[#f0883e]">40 km</span>, because noise
+        adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
+        back. Every figure below is summed geodesic distance over the points a stage actually kept — no
+        fidelity factors, and the tests assert these exact headlines.
       </p>
+
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
-        <div className="relative h-[340px] sm:h-[400px]">
-          {/* `isolate` belongs on the MAP, not on this wrapper. Leaflet's panes
-              carry their own z-index (400 for the map pane, 800+ for controls).
-              A stacking context on the wrapper contains the map AND the canvas,
-              so 400 still outranks the canvas's `auto` and the route paints
-              underneath the tiles. Only a stacking context on the map itself
-              keeps those values inside its subtree, leaving DOM order to decide
-              — canvas last, canvas on top. */}
-          <div ref={mapContainerRef} className="signal-lab-map absolute inset-0 isolate" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-0 bg-void/35" />
+        <div className="relative h-[380px] sm:h-[460px]">
+          <div ref={mapHostRef} className="signal-lab-map absolute inset-0 isolate" />
+          <div className="pointer-events-none absolute inset-0 bg-void/30" />
           <canvas
             ref={canvasRef}
             className="pointer-events-none absolute inset-0 h-full w-full"
-            aria-label="Live GPS journey simulation across five zones, over a map of Pune, India"
+            aria-label={`Live GPS pipeline over a real ${(ROUTE_LENGTH_M / 1000).toFixed(1)} km driving loop in Pune, India`}
           />
           <style>{`
-            .signal-lab-map .leaflet-control-attribution { font-size: 9px; opacity: 0.6; background: rgba(5,7,10,0.5); color: #a1a1aa; }
+            .signal-lab-map .leaflet-control-attribution { font-size: 9px; opacity: 0.65; background: rgba(5,7,10,0.55); color: #a1a1aa; }
             .signal-lab-map .leaflet-control-attribution a { color: #d4d4d8; }
           `}</style>
         </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
-          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={jitter} onChange={(e) => setJitter(e.target.checked)} className="accent-[#3ddc84]" />
-            jitter suppression
+
+        {/* Headline: the three distances, side by side. */}
+        <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-3">
+          <Figure label="raw GPS" value={fmtKm(run.rawPath.distanceM)} sub={fmtPct(rawErrPct)} tone="bad" />
+          <Figure label="engine" value={fmtKm(run.engine.distanceM)} sub={fmtPct(engineErrPct)} tone="good" />
+          <Figure label="ground truth" value={fmtKm(run.truthM)} sub="the road actually driven" tone="neutral" />
+        </div>
+
+        {/* The ladder. */}
+        <div className="border-t border-line px-5 py-4">
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-wider text-muted">
+            the pipeline, one stage at a time
+          </p>
+          <div className="space-y-1.5">
+            {run.rows.map((row, i) => {
+              const on = i <= stages;
+              const active = i === stages;
+              const mag = Math.min(100, Math.abs(row.errorPct));
+              return (
+                <button
+                  key={row.label}
+                  onClick={() => setStages(i)}
+                  aria-pressed={active}
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition ${
+                    active ? "bg-accent/10 ring-1 ring-accent/40" : "hover:bg-surface"
+                  }`}
+                >
+                  <span className={`w-44 shrink-0 font-mono text-xs ${on ? "text-zinc-200" : "text-muted"}`}>
+                    {row.label}
+                  </span>
+                  <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-surface">
+                    <span
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${mag}%`,
+                        background: mag > 40 ? "#f0883e" : mag > 12 ? "#db61ff" : "#3ddc84",
+                      }}
+                    />
+                  </span>
+                  <span
+                    className={`w-16 shrink-0 text-right font-mono text-xs ${
+                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-[#f0883e]"
+                    }`}
+                  >
+                    {fmtPct(row.errorPct)}
+                  </span>
+                  <span className="hidden w-24 shrink-0 text-right font-mono text-[11px] text-muted sm:block">
+                    RMSE {row.rmseM.toFixed(0)}m
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted">
+            {stages === 0
+              ? "Unfiltered. Every fix is trusted, so every jitter becomes distance."
+              : STAGES[stages - 1].blurb}
+            {" · "}
+            <span className="text-muted">
+              {run.engine.rejected} fixes rejected · {run.engine.bridged} dead-reckoned · {run.engine.resets} divergence
+              {run.engine.resets === 1 ? " reset" : " resets"} · worst drift {run.engine.maxDriftM.toFixed(0)}m
+            </span>
+          </p>
+        </div>
+
+        {/* Where the error lives. */}
+        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-line px-5 py-3 font-mono text-[11px]">
+          <span className="text-muted">per zone</span>
+          {ZONES.map((z) => {
+            const got = run.engine.perZoneM[z.id];
+            const want = zoneTruth(z.id);
+            const pct = ((got - want) / want) * 100;
+            return (
+              <span key={z.id} className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full" style={{ background: z.color }} />
+                <span className="text-muted">{z.label.toLowerCase()}</span>
+                <span className={Math.abs(pct) < 15 ? "text-accent" : "text-[#f0883e]"}>{fmtPct(pct)}</span>
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Controls. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-line px-5 py-4 font-mono text-xs">
+          <button
+            onClick={() => setPlaying((p) => !p)}
+            className="rounded-full border border-line px-3 py-1 text-zinc-300 transition hover:border-accent hover:text-accent"
+          >
+            {playing ? "❚❚ pause" : "▶ play"}
+          </button>
+
+          <label className="flex cursor-pointer items-center gap-2 text-zinc-300">
+            <input
+              type="checkbox"
+              checked={tier === "budget"}
+              onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")}
+              className="accent-[#3ddc84]"
+            />
+            budget device
+            <span className="text-muted">({CADENCE_S[tier]}s fixes)</span>
           </label>
-          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={spikeRejection} onChange={(e) => setSpikeRejection(e.target.checked)} className="accent-[#3ddc84]" />
-            spike rejection
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={imuFusion} onChange={(e) => setImuFusion(e.target.checked)} className="accent-[#3ddc84]" />
-            IMU fusion
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={tier === "budget"} onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")} className="accent-[#3ddc84]" />
-            device tier: {tier}
-          </label>
-          <span className="font-mono text-xs text-muted">
-            confirmed {stats.confirmed}m · reckoned {stats.reckoned}m · rejected {stats.rejected}m
+
+          <span className="flex items-center gap-2 text-muted">
+            laps
+            {[1, 2, 3].map((n) => (
+              <button
+                key={n}
+                onClick={() => setLaps(n)}
+                className={`rounded px-1.5 transition ${laps === n ? "text-accent" : "text-muted hover:text-zinc-200"}`}
+              >
+                {n}
+              </button>
+            ))}
           </span>
-          <span className="font-mono text-xs text-accent">accuracy {stats.accuracy}%</span>
-          <span className="font-mono text-xs text-muted">
-            avg error — raw {stats.avgRawErr} · filtered {stats.avgFilteredErr} (relative)
+
+          <span className="flex items-center gap-2 text-muted">
+            seed
+            {SCENARIOS.map((s, i) => (
+              <button
+                key={s.seed}
+                onClick={() => setScenario(i)}
+                className={`rounded px-1.5 transition ${scenario === i ? "text-accent" : "text-muted hover:text-zinc-200"}`}
+              >
+                {s.label}
+              </button>
+            ))}
           </span>
-          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted">
-            <button type="button" onClick={() => goToSection("work")} className="transition hover:text-accent">
-              the full story → Dice.tech
-            </button>
-            <span className="text-zinc-700">·</span>
-            <Link to="/project/$slug" params={{ slug: "mileway" }} className="transition hover:text-accent">
-              rebuilt again at Mileway
-            </Link>
+
+          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+            <a href="/#work" className="transition hover:text-accent">the full story → Dice.tech</a>
+            <span className="text-muted">·</span>
+            <a href="/project/mileway" className="transition hover:text-accent">rebuilt again at Mileway</a>
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: "good" | "bad" | "neutral" }) {
+  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-[#f0883e]" : "text-zinc-200";
+  return (
+    <div className="bg-void/70 px-5 py-3">
+      <p className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</p>
+      <p className={`font-display text-xl font-bold ${color}`}>{value}</p>
+      <p className="font-mono text-[11px] text-muted">{sub}</p>
     </div>
   );
 }
