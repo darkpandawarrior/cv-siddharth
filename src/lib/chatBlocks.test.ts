@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseChatBlocks } from "./chatBlocks.ts";
+import { parseChatBlocks, parseJdFit } from "./chatBlocks.ts";
 import { projects, projectBySlug } from "../data/profile.ts";
 
 describe("parseChatBlocks", () => {
@@ -102,6 +102,151 @@ describe("parseChatBlocks", () => {
       // …and the finished stream still yields both widgets.
       expect(parseChatBlocks(full).filter((b) => b.kind === "widget")).toHaveLength(2);
     });
+  });
+});
+
+/* ── The JD fit scorecard: the one directive that carries a JSON payload ──── */
+
+const REPORT = {
+  score: 78,
+  role: "Senior Android Engineer",
+  summary: "Strong on Compose and platform ownership; no production KMP.",
+  strengths: [{ need: "Compose at scale", evidence: "92% of a 738k-LOC app", project: "mileway" }],
+  gaps: [{ need: "10+ years", note: "5+ years of Android, not 10." }],
+};
+const directive = (payload: unknown) => `[[jdfit:${JSON.stringify(payload)}]]`;
+
+describe("parseChatBlocks — jdfit payloads", () => {
+  it("parses a complete payload into a widget block carrying the report", () => {
+    expect(parseChatBlocks(`Here's the read:\n\n${directive(REPORT)}`)).toEqual([
+      { kind: "text", text: "Here's the read:" },
+      { kind: "widget", name: "jdfit", data: REPORT },
+    ]);
+  });
+
+  it("keeps parsing the reply after a payload closes", () => {
+    const blocks = parseChatBlocks(`${directive(REPORT)}\n\nWant the case study?\n\n[[project:mileway]]`);
+    expect(blocks.map((b) => (b.kind === "widget" ? b.name : b.text))).toEqual([
+      "jdfit",
+      "Want the case study?",
+      "project",
+    ]);
+  });
+
+  it('does not end the directive at a "]]" inside a payload string', () => {
+    const tricky = { ...REPORT, summary: "The JD used [[brackets]] oddly." };
+    expect(parseChatBlocks(directive(tricky))).toEqual([{ kind: "widget", name: "jdfit", data: tricky }]);
+  });
+
+  it("renders nothing (and never throws) for a malformed payload", () => {
+    for (const raw of [
+      '[[jdfit:{"score":78,}]]', // trailing comma
+      "[[jdfit:{score: 78}]]", // unquoted key
+      "[[jdfit:{}]]", // no score, no summary
+      '[[jdfit:{"score":"78","summary":"x"}]]', // score as a string
+      '[[jdfit:{"score":78}]]', // no summary
+      '[[jdfit:{"summary":"x"}]]', // no score
+      '[[jdfit:{"score":null,"summary":"x"}]]',
+    ]) {
+      expect(parseChatBlocks(raw), raw).toEqual([]);
+      expect(parseChatBlocks(`Before.\n\n${raw}\n\nAfter.`), raw).toEqual([
+        { kind: "text", text: "Before." },
+        { kind: "text", text: "After." },
+      ]);
+    }
+  });
+
+  it("never leaks raw JSON at any point of a character-by-character stream", () => {
+    const full = `Honest read:\n\n${directive(REPORT)}\n\nHappy to go deeper.`;
+    for (let i = 0; i <= full.length; i++) {
+      for (const b of parseChatBlocks(full.slice(0, i))) {
+        if (b.kind === "text") {
+          expect(b.text, `leaked at prefix length ${i}`).not.toMatch(/\[\[|\]\]|[{}]|"score"/);
+        } else {
+          // A widget only ever appears once its payload is complete and valid.
+          expect(b.data, `partial data at prefix length ${i}`).toEqual(REPORT);
+        }
+      }
+    }
+    expect(parseChatBlocks(full).filter((b) => b.kind === "widget")).toHaveLength(1);
+  });
+
+  it("hides the text after an opener that never closes", () => {
+    // A payload the model abandoned mid-object: nothing after it is renderable,
+    // and the tail must not fall out as prose.
+    expect(parseChatBlocks('Read:\n\n[[jdfit:{"score":78,"summary":"oops')).toEqual([
+      { kind: "text", text: "Read:" },
+    ]);
+  });
+});
+
+describe("parseJdFit", () => {
+  const base = JSON.stringify({ score: 50, summary: "ok" });
+
+  it("clamps and rounds the score instead of trusting it", () => {
+    expect(parseJdFit(JSON.stringify({ score: 140, summary: "x" }))?.score).toBe(100);
+    expect(parseJdFit(JSON.stringify({ score: -20, summary: "x" }))?.score).toBe(0);
+    expect(parseJdFit(JSON.stringify({ score: 78.6, summary: "x" }))?.score).toBe(79);
+    expect(parseJdFit(JSON.stringify({ score: Infinity, summary: "x" }))).toBeNull();
+  });
+
+  it("rejects payloads that aren't an object", () => {
+    for (const raw of ["[1,2]", '"a string"', "42", "null", "", "   "]) {
+      expect(parseJdFit(raw), raw).toBeNull();
+    }
+  });
+
+  it("truncates over-long strings and caps the row count", () => {
+    const parsed = parseJdFit(
+      JSON.stringify({
+        score: 50,
+        summary: "s".repeat(900),
+        role: "r".repeat(900),
+        strengths: Array.from({ length: 20 }, () => ({ need: "n".repeat(900), evidence: "e" })),
+        gaps: Array.from({ length: 20 }, () => ({ need: "n", note: "x" })),
+      }),
+    )!;
+    expect(parsed.summary).toHaveLength(400);
+    expect(parsed.role).toHaveLength(120);
+    expect(parsed.strengths).toHaveLength(6);
+    expect(parsed.gaps).toHaveLength(6);
+    expect(parsed.strengths[0].need).toHaveLength(240);
+  });
+
+  it("drops rows that are the wrong shape rather than failing the whole card", () => {
+    const parsed = parseJdFit(
+      JSON.stringify({
+        score: 50,
+        summary: "ok",
+        strengths: [{ need: "a", evidence: "b" }, { need: "no evidence" }, "nope", null, 7],
+        gaps: [{ need: "a", note: "" }, { need: "b", note: "c" }],
+      }),
+    )!;
+    expect(parsed.strengths).toEqual([{ need: "a", evidence: "b", project: undefined }]);
+    expect(parsed.gaps).toEqual([{ need: "b", note: "c" }]);
+  });
+
+  it("defaults missing rows to empty arrays", () => {
+    expect(parseJdFit(base)).toEqual({
+      score: 50,
+      role: undefined,
+      summary: "ok",
+      strengths: [],
+      gaps: [],
+    });
+  });
+
+  it("lower-cases the project slug so an invented one just misses", () => {
+    const parsed = parseJdFit(
+      JSON.stringify({ score: 50, summary: "ok", strengths: [{ need: "a", evidence: "b", project: "MileWay" }] }),
+    )!;
+    expect(parsed.strengths[0].project).toBe("mileway");
+    expect(projectBySlug(parsed.strengths[0].project!)?.slug).toBe("mileway");
+
+    for (const project of ["../../etc/passwd", "https://evil.com", "not-a-project"]) {
+      const bad = parseJdFit(JSON.stringify({ score: 50, summary: "ok", strengths: [{ need: "a", evidence: "b", project }] }))!;
+      expect(projectBySlug(bad.strengths[0].project!), project).toBeUndefined();
+    }
   });
 });
 

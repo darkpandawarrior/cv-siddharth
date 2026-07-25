@@ -2,6 +2,7 @@
 // tsconfig (moduleResolution "node16"), which requires explicit ESM extensions.
 import { SYSTEM_PROMPT } from "./system-prompt.js";
 import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
+import { JD_SYSTEM_PROMPT } from "./jd-prompt.js";
 
 // Vercel's builder type-checks this file WITHOUT @types/node, so bare `process`
 // errors there (TS2591) even though our own tsconfig has the node types. This
@@ -17,6 +18,13 @@ const MAX_ASSISTANT_CHARS = 6000;
 const MAX_MESSAGES = 60; // array cap, checked BEFORE per-message validation
 const MAX_TOTAL_CHARS = 24_000; // ~6k tokens of context per upstream request
 const MAX_BODY_BYTES = 64 * 1024;
+// JD mode only. A real job description runs 3-8k characters — the 2000-char
+// chat cap rejects most of them outright — and 12k leaves room for the padded
+// ones without becoming a general-purpose upload. It buys nothing else: JD
+// mode is validated down to exactly ONE user turn (validateRequest), so the
+// raised ceiling can only ever be spent on the thing it was raised for, and
+// 12k chars is at most ~48 KiB of UTF-8 — still inside MAX_BODY_BYTES.
+const MAX_JD_CHARS = 12_000;
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -25,11 +33,12 @@ interface ChatMessage {
 
 /**
  * Which system prompt a request gets. The ONLY way to select the Compose
- * Playground's generator prompt is this server-validated field — never a magic
- * prefix inside a message, which any visitor can copy out of the public bundle
- * and type back (that was the jailbreak this replaced).
+ * Playground's generator prompt (or the JD fit analyzer's) is this
+ * server-validated field — never a magic prefix inside a message, which any
+ * visitor can copy out of the public bundle and type back (that was the
+ * jailbreak this replaced).
  */
-type ChatMode = "chat" | "compose";
+type ChatMode = "chat" | "compose" | "jd";
 
 interface ChatRequest {
   messages: ChatMessage[];
@@ -99,6 +108,15 @@ const RATE_WINDOWS = [
   { ms: 60_000, max: envInt(process.env.CHAT_RATE_PER_MIN, 10) },
   { ms: 3_600_000, max: envInt(process.env.CHAT_RATE_PER_HOUR, 60) },
 ];
+// A JD analysis is the most expensive call this endpoint makes — up to 12k
+// characters of pasted description on top of an 18k-character system prompt —
+// and nobody legitimately analyses four job descriptions a minute. It gets its
+// own, much tighter bucket ON TOP of the general one above (a jd request is
+// counted against both), so the expensive door is the narrow one.
+const JD_RATE_WINDOWS = [
+  { ms: 60_000, max: envInt(process.env.CHAT_JD_RATE_PER_MIN, 3) },
+  { ms: 3_600_000, max: envInt(process.env.CHAT_JD_RATE_PER_HOUR, 12) },
+];
 const LONGEST_WINDOW_MS = 3_600_000;
 const MAX_TRACKED_IPS = 5000; // bounded: ~60 timestamps per IP worst case
 
@@ -152,13 +170,20 @@ export function rateLimitKey(ip: string): string {
  * Sliding window per IP. A rejected request is NOT recorded, so a hammering
  * client is let back in once its oldest hit falls out of the window instead of
  * being locked out forever.
+ *
+ * `mode: "jd"` checks the tighter JD budget in its own bucket. The handler
+ * runs the general check first and this one after, so a JD request spends from
+ * both — a separate bucket must not be a way to buy extra requests.
  */
 export function checkRateLimit(
   ip: string,
   now: number = Date.now(),
   store: Map<string, number[]> = hits,
+  mode: ChatMode = "chat",
 ): { allowed: boolean; retryAfter: number } {
-  const key = rateLimitKey(ip);
+  const jd = mode === "jd";
+  const rules = jd ? JD_RATE_WINDOWS : RATE_WINDOWS;
+  const key = (jd ? "jd:" : "") + rateLimitKey(ip);
   if (store.size > MAX_TRACKED_IPS) {
     for (const [k, times] of store) {
       if (times[times.length - 1] <= now - LONGEST_WINDOW_MS) store.delete(k);
@@ -175,7 +200,7 @@ export function checkRateLimit(
   }
 
   const times = (store.get(key) ?? []).filter((t) => t > now - LONGEST_WINDOW_MS);
-  for (const rule of RATE_WINDOWS) {
+  for (const rule of rules) {
     const inWindow = times.filter((t) => t > now - rule.ms);
     if (inWindow.length >= rule.max) {
       store.set(key, times);
@@ -191,37 +216,52 @@ export function checkRateLimit(
 // Payload validation
 // ---------------------------------------------------------------------------
 
-function isValidMessage(value: unknown): value is ChatMessage {
+function isValidMessage(value: unknown, userLimit: number): value is ChatMessage {
   const m = value as ChatMessage | null;
   if (!m || (m.role !== "user" && m.role !== "assistant")) return false;
-  const limit = m.role === "assistant" ? MAX_ASSISTANT_CHARS : MAX_MESSAGE_CHARS;
+  const limit = m.role === "assistant" ? MAX_ASSISTANT_CHARS : userLimit;
   return typeof m.content === "string" && m.content.length > 0 && m.content.length <= limit;
 }
 
-/** Parsed body → messages, or null if anything about it is wrong (→ 400). */
-export function validateMessages(body: unknown): ChatMessage[] | null {
+/**
+ * Parsed body → messages, or null if anything about it is wrong (→ 400).
+ *
+ * `userLimit` is the per-user-turn ceiling. It is a PARAMETER rather than a
+ * constant only so JD mode can raise it (see validateRequest); every caller
+ * that doesn't ask for it gets the normal chat cap.
+ */
+export function validateMessages(body: unknown, userLimit: number = MAX_MESSAGE_CHARS): ChatMessage[] | null {
   const messages = (body as { messages?: unknown } | null)?.messages;
   if (!Array.isArray(messages) || messages.length === 0) return null;
   // Length first: `.every()` over an arbitrarily long array is a free DoS.
   if (messages.length > MAX_MESSAGES) return null;
-  return messages.every(isValidMessage) ? (messages as ChatMessage[]) : null;
+  return messages.every((m) => isValidMessage(m, userLimit)) ? (messages as ChatMessage[]) : null;
 }
 
 /**
  * Parsed body → { messages, mode }, or null (→ 400).
  *
- * `mode` is absent (normal chat) or the exact string "compose". Anything else
- * — a different string, a number, an object, `null` — is a 400 rather than a
- * silent fallback: an allowlist of one, so a future third mode can't be
+ * `mode` is absent (normal chat) or one of exactly "compose" / "jd". Anything
+ * else — a different string, a number, an object, `null` — is a 400 rather
+ * than a silent fallback: a closed allowlist, so a future mode can't be
  * reached by guessing and a typo fails loudly instead of quietly billing the
  * full CV prompt.
+ *
+ * The mode is read FIRST because it decides how big a user turn may be. JD
+ * mode is then pinned to exactly one user turn: it's a paste box, not a
+ * conversation, and that keeps the raised cap from becoming a 60-turn,
+ * 720k-character door into the same model. Normal chat and compose keep the
+ * 2000-char cap untouched.
  */
 export function validateRequest(body: unknown): ChatRequest | null {
-  const messages = validateMessages(body);
+  const raw = (body as { mode?: unknown } | null)?.mode;
+  if (raw !== undefined && raw !== "compose" && raw !== "jd") return null;
+  const mode: ChatMode = raw === undefined ? "chat" : raw;
+
+  const messages = validateMessages(body, mode === "jd" ? MAX_JD_CHARS : MAX_MESSAGE_CHARS);
   if (!messages) return null;
-  const mode = (body as { mode?: unknown }).mode;
-  if (mode !== undefined && mode !== "compose") return null;
-  return { messages, mode: mode === "compose" ? "compose" : "chat" };
+  if (mode === "jd" && (messages.length !== 1 || messages[0].role !== "user")) return null;
+  return { messages, mode };
 }
 
 /**
@@ -298,7 +338,9 @@ interface Provider {
 
 /** The system prompt a validated mode selects. */
 export function systemPromptFor(mode: ChatMode): string {
-  return mode === "compose" ? COMPOSE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+  if (mode === "compose") return COMPOSE_SYSTEM_PROMPT;
+  if (mode === "jd") return JD_SYSTEM_PROMPT;
+  return SYSTEM_PROMPT;
 }
 
 export const PROVIDERS: Provider[] = [
@@ -439,12 +481,14 @@ export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDel
 }
 
 /**
- * POST { messages: [{role, content}, ...], mode?: "compose" } → SSE stream of
- * `data: {"text": "…"}` events, regardless of the underlying LLM provider.
+ * POST { messages: [{role, content}, ...], mode?: "compose" | "jd" } → SSE
+ * stream of `data: {"text": "…"}` events, regardless of the LLM provider.
  *
- * `mode` only selects a system prompt (see systemPromptFor). Every guard —
- * origin allowlist, rate limit, body ceiling, array/char caps — runs before it
- * is even read, so the Compose Playground's path is not a second, softer door.
+ * `mode` only selects a system prompt (see systemPromptFor) and, for "jd", a
+ * larger per-turn ceiling with a tighter rate limit to pay for it. Every guard
+ * — origin allowlist, rate limit, body ceiling, array/char caps — runs before
+ * it is even read, so neither the Compose Playground's path nor the JD
+ * analyzer's is a second, softer door.
  */
 export async function handleChat(request: Request): Promise<Response> {
   // A request with NO Origin header is rejected. This endpoint exists for one
@@ -467,7 +511,8 @@ export async function handleChat(request: Request): Promise<Response> {
     return jsonError(403, "This chat endpoint only serves Siddharth's portfolio site.", null);
   }
 
-  const limit = checkRateLimit(clientIp(request));
+  const ip = clientIp(request);
+  const limit = checkRateLimit(ip);
   if (!limit.allowed) {
     return jsonError(429, "You're sending messages faster than I can think — give it a moment and try again.", allowedOrigin, {
       "retry-after": String(limit.retryAfter),
@@ -488,7 +533,18 @@ export async function handleChat(request: Request): Promise<Response> {
   }
 
   const parsed = validateRequest(parseJson(raw));
-  if (!parsed) return jsonError(400, 'Expected { messages: [{role, content}, ...], mode?: "compose" }.', allowedOrigin);
+  if (!parsed) return jsonError(400, 'Expected { messages: [{role, content}, ...], mode?: "compose" | "jd" }.', allowedOrigin);
+
+  // The second, tighter budget for the expensive mode — spent on top of the
+  // general one above, and still before anything reaches a provider.
+  if (parsed.mode === "jd") {
+    const jdLimit = checkRateLimit(ip, Date.now(), hits, "jd");
+    if (!jdLimit.allowed) {
+      return jsonError(429, "That's a lot of job descriptions at once — give it a minute and paste the next one.", allowedOrigin, {
+        "retry-after": String(jdLimit.retryAfter),
+      });
+    }
+  }
 
   const upstream = await picked.provider.request(
     picked.key,

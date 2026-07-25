@@ -4,14 +4,15 @@ import Markdown, { type Components } from "react-markdown";
 import { ArrowRight } from "lucide-react";
 import { projectBySlug, metrics, skills, siteRooms, cardMedia } from "./data/profile.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
-import { parseChatBlocks } from "./lib/chatBlocks.ts";
+import { parseChatBlocks, type JdFitReport } from "./lib/chatBlocks.ts";
 import { Picture } from "./Picture.tsx";
 
 /**
  * The generative-UI half of the chat: the components the assistant can drop
  * into its own reply by emitting `[[rooms]]`, `[[project:mileway]]`,
- * `[[metrics]]` or `[[skills]]` (see src/lib/chatBlocks.ts for the parser and
- * the streaming rule that keeps a half-typed directive off the screen).
+ * `[[metrics]]`, `[[skills]]` or `[[jdfit:{…}]]` (see src/lib/chatBlocks.ts for
+ * the parser and the streaming rule that keeps a half-typed directive off the
+ * screen).
  *
  * Everything here is sized for the ~370px console panel first — it also has to
  * survive the expanded console and the terminal's inline `ask`, so nothing
@@ -153,8 +154,109 @@ function SkillChips() {
   );
 }
 
+/* ── The JD fit scorecard ─────────────────────────────────────────────────
+ * The flagship card: a recruiter pastes a job description (`/jd` in the
+ * console, mode:"jd" server-side) and this renders the verdict — a score, the
+ * requirements that are genuinely covered with the evidence that proves them,
+ * and the gaps. The gaps are the point: a fit read that only lists strengths
+ * is marketing, and a recruiter can smell it. Everything here comes from a
+ * validated payload (parseJdFit) — this component never has to defend itself
+ * against a half-streamed or malformed one. */
+
+const BANDS = [
+  { min: 80, label: "Strong fit", tone: "text-accent", bar: "bg-accent" },
+  { min: 60, label: "Good fit, with gaps", tone: "text-accent2", bar: "bg-accent2" },
+  { min: 40, label: "Partial fit", tone: "text-amber-300", bar: "bg-amber-300" },
+  { min: 0, label: "Not a match", tone: "text-zinc-300", bar: "bg-zinc-500" },
+];
+
+const SECTION_LABEL = "font-mono text-[10px] uppercase tracking-widest";
+
+function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: () => void }) {
+  const band = BANDS.find((b) => report.score >= b.min)!;
+
+  return (
+    <section className="my-2.5 overflow-hidden rounded-xl border border-line bg-ink" aria-label="Job description fit analysis">
+      <header className="border-b border-line bg-surface px-3 py-2.5">
+        <p className={`${SECTION_LABEL} text-accent2`}>fit analysis</p>
+        {report.role && <p className="mt-1 break-words text-xs text-zinc-300">{report.role}</p>}
+        <div className="mt-2 flex items-baseline gap-1.5">
+          <span className={`font-display text-2xl font-bold leading-none ${band.tone}`}>{report.score}</span>
+          <span className="font-mono text-[10px] text-muted">/ 100</span>
+          <span className={`ml-auto text-[11px] font-semibold ${band.tone}`}>{band.label}</span>
+        </div>
+        {/* Decorative: the number and the band next to it already say this. */}
+        <div aria-hidden className="mt-2 h-1 overflow-hidden rounded-full bg-line">
+          <div className={`h-full rounded-full ${band.bar}`} style={{ width: `${report.score}%` }} />
+        </div>
+      </header>
+
+      <div className="space-y-3 p-3">
+        <p className="text-xs leading-snug text-zinc-300">{report.summary}</p>
+
+        {report.strengths.length > 0 && (
+          <div>
+            <p className={`${SECTION_LABEL} text-accent`}>what matches</p>
+            {/* `!` beats the assistant bubble's `[&_ul]:list-disc [&_ul]:pl-4`
+                (an element+class selector, so a plain list-none loses to it) —
+                these rows carry their own left rule, not markdown bullets. */}
+            <ul className="mt-1.5 space-y-2 list-none! pl-0!">
+              {report.strengths.map((s, i) => {
+                const project = s.project ? projectBySlug(s.project) : undefined;
+                return (
+                  <li key={i} className="border-l-2 border-accent/40 pl-2">
+                    <p className="text-[11px] font-semibold leading-snug text-zinc-200">{s.need}</p>
+                    <p className="text-[11px] leading-snug text-zinc-400">{s.evidence}</p>
+                    {project && (
+                      <ChatLink
+                        href={`/project/${project.slug}`}
+                        onNavigate={onNavigate}
+                        className={`${LINK_CLASS} mt-0.5 inline-flex items-center gap-1 text-[11px] no-underline`}
+                      >
+                        {project.name} case study <ArrowRight size={11} />
+                      </ChatLink>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div>
+          <p className={`${SECTION_LABEL} text-amber-300`}>where I'd have gaps</p>
+          {report.gaps.length > 0 ? (
+            <ul className="mt-1.5 space-y-2 list-none! pl-0!">
+              {report.gaps.map((g, i) => (
+                <li key={i} className="border-l-2 border-amber-300/40 pl-2">
+                  <p className="text-[11px] font-semibold leading-snug text-zinc-200">{g.need}</p>
+                  <p className="text-[11px] leading-snug text-zinc-400">{g.note}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1.5 text-[11px] leading-snug text-muted">
+              Nothing flagged from the description — ask me directly and I&apos;ll tell you where I&apos;d need ramp-up.
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /** Directive → component. An unknown name (or a made-up slug) renders nothing. */
-function ChatWidget({ name, arg, onNavigate }: { name: string; arg?: string; onNavigate?: () => void }) {
+function ChatWidget({
+  name,
+  arg,
+  data,
+  onNavigate,
+}: {
+  name: string;
+  arg?: string;
+  data?: JdFitReport;
+  onNavigate?: () => void;
+}) {
   switch (name) {
     case "project":
       return arg ? <ProjectCard slug={arg} onNavigate={onNavigate} /> : null;
@@ -164,6 +266,8 @@ function ChatWidget({ name, arg, onNavigate }: { name: string; arg?: string; onN
       return <MetricTiles />;
     case "skills":
       return <SkillChips />;
+    case "jdfit":
+      return data ? <JdFitCard report={data} onNavigate={onNavigate} /> : null;
     default:
       return null;
   }
@@ -189,7 +293,7 @@ export function ChatMessageBody({ content, onNavigate }: { content: string; onNa
             {block.text}
           </Markdown>
         ) : (
-          <ChatWidget key={i} name={block.name} arg={block.arg} onNavigate={onNavigate} />
+          <ChatWidget key={i} name={block.name} arg={block.arg} data={block.data} onNavigate={onNavigate} />
         ),
       )}
     </>

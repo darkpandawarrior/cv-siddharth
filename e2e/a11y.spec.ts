@@ -54,4 +54,18 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   await input.fill("/");
   await expect(page.getByRole("listbox", { name: "Console commands" })).toBeVisible();
   await scan("chat open, slash menu open");
+
+  // /jd swaps the whole composer for the job-description paste box — a
+  // different set of controls (labelled textarea, counter, two buttons) that
+  // the two scans above never see.
+  await input.fill("/jd");
+  await input.press("Enter");
+  const paste = page.getByLabel("job description → fit analysis");
+  await expect(paste).toBeVisible();
+  await scan("chat open, JD composer up");
+
+  // …and Esc gets out of it without closing the panel (focus must not be left
+  // on a control that no longer exists).
+  await paste.press("Escape");
+  await expect(input).toBeFocused();
 });

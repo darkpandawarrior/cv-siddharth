@@ -47,18 +47,45 @@ export function chatErrorText(err: unknown): string {
  */
 export const MAX_SENT_TURNS = 20;
 
+/**
+ * The server's per-turn ceilings, mirrored. A turn over them is truncated
+ * rather than sent: a JD-mode paste lands in the transcript at up to 12k chars
+ * (see JD_MAX_CHARS), and replaying it verbatim in the NEXT ordinary question
+ * would 400 the whole conversation. Truncating keeps the context and the
+ * conversation.
+ */
+export const MAX_TURN_CHARS: Record<ChatMessage["role"], number> = { user: 2000, assistant: 6000 };
+
+/** How much of a job description the JD analyzer accepts — matches the server. */
+export const JD_MAX_CHARS = 12_000;
+
 export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
-  return messages.slice(-MAX_SENT_TURNS);
+  return messages.slice(-MAX_SENT_TURNS).map((m) => {
+    const max = MAX_TURN_CHARS[m.role];
+    return m.content.length > max ? { ...m, content: `${m.content.slice(0, max - 1)}…` } : m;
+  });
 }
 
-/** Consumes the server's normalized SSE stream: `data: {"text": "…"}` events. */
-export async function streamReply(messages: ChatMessage[], onDelta: (text: string) => void): Promise<void> {
+/**
+ * Consumes the server's normalized SSE stream: `data: {"text": "…"}` events.
+ *
+ * `mode: "jd"` is the job-description fit analyzer: a different server-side
+ * system prompt, a much larger per-message cap, and a tighter rate limit. The
+ * pasted description goes up ALONE — no transcript — so the raised cap can
+ * only ever be spent on the thing it was raised for, and the model reads the
+ * description as the one piece of data it was asked to analyse.
+ */
+export async function streamReply(
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+  mode?: "jd",
+): Promise<void> {
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     // Trimmed HERE, at the one place every surface streams through, rather
     // than in each caller — a future third caller can't reintroduce the bug.
-    body: JSON.stringify({ messages: trimHistory(messages) }),
+    body: JSON.stringify(mode === "jd" ? { messages: messages.slice(-1), mode } : { messages: trimHistory(messages) }),
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);

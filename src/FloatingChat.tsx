@@ -3,8 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Check, Copy, Maximize2, MessageCircle, Minimize2, RotateCw, Send, X } from "lucide-react";
 import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
-import { parseChatBlocks } from "./lib/chatBlocks.ts";
-import { chatErrorText, streamReply, type ChatMessage } from "./lib/chatClient.ts";
+import { parseChatBlocks, type JdFitReport } from "./lib/chatBlocks.ts";
+import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, streamReply, type ChatMessage } from "./lib/chatClient.ts";
 
 /**
  * The console — the AI assistant, as a terminal-flavoured panel.
@@ -18,7 +18,14 @@ import { chatErrorText, streamReply, type ChatMessage } from "./lib/chatClient.t
  *  3. The conversation survives navigation (the panel is mounted per route).
  */
 
+// The one chip that doesn't ask a question: it opens the JD composer instead
+// (see the `q === JD_PROMPT` branch where the chips are rendered). Recruiters
+// are the audience this site is for, so it goes first and never gets filtered
+// out by the "already asked" rule — its text never lands in the transcript.
+const JD_PROMPT = "Paste a job description — I'll assess fit";
+
 const QUICK_PROMPTS = [
+  JD_PROMPT,
   "What can I do on this site?",
   "Show me the interactive demos",
   "How did you get GPS accuracy to 95%?",
@@ -29,8 +36,11 @@ const QUICK_PROMPTS = [
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site. Type `/` for commands.",
+    "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.",
 };
+
+/** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
+const COLLAPSE_TURN_CHARS = 400;
 
 // The panel is mounted per route, so without this a conversation died the
 // moment the assistant navigated you somewhere. Capped: this is a chat about a
@@ -57,11 +67,19 @@ interface SlashApi {
   /** Navigate and get out of the way, exactly like a link in a reply. */
   go: (to: string) => void;
   clear: () => void;
+  /** Swap the composer for the job-description paste box. */
+  jd: (prefill: string) => void;
 }
 
 const SLUGS = projects.map((p) => p.slug);
 
 const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: string, api: SlashApi) => void }[] = [
+  {
+    name: "jd",
+    usage: "/jd",
+    help: "paste a job description, get an honest fit read",
+    run: (arg, api) => api.jd(arg),
+  },
   {
     name: "projects",
     usage: "/projects",
@@ -120,8 +138,21 @@ const ICON_BUTTON = "rounded p-1 text-muted transition hover:text-accent focus-v
 /** Copy the words, not the machinery — directives would paste as garbage. */
 function plainText(content: string) {
   return parseChatBlocks(content)
-    .flatMap((b) => (b.kind === "text" ? [b.text] : []))
+    .flatMap((b) => {
+      if (b.kind === "text") return [b.text];
+      // The scorecard is the exception: it IS the answer, so copying only the
+      // sentence around it hands a recruiter an empty quote. Every other
+      // widget is navigation, which doesn't survive a paste anyway.
+      return b.name === "jdfit" && b.data ? [jdFitText(b.data)] : [];
+    })
     .join("\n\n");
+}
+
+function jdFitText(r: JdFitReport): string {
+  const lines = [`Fit: ${r.score}/100${r.role ? ` — ${r.role}` : ""}`, r.summary];
+  if (r.strengths.length) lines.push("", "Matches:", ...r.strengths.map((s) => `- ${s.need}: ${s.evidence}`));
+  if (r.gaps.length) lines.push("", "Gaps:", ...r.gaps.map((g) => `- ${g.need}: ${g.note}`));
+  return lines.join("\n");
 }
 
 export function FloatingChat() {
@@ -135,9 +166,12 @@ export function FloatingChat() {
   const [menuHidden, setMenuHidden] = useState(false);
   const [histCursor, setHistCursor] = useState<number | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  // null = normal composer; a string (possibly empty) = the JD paste box is up.
+  const [jd, setJd] = useState<string | null>(null);
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const jdRef = useRef<HTMLTextAreaElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const firstSaveRef = useRef(true);
 
@@ -198,6 +232,15 @@ export function FloatingChat() {
     previouslyFocusedRef.current?.focus();
   }, [open]);
 
+  // Swapping the composer moves focus with it, both ways — a keyboard user who
+  // types /jd lands in the paste box, and cancelling puts them back in the
+  // input rather than at the top of the document.
+  const jdOpen = jd !== null;
+  useEffect(() => {
+    if (!open) return;
+    (jdOpen ? jdRef.current : inputRef.current)?.focus();
+  }, [jdOpen, open]);
+
   // Esc closes the widget — same escapable contract as the lightbox and
   // command palette. (An open slash menu swallows Esc first, in onKeyDown.)
   useEffect(() => {
@@ -217,22 +260,31 @@ export function FloatingChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, pendingAsk, busy]);
 
-  /** `base` lets Regenerate replay from before the last exchange. */
-  async function send(text: string, base: ChatMessage[] = messages) {
+  /**
+   * `base` lets Regenerate replay from before the last exchange; `mode` is the
+   * JD analyzer, which deliberately sends the pasted description ALONE — the
+   * transcript would only dilute the one thing it's meant to read.
+   */
+  async function send(text: string, base: ChatMessage[] = messages, mode?: "jd") {
     const content = text.trim();
     if (!content || busy) return;
     setBusy(true);
-    const history: ChatMessage[] = [...base.filter((m) => m !== GREETING), { role: "user", content }];
+    const history: ChatMessage[] =
+      mode === "jd" ? [{ role: "user", content }] : [...base.filter((m) => m !== GREETING), { role: "user", content }];
     setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
     try {
-      await streamReply(history, (delta) => {
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1];
-          next[next.length - 1] = { ...last, content: last.content + delta };
-          return next;
-        });
-      });
+      await streamReply(
+        history,
+        (delta) => {
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            next[next.length - 1] = { ...last, content: last.content + delta };
+            return next;
+          });
+        },
+        mode,
+      );
     } catch (err) {
       console.error(err);
       setMessages((prev) => {
@@ -251,7 +303,8 @@ export function FloatingChat() {
     const api: SlashApi = {
       say: (content) => setMessages((prev) => [...prev, { role: "assistant", content }]),
       go: (to) => { setOpen(false); void navigate({ to }); },
-      clear: () => setMessages([GREETING]),
+      clear: () => { setMessages([GREETING]); setJd(null); },
+      jd: (prefill) => setJd(prefill.slice(0, JD_MAX_CHARS)),
     };
     const cmd = SLASH_COMMANDS.find((c) => c.name === name.toLowerCase());
     if (!cmd) return api.say(`\`/${name}\` isn't a command — type \`/help\` for the list.`);
@@ -267,6 +320,14 @@ export function FloatingChat() {
     setMenuHidden(false);
     if (text.startsWith("/")) runSlash(text);
     else void send(text);
+  }
+
+  /** The JD path: one paste, one analysis, straight back to the normal composer. */
+  function submitJd() {
+    const text = (jd ?? "").trim();
+    if (!text || busy) return;
+    setJd(null);
+    void send(text, messages, "jd");
   }
 
   function regenerate() {
@@ -288,7 +349,7 @@ export function FloatingChat() {
   /* ── Slash menu + completion (mirrors the terminal's Tab/ghost UX) ────── */
   const slashQuery = input.startsWith("/") && !input.includes(" ") ? input.slice(1).toLowerCase() : null;
   const matches = slashQuery === null ? [] : SLASH_COMMANDS.filter((c) => c.name.startsWith(slashQuery));
-  const menuOpen = !menuHidden && matches.length > 0;
+  const menuOpen = !menuHidden && !jdOpen && matches.length > 0;
   const selected = matches[Math.min(menuIndex, matches.length - 1)];
   // Second-token completion for the one command that takes an argument.
   const argQuery = /^\/open\s+(\S*)$/i.exec(input)?.[1]?.toLowerCase();
@@ -352,9 +413,15 @@ export function FloatingChat() {
   const asked = new Set(messages.flatMap((m) => (m.role === "user" ? [m.content] : [])));
   const settled = !busy && messages[messages.length - 1]?.role === "assistant";
   const suggestions = settled ? QUICK_PROMPTS.filter((q) => !asked.has(q)).slice(0, messages.length === 1 ? 5 : 3) : [];
-  // Regenerating a local command would just re-send "/rooms" to the model.
+  // Regenerating a local command would just re-send "/rooms" to the model, and
+  // replaying a pasted JD through ordinary chat would send a truncated copy of
+  // it against the wrong prompt — paste it again instead.
   const lastUserIndex = messages.map((m) => m.role).lastIndexOf("user");
-  const canRegenerate = settled && lastUserIndex >= 0 && !messages[lastUserIndex].content.startsWith("/");
+  const canRegenerate =
+    settled &&
+    lastUserIndex >= 0 &&
+    !messages[lastUserIndex].content.startsWith("/") &&
+    messages[lastUserIndex].content.length <= MAX_TURN_CHARS.user;
 
   return (
     <>
@@ -417,7 +484,21 @@ export function FloatingChat() {
                       key={i}
                       className="ml-8 whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-accent/15 px-3.5 py-2.5 text-sm text-zinc-100"
                     >
-                      {m.content}
+                      {m.content.length > COLLAPSE_TURN_CHARS ? (
+                        // A pasted job description is a wall of text. <details>
+                        // is the native, keyboard-operable way to fold it away
+                        // without the panel becoming a scroll canyon.
+                        <details>
+                          <summary className="cursor-pointer font-mono text-[11px] text-zinc-300 marker:text-accent">
+                            pasted text · {m.content.length.toLocaleString()} characters
+                          </summary>
+                          <div className="mt-2 max-h-64 overflow-y-auto text-xs leading-relaxed text-zinc-200">
+                            {m.content}
+                          </div>
+                        </details>
+                      ) : (
+                        m.content
+                      )}
                     </div>
                   );
                 return (
@@ -454,7 +535,9 @@ export function FloatingChat() {
                   {suggestions.map((q) => (
                     <button
                       key={q}
-                      onClick={() => submit(q)}
+                      // The JD chip opens the paste box; every other chip is
+                      // just a question typed for you.
+                      onClick={() => (q === JD_PROMPT ? setJd("") : submit(q))}
                       className="block w-full rounded-xl border border-line px-3 py-2 text-left text-xs text-zinc-400 transition hover:border-accent hover:text-accent"
                     >
                       {q}
@@ -492,6 +575,80 @@ export function FloatingChat() {
             </ul>
           )}
 
+          {jdOpen ? (
+            /* JD mode — the flagship path. A single-line input can't take a
+               job description, so the composer becomes a real textarea with a
+               counter against the same 12k cap the server enforces, and a way
+               back out (Cancel, or Esc). Enter stays a newline here; ⌘/Ctrl +
+               Enter sends, like every other multi-line composer. */
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitJd();
+              }}
+              className="space-y-2 border-t border-line bg-surface p-3"
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <label htmlFor="jd-input" className="font-mono text-[10px] uppercase tracking-widest text-accent2">
+                  job description → fit analysis
+                </label>
+                <span
+                  className={`font-mono text-[10px] ${jd!.length > JD_MAX_CHARS * 0.9 ? "text-accent" : "text-muted"}`}
+                >
+                  {jd!.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
+                </span>
+              </div>
+              <textarea
+                id="jd-input"
+                ref={jdRef}
+                value={jd!}
+                onChange={(e) => setJd(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return;
+                  // Esc backs out of JD mode before the panel's own Esc closes
+                  // the whole widget — same layering as the slash menu.
+                  if (e.key === "Escape") {
+                    e.stopPropagation();
+                    setJd(null);
+                    return;
+                  }
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    submitJd();
+                  }
+                }}
+                maxLength={JD_MAX_CHARS}
+                rows={5}
+                placeholder="Paste the job description here — the whole thing. I'll score the fit against my real experience and name the gaps."
+                aria-describedby="jd-hint"
+                className="h-28 w-full resize-none rounded-xl border border-line bg-ink px-3 py-2 text-sm leading-snug text-zinc-100 placeholder-muted outline-none focus:border-accent"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setJd(null)}
+                  className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                >
+                  Cancel
+                </button>
+                {/* sr-only on phones (no ⌘ key to press) but never hidden from
+                    assistive tech — aria-describedby can't read display:none. */}
+                <span
+                  id="jd-hint"
+                  className="sr-only text-[11px] text-muted sm:not-sr-only sm:min-w-0 sm:flex-1 sm:truncate sm:text-center"
+                >
+                  ⌘/Ctrl + Enter · Esc cancels
+                </span>
+                <button
+                  type="submit"
+                  disabled={busy || !jd!.trim()}
+                  className="ml-auto rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-ink transition disabled:opacity-40"
+                >
+                  Analyse fit
+                </button>
+              </div>
+            </form>
+          ) : (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -541,6 +698,7 @@ export function FloatingChat() {
               <Send size={15} />
             </button>
           </form>
+          )}
         </div>
       )}
     </>
