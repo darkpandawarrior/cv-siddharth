@@ -19,7 +19,7 @@ that demonstrates the work instead of listing it: case studies with real
 production metrics, a pointer-tracked phone mockup (pure CSS 3D transforms, no
 WebGL), a print-perfect
 [résumé view](https://cv-siddharth.vercel.app/resume) (PDF via
-the print dialog), and an AI assistant ("Sid") that answers questions about
+the print dialog), and an AI assistant ("Panda") that answers questions about
 his experience in first person.
 
 Inspired by [santifer/cv-santiago](https://github.com/santifer/cv-santiago),
@@ -92,7 +92,7 @@ api/
 ├── chat.ts                  # Vercel Edge entry
 └── _lib/
     ├── chat-handler.ts      # Web-standard handler (shared dev/prod)
-    └── system-prompt.ts     # Sid persona + CV knowledge + guardrails
+    └── system-prompt.ts     # Panda persona + CV knowledge + guardrails
 src/
 ├── App.tsx                  # All sections (hero, metrics, case studies…)
 ├── FloatingChat.tsx         # Chat widget — SSE streaming, quick prompts
@@ -140,4 +140,4 @@ commits the PNGs — the Vercel build needs no browser.
 
 Edit [src/data/profile.ts](src/data/profile.ts) for the page and
 [api/_lib/system-prompt.ts](api/_lib/system-prompt.ts) for the chatbot —
-keep the two in sync so Sid never contradicts the page.
+keep the two in sync so Panda never contradicts the page.

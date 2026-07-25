@@ -32,7 +32,7 @@ export interface RouteInfo {
 
 /**
  * A project's `name` is a title, not a noun phrase — the portfolio entry is
- * literally `This portfolio + “Sid” AI assistant`, which reads badly inside
+ * literally `This portfolio + “Panda”, my AI assistant`, which reads badly inside
  * "How did you build …?". Take the part before the " + " when there is one;
  * everything else is unchanged, so this degrades to a no-op rather than to
  * wrong copy if a name is ever rewritten.
@@ -50,9 +50,9 @@ function shortName(name: string): string {
 const ROUTES: RouteInfo[] = [
   { route: "/", label: "the home page", phrase: "the home page", kind: "home" },
   ...siteRooms.map((r): RouteInfo => ({ route: r.to, label: r.label, phrase: r.label, kind: "room" })),
-  { route: "/resume", label: "my résumé", phrase: "my résumé", kind: "page" },
+  { route: "/resume", label: "his résumé", phrase: "his résumé", kind: "page" },
   { route: "/playground", label: "The Playground", phrase: "The Playground (the index of every room)", kind: "page" },
-  { route: "/loopdown", label: "The Loopdown", phrase: "The Loopdown (my writing)", kind: "page" },
+  { route: "/loopdown", label: "The Loopdown", phrase: "The Loopdown (his writing)", kind: "page" },
   ...projects.map((p): RouteInfo => {
     const label = shortName(p.name);
     // Possessive rather than "the <name> case study": one of these names is
@@ -87,7 +87,7 @@ export function canonicalRoute(pathname: string): string | undefined {
 // Recruiters are the audience this site is for, so it goes first on every
 // route and never gets filtered out by the "already asked" rule — its text
 // never lands in the transcript.
-export const JD_PROMPT = "Paste a job description — I'll assess fit";
+export const JD_PROMPT = "Paste a job description — I'll assess his fit";
 
 /** The home / unknown-route set: the site as a whole. */
 export const QUICK_PROMPTS = [
@@ -100,7 +100,7 @@ export const QUICK_PROMPTS = [
 ];
 
 export const HOME_GREETING =
-  "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.";
+  "Hi, I'm **Panda** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.";
 
 // Only /resume gets its own copy — its questions are about a person, not about
 // a thing on a page, so no template produces them. Every other page falls back

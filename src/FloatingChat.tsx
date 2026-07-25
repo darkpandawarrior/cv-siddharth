@@ -94,7 +94,7 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
     usage: "/projects",
     help: "every build, as cards",
     run: (_arg, api) =>
-      api.say(`Everything I've built outside employer work:\n\n${SLUGS.map((s) => `[[project:${s}]]`).join("\n\n")}`),
+      api.say(`Everything he's built outside employer work:\n\n${SLUGS.map((s) => `[[project:${s}]]`).join("\n\n")}`),
   },
   {
     name: "open",
@@ -127,7 +127,7 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
     name: "skills",
     usage: "/skills",
     help: "the stack, grouped",
-    run: (_arg, api) => api.say("What I build with:\n\n[[skills]]"),
+    run: (_arg, api) => api.say("What he builds with:\n\n[[skills]]"),
   },
   { name: "resume", usage: "/resume", help: "open the résumé", run: (_arg, api) => api.go("/resume") },
   { name: "clear", usage: "/clear", help: "reset the conversation", run: (_arg, api) => api.clear() },
@@ -555,7 +555,7 @@ export function FloatingChat() {
             <div className="min-w-0">
               <p className="font-display text-sm font-bold">
                 <span className="mr-1.5 font-mono text-[11px] font-normal text-accent">sid@android:~$</span>
-                Sid <span className="font-normal text-muted">· AI assistant</span>
+                Panda <span className="font-normal text-muted">· Siddharth’s AI assistant</span>
               </p>
               <p className="truncate text-xs text-muted">
                 Answers as Siddharth · <span className="font-mono text-accent2">/</span> for commands
@@ -828,7 +828,7 @@ export function FloatingChat() {
                 aria-controls={menuOpen ? "chat-slash-menu" : undefined}
                 aria-autocomplete="list"
                 aria-activedescendant={menuOpen ? `chat-slash-${selected.name}` : undefined}
-                aria-label="Ask Sid, or type a slash command"
+                aria-label="Ask Panda, or type a slash command"
                 className="w-full rounded-full border border-line bg-ink px-4 py-2 text-sm text-zinc-100 placeholder-muted outline-none focus:border-accent"
               />
               {ghost && (

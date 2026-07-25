@@ -277,7 +277,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
 
 // ── Projects & open source ────────────────────────────────────────────────
 // Single source of truth for everything I've built outside employer work.
-// Rendered on the homepage + résumé and fed to the "Sid" chat assistant.
+// Rendered on the homepage + résumé and fed to Panda, the chat assistant.
 export interface ProjectDetailSection {
   heading: string;
   body: string;
@@ -1041,8 +1041,8 @@ export const projects: Project[] = [
   },
   {
     slug: "portfolio",
-    name: "This portfolio + “Sid” AI assistant",
-    tagline: "The site you're reading — a provider-agnostic LLM chat that answers as me, grounded in my real CV.",
+    name: "This portfolio + “Panda”, my AI assistant",
+    tagline: "The site you're reading — and Panda, a provider-agnostic LLM assistant that answers for me, grounded in my real CV.",
     description:
       "An interactive résumé with a built-in AI assistant. React 19 + Vite + Tailwind on Vercel Edge, with a provider-agnostic chat backend (Groq / Gemini / Claude) and prompt-injection guards.",
     stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM"],
@@ -1287,7 +1287,7 @@ export const cardMedia: Record<string, { src: string; alt: string }> = {
   deadlock: { src: "/projects/_heroes/deadlock.png", alt: "DEADLOCK — in development, private repo with a public case study" },
   // The portfolio card had no media at all before, so it sat visually shorter
   // than every card beside it. It has a hero now like the rest.
-  portfolio: { src: "/projects/_heroes/portfolio.png", alt: "This portfolio and its Sid AI assistant — live" },
+  portfolio: { src: "/projects/_heroes/portfolio.png", alt: "This portfolio and Panda, its AI assistant — live" },
 };
 
 /* ── The site's own interactive surfaces ──────────────────────────────────

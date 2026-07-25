@@ -61,7 +61,9 @@ describe("greetingFor", () => {
   it("acknowledges where the visitor is anywhere else", () => {
     expect(greetingFor("/project/mileway")).toContain("**Mileway**");
     expect(greetingFor("/lab")).toContain("**The Lab Bench**");
-    expect(greetingFor("/resume")).toContain("**my résumé**");
+    // Third person: the assistant is Panda, a separate entity that answers
+    // ABOUT Siddharth. "my résumé" would be it claiming to be him.
+    expect(greetingFor("/resume")).toContain("**his résumé**");
   });
 });
 
