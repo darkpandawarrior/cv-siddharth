@@ -1233,3 +1233,56 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
 ];
+
+/* ── The site's own interactive surfaces ──────────────────────────────────
+ * The DATA half of Playground.tsx's ROOMS (route + copy). It lives here, in
+ * the single source of truth, because two very different consumers need it:
+ * the Playground UI (which merges in the React-only `icon`/`tint` per route)
+ * and scripts/gen-system-prompt.mjs, which can't import a .tsx. Without this,
+ * the AI assistant had no idea these rooms existed and denied them when asked.
+ */
+export interface SiteRoom {
+  to: string;
+  label: string;
+  blurb: string;
+  tag: string;
+}
+
+export const siteRooms: SiteRoom[] = [
+  {
+    to: "/compose",
+    label: "Compose Playground",
+    blurb: "Write Jetpack Compose, watch it recompose live in a phone frame — reactive state, animation, and an AI that writes it for you.",
+    tag: "live editor · AI",
+  },
+  {
+    to: "/lab",
+    label: "The Lab Bench",
+    blurb: "Nine experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.",
+    tag: "canvas · physics",
+  },
+  {
+    to: "/blueprint",
+    label: "The Blueprint Room",
+    blurb: "The whole portfolio as an infinite canvas — a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.",
+    tag: "3D · WebGL",
+  },
+  {
+    to: "/map",
+    label: "The 3D Storyboard",
+    blurb: "The projects and the ideas that connect them, as a constellation you can orbit — every edge is a real dependency.",
+    tag: "3D · graph",
+  },
+  {
+    to: "/forge",
+    label: "The Particle Forge",
+    blurb: "A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.",
+    tag: "canvas · interactive",
+  },
+  {
+    to: "/terminal",
+    label: "The Terminal",
+    blurb: "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
+    tag: "text · easter egg",
+  },
+];

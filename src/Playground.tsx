@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
+import { siteRooms, type SiteRoom } from "./data/profile.ts";
 
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
@@ -14,65 +15,28 @@ import { useSectionNav } from "./lib/navigation.ts";
  * context is ever live) and shares the RoomFrame chrome below.
  */
 
-type Room = {
-  to: string;
-  label: string;
-  blurb: string;
-  tag: string;
+type Room = SiteRoom & {
   icon: LucideIcon;
   tint: string;
 };
 
-export const ROOMS: Room[] = [
-  {
-    to: "/compose",
-    label: "Compose Playground",
-    blurb: "Write Jetpack Compose, watch it recompose live in a phone frame — reactive state, animation, and an AI that writes it for you.",
-    tag: "live editor · AI",
-    icon: Smartphone,
-    tint: "#3ddc84",
-  },
-  {
-    to: "/lab",
-    label: "The Lab Bench",
-    blurb: "Nine experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.",
-    tag: "canvas · physics",
-    icon: FlaskConical,
-    tint: "#5ee6ff",
-  },
-  {
-    to: "/blueprint",
-    label: "The Blueprint Room",
-    blurb: "The whole portfolio as an infinite canvas — a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.",
-    tag: "3D · WebGL",
-    icon: Compass,
-    tint: "#db61ff",
-  },
-  {
-    to: "/map",
-    label: "The 3D Storyboard",
-    blurb: "The projects and the ideas that connect them, as a constellation you can orbit — every edge is a real dependency.",
-    tag: "3D · graph",
-    icon: Boxes,
-    tint: "#f0883e",
-  },
-  {
-    to: "/forge",
-    label: "The Particle Forge",
-    blurb: "A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.",
-    tag: "canvas · interactive",
-    icon: Sparkles,
-    tint: "#3ddc84",
-  },
-  {
-    to: "/terminal",
-    label: "The Terminal",
-    blurb: "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
-    tag: "text · easter egg",
-    icon: TerminalSquare,
-    tint: "#5ee6ff",
-  },
-];
+// Per-route presentation (React-only) merged onto the shared `siteRooms` data
+// in profile.ts. The copy lives there because gen-system-prompt.mjs also reads
+// it (a Node script can't import this .tsx) — so the AI assistant and this hub
+// can never drift apart.
+const ROOM_STYLE: Record<string, { icon: LucideIcon; tint: string }> = {
+  "/compose": { icon: Smartphone, tint: "#3ddc84" },
+  "/lab": { icon: FlaskConical, tint: "#5ee6ff" },
+  "/blueprint": { icon: Compass, tint: "#db61ff" },
+  "/map": { icon: Boxes, tint: "#f0883e" },
+  "/forge": { icon: Sparkles, tint: "#3ddc84" },
+  "/terminal": { icon: TerminalSquare, tint: "#5ee6ff" },
+};
+
+export const ROOMS: Room[] = siteRooms.map((r) => ({
+  ...r,
+  ...(ROOM_STYLE[r.to] ?? { icon: LayoutGrid, tint: "#3ddc84" }),
+}));
 
 /** Shared full-screen chrome for every room route (Lab Bench, Storyboard,
  *  Forge). Keeps a consistent way back to the hub and the portfolio. */

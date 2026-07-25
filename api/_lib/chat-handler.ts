@@ -1,4 +1,11 @@
-import { SYSTEM_PROMPT } from "./system-prompt";
+// `.js` extension: Vercel's @vercel/node builder type-checks this with its own
+// tsconfig (moduleResolution "node16"), which requires explicit ESM extensions.
+import { SYSTEM_PROMPT } from "./system-prompt.js";
+
+// Vercel's builder type-checks this file WITHOUT @types/node, so bare `process`
+// errors there (TS2591) even though our own tsconfig has the node types. This
+// local declaration keeps both toolchains happy and needs no new dependency.
+declare const process: { env: Record<string, string | undefined> };
 
 const MAX_HISTORY = 20;
 const MAX_MESSAGE_CHARS = 2000;
