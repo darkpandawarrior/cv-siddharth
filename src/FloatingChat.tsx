@@ -4,6 +4,7 @@ import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, 
 import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { plainText, speakableText } from "./lib/chatBlocks.ts";
+import { matchJd, toFitReport } from "./lib/skillMatch.ts";
 import { HOME_GREETING, JD_PROMPT, canonicalRoute, chipsFor, greetingFor } from "./lib/chatContext.ts";
 import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, type ChatMessage } from "./lib/chatClient.ts";
@@ -346,7 +347,22 @@ export function FloatingChat() {
     setBusy(true);
     const history: ChatMessage[] =
       mode === "jd" ? [{ role: "user", content }] : [...base.filter((m) => m !== GREETING), { role: "user", content }];
-    setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
+
+    /* The offline first pass. matchJd is pure string work over a stack we ship
+     * in the bundle, so a real scorecard is on screen in the same frame as the
+     * paste — no request, no rate limit, nothing to fail. `asked` is the guard:
+     * when the text named nothing recognisable there is no honest card to draw,
+     * and a spinner beats a scorecard full of zeroes. */
+    const jdMatch = mode === "jd" ? matchJd(content) : null;
+    const hasOffline = !!jdMatch && jdMatch.asked > 0;
+    const offlineCard = (final: boolean) =>
+      hasOffline ? `[[jdfit:${JSON.stringify(toFitReport(jdMatch, final))}]]` : "";
+
+    setMessages([...base, { role: "user", content }, { role: "assistant", content: offlineCard(false) }]);
+
+    // The model's answer SUPERSEDES the offline card rather than appending to
+    // it — two scorecards stacked in one bubble is worse than either alone.
+    let superseded = false;
     try {
       await streamReply(
         history,
@@ -354,7 +370,9 @@ export function FloatingChat() {
           setMessages((prev) => {
             const next = [...prev];
             const last = next[next.length - 1];
-            next[next.length - 1] = { ...last, content: last.content + delta };
+            const prior = superseded ? last.content : "";
+            superseded = true;
+            next[next.length - 1] = { ...last, content: prior + delta };
             return next;
           });
         },
@@ -365,7 +383,13 @@ export function FloatingChat() {
       console.error(err);
       setMessages((prev) => {
         const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: chatErrorText(err) };
+        /* This is the payoff. Rate limit, 502, dead provider — the recruiter
+         * still gets a real answer instead of only an apology, because the
+         * offline pass never depended on the network. */
+        next[next.length - 1] = {
+          role: "assistant",
+          content: hasOffline && !superseded ? `${offlineCard(true)}\n\n${chatErrorText(err)}` : chatErrorText(err),
+        };
         return next;
       });
     } finally {
