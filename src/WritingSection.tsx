@@ -33,7 +33,7 @@ export function WritingSection() {
     <section id="writing" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
           <p className="mb-10 max-w-2xl text-zinc-400">
             Field notes from real Android and KMP work, told through a recurring cast of personified

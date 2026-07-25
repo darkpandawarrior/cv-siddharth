@@ -114,7 +114,14 @@ html {
    a narrow column pinned to the right, behind the phone mockup only, never
    reaching into the 656px text column (which ends at 680px inside the
    1024px `max-w-5xl` section — the cap that makes this fixed-px anchor
-   stable across every desktop viewport width). */
+   stable across every desktop viewport width).
+
+   Mobile mask tuning (2026-07 B2): the band's dense core is pulled UP so the
+   sphere reads as a cap behind the eyebrow + the white "I take Android apps"
+   lines, then fades to nothing BEFORE the green `hero-shimmer` lines
+   ("prototype to platform") — green points over green text was the one spot
+   the headline lost legibility. Shorter height + a top-weighted fade keeps the
+   sphere bold up top while the shimmer lines sit on clean ground. */
 .particle-hero {
   position: absolute;
   z-index: -10;
@@ -122,9 +129,9 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  height: 22rem;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 45%, transparent 90%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 45%, transparent 90%);
+  height: 18rem;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 38%, transparent 60%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 38%, transparent 60%);
 }
 @media (min-width: 1024px) {
   .particle-hero {
@@ -136,6 +143,25 @@ html {
     width: 28rem;
     -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
     mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 60%, transparent 100%);
+  }
+}
+
+/* Below lg the particle sphere sits directly behind the hero headline (no room
+   for the desktop side-column). Two-part legibility guard, scoped to < lg since
+   desktop keeps its clean side-by-side composition:
+   1. A soft dark halo behind the WHITE headline lines + the eyebrow keeps them
+      crisp over the swarm.
+   2. The `hero-shimmer` (gradient-clipped) lines are deliberately NOT shadowed —
+      text-shadow muddies background-clip:text into a dull olive. Instead the
+      sphere's mask fades to transparent above those lines (see .particle-hero),
+      so the shimmer sits on clean ground and stays vivid. */
+@media (max-width: 1023px) {
+  #top h1,
+  #top .hero-eyebrow {
+    text-shadow: 0 1px 12px rgba(5, 7, 10, 0.9), 0 0 3px rgba(5, 7, 10, 0.85);
+  }
+  #top h1 .hero-shimmer {
+    text-shadow: none;
   }
 }
 
@@ -280,16 +306,23 @@ html.resume-mode body {
   }
 }
 
-/* Primary CTA: breathing glow + eager lift */
+/* Primary CTA: breathing glow + eager lift, with a crisp spring press. The
+   transform rides --ease-spring for a touch of overshoot on hover-in; :active
+   snaps it down so the button feels physically pressable. */
 .btn-primary {
   box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.35);
   animation: cta-breathe 3.2s ease-in-out infinite;
-  transition: transform var(--dur-fast) var(--ease-out-quart), box-shadow var(--dur-fast) var(--ease-out-quart);
+  transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-out-quart);
 }
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
   animation-play-state: paused;
   box-shadow: 0 8px 30px -8px rgba(61, 220, 132, 0.55);
+}
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.97);
+  transition-duration: 0.09s;
+  animation-play-state: paused;
 }
 @keyframes cta-breathe {
   50% {
@@ -369,14 +402,23 @@ html.resume-mode body {
   background: var(--color-accent);
   transition: right var(--dur-base) var(--ease-out-quart);
 }
-.nav-link:hover::after {
+/* Lit underline (hover or the in-view section) slides in and picks up a crisp
+   accent glow — same glow language as the focus-visible ring. */
+.nav-link:hover::after,
+.nav-link-active::after {
   right: 0;
+  box-shadow: 0 0 8px -1px var(--color-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-shimmer,
   .btn-primary {
     animation: none;
+  }
+  /* No interaction lift/press either — reduced motion means no transform motion */
+  .btn-primary:hover,
+  .btn-primary:active {
+    transform: none;
   }
 }
 
@@ -691,13 +733,33 @@ html.resume-mode body {
   box-shadow: 0 0 30px -8px color-mix(in srgb, var(--color-accent) 60%, transparent);
 }
 
-/* Elevation on hover — layers with the existing border/shadow hover states */
+/* Elevation on hover — layers with the existing border/shadow hover states.
+   Hover adds a subtle accent-tinted glow beneath the neutral elevation so every
+   interactive surface (case studies, projects, experience) lifts with the same
+   premium "signal" depth. Themed via --color-accent, so per-project reskins
+   carry their own accent into the glow. */
 .card-elevated {
   box-shadow: var(--shadow-elevation-1);
   transition: box-shadow var(--dur-base) var(--ease-out-quart);
 }
 .card-elevated:hover {
-  box-shadow: var(--shadow-elevation-2);
+  box-shadow: var(--shadow-elevation-2), 0 14px 44px -18px color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+/* Section eyebrow ("// featured work", "// projects", …): a small glowing
+   accent LED before the label turns every section header into one instrument
+   panel — a consistent telemetry cue across the home sections. Static (no
+   animation), so no reduced-motion concern. */
+.section-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.6rem;
+  border-radius: 1.5px;
+  vertical-align: middle;
+  background: var(--color-accent);
+  box-shadow: 0 0 9px -1px var(--color-accent);
 }
 
 /* Metrics: circular gauge fill draws in once revealed */

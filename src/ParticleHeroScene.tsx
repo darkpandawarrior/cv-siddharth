@@ -189,10 +189,13 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
     kickAmp.current = MathUtils.damp(kickAmp.current, 0, 3, delta);
     if (pts) {
       pts.rotation.y += delta * 0.045 + drag.current.vel;
-      const leanTarget = interactive ? pointer.y * -0.09 : 0;
+      // Cursor lean/roll — amplitudes tuned up a touch (B2) so the sphere reads
+      // as more visibly reactive to the pointer without becoming jittery; damp
+      // rate unchanged keeps the settle smooth.
+      const leanTarget = interactive ? pointer.y * -0.12 : 0;
       parallax.current = MathUtils.damp(parallax.current, leanTarget, 4, delta);
       pts.rotation.x = Math.sin(phase.current * 0.12) * 0.07 + parallax.current; // wobble + cursor lean
-      pts.rotation.z = interactive ? MathUtils.damp(pts.rotation.z, pointer.x * -0.05, 4, delta) : 0;
+      pts.rotation.z = interactive ? MathUtils.damp(pts.rotation.z, pointer.x * -0.07, 4, delta) : 0;
     }
     // Fit-to-container: the host box's aspect swings wildly (a short wide
     // band on mobile, a tall narrow strip on desktop behind the phone) — a

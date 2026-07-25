@@ -285,7 +285,7 @@ function Hero() {
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
       <div>
-        <p className="rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
+        <p className="hero-eyebrow rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
           <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
         </p>
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
@@ -475,7 +475,7 @@ function CaseStudies() {
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
+        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
@@ -587,7 +587,7 @@ function Projects() {
     <section id="projects" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
             Open-source projects and tooling outside employer work — shipped end-to-end.
@@ -807,7 +807,7 @@ function ExperienceSection() {
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div ref={trackRef} className="relative space-y-10 pl-8 sm:pl-10">
@@ -919,7 +919,7 @@ function Skills() {
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// tech stack</p>
+        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
         <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
@@ -1083,7 +1083,7 @@ function PlaygroundTeaser() {
     <section id="explore" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
             Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
