@@ -66,6 +66,30 @@ export function classifyHash(href: string): HashTarget {
   return { kind: "route", to: `/${id}` };
 }
 
+export type ChatLinkTarget = { kind: "section"; id: string } | { kind: "route"; to: string } | { kind: "external"; href: string };
+
+/**
+ * Classifies an href the AI assistant emitted inside a markdown link, so the
+ * chat can render it as real in-app navigation instead of a page-reloading
+ * `<a>`. Chat hrefs arrive in three shapes: absolute site paths ("/lab",
+ * "/project/mileway"), home-page sections ("/#projects", "#projects") and
+ * absolute URLs / mailto:. Section + slug knowledge is delegated to
+ * classifyHash so SECTION_IDS stays the single source of truth.
+ */
+export function classifyChatHref(href: string): ChatLinkTarget {
+  const url = href.trim();
+  // Any scheme (http:, mailto:, tel:) or protocol-relative "//host" leaves the
+  // SPA — render it as a plain anchor rather than feeding it to the router,
+  // which can only build same-origin locations.
+  if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(url)) return { kind: "external", href: url };
+  const hash = /^\/?#(.+)$/.exec(url);
+  if (hash) {
+    const target = classifyHash(hash[1]);
+    return target.kind === "project" ? { kind: "route", to: `/project/${target.slug}` } : target;
+  }
+  return { kind: "route", to: url.startsWith("/") ? url : `/${url}` };
+}
+
 /**
  * Shared home-page-section navigation for internal nav surfaces (footer,
  * command palette, ...). From "/" it smooth-scrolls in place; from any other

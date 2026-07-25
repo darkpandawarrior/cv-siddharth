@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { MessageCircle, Send, X } from "lucide-react";
-import Markdown from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
+import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
 
 interface Message {
   role: "user" | "assistant";
@@ -8,15 +10,17 @@ interface Message {
 }
 
 const QUICK_PROMPTS = [
+  "What can I do on this site?",
+  "Show me the interactive demos",
   "How did you get GPS accuracy to 95%?",
+  "Which project should I look at first?",
   "Tell me about the Compose migration",
-  "What's your biggest production win?",
 ];
 
 const GREETING: Message = {
   role: "assistant",
   content:
-    "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me anything about his Android work: the GPS engineering, the Compose migration, crash hunts, or whether he's a fit for your team.",
+    "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.",
 };
 
 const FALLBACK =
@@ -67,6 +71,44 @@ async function streamReply(messages: Message[], onDelta: (text: string) => void)
   }
 }
 
+const LINK_CLASS = "font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent";
+
+/**
+ * Renders a markdown link from an assistant reply. Internal targets navigate
+ * through the router (SPA, no reload) and close the panel — you asked to be
+ * taken somewhere, so the widget gets out of the way. The real `href` is kept
+ * on the anchor so hover-preview, copy-link and cmd-click-to-new-tab all still
+ * behave like a normal link.
+ */
+function ChatLink({ href, children, onNavigate }: { href?: string; children?: React.ReactNode; onNavigate: () => void }) {
+  const navigate = useNavigate();
+  const { goToSection } = useSectionNav();
+  const target = href ? classifyChatHref(href) : null;
+
+  if (!target || target.kind === "external")
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+        {children}
+      </a>
+    );
+
+  return (
+    <a
+      href={href}
+      className={LINK_CLASS}
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return; // let the browser open its new tab/window
+        e.preventDefault();
+        onNavigate();
+        if (target.kind === "section") goToSection(target.id);
+        else void navigate({ to: target.to });
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function FloatingChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([GREETING]);
@@ -76,6 +118,11 @@ export function FloatingChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  const markdownComponents = useMemo<Components>(
+    () => ({ a: ({ href, children }) => <ChatLink href={href} onNavigate={() => setOpen(false)}>{children}</ChatLink> }),
+    [],
+  );
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -151,6 +198,13 @@ export function FloatingChat() {
     }
   }
 
+  // The quick prompts double as follow-ups: after every settled reply the user
+  // gets a few next steps they haven't asked yet, instead of the chips
+  // disappearing forever after the first question. No second model call.
+  const asked = new Set(messages.filter((m) => m.role === "user").map((m) => m.content));
+  const settled = !busy && messages[messages.length - 1]?.role === "assistant";
+  const suggestions = settled ? QUICK_PROMPTS.filter((q) => !asked.has(q)).slice(0, messages.length === 1 ? 5 : 3) : [];
+
   return (
     <>
       {!open && (
@@ -190,13 +244,14 @@ export function FloatingChat() {
                 {m.content === "" && busy && i === messages.length - 1 ? (
                   <span className="animate-pulse text-muted">thinking…</span>
                 ) : (
-                  <Markdown>{m.content}</Markdown>
+                  <Markdown components={markdownComponents}>{m.content}</Markdown>
                 )}
               </div>
             ))}
-            {messages.length === 1 && (
+            {suggestions.length > 0 && (
               <div className="space-y-2 pt-2">
-                {QUICK_PROMPTS.map((q) => (
+                {messages.length > 1 && <p className="text-[11px] uppercase tracking-widest text-muted">Ask next</p>}
+                {suggestions.map((q) => (
                   <button
                     key={q}
                     onClick={() => send(q)}
