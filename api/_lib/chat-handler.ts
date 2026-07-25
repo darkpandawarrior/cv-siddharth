@@ -352,7 +352,12 @@ export const PROVIDERS: Provider[] = [
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
         body: JSON.stringify({
-          model: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
+          // llama-3.3-70b-versatile was deprecated by Groq (announced 2026-06-17,
+          // decommissioned Aug 2026) and started 502-ing this endpoint in prod.
+          // gpt-oss-120b is Groq's own recommended successor. Override with
+          // GROQ_MODEL if this one is ever retired too — that env var is the
+          // fix that needs no deploy.
+          model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
           messages: [{ role: "system", content: system }, ...messages],
           max_tokens: 1024,
           stream: true,
