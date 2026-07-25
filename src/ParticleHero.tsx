@@ -41,7 +41,27 @@ export function ParticleHero() {
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCount(window.matchMedia("(max-width: 767px)").matches ? 2000 : 6000);
     setDragEnabled(window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 1024px)").matches);
-    setReady(true);
+
+    // Defer mounting the scene — and thus the ~850KB three.js chunk it pulls in
+    // (events-*.esm) — past first paint. The LCP element is the SSR'd headline;
+    // importing three eagerly here saturates the throttled mobile network during
+    // the exact window the headline's render-blocking CSS + font need, pushing
+    // LCP to ~6.5s. Wait for `load` (critical resources drained, LCP painted),
+    // then an idle slot, so only the SPHERE arrives a beat later — not the copy.
+    let idleId = 0;
+    let timerId = 0;
+    const mountScene = () => {
+      if (window.requestIdleCallback) idleId = window.requestIdleCallback(() => setReady(true), { timeout: 2000 });
+      else timerId = window.setTimeout(() => setReady(true), 200); // Safari < 16.4 fallback
+    };
+    if (document.readyState === "complete") mountScene();
+    else window.addEventListener("load", mountScene, { once: true });
+
+    return () => {
+      window.removeEventListener("load", mountScene);
+      if (idleId) window.cancelIdleCallback?.(idleId);
+      if (timerId) window.clearTimeout(timerId);
+    };
   }, []);
 
   useEffect(() => {
