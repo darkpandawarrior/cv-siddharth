@@ -1167,6 +1167,17 @@ export const projects: Project[] = [
   },
 ];
 
+/**
+ * The one place a slug becomes a project. Used by every surface that takes a
+ * slug from something outside the code — the chat's `[[project:<slug>]]`
+ * directive and the console's `/open <slug>` — so an invented, hallucinated or
+ * injected slug resolves to `undefined` and renders nothing, rather than each
+ * caller re-implementing the check.
+ */
+export function projectBySlug(slug: string): Project | undefined {
+  return projects.find((p) => p.slug === slug);
+}
+
 // ── Shared foundation ─────────────────────────────────────────────────────
 // Two of my own KMP libraries that both Mileway and PaymentsLab consume as
 // composite builds — the "systems engineering" thread that ties the apps

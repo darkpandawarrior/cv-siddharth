@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import Markdown, { type Components } from "react-markdown";
 import { ArrowRight } from "lucide-react";
-import { projects, metrics, skills, siteRooms, cardMedia } from "./data/profile.ts";
+import { projectBySlug, metrics, skills, siteRooms, cardMedia } from "./data/profile.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
 import { parseChatBlocks } from "./lib/chatBlocks.ts";
 import { Picture } from "./Picture.tsx";
@@ -74,8 +74,11 @@ export function ChatLink({
 /* ── The widgets ─────────────────────────────────────────────────────────── */
 
 function ProjectCard({ slug, onNavigate }: { slug: string; onNavigate?: () => void }) {
-  const project = projects.find((p) => p.slug === slug);
-  if (!project) return null; // an invented slug renders nothing rather than a broken card
+  // The directive's arg is model output — i.e. attacker-influenceable text.
+  // It is never used to build anything; it only ever looks a project up, and
+  // an invented slug renders nothing rather than a broken (or forged) card.
+  const project = projectBySlug(slug);
+  if (!project) return null;
   const media = cardMedia[project.slug];
 
   return (

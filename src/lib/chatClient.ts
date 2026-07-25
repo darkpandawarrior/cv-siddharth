@@ -19,6 +19,16 @@ export const CHAT_API_URL: string = import.meta.env.VITE_CHAT_API_URL || "/api/c
 export const CHAT_FALLBACK =
   "The chat backend isn't configured yet (missing API key). You can reach Siddharth directly at **siddharthpandalai990@gmail.com**.";
 
+/**
+ * What a visitor should read when a reply fails. Most failures are the site's
+ * problem (no key, upstream down) and get the contact fallback; a 429 from the
+ * endpoint's rate limiter is the one case where the server's own message is
+ * written for the visitor and actually actionable ("wait a moment").
+ */
+export function chatErrorText(err: unknown): string {
+  return err instanceof Error && err.cause === 429 ? err.message : CHAT_FALLBACK;
+}
+
 /** Consumes the server's normalized SSE stream: `data: {"text": "…"}` events. */
 export async function streamReply(messages: ChatMessage[], onDelta: (text: string) => void): Promise<void> {
   const res = await fetch(CHAT_API_URL, {
@@ -28,7 +38,7 @@ export async function streamReply(messages: ChatMessage[], onDelta: (text: strin
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error ?? `Request failed (${res.status})`);
+    throw new Error(body?.error ?? `Request failed (${res.status})`, { cause: res.status });
   }
 
   const reader = res.body.getReader();

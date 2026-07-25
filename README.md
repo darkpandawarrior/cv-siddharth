@@ -65,8 +65,18 @@ npx vercel
 
 Set `ANTHROPIC_API_KEY` (or `GROQ_API_KEY` / `GEMINI_API_KEY`) in the Vercel
 project's environment variables. `api/chat.ts` runs on the Edge runtime and
-streams SSE straight through to the widget — no separate chat host, no CORS
-configuration needed. `vercel.json` pins the SSR function to `bom1` (Mumbai)
+streams SSE straight through to the widget — no separate chat host.
+
+That endpoint spends the owner's API key, so it defends itself
+([api/\_lib/chat-handler.ts](api/_lib/chat-handler.ts)): an **origin allowlist**
+(the live site, this deployment's own Vercel hostnames so previews work,
+localhost, plus anything in `ALLOWED_ORIGIN` — a request with no `Origin` header
+is refused), a **per-IP rate limit** (`CHAT_RATE_PER_MIN`, default 10;
+`CHAT_RATE_PER_HOUR`, default 60 → `429` + `Retry-After`), and **payload caps**
+(≤60 messages, ≤64 KB body, ≤2000 chars per user turn, history trimmed to
+~24k chars before it reaches a provider). The rate limiter is per-isolate and
+therefore best-effort — see the comment above it for what a durable version
+would take. `vercel.json` pins the SSR function to `bom1` (Mumbai)
 and sets long-lived immutable caching for the WASM lab bundles; TanStack
 Start's own router handles all page routing, so there's no rewrite rule to
 maintain.

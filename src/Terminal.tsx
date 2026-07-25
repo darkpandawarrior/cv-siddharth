@@ -20,7 +20,7 @@ import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
-import { CHAT_FALLBACK, streamReply } from "./lib/chatClient.ts";
+import { chatErrorText, streamReply } from "./lib/chatClient.ts";
 
 /**
  * `#terminal` — a faux-shell easter egg that's a real, usable interface.
@@ -701,7 +701,7 @@ function AskBlock({ question }: { question: string }) {
     streamReply([{ role: "user", content: question }], (delta) => {
       if (live) setText((t) => t + delta);
     })
-      .catch(() => live && setText(CHAT_FALLBACK))
+      .catch((err) => live && setText(chatErrorText(err)))
       .finally(() => live && setDone(true));
     return () => {
       live = false;

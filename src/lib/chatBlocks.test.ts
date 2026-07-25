@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseChatBlocks } from "./chatBlocks.ts";
+import { projects, projectBySlug } from "../data/profile.ts";
 
 describe("parseChatBlocks", () => {
   it("returns a single text block for plain prose", () => {
@@ -101,5 +102,46 @@ describe("parseChatBlocks", () => {
       // …and the finished stream still yields both widgets.
       expect(parseChatBlocks(full).filter((b) => b.kind === "widget")).toHaveLength(2);
     });
+  });
+});
+
+/**
+ * The directive surface is attacker-adjacent: a visitor can steer what the
+ * model writes, so anything a directive can reach has to be inert on its own.
+ *
+ * The other half of that guarantee is structural rather than testable here:
+ * directives are parsed ONLY from assistant content. Both surfaces render a
+ * user turn as plain text — `{m.content}` in src/FloatingChat.tsx and the
+ * echoed `“{question}”` in src/Terminal.tsx's AskBlock — so a visitor typing
+ * `[[rooms]]` sees those eight characters back, not a rendered grid.
+ */
+describe("widget-directive safety", () => {
+  it("resolves a project directive only against real slugs", () => {
+    expect(projectBySlug("mileway")?.slug).toBe("mileway");
+    for (const injected of [
+      "evil",
+      "mileway-evil",
+      "../../etc/passwd",
+      "https://evil.com",
+      "mileway ",
+      "MILEWAY", // the parser lowercases; a raw lookup must still not match
+      "",
+    ]) {
+      expect(projectBySlug(injected), injected).toBeUndefined();
+    }
+  });
+
+  it("hands the renderer a lowercased slug that a hallucinated arg can't fake", () => {
+    const [block] = parseChatBlocks("[[project:NotAProject]]");
+    expect(block).toEqual({ kind: "widget", name: "project", arg: "notaproject" });
+    expect(projectBySlug((block as { arg: string }).arg)).toBeUndefined();
+  });
+
+  it("parses every real slug back to its project (the happy path still works)", () => {
+    for (const p of projects) {
+      const [block] = parseChatBlocks(`[[project:${p.slug}]]`);
+      expect(block).toEqual({ kind: "widget", name: "project", arg: p.slug });
+      expect(projectBySlug(p.slug)).toBe(p);
+    }
   });
 });

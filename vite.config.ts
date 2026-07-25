@@ -23,9 +23,19 @@ function chatApiDevPlugin(): Plugin {
         const { handleChat } = await server.ssrLoadModule("/api/_lib/chat-handler.ts");
         const chunks: Buffer[] = [];
         for await (const chunk of req) chunks.push(chunk as Buffer);
+        // Forward the real request headers — the handler's origin allowlist and
+        // rate limiter read `origin` / `x-forwarded-for`, so a stripped-down
+        // header set would make dev behave nothing like production (and 403 the
+        // dev chat, since a missing Origin is rejected).
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(req.headers)) {
+          if (typeof value === "string") headers.set(key, value);
+          else if (Array.isArray(value)) for (const v of value) headers.append(key, v);
+        }
+        headers.set("content-type", "application/json");
         const request = new Request("http://localhost/api/chat", {
           method: req.method ?? "POST",
-          headers: { "content-type": "application/json" },
+          headers,
           body: chunks.length ? Buffer.concat(chunks) : undefined,
         });
         const response: Response = await handleChat(request);

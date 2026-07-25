@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Copy, Maximize2, MessageCircle, Minimize2, RotateCw, Send, X } from "lucide-react";
-import { projects } from "./data/profile.ts";
+import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { parseChatBlocks } from "./lib/chatBlocks.ts";
-import { CHAT_FALLBACK, streamReply, type ChatMessage } from "./lib/chatClient.ts";
+import { chatErrorText, streamReply, type ChatMessage } from "./lib/chatClient.ts";
 
 /**
  * The console — the AI assistant, as a terminal-flavoured panel.
@@ -75,7 +75,7 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
     help: "jump to a case study",
     run: (arg, api) => {
       const slug = arg.toLowerCase();
-      const project = projects.find((p) => p.slug === slug);
+      const project = projectBySlug(slug); // typed by a visitor — never routed to unvalidated
       if (project) return api.go(`/project/${project.slug}`);
       api.say(
         slug
@@ -237,7 +237,7 @@ export function FloatingChat() {
       console.error(err);
       setMessages((prev) => {
         const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: CHAT_FALLBACK };
+        next[next.length - 1] = { role: "assistant", content: chatErrorText(err) };
         return next;
       });
     } finally {
@@ -405,6 +405,10 @@ export function FloatingChat() {
             <div className={`space-y-3 ${expanded ? "mx-auto w-full max-w-2xl" : ""}`}>
               {messages.map((m, i) => {
                 const streaming = busy && i === messages.length - 1 && m.role === "assistant";
+                // A user turn renders as plain text — deliberately NOT through
+                // ChatMessageBody. Widget directives are assistant-only, so a
+                // visitor typing `[[rooms]]` sees those characters back rather
+                // than spoofing site UI inside the conversation.
                 if (m.role === "user")
                   return (
                     <div
