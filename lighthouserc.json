@@ -2,7 +2,7 @@
   "ci": {
     "collect": {
       "startServerCommand": "npm run serve",
-      "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/mileway", "http://localhost:4173/lab"],
+      "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/mileway", "http://localhost:4173/lab", "http://localhost:4173/blueprint"],
       "numberOfRuns": 3
     },
     "assert": {

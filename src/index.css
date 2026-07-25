@@ -132,8 +132,10 @@ html {
   height: 18rem;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 38%, transparent 60%);
   mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 38%, transparent 60%);
-  /* Mounts only after the headline (LCP) has painted — ease it in so the
-     deferred sphere never hard-pops. Reduced motion → instant (guarded below). */
+  /* The whole particle layer mounts only after the headline (LCP) has painted
+     (ParticleHero returns null until its load+idle `ready` gate). This eases in
+     the layer container when it appears; the lazy three.js scene inside still
+     resolves a beat later within it. Reduced motion → instant (guarded below). */
   animation: particle-hero-in 0.8s ease-out both;
 }
 @keyframes particle-hero-in {
