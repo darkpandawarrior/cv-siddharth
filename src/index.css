@@ -921,3 +921,23 @@ html.resume-mode body {
     animation: none;
   }
 }
+
+/* Chat console: streaming caret.
+   A block cursor pinned to the END of the reply that's still arriving —
+   attached with ::after on the bubble's last rendered child so it sits inline
+   after the final word instead of dropping onto its own line. CSS-only: no
+   extra node, no per-token React work. Applied only while `busy` (see
+   src/FloatingChat.tsx / the terminal's inline `ask`). */
+@keyframes chat-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.chat-streaming > :last-child::after {
+  content: "▌";
+  margin-left: 0.12em;
+  color: var(--color-accent);
+  animation: chat-caret 1.05s steps(1, end) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-streaming > :last-child::after { animation: none; }
+}

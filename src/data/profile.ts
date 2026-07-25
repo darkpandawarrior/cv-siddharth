@@ -1234,6 +1234,22 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
 ];
 
+/* ── Card thumbnails ──────────────────────────────────────────────────────
+ * One thumbnail per project, from the daily-synced media. Lives here (not in
+ * App.tsx, where it started) because two renderers need the same picture: the
+ * home-page project grid and the AI assistant's inline project card
+ * (src/ChatWidgets.tsx) — a second hand-maintained map is how thumbnails drift.
+ */
+export const cardMedia: Record<string, { src: string; alt: string }> = {
+  kursi: { src: "/projects/kursi/screenshots/home.gif", alt: "Kursi home screen" },
+  mileway: { src: "/projects/mileway/screenshots/track_a_trip.gif", alt: "Mileway trip tracking flow" },
+  // ponytail: checkout_flow.gif opens on the FLAG_SECURE "screenshots blocked"
+  // frame — great security story, terrible thumbnail. Static catalog shot instead.
+  paymentslab: { src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", alt: "PaymentsLab gateway catalog" },
+  deadlock: { src: "/projects/deadlock/screenshots/journey.gif", alt: "DEADLOCK — title through the first cooperative Echo" },
+  hiresignal: { src: "/projects/hiresignal/screenshots/banner.gif", alt: "HireSignal banner" },
+};
+
 /* ── The site's own interactive surfaces ──────────────────────────────────
  * The DATA half of Playground.tsx's ROOMS (route + copy). It lives here, in
  * the single source of truth, because two very different consumers need it:

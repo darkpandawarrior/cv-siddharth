@@ -19,6 +19,8 @@ import { RELATED_SERIES } from "./data/connections.ts";
 import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { openChat } from "./FloatingChat.tsx";
+import { ChatMessageBody } from "./ChatWidgets.tsx";
+import { CHAT_FALLBACK, streamReply } from "./lib/chatClient.ts";
 
 /**
  * `#terminal` — a faux-shell easter egg that's a real, usable interface.
@@ -408,19 +410,16 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "ask",
       usage: "ask <question>",
-      help: "ask the AI assistant (it has read all of this)",
+      help: "ask the AI assistant, answered right here",
       run: (args) => {
         const q = args.join(" ").trim();
         if (!q) {
           openChat();
           return <span>opening <Hi>Sid</Hi>, the AI assistant…</span>;
         }
-        openChat(q);
-        return (
-          <span>
-            asking <Hi>Sid</Hi>: <span className="text-zinc-300">“{q}”</span> … <Dim>(see the chat panel)</Dim>
-          </span>
-        );
+        // The answer streams into this block — the shell doesn't punt you to
+        // the chat panel any more.
+        return <AskBlock question={q} />;
       },
     },
     {
@@ -683,6 +682,50 @@ function buildCommands(jump: Go): Cmd[] {
     },
   ];
   return cmds;
+}
+
+/* `ask <question>` renders this: the answer streams into the shell itself
+ * instead of punting the visitor to the chat panel. Same src/lib/chatClient.ts
+ * the console panel uses (one streaming implementation), and the same
+ * ChatMessageBody — so a `[[project:mileway]]` card the model emits renders
+ * here too rather than leaking as raw text. Bare `ask` still opens the panel. */
+function AskBlock({ question }: { question: string }) {
+  const [text, setText] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    // Reset first: a re-run of this effect (React's dev double-invoke, HMR)
+    // must restart the answer, not append a second copy on top of the first.
+    setText("");
+    streamReply([{ role: "user", content: question }], (delta) => {
+      if (live) setText((t) => t + delta);
+    })
+      .catch(() => live && setText(CHAT_FALLBACK))
+      .finally(() => live && setDone(true));
+    return () => {
+      live = false;
+    };
+  }, [question]);
+
+  return (
+    <div className="my-1 border-l-2 border-[var(--t-accent)]/40 pl-3">
+      <div>
+        <Hi>sid</Hi> <Dim>·</Dim> <span className="text-zinc-300">“{question}”</span>
+      </div>
+      {/* The whole output log is an aria-live region; a token-by-token stream
+          inside it would be announced dozens of times. Muted while streaming,
+          handed back to the log once the answer has settled. */}
+      <div
+        aria-live={done ? "polite" : "off"}
+        className={`max-w-2xl leading-relaxed text-zinc-200 [&_a]:text-[var(--t-accent)] [&_strong]:text-[var(--t-accent)] [&_ul]:list-disc [&_ul]:pl-4 ${
+          done ? "" : "chat-streaming"
+        }`}
+      >
+        {text ? <ChatMessageBody content={text} /> : <Dim>thinking…</Dim>}
+      </div>
+    </div>
+  );
 }
 
 /* neofetch-style two-column readout, sourced live from profile data. */

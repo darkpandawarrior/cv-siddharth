@@ -14,7 +14,7 @@ import {
   Play,
   LayoutGrid,
 } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation } from "./data/profile.ts";
+import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia } from "./data/profile.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
@@ -81,18 +81,6 @@ function repoStatLine(slug: string): string | null {
   if (slug === "kursi") return `${s.modules} modules · 4 platforms`;
   return `${s.modules} modules`;
 }
-
-// Card-top media per project — the daily-synced gifs finally surface on the
-// home page instead of living only inside detail-page galleries.
-const CARD_MEDIA: Record<string, { src: string; alt: string }> = {
-  kursi: { src: "/projects/kursi/screenshots/home.gif", alt: "Kursi home screen" },
-  mileway: { src: "/projects/mileway/screenshots/track_a_trip.gif", alt: "Mileway trip tracking flow" },
-  // ponytail: checkout_flow.gif opens on the FLAG_SECURE "screenshots blocked"
-  // frame — great security story, terrible thumbnail. Static catalog shot instead.
-  paymentslab: { src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", alt: "PaymentsLab gateway catalog" },
-  deadlock: { src: "/projects/deadlock/screenshots/journey.gif", alt: "DEADLOCK — title through the first cooperative Echo" },
-  hiresignal: { src: "/projects/hiresignal/screenshots/banner.gif", alt: "HireSignal banner" },
-};
 
 const NAV_LINKS = [
   { href: "#work", label: "Case studies" },
@@ -603,7 +591,7 @@ function Projects() {
             const platforms = platformsOf(p.stack);
             const isLive = LIVE_WEB_PROJECTS.has(p.slug);
             const statLine = repoStatLine(p.slug);
-            const media = CARD_MEDIA[p.slug];
+            const media = cardMedia[p.slug];
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
