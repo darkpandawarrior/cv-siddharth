@@ -1,13 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "tanstack-start",
+  "framework": null,
   "buildCommand": "npm run build",
+  "outputDirectory": "dist/client",
   "regions": ["bom1"],
   "redirects": [
     { "source": "/p/resume", "destination": "/resume", "permanent": true },
     { "source": "/p/writing", "destination": "/loopdown", "permanent": true },
     { "source": "/p/:slug", "destination": "/project/:slug", "permanent": true }
   ],
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/api/ssr" }],
   "headers": [
     {
       "source": "/sw.js",
