@@ -509,9 +509,58 @@ export const PROVIDERS: Provider[] = [
           }),
         },
       ),
-    extractDelta: (e) =>
-      (e as { candidates?: { content?: { parts?: { text?: string }[] } }[] }).candidates?.[0]?.content?.parts?.[0]
-        ?.text,
+    /**
+     * Every part, minus the model's thinking.
+     *
+     * Two things wrong with reading `parts[0].text`, both of which bite here:
+     *
+     * 1. Gemini may split one chunk across SEVERAL parts. Taking only the first
+     *    silently drops the rest of that chunk's text mid-answer.
+     * 2. gemini-2.5-flash has thinking on by default, and thought content
+     *    arrives as parts flagged `thought: true`. Concatenated blindly, the
+     *    model's private reasoning gets streamed to the visitor as if it were
+     *    the answer — on the JD analyser, that means a recruiter reads Sid
+     *    deliberating about him. Worse than the blank bubble this replaced.
+     *
+     * Filtering on the flag is correct whether thinking is on, off, or changes
+     * default in a future model, which is why it's done here rather than by
+     * sending a config field whose REST name Google's own docs don't pin down.
+     */
+    extractDelta: (e) => {
+      const parts = (e as { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] })
+        .candidates?.[0]?.content?.parts;
+      if (!parts) return undefined;
+      const text = parts.filter((p) => !p.thought).map((p) => p.text ?? "").join("");
+      return text || undefined;
+    },
+  },
+  {
+    /**
+     * Cerebras — the middle rung. OpenAI-compatible, so this is the Groq shape
+     * with a different host: fast inference, and a free tier around 30K TPM,
+     * which sits between Groq's 8K and Gemini's ~250K. Unset by default; it
+     * costs nothing to leave configured-but-absent, and the moment a key
+     * appears it becomes the second thing every request tries.
+     *
+     * Deliberately NOT added: Mistral's free Experiment tier is far more
+     * generous (~1B tokens/month) but requires opting into training on the
+     * prompts sent to it. Visitors paste real job descriptions into this
+     * endpoint. That is not ours to trade away for quota.
+     */
+    name: "cerebras",
+    key: () => process.env.CEREBRAS_API_KEY,
+    request: (key, messages, system, maxTokens) =>
+      fetch("https://api.cerebras.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: process.env.CEREBRAS_MODEL ?? "llama-3.3-70b",
+          messages: [{ role: "system", content: system }, ...messages],
+          max_tokens: maxTokens,
+          stream: true,
+        }),
+      }),
+    extractDelta: (e) => (e as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content,
   },
   {
     name: "anthropic",
@@ -552,10 +601,49 @@ export const PROVIDERS: Provider[] = [
  * CHAT_PROVIDER still pins a single provider, which is how you force a
  * specific one for testing without unsetting keys.
  */
-export function pickProviders(): { provider: Provider; key: string }[] {
+/**
+ * Which provider should try first, given what this request costs.
+ *
+ * Not a preference — arithmetic. Every call to this endpoint carries a ~5,000
+ * token system prompt, and the free tiers differ by more than an order of
+ * magnitude in tokens-per-minute:
+ *
+ *   groq      8K TPM   ·  200K/day   · fastest by a wide margin
+ *   gemini  ~250K TPM  ·  generous   · slower, but ~30x the per-minute room
+ *   cerebras ~30K TPM  ·             · fast, sits between the two
+ *
+ * A JD analysis is ~6,800 tokens — 85% of Groq's ENTIRE per-minute budget in a
+ * single request, so two of them in the same minute cannot both be served
+ * there. Gemini absorbs them without noticing. A chat turn is small and
+ * latency-sensitive, which is exactly what Groq is best at.
+ *
+ * So the order flips by mode: fat requests to the roomy provider, small ones to
+ * the fast provider, and each still falls through the whole list on failure.
+ * The old fixed order sent the expensive request to the tightest tier first.
+ */
+export function providerOrderFor(mode: ChatMode): string[] {
+  return mode === "jd" ? ["gemini", "cerebras", "groq", "anthropic"] : ["groq", "cerebras", "gemini", "anthropic"];
+}
+
+/**
+ * Every configured provider, in the order this request should try them.
+ *
+ * Returning the whole list is what makes failover possible: a second free-tier
+ * key is worth nothing if the handler only ever reaches for the first one.
+ *
+ * CHAT_PROVIDER still pins a single provider, which is how you force a specific
+ * one for testing without unsetting keys.
+ */
+export function pickProviders(mode: ChatMode = "chat"): { provider: Provider; key: string }[] {
   const forced = process.env.CHAT_PROVIDER;
-  const candidates = forced ? PROVIDERS.filter((p) => p.name === forced) : PROVIDERS;
-  return candidates
+  if (forced) {
+    const p = PROVIDERS.find((x) => x.name === forced);
+    const key = p?.key();
+    return p && key ? [{ provider: p, key }] : [];
+  }
+  const order = providerOrderFor(mode);
+  return [...PROVIDERS]
+    .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
     .map((provider) => ({ provider, key: provider.key() }))
     .filter((c): c is { provider: Provider; key: string } => !!c.key);
 }
@@ -702,11 +790,14 @@ export async function handleChat(request: Request): Promise<Response> {
   const raw = await readBoundedBody(request);
   if (raw === null) return jsonError(413, "That message is too large.", allowedOrigin);
 
-  const providers = pickProviders();
-  if (providers.length === 0) {
+  // Cheap "is anything configured at all?" gate, before the body is parsed. The
+  // ORDER depends on the mode, which isn't known until validateRequest below —
+  // so this only checks that the list is non-empty, and the ordered list is
+  // taken afterwards.
+  if (pickProviders().length === 0) {
     // The visitor gets nothing operational — naming the env vars told an
     // attacker exactly which providers to look for. The fix stays in the logs.
-    console.error("chat: no provider key configured (set GROQ_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY)");
+    console.error("chat: no provider key configured (set GROQ_API_KEY, GEMINI_API_KEY, CEREBRAS_API_KEY, or ANTHROPIC_API_KEY)");
     return jsonError(503, "Chat is not configured right now.", allowedOrigin);
   }
 
@@ -745,6 +836,10 @@ export async function handleChat(request: Request): Promise<Response> {
    * endpoint spends ~5K of them on the system prompt alone — so a couple of
    * back-to-back analyses can exhaust a minute, and a busy afternoon can
    * exhaust a day. Before this loop, that was a dead chat. Now it's a handover. */
+  // Now the mode is known, so the list can be ordered by what this request
+  // actually costs — see providerOrderFor.
+  const providers = pickProviders(parsed.mode);
+
   let upstream: Response | null = null;
   let served: Provider | null = null;
   let lastStatus = 502;

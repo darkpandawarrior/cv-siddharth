@@ -981,7 +981,63 @@ describe("provider failover", () => {
   it("lists every configured provider, in preference order", () => {
     process.env.GROQ_API_KEY = "g";
     process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
     expect(pickProviders().map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+  });
+
+  /* Routing is arithmetic, not taste: a JD analysis is ~6,800 tokens against
+   * Groq's 8K-per-minute free ceiling, so two in one minute cannot both be
+   * served there. Gemini's ~250K TPM can. A chat turn is small and
+   * latency-sensitive, which is what Groq is best at. */
+  it("sends the fat JD request to the roomy provider first", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    expect(pickProviders("jd").map((p) => p.provider.name)).toEqual(["gemini", "groq"]);
+  });
+
+  it("sends the small chat turn to the fast provider first", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    expect(pickProviders("chat").map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+    expect(pickProviders("compose").map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+  });
+
+  it("still falls through the WHOLE list whichever end it starts from", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    process.env.CEREBRAS_API_KEY = "c";
+    delete process.env.CHAT_PROVIDER;
+    expect(pickProviders("jd").map((p) => p.provider.name)).toEqual(["gemini", "cerebras", "groq"]);
+    expect(pickProviders("chat").map((p) => p.provider.name)).toEqual(["groq", "cerebras", "gemini"]);
+    delete process.env.CEREBRAS_API_KEY;
+  });
+
+  it("routes a JD to Gemini and actually calls Google", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(c) {
+            c.enqueue(new TextEncoder().encode('data: {"candidates":[{"content":{"parts":[{"text":"hi"}]}}]}\n'));
+            c.close();
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://cv-siddharth.vercel.app" },
+        body: JSON.stringify({ mode: "jd", messages: [{ role: "user", content: "Senior Android Engineer. Kotlin, Compose." }] }),
+      }),
+    );
+    expect(String(fetchMock.mock.calls[0][0])).toContain("generativelanguage.googleapis.com");
   });
 
   it("still honours CHAT_PROVIDER as a hard pin", () => {
@@ -1091,6 +1147,36 @@ describe("provider failover", () => {
  * The root cause of the empty bubble. Groq's two reasoning families take
  * different vocabularies and reject each other's, so getting this wrong is a
  * 400 on every request rather than a silent degradation. */
+/* Gemini's own thinking hazard — the same shape as Groq's, arriving by a
+ * different door. gemini-2.5-flash thinks by default and returns thought
+ * content as parts flagged `thought: true`, interleaved with the answer. */
+describe("gemini extractDelta", () => {
+  const gemini = () => PROVIDERS.find((p) => p.name === "gemini")!.extractDelta;
+
+  it("never streams the model's thinking to the visitor", () => {
+    // A recruiter reading Sid deliberate about Sid is worse than a blank reply.
+    const frame = {
+      candidates: [{ content: { parts: [{ text: "Let me weigh his iOS depth…", thought: true }, { text: "I'm a strong fit." }] } }],
+    };
+    expect(gemini()(frame)).toBe("I'm a strong fit.");
+  });
+
+  it("keeps every part of a multi-part chunk, not just the first", () => {
+    // Reading parts[0] alone silently dropped the rest of a split chunk.
+    const frame = { candidates: [{ content: { parts: [{ text: "Kotlin, " }, { text: "Compose, " }, { text: "Room." }] } }] };
+    expect(gemini()(frame)).toBe("Kotlin, Compose, Room.");
+  });
+
+  it("yields nothing for a thought-only frame, so the stream stays quiet", () => {
+    const frame = { candidates: [{ content: { parts: [{ text: "thinking…", thought: true }] } }] };
+    expect(gemini()(frame)).toBeUndefined();
+  });
+
+  it("still reads an ordinary single-part frame", () => {
+    expect(gemini()({ candidates: [{ content: { parts: [{ text: "hello" }] } }] })).toBe("hello");
+  });
+});
+
 describe("reasoningEffortFor", () => {
   it("holds gpt-oss to a low budget so tokens reach the answer", () => {
     expect(reasoningEffortFor("openai/gpt-oss-120b")).toBe("low");
