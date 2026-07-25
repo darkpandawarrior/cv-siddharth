@@ -9,6 +9,142 @@ export type Writing = { lessons: Lesson[]; series: Series[]; archive: Archive[];
 export const writing: Writing = {
   "lessons": [
     {
+      "title": "Your thresholds do not belong in constants",
+      "slug": "thresholds-in-config",
+      "pillar": "data-integrity",
+      "series": "chain-of-custody",
+      "status": "ready",
+      "created": "2026-08-27",
+      "live": "",
+      "tags": [
+        "architecture",
+        "configuration",
+        "kotlin",
+        "refactoring",
+        "tuning"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Invariants are cheap. Silent corruption is not.",
+      "slug": "invariants-are-cheap",
+      "pillar": "data-integrity",
+      "series": "chain-of-custody",
+      "status": "ready",
+      "created": "2026-08-25",
+      "live": "",
+      "tags": [
+        "data-integrity",
+        "validation",
+        "architecture",
+        "kotlin",
+        "testing"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Every filter needs a documented exception",
+      "slug": "documented-exception",
+      "pillar": "data-integrity",
+      "series": "sensors-who-lie",
+      "status": "ready",
+      "created": "2026-08-20",
+      "live": "",
+      "tags": [
+        "android",
+        "filtering",
+        "edge-cases",
+        "code-quality",
+        "location"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Never silently change a number someone gets paid on",
+      "slug": "never-silently-change-a-number",
+      "pillar": "data-integrity",
+      "series": "chain-of-custody",
+      "status": "ready",
+      "created": "2026-08-18",
+      "live": "",
+      "tags": [
+        "product-engineering",
+        "trust",
+        "ux",
+        "data-integrity",
+        "android"
+      ],
+      "links": {}
+    },
+    {
+      "title": "When two sensors disagree, rank them",
+      "slug": "accelerometer-outranks-gps",
+      "pillar": "data-integrity",
+      "series": "sensors-who-lie",
+      "status": "ready",
+      "created": "2026-08-13",
+      "live": "",
+      "tags": [
+        "android",
+        "sensors",
+        "sensor-fusion",
+        "imu",
+        "location"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Your data model is where uncertainty goes to die",
+      "slug": "uncertainty-dies-in-data-model",
+      "pillar": "data-integrity",
+      "series": "chain-of-custody",
+      "status": "ready",
+      "created": "2026-08-11",
+      "live": "",
+      "tags": [
+        "data-modelling",
+        "architecture",
+        "provenance",
+        "sensors",
+        "api-design"
+      ],
+      "links": {}
+    },
+    {
+      "title": "One global threshold is how you delete valid data",
+      "slug": "one-global-threshold",
+      "pillar": "data-integrity",
+      "series": "sensors-who-lie",
+      "status": "ready",
+      "created": "2026-08-06",
+      "live": "",
+      "tags": [
+        "android",
+        "location",
+        "thresholds",
+        "heuristics",
+        "sensor-fusion"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Filtered should never mean deleted",
+      "slug": "filtered-never-deleted",
+      "pillar": "data-integrity",
+      "series": "sensors-who-lie",
+      "status": "ready",
+      "created": "2026-08-04",
+      "live": "",
+      "tags": [
+        "android",
+        "data-modelling",
+        "filtering",
+        "observability",
+        "architecture"
+      ],
+      "links": {}
+    },
+    {
       "title": "collectAsState is quietly leaking your work",
       "slug": "collectasstate-leak",
       "pillar": "compose-performance",
@@ -114,6 +250,11 @@ export const writing: Writing = {
   ],
   "series": [
     {
+      "id": "chain-of-custody",
+      "title": "Chain Of Custody",
+      "episodes": 4
+    },
+    {
       "id": "ghosts-in-the-recomposition",
       "title": "Ghosts In The Recomposition",
       "episodes": 2
@@ -126,7 +267,7 @@ export const writing: Writing = {
     {
       "id": "sensors-who-lie",
       "title": "Sensors Who Lie",
-      "episodes": 1
+      "episodes": 5
     },
     {
       "id": "the-coroutine-court",
@@ -278,8 +419,20 @@ export const writing: Writing = {
   ],
   "cast": [
     {
+      "id": "the-concussed-witness",
+      "appearances": 5
+    },
+    {
+      "id": "the-archivist",
+      "appearances": 4
+    },
+    {
       "id": "the-recomposer",
       "appearances": 2
+    },
+    {
+      "id": "the-second-witness",
+      "appearances": 1
     },
     {
       "id": "the-understudy",
@@ -291,10 +444,6 @@ export const writing: Writing = {
     },
     {
       "id": "the-messenger",
-      "appearances": 1
-    },
-    {
-      "id": "the-concussed-witness",
       "appearances": 1
     }
   ]
