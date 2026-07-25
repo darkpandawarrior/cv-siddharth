@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseChatBlocks, parseJdFit } from "./chatBlocks.ts";
+import { parseChatBlocks, parseJdFit, plainText, speakableText } from "./chatBlocks.ts";
 import { projects, projectBySlug } from "../data/profile.ts";
 
 describe("parseChatBlocks", () => {
@@ -288,5 +288,59 @@ describe("widget-directive safety", () => {
       expect(block).toEqual({ kind: "widget", name: "project", arg: p.slug });
       expect(projectBySlug(p.slug)).toBe(p);
     }
+  });
+});
+
+// What the reader actually says out loud. Two bugs live here: speaking the
+// widget directives ("bracket bracket project colon mileway"), and speaking
+// markdown punctuation ("star star ninety-two percent star star").
+describe("speakableText", () => {
+  it("drops the widget directives entirely", () => {
+    expect(speakableText("Mileway is offline-first.\n\n[[project:mileway]]\n\nWant the case study?")).toBe(
+      "Mileway is offline-first. Want the case study?",
+    );
+    expect(speakableText("Every room on this site:\n\n[[rooms]]")).toBe("Every room on this site:");
+  });
+
+  it("still speaks the fit scorecard — it IS the answer, not navigation", () => {
+    const spoken = speakableText(
+      'Here is the read.\n\n[[jdfit:{"score":74,"role":"Android Lead","summary":"Strong core match.","strengths":[{"need":"Kotlin","evidence":"738k LOC"}],"gaps":[{"need":"8+ years","note":"I have 5+"}]}]]',
+    );
+    expect(spoken).toContain("Fit: 74/100");
+    expect(spoken).toContain("Strong core match.");
+    expect(spoken).not.toContain("[[");
+  });
+
+  it("strips markdown emphasis, headings, quotes, rules and list markers", () => {
+    expect(speakableText("**92%** of a _738k_ LOC app")).toBe("92% of a 738k LOC app");
+    expect(speakableText("## Results\n\n- 80% crash reduction\n- 95% GPS accuracy")).toBe(
+      "Results 80% crash reduction 95% GPS accuracy",
+    );
+    expect(speakableText("> He shipped it.\n\n---\n\n1. First\n2. Second")).toBe("He shipped it. First Second");
+    expect(speakableText("~~old~~ new")).toBe("old new");
+  });
+
+  it("speaks a link's words, never its href", () => {
+    const spoken = speakableText("Try [The Lab Bench](/lab) or [my résumé](/resume).");
+    expect(spoken).toBe("Try The Lab Bench or my résumé.");
+    expect(spoken).not.toContain("/lab");
+  });
+
+  it("unwraps inline code but drops a fenced block — nobody wants Kotlin read aloud", () => {
+    expect(speakableText("Type `/jd` to start.")).toBe("Type /jd to start.");
+    expect(speakableText("Like this:\n\n```kotlin\nval x = 1\n```\n\nThat's it.")).toBe("Like this: That's it.");
+    // A block still streaming has no closing fence yet — hide it anyway.
+    expect(speakableText("Like this:\n\n```kotlin\nval x =")).toBe("Like this:");
+  });
+
+  it("leaves ordinary prose (and its punctuation) alone", () => {
+    const prose = "I cut crashes 80% at Dice.tech — 50k+ MAU, 22k DAU. Want the numbers?";
+    expect(speakableText(prose)).toBe(prose);
+  });
+
+  it("is the copy text, minus the markdown — one source, two outputs", () => {
+    const reply = "**Mileway** is offline-first.\n\n[[project:mileway]]";
+    expect(plainText(reply)).toBe("**Mileway** is offline-first.");
+    expect(speakableText(reply)).toBe("Mileway is offline-first.");
   });
 });

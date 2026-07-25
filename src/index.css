@@ -949,3 +949,20 @@ html.resume-mode body {
 @media (prefers-reduced-motion: reduce) {
   .chat-streaming > :last-child::after { animation: none; }
 }
+
+/* Chat console: voice indicator.
+   One dot, two jobs — a green pulse while the mic is open, a cyan one while a
+   reply is being read aloud (src/FloatingChat.tsx). The same class also rides
+   the mic glyph itself so "we are recording" is unmistakable rather than a
+   colour change someone can miss. Reduced motion gets the dot, static: the
+   state is still carried by colour, by the label, and by the live region. */
+@keyframes voice-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.82); }
+}
+.voice-live {
+  animation: voice-live 1.2s var(--ease-out-quart) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-live { animation: none; }
+}

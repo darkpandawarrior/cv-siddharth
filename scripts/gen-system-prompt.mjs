@@ -24,6 +24,7 @@ import {
   siteRooms,
 } from "../src/data/profile.ts";
 import { SECTION_IDS } from "../src/lib/navigation.ts";
+import { ROUTE_PHRASES } from "../src/lib/chatContext.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outFile = join(root, "api", "_lib", "system-prompt.ts");
@@ -256,6 +257,17 @@ const banner = (script) =>
   "// import across ../../src (cross-dir .ts imports break the function build).\n" +
   "// Run `npm run gen:system-prompt` to refresh after editing profile.ts.\n";
 
-writeFileSync(outFile, `${banner("gen-system-prompt.mjs")}export const SYSTEM_PROMPT = ${JSON.stringify(prompt)};\n`);
+/* ── Route allowlist for the ambient route context ────────────────────────
+ * The console tells the server which page the visitor is on. That is
+ * client-supplied data, so the server validates it against THIS map (emitted
+ * from src/lib/chatContext.ts, the same table the chips and the greeting come
+ * from) and injects the matching phrase itself — the visitor's string is never
+ * what reaches the model, only a key into a list written here at build time. */
+const routeMap = `export const ROUTE_PHRASES: Record<string, string> = ${JSON.stringify(ROUTE_PHRASES, null, 2)};\n`;
+
+writeFileSync(
+  outFile,
+  `${banner("gen-system-prompt.mjs")}export const SYSTEM_PROMPT = ${JSON.stringify(prompt)};\n\n${routeMap}`,
+);
 writeFileSync(jdOutFile, `${banner("gen-system-prompt.mjs")}export const JD_SYSTEM_PROMPT = ${JSON.stringify(jdPrompt)};\n`);
 console.log(`[gen-system-prompt] wrote ${prompt.length} chars (chat) + ${jdPrompt.length} chars (jd) from profile.ts`);

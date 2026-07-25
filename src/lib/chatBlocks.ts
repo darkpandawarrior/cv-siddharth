@@ -154,6 +154,59 @@ export function parseJdFit(raw: string): JdFitReport | null {
 }
 
 /**
+ * A reply as words, not machinery — directives would paste (or be READ ALOUD)
+ * as garbage. Used by the copy button and, via speakableText, by the reader.
+ */
+export function plainText(content: string): string {
+  return parseChatBlocks(content)
+    .flatMap((b) => {
+      if (b.kind === "text") return [b.text];
+      // The scorecard is the exception: it IS the answer, so copying only the
+      // sentence around it hands a recruiter an empty quote. Every other
+      // widget is navigation, which doesn't survive a paste anyway.
+      return b.name === "jdfit" && b.data ? [jdFitText(b.data)] : [];
+    })
+    .join("\n\n");
+}
+
+export function jdFitText(r: JdFitReport): string {
+  const lines = [`Fit: ${r.score}/100${r.role ? ` — ${r.role}` : ""}`, r.summary];
+  if (r.strengths.length) lines.push("", "Matches:", ...r.strengths.map((s) => `- ${s.need}: ${s.evidence}`));
+  if (r.gaps.length) lines.push("", "Gaps:", ...r.gaps.map((g) => `- ${g.need}: ${g.note}`));
+  return lines.join("\n");
+}
+
+/**
+ * A reply as something a speech synthesiser should say out loud.
+ *
+ * plainText already removes the widget directives — speaking "bracket bracket
+ * project colon mileway" is the bug this starts from. Markdown is the second
+ * half: every provider writes **bold**, `code`, [links](/lab) and "- " bullets,
+ * and a synthesiser reads the punctuation. A fenced code block is dropped
+ * outright rather than flattened; nobody wants a Kotlin snippet read to them.
+ *
+ * Order matters: fences before inline code, bold before italic (`**x**` would
+ * otherwise be eaten as two italics), links before emphasis (a link label can
+ * contain either).
+ */
+export function speakableText(content: string): string {
+  return plainText(content)
+    .replace(/```[\s\S]*?(?:```|$)/g, " ") // fenced code, including one still streaming
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1") // image → its alt text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // link → its label, never the href
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s{0,3}>\s?/gm, "")
+    .replace(/^\s{0,3}(?:[-*_]\s*){3,}$/gm, " ") // horizontal rule
+    .replace(/^\s*(?:[-*+]|\d+[.)])\s+/gm, "")
+    .replace(/(\*\*|__)(.+?)\1/g, "$2")
+    .replace(/(?<![\w*])[*_](?=\S)([^*_]+?)(?<=\S)[*_](?![\w*])/g, "$1")
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * Splits a (possibly still-streaming) assistant reply into renderable blocks.
  * Unknown widget names are returned as-is — validating them against the real
  * data is the renderer's job, so this stays a pure string function.

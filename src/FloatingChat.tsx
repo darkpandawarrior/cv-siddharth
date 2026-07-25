@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { Check, Copy, Maximize2, MessageCircle, Minimize2, RotateCw, Send, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Volume2, VolumeX, X } from "lucide-react";
 import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
-import { parseChatBlocks, type JdFitReport } from "./lib/chatBlocks.ts";
+import { plainText, speakableText } from "./lib/chatBlocks.ts";
+import { HOME_GREETING, JD_PROMPT, canonicalRoute, chipsFor, greetingFor } from "./lib/chatContext.ts";
+import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, type ChatMessage } from "./lib/chatClient.ts";
 
 /**
@@ -15,29 +17,19 @@ import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, 
  *  2. Slash commands — `/projects`, `/open <slug>`, `/rooms`… run locally with
  *     no model call, with the same ghost-completion + ↑/↓ history the terminal
  *     has, so the two surfaces feel like one system.
- *  3. The conversation survives navigation (the panel is mounted per route).
+ *  3. The conversation survives navigation (the panel is mounted per route) —
+ *     and it KNOWS which route that is: the chips, the greeting and the
+ *     server's system prompt are all route-aware (src/lib/chatContext.ts).
+ *  4. Voice, both ways, on the browser's own Web Speech APIs (src/lib/voice.ts).
  */
 
-// The one chip that doesn't ask a question: it opens the JD composer instead
-// (see the `q === JD_PROMPT` branch where the chips are rendered). Recruiters
-// are the audience this site is for, so it goes first and never gets filtered
-// out by the "already asked" rule — its text never lands in the transcript.
-const JD_PROMPT = "Paste a job description — I'll assess fit";
-
-const QUICK_PROMPTS = [
-  JD_PROMPT,
-  "What can I do on this site?",
-  "Show me the interactive demos",
-  "How did you get GPS accuracy to 95%?",
-  "Which project should I look at first?",
-  "Tell me about the Compose migration",
-];
-
-const GREETING: ChatMessage = {
-  role: "assistant",
-  content:
-    "Hi, I'm **Sid** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.",
-};
+// The greeting is a SENTINEL as much as a message: `m !== GREETING` is how the
+// panel keeps it out of localStorage, out of the model's history and out of
+// the copy/regenerate affordances. What's RENDERED for it comes from the
+// current route (greetingFor), so the object identity has to stay stable —
+// never rebuild this per render. The content below is the home text, kept as
+// the fallback for any path that reads it directly.
+const GREETING: ChatMessage = { role: "assistant", content: HOME_GREETING };
 
 /** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
 const COLLAPSE_TURN_CHARS = 400;
@@ -150,26 +142,19 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
 ];
 
 const ICON_BUTTON = "rounded p-1 text-muted transition hover:text-accent focus-visible:text-accent focus-visible:outline-none";
+// The composer's round controls (mic, reader, send) — same 36px hit target as
+// the send button so a phone user can hit any of them.
+const COMPOSER_BUTTON =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line transition focus-visible:border-accent focus-visible:outline-none";
 
-/** Copy the words, not the machinery — directives would paste as garbage. */
-function plainText(content: string) {
-  return parseChatBlocks(content)
-    .flatMap((b) => {
-      if (b.kind === "text") return [b.text];
-      // The scorecard is the exception: it IS the answer, so copying only the
-      // sentence around it hands a recruiter an empty quote. Every other
-      // widget is navigation, which doesn't survive a paste anyway.
-      return b.name === "jdfit" && b.data ? [jdFitText(b.data)] : [];
-    })
-    .join("\n\n");
-}
-
-function jdFitText(r: JdFitReport): string {
-  const lines = [`Fit: ${r.score}/100${r.role ? ` — ${r.role}` : ""}`, r.summary];
-  if (r.strengths.length) lines.push("", "Matches:", ...r.strengths.map((s) => `- ${s.need}: ${s.evidence}`));
-  if (r.gaps.length) lines.push("", "Gaps:", ...r.gaps.map((g) => `- ${g.need}: ${g.note}`));
-  return lines.join("\n");
-}
+/**
+ * The honest version of what "voice input" does. Chrome's SpeechRecognition is
+ * not on-device — it streams audio to Google's speech service — and this site
+ * has already had to correct one privacy claim it couldn't back up. Short,
+ * accurate, on the control itself rather than buried in a privacy page.
+ */
+const MIC_DISCLOSURE =
+  "Voice input is transcribed by your browser's speech service — in Chrome that means the audio is sent to Google.";
 
 export function FloatingChat() {
   const [open, setOpen] = useState(false);
@@ -187,11 +172,51 @@ export function FloatingChat() {
   // null = normal composer; a string (possibly empty) = the JD paste box is up.
   const [jd, setJd] = useState<string | null>(null);
   const navigate = useNavigate();
+  // Where the visitor is standing. Drives the chips, the greeting, and the one
+  // route field the server gets (which it re-validates — see validateRoute).
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const jdRef = useRef<HTMLTextAreaElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const firstSaveRef = useRef(true);
+  // Whatever was already typed when the mic was pressed — a half-written
+  // question must survive dictating the rest of it.
+  const voicePrefixRef = useRef("");
+  const spokenRef = useRef<string | null>(null);
+
+  /* ── Voice ────────────────────────────────────────────────────────────
+   * Speech-to-text FILLS the composer; it never submits on its own. A
+   * recogniser mishears, and the two things a wrong send costs here are both
+   * unrecoverable by the visitor: a wrong question in a transcript they can't
+   * edit, and one of a small number of rate-limited model calls. Filling puts
+   * the words in front of them with the caret ready — Enter is one keystroke,
+   * and a misheard word is one backspace instead of one wasted turn. */
+  const onTranscript = useCallback((text: string, final: boolean) => {
+    const prefix = voicePrefixRef.current;
+    setInput(prefix && text ? `${prefix} ${text}` : prefix + text);
+    setMenuHidden(true); // a dictated "/" must not pop the command menu open
+    // Hand the caret back on the last result: the words are there, Enter sends
+    // them, and a misheard one is a backspace rather than a wasted turn.
+    if (final) inputRef.current?.focus();
+  }, []);
+  const mic = useSpeechInput(onTranscript);
+  const reader = useSpeechOutput();
+  const { enabled: readAloud, speak, stop: stopSpeech } = reader;
+  const { cancel: cancelMic } = mic;
+
+  function toggleMic() {
+    if (mic.listening) return mic.stop();
+    voicePrefixRef.current = input.trim();
+    mic.start();
+  }
+
+  function toggleReader() {
+    // Turning it back on should read what's on screen, so forget what was
+    // already spoken — otherwise the second press is a dead click.
+    if (reader.enabled) spokenRef.current = null;
+    reader.toggle();
+  }
 
   /* ── Persistence ──────────────────────────────────────────────────────
    * Read in an effect, never in a state initializer: this component is
@@ -277,6 +302,28 @@ export function FloatingChat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Closing the panel — by the X, by Esc, or by following a link out of a
+  // reply — must silence it. A voice reading a page the visitor has left, or a
+  // mic still open behind a closed panel, is the worst failure mode here.
+  useEffect(() => {
+    if (open) return;
+    stopSpeech();
+    cancelMic();
+  }, [open, stopSpeech, cancelMic]);
+
+  // Read a reply once it has SETTLED, not as it streams: speaking a token at a
+  // time stutters, and speechSynthesis has no way to append to an utterance
+  // mid-sentence. Keyed on the content, so Regenerate re-reads the new answer
+  // while a re-render of the same one stays quiet.
+  useEffect(() => {
+    if (busy || !readAloud) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant" || last === GREETING || !last.content) return;
+    if (spokenRef.current === last.content) return;
+    spokenRef.current = last.content;
+    speak(speakableText(last.content));
+  }, [messages, busy, readAloud, speak]);
+
   // Fire a deep-linked question (or a pasted JD) once the widget is open and idle.
   useEffect(() => {
     if (open && pendingAsk && !busy) {
@@ -295,6 +342,7 @@ export function FloatingChat() {
   async function send(text: string, base: ChatMessage[] = messages, mode?: "jd") {
     const content = text.trim();
     if (!content || busy) return;
+    stopSpeech(); // a new question cuts off the previous answer mid-sentence
     setBusy(true);
     const history: ChatMessage[] =
       mode === "jd" ? [{ role: "user", content }] : [...base.filter((m) => m !== GREETING), { role: "user", content }];
@@ -311,6 +359,7 @@ export function FloatingChat() {
           });
         },
         mode,
+        canonicalRoute(pathname),
       );
     } catch (err) {
       console.error(err);
@@ -437,9 +486,15 @@ export function FloatingChat() {
   // The quick prompts double as follow-ups: after every settled reply the user
   // gets a few next steps they haven't asked yet, instead of the chips
   // disappearing forever after the first question. No second model call.
+  //
+  // They're also route-aware: on /project/mileway they ask about Mileway, in a
+  // room they ask about that room. Derived from profile.ts (chatContext.ts),
+  // never per-slug copy that drifts when a project is renamed.
   const asked = new Set(messages.flatMap((m) => (m.role === "user" ? [m.content] : [])));
   const settled = !busy && messages[messages.length - 1]?.role === "assistant";
-  const suggestions = settled ? QUICK_PROMPTS.filter((q) => !asked.has(q)).slice(0, messages.length === 1 ? 5 : 3) : [];
+  const chips = useMemo(() => chipsFor(pathname), [pathname]);
+  const greeting = useMemo(() => greetingFor(pathname), [pathname]);
+  const suggestions = settled ? chips.filter((q) => !asked.has(q)).slice(0, messages.length === 1 ? 5 : 3) : [];
   // Regenerating a local command would just re-send "/rooms" to the model, and
   // replaying a pasted JD through ordinary chat would send a truncated copy of
   // it against the wrong prompt — paste it again instead.
@@ -538,7 +593,11 @@ export function FloatingChat() {
                       {streaming && !m.content ? (
                         <span className="animate-pulse text-muted">thinking…</span>
                       ) : (
-                        <ChatMessageBody content={m.content} onNavigate={() => setOpen(false)} />
+                        // The greeting is rendered from the CURRENT route, not
+                        // from its stored content — that's what makes it
+                        // acknowledge where you are without ever becoming a
+                        // second message or resetting the conversation.
+                        <ChatMessageBody content={m === GREETING ? greeting : m.content} onNavigate={() => setOpen(false)} />
                       )}
                     </div>
                     {!streaming && m !== GREETING && m.content && (
@@ -600,6 +659,40 @@ export function FloatingChat() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Voice status. The live region is always mounted (an aria-live
+              region added at the same moment as its text is unreliably
+              announced); the visible strip only appears when there IS
+              something, so the composer doesn't grow a permanent bar. */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {mic.listening ? "Listening. Speak your question." : mic.error ? mic.error : reader.speaking ? "Reading the reply aloud." : ""}
+          </p>
+          {(mic.listening || mic.error || reader.speaking) && (
+            <div className="flex items-start gap-2 border-t border-line bg-surface px-3 pt-2 text-[11px] leading-snug">
+              {mic.listening ? (
+                <>
+                  <span aria-hidden className="voice-live mt-1 h-2 w-2 shrink-0 rounded-full bg-accent" />
+                  <span className="text-muted">
+                    <span className="text-accent">Listening…</span> {MIC_DISCLOSURE}
+                  </span>
+                </>
+              ) : mic.error ? (
+                <span className="text-accent2">{mic.error}</span>
+              ) : (
+                <>
+                  <span aria-hidden className="voice-live mt-1 h-2 w-2 shrink-0 rounded-full bg-accent2" />
+                  <span className="text-muted">Reading the reply aloud.</span>
+                  <button
+                    type="button"
+                    onClick={reader.stop}
+                    className="ml-auto shrink-0 rounded-full border border-line px-2 py-0.5 text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                  >
+                    Stop
+                  </button>
+                </>
+              )}
+            </div>
           )}
 
           {jdOpen ? (
@@ -714,6 +807,51 @@ export function FloatingChat() {
                 </span>
               )}
             </div>
+            {/* Voice is an ADDITION, never the only way to do anything: every
+                one of these has a typed equivalent. Where an API is missing
+                (Firefox ships no SpeechRecognition) the control stays visible
+                but inert — aria-disabled rather than `disabled`, so it keeps
+                its place in the tab order and a screen-reader user can still
+                read WHY it's off instead of finding a button that does
+                nothing. */}
+            <button
+              type="button"
+              onClick={mic.supported ? toggleMic : undefined}
+              aria-pressed={mic.listening}
+              aria-disabled={!mic.supported}
+              aria-label={mic.supported ? "Ask by voice" : "Ask by voice — not supported in this browser"}
+              title={mic.supported ? MIC_DISCLOSURE : "This browser doesn't do speech recognition — type your question instead."}
+              className={`${COMPOSER_BUTTON} ${
+                !mic.supported
+                  ? "cursor-not-allowed border-line text-muted opacity-50"
+                  : mic.listening
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              <Mic size={15} className={mic.listening ? "voice-live" : undefined} />
+            </button>
+            <button
+              type="button"
+              onClick={reader.supported ? toggleReader : undefined}
+              aria-pressed={reader.enabled}
+              aria-disabled={!reader.supported}
+              aria-label={reader.supported ? "Read replies aloud" : "Read replies aloud — not supported in this browser"}
+              title={
+                reader.supported
+                  ? "Read replies aloud. Off until you turn it on — nothing plays on its own."
+                  : "This browser doesn't do speech synthesis."
+              }
+              className={`${COMPOSER_BUTTON} ${
+                !reader.supported
+                  ? "cursor-not-allowed border-line text-muted opacity-50"
+                  : reader.enabled
+                    ? "border-accent2 bg-accent2/15 text-accent2"
+                    : "text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {reader.enabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            </button>
             <button
               type="submit"
               disabled={busy || !input.trim()}

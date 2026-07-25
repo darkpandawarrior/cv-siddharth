@@ -84,18 +84,27 @@ export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
  * pasted description goes up ALONE — no transcript — so the raised cap can
  * only ever be spent on the thing it was raised for, and the model reads the
  * description as the one piece of data it was asked to analyse.
+ *
+ * `route` is where the visitor is standing (src/lib/chatContext.ts). It is a
+ * hint, not a turn: the server validates it against its own allowlist and
+ * appends it to the SYSTEM prompt, so it can never read as something the
+ * visitor said. JD mode doesn't send it — that path is one pasted document,
+ * and the page it was pasted from tells the analyzer nothing.
  */
 export async function streamReply(
   messages: ChatMessage[],
   onDelta: (text: string) => void,
   mode?: "jd",
+  route?: string,
 ): Promise<void> {
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     // Trimmed HERE, at the one place every surface streams through, rather
     // than in each caller — a future third caller can't reintroduce the bug.
-    body: JSON.stringify(mode === "jd" ? { messages: messages.slice(-1), mode } : { messages: trimHistory(messages) }),
+    body: JSON.stringify(
+      mode === "jd" ? { messages: messages.slice(-1), mode } : { messages: trimHistory(messages), route },
+    ),
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
