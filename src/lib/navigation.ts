@@ -48,7 +48,7 @@ function prefersReducedMotion() {
 // Exported so scripts/gen-system-prompt.mjs derives the assistant's list of
 // linkable home sections from here instead of hand-mirroring it (this file's
 // generator warns that hand-mirroring is how a past drift bug happened).
-export const SECTION_IDS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
+export const SECTION_IDS = new Set(["top", "fit", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
 
 export type HashTarget =
   | { kind: "section"; id: string }

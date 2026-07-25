@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, TerminalSquare } from "lucide-react";
+import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, Target, TerminalSquare } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
@@ -34,6 +34,14 @@ export function CommandPalette() {
   const commands = useMemo<PaletteCommand[]>(
     () => [
       { id: "top", label: "Top / Hero", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("top") },
+      {
+        id: "fit",
+        label: "Fit check — paste a job description",
+        hint: "Jump",
+        keywords: "jd job description recruiter hiring role match score analyse analyze fit",
+        icon: <Target size={15} />,
+        run: () => goToSection("fit"),
+      },
       { id: "work", label: "Case studies", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("work") },
       { id: "projects-section", label: "Projects", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("projects") },
       { id: "experience", label: "Experience", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("experience") },

@@ -13,11 +13,13 @@ import {
   Globe,
   Play,
   LayoutGrid,
+  Target,
 } from "lucide-react";
 import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia } from "./data/profile.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
+import { FitCheck } from "./FitCheck.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
 import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
@@ -83,6 +85,9 @@ function repoStatLine(slug: string): string | null {
 }
 
 const NAV_LINKS = [
+  // First on purpose: recruiters are who this site is for, and the fit
+  // analyzer is the one thing here they can't get from a PDF.
+  { href: "#fit", label: "Fit check" },
   { href: "#work", label: "Case studies" },
   { href: "#projects", label: "Projects" },
   { href: "#experience", label: "Experience" },
@@ -220,7 +225,12 @@ function Nav() {
   const { goToSection } = useSectionNav();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur print:hidden">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      {/* max-w-6xl, not the page's max-w-5xl: at 5xl the link row was already
+          exactly at capacity (976px of space for 976px of links), so adding
+          "Fit check" squeezed two labels onto two lines. A nav bar sitting a
+          little wider than the prose column is the cheaper fix — nothing else
+          on the page moves, and no existing link had to shrink or leave. */}
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <button
           type="button"
           onClick={() => goToSection("top")}
@@ -229,7 +239,9 @@ function Nav() {
         >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
-        <div className="hidden items-center gap-6 text-sm text-zinc-400 lg:flex">
+        {/* gap-3 at lg (where the bar is only ~1009px wide and every label has
+            to stay on one line), back to gap-6 once max-w-6xl actually fits. */}
+        <div className="hidden items-center gap-3 text-sm text-zinc-400 lg:flex xl:gap-6">
           {NAV_LINKS.map((l) => (
             <button
               key={l.href}
@@ -287,6 +299,15 @@ function Hero() {
             className="btn-primary rounded-full bg-accent px-6 py-2.5 font-semibold text-ink hover:bg-accent-dim"
           >
             Chat with my AI assistant
+          </button>
+          {/* The recruiter CTA. Accent2, not accent — it reads as a second
+              distinct offer rather than competing with the chat button. */}
+          <button
+            type="button"
+            onClick={() => goToSection("fit")}
+            className="flex items-center gap-2 rounded-full border border-accent2/40 bg-accent2/5 px-6 py-2.5 font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+          >
+            <Target size={15} /> Paste a job description
           </button>
           <Link
             to="/resume"
@@ -1125,6 +1146,11 @@ export function HomePage() {
       <main id="main-content" tabIndex={-1}>
         <Hero />
         <Metrics />
+        {/* Straight after the numbers: they're what makes a recruiter want to
+            check fit, and the scorecard links down into the case studies that
+            follow it. Below the hero, so it costs LCP nothing. */}
+        <FitCheck />
+        <Circuit />
         <CaseStudies />
         <Projects />
         <ExperienceSection />

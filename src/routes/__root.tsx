@@ -150,10 +150,10 @@ const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "com
 // section — left alone, the hash just changes the URL to e.g. `/lab#top`
 // with nothing on the page to scroll to. Route home instead.
 // All home-page section ids (App.tsx: top/work/projects/experience/skills/
-// contact; ReposShowcase: source; WritingSection: writing). Footer + command
-// palette link to every one of these from non-home routes, so all must route
-// home — omitting `source`/`writing` stranded those two.
-const SECTION_ANCHORS = new Set(["top", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
+// contact; FitCheck: fit; ReposShowcase: source; WritingSection: writing).
+// Footer + command palette link to every one of these from non-home routes, so
+// all must route home — omitting `source`/`writing` stranded those two.
+const SECTION_ANCHORS = new Set(["top", "fit", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
 
 function HashCompat() {
   const router = useRouter();

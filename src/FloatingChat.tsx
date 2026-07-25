@@ -4,7 +4,7 @@ import { Check, Copy, Maximize2, MessageCircle, Minimize2, RotateCw, Send, X } f
 import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { parseChatBlocks, type JdFitReport } from "./lib/chatBlocks.ts";
-import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, streamReply, type ChatMessage } from "./lib/chatClient.ts";
+import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, type ChatMessage } from "./lib/chatClient.ts";
 
 /**
  * The console — the AI assistant, as a terminal-flavoured panel.
@@ -48,12 +48,28 @@ const COLLAPSE_TURN_CHARS = 400;
 const STORE_KEY = "sid-chat-v1";
 const MAX_STORED = 24;
 
-// Lets any button on the page open the widget without prop drilling.
-// Pass a question to have the assistant asked it immediately — every card
-// can deep-link straight into a conversation about itself.
+/* ── Opening the console from anywhere ───────────────────────────────────
+ * One custom event, two shapes of payload, so no caller needs prop drilling:
+ *  - a string  → ask that question (every card deep-links into a conversation
+ *    about itself). This is `openChat(question?)`, unchanged.
+ *  - `{ mode: "jd", text }` → run the fit analyzer on a pasted job description.
+ *    This is what the home page's Fit check section (src/FitCheck.tsx) sends,
+ *    so the section owns the textarea and NOTHING else: the request, the
+ *    streaming and the scorecard stay in the one JD path below. */
 const OPEN_CHAT_EVENT = "open-chat";
+type OpenChatDetail = string | { mode: "jd"; text: string };
+
+function dispatchOpen(detail?: OpenChatDetail) {
+  window.dispatchEvent(new CustomEvent<OpenChatDetail | undefined>(OPEN_CHAT_EVENT, { detail }));
+}
+
 export function openChat(question?: string) {
-  window.dispatchEvent(new CustomEvent(OPEN_CHAT_EVENT, { detail: question }));
+  dispatchOpen(question);
+}
+
+/** Open the console straight into a fit analysis of `text`. */
+export function openJdFit(text: string) {
+  dispatchOpen({ mode: "jd", text });
 }
 
 /* ── Slash commands ──────────────────────────────────────────────────────
@@ -161,7 +177,9 @@ export function FloatingChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [pendingAsk, setPendingAsk] = useState<string | null>(null);
+  // A turn queued by openChat()/openJdFit() before the panel was ready. Carries
+  // the mode so a JD arriving from the page runs down the same path `/jd` does.
+  const [pendingAsk, setPendingAsk] = useState<{ text: string; mode?: "jd" } | null>(null);
   const [menuIndex, setMenuIndex] = useState(0);
   const [menuHidden, setMenuHidden] = useState(false);
   const [histCursor, setHistCursor] = useState<number | null>(null);
@@ -208,8 +226,17 @@ export function FloatingChat() {
   useEffect(() => {
     const onOpen = (e: Event) => {
       setOpen(true);
-      const q = (e as CustomEvent).detail;
-      if (typeof q === "string" && q.trim()) setPendingAsk(q);
+      const detail = (e as CustomEvent<OpenChatDetail | undefined>).detail;
+      if (typeof detail === "string") {
+        if (detail.trim()) setPendingAsk({ text: detail });
+        return;
+      }
+      if (detail?.mode === "jd" && detail.text.trim()) {
+        // Clamped here as well as at the textarea: this event is reachable by
+        // any caller, and the raised JD cap is the one the server enforces.
+        setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
+        setJd(null); // a half-typed paste box would outlive the analysis it started
+      }
     };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
@@ -250,12 +277,12 @@ export function FloatingChat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Fire a deep-linked question once the widget is open and idle.
+  // Fire a deep-linked question (or a pasted JD) once the widget is open and idle.
   useEffect(() => {
     if (open && pendingAsk && !busy) {
-      const q = pendingAsk;
+      const { text, mode } = pendingAsk;
       setPendingAsk(null);
-      void send(q);
+      void send(text, messages, mode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, pendingAsk, busy]);
@@ -592,9 +619,7 @@ export function FloatingChat() {
                 <label htmlFor="jd-input" className="font-mono text-[10px] uppercase tracking-widest text-accent2">
                   job description → fit analysis
                 </label>
-                <span
-                  className={`font-mono text-[10px] ${jd!.length > JD_MAX_CHARS * 0.9 ? "text-accent" : "text-muted"}`}
-                >
+                <span className={`font-mono text-[10px] ${isJdNearCap(jd!.length) ? "text-accent" : "text-muted"}`}>
                   {jd!.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
                 </span>
               </div>

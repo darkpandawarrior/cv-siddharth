@@ -5,6 +5,7 @@ import {
   MAX_SENT_TURNS,
   MAX_TURN_CHARS,
   chatErrorText,
+  isJdNearCap,
   streamReply,
   trimHistory,
   type ChatMessage,
@@ -101,6 +102,18 @@ describe("streamReply", () => {
     // Not trimmed (the server's jd cap is 12k) and not accompanied by history:
     // the raised cap can only ever be spent on the description itself.
     expect(sentBody!.messages).toEqual([{ role: "user", content: paste }]);
+  });
+});
+
+// Two surfaces render a JD paste box against the same cap — the console's
+// composer and the home page's Fit check section. Pinning the threshold here
+// is what stops one of them drifting to a different "you're near the limit".
+describe("isJdNearCap", () => {
+  it("stays cold well under the cap and goes warm in the last 10%", () => {
+    expect(isJdNearCap(0)).toBe(false);
+    expect(isJdNearCap(JD_MAX_CHARS * 0.9)).toBe(false);
+    expect(isJdNearCap(JD_MAX_CHARS * 0.9 + 1)).toBe(true);
+    expect(isJdNearCap(JD_MAX_CHARS)).toBe(true);
   });
 });
 

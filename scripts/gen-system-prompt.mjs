@@ -69,7 +69,12 @@ const roomLines = siteRooms.map((r) => `- **${r.label}** (${r.to}) — ${r.blurb
 // instead of describing it. `detail` marks the ones with a full write-up.
 // Derived from the router's own SECTION_IDS so this list can never drift
 // from the sections HashCompat/useSectionNav actually accept.
-const SECTION_LABELS = { top: "hero", work: "case studies", source: "public repos" };
+const SECTION_LABELS = {
+  top: "hero",
+  fit: "paste a job description, get an honest fit scorecard — the same analyzer as /jd in this console",
+  work: "case studies",
+  source: "public repos",
+};
 const sectionList = [...SECTION_IDS].map((id) => `/#${id}${SECTION_LABELS[id] ? ` (${SECTION_LABELS[id]})` : ""}`).join(", ");
 
 const projectRouteLines = projects

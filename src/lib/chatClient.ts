@@ -59,6 +59,16 @@ export const MAX_TURN_CHARS: Record<ChatMessage["role"], number> = { user: 2000,
 /** How much of a job description the JD analyzer accepts — matches the server. */
 export const JD_MAX_CHARS = 12_000;
 
+/**
+ * When the character counter should go warm. Two surfaces render a JD paste box
+ * against the same cap — the console's composer (src/FloatingChat.tsx) and the
+ * home page's Fit check section (src/FitCheck.tsx) — so the "you're near the
+ * limit" threshold lives here rather than as a magic 0.9 in each of them.
+ */
+export function isJdNearCap(length: number): boolean {
+  return length > JD_MAX_CHARS * 0.9;
+}
+
 export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
   return messages.slice(-MAX_SENT_TURNS).map((m) => {
     const max = MAX_TURN_CHARS[m.role];

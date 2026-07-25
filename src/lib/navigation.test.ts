@@ -21,6 +21,10 @@ describe("classifyHash", () => {
     expect(classifyHash("#work")).toEqual({ kind: "section", id: "work" });
     expect(classifyHash("#top")).toEqual({ kind: "section", id: "top" });
     expect(classifyHash("#source")).toEqual({ kind: "section", id: "source" });
+    // The Fit check section: nav, hero CTA, footer, palette and the assistant's
+    // own `/#fit` links all route through here. Miss it in SECTION_IDS and it
+    // falls through to `{ kind: "route", to: "/fit" }` — a 404.
+    expect(classifyHash("#fit")).toEqual({ kind: "section", id: "fit" });
   });
 
   it("classifies project slugs", () => {
