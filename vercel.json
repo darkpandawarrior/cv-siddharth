@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "tanstack-start",
+  "buildCommand": "npm run build",
   "regions": ["bom1"],
   "redirects": [
     { "source": "/p/resume", "destination": "/resume", "permanent": true },
