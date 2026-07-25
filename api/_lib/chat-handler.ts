@@ -621,8 +621,51 @@ export const PROVIDERS: Provider[] = [
  * the fast provider, and each still falls through the whole list on failure.
  * The old fixed order sent the expensive request to the tightest tier first.
  */
-export function providerOrderFor(mode: ChatMode): string[] {
-  return mode === "jd" ? ["gemini", "cerebras", "groq", "anthropic"] : ["groq", "cerebras", "gemini", "anthropic"];
+/** Roomy-first, for anything that won't comfortably fit Groq's minute. */
+const ROOMY_FIRST = ["gemini", "cerebras", "groq", "anthropic"];
+/** Fast-first, for small latency-sensitive turns. */
+const FAST_FIRST = ["groq", "cerebras", "gemini", "anthropic"];
+
+/**
+ * Roughly how many tokens a request will cost, from its characters.
+ *
+ * ~4 chars per token is the usual English approximation and it does not need to
+ * be better than that: this only decides which provider to TRY first, and being
+ * wrong costs one failover, not a failed request.
+ */
+export function estimateTokens(system: string, messages: ChatMessage[], maxOutput: number): number {
+  const chars = system.length + messages.reduce((n, m) => n + m.content.length, 0);
+  return Math.ceil(chars / 4) + maxOutput;
+}
+
+/**
+ * Groq's free ceiling is 8,000 tokens per MINUTE. Anything estimated above this
+ * is odds-on to trip it, so it starts at the roomy provider instead — the
+ * margin below 8K absorbs the estimator being approximate.
+ */
+const GROQ_TPM_HEADROOM = 7_000;
+
+/**
+ * Which provider to try first, given what this request actually costs.
+ *
+ * Not a preference — arithmetic. Every call carries a ~5,000-token system
+ * prompt, and the free tiers differ by more than an order of magnitude:
+ *
+ *   groq      8K TPM   ·  200K/day  · fastest by a wide margin
+ *   gemini  ~250K TPM  ·  generous  · slower, ~30x the per-minute room
+ *   cerebras ~30K TPM  ·            · fast, sits between the two
+ *
+ * Mode alone was too blunt a proxy. A JD analysis is ~6,800 tokens and clearly
+ * belongs on the roomy tier — but so does a long chat thread, and this endpoint
+ * allows 24,000 characters of history, which lands around 11,000 tokens once
+ * the system prompt is counted. Routing on mode would have sent that to the 8K
+ * tier and called it a small request. Size is measured instead; mode only
+ * breaks the tie for a JD that happens to be short, since those are still
+ * bursty (three per minute are allowed) and TPM is a per-minute budget.
+ */
+export function providerOrderFor(mode: ChatMode, estimatedTokens = 0): string[] {
+  if (estimatedTokens > GROQ_TPM_HEADROOM) return ROOMY_FIRST;
+  return mode === "jd" ? ROOMY_FIRST : FAST_FIRST;
 }
 
 /**
@@ -634,14 +677,14 @@ export function providerOrderFor(mode: ChatMode): string[] {
  * CHAT_PROVIDER still pins a single provider, which is how you force a specific
  * one for testing without unsetting keys.
  */
-export function pickProviders(mode: ChatMode = "chat"): { provider: Provider; key: string }[] {
+export function pickProviders(mode: ChatMode = "chat", estimatedTokens = 0): { provider: Provider; key: string }[] {
   const forced = process.env.CHAT_PROVIDER;
   if (forced) {
     const p = PROVIDERS.find((x) => x.name === forced);
     const key = p?.key();
     return p && key ? [{ provider: p, key }] : [];
   }
-  const order = providerOrderFor(mode);
+  const order = providerOrderFor(mode, estimatedTokens);
   return [...PROVIDERS]
     .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
     .map((provider) => ({ provider, key: provider.key() }))
@@ -836,9 +879,12 @@ export async function handleChat(request: Request): Promise<Response> {
    * endpoint spends ~5K of them on the system prompt alone — so a couple of
    * back-to-back analyses can exhaust a minute, and a busy afternoon can
    * exhaust a day. Before this loop, that was a dead chat. Now it's a handover. */
-  // Now the mode is known, so the list can be ordered by what this request
-  // actually costs — see providerOrderFor.
-  const providers = pickProviders(parsed.mode);
+  // Now the real payload is known, so the list can be ordered by what this
+  // request actually costs rather than by which mode it claims — see
+  // providerOrderFor. Measured on the OUTGOING messages, after condensing.
+  const system = systemPromptFor(parsed.mode, parsed.route);
+  const maxTokens = maxOutputTokensFor(parsed.mode);
+  const providers = pickProviders(parsed.mode, estimateTokens(system, outgoing, maxTokens));
 
   let upstream: Response | null = null;
   let served: Provider | null = null;
@@ -848,12 +894,7 @@ export async function handleChat(request: Request): Promise<Response> {
   for (const candidate of providers) {
     let res: Response;
     try {
-      res = await candidate.provider.request(
-        candidate.key,
-        outgoing,
-        systemPromptFor(parsed.mode, parsed.route),
-        maxOutputTokensFor(parsed.mode),
-      );
+      res = await candidate.provider.request(candidate.key, outgoing, system, maxTokens);
     } catch (err) {
       // A thrown request never reached the provider (DNS, TLS, timeout). That
       // says nothing about the next one, so it is always worth trying.

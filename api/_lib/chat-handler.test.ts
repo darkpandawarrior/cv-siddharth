@@ -7,6 +7,7 @@ import {
   handleChat,
   isAllowedOrigin,
   normalizeStream,
+  estimateTokens,
   pickProviders,
   reasoningEffortFor,
   rateLimitKey,
@@ -1002,6 +1003,34 @@ describe("provider failover", () => {
     delete process.env.CHAT_PROVIDER;
     expect(pickProviders("chat").map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
     expect(pickProviders("compose").map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+  });
+
+  /* Mode alone was too blunt. This endpoint allows 24,000 characters of chat
+   * history, which lands around 11,000 tokens once the ~5,000-token system
+   * prompt is counted — well past Groq's 8K-per-minute ceiling, but still
+   * "chat" mode. Size is what decides. */
+  it("sends a LONG chat thread to the roomy provider, despite being chat mode", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const long = estimateTokens("x".repeat(20_000), [{ role: "user", content: "y".repeat(20_000) }], 1024);
+    expect(long).toBeGreaterThan(7_000);
+    expect(pickProviders("chat", long).map((p) => p.provider.name)).toEqual(["gemini", "groq"]);
+  });
+
+  it("keeps a short chat turn on the fast provider", () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const small = estimateTokens("x".repeat(4_000), [{ role: "user", content: "hi" }], 1024);
+    expect(small).toBeLessThan(7_000);
+    expect(pickProviders("chat", small).map((p) => p.provider.name)).toEqual(["groq", "gemini"]);
+  });
+
+  it("estimates tokens from characters plus the output ceiling", () => {
+    // ~4 chars/token; only decides which provider to TRY first, so approximate
+    // is fine — being wrong costs one failover, not a failed request.
+    expect(estimateTokens("a".repeat(4_000), [{ role: "user", content: "b".repeat(400) }], 1024)).toBe(1000 + 100 + 1024);
   });
 
   it("still falls through the WHOLE list whichever end it starts from", () => {
