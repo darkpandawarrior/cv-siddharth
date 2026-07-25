@@ -722,7 +722,12 @@ function AskBlock({ question }: { question: string }) {
           done ? "" : "chat-streaming"
         }`}
       >
-        {text ? <ChatMessageBody content={text} /> : <Dim>thinking…</Dim>}
+        {/* Same blank-output hole the console panel had: `text` can be entirely
+            a directive that never closed, which renders to nothing — and an
+            empty answer that never arrived would sit on "thinking…" forever.
+            Once `done`, ChatMessageBody always renders something (see its
+            `done` prop); until then, the spinner. */}
+        {!done && !text ? <Dim>thinking…</Dim> : <ChatMessageBody content={text} done={done} />}
       </div>
     </div>
   );

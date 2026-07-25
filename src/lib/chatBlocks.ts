@@ -49,18 +49,24 @@ const HALF_STREAMED = /\[\[[a-z0-9:._/-]*\]?$/i;
  * Only a tail that still *looks* like a directive is hidden: prose that happens
  * to contain "[[ " (a space kills the match) keeps rendering, otherwise a stray
  * double bracket would silently eat the rest of an answer forever.
+ *
+ * `cut` says a DIRECTIVE tail was hidden — which is invisible progress mid-stream
+ * and a lost widget once the stream ends, so the caller needs to tell them apart
+ * (see the `done` flag on parseChatBlocks).
  */
-function hideHalfStreamedTail(content: string): string {
+function hideHalfStreamedTail(content: string): { src: string; cut: boolean } {
   const open = content.lastIndexOf("[[");
   // `includes("]]", open)` — it closed, so this isn't a tail.
   if (open !== -1 && !content.includes("]]", open) && HALF_STREAMED.test(content.slice(open))) {
-    return content.slice(0, open);
+    return { src: content.slice(0, open), cut: true };
   }
   // A lone trailing "[" is as likely to be the first half of "[[" (or of a
   // markdown link) as a real bracket — a provider that chunks between the two
   // brackets would otherwise flash a stray "[" for one token. Verified
   // in-browser: this was the only character that ever reached the screen.
-  return content.endsWith("[") ? content.slice(0, -1) : content;
+  // Not `cut`: one dropped character isn't a lost widget, so a finished reply
+  // that happens to end in "[" must not claim it was cut off.
+  return content.endsWith("[") ? { src: content.slice(0, -1), cut: false } : { src: content, cut: false };
 }
 
 function pushText(blocks: ChatBlock[], text: string) {
@@ -95,6 +101,11 @@ function endOfJson(src: string, start: number): number {
 // about text a stranger pasted, so they are attacker-influenced: truncating
 // keeps a novel-length "evidence" line from becoming a layout bomb, and the
 // row caps keep the card a card.
+//
+// Deliberately LOOSER than what api/_lib/jd-prompt.ts asks the model for (3-4
+// strengths, 2-3 gaps, ≤140-char strings): the prompt shapes a good card, these
+// refuse a hostile one. Keep it that way round — a parser cap below the prompt's
+// would silently truncate output the prompt considers correct.
 const MAX_FIELD_CHARS = 240;
 const MAX_ROWS = 6;
 
@@ -156,9 +167,13 @@ export function parseJdFit(raw: string): JdFitReport | null {
 /**
  * A reply as words, not machinery — directives would paste (or be READ ALOUD)
  * as garbage. Used by the copy button and, via speakableText, by the reader.
+ *
+ * `done` behaves as it does in parseChatBlocks; both callers only ever act on a
+ * settled reply, so both pass true and what you copy (or hear) is what's on
+ * screen, cut-off note included.
  */
-export function plainText(content: string): string {
-  return parseChatBlocks(content)
+export function plainText(content: string, done = false): string {
+  return parseChatBlocks(content, done)
     .flatMap((b) => {
       if (b.kind === "text") return [b.text];
       // The scorecard is the exception: it IS the answer, so copying only the
@@ -189,8 +204,8 @@ export function jdFitText(r: JdFitReport): string {
  * otherwise be eaten as two italics), links before emphasis (a link label can
  * contain either).
  */
-export function speakableText(content: string): string {
-  return plainText(content)
+export function speakableText(content: string, done = false): string {
+  return plainText(content, done)
     .replace(/```[\s\S]*?(?:```|$)/g, " ") // fenced code, including one still streaming
     .replace(/`([^`]*)`/g, "$1")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1") // image → its alt text
@@ -207,13 +222,50 @@ export function speakableText(content: string): string {
 }
 
 /**
+ * What a finished reply says when a directive was swallowed. Hiding a
+ * half-arrived directive is right while tokens are still coming; once the stream
+ * has stopped, the same fail-safe is a permanently blank bubble — which is
+ * exactly the bug a recruiter hit with a 5,398-character job description (the
+ * scorecard ran past the provider's token ceiling and stopped mid-JSON).
+ *
+ * So: keep whatever prose the model did produce, and say the honest thing.
+ * Never the raw JSON — that's machinery, and the visitor pasted a job
+ * description, not a debugger.
+ */
+export const CUT_OFF_NOTE =
+  "That's where I got cut off — the rest of that read didn't make it. Send it through again and I'll finish the job.";
+
+/** The catch-all: a finished reply that renders to literally nothing. */
+export const EMPTY_REPLY_NOTE = "Nothing came back that time — ask me again and I'll have another go.";
+
+/**
+ * The last word on a finished reply, and the whole point of the `done` flag: no
+ * assistant turn ever renders as an empty bubble.
+ */
+function finish(blocks: ChatBlock[], done: boolean, dropped: boolean): ChatBlock[] {
+  if (!done) return blocks;
+  if (dropped) pushText(blocks, CUT_OFF_NOTE);
+  else if (!blocks.length) pushText(blocks, EMPTY_REPLY_NOTE);
+  return blocks;
+}
+
+/**
  * Splits a (possibly still-streaming) assistant reply into renderable blocks.
  * Unknown widget names are returned as-is — validating them against the real
  * data is the renderer's job, so this stays a pure string function.
+ *
+ * `done` is "the stream has stopped", and it changes exactly one thing: whether
+ * a directive that never completed reads as "still on its way" (drop it
+ * silently, the default, so raw `[[`/JSON never flashes) or as "it's not coming"
+ * (say so — see CUT_OFF_NOTE). Callers that render a live stream must leave it
+ * false; callers rendering a settled message pass true.
  */
-export function parseChatBlocks(content: string): ChatBlock[] {
-  const src = hideHalfStreamedTail(content);
+export function parseChatBlocks(content: string, done = false): ChatBlock[] {
+  const { src, cut } = hideHalfStreamedTail(content);
   const blocks: ChatBlock[] = [];
+  // A directive went missing: a half-arrived tail, an opener that never closed,
+  // or a payload that closed but failed validation.
+  let dropped = cut;
   const re = new RegExp(DIRECTIVE); // fresh instance: /g regexes carry lastIndex
   let cursor = 0;
   for (let m = re.exec(src); m; m = re.exec(src)) {
@@ -233,12 +285,13 @@ export function parseChatBlocks(content: string): ChatBlock[] {
     // it). Everything from the opener on is dropped — showing the tail would
     // flash raw JSON, and there is nothing renderable after a directive that
     // never ends.
-    if (!close) return blocks;
+    if (!close) return finish(blocks, done, true);
     const data = parseJdFit(src.slice(start, end));
     if (data) blocks.push({ kind: "widget", name, data });
+    else dropped = true; // it closed, but the JSON didn't survive validation
     cursor = end + close[0].length;
     re.lastIndex = cursor;
   }
   pushText(blocks, src.slice(cursor));
-  return blocks;
+  return finish(blocks, done, dropped);
 }

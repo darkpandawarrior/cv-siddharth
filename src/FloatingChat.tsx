@@ -321,7 +321,7 @@ export function FloatingChat() {
     if (!last || last.role !== "assistant" || last === GREETING || !last.content) return;
     if (spokenRef.current === last.content) return;
     spokenRef.current = last.content;
-    speak(speakableText(last.content));
+    speak(speakableText(last.content, true)); // settled by definition — `busy` is false
   }, [messages, busy, readAloud, speak]);
 
   // Fire a deep-linked question (or a pasted JD) once the widget is open and idle.
@@ -414,7 +414,9 @@ export function FloatingChat() {
 
   async function copyReply(content: string, index: number) {
     try {
-      await navigator.clipboard.writeText(plainText(content));
+      // `true`: the copy button only exists on a settled reply, so what lands on
+      // the clipboard is what's on screen.
+      await navigator.clipboard.writeText(plainText(content, true));
       setCopied(index);
       setTimeout(() => setCopied((c) => (c === index ? null : c)), 1500);
     } catch {
@@ -597,7 +599,15 @@ export function FloatingChat() {
                         // from its stored content — that's what makes it
                         // acknowledge where you are without ever becoming a
                         // second message or resetting the conversation.
-                        <ChatMessageBody content={m === GREETING ? greeting : m.content} onNavigate={() => setOpen(false)} />
+                        <ChatMessageBody
+                          content={m === GREETING ? greeting : m.content}
+                          // Not streaming = the reply is final, so a directive
+                          // that never closed is a lost widget rather than one
+                          // still on the wire — and must not render as a blank
+                          // bubble. (Every earlier message is final too.)
+                          done={!streaming}
+                          onNavigate={() => setOpen(false)}
+                        />
                       )}
                     </div>
                     {!streaming && m !== GREETING && m.content && (

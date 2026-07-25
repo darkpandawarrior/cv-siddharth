@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { parseChatBlocks, parseJdFit, plainText, speakableText } from "./chatBlocks.ts";
+import {
+  CUT_OFF_NOTE,
+  EMPTY_REPLY_NOTE,
+  parseChatBlocks,
+  parseJdFit,
+  plainText,
+  speakableText,
+} from "./chatBlocks.ts";
 import { projects, projectBySlug } from "../data/profile.ts";
 
 describe("parseChatBlocks", () => {
@@ -177,6 +184,105 @@ describe("parseChatBlocks — jdfit payloads", () => {
     expect(parseChatBlocks('Read:\n\n[[jdfit:{"score":78,"summary":"oops')).toEqual([
       { kind: "text", text: "Read:" },
     ]);
+  });
+});
+
+/* ── The empty-bubble bug ──────────────────────────────────────────────────
+ * Reported by a recruiter pasting a 5,398-character job description: the model
+ * tried to score ~40 requirements, the scorecard ran past the provider's output
+ * ceiling and stopped mid-JSON, and the reply rendered as a COMPLETELY EMPTY
+ * bubble — no text, no card, no error.
+ *
+ * The cause was the streaming fail-safe above doing its job at the wrong moment:
+ * hiding an unterminated directive is right while tokens are arriving and a
+ * permanent blank once they stop. `done` is the distinction. */
+
+// The real shape of the failure: prose, then a payload that stops mid-object.
+const TRUNCATED = `Honest read: strong on Android platform work, thin on native iOS.\n\n[[jdfit:{"score":68,"role":"Senior Mobile Engineer","summary":"Android is proven; iOS and on-device AI are`;
+
+describe("a finished stream with a directive that never completed", () => {
+  it("keeps the prose and says it was cut off — never nothing, never raw JSON", () => {
+    const blocks = parseChatBlocks(TRUNCATED, true);
+    expect(blocks).toEqual([
+      { kind: "text", text: "Honest read: strong on Android platform work, thin on native iOS." },
+      { kind: "text", text: CUT_OFF_NOTE },
+    ]);
+    // The whole point: nothing machine-shaped reaches the reader.
+    for (const b of blocks) {
+      if (b.kind === "text") expect(b.text).not.toMatch(/\[\[|\]\]|[{}]|"score"/);
+    }
+  });
+
+  it("renders nothing extra while the same content is still streaming", () => {
+    // Unchanged behaviour: mid-stream this is a payload still on its way.
+    expect(parseChatBlocks(TRUNCATED)).toEqual([
+      { kind: "text", text: "Honest read: strong on Android platform work, thin on native iOS." },
+    ]);
+  });
+
+  it("says so even when the model produced no prose at all before the directive", () => {
+    expect(parseChatBlocks('[[jdfit:{"score":68,"summary":"cut', true)).toEqual([
+      { kind: "text", text: CUT_OFF_NOTE },
+    ]);
+  });
+
+  it("covers a half-streamed plain directive too, not just a jdfit payload", () => {
+    expect(parseChatBlocks("Everything I've built:\n\n[[project:mile", true)).toEqual([
+      { kind: "text", text: "Everything I've built:" },
+      { kind: "text", text: CUT_OFF_NOTE },
+    ]);
+  });
+
+  it("covers a payload that closed but failed validation", () => {
+    expect(parseChatBlocks('Read:\n\n[[jdfit:{"score":"68"}]]', true)).toEqual([
+      { kind: "text", text: "Read:" },
+      { kind: "text", text: CUT_OFF_NOTE },
+    ]);
+  });
+
+  it("never leaks raw JSON at any prefix, even treating every prefix as finished", () => {
+    const full = `Honest read:\n\n${directive(REPORT)}\n\nHappy to go deeper.`;
+    for (let i = 0; i <= full.length; i++) {
+      for (const b of parseChatBlocks(full.slice(0, i), true)) {
+        if (b.kind === "text") expect(b.text, `leaked at prefix length ${i}`).not.toMatch(/\[\[|\]\]|[{}]|"score"/);
+        else expect(b.data, `partial data at prefix length ${i}`).toEqual(REPORT);
+      }
+    }
+  });
+
+  it("does not cry cut-off over a reply that simply ends in a bracket", () => {
+    // One dropped character is not a lost widget — the note would be a lie.
+    expect(parseChatBlocks("Indexing looks like arr[", true)).toEqual([
+      { kind: "text", text: "Indexing looks like arr" },
+    ]);
+  });
+
+  it("leaves a complete reply alone", () => {
+    for (const content of [`Here's the read:\n\n${directive(REPORT)}`, "Mileway is offline-first.\n\n[[rooms]]"]) {
+      expect(parseChatBlocks(content, true), content).toEqual(parseChatBlocks(content));
+    }
+  });
+});
+
+describe("a finished reply with nothing in it at all", () => {
+  for (const content of ["", "   ", "\n\n  \t"]) {
+    it(`answers with the fallback rather than an empty bubble for ${JSON.stringify(content)}`, () => {
+      expect(parseChatBlocks(content, true)).toEqual([{ kind: "text", text: EMPTY_REPLY_NOTE }]);
+      expect(parseChatBlocks(content)).toEqual([]); // still nothing while streaming
+    });
+  }
+
+  it("does not fire when the reply is a widget with no prose", () => {
+    expect(parseChatBlocks("[[rooms]]", true)).toEqual([{ kind: "widget", name: "rooms", arg: undefined }]);
+  });
+});
+
+describe("what gets copied and read aloud matches what's on screen", () => {
+  it("carries the cut-off note into the copied and spoken text", () => {
+    expect(plainText(TRUNCATED, true)).toContain(CUT_OFF_NOTE);
+    expect(speakableText(TRUNCATED, true)).toContain(CUT_OFF_NOTE);
+    // …and never mid-stream, where the payload may still be coming.
+    expect(plainText(TRUNCATED)).not.toContain(CUT_OFF_NOTE);
   });
 });
 

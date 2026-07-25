@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import Markdown, { type Components } from "react-markdown";
 import { ArrowRight } from "lucide-react";
-import { projectBySlug, metrics, skills, siteRooms, cardMedia } from "./data/profile.ts";
+import { projectBySlug, metrics, skills, siteRooms, cardMedia, type Project } from "./data/profile.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
-import { parseChatBlocks, type JdFitReport } from "./lib/chatBlocks.ts";
+import { EMPTY_REPLY_NOTE, parseChatBlocks, type ChatBlock, type JdFitReport } from "./lib/chatBlocks.ts";
 import { Picture } from "./Picture.tsx";
 
 /**
@@ -74,12 +74,7 @@ export function ChatLink({
 
 /* ── The widgets ─────────────────────────────────────────────────────────── */
 
-function ProjectCard({ slug, onNavigate }: { slug: string; onNavigate?: () => void }) {
-  // The directive's arg is model output — i.e. attacker-influenceable text.
-  // It is never used to build anything; it only ever looks a project up, and
-  // an invented slug renders nothing rather than a broken (or forged) card.
-  const project = projectBySlug(slug);
-  if (!project) return null;
+function ProjectCard({ project, onNavigate }: { project: Project; onNavigate?: () => void }) {
   const media = cardMedia[project.slug];
 
   return (
@@ -245,29 +240,36 @@ function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: (
   );
 }
 
-/** Directive → component. An unknown name (or a made-up slug) renders nothing. */
-function ChatWidget({
-  name,
-  arg,
-  data,
-  onNavigate,
-}: {
-  name: string;
-  arg?: string;
-  data?: JdFitReport;
-  onNavigate?: () => void;
-}) {
-  switch (name) {
-    case "project":
-      return arg ? <ProjectCard slug={arg} onNavigate={onNavigate} /> : null;
+/**
+ * Directive → the component it renders, or null when it resolves to nothing (an
+ * unknown name, an invented project slug, a payload that failed validation).
+ *
+ * A plain function rather than a component, on purpose: ChatMessageBody has to
+ * know whether ANYTHING is going to appear, and a component that returns null is
+ * indistinguishable from one that doesn't until React renders it. The slug
+ * lookup moved up here for the same reason.
+ */
+function chatWidget(
+  block: Extract<ChatBlock, { kind: "widget" }>,
+  key: number,
+  onNavigate?: () => void,
+): React.ReactNode {
+  switch (block.name) {
+    case "project": {
+      // The directive's arg is model output — i.e. attacker-influenceable text.
+      // It is never used to build anything; it only ever looks a project up, and
+      // an invented slug renders nothing rather than a broken (or forged) card.
+      const project = block.arg ? projectBySlug(block.arg) : undefined;
+      return project ? <ProjectCard key={key} project={project} onNavigate={onNavigate} /> : null;
+    }
     case "rooms":
-      return <RoomsGrid onNavigate={onNavigate} />;
+      return <RoomsGrid key={key} onNavigate={onNavigate} />;
     case "metrics":
-      return <MetricTiles />;
+      return <MetricTiles key={key} />;
     case "skills":
-      return <SkillChips />;
+      return <SkillChips key={key} />;
     case "jdfit":
-      return data ? <JdFitCard report={data} onNavigate={onNavigate} /> : null;
+      return block.data ? <JdFitCard key={key} report={block.data} onNavigate={onNavigate} /> : null;
     default:
       return null;
   }
@@ -277,25 +279,39 @@ function ChatWidget({
  * One assistant reply: markdown runs rendered as markdown, directives rendered
  * as the real components above. Shared by the console panel and the terminal's
  * inline `ask` so a directive can never leak as raw text on either surface.
+ *
+ * `done` = the stream has stopped. It buys two things, and both exist because
+ * this component rendering NOTHING is a silent failure the visitor can't act on:
+ * the parser turns a directive that never completed into an honest note rather
+ * than dropping it, and the guard below catches the residue — every block
+ * resolving to null (an unknown directive, a made-up slug) — which the parser
+ * can't see from a pure string.
  */
-export function ChatMessageBody({ content, onNavigate }: { content: string; onNavigate?: () => void }) {
+export function ChatMessageBody({
+  content,
+  done = false,
+  onNavigate,
+}: {
+  content: string;
+  done?: boolean;
+  onNavigate?: () => void;
+}) {
   const components = useMemo<Components>(
     () => ({ a: ({ href, children }) => <ChatLink href={href} onNavigate={onNavigate}>{children}</ChatLink> }),
     [onNavigate],
   );
-  const blocks = useMemo(() => parseChatBlocks(content), [content]);
+  const blocks = useMemo(() => parseChatBlocks(content, done), [content, done]);
 
-  return (
-    <>
-      {blocks.map((block, i) =>
-        block.kind === "text" ? (
-          <Markdown key={i} components={components}>
-            {block.text}
-          </Markdown>
-        ) : (
-          <ChatWidget key={i} name={block.name} arg={block.arg} data={block.data} onNavigate={onNavigate} />
-        ),
-      )}
-    </>
+  const nodes = blocks.map((block, i) =>
+    block.kind === "text" ? (
+      <Markdown key={i} components={components}>
+        {block.text}
+      </Markdown>
+    ) : (
+      chatWidget(block, i, onNavigate)
+    ),
   );
+
+  if (done && nodes.every((n) => n === null)) return <Markdown components={components}>{EMPTY_REPLY_NOTE}</Markdown>;
+  return <>{nodes}</>;
 }

@@ -362,9 +362,42 @@ export function selectHistory(messages: ChatMessage[]): ChatMessage[] {
 interface Provider {
   name: string;
   key: () => string | undefined;
-  /** `system` is chosen by the server from `mode` — never from message text. */
-  request: (key: string, messages: ChatMessage[], system: string) => Promise<Response>;
+  /**
+   * `system` and `maxTokens` are both chosen by the server from `mode` — never
+   * from message text.
+   */
+  request: (key: string, messages: ChatMessage[], system: string, maxTokens: number) => Promise<Response>;
   extractDelta: (event: unknown) => string | undefined;
+}
+
+// A console reply is a few sentences, and a Compose snippet is a screen of
+// Kotlin — 1024 has always been enough for both.
+const MAX_OUTPUT_TOKENS = 1024;
+
+/**
+ * The output ceiling a mode gets. JD mode needs materially more room than the
+ * others: its reply is prose PLUS a structured `[[jdfit:{…}]]` payload (role,
+ * summary, up to 4 strengths and 3 gaps, each with two bounded strings), and
+ * these models spend tokens reasoning before they emit any of it.
+ *
+ * This is the number that caused a real, reported failure. A 40-requirement job
+ * description made the model try to enumerate all of them; the payload ran past
+ * 1024 tokens and was cut off mid-JSON, and an unterminated directive rendered
+ * as a COMPLETELY EMPTY reply (the parser hides a half-arrived directive so raw
+ * JSON never flashes mid-stream — correct while streaming, silent failure once
+ * the stream ends). 2048 fits the now-bounded card several times over with room
+ * for the preamble; jd-prompt.ts caps the row count so the extra headroom is
+ * slack, not an invitation.
+ *
+ * COST TRADEOFF: output tokens are the expensive half of a call, so this
+ * doubles the ceiling on the most expensive request this endpoint makes. It's
+ * paid for by JD_RATE_WINDOWS, which is already the narrow door (3/min, 12/hour
+ * per IP): worst case is ~12k extra output tokens per IP per hour, small next to
+ * the 12k characters of INPUT each of those requests already sends. Chat and
+ * compose keep 1024 — nothing about them was short of room.
+ */
+export function maxOutputTokensFor(mode: ChatMode): number {
+  return mode === "jd" ? 2048 : MAX_OUTPUT_TOKENS;
 }
 
 /**
@@ -400,7 +433,7 @@ export const PROVIDERS: Provider[] = [
   {
     name: "groq",
     key: () => process.env.GROQ_API_KEY,
-    request: (key, messages, system) =>
+    request: (key, messages, system, maxTokens) =>
       fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
@@ -412,7 +445,7 @@ export const PROVIDERS: Provider[] = [
           // fix that needs no deploy.
           model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
           messages: [{ role: "system", content: system }, ...messages],
-          max_tokens: 1024,
+          max_tokens: maxTokens,
           stream: true,
         }),
       }),
@@ -421,7 +454,7 @@ export const PROVIDERS: Provider[] = [
   {
     name: "gemini",
     key: () => process.env.GEMINI_API_KEY,
-    request: (key, messages, system) =>
+    request: (key, messages, system, maxTokens) =>
       fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"}:streamGenerateContent?alt=sse`,
         {
@@ -433,7 +466,7 @@ export const PROVIDERS: Provider[] = [
               role: m.role === "assistant" ? "model" : "user",
               parts: [{ text: m.content }],
             })),
-            generationConfig: { maxOutputTokens: 1024 },
+            generationConfig: { maxOutputTokens: maxTokens },
           }),
         },
       ),
@@ -444,7 +477,7 @@ export const PROVIDERS: Provider[] = [
   {
     name: "anthropic",
     key: () => process.env.ANTHROPIC_API_KEY,
-    request: (key, messages, system) =>
+    request: (key, messages, system, maxTokens) =>
       fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -454,7 +487,7 @@ export const PROVIDERS: Provider[] = [
         },
         body: JSON.stringify({
           model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
-          max_tokens: 1024,
+          max_tokens: maxTokens,
           system,
           messages,
           stream: true,
@@ -609,6 +642,7 @@ export async function handleChat(request: Request): Promise<Response> {
     picked.key,
     selectHistory(parsed.messages),
     systemPromptFor(parsed.mode, parsed.route),
+    maxOutputTokensFor(parsed.mode),
   );
 
   if (!upstream.ok || !upstream.body) {
