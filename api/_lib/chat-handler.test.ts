@@ -7,7 +7,10 @@ import {
   handleChat,
   isAllowedOrigin,
   normalizeStream,
+  classifyUpstream,
   estimateTokens,
+  exhaustedResponse,
+  type FailureKind,
   pickProviders,
   reasoningEffortFor,
   rateLimitKey,
@@ -1118,16 +1121,51 @@ describe("provider failover", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("does NOT spend the reserve provider on a malformed request", async () => {
-    // A 400 is our bug: it will be just as malformed at the next provider, and
-    // retrying would burn the reserve quota to reproduce the same error.
+  it("DOES try the next provider on a 400 — the schemas differ", async () => {
+    // This used to stop, reasoning a malformed request would be malformed
+    // everywhere. Groq speaks OpenAI's format and Gemini speaks Google's: a
+    // body one rejects is a body the other may accept.
     process.env.GROQ_API_KEY = "g";
     process.env.GEMINI_API_KEY = "m";
     delete process.env.CHAT_PROVIDER;
-    const fetchMock = vi.fn().mockResolvedValue(new Response("bad request", { status: 400 }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("bad request", { status: 400 }))
+      .mockResolvedValueOnce(sseResponse("recovered"));
     vi.stubGlobal("fetch", fetchMock);
-    expect((await ask()).status).toBe(502);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect((await ask()).status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  /* THE REGRESSION TEST FOR THE REAL OUTAGE.
+   * Production ran Groq 429 (throttled, transient) -> Gemini 404 (the
+   * configured model had been closed to new API keys, permanent). Only the
+   * last status was kept, so both were reported as "the model is unavailable,
+   * please try again" — telling visitors to wait for something waiting could
+   * never fix, while nothing surfaced that an owner had to act. */
+  it("reports a misconfigured ladder as 503, not as a transient 502", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("TPM exceeded", { status: 429 }))
+      .mockResolvedValueOnce(new Response("model no longer available to new users", { status: 404 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await ask();
+    expect(res.status).toBe(503);
+    // No Retry-After: there is nothing to wait for.
+    expect(res.headers.get("retry-after")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("never names a provider, model or env var to the visitor", async () => {
+    process.env.GROQ_API_KEY = "g";
+    process.env.GEMINI_API_KEY = "m";
+    delete process.env.CHAT_PROVIDER;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("gemini-2.5-flash gone", { status: 404 })));
+    const body = await (await ask()).text();
+    expect(body).not.toMatch(/groq|gemini|cerebras|anthropic|API_KEY|MODEL/i);
   });
 
   it("reports 429 only once EVERY provider is throttled", async () => {
@@ -1169,6 +1207,52 @@ describe("provider failover", () => {
     const body = await (await ask()).text();
     expect(body).toContain("hello from gemini");
     expect(body).not.toContain(EMPTY_STREAM_FALLBACK);
+  });
+});
+
+/* ── Failure classification ────────────────────────────────────────────────
+ * Every non-200 used to collapse into one apologetic sentence, which is how a
+ * retired model name hid behind the same wording as ordinary throttling. */
+describe("classifyUpstream", () => {
+  it("separates the failures that clear themselves from the ones that don't", () => {
+    expect(classifyUpstream(429)).toBe("throttled"); // waiting fixes it
+    expect(classifyUpstream(401)).toBe("auth"); // key is wrong
+    expect(classifyUpstream(403)).toBe("auth");
+    expect(classifyUpstream(404)).toBe("config"); // model name retired
+    expect(classifyUpstream(400)).toBe("config"); // request wrong for this API
+    expect(classifyUpstream(500)).toBe("down");
+    expect(classifyUpstream(503)).toBe("down");
+  });
+});
+
+describe("exhaustedResponse", () => {
+  const F = (provider: string, kind: FailureKind, retryAfter: string | null = null) => ({ provider, kind, retryAfter });
+
+  it("429s with a Retry-After when EVERY provider is merely throttled", async () => {
+    const res = exhaustedResponse([F("groq", "throttled", "12"), F("gemini", "throttled")], null);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("12");
+  });
+
+  it("503s — not 429 — as soon as one provider is misconfigured", async () => {
+    // The production combination: Groq busy, Gemini's model retired. Telling
+    // the visitor to wait a minute would be telling them to wait forever.
+    const res = exhaustedResponse([F("groq", "throttled", "9"), F("gemini", "config")], null);
+    expect(res.status).toBe(503);
+    expect(res.headers.get("retry-after")).toBeNull();
+  });
+
+  it("503s on a bad key too", async () => {
+    expect(exhaustedResponse([F("groq", "auth")], null).status).toBe(503);
+  });
+
+  it("502s when providers are genuinely just down", async () => {
+    expect(exhaustedResponse([F("groq", "down"), F("gemini", "down")], null).status).toBe(502);
+  });
+
+  it("keeps provider and model names out of what the visitor reads", async () => {
+    const body = await exhaustedResponse([F("gemini", "config")], null).text();
+    expect(body).not.toMatch(/gemini|groq|model|API_KEY/i);
   });
 });
 

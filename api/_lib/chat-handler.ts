@@ -495,7 +495,20 @@ export const PROVIDERS: Provider[] = [
     key: () => process.env.GEMINI_API_KEY,
     request: (key, messages, system, maxTokens) =>
       fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL ?? "gemini-2.5-flash"}:streamGenerateContent?alt=sse`,
+        // gemini-2.5-flash was CLOSED TO NEW API KEYS and answers 404 for them
+        // ("no longer available to new users"), which is how a freshly-created
+        // key produced a total chat outage the moment Groq throttled.
+        //
+        // 3.6-flash rather than a flash-lite: Gemini is in this ladder to take
+        // the FAT requests, and the fattest is the JD analyser — a judgement
+        // call with a 5,000-token prompt that has to come back as valid
+        // [[jdfit:{…}]] JSON. That is precisely where a cheaper model costs
+        // more than it saves. Throughput tiers optimise a constraint a
+        // portfolio site doesn't have.
+        //
+        // GEMINI_MODEL overrides it — the fix that needs no deploy when Google
+        // retires this one too, which on the evidence they will.
+        `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL ?? "gemini-3.6-flash"}:streamGenerateContent?alt=sse`,
         {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": key },
@@ -692,19 +705,46 @@ export function pickProviders(mode: ChatMode = "chat", estimatedTokens = 0): { p
 }
 
 /**
- * Is this upstream failure worth spending a different provider's quota on?
+ * What KIND of failure an upstream status represents.
  *
- * Yes for anything that is about THIS key or THIS provider — exhausted quota
- * (429), a rejected or unfunded key (401/402/403), a timeout, or the provider
- * being down (5xx). Those are exactly the cases a second key exists to cover.
+ * Lumping every non-200 into "the model is unavailable, please try again" is
+ * what let a real outage hide in plain sight: Groq was throttling (transient,
+ * fixes itself in seconds) while Gemini was returning 404 because the
+ * configured model had been closed to new API keys (permanent, needs an owner
+ * to change a value). Both surfaced as the same apologetic sentence, and the
+ * one that needed a human looked exactly like the one that didn't.
  *
- * No for 400. A 400 means the request itself is malformed, which is our bug and
- * will be just as malformed at the next provider — retrying would burn the
- * reserve quota to produce the same error, and hide the defect while doing it.
+ *   throttled — 429. Out of quota this minute. Waiting genuinely fixes it.
+ *   auth      — 401/402/403. The key is wrong, unfunded or revoked.
+ *   config    — 400/404. The request or the model name is wrong FOR THIS
+ *               provider. Permanent until someone changes something.
+ *   down      — 5xx, timeouts, thrown requests. The provider's problem.
+ *
+ * `auth` and `config` are the two that need a person, and they are the two
+ * that used to be invisible.
  */
-export function shouldFailOver(status: number): boolean {
-  return status !== 400;
+export type FailureKind = "throttled" | "auth" | "config" | "down";
+
+export function classifyUpstream(status: number): FailureKind {
+  if (status === 429) return "throttled";
+  if (status === 401 || status === 402 || status === 403) return "auth";
+  if (status === 400 || status === 404) return "config";
+  return "down";
 }
+
+/*
+ * There is deliberately no shouldFailOver() any more. It used to stop the
+ * ladder on a 400, reasoning that a malformed request is our bug and would be
+ * equally malformed everywhere — wrong the moment providers stop sharing a
+ * schema. Groq speaks OpenAI's format, Gemini speaks Google's, and a body one
+ * rejects outright is a body the other may well accept; a model name retired at
+ * one says nothing about the next. Every failure is now worth trying the next
+ * rung for, so the predicate was always true and the loop simply continues.
+ *
+ * The defect-hiding that rule was meant to prevent is handled properly instead,
+ * by classifying failures and logging config/auth ones as needing a person —
+ * see classifyUpstream and exhaustedResponse.
+ */
 
 // ---------------------------------------------------------------------------
 // Response helpers
@@ -740,6 +780,55 @@ function jsonError(
  */
 export const EMPTY_STREAM_FALLBACK =
   "I didn't manage to get that one out — the model returned nothing. Please try again; if you were analysing a job description, pasting just the requirements section usually does it.";
+
+/**
+ * What the visitor gets once every provider on the ladder has failed.
+ *
+ * Chosen from ALL the failures, not the last one. That distinction is the whole
+ * point: a real outage had Groq throttling (transient) and Gemini 404-ing on a
+ * retired model (permanent, owner must act), and because only the last status
+ * was kept, both were reported as "the model is unavailable, please try again".
+ * A visitor was told to wait for something waiting would never fix.
+ *
+ *   every provider throttled  -> 429 and a Retry-After. Waiting really works.
+ *   any config/auth failure   -> 503, and the owner is told loudly in the log.
+ *                                Not 502: nothing is "unavailable", something
+ *                                is misconfigured, and the two need different
+ *                                fixes. Retry-After is deliberately absent —
+ *                                there is nothing to wait for.
+ *   otherwise                 -> 502, genuinely a provider being down.
+ *
+ * The visitor-facing wording never names a provider, a model or an env var —
+ * that stays in the log where it belongs.
+ */
+export function exhaustedResponse(
+  failures: { provider: string; kind: FailureKind; retryAfter: string | null }[],
+  allowedOrigin: string | null,
+): Response {
+  const kinds = new Set(failures.map((f) => f.kind));
+
+  if (failures.length > 0 && kinds.size === 1 && kinds.has("throttled")) {
+    const retryAfter = failures.map((f) => f.retryAfter).find(Boolean) ?? "60";
+    return jsonError(
+      429,
+      "I'm getting more questions than my free tier allows right now — give me about a minute and ask again.",
+      allowedOrigin,
+      { "retry-after": retryAfter },
+    );
+  }
+
+  if (kinds.has("config") || kinds.has("auth")) {
+    const broken = failures.filter((f) => f.kind === "config" || f.kind === "auth");
+    console.error(
+      "[chat] NEEDS ATTENTION — every provider failed and at least one is misconfigured, not merely busy: " +
+        broken.map((f) => `${f.provider}=${f.kind}`).join(", ") +
+        ". Check the model name (GEMINI_MODEL / GROQ_MODEL / CEREBRAS_MODEL) and the API keys.",
+    );
+    return jsonError(503, "My assistant is offline right now — this one's on me, not you. Everything else on the site works.", allowedOrigin);
+  }
+
+  return jsonError(502, "The model is unavailable right now. Please try again.", allowedOrigin);
+}
 
 /**
  * Re-emits an upstream SSE body as a provider-independent stream the widget
@@ -888,8 +977,9 @@ export async function handleChat(request: Request): Promise<Response> {
 
   let upstream: Response | null = null;
   let served: Provider | null = null;
-  let lastStatus = 502;
-  let lastRetryAfter: string | null = null;
+  // One entry per provider that failed, so the response can be chosen from what
+  // went wrong ACROSS the ladder rather than from whichever rung failed last.
+  const failures: { provider: string; kind: FailureKind; retryAfter: string | null }[] = [];
 
   for (const candidate of providers) {
     let res: Response;
@@ -898,8 +988,8 @@ export async function handleChat(request: Request): Promise<Response> {
     } catch (err) {
       // A thrown request never reached the provider (DNS, TLS, timeout). That
       // says nothing about the next one, so it is always worth trying.
-      console.error(`${candidate.provider.name} request threw`, err);
-      lastStatus = 502;
+      console.error(`[chat] ${candidate.provider.name} request threw`, err);
+      failures.push({ provider: candidate.provider.name, kind: "down", retryAfter: null });
       continue;
     }
 
@@ -910,29 +1000,17 @@ export async function handleChat(request: Request): Promise<Response> {
     }
 
     const detail = await res.text().catch(() => "");
-    console.error(`${candidate.provider.name} API error`, res.status, detail);
-    lastStatus = res.status;
-    lastRetryAfter = res.headers.get("retry-after");
-    if (!shouldFailOver(res.status)) break;
+    const kind = classifyUpstream(res.status);
+    // `config` and `auth` are the two an owner has to fix, and the two that
+    // used to read like weather. Marked so they're greppable in the log stream
+    // and can't be mistaken for the throttling that clears itself.
+    const tag = kind === "config" || kind === "auth" ? "NEEDS ATTENTION" : "transient";
+    console.error(`[chat] ${candidate.provider.name} ${res.status} (${kind}, ${tag})`, detail.slice(0, 400));
+    failures.push({ provider: candidate.provider.name, kind, retryAfter: res.headers.get("retry-after") });
   }
 
   if (!upstream || !served) {
-    // The provider throttling OUR key is not the same failure as the provider
-    // being down, and it's the likely one on a free tier: the JD analyser sends
-    // a large prompt, so a couple of analyses back-to-back can trip a
-    // tokens-per-minute cap. Saying "unavailable" there reads as "this site is
-    // broken" when the truth is "wait ~30s". Surface it as a 429 so the client's
-    // existing 429 branch shows the retry wording (and Retry-After is honoured).
-    // Reaching here with a 429 now means EVERY configured provider is throttled.
-    if (lastStatus === 429) {
-      return jsonError(
-        429,
-        "I'm getting more questions than my free tier allows right now — give me about a minute and ask again.",
-        allowedOrigin,
-        { "retry-after": lastRetryAfter ?? "60" },
-      );
-    }
-    return jsonError(502, "The model is unavailable right now. Please try again.", allowedOrigin);
+    return exhaustedResponse(failures, allowedOrigin);
   }
 
   return new Response(normalizeStream(upstream.body!, served.extractDelta), {
