@@ -6,6 +6,13 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--port", "5174", "--strictPort"],
       "port": 5174
+    },
+    {
+      "//": "Built output, the only way to see real SSR. Separate port from dev because another checkout of this repo commonly holds 5174 — without --strictPort the preview silently served that other tree's code.",
+      "name": "cv-siddharth-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "preview", "--port", "4173", "--strictPort"],
+      "port": 4173
     }
   ]
 }

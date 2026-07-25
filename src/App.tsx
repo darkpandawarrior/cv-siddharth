@@ -501,11 +501,16 @@ function CaseStudies() {
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
               className="card-elevated group grid cursor-pointer gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
             >
+              {/* Was multiplatform.gif — 108 frames cycling phone → watch →
+                  widgets. Rendered at this card's crop, 3 of 4 sampled frames
+                  were a near-black watch face or empty space, so the flagship
+                  build's thumbnail was a black rectangle as often as not. A
+                  still of the loaded home screen is always the home screen, and
+                  Picture gets it through the AVIF pipeline the GIF bypassed. */}
               <div className="relative min-h-[220px] overflow-hidden border-b border-line bg-void lg:border-b-0 lg:border-r">
-                <img
-                  src="/projects/mileway/screenshots/multiplatform.gif"
-                  alt="Mileway running on phone, watch and desktop"
-                  loading="lazy"
+                <Picture
+                  src="/projects/mileway/screenshots/home_screen_loaded.png"
+                  alt="Mileway home screen — quick actions and 248 km tracked this month"
                   className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
                 />
               </div>
@@ -628,8 +633,16 @@ function Projects() {
                       <Picture
                         src={media.src}
                         alt={media.alt}
-                        className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                        className={`absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] ${
+                          media.focal === "center" ? "object-center" : "object-top"
+                        }`}
                       />
+                      {/* Two of these products are light-themed (PaymentsLab,
+                          HireSignal). Bled to the card edge they read as a white
+                          hole punched in a dark page; this scrim settles them into
+                          the card and softens the seam into the text below without
+                          touching the dark shots, which have little to lose here. */}
+                      <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
                     </div>
                   )}
                   <div className="flex grow flex-col p-6">

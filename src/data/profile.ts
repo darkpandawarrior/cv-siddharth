@@ -1251,14 +1251,41 @@ export const recentGrowth: GrowthItem[] = [
  * home-page project grid and the AI assistant's inline project card
  * (src/ChatWidgets.tsx) — a second hand-maintained map is how thumbnails drift.
  */
-export const cardMedia: Record<string, { src: string; alt: string }> = {
-  kursi: { src: "/projects/kursi/screenshots/home.gif", alt: "Kursi home screen" },
-  mileway: { src: "/projects/mileway/screenshots/track_a_trip.gif", alt: "Mileway trip tracking flow" },
-  // ponytail: checkout_flow.gif opens on the FLAG_SECURE "screenshots blocked"
-  // frame — great security story, terrible thumbnail. Static catalog shot instead.
-  paymentslab: { src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", alt: "PaymentsLab gateway catalog" },
-  deadlock: { src: "/projects/deadlock/screenshots/journey.gif", alt: "DEADLOCK — title through the first cooperative Echo" },
-  hiresignal: { src: "/projects/hiresignal/screenshots/banner.gif", alt: "HireSignal banner" },
+/**
+ * The still each project card shows. STILLS, deliberately — never a GIF.
+ *
+ * These were animated flow recordings, and a card is not a player: it shows
+ * whatever frame the loop happens to be on when someone scrolls past. Measured
+ * on the real assets, that meant multiplatform.gif (108 frames across phone,
+ * watch and widgets) served a near-black watch face or empty space in 3 of 4
+ * sampled frames, and paymentslab's own checkout_flow.gif opened on its
+ * FLAG_SECURE "screenshots blocked" screen — a great security story and a
+ * terrible thumbnail. A recruiter got whichever one chance dealt them.
+ *
+ * They also cost 3.5 MB on the home page alone. gen-images.mjs skips GIFs
+ * (they're animated), so every one of them bypassed the AVIF/WebP pipeline
+ * entirely; these stills go through it and land around 12-45 KB.
+ *
+ * `src` is the ORIGINAL raster — Picture derives the .avif/.webp siblings, so
+ * pointing this at an .avif directly would break that chain.
+ *
+ * `focal` is the object-position for the card's wide crop band. It matters more
+ * than it looks: these are tall phone screens shown through a ~2.7:1 letterbox,
+ * so the top edge is nearly all a visitor sees, and every choice below was made
+ * by rendering the actual 474x176 crop rather than by eyeballing the full shot.
+ * The wide ones (Deadlock's game stills) want their centre instead — top-
+ * cropping a 16:9 scene cuts the frame in half.
+ */
+export const cardMedia: Record<string, { src: string; alt: string; focal?: "top" | "center" }> = {
+  // Wide desktop shot: the KURSI wordmark sits at the top, so top-crop keeps
+  // the brand in frame where centre-crop loses it entirely.
+  kursi: { src: "/projects/kursi/screenshots/home.png", alt: "Kursi — the daily challenge board" },
+  // The blue Analytics header reads as product depth, and deliberately differs
+  // from the featured case-study card above it so Mileway isn't shown twice.
+  mileway: { src: "/projects/mileway/screenshots/analytics_home_screen.png", alt: "Mileway — spend analytics with category breakdown" },
+  paymentslab: { src: "/projects/paymentslab/screenshots/home_screen_dashboard.png", alt: "PaymentsLab — 68 gateways integrated, 94% success rate" },
+  deadlock: { src: "/projects/deadlock/screenshots/echo-cooperation.webp", alt: "DEADLOCK — two echoes cooperating on a pressure plate", focal: "center" },
+  hiresignal: { src: "/projects/hiresignal/screenshots/dashboard_screen.png", alt: "HireSignal — this week's matches and follow-ups" },
 };
 
 /* ── The site's own interactive surfaces ──────────────────────────────────
