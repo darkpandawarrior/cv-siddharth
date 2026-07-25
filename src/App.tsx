@@ -630,19 +630,16 @@ function Projects() {
                 >
                   {media && (
                     <div className="relative h-44 shrink-0 overflow-hidden border-b border-line bg-void">
+                      {/* object-center, and no focal override: the heroes are
+                          authored at this band's own aspect, so there is no
+                          "best slice" to choose any more. The scrim stays as a
+                          seam softener into the text block below. */}
                       <Picture
                         src={media.src}
                         alt={media.alt}
-                        className={`absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] ${
-                          media.focal === "center" ? "object-center" : "object-top"
-                        }`}
+                        className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"
                       />
-                      {/* Two of these products are light-themed (PaymentsLab,
-                          HireSignal). Bled to the card edge they read as a white
-                          hole punched in a dark page; this scrim settles them into
-                          the card and softens the seam into the text below without
-                          touching the dark shots, which have little to lose here. */}
-                      <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
+                      <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/60 via-transparent to-transparent" />
                     </div>
                   )}
                   <div className="flex grow flex-col p-6">

@@ -81,13 +81,7 @@ function ProjectCard({ project, onNavigate }: { project: Project; onNavigate?: (
     <div className="my-2.5 overflow-hidden rounded-xl border border-line bg-ink">
       {media && (
         <div className="h-24 w-full overflow-hidden border-b border-line bg-void">
-          {/* Same focal rule as the grid card — this band is even shallower, so
-              a wide still cropped from its top would show almost nothing. */}
-          <Picture
-            src={media.src}
-            alt={media.alt}
-            className={`h-24 w-full object-cover ${media.focal === "center" ? "object-center" : "object-top"}`}
-          />
+          <Picture src={media.src} alt={media.alt} className="h-24 w-full object-cover object-center" />
         </div>
       )}
       <div className="space-y-2 p-3">

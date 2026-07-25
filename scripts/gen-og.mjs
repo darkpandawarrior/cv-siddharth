@@ -25,6 +25,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { inflateSync, deflateSync } from "node:zlib";
 import { projects, profile, metrics, competencies } from "../src/data/profile.ts";
+import { CHROMIUM } from "./lib/chromium.mjs";
 import { writing } from "../src/data/writing.ts";
 
 /* ── Minimal PNG top-crop (no image lib) ──────────────────────────────────
@@ -129,11 +130,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outRoot = join(root, "public", "p");
 const SITE = "https://cv-siddharth.vercel.app";
 
-const CHROMIUM =
-  process.env.CHROMIUM_BIN ||
-  ["/opt/pw-browsers/chromium", "/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"].find((p) =>
-    existsSync(p),
-  );
+// Shared with gen-project-heroes.mjs — and now includes macOS, where this list
+// previously matched nothing and the script skipped on every local run.
 const OG_W = 1200;
 const OG_H = 630;
 // Render into a taller window than the card so the content is centered inside
