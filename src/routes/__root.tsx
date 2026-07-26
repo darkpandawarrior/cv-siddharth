@@ -30,7 +30,7 @@ const PERSON_LD = {
   email: "mailto:siddharthpandalai990@gmail.com",
   alumniOf: "NIT Bhopal",
   address: { "@type": "PostalAddress", addressLocality: "Pune", addressCountry: "IN" },
-  knowsAbout: ["Android", "Kotlin", "Kotlin Multiplatform", "Jetpack Compose", "Location Engineering", "Sensor Fusion", "Mobile Security", "Structured Concurrency"],
+  knowsAbout: ["Android", "Kotlin", "Kotlin Multiplatform", "Jetpack Compose", "Location Engineering", "Dead Reckoning", "Kalman Filtering", "Mobile Security", "Structured Concurrency"],
   sameAs: [
     "https://github.com/darkpandawarrior",
     "https://linkedin.com/in/siddharth-pandalai-3712b215a",

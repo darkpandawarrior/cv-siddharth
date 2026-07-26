@@ -15,7 +15,7 @@ export const profile = {
     "5+ years building production Android. Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Expert in Jetpack Compose migration (92% coverage), Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: sensor-fusion location engineering (GPS accuracy 50% to 95%), on-device security (SQLCipher, Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
+    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Expert in Jetpack Compose migration (92% coverage), Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
 };
 
 export const education = {
@@ -38,8 +38,8 @@ export const competencies = [
   "Kotlin Coroutines & Flow",
   "Hilt Dependency Injection",
   "Room & Offline Storage",
-  "Location Engineering & Sensor Fusion",
-  "Mobile Security (Keystore, SQLCipher)",
+  "Location Engineering (Dead Reckoning, Kalman)",
+  "Mobile Security (Android Keystore, SSL Pinning)",
   "CI/CD (Fastlane, Gradle)",
 ];
 
@@ -79,7 +79,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Security Hardening",
-        text: "Hardened the app to VAPT/banking compliance: SQLCipher, AES-256 Keystore, biometrics, and SSL-pinning build flavors.",
+        text: "Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build flavors.",
       },
       {
         label: "Data Layer",
@@ -172,7 +172,7 @@ export const caseStudies: CaseStudy[] = [
       "Ran a foreground service with a floating bubble UI to survive OEM battery restrictions.",
     ],
     outcome: "Tracking accuracy rose from 50% to 95%, making mileage reliable enough for expense reimbursement.",
-    tags: ["Location", "Sensor fusion", "Foreground services"],
+    tags: ["Location", "Dead reckoning", "Kalman filtering", "Foreground services"],
   },
   {
     slug: "crash-reduction",
@@ -235,11 +235,11 @@ export const skills: { group: string; items: string[] }[] = [
   },
   {
     group: "Platform & Systems",
-    items: ["Android SDK", "Location engineering + sensor fusion", "Foreground services", "Hilt / Dagger", "Firebase Crashlytics + Sentry + Mixpanel"],
+    items: ["Android SDK", "Location engineering (dead reckoning + Kalman)", "Foreground services", "Hilt / Dagger", "Firebase Crashlytics + Sentry + Mixpanel"],
   },
   {
     group: "Security & Ops",
-    items: ["SQLCipher + Android Keystore (AES-256)", "SSL pinning (OkHttp CertificatePinner)", "BiometricPrompt", "Fastlane CI/CD · AGP 9 · Gradle KTS", "Agentic workflows (Firebender, MCP)"],
+    items: ["Android Keystore field-level encryption (AES-256)", "SSL pinning (9 domains, 5 SHA-256 pins)", "BiometricPrompt access gate", "EncryptedSharedPreferences / DataStore + Tink", "Fastlane CI/CD · AGP 9 · Gradle KTS", "Agentic workflows (Firebender, MCP)"],
   },
 ];
 
@@ -259,11 +259,11 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   },
   {
     group: "Data & Networking",
-    items: ["Room (SQLite, 24 schema migrations across 2 databases)", "DataStore", "SQLCipher", "Retrofit", "OkHttp", "REST APIs"],
+    items: ["Room (SQLite, 24 schema migrations across 2 databases)", "DataStore", "Retrofit", "OkHttp", "Ktor", "REST APIs"],
   },
   {
     group: "Platform",
-    items: ["Android SDK", "WorkManager", "Foreground Services", "Location / sensor fusion", "Firebase Crashlytics + Sentry", "Mixpanel"],
+    items: ["Android SDK", "WorkManager", "Foreground Services", "Location / dead reckoning + Kalman filtering", "Firebase Crashlytics + Sentry", "Mixpanel"],
   },
   {
     group: "Security",

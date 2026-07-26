@@ -38,7 +38,7 @@ const APPS: Repo[] = [
     path: "darkpandawarrior/Mileway",
     lang: "Kotlin",
     kind: "KMP app · 5 platforms",
-    role: "A 5-surface fintech from one Kotlin codebase — sensor-fusion location engine, reimbursement-policy layer, durable submit-outbox and an offline on-device AI assistant.",
+    role: "A 5-surface fintech from one Kotlin codebase — dead-reckoning location engine with Kalman smoothing and IMU motion filtering, reimbursement-policy layer, durable submit-outbox and an offline on-device AI assistant.",
     stat: "36 modules · 13 features · 159 tests",
     url: "https://github.com/darkpandawarrior/Mileway",
     accent: "#5ee6ff",

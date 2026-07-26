@@ -108,7 +108,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Room / SQLite",
     depth: "deep",
-    evidence: "24 schema migrations across 2 production databases, with SQLCipher encryption",
+    evidence: "24 schema migrations across 2 production databases; 47 sequential non-destructive migrations in Mileway (schema v48)",
     aliases: ["room", "sqlite", "sqldelight", "local database", "persistence", "orm", "datastore"],
   },
   {
@@ -132,14 +132,14 @@ export const SKILLS: Skill[] = [
   {
     name: "Mobile security",
     depth: "deep",
-    evidence: "SQLCipher + Android Keystore (AES-256), SSL pinning, BiometricPrompt, VAPT-cleared",
-    aliases: ["security", "encryption", "keystore", "sqlcipher", "ssl pinning", "certificate pinning", "biometric", "biometrics", "vapt", "penetration test", "owasp", "secure storage"],
+    evidence: "Android Keystore field-level encryption (AES-256), SSL pinning across 9 domains (5 SHA-256 pins), biometric access gate, EncryptedSharedPreferences/DataStore+Tink — VAPT-cleared",
+    aliases: ["security", "encryption", "keystore", "ssl pinning", "certificate pinning", "biometric", "biometrics", "vapt", "penetration test", "owasp", "secure storage"],
   },
   {
-    name: "Location & sensor fusion",
+    name: "Location & motion engineering",
     depth: "deep",
-    evidence: "Predictive dead reckoning with accelerometer+GPS fusion — accuracy 50% → 95%",
-    aliases: ["location", "gps", "geolocation", "sensor", "sensors", "sensor fusion", "maps", "google maps", "geofencing", "location tracking"],
+    evidence: "Predictive dead reckoning over GPS/IMU with Kalman smoothing and spike rejection — accuracy 50% → 95%; MotionFusion gravity/linear-acceleration filtering in Mileway",
+    aliases: ["location", "gps", "geolocation", "sensor", "sensors", "maps", "google maps", "geofencing", "location tracking", "imu", "accelerometer", "kalman"],
   },
   {
     name: "CI/CD & release",
@@ -174,7 +174,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Performance engineering",
     depth: "working",
-    evidence: "Compose compiler metrics and recomposition work; 80% crash reduction at 50k MAU",
+    evidence: "Compose compiler metrics run during the migration push, recomposition/stability work; 80% crash reduction at 50k MAU",
     aliases: ["performance", "optimization", "optimisation", "profiling", "memory management", "anr", "jank", "baseline profile", "app startup", "rendering"],
   },
   {
