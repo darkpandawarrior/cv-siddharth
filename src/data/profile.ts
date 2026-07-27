@@ -59,7 +59,7 @@ export const experience: Experience[] = [
   {
     company: "Neev Consulting",
     role: "Consulting Engineer, Platform & AI",
-    period: "2026 — Present",
+    period: "Apr 2026 — Present",
     points: [
       {
         label: "Agentic ERP",
