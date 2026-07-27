@@ -57,13 +57,28 @@ export interface Experience {
 
 export const experience: Experience[] = [
   {
+    company: "Neev Consulting",
+    role: "Consulting Engineer, Platform & AI",
+    period: "2026 — Present",
+    points: [
+      {
+        label: "Agentic ERP",
+        text: "Authored the LLM assistant layer of an ERPNext/Frappe consulting ERP — business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
+      },
+      {
+        label: "Platform",
+        text: "Python/Frappe on MariaDB and Docker Compose, with a LibreChat deployment and MCP tool wiring (Atlassian, Playwright). Delivered under Jira with PR review across four repositories.",
+      },
+    ],
+  },
+  {
     company: "Dice.tech",
     role: "SDE-2, Android & Product Owner",
     period: "Jun 2023 — Present",
     points: [
       {
         label: "Platform Ownership",
-        text: "Own Android architecture and platform decisions across a 738k-LOC Kotlin app serving 50,000+ MAU.",
+        text: "Own Android architecture and platform decisions across a ~960k-LOC Kotlin app serving 50,000+ MAU.",
       },
       {
         label: "Compose Migration",
@@ -180,7 +195,7 @@ export const caseStudies: CaseStudy[] = [
     metric: "-80% crashes",
     summary: "Systematic triage with Crashlytics turned a noisy crash feed into a fixable backlog.",
     problem:
-      "A fast-growing 738k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs.",
+      "A fast-growing ~960k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs.",
     approach: [
       "Clustered crashes to collapse dozens of stack traces into a handful of root bugs.",
       "Reconstructed the user journey before each crash with structured breadcrumb instrumentation.",
@@ -193,7 +208,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "compose-migration",
     title: "Zero-regression migration to a Compose theme platform",
     metric: "~87% UI-layer Compose",
-    summary: "Migrated a 738k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
+    summary: "Migrated a ~960k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
     problem:
       "XML views made UI changes slow and inconsistent, and design's theming requests meant touching dozens of files.",
     approach: [
