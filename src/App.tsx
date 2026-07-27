@@ -856,7 +856,7 @@ function ExperienceSection() {
                   {job.company.toLowerCase().includes("dice") && (
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
                       <span className="font-mono text-[10px] uppercase tracking-wider text-muted">receipts</span>
-                      {["50% → 95% GPS", "-80% crashes", "92% Compose"].map((r) => (
+                      {["50% → 95% GPS", "-80% crashes", "~87% UI Compose"].map((r) => (
                         <button
                           key={r}
                           type="button"
@@ -912,7 +912,7 @@ function ExperienceSection() {
 // Each skill group points at the work that proves it — synergy, not a tag soup.
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
-    { label: "92% Compose migration", href: "#work" },
+    { label: "~87% UI-layer Compose migration", href: "#work" },
     { label: "Mileway · 35 modules", href: "#project/mileway" },
   ],
   "Concurrency & Data": [

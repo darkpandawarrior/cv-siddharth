@@ -12,10 +12,10 @@ export const profile = {
   availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
+    "5+ years building production Android. Platform owner of a ~960k-LOC financial SaaS app (~87% of UI-layer code in Compose) serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Expert in Jetpack Compose migration (92% coverage), Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
+    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
 };
 
 export const education = {
@@ -28,7 +28,7 @@ export const metrics = [
   { value: "50k+", label: "monthly active users", detail: "22k+ daily, platform owner at Dice.tech" },
   { value: "95%", label: "GPS accuracy", detail: "up from 50% — predictive dead reckoning" },
   { value: "80%", label: "crash reduction", detail: "Crashlytics + structured concurrency fixes" },
-  { value: "92%", label: "Jetpack Compose", detail: "of a 738k LOC app, zero regressions" },
+  { value: "~87%", label: "UI-layer Compose", detail: "455k of 523k UI LOC in a ~960k LOC app; per-screen parity verification" },
 ];
 
 // Core competency chips — shown in the résumé header and on LinkedIn
@@ -67,7 +67,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Compose Migration",
-        text: "Led legacy Java/XML to 92% Jetpack Compose migration with zero regressions across mission-critical workflows.",
+        text: "Led legacy Java/XML to ~87% of UI-layer code in Compose migration verified per-screen against the legacy XML baseline across mission-critical workflows.",
       },
       {
         label: "Location Engineering",
@@ -192,8 +192,8 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "compose-migration",
     title: "Zero-regression migration to a Compose theme platform",
-    metric: "92% Compose",
-    summary: "Migrated a 738k-LOC app to Jetpack Compose with zero regressions and built a theme engine the whole team ships on.",
+    metric: "~87% UI-layer Compose",
+    summary: "Migrated a 738k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
     problem:
       "XML views made UI changes slow and inconsistent, and design's theming requests meant touching dozens of files.",
     approach: [
@@ -201,7 +201,7 @@ export const caseStudies: CaseStudy[] = [
       "Standardized on a single immutable UiState per screen with StateFlow and MVI.",
       "Built a Dynamic Theme Engine on CompositionLocal for one-place brand and token changes.",
     ],
-    outcome: "Reached 92% Compose coverage with zero regressions; UI development friction dropped 60%.",
+    outcome: "Reached ~87% UI-layer Compose coverage (455k of 523k LOC) verified per-screen against the legacy XML baseline; UI development friction dropped 60%.",
     tags: ["Jetpack Compose", "MVI", "Design systems"],
   },
   {
@@ -247,7 +247,7 @@ export const skills: { group: string; items: string[] }[] = [
 export const resumeSkills: { group: string; items: string[] }[] = [
   {
     group: "UI",
-    items: ["Jetpack Compose (92% production coverage)", "Material 3", "Compose-View interop", "Compose Multiplatform"],
+    items: ["Jetpack Compose (~87% of UI-layer code)", "Material 3", "Compose-View interop", "Compose Multiplatform"],
   },
   {
     group: "Architecture",

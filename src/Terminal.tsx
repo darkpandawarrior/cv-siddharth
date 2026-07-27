@@ -429,7 +429,7 @@ function buildCommands(jump: Go): Cmd[] {
         <div className="space-y-1">
           <div className="text-zinc-200">
             Senior Android engineer, platform owner at <Hi>50k+ MAU</Hi>. Ships the unglamorous
-            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-80% crashes</Hi>, <Hi>92% Compose</Hi> across 738k LOC.
+            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-80% crashes</Hi>, <Hi>~87% UI-layer Compose</Hi> across ~960k LOC.
           </div>
           <div className="text-zinc-400">{profile.availability}</div>
           <div className="pt-1">
@@ -744,7 +744,7 @@ function Neofetch() {
     ["scale", `${metrics[0].value} MAU · 738k LOC`],
     ["gps", "50% → 95% accuracy"],
     ["crashes", "-80% (structured concurrency)"],
-    ["compose", "92% of the codebase"],
+    ["compose", "~87% of UI-layer code (455k of 523k LOC)"],
     ["builds", projects.map((p) => p.name).join(" · ")],
   ];
   return (
