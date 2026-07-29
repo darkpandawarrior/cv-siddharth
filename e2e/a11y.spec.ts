@@ -5,7 +5,23 @@ import AxeBuilder from "@axe-core/playwright";
 // Four routes cover every layout shape on the site — SSR content page (/),
 // print-mode page (/resume), SSR project detail with a gallery/lightbox
 // (/project/mileway), and a CSR "room" with canvas + form controls (/lab).
-const ROUTES = ["/", "/resume", "/project/mileway", "/lab"];
+// 2026-07-29 audit: extended to the remaining CSR "rooms" (terminal, blueprint,
+// compose, forge, map, playground, loopdown) — the original four never scanned
+// any of these, so their ARIA/keyboard wiring shipped unverified like the chat
+// console did before the dedicated test below was added.
+const ROUTES = [
+  "/",
+  "/resume",
+  "/project/mileway",
+  "/lab",
+  "/terminal",
+  "/blueprint",
+  "/compose",
+  "/forge",
+  "/map",
+  "/playground",
+  "/loopdown",
+];
 
 for (const path of ROUTES) {
   test(`${path} has no serious/critical axe violations`, async ({ page }) => {
@@ -68,4 +84,20 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   // on a control that no longer exists).
   await paste.press("Escape");
   await expect(input).toBeFocused();
+});
+
+// CommandPalette is mounted on "/" (scanned above), but the loop never
+// presses ⌘K, so its role="dialog"/combobox/listbox wiring was unverified —
+// same class of gap the chat-console test above exists to catch.
+test("the command palette has no serious/critical axe violations when open", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.keyboard.press("Meta+k");
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  const report = bad
+    .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
+    .join("\n\n");
+  expect(bad, report).toEqual([]);
 });
