@@ -15,7 +15,7 @@ export const profile = {
     "5+ years building production Android. Platform owner of a ~960k-LOC financial SaaS app (~87% of UI-layer code in Compose) serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a 738k-line, 50,000+ MAU financial Android app. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
+    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a ~960k-line, 50,000+ MAU financial Android app. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
 };
 
 export const education = {

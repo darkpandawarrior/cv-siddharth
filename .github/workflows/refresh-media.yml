@@ -27,9 +27,13 @@ jobs:
           node-version: '22'
       - run: npm ci
       # rebuild-showcase re-stitches the narrated films whenever synced frames
-      # change (ubuntu ffmpeg + PIL captions; voiceover comes from the committed
+      # change (ffmpeg + PIL captions; voiceover comes from the committed
       # content-addressed cache — a narration TEXT change must be re-recorded
       # locally on macOS via `npm run showcase`, and this job fails loudly then).
+      # ffmpeg is installed explicitly rather than assumed present on the runner
+      # image — that assumption silently broke this job for two days straight
+      # (2026-07-27/28, ffprobe missing) once the image stopped bundling it.
+      - run: sudo apt-get update -y && sudo apt-get install -y ffmpeg
       - run: pip install --quiet pillow
       - name: Sync media + regenerate stats & galleries
         env:

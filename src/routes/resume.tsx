@@ -4,7 +4,7 @@ import { ResumeView } from "../ResumeView.tsx";
 
 export const Route = createFileRoute("/resume")({
   head: () => {
-    const desc = "Print-perfect résumé — Siddharth Pandalai, Senior Android Engineer. 738k-LOC Compose SaaS, GPS 50%→95%, 80% crash reduction.";
+    const desc = "Print-perfect résumé — Siddharth Pandalai, Senior Android Engineer. ~960k-LOC Compose SaaS, GPS 50%→95%, 80% crash reduction.";
     return {
       meta: [
         { title: "Résumé — Siddharth Pandalai | Senior Android Engineer" },

@@ -5,8 +5,72 @@
   <link href="https://cv-siddharth.vercel.app/feed.xml" rel="self" type="application/atom+xml"/>
   <link href="https://cv-siddharth.vercel.app/loopdown" rel="alternate" type="text/html"/>
   <id>https://cv-siddharth.vercel.app/loopdown</id>
-  <updated>2026-07-31T00:00:00Z</updated>
+  <updated>2026-08-27T00:00:00Z</updated>
   <author><name>Siddharth Pandalai</name></author>
+  <entry>
+    <title>Your thresholds do not belong in constants</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#thresholds-in-config" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#thresholds-in-config</id>
+    <published>2026-08-27T00:00:00Z</published>
+    <updated>2026-08-27T00:00:00Z</updated>
+    <summary>Field notes from “Chain Of Custody” on data-integrity. Topics: architecture, configuration, kotlin, refactoring, tuning.</summary>
+  </entry>
+  <entry>
+    <title>Invariants are cheap. Silent corruption is not.</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#invariants-are-cheap" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#invariants-are-cheap</id>
+    <published>2026-08-25T00:00:00Z</published>
+    <updated>2026-08-25T00:00:00Z</updated>
+    <summary>Field notes from “Chain Of Custody” on data-integrity. Topics: data-integrity, validation, architecture, kotlin, testing.</summary>
+  </entry>
+  <entry>
+    <title>Every filter needs a documented exception</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#documented-exception" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#documented-exception</id>
+    <published>2026-08-20T00:00:00Z</published>
+    <updated>2026-08-20T00:00:00Z</updated>
+    <summary>Field notes from “Sensors Who Lie” on data-integrity. Topics: android, filtering, edge-cases, code-quality, location.</summary>
+  </entry>
+  <entry>
+    <title>Never silently change a number someone gets paid on</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#never-silently-change-a-number" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#never-silently-change-a-number</id>
+    <published>2026-08-18T00:00:00Z</published>
+    <updated>2026-08-18T00:00:00Z</updated>
+    <summary>Field notes from “Chain Of Custody” on data-integrity. Topics: product-engineering, trust, ux, data-integrity, android.</summary>
+  </entry>
+  <entry>
+    <title>When two sensors disagree, rank them</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#accelerometer-outranks-gps" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#accelerometer-outranks-gps</id>
+    <published>2026-08-13T00:00:00Z</published>
+    <updated>2026-08-13T00:00:00Z</updated>
+    <summary>Field notes from “Sensors Who Lie” on data-integrity. Topics: android, sensors, sensor-fusion, imu, location.</summary>
+  </entry>
+  <entry>
+    <title>Your data model is where uncertainty goes to die</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#uncertainty-dies-in-data-model" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#uncertainty-dies-in-data-model</id>
+    <published>2026-08-11T00:00:00Z</published>
+    <updated>2026-08-11T00:00:00Z</updated>
+    <summary>Field notes from “Chain Of Custody” on data-integrity. Topics: data-modelling, architecture, provenance, sensors, api-design.</summary>
+  </entry>
+  <entry>
+    <title>One global threshold is how you delete valid data</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#one-global-threshold" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#one-global-threshold</id>
+    <published>2026-08-06T00:00:00Z</published>
+    <updated>2026-08-06T00:00:00Z</updated>
+    <summary>Field notes from “Sensors Who Lie” on data-integrity. Topics: android, location, thresholds, heuristics, sensor-fusion.</summary>
+  </entry>
+  <entry>
+    <title>Filtered should never mean deleted</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#filtered-never-deleted" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#filtered-never-deleted</id>
+    <published>2026-08-04T00:00:00Z</published>
+    <updated>2026-08-04T00:00:00Z</updated>
+    <summary>Field notes from “Sensors Who Lie” on data-integrity. Topics: android, data-modelling, filtering, observability, architecture.</summary>
+  </entry>
   <entry>
     <title>collectAsState is quietly leaking your work</title>
     <link href="https://cv-siddharth.vercel.app/loopdown#collectasstate-leak" rel="alternate"/>

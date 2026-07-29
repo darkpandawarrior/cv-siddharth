@@ -35,7 +35,7 @@ export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
   "sensors-who-lie": { label: "Built in: Mileway's location engine", href: "#project/mileway" },
   "the-coroutine-court": { label: "From: the -80% crashes work", href: "#work" },
   "the-night-shift": { label: "From: the 50%→95% GPS work", href: "#work" },
-  "ghosts-in-the-recomposition": { label: "From: the 92% Compose migration", href: "#work" },
+  "ghosts-in-the-recomposition": { label: "From: the ~87% Compose migration", href: "#work" },
   "one-brain-two-bodies": { label: "Built in: Mileway across 5 platforms", href: "#project/mileway" },
 };
 

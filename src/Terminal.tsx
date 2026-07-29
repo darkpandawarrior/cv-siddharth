@@ -666,7 +666,7 @@ function buildCommands(jump: Go): Cmd[] {
       name: "uptime",
       hidden: true,
       help: "",
-      run: () => <span>up <Hi>5+ years</Hi>, load average: <Dim>738k LOC, 50k MAU, 0 dropped pagers</Dim></span>,
+      run: () => <span>up <Hi>5+ years</Hi>, load average: <Dim>~960k LOC, 50k MAU, 0 dropped pagers</Dim></span>,
     },
     {
       name: "vim",
@@ -741,7 +741,7 @@ function Neofetch() {
     ["location", profile.location],
     ["uptime", "5+ years in production Android"],
     ["kernel", "Kotlin · Jetpack Compose · KMP"],
-    ["scale", `${metrics[0].value} MAU · 738k LOC`],
+    ["scale", `${metrics[0].value} MAU · ~960k LOC`],
     ["gps", "50% → 95% accuracy"],
     ["crashes", "-80% (structured concurrency)"],
     ["compose", "~87% of UI-layer code (455k of 523k LOC)"],

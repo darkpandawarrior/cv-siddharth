@@ -54,7 +54,7 @@ export function openLab(tab: LabKey) {
 const TABS: { key: LabKey; label: string; metric: string; group: "production" | "personal" }[] = [
   { key: "signal", label: "Signal Lab", metric: "50% → 95%", group: "production" },
   { key: "crashes", label: "Crash Triage", metric: "-80%", group: "production" },
-  { key: "recompose", label: "Recomposition", metric: "92% Compose", group: "production" },
+  { key: "recompose", label: "Recomposition", metric: "~87% Compose", group: "production" },
   { key: "theme", label: "White-label", metric: "80% faster", group: "production" },
   { key: "modules", label: "Module Graph", metric: "46 modules", group: "personal" },
   { key: "gateways", label: "Gateway Lab", metric: "66 gateways", group: "personal" },

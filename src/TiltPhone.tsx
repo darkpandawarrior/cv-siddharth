@@ -140,7 +140,7 @@ export function TiltPhone() {
           </div>
 
           <div className="flex items-center gap-1.5 rounded-xl bg-card p-2.5 text-[10px] text-zinc-400">
-            <Zap size={11} className="shrink-0 text-accent" /> 92% Jetpack Compose
+            <Zap size={11} className="shrink-0 text-accent" /> ~87% Jetpack Compose
           </div>
           <div className="flex items-center gap-1.5 rounded-xl bg-card p-2.5 text-[10px] text-zinc-400">
             <MapPin size={11} className="shrink-0 text-accent" /> Foreground service · floating bubble
