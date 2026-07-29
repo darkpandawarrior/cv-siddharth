@@ -17,6 +17,8 @@ import { Canvas } from "@react-three/fiber";
 import { ARROWS, FRAMES, METRICS, NODES, NOTES, PINS, PERSISTENCE_KEY, TOUR, centerOf } from "./blueprintData.ts";
 import { CountUp, HoloCore, hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 
 /* Everything that pulls in the tldraw SDK lives in this file, isolated from
  * BlueprintRoom.tsx and lazy-loaded only when a visitor actually picks
@@ -26,10 +28,12 @@ declare module "tldraw" {
   interface TLGlobalShapePropsMap {
     "sid-metric": { w: number; h: number; value: string; label: string };
     "sid-holo": { w: number; h: number };
+    "sid-live": { w: number; h: number };
   }
 }
 type MetricShape = TLShape<"sid-metric">;
 type HoloShape = TLShape<"sid-holo">;
+type LiveShape = TLShape<"sid-live">;
 
 class MetricShapeUtil extends ShapeUtil<MetricShape> {
   static override type = "sid-metric" as const;
@@ -167,6 +171,78 @@ class HoloShapeUtil extends ShapeUtil<HoloShape> {
   }
 }
 
+function LiveSignalCard() {
+  const { data } = useLiveSignal<SpotifyNow>("/api/spotify");
+  const playing = data?.connected && data.isPlaying;
+  const art = data?.connected ? (data.isPlaying ? data.albumArt : data.recent[0]?.albumArt) : undefined;
+  const label = data?.connected
+    ? data.isPlaying
+      ? `${data.track} — ${data.artist}`
+      : data.recent[0]
+        ? `last: ${data.recent[0].track}`
+        : "quiet"
+    : "not connected";
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderRadius: 14,
+        background: "rgba(11, 15, 13, 0.92)",
+        border: "1px solid rgba(61, 220, 132, 0.4)",
+        fontFamily: "var(--font-mono)",
+        padding: 12,
+      }}
+    >
+      {art ? (
+        <img
+          src={art}
+          alt=""
+          width={64}
+          height={64}
+          className={playing ? "sid-live-spin" : undefined}
+          style={{ borderRadius: "50%", opacity: playing ? 1 : 0.5 }}
+        />
+      ) : (
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(61,220,132,0.15)" }} />
+      )}
+      <span style={{ fontSize: 10, color: "rgba(232, 239, 233, 0.75)", textAlign: "center" }}>{label}</span>
+    </div>
+  );
+}
+
+class LiveSignalShapeUtil extends ShapeUtil<LiveShape> {
+  static override type = "sid-live" as const;
+
+  getDefaultProps(): LiveShape["props"] {
+    return { w: 160, h: 140 };
+  }
+
+  getGeometry(shape: LiveShape) {
+    return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
+  }
+
+  component(shape: LiveShape) {
+    return (
+      <HTMLContainer style={{ width: shape.props.w, height: shape.props.h }}>
+        <LiveSignalCard />
+      </HTMLContainer>
+    );
+  }
+
+  getIndicatorPath(shape: LiveShape) {
+    const path = new Path2D();
+    path.rect(0, 0, shape.props.w, shape.props.h);
+    return path;
+  }
+}
+
 /* NODES/ARROWS/FRAMES/PINS/METRICS/NOTES/TOUR live in ./blueprintData.ts —
  * shared with the 3D fly-through view so both stay in sync. */
 
@@ -214,6 +290,10 @@ function seed(editor: Editor) {
     shapes.push({ id: id(m.key), type: "sid-metric", x: m.x, y: m.y, props: { w: 200, h: 112, value: m.value, label: m.label } });
   }
   shapes.push({ id: id("holo"), type: "sid-holo", x: 1620, y: 560, props: { w: 300, h: 230 } });
+  // Singleton, so it's inlined like "holo" above rather than data-driven via
+  // blueprintData.ts (that file only holds plain-geo NODES/METRICS, not custom
+  // shape instances). Placed just under "chat" — both are live surfaces.
+  shapes.push({ id: id("live-signal"), type: "sid-live", x: 1180, y: 240, props: { w: 160, h: 140 } });
 
   for (const [i, note] of NOTES.entries()) {
     shapes.push({ id: id(`note-${i}`), type: "note", x: note.x, y: note.y, props: { color: note.color, size: "s", font: "mono", richText: toRichText(note.text) } });
@@ -283,7 +363,7 @@ function boardLooksBlank(editor: Editor): boolean {
   return !boxesOverlap(content, editor.getViewportPageBounds());
 }
 
-const shapeUtils = [MetricShapeUtil, HoloShapeUtil];
+const shapeUtils = [MetricShapeUtil, HoloShapeUtil, LiveSignalShapeUtil];
 
 /** The tldraw whiteboard view — draw, drag, leave a note, all persisted locally.
  *  Reacts to `tourStop`/`resetTick` from the shared header instead of owning

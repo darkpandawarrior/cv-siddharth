@@ -966,3 +966,15 @@ html.resume-mode body {
 @media (prefers-reduced-motion: reduce) {
   .voice-live { animation: none; }
 }
+
+/* Blueprint canvas: spinning album art on the live-signal shape while a
+   track is actually playing (src/SketchBoard.tsx). */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.sid-live-spin {
+  animation: spin 4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sid-live-spin { animation: none; }
+}

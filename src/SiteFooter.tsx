@@ -3,6 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { profile } from "./data/profile.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
 type FooterLink =
   | { label: string; kind: "route"; to: string; params?: { slug: string } }
@@ -64,6 +67,35 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 
 const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent";
 
+function NowChip() {
+  const { data: spotify } = useLiveSignal<SpotifyNow>("/api/spotify");
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+
+  const nowTrack = spotify?.connected && (spotify.isPlaying ? spotify.track : spotify.recent[0]?.track);
+  const nowArtist = spotify?.connected && (spotify.isPlaying ? spotify.artist : spotify.recent[0]?.artist);
+  const nowArt = spotify?.connected ? (spotify.isPlaying ? spotify.albumArt : spotify.recent[0]?.albumArt) : undefined;
+  const nowUrl = spotify?.connected ? (spotify.isPlaying ? spotify.url : spotify.recent[0]?.url) : undefined;
+  const latestActivity = activity?.connected ? activity.items[0] : undefined;
+
+  if (!nowTrack && !latestActivity) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-4 border-t border-line py-3 text-xs text-muted">
+      {nowTrack && (
+        <a href={nowUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-accent">
+          {nowArt && <img src={nowArt} alt="" width={16} height={16} className="rounded-sm" />}
+          <span>{spotify?.isPlaying ? "Now playing" : "Last played"}: {nowTrack} · {nowArtist}</span>
+        </a>
+      )}
+      {latestActivity && (
+        <a href={latestActivity.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+          {latestActivity.type === "push" ? "Pushed to" : latestActivity.type === "pr" ? "Opened a PR on" : "Created a ref on"} {latestActivity.repo.split("/")[1]}
+        </a>
+      )}
+    </div>
+  );
+}
+
 export function SiteFooter() {
   const { goToSection } = useSectionNav();
 
@@ -98,6 +130,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
+      <NowChip />
       <div className="border-t border-line py-5 text-center text-xs text-muted">
         Built with React 19, Tailwind v4, three.js, tldraw and an LLM-agnostic chat backend · {new Date().getFullYear()}
       </div>

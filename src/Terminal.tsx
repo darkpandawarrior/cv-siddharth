@@ -21,6 +21,9 @@ import { projectStats } from "./data/projectStats.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { chatErrorText, streamReply } from "./lib/chatClient.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
 /**
  * `#terminal` — a faux-shell easter egg that's a real, usable interface.
@@ -127,6 +130,8 @@ interface Cmd {
   usage?: string;
   help: string;
   hidden?: boolean;
+  /** Extra names that dispatch to this same command (e.g. `np` for `spotify`). */
+  alias?: string[];
   run: (args: string[], ctx: Ctx) => ReactNode | void | Promise<ReactNode | void>;
 }
 
@@ -675,6 +680,18 @@ function buildCommands(jump: Go): Cmd[] {
       run: () => <Dim>you're already in the best editor — Android Studio. :q!</Dim>,
     },
     {
+      name: "spotify",
+      alias: ["np"],
+      help: "what I'm listening to",
+      run: () => <SpotifyBlock />,
+    },
+    {
+      name: "activity",
+      alias: ["gh"],
+      help: "recent GitHub activity",
+      run: () => <GithubActivityBlock />,
+    },
+    {
       name: "man",
       hidden: true,
       help: "",
@@ -733,6 +750,44 @@ function AskBlock({ question }: { question: string }) {
   );
 }
 
+/* `spotify`/`np` renders this: live now-playing, falling back to the most
+ * recently played track. Same useLiveSignal hook the footer chip uses. */
+function SpotifyBlock() {
+  const { data } = useLiveSignal<SpotifyNow>("/api/spotify");
+  if (!data) return <Dim>reading now-playing…</Dim>;
+  if (!data.connected) return <Dim>spotify: not connected</Dim>;
+  if (data.isPlaying) {
+    return (
+      <span>
+        ▶ <Hi>{data.track}</Hi> — {data.artist}
+      </span>
+    );
+  }
+  if (data.recent.length === 0) return <Dim>nothing recent</Dim>;
+  return (
+    <div>
+      <Dim>not playing. recent:</Dim>
+      {data.recent.map((t, i) => (
+        <div key={i}>· {t.track} — {t.artist}</div>
+      ))}
+    </div>
+  );
+}
+
+/* `activity`/`gh` renders this: live recent GitHub events. */
+function GithubActivityBlock() {
+  const { data } = useLiveSignal<GithubActivity>("/api/github-activity");
+  if (!data) return <Dim>reading github activity…</Dim>;
+  if (!data.connected || data.items.length === 0) return <Dim>no recent activity</Dim>;
+  return (
+    <div>
+      {data.items.map((it, i) => (
+        <div key={i}>· [{it.repo.split("/")[1]}] {it.message}</div>
+      ))}
+    </div>
+  );
+}
+
 /* neofetch-style two-column readout, sourced live from profile data. */
 function Neofetch() {
   const rows: [string, ReactNode][] = [
@@ -786,7 +841,14 @@ export function Terminal() {
     [navigate, goToSection],
   );
   const commands = useMemo(() => buildCommands(jump), [jump]);
-  const cmdMap = useMemo(() => new Map(commands.map((c) => [c.name, c])), [commands]);
+  const cmdMap = useMemo(() => {
+    const map = new Map<string, Cmd>();
+    for (const c of commands) {
+      map.set(c.name, c);
+      for (const a of c.alias ?? []) map.set(a, c);
+    }
+    return map;
+  }, [commands]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>(() => {
@@ -947,10 +1009,9 @@ export function Terminal() {
       setValue("");
       setGhost("");
       void run(v);
-    } else if (e.key === "Tab") {
+    } else if (e.key === "Tab" && complete(value) !== value) {
       e.preventDefault();
-      const c = complete(value);
-      setValue(c);
+      setValue(complete(value));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (!history.length) return;
