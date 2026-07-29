@@ -33,6 +33,7 @@ const STATIC = [
   { path: "/resume", priority: "0.9", changefreq: "monthly" },
   { path: "/loopdown", priority: "0.7", changefreq: "weekly" },
   { path: "/playground", priority: "0.6", changefreq: "monthly" },
+  { path: "/pulse", priority: "0.5", changefreq: "daily" },
   { path: "/lab", priority: "0.6", changefreq: "monthly" },
   { path: "/compose", priority: "0.5", changefreq: "monthly" },
   { path: "/blueprint", priority: "0.5", changefreq: "monthly" },

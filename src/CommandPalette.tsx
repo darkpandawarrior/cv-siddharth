@@ -51,6 +51,7 @@ export function CommandPalette() {
       { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => navigate({ to: "/map" }) },
       { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => navigate({ to: "/lab" }) },
       { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => navigate({ to: "/forge" }) },
+      { id: "pulse", label: "The Pulse — what visitors actually touch", hint: "Open", keywords: "stats counter dashboard analytics interactions live activity", icon: <Compass size={15} />, run: () => navigate({ to: "/pulse" }) },
       { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => navigate({ to: "/playground" }) },
       { id: "source", label: "The Source — every public repo", hint: "Jump", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} />, run: () => goToSection("source") },
       { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("contact") },

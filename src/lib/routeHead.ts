@@ -26,13 +26,18 @@ import { siteRooms } from "../data/profile.ts";
 const SITE = "https://cv-siddharth.vercel.app";
 
 /**
- * The two routes that aren't rooms, and so aren't in `siteRooms`.
+ * The routes that aren't rooms, and so aren't in `siteRooms`.
  *
  * /playground is the hub that LISTS the rooms — putting it in the array would
- * make it render a card for itself — and /loopdown is a writing series, not an
- * interactive surface.
+ * make it render a card for itself — /loopdown is a writing series, not an
+ * interactive surface, and /pulse is a dashboard *about* the rooms.
  */
 const NON_ROOM: Record<string, { label: string; blurb: string }> = {
+  "/pulse": {
+    label: "The Pulse",
+    blurb:
+      "A live count of what visitors actually touch across this portfolio — which rooms get opened, what gets played with, and what nobody has found yet.",
+  },
   "/playground": {
     label: "The Playground",
     blurb:
