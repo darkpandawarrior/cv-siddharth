@@ -1,9 +1,12 @@
-import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Activity, LayoutGrid } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
-import { siteRooms, type SiteRoom } from "./data/profile.ts";
+import { ROOMS, type Room } from "./rooms.tsx";
+import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
+import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
+import { Sandbox } from "./play/Sandbox.tsx";
+import { usePulse, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
 
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
@@ -15,81 +18,18 @@ import { siteRooms, type SiteRoom } from "./data/profile.ts";
  * context is ever live) and shares the RoomFrame chrome below.
  */
 
-type Room = SiteRoom & {
-  icon: LucideIcon;
-  tint: string;
-};
-
-// Per-route presentation (React-only) merged onto the shared `siteRooms` data
-// in profile.ts. The copy lives there because gen-system-prompt.mjs also reads
-// it (a Node script can't import this .tsx) — so the AI assistant and this hub
-// can never drift apart.
-const ROOM_STYLE: Record<string, { icon: LucideIcon; tint: string }> = {
-  "/compose": { icon: Smartphone, tint: "#3ddc84" },
-  "/lab": { icon: FlaskConical, tint: "#5ee6ff" },
-  "/blueprint": { icon: Compass, tint: "#db61ff" },
-  "/map": { icon: Boxes, tint: "#f0883e" },
-  "/forge": { icon: Sparkles, tint: "#3ddc84" },
-  "/terminal": { icon: TerminalSquare, tint: "#5ee6ff" },
-};
-
-export const ROOMS: Room[] = siteRooms.map((r) => ({
-  ...r,
-  ...(ROOM_STYLE[r.to] ?? { icon: LayoutGrid, tint: "#3ddc84" }),
-}));
-
-/** Shared full-screen chrome for every room route (Lab Bench, Storyboard,
- *  Forge). Keeps a consistent way back to the hub and the portfolio. */
-export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
-  const { goToSection } = useSectionNav();
-  return (
-    <div className="flex min-h-screen flex-col bg-void">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/playground"
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent"
-            >
-              <LayoutGrid size={14} /> <span className="hidden sm:inline">Playground</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => goToSection("top")}
-              className="flex items-center gap-1.5 text-sm text-muted transition hover:text-accent"
-            >
-              <ArrowLeft size={14} /> <span className="hidden sm:inline">Portfolio</span>
-            </button>
-          </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
-            {title} — {tagline}
-          </span>
-          <button
-            onClick={() => openChat()}
-            className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
-          >
-            Ask <span className="hidden sm:inline">my AI</span>
-          </button>
-        </nav>
-      </header>
-      <main id="main-content" tabIndex={-1} className="min-h-0 flex-1">
-        {/* Every room route is single-purpose full-screen chrome (no scrollable
-            page around it), so it never gets its own visible <h1> — this one
-            is screen-reader-only, keeping heading order sane (the room's own
-            content, e.g. LabBench's h2, follows it) without duplicating the
-            title bar's visible text above. */}
-        <h1 className="sr-only">{title} — {tagline}</h1>
-        {children}
-      </main>
-    </div>
-  );
-}
-
 function RoomCard({ r, i }: { r: Room; i: number }) {
   const Icon = r.icon;
+  const counts = usePulseCounts();
+  const bump = usePulse();
+  // "room:blueprint" for "/blueprint" — the registry keys are named off the
+  // routes so a new room needs one entry in PULSE_EVENTS and nothing here.
+  const event = `room:${r.to.slice(1)}` as PulseEvent;
+  const visits = counts[event] ?? 0;
   return (
     <Link
       to={r.to}
+      onClick={() => bump(event)}
       className="playground-card group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1"
       style={{ animationDelay: `${i * 60}ms` }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.tint}66`)}
@@ -106,14 +46,29 @@ function RoomCard({ r, i }: { r: Room; i: number }) {
       </div>
       <h3 className="font-display mt-4 text-lg font-bold transition group-hover:text-accent">{r.label}</h3>
       <p className="mt-2 grow text-sm leading-relaxed text-zinc-400">{r.blurb}</p>
-      <span className="mt-4 inline-flex items-center gap-1 font-mono text-[11px] font-semibold" style={{ color: r.tint }}>
+      <span className="mt-4 flex items-center justify-between gap-2 font-mono text-[11px] font-semibold" style={{ color: r.tint }}>
         enter →
+        {visits > 0 && (
+          <span className="font-normal text-muted" title="How many times this room has been opened, across everyone">
+            {visits.toLocaleString()} {visits === 1 ? "visit" : "visits"}
+          </span>
+        )}
       </span>
     </Link>
   );
 }
 
 export default function Playground() {
+  // Everything shared on this page — presence, the tile counts, the sandbox and
+  // the wall — reads from this one room.
+  return (
+    <PlayRoom>
+      <PlaygroundInner />
+    </PlayRoom>
+  );
+}
+
+function PlaygroundInner() {
   const { goToSection } = useSectionNav();
   return (
     <div className="flex min-h-screen flex-col bg-void">
@@ -129,12 +84,15 @@ export default function Playground() {
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
-          <button
-            onClick={() => openChat()}
-            className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
-          >
-            Ask <span className="hidden sm:inline">my AI</span>
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <PresenceBadge className="hidden sm:flex" />
+            <button
+              onClick={() => openChat()}
+              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
+            >
+              Ask <span className="hidden sm:inline">my AI</span>
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -145,12 +103,21 @@ export default function Playground() {
           Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
           engineering the rest of the site describes. Pick one and poke it.
         </p>
+        <Link
+          to="/pulse"
+          className="mt-4 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
+        >
+          <Activity size={12} /> see what everyone else has been touching →
+        </Link>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ROOMS.map((r, i) => (
             <RoomCard key={r.to} r={r} i={i} />
           ))}
         </div>
+
+        <Sandbox />
+        {GUEST_WALL_ENABLED && <GuestWall />}
 
         <p className="mt-10 font-mono text-[11px] text-muted">
           tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}

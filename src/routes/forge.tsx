@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
-import { RoomFrame } from "../Playground.tsx";
+import { RoomFrame } from "../rooms.tsx";
 import { ParticleWordmark } from "../ParticleWordmark.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 

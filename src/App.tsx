@@ -31,7 +31,7 @@ import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { Picture } from "./Picture.tsx";
-import { ROOMS } from "./Playground.tsx";
+import { ROOMS } from "./rooms.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
