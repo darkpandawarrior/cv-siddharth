@@ -119,6 +119,13 @@ Beyond the scroll, the site is navigable as an environment:
   server-rendered with its own Open Graph / Twitter meta and a branded
   1200×630 card (`/p/<slug>/og.png`), so a shared link previews the project,
   not the generic site. (Legacy `/p/<slug>` links 301-redirect to the route.)
+- **Live Signal** — Spotify now-playing/recently-played and recent GitHub
+  activity, one shared polling hook feeding three surfaces: a footer chip,
+  the terminal's `spotify`/`np` and `activity`/`gh` commands, and a live
+  card on the Blueprint canvas. GitHub activity works keyless; Spotify
+  needs a free Spotify Developer app — run `npm run spotify:auth` once to
+  mint `SPOTIFY_REFRESH_TOKEN`. No keys, no crash: every surface just shows
+  "not connected".
 
 ## Generators
 
