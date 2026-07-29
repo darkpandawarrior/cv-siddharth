@@ -94,12 +94,14 @@ function CameraRig({
   zoomInTick,
   zoomOutTick,
   onZoomChange,
+  reducedMotion,
 }: {
   tourStop: number;
   resetTick: number;
   zoomInTick: number;
   zoomOutTick: number;
   onZoomChange: (percent: number) => void;
+  reducedMotion: boolean;
 }) {
   const controls = useRef<OrbitControlsImpl | null>(null);
   const target = useRef(cloneOverview());
@@ -218,7 +220,9 @@ function CameraRig({
     // tilts toward the cursor" trick from award-winning WebGL sites. Nudging
     // the target (not the camera position) leaves zoom distance and orbit
     // angle alone, so it never fights the user's own control of the camera.
-    if (controls.current && !transitioning.current) {
+    // Skipped under prefers-reduced-motion — this is the only 3D scene on the
+    // site that was missing that guard (2026-07-29 audit).
+    if (controls.current && !transitioning.current && !reducedMotion) {
       const sway = scratchSway.current.set(state.pointer.x * 0.35, state.pointer.y * 0.2, 0);
       const lookAt = scratchLook.current.copy(target.current.look).add(sway);
       controls.current.target.lerp(lookAt, 0.03);
@@ -292,12 +296,12 @@ function FrameBackdrop({ frame }: { frame: (typeof FRAMES)[number] }) {
  * place next to glyph-ified geometry. */
 const TERMINAL_GREEN = "#3ddc84";
 
-function NodeCard({ node, ascii }: { node: NodeSpec; ascii: boolean }) {
+function NodeCard({ node, ascii, reducedMotion }: { node: NodeSpec; ascii: boolean; reducedMotion: boolean }) {
   const c = centerOf(node);
   const pos = worldPosAt(c.x, c.y);
   const color = ascii ? TERMINAL_GREEN : (COLOR_HEX[node.color] ?? "#3ddc84");
   return (
-    <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.6}>
+    <Float speed={reducedMotion ? 0 : 1.4} rotationIntensity={reducedMotion ? 0 : 0.12} floatIntensity={reducedMotion ? 0 : 0.6}>
       <Html transform position={pos} distanceFactor={8} occlude="blending">
         <div
           style={{
@@ -326,13 +330,13 @@ function NodeCard({ node, ascii }: { node: NodeSpec; ascii: boolean }) {
   );
 }
 
-function MetricTile({ m, ascii }: { m: (typeof METRICS)[number]; ascii: boolean }) {
+function MetricTile({ m, ascii, reducedMotion }: { m: (typeof METRICS)[number]; ascii: boolean; reducedMotion: boolean }) {
   // Note: frameDepth is intentionally keyed on the tile's origin (m.x, m.y),
   // not its shifted center — worldPosAt doesn't fit here without changing
   // which frame a tile near a boundary gets assigned to.
   const pos = toWorld(m.x + 100, m.y + 56, frameDepth(m.x, m.y) + 0.8);
   return (
-    <Float speed={1.7} rotationIntensity={0.1} floatIntensity={0.7}>
+    <Float speed={reducedMotion ? 0 : 1.7} rotationIntensity={reducedMotion ? 0 : 0.1} floatIntensity={reducedMotion ? 0 : 0.7}>
       <Html transform position={pos} distanceFactor={8}>
         <div
           style={{
@@ -355,10 +359,10 @@ function MetricTile({ m, ascii }: { m: (typeof METRICS)[number]; ascii: boolean 
   );
 }
 
-function StickyNote({ note, ascii }: { note: (typeof NOTES)[number]; ascii: boolean }) {
+function StickyNote({ note, ascii, reducedMotion }: { note: (typeof NOTES)[number]; ascii: boolean; reducedMotion: boolean }) {
   const pos = toWorld(note.x + 100, note.y + 60, frameDepth(note.x, note.y) + 1.4);
   return (
-    <Float speed={1.1} rotationIntensity={0.25} floatIntensity={0.8}>
+    <Float speed={reducedMotion ? 0 : 1.1} rotationIntensity={reducedMotion ? 0 : 0.25} floatIntensity={reducedMotion ? 0 : 0.8}>
       <Html transform position={pos} distanceFactor={8}>
         <div
           style={{
@@ -382,10 +386,10 @@ function StickyNote({ note, ascii }: { note: (typeof NOTES)[number]; ascii: bool
   );
 }
 
-function ImagePin({ pin, ascii }: { pin: (typeof PINS)[number]; ascii: boolean }) {
+function ImagePin({ pin, ascii, reducedMotion }: { pin: (typeof PINS)[number]; ascii: boolean; reducedMotion: boolean }) {
   const pos = toWorld(pin.x + pin.w / 2, pin.y + pin.h / 2, frameDepth(pin.x, pin.y) + 1.3);
   return (
-    <Float speed={1} rotationIntensity={0.2} floatIntensity={0.5}>
+    <Float speed={reducedMotion ? 0 : 1} rotationIntensity={reducedMotion ? 0 : 0.2} floatIntensity={reducedMotion ? 0 : 0.5}>
       <Html transform position={pos} distanceFactor={8} rotation={[0, 0, pin.rot]}>
         {/* decorative moodboard pin, gif keeps animating (unlike a WebGL texture) */}
         <img
@@ -470,6 +474,9 @@ function Scene({
   ascii: boolean;
 }) {
   const byKey = useMemo(() => Object.fromEntries(NODES.map((n) => [n.key, n])), []);
+  // Computed once — matches the inline window.matchMedia pattern already used
+  // elsewhere on the site (labs/useCanvasLoop.ts) rather than a new shared hook.
+  const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
   const { legend, trigger } = useLegendMode();
   // Only recomputed when legend actually flips, not on every tour/reset/zoom
   // re-render — see the note on the hoisted constants above.
@@ -497,7 +504,7 @@ function Scene({
         count={legend ? 260 : 70}
         scale={legend ? [20, 14, 20] : [16, 11, 16]}
         size={legend ? 3.5 : 2}
-        speed={legend ? 1.2 : 0.25}
+        speed={reducedMotion ? 0 : legend ? 1.2 : 0.25}
         color="#5ee6ff"
         opacity={legend ? 0.8 : 0.4}
       />
@@ -557,16 +564,16 @@ function Scene({
         <div onClick={trigger} style={{ width: 340, height: 340, borderRadius: "50%", cursor: "pointer" }} title="???" />
       </Html>
       {NODES.map((n) => (
-        <NodeCard key={n.key} node={n} ascii={ascii} />
+        <NodeCard key={n.key} node={n} ascii={ascii} reducedMotion={reducedMotion} />
       ))}
       {METRICS.map((m) => (
-        <MetricTile key={m.key} m={m} ascii={ascii} />
+        <MetricTile key={m.key} m={m} ascii={ascii} reducedMotion={reducedMotion} />
       ))}
       {NOTES.map((note, i) => (
-        <StickyNote key={i} note={note} ascii={ascii} />
+        <StickyNote key={i} note={note} ascii={ascii} reducedMotion={reducedMotion} />
       ))}
       {PINS.map((p) => (
-        <ImagePin key={p.key} pin={p} ascii={ascii} />
+        <ImagePin key={p.key} pin={p} ascii={ascii} reducedMotion={reducedMotion} />
       ))}
       <CameraRig
         tourStop={tourStop}
@@ -574,6 +581,7 @@ function Scene({
         zoomInTick={zoomInTick}
         zoomOutTick={zoomOutTick}
         onZoomChange={onZoomChange}
+        reducedMotion={reducedMotion}
       />
       {ascii ? (
         // Ascii already fully stylizes the frame — piling Bloom/ChromaticAberration
@@ -582,7 +590,16 @@ function Scene({
         <EffectComposer multisampling={0}>
           <RipplePass />
           <AsciiPass cellSize={9} color="#3ddc84" />
-          <Glitch mode={GlitchMode.SPORADIC} delay={asciiGlitchDelay} duration={GLITCH_DURATION} strength={asciiGlitchStrength} />
+          {/* EffectComposer's children typing requires a real element (not
+           * false/null from a && guard), so reduced-motion disables Glitch via
+           * BlendFunction.SKIP instead of conditionally unmounting it. */}
+          <Glitch
+            mode={GlitchMode.SPORADIC}
+            delay={asciiGlitchDelay}
+            duration={GLITCH_DURATION}
+            strength={asciiGlitchStrength}
+            blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
+          />
         </EffectComposer>
       ) : (
         // Bloom does the heavy lifting for the glow look. The rest are kept
@@ -601,6 +618,7 @@ function Scene({
             duration={GLITCH_DURATION}
             strength={glitchStrength}
             chromaticAberrationOffset={GLITCH_CHROMATIC_OFFSET}
+            blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
           />
           <Vignette eskil={false} offset={0.2} darkness={0.6} />
         </EffectComposer>
