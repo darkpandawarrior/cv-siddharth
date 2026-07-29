@@ -20,7 +20,7 @@ export function fieldNotesFor(slug: string): FieldNoteLink[] {
     return {
       id,
       title: s?.title || titleize(id),
-      color: SERIES_COLOR[id] || "#7c5cff",
+      color: SERIES_COLOR[id] || "#8f74ff",
       episodes: s?.episodes ?? 0,
     };
   });

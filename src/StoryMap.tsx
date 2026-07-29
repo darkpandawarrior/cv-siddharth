@@ -31,7 +31,7 @@ type Node = StoryNode;
 
 const GREEN = "#3ddc84";
 const CYAN = "#5ee6ff";
-const PURPLE = "#7c5cff";
+const PURPLE = "#8f74ff";
 const ORANGE = "#f0883e";
 
 export const NODES: Node[] = [

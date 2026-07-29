@@ -287,7 +287,7 @@ const siteSurfaces = [
     slug: "writing",
     deep: true, // ponytail: was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
-      accent: "#7c5cff",
+      accent: "#8f74ff",
       ink: "#0b0a14",
       surface: "#141024",
       line: "#2a2440",

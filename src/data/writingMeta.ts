@@ -14,7 +14,7 @@ export const BOOKS_BEFORE_BROS = {
 
 // series accent colors mirror the generated post cards
 export const SERIES_COLOR: Record<string, string> = {
-  "sensors-who-lie": "#7c5cff",
+  "sensors-who-lie": "#8f74ff",
   "the-coroutine-court": "#4ec9b0",
   "the-night-shift": "#f0883e",
   "ghosts-in-the-recomposition": "#db61ff",
@@ -28,7 +28,7 @@ export const PLATFORMS: { key: "devto" | "linkedin" | "medium" | "hashnode"; lab
   { key: "hashnode", label: "Hashnode" },
 ];
 
-export const accentOf = (id?: string) => (id && SERIES_COLOR[id]) || "#7c5cff";
+export const accentOf = (id?: string) => (id && SERIES_COLOR[id]) || "#8f74ff";
 
 // Each series is field notes from a real build — link the reader straight to it.
 export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {

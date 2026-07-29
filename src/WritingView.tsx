@@ -22,7 +22,7 @@ import {
  */
 
 // Cast accents cycle through the series palette — the characters roam between series.
-const CAST_COLORS = ["#7c5cff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
+const CAST_COLORS = ["#8f74ff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
 
 export function WritingView() {
   const { goToSection } = useSectionNav();

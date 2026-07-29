@@ -20,12 +20,38 @@ const ROUTES = [
   "/forge",
   "/map",
   "/playground",
+  "/pulse",
   "/loopdown",
 ];
 
+/* The reveal animations on the card grids fade in from transparent, and axe
+ * computes contrast from whatever colour an element happens to have at the
+ * instant it scans. Scanning mid-fade reported a card's own body text as
+ * #191c20-on-#080b0c (1.15:1) — a failure that describes frame 3 of an
+ * animation, not the page anyone reads.
+ *
+ * `waitUntil: "networkidle"` used to hide this by accident, and stopped once
+ * /playground held a websocket open for the shared layer: no idle event, so the
+ * scan started early and the flake surfaced — on /loopdown too, which has no
+ * websocket and was already failing this way for its own timing reasons.
+ *
+ * Freezing animation at its end state is the fix rather than sleeping: it makes
+ * every route scan the settled page deterministically, and it is the state a
+ * visitor actually sits looking at. */
+const SETTLE_ANIMATIONS = `*, *::before, *::after {
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-fill-mode: forwards !important;
+  transition-duration: 0s !important;
+}`;
+
 for (const path of ROUTES) {
   test(`${path} has no serious/critical axe violations`, async ({ page }) => {
-    await page.goto(path, { waitUntil: "networkidle" });
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    await page.addStyleTag({ content: SETTLE_ANIMATIONS });
+    // Let the route's client render land before scanning it.
+    await page.waitForSelector("#main-content", { state: "attached" });
+    await page.waitForTimeout(1500);
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       // color-contrast is ENFORCED (no allowlist). Phase B1 retired the
