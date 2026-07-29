@@ -24,6 +24,29 @@ export function hasWebGL(): boolean {
   return webglOK;
 }
 
+/* The sketch board's equivalent of the WebGL probe: can tldraw actually run on
+ * this host? Since v4.0.0 tldraw hard-gates production use — with no license
+ * key its LicenseProvider renders the editor for exactly 5 seconds and then
+ * swaps the whole thing for a hidden <div data-testid="tl-license-expired">.
+ * That is the "sketch canvas goes blank after a few seconds" report: not a
+ * camera drift, not a lost context, a licence gate. localhost is exempt (same
+ * host check tldraw's own LicenseManager uses), which is why dev, preview and
+ * CI never saw it. So we only offer Sketch where it will survive; drop a key
+ * in VITE_TLDRAW_LICENSE_KEY and the mode comes back everywhere. */
+export function hasTldrawLicense(): boolean {
+  if (import.meta.env.VITE_TLDRAW_LICENSE_KEY) return true;
+  if (typeof location === "undefined") return false;
+  // Mirrors LicenseManager.getIsDevelopment(): tldraw exempts anything not
+  // served over https as well as the loopback hosts, so a plain-http preview
+  // on a LAN address is "development" to it and runs unlicensed. Matching its
+  // rule rather than guessing at it keeps this from disabling a mode tldraw
+  // would happily have run. Note the corollary — an http origin can never
+  // prove the licence works, because tldraw never checks it there.
+  const host = location.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  const isLoopback = host === "localhost" || host === "::1" || /^127(?:\.\d{1,3}){3}$/.test(host);
+  return isLoopback || location.protocol !== "https:";
+}
+
 /* Local boundary so a crash *inside* a piece of three.js content (e.g. a lost
  * WebGL context) can't propagate up and take a whole page down. */
 export class ShapeBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {

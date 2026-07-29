@@ -368,12 +368,48 @@ function boardLooksBlank(editor: Editor): boolean {
 
 const shapeUtils = [MetricShapeUtil, HoloShapeUtil, LiveSignalShapeUtil];
 
+/* The marker tldraw's LicenseProvider leaves behind when it gives up on a
+ * deployment: an expired or missing licence renders the editor for five
+ * seconds, then replaces the whole subtree with this hidden div. */
+const LICENSE_GATE = '[data-testid="tl-license-expired"]';
+
 /** The tldraw whiteboard view — draw, drag, leave a note, all persisted locally.
  *  Reacts to `tourStop`/`resetTick` from the shared header instead of owning
- *  its own tour/reset controls, so both views can be driven by one toolbar. */
-export default function SketchBoard({ tourStop, resetTick }: { tourStop: number; resetTick: number }) {
+ *  its own tour/reset controls, so both views can be driven by one toolbar.
+ *
+ *  `onLicenseGate` fires if tldraw shuts itself down mid-session. The pre-flight
+ *  check in BlueprintRoom only knows whether a key is *configured* — it can't
+ *  see an expiry date or a domain mismatch, and this project is currently on an
+ *  evaluation key with a known end date. Without this, the day that key lapses
+ *  the room silently goes back to handing visitors a canvas that dies after
+ *  five seconds, with nothing anywhere saying why. */
+export default function SketchBoard({
+  tourStop,
+  resetTick,
+  onLicenseGate,
+}: {
+  tourStop: number;
+  resetTick: number;
+  onLicenseGate?: () => void;
+}) {
   const editorRef = useRef<Editor | null>(null);
   const lastResetTick = useRef(resetTick);
+
+  useEffect(() => {
+    if (!onLicenseGate) return;
+    if (document.querySelector(LICENSE_GATE)) {
+      onLicenseGate();
+      return;
+    }
+    // The gate appears on a timer well after mount, so watch rather than poll.
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector(LICENSE_GATE)) return;
+      observer.disconnect();
+      onLicenseGate();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [onLicenseGate]);
 
   useEffect(() => {
     const editor = editorRef.current;

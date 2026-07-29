@@ -1,10 +1,12 @@
-import { Component, Suspense, lazy, useState, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { TOUR } from "./blueprintData.ts";
-import { hasWebGL } from "./blueprintShared.tsx";
+import { hasTldrawLicense, hasWebGL } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
+import { usePulse } from "./play/pulse.ts";
 
 /** Class components (RoomBoundary below) can't call hooks directly — this
  *  wraps the router-aware "back to portfolio" control so both the error
@@ -62,41 +64,94 @@ type Mode = "fly" | "ascii" | "sketch";
 
 /* One entry per header toggle button, driving both the pill UI and the view
  * switch below — adding a mode (as ASCII did) means one array entry, not a
- * hand-copied button plus a new branch in the render switch. */
-const MODES: { id: Mode; label: string; icon: typeof Orbit; needsWebGL: boolean; tagline: string; hint: string }[] = [
-  { id: "fly", label: "Fly", icon: Orbit, needsWebGL: true, tagline: "a live 3D fly-through — drag to orbit, WASD to move", hint: "Fly through the room in 3D" },
+ * hand-copied button plus a new branch in the render switch.
+ *
+ * `available` is checked at render, not at module load: each mode depends on
+ * something the visitor's browser or this deployment may not have (WebGL for
+ * the three.js views, a tldraw licence for the whiteboard). A mode that can't
+ * survive here is offered disabled with the reason, rather than handed over
+ * and left to die a few seconds later. */
+const MODES: {
+  id: Mode;
+  label: string;
+  icon: typeof Orbit;
+  available: () => boolean;
+  unavailable: string;
+  tagline: string;
+  hint: string;
+}[] = [
+  {
+    id: "fly",
+    label: "Fly",
+    icon: Orbit,
+    available: hasWebGL,
+    unavailable: "Needs WebGL — try Sketch mode",
+    tagline: "a live 3D fly-through — drag to orbit, WASD to move",
+    hint: "Fly through the room in 3D",
+  },
   {
     id: "ascii",
     label: "ASCII",
     icon: Terminal,
-    needsWebGL: true,
+    available: hasWebGL,
+    unavailable: "Needs WebGL — try Sketch mode",
     tagline: "a real-time ASCII render — drag to orbit, WASD to move",
     hint: "The same room, rendered as glyphs",
   },
-  { id: "sketch", label: "Sketch", icon: Pencil, needsWebGL: false, tagline: "an infinite sketch canvas", hint: "Draw, drag and leave notes on a 2D whiteboard" },
+  {
+    id: "sketch",
+    label: "Sketch",
+    icon: Pencil,
+    available: hasTldrawLicense,
+    unavailable: "The whiteboard needs a valid tldraw licence for this domain — try Fly or ASCII",
+    tagline: "an infinite sketch canvas",
+    hint: "Draw, drag and leave notes on a 2D whiteboard",
+  },
 ];
 
 const loadingFallback = <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading…</div>;
 
 function BlueprintRoomInner() {
-  const [mode, setMode] = useState<Mode>(() => (hasWebGL() ? "fly" : "sketch"));
+  // Open on the first mode that can actually run here — Fly normally, Sketch on
+  // a machine without WebGL, and nothing at all if neither is on offer.
+  const [mode, setMode] = useState<Mode>(() => MODES.find((m) => m.available())?.id ?? "fly");
   const [stop, setStop] = useState(-1);
   const [resetTick, setResetTick] = useState(0);
   const [zoomInTick, setZoomInTick] = useState(0);
   const [zoomOutTick, setZoomOutTick] = useState(0);
   const [zoomPercent, setZoomPercent] = useState(50);
+  // Set if tldraw shuts its own editor down at runtime (an expired key, or one
+  // that isn't valid for this domain) — things the pre-flight check in MODES
+  // can't see. From then on Sketch is treated exactly like a mode this browser
+  // can't run, rather than left on screen as a blank rectangle.
+  const [licenseGated, setLicenseGated] = useState(false);
+  const isAvailable = useCallback(
+    (m: (typeof MODES)[number]) => m.available() && !(m.id === "sketch" && licenseGated),
+    [licenseGated],
+  );
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0];
+  const bump = usePulse();
+
+  const onLicenseGate = useCallback(() => {
+    setLicenseGated(true);
+    setMode((current) => (current === "sketch" ? (MODES.find((m) => m.id !== "sketch" && m.available())?.id ?? current) : current));
+  }, []);
 
   // Each mode keeps its own camera; hopping modes shouldn't carry a stale tour stop.
   const setModeFresh = (m: Mode) => {
     setMode(m);
     setStop(-1);
+    bump(`blueprint:${m}`);
   };
 
-  const tourNext = () => setStop((s) => (s + 1) % TOUR.length);
+  const tourNext = () => {
+    setStop((s) => (s + 1) % TOUR.length);
+    bump("blueprint:tour");
+  };
   const resetView = () => {
     setStop(-1);
     setResetTick((t) => t + 1);
+    bump("blueprint:reset");
   };
 
   return (
@@ -111,15 +166,16 @@ function BlueprintRoomInner() {
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center rounded-full border border-line p-0.5 text-sm font-semibold">
-              {MODES.map(({ id, label, icon: Icon, needsWebGL, hint }) => {
-                const disabled = needsWebGL && !hasWebGL();
+              {MODES.map((m) => {
+                const { id, label, icon: Icon, unavailable, hint } = m;
+                const disabled = !isAvailable(m);
                 return (
                   <button
                     key={id}
                     onClick={() => setModeFresh(id)}
                     disabled={disabled}
-                    title={disabled ? "Needs WebGL — try Sketch mode" : hint}
-                    aria-label={disabled ? `${label} — needs WebGL, try Sketch mode` : hint}
+                    title={disabled ? unavailable : hint}
+                    aria-label={disabled ? `${label} — ${unavailable}` : hint}
                     aria-pressed={mode === id}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition disabled:cursor-not-allowed disabled:opacity-40 ${
                       mode === id ? "bg-accent text-ink" : "text-zinc-400 hover:text-accent"
@@ -165,6 +221,7 @@ function BlueprintRoomInner() {
             >
               <RotateCcw size={13} /> <span className="hidden sm:inline">Reset</span>
             </button>
+            <PresenceBadge className="hidden md:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -177,8 +234,15 @@ function BlueprintRoomInner() {
       <main id="main-content" tabIndex={-1} className="relative min-h-0 flex-1">
         <h1 className="sr-only">The Blueprint Room — {activeMode.tagline}</h1>
         <Suspense fallback={loadingFallback}>
-          {mode === "sketch" ? (
-            <SketchBoard tourStop={stop} resetTick={resetTick} />
+          {!isAvailable(activeMode) ? (
+            // Only reachable when nothing can run here (no WebGL *and* no
+            // tldraw licence). Say so plainly rather than mounting a view that
+            // will blank out on its own.
+            <div className="flex h-full items-center justify-center px-6 text-center font-mono text-sm text-muted">
+              {activeMode.unavailable}.
+            </div>
+          ) : mode === "sketch" ? (
+            <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
           ) : (
             <>
               <Blueprint3D
@@ -205,7 +269,11 @@ function BlueprintRoomInner() {
 export default function BlueprintRoom() {
   return (
     <RoomBoundary>
-      <BlueprintRoomInner />
+      {/* Its own room, so the presence count means "people in the Blueprint
+          Room" rather than "people somewhere on the site". */}
+      <PlayRoom>
+        <BlueprintRoomInner />
+      </PlayRoom>
     </RoomBoundary>
   );
 }
