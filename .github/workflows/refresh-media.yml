@@ -43,7 +43,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/projects src/data/galleries.ts src/data/projectStats.ts
+          # `npm run refresh` (above) also runs gen:hiresignal (src/data/profile.ts),
+          # gen:loopdown (src/data/writing.ts), gen:og (public/p/**, public/og-image.png),
+          # gen:feed (public/feed.xml), gen:sitemap (public/sitemap.xml), and
+          # gen:system-prompt (api/_lib/system-prompt.ts, api/_lib/jd-prompt.ts) — all
+          # of that output was silently discarded every run until this line covered it
+          # (2026-07-29 audit: only public/projects + galleries/projectStats were staged).
+          git add public src/data api/_lib/system-prompt.ts api/_lib/jd-prompt.ts
           if git diff --cached --quiet; then
             echo "Portfolio media already current."
           else

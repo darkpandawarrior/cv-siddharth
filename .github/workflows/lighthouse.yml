@@ -10,6 +10,6 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npx playwright install-deps chromium || true
+      - run: npx playwright install-deps chromium
       - run: npm run build
       - run: npx @lhci/cli autorun
