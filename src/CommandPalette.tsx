@@ -27,6 +27,7 @@ export function CommandPalette() {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
@@ -119,6 +120,9 @@ export function CommandPalette() {
       setQuery("");
       setActiveIndex(0);
       suppressHoverRef.current = true;
+      // Whichever control opened the palette (⌘K anywhere, the trigger button)
+      // gets focus back once it closes — same pattern as FloatingChat.tsx.
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
       const clear = () => {
         suppressHoverRef.current = false;
       };
@@ -127,6 +131,7 @@ export function CommandPalette() {
       requestAnimationFrame(() => inputRef.current?.focus());
       return () => window.removeEventListener("mousemove", clear);
     }
+    previouslyFocusedRef.current?.focus();
   }, [open]);
 
   function runActive() {
