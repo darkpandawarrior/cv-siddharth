@@ -2,7 +2,7 @@
 
 > Interactive portfolio of Siddharth Pandalai (darkpandawarrior): Senior Android Engineer at Dice.tech, Pune, India. Platform owner of a 50k+ MAU fintech app. Kotlin, Jetpack Compose, Kotlin Multiplatform, location engineering, mobile security. The site includes an AI assistant trained on his work — POST questions via the on-site chat, or read the sources below.
 
-Headline numbers: GPS accuracy 50%→95% (predictive dead reckoning), 80% crash reduction (structured concurrency), 92% Jetpack Compose migration of a 738k LOC app with zero regressions, white-label delivery 80% faster.
+Headline numbers: GPS accuracy 50%→95% (predictive dead reckoning), 80% crash reduction (structured concurrency), ~87% Jetpack Compose migration of a ~960k LOC app verified per-screen against the legacy XML baseline, white-label delivery 80% faster.
 
 Hiring status: open to senior Android / KMP roles — remote (worldwide/India) or hybrid Pune/Bengaluru. Notice period 15 days. Contact: siddharthpandalai990@gmail.com
 

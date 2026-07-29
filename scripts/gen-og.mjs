@@ -264,7 +264,7 @@ const siteSurfaces = [
       eyebrow: "// senior android engineer",
       name: profile.name,
       tagline: profile.tagline,
-      stats: ["50k+ MAU", "95% GPS accuracy", "-80% crashes", "92% Compose"],
+      stats: ["50k+ MAU", "95% GPS accuracy", "-80% crashes", "~87% Compose"],
       chips: ["Kotlin", "Jetpack Compose", "KMP", "Coroutines", "Security"],
     },
   },
