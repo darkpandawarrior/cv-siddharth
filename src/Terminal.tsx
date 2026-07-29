@@ -22,6 +22,7 @@ import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { chatErrorText, streamReply } from "./lib/chatClient.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
@@ -755,7 +756,16 @@ function AskBlock({ question }: { question: string }) {
 function SpotifyBlock() {
   const { data } = useLiveSignal<SpotifyNow>("/api/spotify");
   if (!data) return <Dim>reading now-playing…</Dim>;
-  if (!data.connected) return <Dim>spotify: not connected</Dim>;
+  if (!data.connected) {
+    return (
+      <div>
+        <Dim>spotify: not connected. preview:</Dim>
+        <div>
+          · {SPOTIFY_PREVIEW.track} — {SPOTIFY_PREVIEW.artist} <Dim>(mock)</Dim>
+        </div>
+      </div>
+    );
+  }
   if (data.isPlaying) {
     return (
       <span>

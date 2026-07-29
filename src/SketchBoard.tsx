@@ -18,6 +18,7 @@ import { ARROWS, FRAMES, METRICS, NODES, NOTES, PINS, PERSISTENCE_KEY, TOUR, cen
 import { CountUp, HoloCore, hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 
 /* Everything that pulls in the tldraw SDK lives in this file, isolated from
@@ -181,7 +182,9 @@ function LiveSignalCard() {
       : data.recent[0]
         ? `last: ${data.recent[0].track}`
         : "quiet"
-    : "not connected";
+    : data
+      ? `${SPOTIFY_PREVIEW.track} — ${SPOTIFY_PREVIEW.artist} (preview)`
+      : "reading…";
 
   return (
     <div

@@ -4,6 +4,7 @@ import { profile } from "./data/profile.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
@@ -71,21 +72,48 @@ function NowChip() {
   const { data: spotify } = useLiveSignal<SpotifyNow>("/api/spotify");
   const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
 
-  const nowTrack = spotify?.connected && (spotify.isPlaying ? spotify.track : spotify.recent[0]?.track);
-  const nowArtist = spotify?.connected && (spotify.isPlaying ? spotify.artist : spotify.recent[0]?.artist);
-  const nowArt = spotify?.connected ? (spotify.isPlaying ? spotify.albumArt : spotify.recent[0]?.albumArt) : undefined;
-  const nowUrl = spotify?.connected ? (spotify.isPlaying ? spotify.url : spotify.recent[0]?.url) : undefined;
+  const spotifyConnected = spotify?.connected === true;
+  // spotify !== null means the endpoint answered; connected:false at that
+  // point means "genuinely not set up" (not "still loading") — that's when
+  // the skeleton preview shows, so the widget's shape is visible even before
+  // the owner finishes the one-time Spotify OAuth setup.
+  const spotifyPreview = spotify !== null && !spotifyConnected;
+
+  const nowTrack = spotifyConnected
+    ? spotify.isPlaying
+      ? spotify.track
+      : spotify.recent[0]?.track
+    : spotifyPreview
+      ? SPOTIFY_PREVIEW.track
+      : undefined;
+  const nowArtist = spotifyConnected
+    ? spotify.isPlaying
+      ? spotify.artist
+      : spotify.recent[0]?.artist
+    : spotifyPreview
+      ? SPOTIFY_PREVIEW.artist
+      : undefined;
+  const nowArt = spotifyConnected ? (spotify.isPlaying ? spotify.albumArt : spotify.recent[0]?.albumArt) : undefined;
+  const nowUrl = spotifyConnected ? (spotify.isPlaying ? spotify.url : spotify.recent[0]?.url) : undefined;
   const latestActivity = activity?.connected ? activity.items[0] : undefined;
 
   if (!nowTrack && !latestActivity) return null;
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 border-t border-line py-3 text-xs text-muted">
-      {nowTrack && (
+      {nowTrack && spotifyConnected && (
         <a href={nowUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-accent">
           {nowArt && <img src={nowArt} alt="" width={16} height={16} className="rounded-sm" />}
-          <span>{spotify?.isPlaying ? "Now playing" : "Last played"}: {nowTrack} · {nowArtist}</span>
+          <span>{spotify.isPlaying ? "Now playing" : "Last played"}: {nowTrack} · {nowArtist}</span>
         </a>
+      )}
+      {nowTrack && !spotifyConnected && (
+        <span className="inline-flex items-center gap-2 opacity-50" title="Preview — connect Spotify to show real listening data">
+          <span className="h-4 w-4 rounded-sm border border-dashed border-current" />
+          <span className="border-b border-dashed border-current">
+            {nowTrack} · {nowArtist} <em className="not-italic">(preview)</em>
+          </span>
+        </span>
       )}
       {latestActivity && (
         <a href={latestActivity.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
