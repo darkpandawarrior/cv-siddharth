@@ -55,6 +55,25 @@ function chatApiDevPlugin(): Plugin {
   };
 }
 
+/** Serves a GET-only Edge handler during local dev — same web-standard
+ * handler Vercel runs in production, no vercel dev needed. Simpler than
+ * chatApiDevPlugin: these endpoints take no request body. */
+function edgeGetApiDevPlugin(path: string, modulePath: string, exportName: string): Plugin {
+  return {
+    name: `edge-get-api-dev:${path}`,
+    configureServer(server) {
+      server.middlewares.use(path, async (_req: IncomingMessage, res: ServerResponse) => {
+        const mod = await server.ssrLoadModule(modulePath);
+        const handler = mod[exportName] as (r: Request) => Promise<Response>;
+        const response = await handler(new Request(`http://localhost${path}`));
+        res.statusCode = response.status;
+        response.headers.forEach((value, key) => res.setHeader(key, value));
+        res.end(await response.text());
+      });
+    },
+  };
+}
+
 // React Compiler 1.0 runs through the rolldown->babel bridge, since
 // @vitejs/plugin-react v6 moved its own JSX transform off Babel onto oxc.
 // @rolldown/plugin-babel declares itself `enforce: "pre"`, so it always runs
@@ -78,5 +97,7 @@ export default defineConfig(async () => ({
     // so it runs ahead of Start's own catch-all SSR handler — same ordering
     // that let this plugin work before the migration.
     chatApiDevPlugin(),
+    edgeGetApiDevPlugin("/api/spotify", "/api/_lib/spotify-handler.ts", "handleSpotify"),
+    edgeGetApiDevPlugin("/api/github-activity", "/api/_lib/github-activity-handler.ts", "handleGithubActivity"),
   ],
 }));
