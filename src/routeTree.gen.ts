@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
+import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
 import { Route as ForgeRouteImport } from './routes/forge'
 import { Route as LabRouteImport } from './routes/lab'
@@ -36,6 +37,11 @@ const SplatRoute = SplatRouteImport.update({
 const BlueprintRoute = BlueprintRouteImport.update({
   id: '/blueprint',
   path: '/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChessRoute = ChessRouteImport.update({
+  id: '/chess',
+  path: '/chess',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComposeRoute = ComposeRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/blueprint': typeof BlueprintRoute
+  '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/blueprint': typeof BlueprintRoute
+  '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/blueprint': typeof BlueprintRoute
+  '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/blueprint'
+    | '/chess'
     | '/compose'
     | '/forge'
     | '/lab'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/blueprint'
+    | '/chess'
     | '/compose'
     | '/forge'
     | '/lab'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/blueprint'
+    | '/chess'
     | '/compose'
     | '/forge'
     | '/lab'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   BlueprintRoute: typeof BlueprintRoute
+  ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
   ForgeRoute: typeof ForgeRoute
   LabRoute: typeof LabRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/blueprint'
       fullPath: '/blueprint'
       preLoaderRoute: typeof BlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chess': {
+      id: '/chess'
+      path: '/chess'
+      fullPath: '/chess'
+      preLoaderRoute: typeof ChessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compose': {
@@ -299,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   BlueprintRoute: BlueprintRoute,
+  ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
   ForgeRoute: ForgeRoute,
   LabRoute: LabRoute,

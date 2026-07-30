@@ -1377,4 +1377,15 @@ export const siteRooms: SiteRoom[] = [
     blurb: "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
     tag: "text · easter egg",
   },
+  // No game count in this blurb, deliberately: the corpus grows every time he
+  // plays, and this string feeds the SEO head tags and the assistant's system
+  // prompt as well as the Playground card. Live counts belong in ChessSection,
+  // which imports the generated chess.ts anyway.
+  {
+    to: "/chess",
+    label: "The Board",
+    blurb:
+      "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where the games actually end, a shifting opening repertoire, and a bot calibrated to play like me — including the flaw.",
+    tag: "3d · engine",
+  },
 ];
