@@ -393,8 +393,16 @@ visualisation honest — it renders the real search, not a simulation of one.
 - **2019 Sid (1078)** — the rating he held during the +789 upset.
 - **2026 Sid (1425)** — his chess.com blitz peak.
 
-Calibration is search depth plus a move-selection noise term, tuned so each preset's
-measured strength lands near its target. Both presets also model **his actual clock
+Calibration is search depth plus a move-selection noise term, plus `clockBudget` wired in
+as a hard deadline on the iterative-deepening loop — so a hurried bot genuinely searches
+shallower rather than merely being described as hurried.
+
+**The ratings are labels, not measured Elo.** They name the owner's real historical
+ratings; the engine has never played a rated pool, and 12 self-play games between the two
+presets finished **10–0** to `sid2026`, implying a gap far wider than the 347 points
+between 1078 and 1425. The presets are reliably ordered, which is what the feature needs.
+No surface may claim a bot *plays at* a rating — say it is calibrated after that rating,
+or name the year. Both presets also model **his actual clock
 behaviour**: fast through the opening, slow through moves ~10–25, then hurried —
 the shape the 3,072-game clock analysis found. Losing to a bot that plays like him,
 including the flaw, is the most honest thing the section can do.
