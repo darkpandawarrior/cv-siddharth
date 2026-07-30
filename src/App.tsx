@@ -15,7 +15,8 @@ import {
   LayoutGrid,
   Target,
 } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia } from "./data/profile.ts";
+import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia, siteRooms } from "./data/profile.ts";
+import { countWord } from "./data/labs.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
@@ -1105,7 +1106,7 @@ function PlaygroundTeaser() {
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
-            Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
+            Not a PDF with a pulse — a running program. {countWord(siteRooms.length)} interactive rooms, each a small proof of the
             engineering above. They live behind one door now.
           </p>
           <div className="flex flex-wrap gap-2">

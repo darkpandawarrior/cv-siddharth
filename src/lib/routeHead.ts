@@ -1,4 +1,5 @@
 import { siteRooms } from "../data/profile.ts";
+import { LAB_TABS, countWord } from "../data/labs.ts";
 
 /**
  * Per-route <head> for the client-rendered routes.
@@ -41,7 +42,9 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
   "/playground": {
     label: "The Playground",
     blurb:
-      "Six interactive rooms built into this portfolio — a live Compose playground, an infinite blueprint canvas, a 3D storyboard, a particle forge, a typable terminal and nine running experiments.",
+      `${countWord(siteRooms.length)} interactive rooms built into this portfolio — a live Compose playground, ` +
+      `an infinite blueprint canvas, a 3D storyboard, a particle forge, a typable terminal and ` +
+      `${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
   "/loopdown": {
     label: "The Loopdown",

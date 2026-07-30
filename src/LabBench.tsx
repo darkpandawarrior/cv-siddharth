@@ -15,24 +15,19 @@ import { GatewayLab } from "./labs/GatewayLab.tsx";
 import { SearchTreeLab } from "./labs/SearchTreeLab.tsx";
 import { FanoutLab } from "./labs/FanoutLab.tsx";
 import { ReplayLab } from "./labs/ReplayLab.tsx";
+import { LAB_TABS, countWord, type LabKey } from "./data/labs.ts";
 
 /**
  * The Lab Bench — one live experiment per case study. Not screenshots of
  * the work: the ideas themselves, running. Tabs mount one lab at a time so
  * the section stays light; every case-study card deep-links to its lab via
  * openLab().
+ *
+ * The tab registry itself lives in data/labs.ts (plain data, SSR-safe) so the
+ * four other places that quote the instrument count can derive it.
  */
 
-export type LabKey =
-  | "signal"
-  | "crashes"
-  | "recompose"
-  | "theme"
-  | "modules"
-  | "gateways"
-  | "search"
-  | "fanout"
-  | "replay";
+export type { LabKey };
 
 const OPEN_LAB_EVENT = "open-lab";
 // The Lab Bench now lives on its own /lab route (inside the Playground hub), so
@@ -51,17 +46,7 @@ export function openLab(tab: LabKey) {
 
 /* ── The bench ───────────────────────────────────────────────────────── */
 
-const TABS: { key: LabKey; label: string; metric: string; group: "production" | "personal" }[] = [
-  { key: "signal", label: "Signal Lab", metric: "50% → 95%", group: "production" },
-  { key: "crashes", label: "Crash Triage", metric: "-80%", group: "production" },
-  { key: "recompose", label: "Recomposition", metric: "~87% Compose", group: "production" },
-  { key: "theme", label: "White-label", metric: "80% faster", group: "production" },
-  { key: "modules", label: "Module Graph", metric: "46 modules", group: "personal" },
-  { key: "gateways", label: "Gateway Lab", metric: "66 gateways", group: "personal" },
-  { key: "search", label: "Search Tree", metric: "10 personas", group: "personal" },
-  { key: "fanout", label: "Provider Fan-out", metric: "62 providers", group: "personal" },
-  { key: "replay", label: "Deterministic Replay", metric: "0-tolerance", group: "personal" },
-];
+const TABS = LAB_TABS;
 
 export function LabBench() {
   const [tab, setTab] = useState<LabKey>(() => pendingLab ?? "signal");
@@ -83,7 +68,7 @@ export function LabBench() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
-            Nine instruments spanning Dice.tech's production case studies and five personal open-source
+            {countWord(LAB_TABS.length)} instruments spanning Dice.tech's production case studies and five personal open-source
             builds — the actual idea behind each headline metric, running live in your browser. Flip a
             switch and watch the number happen. Every other room is one door away in
             the{" "}

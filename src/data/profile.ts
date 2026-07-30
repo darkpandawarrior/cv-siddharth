@@ -1,3 +1,5 @@
+import { LAB_TABS, countWord } from "./labs.ts";
+
 export const profile = {
   name: "Siddharth Pandalai",
   title: "Senior Android Engineer",
@@ -1348,7 +1350,7 @@ export const siteRooms: SiteRoom[] = [
   {
     to: "/lab",
     label: "The Lab Bench",
-    blurb: "Nine experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.",
+    blurb: `${countWord(LAB_TABS.length)} experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.`,
     tag: "canvas · physics",
   },
   {
