@@ -31,16 +31,16 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://cv-siddharth.vercel.app/lab</loc>
-    <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://cv-siddharth.vercel.app/compose</loc>
     <lastmod>2026-07-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cv-siddharth.vercel.app/lab</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/blueprint</loc>
@@ -65,6 +65,12 @@
     <lastmod>2026-07-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://cv-siddharth.vercel.app/chess</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/kursi</loc>

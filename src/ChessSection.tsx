@@ -1,4 +1,5 @@
 import { ArrowUpRight, CalendarDays, Clock, Swords } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { chess } from "./data/chess.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { Reveal } from "./Reveal.tsx";
@@ -21,8 +22,11 @@ import { TiltCard } from "./TiltCard.tsx";
  * that property.
  *
  * Three honesty constraints are load-bearing in the copy below, not polish:
- *  - `totals.hours` is lichess `playTime` only. chess.com publishes no
- *    equivalent, so it is labelled per-platform and never as a combined total.
+ *  - `boardTime.combinedHours` adds two DIFFERENT measurements: lichess's own
+ *    `playTime.total`, and a figure derived from live-game PGN wall clock because
+ *    chess.com publishes no equivalent. The copy names both halves rather than
+ *    presenting the sum as one uniformly-measured metric. (`totals.hours` is
+ *    still the lichess-only number and is left alone for anything that wants it.)
  *  - The two platforms are a **handoff**, not parallel accounts. lichess's
  *    rating history runs into 2025 only because of a handful of games that
  *    January; the per-year game counts are what establish when he was actually
@@ -76,6 +80,17 @@ const lichessLastFlicker = [...chess.activityByYear].reverse().find((a) => a.lic
 export function ChessSection() {
   const { thesis, totals, discipline, span } = chess;
   const daysPlayed = discipline.spanDays ? discipline.distinctDays / discipline.spanDays : 0;
+
+  // Cast members, all resolved from generated data so none of the three cards
+  // can assert a figure the corpus no longer supports.
+  const ninth = chess.sessionDecay.find((d) => d.position === 9);
+  const firstGame = chess.sessionDecay.find((d) => d.position === 1);
+  // The most recent year that actually has repertoire rows, and the Scandinavian
+  // within it. `.at(-1)` rather than a hardcoded year: the generator adds a row
+  // every January without anyone editing this file.
+  const latestRepertoire = chess.repertoire.at(-1);
+  const latestYear = latestRepertoire?.year ?? span.to.slice(0, 4);
+  const scandinavianLine = latestRepertoire?.openings.find((o) => SCANDINAVIAN.test(o.name));
 
   return (
     <section id="chess" className="border-t border-line bg-surface">
@@ -163,10 +178,14 @@ export function ChessSection() {
                 <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted">
                   <Clock size={12} /> Time at the board
                 </p>
-                <p className="font-display mt-1 text-2xl font-bold tabular-nums text-accent2">{num(totals.hours)} h</p>
+                <p className="font-display mt-1 text-2xl font-bold tabular-nums text-accent2">
+                  {num(chess.boardTime.combinedHours)} h
+                </p>
                 <p className="mt-1 text-xs leading-snug text-zinc-400">
-                  lichess play time only ({num(chess.platforms[0].games)} games) — chess.com publishes
-                  no equivalent figure, so this is one platform's total, not both.
+                  {num(chess.boardTime.lichessHours)} h self-reported by lichess, plus{" "}
+                  {num(chess.boardTime.chesscomHours)} h derived from the wall clock in{" "}
+                  {num(chess.boardTime.chesscom.games)} chess.com PGNs — chess.com publishes no play-time
+                  figure, so this is two measurements added together, not one metric.
                 </p>
               </div>
 
@@ -333,6 +352,67 @@ export function ChessSection() {
                 )}
               </a>
             ))}
+          </div>
+        </Reveal>
+
+        {/* The Loopdown personifies bugs as a recurring cast. Same treatment for the
+            flaws the data found — but living here, next to the numbers, rather than as
+            entries in src/data/writing.ts, which is regenerated from the-loopdown repo
+            on every predev/prebuild and would silently drop them (and would claim posts
+            that don't exist). Every figure renders from chess.ts. */}
+        <Reveal delay={120}>
+          <div className="mt-12">
+            <h3 className="font-display text-xl font-bold tracking-tight">The cast</h3>
+            <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+              Over in{" "}
+              <Link to="/loopdown" className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim">
+                the Loopdown
+              </Link>{" "}
+              I give recurring production bugs names and personalities, because a bug you can
+              name is a bug you can hunt. The same three keep turning up over the board — and
+              unlike the ones at work, these came with their own receipts.
+            </p>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+                <h4 className="font-display text-base font-bold">The Flagfall</h4>
+                <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
+                  {pct(thesis.lossesOnTime)}
+                </p>
+                <p className="mt-1 text-xs leading-snug text-zinc-400">
+                  of every loss, decided by the clock rather than the board. Not an opponent —
+                  a deadline.
+                </p>
+              </article>
+
+              {ninth && (
+                <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+                  <h4 className="font-display text-base font-bold">The Ninth Game</h4>
+                  <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
+                    {pct(ninth.winRate)}
+                  </p>
+                  <p className="mt-1 text-xs leading-snug text-zinc-400">
+                    win rate by game nine of one sitting, against {pct(firstGame?.winRate ?? 0)} on
+                    game one. He should have stopped at eight.
+                  </p>
+                  <p className="mt-2 font-mono text-[10px] text-muted">
+                    {plural(ninth.n, "game")} — a thin tail, shown with its n
+                  </p>
+                </article>
+              )}
+
+              <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+                <h4 className="font-display text-base font-bold">The Returner</h4>
+                <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
+                  {scandinavianLine ? pct(scandinavianLine.share) : "—"}
+                </p>
+                <p className="mt-1 text-xs leading-snug text-zinc-400">
+                  of games as Black are the Scandinavian again in {latestYear}, after it was
+                  displaced almost entirely on the other account. First loves are a repertoire
+                  choice.
+                </p>
+              </article>
+            </div>
           </div>
         </Reveal>
 

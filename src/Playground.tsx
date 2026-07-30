@@ -3,6 +3,7 @@ import { ArrowLeft, Activity, LayoutGrid } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { ROOMS, type Room } from "./rooms.tsx";
+import { countWord } from "./data/labs.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
 import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
 import { Sandbox } from "./play/Sandbox.tsx";
@@ -100,8 +101,8 @@ function PlaygroundInner() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
         <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
-          Not a PDF with a pulse — a running program. Six interactive rooms, each a small proof of the
-          engineering the rest of the site describes. Pick one and poke it.
+          Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a
+          small proof of the engineering the rest of the site describes. Pick one and poke it.
         </p>
         <Link
           to="/pulse"

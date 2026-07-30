@@ -14,7 +14,7 @@
 import { writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { projects } from "../src/data/profile.ts";
+import { projects, siteRooms } from "../src/data/profile.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://cv-siddharth.vercel.app";
@@ -28,19 +28,35 @@ const SITE = "https://cv-siddharth.vercel.app";
  * own title, description and canonical (src/lib/routeHead.ts) and each is a
  * genuine destination worth finding.
  */
-const STATIC = [
+const PAGES = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
   { path: "/resume", priority: "0.9", changefreq: "monthly" },
   { path: "/loopdown", priority: "0.7", changefreq: "weekly" },
   { path: "/playground", priority: "0.6", changefreq: "monthly" },
   { path: "/pulse", priority: "0.5", changefreq: "daily" },
-  { path: "/lab", priority: "0.6", changefreq: "monthly" },
-  { path: "/compose", priority: "0.5", changefreq: "monthly" },
-  { path: "/blueprint", priority: "0.5", changefreq: "monthly" },
-  { path: "/map", priority: "0.5", changefreq: "monthly" },
-  { path: "/forge", priority: "0.4", changefreq: "monthly" },
-  { path: "/terminal", priority: "0.4", changefreq: "monthly" },
 ];
+
+/**
+ * The rooms are derived from `siteRooms`, not listed here.
+ *
+ * They used to be hand-listed alongside the pages above, and it drifted the
+ * moment a room was added: `/chess` shipped with its own title, description and
+ * canonical (routeHead.ts reads the same array) yet was absent from the sitemap
+ * — invisible from inside the site, exactly like the `/project/portfolio`
+ * omission this generator was written to fix. Same class of bug, one layer up.
+ *
+ * `ROOM_PRIORITY` only carries the paths whose weight differs from the default;
+ * a new room gets 0.5 and appears automatically.
+ */
+const ROOM_PRIORITY = { "/lab": "0.6", "/forge": "0.4", "/terminal": "0.4" };
+
+const ROOM_PAGES = siteRooms.map((r) => ({
+  path: r.to,
+  priority: ROOM_PRIORITY[r.to] ?? "0.5",
+  changefreq: "monthly",
+}));
+
+const STATIC = [...PAGES, ...ROOM_PAGES];
 
 // Date only, no clock time: a sitemap that changes every build for no reason
 // trains crawlers to ignore its lastmod.
