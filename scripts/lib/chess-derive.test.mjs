@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   normaliseChessCom, normaliseLichess, clockDeciles, tilt, sessions,
   sessionDecay, streaks, repertoireByYear, terminationSplit, squareMatrix,
-  weeklyArc, hourHistogram, DRAW_RESULTS,
+  weeklyArc, hourHistogram, DRAW_RESULTS, canonOpening, openingFamily, clockSample,
 } from "./chess-derive.mjs";
 
 const U = "darkpandawarrior";
@@ -113,6 +113,21 @@ describe("clockDeciles", () => {
   });
 });
 
+describe("clockSample", () => {
+  // The sample size printed beside the decile curve has to be the count of the
+  // games the curve was computed from. A draw carries no win/loss curve, so
+  // counting draws over-reported the published n.
+  it("counts exactly the games the decile curve consumes", () => {
+    const ok = (result) => ({ result, speed: "blitz", clk: Array(10).fill(180) });
+    const games = [ok("win"), ok("loss"), ok("draw"), { result: "win", speed: "bullet", clk: Array(10).fill(60) }, { result: "win", speed: "blitz", clk: [180, 170] }];
+    expect(clockSample(games)).toHaveLength(2);
+  });
+
+  it("drops a game whose first clock reading is missing or zero", () => {
+    expect(clockSample([{ result: "win", speed: "blitz", clk: [0, ...Array(9).fill(1)] }])).toHaveLength(0);
+  });
+});
+
 describe("tilt", () => {
   it("conditions the next result on the previous one within a session gap", () => {
     const g = (result, ts) => ({ result, ts, plat: "lichess" });
@@ -178,12 +193,71 @@ describe("streaks", () => {
   });
 });
 
+// The exact spellings the two APIs return for the SAME opening. lichess writes
+// the name out; chess.com's ECO slug drops apostrophes and uses "-" as its word
+// separator, so openingFromEco hands us spaces where lichess has hyphens.
+const LICHESS_MK = "Scandinavian Defense: Mieses-Kotroc Variation";
+const CHESSCOM_MK = "Scandinavian Defense Mieses Kotrc Variation";
+
+describe("canonOpening", () => {
+  it("collapses both platforms' spelling of the same opening onto one key", () => {
+    expect(canonOpening(LICHESS_MK)).toBe(canonOpening(CHESSCOM_MK));
+  });
+
+  it("drops apostrophes rather than splitting the word, matching chess.com's slug", () => {
+    // lichess "Queen's Pawn Game" vs chess.com "Queens-Pawn-Opening": the first
+    // two words must agree, which they cannot if "Queen's" becomes "Queen s".
+    expect(canonOpening("Queen's Pawn Game")).toBe("Queens Pawn Game");
+    expect(canonOpening("King's Indian Attack")).toBe("Kings Indian Attack");
+  });
+
+  it("strips the move-list suffix chess.com sometimes appends", () => {
+    expect(canonOpening("Scandinavian Defense with 1 e4")).toBe("Scandinavian Defense");
+  });
+
+  it("returns null for absent or empty names instead of throwing", () => {
+    expect(canonOpening(null)).toBeNull();
+    expect(canonOpening(undefined)).toBeNull();
+    expect(canonOpening("")).toBeNull();
+    expect(canonOpening("  :  ")).toBeNull();
+  });
+});
+
+describe("openingFamily", () => {
+  it("groups every Scandinavian variation under one family", () => {
+    const fam = openingFamily(LICHESS_MK);
+    expect(fam).toBe("scandinavian defense");
+    expect(openingFamily(CHESSCOM_MK)).toBe(fam);
+    expect(openingFamily("Scandinavian Defense: Valencian Variation")).toBe(fam);
+    expect(openingFamily("Scandinavian Defense")).toBe(fam);
+  });
+
+  it("keeps different families apart", () => {
+    expect(openingFamily("Modern Defense: Standard Line")).not.toBe(openingFamily(LICHESS_MK));
+  });
+
+  it("returns null for absent names", () => {
+    expect(openingFamily(null)).toBeNull();
+    expect(openingFamily("")).toBeNull();
+  });
+});
+
 describe("repertoireByYear", () => {
-  it("ranks the owner's openings as black, per year", () => {
+  it("ranks the owner's openings as black, per year, with each one's share", () => {
     const g = (name, year, white = false) => ({ opening: name, white, ts: new Date(`${year}-06-01T00:00:00Z`).getTime() });
     const out = repertoireByYear([g("Scandinavian", 2019), g("Scandinavian", 2019), g("Modern", 2019), g("Modern", 2021)]);
-    expect(out["2019"][0]).toEqual({ name: "Scandinavian", count: 2 });
-    expect(out["2021"][0]).toEqual({ name: "Modern", count: 1 });
+    expect(out["2019"][0]).toEqual({ name: "Scandinavian", count: 2, share: 2 / 3 });
+    expect(out["2021"][0]).toEqual({ name: "Modern", count: 1, share: 1 });
+  });
+
+  it("merges the two platform spellings into a single line", () => {
+    const g = (name) => ({ opening: name, white: false, ts: Date.parse("2023-06-01") });
+    // The regression this exists to prevent: split spellings would render the
+    // 2023 handoff as a repertoire discontinuity that never happened.
+    const out = repertoireByYear([g(LICHESS_MK), g(LICHESS_MK), g(CHESSCOM_MK)]);
+    expect(out["2023"]).toHaveLength(1);
+    expect(out["2023"][0].count).toBe(3);
+    expect(out["2023"][0].share).toBe(1);
   });
 
   it("excludes games played as white from the black repertoire", () => {

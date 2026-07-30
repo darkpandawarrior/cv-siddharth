@@ -97,17 +97,32 @@ export function normaliseLichess(games, username) {
 }
 
 /**
+ * The games `clockDeciles` actually consumes: the right speed, enough clock
+ * samples to bucket, and a decided result (a draw has no win/loss curve to sit
+ * on). Exported because the sample size printed beside the curve must be the
+ * count of the games that produced it — computing it from a second, looser
+ * filter published an n 144 games too large.
+ */
+export function clockSample(games, speed = "blitz") {
+  return games.filter(
+    (g) =>
+      g.speed === speed &&
+      g.clk &&
+      g.clk.length >= 8 &&
+      g.clk[0] &&
+      (g.result === "win" || g.result === "loss"),
+  );
+}
+
+/**
  * Mean fraction of starting clock remaining, by decile of game progress,
  * split by result. This is the section's thesis: the win/loss gap opens early
  * and never closes.
  */
 export function clockDeciles(games, speed = "blitz") {
   const buckets = Array.from({ length: 10 }, () => ({ win: [], loss: [] }));
-  for (const g of games) {
-    if (g.speed !== speed || !g.clk || g.clk.length < 8) continue;
-    if (g.result !== "win" && g.result !== "loss") continue;
+  for (const g of clockSample(games, speed)) {
     const start = g.clk[0];
-    if (!start) continue;
     g.clk.forEach((c, i) => {
       buckets[Math.min(9, Math.floor((10 * i) / g.clk.length))][g.result].push(c / start);
     });
@@ -199,21 +214,59 @@ export function streaks(games, offsetMs = 0) {
   return { longestWin, longestLoss, distinctDays: days.length, spanDays, longestDayStreak };
 }
 
-/** Top openings as Black, per calendar year — the three-act repertoire arc. */
+/**
+ * Collapses the same opening's two platform spellings onto one key. Without
+ * this, the merged corpus splits one repertoire line in two at exactly the
+ * January 2023 handoff and renders a discontinuity that never happened:
+ * lichess returns `Scandinavian Defense: Mieses-Kotroc Variation` (494 games)
+ * and chess.com's ECO slug yields `Scandinavian Defense Mieses Kotrc Variation`
+ * (426 games).
+ *
+ * Hyphens become spaces and apostrophes are dropped rather than spaced, because
+ * chess.com's slug uses `-` as its word separator and carries no apostrophes at
+ * all (`Queens-Pawn-Opening`, `Kings-Indian-Attack`) — so `Queen's Pawn Game`
+ * has to canonicalise to `Queens Pawn Game`, never `Queen s Pawn Game`.
+ */
+export function canonOpening(name) {
+  if (!name) return null;
+  const c = name
+    .replace(/Kotroc/gi, "Kotrc") // lichess spells it Kotroc, chess.com Kotrc
+    .replace(/['’]/g, "")
+    .replace(/\bwith 1 e4\b/gi, "")
+    .replace(/[-:,"]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return c || null;
+}
+
+/** The first two words — where repertoire identity lives ("Scandinavian Defense"). */
+export function openingFamily(name) {
+  const c = canonOpening(name);
+  return c ? c.split(" ").slice(0, 2).join(" ").toLowerCase() : null;
+}
+
+/**
+ * Top openings as Black, per calendar year — the three-act repertoire arc.
+ * `share` is of that year's Black games that carried an opening name, which is
+ * the denominator the spec's repertoire table uses.
+ */
 export function repertoireByYear(games, top = 5, offsetMs = 0) {
   const years = {};
+  const totals = {};
   for (const g of games) {
-    if (!g.opening || g.white) continue;
+    const opening = canonOpening(g.opening);
+    if (!opening || g.white) continue;
     const y = dayKey(g.ts, offsetMs).slice(0, 4);
     (years[y] ||= {});
-    years[y][g.opening] = (years[y][g.opening] || 0) + 1;
+    years[y][opening] = (years[y][opening] || 0) + 1;
+    totals[y] = (totals[y] || 0) + 1;
   }
   const out = {};
   for (const [y, counts] of Object.entries(years)) {
     out[y] = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, top)
-      .map(([name, count]) => ({ name, count }));
+      .map(([name, count]) => ({ name, count, share: count / totals[y] }));
   }
   return out;
 }
