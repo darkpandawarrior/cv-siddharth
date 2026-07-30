@@ -12,10 +12,10 @@ export const profile = {
   availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. Platform owner of a ~960k-LOC financial SaaS app (~87% of UI-layer code in Compose) serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
+    "5+ years building production Android — de facto technical owner of a ~960k-LOC financial SaaS platform (74% of its production branch, 2,808 of 3,804 commits, is my code), not just a contributor to it. ~87% of UI-layer code in Compose, serving 50,000+ monthly users. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — platform owner of a ~960k-line, 50,000+ MAU financial Android app. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: dead-reckoning location engineering with Kalman smoothing (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
+    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — de facto technical owner (74% of the production branch, 2,808 of 3,804 commits) of a ~960k-line, 50,000+ MAU financial Android app. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: staged dead-reckoning location engineering with Kalman smoothing and spike rejection (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction from concurrency root-cause work (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
 };
 
 export const education = {
@@ -78,7 +78,7 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Platform Ownership",
-        text: "Own Android architecture and platform decisions across a ~960k-LOC Kotlin app serving 50,000+ MAU.",
+        text: "De facto technical owner of a ~960k-LOC Kotlin app serving 50,000+ MAU — 74% of the production branch (2,808 of 3,804 commits) is mine, not a contributor's share.",
       },
       {
         label: "Compose Migration",
@@ -86,11 +86,11 @@ export const experience: Experience[] = [
       },
       {
         label: "Location Engineering",
-        text: "Built a predictive dead-reckoning location engine, lifting GPS accuracy from 50% to 95% for 22,000+ DAU.",
+        text: "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU — staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jumps never reach the buffer, taking tracking accuracy from 50% to 95%.",
       },
       {
         label: "Crash Reduction",
-        text: "Cut production crashes 80% via structured-concurrency fixes and dual Crashlytics + Sentry monitoring.",
+        text: "Cut production crashes 80% on a 964k-LOC app at 22k DAU through concurrency and threading root-cause work — not defensive try/catch — plus dual Crashlytics + Sentry monitoring.",
       },
       {
         label: "Security Hardening",
@@ -102,7 +102,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Product Growth",
-        text: "Shipped intelligent in-app review flows, lifting Play Store rating 85% and reviews 80x.",
+        text: "Shipped intelligent in-app review flows that took the Play Store listing from 1.6★/67 reviews to 4.5★/27.3K — closing 85% of the gap to a perfect 5.0 (+181% rating, 407x review volume).",
       },
       {
         label: "Travel Platform",
@@ -110,11 +110,11 @@ export const experience: Experience[] = [
       },
       {
         label: "UI Platform",
-        text: "Designed a Dynamic Theme Engine for client branding, cutting UI development friction 60%.",
+        text: "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant — cutting UI development friction 60% without touching feature code per client.",
       },
       {
         label: "CI/CD & Automation",
-        text: "Automated Fastlane builds and Play Store releases; upgraded to AGP 9 with agentic MCP workflows.",
+        text: "Own the build platform: automated Fastlane build/signing/release pipelines and drove an AGP 9 upgrade across a 964k-LOC app, layered with agentic MCP workflows (Firebender).",
       },
     ],
   },
@@ -123,11 +123,30 @@ export const experience: Experience[] = [
     role: "Software Engineer, Android & Vertical Owner",
     period: "Jan 2021 — May 2023",
     points: [
-      { text: "Owned Android development across multi-tenant SaaS platforms for customer, driver, and merchant apps." },
-      { text: "Built modular white-label templates, cutting delivery time 80% across 20+ clients." },
-      { text: "Refactored core modules and REST integrations (Retrofit, OkHttp), including secure payment gateways." },
-      { text: "Unified P2P Carpool and Trucking verticals into one super-app platform, simplifying user flows." },
-      { text: "Collaborated cross-team on roadmaps with product and backend, cutting engineering overhead 40%." },
+      {
+        label: "Multi-Tenant Platform Ownership",
+        text: "Owned Android development across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike/car rental, shuttle, wallet) spanning customer, driver, and merchant apps — contributed to 1,179 branches across the two Android codebases; 3,235 commits total, ranking 3rd and 4th most prolific author on repos with 9-year, 10+-contributor histories I joined 7 years in.",
+      },
+      {
+        label: "White-Label Platform, Productising Variation",
+        text: "Rather than fork the app per client, built a per-tenant flavor system (build config, resource overlays, isolated storage/branding) so 858 white-label-named branches across two Android repos carry my commits — 459 autos, 399 driver, a subset of the 1,179 total — spanning 150+ distinct client codebases, cutting delivery time 80%. The problem was shipping one codebase to hundreds of tenants without forking myself to death; the flavor system is the mechanism that made that possible.",
+      },
+      {
+        label: "Product-Line Ownership",
+        text: "Worked product-side as well as engineering across 131 product-line branches — the dev and dev 3.0 mainlines plus the P2P carpool, trucking, e-bike and super-app verticals — shaping requirements alongside shipping them.",
+      },
+      {
+        label: "Payments at Scale",
+        text: "Personally implemented Razorpay, Stripe, Beyonic, and HyperPay gateway integrations across checkout flows; built Stripe 3DS payment retry/recovery handling and a corporate-account KYC verification flow from scratch.",
+      },
+      {
+        label: "Platform Modernization",
+        text: "Upgraded the toolchain across a multi-branch, multi-client codebase — Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance — without breaking any of the 150+ client builds riding on it.",
+      },
+      {
+        label: "Cross-Functional Engineering",
+        text: "Collaborated cross-team on roadmaps with product and backend, cutting engineering overhead 40%.",
+      },
     ],
   },
   {
@@ -182,11 +201,11 @@ export const caseStudies: CaseStudy[] = [
     problem:
       "Field users' trip distances were off by large margins from urban canyons, tunnels, and OEM-throttled location updates.",
     approach: [
-      "Fused accelerometer and GPS data to estimate position between fixes via dead reckoning.",
+      "Ran staged dead reckoning over the GPS/IMU fix stream, smoothed by a separate 1D Kalman filter to estimate position between fixes.",
       "Rejected physically impossible fixes with spike detection, plus gap-filling for weak signal.",
       "Ran a foreground service with a floating bubble UI to survive OEM battery restrictions.",
     ],
-    outcome: "Tracking accuracy rose from 50% to 95%, making mileage reliable enough for expense reimbursement.",
+    outcome: "Tracking accuracy rose from 50% to 95% via staged dead reckoning plus Kalman smoothing, making mileage reliable enough for expense reimbursement.",
     tags: ["Location", "Dead reckoning", "Kalman filtering", "Foreground services"],
   },
   {
@@ -201,12 +220,12 @@ export const caseStudies: CaseStudy[] = [
       "Reconstructed the user journey before each crash with structured breadcrumb instrumentation.",
       "Hunted concurrency bugs: main-thread violations, coroutine race conditions, lifecycle leaks.",
     ],
-    outcome: "Crashes fell 80%; Play Store rating rose 85% with 80x more user reviews.",
+    outcome: "Crashes fell 80% at 22k DAU; Play Store went 1.6★/67 reviews to 4.5★/27.3K — closing 85% of the gap to a perfect 5.0, +181% rating, 407x review volume.",
     tags: ["Crashlytics", "Structured concurrency", "Coroutines"],
   },
   {
     slug: "compose-migration",
-    title: "Zero-regression migration to a Compose theme platform",
+    title: "The theme platform behind a ~964k-LOC Compose migration",
     metric: "~87% UI-layer Compose",
     summary: "Migrated a ~960k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
     problem:
@@ -214,7 +233,7 @@ export const caseStudies: CaseStudy[] = [
     approach: [
       "Migrated incrementally via interop, keeping Expenses, Travel, and Invoices shipping throughout.",
       "Standardized on a single immutable UiState per screen with StateFlow and MVI.",
-      "Built a Dynamic Theme Engine on CompositionLocal for one-place brand and token changes.",
+      "Built a Dynamic Theme Engine on CompositionLocal: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant.",
     ],
     outcome: "Reached ~87% UI-layer Compose coverage (455k of 523k LOC) verified per-screen against the legacy XML baseline; UI development friction dropped 60%.",
     tags: ["Jetpack Compose", "MVI", "Design systems"],
@@ -222,16 +241,16 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "white-label",
     title: "Configuration-driven pipeline for multi-tenant Android",
-    metric: "80% faster delivery",
-    summary: "A configuration-driven pipeline that turned weeks of per-client Android work into days.",
+    metric: "858 branches · 80% faster delivery",
+    summary: "A configuration-driven pipeline that turned weeks of per-client Android work into days, at a scale where per-client forks were the constraint.",
     problem:
-      "Every new white-label client meant manually forking, rebranding, and re-releasing the app: weeks of error-prone work.",
+      "Every new white-label client meant manually forking, rebranding, and re-releasing the app: weeks of error-prone work, and the constraint that mattered was not building the feature once — it was doing that without forking the codebase per tenant.",
     approach: [
       "Built configuration-driven theming and feature flags so one codebase served every client.",
       "Automated per-client signing, asset generation, and Play Store packaging end-to-end.",
       "Unified brand tokens and vertical-specific flows into a single reusable app template.",
     ],
-    outcome: "Shipped 20+ client apps with delivery time cut 80% versus manual per-client builds.",
+    outcome: "858 white-label-named branches across two Android repos carry my commits (459 autos, 399 driver, a subset of the 1,179 total) spanning 150+ client codebases, with delivery time cut 80% versus manual per-client builds.",
     tags: ["Build systems", "Multi-tenant", "Automation"],
   },
 ];
@@ -941,11 +960,11 @@ export const projects: Project[] = [
     tagline: "A native, multiplatform AI career-intelligence engine — and the open-source project it's built on.",
     description:
       "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — rebuilt from scratch in Kotlin Multiplatform, with its scoring engine ported and verified against the open-source career-ops project I actively contribute to upstream.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "65 ATS/board providers"],
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "67 ATS/board providers"],
     highlights: [
       "25-module Kotlin Multiplatform clean architecture — 12 feature + 6 core modules — targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "65 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "67 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
       "4 merged PRs to the public career-ops project (⭐60k+) — two new ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature — real, verifiable upstream contributions.",
     ],
     // The native app (darkpandawarrior/HireSignal) is a private, v1-in-progress

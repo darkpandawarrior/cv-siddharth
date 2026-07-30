@@ -61,7 +61,7 @@ Problem: every white-label client meant weeks of manual forking, rebranding and 
 ## Other builds
 
 - Kursi (https://cv-siddharth.vercel.app/?project=kursi): multiplayer social-deduction game — Android + playable web build, 10 AI bot personas, 6 roles, 4 story arcs, one engine across 4 platforms. Repo: https://github.com/darkpandawarrior/Kursi
-- PaymentsLab (https://cv-siddharth.vercel.app/?project=paymentslab): payment-gateway integration lab with real security hardening (FLAG_SECURE, SSL pinning, SQLCipher). Repo: https://github.com/darkpandawarrior/PaymentsLab
+- PaymentsLab (https://cv-siddharth.vercel.app/?project=paymentslab): payment-gateway integration lab with real security hardening (FLAG_SECURE, SSL pinning, server-side HMAC-SHA256 webhook verification, idempotency keys). Repo: https://github.com/darkpandawarrior/PaymentsLab
 - HireSignal (https://cv-siddharth.vercel.app/?project=hiresignal): local-first AI career-intelligence engine — 25-module Kotlin Multiplatform rebuild (Android/iOS/Desktop/Web/Spring Boot server) of career-ops, a public open-source Node.js job-search engine (⭐60k+) Siddharth actively contributes to upstream (4 merged PRs). Native app repo is private; upstream: https://github.com/santifer/career-ops
 - DEADLOCK (https://cv-siddharth.vercel.app/?project=deadlock): first-person time-loop game in Godot 4.7/GDScript — one deterministic (state, InputFrame) → state replay system reused five ways (cooperative Echoes, ghosts, leaderboard replays, the Hunter, boss desync). Solo build with an AI-orchestrated content pipeline. Repo is private; case study lives on the site.
 - kmp-toolkit: shared KMP foundation (MVI core, security, design system, feedback) used by Mileway and PaymentsLab. https://github.com/darkpandawarrior/kmp-toolkit
@@ -73,7 +73,7 @@ UI: Jetpack Compose (~87% of UI-layer code), Material 3, Compose-View interop, C
 Architecture: Clean Architecture, MVVM, MVI, modular architecture, repository pattern, Kotlin Multiplatform.
 Concurrency & DI: Kotlin Coroutines, Flow, StateFlow/SharedFlow, structured concurrency, Hilt, Dagger.
 Data & networking: Room (24 schema migrations, 2 databases), DataStore, EncryptedSharedPreferences, Retrofit, OkHttp, REST.
-Platform: Android SDK, WorkManager, foreground services, location/sensor fusion, Crashlytics + Sentry, Mixpanel.
+Platform: Android SDK, WorkManager, foreground services, location engineering (staged dead reckoning + Kalman smoothing at Dice; MotionFusion filtering in Mileway), Crashlytics + Sentry, Mixpanel.
 Security: Android Keystore (AES-256), SSL pinning, BiometricPrompt, EncryptedSharedPreferences, VAPT compliance.
 Build & tools: Gradle KTS, AGP 9, Fastlane, Play Store release management, Figma, agentic workflows (Firebender, MCP).
 Languages: Kotlin, Java, Dart, C++.
@@ -82,7 +82,7 @@ Languages: Kotlin, Java, Dart, C++.
 
 Field notes from real Android/KMP work, told through recurring personified-bug characters. Hub: https://cv-siddharth.vercel.app/#loopdown · Registry: https://github.com/darkpandawarrior/the-loopdown
 
-Series: Sensors Who Lie (location/sensor fusion, from Mileway's location engine) · The Coroutine Court (concurrency, from the -80% crashes work) · The Night Shift (background execution, from the GPS work) · Ghosts In The Recomposition (Compose performance, from the ~87% migration) · One Brain Two Bodies (KMP architecture, from Mileway's 5-platform build).
+Series: Sensors Who Lie (location, MotionFusion filtering and dead reckoning, from Mileway's location engine) · The Coroutine Court (concurrency, from the -80% crashes work) · The Night Shift (background execution, from the GPS work) · Ghosts In The Recomposition (Compose performance, from the ~87% migration) · One Brain Two Bodies (KMP architecture, from Mileway's 5-platform build).
 
 Published: "Teaching a phone to disbelieve its own GPS" — https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip (also on Medium, Hashnode, LinkedIn).
 Queued: "collectAsState is quietly leaking your work", "expect/actual is the wrong default in KMP", "Your LazyColumn recomposes on every scroll", "The 5-second window that crashes your service", "CancellationException is not an assassin".
