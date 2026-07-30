@@ -13,6 +13,14 @@ const RepertoireTreeScene = lazy(() => import("./chess/RepertoireTreeScene.tsx")
  * chess.js and the engine worker, and five of the six panes have no use for
  * any of them. */
 const ChessBoardPane = lazy(() => import("./chess/ChessBoardPane.tsx"));
+const GuessTheMove = lazy(() => import("./chess/GuessTheMove.tsx"));
+const DailyPuzzle = lazy(() => import("./chess/DailyPuzzle.tsx"));
+/* The pulse counter writes through playhtml, which needs its provider in the
+ * tree — without one `usePageData`'s setter silently no-ops and the counts
+ * never leave the tab. Lazy like the panes it wraps, so the ~75 kB of Yjs +
+ * partysocket only loads for a visitor who opens this one tab, and the room's
+ * own chunk stays clear of it. */
+const PlayRoom = lazy(() => import("./play/PlayRoom.tsx").then((m) => ({ default: m.PlayRoom })));
 
 /** Square index to algebraic name — index 0 is a1, 63 is h8, the convention the
  *  generator's `squareMatrix` fixed. Lives here rather than in the scene so the
@@ -401,6 +409,22 @@ function PlayPane() {
   );
 }
 
+/** Guess the Move — the corpus quiz, and the captured lichess daily puzzle
+ *  underneath it. Both need react-chessboard, so both are lazy. */
+function PuzzlePane({ corpus }: { corpus: Corpus }) {
+  const { reduced } = useEnv();
+  return (
+    <Suspense fallback={<p className="mt-4 font-mono text-sm text-muted">loading the boards…</p>}>
+      <PlayRoom>
+        <div className="mt-4">
+          <GuessTheMove positions={corpus.positions} reduced={reduced} />
+          <DailyPuzzle builtAt={corpus.generatedAt.slice(0, 10)} reduced={reduced} />
+        </div>
+      </PlayRoom>
+    </Suspense>
+  );
+}
+
 /** One real number per pane, straight from the corpus. A placeholder that
  *  quotes live data is honest about what has loaded and what hasn't. */
 function paneNote(tab: ChessTab, c: Corpus): string {
@@ -483,6 +507,8 @@ export function ChessRoom() {
               <RepertoirePane corpus={corpus} />
             ) : tab === "play" ? (
               <PlayPane />
+            ) : tab === "puzzle" ? (
+              <PuzzlePane corpus={corpus} />
             ) : (
               <p className="mt-1 font-mono text-xs text-muted">
                 {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each

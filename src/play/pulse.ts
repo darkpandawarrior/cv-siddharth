@@ -21,6 +21,7 @@ export const PULSE_EVENTS = {
   "room:map": { label: "The 3D Storyboard", group: "Rooms entered" },
   "room:forge": { label: "The Particle Forge", group: "Rooms entered" },
   "room:terminal": { label: "The Terminal", group: "Rooms entered" },
+  "room:chess": { label: "The Board", group: "Rooms entered" },
   "blueprint:fly": { label: "Flew through it in 3D", group: "In the Blueprint Room" },
   "blueprint:ascii": { label: "Switched to the ASCII render", group: "In the Blueprint Room" },
   "blueprint:sketch": { label: "Opened the whiteboard", group: "In the Blueprint Room" },
@@ -29,6 +30,8 @@ export const PULSE_EVENTS = {
   "playground:move": { label: "Rearranged the room tiles", group: "In the Playground" },
   "playground:tidy": { label: "Tidied the tiles back up", group: "In the Playground" },
   "wall:note": { label: "Left a note on the wall", group: "In the Playground" },
+  "chess:guess": { label: "Called a game won or lost", group: "In the Chess Room" },
+  "chess:puzzle": { label: "Tried the daily puzzle", group: "In the Chess Room" },
 } as const;
 
 export type PulseEvent = keyof typeof PULSE_EVENTS;

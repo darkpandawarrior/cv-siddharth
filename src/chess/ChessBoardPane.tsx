@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Chess, type Square } from "chess.js";
-import { Chessboard } from "react-chessboard";
-import type { PieceDataType } from "react-chessboard";
+import { BoardSurface, type BoardPick } from "./BoardSurface.tsx";
 import { createEngine, type Engine } from "./engineClient.ts";
 import { PRESETS, type PresetId } from "./calibration.ts";
 import { chess } from "../data/chess.ts";
@@ -16,6 +15,9 @@ import { chess } from "../data/chess.ts";
  * reason the board stays live while the bot thinks: a depth-4 search is
  * hundreds of milliseconds and would otherwise be hundreds of milliseconds
  * of frozen page.
+ *
+ * The board itself — square buttons, arrow-key navigation and the dnd-kit
+ * accessibility repair — lives in BoardSurface, shared with the daily puzzle.
  *
  * !! The `Chess` instance lives in a ref and is NEVER read during render. !!
  * This repo compiles with the React Compiler (vite.config.ts). A `Chess`
@@ -32,38 +34,6 @@ import { chess } from "../data/chess.ts";
  * labels, not a measured strength — this engine has never played a rated
  * pool, so no copy in here says a bot "plays at" a rating.
  */
-
-const FILES = "abcdefgh";
-const PIECE_NAMES: Record<string, string> = {
-  p: "pawn",
-  n: "knight",
-  b: "bishop",
-  r: "rook",
-  q: "queen",
-  k: "king",
-};
-
-/** Arrow keys walk the board from White's point of view — the orientation the
- *  visitor always plays from here. */
-const KEY_STEPS: Record<string, [number, number]> = {
-  ArrowLeft: [-1, 0],
-  ArrowRight: [1, 0],
-  ArrowUp: [0, 1],
-  ArrowDown: [0, -1],
-};
-
-function step(square: string, df: number, dr: number): string | null {
-  const file = FILES.indexOf(square[0]) + df;
-  const rank = Number(square[1]) + dr;
-  return file < 0 || file > 7 || rank < 1 || rank > 8 ? null : `${FILES[file]}${rank}`;
-}
-
-function pieceName(piece: PieceDataType | null): string {
-  if (!piece) return "empty";
-  const colour = piece.pieceType[0];
-  const type = piece.pieceType[1].toLowerCase();
-  return `${colour === "w" ? "white" : "black"} ${PIECE_NAMES[type] ?? type}`;
-}
 
 /** Why the game is a draw, asked in order: `isDraw()` is also true for
  *  stalemate and for insufficient material, so the specific reasons have to
@@ -102,7 +72,6 @@ function snapshot(game: Chess): Snap {
 }
 
 type Readout = { move: string; ms: number; nodes: number };
-type Pick = { square: string; targets: string[] };
 
 export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
   const gameRef = useRef<Chess | null>(null);
@@ -110,15 +79,13 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
 
   const [snap, setSnap] = useState<Snap>(() => snapshot(new Chess()));
   const [presetId, setPresetId] = useState<PresetId>("sid2019");
-  const [pick, setPick] = useState<Pick | null>(null);
-  const [cursor, setCursor] = useState("e2");
+  const [pick, setPick] = useState<BoardPick>(null);
   const [thinking, setThinking] = useState(false);
   const [resigned, setResigned] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [readout, setReadout] = useState<Readout | null>(null);
 
   const engineRef = useRef<Engine | null>(null);
-  const boardRef = useRef<HTMLDivElement | null>(null);
   /** Bumped by "new game" and "resign": a search already in flight resolves
    *  into a game that no longer exists, and its move must be dropped. */
   const genRef = useRef(0);
@@ -133,26 +100,6 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
       engine.dispose();
     };
   }, []);
-
-  // react-chessboard renders every piece as a dnd-kit draggable, which means
-  // `role="button" tabindex="0"` with no accessible name. axe reports that as
-  // 32 serious `aria-command-name` violations, and — since the pieces sit
-  // inside our own square buttons — 32 `nested-interactive` ones on top. The
-  // keyboard affordance they would give is exactly what the square grid below
-  // replaces, so they come out of the tab order and out of the a11y tree; the
-  // square button's own label ("e2, white pawn") names the piece instead.
-  // Dragging rides dnd-kit's pointer sensor and is untouched. No dep array:
-  // the piece nodes are recreated on every position change.
-  useEffect(() => {
-    const pieces = boardRef.current?.querySelectorAll<HTMLElement>('[aria-roledescription="draggable"]');
-    for (const el of pieces ?? []) {
-      // Removed, not set to -1: axe's nested-interactive check counts
-      // tabindex="-1" as focusable content inside our button. A div with no
-      // tabindex at all is not focusable, and the rule passes.
-      el.removeAttribute("tabindex");
-      el.setAttribute("aria-hidden", "true");
-    }
-  });
 
   const preset = PRESETS[presetId];
   const over = snap.over || resigned;
@@ -205,7 +152,6 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
     // up in a fraction of games against a bot that rarely reaches an endgame.
     game.move({ from, to, promotion: "q" });
     setPick(null);
-    setCursor(to);
     setSnap(snapshot(game));
     if (!game.isGameOver()) think();
     return true;
@@ -220,17 +166,6 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
     if (pick?.targets.includes(square) && tryMove(pick.square, square)) return;
     const targets = game.moves({ square: square as Square, verbose: true }).map((m) => m.to as string);
     setPick(targets.length > 0 ? { square, targets } : null);
-  };
-
-  const onSquareKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Escape") return setPick(null);
-    const delta = KEY_STEPS[e.key];
-    if (!delta) return;
-    e.preventDefault();
-    const next = step(e.currentTarget.dataset.sq ?? "e2", delta[0], delta[1]);
-    if (!next) return;
-    setCursor(next);
-    boardRef.current?.querySelector<HTMLButtonElement>(`[data-sq="${next}"]`)?.focus();
   };
 
   const newGame = () => {
@@ -290,62 +225,17 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">{preset.blurb}</p>
 
       <div className="mt-5 flex flex-col gap-6 lg:flex-row">
-        <div
-          ref={boardRef}
-          className="w-full max-w-[420px] shrink-0"
-          role="group"
-          aria-label="Chess board. Arrow keys move between squares; Enter or Space picks up a piece and then places it; Escape cancels."
-        >
-          <Chessboard
-            options={{
-              id: "chess-room-board",
-              position: snap.fen,
-              boardOrientation: "white",
-              allowDragging: !locked,
-              allowDrawingArrows: false,
-              showAnimations: !reduced,
-              animationDurationInMs: reduced ? 0 : 200,
-              darkSquareStyle: { backgroundColor: "#2a3b33" },
-              lightSquareStyle: { backgroundColor: "#c9d6cd" },
-              onPieceDrop: ({ sourceSquare, targetSquare }) =>
-                targetSquare ? tryMove(sourceSquare, targetSquare) : false,
-              onSquareClick: ({ square }) => clickSquare(square),
-              // Replacing the default square body with a real button is what
-              // makes the board keyboard-operable: one tab stop (roving
-              // tabindex), arrows to walk it, and Enter fires a click that
-              // bubbles into onSquareClick above — the same path a mouse takes.
-              squareRenderer: ({ square, piece, children }) => {
-                const isTarget = pick?.targets.includes(square) ?? false;
-                const label = `${square}, ${pieceName(piece)}${
-                  square === pick?.square ? ", selected" : isTarget ? ", legal move" : ""
-                }`;
-                return (
-                  <button
-                    type="button"
-                    data-sq={square}
-                    tabIndex={square === cursor ? 0 : -1}
-                    aria-label={label}
-                    onFocus={() => setCursor(square)}
-                    onKeyDown={onSquareKeyDown}
-                    className="block cursor-pointer border-0 p-0 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#3ddc84]"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background:
-                        square === pick?.square
-                          ? "rgba(61,220,132,0.42)"
-                          : isTarget && piece
-                            ? "radial-gradient(circle, transparent 52%, rgba(61,220,132,0.55) 54%)"
-                            : isTarget
-                              ? "radial-gradient(circle, rgba(61,220,132,0.55) 22%, transparent 24%)"
-                              : "transparent",
-                    }}
-                  >
-                    {children}
-                  </button>
-                );
-              },
-            }}
+        <div className="w-full max-w-[420px] shrink-0">
+          <BoardSurface
+            id="chess-room-board"
+            fen={snap.fen}
+            pick={pick}
+            interactive
+            allowDragging={!locked}
+            reduced={reduced}
+            label="Chess board. Arrow keys move between squares; Enter or Space picks up a piece and then places it."
+            onSquareClick={clickSquare}
+            onDrop={tryMove}
           />
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
