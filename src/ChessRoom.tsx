@@ -3,7 +3,17 @@ import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
 
+import type { GraveyardView } from "./chess/GraveyardScene.tsx";
+
 const ChessArcScene = lazy(() => import("./chess/ChessArcScene.tsx"));
+const GraveyardScene = lazy(() => import("./chess/GraveyardScene.tsx"));
+
+/** Square index to algebraic name — index 0 is a1, 63 is h8, the convention the
+ *  generator's `squareMatrix` fixed. Lives here rather than in the scene so the
+ *  room can name squares without pulling three.js into its chunk. */
+function squareName(i: number): string {
+  return `${"abcdefgh"[i % 8]}${Math.floor(i / 8) + 1}`;
+}
 
 /**
  * The Board — the shell for the chess room.
@@ -55,9 +65,13 @@ function supportsWebGL(): boolean {
   }
 }
 
-/** True when this visitor should get flat HTML instead of a moving canvas. */
-function useFlat(): boolean {
-  return useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches || !supportsWebGL(), []);
+/** What this visitor's browser will accept: motion, and a canvas at all.
+ *  Read once — neither answer changes mid-visit in any way worth re-rendering. */
+function useEnv(): { reduced: boolean; webgl: boolean } {
+  return useMemo(
+    () => ({ reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches, webgl: supportsWebGL() }),
+    [],
+  );
 }
 
 const sceneFallback = (
@@ -84,7 +98,8 @@ function ScenePane({ height, alt, children }: { height: string; alt: React.React
  * a reduced-motion visitor never downloads three.js at all.
  */
 function ArcPane({ corpus }: { corpus: Corpus }) {
-  const flat = useFlat();
+  const { reduced, webgl } = useEnv();
+  const flat = reduced || !webgl;
   const handoff = platformHandoff();
   const bands = useMemo(() => {
     const withPoints = corpus.arc.filter((s) => s.points.length > 1);
@@ -149,6 +164,91 @@ function ArcPane({ corpus }: { corpus: Corpus }) {
         <ChessArcScene corpus={corpus} handoffAt={handoff?.at ?? null} handoffLabel={handoff?.label ?? ""} />
       </Suspense>
     </ScenePane>
+  );
+}
+
+/**
+ * The Graveyard — the 64-square terminal-position heatmap, plus the toggle and
+ * the caption that keeps its sample honest.
+ */
+function GraveyardPane({ corpus }: { corpus: Corpus }) {
+  const { reduced, webgl } = useEnv();
+  const [view, setView] = useState<GraveyardView>("losses");
+  const counts = corpus.graveyard[view];
+
+  const top = useMemo(
+    () =>
+      counts
+        .map((n, i) => ({ square: squareName(i), n }))
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 8),
+    [counts],
+  );
+  const cc = chess.platforms.find((p) => p.id === "chess.com");
+  const li = chess.platforms.find((p) => p.id === "lichess");
+
+  const caption = (
+    <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+      Where the games actually end: each column counts the {view} whose <em>final</em> position still had a
+      piece — either side's — standing on that square.{" "}
+      {cc && li && (
+        <>
+          This board is chess.com's {cc.games.toLocaleString()} games only. lichess's{" "}
+          {li.games.toLocaleString()} are not in it: its export ships no FEN, so their final positions
+          were never recorded.
+        </>
+      )}
+    </p>
+  );
+
+  const alt = (
+    <div className="mt-4 text-sm leading-relaxed text-zinc-400">
+      <p>
+        Busiest squares at the end of a game, {view}, heights normalised against the tallest column in this
+        matrix:
+      </p>
+      <ol className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
+        {top.map((t, i) => (
+          <li key={t.square}>
+            <span className="text-zinc-200">
+              {i + 1}. {t.square}
+            </span>{" "}
+            {t.n.toLocaleString()}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+
+  return (
+    <>
+      {caption}
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Which games to show">
+        {(["losses", "wins"] as GraveyardView[]).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            aria-pressed={view === v}
+            className={`rounded-full border px-3 py-1 font-mono text-xs transition ${
+              view === v ? "border-accent bg-accent/15 text-accent" : "border-line text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            {view === v ? "● " : ""}
+            {v}
+          </button>
+        ))}
+      </div>
+      {webgl ? (
+        <ScenePane height="h-[460px]" alt={alt}>
+          <Suspense fallback={sceneFallback}>
+            <GraveyardScene counts={counts} view={view} reduced={reduced} />
+          </Suspense>
+        </ScenePane>
+      ) : (
+        alt
+      )}
+    </>
   );
 }
 
@@ -228,6 +328,8 @@ export function ChessRoom() {
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
             {tab === "arc" ? (
               <ArcPane corpus={corpus} />
+            ) : tab === "graveyard" ? (
+              <GraveyardPane corpus={corpus} />
             ) : (
               <p className="mt-1 font-mono text-xs text-muted">
                 {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each
