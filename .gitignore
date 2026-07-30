@@ -17,3 +17,8 @@ playwright-report/
 
 # Lighthouse CI output
 .lighthouseci/
+
+# chess corpus cache (scripts/gen-chess-stats.mjs) — the lichess half is a
+# frozen archive (last activity 2025-01-16) and its full NDJSON export takes
+# ~9 minutes, so it is fetched once and cached rather than re-pulled daily.
+.chess-cache/
