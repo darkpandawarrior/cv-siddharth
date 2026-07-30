@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo, useState } from "react";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
+import { ChessVsCommits } from "./chess/ChessVsCommits.tsx";
 
 import { focusLines, pct, repertoireYears, shareSeries } from "./chess/repertoireModel.ts";
 import type { GraveyardView } from "./chess/GraveyardScene.tsx";
@@ -38,8 +39,6 @@ function squareName(i: number): string {
  * LabBench (buttons carrying `aria-pressed`, not an ARIA tablist — these are
  * toggles over one region, and the strip stays keyboard-operable for free
  * because they are real buttons).
- *
- * Tasks 7–14 replace the placeholder panes one at a time.
  */
 
 export type ChessTab = "arc" | "graveyard" | "repertoire" | "play" | "puzzle" | "rhythm";
@@ -425,25 +424,6 @@ function PuzzlePane({ corpus }: { corpus: Corpus }) {
   );
 }
 
-/** One real number per pane, straight from the corpus. A placeholder that
- *  quotes live data is honest about what has loaded and what hasn't. */
-function paneNote(tab: ChessTab, c: Corpus): string {
-  switch (tab) {
-    case "arc":
-      return `${c.arc.length} rating series loaded`;
-    case "graveyard":
-      return `${c.graveyard.losses.length} terminal squares loaded`;
-    case "repertoire":
-      return `${Object.keys(c.repertoireByPlatform).length} years of repertoire loaded`;
-    case "play":
-      return "no engine yet";
-    case "puzzle":
-      return `${c.positions.length} positions loaded`;
-    case "rhythm":
-      return `${c.hours.chess.length} hour buckets loaded`;
-  }
-}
-
 export function ChessRoom() {
   const [tab, setTab] = useState<ChessTab>("arc");
   const { corpus, error } = useCorpus();
@@ -510,11 +490,7 @@ export function ChessRoom() {
             ) : tab === "puzzle" ? (
               <PuzzlePane corpus={corpus} />
             ) : (
-              <p className="mt-1 font-mono text-xs text-muted">
-                {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each
-                    swap one of these for the real thing. */}
-                not built yet — {paneNote(tab, corpus)}
-              </p>
+              <ChessVsCommits hours={corpus.hours} />
             )}
           </>
         )}
