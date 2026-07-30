@@ -2,6 +2,12 @@ node_modules
 dist
 .env.local
 .env*.local
+# Timestamped backups written by AgentHarness/scripts/rotate-api-key.sh. These
+# CONTAIN THE OLD SECRET, and `.env*.local` does NOT match them — the pattern
+# requires the name to end in `.local`, while these end in `.bak`. Without this
+# line a `git add -A` would commit a rotated-out API key.
+*.bak
+.env*.bak
 *.log
 .DS_Store
 .vercel
