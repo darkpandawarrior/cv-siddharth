@@ -20,7 +20,9 @@ export type LabKey =
   | "gateways"
   | "search"
   | "fanout"
-  | "replay";
+  | "replay"
+  | "chess-search"
+  | "chess-clock";
 
 export type LabTab = {
   key: LabKey;
@@ -39,6 +41,8 @@ export const LAB_TABS: LabTab[] = [
   { key: "search", label: "Search Tree", metric: "10 personas", group: "personal" },
   { key: "fanout", label: "Provider Fan-out", metric: "62 providers", group: "personal" },
   { key: "replay", label: "Deterministic Replay", metric: "0-tolerance", group: "personal" },
+  { key: "chess-search", label: "Chess Search", metric: "alpha-beta", group: "personal" },
+  { key: "chess-clock", label: "Clock Burn", metric: "+8.5 pts", group: "personal" },
 ];
 
 const WORDS = [
