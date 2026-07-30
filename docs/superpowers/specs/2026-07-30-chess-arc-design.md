@@ -94,10 +94,16 @@ lichess's rating history carries points as late as 2025-01-16 only because of
   | 2020 | 16.0% of 1,629 | — |
   | 2021 | 0.2% of 2,332 | (n=9, thin) |
   | 2022 | 0.2% of 1,676 | — |
-  | 2023 | (n=168, thin) | **27.5%** of 1,007 |
+  | 2023 | 3.6% of 168 | **27.5%** of 1,007 |
   | 2024 | — | 26.6% of 518 |
   | 2025 | — | 22.7% of 295 |
   | 2026 | — | **39.2%** of 474 |
+
+  Two cells above were editorial judgements in an earlier draft and are corrected here to
+  match the generator: **lichess 2023 is not "thin"** — 168 Black games clears the ~30-game
+  rule, so it emits a real 3.6% — and lichess 2025's Black slice is a single game, which
+  *is* thin. The generator's `thin` flag is authoritative; prose must not soften a cell
+  the rule accepts.
 
   The **abandonment is clean and within-platform**: 41.1% → 0.2% on lichess, replaced
   by the Modern Defense at **81.3% of 2021 Black games** (50.3% in 2020, 78.8% in 2022).
