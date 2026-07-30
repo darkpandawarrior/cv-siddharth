@@ -51,7 +51,37 @@ function prefersReducedMotion() {
 // NOTE on `chess`: `#chess` is the home-page section (ChessSection.tsx), while
 // `/chess` is the room route. classifyHash only ever sees `#`-shaped targets,
 // so registering the section here cannot shadow the route.
-export const SECTION_IDS = new Set(["top", "fit", "work", "projects", "experience", "skills", "contact", "source", "writing", "chess"]);
+/**
+ * Every home-page section id, in home-scroll order, and the single source of
+ * truth for "is this hash a section?".
+ *
+ * Ordered (not just a Set) because the command palette renders its jump list
+ * from this array, so the palette follows the page instead of keeping its own
+ * hand-sorted copy. A `const` tuple rather than `string[]` so `SectionId` is a
+ * real union: that is what makes a missing palette entry a compile error
+ * instead of a silently absent row.
+ *
+ * Three separate hand-mirrored copies of this list existed before: __root.tsx's
+ * SECTION_ANCHORS, the palette's jump list, and the counts in routeHead.ts.
+ * All three drifted — SECTION_ANCHORS's own comment records `source` and
+ * `writing` being stranded once, and every one of them was missing `chess`.
+ */
+export const SECTION_ID_LIST = [
+  "top",
+  "fit",
+  "work",
+  "projects",
+  "experience",
+  "skills",
+  "writing",
+  "chess",
+  "source",
+  "contact",
+] as const;
+
+export type SectionId = (typeof SECTION_ID_LIST)[number];
+
+export const SECTION_IDS: ReadonlySet<string> = new Set(SECTION_ID_LIST);
 
 export type HashTarget =
   | { kind: "section"; id: string }

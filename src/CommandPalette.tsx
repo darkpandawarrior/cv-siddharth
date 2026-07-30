@@ -4,7 +4,7 @@ import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, Tar
 import { projects } from "./data/profile.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
-import { useSectionNav } from "./lib/navigation.ts";
+import { useSectionNav, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 
 interface PaletteCommand {
   id: string;
@@ -14,6 +14,37 @@ interface PaletteCommand {
   icon: React.ReactNode;
   run: () => void;
 }
+
+/**
+ * Jump entries for the home-page sections, keyed by section id.
+ *
+ * `Record<SectionId, …>` is the point: the palette's rows used to be a
+ * hand-written list that had to be kept in step with `SECTION_ID_LIST` by
+ * hand, and it silently lacked a `chess` row. Typing it as a total record makes
+ * omitting a section a **compile error**, and rendering it by mapping
+ * `SECTION_ID_LIST` means the palette follows the page's own scroll order
+ * rather than keeping a second opinion about it.
+ */
+const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
+  top: { label: "Top / Hero", icon: <Compass size={15} /> },
+  fit: {
+    label: "Fit check — paste a job description",
+    keywords: "jd job description recruiter hiring role match score analyse analyze fit",
+    icon: <Target size={15} />,
+  },
+  work: { label: "Case studies", icon: <Compass size={15} /> },
+  projects: { label: "Projects", icon: <Compass size={15} /> },
+  experience: { label: "Experience", icon: <Compass size={15} /> },
+  skills: { label: "Skills", icon: <Compass size={15} /> },
+  writing: { label: "Writing", keywords: "loopdown blog lessons", icon: <PenLine size={15} /> },
+  chess: {
+    label: "Chess — 18k games, mined",
+    keywords: "chess lichess chess.com rating openings scandinavian blitz board games hobby",
+    icon: <Compass size={15} />,
+  },
+  source: { label: "The Source — every public repo", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} /> },
+  contact: { label: "Contact", icon: <Compass size={15} /> },
+};
 
 /**
  * Global ⌘K / Ctrl+K command palette — the "site is an environment" touch.
@@ -34,27 +65,22 @@ export function CommandPalette() {
 
   const commands = useMemo<PaletteCommand[]>(
     () => [
-      { id: "top", label: "Top / Hero", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("top") },
-      {
-        id: "fit",
-        label: "Fit check — paste a job description",
+      // One row per home-page section, in the page's own order. Adding a
+      // section to SECTION_ID_LIST without a SECTION_JUMPS entry won't compile.
+      ...SECTION_ID_LIST.map((id) => ({
+        // "projects" would collide with the per-project rows appended below,
+        // which use `project-<slug>`; the original hand-written list dodged
+        // this with a bespoke "projects-section" id, kept here.
+        id: id === "projects" ? "projects-section" : id,
         hint: "Jump",
-        keywords: "jd job description recruiter hiring role match score analyse analyze fit",
-        icon: <Target size={15} />,
-        run: () => goToSection("fit"),
-      },
-      { id: "work", label: "Case studies", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("work") },
-      { id: "projects-section", label: "Projects", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("projects") },
-      { id: "experience", label: "Experience", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("experience") },
-      { id: "skills", label: "Skills", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("skills") },
-      { id: "writing", label: "Writing", hint: "Jump", keywords: "loopdown blog lessons", icon: <PenLine size={15} />, run: () => goToSection("writing") },
+        ...SECTION_JUMPS[id],
+        run: () => goToSection(id),
+      })),
       { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => navigate({ to: "/map" }) },
       { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => navigate({ to: "/lab" }) },
       { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => navigate({ to: "/forge" }) },
       { id: "pulse", label: "The Pulse — what visitors actually touch", hint: "Open", keywords: "stats counter dashboard analytics interactions live activity", icon: <Compass size={15} />, run: () => navigate({ to: "/pulse" }) },
       { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => navigate({ to: "/playground" }) },
-      { id: "source", label: "The Source — every public repo", hint: "Jump", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} />, run: () => goToSection("source") },
-      { id: "contact", label: "Contact", hint: "Jump", icon: <Compass size={15} />, run: () => goToSection("contact") },
       { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => navigate({ to: "/loopdown" }) },
       { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => navigate({ to: "/blueprint" }) },
       { id: "compose", label: "The Compose Playground — write Compose, live", hint: "Open", keywords: "jetpack compose kotlin android code editor playground live preview", icon: <TerminalSquare size={15} />, run: () => navigate({ to: "/compose" }) },

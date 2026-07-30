@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { resolveSectionAction, classifyHash, classifyChatHref } from "./navigation";
+import { readFile } from "node:fs/promises";
+import { resolveSectionAction, classifyHash, classifyChatHref, SECTION_ID_LIST, SECTION_IDS } from "./navigation";
 
 describe("resolveSectionAction", () => {
   it("scrolls in place when already on the home route", () => {
@@ -79,5 +80,46 @@ describe("classifyChatHref", () => {
 
   it("normalizes a slashless path so it can't become a relative reload", () => {
     expect(classifyChatHref("playground")).toEqual({ kind: "route", to: "/playground" });
+  });
+});
+
+/* ── Drift guards for the derived navigation lists ──────────────────────
+ * Three hand-mirrored copies of the section list used to exist (__root.tsx's
+ * SECTION_ANCHORS, CommandPalette's jump rows, and routeHead's counts). Every
+ * one of them drifted, and all three were missing `chess`. These assert the
+ * single source of truth stays single. */
+describe("SECTION_ID_LIST as the single source of truth", () => {
+  it("has no duplicates", () => {
+    expect(new Set(SECTION_ID_LIST).size).toBe(SECTION_ID_LIST.length);
+  });
+
+  it("backs SECTION_IDS exactly, so membership checks cannot drift from the order", () => {
+    expect(SECTION_IDS.size).toBe(SECTION_ID_LIST.length);
+    for (const id of SECTION_ID_LIST) expect(SECTION_IDS.has(id)).toBe(true);
+  });
+
+  it("classifies every listed section as a section, not as a route", () => {
+    for (const id of SECTION_ID_LIST) {
+      expect(classifyHash(`#${id}`)).toEqual({ kind: "section", id });
+    }
+  });
+
+  it("gives the command palette a jump entry for every section", async () => {
+    // Read the source rather than rendering: the palette is a hooked component
+    // and this repo deliberately avoids @testing-library. The Record<SectionId>
+    // type already makes an omission a compile error — this catches the case
+    // where someone widens the type to escape that.
+    const src = await readFile(new URL("../CommandPalette.tsx", import.meta.url), "utf8");
+    const body = src.slice(src.indexOf("const SECTION_JUMPS"), src.indexOf("export function CommandPalette"));
+    for (const id of SECTION_ID_LIST) {
+      expect(body).toContain(`${id}:`);
+    }
+  });
+
+  it("routes every section home from a non-home route via __root's anchor set", async () => {
+    const src = await readFile(new URL("../routes/__root.tsx", import.meta.url), "utf8");
+    // Must derive, not restate: a literal Set here is the exact bug this fixes.
+    expect(src).toContain("const SECTION_ANCHORS = SECTION_IDS");
+    expect(src).not.toMatch(/SECTION_ANCHORS = new Set\(\[/);
   });
 });

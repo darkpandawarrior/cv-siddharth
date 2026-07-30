@@ -2,7 +2,7 @@ import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/reac
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { scrollToSectionWhenReady } from "../lib/navigation.ts";
+import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
@@ -149,11 +149,13 @@ const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "com
 // hrefs as their only "back to portfolio" control, but they don't own the
 // section — left alone, the hash just changes the URL to e.g. `/lab#top`
 // with nothing on the page to scroll to. Route home instead.
-// All home-page section ids (App.tsx: top/work/projects/experience/skills/
-// contact; FitCheck: fit; ReposShowcase: source; WritingSection: writing).
-// Footer + command palette link to every one of these from non-home routes, so
-// all must route home — omitting `source`/`writing` stranded those two.
-const SECTION_ANCHORS = new Set(["top", "fit", "work", "projects", "experience", "skills", "contact", "source", "writing"]);
+// Every home-page section id comes straight from navigation.ts. This used to be
+// a hand-retyped copy, and it drifted exactly as you'd expect: its own comment
+// recorded `source`/`writing` being stranded once, and it was silently missing
+// `chess` again. Footer + command palette link to all of these from non-home
+// routes, so every one must route home — deriving is the only way that stays
+// true when a section is added.
+const SECTION_ANCHORS = SECTION_IDS;
 
 function HashCompat() {
   const router = useRouter();
