@@ -31,6 +31,7 @@ import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
+import { ChessSection } from "./ChessSection.tsx";
 import { Picture } from "./Picture.tsx";
 import { ROOMS } from "./rooms.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
@@ -1168,6 +1169,7 @@ export function HomePage() {
         <Circuit />
         <Skills />
         <WritingSection />
+        <ChessSection />
         <Circuit />
         <PlaygroundTeaser />
         <Contact />
