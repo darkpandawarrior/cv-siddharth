@@ -26,6 +26,12 @@ point of view is derived from the data, so the data had to come first.
 **Corpus:** 18,731 games, 2019-02-09 → 2026-07-30.
 lichess 14,119 · chess.com 4,612.
 
+> **Every figure in this section is a 2026-07-30 snapshot, not a constant.** The owner
+> is still playing — the corpus was 18,734 within an hour of first generation. The
+> generated `src/data/chess.ts` is the authoritative value at any moment, and **no UI
+> may hardcode any of these numbers**. They appear here to fix the design's shape and
+> to let a reviewer sanity-check the derivations, nothing more.
+
 **Activity by year — the shape that matters:**
 
 | year | lichess | chess.com |
@@ -123,8 +129,13 @@ lichess's rating history carries points as late as 2025-01-16 only because of
 - **4,612/4,612** chess.com games carry a final `fen` → terminal-position heatmap is
   data-backed.
 - **4,600/4,612** carry per-move `[%clk]` → clock curves are data-backed.
-- **GitHub commit search returns 1,556 commits back to 2019-07-04** with authored
-  dates → the chess-vs-commits overlay spans the same window as the chess corpus.
+- **GitHub commit search reports 1,557 matching commits back to 2019-07-04** with authored
+  dates — but the API returns at most **1,000** of them, and rate-limits unauthenticated
+  callers to 10 requests/minute. The overlay therefore rests on a capped 1,000-commit
+  sample and must label itself as such. (Discovered during implementation: a 20-page
+  loop 403s on page 11, and because that fetch preceded both writes it silently
+  produced no output at all.) The overlay still spans the same 2019→2026 window as the
+  chess corpus; it just does so on a sample rather than the full set.
 - lichess `rating-history` returns full daily series per variant in **one request**.
 - lichess `/api/puzzle/daily` is public: FEN, solution line, rating, themes.
 
@@ -320,7 +331,7 @@ that caught the Blueprint 3D scene ignoring it.
 
 ## Cross-integration — `ChessVsCommits`
 
-Hour-of-day histograms overlaid: 18,731 games against 1,556 commits, same person,
+Hour-of-day histograms overlaid: the full game corpus against a capped 1,000-commit sample, same person,
 same 2019→2026 window, two datasets already on this site and never before crossed.
 
 The chess side is clean (peak play 19:00 IST at 1,341 games; a real late-night tail
