@@ -124,6 +124,58 @@ lichess's rating history carries points as late as 2025-01-16 only because of
   chess.com blitz 1425, chess.com rapid 1307.
 - Highest-accuracy game on record (95.31%) **was a loss**.
 
+### Derived from chess.com PGNs — filling the gaps the API doesn't publish
+
+chess.com exposes no `playTime`, no move counts and no length statistics, but it ships
+per-move clocks and full PGN headers, so all of it is computable. Verified 2026-07-30
+over all 4,612 games.
+
+**Time at the board.** Live-game wall clock from the PGN's `UTCDate`/`StartTime` →
+`EndDate`/`EndTime` headers: **272.9 hours** across **4,312 live games, 0 skipped** for
+missing or implausible headers. Blitz 229.4 h · bullet 28.7 h · rapid 14.8 h. Mean game
+3.8 minutes. The 300 daily/correspondence games are **excluded** — they span real days,
+not board time.
+
+With lichess's 763.4 h, **combined verifiable board time is ~1,036 hours** (~43 days).
+This removes the "lichess-only" caveat on the hours figure. It must still be labelled as
+two measurements combined — lichess reports its own `playTime.total`, chess.com's half is
+derived from PGN wall clock — not as one uniformly-measured metric.
+
+**Win rate collapses with game length** — the thesis, confirmed independently of the
+clock traces (live games, n=4,150 decided):
+
+| moves | n | win rate | flag share of that bucket's losses |
+|---|---|---|---|
+| <20 | 640 | **58.8%** | 14.8% |
+| 20–30 | 1,240 | 56.8% | 34.5% |
+| 30–40 | 1,146 | 48.4% | 37.7% |
+| 40–50 | 550 | 45.8% | 33.2% |
+| 50–60 | 347 | 37.5% | 36.9% |
+| 60+ | 227 | **27.3%** | 29.7% |
+
+Monotonic, 31.5 points end to end. Short games are decided on the board; past move 20 the
+flag share of losses more than doubles and stays there. Two independent measures — clock
+traces and game length — agree, which is what makes the thesis worth leading with.
+
+**Supporting derivations:**
+- **Game length:** median **31** moves (mean 33.7, max 90). Wins median **29**, losses
+  median **33** — he loses the longer games.
+- **Material at termination** (both sides summed; a full board is 78 points): wins end
+  with a median **39** points on the board, losses with **33**. He wins earlier and loses
+  deeper into the endgame.
+- **Checkmate:** delivered **662**, received **978**.
+- **First move as White** — completes a repertoire picture that was Black-only:
+  **1.d4 ×1,565**, 1.g3 ×277, 1.Nf3 ×136, 1.d3 ×112, **1.e4 only ×75**, 1.b3 ×50. A d4
+  and system player who almost never enters mainline 1.e4 theory — which pairs with the
+  Scandinavian as Black into one coherent stance: avoid the most-theorised lines on both
+  sides of the board.
+- **Clutch rate:** of 507 blitz games finished under 10% of the starting clock, he won
+  **30.6%** — against a ~48% baseline.
+
+**Scope caveat:** game length, material, first move and clutch rate are **chess.com-only**
+(4,612 games), because the lichess export is fetched without moves or FENs. Every surface
+using them must say so rather than implying the full 18.7k corpus.
+
 ### Data availability confirmed
 
 - **4,612/4,612** chess.com games carry a final `fen` → terminal-position heatmap is
