@@ -3,6 +3,7 @@ import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
 import { ChessVsCommits } from "./chess/ChessVsCommits.tsx";
+import { ChessFindings } from "./chess/ChessFindings.tsx";
 
 import { focusLines, pct, repertoireYears, shareSeries } from "./chess/repertoireModel.ts";
 import type { GraveyardView } from "./chess/GraveyardScene.tsx";
@@ -41,9 +42,10 @@ function squareName(i: number): string {
  * because they are real buttons).
  */
 
-export type ChessTab = "arc" | "graveyard" | "repertoire" | "play" | "puzzle" | "rhythm";
+export type ChessTab = "findings" | "arc" | "graveyard" | "repertoire" | "play" | "puzzle" | "rhythm";
 
 const TABS: { key: ChessTab; label: string }[] = [
+  { key: "findings", label: "The Findings" },
   { key: "arc", label: "The Arc" },
   { key: "graveyard", label: "The Graveyard" },
   { key: "repertoire", label: "Repertoire" },
@@ -425,7 +427,7 @@ function PuzzlePane({ corpus }: { corpus: Corpus }) {
 }
 
 export function ChessRoom() {
-  const [tab, setTab] = useState<ChessTab>("arc");
+  const [tab, setTab] = useState<ChessTab>("findings");
   const { corpus, error } = useCorpus();
   const active = TABS.find((t) => t.key === tab);
 
@@ -466,10 +468,18 @@ export function ChessRoom() {
         id="chess-pane"
         role="region"
         aria-labelledby={`chess-tab-${tab}`}
-        aria-busy={!corpus && !error}
+        aria-busy={tab !== "findings" && !corpus && !error}
         className="mt-6 rounded-xl border border-line bg-card p-6"
       >
-        {error ? (
+        {tab === "findings" ? (
+          // Renders straight from the bundled `chess.ts` summary, not the
+          // fetched corpus — the room's default landing tab shouldn't wait on
+          // a 254 KB fetch for numbers that were already in the JS chunk.
+          <>
+            <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
+            <ChessFindings />
+          </>
+        ) : error ? (
           <p className="font-mono text-sm text-zinc-300">
             The game corpus didn't load, so there is nothing honest to show here. It's a static file
             (<code>/chess/corpus.json</code>) — a reload usually fixes it.

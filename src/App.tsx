@@ -14,6 +14,7 @@ import {
   Play,
   LayoutGrid,
   Target,
+  Crown,
 } from "lucide-react";
 import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
@@ -31,7 +32,7 @@ import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { WritingSection } from "./WritingSection.tsx";
-import { ChessSection } from "./ChessSection.tsx";
+import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { ROOMS } from "./rooms.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
@@ -1134,6 +1135,43 @@ function PlaygroundTeaser() {
   );
 }
 
+/**
+ * A light in-page teaser for Chess — the headline finding only, no tables or
+ * charts, so it costs the main scroll nothing. The full analysis (the thesis
+ * decile table, repertoire drift, platform profiles, "the cast") moved to
+ * the Findings tab of `/chess`, the same room The Board's other panes live
+ * in. Same pattern as `PlaygroundTeaser` above.
+ */
+function ChessTeaser() {
+  const { thesis, totals } = chess;
+  return (
+    <section id="chess" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the board</p>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Chess</h2>
+          <p className="mb-6 max-w-2xl text-zinc-400">
+            {totals.games.toLocaleString("en-US")} rated and casual games across two platforms, pulled from
+            both public APIs at build time and analysed before anything on this page was written. The
+            finding was not flattering:{" "}
+            <strong className="font-semibold text-zinc-200">
+              {(thesis.decidedOnClock * 100).toFixed(1)}% of my decided games ended on a clock, not on a
+              board
+            </strong>
+            .
+          </p>
+          <Link
+            to="/chess"
+            className="btn-primary inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            <Crown size={16} /> See the full analysis →
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
   const navigate = useNavigate();
   // Backtick summons the terminal from anywhere — unless you're typing in a
@@ -1169,7 +1207,7 @@ export function HomePage() {
         <Circuit />
         <Skills />
         <WritingSection />
-        <ChessSection />
+        <ChessTeaser />
         <Circuit />
         <PlaygroundTeaser />
         <Contact />

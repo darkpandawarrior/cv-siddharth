@@ -44,6 +44,11 @@ test("/chess renders the room from committed data with no network", async ({ pag
 
   const room = page.locator("#chess-pane");
 
+  // Findings is the default tab and doesn't touch the fetched corpus, so
+  // switch to Arc — the pane this test actually exercises — before asserting
+  // on corpus-derived content.
+  await page.getByRole("button", { name: "The Arc" }).click();
+
   // The honest failure state the loader renders when corpus.json doesn't
   // arrive. Asserting against it directly means a broken fetch can't pass as
   // "the page rendered".
@@ -65,7 +70,7 @@ test("/chess renders the room from committed data with no network", async ({ pag
   expect(blocked.filter((u) => /lichess|chess\.com/.test(u)), blocked.join("\n")).toEqual([]);
 });
 
-test("the home chess section renders its thesis and both profile links with no network", async ({ page }) => {
+test("the home chess teaser renders its thesis with no network", async ({ page }) => {
   await cutTheNetwork(page);
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -80,14 +85,28 @@ test("the home chess section renders its thesis and both profile links with no n
     /\d+\.\d% of my decided games ended on a clock, not on a board/,
   );
 
-  // Both profile links. These are the plan's stated offline targets; they live
-  // in ChessSection on "/" rather than in the room, which renders no outbound
-  // profile link at all.
-  await expect(section.getByRole("link", { name: /lichess/ })).toHaveAttribute(
+  await expect(section.getByRole("link", { name: /see the full analysis/i })).toHaveAttribute("href", "/chess");
+});
+
+test("the chess room's Findings tab renders both profile links with no network", async ({ page }) => {
+  await cutTheNetwork(page);
+
+  // Findings is the default tab, and — unlike the room's other panes — reads
+  // straight from the bundled chess.ts summary rather than the fetched
+  // corpus, so it renders even before/without corpus.json.
+  await page.goto("/chess", { waitUntil: "domcontentloaded" });
+
+  const room = page.locator("#chess-pane");
+
+  await expect(room).toContainText(
+    /\d+\.\d% of my decided games ended on a clock, not on a board/,
+  );
+
+  await expect(room.getByRole("link", { name: /lichess/ })).toHaveAttribute(
     "href",
     /^https:\/\/lichess\.org\//,
   );
-  await expect(section.getByRole("link", { name: /chess\.com/ })).toHaveAttribute(
+  await expect(room.getByRole("link", { name: /chess\.com/ })).toHaveAttribute(
     "href",
     /^https:\/\/www\.chess\.com\//,
   );

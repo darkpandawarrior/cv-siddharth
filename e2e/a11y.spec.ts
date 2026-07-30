@@ -113,13 +113,14 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   await expect(input).toBeFocused();
 });
 
-/* The chess room mounts exactly ONE of its six panes at a time (three are
- * three.js scenes and one is a Web Worker engine — mounting all six would pay
- * for five rooms nobody is looking at). So the "/chess" entry in the loop above
- * scans the shell plus the default pane, The Arc, and nothing else: the other
- * five panes' controls — the graveyard toggle group, the repertoire year
- * slider, the bot picker and its 64-button board, the two puzzle boards, the
- * rhythm hour slider — would ship unscanned exactly like the chat console did.
+/* The chess room mounts exactly ONE of its seven panes at a time (three are
+ * three.js scenes and one is a Web Worker engine — mounting all seven would pay
+ * for six rooms nobody is looking at). So the "/chess" entry in the loop above
+ * scans the shell plus the default pane, The Findings, and nothing else: the
+ * other six panes' controls — the rating arc, the graveyard toggle group, the
+ * repertoire year slider, the bot picker and its 64-button board, the two
+ * puzzle boards, the rhythm hour slider — would ship unscanned exactly like
+ * the chat console did.
  *
  * The tab strip carries no route state, so this walks it by clicking, and waits
  * on each pane's own control rather than a timeout — the lazy chunks (and the
@@ -132,6 +133,7 @@ test("the chat console has no serious/critical axe violations, closed menu or op
  * ever stops converging, "Play the Bot" and "Guess the Move" go red here.
  */
 const CHESS_PANES: { tab: string; ready: (page: Page) => Locator }[] = [
+  { tab: "The Arc", ready: (p) => p.getByText(/Where the arc changes hands/i) },
   { tab: "The Graveyard", ready: (p) => p.getByRole("group", { name: "Which games to show" }) },
   { tab: "Repertoire", ready: (p) => p.locator("#repertoire-year") },
   { tab: "Play the Bot", ready: (p) => p.getByRole("group", { name: /^Chess board\./ }) },

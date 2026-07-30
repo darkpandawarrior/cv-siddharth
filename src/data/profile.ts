@@ -1383,8 +1383,8 @@ export const siteRooms: SiteRoom[] = [
   },
   // No game count in this blurb, deliberately: the corpus grows every time he
   // plays, and this string feeds the SEO head tags and the assistant's system
-  // prompt as well as the Playground card. Live counts belong in ChessSection,
-  // which imports the generated chess.ts anyway.
+  // prompt as well as the Playground card. Live counts belong in the home
+  // teaser and ChessFindings, both of which import the generated chess.ts.
   {
     to: "/chess",
     label: "The Board",

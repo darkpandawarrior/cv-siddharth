@@ -114,7 +114,7 @@ const Dim = ({ children }: { children: ReactNode }) => <span className="text-mut
 const Hi = ({ children }: { children: ReactNode }) => <span className="text-[var(--t-accent)]">{children}</span>;
 
 /* The `chess` command's formatters. Explicit "en-US" for the same reason
- * ChessSection.tsx uses it: /terminal is server-rendered, and a visitor whose
+ * ChessFindings.tsx uses it: /terminal is server-rendered, and a visitor whose
  * locale groups with "." would hydrate "18.736" over the server's "18,736"
  * and React would throw the tree away. */
 const num = (x: number) => x.toLocaleString("en-US");

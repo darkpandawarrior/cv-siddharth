@@ -48,9 +48,10 @@ function prefersReducedMotion() {
 // Exported so scripts/gen-system-prompt.mjs derives the assistant's list of
 // linkable home sections from here instead of hand-mirroring it (this file's
 // generator warns that hand-mirroring is how a past drift bug happened).
-// NOTE on `chess`: `#chess` is the home-page section (ChessSection.tsx), while
-// `/chess` is the room route. classifyHash only ever sees `#`-shaped targets,
-// so registering the section here cannot shadow the route.
+// NOTE on `chess`: `#chess` is the home-page teaser (App.tsx's ChessTeaser),
+// while `/chess` is the room route with the full analysis (ChessFindings.tsx,
+// one of its tabs). classifyHash only ever sees `#`-shaped targets, so
+// registering the section here cannot shadow the route.
 /**
  * Every home-page section id, in home-scroll order, and the single source of
  * truth for "is this hash a section?".
