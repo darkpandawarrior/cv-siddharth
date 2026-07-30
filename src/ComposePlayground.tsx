@@ -174,7 +174,17 @@ function modifierStyle(mods: Modifier[], state?: StateMap): CSSProperties {
 /** Column/Row alignment + arrangement from named args → flex CSS. */
 function arrangementStyle(name: string, named: Record<string, Expr>): CSSProperties {
   const s: CSSProperties = {};
-  const val = (k: string) => (named[k]?.t === "member" ? (named[k] as { path: string }).path : "");
+  const raw = (k: string) => (named[k]?.t === "member" ? (named[k] as { path: string }).path : "");
+  // The parser encodes a call's numeric argument onto the path (`Arrangement.spacedBy:12`), so
+  // every name comparison below has to read the part before the colon or `endsWith` stops matching.
+  const val = (k: string) => raw(k).split(":")[0];
+  /** `spacedBy(12.dp)` → 12. Null when the arrangement isn't a spacedBy or carried no number. */
+  const gapOf = (k: string): number | null => {
+    const [base, arg] = raw(k).split(":");
+    if (!base.endsWith("spacedBy") || arg === undefined) return null;
+    const n = Number(arg);
+    return Number.isFinite(n) ? n : null;
+  };
   const hAlign = val("horizontalAlignment");
   const vAlign = val("verticalAlignment");
   const vArr = val("verticalArrangement");
@@ -183,14 +193,16 @@ function arrangementStyle(name: string, named: Record<string, Expr>): CSSPropert
     v.endsWith("End") || v.endsWith("Bottom") ? "flex-end" : v.includes("Center") ? "center" : "flex-start";
   const mapArrange = (v: string): CSSProperties["justifyContent"] =>
     v.endsWith("SpaceBetween") ? "space-between" : v.endsWith("SpaceAround") ? "space-around" : v.endsWith("SpaceEvenly") ? "space-evenly" : v.endsWith("End") || v.endsWith("Bottom") ? "flex-end" : v.includes("Center") ? "center" : "flex-start";
+  // `?? 8` keeps the old behaviour only for a `spacedBy` whose argument the parser couldn't read;
+  // a declared `spacedBy(12.dp)` now renders at 12, not at a fixed 8.
   if (name === "Column") {
     if (hAlign) s.alignItems = mapAlign(hAlign);
     if (vArr) s.justifyContent = mapArrange(vArr);
-    if (vArr.includes("spacedBy")) s.gap = 8;
+    if (vArr.includes("spacedBy")) s.gap = gapOf("verticalArrangement") ?? 8;
   } else if (name === "Row") {
     s.alignItems = vAlign ? mapAlign(vAlign) : "center";
     if (hArr) s.justifyContent = mapArrange(hArr);
-    if (hArr.includes("spacedBy")) s.gap = 8;
+    if (hArr.includes("spacedBy")) s.gap = gapOf("horizontalArrangement") ?? 8;
   }
   return s;
 }

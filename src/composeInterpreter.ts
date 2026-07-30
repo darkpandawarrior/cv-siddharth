@@ -401,7 +401,12 @@ class Parser {
       while (this.atPunc(".") && this.peek(1)?.k === "id") {
         this.next();
         path += "." + (this.next() as Tok).v;
-        if (this.atPunc("(")) this.skipParens(); // e.g. spacedBy(8.dp) — arg ignored
+        // e.g. spacedBy(12.dp) — the argument is kept as `Arrangement.spacedBy:12` so the
+        // renderer can honour it instead of substituting a fixed gap.
+        if (this.atPunc("(")) {
+          const arg = this.skipParensCapturingNumber();
+          if (arg !== null) path += ":" + arg;
+        }
       }
       return isMember ? { t: "member", path } : { t: "ident", name: path };
     }
@@ -419,6 +424,33 @@ class Parser {
       if (t.k === "punc" && t.v === "(") depth++;
       else if (t.k === "punc" && t.v === ")") depth--;
     } while (depth > 0 && this.peek());
+  }
+
+  /**
+   * Skip a call's arguments the way {@link skipParens} does, but keep the first numeric one.
+   *
+   * `spacedBy(12.dp)` used to parse to a bare `Arrangement.spacedBy` and the renderer then drew a
+   * hardcoded 8px gap whatever the source said — so every `spacedBy` in every preset was a lie by
+   * however much it differed from 8. The argument is encoded onto the path with a colon, following
+   * the `ColorHex:` precedent a few lines above, so `Expr` needs no new shape.
+   *
+   * Returns the number, or null when the call carried none (`CircleShape`, `fillMaxWidth()`).
+   */
+  private skipParensCapturingNumber(): number | null {
+    if (!this.atPunc("(")) return null;
+    let depth = 0;
+    let first: number | null = null;
+    do {
+      const t = this.next();
+      if (!t) break;
+      if (t.k === "punc" && t.v === "(") depth++;
+      else if (t.k === "punc" && t.v === ")") depth--;
+      else if (t.k === "num" && first === null) {
+        const n = Number(t.v);
+        if (Number.isFinite(n)) first = n;
+      }
+    } while (depth > 0 && this.peek());
+    return first;
   }
   private skipBraces() {
     if (!this.atPunc("{")) return;
