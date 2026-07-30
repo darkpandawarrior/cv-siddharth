@@ -22,6 +22,8 @@ import {
   normaliseChessCom, normaliseLichess, clockDeciles, tilt, sessions,
   sessionDecay, streaks, repertoireByYear, terminationSplit, squareMatrix,
   weeklyArc, hourHistogram, canonOpening, clockSample,
+  boardTime, gameLength, lengthBuckets, clutchRate, firstMoveAsWhite,
+  materialAtEnd, checkmates, repertoireByPlatform,
 } from "./lib/chess-derive.mjs";
 import { getJson, getNdjson, walkArchives, readCache, writeCache } from "./lib/chess-fetch.mjs";
 
@@ -127,6 +129,20 @@ async function build() {
   const st = streaks(games, IST);
   const decay = sessionDecay(sessions(games), 12);
   const rep = repertoireByYear(games, 5, IST);
+  const repPlat = repertoireByPlatform(games, 5, IST);
+
+  // Everything chess.com's API withholds but its PGNs carry. The lichess half
+  // is fetched without moves, clocks or FENs, so all of this is chess.com-only
+  // and every field below ships a `scope` saying so.
+  const bt = boardTime(games);
+  const lichessHours = (liUser.playTime?.total ?? 0) / 3600;
+  const chesscomHours = bt.totalSecs / 3600;
+  const len = gameLength(games);
+  const mat = materialAtEnd(games);
+  const mates = checkmates(games);
+  const buckets = lengthBuckets(games);
+  const clutch = clutchRate(games);
+  const r1 = (n) => (Number.isFinite(n) ? Math.round(n * 10) / 10 : null);
 
   // Games per platform per year — the shape the arc is about. A handoff in
   // January 2023, not two parallel streams: lichess's late points are three
@@ -192,10 +208,61 @@ async function build() {
     totals: {
       games: games.length,
       wins, losses, draws,
-      // lichess reports playTime in seconds; chess.com publishes no equivalent,
-      // so this is the lichess figure only and the UI must label it that way.
+      // lichess reports playTime in seconds; chess.com publishes no equivalent.
+      // This is the lichess figure only — `boardTime` below carries both halves.
       hours: Math.round((liUser.playTime?.total ?? 0) / 3600),
     },
+    // Time at the board across both platforms. Deliberately NOT presented as
+    // one metric: the two halves are measured differently and the `note` says
+    // so wherever this is rendered.
+    boardTime: {
+      scope: "both platforms, two measurements",
+      lichessHours: Math.round(lichessHours),
+      chesscomHours: Math.round(chesscomHours),
+      combinedHours: Math.round(lichessHours + chesscomHours),
+      note:
+        "lichess self-reports playTime.total; the chess.com half is derived from " +
+        "live-game PGN wall clock (UTCDate/StartTime to EndDate/EndTime). Two " +
+        "measurement methods, not one uniform metric.",
+      chesscom: {
+        games: bt.measured,
+        skipped: bt.skipped,
+        // Daily/correspondence games are excluded — they span real days, not
+        // time at the board.
+        excludedDaily: games.filter((g) => g.plat === "chess.com" && g.speed === "daily").length,
+        byClass: Object.fromEntries(
+          Object.entries(bt.byClass).map(([k, v]) => [k, r1(v / 3600)]),
+        ),
+        meanMinutes: r1(bt.totalSecs / 60 / bt.measured),
+      },
+    },
+    // The thesis confirmed independently of the clock traces: win rate falls
+    // monotonically with game length while the flag share of losses doubles
+    // after move 20. chess.com-only — lichess ships no moves.
+    length: {
+      scope: "chess.com",
+      games: len.n,
+      median: len.median,
+      mean: r3(len.mean),
+      max: len.max,
+      winMedian: len.winMedian,
+      lossMedian: len.lossMedian,
+      buckets: buckets.map((b) => ({
+        lo: b.lo, hi: b.hi, n: b.n,
+        winRate: r3(b.winRate),
+        flagShareOfLosses: r3(b.flagShareOfLosses),
+      })),
+      decided: buckets.reduce((a, b) => a + b.n, 0),
+    },
+    material: {
+      scope: "chess.com",
+      winMedian: mat.winMedian,
+      lossMedian: mat.lossMedian,
+      fullBoard: mat.fullBoard,
+    },
+    firstMoveWhite: { scope: "chess.com", moves: firstMoveAsWhite(games) },
+    clutch: { scope: "chess.com", n: clutch.n, wins: clutch.wins, rate: r3(clutch.rate) },
+    checkmate: { scope: "chess.com", delivered: mates.delivered, received: mates.received },
     span: { from: iso(games[0].ts), to: iso(games.at(-1).ts) },
     activityByYear: Object.entries(byYear).sort().map(([year, n]) => ({
       year, lichess: n.lichess, chesscom: n["chess.com"],
@@ -274,6 +341,23 @@ async function build() {
     arc: fullArc.map((a) => ({ ...a, points: weeklyArc(a.points) })),
   };
 
+  // The downsampled arc IS the chart, so its maximum must equal the peak
+  // printed beside it. Keeping the last sample per week broke this silently —
+  // lichess blitz plotted a ceiling of 1668 against a reported peak of 1686 —
+  // and a chart quietly disagreeing with its own caption is exactly the class
+  // of drift this generator exists to make impossible. Asserted, not trusted.
+  for (const a of data.arc) {
+    const peak = data.platforms
+      .find((p) => p.id === a.platform)
+      .peaks.find((p) => p.format === a.format);
+    const plotted = Math.max(...a.points.map((p) => p.r));
+    if (plotted !== peak.rating) {
+      throw new Error(
+        `arc downsampling clipped ${a.platform} ${a.format}: plotted max ${plotted} != peak ${peak.rating}`,
+      );
+    }
+  }
+
   const corpus = {
     generatedAt: data.generatedAt,
     arc: fullArc,
@@ -285,6 +369,31 @@ async function build() {
       // must label the overlay as a sample, not the whole history.
       commitSample: { n: commits.sampled, total: commits.total, from: commits.from },
     },
+    // Opening shares as Black WITHIN each platform, per year — the only way to
+    // separate a repertoire change from the January 2023 platform handoff, since
+    // a share of a merged year is a share of whichever site he was on. Lives
+    // here rather than in chess.ts because it is 12 KB and only the room's
+    // repertoire scene reads it; chess.ts would cross 60 KB carrying it.
+    repertoireByPlatform: Object.fromEntries(
+      Object.entries(repPlat).sort().map(([year, platforms]) => [
+        year,
+        Object.fromEntries(
+          Object.entries(platforms).map(([plat, p]) => [
+            plat,
+            {
+              blackGames: p.blackGames,
+              thin: p.thin,
+              // 4dp, not 3: a line that fell to one game in 2,332 rounds to a
+              // flat 0 at 3dp, which reads as "never played" beside a count of 1.
+              openings: p.openings.map((o) => ({
+                ...o,
+                share: Number.isFinite(o.share) ? Math.round(o.share * 10000) / 10000 : null,
+              })),
+            },
+          ]),
+        ),
+      ]),
+    ),
     openings: Object.entries(
       games.reduce((acc, g) => {
         // Canonicalised: the same opening arrives spelled two ways from the two
@@ -321,7 +430,10 @@ async function build() {
 
   console.log(
     `chess: ${data.totals.games} games, ${data.span.from} -> ${data.span.to}, ` +
-      `${Math.round(data.thesis.decidedOnClock * 1000) / 10}% decided on a clock`,
+      `${Math.round(data.thesis.decidedOnClock * 1000) / 10}% decided on a clock, ` +
+      `${data.boardTime.combinedHours}h at the board ` +
+      `(${data.boardTime.chesscomHours}h derived from ${data.boardTime.chesscom.games} PGNs, ` +
+      `${data.boardTime.chesscom.skipped} skipped)`,
   );
 }
 
