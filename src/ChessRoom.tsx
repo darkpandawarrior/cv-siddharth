@@ -9,6 +9,10 @@ import type { GraveyardView } from "./chess/GraveyardScene.tsx";
 const ChessArcScene = lazy(() => import("./chess/ChessArcScene.tsx"));
 const GraveyardScene = lazy(() => import("./chess/GraveyardScene.tsx"));
 const RepertoireTreeScene = lazy(() => import("./chess/RepertoireTreeScene.tsx"));
+/* Lazy for the same reason as the scenes: this one pulls react-chessboard,
+ * chess.js and the engine worker, and five of the six panes have no use for
+ * any of them. */
+const ChessBoardPane = lazy(() => import("./chess/ChessBoardPane.tsx"));
 
 /** Square index to algebraic name — index 0 is a1, 63 is h8, the convention the
  *  generator's `squareMatrix` fixed. Lives here rather than in the scene so the
@@ -387,6 +391,16 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
   );
 }
 
+/** Play the Bot — the board, the two calibrated presets, and the worker. */
+function PlayPane() {
+  const { reduced } = useEnv();
+  return (
+    <Suspense fallback={<p className="mt-4 font-mono text-sm text-muted">loading the board…</p>}>
+      <ChessBoardPane reduced={reduced} />
+    </Suspense>
+  );
+}
+
 /** One real number per pane, straight from the corpus. A placeholder that
  *  quotes live data is honest about what has loaded and what hasn't. */
 function paneNote(tab: ChessTab, c: Corpus): string {
@@ -467,6 +481,8 @@ export function ChessRoom() {
               <GraveyardPane corpus={corpus} />
             ) : tab === "repertoire" ? (
               <RepertoirePane corpus={corpus} />
+            ) : tab === "play" ? (
+              <PlayPane />
             ) : (
               <p className="mt-1 font-mono text-xs text-muted">
                 {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each
