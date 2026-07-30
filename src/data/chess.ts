@@ -6,7 +6,7 @@
 export type ChessData = typeof chess;
 
 export const chess = {
-  "generatedAt": "2026-07-30T13:00:07.199Z",
+  "generatedAt": "2026-07-30T13:05:38.306Z",
   "username": "darkpandawarrior",
   "totals": {
     "games": 18736,
@@ -656,7 +656,7 @@ export const chess = {
       "g2g3",
       "h4c4"
     ],
-    "rating": 2008,
+    "rating": 2031,
     "themes": [
       "opening",
       "crushing",

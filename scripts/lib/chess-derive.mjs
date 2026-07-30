@@ -467,22 +467,52 @@ export function openingFamily(name) {
 }
 
 /**
- * The repertoire line a game belongs to, display-cased — `openingFamily`'s
- * grouping with one correction: a line that arrives by transposition is named
- * after the *host* opening, so first-two-words files it in the wrong bucket.
+ * Repertoire lines that get transposition-folding, most specific first.
  *
- * The same early ...d5 repertoire is published as `English Opening Anglo
- * Scandinavian Defense` (1.c4 d5, 61 games), `Nimzowitsch Defense Scandinavian
- * Variation` (1.e4 Nc6 2.d4 d5, 57) and `Alekhine Defense Scandinavian
- * Variation` (27). Filing those under English/Nimzowitsch/Alekhine
- * under-reports the line he actually plays by 4.5 points — 36.6% instead of
- * the 41.1% the spec measures for lichess 2019 — so where a name carries a
- * line, the line wins over the opening.
+ * A line reached by transposition is published under the *host* opening's name,
+ * so first-two-words grouping files it in the wrong bucket. The same early ...d5
+ * repertoire arrives as `English Opening Anglo Scandinavian Defense` (1.c4 d5),
+ * `Nimzowitsch Defense Scandinavian Variation` (1.e4 Nc6 2.d4 d5) and `Alekhine
+ * Defense Scandinavian Variation`; the Modern arrives as `Queen's Pawn Game:
+ * Modern Defense` in hundreds of games.
+ *
+ * This list MUST stay symmetric across every line the site compares. An earlier
+ * version folded only the Scandinavian and left everything else on two-word
+ * grouping, which reproduced the spec's figures exactly — because the spec's
+ * figures came from the same asymmetry. It quietly under-reported the Modern
+ * Defense by up to 22 points (59.2% against a true 81.3% of lichess 2021 Black
+ * games) while leaving the Scandinavian untouched, i.e. it biased in favour of
+ * the very line the repertoire narrative is about. Adding a line here without
+ * its counterparts recreates that bug.
+ *
+ * Each entry pairs the display name with the *distinctive* token that identifies
+ * it. The token cannot just be the first word: "Queens" would drag
+ * `Queens Pawn Opening Chigorin Variation` into "Queen's Gambit", and "Kings"
+ * would pull `Kings Fianchetto Opening` into the King's Indian.
+ */
+const OPENING_LINES = [
+  ["Scandinavian Defense", /\bscandinavian\b/i],
+  ["Modern Defense", /\bmodern defense\b/i],
+  ["Nimzowitsch Defense", /\bnimzowitsch\b/i],
+  ["Alekhine Defense", /\balekhine\b/i],
+  ["Pirc Defense", /\bpirc\b/i],
+  ["Caro-Kann Defense", /\bcaro.?kann\b/i],
+  ["French Defense", /\bfrench\b/i],
+  ["Sicilian Defense", /\bsicilian\b/i],
+  ["Dutch Defense", /\bdutch\b/i],
+  ["King's Indian Defense", /\bkings indian\b/i],
+  ["Queen's Gambit", /\bqueens gambit\b/i],
+  ["Englund Gambit", /\benglund\b/i],
+];
+
+/**
+ * The repertoire line a game belongs to, display-cased. Falls back to
+ * first-two-words for anything not in `OPENING_LINES`.
  */
 export function openingLine(name) {
   const c = canonOpening(name);
   if (!c) return null;
-  if (/\bscandinavian\b/i.test(c)) return "Scandinavian Defense";
+  for (const [line, re] of OPENING_LINES) if (re.test(c)) return line;
   return c.split(" ").slice(0, 2).join(" ");
 }
 

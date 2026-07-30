@@ -606,8 +606,16 @@ describe("openingLine", () => {
 
   it("falls back to the first two words, display-cased", () => {
     expect(openingLine("Modern Defense: Standard Line")).toBe("Modern Defense");
-    expect(openingLine("Queen's Pawn Game: Modern Defense")).toBe("Queens Pawn");
+    expect(openingLine("Van 't Kruijs Opening")).toBe("Van t");
     expect(openingLine(null)).toBeNull();
+  });
+
+  // This assertion previously expected "Queens Pawn", encoding the very bias it
+  // now guards against: the Modern reached by 1.d4 is still the Modern, and
+  // filing it under its host opening under-reported the line by up to 22 points
+  // while the Scandinavian was being folded correctly.
+  it("groups a transposed Modern with the mainline too, symmetrically", () => {
+    expect(openingLine("Queen's Pawn Game: Modern Defense")).toBe("Modern Defense");
   });
 });
 
@@ -623,5 +631,39 @@ describe("hourHistogram", () => {
     const out = hourHistogram([], 0);
     expect(out[0].n).toBe(0);
     expect(out[0].winRate).toBeNull();
+  });
+});
+
+describe("openingLine symmetry", () => {
+  // Regression guard for a bias bug: an earlier version folded transposed
+  // lines for the Scandinavian ONLY, leaving every other line on two-word
+  // grouping. That reproduced the spec's numbers because the spec came from the
+  // same asymmetry — while under-reporting the Modern Defense by up to 22
+  // points in favour of the line the repertoire narrative is about.
+  it("folds transposed Scandinavian lines onto the line, not the host opening", () => {
+    for (const n of [
+      "Scandinavian Defense: Mieses-Kotroc Variation",
+      "Scandinavian Defense Mieses Kotrc Variation",
+      "English Opening Anglo-Scandinavian Defense",
+      "Nimzowitsch Defense Scandinavian Variation",
+      "Alekhine Defense Scandinavian Variation",
+    ]) expect(openingLine(n)).toBe("Scandinavian Defense");
+  });
+
+  it("folds transposed Modern Defense lines the SAME way — this is the symmetry", () => {
+    for (const n of ["Modern Defense", "Queen's Pawn Game: Modern Defense", "Modern Defense with 1 e4"])
+      expect(openingLine(n)).toBe("Modern Defense");
+  });
+
+  it("does not let a shared first word capture an unrelated opening", () => {
+    // "Queens" must not reach Queen's Gambit, "Kings" must not reach the King's Indian.
+    expect(openingLine("Queens Pawn Opening Chigorin Variation")).toBe("Queens Pawn");
+    expect(openingLine("Kings Fianchetto Opening")).toBe("Kings Fianchetto");
+  });
+
+  it("falls back to two-word grouping for untracked openings, and is null-safe", () => {
+    expect(openingLine("Van t Kruijs Opening")).toBe("Van t");
+    expect(openingLine(null)).toBeNull();
+    expect(openingLine("")).toBeNull();
   });
 });

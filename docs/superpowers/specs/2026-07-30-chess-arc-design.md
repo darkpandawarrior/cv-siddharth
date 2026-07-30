@@ -100,12 +100,33 @@ lichess's rating history carries points as late as 2025-01-16 only because of
   | 2026 | — | **39.2%** of 474 |
 
   The **abandonment is clean and within-platform**: 41.1% → 0.2% on lichess, replaced
-  by the Modern Defense (59% of Black games in 2021). The **re-adoption is also
+  by the Modern Defense at **81.3% of 2021 Black games** (50.3% in 2020, 78.8% in 2022).
+  Not a drift — a near-total replacement. The **re-adoption is also
   within-platform**: 27.5% → 39.2% and rising on chess.com. But the two halves sit on
   opposite sides of the 2023 handoff, so "he returned to his first opening" cannot be
   cleanly separated from "he started fresh on a new site." Copy must present these as
   two within-platform observations, not one continuous line. ECO coverage is **100% in
   every chess.com year**, so this is not a missing-data artifact — that was checked.
+
+- **Grouping must fold transposed lines, and must do so symmetrically.** A line reached
+  by transposition is published under its *host* opening: the same ...d5 repertoire
+  appears as `English Opening: Anglo-Scandinavian Defense`, `Nimzowitsch Defense:
+  Scandinavian Variation` and `Alekhine Defense: Scandinavian Variation`, while the
+  Modern arrives as `Queen's Pawn Game: Modern Defense` in hundreds of games. Grouping on
+  the first two words files all of those under the wrong line.
+
+  **The first implementation folded the Scandinavian only.** It reproduced this spec's
+  figures exactly — because this spec's figures came from the same asymmetry — while
+  under-reporting the Modern Defense by up to **22 points** (59.2% against a true 81.3%),
+  biasing measurement in favour of the one line the repertoire narrative is about. Now
+  every compared line folds through one list, guarded by a regression test. The
+  Scandinavian figures are unchanged by the fix; only the Modern moved, and it moved the
+  story's own way.
+
+  A second trap: the tracked set must be the **union of every platform-year's top five**,
+  not a per-year top five. A plain top-five drops the Scandinavian's 2021–22 collapse to
+  0.2% (rank ~15 that year) — precisely the datapoint the arc exists to show. Absence of
+  a line now means zero games, not "outside the top five".
 
 - **Opening names require canonicalisation before any cross-platform merge.** The same
   opening is spelled `Scandinavian Defense: Mieses-Kotroc Variation` on lichess (473
