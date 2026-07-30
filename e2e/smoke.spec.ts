@@ -24,7 +24,22 @@ const routes = [
 // OTHER 4xx/5xx WITH its URL — so a real broken asset a future change introduces
 // still fails this test — while the URL-less generic console 404 is dropped as
 // redundant. Genuine JS console.error() calls and page errors are still caught.
-const EXPECTED_404 = ["/favicon.ico", "/_vercel/speed-insights/"];
+// `/api/*` are Vercel serverless functions. They cannot exist under `vite
+// preview`, which serves static output only — the same reason
+// `/_vercel/speed-insights/` is here. This is NOT a broken endpoint being
+// waved through: both were checked against the deployed site and return 200
+// (`curl https://cv-siddharth.vercel.app/api/spotify` → 200, likewise
+// `/api/github-activity`). Verify the same way before adding another `/api/`
+// path, and never add one that is failing in production.
+//
+// The entry is the specific prefixes, not a bare "/api/", so a future endpoint
+// that really is broken locally still fails this test.
+const EXPECTED_404 = [
+  "/favicon.ico",
+  "/_vercel/speed-insights/",
+  "/api/spotify",
+  "/api/github-activity",
+];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 
 for (const r of routes) {
