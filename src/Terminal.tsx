@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
@@ -14,6 +14,7 @@ import {
   sharedFoundation,
   openSource,
 } from "./data/profile.ts";
+import { chess } from "./data/chess.ts";
 import { writing } from "./data/writing.ts";
 import { RELATED_SERIES } from "./data/connections.ts";
 import { titleize } from "./data/writingMeta.ts";
@@ -71,6 +72,7 @@ const SECTION_ROUTES: Record<string, { hash: string; label: string }> = {
   lab: { hash: "#lab", label: "The Signal Lab" },
   forge: { hash: "#forge", label: "The Particle Forge" },
   compose: { hash: "#compose", label: "The Compose Playground" },
+  chess: { hash: "#chess", label: "The Board" },
   playground: { hash: "#playground", label: "The Playground" },
   source: { hash: "#source", label: "The Source" },
 };
@@ -110,6 +112,13 @@ function A({ dest, children, ext }: { dest: string; children: ReactNode; ext?: b
 }
 const Dim = ({ children }: { children: ReactNode }) => <span className="text-muted">{children}</span>;
 const Hi = ({ children }: { children: ReactNode }) => <span className="text-[var(--t-accent)]">{children}</span>;
+
+/* The `chess` command's formatters. Explicit "en-US" for the same reason
+ * ChessSection.tsx uses it: /terminal is server-rendered, and a visitor whose
+ * locale groups with "." would hydrate "18.736" over the server's "18,736"
+ * and React would throw the tree away. */
+const num = (x: number) => x.toLocaleString("en-US");
+const pct = (x: number, digits = 1) => `${(x * 100).toFixed(digits)}%`;
 
 /* The signature — kept ASCII so it renders in the terminal's mono grid. */
 const BANNER = String.raw`
@@ -691,6 +700,148 @@ function buildCommands(jump: Go): Cmd[] {
       alias: ["gh"],
       help: "recent GitHub activity",
       run: () => <GithubActivityBlock />,
+    },
+    {
+      /* Every figure below reads from the generated `chess.*`. He is still
+       * playing — the corpus grew by three games within an hour of first
+       * generation — so a literal typed into this file is a number that goes
+       * stale on a hiring surface. That includes counts, percentages, ratings,
+       * day spans and sample sizes. The generator IS the claim audit here. */
+      name: "chess",
+      usage: "chess [clock|arc|best]",
+      help: "the two-platform game corpus, mined",
+      run: (args) => {
+        const { totals, span, discipline, thesis, boardTime, platforms, bestUpset } = chess;
+        switch ((args[0] ?? "").toLowerCase()) {
+          case "clock": {
+            const step = 100 / thesis.deciles.length;
+            const widest = thesis.deciles.reduce((a, b) => (b.gap > a.gap ? b : a));
+            return (
+              <div className="space-y-1">
+                <div>
+                  <Hi>{pct(thesis.lossesOnTime)}</Hi> <span className="text-zinc-300">of losses ended on time</span>{" "}
+                  <Dim>·</Dim> <Hi>{pct(thesis.winsOnTime)}</Hi>{" "}
+                  <span className="text-zinc-300">of wins came on the opponent&apos;s clock</span>
+                </div>
+                <div>
+                  <Dim>{pct(thesis.decidedOnClock)} of decided games were settled by a clock, not a board.</Dim>
+                </div>
+                <div className="pt-1">
+                  <Dim>mean clock left, by game progress · n={num(thesis.sampleSize)} blitz games with [%clk] traces</Dim>
+                </div>
+                <div className="grid max-w-sm grid-cols-4 gap-x-3 tabular-nums">
+                  <Dim>progress</Dim>
+                  <Dim>win</Dim>
+                  <Dim>loss</Dim>
+                  <Dim>gap</Dim>
+                  {thesis.deciles.map((d) => (
+                    <Fragment key={d.bucket}>
+                      <span className="text-zinc-500">
+                        {Math.round(d.bucket * step)}–{Math.round((d.bucket + 1) * step)}%
+                      </span>
+                      <span className="text-zinc-300">{pct(d.win)}</span>
+                      <span className="text-zinc-400">{pct(d.loss)}</span>
+                      <Hi>+{(d.gap * 100).toFixed(1)}</Hi>
+                    </Fragment>
+                  ))}
+                </div>
+                <Dim>
+                  the gap opens early and never closes — widest at {Math.round(widest.bucket * step)}–
+                  {Math.round((widest.bucket + 1) * step)}% of the game. Losses are decided in the early middlegame by
+                  time spent, not by a late blunder.
+                </Dim>
+              </div>
+            );
+          }
+          case "arc": {
+            // The "not comparable" note names each platform's own best peak
+            // rather than a hardcoded pair, so it can never quote a rating the
+            // corpus no longer contains.
+            const best = platforms.map((p) => ({ id: p.id, peak: p.peaks.reduce((a, b) => (b.rating > a.rating ? b : a)) }));
+            return (
+              <div className="space-y-1.5">
+                {platforms.map((p) => (
+                  <div key={p.id}>
+                    <Hi>{p.id}</Hi>{" "}
+                    <Dim>
+                      · {num(p.games)} games · {p.joined} → {p.lastActive}
+                    </Dim>
+                    <div className="text-zinc-300">
+                      {p.peaks.map((k) => `${k.format} ${k.rating}${k.at ? ` (${k.at})` : ""}`).join("  ·  ")}
+                    </div>
+                    {p.provisional && (
+                      <Dim>last ratings, not current — deviation grew back while the account sat idle</Dim>
+                    )}
+                  </div>
+                ))}
+                <div>
+                  <Dim>
+                    not comparable: {best.map((b) => `${b.peak.rating} on ${b.id}`).join(" and ")} sit in different
+                    rating pools, not at different strengths. Each arc reads against itself; subtracting one from the
+                    other draws a decline the games do not support.
+                  </Dim>
+                </div>
+              </div>
+            );
+          }
+          case "best":
+            return (
+              <div className="space-y-0.5">
+                <div>
+                  <Hi>
+                    beat {bestUpset.opRating} while rated {bestUpset.myRating}
+                  </Hi>{" "}
+                  <Dim>— a +{bestUpset.gap} upset</Dim>
+                </div>
+                <Dim>
+                  {bestUpset.at} · {bestUpset.platform} {bestUpset.speed}
+                </Dim>
+              </div>
+            );
+          default:
+            return (
+              <div className="space-y-1">
+                <div>
+                  <Hi>{num(totals.games)} games</Hi>{" "}
+                  <Dim>· {platforms.map((p) => `${p.id} ${num(p.games)}`).join(" · ")}</Dim>
+                </div>
+                <div>
+                  <span className="text-zinc-300">
+                    W {num(totals.wins)} · L {num(totals.losses)} · D {num(totals.draws)}
+                  </span>
+                </div>
+                <div>
+                  <Dim>
+                    {span.from} → {span.to} · played {num(discipline.distinctDays)} of {num(discipline.spanDays)} days (
+                    {pct(discipline.distinctDays / discipline.spanDays)})
+                  </Dim>
+                </div>
+                <div>
+                  <Hi>~{num(boardTime.combinedHours)}h</Hi>{" "}
+                  <Dim>
+                    on the board — {num(boardTime.lichessHours)}h lichess self-reported plus{" "}
+                    {num(boardTime.chesscomHours)}h derived from chess.com PGN wall clock. Two measurements, not one
+                    metric.
+                  </Dim>
+                </div>
+                <div className="space-y-0.5 pt-1">
+                  {platforms.map((p) => (
+                    <div key={p.id}>
+                      <Dim>{p.id}</Dim>{" "}
+                      <A dest={p.url} ext>
+                        {p.url.replace("https://", "")}
+                      </A>
+                    </div>
+                  ))}
+                </div>
+                <Dim>
+                  → <Hi>chess clock</Hi> the thesis <Dim>·</Dim> <Hi>chess arc</Hi> the ratings <Dim>·</Dim>{" "}
+                  <Hi>chess best</Hi> the upset <Dim>·</Dim> <A dest="#chess">the board</A>
+                </Dim>
+              </div>
+            );
+        }
+      },
     },
     {
       name: "man",

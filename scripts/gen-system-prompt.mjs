@@ -25,6 +25,8 @@ import {
 } from "../src/data/profile.ts";
 import { SECTION_IDS } from "../src/lib/navigation.ts";
 import { ROUTE_PHRASES } from "../src/lib/chatContext.ts";
+import { chess } from "../src/data/chess.ts";
+import { PRESETS } from "../src/chess/calibration.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outFile = join(root, "api", "_lib", "system-prompt.ts");
@@ -82,6 +84,36 @@ const projectRouteLines = projects
   .map((p) => `- ${p.name} → /project/${p.slug}${p.detail ? "" : " (short overview, no deep dive)"}`)
   .join("\n");
 
+/* ── Chess grounding ──────────────────────────────────────────────────────
+ * "Does he have hobbies?" used to get an improvised answer, and the parts it
+ * improvised were the parts that are wrong in his own retelling: it dated the
+ * platform handoff to 2020, described the two accounts as running in parallel,
+ * and compared a lichess rating to a chess.com one as if they measured the
+ * same thing. So the corrections ship as prose the model can't reach past,
+ * and every figure around them derives from the generated src/data/chess.ts —
+ * which the /chess page renders from too, so the assistant and the page can
+ * never quote different corpora. The month names are prose because chess.ts
+ * carries per-year counts, not per-month; the YEARS are derived, and the year
+ * is the part the model gets wrong.
+ * Chat prompt only: the JD analyser scores a job description against his CV,
+ * and 18k blitz games are not evidence for or against any role. */
+const li = chess.platforms.find((p) => p.id === "lichess");
+const cc = chess.platforms.find((p) => p.id === "chess.com");
+const handoffYear = chess.activityByYear.find((a) => a.chesscom > a.lichess)?.year;
+const falseStart = chess.activityByYear.find((a) => a.year < handoffYear && a.chesscom > 0);
+const topPeak = (p) => p.peaks.reduce((a, b) => (b.rating > a.rating ? b : a));
+const widestGap = chess.thesis.deciles.reduce((a, b) => (b.gap > a.gap ? b : a));
+const decileStep = 100 / chess.thesis.deciles.length;
+const pc = (x, d = 1) => `${(x * 100).toFixed(d)}%`;
+const n = (x) => x.toLocaleString("en-US");
+
+const chessLines = `- ${n(chess.totals.games)} games, ${chess.span.from} → ${chess.span.to}: lichess ${n(li.games)}, chess.com ${n(cc.games)}, on ${n(chess.discipline.distinctDays)} of ${n(chess.discipline.spanDays)} days (${pc(chess.discipline.distinctDays / chess.discipline.spanDays)}). Generated from both platforms' APIs, so these are live numbers.
+- Timeline — the part that gets improvised wrong: lichess from **February 2019**, handoff to **chess.com in January ${handoffYear}**. Not 2018, not 2020. chess.com opened ${cc.joined} but saw ${falseStart.chesscom} games in ${falseStart.year}, a false start, then nothing until ${handoffYear}. The accounts **never ran in parallel** — a sequential handoff, and an earlier four-year-overlap claim is retracted. lichess's rating history reaches ${li.lastActive} only via a few games that month; rating dates are not activity.
+- The two platforms' ratings are **not comparable**: ${topPeak(li).rating} (lichess ${topPeak(li).format}) against ${topPeak(cc).rating} (chess.com ${topPeak(cc).format}) is two rating pools, not two strengths. lichess figures are his LAST ratings, not current.
+- His actual finding: ${pc(chess.thesis.lossesOnTime)} of losses ended on time, ${pc(chess.thesis.winsOnTime)} of wins came on the opponent's clock, ~${pc(chess.thesis.decidedOnClock)} of decided games settled by a clock not a board (${n(chess.thesis.sampleSize)} blitz clock traces). The time goes in the early middlegame, not on a late blunder.
+- Handle with care: ~${n(chess.boardTime.combinedHours)}h at the board is TWO measurements summed (lichess self-reported ${n(chess.boardTime.lichessHours)}h + ${n(chess.boardTime.chesscomHours)}h derived from chess.com PGN wall clock); accuracy covers only ${n(chess.accuracy.covered)} of ${n(chess.accuracy.total)} chess.com games (${pc(chess.accuracy.covered / chess.accuracy.total)}), never "his accuracy"; the bot's presets ${Object.values(PRESETS).map((p) => `${p.label} (${p.rating})`).join(" and ")} are named after his own old ratings — labels, not measured Elo, so "calibrated after", never "plays at".
+- Asked about hobbies: he plays a lot of chess and then treats his own games as a dataset — [The Board](/chess) is that analysis.`;
+
 // Generative UI: the assistant renders real components by emitting a directive
 // inside the markdown it's already streaming (src/lib/chatBlocks.ts parses it,
 // src/ChatWidgets.tsx renders it). Deliberately NOT provider tool-calling —
@@ -118,6 +150,9 @@ ${growth}
 # Technical depth
 ${skillLines}
 Working knowledge, still deepening (demonstrated hands-on in Mileway/Kursi/PaymentsLab): Kotlin Multiplatform / Compose Multiplatform at scale, baseline profiles and performance engineering, Paging 3.
+
+# Outside work — chess (${n(chess.totals.games)} games, mined into a section of this site)
+${chessLines}
 
 # This site (he built it — you can talk about it and point people at it)
 This portfolio is itself one of his builds: React 19 + TanStack Start (SSR), TypeScript, Vite, Tailwind, deployed on Vercel — and you, Panda, are the assistant living in it, streaming from a provider-agnostic edge function.
