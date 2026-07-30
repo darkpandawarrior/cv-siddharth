@@ -24,7 +24,29 @@ offline before any design decision was made. This matters: the section's entire
 point of view is derived from the data, so the data had to come first.
 
 **Corpus:** 18,731 games, 2019-02-09 → 2026-07-30.
-lichess 14,119 (2019-02-09 → 2025-01-16) · chess.com 4,612 (2021-01-22 → 2026-07-30).
+lichess 14,119 · chess.com 4,612.
+
+**Activity by year — the shape that matters:**
+
+| year | lichess | chess.com |
+|---|---|---|
+| 2019 | 2,480 | — |
+| 2020 | 3,262 | — |
+| 2021 | 4,672 | 19 |
+| 2022 | 3,365 | — |
+| 2023 | 337 | 2,017 |
+| 2024 | — | 1,043 |
+| 2025 | 3 | 590 |
+| 2026 | — | 943 |
+
+This is a **handoff in January 2023**, not two parallel streams. Months in which
+both platforms saw ≥10 games: **five** (2021-01, then 2023-01 through 2023-04).
+The chess.com account opened 2021-01-22 but saw only 19 games across January and
+February 2021 — a false start — before being abandoned until January 2023.
+lichess's rating history carries points as late as 2025-01-16 only because of
+**three games** played that month.
+
+**Longest silence in the whole 7.5-year corpus: 13 days** (2026-05-20 → 2026-06-02).
 
 ### The clock finding (the thesis)
 
@@ -51,11 +73,39 @@ lichess 14,119 (2019-02-09 → 2025-01-16) · chess.com 4,612 (2021-01-22 → 20
 
 ### Supporting findings
 
-- **2,262 distinct days played across a 2,728-day span (82.9%)**, longest
-  consecutive-day streak **298 days**.
-- **Repertoire is a three-act arc as Black:** Scandinavian Mieses-Kotrc 319 games
-  (2019) → Modern Defense 583 (2020), **1,275 (2021)**, 858 (2022) → Scandinavian
-  returns 168 (2023) and remains the main line through 2026 (126 in 2026 so far).
+- **2,262 distinct days played across a 2,729-day span (82.9%)**, longest
+  consecutive-day streak **298 days**. The span is endpoint-inclusive, which is the
+  correct denominator for "what fraction of days in the window did he play"; an
+  earlier revision of this line said 2,728 from an exclusive count. The percentage is
+  82.9% either way, and the UI must render the generated value rather than a literal.
+- **Repertoire arc as Black — real, but confounded and must be stated carefully.**
+  Measured as share-of-games-as-Black *within each platform separately*, which is the
+  only way to separate a repertoire change from a platform change:
+
+  | year | lichess Scandinavian % | chess.com Scandinavian % |
+  |---|---|---|
+  | 2019 | **41.1%** of 1,215 | — |
+  | 2020 | 16.0% of 1,629 | — |
+  | 2021 | 0.2% of 2,332 | (n=9, thin) |
+  | 2022 | 0.2% of 1,676 | — |
+  | 2023 | (n=168, thin) | **27.5%** of 1,007 |
+  | 2024 | — | 26.6% of 518 |
+  | 2025 | — | 22.7% of 295 |
+  | 2026 | — | **39.2%** of 474 |
+
+  The **abandonment is clean and within-platform**: 41.1% → 0.2% on lichess, replaced
+  by the Modern Defense (59% of Black games in 2021). The **re-adoption is also
+  within-platform**: 27.5% → 39.2% and rising on chess.com. But the two halves sit on
+  opposite sides of the 2023 handoff, so "he returned to his first opening" cannot be
+  cleanly separated from "he started fresh on a new site." Copy must present these as
+  two within-platform observations, not one continuous line. ECO coverage is **100% in
+  every chess.com year**, so this is not a missing-data artifact — that was checked.
+
+- **Opening names require canonicalisation before any cross-platform merge.** The same
+  opening is spelled `Scandinavian Defense: Mieses-Kotroc Variation` on lichess (473
+  games) and `Scandinavian Defense Mieses Kotrc Variation` via chess.com's ECO URL
+  (426 games). Merging raw strings would split one repertoire line in two and render a
+  false discontinuity at exactly the handoff the arc is about.
 - **Tilt:** next-game win rate 50.3% after a win vs **47.0% after a loss** (n=8,285,
   same platform, <30 min gap).
 - **Session decay:** game 1 of a sitting 48.5% → game 9 **34.8%**, game 11 32.3%.
@@ -223,8 +273,12 @@ would read as a decline starting in 2021, and applying an invented offset to mak
 the line continuous would be fabricating a number.
 
 Two ribbons never share an axis, so nothing is implied that the data doesn't
-support — and the four-year overlap (2021–2025, when both accounts were active)
-becomes something you can see by orbiting. Camera dollies along the time axis.
+support. The visual's job is the **January 2023 handoff**: one ribbon ends, another
+begins on a different Z-plane at a different scale, and the baton-pass is legible
+without the geometry suggesting the numbers are continuous. Camera dollies along the
+time axis. The five genuine both-active months (2021-01, 2023-01…04) are a detail, not
+the story — do not build the composition around an overlap that is essentially a
+seam.
 
 ### `GraveyardScene` — where the games die
 
@@ -293,14 +347,27 @@ back. `writingMeta.ts` gets an accent for the series.
 
 ## Claim-audit obligations
 
-The owner's stated history was "lichess 2018–2020, then chess.com since." **The APIs
-disprove both halves:** lichess was created **2019-02-06**, not 2018, and its blitz
-rating has points through **2025-01-16** — four years *after* the chess.com account
-opened in Jan 2021. The two accounts ran in parallel, they did not hand off.
+The owner's stated history was "lichess 2018–2020, then chess.com since." An earlier
+revision of this spec claimed the APIs disproved that and that the accounts "ran in
+parallel for four years." **That claim was wrong and is retracted here.** It rested on
+rating-history points and account-creation dates rather than on game counts; the late
+lichess points come from three games in January 2025, and the 2021 chess.com account
+saw 19 games before being abandoned for two years.
+
+The owner's account was right about the **shape** — it is a sequential handoff. Only
+the dates need correcting:
+
+| stated | actual |
+|---|---|
+| lichess from 2018 | lichess from **2019-02-06** (first game 2019-02-09) |
+| handoff in 2020 | handoff in **January 2023** |
+| chess.com since | correct, from **2023** — with a 19-game false start in Jan–Feb 2021 |
 
 Consequences:
-- No surface may state the handoff version. The parallel-streams version is both
-  true and the better story.
+- Surfaces may describe this as a handoff, because it is one. They must not date it
+  to 2020, and must not claim parallel streams.
+- The retraction is itself a lesson worth encoding: rating-history density is not
+  activity. Only game counts establish when someone was actually playing.
 - These claims go into `claims.json` so the mechanical audit covers them, per the
   standing rule that claims about the owner's own record get checked, never recalled.
 - Because every figure is generated from the APIs rather than typed by hand, the
