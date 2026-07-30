@@ -35,6 +35,30 @@ jobs:
       # (2026-07-27/28, ffprobe missing) once the image stopped bundling it.
       - run: sudo apt-get update -y && sudo apt-get install -y ffmpeg
       - run: pip install --quiet pillow
+      # `npm run refresh` includes gen:chess, whose lichess half is a ~9-minute
+      # NDJSON export of 14k games. gen-chess-stats.mjs already skips that export
+      # when .chess-cache/lichess-games.json carries the same `seenAt` the
+      # /api/user endpoint reports, so the cache key here is that same seenAt —
+      # keyed on anything else, the runner would restore a cache the generator
+      # then rejects and re-pull the export anyway. The User-Agent is mandatory
+      # on every outbound request in this feature; lichess tolerates its absence
+      # but chess.com 403s, so it is used uniformly rather than per-host.
+      # `|| true` on the curl: a lichess blip must not fail the whole refresh —
+      # an empty key just means a restore-keys partial hit and a re-export.
+      - name: Lichess cache key
+        id: chess-key
+        run: |
+          SEEN=$(curl -sf -H 'User-Agent: cv-siddharth-portfolio/1.0 (siddharthpandalai990@gmail.com)' \
+            https://lichess.org/api/user/darkpandawarrior | jq -r '.seenAt // empty') || true
+          echo "seen=${SEEN}" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: .chess-cache
+          # Exact hit => actions/cache skips the post-run save, which is right:
+          # nothing in the cache changed. A restore-keys hit does save under the
+          # new key, which is also right — the export was re-pulled.
+          key: chess-cache-${{ steps.chess-key.outputs.seen }}
+          restore-keys: chess-cache-
       - name: Sync media + regenerate stats & galleries
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
@@ -45,7 +69,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # `npm run refresh` (above) also runs gen:hiresignal (src/data/profile.ts),
           # gen:loopdown (src/data/writing.ts), gen:og (public/p/**, public/og-image.png),
-          # gen:feed (public/feed.xml), gen:sitemap (public/sitemap.xml), and
+          # gen:feed (public/feed.xml), gen:sitemap (public/sitemap.xml),
+          # gen:chess (src/data/chess.ts, public/chess/corpus.json), and
           # gen:system-prompt (api/_lib/system-prompt.ts, api/_lib/jd-prompt.ts) — all
           # of that output was silently discarded every run until this line covered it
           # (2026-07-29 audit: only public/projects + galleries/projectStats were staged).
