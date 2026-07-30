@@ -75,9 +75,9 @@ export function LabBench() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
-            {countWord(LAB_TABS.length)} instruments spanning Dice.tech's production case studies and five personal open-source
-            builds — the actual idea behind each headline metric, running live in your browser. Flip a
-            switch and watch the number happen. Every other room is one door away in
+            {countWord(LAB_TABS.length)} instruments spanning Dice.tech's production case studies, five personal open-source
+            builds and seven years of chess — the actual idea behind each headline metric, running live in
+            your browser. Flip a switch and watch the number happen. Every other room is one door away in
             the{" "}
             <Link
               to="/playground"

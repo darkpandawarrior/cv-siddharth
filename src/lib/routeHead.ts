@@ -40,11 +40,15 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
       "A live count of what visitors actually touch across this portfolio — which rooms get opened, what gets played with, and what nobody has found yet.",
   },
   "/playground": {
+    // Deliberately does NOT enumerate the rooms. It used to, and the list grew
+    // past the 158-char cut below — the rendered description ended at "a
+    // typable…", losing both the terminal and the experiment count entirely.
+    // An enumeration of a growing set can't survive a fixed clamp, so this
+    // describes the shape instead and lets the counts carry the specifics.
     label: "The Playground",
     blurb:
-      `${countWord(siteRooms.length)} interactive rooms built into this portfolio — a live Compose playground, ` +
-      `an infinite blueprint canvas, a 3D storyboard, a particle forge, a typable terminal and ` +
-      `${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
+      `${countWord(siteRooms.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
+      `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
   "/loopdown": {
     label: "The Loopdown",

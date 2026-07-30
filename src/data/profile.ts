@@ -1350,7 +1350,11 @@ export const siteRooms: SiteRoom[] = [
   {
     to: "/lab",
     label: "The Lab Bench",
-    blurb: `${countWord(LAB_TABS.length)} experiments that prove the numbers — Dice.tech's production metrics plus five personal builds (Mileway, PaymentsLab, Kursi, HireSignal, Deadlock) — running in your browser.`,
+    // Kept under 158 chars: routeHead clamps descriptions at that length and
+    // this one used to render truncated. The project roll-call moved out — it
+    // was the part that pushed it over, and the projects section already names
+    // them.
+    blurb: `${countWord(LAB_TABS.length)} experiments that prove the numbers — Dice.tech production metrics, five personal builds and seven years of chess — running in your browser.`,
     tag: "canvas · physics",
   },
   {
@@ -1385,7 +1389,7 @@ export const siteRooms: SiteRoom[] = [
     to: "/chess",
     label: "The Board",
     blurb:
-      "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where the games actually end, a shifting opening repertoire, and a bot calibrated to play like me — including the flaw.",
+      "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot that plays like me.",
     tag: "3d · engine",
   },
 ];
