@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
+import { ChessArc } from "./ChessArc.tsx";
+import { chess } from "./data/chess.ts";
+
+const ChessArcScene = lazy(() => import("./chess/ChessArcScene.tsx"));
 
 /**
  * The Board — the shell for the chess room.
@@ -24,6 +28,129 @@ const TABS: { key: ChessTab; label: string }[] = [
   { key: "puzzle", label: "Guess the Move" },
   { key: "rhythm", label: "Rhythm" },
 ];
+
+/**
+ * The platform handoff, derived rather than written down: the first year
+ * chess.com out-played lichess. 2021 doesn't qualify (19 games against 4,672 —
+ * the false start), 2023 does. The corpus grows every time he plays, so this
+ * has to be a computation, not a constant.
+ */
+function platformHandoff() {
+  const year = chess.activityByYear.find((y) => y.chesscom > y.lichess)?.year;
+  if (!year) return null;
+  // ASCII only: this label is drawn inside a canvas by troika, which fetches a
+  // fallback font from a CDN for any glyph the bundled font lacks.
+  return { year, at: Date.UTC(Number(year), 0, 1), label: `handoff -> chess.com ${year}` };
+}
+
+/** Local WebGL probe — same shape as FoundationGraph's, kept local so this
+ *  module never imports a three.js-touching file (that would drag the whole
+ *  engine into the room chunk even for visitors who never see a canvas). */
+function supportsWebGL(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
+/** True when this visitor should get flat HTML instead of a moving canvas. */
+function useFlat(): boolean {
+  return useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches || !supportsWebGL(), []);
+}
+
+const sceneFallback = (
+  <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the scene…</div>
+);
+
+/** Wrapper for every 3D pane: fixed-height canvas holder plus the text
+ *  alternative underneath. A canvas is opaque to a screen reader, so each
+ *  scene's finding is also written out — from the same data the scene draws. */
+function ScenePane({ height, alt, children }: { height: string; alt: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <>
+      <div className={`relative mt-4 overflow-hidden rounded-lg border border-line bg-ink ${height}`} aria-hidden>
+        {children}
+      </div>
+      {alt}
+    </>
+  );
+}
+
+/**
+ * The Arc — twin ribbons in 3D, the flat `ChessArc` under reduced motion or
+ * without WebGL. The fallback check lives here rather than inside the scene so
+ * a reduced-motion visitor never downloads three.js at all.
+ */
+function ArcPane({ corpus }: { corpus: Corpus }) {
+  const flat = useFlat();
+  const handoff = platformHandoff();
+  const bands = useMemo(() => {
+    const withPoints = corpus.arc.filter((s) => s.points.length > 1);
+    return [...new Set(withPoints.map((s) => s.platform))].map((platform) => {
+      const own = withPoints.filter((s) => s.platform === platform);
+      const ts = own.flatMap((s) => s.points.map((p) => p.t));
+      return {
+        platform,
+        from: new Date(Math.min(...ts)).toISOString().slice(0, 10),
+        to: new Date(Math.max(...ts)).toISOString().slice(0, 10),
+        formats: own.map((s) => {
+          const rs = s.points.map((p) => p.r);
+          return { format: s.format, min: Math.min(...rs), max: Math.max(...rs) };
+        }),
+      };
+    });
+  }, [corpus]);
+  const handoffRow = handoff && chess.activityByYear.find((y) => y.year === handoff.year);
+
+  // The handoff sentence holds in both modes; the ribbon description and the
+  // range list are the canvas's text alternative, so they are only worth
+  // printing when there is a canvas (the flat arc already carries both).
+  const handoffNote = handoffRow && (
+    <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+      Where the arc changes hands: in {handoffRow.year} chess.com carried {handoffRow.chesscom.toLocaleString()}{" "}
+      games against lichess's {handoffRow.lichess.toLocaleString()}. One platform's ratings stop there and the
+      other's start on its own scale — the two are marked apart, never joined into one line.
+    </p>
+  );
+
+  const alt = (
+    <div className="mt-4 text-sm leading-relaxed text-zinc-400">
+      <p>
+        Two ribbons, one per platform, sharing only the time axis. Each platform keeps its own vertical
+        scale — the rating pools are not comparable, so a shared axis would draw a decline the games do
+        not support.
+      </p>
+      <ul className="mt-2 space-y-1 font-mono text-xs">
+        {bands.map((b) => (
+          <li key={b.platform}>
+            <span className="text-zinc-200">{b.platform}</span> {b.from} → {b.to} ·{" "}
+            {b.formats.map((f) => `${f.format} ${f.min}–${f.max}`).join(" · ")}
+          </li>
+        ))}
+      </ul>
+      {handoffNote}
+    </div>
+  );
+
+  if (flat) {
+    return (
+      <div className="mt-4">
+        <ChessArc arcs={corpus.arc} height={110} />
+        {handoffNote}
+      </div>
+    );
+  }
+
+  return (
+    <ScenePane height="h-[460px]" alt={alt}>
+      <Suspense fallback={sceneFallback}>
+        <ChessArcScene corpus={corpus} handoffAt={handoff?.at ?? null} handoffLabel={handoff?.label ?? ""} />
+      </Suspense>
+    </ScenePane>
+  );
+}
 
 /** One real number per pane, straight from the corpus. A placeholder that
  *  quotes live data is honest about what has loaded and what hasn't. */
@@ -99,11 +226,15 @@ export function ChessRoom() {
         ) : (
           <>
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
-            <p className="mt-1 font-mono text-xs text-muted">
-              {/* ponytail: an honest stub, not a fake scene. Tasks 7–14 each
-                  swap one of these for the real thing. */}
-              not built yet — {paneNote(tab, corpus)}
-            </p>
+            {tab === "arc" ? (
+              <ArcPane corpus={corpus} />
+            ) : (
+              <p className="mt-1 font-mono text-xs text-muted">
+                {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each
+                    swap one of these for the real thing. */}
+                not built yet — {paneNote(tab, corpus)}
+              </p>
+            )}
           </>
         )}
       </div>
