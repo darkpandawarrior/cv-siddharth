@@ -509,6 +509,45 @@ Following the repo's established split:
   room. *(ponytail: measure before optimising, but the fallback path is decided now
   so the decision isn't made under pressure later.)*
 
+## Two repo-wide constraints this feature discovered
+
+Neither is chess-specific. Both were found during implementation and cost real debugging
+time, so they are recorded here rather than in a commit message.
+
+### The React Compiler memoises reads of a mutable object held in state
+
+`vite.config.ts` runs **React Compiler 1.0** through the rolldown→babel bridge. A `Chess`
+instance kept in state or a ref and read during render — `game.fen()`, `game.history()` —
+gets memoised against a reference that never changes, because mutating the object does not
+change its identity. The board freezes on the starting position while the game plays on
+underneath, and the move list stays empty while the status line updates.
+
+Two things make this expensive to find:
+
+- It **only reproduces in the production build.**
+- Adding a `console.log` to debug it **makes it disappear**, because the side effect makes
+  the compiler bail out of optimising that component.
+
+The fix is to snapshot every derived value into state after each mutation rather than
+reading through the live object during render. This applies to any mutable library object
+(a chess game, a parser, a state machine) — not just `chess.js`.
+
+### `react-chessboard` ships 32 axe violations on every board it draws
+
+Its pieces are dnd-kit draggables carrying `role="button"` and `tabindex="0"` with **no
+accessible name** (`aria-command-name`), which additionally becomes `nested-interactive`
+once the squares underneath are real buttons. **`allowDragging: false` does not help** —
+dnd-kit sets those attributes regardless of whether dragging is enabled.
+
+The site's own board wrapper strips `tabindex` (removed outright, not set to `-1`, which
+axe still counts as focusable content) and marks the pieces `aria-hidden`. It has to do
+this through a `MutationObserver`, because a render-tied sweep misses the clone dnd-kit
+mounts during a move animation.
+
+This is a property of the library, not of our usage, and it is the main accessibility cost
+of choosing the MIT-licensed board over the GPL alternatives. Anything that renders a board
+must go through that wrapper.
+
 ## Explicitly not built
 
 - **Live "currently playing"** — chess.com's `/games/to-move` covers only daily
