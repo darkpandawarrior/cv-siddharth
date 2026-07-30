@@ -3,10 +3,12 @@ import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
 
+import { focusLines, pct, repertoireYears, shareSeries } from "./chess/repertoireModel.ts";
 import type { GraveyardView } from "./chess/GraveyardScene.tsx";
 
 const ChessArcScene = lazy(() => import("./chess/ChessArcScene.tsx"));
 const GraveyardScene = lazy(() => import("./chess/GraveyardScene.tsx"));
+const RepertoireTreeScene = lazy(() => import("./chess/RepertoireTreeScene.tsx"));
 
 /** Square index to algebraic name — index 0 is a1, 63 is h8, the convention the
  *  generator's `squareMatrix` fixed. Lives here rather than in the scene so the
@@ -252,6 +254,139 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
   );
 }
 
+/**
+ * Repertoire — the opening tree with a year scrubber, plus the written table
+ * that is the whole arc for anyone who can't see the canvas.
+ */
+function RepertoirePane({ corpus }: { corpus: Corpus }) {
+  const { reduced, webgl } = useEnv();
+  const years = useMemo(() => repertoireYears(corpus.repertoireByPlatform), [corpus]);
+  const focus = useMemo(() => focusLines(years), [years]);
+  const [idx, setIdx] = useState(0);
+  const handoff = platformHandoff();
+  const selected = years[idx]?.year ?? "";
+
+  // "lichess 41.1% (2019) to 3.6% (2023)" — first and last quotable year of
+  // each platform's own run, never spliced across the handoff.
+  const arcLines = useMemo(
+    () =>
+      focus.map((name) => {
+        const series = shareSeries(years, name);
+        const runs = (["lichess", "chesscom"] as const).flatMap((key) => {
+          const run = series.filter((p) => p.key === key && !p.thin);
+          if (run.length < 2) return [];
+          const from = run[0];
+          const to = run[run.length - 1];
+          return [`${key === "lichess" ? "lichess" : "chess.com"} ${pct(from.share)} (${from.year}) → ${pct(to.share)} (${to.year})`];
+        });
+        return { name, runs };
+      }),
+    [focus, years],
+  );
+
+  const alt = (
+    <div className="mt-4 text-sm leading-relaxed text-zinc-400">
+      <ul className="space-y-1">
+        {arcLines.map((l) => (
+          <li key={l.name}>
+            <span className="text-zinc-200">{l.name}</span> — {l.runs.join(" · ")}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[34rem] border-collapse font-mono text-xs">
+          <caption className="pb-2 text-left text-xs text-muted">
+            Share of that platform-year's games as Black. A platform only appears in a year it was
+            actually played, and a sample the generator marked thin carries no percentage at all.
+          </caption>
+          <thead>
+            <tr className="border-b border-line text-left text-zinc-300">
+              <th scope="col" className="py-1 pr-3">year</th>
+              <th scope="col" className="py-1 pr-3">platform</th>
+              <th scope="col" className="py-1 pr-3">games as Black</th>
+              {focus.map((f) => (
+                <th key={f} scope="col" className="py-1 pr-3">{f}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {years.flatMap((y) =>
+              y.platforms.map((p) => (
+                <tr key={`${y.year}-${p.key}`} className="border-b border-line/50">
+                  <th scope="row" className="py-1 pr-3 text-left font-normal text-zinc-300">{y.year}</th>
+                  <td className="py-1 pr-3">{p.key === "lichess" ? "lichess" : "chess.com"}</td>
+                  <td className="py-1 pr-3">{p.blackGames.toLocaleString()}</td>
+                  {focus.map((f) => {
+                    const o = p.openings.find((x) => x.name === f);
+                    return (
+                      <td key={f} className="py-1 pr-3">
+                        {p.thin ? `thin (n=${o?.count ?? 0})` : `${pct(o?.share ?? 0)}`}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )),
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+        The two lines whose share of his games as Black moved most, tracked <em>within</em> each platform.
+        {handoff && (
+          <>
+            {" "}
+            The wall in the scene is the {handoff.year} handoff: the fall on lichess and the return on
+            chess.com are two separate observations on two different sites, and the scene will not draw
+            them as one line.
+          </>
+        )}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <label htmlFor="repertoire-year" className="font-mono text-xs text-zinc-300">
+          year
+        </label>
+        <input
+          id="repertoire-year"
+          type="range"
+          min={0}
+          max={Math.max(0, years.length - 1)}
+          step={1}
+          value={idx}
+          onChange={(e) => setIdx(Number(e.target.value))}
+          aria-valuetext={selected}
+          className="w-56 accent-accent"
+        />
+        <span className="font-mono text-sm text-accent">{selected}</span>
+        <span className="font-mono text-xs text-muted">
+          {years[idx]?.platforms.map((p) => `${p.key === "lichess" ? "lichess" : "chess.com"} ${p.blackGames}`).join(" · ")}
+        </span>
+      </div>
+
+      {webgl ? (
+        <ScenePane height="h-[520px]" alt={alt}>
+          <Suspense fallback={sceneFallback}>
+            <RepertoireTreeScene
+              years={years}
+              focus={focus}
+              selected={selected}
+              handoffYear={handoff?.year ?? null}
+              reduced={reduced}
+            />
+          </Suspense>
+        </ScenePane>
+      ) : (
+        alt
+      )}
+    </>
+  );
+}
+
 /** One real number per pane, straight from the corpus. A placeholder that
  *  quotes live data is honest about what has loaded and what hasn't. */
 function paneNote(tab: ChessTab, c: Corpus): string {
@@ -330,6 +465,8 @@ export function ChessRoom() {
               <ArcPane corpus={corpus} />
             ) : tab === "graveyard" ? (
               <GraveyardPane corpus={corpus} />
+            ) : tab === "repertoire" ? (
+              <RepertoirePane corpus={corpus} />
             ) : (
               <p className="mt-1 font-mono text-xs text-muted">
                 {/* ponytail: an honest stub, not a fake scene. Tasks 8–14 each
