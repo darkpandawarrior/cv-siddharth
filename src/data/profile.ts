@@ -10,7 +10,7 @@ export const profile = {
   phone: "+91 8848852062",
   github: "https://github.com/darkpandawarrior",
   linkedin: "https://linkedin.com/in/siddharth-pandalai-3712b215a",
-  portfolio: "https://darkpandawarrior.github.io/cv-siddharth",
+  portfolio: "https://cv-siddharth.vercel.app",
   availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
@@ -967,7 +967,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture — 12 feature + 6 core modules — targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "67 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "4 merged PRs to the public career-ops project (⭐60k+) — two new ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature — real, verifiable upstream contributions.",
+      "4 merged PRs to the public career-ops project (⭐62k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), and an agent-inbox feature (#1472) — every one publicly checkable. A further 38 merged PRs went to the private HireSignal engine repo; that number is real but not something a reader can verify, so these four are the ones I lead with.",
     ],
     // The native app (darkpandawarrior/HireSignal) is a private, v1-in-progress
     // repo with no screenshots yet — case study shown via the site's own
@@ -975,9 +975,9 @@ export const projects: Project[] = [
     // upstream are real, public, and safe to link directly.
     links: [
       { label: "My career-ops fork", url: "https://github.com/darkpandawarrior/career-ops" },
-      { label: "Upstream (career-ops, ⭐60k+)", url: "https://github.com/santifer/career-ops" },
+      { label: "Upstream (career-ops, ⭐62k+)", url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · 4 PRs merged upstream",
+    status: "Active · 4 PRs merged to public career-ops",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
     theme: {
       accent: "#3B82F6",
@@ -1200,6 +1200,44 @@ export const projects: Project[] = [
       { file: "echo-stutter.svg", caption: "Echo / Stutter — the core verb, diagrammed" },
       { file: "pipeline.gif", caption: "The AI dev-crew pipeline that generated the design codex — 39 agents, one session" },
     ],
+  },
+  {
+    slug: "kmp-family",
+    name: "The KMP toolkit family",
+    tagline: "Three decoupled repos so a new app starts at \"write the feature\".",
+    description:
+      "The reusable libraries, the shared build logic and the app shape each live in their own repo — vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
+    stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
+    highlights: [
+      "kmp-toolkit — 36 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
+      "kmp-build-logic — 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
+      "kmp-app-template — the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
+      "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi — the composition is the proof the extraction was real, not a library nobody uses.",
+    ],
+    links: [
+      { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
+      { label: "kmp-build-logic", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
+      { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+    ],
+    status: "Active · MIT · vendored across 5 repos",
+    badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
+  },
+  {
+    slug: "the-loopdown",
+    name: "The Loopdown",
+    tagline: "Field notes from an engineer who writes — one war story, four channels, one branded card.",
+    description:
+      "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic — plus the consolidated back catalogue.",
+    stack: ["Node.js", "Markdown", "SVG generation", "Voice-profile linting"],
+    highlights: [
+      "One lesson in, four channel-shaped posts out, each with a branded SVG card — the adaptation is the product, not the writing.",
+      "A voice profile derived from the existing archive, enforced by a lint step, so the generated drafts do not read like a language model wrote them.",
+      "Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass — because seniority is the loop: you have run the same failure enough times to name it on sight.",
+      "Public/private split by construction: the engine and the published posts are tracked, drafts and personal notes are gitignored.",
+    ],
+    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/the-loopdown" }],
+    status: "Active · public",
+    badges: ["Node.js", "Content engine", "Open source"],
   },
 ];
 

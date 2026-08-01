@@ -35,7 +35,7 @@ const PERSON_LD = {
     "https://github.com/darkpandawarrior",
     "https://linkedin.com/in/siddharth-pandalai-3712b215a",
     "https://dev.to/darkpandawarrior",
-    "https://medium.com/@darkpandawarrior",
+    "https://medium.com/@siddharthpandalai990",
     "https://darkpandawarrior.hashnode.dev",
     "https://booksbeforebros.wordpress.com",
   ],
