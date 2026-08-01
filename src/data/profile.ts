@@ -1225,6 +1225,27 @@ export const projects: Project[] = [
     badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
   },
   {
+    slug: "cv-siddharth-kmp",
+    name: "cv-siddharth-kmp",
+    tagline: "This portfolio, rebuilt in Compose Multiplatform — one commonMain to Web, Desktop, Android and iOS.",
+    description:
+      "A Compose Multiplatform port of this very site: ~16.5k lines of Kotlin across four modules rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS. An experiment in how far CMP reaches on the web — and an honest record of where it does not.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm", "Desktop", "Android", "iOS", "Ktor"],
+    highlights: [
+      "Deliberately bleeding edge — Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2. Every version the newest published, pre-release included.",
+      "Almost no dependencies by design: no nav library, no DI, no markdown parser, no diagram renderer, no icon pack, no shader library. Routing, the Mermaid layout engine, the SkSL ambient wash, the SSE frame parser and every icon are hand-built on Compose and Ktor primitives.",
+      "Includes a Compose-subset interpreter that parses a snippet and renders it with real composables — a live playground rather than a screenshot.",
+      "Built on kmp-app-template, so it doubles as the proof that the template actually carries a real app to four targets.",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
+      { label: "The React original", url: "https://cv-siddharth.vercel.app" },
+      { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+    ],
+    status: "Experiment · public · 4 targets",
+    badges: ["Kotlin Multiplatform", "Compose Multiplatform", "Wasm", "Bleeding edge"],
+  },
+  {
     slug: "the-loopdown",
     name: "The Loopdown",
     tagline: "Field notes from an engineer who writes — one war story, four channels, one branded card.",
