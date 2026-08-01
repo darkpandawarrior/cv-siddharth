@@ -4,6 +4,8 @@ import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
 import { groupPulse, totalInteractions, usePulseCounts } from "./play/pulse.ts";
+import { VisitorLedgerPanel, useVisitorLedger } from "./play/Visitors.tsx";
+import { totalVisitors } from "./play/visitors.ts";
 
 /**
  * /pulse — what visitors actually do here, counted across everyone.
@@ -37,6 +39,7 @@ function PulseInner() {
   const counts = usePulseCounts();
   const groups = groupPulse(counts);
   const total = totalInteractions(counts);
+  const people = totalVisitors(useVisitorLedger());
   // One scale across the whole page, so a bar's length means the same thing in
   // every group — per-group scaling would make a room with 3 visits look as
   // busy as one with 300.
@@ -80,6 +83,13 @@ function PulseInner() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the pulse</p>
         <h1 className="font-display text-hero font-bold tracking-tight">
           {total.toLocaleString()} <span className="text-accent">interaction{total === 1 ? "" : "s"}</span>
+          {people > 0 && (
+            <>
+              {" "}
+              <span className="text-zinc-500">from</span>{" "}
+              {people.toLocaleString()} <span className="text-accent2">{people === 1 ? "person" : "people"}</span>
+            </>
+          )}
         </h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Every room on this site writes to one shared counter. This is the whole of it — what gets opened,
@@ -116,11 +126,21 @@ function PulseInner() {
           })}
         </div>
 
+        <VisitorLedgerPanel />
+
         <p className="mt-12 max-w-2xl border-l-2 border-line pl-4 font-mono text-[11px] leading-relaxed text-muted">
           How this works: every counted action writes to one shared CRDT document over a websocket, so these
           numbers move live and outlive the tab that made them. They are also stored client-side, which makes
           them forgeable by anyone who opens a console — a deliberate trade for having no backend to run. Treat
           them as a sign of life, not as analytics.
+        </p>
+        <p className="mt-4 max-w-2xl border-l-2 border-line pl-4 font-mono text-[11px] leading-relaxed text-muted">
+          What the visitor count is: one number per browser that has opened a room, kept apart from the
+          interaction counts above. A person counts once, on a flag in their own browser — so clearing site
+          data or opening a private window counts again, and a phone and a laptop count twice. It is a floor
+          on people, not a measurement of them. The only thing recorded about anyone is the name of their time
+          zone, straight from their clock, added to a tally and never to a row: no address, no cookie, no
+          identifier, and nowhere to keep one even if I wanted it.
         </p>
       </main>
     </div>

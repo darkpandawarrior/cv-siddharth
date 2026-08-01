@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { PlayProvider, useCursorPresences } from "@playhtml/react";
 import { Users } from "lucide-react";
+import { VisitorProvider } from "./Visitors.tsx";
 
 /**
  * The shared layer — playhtml (https://github.com/spencerc99/playhtml) over a
@@ -33,19 +34,57 @@ import { Users } from "lucide-react";
  * separately below. */
 const ROOM = "cv-siddharth";
 
+/**
+ * Makes point 3 above actually true.
+ *
+ * "Every hook falls back to its default" holds for a socket that drops, but not
+ * for one that never starts: PlayProvider surfaces an init failure by throwing
+ * it from render, which the router's error boundary turns into the whole route
+ * being replaced by an error page. A browser with site data blocked hits this —
+ * playhtml keeps its player identity in localStorage — so /playground, /pulse
+ * and /blueprint would show "Something broke" to someone whose only crime was
+ * turning off cookies, on pages that are perfectly readable without any of it.
+ *
+ * Catching it here drops the shared layer and renders the rooms plain: no
+ * cursors, no counters, no wall, everything else exactly as it was. That is the
+ * degradation the comment above promises, and this is what enforces it.
+ */
+class SharedLayerBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    // Worth a line in the console — a room quietly losing its shared layer
+    // should be findable — but not worth a visitor's attention.
+    console.warn("[play] shared layer unavailable; rendering rooms without it", error);
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 export function PlayRoom({ children }: { children: ReactNode }) {
   return (
-    <PlayProvider
-      initOptions={{
-        room: ROOM,
-        // Cursors get their own scope: "page" keeps presence per route, so the
-        // badge means "people in this room" while the shared documents above
-        // stay site-wide.
-        cursors: { enabled: true, room: "page" },
-      }}
-    >
-      {children}
-    </PlayProvider>
+    <SharedLayerBoundary fallback={children}>
+      <PlayProvider
+        initOptions={{
+          room: ROOM,
+          // Cursors get their own scope: "page" keeps presence per route, so the
+          // badge means "people in this room" while the shared documents above
+          // stay site-wide.
+          cursors: { enabled: true, room: "page" },
+        }}
+      >
+        {/* Inside the provider because it reads the shared document, and around
+            every room because an arrival should count the same wherever it
+            lands — the plaque that displays it only renders on /playground. */}
+        <VisitorProvider>{children}</VisitorProvider>
+      </PlayProvider>
+    </SharedLayerBoundary>
   );
 }
 
