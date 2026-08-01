@@ -967,14 +967,16 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture — 12 feature + 6 core modules — targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "67 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "4 merged PRs to the public career-ops project (⭐62k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), and an agent-inbox feature (#1472) — every one publicly checkable. A further 38 merged PRs went to the private HireSignal engine repo; that number is real but not something a reader can verify, so these four are the ones I lead with.",
+      "4 merged PRs to the public career-ops project (⭐62k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), and an agent-inbox feature (#1472) — every one publicly checkable.",
     ],
-    // The native app (darkpandawarrior/HireSignal) is a private, v1-in-progress
-    // repo with no screenshots yet — case study shown via the site's own
-    // detail page instead of a code link. The career-ops fork and its public
-    // upstream are real, public, and safe to link directly.
+    // The native app is a private, v1-in-progress repo with no screenshots yet
+    // — case study shown via the site's own detail page instead of a code link.
+    // ONLY the public upstream is linked. Do not add a link to a personal
+    // career-ops fork: a fork of a public repo is itself public (GitHub refuses
+    // to make a public fork private), so it would publish the engine work that
+    // is deliberately kept private. A public fork was deleted on 2026-08-01 for
+    // exactly that reason.
     links: [
-      { label: "My career-ops fork", url: "https://github.com/darkpandawarrior/career-ops" },
       { label: "Upstream (career-ops, ⭐62k+)", url: "https://github.com/santifer/career-ops" },
     ],
     status: "Active · 4 PRs merged to public career-ops",
