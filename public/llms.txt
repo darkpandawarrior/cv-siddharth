@@ -27,7 +27,7 @@ Hiring status: open to senior Android / KMP roles — remote (worldwide/India) o
 - GitHub: https://github.com/darkpandawarrior
 - LinkedIn: https://linkedin.com/in/siddharth-pandalai-3712b215a
 - dev.to: https://dev.to/darkpandawarrior
-- Medium: https://medium.com/@darkpandawarrior
+- Medium: https://medium.com/@siddharthpandalai990
 - Hashnode: https://darkpandawarrior.hashnode.dev
 
 ## Open source
