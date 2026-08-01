@@ -5,6 +5,7 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { ROOMS, type Room } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
+import { VisitorPlaque } from "./play/Visitors.tsx";
 import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
 import { Sandbox } from "./play/Sandbox.tsx";
 import { usePulse, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
@@ -110,6 +111,8 @@ function PlaygroundInner() {
         >
           <Activity size={12} /> see what everyone else has been touching →
         </Link>
+
+        <VisitorPlaque />
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ROOMS.map((r, i) => (
