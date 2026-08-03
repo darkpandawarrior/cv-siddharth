@@ -5,8 +5,32 @@
   <link href="https://cv-siddharth.vercel.app/feed.xml" rel="self" type="application/atom+xml"/>
   <link href="https://cv-siddharth.vercel.app/loopdown" rel="alternate" type="text/html"/>
   <id>https://cv-siddharth.vercel.app/loopdown</id>
-  <updated>2026-08-27T00:00:00Z</updated>
+  <updated>2026-09-02T00:00:00Z</updated>
   <author><name>Siddharth Pandalai</name></author>
+  <entry>
+    <title>The captain routes. The captain never rows.</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#the-captain-never-rows" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#the-captain-never-rows</id>
+    <published>2026-09-02T00:00:00Z</published>
+    <updated>2026-09-02T00:00:00Z</updated>
+    <summary>Field notes from “Notes From The Loop” on engineering-practice. Topics: ai-assisted-development, orchestration, cost-engineering, tooling.</summary>
+  </entry>
+  <entry>
+    <title>I audited my own migrations. It was not fine.</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#the-ferryman-rows-one-way" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#the-ferryman-rows-one-way</id>
+    <published>2026-08-31T00:00:00Z</published>
+    <updated>2026-08-31T00:00:00Z</updated>
+    <summary>Field notes from “Crossing The Schema” on data-integrity. Topics: android, room, migrations, testing, kotlin.</summary>
+  </entry>
+  <entry>
+    <title>Plausible is worse than wrong</title>
+    <link href="https://cv-siddharth.vercel.app/loopdown#the-borrowed-hand" rel="alternate"/>
+    <id>https://cv-siddharth.vercel.app/loopdown#the-borrowed-hand</id>
+    <published>2026-08-29T00:00:00Z</published>
+    <updated>2026-08-29T00:00:00Z</updated>
+    <summary>Field notes from “Notes From The Loop” on engineering-practice. Topics: ai-assisted-development, code-review, api-design, kotlin, android.</summary>
+  </entry>
   <entry>
     <title>Your thresholds do not belong in constants</title>
     <link href="https://cv-siddharth.vercel.app/loopdown#thresholds-in-config" rel="alternate"/>

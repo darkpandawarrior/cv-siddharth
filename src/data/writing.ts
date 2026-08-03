@@ -9,6 +9,56 @@ export type Writing = { lessons: Lesson[]; series: Series[]; archive: Archive[];
 export const writing: Writing = {
   "lessons": [
     {
+      "title": "The captain routes. The captain never rows.",
+      "slug": "the-captain-never-rows",
+      "pillar": "engineering-practice",
+      "series": "notes-from-the-loop",
+      "status": "ready",
+      "created": "2026-09-02",
+      "live": "",
+      "tags": [
+        "ai-assisted-development",
+        "orchestration",
+        "cost-engineering",
+        "tooling"
+      ],
+      "links": {}
+    },
+    {
+      "title": "I audited my own migrations. It was not fine.",
+      "slug": "the-ferryman-rows-one-way",
+      "pillar": "data-integrity",
+      "series": "crossing-the-schema",
+      "status": "ready",
+      "created": "2026-08-31",
+      "live": "",
+      "tags": [
+        "android",
+        "room",
+        "migrations",
+        "testing",
+        "kotlin"
+      ],
+      "links": {}
+    },
+    {
+      "title": "Plausible is worse than wrong",
+      "slug": "the-borrowed-hand",
+      "pillar": "engineering-practice",
+      "series": "notes-from-the-loop",
+      "status": "ready",
+      "created": "2026-08-29",
+      "live": "",
+      "tags": [
+        "ai-assisted-development",
+        "code-review",
+        "api-design",
+        "kotlin",
+        "android"
+      ],
+      "links": {}
+    },
+    {
       "title": "Your thresholds do not belong in constants",
       "slug": "thresholds-in-config",
       "pillar": "data-integrity",
@@ -255,8 +305,18 @@ export const writing: Writing = {
       "episodes": 4
     },
     {
+      "id": "crossing-the-schema",
+      "title": "Crossing The Schema",
+      "episodes": 1
+    },
+    {
       "id": "ghosts-in-the-recomposition",
       "title": "Ghosts In The Recomposition",
+      "episodes": 2
+    },
+    {
+      "id": "notes-from-the-loop",
+      "title": "Notes From The Loop",
       "episodes": 2
     },
     {
@@ -429,6 +489,18 @@ export const writing: Writing = {
     {
       "id": "the-recomposer",
       "appearances": 2
+    },
+    {
+      "id": "the-fleet",
+      "appearances": 1
+    },
+    {
+      "id": "the-ferryman",
+      "appearances": 1
+    },
+    {
+      "id": "the-borrowed-hand",
+      "appearances": 1
     },
     {
       "id": "the-second-witness",
