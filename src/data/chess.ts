@@ -6,12 +6,12 @@
 export type ChessData = typeof chess;
 
 export const chess = {
-  "generatedAt": "2026-08-03T10:13:06.591Z",
+  "generatedAt": "2026-08-04T09:16:05.060Z",
   "username": "darkpandawarrior",
   "totals": {
-    "games": 18766,
+    "games": 18767,
     "wins": 9142,
-    "losses": 9160,
+    "losses": 9161,
     "draws": 464,
     "hours": 763
   },
@@ -22,7 +22,7 @@ export const chess = {
     "combinedHours": 1039,
     "note": "lichess self-reports playTime.total; the chess.com half is derived from live-game PGN wall clock (UTCDate/StartTime to EndDate/EndTime). Two measurement methods, not one uniform metric.",
     "chesscom": {
-      "games": 4347,
+      "games": 4348,
       "skipped": 0,
       "excludedDaily": 300,
       "byClass": {
@@ -35,9 +35,9 @@ export const chess = {
   },
   "length": {
     "scope": "chess.com",
-    "games": 4347,
+    "games": 4348,
     "median": 31,
-    "mean": 33.883,
+    "mean": 33.882,
     "max": 90,
     "winMedian": 29,
     "lossMedian": 33,
@@ -52,7 +52,7 @@ export const chess = {
       {
         "lo": 20,
         "hi": 30,
-        "n": 1250,
+        "n": 1251,
         "winRate": 0.566,
         "flagShareOfLosses": 0.341
       },
@@ -85,7 +85,7 @@ export const chess = {
         "flagShareOfLosses": 0.293
       }
     ],
-    "decided": 4182
+    "decided": 4183
   },
   "material": {
     "scope": "chess.com",
@@ -135,7 +135,7 @@ export const chess = {
   },
   "span": {
     "from": "2019-02-09",
-    "to": "2026-08-03"
+    "to": "2026-08-04"
   },
   "activityByYear": [
     {
@@ -176,7 +176,7 @@ export const chess = {
     {
       "year": "2026",
       "lichess": 0,
-      "chesscom": 978
+      "chesscom": 979
     }
   ],
   "platforms": [
@@ -214,8 +214,8 @@ export const chess = {
       "id": "chess.com",
       "url": "https://www.chess.com/member/darkpandawarrior",
       "joined": "2021-01-22",
-      "lastActive": "2026-08-03",
-      "games": 4647,
+      "lastActive": "2026-08-04",
+      "games": 4648,
       "peaks": [
         {
           "format": "blitz",
@@ -275,20 +275,20 @@ export const chess = {
       {
         "bucket": 5,
         "win": 0.669,
-        "loss": 0.592,
+        "loss": 0.593,
         "gap": 0.077
       },
       {
         "bucket": 6,
         "win": 0.586,
-        "loss": 0.502,
+        "loss": 0.503,
         "gap": 0.084
       },
       {
         "bucket": 7,
         "win": 0.506,
         "loss": 0.422,
-        "gap": 0.085
+        "gap": 0.084
       },
       {
         "bucket": 8,
@@ -303,11 +303,11 @@ export const chess = {
         "gap": 0.081
       }
     ],
-    "sampleSize": 3103
+    "sampleSize": 3104
   },
   "discipline": {
-    "distinctDays": 2266,
-    "spanDays": 2733,
+    "distinctDays": 2267,
+    "spanDays": 2734,
     "longestDayStreak": 298,
     "longestWin": 12,
     "longestLoss": 14
@@ -321,7 +321,7 @@ export const chess = {
     {
       "position": 1,
       "winRate": 0.485,
-      "n": 10237
+      "n": 10238
     },
     {
       "position": 2,
@@ -627,7 +627,7 @@ export const chess = {
       "winRate": 0.49
     },
     "black": {
-      "games": 9381,
+      "games": 9382,
       "winRate": 0.484
     }
   },
@@ -636,7 +636,7 @@ export const chess = {
     "inWins": 73.903,
     "inLosses": 64.324,
     "covered": 355,
-    "total": 4647
+    "total": 4648
   },
   "bestUpset": {
     "opRating": 1867,
@@ -647,24 +647,24 @@ export const chess = {
     "speed": "rapid"
   },
   "puzzle": {
-    "id": "Tsqqj",
-    "fen": "r2q3k/p1p1n1pp/1p2pr2/3bPpN1/2Q5/8/PPP2PPP/R3R1K1 w - - 1 1",
+    "id": "YjIDu",
+    "fen": "2kr3r/p1p2pp1/2pb4/3n4/NP3P2/P3P1P1/2P1Q3/q1B2RK1 w - - 1 1",
     "solution": [
-      "e5f6",
-      "d5c4",
-      "g5f7",
-      "h8g8",
-      "f7d8"
+      "c1b2",
+      "a1a2",
+      "f1a1",
+      "a2a1",
+      "b2a1"
     ],
-    "rating": 1973,
+    "rating": 1930,
     "themes": [
+      "clearance",
       "middlegame",
       "advantage",
-      "fork",
-      "long",
-      "sacrifice"
+      "trappedPiece",
+      "long"
     ],
-    "lastMove": "b7d5"
+    "lastMove": "f6d5"
   },
   "arc": [
     {
@@ -2354,8 +2354,8 @@ export const chess = {
           "r": 1331
         },
         {
-          "t": 1785748280000,
-          "r": 1317
+          "t": 1785828330000,
+          "r": 1309
         }
       ]
     },
