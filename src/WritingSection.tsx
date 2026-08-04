@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
+import { ExcelsiorShelf } from "./Excelsior.tsx";
 import {
   BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
@@ -184,6 +185,28 @@ export function WritingSection() {
               </div>
               <p className="mt-2 text-sm leading-snug text-zinc-400">{BOOKS_BEFORE_BROS.blurb}</p>
             </a>
+          </div>
+        </Reveal>
+
+        {/* The print lineage. Before the blog and before the code there was a
+            128-page institute magazine with my signature in the masthead — so
+            it gets shown as a magazine, not as a line in a list. */}
+        <Reveal delay={120}>
+          <div className="mt-10 rounded-2xl border border-line bg-card p-6 sm:p-8">
+            <div className="meta-row">
+              <span className="font-display text-base font-bold tracking-tight">
+                Excelsior — MANIT's institute magazine
+              </span>
+              <span className="meta-row-tag">[&nbsp;print · 2019–21&nbsp;]</span>
+            </div>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              Three years on the Editorial Board at NIT Bhopal, and Joint Chief Editor on the 2021
+              edition — 128 pages ideated, edited and shipped entirely remotely through the pandemic.
+              Hover a cover to open it.
+            </p>
+            <div className="mt-8">
+              <ExcelsiorShelf />
+            </div>
           </div>
         </Reveal>
 
