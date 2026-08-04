@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight, Share2, Check } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
+import { ScreenMarquee } from "./ScreenMarquee.tsx";
 import { PROJECT_ORDER } from "./data/connections.ts";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { openChat } from "./FloatingChat.tsx";
@@ -388,6 +389,13 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
         </div>
       </div>
+
+      {/* The poster band: real screens, full-bleed, straight under the header.
+          Without it the page opened on three columns of prose and nothing to
+          look at until well past the fold. */}
+      {items.length > 0 && (
+        <ScreenMarquee screens={items.map((i) => i.src)} alt={`Screens from ${project.name}`} />
+      )}
 
       {/* Narrated product tour — storyboarded from real screens */}
       {FILM_PROJECTS.has(slug) && (

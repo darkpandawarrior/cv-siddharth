@@ -973,6 +973,73 @@ html.resume-mode body {
   }
 }
 
+/* --- Full-bleed screen marquee ------------------------------------------
+   The band of real app screens under a case-study header. Two identical rows
+   translated by exactly -50% of the track: the seam lands where copy 2 starts,
+   which is pixel-identical to where copy 1 started, so the loop is invisible.
+   One composited transform, nothing on the main thread. */
+
+.screen-marquee {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  overflow: hidden;
+  padding-block: 1px;
+  border-block: 1px solid var(--color-line);
+  background-color: var(--color-void);
+  /* Edges dissolve instead of stopping — the row reads as continuing past the
+     viewport rather than as a clipped strip. */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.screen-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: screen-marquee 90s linear infinite;
+}
+.screen-marquee:hover .screen-marquee-track,
+.screen-marquee:focus-within .screen-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes screen-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.screen-marquee-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 0.5rem;
+}
+
+.screen-marquee-item {
+  height: clamp(11rem, 22vw, 17rem);
+  aspect-ratio: 9 / 19.5;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+}
+
+/* Reduced motion: no crawl. It becomes a scroller the reader drives, so the
+   screens are still all reachable — the content does not depend on the
+   animation running. */
+@media (prefers-reduced-motion: reduce) {
+  .screen-marquee {
+    overflow-x: auto;
+  }
+  .screen-marquee-track {
+    animation: none;
+  }
+  .screen-marquee-row:nth-child(2) {
+    display: none;
+  }
+}
+
 /* --- Excelsior shelf -----------------------------------------------------
    A magazine credit rendered as a magazine. The cover swings on its spine
    (rotateY about the left edge, inside a perspective) to reveal the spread
