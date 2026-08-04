@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
+import { CommandPalette } from "./CommandPalette.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { siteRooms, type SiteRoom } from "./data/profile.ts";
 
@@ -44,10 +45,30 @@ export const ROOMS: Room[] = siteRooms.map((r) => ({
   ...(ROOM_STYLE[r.to] ?? { icon: LayoutGrid, tint: "#3ddc84" }),
 }));
 
-/** Shared full-screen chrome for every room route (Lab Bench, Storyboard,
- *  Forge). Keeps a consistent way back to the hub and the portfolio. */
+/**
+ * Shared full-screen chrome for every room route.
+ *
+ * Two things this now fixes, both found by auditing the whole site at once:
+ *
+ * 1. NO DEAD ENDS. Every room used to offer only two ways out — back to the hub
+ *    or back to the portfolio — so the rooms were leaves hanging off a hub with
+ *    no edges between them. A visitor who liked one room had no way to discover
+ *    its neighbour except by going back and choosing again. The pager at the
+ *    foot loops the rooms into each other, the same device `NextProject` already
+ *    gives the case studies.
+ *
+ * 2. ⌘K EVERYWHERE. The command palette — the one control that can reach every
+ *    surface on this site — was mounted inside HomePage(), so it existed on `/`
+ *    and nowhere else. Mounting it here gives it to every room. (The remaining
+ *    routes that don't use RoomFrame still need it; see the audit.)
+ */
 export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
   const { goToSection } = useSectionNav();
+  // The room after this one, wrapping at the end. Derived from the same
+  // `siteRooms` order the hub and the assistant's prompt both read, so the
+  // three can never disagree about what follows what.
+  const here = ROOMS.findIndex((r) => r.to === useRouterState({ select: (s) => s.location.pathname }));
+  const next = here === -1 ? null : ROOMS[(here + 1) % ROOMS.length];
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
@@ -70,12 +91,15 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             {title} — {tagline}
           </span>
-          <button
-            onClick={() => openChat()}
-            className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
-          >
-            Ask <span className="hidden sm:inline">my AI</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <CommandPalette />
+            <button
+              onClick={() => openChat()}
+              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
+            >
+              Ask <span className="hidden sm:inline">my AI</span>
+            </button>
+          </div>
         </nav>
       </header>
       <main id="main-content" tabIndex={-1} className="min-h-0 flex-1">
@@ -87,6 +111,35 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
         <h1 className="sr-only">{title} — {tagline}</h1>
         {children}
       </main>
+      {/* The onward path. Without this a room is a leaf: the only exits were
+          "back to the hub" and "back to the portfolio", so the rooms never led
+          to each other and the deepest work on the site was the hardest to
+          stumble into. */}
+      {next && (
+        <footer className="border-t border-line bg-ink/80">
+          <Link
+            to={next.to}
+            className="group mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6"
+          >
+            <span className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border"
+                style={{ borderColor: `${next.tint}55`, color: next.tint }}
+              >
+                <next.icon size={15} />
+              </span>
+              <span>
+                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted">next room</span>
+                <span className="font-display text-sm font-bold text-zinc-100 transition group-hover:text-accent">
+                  {next.label}
+                </span>
+              </span>
+            </span>
+            <span aria-hidden className="text-xl text-accent transition group-hover:translate-x-1.5">→</span>
+          </Link>
+        </footer>
+      )}
     </div>
   );
 }
