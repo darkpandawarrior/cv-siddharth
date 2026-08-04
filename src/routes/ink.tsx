@@ -1,0 +1,50 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
+import { roomHead } from "../lib/routeHead.ts";
+import { WritingSection } from "../WritingSection.tsx";
+import { FloatingChat } from "../FloatingChat.tsx";
+import { WorldSwitch } from "../WorldSwitch.tsx";
+
+/**
+ * The Ink — the writing years, given their own world.
+ *
+ * These used to be a section three-quarters of the way down a 14,000px
+ * homepage, wearing the same control-room skin as the Android work. Two
+ * different lives should not share one scroll or one palette: this route is
+ * `.ink-world` (sepia ground, cream text, ochre accent, display serif) and the
+ * engineering half is spared ~4,000px of scroll it was carrying for content
+ * that belongs somewhere else.
+ */
+export const Route = createFileRoute("/ink")({
+  head: () => roomHead("/ink"),
+  ssr: false,
+  component: InkRoute,
+});
+
+function InkRoute() {
+  return (
+    <div className="ink-world min-h-screen">
+      <header className="border-b border-line">
+        <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+          <Link to="/" className="flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+            <ArrowLeft size={16} /> The Build
+          </Link>
+          <WorldSwitch current="ink" />
+        </nav>
+      </header>
+
+      <main id="main-content" tabIndex={-1}>
+        <div className="mx-auto max-w-5xl px-6 pt-12">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
+          <h1 className="font-display mt-3 text-hero">The Ink</h1>
+          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>
+            Three years of a college magazine, a literary society, and everything I wrote before I
+            wrote software. It reads differently because it was a different life.
+          </p>
+        </div>
+        <WritingSection />
+      </main>
+      <FloatingChat />
+    </div>
+  );
+}

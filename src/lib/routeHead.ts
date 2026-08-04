@@ -50,6 +50,11 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
       `${countWord(siteRooms.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
       `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
+  "/ink": {
+    label: "The Ink",
+    blurb:
+      "The writing years — three editions of MANIT's institute magazine, a literary society, four published stories, and everything written before the code.",
+  },
   "/excelsior": {
     label: "Excelsior",
     blurb:

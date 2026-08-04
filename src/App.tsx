@@ -11,7 +11,6 @@ import {
   Monitor,
   Globe,
   Play,
-  LayoutGrid,
   Target,
   Crown,
 } from "lucide-react";
@@ -31,7 +30,7 @@ import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
-import { WritingSection } from "./WritingSection.tsx";
+import { WorldSwitch } from "./WorldSwitch.tsx";
 import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { ROOMS } from "./rooms.tsx";
@@ -87,15 +86,20 @@ function repoStatLine(slug: string): string | null {
   return `${s.modules} modules`;
 }
 
+/**
+ * The Build world's sections. Trimmed from seven to four: the bar was carrying
+ * seven anchors plus four route links plus a palette plus a CTA, which is not a
+ * navigation, it is an index. Skills and Experience are one scroll below Case
+ * studies and both are in ⌘K; Writing moved out to its own world entirely.
+ *
+ * These four are what a recruiter actually navigates to.
+ */
 const NAV_LINKS = [
   // First on purpose: recruiters are who this site is for, and the fit
   // analyzer is the one thing here they can't get from a PDF.
   { href: "#fit", label: "Fit check" },
   { href: "#work", label: "Case studies" },
   { href: "#projects", label: "Projects" },
-  { href: "#experience", label: "Experience" },
-  { href: "#skills", label: "Skills" },
-  { href: "#writing", label: "Writing" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -144,6 +148,7 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 // Everything reachable from the phone drawer — sections plus the sub-worlds.
 const DRAWER_EXTRAS = [
   { href: "#playground", label: "▶ The Playground" },
+  { href: "/ink", label: "The Ink — writing" },
   { href: "#loopdown", label: "The Loopdown" },
   { href: "#resume", label: "Résumé" },
 ];
@@ -283,9 +288,10 @@ function Nav() {
         >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
-        {/* gap-3 at lg (where the bar is only ~1009px wide and every label has
-            to stay on one line), back to gap-6 once max-w-6xl actually fits. */}
-        <div className="hidden items-center gap-3 text-sm text-zinc-400 lg:flex xl:gap-6">
+        {/* Four anchors and the world switch. With the link count halved the
+            old gap-3-at-lg squeeze is gone, so this is one spacing again. */}
+        <div className="hidden items-center gap-5 text-sm text-zinc-400 lg:flex">
+          <WorldSwitch current="build" />
           {NAV_LINKS.map((l) => (
             <button
               key={l.href}
@@ -297,9 +303,10 @@ function Nav() {
               {l.label}
             </button>
           ))}
-          <Link to="/playground" className="flex items-center gap-1 transition hover:text-accent">
-            <LayoutGrid size={13} /> Playground
-          </Link>
+          {/* Playground dropped from the bar — it is a room index reachable
+              from ⌘K, the explore section and the footer, and it was competing
+              with the world switch for the same glance. Résumé stays: it is
+              the one thing a recruiter looks for by name. */}
           <Link to="/resume" className="flex items-center gap-1 transition hover:text-accent">
             <FileText size={13} /> Résumé
           </Link>
@@ -1151,6 +1158,48 @@ function Contact() {
 }
 
 /**
+ * The doorway into the other world. Not a teaser card — a threshold: the
+ * ground warms from control-room green-black into sepia across a full-bleed
+ * seam, and the panel below it is already wearing the ink palette. You can see
+ * the other life from here before you decide to walk into it.
+ */
+function InkDoorway() {
+  return (
+    <section id="writing" className="border-t border-line">
+      <div className="ink-threshold" aria-hidden />
+      <div className="ink-world">
+        <div className="section-y mx-auto max-w-5xl px-6">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
+          <h2 className="font-display mt-3 text-h2">The Ink</h2>
+          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>
+            Before the Android work there were three years of a college magazine and a literary
+            society — English Editor, then Joint Chief Editor of a 128-page edition shipped entirely
+            remotely. Four published stories, all readable here, and the pieces the board wrote
+            about me. It's a different life, so it gets a different room.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to="/ink"
+              className="rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            >
+              Enter The Ink →
+            </Link>
+            <Link
+              to="/excelsior"
+              search={{ year: 2021, page: 44 }}
+              className="rounded-full border border-line px-6 py-2.5 font-semibold transition hover:border-accent"
+              style={{ color: "#cfc3b2" }}
+            >
+              Read "The Loopdown"
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
  * A light in-page teaser for the Playground hub — no canvases, so it costs the
  * main scroll nothing. It advertises the interactive rooms and funnels into the
  * full-screen hub (where each room renders one at a time).
@@ -1261,7 +1310,10 @@ export function HomePage() {
         <ExperienceSection />
         <Circuit />
         <Skills />
-        <WritingSection />
+        {/* Writing lives in its own world now (/ink). What stays here is the
+            doorway — the homepage was 14,000px because it was carrying two
+            lives in one scroll. */}
+        <InkDoorway />
         <ChessTeaser />
         <Circuit />
         <PlaygroundTeaser />

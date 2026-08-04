@@ -16,6 +16,7 @@ import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
 import { Route as ExcelsiorRouteImport } from './routes/excelsior'
 import { Route as ForgeRouteImport } from './routes/forge'
+import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
 import { Route as MapRouteImport } from './routes/map'
@@ -58,6 +59,11 @@ const ExcelsiorRoute = ExcelsiorRouteImport.update({
 const ForgeRoute = ForgeRouteImport.update({
   id: '/forge',
   path: '/forge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InkRoute = InkRouteImport.update({
+  id: '/ink',
+  path: '/ink',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabRoute = LabRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   ComposeRoute: typeof ComposeRoute
   ExcelsiorRoute: typeof ExcelsiorRoute
   ForgeRoute: typeof ForgeRoute
+  InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
   LoopdownRoute: typeof LoopdownRoute
   MapRoute: typeof MapRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/forge'
       fullPath: '/forge'
       preLoaderRoute: typeof ForgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ink': {
+      id: '/ink'
+      path: '/ink'
+      fullPath: '/ink'
+      preLoaderRoute: typeof InkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab': {
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComposeRoute: ComposeRoute,
   ExcelsiorRoute: ExcelsiorRoute,
   ForgeRoute: ForgeRoute,
+  InkRoute: InkRoute,
   LabRoute: LabRoute,
   LoopdownRoute: LoopdownRoute,
   MapRoute: MapRoute,
