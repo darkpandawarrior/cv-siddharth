@@ -50,6 +50,11 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
       `${countWord(siteRooms.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
       `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
+  "/excelsior": {
+    label: "Excelsior",
+    blurb:
+      "Three editions of MANIT Bhopal's institute magazine, readable here in full — English Editor on 2019 and 2020, Joint Chief Editor on 2021.",
+  },
   "/loopdown": {
     label: "The Loopdown",
     blurb:

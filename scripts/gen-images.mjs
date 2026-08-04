@@ -2,7 +2,7 @@
 // Idempotent: regenerates only when the source is newer. Runs in prebuild,
 // same pattern as gen-galleries.mjs / gen-og.mjs. No runtime image CDN.
 import { readdirSync, statSync, existsSync } from "node:fs";
-import { join, dirname, extname } from "node:path";
+import { join, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
@@ -22,6 +22,10 @@ let made = 0;
 for (const src of walk(publicDir)) {
   const ext = extname(src).toLowerCase();
   if (![".png", ".jpg", ".jpeg", ".webp"].includes(ext)) continue; // gifs: animated, skip
+  // Excelsior magazine pages are already the delivered format (see
+  // gen-excelsior.mjs). Deriving an .avif per page would be ~400 extra files
+  // regenerated on every build for no gain — they have no raster source here.
+  if (src.includes(`${sep}excelsior${sep}pages${sep}`)) continue;
   const base = src.slice(0, -ext.length);
   // A .webp sitting next to a same-name .png/.jpg/.jpeg is OUR OWN derivative
   // (generated below from that raster), not a real source — skip it, or the

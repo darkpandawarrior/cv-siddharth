@@ -973,6 +973,255 @@ html.resume-mode body {
   }
 }
 
+/* --- Excelsior reader ----------------------------------------------------
+   A magazine that actually turns. The leaf rotates about the spine with a
+   front and a back face while the destination spread sits painted underneath,
+   so the page appears to lift off the one behind it rather than cross-fade. */
+
+.flipbook {
+  --flip-dur: 0.6s;
+}
+
+.flipbook-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 0.75rem;
+}
+.flipbook-years {
+  display: flex;
+  gap: 0.375rem;
+}
+.flipbook-year {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-year:hover {
+  color: #e8efe9;
+  border-color: var(--color-accent);
+}
+.flipbook-year.is-active {
+  border-color: var(--color-accent);
+  background-color: rgba(61, 220, 132, 0.12);
+  color: var(--color-accent);
+}
+.flipbook-counter {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+.flipbook-tools {
+  display: flex;
+  gap: 0.375rem;
+}
+.flipbook-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.5rem;
+  color: #d4d4d8;
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-tool:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.flipbook-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-block: clamp(1rem, 3vw, 2rem);
+  /* One perspective for the whole stage: the leaf and the pages it lifts off
+     have to share a vanishing point or the turn reads as a sticker peeling. */
+  perspective: 2400px;
+}
+
+.flipbook-book {
+  position: relative;
+  display: flex;
+  transform-style: preserve-3d;
+}
+
+/* A spread has to fit the window without scrolling — a magazine you have to
+   scroll to finish a page of is not a magazine. Height leads (capped against
+   the viewport), and the width follows from the page aspect. */
+.flipbook-side {
+  /* The subtraction is the page furniture above the stage (back link, title,
+     blurb, toolbar). Budgeting for it explicitly is what keeps a spread inside
+     the window on a 900px-tall laptop instead of running under the fold. */
+  height: clamp(16rem, calc(100vh - 24rem), 44rem);
+  aspect-ratio: 950 / 1230;
+  background-color: var(--color-card);
+  box-shadow: var(--shadow-elevation-2);
+}
+/* On the cover spread there is no left page — the single sheet centres itself
+   instead of sitting in the right half of an invisible two-page frame. */
+.flipbook-book.is-cover .flipbook-side-left {
+  display: none;
+}
+
+.flipbook-page {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+/* The turning leaf. */
+.flipbook-leaf {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  aspect-ratio: 950 / 1230; /* matches .flipbook-side exactly, or the leaf
+                               would not line up with the page it lifts off */
+  transform-style: preserve-3d;
+  z-index: 2;
+  animation-duration: var(--flip-dur);
+  animation-timing-function: var(--ease-out-quart);
+  animation-fill-mode: forwards;
+}
+.flipbook-leaf-right {
+  left: 50%;
+  transform-origin: left center;
+}
+.flipbook-leaf-left {
+  right: 50%;
+  transform-origin: right center;
+}
+.flipbook-book.is-cover .flipbook-leaf-right {
+  left: 0;
+}
+.flipbook-leaf-right.is-turning {
+  animation-name: flip-forward;
+}
+.flipbook-leaf-left.is-turning {
+  animation-name: flip-back;
+}
+@keyframes flip-forward {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-180deg); }
+}
+@keyframes flip-back {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(180deg); }
+}
+
+.flipbook-leaf-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background-color: var(--color-card);
+  box-shadow: var(--shadow-elevation-2);
+}
+.flipbook-leaf-back {
+  transform: rotateY(180deg);
+}
+
+.flipbook-nav {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.625rem;
+  color: #d4d4d8;
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), opacity var(--dur-fast) linear;
+}
+.flipbook-nav:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.flipbook-nav:disabled {
+  opacity: 0.25;
+}
+
+/* Contact sheet */
+.flipbook-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(5, 7, 10, 0.97);
+  backdrop-filter: blur(6px);
+}
+.flipbook-sheet-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding: 1rem 1.25rem;
+}
+.flipbook-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.75rem;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+.flipbook-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  transition: border-color var(--dur-fast) var(--ease-out-quart), transform var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-thumb:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+.flipbook-thumb img {
+  display: block;
+  width: 100%;
+}
+.flipbook-thumb span {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(5, 7, 10, 0.8);
+  padding: 0.0625rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--color-muted);
+}
+
+/* Single page below the fold-in-half width — a two-page spread at 400px wide
+   is two unreadable columns. */
+@media (max-width: 767px) {
+  .flipbook-side-left {
+    display: none;
+  }
+  .flipbook-side,
+  .flipbook-leaf {
+    height: min(66vh, 34rem);
+  }
+  .flipbook-leaf-right {
+    left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipbook-leaf {
+    display: none; /* the destination spread is already rendered underneath */
+  }
+  .flipbook-thumb:hover {
+    transform: none;
+  }
+}
+
 /* --- Full-bleed screen marquee ------------------------------------------
    The band of real app screens under a case-study header. Two identical rows
    translated by exactly -50% of the track: the seam lands where copy 2 starts,
@@ -1124,6 +1373,15 @@ html.resume-mode body {
 }
 .magazine-action:hover {
   color: var(--color-accent2);
+}
+/* Secondary action under the primary one — same row of type, less voice. */
+.magazine-action-quiet {
+  margin-top: 0.25rem;
+  display: block;
+  color: var(--color-muted);
+}
+.magazine-action-quiet:hover {
+  color: #e8efe9;
 }
 
 /* Reduced motion: the books stay shut. The lightbox still opens the spread,

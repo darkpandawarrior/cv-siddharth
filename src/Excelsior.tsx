@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
+import { excelsiorEditions } from "./data/excelsior.ts";
 
 /**
  * Excelsior — MANIT Bhopal's institute magazine, and the print half of the
@@ -10,15 +12,17 @@ import { Picture } from "./Picture.tsx";
  * The covers sit on a shelf and open like actual books: the front cover swings
  * on its spine (rotateY about the left edge) to reveal the spread behind it.
  * That is the whole point — a magazine credit rendered as a magazine, not as a
- * bullet. Clicking opens the credited spread full-size; "read all N pages"
- * goes to MANIT's own flipbook, which stays the canonical host (the PDFs are
- * 30–60 MB each, so this site links to them rather than re-hosting them).
+ * bullet. From here you go into the reader at /excelsior, which hosts all 396
+ * pages; MANIT keeps the original PDFs (30-60 MB each) and the reader links
+ * out to them for anyone who wants the source file.
  */
+
+/** Page counts come from the generated manifest — never hand-written here. */
+const pagesIn = (year: string) => excelsiorEditions.find((e) => e.year === year)?.pages ?? 0;
 
 interface Edition {
   year: string;
   role: string;
-  pages: number;
   cover: string;
   /** The spread this site can vouch for — where the masthead credit appears. */
   spread?: { src: string; alt: string; caption: string };
@@ -30,7 +34,6 @@ const EXCELSIOR: Edition[] = [
   {
     year: "2021",
     role: "Joint Chief Editor",
-    pages: 128,
     cover: "/excelsior/cover-2021.jpg",
     spread: {
       src: "/excelsior/spread-2021.jpg",
@@ -43,7 +46,6 @@ const EXCELSIOR: Edition[] = [
   {
     year: "2020",
     role: "English Editor",
-    pages: 0,
     cover: "/excelsior/cover-2020.jpg",
     flipbook: "https://flip.manit.ac.in/",
     pdf: "https://flip.manit.ac.in/wp-content/uploads/2024/04/Excelsior-2020.pdf",
@@ -51,7 +53,6 @@ const EXCELSIOR: Edition[] = [
   {
     year: "2019",
     role: "English Editor",
-    pages: 0,
     cover: "/excelsior/cover-2019.jpg",
     flipbook: "https://flip.manit.ac.in/",
     pdf: "https://flip.manit.ac.in/wp-content/uploads/2024/04/Excelsior-2019-.pdf",
@@ -75,14 +76,15 @@ function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void
         <span className="font-display text-sm font-bold">Excelsior '{ed.year.slice(2)}</span>
         <span className="meta-row-tag">[&nbsp;{ed.role}&nbsp;]</span>
       </figcaption>
-      {openable ? (
-        <button type="button" onClick={() => onOpen(ed)} className="magazine-action">
-          See the masthead <ArrowUpRight size={12} />
+      {/* The whole issue is hosted here now — the shelf is the way in, not a
+          teaser that hands you off to somebody else's site. */}
+      <Link to="/excelsior" search={{ year: Number(ed.year), page: 1 }} className="magazine-action">
+        Read all {pagesIn(ed.year)} pages <ArrowUpRight size={12} />
+      </Link>
+      {openable && (
+        <button type="button" onClick={() => onOpen(ed)} className="magazine-action magazine-action-quiet">
+          The masthead
         </button>
-      ) : (
-        <a href={ed.pdf} target="_blank" rel="noreferrer" className="magazine-action">
-          Read the PDF <ArrowUpRight size={12} />
-        </a>
       )}
     </figure>
   );
@@ -142,13 +144,13 @@ export function ExcelsiorShelf() {
           />
           <p className="mt-4 max-w-xl text-center text-sm text-zinc-400">{open.spread.caption}</p>
           <a
-            href={open.flipbook}
+            href={open.pdf}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent transition hover:text-accent-dim"
           >
-            Read all {open.pages} pages on MANIT's flipbook <ArrowUpRight size={14} />
+            Read the original PDF at MANIT <ArrowUpRight size={14} />
           </a>
         </div>
       )}

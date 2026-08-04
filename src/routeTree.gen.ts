@@ -14,6 +14,7 @@ import { Route as SplatRouteImport } from './routes/$'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
+import { Route as ExcelsiorRouteImport } from './routes/excelsior'
 import { Route as ForgeRouteImport } from './routes/forge'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
@@ -47,6 +48,11 @@ const ChessRoute = ChessRouteImport.update({
 const ComposeRoute = ComposeRouteImport.update({
   id: '/compose',
   path: '/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExcelsiorRoute = ExcelsiorRouteImport.update({
+  id: '/excelsior',
+  path: '/excelsior',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgeRoute = ForgeRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
     | '/lab'
     | '/loopdown'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
     | '/lab'
     | '/loopdown'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
     | '/lab'
     | '/loopdown'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   BlueprintRoute: typeof BlueprintRoute
   ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
+  ExcelsiorRoute: typeof ExcelsiorRoute
   ForgeRoute: typeof ForgeRoute
   LabRoute: typeof LabRoute
   LoopdownRoute: typeof LoopdownRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/compose'
       fullPath: '/compose'
       preLoaderRoute: typeof ComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/excelsior': {
+      id: '/excelsior'
+      path: '/excelsior'
+      fullPath: '/excelsior'
+      preLoaderRoute: typeof ExcelsiorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forge': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlueprintRoute: BlueprintRoute,
   ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
+  ExcelsiorRoute: ExcelsiorRoute,
   ForgeRoute: ForgeRoute,
   LabRoute: LabRoute,
   LoopdownRoute: LoopdownRoute,
