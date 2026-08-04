@@ -4,7 +4,7 @@ import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { ExcelsiorShelf } from "./Excelsior.tsx";
-import { boardProfiles, boardArc, societies } from "./data/beforeTheCode.ts";
+import { boardProfiles, boardArc, societies, loopdownOrigin } from "./data/beforeTheCode.ts";
 import {
   BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
@@ -37,9 +37,23 @@ export function WritingSection() {
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
-          <p className="mb-10 max-w-2xl text-zinc-400">
+          <p className="mb-5 max-w-2xl text-zinc-400">
             Field notes from real Android and KMP work, told through a recurring cast of personified
             bugs — plus the creative archive that came before the code.
+          </p>
+          {/* The name is inherited, not invented — worth saying up front, since
+              it is the whole reason an Android engineer has a writing section. */}
+          <p className="mb-10 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm leading-relaxed text-zinc-400">
+            "The Loopdown" isn't a brand I made up. It's a short story I wrote for{" "}
+            <Link
+              to="/excelsior"
+              search={{ year: Number(loopdownOrigin.year), page: loopdownOrigin.page }}
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              Excelsior '21
+            </Link>{" "}
+            — a week that refuses to end, 52 iterations of the same Wednesday. The hub, the repo and
+            the series all still carry its name.
           </p>
         </Reveal>
 
@@ -202,8 +216,9 @@ export function WritingSection() {
             </div>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
               Three years on the Editorial Board at NIT Bhopal — English Editor on the 2019 and 2020
-              editions, Joint Chief Editor on 2021. That last one was 128 pages ideated, edited and
-              shipped entirely remotely, through the pandemic. Hover a cover to open it.
+              editions, Joint Chief Editor on 2021. That last one was 128 pages shipped entirely
+              remotely through the pandemic, and its cover story was the whole magazine: one frame
+              story branching into three paths a reader chooses between. Hover a cover to open it.
             </p>
             <div className="mt-8">
               <ExcelsiorShelf />

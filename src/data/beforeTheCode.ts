@@ -103,6 +103,39 @@ export const boardProfiles: BoardProfile[] = [
 ];
 
 /**
+ * Where the name came from. This is not trivia — "The Loopdown" is the writing
+ * hub on this site (/loopdown), the GitHub repo that generates it, and the
+ * series the field notes ship under. All three are named after a short story
+ * he wrote for Excelsior '21: 52 iterations of the same Wednesday, on the
+ * Rebel path of that year's branching cover story.
+ *
+ * A blog named after a magazine piece is the whole throughline in one word,
+ * which is exactly why it is stated here rather than left for someone to spot.
+ */
+export const loopdownOrigin = {
+  year: "2021",
+  page: 44,
+  /** The story itself. Kept separate from the naming claim so callers that
+   *  have already said "the hub is named after it" don't say it twice. */
+  story: "on the Rebel path, tagged REPETITION: a week that refuses to end, 52 iterations of the same Wednesday",
+};
+
+/**
+ * Excelsior '21 was not a magazine with a cover story in it; the cover story
+ * WAS the magazine. Mr. Talesman opens on p24 and sends the reader down one of
+ * three branching paths — Compliant, Rebel, Explorer — each with its own
+ * prologue and epilogue. He was Joint Chief Editor on it.
+ */
+export const coverStory2021 = {
+  page: 24,
+  paths: [
+    { name: "Mr. Compliant", page: 25 },
+    { name: "Mr. Rebel", page: 39 },
+    { name: "Mr. Explorer", page: 53 },
+  ],
+};
+
+/**
  * The arc those three describe, stated plainly — this is the line the AI
  * assistant should be able to draw, because it is the actual throughline from
  * a college magazine to a production codebase.

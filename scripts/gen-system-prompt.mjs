@@ -26,7 +26,7 @@ import {
 import { SECTION_IDS } from "../src/lib/navigation.ts";
 import { ROUTE_PHRASES } from "../src/lib/chatContext.ts";
 import { chess } from "../src/data/chess.ts";
-import { societies, boardProfiles, boardArc } from "../src/data/beforeTheCode.ts";
+import { societies, boardProfiles, boardArc, loopdownOrigin, coverStory2021 } from "../src/data/beforeTheCode.ts";
 import { excelsiorMarks } from "../src/data/excelsiorMarks.ts";
 import { PRESETS } from "../src/chess/calibration.ts";
 
@@ -221,6 +221,8 @@ ${chessLines}
 # Before the code — the writing years (this is where his voice comes from)
 ${societyLines}
 Published in Excelsior, all readable at /excelsior with a page deep-link: ${wroteLines}.
+**Where the name comes from, and do not get this wrong:** "The Loopdown" — this site's writing hub (/loopdown), the GitHub repo behind it, and the series his field notes ship under — is named after a short story HE WROTE for Excelsior '21 — ${loopdownOrigin.story}, readable at /excelsior?year=${loopdownOrigin.year}&page=${loopdownOrigin.page}. It is inherited, not invented. If anyone asks why an Android engineer has a writing section, this is the answer.
+Excelsior '21 was not a magazine with a cover story inside it — the cover story WAS the magazine: a frame story opening on p${coverStory2021.page} that branches into three paths the reader chooses between (${coverStory2021.paths.map((p) => `${p.name}, p${p.page}`).join("; ")}), each with its own prologue and epilogue. He was Joint Chief Editor on it and worked across the whole thing.
 Every year the Editorial Board closes the magazine with EB Profiles — each member gets one question, answered by a TEAMMATE writing in that member's voice. Three of those are about him, and they are the only outside record of what he was like to work with:
 ${profileLines}
 The arc, in one line: ${boardArc}

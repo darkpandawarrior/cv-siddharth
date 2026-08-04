@@ -21,6 +21,20 @@ export interface ExcelsiorMark {
 export const excelsiorMarks: ExcelsiorMark[] = [
   // --- Pieces I wrote ---
   {
+    year: "2021",
+    page: 44,
+    label: "The Loopdown",
+    note: "Excelsior '21, on the Rebel path — 52 iterations of the same Wednesday. This site's writing hub is named after it.",
+    kind: "wrote",
+  },
+  {
+    year: "2021",
+    page: 24,
+    label: "Cover Prologue",
+    note: "The frame for the whole of Excelsior '21: Mr. Talesman sends you down one of three paths — Compliant (p25), Rebel (p39) or Explorer (p53), each with its own prologue and epilogue.",
+    kind: "wrote",
+  },
+  {
     year: "2020",
     page: 36,
     label: "CTC: Cost to Company",
