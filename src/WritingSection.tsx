@@ -4,6 +4,7 @@ import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { ExcelsiorShelf } from "./Excelsior.tsx";
+import { boardProfiles, boardArc, societies } from "./data/beforeTheCode.ts";
 import {
   BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
@@ -206,6 +207,79 @@ export function WritingSection() {
             </p>
             <div className="mt-8">
               <ExcelsiorShelf />
+            </div>
+
+            {/* The part a CV cannot carry. Every year the board closes the
+                magazine with EB Profiles: each member gets a question, and a
+                teammate answers it in that member's voice. Three years of
+                those are the only outside record of what I was actually like
+                to work with — so they run verbatim, credited to the board,
+                not paraphrased into something flattering. */}
+            <div className="mt-12 border-t border-line pt-8">
+              <div className="meta-row">
+                <span className="font-display text-base font-bold tracking-tight">How the board wrote me</span>
+                <span className="meta-row-tag">[&nbsp;EB Profiles · in my voice, by them&nbsp;]</span>
+              </div>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                Each year every board member gets one question, answered by a teammate impersonating
+                them. Affectionate, accurate, and not written by me — which is the only reason
+                they're worth reading.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {boardProfiles.map((p) => (
+                  <Link
+                    key={p.year}
+                    to="/excelsior"
+                    search={{ year: Number(p.year), page: p.page }}
+                    className="card-elevated group flex flex-col rounded-2xl border border-line bg-surface p-5 transition hover:border-accent2/50"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
+                      <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
+                    </div>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{p.role}</p>
+                    <p className="mt-3 text-xs italic text-zinc-500">Q: {p.question}</p>
+                    <blockquote className="mt-2 grow text-sm leading-relaxed text-zinc-300">"{p.quote}"</blockquote>
+                    <p className="mt-3 font-mono text-[11px] text-muted">
+                      ~「{p.direction}」~{p.gloss ? ` · ${p.gloss}` : ""}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-6 max-w-3xl text-sm leading-relaxed text-zinc-400">{boardArc}</p>
+            </div>
+
+            {/* The two societies, and what they published. */}
+            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+              {societies.map((s) => (
+                <div key={s.name} className="rounded-2xl border border-line bg-surface p-5">
+                  <div className="meta-row">
+                    <span className="font-display text-sm font-bold">{s.name}</span>
+                    <span className="meta-row-tag">[&nbsp;{s.years}&nbsp;]</span>
+                  </div>
+                  <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-accent/80">{s.role}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-400">{s.blurb}</p>
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+                    {s.links.map((l) =>
+                      l.url.startsWith("/") ? (
+                        <Link key={l.url} to={l.url} className="text-xs font-semibold text-accent transition hover:text-accent-dim">
+                          {l.label} →
+                        </Link>
+                      ) : (
+                        <a
+                          key={l.url}
+                          href={l.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-zinc-400 transition hover:text-accent2"
+                        >
+                          {l.label} ↗
+                        </a>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </Reveal>

@@ -78,12 +78,14 @@ function ExcelsiorRoute() {
               replace
               title={m.note}
               className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
-                m.mine
+                m.kind === "wrote"
                   ? "border-accent/40 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
-                  : "border-line text-zinc-300 hover:border-accent2/50 hover:text-accent2"
+                  : m.kind === "about"
+                    ? "border-accent2/35 bg-accent2/5 text-accent2 hover:border-accent2 hover:bg-accent2/10"
+                    : "border-line text-zinc-300 hover:border-accent hover:text-accent"
               }`}
             >
-              {m.mine && <span aria-hidden>✎</span>}
+              <span aria-hidden>{m.kind === "wrote" ? "✎" : m.kind === "about" ? "❝" : "✦"}</span>
               {m.label}
               <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
             </Link>
