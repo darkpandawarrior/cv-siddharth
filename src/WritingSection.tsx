@@ -200,9 +200,9 @@ export function WritingSection() {
               <span className="meta-row-tag">[&nbsp;print · 2019–21&nbsp;]</span>
             </div>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              Three years on the Editorial Board at NIT Bhopal, and Joint Chief Editor on the 2021
-              edition — 128 pages ideated, edited and shipped entirely remotely through the pandemic.
-              Hover a cover to open it.
+              Three years on the Editorial Board at NIT Bhopal — English Editor on the 2019 and 2020
+              editions, Joint Chief Editor on 2021. That last one was 128 pages ideated, edited and
+              shipped entirely remotely, through the pandemic. Hover a cover to open it.
             </p>
             <div className="mt-8">
               <ExcelsiorShelf />

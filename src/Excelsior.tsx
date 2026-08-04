@@ -42,7 +42,7 @@ const EXCELSIOR: Edition[] = [
   },
   {
     year: "2020",
-    role: "Editorial Board",
+    role: "English Editor",
     pages: 0,
     cover: "/excelsior/cover-2020.jpg",
     flipbook: "https://flip.manit.ac.in/",
@@ -50,7 +50,7 @@ const EXCELSIOR: Edition[] = [
   },
   {
     year: "2019",
-    role: "Editorial Board",
+    role: "English Editor",
     pages: 0,
     cover: "/excelsior/cover-2019.jpg",
     flipbook: "https://flip.manit.ac.in/",
