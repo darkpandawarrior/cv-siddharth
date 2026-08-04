@@ -1277,21 +1277,9 @@ function ChessTeaser() {
 }
 
 export function HomePage() {
-  const navigate = useNavigate();
-  // Backtick summons the terminal from anywhere — unless you're typing in a
-  // field (including the terminal's own input, so ` types normally there).
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
-      e.preventDefault();
-      navigate({ to: "/terminal" });
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
-
+  // The backtick-summons-the-terminal listener used to live here, which meant
+  // it only existed on `/` — while two separate copy strings promised it worked
+  // "from anywhere". It now lives in routes/__root.tsx, so the promise is true.
   return (
     <div className="min-h-screen">
       <AmbientBackground />

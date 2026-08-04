@@ -17,7 +17,6 @@
   --color-accent2-dim: #2fb8d6;
   /* Deeper space-ink ground with a hint of blue, used behind the OS workspace */
   --color-void: #05070a;
-  --color-void-deep: #020304;
   /* Glass surfaces (backdrop-blur panels — windows, dock, palette) */
   --color-glass: rgba(17, 22, 25, 0.66);
   --color-glass-border: rgba(93, 230, 255, 0.14);

@@ -157,6 +157,35 @@ const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "com
 // true when a section is added.
 const SECTION_ANCHORS = SECTION_IDS;
 
+/**
+ * Backtick summons the terminal — from anywhere, which is what the copy on the
+ * Playground and in the terminal's own hint has always claimed.
+ *
+ * It used to be a useEffect inside HomePage(), so it worked on `/` and nowhere
+ * else: 15 of the 17 routes silently didn't have it. Mounted here it is true on
+ * every route, and it costs one keydown listener.
+ *
+ * Ignores typing contexts (including the terminal's own input, so ` types
+ * normally there) and any modified press, so ⌥` and friends still reach the OS.
+ */
+function TerminalHotkey() {
+  const router = useRouter();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      // Already there — let the key through rather than re-navigating.
+      if (router.state.location.pathname === "/terminal") return;
+      e.preventDefault();
+      router.navigate({ to: "/terminal" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+  return null;
+}
+
 function HashCompat() {
   const router = useRouter();
   useEffect(() => {
@@ -227,6 +256,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         </a>
         <HashCompat />
         <RegisterServiceWorker />
+        <TerminalHotkey />
         {children}
         <SpeedInsights />
         <Scripts />

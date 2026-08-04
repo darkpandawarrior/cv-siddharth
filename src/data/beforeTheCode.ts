@@ -1,3 +1,5 @@
+import { excelsiorMarks } from "./excelsiorMarks.ts";
+
 /**
  * Before the code — the two MANIT societies, what I published in them, and the
  * three profiles the board wrote *about* me.
@@ -112,9 +114,14 @@ export const boardProfiles: BoardProfile[] = [
  * A blog named after a magazine piece is the whole throughline in one word,
  * which is exactly why it is stated here rather than left for someone to spot.
  */
+const loopdownMark = excelsiorMarks.find((m) => m.year === "2021" && m.label === "The Loopdown");
+
 export const loopdownOrigin = {
-  year: "2021",
-  page: 44,
+  // Derived, not restated. The year and page were hardcoded here AND in
+  // excelsiorMarks.ts — the same two facts in two files, written an hour apart.
+  // Re-rendering the PDFs shifts pagination, and only one of them would move.
+  year: loopdownMark?.year ?? "2021",
+  page: loopdownMark?.page ?? 44,
   /** The story itself. Kept separate from the naming claim so callers that
    *  have already said "the hub is named after it" don't say it twice. */
   story: "on the Rebel path, tagged REPETITION: a week that refuses to end, 52 iterations of the same Wednesday",
