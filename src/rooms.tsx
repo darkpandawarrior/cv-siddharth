@@ -67,7 +67,8 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
   // The room after this one, wrapping at the end. Derived from the same
   // `siteRooms` order the hub and the assistant's prompt both read, so the
   // three can never disagree about what follows what.
-  const here = ROOMS.findIndex((r) => r.to === useRouterState({ select: (s) => s.location.pathname }));
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const here = ROOMS.findIndex((r) => r.to === pathname);
   const next = here === -1 ? null : ROOMS[(here + 1) % ROOMS.length];
   return (
     <div className="flex min-h-screen flex-col bg-void">
