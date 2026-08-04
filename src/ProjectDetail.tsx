@@ -290,23 +290,42 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
             <ArrowLeft size={16} /> All projects
           </button>
-          <p className="rise-in mt-8 text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
-          {/* Shared-element morph target: the home projects-grid card title of
-              the same `project-title-<slug>` name lifts into this hero heading
-              on card→detail navigation (View Transitions). rise-in stays for
-              direct loads, where no morph occurs. */}
-          <h1
-            className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight"
-            style={{ viewTransitionName: `project-title-${slug}` }}
-          >
-            {project.name}
-          </h1>
-          <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
-          <p className="rise-in rise-in-2 mt-4 max-w-3xl text-lg text-accent">{project.tagline}</p>
-          <p className="rise-in rise-in-2 mt-4 max-w-3xl leading-relaxed text-zinc-300">
-            {d?.overview ?? project.description}
-          </p>
-          <div className="rise-in rise-in-3 mt-5 flex flex-wrap gap-2">
+          {/* Case-study triptych: the name and what it is, the brief, and what
+              actually shipped — three columns you can read in any order. It
+              replaced a single stacked run of paragraphs, which made every
+              project read like the same block of text at a glance. */}
+          <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.75fr)] lg:gap-12">
+            <div>
+              <p className="rise-in text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
+              {/* Shared-element morph target: the home projects-grid card title of
+                  the same `project-title-<slug>` name lifts into this hero heading
+                  on card→detail navigation (View Transitions). rise-in stays for
+                  direct loads, where no morph occurs. */}
+              <h1
+                className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight text-balance"
+                style={{ viewTransitionName: `project-title-${slug}` }}
+              >
+                {project.name}
+              </h1>
+              <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
+              <p className="rise-in rise-in-2 mt-4 text-lg text-accent">{project.tagline}</p>
+            </div>
+            <div className="rise-in rise-in-2">
+              <p className="brief-label">The brief</p>
+              <p className="mt-3 leading-relaxed text-zinc-300">{d?.overview ?? project.description}</p>
+            </div>
+            {project.highlights.length > 0 && (
+              <div className="rise-in rise-in-3">
+                <p className="brief-label">What shipped</p>
+                <ul className="mt-3 space-y-2.5 text-sm leading-snug text-zinc-300">
+                  {project.highlights.map((h) => (
+                    <li key={h}>{h}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-2">
             {project.stack.map((s) => (
               <span key={s} className="rounded-full border border-accent/25 bg-accent/5 px-2.5 py-0.5 text-xs text-accent/90">
                 {s}

@@ -796,6 +796,284 @@ html.resume-mode body {
   }
 }
 
+/* --- Editorial scroll spine ---------------------------------------------
+   Chapter markers, filing rows, brief labels and the closing CTA. Absorbed
+   from smit.fyi's editorial pacing; rebuilt for the dark system — where that
+   site slams a solid black word across a white page, this uses a "ghost" word
+   (near-ink fill + hairline accent stroke) so it marks the chapter without
+   blowing out a dark ground.
+
+   All the motion here is CSS-native scroll-driven animation. No listener, no
+   rAF, nothing on the scroll path; unsupported browsers get the static
+   composition, which is still a correct layout. */
+
+.chapter-word-wrap {
+  /* Full-bleed out of whatever max-w container it sits in. html already has
+     overflow-x:hidden, so the overhang never produces a page scrollbar. */
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  overflow: hidden;
+  padding-block: clamp(1.5rem, 4vw, 3.5rem);
+  pointer-events: none;
+  user-select: none;
+}
+
+.chapter-word {
+  display: block;
+  width: 112%; /* wider than the wrap, so the drift never exposes a bare edge */
+  margin-left: -6%;
+  height: auto;
+  /* Fades at both edges so the word reads as a passing marquee rather than as
+     text someone forgot to fit. */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+.chapter-word text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 118px; /* in viewBox units — the SVG scales it to the container */
+  text-transform: uppercase;
+  fill: var(--color-surface);
+  stroke: rgba(61, 220, 132, 0.22);
+  stroke-width: 1;
+  paint-order: stroke fill;
+}
+
+/* Parallax drift: the word slides against the scroll across its own view
+   window. `view()` ties the timeline to the element's trip through the
+   viewport — entry to exit — with no JS. */
+@supports (animation-timeline: view()) {
+  .chapter-word {
+    animation: chapter-drift linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+}
+@keyframes chapter-drift {
+  from {
+    transform: translate3d(5%, 0, 0);
+  }
+  to {
+    transform: translate3d(-5%, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter-word {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Title row: name left, bracketed category right, hairline under. */
+.meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 0.625rem;
+}
+.meta-row-tag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+.meta-row:hover .meta-row-tag {
+  color: var(--color-accent);
+}
+
+/* Small caps-ish label above a brief / deliverables column. */
+.brief-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* The closing ask, sized like it matters. Accent wipes in from the left on
+   hover; the arrow leads and the fill follows. */
+.giant-cta {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  padding: clamp(1rem, 3vw, 2rem) clamp(1.5rem, 5vw, 3.5rem);
+  text-align: left;
+  transition: border-color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta:hover {
+  border-color: var(--color-accent);
+}
+.giant-cta-label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 7vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta-arrow {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  font-size: clamp(1.5rem, 5vw, 3.5rem);
+  line-height: 1;
+  transition: transform var(--dur-base) var(--ease-out-expo), color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta:hover .giant-cta-arrow {
+  transform: translateX(0.35em);
+}
+/* The wipe. scaleX from the left edge keeps it one composited transform
+   instead of animating width. */
+.giant-cta-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(100deg, var(--color-accent) 0%, #a7f3c8 55%, var(--color-accent2) 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.giant-cta:hover .giant-cta-fill,
+.giant-cta:focus-visible .giant-cta-fill {
+  transform: scaleX(1);
+}
+.giant-cta:hover .giant-cta-label,
+.giant-cta:hover .giant-cta-arrow,
+.giant-cta:focus-visible .giant-cta-label,
+.giant-cta:focus-visible .giant-cta-arrow {
+  color: var(--color-ink);
+}
+.giant-cta-sub {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .giant-cta-fill,
+  .giant-cta-arrow {
+    transition: none;
+  }
+}
+
+/* --- Excelsior shelf -----------------------------------------------------
+   A magazine credit rendered as a magazine. The cover swings on its spine
+   (rotateY about the left edge, inside a perspective) to reveal the spread
+   behind it, and the book lifts off the shelf as it opens. Pure CSS 3D — the
+   only JS is the lightbox. */
+
+.magazine-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  /* The shared vanishing point: one perspective on the row, not per-card, so
+     the three books read as sitting on the same shelf rather than each in its
+     own private box. */
+  perspective: 1600px;
+  perspective-origin: 50% 40%;
+}
+
+.magazine {
+  width: clamp(7.5rem, 18vw, 10rem);
+}
+
+.magazine-book {
+  position: relative;
+  aspect-ratio: 298 / 421;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.magazine:hover .magazine-book,
+.magazine:focus-within .magazine-book {
+  transform: translateY(-6px) rotateY(-6deg);
+}
+
+/* The page behind the cover. */
+.magazine-inside {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  border: 1px solid var(--color-line);
+  background-color: #f4f4f2;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.magazine-cover {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px 4px 4px 2px;
+  transform-origin: left center;
+  transform: rotateY(0deg);
+  box-shadow: var(--shadow-elevation-2);
+  transition: transform 0.75s var(--ease-out-expo), box-shadow var(--dur-slow) var(--ease-out-quart);
+  /* The spine: a darker strip down the binding edge, the cheapest cue that
+     this is a bound object and not a rectangle with a picture in it. */
+  border-left: 3px solid rgba(0, 0, 0, 0.45);
+  backface-visibility: hidden;
+}
+.magazine:hover .magazine-cover,
+.magazine:focus-within .magazine-cover {
+  transform: rotateY(-118deg);
+  box-shadow: var(--shadow-elevation-3);
+}
+
+.magazine-caption {
+  margin-top: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.magazine-action {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+.magazine-action:hover {
+  color: var(--color-accent2);
+}
+
+/* Reduced motion: the books stay shut. The lightbox still opens the spread,
+   so nothing is only reachable through the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .magazine-book,
+  .magazine-cover {
+    transition: none;
+  }
+  .magazine:hover .magazine-book,
+  .magazine:focus-within .magazine-book,
+  .magazine:hover .magazine-cover,
+  .magazine:focus-within .magazine-cover {
+    transform: none;
+  }
+}
+
 /* Skills: tag-cloud chips with hover depth */
 .tag-chip {
   transition: transform var(--dur-fast) var(--ease-out-quart), opacity var(--dur-base) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), color var(--dur-fast) var(--ease-out-quart), background-color var(--dur-fast) var(--ease-out-quart);

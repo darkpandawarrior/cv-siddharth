@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Mail,
   MapPin,
   ArrowUpRight,
   MessageCircle,
@@ -31,6 +30,7 @@ import { ScrollBot } from "./ScrollBot.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
+import { ChapterWord, GiantCTA } from "./Editorial.tsx";
 import { WritingSection } from "./WritingSection.tsx";
 import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
@@ -223,6 +223,47 @@ function MobileMenu() {
   );
 }
 
+/**
+ * Nav telemetry — where I am and what time it is there, ticking. A portfolio
+ * that shows a live local clock reads as a place someone actually is, not a
+ * document that was uploaded once. Mono, muted, IST-pinned (the clock is *my*
+ * time, not the viewer's — that's the whole point of showing it).
+ */
+function NavClock({ className = "" }: { className?: string }) {
+  // `null` until mounted, deliberately: this renders under SSR, and a clock
+  // read on the server is milliseconds off the one read on the client, which
+  // React reports as a hydration mismatch. Server and first client render both
+  // emit nothing, then the effect fills it in.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    // Tick on the minute boundary, not every second: nothing here shows
+    // seconds, so a 1s interval would be 60x the wakeups for zero pixels.
+    let timer: number;
+    const schedule = () => {
+      timer = window.setTimeout(() => {
+        setNow(new Date());
+        schedule();
+      }, 60_000 - (Date.now() % 60_000));
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, []);
+  if (!now) return null;
+  const time = now.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return (
+    <span className={`items-center gap-2 font-mono text-[11px] tracking-wide text-muted ${className}`}>
+      <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" />
+      <time dateTime={now.toISOString()}>{time} IST</time>
+    </span>
+  );
+}
+
 function Nav() {
   const { progressRef, active } = useScrollSpy();
   const { goToSection } = useSectionNav();
@@ -263,7 +304,11 @@ function Nav() {
             <FileText size={13} /> Résumé
           </Link>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* 2xl only. The link row is already at capacity at xl (see the
+              max-w-6xl note above) — the clock is a grace note, not something
+              worth reflowing the bar for. The hero eyebrow carries it always. */}
+          <NavClock className="hidden 2xl:flex" />
           <MobileMenu />
           <CommandPalette />
           <button
@@ -288,8 +333,13 @@ function Hero() {
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
       <div>
-        <p className="hero-eyebrow rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
-          <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
+        <p className="hero-eyebrow rise-in mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+          <span className="flex items-center gap-2">
+            <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
+          </span>
+          {/* A live local clock — this is a place someone is, right now, not a
+              document that got uploaded once. */}
+          <NavClock className="flex" />
         </p>
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
@@ -486,6 +536,7 @@ function CaseStudies() {
   const [featured, ...rest] = caseStudies;
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
+      <ChapterWord>Case studies</ChapterWord>
       <Reveal>
         <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
@@ -603,6 +654,7 @@ function Projects() {
   return (
     <section id="projects" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
+        <ChapterWord>Things I've built</ChapterWord>
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
@@ -646,7 +698,10 @@ function Projects() {
                     </div>
                   )}
                   <div className="flex grow flex-col p-6">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  {/* Filing row: name left, bracketed status right, hairline
+                      under. The bracket makes the grid read as an index rather
+                      than a stack of loose cards. */}
+                  <div className="meta-row flex-wrap gap-y-1">
                     {/* Shared-element morph: this title lifts into the /project/$slug
                         hero <h1> of the same name. Keyed by slug so each card morphs
                         to its own detail; unique across the grid (only grid cards
@@ -658,9 +713,9 @@ function Projects() {
                     >
                       {p.name}
                     </h3>
-                    <span className="shrink-0 text-xs text-muted">{p.status}</span>
+                    <span className="meta-row-tag">[&nbsp;{p.status}&nbsp;]</span>
                   </div>
-                  <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
+                  <p className="mt-3 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
                     <p className="mt-2 font-mono text-[11px] text-muted">
                       <span className="text-accent2">◇</span> {statLine}
@@ -828,6 +883,7 @@ function ExperienceSection() {
   return (
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
+        <ChapterWord>Experience</ChapterWord>
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
@@ -1052,13 +1108,12 @@ function Contact() {
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
           Ask my AI assistant anything about my work, or reach out directly — I reply fast.
         </p>
+        {/* The ask, sized like it matters. Everything below it is a secondary
+            route to the same person — so it gets the weight, and they get a row. */}
+        <div className="mt-8">
+          <GiantCTA label="Let's talk" href={`mailto:${profile.email}`} sub={profile.email} />
+        </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href={`mailto:${profile.email}`}
-            className="card-elevated flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
-          >
-            <Mail size={16} /> {profile.email}
-          </a>
           <CopyEmail />
           <Link
             to="/resume"
