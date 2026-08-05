@@ -83,6 +83,10 @@ export const experience: Experience[] = [
         text: "Technical owner of the Android platform: a ~960k-LOC Kotlin app serving 50,000+ MAU. Set the module architecture, the release process and the review standards the team builds against.",
       },
       {
+        label: "Scope",
+        text: "Product Owner as well as engineer on the same platform — here the requirements and the delivery are one job, not a handoff. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+      },
+      {
         label: "Compose Migration",
         text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, checked screen by screen against the XML it replaced so nothing regressed on the way.",
       },
