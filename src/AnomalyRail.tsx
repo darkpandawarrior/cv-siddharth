@@ -74,10 +74,28 @@ export default function AnomalyRail() {
       if (sweepT < 1) sweepT = Math.min(1, sweepT + dtMs / SWEEP_MS);
     };
 
+    // Ticks and deviations are pure geometry — they only change when the
+    // rail resizes, not every frame. Recomputing (and re-sorting, in
+    // deviationsFor) on every one of a continuous rAF loop's ~60 frames/sec
+    // was pure waste and, worse, real main-thread contention: this loop
+    // never stops (that's useCanvasLoop's design), so it was competing with
+    // everything else on the page — including a large native "smooth"
+    // scrollIntoView — for the whole time the rail is mounted, i.e. always.
+    // Cache both, keyed on the last height we drew at.
+    let cachedH = -1;
+    let cachedTicks: number[] = [];
+    let cachedDeviations = deviationsFor(facets, 0, DEVIATION_PAD);
+
     const draw = () => {
       const { width, height: h } = getSize();
       ctx.clearRect(0, 0, width, h);
       if (h <= 0) return;
+
+      if (h !== cachedH) {
+        cachedH = h;
+        cachedTicks = baselineTicks(h, TICK_SPACING);
+        cachedDeviations = deviationsFor(facets, h, DEVIATION_PAD);
+      }
 
       // Read tokens at runtime (not hardcoded hex) so a palette change
       // propagates. document.documentElement, not any scoped override —
@@ -87,16 +105,18 @@ export default function AnomalyRail() {
       const accent2 = tokens.getPropertyValue("--color-accent2").trim();
       const cx = width / 2;
 
-      // Baseline: a faint repeating tick scale — the thing deviations are measured against.
+      // Baseline: a faint repeating tick scale — the thing deviations are
+      // measured against. One path for every tick (not one stroke() call
+      // per tick) — same pixels, a fraction of the draw calls.
       ctx.strokeStyle = accent2;
       ctx.lineWidth = 1;
       ctx.globalAlpha = 0.3;
-      for (const y of baselineTicks(h, TICK_SPACING)) {
-        ctx.beginPath();
+      ctx.beginPath();
+      for (const y of cachedTicks) {
         ctx.moveTo(cx - 4, y + 0.5);
         ctx.lineTo(cx + 4, y + 0.5);
-        ctx.stroke();
       }
+      ctx.stroke();
       ctx.globalAlpha = 1;
 
       // One-time sweep hint: a soft band travels the baseline once, first visit only.
@@ -114,7 +134,7 @@ export default function AnomalyRail() {
 
       // Deviations: the measured signal, one per facet, laid out by chronology.
       const hovered = hoveredRef.current;
-      for (const d of deviationsFor(facets, h, DEVIATION_PAD)) {
+      for (const d of cachedDeviations) {
         const isHovered = d.id === hovered;
         ctx.beginPath();
         ctx.arc(cx, d.y, isHovered ? 4.5 : 3, 0, Math.PI * 2);
