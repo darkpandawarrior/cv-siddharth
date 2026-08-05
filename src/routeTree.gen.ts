@@ -26,6 +26,7 @@ import { Route as PulseRouteImport } from './routes/pulse'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as ProjectSlugRouteImport } from './routes/project.$slug'
+import { Route as ReadSlugRouteImport } from './routes/read.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const ProjectSlugRoute = ProjectSlugRouteImport.update({
   path: '/project/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReadSlugRoute = ReadSlugRouteImport.update({
+  id: '/read/$slug',
+  path: '/read/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof ResumeRoute
   '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
+  '/read/$slug': typeof ReadSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/resume': typeof ResumeRoute
   '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
+  '/read/$slug': typeof ReadSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/resume': typeof ResumeRoute
   '/terminal': typeof TerminalRoute
   '/project/$slug': typeof ProjectSlugRoute
+  '/read/$slug': typeof ReadSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/terminal'
     | '/project/$slug'
+    | '/read/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/terminal'
     | '/project/$slug'
+    | '/read/$slug'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/terminal'
     | '/project/$slug'
+    | '/read/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   ResumeRoute: typeof ResumeRoute
   TerminalRoute: typeof TerminalRoute
   ProjectSlugRoute: typeof ProjectSlugRoute
+  ReadSlugRoute: typeof ReadSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/read/$slug': {
+      id: '/read/$slug'
+      path: '/read/$slug'
+      fullPath: '/read/$slug'
+      preLoaderRoute: typeof ReadSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResumeRoute: ResumeRoute,
   TerminalRoute: TerminalRoute,
   ProjectSlugRoute: ProjectSlugRoute,
+  ReadSlugRoute: ReadSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

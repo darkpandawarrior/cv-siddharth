@@ -16,6 +16,9 @@ export interface ExcelsiorMark {
   note: string;
   /** "wrote" = my piece · "about" = written about me · "credit" = masthead. */
   kind: "wrote" | "about" | "credit";
+  /** For pieces he wrote: the slug of the readable version at /read/<slug>.
+   *  The magazine page is the artefact; this is where you actually read it. */
+  readSlug?: string;
 }
 
 export const excelsiorMarks: ExcelsiorMark[] = [
@@ -24,6 +27,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2021",
     page: 44,
     label: "The Loopdown",
+    readSlug: "the-loopdown-story",
     note: "Excelsior '21, on the Rebel path — 52 iterations of the same Wednesday. This site's writing hub is named after it.",
     kind: "wrote",
   },
@@ -38,6 +42,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2020",
     page: 36,
     label: "CTC: Cost to Company",
+    readSlug: "ctc-cost-to-company",
     note: "Cover story, Excelsior '20 — a 2069 climate dystopia where salary is paid in days of drinkable water. Printed p34.",
     kind: "wrote",
   },
@@ -45,6 +50,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2020",
     page: 39,
     label: "Prophecy #201112003",
+    readSlug: "prophecy-201112003",
     note: "Cover story, Excelsior '20 — a sentient banyan hands a fresher his prophecy. Printed p37.",
     kind: "wrote",
   },
@@ -52,6 +58,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2019",
     page: 65,
     label: "Deadline",
+    readSlug: "deadline",
     note: "Excelsior '19 — Death turns up in a t-shirt and gives you six months. A memento mori in a Deadpool costume.",
     kind: "wrote",
   },
@@ -59,6 +66,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2019",
     page: 48,
     label: "Pointer Games",
+    readSlug: "pointer-games",
     note: "Excelsior '19 — Episode 1: \"Nidra\" Thama. Campus lore as a serialised thriller.",
     kind: "wrote",
   },

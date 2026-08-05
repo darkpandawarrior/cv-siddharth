@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { profile } from "./data/profile.ts";
+import { elsewhere } from "./data/elsewhere.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
@@ -59,9 +60,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
   {
     title: "Elsewhere",
+    // Derived from src/data/elsewhere.ts so the footer, the /elsewhere index and
+    // anything else that lists his presences can never drift apart. A web sweep
+    // found four profiles the site had never linked — Stack Overflow, X, the
+    // Dice org chart, and the Editorial Board's own site.
     links: [
-      { label: "GitHub", kind: "external", href: profile.github },
-      { label: "LinkedIn", kind: "external", href: profile.linkedin },
+      ...elsewhere.map((e) => ({ label: e.label, kind: "external" as const, href: e.url })),
       { label: "Email", kind: "external", href: `mailto:${profile.email}` },
     ],
   },

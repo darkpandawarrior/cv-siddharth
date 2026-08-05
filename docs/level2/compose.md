@@ -275,7 +275,7 @@ Add one entry to `PRESETS` that's intentionally malformed:
 },
 ```
 
-Paired with change #3, tapping this chip now produces a real, specific `Line 4, col 1: Expected "}" near "end of code"` — a visitor can then delete the trailing `}` on purpose, watch the error appear live, retype it, watch it resolve. That loop (break it, see exactly what broke, fix it, watch it recover) is a more convincing "this is a real parser" demonstration than any amount of about-this-project copy, and it costs one preset entry.
+Paired with change #4, tapping this chip now produces a real, specific `Line 4, col 1: Expected "}" near "end of code"` — a visitor can then delete the trailing `}` on purpose, watch the error appear live, retype it, watch it resolve. That loop (break it, see exactly what broke, fix it, watch it recover) is a more convincing "this is a real parser" demonstration than any amount of about-this-project copy, and it costs one preset entry.
 
 `→ skipped: multiple broken presets covering every error class. One is enough to teach the affordance exists; the visitor's own typos supply the rest.`
 
@@ -299,8 +299,9 @@ Line 866's `<p>` with `title={SUPPORTED}` is dead to touch users and low-signal 
 ## A11y + reduced-motion + SSR notes
 
 - **SSR:** No change to the SSR posture. `src/routes/compose.tsx` already sets `ssr: false` and lazy-loads `ComposePlayground`; every addition above (`window.location`, `navigator.clipboard`) only ever executes after that client-only mount, same guarantee the file already leans on for `hapticTap`/`MOTION_OK`. Nothing here runs at module scope — the `useState` lazy initializer for `code` still only runs on first client render.
-- **Reduced motion:** The preview/AST tab switch (#2) is a state swap with no transition by default — add `transition: MOTION_OK ? "opacity 0.2s ease" : undefined` on the swapped container if a crossfade is wanted, but a hard swap is also correct and needs no gate at all. Nothing else here introduces new motion.
-- **Axe / a11y surface:** #3's `role="alert" aria-live="assertive"` on the error panel and `aria-describedby` on the textarea are net-new correctness, not just decoration — closes a real gap (silent-to-screen-reader parse failures). #5's `<details>` is a straight a11y upgrade over the current `title`-only truncation. The new Share/tab-toggle buttons need the same `aria-label`/`aria-pressed` discipline already used elsewhere in this file (see the existing Reset button for the pattern) — spelled out inline above.
+- **Reduced motion:** The preview/AST tab switch (#3) is a state swap with no transition by default — add `transition: MOTION_OK ? "opacity 0.2s ease" : undefined` on the swapped container if a crossfade is wanted, but a hard swap is also correct and needs no gate at all. Nothing else here introduces new motion, including the CAL-1 chrome swap (#5) — it's a static color/gradient change, no animation involved.
+- **Axe / a11y surface:** #4's `role="alert" aria-live="assertive"` on the error panel and `aria-describedby` on the textarea are net-new correctness, not just decoration — closes a real gap (silent-to-screen-reader parse failures). #7's `<details>` is a straight a11y upgrade over the current `title`-only truncation. The command palette (#1) brings its own existing a11y (it's already shipping correctly on every `RoomFrame` route). The new Share/tab-toggle buttons need the same `aria-label`/`aria-pressed` discipline already used elsewhere in this file (see the existing Reset button for the pattern) — spelled out inline above.
+- **Contrast:** `#f2a13d` for the default button fill (#5) is already verified at 9.24:1 on the ink background per the `index.css` comment where the token is defined — reusing the same hex inherits that, no new contrast check needed.
 - **Giant decorative type:** N/A — nothing here adds large DOM text; the AST view is monospace body-sized `<pre>`, not decorative.
 
 ## What NOT to do
@@ -310,3 +311,10 @@ Line 866's `<p>` with `title={SUPPORTED}` is dead to touch users and low-signal 
 - **Do not add a code-editing library** (CodeMirror/Monaco) to get squiggly-underline errors or syntax highlighting. It's a new dependency for a feature the line-number-gutter highlight already covers at acceptable fidelity, and it would balloon the lazy-loaded chunk this route exists specifically to keep small (see the route comment in `src/routes/compose.tsx`).
 - **Do not rename or restructure `PRESETS`** into categories/tabs. Seven (soon eight) flat chips is still scannable; a taxonomy is solving a problem that doesn't exist yet.
 - **Do not explain the AI-generation grammar constraint in visitor-facing copy** ("the AI can only use a limited subset..."). It's already honestly documented in code comments for the engineer who reads source; the visitor-facing proof is the parse-tree view and the Break-it preset doing the explaining structurally, not a paragraph.
+- **Do not touch `NAMED_COLORS`'s Kotlin-semantic entries for CAL-1.** `Color.Green` rendering as
+  anything other than green to match a site theme is a fidelity regression, not a visual upgrade —
+  see item #5. CAL-1 governs the playground's own UI chrome; it has no claim on what a real Compose
+  color constant means.
+- **Do not build a full RoomFrame wrapper for `/compose`.** The route needs a different, full-height
+  split-pane layout than every other room — mounting `CommandPalette` directly (#1) gets the one
+  thing actually missing without forcing this route into a frame it structurally doesn't fit.

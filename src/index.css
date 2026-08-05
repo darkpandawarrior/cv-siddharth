@@ -1122,6 +1122,61 @@ html.resume-mode body {
   opacity: 0.65;
 }
 
+/* --- Long-form reading -----------------------------------------------------
+   Used by /read/$slug for the pieces that ran in Excelsior. Everything here is
+   in service of one thing: 2,000-3,000 words being comfortable to read. No
+   animation, no decoration — a reading page's most sophisticated move is to
+   get out of the way. */
+
+.piece-body {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #ded3c2;
+}
+.piece-body p {
+  margin-bottom: 1.35em;
+}
+/* Bare em-dash lines and scene breaks are load-bearing in his fiction — they
+   are how the time-loop pieces mark an iteration boundary. */
+.piece-body hr {
+  margin: 2.5rem auto;
+  width: 4rem;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+.piece-body h1,
+.piece-body h2,
+.piece-body h3 {
+  font-family: var(--font-display);
+  margin-top: 2.25em;
+  margin-bottom: 0.6em;
+  color: #efe7d8;
+  line-height: 1.25;
+}
+.piece-body h2 { font-size: 1.5rem; }
+.piece-body h3 { font-size: 1.2rem; }
+.piece-body em { color: #efe7d8; }
+.piece-body strong { color: #efe7d8; font-weight: 600; }
+.piece-body blockquote {
+  margin: 1.75em 0;
+  border-left: 2px solid var(--color-accent);
+  padding-left: 1.15rem;
+  font-style: italic;
+  color: #cfc3b2;
+}
+.piece-body ul,
+.piece-body ol {
+  margin: 0 0 1.35em 1.25rem;
+  list-style: disc;
+}
+.piece-body ol { list-style: decimal; }
+.piece-body li { margin-bottom: 0.4em; }
+.piece-body a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* --- Excelsior reader ----------------------------------------------------
    A magazine that actually turns. The leaf rotates about the spine with a
    front and a back face while the destination spread sits painted underneath,

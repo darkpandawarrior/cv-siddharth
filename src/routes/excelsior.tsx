@@ -43,8 +43,11 @@ function ExcelsiorRoute() {
     <div className="min-h-screen">
       <AmbientBackground />
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 py-8">
-        <Link to="/" hash="writing" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
-          <ArrowLeft size={16} /> Back to writing
+        {/* Was `to="/" hash="writing"` — which sent you to the homepage doorway,
+            not the world this page belongs to. The writing moved to /ink; the
+            back link did not follow it. */}
+        <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <ArrowLeft size={16} /> The Ink
         </Link>
 
         {/* Deliberately smaller than a landing-page hero: this is a reader, so
@@ -67,8 +70,31 @@ function ExcelsiorRoute() {
           </p>
         </div>
 
-        {/* Jump straight to the pages worth landing on. A 396-page magazine
-            with no entry points is an archive, not a portfolio piece. */}
+        {/* The pieces, as prose. This row comes FIRST because 396 page images
+            are the artefact, not the reading — the text is unselectable and
+            invisible to search, and on a phone it is unusable. Read it here,
+            then go look at the page it ran on. */}
+        <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">
+            Rather read it? The five I wrote, in full
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {excelsiorMarks
+              .filter((m) => m.readSlug)
+              .map((m) => (
+                <Link
+                  key={m.readSlug}
+                  to="/read/$slug"
+                  params={{ slug: m.readSlug! }}
+                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
+                >
+                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+                </Link>
+              ))}
+          </div>
+        </div>
+
+        {/* Jump to a page in the scan itself. */}
         <div className="mt-4 flex flex-wrap gap-2">
           {excelsiorMarks.map((m) => (
             <Link

@@ -12,6 +12,7 @@ import AxeBuilder from "@axe-core/playwright";
 const ROUTES = [
   "/",
   "/hire",
+  "/read/deadline",
   "/resume",
   "/project/mileway",
   "/lab",
