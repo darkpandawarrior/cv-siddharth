@@ -614,7 +614,18 @@ function CaseStudies() {
               <article className="card-elevated group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
-                  <span className="font-display select-none text-4xl font-black leading-none text-accent/10">
+                  {/* Ornamental index, deliberately at 10% accent (1.18:1) —
+                      it is texture, not content: the card already states its
+                      metric and title, and a screen reader announcing "02"
+                      adds nothing. aria-hidden is the honest declaration of
+                      that AND what stops axe judging it as unreadable text.
+                      It only ever escaped the gate because it sits below the
+                      fold, where the reveal animation left it invisible to
+                      the scan. */}
+                  <span
+                    aria-hidden="true"
+                    className="font-display select-none text-4xl font-black leading-none text-accent/10"
+                  >
                     {String(i + 2).padStart(2, "0")}
                   </span>
                 </div>

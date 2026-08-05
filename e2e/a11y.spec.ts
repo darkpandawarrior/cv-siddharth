@@ -25,6 +25,7 @@ const ROUTES = [
   "/pulse",
   "/loopdown",
   "/chess",
+  "/weeb",
 ];
 
 /* The reveal animations on the card grids fade in from transparent, and axe
@@ -46,7 +47,28 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
   animation-duration: 0s !important;
   animation-fill-mode: forwards !important;
   transition-duration: 0s !important;
-}`;
+}
+.reveal { opacity: 1 !important; transform: none !important; }`;
+
+/* Why that last rule exists.
+ *
+ * .reveal starts at opacity 0 and only gains .revealed when an
+ * IntersectionObserver fires. A test never scrolls, so every section below the
+ * fold stayed transparent — and axe either skipped it or, worse, computed
+ * contrast against a half-composited grey (#bcbcc0 on #909092 at 9px) and
+ * failed a pairing that exists in no stylesheet.
+ *
+ * That made the suite load-dependent: whichever routes lost the race against
+ * the fixed 1500ms wait below failed, and WHICH routes lost changed run to run.
+ * It stayed hidden while the suite was small and surfaced the moment an
+ * eighteenth route was added.
+ *
+ * Forcing the end state is both the deterministic fix and a stricter gate:
+ * below-the-fold content is now actually scanned instead of being invisible to
+ * axe, and it is the state a visitor who scrolls actually reads.
+ *
+ * (Kept OUTSIDE the template literal: a backtick in a comment inside a tagged
+ * template is parsed as JS, which silently yielded "No tests found".) */
 
 for (const path of ROUTES) {
   test(`${path} has no serious/critical axe violations`, async ({ page }) => {
