@@ -1828,6 +1828,95 @@ html.resume-mode body {
   border-radius: 4px;
 }
 
+/* The rail's expansion — same trace as the rail, full-bleed. Always mounted
+   (see InstrumentView's `inert` prop); this is what actually animates the
+   open/close. `visibility` is delayed on the closed transition only, so it
+   waits for the fade-out to finish before leaving the layout — and cut to 0s
+   on the open transition, so it's interactive the instant it starts fading
+   in rather than only once the fade completes. */
+.instrument-view {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--color-void) 97%, transparent);
+  backdrop-filter: blur(12px);
+  padding: clamp(2rem, 6vw, 4.5rem) clamp(1.25rem, 6vw, 5rem);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo), visibility 0s linear var(--dur-base);
+}
+.instrument-view-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo), visibility 0s linear 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .instrument-view,
+  .instrument-view-open {
+    transition: opacity 0s linear, visibility 0s linear;
+    transform: none;
+  }
+}
+
+.instrument-view-close {
+  align-self: flex-end;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  color: var(--color-muted);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
+}
+.instrument-view-close:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.instrument-view-list {
+  margin: auto 0;
+  padding: 2rem 0 0;
+  width: 100%;
+  max-width: 42rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.instrument-view-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.9rem 0.25rem;
+  border-bottom: 1px solid var(--color-line);
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out-quart);
+}
+.instrument-view-link:hover,
+.instrument-view-link:focus-visible {
+  border-color: var(--color-accent2);
+}
+.instrument-view-label {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  color: var(--color-accent);
+}
+.instrument-view-stamp {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
 /* The case-study cards' ghost index ("02", "03"…). Generated content, not a
    text node: it is decoration at 1.18:1 and axe's color-contrast rule walks
    text nodes only. aria-hidden does not exempt it — correctly, since text a

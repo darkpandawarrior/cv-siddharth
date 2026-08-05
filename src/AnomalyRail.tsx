@@ -4,6 +4,7 @@ import { facets } from "./data/facets";
 import { byChronology, dualStamp } from "./lib/facets";
 import { baselineTicks, deviationsFor, hitTest } from "./lib/railGeometry";
 import { useCanvasLoop } from "./labs/useCanvasLoop";
+import InstrumentView from "./InstrumentView";
 
 /**
  * The site's secondary nav: a live trace pinned to the left edge on every
@@ -14,6 +15,11 @@ import { useCanvasLoop } from "./labs/useCanvasLoop";
  * The canvas is pure decoration (aria-hidden) — every real interaction runs
  * through the plain <nav>/<a> underneath it, so deleting the canvas still
  * leaves a fully working, keyboard-reachable secondary nav.
+ *
+ * The rail also expands: dragging it rightwards, or pressing `\` from
+ * anywhere, opens InstrumentView (the same facets as a full trace). Both
+ * triggers funnel into the same `openInstrument`/`closeInstrument` pair so
+ * there's one place that knows focus comes back to the rail on close.
  */
 
 const TICK_SPACING = 16;
@@ -21,6 +27,10 @@ const DEVIATION_PAD = 32;
 const HOVER_TOLERANCE = 8;
 const SWEEP_MS = 1400;
 const SWEEP_SEEN_KEY = "sidos.rail.seen";
+// How far right a drag has to travel, from wherever it started on the
+// 24px-wide rail, before it counts as "open the instrument view" rather
+// than an incidental wobble.
+const DRAG_OPEN_THRESHOLD_PX = 40;
 
 // localStorage throws in private-mode Safari — the sweep hint is a nicety,
 // never worth crashing the rail over.
@@ -48,6 +58,7 @@ export default function AnomalyRail() {
   // A ref, not state — the rail already redraws every frame, so this doesn't
   // need to trigger a React render on top of that.
   const hoveredRef = useRef<string | null>(null);
+  const [instrumentOpen, setInstrumentOpen] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -56,6 +67,55 @@ export default function AnomalyRail() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // `\` opens the instrument view from anywhere on the site — same pattern
+  // as the terminal's backtick hotkey in __root.tsx: ignore modified presses
+  // (so e.g. ⌥\ still reaches the OS) and typing contexts (the terminal and
+  // the chat box both live on this site; stealing their keystroke is a bug).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "\\" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      setInstrumentOpen(true);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Focus returns to the rail itself (not "whatever was focused before" —
+  // that could be nothing, if the drag opened it) on close. tabIndex={-1}
+  // on the container makes it a valid programmatic focus target without
+  // adding a stop to the normal Tab order.
+  const closeInstrument = () => {
+    setInstrumentOpen(false);
+    containerRef.current?.focus();
+  };
+
+  // Drag-to-open: the rail is only 24px wide, so a rightward drag leaves its
+  // bounds almost immediately — window-level listeners (rather than
+  // relying on the rail to keep receiving pointermove) are what let the
+  // gesture keep tracking once the pointer's past the rail's own edge.
+  const onRailPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const pointerId = e.pointerId;
+    const startX = e.clientX;
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      if (ev.clientX - startX > DRAG_OPEN_THRESHOLD_PX) {
+        cleanup();
+        setInstrumentOpen(true);
+      }
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", cleanup);
+      window.removeEventListener("pointercancel", cleanup);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", cleanup);
+    window.addEventListener("pointercancel", cleanup);
+  };
 
   const deviations = deviationsFor(facets, height, DEVIATION_PAD);
   const yById = new Map(deviations.map((d) => [d.id, d.y]));
@@ -168,32 +228,37 @@ export default function AnomalyRail() {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="anomaly-rail"
-      onPointerMove={updateHover}
-      onPointerLeave={() => {
-        hoveredRef.current = null;
-      }}
-    >
-      <nav aria-label="Timeline" className="anomaly-rail-nav">
-        {orderedFacets.map((facet) => (
-          <a
-            key={facet.id}
-            href={facet.href}
-            className="anomaly-rail-link"
-            style={{ top: `${yById.get(facet.id) ?? 0}px` }}
-            aria-label={`${facet.label} — ${dualStamp(facet)}`}
-            onFocus={() => {
-              hoveredRef.current = facet.id;
-            }}
-            onBlur={() => {
-              hoveredRef.current = null;
-            }}
-          />
-        ))}
-      </nav>
-      <canvas ref={canvasRef} aria-hidden="true" className="anomaly-rail-canvas" />
-    </div>
+    <>
+      <div
+        ref={containerRef}
+        className="anomaly-rail"
+        tabIndex={-1}
+        onPointerDown={onRailPointerDown}
+        onPointerMove={updateHover}
+        onPointerLeave={() => {
+          hoveredRef.current = null;
+        }}
+      >
+        <nav aria-label="Timeline" className="anomaly-rail-nav">
+          {orderedFacets.map((facet) => (
+            <a
+              key={facet.id}
+              href={facet.href}
+              className="anomaly-rail-link"
+              style={{ top: `${yById.get(facet.id) ?? 0}px` }}
+              aria-label={`${facet.label} — ${dualStamp(facet)}`}
+              onFocus={() => {
+                hoveredRef.current = facet.id;
+              }}
+              onBlur={() => {
+                hoveredRef.current = null;
+              }}
+            />
+          ))}
+        </nav>
+        <canvas ref={canvasRef} aria-hidden="true" className="anomaly-rail-canvas" />
+      </div>
+      <InstrumentView open={instrumentOpen} onClose={closeInstrument} />
+    </>
   );
 }
