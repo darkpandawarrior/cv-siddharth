@@ -77,6 +77,23 @@ function ReadPiece() {
             {piece.words.toLocaleString()} words · about {Math.max(1, Math.round(piece.words / 220))} min
           </p>
 
+          {/* Two things a reader cannot otherwise know, and both are the
+              interesting part of the artefact. */}
+          {piece.printWords > 0 && (
+            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "#cfc3b2" }}>
+              This is the draft. Roughly {piece.printWords.toLocaleString()} words of it ran in the
+              magazine — about {Math.round((piece.printWords / piece.words) * 100)}% survived the page
+              count, so most of what follows has never been read by anyone.{" "}
+              <span style={{ color: "#a4978a" }}>(Print figure is approximate: counted from OCR of the scan.)</span>
+            </p>
+          )}
+          {piece.note === "First published here" && (
+            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "#cfc3b2" }}>
+              Never submitted anywhere, so it was never cut to fit a page — and never had an editor
+              either. This is the length it wanted to be.
+            </p>
+          )}
+
           {/* The provenance line. This is the whole reason not to have rebuilt
               the magazine as a scrolling microsite: you can read the prose here
               AND go see the page it was actually printed on. */}

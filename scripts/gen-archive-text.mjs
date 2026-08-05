@@ -25,7 +25,12 @@ const PRINTED = [
   { slug: "the-loopdown-story", year: "2021", page: 44, note: "Rebel path, tagged REPETITION" },
   { slug: "ctc-cost-to-company", year: "2020", page: 36, note: "Cover story" },
   { slug: "prophecy-201112003", year: "2020", page: 39, note: "Cover story" },
-  { slug: "deadline", year: "2019", page: 65 },
+  // The site text is the DRAFT. OCR of the printed pages 65-66 counts ~838
+  // words against 3,184 here — roughly a quarter of it survived the page
+  // count. So /read/deadline has been a director's cut all along; it just
+  // never said so. printWords is approximate because it comes from OCR of a
+  // scan, and it is stated as approximate on the page.
+  { slug: "deadline", year: "2019", page: 65, printWords: 838 },
   { slug: "pointer-games", year: "2019", page: 48, note: "Episode 1 — “Nidra” Thama" },
   // Not print — this one ran on the Editorial Board's blog while he was on the
   // board. The byline there is the society account (as with every post on that
@@ -113,6 +118,7 @@ for (const p of PRINTED) {
       page: p.page ?? 0,
       url: p.url || "",
       published: p.published || "",
+      printWords: p.printWords ?? 0,
       note: p.note || "",
       body,
     });
@@ -141,6 +147,7 @@ writeFileSync(
     `  /** Live URL, for the piece published on the Editorial Board blog. */\n` +
     `  url: string;\n` +
     `  published: string;\n` +
+    `  /** Approx words that actually ran in print, when the draft was cut. 0 if not cut. */\n  printWords: number;\n` +
     `  note: string;\n` +
     `  /** Markdown. Rendered with react-markdown, which the site already ships. */\n  body: string;\n` +
     `}\n\n` +
