@@ -230,7 +230,7 @@ export function WritingSection() {
                 those are the only outside record of what I was actually like
                 to work with — so they run verbatim, credited to the board,
                 not paraphrased into something flattering. */}
-            <div className="mt-12 border-t border-line pt-8">
+            <div id="board" className="mt-12 scroll-mt-24 border-t border-line pt-8">
               <div className="meta-row">
                 <span className="font-display text-base font-bold tracking-tight">How the board wrote me</span>
                 <span className="meta-row-tag">[&nbsp;EB Profiles · in my voice, by them&nbsp;]</span>
@@ -261,7 +261,7 @@ export function WritingSection() {
                   </Link>
                 ))}
               </div>
-              <p className="mt-6 max-w-3xl text-sm leading-relaxed text-zinc-400">{boardArc}</p>
+              <p className="font-display mt-6 max-w-3xl text-base font-semibold leading-relaxed text-zinc-200 sm:text-lg">{boardArc}</p>
             </div>
 
             {/* The two societies, and what they published. */}
