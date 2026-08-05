@@ -432,7 +432,7 @@ export function ChessRoom() {
   const active = TABS.find((t) => t.key === tab);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className="section-y mx-auto w-full max-w-6xl px-6">
       <h2 className="font-display text-h2 font-bold tracking-tight">Seven years of games, mined</h2>
       <p className="mt-2 max-w-2xl text-zinc-400">
         Every rated game played on lichess and chess.com, pulled at build time and taken apart — the

@@ -51,7 +51,7 @@ const maxStatus = Math.max(...STATUSES.map(([, n]) => n));
 
 export function WeebRoom() {
   return (
-    <div className="mx-auto max-w-4xl px-6 pb-24">
+    <div className="section-y mx-auto max-w-4xl px-6">
       <Reveal>
         <p className="max-w-2xl text-base leading-relaxed text-zinc-300">
           {num(anime.total)} anime and {num(manga.total)} manga, kept by hand in Notion for years
@@ -64,7 +64,7 @@ export function WeebRoom() {
       <Reveal>
         <section className="mt-14">
           <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 01</p>
-          <h2 className="font-display mt-2 text-2xl font-bold sm:text-3xl">
+          <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             {hasDropped ? "Quitting is recorded" : "There is no word for quitting"}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
@@ -125,7 +125,7 @@ export function WeebRoom() {
       <Reveal>
         <section className="mt-16">
           <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 02</p>
-          <h2 className="font-display mt-2 text-2xl font-bold sm:text-3xl">
+          <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             The bottom of the scale has never been used
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
@@ -182,7 +182,7 @@ export function WeebRoom() {
       <Reveal>
         <section className="mt-16">
           <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 03</p>
-          <h2 className="font-display mt-2 text-2xl font-bold sm:text-3xl">
+          <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             A hand-kept list cannot see the present
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
