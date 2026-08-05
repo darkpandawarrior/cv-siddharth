@@ -338,7 +338,7 @@ export function SignalLabPane() {
         At Dice.tech, field users' trip distances were off by large margins — urban canyons, tunnels and
         OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
         fix, rebuilt from scratch as Mileway's location engine and running over a real 17.4 km loop through
-        Pune. Raw GPS reads the drive as roughly <span className="text-[#f0883e]">40 km</span>, because noise
+        Pune. Raw GPS reads the drive as roughly <span className="text-warn">40 km</span>, because noise
         adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
         back. Every figure below is summed geodesic distance over the points a stage actually kept — no
         fidelity factors, and the tests assert these exact headlines.
@@ -404,7 +404,7 @@ export function SignalLabPane() {
                   </span>
                   <span
                     className={`w-16 shrink-0 text-right font-mono text-xs ${
-                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-[#f0883e]"
+                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-warn"
                     }`}
                   >
                     {fmtPct(row.errorPct)}
@@ -439,7 +439,7 @@ export function SignalLabPane() {
               <span key={z.id} className="flex items-center gap-1.5">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ background: z.color }} />
                 <span className="text-muted">{z.label.toLowerCase()}</span>
-                <span className={Math.abs(pct) < 15 ? "text-accent" : "text-[#f0883e]"}>{fmtPct(pct)}</span>
+                <span className={Math.abs(pct) < 15 ? "text-accent" : "text-warn"}>{fmtPct(pct)}</span>
               </span>
             );
           })}
@@ -459,7 +459,7 @@ export function SignalLabPane() {
               type="checkbox"
               checked={tier === "budget"}
               onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")}
-              className="accent-[#3ddc84]"
+              className="accent-signal"
             />
             budget device
             <span className="text-muted">({CADENCE_S[tier]}s fixes)</span>
@@ -503,7 +503,7 @@ export function SignalLabPane() {
 }
 
 function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: "good" | "bad" | "neutral" }) {
-  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-[#f0883e]" : "text-zinc-200";
+  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-warn" : "text-zinc-200";
   return (
     <div className="bg-void/70 px-5 py-3">
       <p className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</p>

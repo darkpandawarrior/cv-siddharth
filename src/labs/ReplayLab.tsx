@@ -226,7 +226,7 @@ export function ReplayLab() {
           >
             reset
           </button>
-          <span className={`font-mono text-xs ${stat.blocked ? "text-[#ff5c5c]" : "text-accent"}`}>
+          <span className={`font-mono text-xs ${stat.blocked ? "text-danger" : "text-accent"}`}>
             drift: {stat.drift.toFixed(stat.blocked ? 3 : 6)} · gate: {stat.blocked ? "BLOCKED — change rejected" : "PASS"}
           </span>
           <Link

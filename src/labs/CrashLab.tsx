@@ -137,7 +137,7 @@ export function CrashLab() {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={triage} onChange={(e) => setTriage(e.target.checked)} className="accent-[#3ddc84]" />
+            <input type="checkbox" checked={triage} onChange={(e) => setTriage(e.target.checked)} className="accent-signal" />
             cluster by root cause
           </label>
           <span className="font-mono text-xs text-muted">{stats.total} traces seen</span>

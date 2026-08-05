@@ -201,7 +201,7 @@ export function ThemeLab() {
               type="checkbox"
               checked={layout === "hero"}
               onChange={(e) => setLayout(e.target.checked ? "hero" : "card")}
-              className="accent-[#3ddc84]"
+              className="accent-signal"
             />
             hero layout
           </label>
