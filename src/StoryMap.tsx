@@ -4,6 +4,7 @@ import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { readToken } from "./themeColor";
 
 const StoryMapScene = lazy(() => import("./StoryMapScene.tsx"));
 
@@ -176,7 +177,7 @@ function StoryMapCanvas({ onNavigate }: { onNavigate: (target: string) => void }
         ctx.fill();
         ctx.font = `${hot ? 700 : 600} 11px "JetBrains Mono", ui-monospace, monospace`;
         ctx.textAlign = "center";
-        ctx.fillStyle = hot ? "#e8efe9" : "rgba(232, 239, 233, 0.72)";
+        ctx.fillStyle = hot ? readToken("--color-text", "#e8efe9") : "rgba(232, 239, 233, 0.72)";
         ctx.fillText(p.n.label, p.x, p.y - p.n.r - 4);
         if (p.n.sub && (hot || p.n.id === "sid")) {
           ctx.font = '400 9.5px "JetBrains Mono", ui-monospace, monospace';

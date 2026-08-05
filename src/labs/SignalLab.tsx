@@ -19,6 +19,7 @@ import {
   simulate,
   type Tier,
 } from "./signalEngine.ts";
+import { readToken } from "../themeColor";
 
 /**
  * The Signal Lab — the "trip distances were off by large margins" bug from
@@ -215,7 +216,7 @@ export function SignalLabPane() {
         else pen = false;
       }
       ctx.setLineDash(bridged ? [4, 4] : []);
-      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : "#5ee6ff";
+      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : readToken("--color-probe", "#5ee6ff");
       ctx.lineWidth = bridged ? 1.8 : 2.4;
       ctx.shadowColor = "rgba(94, 230, 255, 0.5)";
       ctx.shadowBlur = 5;
@@ -232,7 +233,7 @@ export function SignalLabPane() {
       const pt = projectXY(here.truth);
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e8efe9";
+      ctx.fillStyle = readToken("--color-text", "#e8efe9");
       ctx.fill();
       ctx.strokeStyle = "rgba(5,7,10,0.8)";
       ctx.lineWidth = 1.5;
@@ -292,7 +293,7 @@ export function SignalLabPane() {
       const v = toInset(here.truth);
       ctx.beginPath();
       ctx.arc(v.x, v.y, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e8efe9";
+      ctx.fillStyle = readToken("--color-text", "#e8efe9");
       ctx.fill();
       ctx.restore();
 

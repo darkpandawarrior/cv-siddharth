@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { readToken } from "../themeColor";
 
 /* ── Crash Triage Lab ────────────────────────────────────────────────── */
 
@@ -85,7 +86,7 @@ export function CrashLab() {
       for (const e of events) {
         ctx.beginPath();
         ctx.arc(e.x, e.y, 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = triageRef.current ? CAUSES[e.cause].color : "#ff5c5c";
+        ctx.fillStyle = triageRef.current ? CAUSES[e.cause].color : readToken("--color-danger", "#ff5c5c");
         ctx.fill();
         ctx.fillStyle = triageRef.current ? `${CAUSES[e.cause].color}44` : "rgba(255,92,92,0.25)";
         ctx.fillRect(e.x - 0.5, e.y - 14, 1, 12);
