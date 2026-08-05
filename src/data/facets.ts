@@ -36,4 +36,9 @@ export const facets: Facet[] = [
     discovered: "2026-07-30", paths: ["wandering"], kind: "corpus" },
   { id: "lab", label: "Labs", href: "/lab", authored: "2026-07-24",
     discovered: "2026-07-24", paths: ["wandering"], kind: "lab" },
+  // The list itself is years old, but it carries no usable start date — its
+  // `Date` column is empty on every row — so `authored` cannot be dated without
+  // inventing one. Equal dates here mean "not recoverable", not "made today".
+  { id: "weeb", label: "Weeb Central", href: "/weeb", authored: "2026-08-05",
+    discovered: "2026-08-05", paths: ["wandering"], kind: "corpus" },
 ];

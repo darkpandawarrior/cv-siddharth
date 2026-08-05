@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, type LucideIcon } from "lucide-react";
+import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -38,6 +38,7 @@ const ROOM_STYLE: Record<string, { icon: LucideIcon; tint: string }> = {
   // same value for Kursi's search tree, and the chess engine lab renders through
   // that renderer, so the two read as one family.
   "/chess": { icon: Crown, tint: "#e8c874" },
+  "/weeb": { icon: Tv, tint: "#f2a13d" },
 };
 
 export const ROOMS: Room[] = siteRooms.map((r) => ({
