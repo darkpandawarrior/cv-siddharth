@@ -69,7 +69,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Platform",
-        text: "Python/Frappe on MariaDB and Docker Compose, with a LibreChat deployment and MCP tool wiring (Atlassian, Playwright). Delivered under Jira with PR review across four repositories.",
+        text: "Python and Frappe on MariaDB, running under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
       },
     ],
   },
@@ -84,7 +84,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Compose Migration",
-        text: "Led legacy Java/XML to ~87% of UI-layer code in Compose migration verified per-screen against the legacy XML baseline across mission-critical workflows.",
+        text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, checked screen by screen against the XML it replaced so nothing regressed on the way.",
       },
       {
         label: "Location Engineering",
@@ -104,7 +104,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Product Growth",
-        text: "Shipped intelligent in-app review flows that took the Play Store listing from 1.6★/67 reviews to 4.5★/27.3K — closing 85% of the gap to a perfect 5.0 (+181% rating, 407x review volume).",
+        text: "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300 — the rating a prospective customer sees before they install anything.",
       },
       {
         label: "Travel Platform",
@@ -116,7 +116,7 @@ export const experience: Experience[] = [
       },
       {
         label: "CI/CD & Automation",
-        text: "Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, layered with agentic MCP workflows (Firebender).",
+        text: "Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, and wired agent tooling into the build itself (Firebender over MCP).",
       },
     ],
   },
@@ -135,7 +135,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Product-Line Ownership",
-        text: "Worked product-side as well as engineering across the P2P carpool, trucking, e-bike and super-app verticals — shaping what got built, not just building it.",
+        text: "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals — writing the specs I then had to build.",
       },
       {
         label: "Payments at Scale",
