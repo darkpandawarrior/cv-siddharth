@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
+import AnomalyRail from "../AnomalyRail.tsx";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -258,6 +259,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <RegisterServiceWorker />
         <TerminalHotkey />
         {children}
+        {/* Mounted after the routed content (never blocks first paint) and
+            outside <main id="main-content">, so the skip link still jumps
+            straight past it to the page's own content. */}
+        <AnomalyRail />
         <SpeedInsights />
         <Scripts />
         <noscript>

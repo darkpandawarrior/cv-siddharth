@@ -1785,3 +1785,55 @@ html.resume-mode body {
 @media (prefers-reduced-motion: reduce) {
   .sid-live-spin { animation: none; }
 }
+
+/* --- Anomaly rail --- */
+/* Pinned to the left edge on every route (mounted in __root.tsx, outside
+   <main>) — the site's secondary nav. z-index sits above ordinary page
+   content but below the skip link (100) and the contact sheet (50): nothing
+   here should ever compete with those. Narrow enough (24px) to stay out of
+   the way of real content on small viewports without a separate breakpoint. */
+.anomaly-rail {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  width: 24px;
+  z-index: 30;
+}
+/* Decoration only (aria-hidden in the component) — never a click/hover
+   target, so pointer-events pass straight through to the real <a>s beneath
+   it. This is also why colour here is read from CSS vars at runtime instead
+   of being set here: the component's getComputedStyle call is the one
+   source of truth, this file only owns layout. */
+.anomaly-rail-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.anomaly-rail-nav {
+  position: absolute;
+  inset: 0;
+}
+/* Real, focusable link per facet — visually empty (the canvas draws the
+   dot), full rail width, 20px tall band centred on its deviation's y so the
+   click/tap target is bigger than the 3px dot it corresponds to. Focus ring
+   comes from the sitewide :focus-visible rule, nothing bespoke needed here. */
+.anomaly-rail-link {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 4px;
+}
+
+/* The case-study cards' ghost index ("02", "03"…). Generated content, not a
+   text node: it is decoration at 1.18:1 and axe's color-contrast rule walks
+   text nodes only. aria-hidden does not exempt it — correctly, since text a
+   sighted low-vision user can still see is still their problem — and the only
+   other way past the gate was brightening a watermark until it stopped being
+   one. See src/App.tsx where data-index is set. */
+.card-index::after {
+  content: attr(data-index);
+}

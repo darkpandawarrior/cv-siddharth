@@ -1461,4 +1461,15 @@ export const siteRooms: SiteRoom[] = [
       "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot that plays like me.",
     tag: "3d · engine",
   },
+  // No counts in this blurb for the same reason as /chess above: the corpus is
+  // re-exported whenever he updates Notion, and this string feeds the SEO head
+  // tags and the assistant's system prompt as well as the Playground card.
+  // Live figures belong in WeebRoom, which renders from the generated weeb.ts.
+  {
+    to: "/weeb",
+    label: "Weeb Central",
+    blurb:
+      "Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.",
+    tag: "corpus · data",
+  },
 ];
