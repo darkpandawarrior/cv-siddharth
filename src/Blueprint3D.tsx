@@ -9,6 +9,7 @@ import type { Line2, LineSegments2, OrbitControls as OrbitControlsImpl } from "t
 import { ARROWS, COLOR_HEX, FRAMES, METRICS, NODES, NOTES, PINS, TOUR, centerOf, type NodeSpec } from "./blueprintData.ts";
 import { CountUp, HoloCore, ShapeBoundary, hasWebGL } from "./blueprintShared.tsx";
 import { AsciiEffect } from "./asciiEffect.ts";
+import { readToken } from "./themeColor";
 import { RippleEffect } from "./rippleEffect.ts";
 
 /* Custom Effect instances (anything not shipped by @react-three/postprocessing)
@@ -281,7 +282,7 @@ function FrameBackdrop({ frame }: { frame: (typeof FRAMES)[number] }) {
   ];
   return (
     <>
-      <Line points={corners} color="#3ddc84" lineWidth={0.6} transparent opacity={0.2} />
+      <Line points={corners} color={readToken("--color-signal", "#3ddc84")} lineWidth={0.6} transparent opacity={0.2} />
       <Html position={[lx, ly, z + 0.15]} style={{ pointerEvents: "none" }}>
         <span className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.3em] text-zinc-400/70">{frame.name}</span>
       </Html>
@@ -294,12 +295,15 @@ function FrameBackdrop({ frame }: { frame: (typeof FRAMES)[number] }) {
  * the terminal look on these cards directly (flat black/green, no glow, no
  * per-node color) instead of leaving them full-color and looking out of
  * place next to glyph-ified geometry. */
-const TERMINAL_GREEN = "#3ddc84";
+/* ASCII-mode phosphor. A function, not a const: a module-scope constant is
+ * evaluated once at import and would freeze the palette the page booted with,
+ * which is exactly why the scenes ignored theme changes before. */
+const terminalGreen = () => readToken("--color-signal", "#3ddc84");
 
 function NodeCard({ node, ascii, reducedMotion }: { node: NodeSpec; ascii: boolean; reducedMotion: boolean }) {
   const c = centerOf(node);
   const pos = worldPosAt(c.x, c.y);
-  const color = ascii ? TERMINAL_GREEN : (COLOR_HEX[node.color] ?? "#3ddc84");
+  const color = ascii ? terminalGreen() : (COLOR_HEX[node.color] ?? "#3ddc84");
   return (
     <Float speed={reducedMotion ? 0 : 1.4} rotationIntensity={reducedMotion ? 0 : 0.12} floatIntensity={reducedMotion ? 0 : 0.6}>
       <Html transform position={pos} distanceFactor={8} occlude="blending">
@@ -312,7 +316,7 @@ function NodeCard({ node, ascii, reducedMotion }: { node: NodeSpec; ascii: boole
             border: `1px solid ${color}`,
             background: "#000",
             boxShadow: ascii ? "none" : `0 0 22px -10px ${color}`,
-            color: ascii ? TERMINAL_GREEN : "#e8efe9",
+            color: ascii ? terminalGreen() : "var(--color-text)",
             fontFamily: "var(--font-mono)",
             fontSize: 11,
             lineHeight: 1.35,
@@ -344,12 +348,12 @@ function MetricTile({ m, ascii, reducedMotion }: { m: (typeof METRICS)[number]; 
             padding: "10px 16px",
             borderRadius: ascii ? 0 : 14,
             background: "#000",
-            border: `1px solid ${ascii ? TERMINAL_GREEN : "rgba(61,220,132,0.4)"}`,
+            border: `1px solid ${ascii ? terminalGreen() : "rgba(61,220,132,0.4)"}`,
             boxShadow: ascii ? "none" : "0 0 30px -10px rgba(61,220,132,0.5)",
             fontFamily: "var(--font-mono)",
           }}
         >
-          <div style={{ fontSize: 24, fontWeight: 700, color: TERMINAL_GREEN, lineHeight: 1.1 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: terminalGreen(), lineHeight: 1.1 }}>
             <CountUp value={m.value} />
           </div>
           <div style={{ fontSize: 10, color: ascii ? "rgba(61,220,132,0.6)" : "rgba(232,239,233,0.6)", marginTop: 4 }}>{m.label}</div>
@@ -369,8 +373,8 @@ function StickyNote({ note, ascii, reducedMotion }: { note: (typeof NOTES)[numbe
             width: 170,
             padding: 12,
             background: ascii ? "#000" : "#3a3208",
-            color: ascii ? TERMINAL_GREEN : "#ffe8a3",
-            border: ascii ? `1px solid ${TERMINAL_GREEN}` : "none",
+            color: ascii ? terminalGreen() : "#ffe8a3",
+            border: ascii ? `1px solid ${terminalGreen()}` : "none",
             fontFamily: "var(--font-mono)",
             fontSize: 10.5,
             lineHeight: 1.4,
@@ -398,7 +402,7 @@ function ImagePin({ pin, ascii, reducedMotion }: { pin: (typeof PINS)[number]; a
           style={{
             width: pin.w * 0.5,
             borderRadius: ascii ? 0 : 10,
-            border: `1px solid ${ascii ? TERMINAL_GREEN : "rgba(94,230,255,0.4)"}`,
+            border: `1px solid ${ascii ? terminalGreen() : "rgba(94,230,255,0.4)"}`,
             boxShadow: ascii ? "none" : "0 0 30px -8px rgba(94,230,255,0.5)",
             display: "block",
             // Fakes a monochrome-green terminal readout for a real screenshot —
@@ -486,18 +490,18 @@ function Scene({
   const glitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.15, 0.3) : new THREE.Vector2(0.05, 0.15)), [legend]);
   return (
     <>
-      <color attach="background" args={["#05070a"]} />
-      <fog attach="fog" args={["#05070a", 22, 58]} />
+      <color attach="background" args={[readToken("--color-void", "#060807")]} />
+      <fog attach="fog" args={[readToken("--color-void", "#060807"), 22, 58]} />
       <ambientLight intensity={0.5} />
-      <pointLight position={[8, 8, 12]} intensity={22} color="#3ddc84" />
-      <pointLight position={[-8, -4, 8]} intensity={16} color="#5ee6ff" />
+      <pointLight position={[8, 8, 12]} intensity={22} color={readToken("--color-signal", "#3ddc84")} />
+      <pointLight position={[-8, -4, 8]} intensity={16} color={readToken("--color-probe", "#5ee6ff")} />
       {/* Procedural env (not a fetched HDRI — a portfolio shouldn't depend on a
        * CDN being up) so the hologram's metallic material actually reflects
        * something instead of looking flat despite metalness={0.8}. */}
       <Environment resolution={256}>
-        <Lightformer intensity={3} color="#3ddc84" position={[0, 4, -6]} scale={12} />
-        <Lightformer intensity={2} color="#5ee6ff" position={[-6, 2, 4]} scale={9} />
-        <Lightformer intensity={1.5} color="#b98bff" position={[6, -2, 3]} scale={7} />
+        <Lightformer intensity={3} color={readToken("--color-signal", "#3ddc84")} position={[0, 4, -6]} scale={12} />
+        <Lightformer intensity={2} color={readToken("--color-probe", "#5ee6ff")} position={[-6, 2, 4]} scale={9} />
+        <Lightformer intensity={1.5} color={readToken("--color-alt", "#db61ff")} position={[6, -2, 3]} scale={7} />
       </Environment>
       <Stars radius={60} depth={30} count={2200} factor={2.2} saturation={0} fade speed={0.35} />
       <Sparkles
@@ -505,14 +509,14 @@ function Scene({
         scale={legend ? [20, 14, 20] : [16, 11, 16]}
         size={legend ? 3.5 : 2}
         speed={reducedMotion ? 0 : legend ? 1.2 : 0.25}
-        color="#5ee6ff"
+        color={readToken("--color-probe", "#5ee6ff")}
         opacity={legend ? 0.8 : 0.4}
       />
       {legend && (
         <>
-          <Comet color="#ffd866" radius={9} speed={0.9} tilt={2} />
-          <Comet color="#5ee6ff" radius={12} speed={-0.6} tilt={-3} />
-          <Comet color="#ff6b6b" radius={7} speed={1.3} tilt={0} />
+          <Comet color={readToken("--color-accent", "#f2a13d")} radius={9} speed={0.9} tilt={2} />
+          <Comet color={readToken("--color-probe", "#5ee6ff")} radius={12} speed={-0.6} tilt={-3} />
+          <Comet color={readToken("--color-danger", "#ff5c5c")} radius={7} speed={1.3} tilt={0} />
           <Html fullscreen style={{ pointerEvents: "none" }}>
             <div className="flex h-full items-start justify-center pt-6">
               <span className="animate-pulse rounded-full border border-accent2/60 bg-black/70 px-4 py-1 font-mono text-xs uppercase tracking-[0.4em] text-accent2">
@@ -527,10 +531,10 @@ function Scene({
         args={[10, 10]}
         cellSize={1}
         cellThickness={0.4}
-        cellColor="#123b28"
+        cellColor={readToken("--color-line", "#262e2b")}
         sectionSize={5}
         sectionThickness={1}
-        sectionColor="#3ddc84"
+        sectionColor={readToken("--color-signal", "#3ddc84")}
         fadeDistance={45}
         fadeStrength={1.4}
         infiniteGrid
@@ -589,7 +593,7 @@ function Scene({
         // the single wackiest thing this whole room does.
         <EffectComposer multisampling={0}>
           <RipplePass />
-          <AsciiPass cellSize={9} color="#3ddc84" />
+          <AsciiPass cellSize={9} color={terminalGreen()} />
           {/* EffectComposer's children typing requires a real element (not
            * false/null from a && guard), so reduced-motion disables Glitch via
            * BlendFunction.SKIP instead of conditionally unmounting it. */}
