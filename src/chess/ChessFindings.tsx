@@ -1,6 +1,7 @@
 import { ArrowUpRight, CalendarDays, Clock, Swords } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { chess } from "../data/chess.ts";
+import { chessDeep } from "../data/chessDeep.ts";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 
@@ -401,6 +402,91 @@ export function ChessFindings() {
           on this page is build output, not prose. Re-run it and the figures move.
         </p>
       </Reveal>
+      {/* Second pass. The first analysis measured what happens INSIDE a game
+          and never read four fields that were in every record: how the game was
+          found, which time control, how it ended, and when the opening book ran
+          out. Those four carry the least flattering findings in the corpus,
+          which is exactly why they are here. */}
+      <Reveal>
+        <div className="mt-12 border-t border-line pt-8">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">
+            Second pass — four fields the first analysis never read
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <p className="font-display text-base font-bold">More clock does not help me</p>
+              <dl className="mt-3 space-y-1.5">
+                {chessDeep.byTimeControl.map((t) => (
+                  <div key={t.tc} className="flex items-baseline justify-between gap-3">
+                    <dt className="font-mono text-xs text-muted">
+                      {t.tc} · {t.n.toLocaleString()} games
+                    </dt>
+                    <dd className="font-mono text-sm text-accent">{t.winRate}%</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-sm leading-snug text-zinc-400">
+                Ten times the thinking time moves the win rate by half a point. Whatever decides
+                these games, it is not how long I get to look at them.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <p className="font-display text-base font-bold">I leave theory on move one</p>
+              <p className="mt-3 font-mono text-sm text-accent2">
+                median book exit: ply {chessDeep.book.medianPly}
+              </p>
+              <p className="mt-3 text-sm leading-snug text-zinc-400">
+                In the {chessDeep.book.deep.n} games where I stayed in a named opening to ply 8 or
+                deeper, I won {chessDeep.book.deep.winRate}% — against{" "}
+                {chessDeep.book.shallow.winRate}% across the {chessDeep.book.shallow.n.toLocaleString()}{" "}
+                where I was out by ply 4. The sample is small and I have never acted on it.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <p className="font-display text-base font-bold">Where the game came from</p>
+              <dl className="mt-3 space-y-1.5">
+                {chessDeep.bySource.map((s) => (
+                  <div key={s.source} className="flex items-baseline justify-between gap-3">
+                    <dt className="font-mono text-xs text-muted">
+                      {s.source} · {s.n.toLocaleString()}
+                    </dt>
+                    <dd className="font-mono text-sm text-accent">{s.winRate}%</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-sm leading-snug text-zinc-400">
+                Matchmaking is a coin flip. Arena is a bloodbath. The gap is twenty-one points and
+                the arena sample is small enough to stay a hypothesis.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <p className="font-display text-base font-bold">How they actually end</p>
+              <dl className="mt-3 space-y-1.5">
+                {chessDeep.byEnding.slice(0, 4).map((e) => (
+                  <div key={e.status} className="flex items-baseline justify-between gap-3">
+                    <dt className="font-mono text-xs text-muted">{e.status}</dt>
+                    <dd className="font-mono text-sm text-accent">{e.share}%</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-sm leading-snug text-zinc-400">
+                Across every game, not just decided ones: the clock ends more of them than checkmate
+                and resignation combined.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-5 font-mono text-[11px] text-muted">
+            {chessDeep.sampleSize.toLocaleString()} lichess games ·{" "}
+            <span className="text-zinc-400">scripts/gen-chess-deep.mjs</span>
+          </p>
+        </div>
+      </Reveal>
+
     </div>
   );
 }
