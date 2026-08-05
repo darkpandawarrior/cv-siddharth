@@ -7,6 +7,7 @@ import type { Group } from "three";
 // from a CDN, so the font is bundled and every in-canvas string is ASCII.
 import fontUrl from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff?url";
 import { pct, shareSeries, type PlatformKey, type RepYear } from "./repertoireModel.ts";
+import { readToken } from "../themeColor";
 
 /**
  * The repertoire as Black, in two pieces that are never joined.
@@ -144,7 +145,7 @@ export default function RepertoireTreeScene({
       style={{ position: "absolute", inset: 0 }}
     >
       <ambientLight intensity={0.6} />
-      <pointLight position={[5, 8, 8]} intensity={70} color="#e8efe9" />
+      <pointLight position={[5, 8, 8]} intensity={70} color={readToken("--color-text", "#e8efe9")} />
       <OrbitControls
         autoRotate={!reduced}
         autoRotateSpeed={0.25}
@@ -213,7 +214,7 @@ export default function RepertoireTreeScene({
       {/* One label per row: which opening this run of bars is. */}
       {rows.map((row) => (
         <Billboard key={`row-${row.name}`} position={[x(0) - 1.5, 0.55, row.z]}>
-          <Text font={fontUrl} fontSize={0.22} color="#e8efe9" anchorX="right">
+          <Text font={fontUrl} fontSize={0.22} color={readToken("--color-text", "#e8efe9")} anchorX="right">
             {row.name}
           </Text>
         </Billboard>
@@ -225,7 +226,7 @@ export default function RepertoireTreeScene({
           [x(selectedIndex), 0, -ROW_GAP],
           [x(selectedIndex), 0, ROW_GAP],
         ]}
-        color="#e8efe9"
+        color={readToken("--color-text", "#e8efe9")}
         lineWidth={1.5}
       />
 
@@ -234,21 +235,21 @@ export default function RepertoireTreeScene({
         <group>
           <mesh position={[handoffX, RAIL_H / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
             <planeGeometry args={[(LANE_Z + 1.2) * 2, RAIL_H * 1.4]} />
-            <meshBasicMaterial color="#f0883e" transparent opacity={0.12} side={DoubleSide} depthWrite={false} />
+            <meshBasicMaterial color={readToken("--color-warn", "#f0883e")} transparent opacity={0.12} side={DoubleSide} depthWrite={false} />
           </mesh>
           <Line
             points={[
               [handoffX, 0, 0],
               [handoffX, RAIL_H * 1.5, 0],
             ]}
-            color="#f0883e"
+            color={readToken("--color-warn", "#f0883e")}
             lineWidth={2}
             dashed
             dashSize={0.14}
             gapSize={0.1}
           />
           <Billboard position={[handoffX, RAIL_H * 1.4, 0]}>
-            <Text font={fontUrl} fontSize={0.24} color="#f0883e" anchorX="center">
+            <Text font={fontUrl} fontSize={0.24} color={readToken("--color-warn", "#f0883e")} anchorX="center">
               {`handoff -> chess.com ${handoffYear}`}
             </Text>
           </Billboard>

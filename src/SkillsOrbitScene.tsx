@@ -4,6 +4,7 @@ import { Html } from "@react-three/drei";
 import { MathUtils } from "three";
 import type { Group } from "three";
 import { skills } from "./data/profile.ts";
+import { readToken } from "./themeColor";
 
 /**
  * The skill cloud as an orbiting word-sphere — every chip from the flat
@@ -57,7 +58,7 @@ function Orbit({ active, onSelect }: { active: string | null; onSelect: (group: 
       {/* faint wire sphere anchoring the cloud */}
       <mesh>
         <sphereGeometry args={[2.35, 18, 12]} />
-        <meshBasicMaterial color="#5ee6ff" wireframe transparent opacity={0.05} />
+        <meshBasicMaterial color={readToken("--color-probe", "#5ee6ff")} wireframe transparent opacity={0.05} />
       </mesh>
       {POINTS.map((p) => {
         const color = GROUP_COLOR[p.group] ?? "#3ddc84";

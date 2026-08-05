@@ -38,7 +38,7 @@ function InkRoute() {
         <div className="mx-auto max-w-5xl px-6 pt-12">
           <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
           <h1 className="font-display mt-3 text-hero">The Ink</h1>
-          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>
+          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
             Three years of a college magazine, a literary society, and everything I wrote before I
             wrote software. It reads differently because it was a different life.
           </p>

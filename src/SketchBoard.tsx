@@ -64,7 +64,7 @@ class MetricShapeUtil extends ShapeUtil<MetricShape> {
           fontFamily: "var(--font-mono)",
         }}
       >
-        <span style={{ fontSize: 30, fontWeight: 700, color: "#3ddc84", lineHeight: 1.1 }}>
+        <span style={{ fontSize: 30, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1.1 }}>
           <CountUp value={shape.props.value} />
         </span>
         <span style={{ fontSize: 11, color: "rgba(232, 239, 233, 0.6)", marginTop: 4 }}>{shape.props.label}</span>

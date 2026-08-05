@@ -80,7 +80,7 @@ function ReadPiece() {
           {/* Two things a reader cannot otherwise know, and both are the
               interesting part of the artefact. */}
           {piece.printWords > 0 && (
-            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "#cfc3b2" }}>
+            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               This is the draft. Roughly {piece.printWords.toLocaleString()} words of it ran in the
               magazine — about {Math.round((piece.printWords / piece.words) * 100)}% survived the page
               count, so most of what follows has never been read by anyone.{" "}
@@ -88,7 +88,7 @@ function ReadPiece() {
             </p>
           )}
           {piece.note === "First published here" && (
-            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "#cfc3b2" }}>
+            <p className="mt-4 border-l-2 border-accent/40 pl-4 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               Never submitted anywhere, so it was never cut to fit a page — and never had an editor
               either. This is the length it wanted to be.
             </p>
