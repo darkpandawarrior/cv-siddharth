@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
-import { AmbientBackground } from "../AmbientBackground.tsx";
 import { Flipbook } from "../Flipbook.tsx";
 import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
@@ -40,8 +39,12 @@ function ExcelsiorRoute() {
   const navigate = useNavigate({ from: "/excelsior" });
 
   return (
-    <div className="min-h-screen">
-      <AmbientBackground />
+    // The print-era artefact `/ink` and `/read/$slug` exist to host — it
+    // belongs in their world, not the engineering control room. `AmbientBackground`
+    // (the starfield) is control-room decor, dropped here for the same reason
+    // it's absent from `/ink` and `/read/$slug`: it would fight the sepia
+    // ground instead of sitting behind it.
+    <div className="ink-world min-h-screen">
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 py-8">
         {/* Was `to="/" hash="writing"` — which sent you to the homepage doorway,
             not the world this page belongs to. The writing moved to /ink; the
