@@ -1186,7 +1186,7 @@ function InkDoorway() {
         <div className="section-y mx-auto max-w-5xl px-6">
           <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
           <h2 className="font-display mt-3 text-h2">The Ink</h2>
-          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>
+          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
             Before the Android work there were three years of a college magazine and a literary
             society — English Editor, then Joint Chief Editor of a 128-page edition shipped entirely
             remotely. Four published stories, all readable here, and the pieces the board wrote
@@ -1203,7 +1203,7 @@ function InkDoorway() {
               to="/excelsior"
               search={{ year: 2021, page: 44 }}
               className="rounded-full border border-line px-6 py-2.5 font-semibold transition hover:border-accent"
-              style={{ color: "#cfc3b2" }}
+              style={{ color: "var(--color-text-dim)" }}
             >
               Read "The Loopdown"
             </Link>

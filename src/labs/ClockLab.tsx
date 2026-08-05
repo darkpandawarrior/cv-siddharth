@@ -127,16 +127,16 @@ export function ClockLab() {
               max={deciles.length - 1}
               value={bucket}
               onChange={(e) => setBucket(Number(e.target.value))}
-              className="h-1 w-40 accent-[#3ddc84]"
+              className="h-1 w-40 accent-signal"
               aria-label="Game progress decile"
               aria-valuetext={summary}
             />
             <span className="text-zinc-400">{band(bucket)}</span>
           </label>
           <span className="font-mono text-xs">
-            <span className="text-[#3ddc84]">won — {pct(here.win)} left</span>
+            <span className="text-signal">won — {pct(here.win)} left</span>
             <span className="text-muted"> · </span>
-            <span className="text-[#5ee6ff]">lost (dashed) — {pct(here.loss)} left</span>
+            <span className="text-probe">lost (dashed) — {pct(here.loss)} left</span>
             <span className="text-muted"> · gap {pts(here.gap)}</span>
           </span>
           <Link to="/chess" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">

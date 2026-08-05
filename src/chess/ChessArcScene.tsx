@@ -8,6 +8,7 @@ import { DoubleSide } from "three";
 // string stays ASCII. A portfolio shouldn't depend on a CDN being up.
 import fontUrl from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff?url";
 import type { ArcSeries, Corpus } from "../lib/useCorpus.ts";
+import { readToken } from "../themeColor";
 
 /**
  * The rating arc as twin ribbons — time on X, rating on Y, **platform on Z**.
@@ -193,7 +194,7 @@ export default function ChessArcScene({
       style={{ position: "absolute", inset: 0 }}
     >
       <ambientLight intensity={0.6} />
-      <pointLight position={[6, 6, 8]} intensity={40} color="#5ee6ff" />
+      <pointLight position={[6, 6, 8]} intensity={40} color={readToken("--color-probe", "#5ee6ff")} />
       <OrbitControls
         autoRotate
         autoRotateSpeed={0.3}
@@ -263,7 +264,7 @@ export default function ChessArcScene({
             lineWidth={1.5}
           />
           <Billboard position={[plane.x0, -0.42, 0]}>
-            <Text font={fontUrl} fontSize={0.26} color="#e8efe9" anchorX="left">
+            <Text font={fontUrl} fontSize={0.26} color={readToken("--color-text", "#e8efe9")} anchorX="left">
               {`${plane.platform} | own scale ${plane.rMin}-${plane.rMax}`}
             </Text>
           </Billboard>

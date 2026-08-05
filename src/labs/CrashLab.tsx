@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { readToken } from "../themeColor";
 
 /* ── Crash Triage Lab ────────────────────────────────────────────────── */
 
@@ -85,7 +86,7 @@ export function CrashLab() {
       for (const e of events) {
         ctx.beginPath();
         ctx.arc(e.x, e.y, 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = triageRef.current ? CAUSES[e.cause].color : "#ff5c5c";
+        ctx.fillStyle = triageRef.current ? CAUSES[e.cause].color : readToken("--color-danger", "#ff5c5c");
         ctx.fill();
         ctx.fillStyle = triageRef.current ? `${CAUSES[e.cause].color}44` : "rgba(255,92,92,0.25)";
         ctx.fillRect(e.x - 0.5, e.y - 14, 1, 12);
@@ -136,7 +137,7 @@ export function CrashLab() {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={triage} onChange={(e) => setTriage(e.target.checked)} className="accent-[#3ddc84]" />
+            <input type="checkbox" checked={triage} onChange={(e) => setTriage(e.target.checked)} className="accent-signal" />
             cluster by root cause
           </label>
           <span className="font-mono text-xs text-muted">{stats.total} traces seen</span>

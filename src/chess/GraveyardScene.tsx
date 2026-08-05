@@ -7,6 +7,7 @@ import type { Mesh } from "three";
 // for any glyph its font lacks, so the font ships in the bundle and every
 // in-canvas string stays ASCII.
 import fontUrl from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff?url";
+import { readToken } from "../themeColor";
 
 /**
  * The Graveyard — 64 extruded columns over a chessboard, one per square, each
@@ -104,7 +105,7 @@ export default function GraveyardScene({
       style={{ position: "absolute", inset: 0 }}
     >
       <ambientLight intensity={0.7} />
-      <pointLight position={[5, 9, 6]} intensity={90} color="#e8efe9" />
+      <pointLight position={[5, 9, 6]} intensity={90} color={readToken("--color-text", "#e8efe9")} />
       <OrbitControls
         autoRotate={!reduced}
         autoRotateSpeed={0.3}

@@ -19,6 +19,7 @@ import {
   simulate,
   type Tier,
 } from "./signalEngine.ts";
+import { readToken } from "../themeColor";
 
 /**
  * The Signal Lab — the "trip distances were off by large margins" bug from
@@ -215,7 +216,7 @@ export function SignalLabPane() {
         else pen = false;
       }
       ctx.setLineDash(bridged ? [4, 4] : []);
-      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : "#5ee6ff";
+      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : readToken("--color-probe", "#5ee6ff");
       ctx.lineWidth = bridged ? 1.8 : 2.4;
       ctx.shadowColor = "rgba(94, 230, 255, 0.5)";
       ctx.shadowBlur = 5;
@@ -232,7 +233,7 @@ export function SignalLabPane() {
       const pt = projectXY(here.truth);
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e8efe9";
+      ctx.fillStyle = readToken("--color-text", "#e8efe9");
       ctx.fill();
       ctx.strokeStyle = "rgba(5,7,10,0.8)";
       ctx.lineWidth = 1.5;
@@ -292,7 +293,7 @@ export function SignalLabPane() {
       const v = toInset(here.truth);
       ctx.beginPath();
       ctx.arc(v.x, v.y, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e8efe9";
+      ctx.fillStyle = readToken("--color-text", "#e8efe9");
       ctx.fill();
       ctx.restore();
 
@@ -337,7 +338,7 @@ export function SignalLabPane() {
         At Dice.tech, field users' trip distances were off by large margins — urban canyons, tunnels and
         OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
         fix, rebuilt from scratch as Mileway's location engine and running over a real 17.4 km loop through
-        Pune. Raw GPS reads the drive as roughly <span className="text-[#f0883e]">40 km</span>, because noise
+        Pune. Raw GPS reads the drive as roughly <span className="text-warn">40 km</span>, because noise
         adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
         back. Every figure below is summed geodesic distance over the points a stage actually kept — no
         fidelity factors, and the tests assert these exact headlines.
@@ -403,7 +404,7 @@ export function SignalLabPane() {
                   </span>
                   <span
                     className={`w-16 shrink-0 text-right font-mono text-xs ${
-                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-[#f0883e]"
+                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-warn"
                     }`}
                   >
                     {fmtPct(row.errorPct)}
@@ -438,7 +439,7 @@ export function SignalLabPane() {
               <span key={z.id} className="flex items-center gap-1.5">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ background: z.color }} />
                 <span className="text-muted">{z.label.toLowerCase()}</span>
-                <span className={Math.abs(pct) < 15 ? "text-accent" : "text-[#f0883e]"}>{fmtPct(pct)}</span>
+                <span className={Math.abs(pct) < 15 ? "text-accent" : "text-warn"}>{fmtPct(pct)}</span>
               </span>
             );
           })}
@@ -458,7 +459,7 @@ export function SignalLabPane() {
               type="checkbox"
               checked={tier === "budget"}
               onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")}
-              className="accent-[#3ddc84]"
+              className="accent-signal"
             />
             budget device
             <span className="text-muted">({CADENCE_S[tier]}s fixes)</span>
@@ -502,7 +503,7 @@ export function SignalLabPane() {
 }
 
 function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: "good" | "bad" | "neutral" }) {
-  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-[#f0883e]" : "text-zinc-200";
+  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-warn" : "text-zinc-200";
   return (
     <div className="bg-void/70 px-5 py-3">
       <p className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</p>

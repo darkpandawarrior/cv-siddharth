@@ -82,7 +82,7 @@ export default function GuessTheMove({
           <p aria-live="polite" aria-atomic="true" className="mt-3 text-sm leading-relaxed text-zinc-300">
             {guess ? (
               <>
-                <span className={correct ? "text-accent" : "text-[#ff5c5c]"}>
+                <span className={correct ? "text-accent" : "text-danger"}>
                   {correct ? "Right" : "Wrong"}
                 </span>{" "}
                 — he {position.result === "win" ? "won" : "lost"} it. {position.speed} on{" "}
