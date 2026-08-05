@@ -614,20 +614,24 @@ function CaseStudies() {
               <article className="card-elevated group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
-                  {/* Ornamental index, deliberately at 10% accent (1.18:1) —
-                      it is texture, not content: the card already states its
-                      metric and title, and a screen reader announcing "02"
-                      adds nothing. aria-hidden is the honest declaration of
-                      that AND what stops axe judging it as unreadable text.
-                      It only ever escaped the gate because it sits below the
-                      fold, where the reveal animation left it invisible to
-                      the scan. */}
+                  {/* Ornamental index, deliberately a ghost at 10% accent
+                      (1.18:1). It is texture, not content — the card already
+                      states its metric and title, and "02" tells a reader
+                      nothing DOM order doesn't.
+                      Rendered as generated content via CSS, not a text node.
+                      aria-hidden alone does NOT satisfy the contrast rule and
+                      shouldn't: hiding text from assistive tech doesn't help
+                      the low-vision users who still see it. WCAG 1.4.3 exempts
+                      decoration, and `content:` is how you actually declare
+                      that — the alternative was brightening a watermark to 3:1
+                      until it stopped being a watermark.
+                      It escaped the gate for so long only because it sits
+                      below the fold, where the reveal left it unscanned. */}
                   <span
                     aria-hidden="true"
-                    className="font-display select-none text-4xl font-black leading-none text-accent/10"
-                  >
-                    {String(i + 2).padStart(2, "0")}
-                  </span>
+                    data-index={String(i + 2).padStart(2, "0")}
+                    className="card-index font-display select-none text-4xl font-black leading-none text-accent/10"
+                  />
                 </div>
                 <h3 className="font-display mt-2 text-lg font-bold">{cs.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
