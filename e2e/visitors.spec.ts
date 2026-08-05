@@ -21,6 +21,24 @@ import { test, expect, type Browser, type Page } from "@playwright/test";
 
 const PLAQUE = 'section[aria-label="Visitor count"]';
 
+/** Forces the no-WebGL fallback so /playground always lands on RoomGrid +
+ *  VisitorPlaque — the page this whole suite is about — regardless of
+ *  whether this browser could otherwise run the playground-world's 3D world
+ *  by default (this test env's headless Chromium can, via SwiftShader). The
+ *  door counter itself is unaffected either way: PlayRoom wraps both views,
+ *  neither view owns the shared playhtml layer underneath it. */
+async function stubListView(page: Page) {
+  await page.addInitScript(() => {
+    const orig = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = new Proxy(orig, {
+      apply(target, thisArg, args: [string, ...unknown[]]) {
+        if (args[0] === "webgl" || args[0] === "webgl2" || args[0] === "experimental-webgl") return null;
+        return Reflect.apply(target, thisArg, args);
+      },
+    });
+  });
+}
+
 async function plaqueText(page: Page): Promise<string> {
   const plaque = page.locator(PLAQUE);
   await expect(plaque).toBeVisible({ timeout: 20_000 });
@@ -67,6 +85,7 @@ async function freshVisit(browser: Browser): Promise<number> {
   const context = await browser.newContext();
   try {
     const page = await context.newPage();
+    await stubListView(page);
     await page.goto("/playground");
     return await doorTotal(page);
   } finally {
@@ -86,6 +105,7 @@ test.describe("the visitor ledger", () => {
   test("does not count the same browser again, however often it comes back", async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    await stubListView(page);
 
     await page.goto("/playground");
     const counted = await doorTotal(page);
@@ -104,6 +124,7 @@ test.describe("the visitor ledger", () => {
   test("gives a visitor a number and still knows it next time", async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    await stubListView(page);
 
     await page.goto("/playground");
     await doorTotal(page);
@@ -120,6 +141,7 @@ test.describe("the visitor ledger", () => {
   test("declines to count a browser that will not remember being counted", async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    await stubListView(page);
     // Only this feature's own keys are refused, which isolates the counter from
     // the shared layer underneath it: playhtml keeps its player identity in
     // localStorage too, and blocking everything would be testing that instead.
@@ -164,6 +186,7 @@ test.describe("the visitor ledger", () => {
   test("keeps the rooms readable when the shared layer cannot start at all", async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
+    await stubListView(page);
     /* Chrome with "block all cookies" set does not hand back a storage object
      * whose methods fail — reaching for `localStorage` at all throws. That is
      * the shape worth testing, and it is the one that takes playhtml's init

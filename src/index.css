@@ -302,6 +302,18 @@ html.resume-mode body {
   .instrument-view {
     display: none !important;
   }
+
+  /* Same reasoning for the Playground world: a WebGL canvas is a black
+     rectangle on paper. .playground-canvas (Playground.tsx) is the wrapper
+     around just the Canvas + WorldBoundary — NOT .playground-world itself,
+     which is the shared <main> and also hosts an sr-only RoomGrid. Hiding
+     only the canvas wrapper here is what lets that sr-only grid (unhidden by
+     its own print:not-sr-only class in Playground.tsx) become the page that
+     actually prints, instead of hiding the only content main had and
+     printing a blank page. */
+  .playground-canvas {
+    display: none !important;
+  }
 }
 
 /* --- A11y ---------------------------------------------------------------- */
