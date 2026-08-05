@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import { useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp } from "./lib/facets";
 import { baselineTicks, deviationsFor, hitTest } from "./lib/railGeometry";
@@ -59,6 +61,7 @@ export default function AnomalyRail() {
   // need to trigger a React render on top of that.
   const hoveredRef = useRef<string | null>(null);
   const [instrumentOpen, setInstrumentOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -67,6 +70,18 @@ export default function AnomalyRail() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // A route change while the overlay is open (the terminal's ` hotkey,
+  // browser back/forward, a link inside the overlay itself) has to close it
+  // — InstrumentView's `inert` effect snapshots document.body.children once,
+  // on open, and the router swaps the routed page's DOM node out from under
+  // that snapshot on navigation, leaving the new page's node never inerted
+  // and the dialog open over a fully reachable background. Closing here runs
+  // the exact same cleanup as a normal close (closeInstrument, below), so
+  // nothing is left half-inerted.
+  useEffect(() => {
+    setInstrumentOpen(false);
+  }, [pathname]);
 
   // `\` opens the instrument view from anywhere on the site — same pattern
   // as the terminal's backtick hotkey in __root.tsx: ignore modified presses
@@ -160,29 +175,57 @@ export default function AnomalyRail() {
     // never stops (that's useCanvasLoop's design), so it was competing with
     // everything else on the page — including a large native "smooth"
     // scrollIntoView — for the whole time the rail is mounted, i.e. always.
-    // Cache both, keyed on the last height we drew at.
+    // Cache both, keyed on the last height we drew at — and read the CAL-1
+    // tokens (a getComputedStyle call) at that same cadence instead of every
+    // frame: this site has no runtime theme toggle, so nothing but a resize
+    // can invalidate them.
     let cachedH = -1;
     let cachedTicks: number[] = [];
     let cachedDeviations = deviationsFor(facets, 0, DEVIATION_PAD);
+    let accent = "";
+    let accent2 = "";
+
+    // What the last frame actually painted. Once the one-shot sweep hint
+    // finishes and the pointer stops moving, every subsequent frame is
+    // byte-identical to the one before it — measured: two snapshots 1.5s
+    // apart hash identical — yet useCanvasLoop's rAF loop never stops.
+    // Skipping the clear+restroke when nothing changed fixes that without
+    // touching the loop itself. Not applied under reduced motion: that path
+    // draws at most a couple of times total (once on mount, once per
+    // resize), so there's no perpetual loop to save here, and skipping would
+    // risk racing the resize-triggered redraw that keeps the frozen frame
+    // from going blank (see useCanvasLoop.ts).
+    let lastHovered: string | null = null;
+    let lastSweepDone = false;
 
     const draw = () => {
       const { width, height: h } = getSize();
-      ctx.clearRect(0, 0, width, h);
-      if (h <= 0) return;
+      if (h <= 0) {
+        ctx.clearRect(0, 0, width, h);
+        return;
+      }
 
-      if (h !== cachedH) {
+      const resized = h !== cachedH;
+      if (resized) {
         cachedH = h;
         cachedTicks = baselineTicks(h, TICK_SPACING);
         cachedDeviations = deviationsFor(facets, h, DEVIATION_PAD);
+        // Read tokens at runtime (not hardcoded hex) so a palette change
+        // propagates. document.documentElement, not any scoped override —
+        // this rail sits outside <main>, so it always reflects the root theme.
+        const tokens = getComputedStyle(document.documentElement);
+        accent = tokens.getPropertyValue("--color-accent").trim();
+        accent2 = tokens.getPropertyValue("--color-accent2").trim();
       }
 
-      // Read tokens at runtime (not hardcoded hex) so a palette change
-      // propagates. document.documentElement, not any scoped override —
-      // this rail sits outside <main>, so it always reflects the root theme.
-      const tokens = getComputedStyle(document.documentElement);
-      const accent = tokens.getPropertyValue("--color-accent").trim();
-      const accent2 = tokens.getPropertyValue("--color-accent2").trim();
+      const hovered = hoveredRef.current;
+      const sweepDone = sweepT >= 1;
+      if (!reduced && !resized && sweepDone && lastSweepDone && hovered === lastHovered) return;
+      lastHovered = hovered;
+      lastSweepDone = sweepDone;
+
       const cx = width / 2;
+      ctx.clearRect(0, 0, width, h);
 
       // Baseline: a faint repeating tick scale — the thing deviations are
       // measured against. One path for every tick (not one stroke() call
@@ -212,7 +255,6 @@ export default function AnomalyRail() {
       }
 
       // Deviations: the measured signal, one per facet, laid out by chronology.
-      const hovered = hoveredRef.current;
       for (const d of cachedDeviations) {
         const isHovered = d.id === hovered;
         ctx.beginPath();
@@ -260,9 +302,10 @@ export default function AnomalyRail() {
       >
         <nav aria-label="Timeline" className="anomaly-rail-nav">
           {orderedFacets.map((facet) => (
-            <a
+            <Link
               key={facet.id}
-              href={facet.href}
+              to={facet.to}
+              hash={facet.hash}
               className="anomaly-rail-link"
               style={{ top: `${yById.get(facet.id) ?? 0}px` }}
               aria-label={`${facet.label} — ${dualStamp(facet)}`}

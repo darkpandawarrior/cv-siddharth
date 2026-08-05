@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Link } from "@tanstack/react-router";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp, isRecovered } from "./lib/facets";
 import { wrapFocusTarget } from "./lib/focusTrap";
@@ -117,12 +118,12 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
       <ol className="instrument-view-list">
         {orderedFacets.map((facet) => (
           <li key={facet.id}>
-            <a href={facet.href} onClick={onClose} className="instrument-view-link">
+            <Link to={facet.to} hash={facet.hash} onClick={onClose} className="instrument-view-link">
               <span className="instrument-view-label">{facet.label}</span>
               <span className="instrument-view-stamp">
                 {isRecovered(facet, 2) ? dualStamp(facet) : facet.authored}
               </span>
-            </a>
+            </Link>
           </li>
         ))}
       </ol>
