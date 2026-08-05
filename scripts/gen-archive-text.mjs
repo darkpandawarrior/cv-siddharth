@@ -51,6 +51,9 @@ const PRINTED = [
   { slug: "honest-college-fests", year: "", note: "First published here" },
   { slug: "the-pun-force", year: "", note: "First published here" },
   { slug: "college-clubs", year: "", note: "First published here" },
+  // Recovered 2026-08-05. Never ran in print — page 0 is the interface's own
+  // convention for that, not a placeholder standing in for a real page.
+  { slug: "the-tour", year: "2020", page: 0, note: "Unfinished draft, recovered from the archive" },
 ];
 
 /**
