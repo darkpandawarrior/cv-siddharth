@@ -35,7 +35,7 @@ function InkRoute() {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-        <div className="mx-auto max-w-5xl px-6 pt-12">
+        <div className="section-y mx-auto max-w-5xl px-6">
           <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
           <h1 className="font-display mt-3 text-hero">The Ink</h1>
           <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>

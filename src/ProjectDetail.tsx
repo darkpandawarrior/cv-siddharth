@@ -174,7 +174,7 @@ function ShareProject({ slug, name }: { slug: string; name: string }) {
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="reveal mb-8">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// {eyebrow}</p>
+      <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// {eyebrow}</p>
       <h2 className="font-display text-h2 font-bold tracking-tight">{title}</h2>
     </div>
   );
@@ -287,7 +287,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
       <div className="relative overflow-hidden border-b border-line">
         <div className="aurora pointer-events-none absolute inset-0 opacity-80 print:hidden" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-ink print:hidden" />
-        <div className="relative mx-auto max-w-5xl px-6 pb-14 pt-10">
+        <div className="section-y relative mx-auto max-w-5xl px-6">
           <button type="button" onClick={() => goToSection("projects")} className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
             <ArrowLeft size={16} /> All projects
           </button>
@@ -545,7 +545,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <div className="section-y mx-auto max-w-6xl px-6">
             <div className="mb-8 flex items-center justify-between gap-4">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// gallery</p>
+                <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// gallery</p>
                 <h2 className="font-display text-h2 font-bold tracking-tight">
                   Screens <span className="text-muted">({items.length})</span>
                 </h2>

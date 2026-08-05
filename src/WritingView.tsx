@@ -71,6 +71,8 @@ export function WritingView() {
           <span className="flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300">
             <PenLine size={13} className="text-accent" /> The Loopdown
           </span>
+          {/* Deliberately smaller than a landing-page hero, same demotion excelsior
+              documents: this is a writing hub, not a doorway page. */}
           <h1 className="font-display mt-5 text-h2 font-bold tracking-tight">
             Field notes from an engineer who <span className="hero-shimmer">writes.</span>
           </h1>
@@ -82,7 +84,7 @@ export function WritingView() {
         </section>
 
         {/* lessons */}
-        <section className="pb-16">
+        <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Lessons</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {sorted.map((l, i) => {
@@ -148,7 +150,7 @@ export function WritingView() {
         </section>
 
         {/* series */}
-        <section className="border-t border-line pb-16 pt-12">
+        <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Series</h2>
           <div className="mt-5 flex flex-wrap gap-3">
             {series.map((s) => (
@@ -167,7 +169,7 @@ export function WritingView() {
 
         {/* the recurring cast */}
         {cast.length > 0 && (
-          <section className="border-t border-line pb-16 pt-12">
+          <section className="border-t border-line section-y">
             <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
               The cast <span className="text-muted">· the bugs, personified</span>
             </h2>
@@ -198,7 +200,7 @@ export function WritingView() {
         )}
 
         {/* archive */}
-        <section className="border-t border-line pb-24 pt-12">
+        <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
             Archive <span className="text-muted">· earlier writing</span>
           </h2>

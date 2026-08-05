@@ -54,7 +54,7 @@ function ReadPiece() {
       {/* The root skip link targets #main-content on every route; without it
           here, "Skip to content" went nowhere and the a11y gate timed out
           waiting for the selector. */}
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl px-6 py-10">
+      <main id="main-content" tabIndex={-1} className="section-y mx-auto max-w-2xl px-6">
         <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
           <ArrowLeft size={16} /> The Ink
         </Link>
