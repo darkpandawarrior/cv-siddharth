@@ -3,8 +3,7 @@ import { baselineTicks, deviationsFor, hitTest } from "./railGeometry";
 import type { Facet } from "../data/facets";
 
 const f = (id: string, authored: string): Facet => ({
-  id, label: id, href: `/${id}`, authored, discovered: authored,
-  paths: ["deep"], kind: "work",
+  id, label: id, to: `/${id}`, authored, discovered: authored,
 });
 
 describe("baselineTicks", () => {

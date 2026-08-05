@@ -1,22 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { facetsForPath, byChronology, isRecovered, dualStamp } from "./facets";
+import { byChronology, isRecovered, dualStamp } from "./facets";
 import type { Facet } from "../data/facets";
 
 const f = (over: Partial<Facet>): Facet => ({
-  id: "x", label: "X", href: "/x", authored: "2024-01-01",
-  discovered: "2024-01-01", paths: ["deep"], kind: "work", ...over,
-});
-
-describe("facetsForPath", () => {
-  it("keeps only facets that declare the path", () => {
-    const all = [f({ id: "a", paths: ["fast"] }), f({ id: "b", paths: ["deep"] })];
-    expect(facetsForPath(all, "fast").map((x) => x.id)).toEqual(["a"]);
-  });
-
-  it("keeps a facet that declares several paths", () => {
-    const all = [f({ id: "a", paths: ["fast", "deep"] })];
-    expect(facetsForPath(all, "deep").map((x) => x.id)).toEqual(["a"]);
-  });
+  id: "x", label: "X", to: "/x", authored: "2024-01-01",
+  discovered: "2024-01-01", ...over,
 });
 
 describe("byChronology", () => {

@@ -1,8 +1,4 @@
-import type { Facet, FacetPath } from "../data/facets";
-
-export function facetsForPath(all: Facet[], path: FacetPath): Facet[] {
-  return all.filter((f) => f.paths.includes(path));
-}
+import type { Facet } from "../data/facets";
 
 /** Ordered by when the thing was MADE, which is not when it turned up. */
 export function byChronology(all: Facet[]): Facet[] {
