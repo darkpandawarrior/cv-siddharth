@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Activity, LayoutGrid } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
+import { CommandPalette } from "./CommandPalette.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { ROOMS, type Room } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
@@ -16,8 +17,11 @@ import { usePulse, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
  * behind one door makes the point explicit: this portfolio is a running program,
  * and each room is a small proof of the engineering the CV describes.
  *
- * Each room is its own route (rendered one at a time, so only one canvas / WebGL
- * context is ever live) and shares the RoomFrame chrome below.
+ * Each room is its own route, rendered one at a time so only one canvas / WebGL
+ * context is ever live. This hub keeps its OWN header rather than RoomFrame's —
+ * RoomFrame's first control links back here, which from here is a link to
+ * itself. (This comment used to claim it shared RoomFrame's chrome. It never
+ * did, and that drift is why the palette was missing from this page.)
  */
 
 function RoomCard({ r, i }: { r: Room; i: number }) {
@@ -87,6 +91,12 @@ function PlaygroundInner() {
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* The hub keeps its own header rather than RoomFrame's — RoomFrame
+                links back to the Playground, which from the Playground is a
+                link to itself. But it was also missing the palette, so the one
+                page whose whole job is "every room, one door" was the one page
+                you couldn't reach the other rooms from by keyboard. */}
+            <CommandPalette />
             <PresenceBadge className="hidden sm:flex" />
             <button
               onClick={() => openChat()}

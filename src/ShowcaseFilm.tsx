@@ -12,6 +12,7 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [ended, setEnded] = useState(false);
+  const [line, setLine] = useState("");
   const base = `/projects/${slug}/showcase`;
 
   useEffect(() => {
@@ -29,8 +30,32 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
     return () => observer.disconnect();
   }, []);
 
+  // The film already burns its own short caption ("Sign in, or skip it
+  // entirely") into every frame. The WebVTT track carries something different
+  // — the full spoken narration — so letting the UA render it `default` put
+  // two unrelated caption layers in the same place, straight across the phone.
+  // Instead: keep the track (it is the accessible transcript, and the <track>
+  // element still exposes it) but set it to `hidden`, which fires cuechange
+  // without painting, and render the narration ourselves in a strip BELOW the
+  // frame where it has room to be read.
+  useEffect(() => {
+    const el = video.current;
+    if (!el) return;
+    const track = el.textTracks[0];
+    if (!track) return;
+    track.mode = "hidden";
+    const onCue = () => {
+      const cue = track.activeCues?.[0] as VTTCue | undefined;
+      setLine(cue?.text ?? "");
+    };
+    track.addEventListener("cuechange", onCue);
+    onCue();
+    return () => track.removeEventListener("cuechange", onCue);
+  }, []);
+
   return (
-    <figure className="group relative overflow-hidden rounded-2xl border border-line bg-void">
+    <figure className="group overflow-hidden rounded-2xl border border-line bg-void">
+      <div className="relative">
       <video
         ref={video}
         muted={muted}
@@ -44,7 +69,7 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
         crossOrigin="anonymous"
       >
         <source src={`${base}/showcase.mp4`} type="video/mp4" />
-        <track kind="captions" src={`${base}/captions.vtt`} srcLang="en" label="English" default={muted} />
+        <track kind="captions" src={`${base}/captions.vtt`} srcLang="en" label="English" />
       </video>
       <div className="absolute bottom-3 right-3 flex gap-2">
         {ended && (
@@ -67,6 +92,15 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       </div>
+      </div>
+      {/* The narration strip. Min-height is reserved so the card does not jump
+          a line taller every time a cue with a longer sentence comes in. */}
+      <p
+        aria-live="off"
+        className="flex min-h-[4.25rem] items-center justify-center border-t border-line bg-surface px-6 py-3 text-center text-sm leading-relaxed text-zinc-300"
+      >
+        {line}
+      </p>
       <figcaption className="sr-only">{title} — narrated product tour</figcaption>
     </figure>
   );

@@ -3,31 +3,33 @@
 @theme {
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
-  --color-accent: #3ddc84; /* Android green */
-  --color-accent-dim: #2bb86c;
-  --color-ink: #0b0f0d;
-  --color-surface: #111613;
-  --color-card: #171e1a;
-  --color-line: #243029;
+  --color-accent: #f2a13d; /* CAL-1 Channel A — calibration amber, the MEASURED signal. 9.24:1 on ink. */
+  --color-accent-dim: #c47f2a; /* Channel A, hover/pressed/dim */
+  --color-ink: #0a0d0c;
+  --color-surface: #111514;
+  --color-card: #171c1a;
+  --color-line: #262e2b;
 
   /* --- SID//OS control-room tokens (additive — old vars above still work) - */
   --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
-  /* Second accent: cool cyan for telemetry/depth, distinct from the green signal */
-  --color-accent2: #5ee6ff;
-  --color-accent2-dim: #2fb8d6;
-  /* Deeper space-ink ground with a hint of blue, used behind the OS workspace */
-  --color-void: #05070a;
-  --color-void-deep: #020304;
+  /* CAL-1 Channel B — phosphor cyan, the BASELINE a Channel A value is measured
+     against. Never decorative: if it is cyan it is the thing being compared to. */
+  --color-accent2: #4fd6e0;
+  --color-accent2-dim: #35a8b0;
+  /* Deepest ground, behind the full-screen rooms. Warm-neutral, not the old cool green-black. */
+  --color-void: #060807;
   /* Glass surfaces (backdrop-blur panels — windows, dock, palette) */
   --color-glass: rgba(17, 22, 25, 0.66);
-  --color-glass-border: rgba(93, 230, 255, 0.14);
+  --color-glass-border: rgba(79, 214, 224, 0.14);
   /* Elevation shadows — stack for higher z windows */
   --shadow-elevation-1: 0 4px 16px -6px rgba(0, 0, 0, 0.5);
   --shadow-elevation-2: 0 14px 40px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-elevation-3: 0 28px 80px -16px rgba(0, 0, 0, 0.8), 0 0 40px -12px rgba(61, 220, 132, 0.25);
-  /* Glow gradients — signal (green) and depth (cyan) */
-  --gradient-glow-signal: radial-gradient(60% 60% at 50% 0%, rgba(61, 220, 132, 0.28), transparent 70%);
-  --gradient-glow-depth: radial-gradient(60% 60% at 50% 100%, rgba(94, 230, 255, 0.22), transparent 70%);
+  --shadow-elevation-3: 0 28px 80px -16px rgba(0, 0, 0, 0.8), 0 0 40px -12px rgba(242, 161, 61, 0.25);
+  /* Glow gradients — Channel A (amber) and Channel B (cyan). These carry their
+     colour in an rgba() literal, so they do NOT follow an accent token swap and
+     must be hand-edited. That is why they are listed here and not derived. */
+  --gradient-glow-signal: radial-gradient(60% 60% at 50% 0%, rgba(242, 161, 61, 0.28), transparent 70%);
+  --gradient-glow-depth: radial-gradient(60% 60% at 50% 100%, rgba(79, 214, 224, 0.22), transparent 70%);
 
   /* Fluid type scale — clamp(min, preferred, max), scales smoothly 375px→1920px.
      Tailwind v4 turns --text-* theme keys into `text-*` utilities directly. */
@@ -100,7 +102,7 @@ html {
 
 /* Subtle dot-grid in hero section */
 #top {
-  background-image: radial-gradient(circle, rgba(61, 220, 132, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(242, 161, 61, 0.07) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -118,8 +120,8 @@ html {
 
    Mobile mask tuning (2026-07 B2): the band's dense core is pulled UP so the
    sphere reads as a cap behind the eyebrow + the white "I take Android apps"
-   lines, then fades to nothing BEFORE the green `hero-shimmer` lines
-   ("prototype to platform") — green points over green text was the one spot
+   lines, then fades to nothing BEFORE the accented `hero-shimmer` lines
+   ("prototype to platform") — accent points over accent text was the one spot
    the headline lost legibility. Shorter height + a top-weighted fade keeps the
    sphere bold up top while the shimmer lines sit on clean ground. */
 .particle-hero {
@@ -195,8 +197,8 @@ body::before {
   z-index: -5;
   pointer-events: none;
   background:
-    radial-gradient(50% 40% at 85% -5%, rgba(94, 230, 255, 0.07), transparent 70%),
-    radial-gradient(60% 45% at 10% 0%, rgba(61, 220, 132, 0.08), transparent 70%);
+    radial-gradient(50% 40% at 85% -5%, rgba(79, 214, 224, 0.07), transparent 70%),
+    radial-gradient(60% 45% at 10% 0%, rgba(242, 161, 61, 0.08), transparent 70%);
 }
 
 html.resume-mode body::before {
@@ -305,7 +307,7 @@ html.resume-mode body {
 
 /* Hero accent line: slow living gradient sweep (paused for reduced motion) */
 .hero-shimmer {
-  background: linear-gradient(100deg, var(--color-accent) 20%, #a7f3c8 40%, var(--color-accent2) 60%, var(--color-accent) 80%);
+  background: linear-gradient(100deg, var(--color-accent) 20%, #f6e2bd 40%, var(--color-accent2) 60%, var(--color-accent) 80%);
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -322,14 +324,14 @@ html.resume-mode body {
    transform rides --ease-spring for a touch of overshoot on hover-in; :active
    snaps it down so the button feels physically pressable. */
 .btn-primary {
-  box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.35);
+  box-shadow: 0 0 0 0 rgba(242, 161, 61, 0.35);
   animation: cta-breathe 3.2s ease-in-out infinite;
   transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-out-quart);
 }
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
   animation-play-state: paused;
-  box-shadow: 0 8px 30px -8px rgba(61, 220, 132, 0.55);
+  box-shadow: 0 8px 30px -8px rgba(242, 161, 61, 0.55);
 }
 .btn-primary:active {
   transform: translateY(-1px) scale(0.97);
@@ -338,7 +340,7 @@ html.resume-mode body {
 }
 @keyframes cta-breathe {
   50% {
-    box-shadow: 0 0 24px -4px rgba(61, 220, 132, 0.4);
+    box-shadow: 0 0 24px -4px rgba(242, 161, 61, 0.4);
   }
 }
 
@@ -348,7 +350,7 @@ html.resume-mode body {
   100% { background: transparent; }
 }
 @keyframes cell-flash-good {
-  0% { background: rgba(61, 220, 132, 0.6); box-shadow: 0 0 14px -2px rgba(61, 220, 132, 0.8); }
+  0% { background: rgba(242, 161, 61, 0.6); box-shadow: 0 0 14px -2px rgba(242, 161, 61, 0.8); }
   100% { background: transparent; box-shadow: none; }
 }
 .cell-flash-bad { animation: cell-flash-bad 0.5s ease-out both; }
@@ -386,7 +388,7 @@ html.resume-mode body {
 /* Nav scroll-progress beam */
 .nav-progress {
   background: linear-gradient(90deg, var(--color-accent), var(--color-accent2));
-  box-shadow: 0 0 10px -1px rgba(61, 220, 132, 0.7);
+  box-shadow: 0 0 10px -1px rgba(242, 161, 61, 0.7);
   transition: width 0.1s linear;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -581,9 +583,9 @@ html.resume-mode body {
 }
 .aurora {
   background:
-    radial-gradient(60% 130% at 15% 0%, rgba(61, 220, 132, 0.20), transparent 60%),
+    radial-gradient(60% 130% at 15% 0%, rgba(242, 161, 61, 0.20), transparent 60%),
     radial-gradient(55% 110% at 92% 8%, rgba(43, 184, 108, 0.16), transparent 55%),
-    linear-gradient(125deg, rgba(61, 220, 132, 0.10), transparent 45%, rgba(61, 220, 132, 0.07));
+    linear-gradient(125deg, rgba(242, 161, 61, 0.10), transparent 45%, rgba(242, 161, 61, 0.07));
   background-size: 220% 220%;
   animation: aurora-shift 16s ease-in-out infinite;
 }
@@ -674,7 +676,7 @@ html.resume-mode body {
   background-image:
     var(--gradient-glow-signal),
     var(--gradient-glow-depth),
-    radial-gradient(circle, rgba(94, 230, 255, 0.05) 1px, transparent 1px);
+    radial-gradient(circle, rgba(79, 214, 224, 0.05) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 32px 32px;
 }
 
@@ -696,11 +698,11 @@ html.resume-mode body {
   background-color: var(--color-void);
   background-image:
     radial-gradient(1.5px 1.5px at 20% 30%, rgba(255, 255, 255, 0.55), transparent),
-    radial-gradient(1px 1px at 70% 15%, rgba(94, 230, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 70% 15%, rgba(79, 214, 224, 0.5), transparent),
     radial-gradient(1.5px 1.5px at 85% 60%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 40% 80%, rgba(61, 220, 132, 0.45), transparent),
+    radial-gradient(1px 1px at 40% 80%, rgba(242, 161, 61, 0.45), transparent),
     radial-gradient(1px 1px at 55% 45%, rgba(255, 255, 255, 0.35), transparent),
-    radial-gradient(1.5px 1.5px at 10% 70%, rgba(94, 230, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 10% 70%, rgba(79, 214, 224, 0.4), transparent),
     radial-gradient(1px 1px at 92% 35%, rgba(255, 255, 255, 0.4), transparent);
   background-repeat: repeat;
   background-size: 340px 340px;
@@ -796,6 +798,756 @@ html.resume-mode body {
   }
 }
 
+/* --- Editorial scroll spine ---------------------------------------------
+   Chapter markers, filing rows, brief labels and the closing CTA. Absorbed
+   from smit.fyi's editorial pacing; rebuilt for the dark system — where that
+   site slams a solid black word across a white page, this uses a "ghost" word
+   (near-ink fill + hairline accent stroke) so it marks the chapter without
+   blowing out a dark ground.
+
+   All the motion here is CSS-native scroll-driven animation. No listener, no
+   rAF, nothing on the scroll path; unsupported browsers get the static
+   composition, which is still a correct layout. */
+
+.chapter-word-wrap {
+  /* Full-bleed out of whatever max-w container it sits in. html already has
+     overflow-x:hidden, so the overhang never produces a page scrollbar. */
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  overflow: hidden;
+  padding-block: clamp(1.5rem, 4vw, 3.5rem);
+  pointer-events: none;
+  user-select: none;
+}
+
+.chapter-word {
+  display: block;
+  width: 112%; /* wider than the wrap, so the drift never exposes a bare edge */
+  margin-left: -6%;
+  height: auto;
+  /* Fades at both edges so the word reads as a passing marquee rather than as
+     text someone forgot to fit. */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+.chapter-word text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 118px; /* in viewBox units — the SVG scales it to the container */
+  text-transform: uppercase;
+  fill: var(--color-surface);
+  stroke: rgba(242, 161, 61, 0.22);
+  stroke-width: 1;
+  paint-order: stroke fill;
+}
+
+/* Parallax drift: the word slides against the scroll across its own view
+   window. `view()` ties the timeline to the element's trip through the
+   viewport — entry to exit — with no JS. */
+@supports (animation-timeline: view()) {
+  .chapter-word {
+    animation: chapter-drift linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+}
+@keyframes chapter-drift {
+  from {
+    transform: translate3d(5%, 0, 0);
+  }
+  to {
+    transform: translate3d(-5%, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter-word {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Title row: name left, bracketed category right, hairline under. */
+.meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 0.625rem;
+}
+.meta-row-tag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+.meta-row:hover .meta-row-tag {
+  color: var(--color-accent);
+}
+
+/* Small caps-ish label above a brief / deliverables column. */
+.brief-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* The closing ask, sized like it matters. Accent wipes in from the left on
+   hover; the arrow leads and the fill follows. */
+.giant-cta {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  padding: clamp(1rem, 3vw, 2rem) clamp(1.5rem, 5vw, 3.5rem);
+  text-align: left;
+  transition: border-color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta:hover {
+  border-color: var(--color-accent);
+}
+.giant-cta-label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 7vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta-arrow {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  font-size: clamp(1.5rem, 5vw, 3.5rem);
+  line-height: 1;
+  transition: transform var(--dur-base) var(--ease-out-expo), color var(--dur-base) var(--ease-out-quart);
+}
+.giant-cta:hover .giant-cta-arrow {
+  transform: translateX(0.35em);
+}
+/* The wipe. scaleX from the left edge keeps it one composited transform
+   instead of animating width. */
+.giant-cta-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(100deg, var(--color-accent) 0%, #f6e2bd 55%, var(--color-accent2) 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.giant-cta:hover .giant-cta-fill,
+.giant-cta:focus-visible .giant-cta-fill {
+  transform: scaleX(1);
+}
+.giant-cta:hover .giant-cta-label,
+.giant-cta:hover .giant-cta-arrow,
+.giant-cta:focus-visible .giant-cta-label,
+.giant-cta:focus-visible .giant-cta-arrow {
+  color: var(--color-ink);
+}
+.giant-cta-sub {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .giant-cta-fill,
+  .giant-cta-arrow {
+    transition: none;
+  }
+}
+
+/* --- World switch -------------------------------------------------------
+   Two halves of one control, split by a seam. Each half carries its own
+   world's colour so the switch itself previews where you are going — the Build
+   side stays signal-green, the Ink side ochre, in BOTH worlds. */
+
+.world-switch {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+}
+
+.world-switch-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding: 0.4rem 1rem;
+  transition: background-color var(--dur-fast) var(--ease-out-quart), color var(--dur-fast) var(--ease-out-quart);
+}
+.world-switch-label {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #a1a1aa;
+}
+.world-switch-sub {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.world-switch-seam {
+  width: 1px;
+  background-color: var(--color-line);
+}
+
+.world-switch-side:hover .world-switch-label {
+  color: #e8efe9;
+}
+/* The current side lights up in ITS world's colour, not the ambient accent —
+   that is what makes the control read as a map rather than a toggle. */
+.world-switch-side.is-current {
+  background-color: rgba(242, 161, 61, 0.1);
+}
+.world-switch-side.is-current .world-switch-label {
+  color: #f2a13d;
+}
+.world-switch-ink.is-current {
+  background-color: rgba(217, 164, 65, 0.12);
+}
+.world-switch-ink.is-current .world-switch-label {
+  color: #d9a441;
+}
+.world-switch-ink:hover .world-switch-label {
+  color: #d9a441;
+}
+
+/* --- The ink world ------------------------------------------------------
+   Two different lives should not wear the same skin. Everything about the
+   engineering half of this site is a control room: green signal on near-black,
+   grotesk and mono, glass panels. The writing years were paper — so inside
+   `.ink-world` the design tokens are swapped wholesale for lamplight on old
+   stock: warm sepia ground, cream ink, ochre accent, a high-contrast display
+   serif (Rozha One, already loaded and previously unused).
+
+   Scoped token overrides, not a second stylesheet: every component inside
+   keeps working because it reads the same var() names it always did. That is
+   the whole reason the palette lives in custom properties.
+
+   Deliberately still DARK. Going to cream paper mid-scroll is a flashbang, and
+   the contrast tokens are tuned against dark grounds — this reads as a
+   different room in the same building, not a different building. */
+
+.ink-world {
+  --color-ink: #14100c;
+  --color-surface: #1b1611;
+  --color-card: #221b15;
+  --color-line: #3a2f24;
+  --color-accent: #d9a441; /* ochre — 9.0:1 on the ink ground */
+  --color-accent-dim: #b8842c;
+  --color-accent2: #cf8f63; /* terracotta, replacing the telemetry cyan */
+  --color-accent2-dim: #a86f4a;
+  --color-muted: #a4978a; /* 7.1:1 on ink — still passes, still clearly quieter */
+  --font-display: "Rozha One", "Iowan Old Style", Georgia, serif;
+
+  background-color: var(--color-ink);
+  color: #efe7d8;
+  position: relative;
+}
+
+/* Paper grain. Two offset dot fields at low alpha read as fibre rather than
+   as a pattern, and cost one paint — no texture image to download. */
+.ink-world::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(217, 164, 65, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 70% 65%, rgba(207, 143, 99, 0.04) 1px, transparent 1px);
+  background-size: 23px 23px, 31px 31px;
+}
+.ink-world > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Display type in the ink world is set, not engineered: Rozha One is a
+   high-contrast Didone, so it wants tighter leading and NO negative tracking —
+   the thin strokes fall apart when you squeeze it. */
+.ink-world .font-display {
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.ink-world .meta-row-tag,
+.ink-world .brief-label {
+  font-family: var(--font-mono);
+}
+
+/* The threshold. A full-bleed seam that fades the control-room ground into the
+   ink ground, so crossing it is a felt transition rather than a hard edge. */
+.ink-threshold {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  height: clamp(4rem, 10vw, 9rem);
+  background: linear-gradient(to bottom, #111613 0%, #191410 55%, #14100c 100%);
+}
+/* A hairline rule with a gap in the middle, like a printed section break. */
+.ink-threshold::after {
+  content: "❦";
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  color: #d9a441;
+  opacity: 0.65;
+}
+
+/* --- Excelsior reader ----------------------------------------------------
+   A magazine that actually turns. The leaf rotates about the spine with a
+   front and a back face while the destination spread sits painted underneath,
+   so the page appears to lift off the one behind it rather than cross-fade. */
+
+.flipbook {
+  --flip-dur: 0.6s;
+}
+
+.flipbook-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 0.75rem;
+}
+.flipbook-years {
+  display: flex;
+  gap: 0.375rem;
+}
+.flipbook-year {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-year:hover {
+  color: #e8efe9;
+  border-color: var(--color-accent);
+}
+.flipbook-year.is-active {
+  border-color: var(--color-accent);
+  background-color: rgba(242, 161, 61, 0.12);
+  color: var(--color-accent);
+}
+.flipbook-counter {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+.flipbook-tools {
+  display: flex;
+  gap: 0.375rem;
+}
+.flipbook-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.5rem;
+  color: #d4d4d8;
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-tool:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.flipbook-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-block: clamp(1rem, 3vw, 2rem);
+  /* One perspective for the whole stage: the leaf and the pages it lifts off
+     have to share a vanishing point or the turn reads as a sticker peeling. */
+  perspective: 2400px;
+}
+
+.flipbook-book {
+  position: relative;
+  display: flex;
+  transform-style: preserve-3d;
+}
+
+/* A spread has to fit the window without scrolling — a magazine you have to
+   scroll to finish a page of is not a magazine. Height leads (capped against
+   the viewport), and the width follows from the page aspect. */
+.flipbook-side {
+  /* The subtraction is the page furniture above the stage (back link, title,
+     blurb, toolbar). Budgeting for it explicitly is what keeps a spread inside
+     the window on a 900px-tall laptop instead of running under the fold. */
+  height: clamp(16rem, calc(100vh - 24rem), 44rem);
+  aspect-ratio: 950 / 1230;
+  background-color: var(--color-card);
+  box-shadow: var(--shadow-elevation-2);
+}
+/* On the cover spread there is no left page — the single sheet centres itself
+   instead of sitting in the right half of an invisible two-page frame. */
+.flipbook-book.is-cover .flipbook-side-left {
+  display: none;
+}
+
+.flipbook-page {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+/* The turning leaf. */
+.flipbook-leaf {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  aspect-ratio: 950 / 1230; /* matches .flipbook-side exactly, or the leaf
+                               would not line up with the page it lifts off */
+  transform-style: preserve-3d;
+  z-index: 2;
+  animation-duration: var(--flip-dur);
+  animation-timing-function: var(--ease-out-quart);
+  animation-fill-mode: forwards;
+}
+.flipbook-leaf-right {
+  left: 50%;
+  transform-origin: left center;
+}
+.flipbook-leaf-left {
+  right: 50%;
+  transform-origin: right center;
+}
+.flipbook-book.is-cover .flipbook-leaf-right {
+  left: 0;
+}
+.flipbook-leaf-right.is-turning {
+  animation-name: flip-forward;
+}
+.flipbook-leaf-left.is-turning {
+  animation-name: flip-back;
+}
+@keyframes flip-forward {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-180deg); }
+}
+@keyframes flip-back {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(180deg); }
+}
+
+.flipbook-leaf-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background-color: var(--color-card);
+  box-shadow: var(--shadow-elevation-2);
+}
+.flipbook-leaf-back {
+  transform: rotateY(180deg);
+}
+
+.flipbook-nav {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.625rem;
+  color: #d4d4d8;
+  transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), opacity var(--dur-fast) linear;
+}
+.flipbook-nav:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.flipbook-nav:disabled {
+  opacity: 0.25;
+}
+
+/* Contact sheet */
+.flipbook-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(5, 7, 10, 0.97);
+  backdrop-filter: blur(6px);
+}
+.flipbook-sheet-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding: 1rem 1.25rem;
+}
+.flipbook-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.75rem;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+.flipbook-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  transition: border-color var(--dur-fast) var(--ease-out-quart), transform var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-thumb:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+.flipbook-thumb img {
+  display: block;
+  width: 100%;
+}
+.flipbook-thumb span {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(5, 7, 10, 0.8);
+  padding: 0.0625rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--color-muted);
+}
+
+/* Single page below the fold-in-half width — a two-page spread at 400px wide
+   is two unreadable columns. */
+@media (max-width: 767px) {
+  .flipbook-side-left {
+    display: none;
+  }
+  .flipbook-side,
+  .flipbook-leaf {
+    height: min(66vh, 34rem);
+  }
+  .flipbook-leaf-right {
+    left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipbook-leaf {
+    display: none; /* the destination spread is already rendered underneath */
+  }
+  .flipbook-thumb:hover {
+    transform: none;
+  }
+}
+
+/* --- Full-bleed screen marquee ------------------------------------------
+   The band of real app screens under a case-study header. Two identical rows
+   translated by exactly -50% of the track: the seam lands where copy 2 starts,
+   which is pixel-identical to where copy 1 started, so the loop is invisible.
+   One composited transform, nothing on the main thread. */
+
+.screen-marquee {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  margin-left: -50vw;
+  overflow: hidden;
+  padding-block: 1px;
+  border-block: 1px solid var(--color-line);
+  background-color: var(--color-void);
+  /* Edges dissolve instead of stopping — the row reads as continuing past the
+     viewport rather than as a clipped strip. */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.screen-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: screen-marquee 90s linear infinite;
+}
+.screen-marquee:hover .screen-marquee-track,
+.screen-marquee:focus-within .screen-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes screen-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.screen-marquee-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 0.5rem;
+}
+
+.screen-marquee-item {
+  height: clamp(11rem, 22vw, 17rem);
+  aspect-ratio: 9 / 19.5;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+}
+
+/* Reduced motion: no crawl. It becomes a scroller the reader drives, so the
+   screens are still all reachable — the content does not depend on the
+   animation running. */
+@media (prefers-reduced-motion: reduce) {
+  .screen-marquee {
+    overflow-x: auto;
+  }
+  .screen-marquee-track {
+    animation: none;
+  }
+  .screen-marquee-row:nth-child(2) {
+    display: none;
+  }
+}
+
+/* --- Excelsior shelf -----------------------------------------------------
+   A magazine credit rendered as a magazine. The cover swings on its spine
+   (rotateY about the left edge, inside a perspective) to reveal the spread
+   behind it, and the book lifts off the shelf as it opens. Pure CSS 3D — the
+   only JS is the lightbox. */
+
+.magazine-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  /* The shared vanishing point: one perspective on the row, not per-card, so
+     the three books read as sitting on the same shelf rather than each in its
+     own private box. */
+  perspective: 1600px;
+  perspective-origin: 50% 40%;
+}
+
+.magazine {
+  width: clamp(7.5rem, 18vw, 10rem);
+}
+
+.magazine-book {
+  position: relative;
+  aspect-ratio: 298 / 421;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.magazine:hover .magazine-book,
+.magazine:focus-within .magazine-book {
+  transform: translateY(-6px) rotateY(-6deg);
+}
+
+/* The page behind the cover. */
+.magazine-inside {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  border: 1px solid var(--color-line);
+  background-color: #f4f4f2;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.magazine-cover {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px 4px 4px 2px;
+  transform-origin: left center;
+  transform: rotateY(0deg);
+  box-shadow: var(--shadow-elevation-2);
+  transition: transform 0.75s var(--ease-out-expo), box-shadow var(--dur-slow) var(--ease-out-quart);
+  /* The spine: a darker strip down the binding edge, the cheapest cue that
+     this is a bound object and not a rectangle with a picture in it. */
+  border-left: 3px solid rgba(0, 0, 0, 0.45);
+  backface-visibility: hidden;
+}
+.magazine:hover .magazine-cover,
+.magazine:focus-within .magazine-cover {
+  transform: rotateY(-118deg);
+  box-shadow: var(--shadow-elevation-3);
+}
+
+.magazine-caption {
+  margin-top: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.magazine-action {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+.magazine-action:hover {
+  color: var(--color-accent2);
+}
+/* Secondary action under the primary one — same row of type, less voice. */
+.magazine-action-quiet {
+  margin-top: 0.25rem;
+  display: block;
+  color: var(--color-muted);
+}
+.magazine-action-quiet:hover {
+  color: #e8efe9;
+}
+
+/* Reduced motion: the books stay shut. The lightbox still opens the spread,
+   so nothing is only reachable through the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .magazine-book,
+  .magazine-cover {
+    transition: none;
+  }
+  .magazine:hover .magazine-book,
+  .magazine:focus-within .magazine-book,
+  .magazine:hover .magazine-cover,
+  .magazine:focus-within .magazine-cover {
+    transform: none;
+  }
+}
+
 /* Skills: tag-cloud chips with hover depth */
 .tag-chip {
   transition: transform var(--dur-fast) var(--ease-out-quart), opacity var(--dur-base) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), color var(--dur-fast) var(--ease-out-quart), background-color var(--dur-fast) var(--ease-out-quart);
@@ -816,7 +1568,7 @@ html.resume-mode body {
 .timeline-fill {
   background: linear-gradient(to bottom, var(--color-accent), var(--color-accent2));
   transition: height 0.1s linear;
-  box-shadow: 0 0 12px -2px rgba(61, 220, 132, 0.6);
+  box-shadow: 0 0 12px -2px rgba(242, 161, 61, 0.6);
 }
 @media (prefers-reduced-motion: reduce) {
   .timeline-fill {
@@ -824,7 +1576,7 @@ html.resume-mode body {
   }
 }
 .timeline-dot {
-  box-shadow: 0 0 0 4px rgba(61, 220, 132, 0.14);
+  box-shadow: 0 0 0 4px rgba(242, 161, 61, 0.14);
 }
 
 /* "Live" badge shimmer on multiplatform teasers with a playable web build */
@@ -892,7 +1644,7 @@ html.resume-mode body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent, rgba(61, 220, 132, 0.05), transparent);
+  background: linear-gradient(to bottom, transparent, rgba(242, 161, 61, 0.05), transparent);
   background-size: 100% 40%;
   background-repeat: no-repeat;
   animation: term-sweep 7s linear infinite;
@@ -910,8 +1662,8 @@ html.resume-mode body {
 
 /* Contact: status pulse dot */
 @keyframes status-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(61, 220, 132, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 161, 61, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(242, 161, 61, 0); }
 }
 .status-pulse {
   animation: status-pulse 2.2s ease-in-out infinite;

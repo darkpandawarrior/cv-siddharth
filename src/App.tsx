@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Mail,
   MapPin,
   ArrowUpRight,
   MessageCircle,
@@ -12,7 +11,6 @@ import {
   Monitor,
   Globe,
   Play,
-  LayoutGrid,
   Target,
   Crown,
 } from "lucide-react";
@@ -31,7 +29,8 @@ import { ScrollBot } from "./ScrollBot.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
-import { WritingSection } from "./WritingSection.tsx";
+import { ChapterWord, GiantCTA } from "./Editorial.tsx";
+import { WorldSwitch } from "./WorldSwitch.tsx";
 import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { ROOMS } from "./rooms.tsx";
@@ -87,15 +86,20 @@ function repoStatLine(slug: string): string | null {
   return `${s.modules} modules`;
 }
 
+/**
+ * The Build world's sections. Trimmed from seven to four: the bar was carrying
+ * seven anchors plus four route links plus a palette plus a CTA, which is not a
+ * navigation, it is an index. Skills and Experience are one scroll below Case
+ * studies and both are in ⌘K; Writing moved out to its own world entirely.
+ *
+ * These four are what a recruiter actually navigates to.
+ */
 const NAV_LINKS = [
   // First on purpose: recruiters are who this site is for, and the fit
   // analyzer is the one thing here they can't get from a PDF.
   { href: "#fit", label: "Fit check" },
   { href: "#work", label: "Case studies" },
   { href: "#projects", label: "Projects" },
-  { href: "#experience", label: "Experience" },
-  { href: "#skills", label: "Skills" },
-  { href: "#writing", label: "Writing" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -144,6 +148,7 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 // Everything reachable from the phone drawer — sections plus the sub-worlds.
 const DRAWER_EXTRAS = [
   { href: "#playground", label: "▶ The Playground" },
+  { href: "/ink", label: "The Ink — writing" },
   { href: "#loopdown", label: "The Loopdown" },
   { href: "#resume", label: "Résumé" },
 ];
@@ -223,6 +228,47 @@ function MobileMenu() {
   );
 }
 
+/**
+ * Nav telemetry — where I am and what time it is there, ticking. A portfolio
+ * that shows a live local clock reads as a place someone actually is, not a
+ * document that was uploaded once. Mono, muted, IST-pinned (the clock is *my*
+ * time, not the viewer's — that's the whole point of showing it).
+ */
+function NavClock({ className = "" }: { className?: string }) {
+  // `null` until mounted, deliberately: this renders under SSR, and a clock
+  // read on the server is milliseconds off the one read on the client, which
+  // React reports as a hydration mismatch. Server and first client render both
+  // emit nothing, then the effect fills it in.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    // Tick on the minute boundary, not every second: nothing here shows
+    // seconds, so a 1s interval would be 60x the wakeups for zero pixels.
+    let timer: number;
+    const schedule = () => {
+      timer = window.setTimeout(() => {
+        setNow(new Date());
+        schedule();
+      }, 60_000 - (Date.now() % 60_000));
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, []);
+  if (!now) return null;
+  const time = now.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return (
+    <span className={`items-center gap-2 font-mono text-[11px] tracking-wide text-muted ${className}`}>
+      <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" />
+      <time dateTime={now.toISOString()}>{time} IST</time>
+    </span>
+  );
+}
+
 function Nav() {
   const { progressRef, active } = useScrollSpy();
   const { goToSection } = useSectionNav();
@@ -242,9 +288,10 @@ function Nav() {
         >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
-        {/* gap-3 at lg (where the bar is only ~1009px wide and every label has
-            to stay on one line), back to gap-6 once max-w-6xl actually fits. */}
-        <div className="hidden items-center gap-3 text-sm text-zinc-400 lg:flex xl:gap-6">
+        {/* Four anchors and the world switch. With the link count halved the
+            old gap-3-at-lg squeeze is gone, so this is one spacing again. */}
+        <div className="hidden items-center gap-5 text-sm text-zinc-400 lg:flex">
+          <WorldSwitch current="build" />
           {NAV_LINKS.map((l) => (
             <button
               key={l.href}
@@ -256,14 +303,19 @@ function Nav() {
               {l.label}
             </button>
           ))}
-          <Link to="/playground" className="flex items-center gap-1 transition hover:text-accent">
-            <LayoutGrid size={13} /> Playground
-          </Link>
+          {/* Playground dropped from the bar — it is a room index reachable
+              from ⌘K, the explore section and the footer, and it was competing
+              with the world switch for the same glance. Résumé stays: it is
+              the one thing a recruiter looks for by name. */}
           <Link to="/resume" className="flex items-center gap-1 transition hover:text-accent">
             <FileText size={13} /> Résumé
           </Link>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* 2xl only. The link row is already at capacity at xl (see the
+              max-w-6xl note above) — the clock is a grace note, not something
+              worth reflowing the bar for. The hero eyebrow carries it always. */}
+          <NavClock className="hidden 2xl:flex" />
           <MobileMenu />
           <CommandPalette />
           <button
@@ -288,8 +340,13 @@ function Hero() {
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
       <div>
-        <p className="hero-eyebrow rise-in mb-4 flex items-center gap-2 text-sm text-zinc-400">
-          <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
+        <p className="hero-eyebrow rise-in mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+          <span className="flex items-center gap-2">
+            <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
+          </span>
+          {/* A live local clock — this is a place someone is, right now, not a
+              document that got uploaded once. */}
+          <NavClock className="flex" />
         </p>
         <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
@@ -486,6 +543,7 @@ function CaseStudies() {
   const [featured, ...rest] = caseStudies;
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
+      <ChapterWord>Case studies</ChapterWord>
       <Reveal>
         <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
@@ -603,6 +661,7 @@ function Projects() {
   return (
     <section id="projects" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
+        <ChapterWord>Things I've built</ChapterWord>
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
@@ -646,7 +705,10 @@ function Projects() {
                     </div>
                   )}
                   <div className="flex grow flex-col p-6">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  {/* Filing row: name left, bracketed status right, hairline
+                      under. The bracket makes the grid read as an index rather
+                      than a stack of loose cards. */}
+                  <div className="meta-row flex-wrap gap-y-1">
                     {/* Shared-element morph: this title lifts into the /project/$slug
                         hero <h1> of the same name. Keyed by slug so each card morphs
                         to its own detail; unique across the grid (only grid cards
@@ -658,9 +720,9 @@ function Projects() {
                     >
                       {p.name}
                     </h3>
-                    <span className="shrink-0 text-xs text-muted">{p.status}</span>
+                    <span className="meta-row-tag">[&nbsp;{p.status}&nbsp;]</span>
                   </div>
-                  <p className="mt-1 text-sm font-medium text-accent">{p.tagline}</p>
+                  <p className="mt-3 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
                     <p className="mt-2 font-mono text-[11px] text-muted">
                       <span className="text-accent2">◇</span> {statLine}
@@ -828,6 +890,7 @@ function ExperienceSection() {
   return (
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
+        <ChapterWord>Experience</ChapterWord>
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
@@ -1052,13 +1115,12 @@ function Contact() {
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
           Ask my AI assistant anything about my work, or reach out directly — I reply fast.
         </p>
+        {/* The ask, sized like it matters. Everything below it is a secondary
+            route to the same person — so it gets the weight, and they get a row. */}
+        <div className="mt-8">
+          <GiantCTA label="Let's talk" href={`mailto:${profile.email}`} sub={profile.email} />
+        </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href={`mailto:${profile.email}`}
-            className="card-elevated flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
-          >
-            <Mail size={16} /> {profile.email}
-          </a>
           <CopyEmail />
           <Link
             to="/resume"
@@ -1091,6 +1153,48 @@ function Contact() {
         </div>
       </Reveal>
       <SiteFooter />
+    </section>
+  );
+}
+
+/**
+ * The doorway into the other world. Not a teaser card — a threshold: the
+ * ground warms from control-room green-black into sepia across a full-bleed
+ * seam, and the panel below it is already wearing the ink palette. You can see
+ * the other life from here before you decide to walk into it.
+ */
+function InkDoorway() {
+  return (
+    <section id="writing" className="border-t border-line">
+      <div className="ink-threshold" aria-hidden />
+      <div className="ink-world">
+        <div className="section-y mx-auto max-w-5xl px-6">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
+          <h2 className="font-display mt-3 text-h2">The Ink</h2>
+          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "#cfc3b2" }}>
+            Before the Android work there were three years of a college magazine and a literary
+            society — English Editor, then Joint Chief Editor of a 128-page edition shipped entirely
+            remotely. Four published stories, all readable here, and the pieces the board wrote
+            about me. It's a different life, so it gets a different room.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to="/ink"
+              className="rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            >
+              Enter The Ink →
+            </Link>
+            <Link
+              to="/excelsior"
+              search={{ year: 2021, page: 44 }}
+              className="rounded-full border border-line px-6 py-2.5 font-semibold transition hover:border-accent"
+              style={{ color: "#cfc3b2" }}
+            >
+              Read "The Loopdown"
+            </Link>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -1173,21 +1277,9 @@ function ChessTeaser() {
 }
 
 export function HomePage() {
-  const navigate = useNavigate();
-  // Backtick summons the terminal from anywhere — unless you're typing in a
-  // field (including the terminal's own input, so ` types normally there).
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "`" || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
-      e.preventDefault();
-      navigate({ to: "/terminal" });
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
-
+  // The backtick-summons-the-terminal listener used to live here, which meant
+  // it only existed on `/` — while two separate copy strings promised it worked
+  // "from anywhere". It now lives in routes/__root.tsx, so the promise is true.
   return (
     <div className="min-h-screen">
       <AmbientBackground />
@@ -1206,7 +1298,10 @@ export function HomePage() {
         <ExperienceSection />
         <Circuit />
         <Skills />
-        <WritingSection />
+        {/* Writing lives in its own world now (/ink). What stays here is the
+            doorway — the homepage was 14,000px because it was carrying two
+            lives in one scroll. */}
+        <InkDoorway />
         <ChessTeaser />
         <Circuit />
         <PlaygroundTeaser />

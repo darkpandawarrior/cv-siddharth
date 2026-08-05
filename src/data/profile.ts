@@ -30,7 +30,7 @@ export const metrics = [
   { value: "50k+", label: "monthly active users", detail: "22k+ daily, platform owner at Dice.tech" },
   { value: "95%", label: "GPS accuracy", detail: "up from 50% — predictive dead reckoning" },
   { value: "80%", label: "crash reduction", detail: "Crashlytics + structured concurrency fixes" },
-  { value: "~87%", label: "UI-layer Compose", detail: "455k of 523k UI LOC in a ~960k LOC app; per-screen parity verification" },
+  { value: "~87%", label: "UI-layer Compose", detail: "~87% of the UI layer, verified screen by screen against the legacy XML" },
 ];
 
 // Core competency chips — shown in the résumé header and on LinkedIn
@@ -69,7 +69,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Platform",
-        text: "Python/Frappe on MariaDB and Docker Compose, with a LibreChat deployment and MCP tool wiring (Atlassian, Playwright). Delivered under Jira with PR review across four repositories.",
+        text: "Python and Frappe on MariaDB, running under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
       },
     ],
   },
@@ -80,11 +80,19 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Platform Ownership",
-        text: "De facto technical owner of a ~960k-LOC Kotlin app serving 50,000+ MAU — 74% of the production branch (2,808 of 3,804 commits) is mine, not a contributor's share.",
+        text: "Technical owner of the Android platform: a ~960k-LOC Kotlin app serving 50,000+ MAU. Set the module architecture, the release process and the review standards the team builds against.",
+      },
+      {
+        label: "Scope",
+        text: "Product Owner as well as engineer on the same platform — here the requirements and the delivery are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+      },
+      {
+        label: "Team",
+        text: "Took a junior engineer from Flutter to shipping production Kotlin, Java and React — he now manages this app at the company that acquired it. Ran interview loops for the company and helped hire onto both the frontend and the React Native mobile teams.",
       },
       {
         label: "Compose Migration",
-        text: "Led legacy Java/XML to ~87% of UI-layer code in Compose migration verified per-screen against the legacy XML baseline across mission-critical workflows.",
+        text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, checked screen by screen against the XML it replaced so nothing regressed on the way.",
       },
       {
         label: "Location Engineering",
@@ -92,7 +100,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Crash Reduction",
-        text: "Cut production crashes 80% on a 964k-LOC app at 22k DAU through concurrency and threading root-cause work — not defensive try/catch — plus dual Crashlytics + Sentry monitoring.",
+        text: "Cut production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch — paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
       },
       {
         label: "Security Hardening",
@@ -104,7 +112,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Product Growth",
-        text: "Shipped intelligent in-app review flows that took the Play Store listing from 1.6★/67 reviews to 4.5★/27.3K — closing 85% of the gap to a perfect 5.0 (+181% rating, 407x review volume).",
+        text: "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300 — the rating a prospective customer sees before they install anything.",
       },
       {
         label: "Travel Platform",
@@ -116,7 +124,7 @@ export const experience: Experience[] = [
       },
       {
         label: "CI/CD & Automation",
-        text: "Own the build platform: automated Fastlane build/signing/release pipelines and drove an AGP 9 upgrade across a 964k-LOC app, layered with agentic MCP workflows (Firebender).",
+        text: "Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, and wired agent tooling into the build itself (Firebender over MCP).",
       },
     ],
   },
@@ -127,15 +135,15 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Multi-Tenant Platform Ownership",
-        text: "Owned Android development across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike/car rental, shuttle, wallet) spanning customer, driver, and merchant apps — contributed to 1,179 branches across the two Android codebases; 3,235 commits total, ranking 3rd and 4th most prolific author on repos with 9-year, 10+-contributor histories I joined 7 years in.",
+        text: "Owned Android across a multi-vertical super-app — ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet — spanning customer, driver and merchant apps. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.",
       },
       {
         label: "White-Label Platform, Productising Variation",
-        text: "Rather than fork the app per client, built a per-tenant flavor system (build config, resource overlays, isolated storage/branding) so 858 white-label-named branches across two Android repos carry my commits — 459 autos, 399 driver, a subset of the 1,179 total — spanning 150+ distinct client codebases, cutting delivery time 80%. The problem was shipping one codebase to hundreds of tenants without forking myself to death; the flavor system is the mechanism that made that possible.",
+        text: "Every client wanted their own branded app, and forking per client would have been unmaintainable within a year. Built a per-tenant flavour system instead — build config, resource overlays, isolated storage and branding — so 150+ clients ship from one codebase across the customer and driver apps. Cut per-client delivery time by 80%.",
       },
       {
         label: "Product-Line Ownership",
-        text: "Worked product-side as well as engineering across 131 product-line branches — the dev and dev 3.0 mainlines plus the P2P carpool, trucking, e-bike and super-app verticals — shaping requirements alongside shipping them.",
+        text: "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals — writing the specs I then had to build.",
       },
       {
         label: "Payments at Scale",

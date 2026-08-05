@@ -14,7 +14,10 @@ import { Route as SplatRouteImport } from './routes/$'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
+import { Route as ExcelsiorRouteImport } from './routes/excelsior'
 import { Route as ForgeRouteImport } from './routes/forge'
+import { Route as HireRouteImport } from './routes/hire'
+import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
 import { Route as MapRouteImport } from './routes/map'
@@ -49,9 +52,24 @@ const ComposeRoute = ComposeRouteImport.update({
   path: '/compose',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExcelsiorRoute = ExcelsiorRouteImport.update({
+  id: '/excelsior',
+  path: '/excelsior',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgeRoute = ForgeRouteImport.update({
   id: '/forge',
   path: '/forge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HireRoute = HireRouteImport.update({
+  id: '/hire',
+  path: '/hire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InkRoute = InkRouteImport.update({
+  id: '/ink',
+  path: '/ink',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabRoute = LabRouteImport.update({
@@ -101,7 +119,10 @@ export interface FileRoutesByFullPath {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/hire': typeof HireRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -117,7 +138,10 @@ export interface FileRoutesByTo {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/hire': typeof HireRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -134,7 +158,10 @@ export interface FileRoutesById {
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
+  '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/hire': typeof HireRoute
+  '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
   '/map': typeof MapRoute
@@ -152,7 +179,10 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
+    | '/hire'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -168,7 +198,10 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
+    | '/hire'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -184,7 +217,10 @@ export interface FileRouteTypes {
     | '/blueprint'
     | '/chess'
     | '/compose'
+    | '/excelsior'
     | '/forge'
+    | '/hire'
+    | '/ink'
     | '/lab'
     | '/loopdown'
     | '/map'
@@ -201,7 +237,10 @@ export interface RootRouteChildren {
   BlueprintRoute: typeof BlueprintRoute
   ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
+  ExcelsiorRoute: typeof ExcelsiorRoute
   ForgeRoute: typeof ForgeRoute
+  HireRoute: typeof HireRoute
+  InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
   LoopdownRoute: typeof LoopdownRoute
   MapRoute: typeof MapRoute
@@ -249,11 +288,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComposeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/excelsior': {
+      id: '/excelsior'
+      path: '/excelsior'
+      fullPath: '/excelsior'
+      preLoaderRoute: typeof ExcelsiorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forge': {
       id: '/forge'
       path: '/forge'
       fullPath: '/forge'
       preLoaderRoute: typeof ForgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hire': {
+      id: '/hire'
+      path: '/hire'
+      fullPath: '/hire'
+      preLoaderRoute: typeof HireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ink': {
+      id: '/ink'
+      path: '/ink'
+      fullPath: '/ink'
+      preLoaderRoute: typeof InkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab': {
@@ -321,7 +381,10 @@ const rootRouteChildren: RootRouteChildren = {
   BlueprintRoute: BlueprintRoute,
   ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
+  ExcelsiorRoute: ExcelsiorRoute,
   ForgeRoute: ForgeRoute,
+  HireRoute: HireRoute,
+  InkRoute: InkRoute,
   LabRoute: LabRoute,
   LoopdownRoute: LoopdownRoute,
   MapRoute: MapRoute,

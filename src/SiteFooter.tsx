@@ -21,6 +21,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
     links: [
+      { label: "Hire me (90 seconds)", kind: "route", to: "/hire" },
       { label: "Fit check (paste a JD)", kind: "section", id: "fit" },
       { label: "Case studies", kind: "section", id: "work" },
       { label: "Projects", kind: "section", id: "projects" },

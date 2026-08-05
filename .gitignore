@@ -16,6 +16,11 @@ dist
 # build-time image derivatives (scripts/gen-images.mjs, regenerated in prebuild)
 public/**/*.avif
 public/**/*.webp
+# ...except the Excelsior magazine pages. Those are NOT derivatives — they are
+# the source, rendered from PDFs that do not live in this repo by the manual
+# scripts/gen-excelsior.mjs. Ignoring them would silently ship a reader with no
+# pages in it. gen-images.mjs skips this directory for the same reason.
+!public/excelsior/pages/**/*.webp
 
 # Playwright output
 test-results/
@@ -28,3 +33,4 @@ playwright-report/
 # frozen archive (last activity 2025-01-16) and its full NDJSON export takes
 # ~9 minutes, so it is fetched once and cached rather than re-pulled daily.
 .chess-cache/
+.excelsior-cache/

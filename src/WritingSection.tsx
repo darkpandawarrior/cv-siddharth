@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
+import { ExcelsiorShelf } from "./Excelsior.tsx";
+import { boardProfiles, boardArc, societies, loopdownOrigin } from "./data/beforeTheCode.ts";
 import {
   BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
@@ -35,9 +37,23 @@ export function WritingSection() {
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
-          <p className="mb-10 max-w-2xl text-zinc-400">
+          <p className="mb-5 max-w-2xl text-zinc-400">
             Field notes from real Android and KMP work, told through a recurring cast of personified
             bugs — plus the creative archive that came before the code.
+          </p>
+          {/* The name is inherited, not invented — worth saying up front, since
+              it is the whole reason an Android engineer has a writing section. */}
+          <p className="mb-10 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm leading-relaxed text-zinc-400">
+            "The Loopdown" isn't a brand I made up. It's a short story I wrote for{" "}
+            <Link
+              to="/excelsior"
+              search={{ year: Number(loopdownOrigin.year), page: loopdownOrigin.page }}
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              Excelsior '21
+            </Link>{" "}
+            — a week that refuses to end, 52 iterations of the same Wednesday. The hub, the repo and
+            the series all still carry its name.
           </p>
         </Reveal>
 
@@ -184,6 +200,102 @@ export function WritingSection() {
               </div>
               <p className="mt-2 text-sm leading-snug text-zinc-400">{BOOKS_BEFORE_BROS.blurb}</p>
             </a>
+          </div>
+        </Reveal>
+
+        {/* The print lineage. Before the blog and before the code there was a
+            128-page institute magazine with my signature in the masthead — so
+            it gets shown as a magazine, not as a line in a list. */}
+        <Reveal delay={120}>
+          <div className="mt-10 rounded-2xl border border-line bg-card p-6 sm:p-8">
+            <div className="meta-row">
+              <span className="font-display text-base font-bold tracking-tight">
+                Excelsior — MANIT's institute magazine
+              </span>
+              <span className="meta-row-tag">[&nbsp;print · 2019–21&nbsp;]</span>
+            </div>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              Three years on the Editorial Board at NIT Bhopal — English Editor on the 2019 and 2020
+              editions, Joint Chief Editor on 2021. That last one was 128 pages shipped entirely
+              remotely through the pandemic, and its cover story was the whole magazine: one frame
+              story branching into three paths a reader chooses between. Hover a cover to open it.
+            </p>
+            <div className="mt-8">
+              <ExcelsiorShelf />
+            </div>
+
+            {/* The part a CV cannot carry. Every year the board closes the
+                magazine with EB Profiles: each member gets a question, and a
+                teammate answers it in that member's voice. Three years of
+                those are the only outside record of what I was actually like
+                to work with — so they run verbatim, credited to the board,
+                not paraphrased into something flattering. */}
+            <div className="mt-12 border-t border-line pt-8">
+              <div className="meta-row">
+                <span className="font-display text-base font-bold tracking-tight">How the board wrote me</span>
+                <span className="meta-row-tag">[&nbsp;EB Profiles · in my voice, by them&nbsp;]</span>
+              </div>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                Each year every board member gets one question, answered by a teammate impersonating
+                them. Affectionate, accurate, and not written by me — which is the only reason
+                they're worth reading.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {boardProfiles.map((p) => (
+                  <Link
+                    key={p.year}
+                    to="/excelsior"
+                    search={{ year: Number(p.year), page: p.page }}
+                    className="card-elevated group flex flex-col rounded-2xl border border-line bg-surface p-5 transition hover:border-accent2/50"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
+                      <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
+                    </div>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{p.role}</p>
+                    <p className="mt-3 text-xs italic text-zinc-500">Q: {p.question}</p>
+                    <blockquote className="mt-2 grow text-sm leading-relaxed text-zinc-300">"{p.quote}"</blockquote>
+                    <p className="mt-3 font-mono text-[11px] text-muted">
+                      ~「{p.direction}」~{p.gloss ? ` · ${p.gloss}` : ""}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-6 max-w-3xl text-sm leading-relaxed text-zinc-400">{boardArc}</p>
+            </div>
+
+            {/* The two societies, and what they published. */}
+            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+              {societies.map((s) => (
+                <div key={s.name} className="rounded-2xl border border-line bg-surface p-5">
+                  <div className="meta-row">
+                    <span className="font-display text-sm font-bold">{s.name}</span>
+                    <span className="meta-row-tag">[&nbsp;{s.years}&nbsp;]</span>
+                  </div>
+                  <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-accent/80">{s.role}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-400">{s.blurb}</p>
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+                    {s.links.map((l) =>
+                      l.url.startsWith("/") ? (
+                        <Link key={l.url} to={l.url} className="text-xs font-semibold text-accent transition hover:text-accent-dim">
+                          {l.label} →
+                        </Link>
+                      ) : (
+                        <a
+                          key={l.url}
+                          href={l.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-zinc-400 transition hover:text-accent2"
+                        >
+                          {l.label} ↗
+                        </a>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </Reveal>
 

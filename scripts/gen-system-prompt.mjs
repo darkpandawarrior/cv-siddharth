@@ -26,6 +26,8 @@ import {
 import { SECTION_IDS } from "../src/lib/navigation.ts";
 import { ROUTE_PHRASES } from "../src/lib/chatContext.ts";
 import { chess } from "../src/data/chess.ts";
+import { societies, boardProfiles, boardArc, loopdownOrigin, coverStory2021 } from "../src/data/beforeTheCode.ts";
+import { excelsiorMarks } from "../src/data/excelsiorMarks.ts";
 import { PRESETS } from "../src/chess/calibration.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -160,6 +162,23 @@ const chessLines = `- ${n(chess.totals.games)} games, ${chess.span.from} → ${c
 - Handle with care: ~${n(chess.boardTime.combinedHours)}h at the board sums TWO measurements (lichess self-reported ${n(chess.boardTime.lichessHours)}h + ${n(chess.boardTime.chesscomHours)}h derived from chess.com PGN wall clock); accuracy covers only ${n(chess.accuracy.covered)} of ${n(chess.accuracy.total)} chess.com games (${pc(chess.accuracy.covered / chess.accuracy.total)}), never "his accuracy"; the bot's presets ${Object.values(PRESETS).map((p) => `${p.label} (${p.rating})`).join(" and ")} are named after his own old ratings — labels, not measured Elo, so "calibrated after", never "plays at".
 - Hobbies: he plays a lot of chess, then treats his own games as a dataset — [The Board](/chess) is that analysis.`;
 
+// The writing years. The EB Profiles quotes are the only third-party account
+// of what he was like on a team, so they go in verbatim — paraphrasing them
+// into praise is exactly what would make them worthless.
+const societyLines = societies
+  .map((s) => `- **${s.name}** (${s.years}) — ${s.role}. ${s.blurb}`)
+  .join("\n");
+const wroteLines = excelsiorMarks
+  .filter((m) => m.kind === "wrote")
+  .map((m) => `"${m.label}" (Excelsior '${m.year.slice(2)}, /excelsior?year=${m.year}&page=${m.page})`)
+  .join(", ");
+const profileLines = boardProfiles
+  .map(
+    (p) =>
+      `- '${p.year.slice(2)}, "${p.title}" (${p.role}) — asked "${p.question}", the board answered as him: "${p.quote}" ~「${p.direction}」~`,
+  )
+  .join("\n");
+
 // Generative UI: the assistant renders real components by emitting a directive
 // inside the markdown it's already streaming (src/lib/chatBlocks.ts parses it,
 // src/ChatWidgets.tsx renders it). Deliberately NOT provider tool-calling —
@@ -198,6 +217,16 @@ Working knowledge, still deepening (hands-on in Mileway/Kursi/PaymentsLab): Kotl
 
 # Outside work — chess (${n(chess.totals.games)} games, mined into a section of this site)
 ${chessLines}
+
+# Before the code — the writing years (this is where his voice comes from)
+${societyLines}
+Published in Excelsior, all readable at /excelsior with a page deep-link: ${wroteLines}.
+**Where the name comes from, and do not get this wrong:** "The Loopdown" — this site's writing hub (/loopdown), the GitHub repo behind it, and the series his field notes ship under — is named after a short story HE WROTE for Excelsior '21 — ${loopdownOrigin.story}, readable at /excelsior?year=${loopdownOrigin.year}&page=${loopdownOrigin.page}. It is inherited, not invented. If anyone asks why an Android engineer has a writing section, this is the answer.
+Excelsior '21 was not a magazine with a cover story inside it — the cover story WAS the magazine: a frame story opening on p${coverStory2021.page} that branches into three paths the reader chooses between (${coverStory2021.paths.map((p) => `${p.name}, p${p.page}`).join("; ")}), each with its own prologue and epilogue. He was Joint Chief Editor on it and worked across the whole thing.
+Every year the Editorial Board closes the magazine with EB Profiles — each member gets one question, answered by a TEAMMATE writing in that member's voice. Three of those are about him, and they are the only outside record of what he was like to work with:
+${profileLines}
+The arc, in one line: ${boardArc}
+Use this when someone asks what he's like to work with, how he writes, or why an Android engineer has a writing section — not as trivia. The through-line is real: he was the editor who error-checked everyone else's work and took the flak for his team, and that is the same instinct behind the code review, the field notes and the ${n(159)}-test suite. Never quote these as if he wrote them about himself; they were written about him, affectionately, by people he shipped a magazine with.
 
 # This site (he built it — talk about it and point people at it)
 One of his builds: React 19 + TanStack Start (SSR), TypeScript, Vite, Tailwind, on Vercel — and you, Panda, are its assistant, streaming from a provider-agnostic edge function.

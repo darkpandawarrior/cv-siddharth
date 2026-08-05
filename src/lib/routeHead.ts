@@ -50,6 +50,21 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
       `${countWord(siteRooms.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
       `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
+  "/hire": {
+    label: "Hire",
+    blurb:
+      "Senior Android engineer, platform owner of a ~960k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.",
+  },
+  "/ink": {
+    label: "The Ink",
+    blurb:
+      "The writing years — three editions of MANIT's institute magazine, a literary society, four published stories, and everything written before the code.",
+  },
+  "/excelsior": {
+    label: "Excelsior",
+    blurb:
+      "Three editions of MANIT Bhopal's institute magazine, readable here in full — English Editor on 2019 and 2020, Joint Chief Editor on 2021.",
+  },
   "/loopdown": {
     label: "The Loopdown",
     blurb:
