@@ -2,6 +2,7 @@ import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { AdditiveBlending, Color, MathUtils } from "three";
+import { readColor } from "./themeColor";
 import type { BufferAttribute, Group, Points as ThreePoints } from "three";
 
 /**
@@ -127,11 +128,6 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-function readColor(varName: string, fallback: string): Color {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-  return new Color(v || fallback);
-}
-
 function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMotion: boolean; interactive: boolean }) {
   const pointsRef = useRef<ThreePoints>(null);
   const groupRef = useRef<Group>(null);
@@ -163,7 +159,7 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
 
   // Theme-aware: read the site's own accent/accent2 CSS variables once, so
   // this stays in sync with whatever palette is active (light or dark).
-  const themeColors = useMemo(() => ({ c1: readColor("--color-accent", "#3ddc84"), c2: readColor("--color-accent2", "#5ee6ff") }), []);
+  const themeColors = useMemo(() => ({ c1: readColor("--color-accent", "#f2a13d"), c2: readColor("--color-accent2", "#4fd6e0") }), []);
   const colorAttrRef = useRef<BufferAttribute>(null);
   const colorPhase = useRef(0);
   const colors = useMemo(() => {

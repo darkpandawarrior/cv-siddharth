@@ -16,6 +16,20 @@
      against. Never decorative: if it is cyan it is the thing being compared to. */
   --color-accent2: #4fd6e0;
   --color-accent2-dim: #35a8b0;
+
+  /* --- Scene palette (NOT new colours — names for colours already shipping) ----
+     These were hardcoded across the 3D/canvas scenes, which is why a theme swap
+     never reached them: r3f props and canvas ctx take resolved strings, not
+     var(). Read them through readColor() in themeColor.ts, never inline.
+     Frequencies are the pre-migration hardcoded counts, kept as a receipt. */
+  --color-signal: #3ddc84; /* 71x — "lit/live/active" in every scene */
+  --color-signal-dim: #8ff0b4; /* 7x — the same signal, attenuated */
+  --color-probe: #5ee6ff; /* 43x — unlit/idle counterpart to signal */
+  --color-warn: #f0883e; /* 22x */
+  --color-danger: #ff5c5c; /* 11x */
+  --color-alt: #db61ff; /* 11x */
+  --color-text: #e8efe9; /* 22x — bright body text on dark grounds */
+  --color-text-dim: #cfc3b2; /* 5x */
   /* Deepest ground, behind the full-screen rooms. Warm-neutral, not the old cool green-black. */
   --color-void: #060807;
   /* Glass surfaces (backdrop-blur panels — windows, dock, palette) */
