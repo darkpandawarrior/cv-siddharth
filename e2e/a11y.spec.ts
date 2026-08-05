@@ -11,6 +11,7 @@ import AxeBuilder from "@axe-core/playwright";
 // console did before the dedicated test below was added.
 const ROUTES = [
   "/",
+  "/hire",
   "/resume",
   "/project/mileway",
   "/lab",

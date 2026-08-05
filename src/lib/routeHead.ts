@@ -50,6 +50,11 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
       `${countWord(siteRooms.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
       `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
   },
+  "/hire": {
+    label: "Hire",
+    blurb:
+      "Senior Android engineer, platform owner of a ~960k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.",
+  },
   "/ink": {
     label: "The Ink",
     blurb:

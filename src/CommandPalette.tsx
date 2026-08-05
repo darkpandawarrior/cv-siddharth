@@ -93,6 +93,9 @@ export function CommandPalette() {
         icon: <PenLine size={15} />,
         run: () => window.open(BOOKS_BEFORE_BROS.url, "_blank", "noreferrer"),
       },
+      // First in the jump list on purpose: it is the one surface built for
+      // someone who does not want to explore the site at all.
+      { id: "hire", label: "Hire me — the 90-second version", hint: "Open", keywords: "hire recruiter cv numbers metrics contact summary tldr", icon: <FileText size={15} />, run: () => navigate({ to: "/hire" }) },
       { id: "resume", label: "Résumé", hint: "Open", icon: <FileText size={15} />, run: () => navigate({ to: "/resume" }) },
       {
         id: "chat",
