@@ -14,7 +14,7 @@ export const profile = {
   availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. I own the platform behind a ~960k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. I care about the unglamorous engineering that makes apps feel reliable: location accuracy, crash-free sessions, and architecture a team can move fast in.",
+    "5+ years building production Android. I own the platform behind a ~960k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
     "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — technical owner of a ~960k-line, 50,000+ MAU financial Android app — inherited as a Java codebase with no Kotlin in it. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: staged dead-reckoning location engineering with Kalman smoothing and spike rejection (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction from concurrency root-cause work (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
@@ -1263,7 +1263,7 @@ export const projects: Project[] = [
     highlights: [
       "One lesson in, four channel-shaped posts out, each with a branded SVG card — the adaptation is the product, not the writing.",
       "A voice profile derived from the existing archive, enforced by a lint step, so the generated drafts do not read like a language model wrote them.",
-      "Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass — because seniority is the loop: you have run the same failure enough times to name it on sight.",
+      "Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass.",
       "Public/private split by construction: the engine and the published posts are tracked, drafts and personal notes are gitignored.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/the-loopdown" }],

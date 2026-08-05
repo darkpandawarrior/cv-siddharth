@@ -455,7 +455,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Deep-dive sections — tilt-glow cards, same signature hover as the homepage */}
       {d?.sections && d.sections.length > 0 && (
         <section className="section-y mx-auto max-w-5xl px-6">
-          <SectionHeader eyebrow="deep dive" title="How it works" />
+          <SectionHeader eyebrow="design notes" title="How it works" />
           <div className="grid gap-6 sm:grid-cols-2">
             {d.sections.map((s, i) => (
               <div key={s.heading} className="reveal h-full" style={{ transitionDelay: `${(i % 2) * 100}ms` }}>
