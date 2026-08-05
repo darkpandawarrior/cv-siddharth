@@ -10,11 +10,16 @@ import { wrapFocusTarget } from "./lib/focusTrap";
  * replacement — and it does not explain itself: labels name destinations,
  * nothing more.
  *
- * Focus handling is the point of this component. It is always mounted
- * (marked `inert` while closed) so opening/closing never remounts anything
- * and can carry a CSS transition; the dialog itself owns the focus trap
- * because the trigger is ambiguous (drag or global hotkey — there's no
- * single "open" button whose focus a browser default would trap for us).
+ * Focus handling is the point of this component. The dialog itself owns the
+ * focus trap because the trigger is ambiguous (drag or global hotkey —
+ * there's no single "open" button whose focus a browser default would trap
+ * for us). The `role="dialog"` element is only ever rendered while `open`
+ * — a closed dialog that merely looks hidden (`display:none`/`inert`) still
+ * carries the `dialog` role in the accessibility tree, which assistive tech
+ * can encounter and announce even though nothing is open. This component
+ * function itself (and its hooks) stays mounted for the rail's whole
+ * lifetime regardless — only the JSX it returns is conditional — so the
+ * routed page behind it is never touched by any of this.
  */
 
 const orderedFacets = byChronology(facets);
@@ -98,18 +103,14 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
+  // Not rendered at all while closed — see the doc comment above. Every
+  // effect above is already gated on `open`, so this costs nothing extra:
+  // they simply never fire (open effects) or already tore themselves down
+  // (close effects) by the time this returns null.
+  if (!open) return null;
+
   return (
-    <div
-      ref={dialogRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Timeline"
-      // Kept mounted at all times so the route underneath never unmounts;
-      // `inert` (not `display: none`) is what actually removes it from the
-      // a11y tree and the tab order while closed, so it costs axe nothing.
-      inert={!open}
-      className={`instrument-view${open ? " instrument-view-open" : ""}`}
-    >
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Timeline" className="instrument-view">
       <button type="button" onClick={onClose} aria-label="Close" className="instrument-view-close">
         Esc
       </button>

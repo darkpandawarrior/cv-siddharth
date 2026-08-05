@@ -1828,12 +1828,16 @@ html.resume-mode body {
   border-radius: 4px;
 }
 
-/* The rail's expansion — same trace as the rail, full-bleed. Always mounted
-   (see InstrumentView's `inert` prop); this is what actually animates the
-   open/close. `visibility` is delayed on the closed transition only, so it
-   waits for the fade-out to finish before leaving the layout — and cut to 0s
-   on the open transition, so it's interactive the instant it starts fading
-   in rather than only once the fade completes.
+/* The rail's expansion — same trace as the rail, full-bleed. Only mounted
+   while open (InstrumentView returns null when closed — a dialog that only
+   LOOKS hidden while closed still carries role="dialog" in the
+   accessibility tree, which assistive tech can encounter and announce even
+   though nothing is open; see e2e/navigation.spec.ts's `[role=dialog]`
+   count-is-0 check). `@starting-style` gives it a native fade/slide-in on
+   mount — no JS, degrades to an instant appearance on anything that doesn't
+   support it. There's no equivalent for animating an element OUT as it's
+   removed from the DOM without keeping it mounted (the exact thing being
+   fixed here), so closing is instant; an accepted trade-off.
 
    z-index 80: a true modal, so it must sit above everything else the site
    ever stacks — the rail itself (30), a route header (40), the flipbook's
@@ -1850,24 +1854,19 @@ html.resume-mode body {
   background: color-mix(in srgb, var(--color-void) 97%, transparent);
   backdrop-filter: blur(12px);
   padding: clamp(2rem, 6vw, 4.5rem) clamp(1.25rem, 6vw, 5rem);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(12px);
-  transition: opacity var(--dur-base) var(--ease-out-expo),
-    transform var(--dur-base) var(--ease-out-expo), visibility 0s linear var(--dur-base);
-}
-.instrument-view-open {
   opacity: 1;
-  visibility: visible;
   transform: translateY(0);
-  transition: opacity var(--dur-base) var(--ease-out-expo),
-    transform var(--dur-base) var(--ease-out-expo), visibility 0s linear 0s;
+  transition: opacity var(--dur-base) var(--ease-out-expo), transform var(--dur-base) var(--ease-out-expo);
+}
+@starting-style {
+  .instrument-view {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .instrument-view,
-  .instrument-view-open {
-    transition: opacity 0s linear, visibility 0s linear;
-    transform: none;
+  .instrument-view {
+    transition: none;
   }
 }
 
