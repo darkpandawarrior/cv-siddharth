@@ -334,13 +334,22 @@ export default function World(props: { onShowList: () => void }) {
         aria-hidden="true"
       >
         <color attach="background" args={[BACKGROUND]} />
-        <fog attach="fog" args={[BACKGROUND, 30, 95]} />
-        <ambientLight intensity={0.55} />
-        <hemisphereLight args={["#274436", "#05070a", 0.6]} />
+        {/* Fog starts further out than it did (30 -> 55). At 30 the far half
+            of the mainland was already fading into the background colour, so a
+            driver couldn't see the room they were heading for — which on a
+            surface whose entire job is navigation is the wrong trade. */}
+        <fog attach="fog" args={[BACKGROUND, 55, 140]} />
+        {/* Lifted from 0.55/0.6/1.4. The first render of this scene was legible
+            in a screenshot only if you already knew what you were looking at:
+            unlit faces of the terrain read as pure background, so the mainland
+            had no visible edge and the sea and the sky were the same colour.
+            Dark is the site's palette; unreadable isn't. */}
+        <ambientLight intensity={0.95} />
+        <hemisphereLight args={["#3b6a52", "#0a1016", 1.0]} />
         <directionalLight
           castShadow
           position={[18, 26, -12]}
-          intensity={1.4}
+          intensity={2.1}
           shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-40}
           shadow-camera-right={40}

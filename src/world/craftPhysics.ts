@@ -38,6 +38,23 @@ export const HULL_LINEAR_DAMPING = 1.6; // afloat, standing in for water drag
 export const HULL_THRUST = 1400; // N forward; terminal speed = thrust/(mass*damping) = 4.0 m/s
 export const WORLD_BOUNDS = { minX: -45, maxX: 45, minZ: -22, maxZ: 80, minY: -10 };
 
+/**
+ * Where the craft starts, and where a stuck one recovers to.
+ *
+ * The Y matters more than it looks. The craft's suspension holds the chassis
+ * ~0.77m above the ground's top face, so a spawn at 1.5 (the original) left
+ * only 0.23m of clearance — inside its own suspension travel. It penetrated
+ * the mainland on the first physics step and fell through, coming to rest
+ * pinned against the slab's underside by buoyancy: upright, in bounds, wheels
+ * raycasting into open water, and therefore invisible to every recovery check
+ * the craft has. That is the state /playground booted into while passing a
+ * typecheck, a lint, 520 unit tests, 48 e2e tests and a production build.
+ */
+export const SPAWN_POSITION: [number, number, number] = [0, 3, -4];
+
+/** How far the suspension holds the chassis above the surface it rests on. */
+export const CHASSIS_RESTING_HEIGHT = 0.77;
+
 /** Terminal speed afloat, m/s — thrust and drag reach equilibrium here. */
 export function hullTerminalSpeed(): number {
   return HULL_THRUST / (CHASSIS_MASS * HULL_LINEAR_DAMPING);

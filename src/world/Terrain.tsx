@@ -69,6 +69,56 @@ function Mainland() {
 }
 
 /**
+ * A raised lip along the mainland's north, east and west edges — the three
+ * that end in a sheer 1m drop. The south edge is deliberately left open,
+ * because that is where Shore and LaunchRamp taper into the sea: leaving the
+ * land is meant to be a decision, not an accident.
+ *
+ * Found by driving it rather than by reading it. Spawn sits 14m from the north
+ * edge and the craft accelerates at ~8.2 m/s², so holding W from a standing
+ * start put a first-time visitor in the water in 1.9 seconds — before they had
+ * any idea what the controls did, and with the only ramp back onto land 40m
+ * away around the far side. Every automated gate passed while that was true;
+ * it took a screenshot to see it.
+ *
+ * Reads as the raised lip of a desk mat, which is the right shape for a world
+ * built at desk scale anyway.
+ */
+const KERB_HEIGHT = 0.9;
+const KERB_THICKNESS = 0.5;
+
+function Kerb() {
+  const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
+  const depth = z1 - z0;
+  const y = groundY + KERB_HEIGHT / 2;
+  return (
+    <>
+      {/* North */}
+      <RigidBody type="fixed" colliders="cuboid" position={[0, y, z0 + KERB_THICKNESS / 2]}>
+        <mesh receiveShadow castShadow>
+          <boxGeometry args={[halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS]} />
+          <meshStandardMaterial color="#1c231f" roughness={0.8} />
+        </mesh>
+      </RigidBody>
+      {/* East and west, stopping short of the south edge so the shore stays open */}
+      {[-1, 1].map((side) => (
+        <RigidBody
+          key={side}
+          type="fixed"
+          colliders="cuboid"
+          position={[side * (halfWidth - KERB_THICKNESS / 2), y, (z0 + z1) / 2]}
+        >
+          <mesh receiveShadow castShadow>
+            <boxGeometry args={[KERB_THICKNESS, KERB_HEIGHT, depth]} />
+            <meshStandardMaterial color="#1c231f" roughness={0.8} />
+          </mesh>
+        </RigidBody>
+      ))}
+    </>
+  );
+}
+
+/**
  * A gently sloped strip of the south shore — the plain, non-launching half of
  * the shoreline. Built as a single rotated box rather than custom geometry: a
  * box's top face IS a ramp once the whole RigidBody is tilted, and Rapier's
@@ -243,6 +293,7 @@ export function Terrain(): JSX.Element {
   return (
     <group>
       <Mainland />
+      <Kerb />
       <Shore />
       <LaunchRamp />
 

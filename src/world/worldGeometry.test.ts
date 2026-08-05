@@ -8,7 +8,12 @@ import {
   WATER_SENSOR_HALF_EXTENTS,
   atollWaterlineRadius,
 } from "./worldData.ts";
-import { WORLD_BOUNDS, hullTerminalSpeed } from "./craftPhysics.ts";
+import {
+  CHASSIS_RESTING_HEIGHT,
+  SPAWN_POSITION,
+  WORLD_BOUNDS,
+  hullTerminalSpeed,
+} from "./craftPhysics.ts";
 
 /**
  * Geometry invariants — the checks that would have caught every bug this world
@@ -53,6 +58,33 @@ describe("the ground is continuous", () => {
     const rampX1 = TERRAIN.shore.rampCenterX + TERRAIN.shore.rampWidth / 2;
     expect(rampX0).toBeGreaterThanOrEqual(TERRAIN.shore.xMin);
     expect(rampX1).toBeLessThanOrEqual(TERRAIN.shore.xMax);
+  });
+});
+
+describe("the craft starts somewhere it can survive", () => {
+  const [sx, sy, sz] = SPAWN_POSITION;
+
+  it("spawns clear of its own suspension travel", () => {
+    // At 1.5 the craft spawned 0.23m above its own resting height, penetrated
+    // the mainland on the first physics step, fell through, and came to rest
+    // pinned under the map by buoyancy — upright and in bounds, so no recovery
+    // check could see it. The world booted into that state and every gate
+    // still passed.
+    const clearance = sy - TERRAIN.mainland.groundY;
+    expect(clearance).toBeGreaterThan(CHASSIS_RESTING_HEIGHT * 1.5);
+  });
+
+  it("spawns on the mainland, not over the edge of it", () => {
+    expect(Math.abs(sx)).toBeLessThan(TERRAIN.mainland.halfWidth);
+    expect(sz).toBeGreaterThan(TERRAIN.mainland.z0);
+    expect(sz).toBeLessThan(TERRAIN.mainland.z1);
+  });
+
+  it("spawns far enough from the north edge to survive a held key", () => {
+    // Even with the kerb in place, a spawn a couple of metres from a sheer
+    // drop means the first thing a visitor does — hold a key to see what
+    // happens — is the thing that strands them.
+    expect(sz - TERRAIN.mainland.z0).toBeGreaterThan(8);
   });
 });
 

@@ -12,11 +12,12 @@ import {
   HULL_THRUST,
   HULL_LINEAR_DAMPING,
   WORLD_BOUNDS,
+  SPAWN_POSITION,
   type CraftMode,
   type MediumProbe,
 } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
-import { THERMALS } from "./worldData.ts";
+import { TERRAIN, THERMALS } from "./worldData.ts";
 
 /**
  * The one craft. A single dynamic rigid body driven three different ways —
@@ -102,6 +103,32 @@ const HULL_YAW_TORQUE = 900;
 // Sign conventions for steering, pitch and roll below (which input axis
 // turns which way) are a first pass, not a measured fact — flip the minus
 // signs here if a playtest says the car turns the wrong way.
+/**
+ * The craft's forward direction in its OWN frame, and it is -Z, not +Z.
+ *
+ * Rapier derives each wheel's forward from cross(axle, suspensionDirection) —
+ * here cross((1,0,0), (0,-1,0)) = (0,0,-1). Everything the vehicle controller
+ * does is built on that: engine force, wheel friction, and the sign of
+ * currentVehicleSpeed(). The rest of this world assumes +Z is forward
+ * (worldData.ts's coordinate scheme; the whole course lies south of spawn), so
+ * the two have to be reconciled somewhere.
+ *
+ * They are reconciled HERE, by naming the craft's local forward and turning the
+ * craft around at spawn (SPAWN_ROTATION below) — not by flipping the axle and
+ * not by negating the engine force. Both of those were tried and both make the
+ * craft drive against its own wheel frame: it rolled onto its roof within a
+ * couple of seconds and sat in a respawn loop. The wheel geometry is fine; only
+ * the craft's heading and the sign of "how fast is it going forward" needed to
+ * agree with the world.
+ */
+const LOCAL_FORWARD_Z = -1;
+
+// Yawed 180° so the craft's local -Z (its true forward, above) points along
+// world +Z — down the mainland toward the shore, the ramp and the whole course.
+// Without this a visitor holding the throttle drives away from every part of
+// the world and parks against the north kerb.
+const SPAWN_ROTATION: [number, number, number] = [0, Math.PI, 0];
+
 const STEER_SIGN = -1;
 const WING_PITCH_TORQUE = 220;
 const WING_ROLL_TORQUE = 260;
@@ -123,7 +150,29 @@ const CAMERA_FOLLOW_SPEED = 4;
 // west ones, while staying an easy drive from every land room and the ramp.
 // Also doubles as the pose `respawnCraft` below resets to, so "where the
 // craft starts" and "where a stuck craft recovers to" can never drift apart.
-const SPAWN_POSITION: [number, number, number] = [0, 1.5, -4];
+/**
+ * Under the mainland slab, inside its footprint — a state the ordinary
+ * recovery checks are all blind to. The craft isn't flipped (it's upright),
+ * isn't out of bounds (it's over the middle of the map), and its wheels
+ * raycast downward into open water so they never touch anything. Buoyancy
+ * then pins it against the slab's underside, stationary and unrecoverable
+ * except by pressing R — which a first-time visitor has no reason to know.
+ *
+ * This was the actual state the world booted into: the spawn at y=1.5 sat
+ * only 0.23m above the craft's own suspension resting height, so it
+ * penetrated the ground on the first physics step and dropped through. Every
+ * automated gate passed with the craft parked under the map. The spawn is
+ * fixed below, and this guard means any *other* route under the terrain
+ * recovers too rather than needing the same lesson learned again.
+ */
+function isUnderTheMap(x: number, y: number, z: number): boolean {
+  const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
+  const slabBottom = groundY - 1; // the slab is 1 unit thick, top face at groundY
+  return y < slabBottom && Math.abs(x) <= halfWidth && z >= z0 && z <= z1;
+}
+
+// SPAWN_POSITION lives in craftPhysics.ts so worldGeometry.test.ts can assert
+// it clears the craft's own resting height — see that file.
 
 // FINDING 5b fix, the other half: nothing previously stopped a craft from
 // drifting arbitrarily far in x/z (buoyancyForce only reads Y-depth, so a
@@ -162,7 +211,9 @@ const FLIP_RESPAWN_MS = 1500;
  */
 function respawnCraft(chassis: RapierRigidBody): void {
   chassis.setTranslation({ x: SPAWN_POSITION[0], y: SPAWN_POSITION[1], z: SPAWN_POSITION[2] }, true);
-  chassis.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+  // Yaw 180° as a quaternion — the same heading as SPAWN_ROTATION. Resetting to
+  // identity would leave a recovered craft facing away from the entire course.
+  chassis.setRotation({ x: 0, y: 1, z: 0, w: 0 }, true);
   chassis.setLinvel({ x: 0, y: 0, z: 0 }, true);
   chassis.setAngvel({ x: 0, y: 0, z: 0 }, true);
   chassis.resetForces(true);
@@ -308,7 +359,8 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       t0.x > WORLD_BOUNDS.maxX ||
       t0.z < WORLD_BOUNDS.minZ ||
       t0.z > WORLD_BOUNDS.maxZ ||
-      t0.y < WORLD_BOUNDS.minY;
+      t0.y < WORLD_BOUNDS.minY ||
+      isUnderTheMap(t0.x, t0.y, t0.z);
 
     // wheelIsInContact() (below) never reports true while flipped — the
     // wheel rays point up through the chassis — so "is this thing stuck
@@ -357,7 +409,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       grounded,
       submergedDepth,
       airborneMs: airborneMsRef.current,
-      speed: vehicle.currentVehicleSpeed(),
+      speed: -vehicle.currentVehicleSpeed(),
     };
 
     const newMode = nextMode(mode, probe);
@@ -365,7 +417,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
 
     const r = chassis.rotation();
     scratch.quat.set(r.x, r.y, r.z, r.w);
-    scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
+    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
     scratch.right.set(1, 0, 0).applyQuaternion(scratch.quat);
     scratch.up.set(0, 1, 0).applyQuaternion(scratch.quat);
 
@@ -432,7 +484,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     const t = chassis.translation();
     const r = chassis.rotation();
     scratch.quat.set(r.x, r.y, r.z, r.w);
-    scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
+    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
 
     const linvel = chassis.linvel();
     const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
@@ -477,6 +529,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       angularDamping={0.7}
       linearDamping={BASE_LINEAR_DAMPING}
       position={SPAWN_POSITION}
+      rotation={SPAWN_ROTATION}
     >
       <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} mass={CHASSIS_MASS} friction={0.4} />
 
