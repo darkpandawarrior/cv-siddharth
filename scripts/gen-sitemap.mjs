@@ -30,7 +30,12 @@ const SITE = "https://cv-siddharth.vercel.app";
  */
 const PAGES = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
+  // Ranked with /resume, not below it: /hire is the surface built for someone
+  // who will not explore, and it was invisible to crawlers until now.
+  { path: "/hire", priority: "0.9", changefreq: "monthly" },
   { path: "/resume", priority: "0.9", changefreq: "monthly" },
+  { path: "/ink", priority: "0.7", changefreq: "monthly" },
+  { path: "/excelsior", priority: "0.6", changefreq: "yearly" },
   { path: "/loopdown", priority: "0.7", changefreq: "weekly" },
   { path: "/playground", priority: "0.6", changefreq: "monthly" },
   { path: "/pulse", priority: "0.5", changefreq: "daily" },
