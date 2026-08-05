@@ -60,9 +60,17 @@ function ReadPiece() {
         </Link>
 
         <article className="mt-8">
+          {/* Four of these never ran anywhere, so there is no edition to name.
+              Saying "First published here" is better than inventing a
+              provenance, and it is also the more interesting claim. */}
           <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
-            {piece.form} · Excelsior '{piece.year.slice(2)}
-            {piece.note ? ` · ${piece.note}` : ""}
+            {[
+              piece.form,
+              piece.page > 0 ? `Excelsior '${piece.year.slice(2)}` : piece.year ? `'${piece.year.slice(2)}` : null,
+              piece.note,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <h1 className="font-display mt-3 text-hero">{piece.title}</h1>
           <p className="mt-3 text-sm" style={{ color: "#a4978a" }}>
@@ -101,7 +109,7 @@ function ReadPiece() {
 
         <nav className="mt-16 border-t border-line pt-8">
           <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "#a4978a" }}>
-            More from the magazines
+            More from the archive
           </p>
           <ul className="mt-4 divide-y divide-line">
             {others.map((p) => (
@@ -109,7 +117,7 @@ function ReadPiece() {
                 <Link to="/read/$slug" params={{ slug: p.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                   <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
                   <span className="shrink-0 font-mono text-[11px]" style={{ color: "#a4978a" }}>
-                    '{p.year.slice(2)} · {p.words.toLocaleString()}w
+                    {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
                   </span>
                 </Link>
               </li>

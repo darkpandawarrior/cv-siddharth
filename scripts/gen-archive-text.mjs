@@ -38,6 +38,14 @@ const PRINTED = [
     published: "2019-08-19",
     note: "Editorial Board blog",
   },
+  // Never published anywhere. The drafts have sat in the archive with no live
+  // reference, which meant the strongest argument that he writes — volume and
+  // range — was invisible. This site is their first publication, and saying so
+  // plainly is better than implying a provenance that does not exist.
+  { slug: "chronicles-of-an-nre-kid", year: "", note: "First published here" },
+  { slug: "honest-college-fests", year: "", note: "First published here" },
+  { slug: "the-pun-force", year: "", note: "First published here" },
+  { slug: "college-clubs", year: "", note: "First published here" },
 ];
 
 /**
