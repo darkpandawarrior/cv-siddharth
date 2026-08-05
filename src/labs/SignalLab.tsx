@@ -353,8 +353,13 @@ export function SignalLabPane() {
             aria-label={`Live GPS pipeline over a real ${(ROUTE_LENGTH_M / 1000).toFixed(1)} km driving loop in Pune, India`}
           />
           <style>{`
-            .signal-lab-map .leaflet-control-attribution { font-size: 9px; opacity: 0.65; background: rgba(5,7,10,0.55); color: #a1a1aa; }
-            .signal-lab-map .leaflet-control-attribution a { color: #d4d4d8; }
+            /* Opaque, not faded. opacity:0.65 over a 55%-alpha panel composited
+               this strip down to ~1.3:1 against the map tiles — 9px text nobody
+               could read. It is the OpenStreetMap credit, which is required to
+               be visible, so it is the last thing that should be ghosted.
+               Solid ground + #d4d4d8 clears AA at this size. */
+            .signal-lab-map .leaflet-control-attribution { font-size: 9px; background: #05070a; color: #d4d4d8; padding: 1px 5px; }
+            .signal-lab-map .leaflet-control-attribution a { color: #f4f4f5; text-decoration: underline; }
           `}</style>
         </div>
 
