@@ -27,11 +27,22 @@ export function useCanvasLoop(
       canvas.height = Math.round(rect.height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
     resize();
 
     const { step, draw } = setup(canvas, ctx, () => ({ width, height }));
+
+    // The ResizeObserver's initial callback fires asynchronously, after this
+    // effect body returns — always, even when the box didn't change size.
+    // resize() resets the canvas bitmap, so in the reduced-motion branch
+    // below (a single synchronous draw() and no rAF loop) that initial
+    // callback used to wipe the one and only frame, leaving the canvas
+    // permanently blank. Redrawing here too — and on every later resize —
+    // keeps the frozen frame frozen instead of erased.
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
 
     if (reduced) {
       for (let i = 0; i < 900; i++) step(16);
