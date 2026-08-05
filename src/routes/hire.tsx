@@ -38,7 +38,7 @@ function HirePage() {
   const featured = caseStudies.slice(0, 3);
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-ink">
-      <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+      <div className="mx-auto max-w-4xl px-6 section-y">
         <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
           {profile.location} · open to remote
         </p>

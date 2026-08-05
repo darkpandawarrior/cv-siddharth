@@ -26,7 +26,13 @@ export function ResumeView() {
       <article className="resume mx-auto max-w-[210mm] bg-white px-10 py-9 text-zinc-900 shadow-xl print:max-w-none print:px-0 print:py-0 print:shadow-none">
         {/* Header */}
         <header className="border-b-2 border-zinc-900 pb-4">
-          <h1 className="font-display text-3xl font-bold tracking-tight">{profile.name}</h1>
+          {/* text-hero on screen, matching every other route's h1 — but pinned
+              back to the original fixed size for print. --text-hero is a
+              vw-based clamp, and print media doesn't reliably rebase vw to the
+              paper width (Chromium keeps using the on-screen window width),
+              so letting it through to print risked ~doubling the header and
+              pushing this off its one printed page. */}
+          <h1 className="font-display text-hero print:text-3xl font-bold tracking-tight">{profile.name}</h1>
           <p className="mt-0.5 text-lg font-medium text-zinc-700">{profile.resumeTitle}</p>
           <p className="mt-1.5 text-sm text-zinc-600">
             {profile.phone} · {profile.email} · {profile.linkedin.replace("https://", "")} ·{" "}
