@@ -291,6 +291,17 @@ html.resume-mode body {
   .project-detail img {
     max-width: 100% !important;
   }
+
+  /* The rail is a fixed, always-on-top nav strip mounted on every route
+     (__root.tsx) — including /resume, an explicitly printable deliverable
+     (spec: "sober, fast, printable"). Left unhidden it prints a 24px accent
+     column down the left edge of page 1 of the résumé and of every printed
+     case study. The instrument view is a full-screen overlay and would be
+     just as wrong on paper if it happened to be open at print time. */
+  .anomaly-rail,
+  .instrument-view {
+    display: none !important;
+  }
 }
 
 /* --- A11y ---------------------------------------------------------------- */
