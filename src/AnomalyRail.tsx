@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp } from "./lib/facets";
@@ -87,17 +87,36 @@ export default function AnomalyRail() {
   // Focus returns to the rail itself (not "whatever was focused before" —
   // that could be nothing, if the drag opened it) on close. tabIndex={-1}
   // on the container makes it a valid programmatic focus target without
-  // adding a stop to the normal Tab order.
-  const closeInstrument = () => {
+  // adding a stop to the normal Tab order. useCallback keeps this one
+  // identity across re-renders (e.g. the ResizeObserver-driven height
+  // updates below) — InstrumentView's Escape/Tab-trap effect is keyed on
+  // this prop, and a fresh identity every render would tear down and re-add
+  // its document keydown listener for no reason.
+  const closeInstrument = useCallback(() => {
     setInstrumentOpen(false);
-    containerRef.current?.focus();
-  };
+    const rail = containerRef.current;
+    if (!rail) return;
+    // InstrumentView un-inerts every body-level sibling (this rail
+    // included) in its own close effect, but that effect only runs once
+    // React flushes the `open` state update scheduled above — after this
+    // function has already returned. Clear it here too so the focus() call
+    // below doesn't silently no-op: an inert element can't take focus.
+    rail.inert = false;
+    rail.focus();
+  }, []);
 
   // Drag-to-open: the rail is only 24px wide, so a rightward drag leaves its
   // bounds almost immediately — window-level listeners (rather than
   // relying on the rail to keep receiving pointermove) are what let the
   // gesture keep tracking once the pointer's past the rail's own edge.
   const onRailPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // The rail sits in the same leftmost 24px, same rightward direction, as
+    // iOS Safari's and Android Chrome's edge-swipe-to-go-back gesture.
+    // Never arm drag-to-open for touch — `\` and tapping a rail link still
+    // work there, so touch users only lose the drag affordance, not the
+    // feature. Per-event pointerType (not a static `(pointer: fine)` media
+    // query) so a hybrid device's mouse/pen input is unaffected.
+    if (e.pointerType === "touch") return;
     const pointerId = e.pointerId;
     const startX = e.clientX;
     const onMove = (ev: PointerEvent) => {

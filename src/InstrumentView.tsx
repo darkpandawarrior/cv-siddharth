@@ -37,6 +37,29 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
     first?.focus();
   }, [open]);
 
+  // Inert everything else at the document.body level while open. Trapping
+  // Tab (below) only stops keyboard focus from leaving the dialog — a screen
+  // reader's browse-mode virtual cursor ignores Tab order entirely and would
+  // still walk the routed content, the rail, the skip link etc. behind the
+  // overlay. `inert` removes that whole subtree from the accessibility tree,
+  // not just the tab order. Every body-level sibling gets it (this dialog
+  // and __root.tsx's structure put the rail, the routed page, and this
+  // overlay all as direct children of <body>), and the cleanup — which React
+  // runs on close *and* on unmount — is what guarantees nothing is left
+  // permanently inert; a leaked inert would make the whole page unusable.
+  useEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const siblings = Array.from(document.body.children).filter(
+      (el): el is HTMLElement => el instanceof HTMLElement && el !== dialog,
+    );
+    for (const el of siblings) el.inert = true;
+    return () => {
+      for (const el of siblings) el.inert = false;
+    };
+  }, [open]);
+
   // Background scroll lock. Plain `overflow: hidden` rather than the classic
   // `position: fixed` body trick — that trick has to record scrollY and
   // reapply it as a negative `top` on open, then re-scroll on close, or the

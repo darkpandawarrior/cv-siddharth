@@ -1833,11 +1833,17 @@ html.resume-mode body {
    open/close. `visibility` is delayed on the closed transition only, so it
    waits for the fade-out to finish before leaving the layout — and cut to 0s
    on the open transition, so it's interactive the instant it starts fading
-   in rather than only once the fade completes. */
+   in rather than only once the fade completes.
+
+   z-index 80: a true modal, so it must sit above everything else the site
+   ever stacks — the rail itself (30), a route header (40), the flipbook's
+   ContactSheet (50), CommandPalette (60), and the mobile nav's hamburger
+   backdrop (70, App.tsx) — and below only the one thing that must survive
+   any overlay, the skip-to-content link (100, __root.tsx). */
 .instrument-view {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: 80;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
