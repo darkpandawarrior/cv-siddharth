@@ -45,8 +45,10 @@ export const societies: Society[] = [
     name: "Drishtant",
     role: "Online Content Secretary → Online Content Head",
     years: "2018–2021",
+    // Source: signed LOR, Dr K. K. Dhote, Faculty Coordinator, Drishtant,
+    // dated 11/05/2021. Facts only — the letter itself does not enter this repo.
     blurb:
-      "MANIT's oldest (and only) English literary society. Ran the society blog and its online content, and published the D Buzz newsletter — the guide handed to every incoming batch.",
+      "MANIT's oldest (and only) English literary society. Member since 2018. Ran the society's recruitment: 250+ students went through it. Wrote for Scribbled, the society blog. Helped run Illuminati 8.0, the Technosearch'18 fest event with 1500+ footfall from other colleges. Coordinated Ripple'20, MANIT's Literary Fest.",
     links: [
       { label: "D Buzz 2019 (PDF)", url: "https://drishtantnitbhopal.wordpress.com/wp-content/uploads/2022/01/d-buzz-2019.pdf" },
       { label: "Blog", url: "https://drishtantnitbhopal.wordpress.com/" },
