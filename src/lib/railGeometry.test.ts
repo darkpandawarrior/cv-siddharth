@@ -19,6 +19,18 @@ describe("baselineTicks", () => {
   it("refuses a non-positive spacing rather than looping forever", () => {
     expect(() => baselineTicks(100, 0)).toThrow();
   });
+
+  it("stops at the last exact multiple when spacing does not divide height", () => {
+    expect(baselineTicks(100, 30)).toEqual([0, 30, 60, 90]);
+  });
+
+  it("handles float spacing without silent rounding errors", () => {
+    expect(baselineTicks(100, 0.1).length).toBe(1001);
+  });
+
+  it("returns a single tick for negative height", () => {
+    expect(baselineTicks(-5, 25)).toEqual([0]);
+  });
 });
 
 describe("deviationsFor", () => {
@@ -50,5 +62,9 @@ describe("hitTest", () => {
 
   it("returns the nearest when two are in range", () => {
     expect(hitTest([{ id: "a", y: 50 }, { id: "b", y: 56 }], 55, 8)).toBe("b");
+  });
+
+  it("returns the earlier entry when two are equidistant", () => {
+    expect(hitTest([{ id: "first", y: 50 }, { id: "second", y: 60 }], 55, 8)).toBe("first");
   });
 });

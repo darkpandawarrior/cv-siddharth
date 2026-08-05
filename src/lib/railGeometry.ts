@@ -6,7 +6,12 @@ export interface Deviation {
   y: number;
 }
 
-/** Evenly spaced baseline ticks, inclusive of both ends. */
+/**
+ * Baseline ticks: start at 0, step by spacing while y ≤ height. The final tick is the last exact
+ * multiple of spacing that fits — when spacing does not divide height evenly, the rail's bottom
+ * edge sits short of the final tick. This is intended for drawing onto canvas without jamming ticks
+ * against the exact pixel boundary.
+ */
 export function baselineTicks(height: number, spacing: number): number[] {
   if (spacing <= 0) throw new Error("baselineTicks: spacing must be > 0");
   const out: number[] = [];
@@ -26,6 +31,11 @@ export function deviationsFor(facets: Facet[], height: number, pad: number): Dev
   return ordered.map((f, i) => ({ id: f.id, y: pad + (span * i) / (ordered.length - 1) }));
 }
 
+/**
+ * Pointer-to-facet hit detection: returns the facet id within tolerance of pointer y-coordinate,
+ * or null if no match. When multiple deviations are equidistant, the earlier array entry wins
+ * (strict inequality on distance comparison ensures this).
+ */
 export function hitTest(deviations: Deviation[], y: number, tolerance: number): string | null {
   let best: Deviation | null = null;
   let bestDist = Infinity;
