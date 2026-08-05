@@ -32,8 +32,11 @@ function pagesOf(spread: number, total: number): { left?: number; right?: number
 const lastSpread = (total: number) => Math.floor(total / 2);
 
 export function Flipbook({
-  year: initialYear,
-  page: initialPage,
+  // NOT 'initialYear'/'initialPage'. These are LIVE props: the jump chips and
+  // the back button change them without remounting this component, and naming
+  // them 'initial' is precisely what caused the reader to ignore them.
+  year,
+  page,
   onYearChange,
   onPageChange,
 }: {
@@ -42,10 +45,10 @@ export function Flipbook({
   onYearChange: (y: string) => void;
   onPageChange: (p: number) => void;
 }) {
-  const edition = excelsiorEditions.find((e) => e.year === initialYear) ?? excelsiorEditions[0];
+  const edition = excelsiorEditions.find((e) => e.year === year) ?? excelsiorEditions[0];
   const total = edition.pages;
 
-  const [spread, setSpread] = useState(() => Math.min(Math.floor(initialPage / 2), lastSpread(total)));
+  const [spread, setSpread] = useState(() => Math.min(Math.floor(page / 2), lastSpread(total)));
   const [flip, setFlip] = useState<{ dir: Dir; from: number } | null>(null);
   const [sheet, setSheet] = useState(false);
   const timer = useRef<number | undefined>(undefined);
@@ -56,6 +59,28 @@ export function Flipbook({
     const { left, right } = pagesOf(spread, total);
     onPageChange(left ?? right ?? 1);
   }, [spread, total, onPageChange]);
+
+  // ...and the traffic goes the other way too. `spread` is seeded from the
+  // `page` prop by a useState INITIALISER, which runs once per mount — but the
+  // jump chips, a pasted link and the browser back button all change only the
+  // search params, so this component never remounts and the initialiser never
+  // re-runs. The result: the chip lit up, the year switched, and the reader
+  // sat on page 1.
+  //
+  // The guard matters. The effect above writes the spread's first page back to
+  // the URL, so syncing unconditionally would have the two effects fighting —
+  // land on page 5, get rewritten to 4, sync back to 5, forever. Moving only
+  // when the requested page is NOT already on screen breaks that loop, because
+  // page 4 and page 5 are the same spread.
+  useEffect(() => {
+    const { left, right } = pagesOf(spread, total);
+    if (page === left || page === right) return;
+    setSpread(Math.min(Math.floor(page / 2), lastSpread(total)));
+    setFlip(null); // a jump is a cut, not a turn — never animate it
+    // `spread` is deliberately not a dependency: this reacts to the URL
+    // changing, not to our own turns.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, total]);
 
   const go = useCallback(
     (dir: Dir) => {

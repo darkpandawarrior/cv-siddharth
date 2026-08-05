@@ -5,6 +5,18 @@ Files this spec touches:
 - `src/composeInterpreter.ts`
 - `src/routes/compose.tsx`
 - `api/_lib/compose-prompt.ts` (read-only reference, not changed)
+- `src/CommandPalette.tsx`, `src/rooms.tsx` (read-only reference — `rooms.tsx` already has the
+  pattern this spec reuses for item 1)
+- `src/index.css` (read-only reference — the CAL-1 tokens item 5 reuses already live here)
+
+Revision note: this file previously covered items 1–5 below under different numbers (share link,
+AST view, error affordances, a broken-on-purpose preset, the supported-bar disclosure). Re-reading
+the three target files against this session's brief surfaced two real gaps that draft missed
+entirely: the playground is one of the routes `rooms.tsx`'s own comment names as still lacking the
+command palette, and the playground's default rendering chrome never picked up the CAL-1 amber/cyan
+tokens the rest of the site already has. Both are folded in below as items 1 and 6; the rest is the
+prior draft's engineering, kept as-is where it was already the right call (base64 share encoding,
+token-position error tracking).
 
 ## Current state (honest)
 
@@ -25,7 +37,38 @@ Right now the playground *works* and *looks* impressive for the ~8 seconds someo
 
 ## Concrete changes, ordered by value ÷ risk
 
-### 1. Shareable snippets via URL param (highest value, lowest risk)
+### 1. Mount the command palette (trivial risk, closes a named gap)
+
+**Files:** `src/ComposePlayground.tsx`
+
+`routes/compose.tsx` doesn't route through `RoomFrame` — it can't; the playground needs the
+full-height split-pane layout `RoomFrame`'s chrome doesn't offer — so it missed this session's
+"no dead ends" pass. `rooms.tsx` says so in its own comment, verbatim: *"The remaining routes that
+don't use RoomFrame still need [the command palette]; see the audit."* Compose is that route: right
+now the only way off `/compose` is the "back to portfolio" link or the Ask-AI button — no `` ` ``
+hotkey, no jump to any other section.
+
+`CommandPalette` (`src/CommandPalette.tsx`) is self-contained — it owns its own hotkey listener and
+its own trigger button — so mounting it is one import and one JSX line, next to the existing header
+buttons (`ComposePlayground.tsx` ~line 711):
+
+```tsx
+import { CommandPalette } from "./CommandPalette.tsx";
+// ...
+<div className="flex items-center gap-2 sm:gap-3">
+  <CommandPalette />
+  <button onClick={() => openChat("...")}>How it works</button>
+  <button onClick={() => openChat()}>Ask my AI</button>
+</div>
+```
+
+Same placement `rooms.tsx` already uses (`rooms.tsx:96`, directly left of its own "Ask my AI"
+button) — no new layout decision to make, just apply the existing one.
+
+`→ skipped: nothing. This is as close to a free fix as this file has — reuse an existing,
+self-mounting component in the one place it's documented as missing.`
+
+### 2. Shareable snippets via URL param (highest value, lowest risk)
 
 **Files:** `src/ComposePlayground.tsx`
 
@@ -76,7 +119,7 @@ Add a **Share** button next to the existing Reset button (same row, `ComposePlay
 
 `→ skipped: URL compression (LZ-string etc.) and a backend snippet store (short IDs, a KV table). Add compression only if a real preset regularly exceeds ~1500 chars after encoding; add a backend store only if someone asks for snippets to survive a full site redesign that changes the encoding scheme.`
 
-### 2. "View parse tree" toggle — the actual proof (high value, low-medium risk)
+### 3. "View parse tree" toggle — the actual proof (high value, low-medium risk)
 
 **Files:** `src/ComposePlayground.tsx`
 
@@ -111,7 +154,7 @@ This is what actually moves the "canned demo" skepticism: a visitor can edit `fo
 
 `→ skipped: syntax highlighting inside the JSON, a collapsible tree widget. Add if visitors' actual usage (once there's any signal — there isn't yet) shows people expanding it more than glancing.`
 
-### 3. Error affordances — line/column instead of a bare message (medium-high value, medium risk)
+### 4. Error affordances — line/column instead of a bare message (medium-high value, medium risk)
 
 **Files:** `src/composeInterpreter.ts`, `src/ComposePlayground.tsx`
 
@@ -179,7 +222,44 @@ Also add `role="alert" aria-live="assertive"` to the error `<div>` (line 849) an
 
 `→ skipped: squiggly underlines inside the textarea (needs a contentEditable or CodeMirror-class overlay — that's a new dependency, off the ladder). Line-number-in-gutter + line/col-in-message gets 90% of the value for near-zero added surface.`
 
-### 4. A "broken on purpose" preset — the second half of proving realness (low risk, medium value)
+### 5. CAL-1 for the playground's own chrome, not the Kotlin semantics (low risk, medium value)
+
+**Files:** `src/ComposePlayground.tsx`
+
+`src/index.css` already defines the CAL-1 tokens (`--color-accent: #f2a13d`, amber Channel A,
+9.24:1 on ink; `--color-accent2: #4fd6e0`, cyan Channel B) and the playground's own header chrome
+already picks them up automatically via Tailwind's `text-accent`/`bg-accent`/`text-accent2`
+classes. What never went through a token: the *interpreter's own rendering defaults* — the parts of
+`ComposePlayground.tsx` that are the playground's stylistic choices, not Jetpack Compose's.
+
+Scope this narrowly and don't touch `NAMED_COLORS` (line 20). That map is Kotlin's own named
+colors — `Color.Green`, `Color.Red`, `Color.Blue`... — and remapping them to non-green/non-red
+hexes to match a site theme would be a *fidelity regression* an Android engineer notices
+immediately: worse for the "this is real" pitch than the current mismatch, not better.
+
+What is the interpreter's own default, not Kotlin's, and should move:
+
+- **Default button background** when no `Modifier.background(...)` is given
+  (`ComposePlayground.tsx:267`, currently `"#3ddc84"` — note this was *never* period-accurate to
+  real Compose either; `Button`'s real default is Material's primary color, not green, so this was
+  always a stylistic pick, not fidelity, and is free to move) → `"#f2a13d"`.
+- **The preview pane's ambient glow** (`ComposePlayground.tsx:838`,
+  `radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)`) — a straight CAL-1
+  violation twice over: it's Android green, and CAL-1 explicitly calls for "zero glow." Drop it
+  rather than reskin it in amber (a glow in a new color is still a glow): swap the
+  `bg-[radial-gradient(...)]` class for a flat `bg-void/40`, matching the hairline-and-matte
+  direction instead of trading one glow color for another.
+- Card border/background defaults (`ComposePlayground.tsx:221-224`, `#171e1a`/`#243029`) are
+  already neutral dark surfaces, not green — no change needed there.
+
+`→ skipped: resolving --color-accent via getComputedStyle at runtime instead of a literal hex
+match. The interpreter already hand-picks its Android-styled defaults as literals everywhere else
+in this file (see NAMED_COLORS, the phone bezel colors) — matching that existing convention is the
+smaller diff than introducing the one runtime CSS-var read in the file. If the two ever drift,
+that's a two-sources-of-truth bug worth a \`ponytail:\` comment at the literal, not a reason to
+add the indirection up front.`
+
+### 6. A "broken on purpose" preset — the second half of proving realness (low risk, medium value)
 
 **Files:** `src/ComposePlayground.tsx`
 
@@ -199,7 +279,7 @@ Paired with change #3, tapping this chip now produces a real, specific `Line 4, 
 
 `→ skipped: multiple broken presets covering every error class. One is enough to teach the affordance exists; the visitor's own typos supply the rest.`
 
-### 5. Turn the truncated "supported" bar into a real reference (low value, low risk — cleanup)
+### 7. Turn the truncated "supported" bar into a real reference (low value, low risk — cleanup)
 
 **Files:** `src/ComposePlayground.tsx`
 
