@@ -1215,20 +1215,31 @@ function InkDoorway() {
 }
 
 /**
- * A light in-page teaser for the Playground hub — no canvases, so it costs the
- * main scroll nothing. It advertises the interactive rooms and funnels into the
- * full-screen hub (where each room renders one at a time).
+ * The one "go poke at something" doorway — collapsed from the two teasers
+ * (Playground, Chess) that used to sit back to back answering the same
+ * impulse. No canvases and no tables here, so it still costs the main scroll
+ * nothing; the interactive rooms live behind `/playground`, the full chess
+ * analysis (thesis decile table, repertoire drift, "the cast") behind
+ * `/chess`'s Findings tab. Keeps `id="chess"` — the registered anchor the
+ * command palette, Terminal quick-command and offline e2e all target — over
+ * the old Playground teaser's `id="explore"`, which nothing else linked to.
  */
-function PlaygroundTeaser() {
+function Doorway() {
+  const { thesis, totals } = chess;
   return (
-    <section id="explore" className="border-t border-line bg-surface">
+    <section id="chess" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
+          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// not a PDF with a pulse</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
-            Not a PDF with a pulse — a running program. {countWord(siteRooms.length)} interactive rooms, each a small proof of the
-            engineering above. They live behind one door now.
+            A running program, not a slide deck: {countWord(siteRooms.length)} interactive rooms, each a small proof
+            of the engineering above — plus {totals.games.toLocaleString("en-US")} rated and casual chess games,
+            mined and analysed at build time. The chess finding was not flattering:{" "}
+            <strong className="font-semibold text-zinc-200">
+              {(thesis.decidedOnClock * 100).toFixed(1)}% of my decided games ended on a clock, not on a board
+            </strong>
+            .
           </p>
           <div className="flex flex-wrap gap-2">
             {ROOMS.map(({ to, label, icon: Icon, tint }) => (
@@ -1242,49 +1253,20 @@ function PlaygroundTeaser() {
               </Link>
             ))}
           </div>
-          <Link
-            to="/playground"
-            className="btn-primary mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
-          >
-            Enter the Playground →
-          </Link>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/**
- * A light in-page teaser for Chess — the headline finding only, no tables or
- * charts, so it costs the main scroll nothing. The full analysis (the thesis
- * decile table, repertoire drift, platform profiles, "the cast") moved to
- * the Findings tab of `/chess`, the same room The Board's other panes live
- * in. Same pattern as `PlaygroundTeaser` above.
- */
-function ChessTeaser() {
-  const { thesis, totals } = chess;
-  return (
-    <section id="chess" className="border-t border-line bg-surface">
-      <div className="section-y mx-auto max-w-5xl px-6">
-        <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the board</p>
-          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Chess</h2>
-          <p className="mb-6 max-w-2xl text-zinc-400">
-            {totals.games.toLocaleString("en-US")} rated and casual games across two platforms, pulled from
-            both public APIs at build time and analysed before anything on this page was written. The
-            finding was not flattering:{" "}
-            <strong className="font-semibold text-zinc-200">
-              {(thesis.decidedOnClock * 100).toFixed(1)}% of my decided games ended on a clock, not on a
-              board
-            </strong>
-            .
-          </p>
-          <Link
-            to="/chess"
-            className="btn-primary inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
-          >
-            <Crown size={16} /> See the full analysis →
-          </Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              to="/playground"
+              className="btn-primary inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            >
+              Enter the Playground →
+            </Link>
+            <Link
+              to="/chess"
+              className="inline-flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold transition hover:border-accent"
+            >
+              <Crown size={16} /> See the full analysis →
+            </Link>
+          </div>
         </Reveal>
       </div>
     </section>
@@ -1307,19 +1289,18 @@ export function HomePage() {
             check fit, and the scorecard links down into the case studies that
             follow it. Below the hero, so it costs LCP nothing. */}
         <FitCheck />
-        <Circuit />
         <CaseStudies />
         <Projects />
         <ExperienceSection />
+        {/* The one remaining Circuit: a genuine gear change from career
+            evidence into "go poke at something", not spacing. */}
         <Circuit />
-        <Skills />
+        <Doorway />
         {/* Writing lives in its own world now (/ink). What stays here is the
             doorway — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
         <InkDoorway />
-        <ChessTeaser />
-        <Circuit />
-        <PlaygroundTeaser />
+        <Skills />
         <Contact />
       </main>
       <ScrollBot />
