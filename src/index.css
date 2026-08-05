@@ -1078,8 +1078,21 @@ html.resume-mode body {
   --color-muted: #a4978a; /* 7.1:1 on ink — still passes, still clearly quieter */
   --font-display: "Rozha One", "Iowan Old Style", Georgia, serif;
 
+  /* Scene palette. Without these the 3D rooms kept rendering the CAL-1 green
+     and cyan inside the ink world — the tokens existed but this theme never
+     overrode them, so the scenes were the one surface that ignored the swap.
+     Warm throughout: signal stays the "lit/live" role, probe the baseline. */
+  --color-signal: #e3a83c;
+  --color-signal-dim: #b58a4e;
+  --color-probe: #cf8f63;
+  --color-warn: #d97a3d;
+  --color-danger: #c25a4a;
+  --color-alt: #a87ca0;
+  --color-text: #efe7d8;
+  --color-text-dim: #a4978a;
+
   background-color: var(--color-ink);
-  color: #efe7d8;
+  color: var(--color-text);
   position: relative;
 }
 
