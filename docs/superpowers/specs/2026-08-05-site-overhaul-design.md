@@ -50,6 +50,45 @@ concept and a portfolio with a person in it.
 Explorer, and no copy explains the lineage. Per `project_loop_thesis`: if the metaphor needs an
 explanation paragraph, it has already failed.
 
+### 2.1 Recovered material (Drive sweep, 2026-08-05)
+
+A Drive sweep — not previously done, and the reason this section exists — surfaced material that is
+not in `writing.ts`, `beforeTheCode.ts`, or anywhere on the site.
+
+**"The Tour" (untitled draft, 2020).** A second lockdown-era time story, unpublished and unfinished.
+Researchers from 2436 travel to August 2020 to observe "the quarantined." It is written as a
+**timestamped observation log** — every section header is a clock reading, and where the two eras
+overlap it runs both: `0950 HOURS: JAN 23, 2436 :: 0803 HOURS : AUG 14, 2020`. The subject is never
+named, only numbered, explicitly "to maintain confidentiality." The draft still contains
+`{more here, edit here}` in two places.
+
+This changes §3.2. The rail's grammar is not invented for it — it is **his**, from 2020: dual
+timestamps, subject-as-ID, log entries against a monotonous baseline where only the deviations are
+worth recording. The unfinished markers stay visible if the piece ships; a past that grows is
+better served by a real draft than a tidied one.
+
+**The Drishtant LOR (signed, Dr K. K. Dhote, Faculty Coordinator, 11/05/2021).** Outside testimony,
+and the only voice on the site that is neither his nor his friends'. It carries facts the site does
+not have: member since 2018; ran a recruitment drawing 250+ students; content creation on
+**"Scribbled"**, the student blog the site currently calls only "the society blog"; Illuminati 8.0
+within Technosearch'18, 1500+ footfall; coordination of Ripple'20, MANIT's Literary Fest.
+
+The site's current Drishtant blurb is **thinner than its own evidence**. This is the recorded
+retroactive-upgrade pattern firing again, and it is exactly what the authored/discovered split in
+§3.3 exists to render.
+
+**Certificates.** Excelsior '19 and '20, Drishtant 2nd Year / Core Team / Final Year Core Team, plus
+`LOR2_PE` and `Drishtant GP`. Every society claim on the site has a signed document behind it.
+`Excelsior 2010` also exists (another alum's copy) — not his work, but real evidence for the
+publishing lineage rather than an assertion.
+
+**Exclusions, non-negotiable.** The Drive folder holding the 2020 draft is a junk drawer also
+containing account statements, an insurance policy, a medical certificate, travel documents, and
+**five other people's CVs**; recent files include payslips, ITR/Form-16 PDFs, and a contractor
+agreement. None of it enters this repo. Recovered material ships only as (a) prose he authored, or
+(b) a derived aggregate. Third-party PII is excluded outright — aggregation does not launder it.
+Raw documents stay in AgentHarnessData per `DATA_CONTRACT.md`.
+
 ## 3. Architecture
 
 ### 3.1 Three paths, one page
@@ -73,6 +112,11 @@ and the growable-facet index — one component doing all three, which is why it 
 
 **At rest:** a repeating tick baseline, drawn on canvas via the existing `useCanvasLoop.ts` rAF
 pattern. It is the only thing on the page moving when the page is idle.
+
+**Its grammar comes from §2.1**, not from instrument-panel pastiche. A deviation's label reads as a
+log entry, and where a facet has both an authored and a discovered date it renders both, in his own
+`A :: B` form. That device is his, from 2020, and using it is the difference between a site that
+looks instrumented and a site that is.
 
 **Deviations:** each real facet is a deviation in the trace, positioned by its place in his
 chronology, not by nav order. Hover blooms a label; click navigates. Deviations pulse on a slow
