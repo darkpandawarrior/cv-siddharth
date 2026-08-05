@@ -84,7 +84,11 @@ export const experience: Experience[] = [
       },
       {
         label: "Scope",
-        text: "Product Owner as well as engineer on the same platform — here the requirements and the delivery are one job, not a handoff. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+        text: "Product Owner as well as engineer on the same platform — here the requirements and the delivery are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+      },
+      {
+        label: "Team",
+        text: "Took a junior engineer from Flutter to shipping production Kotlin, Java and React — he now manages this app at the company that acquired it. Ran interview loops for the company and helped hire onto both the frontend and the React Native mobile teams.",
       },
       {
         label: "Compose Migration",
