@@ -80,7 +80,7 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Platform Ownership",
-        text: "Technical owner of the Android platform: a ~960k-LOC Kotlin app serving 50,000+ monthly users. Set the module architecture, the release process and the review standards the team builds against.",
+        text: "Technical owner of the Android platform: a ~960k-LOC Kotlin app serving 50,000+ MAU. Set the module architecture, the release process and the review standards the team builds against.",
       },
       {
         label: "Compose Migration",
