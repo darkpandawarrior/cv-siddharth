@@ -261,7 +261,12 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
           other three.js label on this site (Blueprint3D, StoryMapScene)
           already uses <Html> for exactly that reason: it's a real DOM node
           styled with this site's own fonts, no extra network fetch. */}
-      <Html center position={[0, halfExtents[1] + 0.7, 0]} distanceFactor={14} style={{ pointerEvents: "none" }}>
+      {/* No distanceFactor: these are labels, not geometry. Scaling them in
+          world space meant the nearest one filled a third of the screen while
+          the far ones vanished — one read "THE TERMINAL" at 40px tall across
+          the viewport. Fixed screen size makes them behave like the compass
+          chips they visually match. */}
+      <Html center position={[0, halfExtents[1] + 0.7, 0]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
         <span
           className="whitespace-nowrap rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.25em] backdrop-blur"
           style={{ borderColor: `${room.tint}55`, color: room.tint, background: "rgba(10,13,12,0.6)" }}

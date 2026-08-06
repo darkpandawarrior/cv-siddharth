@@ -27,7 +27,17 @@ import { TrackFilter, meanError, rawFix, stepDistance, type Fix } from "./gps.ts
  */
 
 const SAMPLE_INTERVAL_S = 0.1;
-const MAX_POINTS = 160;
+// 44, not 160. At 10Hz that is ~4 seconds of history instead of ~16, and the
+// difference is not subtle: a 160-point trail after a few hundred metres of
+// driving is a scribble covering the entire map, and because it also spanned
+// every respawn it drew long straight streaks from wherever you died back to
+// spawn. It read as a rendering bug, not as a GPS track. Short enough to say
+// "here is where you just were" and then get out of the way.
+const MAX_POINTS = 44;
+
+/** A jump further than this between samples is a respawn or a teleport, not
+ *  driving — the trail restarts rather than drawing a line across the world. */
+const TELEPORT_M = 12;
 /** Trails float just above the surface so they are not z-fighting the ground. */
 const TRAIL_Y = TERRAIN.mainland.groundY + 0.06;
 
@@ -94,6 +104,20 @@ export function Trail(): JSX.Element {
 
     const truth: Fix = { x: telemetry.x, z: telemetry.z };
     const moved = stepDistance(lastTruth.current, truth);
+
+    // Respawn, or a mode change that moved the craft a long way: drop the
+    // history instead of connecting the two positions with a streak, and do
+    // not count the jump as distance travelled.
+    if (moved > TELEPORT_M) {
+      lastTruth.current = truth;
+      lastFused.current = { ...truth };
+      filter.reset();
+      for (let i = 0; i < MAX_POINTS; i++) {
+        rawPoints.current[i] = [truth.x, TRAIL_Y, truth.z];
+        fusedPoints.current[i] = [truth.x, TRAIL_Y + 0.02, truth.z];
+      }
+      return;
+    }
     telemetry.odometer += moved;
 
     const fix = rawFix(truth, sample.current++, towers);
@@ -163,18 +187,18 @@ export function Trail(): JSX.Element {
         ref={rawRef as never}
         points={rawPoints.current}
         color={c.warn}
-        lineWidth={1.4}
+        lineWidth={1}
         transparent
-        opacity={0.45}
+        opacity={0.25}
       />
       {/* Fused: the line the app actually draws for a driver. */}
       <Line
         ref={fusedRef as never}
         points={fusedPoints.current}
         color={c.signal}
-        lineWidth={2.6}
+        lineWidth={1.8}
         transparent
-        opacity={0.9}
+        opacity={0.55}
       />
     </>
   );

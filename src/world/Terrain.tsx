@@ -2,7 +2,7 @@ import { useMemo, type JSX } from "react";
 import { RigidBody } from "@react-three/rapier";
 import { Grid, Line } from "@react-three/drei";
 import { PLACEMENTS, TERRAIN, tiltedSlabCenterY } from "./worldData.ts";
-import { dim, worldPalette } from "./palette.ts";
+import { dim, mix, worldPalette } from "./palette.ts";
 
 /**
  * The static landmass: mainland, two atolls, two sky islands, all as plain
@@ -63,7 +63,14 @@ function Mainland() {
           respawned it. The launch leg of the triathlon was unrunnable. */}
       <mesh position={[0, GROUND_Y - 0.5, (TERRAIN.mainland.z0 + TERRAIN.mainland.z1) / 2]} receiveShadow>
         <boxGeometry args={[TERRAIN.mainland.halfWidth * 2, 1, TERRAIN.mainland.z1 - TERRAIN.mainland.z0]} />
-        <meshStandardMaterial color={c.card} roughness={0.85} metalness={0.05} />
+        {/* Lifted NEUTRALLY, toward the text colour rather than toward the
+            accent. --color-card alone is the site's dark panel colour: correct
+            behind text on a web page, far too dark for a surface filling most
+            of the frame, so the ground read as a void with objects floating in
+            it. Lifting it toward --color-signal instead turned the desk into a
+            golf course — a green field is not what "a work surface" looks like.
+            12% toward the text colour is a grey desk mat that AO can bite into. */}
+        <meshStandardMaterial color={mix(c.card, c.text, 0.12)} roughness={0.9} metalness={0.02} />
       </mesh>
     </RigidBody>
   );

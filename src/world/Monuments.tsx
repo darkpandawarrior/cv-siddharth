@@ -26,7 +26,12 @@ import { worldPalette } from "./palette.ts";
  * driving around.
  */
 
-const SEGMENT_HEIGHT = 0.55;
+// 0.26, down from 0.55. Height still IS the module count — that is the whole
+// point of these — but at 0.55 Mileway's 36 modules made a 20m tower next to a
+// 1.9m car, which from the driver's seat is a featureless wall filling the
+// screen rather than a landmark. Halved, the tallest is ~9m: readable as a
+// skyline from across the map, passable without the world disappearing.
+const SEGMENT_HEIGHT = 0.26;
 
 /** Shared scratch for writing instance matrices — never rendered itself. */
 const dummy = new THREE.Object3D();
@@ -116,7 +121,7 @@ function Tower({ tower }: { tower: Tower }) {
           an SDF font atlas on first use — a visible chunk of the world's
           startup cost for three labels, and Pavilions already pays for the
           <Html> path anyway. Same reasoning as that file's label comment. */}
-      <Html center position={[0, height + 1.1, 0]} distanceFactor={18} style={{ pointerEvents: "none" }}>
+      <Html center position={[0, height + 1.1, 0]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
         <span
           className="whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest backdrop-blur"
           style={{ borderColor: `${tower.tint}55`, color: tower.tint, background: "rgba(10,13,12,0.65)" }}

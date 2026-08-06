@@ -64,6 +64,10 @@ export type WorldPalette = ReturnType<typeof worldPalette>;
  * invisible to every theme; deriving it keeps the relationship to the token, so
  * a theme that changes --color-signal moves the grid with it.
  */
+export function mix(a: string, b: string, amount: number): string {
+  return `#${new Color(a).lerp(new Color(b), amount).getHexString()}`;
+}
+
 export function dim(token: string, amount: number): string {
   return `#${new Color(token).lerp(new Color(readToken("--color-void", "#060807")), amount).getHexString()}`;
 }

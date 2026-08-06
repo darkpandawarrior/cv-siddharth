@@ -539,14 +539,14 @@ export default function World(props: { onShowList: () => void }) {
             cool fill from the opposite side keeps the shadow sides from going
             to pure black. This is the cheapest thing that makes primitives look
             deliberate. */}
-        <ambientLight intensity={0.55} />
-        <directionalLight position={[-16, 12, 26]} intensity={0.9} color="#7fd9ff" />
-        <directionalLight position={[10, 6, -20]} intensity={1.1} color="#ffd9a0" />
+        <ambientLight intensity={0.85} />
+        <directionalLight position={[-16, 12, 26]} intensity={1.2} color="#7fd9ff" />
+        <directionalLight position={[10, 6, -20]} intensity={1.4} color="#ffd9a0" />
         <hemisphereLight args={[palette.signalDim, palette.void, 1.0]} />
         <directionalLight
           castShadow
           position={[18, 26, -12]}
-          intensity={2.1}
+          intensity={2.6}
           shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-40}
           shadow-camera-right={40}
