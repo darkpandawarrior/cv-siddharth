@@ -391,7 +391,7 @@ export function Hud(props: {
           )}
           {collectedCount !== undefined && artifactTotal !== undefined && (
             <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
-              <span style={{ color: "#f0883e" }}>{collectedCount}</span> / {artifactTotal} artifacts
+              <span style={{ color: "var(--color-warn)" }}>{collectedCount}</span> / {artifactTotal} artifacts
             </div>
           )}
           <Gauges />

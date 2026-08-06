@@ -2,7 +2,11 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { PLACEMENTS } from "./worldData.ts";
 import { ROOMS } from "../rooms.tsx";
 import { telemetry } from "./telemetry.ts";
-import { SPACE_ALTITUDE } from "./craftPhysics.ts";
+import { LAUNCH_SPEED, SPACE_ALTITUDE } from "./craftPhysics.ts";
+
+/** Top of the speed bar, m/s. Above the craft's terminal speed so the bar
+ *  never pins. */
+const GAUGE_MAX_SPEED = 25;
 
 /**
  * Wayfinding, speed and boost — the HUD layer that turns a dark plane into a
@@ -72,7 +76,7 @@ export function Compass(): JSX.Element {
       return {
         to: p.to,
         label: room?.label ?? p.to,
-        tint: room?.tint ?? "#3ddc84",
+        tint: room?.tint ?? "var(--color-signal)",
         hint: MEDIUM_HINT[p.medium] ?? "",
         x: p.position[0],
         z: p.position[2],
@@ -212,8 +216,11 @@ export function Gauges(): JSX.Element {
         numRef.current.textContent = String(rounded);
       }
       if (barRef.current) {
-        barRef.current.style.width = `${Math.min(100, (speed / 25) * 100)}%`;
-        barRef.current.style.background = speed >= 14 ? "#3ddc84" : "#5ee6ff";
+        barRef.current.style.width = `${Math.min(100, (speed / GAUGE_MAX_SPEED) * 100)}%`;
+        // var(), not a hex: these are CSS values, so the token can be handed
+        // straight over and a theme change is picked up without a re-render.
+        barRef.current.style.background =
+          speed >= LAUNCH_SPEED ? "var(--color-signal)" : "var(--color-probe)";
       }
       if (boostRef.current) {
         boostRef.current.style.width = `${telemetry.boost * 100}%`;
@@ -229,7 +236,8 @@ export function Gauges(): JSX.Element {
         if (airborne) {
           altNumRef.current.textContent = String(Math.round(telemetry.y));
           const nearSpace = telemetry.y >= SPACE_ALTITUDE * 0.6;
-          altNumRef.current.style.color = telemetry.y >= SPACE_ALTITUDE ? "#db61ff" : nearSpace ? "#5ee6ff" : "";
+          altNumRef.current.style.color =
+            telemetry.y >= SPACE_ALTITUDE ? "var(--color-alt)" : nearSpace ? "var(--color-probe)" : "";
         }
       }
     };
@@ -254,12 +262,14 @@ export function Gauges(): JSX.Element {
       <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={barRef} className="h-full w-0 rounded-full transition-[background] duration-200" />
       </div>
-      {/* The launch threshold, drawn where 14 of 25 m/s falls. */}
+      {/* The launch threshold, drawn where LAUNCH_SPEED falls on the bar —
+          read from craftPhysics rather than repeated, so retuning the flight
+          envelope moves the mark with it. */}
       <div className="relative h-1.5">
-        <span className="absolute h-1.5 w-px bg-accent/50" style={{ left: `${(14 / 25) * 100}%` }} />
+        <span className="absolute h-1.5 w-px bg-accent/50" style={{ left: `${(LAUNCH_SPEED / GAUGE_MAX_SPEED) * 100}%` }} />
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
-        <div ref={boostRef} className="h-full w-full rounded-full bg-[#f0883e]" />
+        <div ref={boostRef} className="h-full w-full rounded-full bg-[var(--color-warn)]" />
       </div>
       <div
         ref={altRef}

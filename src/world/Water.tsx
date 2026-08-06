@@ -1,8 +1,9 @@
 import { useMemo, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { ShaderMaterial } from "three";
+import { Color, type ShaderMaterial } from "three";
 import { SEA_LEVEL } from "./craftPhysics.ts";
 import { WATER_PLANE } from "./worldData.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The Ink sea's surface. Deliberately the cheapest thing in the scene: this
@@ -47,9 +48,14 @@ const WATER_VERTEX = /* glsl */ `
 // this cheap a material doesn't bother computing.
 const WATER_FRAGMENT = /* glsl */ `
   varying float vWave;
+  // Fed from the theme tokens (uInk = --color-void, uGlint = --color-probe)
+  // rather than written into the shader. A hardcoded vec3 here is the one kind
+  // of colour no theme can ever reach — it isn't even a CSS value to override.
+  uniform vec3 uInk;
+  uniform vec3 uGlint;
   void main() {
-    vec3 ink = vec3(0.03, 0.035, 0.04);
-    vec3 glint = vec3(0.37, 0.90, 1.0);
+    vec3 ink = uInk;
+    vec3 glint = uGlint;
     float crest = smoothstep(0.03, 0.16, vWave);
     gl_FragColor = vec4(ink + glint * crest * 0.4, 0.95);
   }
@@ -58,7 +64,15 @@ const WATER_FRAGMENT = /* glsl */ `
 export function Water(): JSX.Element {
   const material = useRef<ShaderMaterial>(null);
 
-  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  const c = worldPalette();
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uInk: { value: new Color(c.void) },
+      uGlint: { value: new Color(c.probe) },
+    }),
+    [c.void, c.probe],
+  );
 
   useFrame((_, delta) => {
     if (material.current) material.current.uniforms.uTime.value += delta;

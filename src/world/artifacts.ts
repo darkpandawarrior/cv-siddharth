@@ -31,17 +31,21 @@ export type Artifact = {
   label: string;
   /** The fact itself. */
   detail: string;
-  tint: string;
   medium: ArtifactMedium;
   position: [number, number, number];
 };
 
-const TINTS = {
-  land: "#3ddc84",
-  water: "#5ee6ff",
-  air: "#db61ff",
-  orbit: "#f0883e",
-} as const;
+/**
+ * Which theme token each medium's artifacts wear. Token NAMES, not values —
+ * this module is imported by tests and by the pure data layer, so it must not
+ * touch the DOM; the components resolve these through palette.ts at render.
+ */
+export const MEDIUM_TINT: Record<ArtifactMedium, "signal" | "probe" | "alt" | "warn"> = {
+  land: "signal",
+  water: "probe",
+  air: "alt",
+  orbit: "warn",
+};
 
 /**
  * Deterministic placement. A seeded ring layout rather than Math.random so the
@@ -165,7 +169,7 @@ export const ARTIFACTS: Artifact[] = (() => {
   const out: Artifact[] = [];
   for (const [medium, list] of byMedium) {
     list.forEach((s, i) => {
-      out.push({ ...s, tint: TINTS[medium], position: place(medium, i, list.length) });
+      out.push({ ...s, position: place(medium, i, list.length) });
     });
   }
   return out;

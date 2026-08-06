@@ -9,6 +9,7 @@ import {
   normalizeStream,
   classifyUpstream,
   estimateTokens,
+  providerOrderFor,
   exhaustedResponse,
   type FailureKind,
   pickProviders,
@@ -1072,6 +1073,26 @@ describe("provider failover", () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain("generativelanguage.googleapis.com");
   });
 
+  it("the fast tier is unreachable: the shipped system prompt alone exceeds Groq's headroom", () => {
+    // A TRIPWIRE, not a preference. Groq's free ceiling is 8,000 tokens per
+    // MINUTE and providerOrderFor drops to ROOMY_FIRST above 7,000. The
+    // generated system prompt is now ~7.8k tokens on its own, so EVERY request
+    // routes roomy-first and the fast tier is dead code — Groq is only ever
+    // reached as a failover.
+    //
+    // That is a product fact worth surfacing rather than a bug in this file:
+    // the fix is either a smaller prompt or dropping the fast tier, and both
+    // are decisions, not cleanups. If someone shrinks the prompt back under the
+    // line, this test fails on purpose — go and revisit the two failover tests
+    // above, which encode the resulting order.
+    const estimated = estimateTokens(SYSTEM_PROMPT, [{ role: "user", content: "hi" }], 700);
+    expect(estimated).toBeGreaterThan(7_000);
+    expect(providerOrderFor("chat", estimated)[0]).toBe("gemini");
+    // ...and the fast path is still correct for anything that would fit, so the
+    // ordering logic itself is not what needs changing.
+    expect(providerOrderFor("chat", 1_000)[0]).toBe("groq");
+  });
+
   it("still honours CHAT_PROVIDER as a hard pin", () => {
     process.env.GROQ_API_KEY = "g";
     process.env.GEMINI_API_KEY = "m";
@@ -1086,13 +1107,19 @@ describe("provider failover", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response("rate limit", { status: 429 }))
-      .mockResolvedValueOnce(sseResponse("from gemini"));
+      .mockResolvedValueOnce(sseResponse("from groq"));
     vi.stubGlobal("fetch", fetchMock);
 
     const res = await ask();
     expect(res.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(String(fetchMock.mock.calls[1][0])).toContain("generativelanguage.googleapis.com");
+    // Gemini leads and Groq catches the fall — NOT the other way round, which
+    // is what this test asserted when it was written. Nothing about failover
+    // changed; the system prompt grew past GROQ_TPM_HEADROOM, so every request
+    // now routes ROOMY_FIRST. See "the fast tier is unreachable" below, which
+    // pins the cause rather than leaving it to be rediscovered here.
+    expect(String(fetchMock.mock.calls[0][0])).toContain("generativelanguage.googleapis.com");
+    expect(String(fetchMock.mock.calls[1][0])).toContain("api.groq.com");
   });
 
   it("falls over when the first provider's key is rejected", async () => {
@@ -1187,8 +1214,12 @@ describe("provider failover", () => {
     process.env.GROQ_API_KEY = "g";
     process.env.GEMINI_API_KEY = "m";
     delete process.env.CHAT_PROVIDER;
-    const geminiFrame =
-      'data: {"candidates":[{"content":{"parts":[{"text":"hello from gemini"}]}}]}\n';
+    // Groq's frame, not Gemini's — Groq is the SECOND provider now (the system
+    // prompt exceeds GROQ_TPM_HEADROOM, so Gemini leads). The point of the test
+    // is unchanged: whichever provider actually answers, its own delta shape is
+    // what gets decoded. Feeding it the leader's format would test nothing.
+    const secondProviderFrame =
+      'data: {"choices":[{"delta":{"content":"hello from groq"}}]}\n';
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response("", { status: 429 }))
@@ -1196,7 +1227,7 @@ describe("provider failover", () => {
         new Response(
           new ReadableStream({
             start(c) {
-              c.enqueue(new TextEncoder().encode(geminiFrame));
+              c.enqueue(new TextEncoder().encode(secondProviderFrame));
               c.close();
             },
           }),
@@ -1205,7 +1236,7 @@ describe("provider failover", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
     const body = await (await ask()).text();
-    expect(body).toContain("hello from gemini");
+    expect(body).toContain("hello from groq");
     expect(body).not.toContain(EMPTY_STREAM_FALLBACK);
   });
 });

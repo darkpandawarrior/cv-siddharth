@@ -2,6 +2,7 @@ import { useMemo, type JSX } from "react";
 import { RigidBody } from "@react-three/rapier";
 import { Grid, Line } from "@react-three/drei";
 import { PLACEMENTS, TERRAIN } from "./worldData.ts";
+import { dim, worldPalette } from "./palette.ts";
 
 /**
  * The static landmass: mainland, two atolls, two sky islands, all as plain
@@ -17,10 +18,9 @@ import { PLACEMENTS, TERRAIN } from "./worldData.ts";
  * a second edit.
  */
 
-const CARD = "#171c1a"; // --color-card — the site's own dark panel colour, reused as bare rock/board colour
-const ACCENT = "#3ddc84";
-const CYAN = "#5ee6ff";
-const PURPLE = "#db61ff";
+// Colours come from worldPalette() inside each component, never from
+// module-scope constants: a const here would capture whichever theme was
+// applied at import and never update. See palette.ts.
 
 // The mainland's ground plane. Chosen half a unit above SEA_LEVEL (0) so the
 // four land pavilions (worldData.ts positions them at y=0.5) sit flush on
@@ -51,6 +51,7 @@ function ringPoints(radius: number, segments = 32): [number, number, number][] {
  * ground down to SEA_LEVEL instead of ending in a cliff.
  */
 function Mainland() {
+  const c = worldPalette();
   return (
     <RigidBody type="fixed" colliders="cuboid">
       {/* Depth 30 centred at z=-3 gives z in [-18, 12] — the slab MUST reach
@@ -62,7 +63,7 @@ function Mainland() {
           respawned it. The launch leg of the triathlon was unrunnable. */}
       <mesh position={[0, GROUND_Y - 0.5, (TERRAIN.mainland.z0 + TERRAIN.mainland.z1) / 2]} receiveShadow>
         <boxGeometry args={[TERRAIN.mainland.halfWidth * 2, 1, TERRAIN.mainland.z1 - TERRAIN.mainland.z0]} />
-        <meshStandardMaterial color={CARD} roughness={0.85} metalness={0.05} />
+        <meshStandardMaterial color={c.card} roughness={0.85} metalness={0.05} />
       </mesh>
     </RigidBody>
   );
@@ -88,6 +89,7 @@ const KERB_HEIGHT = 0.9;
 const KERB_THICKNESS = 0.5;
 
 function Kerb() {
+  const c = worldPalette();
   const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
   const depth = z1 - z0;
   const y = groundY + KERB_HEIGHT / 2;
@@ -97,7 +99,7 @@ function Kerb() {
       <RigidBody type="fixed" colliders="cuboid" position={[0, y, z0 + KERB_THICKNESS / 2]}>
         <mesh receiveShadow castShadow>
           <boxGeometry args={[halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS]} />
-          <meshStandardMaterial color="#1c231f" roughness={0.8} />
+          <meshStandardMaterial color={c.surface} roughness={0.8} />
         </mesh>
       </RigidBody>
       {/* East and west, stopping short of the south edge so the shore stays open */}
@@ -110,7 +112,7 @@ function Kerb() {
         >
           <mesh receiveShadow castShadow>
             <boxGeometry args={[KERB_THICKNESS, KERB_HEIGHT, depth]} />
-            <meshStandardMaterial color="#1c231f" roughness={0.8} />
+            <meshStandardMaterial color={c.surface} roughness={0.8} />
           </mesh>
         </RigidBody>
       ))}
@@ -139,7 +141,8 @@ function TiltedShoreBox(props: {
   y1: number;
   color?: string;
 }) {
-  const { centerX, width, z0, z1, y0, y1, color = CARD } = props;
+  const c = worldPalette();
+  const { centerX, width, z0, z1, y0, y1, color = c.card } = props;
   const run = z1 - z0;
   const rise = y1 - y0;
   const length = Math.hypot(run, rise);
@@ -202,6 +205,7 @@ function Shore() {
  * drifts a few metres off-line still finds sloped ground, not a wall.
  */
 function LaunchRamp() {
+  const c = worldPalette();
   return (
     <TiltedShoreBox
       centerX={TERRAIN.shore.rampCenterX}
@@ -210,7 +214,7 @@ function LaunchRamp() {
       z1={TERRAIN.shore.z1}
       y0={GROUND_Y}
       y1={TERRAIN.shore.rampTopY}
-      color="#1c231f"
+      color={c.surface}
     />
   );
 }
@@ -224,6 +228,7 @@ function LaunchRamp() {
  * the puck shape closely for negligible extra cost on a static body.
  */
 function Atoll({ to, ringColor }: { to: string; ringColor: string }) {
+  const c = worldPalette();
   const {
     position: [x, y, z],
   } = placementOf(to);
@@ -232,7 +237,7 @@ function Atoll({ to, ringColor }: { to: string; ringColor: string }) {
     <RigidBody type="fixed" colliders="hull" position={[x, y + TERRAIN.atoll.centerOffsetY, z]}>
       <mesh receiveShadow>
         <cylinderGeometry args={[TERRAIN.atoll.topRadius, TERRAIN.atoll.baseRadius, TERRAIN.atoll.height, 24]} />
-        <meshStandardMaterial color={CARD} roughness={0.8} metalness={0.05} />
+        <meshStandardMaterial color={c.card} roughness={0.8} metalness={0.05} />
       </mesh>
       <Line points={ring} color={ringColor} lineWidth={1.5} transparent opacity={0.8} position={[0, 0.36, 0]} />
     </RigidBody>
@@ -275,6 +280,7 @@ function PcbTraces({ colors, y }: { colors: [string, string, string]; y: number 
  *  traced circuitry as a populated circuit board, which only sells the
  *  "PCB" read if the board itself looks board-shaped rather than rock-shaped. */
 function SkyIsland({ to, traceColors }: { to: string; traceColors: [string, string, string] }) {
+  const c = worldPalette();
   const {
     position: [x, y, z],
   } = placementOf(to);
@@ -282,7 +288,7 @@ function SkyIsland({ to, traceColors }: { to: string; traceColors: [string, stri
     <RigidBody type="fixed" colliders="cuboid" position={[x, y - TERRAIN.skyIsland.thickness / 2, z]}>
       <mesh receiveShadow>
         <boxGeometry args={[TERRAIN.skyIsland.half * 2, TERRAIN.skyIsland.thickness, TERRAIN.skyIsland.half * 2]} />
-        <meshStandardMaterial color={CARD} roughness={0.55} metalness={0.25} />
+        <meshStandardMaterial color={c.card} roughness={0.55} metalness={0.25} />
       </mesh>
       <PcbTraces colors={traceColors} y={0.51} />
     </RigidBody>
@@ -290,6 +296,7 @@ function SkyIsland({ to, traceColors }: { to: string; traceColors: [string, stri
 }
 
 export function Terrain(): JSX.Element {
+  const c = worldPalette();
   return (
     <group>
       {/* A cutting-mat grid on the desk surface. This is the only thing in the
@@ -305,10 +312,10 @@ export function Terrain(): JSX.Element {
         args={[TERRAIN.mainland.halfWidth * 2, TERRAIN.mainland.z1 - TERRAIN.mainland.z0]}
         cellSize={1}
         cellThickness={0.5}
-        cellColor="#243029"
+        cellColor={dim(c.signal, 0.88)}
         sectionSize={5}
         sectionThickness={0.8}
-        sectionColor="#2c5f47"
+        sectionColor={dim(c.signal, 0.62)}
         fadeDistance={70}
         fadeStrength={1.4}
         followCamera={false}
@@ -320,13 +327,13 @@ export function Terrain(): JSX.Element {
       <LaunchRamp />
 
       {/* West corridor (weeb/blueprint) — the timed course, cyan-trimmed. */}
-      <Atoll to="/weeb" ringColor={CYAN} />
-      <SkyIsland to="/blueprint" traceColors={[ACCENT, CYAN, CYAN]} />
+      <Atoll to="/weeb" ringColor={c.probe} />
+      <SkyIsland to="/blueprint" traceColors={[c.signal, c.probe, c.probe]} />
 
       {/* East corridor (chess/map) — drive-and-explore only, purple-trimmed,
           so the two corridors read as a matched pair rather than duplicates. */}
-      <Atoll to="/chess" ringColor={PURPLE} />
-      <SkyIsland to="/map" traceColors={[ACCENT, PURPLE, PURPLE]} />
+      <Atoll to="/chess" ringColor={c.alt} />
+      <SkyIsland to="/map" traceColors={[c.signal, c.alt, c.alt]} />
     </group>
   );
 }

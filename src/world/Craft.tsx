@@ -24,6 +24,7 @@ import {
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { SPACE_LIFTS, TERRAIN, THERMALS } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The one craft. A single dynamic rigid body driven three different ways —
@@ -291,6 +292,7 @@ function respawnCraft(chassis: RapierRigidBody): void {
 }
 
 export function Craft(props: { onState: (s: { mode: CraftMode; position: [number, number, number] }) => void }) {
+  const c = worldPalette();
   const { world } = useRapier();
   const { camera } = useThree();
   const chassisRef = useRef<RapierRigidBody>(null);
@@ -782,13 +784,13 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       {/* Body */}
       <mesh castShadow receiveShadow>
         <boxGeometry args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]} />
-        <meshStandardMaterial color="#3ddc84" metalness={0.2} roughness={0.5} />
+        <meshStandardMaterial color={c.signal} metalness={0.2} roughness={0.5} />
       </mesh>
 
       {/* Cabin */}
       <mesh castShadow position={[0, HALF.y + 0.16, -0.1]}>
         <boxGeometry args={[0.68, 0.32, 0.9]} />
-        <meshStandardMaterial color="#0b0f0d" metalness={0.4} roughness={0.3} />
+        <meshStandardMaterial color={c.void} metalness={0.4} roughness={0.3} />
       </mesh>
 
       {/* Wheels — a steering group (position + yaw) nesting a spin group
@@ -810,7 +812,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
           >
             <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, 0.26, 14]} />
-              <meshStandardMaterial color="#161616" roughness={0.7} />
+              <meshStandardMaterial color={c.void} roughness={0.7} />
             </mesh>
           </group>
         </group>

@@ -2,6 +2,7 @@ import { useMemo, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { TERRAIN } from "./worldData.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The things that move when nothing is happening.
@@ -27,6 +28,7 @@ const MOTE_COUNT = 90;
  * job the floor grid does at ground level.
  */
 export function Motes(): JSX.Element {
+  const c = worldPalette();
   const ref = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const seeds = useMemo(
@@ -62,7 +64,7 @@ export function Motes(): JSX.Element {
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, MOTE_COUNT]} frustumCulled={false}>
       <sphereGeometry args={[1, 5, 4]} />
-      <meshBasicMaterial color="#7fe3b0" transparent opacity={0.13} depthWrite={false} />
+      <meshBasicMaterial color={c.signalDim} transparent opacity={0.13} depthWrite={false} />
     </instancedMesh>
   );
 }

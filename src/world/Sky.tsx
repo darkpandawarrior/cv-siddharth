@@ -6,6 +6,7 @@ import { SPACE_ALTITUDE } from "./craftPhysics.ts";
 import { SPACE_LIFTS, THERMALS } from "./worldData.ts";
 import { weeb } from "../data/weeb.ts";
 import { telemetry } from "./telemetry.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * Everything above the water line: the thermal columns, and the sky that turns
@@ -31,6 +32,7 @@ function ThermalColumn({
   radius: number;
   ceilingY: number;
 }) {
+  const c = worldPalette();
   const group = useRef<THREE.Group>(null);
   const offsets = useMemo(
     () => Array.from({ length: THERMAL_RINGS }, (_, i) => i / THERMAL_RINGS),
@@ -61,7 +63,7 @@ function ThermalColumn({
       {offsets.map((o, i) => (
         <mesh key={i} position={[0, o * ceilingY, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[radius * 0.8, 0.09, 6, 28]} />
-          <meshBasicMaterial color="#5ee6ff" transparent opacity={0.4} depthWrite={false} />
+          <meshBasicMaterial color={c.probe} transparent opacity={0.4} depthWrite={false} />
         </mesh>
       ))}
     </group>
@@ -124,6 +126,7 @@ export function SpaceSky(): JSX.Element {
  * sky island and sees nothing has reached the end of the world.
  */
 function LaunchPad({ position, radius }: { position: [number, number, number]; radius: number }) {
+  const c = worldPalette();
   const ring = useRef<THREE.Mesh>(null);
   const beam = useRef<THREE.Mesh>(null);
   useFrame((state) => {
@@ -141,11 +144,11 @@ function LaunchPad({ position, radius }: { position: [number, number, number]; r
     <group position={[position[0], position[1] + 0.06, position[2]]}>
       <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]}>
         <torusGeometry args={[radius, 0.16, 8, 40]} />
-        <meshBasicMaterial color="#db61ff" transparent opacity={0.7} depthWrite={false} />
+        <meshBasicMaterial color={c.alt} transparent opacity={0.7} depthWrite={false} />
       </mesh>
       <mesh ref={beam} position={[0, 22, 0]}>
         <cylinderGeometry args={[radius * 0.85, radius, 44, 20, 1, true]} />
-        <meshBasicMaterial color="#db61ff" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} />
+        <meshBasicMaterial color={c.alt} transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
     </group>
   );

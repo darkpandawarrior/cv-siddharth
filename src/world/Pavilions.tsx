@@ -7,6 +7,7 @@ import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapie
 import { PLACEMENTS, WATER_SENSOR_HALF_EXTENTS, type Placement } from "./worldData.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * One physical structure per room, built entirely from three.js primitives —
@@ -98,11 +99,12 @@ function BreathingLight({
 
 /** Phone lying face-up: a flat body with a raised, tinted "screen" inset. */
 function Slab({ tint }: { tint: string }) {
+  const c = worldPalette();
   return (
     <group>
       <mesh position={[0, 0.09, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.7, 0.18, 3.4]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.6} />
+        <meshStandardMaterial color={c.card} roughness={0.6} />
       </mesh>
       <mesh position={[0, 0.19, 0]}>
         <boxGeometry args={[1.4, 0.02, 2.9]} />
@@ -114,19 +116,20 @@ function Slab({ tint }: { tint: string }) {
 
 /** Chunky monitor on a pedestal, tinted screen facing +Z (out of the mainland). */
 function Crt({ tint }: { tint: string }) {
+  const c = worldPalette();
   return (
     <group>
       <mesh position={[0, 0.25, 0]} castShadow>
         <boxGeometry args={[0.7, 0.5, 0.7]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.7} />
+        <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <mesh position={[0, 0.6, 0]} castShadow>
         <boxGeometry args={[0.35, 0.4, 0.35]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.7} />
+        <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <mesh position={[0, 1.65, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.1, 1.7, 1.7]} />
-        <meshStandardMaterial color="#111514" roughness={0.55} />
+        <meshStandardMaterial color={c.surface} roughness={0.55} />
       </mesh>
       <mesh position={[0, 1.65, 0.87]}>
         <boxGeometry args={[1.7, 1.3, 0.05]} />
@@ -138,20 +141,21 @@ function Crt({ tint }: { tint: string }) {
 
 /** A drafting board tilted on two legs, like a table angled up for drawing. */
 function Board({ tint }: { tint: string }) {
+  const c = worldPalette();
   return (
     <group>
       <mesh position={[-1.1, 0.9, 0.7]} castShadow>
         <boxGeometry args={[0.14, 1.8, 0.14]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.7} />
+        <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <mesh position={[1.1, 0.9, 0.7]} castShadow>
         <boxGeometry args={[0.14, 1.8, 0.14]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.7} />
+        <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <group position={[0, 1.55, 0]} rotation={[-0.45, 0, 0]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[3.2, 0.12, 2.1]} />
-          <meshStandardMaterial color="#111514" roughness={0.5} />
+          <meshStandardMaterial color={c.surface} roughness={0.5} />
         </mesh>
         {/* Edge trim in the room's tint reads as a lit border along the top
             edge of the board without needing a second light in the scene. */}
@@ -166,11 +170,12 @@ function Board({ tint }: { tint: string }) {
 
 /** Small island platform: a low dock with a lit rim and a flag marker. */
 function Atoll({ tint }: { tint: string }) {
+  const c = worldPalette();
   return (
     <group>
       <mesh position={[0, 0.2, 0]} receiveShadow castShadow>
         <cylinderGeometry args={[2.6, 2.8, 0.4, 28]} />
-        <meshStandardMaterial color="#2a2620" roughness={0.85} />
+        <meshStandardMaterial color={c.card} roughness={0.85} />
       </mesh>
       <mesh position={[0, 0.41, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[2.55, 0.06, 8, 40]} />
@@ -178,7 +183,7 @@ function Atoll({ tint }: { tint: string }) {
       </mesh>
       <mesh position={[0, 1.4, 0]}>
         <boxGeometry args={[0.08, 2.0, 0.08]} />
-        <meshStandardMaterial color="#171c1a" roughness={0.6} />
+        <meshStandardMaterial color={c.card} roughness={0.6} />
       </mesh>
       <mesh position={[0.35, 2.15, 0]}>
         <boxGeometry args={[0.7, 0.4, 0.02]} />
@@ -190,6 +195,7 @@ function Atoll({ tint }: { tint: string }) {
 
 /** Circuit slab: a flat board with a handful of raised chips and trace lines. */
 function Pcb({ tint }: { tint: string }) {
+  const c = worldPalette();
   const chips: [number, number][] = [
     [-1.0, -0.9],
     [0.6, -0.6],
@@ -201,7 +207,7 @@ function Pcb({ tint }: { tint: string }) {
     <group>
       <mesh position={[0, 0.1, 0]} receiveShadow castShadow>
         <boxGeometry args={[3.2, 0.2, 3.2]} />
-        <meshStandardMaterial color="#0f1a12" roughness={0.6} />
+        <meshStandardMaterial color={c.surface} roughness={0.6} />
       </mesh>
       {chips.map(([x, z], i) => (
         <mesh key={i} position={[x, 0.27, z]}>

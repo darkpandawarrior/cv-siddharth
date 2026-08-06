@@ -4,6 +4,7 @@ import { Html } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
 import { projectStats } from "../data/projectStats.ts";
 import { TERRAIN } from "./worldData.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The skyline IS the data.
@@ -29,7 +30,7 @@ const SEGMENT_HEIGHT = 0.55;
 
 /** Shared scratch for writing instance matrices — never rendered itself. */
 const dummy = new THREE.Object3D();
-const TINTS = ["#3ddc84", "#5ee6ff", "#db61ff", "#f0883e"];
+
 
 type Tower = {
   slug: string;
@@ -40,7 +41,9 @@ type Tower = {
   z: number;
 };
 
-function towers(): Tower[] {
+// Tints come from the theme, resolved when the component renders — a
+// module-scope TINTS array would freeze the boot palette (see palette.ts).
+function towers(tints: string[]): Tower[] {
   const entries = Object.entries(projectStats);
   return entries.map(([slug, stat], i) => {
     const modules = "modules" in stat ? stat.modules : 8;
@@ -56,7 +59,7 @@ function towers(): Tower[] {
       slug,
       modules,
       screenshots,
-      tint: TINTS[i % TINTS.length],
+      tint: tints[i % tints.length],
       x: side * (TERRAIN.mainland.halfWidth - 4.5),
       // Staggered down the length of the mainland so they pass by as you drive
       // rather than arriving all at once.
@@ -66,6 +69,7 @@ function towers(): Tower[] {
 }
 
 function Tower({ tower }: { tower: Tower }) {
+  const c = worldPalette();
   const segments = useMemo(
     () => Array.from({ length: tower.modules }, (_, i) => i),
     [tower.modules],
@@ -99,14 +103,14 @@ function Tower({ tower }: { tower: Tower }) {
         receiveShadow
       >
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#1b2420" emissive={tower.tint} emissiveIntensity={0.4} roughness={0.5} metalness={0.2} />
+        <meshStandardMaterial color={c.surface} emissive={tower.tint} emissiveIntensity={0.4} roughness={0.5} metalness={0.2} />
       </instancedMesh>
       {/* The lit crown, as one small separate box — this is what bloom picks
           up, and keeping it separate is why the shaft can stay a single
           uniform instanced material. */}
       <mesh position={[0, height + 0.3, 0]} castShadow>
         <boxGeometry args={[width * 1.15, 0.5, width * 1.15]} />
-        <meshStandardMaterial color="#1b2420" emissive={tower.tint} emissiveIntensity={1.8} roughness={0.4} />
+        <meshStandardMaterial color={c.surface} emissive={tower.tint} emissiveIntensity={1.8} roughness={0.4} />
       </mesh>
       {/* <Html>, not drei's <Text>. Text renders through troika, which builds
           an SDF font atlas on first use — a visible chunk of the world's
@@ -125,7 +129,8 @@ function Tower({ tower }: { tower: Tower }) {
 }
 
 export function Monuments(): JSX.Element {
-  const all = useMemo(towers, []);
+  const c = worldPalette();
+  const all = useMemo(() => towers([c.signal, c.probe, c.alt, c.warn]), [c.signal, c.probe, c.alt, c.warn]);
   return (
     <>
       {all.map((t) => (

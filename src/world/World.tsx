@@ -14,6 +14,7 @@ import { Craft } from "./Craft.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard } from "./input.ts";
 import { telemetry } from "./telemetry.ts";
+import { worldPalette } from "./palette.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import {
   beginRun,
@@ -25,7 +26,7 @@ import {
 } from "./triathlon.ts";
 import { CHECKPOINTS } from "./worldData.ts";
 import { loadExplored, markExplored } from "./explored.ts";
-import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
+import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS, MEDIUM_TINT } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
 import { collect, loadCollected, loadUnlocked, unlock } from "./progress.ts";
 import type { Toast } from "./Nav.tsx";
@@ -80,7 +81,7 @@ const ACHIEVEMENT_GRACE_MS = 2000;
 /** How long a mode must be held before it counts as having been done. */
 const MODE_DWELL_MS = 500;
 
-const BACKGROUND = "#060807"; // --color-void
+
 
 function CheckpointRing({
   checkpoint,
@@ -100,6 +101,7 @@ function CheckpointRing({
   // (south) — see worldData.ts's coordinate scheme. Pavilions' Atoll ring is
   // the other case (flat, rotated onto the ground); this one stands upright
   // on purpose, something to drive/glide/sail *through*.
+  const c = worldPalette();
   return (
     <mesh position={checkpoint.position}>
       <torusGeometry args={[checkpoint.radius, 0.14, 8, 32]} />
@@ -110,8 +112,8 @@ function CheckpointRing({
           screen. Dormant until a run begins; only the checkpoint you actually
           need is lit. */}
       <meshStandardMaterial
-        color={passed ? "#3ddc84" : "#5ee6ff"}
-        emissive={passed ? "#3ddc84" : "#5ee6ff"}
+        color={passed ? c.signal : c.probe}
+        emissive={passed ? c.signal : c.probe}
         emissiveIntensity={passed ? 0.15 : next ? 1.1 : active ? 0.45 : 0.12}
         transparent
         opacity={passed ? 0.14 : next ? 0.9 : active ? 0.4 : 0.12}
@@ -145,6 +147,7 @@ const CheckpointRings = memo(function CheckpointRings({
 });
 
 export default function World(props: { onShowList: () => void }) {
+  const palette = worldPalette();
   const navigate = useNavigate();
   const bump = usePulse();
 
@@ -243,11 +246,11 @@ export default function World(props: { onShowList: () => void }) {
         id: `ach-${id}-${achievement.label}`,
         title: achievement.label,
         detail: achievement.detail,
-        tint: "#f0883e",
+        tint: palette.warn,
         kind: "unlock",
       });
     },
-    [pushToast],
+    [pushToast, palette.warn],
   );
 
   // Every scheduled toast has to be cancellable: navigating into a room
@@ -354,7 +357,12 @@ export default function World(props: { onShowList: () => void }) {
           id: `art-${artifact.id}`,
           title: artifact.label,
           detail: artifact.detail,
-          tint: artifact.tint,
+          // Resolved here rather than closed over: worldPalette() returns a
+          // fresh object each render, so capturing it would either break this
+          // callback's stable identity (and with it Craft's memoisation) or go
+          // stale. Reading at pickup time also means a theme swap is reflected
+          // without waiting for a re-render.
+          tint: worldPalette()[MEDIUM_TINT[artifact.medium]],
           kind: "find",
         });
         if (next.size === ARTIFACTS.length) tryUnlock("all-artifacts");
@@ -487,19 +495,19 @@ export default function World(props: { onShowList: () => void }) {
         className="absolute inset-0"
         aria-hidden="true"
       >
-        <color attach="background" args={[BACKGROUND]} />
+        <color attach="background" args={[palette.void]} />
         {/* Fog starts further out than it did (30 -> 55). At 30 the far half
             of the mainland was already fading into the background colour, so a
             driver couldn't see the room they were heading for — which on a
             surface whose entire job is navigation is the wrong trade. */}
-        <fog attach="fog" args={[BACKGROUND, 55, 140]} />
+        <fog attach="fog" args={[palette.void, 55, 140]} />
         {/* Lifted from 0.55/0.6/1.4. The first render of this scene was legible
             in a screenshot only if you already knew what you were looking at:
             unlit faces of the terrain read as pure background, so the mainland
             had no visible edge and the sea and the sky were the same colour.
             Dark is the site's palette; unreadable isn't. */}
         <ambientLight intensity={0.95} />
-        <hemisphereLight args={["#3b6a52", "#0a1016", 1.0]} />
+        <hemisphereLight args={[palette.signalDim, palette.void, 1.0]} />
         <directionalLight
           castShadow
           position={[18, 26, -12]}

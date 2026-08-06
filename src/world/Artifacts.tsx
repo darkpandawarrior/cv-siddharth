@@ -1,7 +1,8 @@
 import { useMemo, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { ARTIFACTS } from "./artifacts.ts";
+import { ARTIFACTS, MEDIUM_TINT } from "./artifacts.ts";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The collectibles, in the world.
@@ -22,6 +23,7 @@ import { ARTIFACTS } from "./artifacts.ts";
 type Props = { collected: ReadonlySet<string> };
 
 export function Artifacts({ collected }: Props): JSX.Element {
+  const c = worldPalette();
   const group = useRef<THREE.Group>(null);
   const phases = useMemo(() => ARTIFACTS.map((_, i) => (i * 2.39996) % (Math.PI * 2)), []);
 
@@ -43,6 +45,9 @@ export function Artifacts({ collected }: Props): JSX.Element {
     <group ref={group}>
       {ARTIFACTS.map((a) => {
         const held = collected.has(a.id);
+        // Token resolved here, not baked into the data: artifacts.ts is
+        // imported by tests and must never touch the DOM.
+        const tint = c[MEDIUM_TINT[a.medium]];
         return (
           <mesh
             key={a.id}
@@ -52,8 +57,8 @@ export function Artifacts({ collected }: Props): JSX.Element {
           >
             <octahedronGeometry args={[1, 0]} />
             <meshStandardMaterial
-              color={a.tint}
-              emissive={a.tint}
+              color={tint}
+              emissive={tint}
               // Uncollected ones sit well above the bloom threshold (0.9) so
               // they glow and carry at distance; collected ones drop below it
               // and become quiet geometry.

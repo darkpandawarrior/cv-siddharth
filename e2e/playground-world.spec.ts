@@ -43,6 +43,11 @@ async function stubNoWebGL(page: Page) {
 
 test.describe("playground world — no WebGL", () => {
   test("renders the card grid, not the canvas, and every room link is reachable", async ({ page }) => {
+    // 16 navigations across the heaviest routes on the site (blueprint, map and
+    // chess each boot their own three.js scene), so this is genuinely a slow
+    // test rather than a hanging one: ~12s alone, and it tipped past the 30s
+    // default when the full suite was running. Stated rather than left to luck.
+    test.setTimeout(90_000);
     await stubNoWebGL(page);
     await page.goto("/playground");
 

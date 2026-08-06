@@ -3,6 +3,7 @@ import { Color, type InstancedMesh } from "three";
 import { InstancedRigidBodies, interactionGroups, type InstancedRigidBodyProps, type RigidBodyAutoCollider } from "@react-three/rapier";
 import { PLACEMENTS } from "./worldData.ts";
 import { PAVILION_SENSOR_GROUP } from "./Pavilions.tsx";
+import { worldPalette, type WorldPalette } from "./palette.ts";
 
 /**
  * The knockable debris scattered over the mainland — keycaps, pencils, mugs,
@@ -80,10 +81,22 @@ function scatterMainland(count: number, dropHeight: [number, number]): Instanced
   return instances;
 }
 
-const KEYCAP_COLORS = ["#e8efe9", "#8b909a", "#171c1a", "#f2a13d"];
-const MUG_COLORS = ["#e8efe9", "#4fd6e0"];
-const PENCIL_COLORS = ["#f2a13d", "#c47f2a"];
-const CRATE_COLORS = ["#4a3826", "#3a2c1c"];
+// Prop colours, resolved from theme tokens at render — see palette.ts for why
+// these cannot be module-scope constants. The two browns are the only values
+// in this world with no token behind them: there is no "cardboard" in the
+// site's palette, and inventing a token for two crates would be worse than
+// naming the shade here.
+const CRATE_BROWN = "#4a3826";
+const CRATE_BROWN_DARK = "#3a2c1c";
+
+function propColors(c: WorldPalette) {
+  return {
+    keycap: [c.text, c.textDim, c.card, c.accent],
+    mug: [c.text, c.accent2],
+    pencil: [c.accent, c.accentDim],
+    crate: [CRATE_BROWN, CRATE_BROWN_DARK],
+  };
+}
 
 // Drop-height ranges, hoisted to module scope (rather than inline array
 // literals at each call site below) so they're stable references across
@@ -143,24 +156,25 @@ function PropFamily({
 }
 
 export function Props(): JSX.Element {
+  const colors = propColors(worldPalette());
   return (
     <>
-      <PropFamily count={36} dropHeight={KEYCAP_DROP} colliders="cuboid" colors={KEYCAP_COLORS} geometry={<boxGeometry args={[0.22, 0.22, 0.22]} />} />
+      <PropFamily count={36} dropHeight={KEYCAP_DROP} colliders="cuboid" colors={colors.keycap} geometry={<boxGeometry args={[0.22, 0.22, 0.22]} />} />
       <PropFamily
         count={18}
         dropHeight={PENCIL_DROP}
         colliders="hull"
-        colors={PENCIL_COLORS}
+        colors={colors.pencil}
         geometry={<cylinderGeometry args={[0.035, 0.035, 1.0, 8]} />}
       />
       <PropFamily
         count={12}
         dropHeight={MUG_DROP}
         colliders="hull"
-        colors={MUG_COLORS}
+        colors={colors.mug}
         geometry={<cylinderGeometry args={[0.16, 0.13, 0.32, 16]} />}
       />
-      <PropFamily count={10} dropHeight={CRATE_DROP} colliders="cuboid" colors={CRATE_COLORS} geometry={<boxGeometry args={[0.55, 0.45, 0.55]} />} />
+      <PropFamily count={10} dropHeight={CRATE_DROP} colliders="cuboid" colors={colors.crate} geometry={<boxGeometry args={[0.55, 0.45, 0.55]} />} />
     </>
   );
 }
