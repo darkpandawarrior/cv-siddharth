@@ -56,10 +56,10 @@ const SENSOR_COLLISION_GROUPS = interactionGroups([PAVILION_SENSOR_GROUP], [PAVI
 // PLACEMENTS keeps the rooms 8m+ apart (worldGeometry.test.ts asserts it), so
 // there is room for this without two prompts ever overlapping.
 const SENSOR_HALF_EXTENTS: Record<Placement["shape"], [number, number, number]> = {
-  slab: [4.2, 2.4, 4.2],
-  crt: [4.2, 3, 4.2],
-  board: [4.4, 3, 4.4],
-  pcb: [4.2, 2.4, 4.2],
+  slab: [4.8, 2.6, 4.8],
+  crt: [4.8, 3.2, 4.8],
+  board: [4.8, 3.2, 4.8],
+  pcb: [4.8, 2.6, 4.8],
 };
 
 

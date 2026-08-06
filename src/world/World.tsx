@@ -5,6 +5,7 @@ import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
+import { Stunts } from "./Stunts.tsx";
 import { Trail } from "./Trail.tsx";
 import { disposeAudio, initAudio, playPickup } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
@@ -49,6 +50,7 @@ const MemoPavilions = memo(Pavilions);
 const MemoCraft = memo(Craft);
 const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
+const MemoStunts = memo(Stunts);
 const MemoTrail = memo(Trail);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
@@ -303,6 +305,7 @@ export default function World(props: { onShowList: () => void }) {
           <MemoTerrain />
           <MemoProps />
           <MemoMonuments />
+          <MemoStunts />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>

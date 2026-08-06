@@ -270,6 +270,7 @@ export function Hud(props: {
           (top / middle / bottom) whichever of these two is showing — they
           stack rather than fighting over the middle slot. */}
       <div className="flex flex-col items-center gap-2">
+
         <StuckNotice />
 
         {toasts && toasts.length > 0 && <Toasts items={toasts} />}
