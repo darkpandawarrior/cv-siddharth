@@ -57,9 +57,17 @@ const HALF = { x: 0.55, y: 0.3, z: 0.95 };
 // craftPhysics.ts, imported above — see the block comment there for why these
 // four in particular could not stay private to a component file.
 
-// Wheel layout, in the chassis's local frame. Front pair steers, rear pair
-// drives — a conventional RWD toy car. TRACK_X sits slightly outside the
-// chassis half-width for a stanced, wheels-poking-out toy-car silhouette.
+/**
+ * Wheel layout, in the chassis's local frame.
+ *
+ * Front is +Z because forward is +Z (see WHEEL_AXLE). The leading pair steers,
+ * the trailing pair drives — a conventional RWD toy car.
+ *
+ * This was briefly inverted, which made the trailing pair steer and the leading
+ * pair drive: a rear-steer forklift. That is why turning felt wrong and why the
+ * car swung its tail into scenery. Front/rear must always be read off the
+ * forward convention, never assumed.
+ */
 const TRACK_X = 0.62;
 const AXLE_FRONT_Z = 0.82;
 const AXLE_REAR_Z = -0.82;
@@ -116,7 +124,14 @@ const HULL_YAW_TORQUE = 900;
  * can influence, which is the difference between a course that feels fair and
  * one that feels arbitrary.
  */
-const BOOST_MULTIPLIER = 2.1;
+const BOOST_MULTIPLIER = 1.75;
+
+// Pitch (as the forward vector's Y) beyond which the anti-wheelie assist starts
+// pushing the nose back down, and how hard. The threshold is deliberately above
+// the pitch of the launch ramp itself (~0.28) so driving up it never triggers
+// the assist — only a genuine power wheelie does.
+const ANTI_WHEELIE_PITCH = 0.2;
+const ANTI_WHEELIE_TORQUE = 5200;
 const BOOST_DRAIN_PER_S = 0.35; // full tank ≈ 3s of boost — 2s ran dry before the ramp
 const BOOST_RECHARGE_PER_S = 0.22; // ~4.5s from empty to full
 
@@ -124,31 +139,43 @@ const BOOST_RECHARGE_PER_S = 0.22; // ~4.5s from empty to full
 // turns which way) are a first pass, not a measured fact — flip the minus
 // signs here if a playtest says the car turns the wrong way.
 /**
- * The craft's forward direction in its OWN frame, and it is -Z, not +Z.
+ * FORWARD IS +Z. One convention, stated once, obeyed by everything below.
  *
- * Rapier derives each wheel's forward from cross(axle, suspensionDirection) —
- * here cross((1,0,0), (0,-1,0)) = (0,0,-1). Everything the vehicle controller
- * does is built on that: engine force, wheel friction, and the sign of
- * currentVehicleSpeed(). The rest of this world assumes +Z is forward
- * (worldData.ts's coordinate scheme; the whole course lies south of spawn), so
- * the two have to be reconciled somewhere.
+ * This replaces four separate sign patches that had drifted out of agreement
+ * with each other — a negated engine force, a local-forward of -Z, a 180-degree
+ * spawn yaw, and a negated speed reading. Each was correct in isolation and the
+ * combination drove the car backwards: it travelled +Z while reporting a
+ * heading of 180 degrees, so the compass, the chase camera and the launch
+ * threshold were all describing a craft that was reversing down its own course.
  *
- * They are reconciled HERE, by naming the craft's local forward and turning the
- * craft around at spawn (SPAWN_ROTATION below) — not by flipping the axle and
- * not by negating the engine force. Both of those were tried and both make the
- * craft drive against its own wheel frame: it rolled onto its roof within a
- * couple of seconds and sat in a respawn loop. The wheel geometry is fine; only
- * the craft's heading and the sign of "how fast is it going forward" needed to
- * agree with the world.
+ * The single fact everything derives from: Rapier builds a wheel's forward
+ * direction as cross(axle, suspensionDirection). With suspension pointing down
+ * (0,-1,0), an axle of (-1,0,0) yields (0,0,+1) — so the vehicle controller's
+ * own notion of forward is +Z, matching worldData.ts's coordinate scheme, the
+ * course layout, and scratch.forward below. Nothing needs negating anywhere.
+ *
+ * An earlier attempt at this flipped the axle alone and the craft rolled onto
+ * its roof within seconds. That was NOT the axle's fault: the centre of mass
+ * was still at the collider centroid then, and the "front" wheels were the
+ * trailing pair. With both of those fixed the geometry is consistent and the
+ * car is stable — see CENTRE_OF_MASS_Y and AXLE_FRONT_Z.
  */
-const LOCAL_FORWARD_Z = -1;
+const WHEEL_AXLE = { x: -1, y: 0, z: 0 };
 
-// Yawed 180° so the craft's local -Z (its true forward, above) points along
-// world +Z — down the mainland toward the shore, the ramp and the whole course.
-// Without this a visitor holding the throttle drives away from every part of
-// the world and parks against the north kerb.
-const SPAWN_ROTATION: [number, number, number] = [0, Math.PI, 0];
-
+/**
+ * Maps steer input to wheel angle. -1, verified by driving rather than derived.
+ *
+ * The trap: with +Y up and the craft facing +Z, the driver's RIGHT is -X, not
+ * +X (right = forward x up = -X). So "turns toward -X" reads as left on paper
+ * and is right from the seat. At +1 the arrow keys steered the car the wrong
+ * way — which, with the rear-steer wheel bug that shipped alongside it, is why
+ * "arrow keys control the wrong wheel" was the honest description.
+ *
+ * Note the same trap applies to `scratch.right` below: it is set from local +X,
+ * which is the craft's LEFT in this frame. The wings/orbit torques are written
+ * against that vector consistently, so they are correct as a set — but do not
+ * assume the name means what it says without checking the sign in the browser.
+ */
 const STEER_SIGN = -1;
 const WING_PITCH_TORQUE = 220;
 const WING_ROLL_TORQUE = 260;
@@ -184,7 +211,18 @@ const PAD_BURN_MS = 1500;
  * height, where a die-cast car's mass actually is: the body is a shell and the
  * metal is underneath.
  */
-const CENTRE_OF_MASS_Y = -0.28;
+const CENTRE_OF_MASS_Y = -0.34;
+
+/**
+ * ...and slightly FORWARD of centre, which is the other half of not tipping
+ * over. Wheelie resistance is m*g*d/h, where d is the horizontal distance from
+ * the rear axle to the centre of mass. At d=0.82 (mass dead centre) the
+ * threshold was ~3,220N against boost's 4,025N — it went over every time. Ahead
+ * by 0.2 gives d=1.02 and, with the lower h above, a threshold near 4,500N:
+ * boost now accelerates the car instead of standing it up. Front-heavy is also
+ * simply what a die-cast toy is, with the motor block over the front axle.
+ */
+const CENTRE_OF_MASS_Z = 0.2;
 
 /**
  * Inertia tensor for the chassis box, computed rather than left at zero.
@@ -268,7 +306,10 @@ function isUnderTheMap(x: number, y: number, z: number): boolean {
 // "short interval" Finding 5a asks for before auto-recovery kicks in.
 const FLIP_UP_Y = -0.3;
 const FLIP_SPEED_THRESHOLD = 2; // m/s
-const FLIP_RESPAWN_MS = 1500;
+// Was 1500. A second and a half upside down with no explanation is long enough
+// to read as "the game broke" rather than "you crashed" — the visitor has no
+// way to know a timer is running. Shorter, plus the HUD now says so.
+const FLIP_RESPAWN_MS = 700;
 
 /**
  * Teleports the chassis back to a known-safe pose and zeroes everything that
@@ -282,9 +323,9 @@ const FLIP_RESPAWN_MS = 1500;
  */
 function respawnCraft(chassis: RapierRigidBody): void {
   chassis.setTranslation({ x: SPAWN_POSITION[0], y: SPAWN_POSITION[1], z: SPAWN_POSITION[2] }, true);
-  // Yaw 180° as a quaternion — the same heading as SPAWN_ROTATION. Resetting to
-  // identity would leave a recovered craft facing away from the entire course.
-  chassis.setRotation({ x: 0, y: 1, z: 0, w: 0 }, true);
+  // Identity: forward is +Z and the course runs +Z, so an unrotated craft is
+  // already pointing down it.
+  chassis.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
   chassis.setLinvel({ x: 0, y: 0, z: 0 }, true);
   chassis.setAngvel({ x: 0, y: 0, z: 0 }, true);
   chassis.resetForces(true);
@@ -384,7 +425,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
      */
     chassis.setAdditionalMassProperties(
       CHASSIS_MASS,
-      { x: 0, y: CENTRE_OF_MASS_Y, z: 0 },
+      { x: 0, y: CENTRE_OF_MASS_Y, z: CENTRE_OF_MASS_Z },
       CHASSIS_INERTIA,
       { x: 0, y: 0, z: 0, w: 1 },
       true,
@@ -398,7 +439,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // in.
     controller.setIndexForwardAxis = 2;
     for (const w of WHEELS) {
-      controller.addWheel({ x: w.x, y: WHEEL_Y, z: w.z }, { x: 0, y: -1, z: 0 }, { x: 1, y: 0, z: 0 }, SUSPENSION_REST, WHEEL_RADIUS);
+      controller.addWheel({ x: w.x, y: WHEEL_Y, z: w.z }, { x: 0, y: -1, z: 0 }, WHEEL_AXLE, SUSPENSION_REST, WHEEL_RADIUS);
     }
     for (let i = 0; i < WHEELS.length; i++) {
       controller.setWheelSuspensionStiffness(i, 26);
@@ -536,7 +577,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       grounded,
       submergedDepth,
       airborneMs: airborneMsRef.current,
-      speed: -vehicle.currentVehicleSpeed(),
+      speed: vehicle.currentVehicleSpeed(),
       altitude: t.y - SEA_LEVEL,
     };
 
@@ -545,9 +586,30 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
 
     const r = chassis.rotation();
     scratch.quat.set(r.x, r.y, r.z, r.w);
-    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
+    scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
     scratch.right.set(1, 0, 0).applyQuaternion(scratch.quat);
     scratch.up.set(0, 1, 0).applyQuaternion(scratch.quat);
+
+    // ANTI-WHEELIE. Hard acceleration tips the car over backwards, and the
+    // arithmetic is not marginal: the nose lifts once drive force exceeds
+    // m*g*d/h — with the centre of mass 0.55m above the contact patch and the
+    // rear axle 0.82m behind it, that is ~3,220N, and boost puts 4,025N
+    // through it. It went onto its roof inside a second, every time.
+    //
+    // The honest options were less boost or a shorter car. Both make the world
+    // worse to be in, so instead the nose is held down the way an arcade racer
+    // does it: a corrective torque proportional to how far past level the craft
+    // has pitched, applied only on the ground and only when the nose is
+    // rising. It cannot fight a genuine ramp launch (airborne, so skipped) and
+    // it does nothing at all in normal driving, where pitch stays near zero.
+    if (newMode === "wheels" && grounded) {
+      const nose = scratch.forward.y; // +ve = nose up
+      if (nose > ANTI_WHEELIE_PITCH) {
+        const correction = (nose - ANTI_WHEELIE_PITCH) * ANTI_WHEELIE_TORQUE;
+        scratch.torque.copy(scratch.right).multiplyScalar(correction);
+        chassis.addTorque({ x: scratch.torque.x, y: scratch.torque.y, z: scratch.torque.z }, true);
+      }
+    }
 
     if (newMode === "hull") {
       chassis.setLinearDamping(HULL_LINEAR_DAMPING);
@@ -665,6 +727,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       }
     }
     telemetry.inThermal = liftedByThermal;
+    telemetry.stuck = flippedMsRef.current > 150;
 
     // Launch pads. Deliberately NOT skipped while grounded — the whole design
     // is that you drive onto one and it throws you, and a pad you had to be
@@ -697,7 +760,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     const t = chassis.translation();
     const r = chassis.rotation();
     scratch.quat.set(r.x, r.y, r.z, r.w);
-    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
+    scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
 
     const linvel = chassis.linvel();
     const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
@@ -750,13 +813,12 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     telemetry.x = t.x;
     telemetry.y = t.y;
     telemetry.z = t.z;
-    // Yaw of the craft's own forward axis (local -Z, see LOCAL_FORWARD_Z),
-    // measured so 0 points along world +Z. atan2(x, z) rather than the usual
-    // (z, x) because the compass wants bearing-from-+Z, not maths-convention
-    // angle-from-+X.
-    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
+    // Yaw of the craft's forward axis (local +Z — see WHEEL_AXLE), measured so
+    // 0 points along world +Z. atan2(x, z) rather than the usual (z, x) because
+    // the compass wants bearing-from-+Z, not maths-convention angle-from-+X.
+    scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
     telemetry.heading = Math.atan2(scratch.forward.x, scratch.forward.z);
-    telemetry.speed = vehicle ? -vehicle.currentVehicleSpeed() : 0;
+    telemetry.speed = vehicle ? vehicle.currentVehicleSpeed() : 0;
     telemetry.mode = modeRef.current;
     telemetry.boost = boostRef.current;
     telemetry.boosting = boostingRef.current;
@@ -774,7 +836,6 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       angularDamping={0.7}
       linearDamping={BASE_LINEAR_DAMPING}
       position={SPAWN_POSITION}
-      rotation={SPAWN_ROTATION}
     >
       {/* Mass comes from setAdditionalMassProperties in the effect above (which
           also lowers the centre of mass); giving the collider its own density

@@ -96,6 +96,22 @@ export function atollWaterlineRadius(placementY: number): number {
 // atoll, so entering from the water is the only way in.
 export const WATER_SENSOR_HALF_EXTENTS: [number, number, number] = [6, 2.6, 6];
 
+/**
+ * Where to place the CENTRE of a tilted slab so its TOP FACE runs along the
+ * line (z0,y0)→(z1,y1) — i.e. so the surface you drive on is the surface the
+ * layout describes.
+ *
+ * Pure, and here rather than inside Terrain.tsx, because getting it wrong is
+ * invisible to the eye and fatal to play: positioning these slabs by their
+ * centre line put the shore's driving surface half a slab ABOVE the mainland,
+ * a 0.5m step across the full width of the map right where every run south
+ * passes. The craft hit it at speed and flipped, every time.
+ */
+export function tiltedSlabCenterY(y0: number, y1: number, run: number, thickness: number): number {
+  const angle = -Math.atan2(y1 - y0, run);
+  return (y0 + y1) / 2 - (thickness / 2) * Math.cos(angle);
+}
+
 export type Medium = "land" | "water" | "air";
 
 export type Placement = {

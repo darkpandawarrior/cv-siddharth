@@ -58,6 +58,30 @@ function tooCloseToAPavilion(x: number, z: number): boolean {
  *  a small random height so they fall onto the terrain under gravity rather
  *  than spawning already resting (which would read as static set-dressing,
  *  not physical debris). */
+/**
+ * The lanes props are kept out of.
+ *
+ * Debris scattered uniformly over the mainland put crates directly across the
+ * only route south — the first thing a visitor does is hold the throttle from
+ * spawn, and about ten metres in they hit something and get spun. "Everything
+ * is difficult" starts here: the world's opening move should be a clear run,
+ * not an obstacle course nobody was told about.
+ *
+ * Two corridors: the spawn lane straight down the middle, and the approach to
+ * the launch ramp. Props still cover the rest of the mainland, so the place
+ * still reads as a cluttered desk — you just have somewhere to drive.
+ */
+const SPAWN_LANE_HALF_WIDTH = 4;
+const RAMP_LANE_HALF_WIDTH = 4;
+
+function inDrivingLane(x: number, z: number): boolean {
+  if (Math.abs(x) < SPAWN_LANE_HALF_WIDTH) return true;
+  // The ramp sits at x=-10 (worldData's CHECKPOINTS/Terrain agree); its
+  // approach only matters on the southern half.
+  if (z > -4 && Math.abs(x + 10) < RAMP_LANE_HALF_WIDTH) return true;
+  return false;
+}
+
 function scatterMainland(count: number, dropHeight: [number, number]): InstancedRigidBodyProps[] {
   const instances: InstancedRigidBodyProps[] = [];
   for (let i = 0; i < count; i++) {
@@ -69,7 +93,7 @@ function scatterMainland(count: number, dropHeight: [number, number]): Instanced
     for (let tries = 0; tries < 20; tries++) {
       x = (Math.random() * 2 - 1) * MAINLAND_X_HALF;
       z = MAINLAND_Z_MIN + Math.random() * (MAINLAND_Z_MAX - MAINLAND_Z_MIN);
-      if (!tooCloseToAPavilion(x, z)) break;
+      if (!tooCloseToAPavilion(x, z) && !inDrivingLane(x, z)) break;
     }
     const y = dropHeight[0] + Math.random() * (dropHeight[1] - dropHeight[0]);
     instances.push({
@@ -145,6 +169,12 @@ function PropFamily({
       colliders={colliders}
       friction={0.9}
       restitution={0.15}
+      // Light. At Rapier's default density these were heavy enough relative to
+      // a 220kg chassis to stop it dead or flip it — a crate the size of the
+      // car's own body, hit at 8 m/s, ended the drive. Debris should burst out
+      // of the way and tumble, which is the fun part; being wrecked by desk
+      // clutter is not.
+      density={0.08}
       collisionGroups={PROP_COLLISION_GROUPS}
     >
       <instancedMesh ref={meshRef} args={[undefined, undefined, count]} count={count} castShadow receiveShadow>
@@ -174,7 +204,7 @@ export function Props(): JSX.Element {
         colors={colors.mug}
         geometry={<cylinderGeometry args={[0.16, 0.13, 0.32, 16]} />}
       />
-      <PropFamily count={10} dropHeight={CRATE_DROP} colliders="cuboid" colors={colors.crate} geometry={<boxGeometry args={[0.55, 0.45, 0.55]} />} />
+      <PropFamily count={10} dropHeight={CRATE_DROP} colliders="cuboid" colors={colors.crate} geometry={<boxGeometry args={[0.34, 0.28, 0.34]} />} />
     </>
   );
 }

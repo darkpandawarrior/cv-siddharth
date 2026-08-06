@@ -7,6 +7,7 @@ import {
   WATER_PLANE,
   WATER_SENSOR_HALF_EXTENTS,
   atollWaterlineRadius,
+  tiltedSlabCenterY,
 } from "./worldData.ts";
 import {
   CHASSIS_RESTING_HEIGHT,
@@ -63,6 +64,33 @@ describe("the ground is continuous", () => {
     const rampX1 = TERRAIN.shore.rampCenterX + TERRAIN.shore.rampWidth / 2;
     expect(rampX0).toBeGreaterThanOrEqual(TERRAIN.shore.xMin);
     expect(rampX1).toBeLessThanOrEqual(TERRAIN.shore.xMax);
+  });
+});
+
+describe("the ground has no steps in it", () => {
+  const THICKNESS = 1; // Terrain's BOX_THICKNESS
+
+  it("starts the shore's driving surface exactly at the mainland's height", () => {
+    // The bug this exists for: the shore slabs were positioned by their CENTRE
+    // line, which put the surface you drive on half a slab higher than the
+    // layout said — a 0.5m step across the whole map at z=12, where every run
+    // south crosses. It flipped the craft at speed and it was invisible to the
+    // z-extent checks above, which is exactly why surface height needs its own
+    // assertion.
+    const { groundY } = TERRAIN.mainland;
+    const run = TERRAIN.shore.z1 - TERRAIN.shore.z0;
+    const centerY = tiltedSlabCenterY(groundY, 0, run, THICKNESS);
+    const angle = -Math.atan2(0 - groundY, run);
+    const topAtStart = centerY + (THICKNESS / 2) * Math.cos(angle) + (run / 2) * Math.sin(angle);
+    expect(topAtStart).toBeCloseTo(groundY, 2);
+  });
+
+  it("meets the water at sea level, not above it", () => {
+    const run = TERRAIN.shore.z1 - TERRAIN.shore.z0;
+    const centerY = tiltedSlabCenterY(TERRAIN.mainland.groundY, 0, run, THICKNESS);
+    const angle = -Math.atan2(0 - TERRAIN.mainland.groundY, run);
+    const topAtEnd = centerY + (THICKNESS / 2) * Math.cos(angle) - (run / 2) * Math.sin(angle);
+    expect(topAtEnd).toBeCloseTo(0, 2);
   });
 });
 

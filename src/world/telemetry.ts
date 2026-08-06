@@ -30,6 +30,8 @@ export type Telemetry = {
   boosting: boolean;
   /** True on any frame a thermal column is lifting the craft. */
   inThermal: boolean;
+  /** Upside down and going nowhere — the HUD says so before auto-recovery. */
+  stuck: boolean;
 };
 
 export const telemetry: Telemetry = {
@@ -42,4 +44,5 @@ export const telemetry: Telemetry = {
   boost: 1,
   boosting: false,
   inThermal: false,
+  stuck: false,
 };

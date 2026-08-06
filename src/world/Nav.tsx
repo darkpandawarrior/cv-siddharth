@@ -410,3 +410,43 @@ export function Toasts({ items }: { items: Toast[] }): JSX.Element {
     </div>
   );
 }
+
+
+/**
+ * The stuck notice.
+ *
+ * Being upside down was previously silent: the craft stopped responding, an
+ * unexplained 1.5s passed, and it teleported. Two of the three complaints about
+ * this world being "difficult" were really this — a failure state with no
+ * feedback and no visible way out. Now it names the state and the key, and the
+ * auto-recovery behind it is faster.
+ *
+ * Driven from telemetry in its own rAF loop like the rest of this file, so it
+ * costs no React renders while you are driving normally.
+ */
+export function StuckNotice(): JSX.Element {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let raf = 0;
+    let shown = false;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      if (!ref.current || telemetry.stuck === shown) return;
+      shown = telemetry.stuck;
+      ref.current.style.display = shown ? "" : "none";
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div
+      ref={ref}
+      role="status"
+      aria-live="polite"
+      style={{ display: "none" }}
+      className="pointer-events-none rounded-xl border border-[var(--color-warn)]/50 bg-card/90 px-4 py-2 text-center font-mono text-[11px] uppercase tracking-widest text-muted backdrop-blur"
+    >
+      upside down — <span className="text-[var(--color-warn)]">R</span> to recover
+    </div>
+  );
+}

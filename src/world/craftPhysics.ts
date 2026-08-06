@@ -45,16 +45,18 @@ export const CHASSIS_MASS = 220; // kg
  * hand-copied here as `900` — the exact duplication that has now produced three
  * separate bugs in this world.
  *
- * 2100, up from 900 via 1400. The run-up from spawn to the ramp is 16m, and at
- * 900 the craft reached ~12.5 m/s by the ramp on full boost, at 1400 it reached
- * 13.6 — both under LAUNCH_SPEED (14), so the launch never fired no matter how
- * well it was driven. Every one of those numbers is measured in the browser,
- * not calculated: the naive 2F/m figure is nearly three times the real
- * acceleration, because the raycast vehicle's traction limit and suspension
- * losses do not appear in that sum. This is the constant to lower first if the
- * car ever feels twitchy.
+ * 1150, DOWN from 2100. The climb to 2100 was compensating for the wrong
+ * problem: the craft was a rear-steer, front-drive forklift (see Craft.tsx's
+ * AXLE_FRONT_Z), which wasted most of its drive fighting its own geometry, so
+ * more power looked like the answer. With the drivetrain corrected, 2100 put
+ * ~40 m/s^2 through a 220kg car on boost — it wheelied over backwards and the
+ * run ended in a respawn. Power was never the problem.
+ *
+ * Every number here is measured in the browser, not calculated: the naive 2F/m
+ * figure runs well ahead of real acceleration once the raycast vehicle's
+ * traction limit and suspension losses are in play.
  */
-export const ENGINE_FORCE = 2100; // N per rear wheel, full throttle
+export const ENGINE_FORCE = 1150; // N per rear wheel, full throttle
 export const BASE_LINEAR_DAMPING = 0.35;
 export const HULL_LINEAR_DAMPING = 1.6; // afloat, standing in for water drag
 export const HULL_THRUST = 1400; // N forward; terminal speed = thrust/(mass*damping) = 4.0 m/s

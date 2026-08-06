@@ -1,7 +1,7 @@
 import { useMemo, type JSX } from "react";
 import { RigidBody } from "@react-three/rapier";
 import { Grid, Line } from "@react-three/drei";
-import { PLACEMENTS, TERRAIN } from "./worldData.ts";
+import { PLACEMENTS, TERRAIN, tiltedSlabCenterY } from "./worldData.ts";
 import { dim, worldPalette } from "./palette.ts";
 
 /**
@@ -132,6 +132,10 @@ function Kerb() {
  * angle so LaunchRamp below can reuse the exact same box-tilting technique
  * with a steeper rise instead of duplicating the trig.
  */
+/** Thickness of a shore/ramp slab. Named because the surface offset above
+ *  depends on it. */
+const BOX_THICKNESS = 1;
+
 function TiltedShoreBox(props: {
   centerX: number;
   width: number;
@@ -151,10 +155,21 @@ function TiltedShoreBox(props: {
   // +Z by dy = -sin(a), dz = cos(a) per unit length, so dy/dz = -tan(a). We
   // want dy/dz = rise/run, hence a = -atan2(rise, run).
   const angle = -Math.atan2(rise, run);
+  // Drop the box by half its thickness along its own normal so its TOP FACE —
+  // the surface you actually drive on — passes through (z0,y0)→(z1,y1).
+  //
+  // Positioning by centre line, as this did, put the driving surface half a
+  // box above the intended slope: a 0.5m step across the full width of the map
+  // exactly where the mainland ends and the shore begins. Every run south hit
+  // it at speed and flipped. It survived the earlier "trench" fix because that
+  // one reconciled the z ranges and never checked the heights, and it is
+  // invisible to worldGeometry.test.ts for the same reason — the test compares
+  // z extents, not surface heights. See the new step-height assertion there.
+  const centerY = tiltedSlabCenterY(y0, y1, run, BOX_THICKNESS);
   return (
-    <RigidBody type="fixed" colliders="cuboid" position={[centerX, (y0 + y1) / 2, (z0 + z1) / 2]} rotation={[angle, 0, 0]}>
+    <RigidBody type="fixed" colliders="cuboid" position={[centerX, centerY, (z0 + z1) / 2]} rotation={[angle, 0, 0]}>
       <mesh receiveShadow>
-        <boxGeometry args={[width, 1, length]} />
+        <boxGeometry args={[width, BOX_THICKNESS, length]} />
         <meshStandardMaterial color={color} roughness={0.85} metalness={0.05} />
       </mesh>
     </RigidBody>

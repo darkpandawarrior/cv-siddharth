@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { LayoutGrid, RotateCcw } from "lucide-react";
-import { Compass, Gauges, Onboarding, Toasts, type Toast } from "./Nav.tsx";
+import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
@@ -280,6 +280,8 @@ export function Hud(props: {
           (top / middle / bottom) whichever of these two is showing — they
           stack rather than fighting over the middle slot. */}
       <div className="flex flex-col items-center gap-2">
+        <StuckNotice />
+
         {toasts && toasts.length > 0 && <Toasts items={toasts} />}
 
         {!captured && (
