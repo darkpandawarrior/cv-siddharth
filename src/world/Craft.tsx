@@ -313,6 +313,11 @@ const FLIP_SPEED_THRESHOLD = 2; // m/s
 // way to know a timer is running. Shorter, plus the HUD now says so.
 const FLIP_RESPAWN_MS = 700;
 
+/** How long the craft may be pinned with the throttle down before it is
+ *  recovered. Longer than the flip timer: pushing against scenery for a moment
+ *  is normal driving, three seconds of it is not. */
+const BEACHED_RESPAWN_MS = 3000;
+
 /**
  * Teleports the chassis back to a known-safe pose and zeroes everything that
  * could carry a bad state across the reset — velocity (so a fast, out-of-
@@ -353,6 +358,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
   // "flipped" means here. Reset to 0 the instant either condition lapses, so
   // only a *sustained* stuck-upside-down state ever reaches FLIP_RESPAWN_MS.
   const flippedMsRef = useRef(0);
+  const beachedMsRef = useRef(0);
   // Set by the "R" keydown handler below, consumed (and cleared) on the next
   // physics step — a ref rather than state because useBeforePhysicsStep reads
   // it synchronously inside the physics loop, not through React's render
@@ -519,21 +525,58 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // and near-stationary for well over the 1.5s timer, and this respawned it
     // mid-flight every single time it reached space. The check needs the craft
     // to be somewhere it could plausibly be resting.
-    const nearGround = t0.y < TERRAIN.mainland.groundY + 3;
+    /**
+     * STUCK, defined for every medium — not just on the desk.
+     *
+     * This was gated on being near the ground, which fixed a real bug (a craft
+     * coasting through a low-gravity arc in orbit reads as inverted and slow,
+     * and was being respawned mid-flight) and created a worse one: capsize the
+     * boat and nothing could ever recover it. Upside down in open water at 0
+     * m/s, with the auto-recovery unable to fire and no prompt saying R would
+     * help. That is a dead end, which is the one thing this world is not
+     * allowed to have.
+     *
+     * So the rule is per-mode rather than per-altitude:
+     *   wheels — inverted and stationary: the classic roll-over
+     *   hull   — inverted and stationary: capsized, and unrecoverable by
+     *            driving because the hull thrust is along a forward axis that
+     *            is now pointing into the seabed
+     *   wings/orbit — never. Being upside down is what flying looks like.
+     */
+    // modeRef, not `mode`: this recovery check runs before this frame's mode is
+    // decided (that needs the vehicle raycasts, which have not run yet). Last
+    // frame's mode is the right input anyway — being stuck is a state that
+    // persists across frames by definition.
+    const lastMode = modeRef.current;
+    const canBeStuck = lastMode === "wheels" || lastMode === "hull";
     const flippedNow =
-      nearGround &&
+      canBeStuck &&
       scratch.up.y < FLIP_UP_Y &&
       Math.abs(vehicle.currentVehicleSpeed()) < FLIP_SPEED_THRESHOLD;
     flippedMsRef.current = flippedNow ? flippedMsRef.current + dt * 1000 : 0;
 
+    // Beached, wedged, or otherwise going nowhere with the throttle down.
+    // Being upright is not the same as being free: the craft in the screenshot
+    // that prompted this was tipped onto an atoll's rim at 0 m/s with the
+    // player holding W, and no rule in this file described that state.
+    const tryingToMove = Math.abs(input.throttle) > 0.2;
+    const goingNowhere = canBeStuck && tryingToMove && Math.abs(vehicle.currentVehicleSpeed()) < 0.8;
+    beachedMsRef.current = goingNowhere ? beachedMsRef.current + dt * 1000 : 0;
+
     const manualRespawn = respawnRequestedRef.current;
     respawnRequestedRef.current = false;
 
-    if (outOfBounds || flippedMsRef.current > FLIP_RESPAWN_MS || manualRespawn) {
+    if (
+      outOfBounds ||
+      flippedMsRef.current > FLIP_RESPAWN_MS ||
+      beachedMsRef.current > BEACHED_RESPAWN_MS ||
+      manualRespawn
+    ) {
       respawnCraft(chassis);
       modeRef.current = "wheels";
       airborneMsRef.current = 0;
       flippedMsRef.current = 0;
+      beachedMsRef.current = 0;
       return; // next step runs the vehicle controller fresh against the new pose
     }
 
@@ -731,7 +774,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       }
     }
     telemetry.inThermal = liftedByThermal;
-    telemetry.stuck = flippedMsRef.current > 150;
+    telemetry.stuck = flippedMsRef.current > 150 || beachedMsRef.current > 1200;
 
     // Sound rides the state machine rather than being detected separately —
     // the mode transitions and the speed are already computed here, so the

@@ -113,8 +113,8 @@ function SkyGates(): JSX.Element {
   const gates = useMemo(() => {
     if (islands.length < 2) return [];
     const [a, bIsland] = islands;
-    return Array.from({ length: 7 }, (_, i) => {
-      const t = (i + 1) / 8;
+    return Array.from({ length: 5 }, (_, i) => {
+      const t = (i + 1) / 6;
       return {
         x: a.position[0] + (bIsland.position[0] - a.position[0]) * t,
         // Dipping in the middle, so the line of gates is a flight path rather
@@ -155,13 +155,13 @@ function SkyGates(): JSX.Element {
           }}
           position={[g.x, g.y, g.z]}
         >
-          <torusGeometry args={[3, 0.16, 8, 28]} />
+          <torusGeometry args={[3, 0.1, 8, 24]} />
           <meshStandardMaterial
             color={c.alt}
             emissive={c.alt}
-            emissiveIntensity={1.1}
+            emissiveIntensity={0.7}
             transparent
-            opacity={0.85}
+            opacity={0.5}
           />
         </mesh>
       ))}

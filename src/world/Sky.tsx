@@ -20,7 +20,12 @@ import { worldPalette } from "./palette.ts";
  * surprise.
  */
 
-const THERMAL_RINGS = 9;
+// 5, not 9, and much fainter. Nine bright rings per column, two columns, all
+// rising, filled the frame with cyan coils from most angles on the map — from
+// the driver's seat it read as the scene being broken rather than as weather.
+// A column has to say "lift here" from a distance and then stop competing with
+// everything else.
+const THERMAL_RINGS = 5;
 
 /** One updraft column, drawn as a stack of rings that rise and recycle. */
 function ThermalColumn({
@@ -53,7 +58,7 @@ function ThermalColumn({
       // Fade in off the water and out again near the ceiling, so the column
       // shows where its lift actually stops.
       const material = (ring as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      material.opacity = Math.sin(t * Math.PI) * 0.5;
+      material.opacity = Math.sin(t * Math.PI) * 0.22;
       ring.scale.setScalar(0.75 + t * 0.35);
     }
   });
@@ -62,8 +67,8 @@ function ThermalColumn({
     <group ref={group} position={position}>
       {offsets.map((o, i) => (
         <mesh key={i} position={[0, o * ceilingY, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[radius * 0.8, 0.09, 6, 28]} />
-          <meshBasicMaterial color={c.probe} transparent opacity={0.4} depthWrite={false} />
+          <torusGeometry args={[radius * 0.72, 0.05, 6, 24]} />
+          <meshBasicMaterial color={c.probe} transparent opacity={0.2} depthWrite={false} />
         </mesh>
       ))}
     </group>
