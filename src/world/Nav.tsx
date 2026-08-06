@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { PLACEMENTS } from "./worldData.ts";
 import { ROOMS } from "../rooms.tsx";
 import { telemetry } from "./telemetry.ts";
+import { SPACE_ALTITUDE } from "./craftPhysics.ts";
 
 /**
  * Wayfinding, speed and boost — the HUD layer that turns a dark plane into a
@@ -196,6 +197,8 @@ export function Gauges(): JSX.Element {
   const barRef = useRef<HTMLDivElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
   const boostRef = useRef<HTMLDivElement>(null);
+  const altRef = useRef<HTMLDivElement>(null);
+  const altNumRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -215,6 +218,19 @@ export function Gauges(): JSX.Element {
       if (boostRef.current) {
         boostRef.current.style.width = `${telemetry.boost * 100}%`;
         boostRef.current.style.opacity = telemetry.boosting ? "1" : "0.55";
+      }
+      // Altitude only appears once you actually leave the ground. On the desk
+      // it would be a permanent "0 m" taking up space; in the air it is the
+      // only way to judge a climb, and the only hint that something changes
+      // at a specific height.
+      if (altRef.current && altNumRef.current) {
+        const airborne = telemetry.y > 2;
+        altRef.current.style.display = airborne ? "" : "none";
+        if (airborne) {
+          altNumRef.current.textContent = String(Math.round(telemetry.y));
+          const nearSpace = telemetry.y >= SPACE_ALTITUDE * 0.6;
+          altNumRef.current.style.color = telemetry.y >= SPACE_ALTITUDE ? "#db61ff" : nearSpace ? "#5ee6ff" : "";
+        }
       }
     };
     raf = requestAnimationFrame(tick);
@@ -244,6 +260,19 @@ export function Gauges(): JSX.Element {
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={boostRef} className="h-full w-full rounded-full bg-[#f0883e]" />
+      </div>
+      <div
+        ref={altRef}
+        style={{ display: "none" }}
+        className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted"
+      >
+        <span>alt</span>
+        <span>
+          <span ref={altNumRef} className="text-zinc-200">
+            0
+          </span>{" "}
+          m
+        </span>
       </div>
     </div>
   );

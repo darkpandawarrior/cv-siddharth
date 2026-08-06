@@ -6,6 +6,7 @@ import {
   LAUNCH_SPEED,
   STALL_SPEED,
   LONG_FALL_MS,
+  SPACE_ALTITUDE,
   type CraftMode,
   type MediumProbe,
 } from "./craftPhysics.ts";
@@ -14,7 +15,7 @@ import {
 // else defaults to "nothing interesting is happening" so a failing test
 // points at the one condition it's actually exercising.
 function probe(overrides: Partial<MediumProbe> = {}): MediumProbe {
-  return { grounded: false, submergedDepth: 0, airborneMs: 0, speed: 0, ...overrides };
+  return { grounded: false, submergedDepth: 0, airborneMs: 0, speed: 0, altitude: 0, ...overrides };
 }
 
 describe("nextMode transition table", () => {
@@ -78,6 +79,42 @@ describe("nextMode transition table", () => {
 
   it("submergedDepth > 0 outranks a long fall too", () => {
     expect(nextMode("wheels", probe({ submergedDepth: 0.01, airborneMs: LONG_FALL_MS + 1, speed: 0 }))).toBe("hull");
+  });
+});
+
+describe("orbit", () => {
+  it("any mode at or above SPACE_ALTITUDE becomes orbit", () => {
+    for (const mode of ["wheels", "hull", "wings"] as CraftMode[]) {
+      expect(nextMode(mode, probe({ altitude: SPACE_ALTITUDE }))).toBe("orbit");
+    }
+  });
+
+  it("altitude outranks a simultaneous launch condition", () => {
+    expect(
+      nextMode("wheels", probe({ altitude: SPACE_ALTITUDE + 5, airborneMs: 999, speed: 40 })),
+    ).toBe("orbit");
+  });
+
+  it("hands back the wings on re-entry rather than dropping straight to wheels", () => {
+    // A craft that lost all control authority the instant it fell below the
+    // line would have no way to arrest a 70m fall — it would arrive as a
+    // projectile every single time.
+    expect(nextMode("orbit", probe({ altitude: SPACE_ALTITUDE - 1 }))).toBe("wings");
+  });
+
+  it("comes back down: orbit always has an exit", () => {
+    // The soft-lock question, asked of the one mode where being stuck would be
+    // unrecoverable — there is no ground to land on and no water to fall into.
+    let mode: CraftMode = "orbit";
+    for (let altitude = SPACE_ALTITUDE - 1; altitude >= 0; altitude -= 10) {
+      mode = nextMode(mode, probe({ altitude }));
+    }
+    expect(mode).toBe("wings");
+    expect(nextMode(mode, probe({ grounded: true }))).toBe("wheels");
+  });
+
+  it("stays in orbit while still above the line", () => {
+    expect(nextMode("orbit", probe({ altitude: SPACE_ALTITUDE + 40 }))).toBe("orbit");
   });
 });
 

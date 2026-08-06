@@ -6,13 +6,14 @@
  * "does the craft ever get stuck" is a headless unit-test question, not a
  * playtest-and-hope one — see the design doc's soft-lock invariant. */
 
-export type CraftMode = "wheels" | "hull" | "wings";
+export type CraftMode = "wheels" | "hull" | "wings" | "orbit";
 
 export type MediumProbe = {
   grounded: boolean; // any wheel in contact this frame
   submergedDepth: number; // metres of chassis below sea level; 0 when clear
   airborneMs: number; // ms since last ground or water contact
   speed: number; // forward speed, m/s
+  altitude: number; // metres above SEA_LEVEL
 };
 
 // World Y of the water plane. Chosen as the coordinate origin so terrain and
@@ -34,9 +35,30 @@ export const SEA_LEVEL = 0;
  * component file; worldGeometry.test.ts now asserts each relationship.
  */
 export const CHASSIS_MASS = 220; // kg
+
+/**
+ * Engine force per driven wheel, and the damping that caps top speed.
+ *
+ * Here rather than in Craft.tsx because TERMINAL_WHEEL_SPEED below is derived
+ * from them and the geometry test asserts that derived speed clears
+ * LAUNCH_SPEED. They were literals in the component with the terminal speed
+ * hand-copied here as `900` — the exact duplication that has now produced three
+ * separate bugs in this world.
+ *
+ * 2100, up from 900 via 1400. The run-up from spawn to the ramp is 16m, and at
+ * 900 the craft reached ~12.5 m/s by the ramp on full boost, at 1400 it reached
+ * 13.6 — both under LAUNCH_SPEED (14), so the launch never fired no matter how
+ * well it was driven. Every one of those numbers is measured in the browser,
+ * not calculated: the naive 2F/m figure is nearly three times the real
+ * acceleration, because the raycast vehicle's traction limit and suspension
+ * losses do not appear in that sum. This is the constant to lower first if the
+ * car ever feels twitchy.
+ */
+export const ENGINE_FORCE = 2100; // N per rear wheel, full throttle
+export const BASE_LINEAR_DAMPING = 0.35;
 export const HULL_LINEAR_DAMPING = 1.6; // afloat, standing in for water drag
 export const HULL_THRUST = 1400; // N forward; terminal speed = thrust/(mass*damping) = 4.0 m/s
-export const WORLD_BOUNDS = { minX: -45, maxX: 45, minZ: -22, maxZ: 80, minY: -10 };
+export const WORLD_BOUNDS = { minX: -45, maxX: 45, minZ: -22, maxZ: 80, minY: -10, maxY: 300 };
 
 /**
  * Where the craft starts, and where a stuck one recovers to.
@@ -54,6 +76,14 @@ export const SPAWN_POSITION: [number, number, number] = [0, 3, -4];
 
 /** How far the suspension holds the chassis above the surface it rests on. */
 export const CHASSIS_RESTING_HEIGHT = 0.77;
+
+/**
+ * Top speed on the wheels — where engine force and damping balance. Exported
+ * so the geometry test can assert the craft can actually reach the launch
+ * speed its own ramp requires; ENGINE_FORCE and BASE_LINEAR_DAMPING live in
+ * Craft.tsx, so this states the result rather than recomputing it there.
+ */
+export const TERMINAL_WHEEL_SPEED = (2 * ENGINE_FORCE) / (CHASSIS_MASS * BASE_LINEAR_DAMPING);
 
 /** Terminal speed afloat, m/s — thrust and drag reach equilibrium here. */
 export function hullTerminalSpeed(): number {
@@ -89,12 +119,50 @@ export const STALL_SPEED = 9; // m/s
 // the ordinary rule so a normal bump/landing hop never trips it.
 export const LONG_FALL_MS = 1500;
 
+/**
+ * Where the air runs out and orbit begins.
+ *
+ * 70m is chosen off the world's own geometry, not picked for feel: the sky
+ * islands sit at y=34 and a craft leaving one on a full thermal climb tops out
+ * around y=40, so nothing reaches this by accident. Getting here takes a
+ * deliberate climb — ride a thermal to its ceiling, then hold the boost through
+ * the gap. That makes space something you discover by trying, which is the only
+ * kind of secret worth putting in a portfolio.
+ */
+export const SPACE_ALTITUDE = 70;
+
+/**
+ * Gravity's share up there. Not zero, and not nearly zero either.
+ *
+ * At 0.12 the craft left the launch pad and simply kept going: 455m and still
+ * climbing when the test gave up, decelerating at 1.2 m/s² from ~90 m/s, with
+ * no upper bound anywhere in the world to catch it. "A soft-lock with a nice
+ * view" was written as a joke in this comment and then shipped as the actual
+ * behaviour. 0.55 keeps orbit feeling weightless while guaranteeing every climb
+ * turns around on its own.
+ */
+export const ORBIT_GRAVITY_SCALE = 0.55;
+
+/** Free thrust in orbit, N. No wings work in vacuum, so this is the only way
+ *  to move — and the only way back down is to stop using it. */
+export const ORBIT_THRUST = 2600;
+
+/**
+ * The top of the sky. Above this, a restoring force pushes back down hard
+ * enough that no amount of thrust escapes — a ceiling you can feel rather than
+ * a wall you hit, and the reason WORLD_BOUNDS.maxY below is a backstop that
+ * should never fire rather than the primary mechanism.
+ */
+export const ORBIT_CEILING = 160;
+
 /* --- transition table, in priority order --- the first four rows are
  * verbatim from the design doc; the fifth (wheels -> wings on a long fall,
  * regardless of speed) is Finding 15's addition, not in the original doc —
  * called out separately because "verbatim" no longer describes the whole
  * table.
+ *   any    | altitude >= SPACE_ALTITUDE                   -> orbit
  *   any    | submergedDepth > 0                          -> hull
+ *   orbit  | altitude < SPACE_ALTITUDE                    -> wings (re-entry)
  *   wheels | airborneMs > 300 && speed >= LAUNCH_SPEED    -> wings
  *   wheels | airborneMs > LONG_FALL_MS                    -> wings
  *   hull   | submergedDepth <= 0 && grounded              -> wheels
@@ -110,7 +178,15 @@ export const LONG_FALL_MS = 1500;
  * airspeed on the ground waiting for a launch condition it can never
  * re-trigger from where it's parked. */
 export function nextMode(current: CraftMode, probe: MediumProbe): CraftMode {
+  // Orbit outranks everything except water, and water can't happen up there.
+  // Checked before the wheels->wings rules for the same reason rule 1 is:
+  // whichever medium the craft is physically IN wins over what it was doing.
+  if (probe.altitude >= SPACE_ALTITUDE) return "orbit";
   if (probe.submergedDepth > 0) return "hull";
+  // Re-entry. Falling back below the line hands the wings back rather than
+  // dropping straight to wheels — otherwise a craft returning from orbit would
+  // have no control authority for the entire descent.
+  if (current === "orbit") return "wings";
   if (current === "wheels" && probe.airborneMs > 300 && probe.speed >= LAUNCH_SPEED) return "wings";
   if (current === "wheels" && probe.airborneMs > LONG_FALL_MS) return "wings";
   if (current === "hull" && probe.submergedDepth <= 0 && probe.grounded) return "wheels";
@@ -122,8 +198,9 @@ export function nextMode(current: CraftMode, probe: MediumProbe): CraftMode {
 // depth. Treating the hull's waterline cross-section as constant (a dinghy
 // shape, not a ball) keeps this a straight line rather than a curve fit —
 // correct enough for a toy hull that's never more than knee-deep submerged.
+const GRAVITY_MS2 = 9.81;
 const WATER_DENSITY = 1000; // kg/m^3
-const GRAVITY = 9.81; // m/s^2
+const GRAVITY = GRAVITY_MS2; // m/s^2
 const HULL_WATERPLANE_AREA_M2 = 1.5; // footprint of the craft's hull at the waterline
 const BUOYANCY_PER_METRE = WATER_DENSITY * GRAVITY * HULL_WATERPLANE_AREA_M2; // N per metre of depth
 
@@ -146,7 +223,8 @@ export function buoyancyForce(submergedDepth: number): number {
 //   top speed on wheels                    -> 2*ENGINE_FORCE/(mass*damping)
 //                                              = 1800/(220*0.35) ≈ 23.4 m/s
 //   LAUNCH_SPEED                    14 m/s  (wheels -> wings threshold)
-//   level-flight speed (L == W)     18.0 m/s = sqrt(W / LIFT_PER_SPEED_SQUARED)
+//   level-flight speed (L == W)     11.9 m/s = sqrt(W / LIFT_PER_SPEED_SQUARED)
+//                                   — MUST stay below LAUNCH_SPEED (14); see levelFlightSpeed()
 //   STALL_SPEED                      9 m/s  (lift == 0 below this)
 //
 // Net vertical acceleration at the speeds that actually matter (lift minus
@@ -179,9 +257,26 @@ export function buoyancyForce(submergedDepth: number): number {
 // level flight against a 23.4 m/s top speed — physically unreachable, hence
 // "wings produce ~12% of the lift needed" at LAUNCH_SPEED (270N / 2158N).
 const AIR_DENSITY = 1.225; // kg/m^3, sea-level
-const WING_AREA_M2 = 4;
-const LIFT_COEFFICIENT = 2.72;
-const LIFT_PER_SPEED_SQUARED = 0.5 * AIR_DENSITY * WING_AREA_M2 * LIFT_COEFFICIENT; // ≈ 6.664 N per (m/s)^2
+const WING_AREA_M2 = 6.4;
+const LIFT_COEFFICIENT = 3.9;
+const LIFT_PER_SPEED_SQUARED = 0.5 * AIR_DENSITY * WING_AREA_M2 * LIFT_COEFFICIENT; // ≈ 15.29 N per (m/s)^2
+
+/**
+ * The speed at which lift exactly balances weight — i.e. the slowest the craft
+ * can fly without descending.
+ *
+ * THIS MUST BE BELOW LAUNCH_SPEED, and it wasn't. The previous tuning put level
+ * flight at 18.0 m/s while the craft transitions to wings at 14, which means
+ * every single launch began already below flying speed: the craft left the
+ * ramp, sank, and splashed down a second later, every time, no matter how the
+ * driver flew it. The air leg looked implemented and was arithmetically
+ * impossible — the same shape of defect as the trench and the buried thermals,
+ * two numbers in a valid-looking relationship that nobody multiplied out.
+ * worldGeometry.test.ts now asserts the inequality.
+ */
+export function levelFlightSpeed(): number {
+  return Math.sqrt((CHASSIS_MASS * GRAVITY_MS2) / LIFT_PER_SPEED_SQUARED);
+}
 
 /** Lift from airspeed, N. Zero below STALL_SPEED. */
 export function liftForce(speed: number): number {

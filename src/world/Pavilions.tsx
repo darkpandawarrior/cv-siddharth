@@ -1,4 +1,6 @@
-import { Fragment, type JSX } from "react";
+import { Fragment, useRef, type JSX } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { PointLight } from "three";
 import { DoubleSide } from "three";
 import { Html } from "@react-three/drei";
 import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
@@ -56,6 +58,23 @@ const SENSOR_HALF_EXTENTS: Record<Placement["shape"], [number, number, number]> 
   pcb: [2.4, 1.6, 2.4],
 };
 
+
+/**
+ * A room's light, breathing.
+ *
+ * The pulse is slow (a full cycle every ~4s) and shallow (±18%) on purpose: it
+ * should register as "this thing is running" the way a sleeping laptop's LED
+ * does, not as a flashing beacon. `seed` offsets each room's phase from its own
+ * position so the eight of them never sync up into one throb, which is what
+ * would make it read as an effect rather than as eight separate live things.
+ */
+function BreathingLight({ tint, y, seed }: { tint: string; y: number; seed: number }) {
+  const ref = useRef<PointLight>(null);
+  useFrame((state) => {
+    if (ref.current) ref.current.intensity = 22 + Math.sin(state.clock.elapsedTime * 1.6 + seed) * 4;
+  });
+  return <pointLight ref={ref} position={[0, y, 0]} color={tint} intensity={22} distance={16} decay={2} />;
+}
 
 /** Phone lying face-up: a flat body with a raised, tinted "screen" inset. */
 function Slab({ tint }: { tint: string }) {
@@ -226,13 +245,7 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
           rather than looking at the world. No shadow casting: eight
           shadow-casting point lights would cost far more than they add, and
           these exist to mark a position, not to model illumination. */}
-      <pointLight
-        position={[0, halfExtents[1] + 1.2, 0]}
-        color={room.tint}
-        intensity={22}
-        distance={16}
-        decay={2}
-      />
+      <BreathingLight tint={room.tint} y={halfExtents[1] + 1.2} seed={placement.position[0] + placement.position[2]} />
       <CuboidCollider
         args={halfExtents}
         sensor

@@ -200,6 +200,30 @@ export const CHECKPOINTS: Checkpoint[] = [
 // so there was no water inside it to enter from. With the islands moved to
 // open water (see the header note), 7 gives a column a craft can plausibly
 // sail into without being so wide it's impossible to avoid.
+/**
+ * Launch pads — the route to orbit, one on each sky island.
+ *
+ * The chain is deliberate and each link teaches the next: ramp to fly, thermal
+ * to climb, island to land, pad to leave the atmosphere. Space is 70m up and
+ * nothing else in the world gets close — a full boosted climb off the ramp tops
+ * out around 10m — so without these it is a mode the craft can enter and no
+ * visitor could ever reach.
+ *
+ * Unlike THERMALS these fire even while GROUNDED: you drive onto the pad and it
+ * throws you. That is the point — a column you have to be already airborne to
+ * use would be unreachable standing on the island it sits on, which is exactly
+ * the mistake the thermals made in their first two versions.
+ */
+export const SPACE_LIFTS: {
+  position: [number, number, number];
+  radius: number;
+  strength: number;
+  ceilingY: number;
+}[] = [
+  { position: [-14, 34, 62], radius: 3, strength: 26, ceilingY: 74 },
+  { position: [14, 34, 62], radius: 3, strength: 26, ceilingY: 74 },
+];
+
 export const THERMALS: { position: [number, number, number]; radius: number; strength: number; ceilingY: number }[] = [
   { position: [-14, 17, 62], radius: 7, strength: 14, ceilingY: 32 },
   { position: [14, 17, 62], radius: 7, strength: 14, ceilingY: 32 },

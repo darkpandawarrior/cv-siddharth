@@ -24,6 +24,7 @@ const MODE_LABEL: Record<CraftMode, string> = {
   wheels: "Wheels",
   hull: "Hull",
   wings: "Wings",
+  orbit: "Orbit",
 };
 
 // mm:ss.cc — centiseconds are plenty of precision for a course measured in

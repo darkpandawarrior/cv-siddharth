@@ -10,9 +10,14 @@ import {
 } from "./worldData.ts";
 import {
   CHASSIS_RESTING_HEIGHT,
+  LAUNCH_SPEED,
+  SPACE_ALTITUDE,
   SPAWN_POSITION,
+  STALL_SPEED,
+  TERMINAL_WHEEL_SPEED,
   WORLD_BOUNDS,
   hullTerminalSpeed,
+  levelFlightSpeed,
 } from "./craftPhysics.ts";
 
 /**
@@ -165,6 +170,28 @@ describe("the craft can cross what the course asks it to", () => {
     // 0.74 m/s made the 35m strait a 47-second hold-W: technically passable,
     // realistically never finished.
     expect(hullTerminalSpeed()).toBeGreaterThan(2);
+  });
+
+  it("can stay in the air once it gets there", () => {
+    // The launch threshold has to be ABOVE the speed needed to sustain flight,
+    // or the craft transitions to wings already sinking and splashes down every
+    // time regardless of how it is flown. It was 14 vs 18 — every launch was a
+    // guaranteed descent, and the air leg was arithmetically impossible while
+    // looking completely implemented.
+    expect(levelFlightSpeed()).toBeLessThan(LAUNCH_SPEED);
+    // ...and stalling still has to mean something, or "flight" is just hovering.
+    expect(STALL_SPEED).toBeLessThan(levelFlightSpeed());
+  });
+
+  it("can reach the speed its own ramp demands", () => {
+    expect(TERMINAL_WHEEL_SPEED).toBeGreaterThan(LAUNCH_SPEED);
+  });
+
+  it("puts space far above anything reachable by accident", () => {
+    // Sky islands are the highest ordinary geometry; orbit has to be a
+    // deliberate climb beyond them, not somewhere you arrive by mistake.
+    const highestIsland = Math.max(...skyIslands.map((p) => p.position[1]));
+    expect(SPACE_ALTITUDE).toBeGreaterThan(highestIsland * 1.5);
   });
 
   it("routes every checkpoint inside the bounds box", () => {

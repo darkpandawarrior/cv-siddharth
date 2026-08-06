@@ -13,11 +13,16 @@ import {
   HULL_LINEAR_DAMPING,
   WORLD_BOUNDS,
   SPAWN_POSITION,
+  ORBIT_GRAVITY_SCALE,
+  ORBIT_THRUST,
+  ORBIT_CEILING,
+  ENGINE_FORCE,
+  BASE_LINEAR_DAMPING,
   type CraftMode,
   type MediumProbe,
 } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
-import { TERRAIN, THERMALS } from "./worldData.ts";
+import { SPACE_LIFTS, TERRAIN, THERMALS } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
 
 /**
@@ -92,9 +97,7 @@ type VehicleController = ReturnType<RapierContext["world"]["createVehicleControl
 // into a genuine climb, not a token one. Change either number here and
 // re-check that comment.
 const MAX_STEER_RAD = 0.6; // ~34°, generous for a snappy toy-car turn radius
-const ENGINE_FORCE = 900; // N per rear wheel, full throttle
 const BRAKE_FORCE = 40;
-const BASE_LINEAR_DAMPING = 0.35; // caps top speed so ENGINE_FORCE reaches an equilibrium instead of climbing forever
 // N·m of yaw. Steering afloat has to be its own force: `input.steer` otherwise
 // only feeds vehicle.setWheelSteering, and the wheels are touching nothing
 // while the craft floats, so heading was frozen at whatever it happened to be
@@ -113,7 +116,7 @@ const HULL_YAW_TORQUE = 900;
  * one that feels arbitrary.
  */
 const BOOST_MULTIPLIER = 2.1;
-const BOOST_DRAIN_PER_S = 0.5; // full tank = 2s of boost
+const BOOST_DRAIN_PER_S = 0.35; // full tank ≈ 3s of boost — 2s ran dry before the ramp
 const BOOST_RECHARGE_PER_S = 0.22; // ~4.5s from empty to full
 
 // Sign conventions for steering, pitch and roll below (which input axis
@@ -148,6 +151,55 @@ const SPAWN_ROTATION: [number, number, number] = [0, Math.PI, 0];
 const STEER_SIGN = -1;
 const WING_PITCH_TORQUE = 220;
 const WING_ROLL_TORQUE = 260;
+// Yaw generated per unit of bank angle — see the banked-turn comment above.
+const BANK_TURN_TORQUE = 520;
+// Nose-thrust available in wings mode while boosting; the route to orbit.
+const WING_BOOST_THRUST = 2200;
+
+// Orbit. Damping stays low but non-zero: a true vacuum with zero damping means
+// every nudge accumulates forever and the craft ends up tumbling with no way to
+// settle, which is realistic and miserable to control.
+const ORBIT_LINEAR_DAMPING = 0.08;
+const ORBIT_PITCH_TORQUE = 300;
+const ORBIT_YAW_TORQUE = 300;
+const GRAVITY = 9.81;
+
+/**
+ * How long a launch pad keeps pushing after the craft last touched down, ms.
+ *
+ * With net ~16 m/s² over 1.5s the craft leaves the pad at ~24 m/s having
+ * climbed ~18m, which coasts it from the island at y=34 comfortably past
+ * SPACE_ALTITUDE (70) — checked against the arc, not guessed.
+ */
+const PAD_BURN_MS = 1500;
+
+/**
+ * Centre of mass, below the chassis centre — this is the flip fix.
+ *
+ * Roll resistance is governed by how far the centre of mass sits below the
+ * contact patch, and Rapier defaults it to the collider centroid: dead centre
+ * of a box 1.1m wide and 0.6m tall, exactly where a toy car is least stable.
+ * The car rolled onto its roof from ordinary play. -0.28 puts it at axle
+ * height, where a die-cast car's mass actually is: the body is a shell and the
+ * metal is underneath.
+ */
+const CENTRE_OF_MASS_Y = -0.28;
+
+/**
+ * Inertia tensor for the chassis box, computed rather than left at zero.
+ *
+ * setAdditionalMassProperties takes these LITERALLY — passing {0,0,0} does not
+ * mean "work it out for me", it means a body with no rotational inertia at all.
+ * With that plus a zero-density collider the craft had nothing to resist torque
+ * with, the raycast vehicle's friction impulses went to nonsense, and the car
+ * simply would not accelerate. Standard solid-cuboid formula, I = m/12 * (a² +
+ * b²) about each axis, using the full extents (2 × HALF).
+ */
+const CHASSIS_INERTIA = {
+  x: (CHASSIS_MASS / 12) * ((2 * HALF.y) ** 2 + (2 * HALF.z) ** 2),
+  y: (CHASSIS_MASS / 12) * ((2 * HALF.x) ** 2 + (2 * HALF.z) ** 2),
+  z: (CHASSIS_MASS / 12) * ((2 * HALF.x) ** 2 + (2 * HALF.y) ** 2),
+};
 
 // Chase camera. Distance grows with speed (a cheap sense of speed with zero
 // extra state), and the follow uses a per-frame lerp rather than a spring —
@@ -311,6 +363,30 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
   useEffect(() => {
     const chassis = chassisRef.current;
     if (!chassis) return;
+    /**
+     * Drop the centre of mass below the chassis before anything else touches
+     * this body.
+     *
+     * The car rolled onto its roof from ordinary play — clipping the kerb,
+     * landing off the ramp at an angle, catching a crate at speed — and
+     * recovery, however quick, is a worse answer than not flipping. A rigid
+     * body's roll resistance is governed by how far its centre of mass sits
+     * below the contact patch, and Rapier defaults it to the collider's
+     * centroid: dead centre of a box that is 1.1m wide and 0.6m tall, i.e.
+     * perched exactly where a toy car is least stable.
+     *
+     * -0.28 puts it at the very bottom of the chassis, roughly axle height,
+     * which is where a die-cast car's mass actually is — the body is a shell
+     * and the metal is underneath. Inertia is left to Rapier (zeros mean
+     * "compute it"); only the mass and its position are stated.
+     */
+    chassis.setAdditionalMassProperties(
+      CHASSIS_MASS,
+      { x: 0, y: CENTRE_OF_MASS_Y, z: 0 },
+      CHASSIS_INERTIA,
+      { x: 0, y: 0, z: 0, w: 1 },
+      true,
+    );
     const controller = world.createVehicleController(chassis);
     controller.indexUpAxis = 1;
     // Not a typo: rapier3d-compat's codegen names this setter
@@ -382,6 +458,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       t0.z < WORLD_BOUNDS.minZ ||
       t0.z > WORLD_BOUNDS.maxZ ||
       t0.y < WORLD_BOUNDS.minY ||
+      t0.y > WORLD_BOUNDS.maxY ||
       isUnderTheMap(t0.x, t0.y, t0.z);
 
     // wheelIsInContact() (below) never reports true while flipped — the
@@ -389,7 +466,17 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // upside down" is read from orientation and last frame's vehicle speed
     // instead of grounded-ness. One frame of staleness on a 1.5s timer is
     // nothing.
-    const flippedNow = scratch.up.y < FLIP_UP_Y && Math.abs(vehicle.currentVehicleSpeed()) < FLIP_SPEED_THRESHOLD;
+    // Only ever a *ground* diagnosis. Being inverted and slow is what stuck
+    // looks like on the desk; in the air and in orbit it is what flying looks
+    // like — a craft coasting up through a low-gravity arc reads as inverted
+    // and near-stationary for well over the 1.5s timer, and this respawned it
+    // mid-flight every single time it reached space. The check needs the craft
+    // to be somewhere it could plausibly be resting.
+    const nearGround = t0.y < TERRAIN.mainland.groundY + 3;
+    const flippedNow =
+      nearGround &&
+      scratch.up.y < FLIP_UP_Y &&
+      Math.abs(vehicle.currentVehicleSpeed()) < FLIP_SPEED_THRESHOLD;
     flippedMsRef.current = flippedNow ? flippedMsRef.current + dt * 1000 : 0;
 
     const manualRespawn = respawnRequestedRef.current;
@@ -417,7 +504,13 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // Boost only spends while it is actually doing something: held, with
     // charge left, throttle down, and on the wheels. Draining it mid-air or
     // mid-ocean would burn the tank on a press that changed nothing.
-    const wantsBoost = input.boost && boostRef.current > 0 && input.throttle > 0 && mode === "wheels";
+    // Boost works on the wheels AND aloft. On the ground it is the difference
+    // between clearing the ramp and rolling off it; in the air and in orbit it
+    // is the only way to gain real altitude, which is what makes reaching space
+    // a thing a visitor can work out and then execute rather than stumble into.
+    const boostable = mode === "wheels" || mode === "wings" || mode === "orbit";
+    const wantsBoost =
+      input.boost && boostRef.current > 0 && boostable && (mode === "wheels" ? input.throttle > 0 : true);
     boostRef.current = Math.max(
       0,
       Math.min(1, boostRef.current + (wantsBoost ? -BOOST_DRAIN_PER_S : BOOST_RECHARGE_PER_S) * dt),
@@ -442,6 +535,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       submergedDepth,
       airborneMs: airborneMsRef.current,
       speed: -vehicle.currentVehicleSpeed(),
+      altitude: t.y - SEA_LEVEL,
     };
 
     const newMode = nextMode(mode, probe);
@@ -462,10 +556,71 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       // Yaw about world +Y rather than the craft's local up: a boat wallowing
       // in swell shouldn't have its steering authority fall off as it rolls.
       chassis.addTorque({ x: 0, y: -input.steer * HULL_YAW_TORQUE, z: 0 }, true);
+    } else if (newMode === "orbit") {
+      // Vacuum: no lift, no drag, almost no weight. Thrust points wherever the
+      // nose points, so flying here is aiming rather than banking — a
+      // deliberately different verb from the wings mode below it.
+      chassis.setLinearDamping(ORBIT_LINEAR_DAMPING);
+      chassis.addForce(
+        {
+          x: 0,
+          // Cancel most of gravity so the craft coasts instead of falling, but
+          // never all of it: what goes up has to be able to come back down, or
+          // orbit becomes a room with no door.
+          y: CHASSIS_MASS * GRAVITY * (1 - ORBIT_GRAVITY_SCALE),
+          z: 0,
+        },
+        true,
+      );
+      if (input.throttle > 0 || wantsBoost) {
+        const thrust = ORBIT_THRUST * (wantsBoost ? 1.6 : Math.max(0, input.throttle));
+        chassis.addForce(
+          {
+            x: scratch.forward.x * thrust,
+            y: scratch.forward.y * thrust,
+            z: scratch.forward.z * thrust,
+          },
+          true,
+        );
+      }
+      // The ceiling, as a force rather than a wall. Past ORBIT_CEILING the
+      // restoring push ramps up with how far over you are, so a craft on full
+      // thrust slows, stops and turns around instead of hitting an invisible
+      // barrier or sailing off to the WORLD_BOUNDS.maxY backstop.
+      if (t.y > ORBIT_CEILING) {
+        const over = t.y - ORBIT_CEILING;
+        chassis.addForce({ x: 0, y: -over * CHASSIS_MASS * 2.2, z: 0 }, true);
+      }
+      // Full attitude authority up here — pitch, roll AND yaw. Without yaw you
+      // can only steer by rolling first, which is fine in atmosphere where a
+      // banked wing turns you, and useless in vacuum where nothing does.
+      scratch.torque
+        .copy(scratch.right)
+        .multiplyScalar(input.pitch * ORBIT_PITCH_TORQUE)
+        .addScaledVector(scratch.up, -input.steer * ORBIT_YAW_TORQUE);
+      chassis.addTorque({ x: scratch.torque.x, y: scratch.torque.y, z: scratch.torque.z }, true);
     } else if (newMode === "wings") {
       chassis.setLinearDamping(BASE_LINEAR_DAMPING);
       const lift = liftForce(probe.speed);
       chassis.addForce({ x: scratch.up.x * lift, y: scratch.up.y * lift, z: scratch.up.z * lift }, true);
+      // Boost aloft pushes along the nose — the climb that reaches orbit.
+      if (wantsBoost) {
+        chassis.addForce(
+          {
+            x: scratch.forward.x * WING_BOOST_THRUST,
+            y: scratch.forward.y * WING_BOOST_THRUST,
+            z: scratch.forward.z * WING_BOOST_THRUST,
+          },
+          true,
+        );
+      }
+      // Banked turns. A wing with pitch and roll but no yaw can point itself
+      // anywhere and still travel in a straight line, which reads as sliding
+      // rather than flying. Yawing in proportion to how far the craft is
+      // ROLLED is what makes a bank actually turn it — the same coupling a
+      // real aircraft gets from its lift vector tilting.
+      const bank = -scratch.right.y; // +1 when rolled hard left, -1 hard right
+      chassis.addTorque({ x: 0, y: bank * BANK_TURN_TORQUE, z: 0 }, true);
       // Pitch/roll only — no yaw, no throttle thrust. The design doc is
       // explicit that sustained flight comes from thermals, not a throttle:
       // a wing with thrust would let a visitor just power to every sky
@@ -503,6 +658,27 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       const dz = t.z - thermal.position[2];
       if (Math.hypot(dx, dz) <= thermal.radius) {
         chassis.addForce({ x: 0, y: thermal.strength * chassis.mass(), z: 0 }, true);
+      }
+    }
+
+    // Launch pads. Deliberately NOT skipped while grounded — the whole design
+    // is that you drive onto one and it throws you, and a pad you had to be
+    // airborne to trigger would be useless standing on the island it sits on.
+    // Bounded below by the island's own surface so the column can't reach down
+    // and grab a craft flying past underneath.
+    // The pad ARMS ON CONTACT and stays lit for PAD_BURN_MS after you leave it.
+    // A permanent column here put the craft in an endless bounce — up to 110m,
+    // back down into the same column, boosted again, forever — because falling
+    // back through it re-triggered the lift. Firing only for a burn window
+    // after ground contact makes it a launch rather than a fountain, and means
+    // re-entry through the same airspace does nothing.
+    const padArmed = airborneMsRef.current < PAD_BURN_MS;
+    for (const lift of SPACE_LIFTS) {
+      if (!padArmed || t.y < lift.position[1] - 1 || t.y >= lift.ceilingY) continue;
+      const dx = t.x - lift.position[0];
+      const dz = t.z - lift.position[2];
+      if (Math.hypot(dx, dz) <= lift.radius) {
+        chassis.addForce({ x: 0, y: lift.strength * chassis.mass(), z: 0 }, true);
       }
     }
   });
@@ -595,7 +771,10 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       position={SPAWN_POSITION}
       rotation={SPAWN_ROTATION}
     >
-      <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} mass={CHASSIS_MASS} friction={0.4} />
+      {/* Mass comes from setAdditionalMassProperties in the effect above (which
+          also lowers the centre of mass); giving the collider its own density
+          on top would add a second, centred mass to the same body. */}
+      <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} density={0} friction={0.4} />
 
       {/* Body */}
       <mesh castShadow receiveShadow>

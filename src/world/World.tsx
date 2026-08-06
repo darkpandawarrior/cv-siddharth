@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
+import { Motes } from "./Ambience.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
@@ -49,6 +51,9 @@ const MemoWater = memo(Water);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoCraft = memo(Craft);
+const MemoThermals = memo(Thermals);
+const MemoLaunchPads = memo(LaunchPads);
+const MemoMotes = memo(Motes);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
 // auto-confirms — the design doc's "~1s dwell" figure.
@@ -392,6 +397,10 @@ export default function World(props: { onShowList: () => void }) {
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
+        <MemoMotes />
+        <MemoThermals />
+        <MemoLaunchPads />
+        <SpaceSky />
         <CheckpointRings passedCount={checkpointIndex} active={elapsedMs !== null} />
         {/* Bloom is doing real work here, not gloss. Every room's identity in
             this world is carried by an emissive material in its tint — the
