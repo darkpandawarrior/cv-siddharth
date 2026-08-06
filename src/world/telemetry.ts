@@ -28,6 +28,8 @@ export type Telemetry = {
   boost: number;
   /** True while boost is actually being spent, for the meter's lit state. */
   boosting: boolean;
+  /** True on any frame a thermal column is lifting the craft. */
+  inThermal: boolean;
 };
 
 export const telemetry: Telemetry = {
@@ -39,4 +41,5 @@ export const telemetry: Telemetry = {
   mode: "wheels",
   boost: 1,
   boosting: false,
+  inThermal: false,
 };

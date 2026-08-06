@@ -280,6 +280,30 @@ html.resume-mode body {
   }
 }
 
+/* Pickup notices: rise and fade in, so a fact arriving reads as an event
+   rather than a layout shift. Removal is handled by a timer in World.tsx —
+   this only covers the entrance. */
+@keyframes hud-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hud-toast {
+  animation: hud-toast-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-toast {
+    animation: none;
+  }
+}
+
 @media print {
   body {
     background: white;

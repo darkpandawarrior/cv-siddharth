@@ -355,3 +355,48 @@ export function Onboarding(): JSX.Element | null {
     </div>
   );
 }
+
+export type Toast = { id: string; title: string; detail: string; tint: string; kind: "find" | "unlock" };
+
+/**
+ * Pickup and milestone notices.
+ *
+ * Bottom-centre rather than a corner, and one at a time: this is the only
+ * moment the world hands a visitor a real fact from the CV, so it gets the
+ * screen position a subtitle would. Auto-dismissed by World.tsx on a timer —
+ * this component only draws.
+ *
+ * `role="status"` with aria-live: the canvas is aria-hidden, so without this a
+ * screen-reader user driving the world would collect things and be told
+ * nothing at all.
+ */
+export function Toasts({ items }: { items: Toast[] }): JSX.Element {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none flex w-full flex-col items-center gap-2"
+    >
+      {items.map((t) => (
+        <div
+          key={t.id}
+          className="hud-toast pointer-events-none flex max-w-sm items-center gap-3 rounded-2xl border bg-card/95 px-4 py-2.5 backdrop-blur"
+          style={{ borderColor: `${t.tint}66` }}
+        >
+          <span
+            className="font-mono text-[9px] uppercase tracking-[0.2em]"
+            style={{ color: t.tint }}
+          >
+            {t.kind === "find" ? "found" : "unlocked"}
+          </span>
+          <span className="flex flex-col">
+            <span className="font-display text-sm font-bold" style={{ color: t.tint }}>
+              {t.title}
+            </span>
+            <span className="text-[11px] leading-snug text-zinc-400">{t.detail}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}

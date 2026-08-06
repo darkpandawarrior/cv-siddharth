@@ -652,14 +652,17 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // slab) stops it short of the sky island the column feeds, so the craft
     // coasts the last bit under its own momentum instead of being pushed
     // through — or pinned against — the slab's underside.
+    let liftedByThermal = false;
     for (const thermal of THERMALS) {
       if (grounded || t.y >= thermal.ceilingY) continue;
       const dx = t.x - thermal.position[0];
       const dz = t.z - thermal.position[2];
       if (Math.hypot(dx, dz) <= thermal.radius) {
         chassis.addForce({ x: 0, y: thermal.strength * chassis.mass(), z: 0 }, true);
+        liftedByThermal = true;
       }
     }
+    telemetry.inThermal = liftedByThermal;
 
     // Launch pads. Deliberately NOT skipped while grounded — the whole design
     // is that you drive onto one and it throws you, and a pad you had to be

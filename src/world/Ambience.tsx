@@ -18,7 +18,7 @@ import { TERRAIN } from "./worldData.ts";
  * performance budget for a particle system it would only use for garnish.
  */
 
-const MOTE_COUNT = 160;
+const MOTE_COUNT = 90;
 
 /**
  * Dust over the desk. Each mote drifts on its own slow sine and wraps within a
@@ -62,7 +62,7 @@ export function Motes(): JSX.Element {
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, MOTE_COUNT]} frustumCulled={false}>
       <sphereGeometry args={[1, 5, 4]} />
-      <meshBasicMaterial color="#7fe3b0" transparent opacity={0.22} depthWrite={false} />
+      <meshBasicMaterial color="#7fe3b0" transparent opacity={0.13} depthWrite={false} />
     </instancedMesh>
   );
 }

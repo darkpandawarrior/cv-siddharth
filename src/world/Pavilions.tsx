@@ -6,6 +6,7 @@ import { Html } from "@react-three/drei";
 import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
 import { PLACEMENTS, WATER_SENSOR_HALF_EXTENTS, type Placement } from "./worldData.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
+import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
 
 /**
  * One physical structure per room, built entirely from three.js primitives —
@@ -68,12 +69,31 @@ const SENSOR_HALF_EXTENTS: Record<Placement["shape"], [number, number, number]> 
  * position so the eight of them never sync up into one throb, which is what
  * would make it read as an effect rather than as eight separate live things.
  */
-function BreathingLight({ tint, y, seed }: { tint: string; y: number; seed: number }) {
+function BreathingLight({
+  tint,
+  y,
+  seed,
+  visits,
+}: {
+  tint: string;
+  y: number;
+  seed: number;
+  /** Real, shared open-count for this room, from the playhtml pulse layer. */
+  visits: number;
+}) {
   const ref = useRef<PointLight>(null);
+  // Well-trodden rooms burn brighter. `visits` is the same live number the
+  // card grid prints and /pulse charts — everyone's opens, not this visitor's —
+  // so the world literally lights up where people have been going. Logarithmic
+  // because these counts are unbounded and a linear map would let one popular
+  // room white out the map: 0 visits ~ 18, 10 ~ 30, 100 ~ 42, 1000 ~ 54.
+  const base = 18 + Math.log10(1 + Math.max(0, visits)) * 12;
   useFrame((state) => {
-    if (ref.current) ref.current.intensity = 22 + Math.sin(state.clock.elapsedTime * 1.6 + seed) * 4;
+    if (ref.current) ref.current.intensity = base + Math.sin(state.clock.elapsedTime * 1.6 + seed) * 4;
   });
-  return <pointLight ref={ref} position={[0, y, 0]} color={tint} intensity={22} distance={16} decay={2} />;
+  return (
+    <pointLight ref={ref} position={[0, y, 0]} color={tint} intensity={base} distance={16 + base / 6} decay={2} />
+  );
 }
 
 /** Phone lying face-up: a flat body with a raised, tinted "screen" inset. */
@@ -211,6 +231,10 @@ const SHAPES: Record<Placement["shape"], (props: { tint: string }) => JSX.Elemen
 
 function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: Room; onPrompt: (to: string | null) => void }) {
   const Shape = SHAPES[placement.shape];
+  // The same registry key the card grid uses for its visit counter, so the
+  // world and the list are lit by one number rather than two.
+  const counts = usePulseCounts();
+  const visits = counts[`room:${placement.to.slice(1)}` as PulseEvent] ?? 0;
   // Water rooms get a deliberately oversized sensor, and it is not cosmetic.
   // An atoll (Terrain.tsx) is a cone ~4.5m in radius at the waterline whose
   // flank above the water is ~41 degrees — far too steep for hull mode's
@@ -245,7 +269,12 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
           rather than looking at the world. No shadow casting: eight
           shadow-casting point lights would cost far more than they add, and
           these exist to mark a position, not to model illumination. */}
-      <BreathingLight tint={room.tint} y={halfExtents[1] + 1.2} seed={placement.position[0] + placement.position[2]} />
+      <BreathingLight
+        tint={room.tint}
+        y={halfExtents[1] + 1.2}
+        seed={placement.position[0] + placement.position[2]}
+        visits={visits}
+      />
       <CuboidCollider
         args={halfExtents}
         sensor

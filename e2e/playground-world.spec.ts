@@ -75,7 +75,13 @@ test.describe("playground world — List view toggle", () => {
     // world mounts by default. Confirming that first means the assertions
     // below actually exercise the toggle instead of trivially passing
     // because the grid was already the only thing that ever rendered.
-    await expect(page.locator(".playground-world canvas")).toBeVisible();
+    // 20s, not the 5s default. This is a lazy chunk that pulls Rapier's
+    // ~816kB WASM physics engine and then builds the scene; measured cold in
+    // preview it reaches first canvas in ~5.2s, which sits right on the
+    // default and fails intermittently. The subject of this test is the
+    // toggle, not the load time — but the number is pinned here rather than
+    // hidden so a real startup regression still shows up as a failure.
+    await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
     await page.getByRole("button", { name: "List view" }).click();
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
@@ -90,7 +96,13 @@ test.describe("playground world — List view toggle", () => {
 test.describe("playground world — print", () => {
   test("print media hides the canvas and prints the room grid instead", async ({ page }) => {
     await page.goto("/playground");
-    await expect(page.locator(".playground-world canvas")).toBeVisible();
+    // 20s, not the 5s default. This is a lazy chunk that pulls Rapier's
+    // ~816kB WASM physics engine and then builds the scene; measured cold in
+    // preview it reaches first canvas in ~5.2s, which sits right on the
+    // default and fails intermittently. The subject of this test is the
+    // toggle, not the load time — but the number is pinned here rather than
+    // hidden so a real startup regression still shows up as a failure.
+    await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
     await page.emulateMedia({ media: "print" });
     // .playground-canvas (src/index.css's @media print block), NOT

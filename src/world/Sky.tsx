@@ -4,6 +4,7 @@ import { Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { SPACE_ALTITUDE } from "./craftPhysics.ts";
 import { SPACE_LIFTS, THERMALS } from "./worldData.ts";
+import { weeb } from "../data/weeb.ts";
 import { telemetry } from "./telemetry.ts";
 
 /**
@@ -99,7 +100,19 @@ export function SpaceSky(): JSX.Element {
 
   return (
     <group ref={ref}>
-      <Stars radius={220} depth={90} count={2600} factor={5} saturation={0} fade speed={0.6} />
+      {/* One star per title in the anime log, times six. Absurd on its
+          face and completely real underneath: `npm run gen:weeb` regenerates
+          that number and the sky changes with it. The archive is literally
+          what you are looking at up here. */}
+      <Stars
+        radius={220}
+        depth={90}
+        count={weeb.anime.total * 6}
+        factor={5}
+        saturation={0}
+        fade
+        speed={0.6}
+      />
     </group>
   );
 }

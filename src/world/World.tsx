@@ -4,6 +4,7 @@ import { Physics } from "@react-three/rapier";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
 import { Motes } from "./Ambience.tsx";
+import { Monuments } from "./Monuments.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
@@ -12,6 +13,7 @@ import { Pavilions } from "./Pavilions.tsx";
 import { Craft } from "./Craft.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard } from "./input.ts";
+import { telemetry } from "./telemetry.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import {
   beginRun,
@@ -23,6 +25,10 @@ import {
 } from "./triathlon.ts";
 import { CHECKPOINTS } from "./worldData.ts";
 import { loadExplored, markExplored } from "./explored.ts";
+import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
+import { Artifacts } from "./Artifacts.tsx";
+import { collect, loadCollected, loadUnlocked, unlock } from "./progress.ts";
+import type { Toast } from "./Nav.tsx";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulse, type PulseEvent } from "../play/pulse.ts";
 
@@ -54,6 +60,7 @@ const MemoCraft = memo(Craft);
 const MemoThermals = memo(Thermals);
 const MemoLaunchPads = memo(LaunchPads);
 const MemoMotes = memo(Motes);
+const MemoMonuments = memo(Monuments);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
 // auto-confirms — the design doc's "~1s dwell" figure.
@@ -66,6 +73,12 @@ const DWELL_MS = 1000;
 // whole (possibly minutes-long) duration of a run. Start/finish still update
 // immediately regardless of this interval, see handleCraftState below.
 const ELAPSED_UPDATE_INTERVAL_MS = 100;
+
+/** How long after mount before milestones can fire — see tryUnlock. */
+const ACHIEVEMENT_GRACE_MS = 2000;
+
+/** How long a mode must be held before it counts as having been done. */
+const MODE_DWELL_MS = 500;
 
 const BACKGROUND = "#060807"; // --color-void
 
@@ -161,6 +174,14 @@ export default function World(props: { onShowList: () => void }) {
   // grid view has always shown all eight at once, so the world needs its own
   // sense of progress or it is strictly less informative than a list.
   const [exploredCount, setExploredCount] = useState(() => loadExplored().length);
+  // Collected artifacts. Held in state because the scene reads it (collected
+  // ones dim in place), and mirrored in a ref for the per-frame pickup check
+  // that must not close over a stale value.
+  const [collected, setCollected] = useState<Set<string>>(() => loadCollected());
+  const collectedRef = useRef(collected);
+  const unlockedRef = useRef<Set<string>>(loadUnlocked());
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastTimers = useRef<number[]>([]);
   // Mirrors `elapsedMs` for the per-frame closure below (handleCraftState's
   // own dependency list is just `[enterRoom]`, so it never sees a fresh
   // `elapsedMs` from state — same reason runRef/modeRef/promptToRef exist).
@@ -190,6 +211,55 @@ export default function World(props: { onShowList: () => void }) {
     [],
   );
 
+  /** Shows a notice and schedules its own removal. */
+  const pushToast = useCallback((toast: Toast) => {
+    setToasts((prev) => [...prev.slice(-2), toast]);
+    const timer = window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+    }, 4200);
+    toastTimers.current.push(timer);
+  }, []);
+
+  // Nothing unlocks in the first moments after mount. The craft spawns in
+  // mid-air and its very first physics frames report a mode derived from a
+  // half-initialised probe — enough to hand out "Afloat: found out the car
+  // swims" to a visitor who had not yet touched a key, which devalues every
+  // other milestone in the set. A milestone has to describe something the
+  // visitor did.
+  const readyAtRef = useRef(0);
+  const modeSinceRef = useRef(0);
+  useEffect(() => {
+    readyAtRef.current = performance.now() + ACHIEVEMENT_GRACE_MS;
+  }, []);
+
+  const tryUnlock = useCallback(
+    (id: string) => {
+      if (performance.now() < readyAtRef.current) return;
+      if (unlockedRef.current.has(id)) return;
+      const achievement = unlock(id);
+      if (!achievement) return;
+      unlockedRef.current.add(id);
+      pushToast({
+        id: `ach-${id}-${achievement.label}`,
+        title: achievement.label,
+        detail: achievement.detail,
+        tint: "#f0883e",
+        kind: "unlock",
+      });
+    },
+    [pushToast],
+  );
+
+  // Every scheduled toast has to be cancellable: navigating into a room
+  // unmounts this component, and a setTimeout calling setToasts afterwards is
+  // a React warning at best and a leak at worst.
+  useEffect(
+    () => () => {
+      for (const t of toastTimers.current) window.clearTimeout(t);
+    },
+    [],
+  );
+
   const enterRoom = useCallback(
     (to: string) => {
       if (dwellTimerRef.current !== null) {
@@ -203,10 +273,12 @@ export default function World(props: { onShowList: () => void }) {
       // a visitor entered through.
       bump(`room:${to.slice(1)}` as PulseEvent);
       markExplored(to);
-      setExploredCount(loadExplored().length);
+      const exploredNow = loadExplored().length;
+      setExploredCount(exploredNow);
+      if (exploredNow >= ROOMS.length) tryUnlock("all-rooms");
       navigate({ to });
     },
-    [bump, navigate],
+    [bump, navigate, tryUnlock],
   );
 
   const handlePrompt = useCallback(
@@ -243,7 +315,49 @@ export default function World(props: { onShowList: () => void }) {
     (s: { mode: CraftMode; position: [number, number, number] }) => {
       if (modeRef.current !== s.mode) {
         modeRef.current = s.mode;
+        modeSinceRef.current = performance.now();
         setMode(s.mode);
+      }
+
+      // Milestones ride the mode machine — the transitions ARE the moments
+      // worth marking, and deriving them anywhere else would mean a second,
+      // driftable copy of "what counts as flying".
+      //
+      // But they need the mode to STICK. On load the craft falls from its
+      // spawn before the terrain colliders settle, dips below sea level for a
+      // few frames, and is caught by the under-map guard — enough to award
+      // "Afloat: found out the car swims" to a visitor who has not yet touched
+      // a key. A mode held for half a second is something the driver did; a
+      // mode held for three frames is a startup transient.
+      if (performance.now() - modeSinceRef.current > MODE_DWELL_MS) {
+        if (s.mode === "wings") tryUnlock("first-flight");
+        if (s.mode === "hull") tryUnlock("first-sail");
+        if (s.mode === "orbit") tryUnlock("orbit");
+      }
+      if (telemetry.inThermal) tryUnlock("thermal");
+
+      // Artifact pickups. A plain distance sweep over ~18 positions, run on
+      // the frame callback that already exists: eighteen more Rapier sensors
+      // would cost real physics time to answer a question Math.hypot answers
+      // for nothing.
+      for (const artifact of ARTIFACTS) {
+        if (collectedRef.current.has(artifact.id)) continue;
+        const [ax, ay, az] = artifact.position;
+        const dist = Math.hypot(s.position[0] - ax, s.position[1] - ay, s.position[2] - az);
+        if (dist > ARTIFACT_PICKUP_RADIUS) continue;
+        if (!collect(artifact.id)) continue;
+        const next = new Set(collectedRef.current);
+        next.add(artifact.id);
+        collectedRef.current = next;
+        setCollected(next);
+        pushToast({
+          id: `art-${artifact.id}`,
+          title: artifact.label,
+          detail: artifact.detail,
+          tint: artifact.tint,
+          kind: "find",
+        });
+        if (next.size === ARTIFACTS.length) tryUnlock("all-artifacts");
       }
 
       const confirmed = input.confirm;
@@ -327,7 +441,13 @@ export default function World(props: { onShowList: () => void }) {
         }
       }
     },
-    [enterRoom],
+    // pushToast and tryUnlock are both stable useCallbacks, but listing them
+    // is not ceremony: this callback is handed to Craft and captured for the
+    // life of the mount, so anything it closes over that is NOT listed would
+    // silently freeze at its first value. Milestones and pickups going quiet
+    // after a re-render is exactly the kind of bug that looks like "the game
+    // stopped rewarding me" and is untraceable from the symptom.
+    [enterRoom, pushToast, tryUnlock],
   );
 
   // The HUD's reset control: clears an in-progress or finished run back to
@@ -394,10 +514,12 @@ export default function World(props: { onShowList: () => void }) {
           <MemoTerrain />
           <MemoWater />
           <MemoProps />
+          <MemoMonuments />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
         <MemoMotes />
+        <Artifacts collected={collected} />
         <MemoThermals />
         <MemoLaunchPads />
         <SpaceSky />
@@ -431,6 +553,9 @@ export default function World(props: { onShowList: () => void }) {
         onResetRun={resetRun}
         atStartLine={atStartLine}
         exploredCount={exploredCount}
+        collectedCount={collected.size}
+        artifactTotal={ARTIFACTS.length}
+        toasts={toasts}
         totalRooms={ROOMS.length}
       />
     </>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { LayoutGrid, RotateCcw } from "lucide-react";
-import { Compass, Gauges, Onboarding } from "./Nav.tsx";
+import { Compass, Gauges, Onboarding, Toasts, type Toast } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
@@ -190,8 +190,26 @@ export function Hud(props: {
   /** How many of the eight rooms have been entered from the world. */
   exploredCount?: number;
   totalRooms?: number;
+  /** Artifacts held, and how many exist. */
+  collectedCount?: number;
+  artifactTotal?: number;
+  toasts?: Toast[];
 }) {
-  const { mode, promptRoom, onConfirm, onShowList, elapsedMs, bestMs, onResetRun, atStartLine, exploredCount, totalRooms } = props;
+  const {
+    mode,
+    promptRoom,
+    onConfirm,
+    onShowList,
+    elapsedMs,
+    bestMs,
+    onResetRun,
+    atStartLine,
+    exploredCount,
+    totalRooms,
+    collectedCount,
+    artifactTotal,
+    toasts,
+  } = props;
 
   // Mirrors input.ts's module-level capture flag into React state so this
   // component re-renders on Escape/recapture. A ref-and-poll approach would
@@ -262,6 +280,8 @@ export function Hud(props: {
           (top / middle / bottom) whichever of these two is showing — they
           stack rather than fighting over the middle slot. */}
       <div className="flex flex-col items-center gap-2">
+        {toasts && toasts.length > 0 && <Toasts items={toasts} />}
+
         {!captured && (
           // Finding 6's other half: Escape genuinely releases (input.ts), but
           // a visitor who's never told that needs a way to notice AND a way
@@ -367,6 +387,11 @@ export function Hud(props: {
           {exploredCount !== undefined && totalRooms !== undefined && (
             <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
               <span className="text-accent">{exploredCount}</span> / {totalRooms} rooms found
+            </div>
+          )}
+          {collectedCount !== undefined && artifactTotal !== undefined && (
+            <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
+              <span style={{ color: "#f0883e" }}>{collectedCount}</span> / {artifactTotal} artifacts
             </div>
           )}
           <Gauges />
