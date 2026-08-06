@@ -1,6 +1,6 @@
 import { useMemo, type JSX } from "react";
 import { RigidBody } from "@react-three/rapier";
-import { Line } from "@react-three/drei";
+import { Grid, Line } from "@react-three/drei";
 import { PLACEMENTS, TERRAIN } from "./worldData.ts";
 
 /**
@@ -292,6 +292,28 @@ function SkyIsland({ to, traceColors }: { to: string; traceColors: [string, stri
 export function Terrain(): JSX.Element {
   return (
     <group>
+      {/* A cutting-mat grid on the desk surface. This is the only thing in the
+          scene close enough to the camera to give parallax, and without it a
+          car at 23 m/s over an untextured plane looks like a car at 6 m/s —
+          there is simply nothing passing by to register speed against. It also
+          sells the desk-scale read the whole world is built on: this is a
+          work surface, and work surfaces have a grid printed on them.
+          `infiniteGrid` is off deliberately — the grid stops at the coast, so
+          its edge marks where the drivable ground ends. */}
+      <Grid
+        position={[0, TERRAIN.mainland.groundY + 0.01, (TERRAIN.mainland.z0 + TERRAIN.mainland.z1) / 2]}
+        args={[TERRAIN.mainland.halfWidth * 2, TERRAIN.mainland.z1 - TERRAIN.mainland.z0]}
+        cellSize={1}
+        cellThickness={0.5}
+        cellColor="#243029"
+        sectionSize={5}
+        sectionThickness={0.8}
+        sectionColor="#2c5f47"
+        fadeDistance={70}
+        fadeStrength={1.4}
+        followCamera={false}
+        infiniteGrid={false}
+      />
       <Mainland />
       <Kerb />
       <Shore />

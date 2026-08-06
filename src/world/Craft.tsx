@@ -18,6 +18,7 @@ import {
 } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { TERRAIN, THERMALS } from "./worldData.ts";
+import { telemetry } from "./telemetry.ts";
 
 /**
  * The one craft. A single dynamic rigid body driven three different ways —
@@ -100,6 +101,21 @@ const BASE_LINEAR_DAMPING = 0.35; // caps top speed so ENGINE_FORCE reaches an e
 // on splashdown. You could sail, but only in a straight line.
 const HULL_YAW_TORQUE = 900;
 
+/**
+ * Boost — hold Shift for a burst of extra drive, on a tank that refills when
+ * you're off it.
+ *
+ * It exists for a specific reason rather than as a generic "make it faster"
+ * knob: the ramp launch needs LAUNCH_SPEED (14 m/s) and the mainland gives
+ * about 26m of run-up, which reaches it but leaves no margin for a bad line.
+ * Boost turns "did I clear the ramp" from a coin flip into something a driver
+ * can influence, which is the difference between a course that feels fair and
+ * one that feels arbitrary.
+ */
+const BOOST_MULTIPLIER = 2.1;
+const BOOST_DRAIN_PER_S = 0.5; // full tank = 2s of boost
+const BOOST_RECHARGE_PER_S = 0.22; // ~4.5s from empty to full
+
 // Sign conventions for steering, pitch and roll below (which input axis
 // turns which way) are a first pass, not a measured fact — flip the minus
 // signs here if a playtest says the car turns the wrong way.
@@ -141,6 +157,8 @@ const CAMERA_SPEED_PULLBACK = 0.16;
 const CAMERA_HEIGHT = 2.6;
 const CAMERA_LOOK_HEIGHT = 0.6;
 const CAMERA_FOLLOW_SPEED = 4;
+const CAMERA_BASE_FOV = 55; // matches World.tsx's <Canvas camera={{ fov }}>
+const CAMERA_FOV_SPREAD = 14; // extra degrees at full speed
 
 // FINDING 5b fix: the old spawn, [0, 1.5, -16], sat 2m from the mainland's
 // sheer north cliff (the slab spans z in [-18, 12] — see Terrain.tsx's
@@ -227,6 +245,10 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
   const vehicleRef = useRef<VehicleController | null>(null);
   const modeRef = useRef<CraftMode>("wheels");
   const airborneMsRef = useRef(0);
+  // Boost charge, 0..1, and whether it is being spent this step. Refs, not
+  // state: they change every frame and only the HUD (via telemetry) reads them.
+  const boostRef = useRef(1);
+  const boostingRef = useRef(false);
   // FINDING 5a: how long (ms) the chassis has been continuously flipped AND
   // roughly stationary — see FLIP_UP_Y/FLIP_SPEED_THRESHOLD above for what
   // "flipped" means here. Reset to 0 the instant either condition lapses, so
@@ -392,7 +414,17 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     const steerAngle = STEER_SIGN * input.steer * MAX_STEER_RAD;
     vehicle.setWheelSteering(0, steerAngle);
     vehicle.setWheelSteering(1, steerAngle);
-    const engineForce = mode === "wheels" ? input.throttle * ENGINE_FORCE : 0;
+    // Boost only spends while it is actually doing something: held, with
+    // charge left, throttle down, and on the wheels. Draining it mid-air or
+    // mid-ocean would burn the tank on a press that changed nothing.
+    const wantsBoost = input.boost && boostRef.current > 0 && input.throttle > 0 && mode === "wheels";
+    boostRef.current = Math.max(
+      0,
+      Math.min(1, boostRef.current + (wantsBoost ? -BOOST_DRAIN_PER_S : BOOST_RECHARGE_PER_S) * dt),
+    );
+    boostingRef.current = wantsBoost;
+    const engineForce =
+      mode === "wheels" ? input.throttle * ENGINE_FORCE * (wantsBoost ? BOOST_MULTIPLIER : 1) : 0;
     vehicle.setWheelEngineForce(2, engineForce);
     vehicle.setWheelEngineForce(3, engineForce);
     const brake = input.brake ? BRAKE_FORCE : 0;
@@ -495,6 +527,21 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     scratch.lookTarget.set(t.x, t.y + CAMERA_LOOK_HEIGHT, t.z);
     camera.lookAt(scratch.lookTarget);
 
+    // Field of view widens with speed, and further again on boost. This is the
+    // cheapest possible sense of speed — no particles, no motion blur, no extra
+    // draw calls — and without something like it a toy car at 23 m/s on an open
+    // plane feels identical to the same car at 6 m/s, because there is nothing
+    // close enough to the camera for parallax to register against.
+    if ("fov" in camera) {
+      const perspective = camera as THREE.PerspectiveCamera;
+      const target = CAMERA_BASE_FOV + Math.min(1, speed / 24) * CAMERA_FOV_SPREAD + (boostingRef.current ? 6 : 0);
+      const next = perspective.fov + (target - perspective.fov) * Math.min(1, delta * 4);
+      if (Math.abs(next - perspective.fov) > 0.01) {
+        perspective.fov = next;
+        perspective.updateProjectionMatrix();
+      }
+    }
+
     if (vehicle) {
       for (let i = 0; i < WHEELS.length; i++) {
         const yaw = wheelYawRefs.current[i];
@@ -516,6 +563,23 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     scratch.state.position[0] = t.x;
     scratch.state.position[1] = t.y;
     scratch.state.position[2] = t.z;
+    // Publish to the telemetry singleton for the HUD's compass, speed readout
+    // and boost meter. Written in place every frame; the HUD reads it from its
+    // own rAF loop rather than taking it through React state — see telemetry.ts.
+    telemetry.x = t.x;
+    telemetry.y = t.y;
+    telemetry.z = t.z;
+    // Yaw of the craft's own forward axis (local -Z, see LOCAL_FORWARD_Z),
+    // measured so 0 points along world +Z. atan2(x, z) rather than the usual
+    // (z, x) because the compass wants bearing-from-+Z, not maths-convention
+    // angle-from-+X.
+    scratch.forward.set(0, 0, LOCAL_FORWARD_Z).applyQuaternion(scratch.quat);
+    telemetry.heading = Math.atan2(scratch.forward.x, scratch.forward.z);
+    telemetry.speed = vehicle ? -vehicle.currentVehicleSpeed() : 0;
+    telemetry.mode = modeRef.current;
+    telemetry.boost = boostRef.current;
+    telemetry.boosting = boostingRef.current;
+
     props.onState(scratch.state);
   });
 

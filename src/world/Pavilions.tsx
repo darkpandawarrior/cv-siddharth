@@ -219,6 +219,20 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
           {room.label}
         </span>
       </Html>
+      {/* Each room lights its own patch of the world in its tint. Landmarks
+          you can see from distance are what make a dark map navigable — before
+          this, a pavilion was a small dim shape that only resolved once you
+          were nearly on top of it, so finding rooms meant reading the compass
+          rather than looking at the world. No shadow casting: eight
+          shadow-casting point lights would cost far more than they add, and
+          these exist to mark a position, not to model illumination. */}
+      <pointLight
+        position={[0, halfExtents[1] + 1.2, 0]}
+        color={room.tint}
+        intensity={22}
+        distance={16}
+        decay={2}
+      />
       <CuboidCollider
         args={halfExtents}
         sensor

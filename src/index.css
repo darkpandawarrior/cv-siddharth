@@ -254,6 +254,32 @@ html.resume-mode body {
   }
 }
 
+/* The room-entry dwell, drawn. World.tsx holds the craft in a pavilion's
+   sensor for DWELL_MS (1000ms) before navigating; this ring drains over exactly
+   that, so the wait reads as a deliberate countdown instead of a pause before
+   the page inexplicably changes. `forwards` matters — the prompt unmounts the
+   instant entry fires, and a ring that snapped back to full on the last frame
+   would flicker. */
+@keyframes hud-dwell {
+  from {
+    stroke-dashoffset: 100.5;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.hud-dwell-ring {
+  animation: hud-dwell 1000ms linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-dwell-ring {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 @media print {
   body {
     background: white;

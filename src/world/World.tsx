@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
@@ -19,6 +20,7 @@ import {
   type Checkpoint,
 } from "./triathlon.ts";
 import { CHECKPOINTS } from "./worldData.ts";
+import { loadExplored, markExplored } from "./explored.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulse, type PulseEvent } from "../play/pulse.ts";
 
@@ -65,9 +67,15 @@ const BACKGROUND = "#060807"; // --color-void
 function CheckpointRing({
   checkpoint,
   passed,
+  active,
+  next,
 }: {
   checkpoint: Checkpoint;
   passed: boolean;
+  /** A run is under way. Before one starts, the course is scenery. */
+  active: boolean;
+  /** This is the checkpoint to head for right now. */
+  next: boolean;
 }) {
   // No rotation: TorusGeometry starts facing +Z, which is exactly a "gate"
   // orientation for a course that runs mainland (north) to sky island
@@ -77,12 +85,18 @@ function CheckpointRing({
   return (
     <mesh position={checkpoint.position}>
       <torusGeometry args={[checkpoint.radius, 0.14, 8, 32]} />
+      {/* Three states, not two. Seven huge glowing gates at full brightness
+          dominated the view from spawn and read as the point of the world,
+          when the triathlon is an optional side activity most visitors will
+          never start — and with bloom added they became the brightest thing on
+          screen. Dormant until a run begins; only the checkpoint you actually
+          need is lit. */}
       <meshStandardMaterial
         color={passed ? "#3ddc84" : "#5ee6ff"}
         emissive={passed ? "#3ddc84" : "#5ee6ff"}
-        emissiveIntensity={passed ? 0.22 : 0.9}
+        emissiveIntensity={passed ? 0.15 : next ? 1.1 : active ? 0.45 : 0.12}
         transparent
-        opacity={passed ? 0.22 : 0.85}
+        opacity={passed ? 0.14 : next ? 0.9 : active ? 0.4 : 0.12}
       />
     </mesh>
   );
@@ -92,13 +106,21 @@ function CheckpointRing({
  *  checkpoint pass (a handful of times per run) rather than every frame. */
 const CheckpointRings = memo(function CheckpointRings({
   passedCount,
+  active,
 }: {
   passedCount: number;
+  active: boolean;
 }) {
   return (
     <>
       {CHECKPOINTS.map((c) => (
-        <CheckpointRing key={c.id} checkpoint={c} passed={c.id < passedCount} />
+        <CheckpointRing
+          key={c.id}
+          checkpoint={c}
+          passed={c.id < passedCount}
+          active={active}
+          next={active && c.id === passedCount}
+        />
       ))}
     </>
   );
@@ -129,6 +151,11 @@ export default function World(props: { onShowList: () => void }) {
   const [atStartLine, setAtStartLine] = useState(false);
   const atStartLineRef = useRef(false);
   const [bestMs, setBestMs] = useState<number | null>(() => loadBestMs());
+  // How many rooms have been entered from the world, ever. Gives the map a
+  // reason to be explored past the first room you happen to bump into — the
+  // grid view has always shown all eight at once, so the world needs its own
+  // sense of progress or it is strictly less informative than a list.
+  const [exploredCount, setExploredCount] = useState(() => loadExplored().length);
   // Mirrors `elapsedMs` for the per-frame closure below (handleCraftState's
   // own dependency list is just `[enterRoom]`, so it never sees a fresh
   // `elapsedMs` from state — same reason runRef/modeRef/promptToRef exist).
@@ -170,6 +197,8 @@ export default function World(props: { onShowList: () => void }) {
       // counters on /pulse stay one shared number regardless of which view
       // a visitor entered through.
       bump(`room:${to.slice(1)}` as PulseEvent);
+      markExplored(to);
+      setExploredCount(loadExplored().length);
       navigate({ to });
     },
     [bump, navigate],
@@ -363,7 +392,25 @@ export default function World(props: { onShowList: () => void }) {
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
-        <CheckpointRings passedCount={checkpointIndex} />
+        <CheckpointRings passedCount={checkpointIndex} active={elapsedMs !== null} />
+        {/* Bloom is doing real work here, not gloss. Every room's identity in
+            this world is carried by an emissive material in its tint — the
+            phone screen, the CRT face, the atoll's waterline ring, the sky
+            islands' PCB traces, the checkpoint gates. Unbloomed they read as
+            flat coloured rectangles in a dark scene; with it they read as lit
+            objects and become visible from much further away, which is the
+            difference between navigating and hunting. luminanceThreshold is set
+            high enough that only genuinely emissive surfaces bloom, so the
+            terrain doesn't turn milky. */}
+        <EffectComposer>
+          {/* Threshold 0.9, not 0.62. At 0.62 the lit terrain itself passed the
+              cut and the mainland bloomed into soft white pools — the scene got
+              brighter but less readable, which is the opposite of the point.
+              The room emissives sit well above 0.9, so raising it keeps the
+              glow on the things that are meant to glow. */}
+          <Bloom intensity={0.7} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
+          <Vignette eskil={false} offset={0.22} darkness={0.72} />
+        </EffectComposer>
       </Canvas>
       <Hud
         mode={mode}
@@ -374,6 +421,8 @@ export default function World(props: { onShowList: () => void }) {
         bestMs={bestMs}
         onResetRun={resetRun}
         atStartLine={atStartLine}
+        exploredCount={exploredCount}
+        totalRooms={ROOMS.length}
       />
     </>
   );

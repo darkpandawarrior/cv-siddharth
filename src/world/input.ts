@@ -21,6 +21,8 @@ export type InputState = {
   brake: boolean;
   pitch: number;
   confirm: boolean;
+  /** Shift held — spend boost. Craft decides whether there is any left. */
+  boost: boolean;
 };
 
 export const input: InputState = {
@@ -29,6 +31,7 @@ export const input: InputState = {
   brake: false,
   pitch: 0,
   confirm: false,
+  boost: false,
 };
 
 // Keys this module ever acts on. Lower-cased `KeyboardEvent.key` values —
@@ -37,7 +40,11 @@ const STEER_LEFT = new Set(["a", "arrowleft"]);
 const STEER_RIGHT = new Set(["d", "arrowright"]);
 const THROTTLE_FWD = new Set(["w", "arrowup"]);
 const THROTTLE_BACK = new Set(["s", "arrowdown"]);
-const CAPTURED_KEYS = new Set(["a", "d", "w", "s", "arrowleft", "arrowright", "arrowup", "arrowdown", " ", "enter"]);
+const CAPTURED_KEYS = new Set([
+  "a", "d", "w", "s",
+  "arrowleft", "arrowright", "arrowup", "arrowdown",
+  " ", "enter", "shift",
+]);
 
 const INTERACTIVE_TAGS = new Set(["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"]);
 
@@ -165,6 +172,7 @@ export function attachKeyboard(): () => void {
     recomputeAxes();
     input.brake = pressed.has(" ");
     input.confirm = pressed.has("enter");
+    input.boost = pressed.has("shift");
   };
 
   const releaseAll = () => {
@@ -174,6 +182,10 @@ export function attachKeyboard(): () => void {
     recomputeAxes();
     input.brake = false;
     input.confirm = false;
+    // Boost clears here too. Leaving it set is the same defect class as the
+    // stuck-throttle bug: alt-tab while holding Shift and the craft would keep
+    // burning boost with no key held and no way to stop it.
+    input.boost = false;
   };
 
   const onKeyDown = (e: KeyboardEvent) => {

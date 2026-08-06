@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { LayoutGrid, RotateCcw } from "lucide-react";
+import { Compass, Gauges, Onboarding } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
@@ -185,8 +186,11 @@ export function Hud(props: {
   onResetRun?: () => void;
   /** Craft is parked on the triathlon's start line with no run under way. */
   atStartLine?: boolean;
+  /** How many of the eight rooms have been entered from the world. */
+  exploredCount?: number;
+  totalRooms?: number;
 }) {
-  const { mode, promptRoom, onConfirm, onShowList, elapsedMs, bestMs, onResetRun, atStartLine } = props;
+  const { mode, promptRoom, onConfirm, onShowList, elapsedMs, bestMs, onResetRun, atStartLine, exploredCount, totalRooms } = props;
 
   // Mirrors input.ts's module-level capture flag into React state so this
   // component re-renders on Escape/recapture. A ref-and-poll approach would
@@ -213,6 +217,10 @@ export function Hud(props: {
           .hud-touch { display: flex; }
         }
       `}</style>
+
+      <Onboarding />
+
+      <Compass />
 
       <div className="flex items-start justify-between gap-3">
         {/* Mode indicator. aria-live: mode changes are rare (a handful of
@@ -292,6 +300,27 @@ export function Hud(props: {
             <span className="font-display text-base font-bold" style={{ color: promptRoom.tint }}>
               {promptRoom.label}
             </span>
+            {/* The dwell is a real one-second timer in World.tsx, and until now
+                it was invisible: the prompt said "hold to enter" and then the
+                page changed, with nothing in between to say it was working or
+                how long was left. The ring drains over exactly DWELL_MS, so
+                driving away mid-dwell reads as a cancel rather than a mystery. */}
+            <span className="relative flex h-8 w-8 items-center justify-center">
+              <svg viewBox="0 0 36 36" className="absolute h-8 w-8 -rotate-90">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-line" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke={promptRoom.tint}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray="100.5"
+                  className="hud-dwell-ring"
+                />
+              </svg>
+            </span>
             <span className="font-mono text-[11px] uppercase tracking-widest text-muted">hold to enter · press Enter</span>
             <button
               type="button"
@@ -333,9 +362,17 @@ export function Hud(props: {
           )}
         </div>
 
-        <div className="hud-touch pointer-events-auto items-end gap-4">
-          <Thumbstick />
-          <Pedal />
+        <div className="flex flex-col items-end gap-3 pr-0 sm:pr-16">
+          {exploredCount !== undefined && totalRooms !== undefined && (
+            <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
+              <span className="text-accent">{exploredCount}</span> / {totalRooms} rooms found
+            </div>
+          )}
+          <Gauges />
+          <div className="hud-touch pointer-events-auto items-end gap-4">
+            <Thumbstick />
+            <Pedal />
+          </div>
         </div>
       </div>
     </div>
