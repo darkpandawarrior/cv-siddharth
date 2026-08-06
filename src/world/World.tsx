@@ -5,6 +5,9 @@ import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
+import { Stunts } from "./Stunts.tsx";
+import { Trail } from "./Trail.tsx";
+import { disposeAudio, initAudio, playOrbit, playPickup } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
@@ -62,6 +65,8 @@ const MemoThermals = memo(Thermals);
 const MemoLaunchPads = memo(LaunchPads);
 const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
+const MemoStunts = memo(Stunts);
+const MemoTrail = memo(Trail);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
 // auto-confirms — the design doc's "~1s dwell" figure.
@@ -203,6 +208,21 @@ export default function World(props: { onShowList: () => void }) {
 
   useEffect(() => attachKeyboard(), []);
 
+  // Audio starts on the first real gesture and never before — browsers suspend
+  // an AudioContext until then, and a portfolio that greets a recruiter with
+  // engine noise is worse than a silent one. Torn down on unmount so entering
+  // a room does not leave a synth running behind the page.
+  useEffect(() => {
+    const start = () => initAudio();
+    window.addEventListener("keydown", start, { once: true });
+    window.addEventListener("pointerdown", start, { once: true });
+    return () => {
+      window.removeEventListener("keydown", start);
+      window.removeEventListener("pointerdown", start);
+      disposeAudio();
+    };
+  }, []);
+
   // Navigating away from a room's sensor volume before its dwell timer fires
   // must not leave a stray setTimeout that fires `navigate()` after this
   // component (and the craft inside it) is gone.
@@ -335,7 +355,10 @@ export default function World(props: { onShowList: () => void }) {
       if (performance.now() - modeSinceRef.current > MODE_DWELL_MS) {
         if (s.mode === "wings") tryUnlock("first-flight");
         if (s.mode === "hull") tryUnlock("first-sail");
-        if (s.mode === "orbit") tryUnlock("orbit");
+        if (s.mode === "orbit") {
+          tryUnlock("orbit");
+          playOrbit();
+        }
       }
       if (telemetry.inThermal) tryUnlock("thermal");
 
@@ -353,6 +376,7 @@ export default function World(props: { onShowList: () => void }) {
         next.add(artifact.id);
         collectedRef.current = next;
         setCollected(next);
+        playPickup();
         pushToast({
           id: `art-${artifact.id}`,
           title: artifact.label,
@@ -523,9 +547,11 @@ export default function World(props: { onShowList: () => void }) {
           <MemoWater />
           <MemoProps />
           <MemoMonuments />
+          <MemoStunts />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
+        <MemoTrail />
         <MemoMotes />
         <Artifacts collected={collected} />
         <MemoThermals />

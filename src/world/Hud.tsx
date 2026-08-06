@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { LayoutGrid, RotateCcw } from "lucide-react";
+import { LayoutGrid, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
+import { isMuted, toggleMuted } from "./audio.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
 
@@ -170,6 +171,21 @@ function Pedal() {
         style={{ top: `calc(50% + ${knobY}px - 1rem)` }}
       />
     </div>
+  );
+}
+
+function SoundToggle() {
+  const [muted, setMuted] = useState(() => isMuted());
+  return (
+    <button
+      type="button"
+      aria-pressed={muted}
+      onClick={() => setMuted(toggleMuted())}
+      className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-line bg-card/80 px-3 py-1.5 text-sm text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent"
+    >
+      {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+      <span className="sr-only">{muted ? "Unmute world sound" : "Mute world sound"}</span>
+    </button>
   );
 }
 
@@ -363,6 +379,11 @@ export function Hud(props: {
               present, never hidden behind hover or a gesture, reachable by Tab
               even while the canvas has "captured" keyboard input (Escape
               releases that capture — see input.ts). */}
+          {/* Sound is on by default but always one click from off, and the
+              choice persists. A portfolio that cannot be silenced is one people
+              close the tab on. */}
+          <SoundToggle />
+
           <button
             type="button"
             onClick={onShowList}

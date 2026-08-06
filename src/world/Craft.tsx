@@ -25,6 +25,7 @@ import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { SPACE_LIFTS, TERRAIN, THERMALS } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
 import { worldPalette } from "./palette.ts";
+import { playBoost, playImpact, playSplash, updateEngine } from "./audio.ts";
 
 /**
  * The one craft. A single dynamic rigid body driven three different ways —
@@ -344,6 +345,8 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
   // state: they change every frame and only the HUD (via telemetry) reads them.
   const boostRef = useRef(1);
   const boostingRef = useRef(false);
+  const boostSoundRef = useRef(false);
+  const lastSpeedRef = useRef(0);
   // FINDING 5a: how long (ms) the chassis has been continuously flipped AND
   // roughly stationary — see FLIP_UP_Y/FLIP_SPEED_THRESHOLD above for what
   // "flipped" means here. Reset to 0 the instant either condition lapses, so
@@ -728,6 +731,19 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     }
     telemetry.inThermal = liftedByThermal;
     telemetry.stuck = flippedMsRef.current > 150;
+
+    // Sound rides the state machine rather than being detected separately —
+    // the mode transitions and the speed are already computed here, so the
+    // audio can never disagree with what the craft is actually doing.
+    updateEngine(probe.speed, !grounded);
+    if (newMode === "hull" && mode !== "hull") playSplash();
+    if (wantsBoost && !boostSoundRef.current) playBoost();
+    boostSoundRef.current = wantsBoost;
+    // A landing or a collision: a sharp drop in forward speed while touching
+    // something. Threshold high enough that ordinary braking is silent.
+    const speedDrop = lastSpeedRef.current - Math.abs(probe.speed);
+    if (grounded && speedDrop > 4) playImpact(Math.min(1, speedDrop / 14));
+    lastSpeedRef.current = Math.abs(probe.speed);
 
     // Launch pads. Deliberately NOT skipped while grounded — the whole design
     // is that you drive onto one and it throws you, and a pad you had to be

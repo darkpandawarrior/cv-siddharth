@@ -202,6 +202,8 @@ export function Gauges(): JSX.Element {
   const numRef = useRef<HTMLSpanElement>(null);
   const boostRef = useRef<HTMLDivElement>(null);
   const altRef = useRef<HTMLDivElement>(null);
+  const odoRef = useRef<HTMLSpanElement>(null);
+  const accRef = useRef<HTMLSpanElement>(null);
   const altNumRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -230,6 +232,14 @@ export function Gauges(): JSX.Element {
       // it would be a permanent "0 m" taking up space; in the air it is the
       // only way to judge a climb, and the only hint that something changes
       // at a specific height.
+      if (odoRef.current) {
+        // Kilometres once it gets silly, metres before that.
+        const m = telemetry.odometer;
+        odoRef.current.textContent = m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`;
+      }
+      if (accRef.current) {
+        accRef.current.textContent = `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
+      }
       if (altRef.current && altNumRef.current) {
         const airborne = telemetry.y > 2;
         altRef.current.style.display = airborne ? "" : "none";
@@ -271,6 +281,23 @@ export function Gauges(): JSX.Element {
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={boostRef} className="h-full w-full rounded-full bg-[var(--color-warn)]" />
       </div>
+      {/* The Mileway lens. Distance driven, and the live accuracy of the raw
+          GPS trail against the dead-reckoned one — the same 50%-to-95% story
+          the front page tells, except these numbers are measured from the
+          samples on screen rather than quoted. */}
+      <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <span>trip</span>
+        <span ref={odoRef} className="text-zinc-200">
+          0 m
+        </span>
+      </div>
+      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <span title="Mean positional error: the raw GPS fix versus the dead-reckoned track">gps err</span>
+        <span ref={accRef} className="text-[var(--color-signal)]">
+          0.0m → 0.0m
+        </span>
+      </div>
+
       <div
         ref={altRef}
         style={{ display: "none" }}

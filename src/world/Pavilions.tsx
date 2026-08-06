@@ -7,6 +7,7 @@ import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapie
 import { PLACEMENTS, WATER_SENSOR_HALF_EXTENTS, type Placement } from "./worldData.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
+import { PAVILION_SENSOR_GROUP } from "./collisionGroups.ts";
 import { worldPalette } from "./palette.ts";
 
 /**
@@ -43,7 +44,7 @@ import { worldPalette } from "./palette.ts";
 // there. (Static-vs-static pairs, e.g. this sensor vs. Terrain's fixed
 // ground, are pruned by Rapier's broadphase before groups are even
 // considered, so the ground never needs this treatment.)
-export const PAVILION_SENSOR_GROUP: number = 15;
+
 const SENSOR_COLLISION_GROUPS = interactionGroups([PAVILION_SENSOR_GROUP], [PAVILION_SENSOR_GROUP]);
 
 // Half-extents (metres) of each shape's sensor volume, keyed off `shape`

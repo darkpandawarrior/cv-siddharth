@@ -32,6 +32,11 @@ export type Telemetry = {
   inThermal: boolean;
   /** Upside down and going nowhere — the HUD says so before auto-recovery. */
   stuck: boolean;
+  /** Metres driven this session — the Mileway lens (see Trail.tsx / gps.ts). */
+  odometer: number;
+  /** Mean positional error of the raw fix and of the fused track, metres. */
+  rawError: number;
+  fusedError: number;
 };
 
 export const telemetry: Telemetry = {
@@ -45,4 +50,7 @@ export const telemetry: Telemetry = {
   boosting: false,
   inThermal: false,
   stuck: false,
+  odometer: 0,
+  rawError: 0,
+  fusedError: 0,
 };

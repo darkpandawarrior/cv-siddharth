@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, type JSX, type ReactElement } from "react";
 import { Color, type InstancedMesh } from "three";
-import { InstancedRigidBodies, interactionGroups, type InstancedRigidBodyProps, type RigidBodyAutoCollider } from "@react-three/rapier";
+import { InstancedRigidBodies, type InstancedRigidBodyProps, type RigidBodyAutoCollider } from "@react-three/rapier";
 import { PLACEMENTS } from "./worldData.ts";
-import { PAVILION_SENSOR_GROUP } from "./Pavilions.tsx";
+import { PAVILION_SENSOR_GROUP, PROP_COLLISION_GROUPS } from "./collisionGroups.ts";
 import { worldPalette, type WorldPalette } from "./palette.ts";
 
 /**
@@ -37,7 +37,7 @@ const PAVILION_CLEARANCE = 3.6; // keep debris out from under the room structure
 // keycap nudged under a pavilion can no longer satisfy that sensor's
 // group-15-only filter (see Pavilions.tsx's PAVILION_SENSOR_GROUP comment),
 // so it can never fake a "craft entered this room" event.
-const PROP_COLLISION_GROUPS = interactionGroups([0]);
+
 if (PAVILION_SENSOR_GROUP === 0) {
   // Would silently defeat the whole scheme above — group 0 must stay reserved
   // for props, group 15 for the sensors they need to be invisible to.
