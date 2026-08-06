@@ -7,7 +7,9 @@
  * artefacts, three separate acts of remembering. This makes it one command.
  *
  *   npm run preview           # in another shell — Playwright needs the served app
- *   npm run resume:pdf
+ *   npm run resume:pdf        # writes all three to ~/Downloads/Latest Resumes
+ *
+ * Pass a directory as the first argument to write somewhere else.
  *
  * The filenames are the ones claim-audit already tracks as employer-facing
  * surfaces (_1PAGE / _FULL / _SUPERFULL), so renaming them would silently drop
@@ -18,9 +20,13 @@ import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
+import { homedir } from "node:os";
 
 const BASE = process.env.RESUME_BASE_URL || "http://localhost:4173";
-const OUT = resolve(process.argv[2] || "dist/resume");
+// Default straight into the folder the user actually opens. Writing to
+// dist/resume meant a manual copy afterwards, which is how stray one-off PDFs
+// ended up loose in ~/Downloads competing with the current ones.
+const OUT = resolve(process.argv[2] || `${homedir()}/Downloads/Latest Resumes`);
 mkdirSync(OUT, { recursive: true });
 
 // Page budgets are asserted, not hoped for: a "1PAGE" file that quietly runs
@@ -53,6 +59,10 @@ for (const cut of CUTS) {
   await page.pdf({
     path: file,
     format: "A4",
+    // Safe again now that `@media print { :root { color-scheme: light } }`
+    // stops the UA painting a dark canvas. Needed for the accent rule and the
+    // tinted competency chips; verify the page edges stay white after changing
+    // anything here, because the failure mode is a black frame on every page.
     printBackground: true,
     margin: { top: "12mm", bottom: "12mm", left: "12mm", right: "12mm" },
   });
