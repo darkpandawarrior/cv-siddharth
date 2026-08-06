@@ -2,6 +2,7 @@ import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Mesh } from "three";
+import { readToken } from "./themeColor";
 
 /* Bits shared between the 2D tldraw sketch board (BlueprintRoom.tsx) and the
  * 3D fly-through scene (Blueprint3D.tsx): the WebGL probe, the count-up
@@ -136,11 +137,11 @@ export function HoloCore() {
   return (
     <>
       <ambientLight intensity={0.6} />
-      <pointLight position={[3, 3, 3]} intensity={10} color="#3ddc84" />
-      <pointLight position={[-3, -2, 2]} intensity={8} color="#5ee6ff" />
+      <pointLight position={[3, 3, 3]} intensity={10} color={readToken("--color-signal", "#3ddc84")} />
+      <pointLight position={[-3, -2, 2]} intensity={8} color={readToken("--color-probe", "#5ee6ff")} />
       <mesh ref={knot}>
         <torusKnotGeometry args={[0.85, 0.26, 110, 16]} />
-        <meshStandardMaterial color="#0b0f0d" emissive="#3ddc84" emissiveIntensity={0.32} metalness={0.8} roughness={0.25} />
+        <meshStandardMaterial color="#0b0f0d" emissive={readToken("--color-signal", "#3ddc84")} emissiveIntensity={0.32} metalness={0.8} roughness={0.25} />
       </mesh>
       <mesh ref={shell} material={fresnelMaterial}>
         <icosahedronGeometry args={[1.7, 1]} />

@@ -58,10 +58,10 @@ export function RecomposeLab() {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={optimized} onChange={(e) => setOptimized(e.target.checked)} className="accent-[#3ddc84]" />
+            <input type="checkbox" checked={optimized} onChange={(e) => setOptimized(e.target.checked)} className="accent-signal" />
             compose + stable UiState
           </label>
-          <span className="font-mono text-xs text-[#ff5c5c]">wasted renders: {renders.naive}</span>
+          <span className="font-mono text-xs text-danger">wasted renders: {renders.naive}</span>
           <span className="font-mono text-xs text-accent">needed renders: {renders.smart}</span>
           <span className="font-mono text-xs text-muted">
             avg cells touched: naive {avgTouched.naive} · optimized {avgTouched.optimized}

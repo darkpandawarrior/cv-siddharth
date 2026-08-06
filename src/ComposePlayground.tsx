@@ -844,7 +844,7 @@ export default function ComposePlayground() {
                 <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
                 <span>▮▮▮ 100%</span>
               </div>
-              <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-[#e8efe9]">
+              <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
                 {error ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
                     <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>

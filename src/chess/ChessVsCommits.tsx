@@ -233,7 +233,7 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
               max={HOURS - 1}
               value={hour}
               onChange={(e) => setHour(Number(e.target.value))}
-              className="h-1 w-40 accent-[#3ddc84]"
+              className="h-1 w-40 accent-signal"
               aria-label="Hour of day, IST"
               aria-valuetext={readout}
             />

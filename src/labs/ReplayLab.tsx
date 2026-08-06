@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { readToken } from "../themeColor";
 
 /* ── Deadlock Replay Lab ─────────────────────────────────────────────── */
 // Deadlock's determinism contract in one line: an InputFrame records intent
@@ -183,7 +184,7 @@ export function ReplayLab() {
       const ha = pathA[Math.floor(playhead)];
       ctx.beginPath();
       ctx.arc(ha.x, ha.y, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#e8efe9";
+      ctx.fillStyle = readToken("--color-text", "#e8efe9");
       ctx.fill();
     };
 
@@ -225,7 +226,7 @@ export function ReplayLab() {
           >
             reset
           </button>
-          <span className={`font-mono text-xs ${stat.blocked ? "text-[#ff5c5c]" : "text-accent"}`}>
+          <span className={`font-mono text-xs ${stat.blocked ? "text-danger" : "text-accent"}`}>
             drift: {stat.drift.toFixed(stat.blocked ? 3 : 6)} · gate: {stat.blocked ? "BLOCKED — change rejected" : "PASS"}
           </span>
           <Link

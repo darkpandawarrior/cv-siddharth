@@ -266,16 +266,16 @@ function RootDocument({ children }: { children: ReactNode }) {
         <SpeedInsights />
         <Scripts />
         <noscript>
-          <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "#e8efe9" }}>
+          <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "var(--color-text)" }}>
             <h1>Siddharth Pandalai — Senior Android Engineer</h1>
             <p>Platform owner of a ~964k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
             <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
             <ul>
-              <li><a href="/llms.txt" style={{ color: "#3ddc84" }}>Profile summary (llms.txt)</a></li>
-              <li><a href="/llms-full.txt" style={{ color: "#3ddc84" }}>Full profile (llms-full.txt)</a></li>
-              <li><a href="https://github.com/darkpandawarrior" style={{ color: "#3ddc84" }}>GitHub</a></li>
-              <li><a href="https://linkedin.com/in/siddharth-pandalai-3712b215a" style={{ color: "#3ddc84" }}>LinkedIn</a></li>
-              <li><a href="mailto:siddharthpandalai990@gmail.com" style={{ color: "#3ddc84" }}>siddharthpandalai990@gmail.com</a></li>
+              <li><a href="/llms.txt" style={{ color: "var(--color-signal)" }}>Profile summary (llms.txt)</a></li>
+              <li><a href="/llms-full.txt" style={{ color: "var(--color-signal)" }}>Full profile (llms-full.txt)</a></li>
+              <li><a href="https://github.com/darkpandawarrior" style={{ color: "var(--color-signal)" }}>GitHub</a></li>
+              <li><a href="https://linkedin.com/in/siddharth-pandalai-3712b215a" style={{ color: "var(--color-signal)" }}>LinkedIn</a></li>
+              <li><a href="mailto:siddharthpandalai990@gmail.com" style={{ color: "var(--color-signal)" }}>siddharthpandalai990@gmail.com</a></li>
             </ul>
           </main>
         </noscript>

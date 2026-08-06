@@ -4,6 +4,7 @@ import { Line, Html } from "@react-three/drei";
 import { MathUtils, Vector3 } from "three";
 import type { Group, Mesh } from "three";
 import { EDGES, NODES, type StoryNode } from "./StoryMap.tsx";
+import { readToken } from "./themeColor";
 
 /**
  * The Storyboard, in depth — the same node/edge data as the 2D canvas
@@ -85,7 +86,8 @@ function Star({
             fontFamily: "var(--font-mono)",
             fontSize: "11px",
             whiteSpace: "nowrap",
-            color: dim ? "rgba(232,239,233,0.3)" : "#e8efe9",
+            // <Html> is real DOM — var() works here, unlike the r3f props below.
+            color: dim ? "color-mix(in srgb, var(--color-text) 30%, transparent)" : "var(--color-text)",
             background: "rgba(5,7,10,0.55)",
             padding: "2px 7px",
             borderRadius: "999px",
@@ -118,7 +120,7 @@ function Pulse({ a, b, offset, lit }: { a: [number, number, number]; b: [number,
   return (
     <mesh ref={mesh}>
       <sphereGeometry args={[lit ? 0.045 : 0.028, 8, 8]} />
-      <meshBasicMaterial color={lit ? "#3ddc84" : "#5ee6ff"} transparent opacity={lit ? 1 : 0.5} />
+      <meshBasicMaterial color={lit ? readToken("--color-signal", "#3ddc84") : readToken("--color-probe", "#5ee6ff")} transparent opacity={lit ? 1 : 0.5} />
     </mesh>
   );
 }
@@ -164,7 +166,7 @@ function Constellation({ onNavigate }: { onNavigate: (target: string) => void })
           <group key={`${a}-${b}`}>
             <Line
               points={[pos3(byId[a]), pos3(byId[b])]}
-              color={lit ? "#3ddc84" : "#24445a"}
+              color={lit ? readToken("--color-signal", "#3ddc84") : readToken("--color-line", "#262e2b")}
               lineWidth={lit ? 2 : 1}
               transparent
               opacity={neighbourhood && !lit ? 0.12 : 0.55}
@@ -196,8 +198,8 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
       style={{ position: "absolute", inset: 0 }}
     >
       <ambientLight intensity={0.55} />
-      <pointLight position={[4, 3, 4]} intensity={9} color="#5ee6ff" />
-      <pointLight position={[-4, -2, 3]} intensity={9} color="#3ddc84" />
+      <pointLight position={[4, 3, 4]} intensity={9} color={readToken("--color-probe", "#5ee6ff")} />
+      <pointLight position={[-4, -2, 3]} intensity={9} color={readToken("--color-signal", "#3ddc84")} />
       <Constellation onNavigate={onNavigate} />
     </Canvas>
   );

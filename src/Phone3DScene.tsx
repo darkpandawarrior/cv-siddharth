@@ -3,6 +3,7 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import { TextureLoader, SRGBColorSpace, MathUtils } from "three";
 import type { Group, Mesh, MeshBasicMaterial, Texture } from "three";
+import { readToken } from "./themeColor";
 
 /**
  * Real 3D hero phone: rounded device body + emissive screen cycling through
@@ -122,7 +123,7 @@ export default function Phone3DScene({ shots, onContextLost }: { shots: PhoneSho
       <ambientLight intensity={0.8} />
       <directionalLight position={[3, 4, 5]} intensity={1.1} />
       {/* Android-green rim light off the left edge */}
-      <pointLight position={[-3, 0, 2]} intensity={6} color="#3ddc84" />
+      <pointLight position={[-3, 0, 2]} intensity={6} color={readToken("--color-signal", "#3ddc84")} />
       {/* Texture loading suspends INSIDE the canvas — if it suspended at the
           outer boundary the whole Canvas would unmount, three would
           force-lose the context, and the context-lost fallback would

@@ -274,7 +274,7 @@ export function ChessSearchLab() {
               max={MEDIAN_GAME}
               value={moveNumber}
               onChange={(e) => setMoveNumber(Number(e.target.value))}
-              className="h-1 w-32 accent-[#3ddc84]"
+              className="h-1 w-32 accent-signal"
               aria-label="Move number — sets the clock budget the search is allowed"
               aria-valuetext={`move ${moveNumber} of a ${MEDIAN_GAME}-move game, ${budget} millisecond budget`}
             />
