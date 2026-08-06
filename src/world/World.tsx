@@ -5,21 +5,18 @@ import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
-import { Arenas } from "./Arenas.tsx";
 import { Trail } from "./Trail.tsx";
 import { disposeAudio, initAudio, playPickup } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
-import { Water } from "./Water.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
 import { Craft } from "./Craft.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard } from "./input.ts";
 import { worldPalette } from "./palette.ts";
-import type { CraftMode } from "./craftPhysics.ts";
 import { loadExplored, markExplored } from "./explored.ts";
-import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS, MEDIUM_TINT } from "./artifacts.ts";
+import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
 import { collect, loadCollected } from "./progress.ts";
 import type { Toast } from "./Nav.tsx";
@@ -47,13 +44,11 @@ import { usePulse, type PulseEvent } from "../play/pulse.ts";
  * re-running its component *body*.
  */
 const MemoTerrain = memo(Terrain);
-const MemoWater = memo(Water);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoCraft = memo(Craft);
 const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
-const MemoArenas = memo(Arenas);
 const MemoTrail = memo(Trail);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
@@ -71,8 +66,6 @@ export default function World(props: { onShowList: () => void }) {
   const navigate = useNavigate();
   const bump = usePulse();
 
-  const [mode, setMode] = useState<CraftMode>("wheels");
-  const modeRef = useRef<CraftMode>("wheels");
 
   const [promptTo, setPromptTo] = useState<string | null>(null);
   const promptToRef = useRef<string | null>(null);
@@ -201,11 +194,7 @@ export default function World(props: { onShowList: () => void }) {
   // key edge, triathlon sequencing) rather than adding three separate frame
   // loops for them.
   const handleCraftState = useCallback(
-    (s: { mode: CraftMode; position: [number, number, number] }) => {
-      if (modeRef.current !== s.mode) {
-        modeRef.current = s.mode;
-        setMode(s.mode);
-      }
+    (s: { position: [number, number, number] }) => {
 
 
       // Artifact pickups. A plain distance sweep over ~18 positions, run on
@@ -227,12 +216,7 @@ export default function World(props: { onShowList: () => void }) {
           id: `art-${artifact.id}`,
           title: artifact.label,
           detail: artifact.detail,
-          // Resolved here rather than closed over: worldPalette() returns a
-          // fresh object each render, so capturing it would either break this
-          // callback's stable identity (and with it Craft's memoisation) or go
-          // stale. Reading at pickup time also means a theme swap is reflected
-          // without waiting for a re-render.
-          tint: worldPalette()[MEDIUM_TINT[artifact.medium]],
+          tint: worldPalette().signal,
           kind: "find",
         });
       }
@@ -317,10 +301,8 @@ export default function World(props: { onShowList: () => void }) {
         />
         <Physics paused={paused}>
           <MemoTerrain />
-          <MemoWater />
           <MemoProps />
           <MemoMonuments />
-          <MemoArenas />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
@@ -363,7 +345,6 @@ export default function World(props: { onShowList: () => void }) {
         </EffectComposer>
       </Canvas>
       <Hud
-        mode={mode}
         promptRoom={promptRoom}
         onConfirm={onHudConfirm}
         onShowList={props.onShowList}

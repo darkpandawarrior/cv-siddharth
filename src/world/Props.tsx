@@ -47,7 +47,7 @@ if (PAVILION_SENSOR_GROUP === 0) {
 // Land pavilion centres, read from the same registry Pavilions.tsx builds
 // from — so if a land room ever moves, this clearing moves with it instead
 // of drifting out of sync with a hand-copied list of coordinates.
-const LAND_CENTRES: [number, number][] = PLACEMENTS.filter((p) => p.medium === "land").map((p) => [p.position[0], p.position[2]]);
+const LAND_CENTRES: [number, number][] = PLACEMENTS.map((p) => [p.position[0], p.position[2]]);
 
 function tooCloseToAPavilion(x: number, z: number): boolean {
   return LAND_CENTRES.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < PAVILION_CLEARANCE);

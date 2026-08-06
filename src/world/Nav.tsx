@@ -32,17 +32,11 @@ const COMPASS_MAX_MARKERS = 5;
 const COMPASS_ROW_PX = 22;
 const COMPASS_GAP_PX = 6;
 
-const MEDIUM_HINT: Record<string, string> = {
-  land: "",
-  water: "sail",
-  air: "fly",
-};
 
 type Marker = {
   to: string;
   label: string;
   tint: string;
-  hint: string;
   x: number;
   z: number;
   el: HTMLDivElement | null;
@@ -77,7 +71,6 @@ export function Compass(): JSX.Element {
         to: p.to,
         label: room?.label ?? p.to,
         tint: room?.tint ?? "var(--color-signal)",
-        hint: MEDIUM_HINT[p.medium] ?? "",
         x: p.position[0],
         z: p.position[2],
         el: null,
@@ -176,7 +169,6 @@ export function Compass(): JSX.Element {
         >
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.tint }} />
           {m.label}
-          {m.hint && <span className="text-muted">{m.hint}</span>}
           <span
             ref={(el) => {
               markersRef.current[i].distEl = el;
@@ -192,12 +184,22 @@ export function Compass(): JSX.Element {
 /**
  * Speed readout and boost tank.
  *
- * Speed matters here beyond flavour: the ramp launch has a hard threshold
- * (LAUNCH_SPEED, 14 m/s), so a driver who cannot see their speed cannot tell
- * whether they are about to clear the jump or roll off the end of it. The bar
- * marks that threshold explicitly.
+ * One panel for everything the driver needs at a glance: speed, boost, how
+ * much of the world is left to find, and the location lens. It replaced four
+ * separate floating pills, which is what happens when each feature adds its own
+ * readout and nothing ever asks whether the corner is full.
  */
-export function Gauges(): JSX.Element {
+export function Gauges({
+  collected,
+  artifactTotal,
+  rooms,
+  totalRooms,
+}: {
+  collected?: number;
+  artifactTotal?: number;
+  rooms?: number;
+  totalRooms?: number;
+}): JSX.Element {
   const barRef = useRef<HTMLDivElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
   const boostRef = useRef<HTMLDivElement>(null);
@@ -242,7 +244,7 @@ export function Gauges(): JSX.Element {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none w-40 rounded-xl border border-line bg-card/80 px-3 py-2 backdrop-blur"
+      className="pointer-events-none w-44 rounded-xl border border-line bg-card/80 px-3 py-2 backdrop-blur"
     >
       <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
         <span>
@@ -259,11 +261,27 @@ export function Gauges(): JSX.Element {
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={boostRef} className="h-full w-full rounded-full bg-[var(--color-warn)]" />
       </div>
-      {/* The Mileway lens. Distance driven, and the live accuracy of the raw
-          GPS trail against the dead-reckoned one — the same 50%-to-95% story
-          the front page tells, except these numbers are measured from the
-          samples on screen rather than quoted. */}
-      <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+      {/* Progress, then the Mileway lens. One panel rather than four floating
+          pills: the HUD had a mode chip, a rooms counter, an artifacts counter
+          and a gauge block all competing for the same corner, which is three
+          more surfaces than a hub needs. */}
+      {rooms !== undefined && totalRooms !== undefined && (
+        <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+          <span>rooms</span>
+          <span>
+            <span className="text-accent">{rooms}</span> / {totalRooms}
+          </span>
+        </div>
+      )}
+      {collected !== undefined && artifactTotal !== undefined && (
+        <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+          <span>found</span>
+          <span>
+            <span className="text-[var(--color-signal)]">{collected}</span> / {artifactTotal}
+          </span>
+        </div>
+      )}
+      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
         <span>trip</span>
         <span ref={odoRef} className="text-zinc-200">
           0 m

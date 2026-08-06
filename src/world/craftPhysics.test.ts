@@ -1,68 +1,53 @@
 import { describe, it, expect } from "vitest";
 import {
-  nextMode,
-  buoyancyForce,
-  hullTerminalSpeed,
-  type CraftMode,
-  type MediumProbe,
+  BASE_LINEAR_DAMPING,
+  CHASSIS_MASS,
+  CHASSIS_RESTING_HEIGHT,
+  ENGINE_FORCE,
+  SPAWN_POSITION,
+  TERMINAL_WHEEL_SPEED,
+  WORLD_BOUNDS,
 } from "./craftPhysics.ts";
 
 /**
- * Two modes, two rules.
+ * What is left to test once the world is a desk you drive a car on.
  *
- * This file used to test four modes and six transitions — wings above a launch
- * speed, orbit above an altitude, long-fall recovery, re-entry — and most of
- * this world's soft-locks lived in the states those rules created. The hub's
- * job is getting a visitor into one of eight rooms; driving and sailing do
- * that, so that is all there is to test.
+ * This file held a four-mode state machine, a lift model and a buoyancy model,
+ * and most of the world's soft-locks lived in the states those created. There
+ * is no mode to be in now, so there is no transition table to assert — only the
+ * handful of constants that mean something in relation to each other.
  */
-function probe(overrides: Partial<MediumProbe> = {}): MediumProbe {
-  return { grounded: false, submergedDepth: 0, speed: 0, airborneMs: 0, ...overrides };
-}
-
-describe("nextMode", () => {
-  const modes: CraftMode[] = ["wheels", "hull"];
-
-  it("becomes a hull the moment it is in water, from any mode", () => {
-    for (const mode of modes) {
-      expect(nextMode(mode, probe({ submergedDepth: 0.05 }))).toBe("hull");
-    }
+describe("the car's numbers hang together", () => {
+  it("reaches a speed worth having on a desk this size", () => {
+    // Fast enough to cross the mainland in a few seconds, slow enough to place
+    // the car on a room. Both ends matter: a toy that takes half a minute to
+    // cross its own world is tedious, and one that crosses it in one is
+    // unsteerable.
+    expect(TERMINAL_WHEEL_SPEED).toBeGreaterThan(12);
+    expect(TERMINAL_WHEEL_SPEED).toBeLessThan(45);
   });
 
-  it("returns to wheels once clear of the water and on the ground", () => {
-    expect(nextMode("hull", probe({ grounded: true }))).toBe("wheels");
+  it("derives top speed from the two constants that set it", () => {
+    expect(TERMINAL_WHEEL_SPEED).toBeCloseTo(
+      (2 * ENGINE_FORCE) / (CHASSIS_MASS * BASE_LINEAR_DAMPING),
+      5,
+    );
   });
 
-  it("stays a hull while still afloat, grounded or not", () => {
-    expect(nextMode("hull", probe({ submergedDepth: 0.2, grounded: true }))).toBe("hull");
-    expect(nextMode("hull", probe({ submergedDepth: 0.2 }))).toBe("hull");
+  it("spawns clear of the craft's own suspension travel", () => {
+    // The bug this remembers: at 1.5 the craft spawned inside its own
+    // suspension, penetrated the ground on the first physics step and came to
+    // rest UNDER the world — upright, in bounds, invisible to every recovery
+    // check it had.
+    expect(SPAWN_POSITION[1]).toBeGreaterThan(CHASSIS_RESTING_HEIGHT * 1.5);
   });
 
-  it("stays on wheels when nothing is happening", () => {
-    expect(nextMode("wheels", probe({ grounded: true }))).toBe("wheels");
-    // Airborne over dry land — a jump, not a mode change.
-    expect(nextMode("wheels", probe({ airborneMs: 900, speed: 20 }))).toBe("wheels");
-  });
-});
-
-describe("no dead ends", () => {
-  it("every mode can reach every other mode", () => {
-    // The invariant that matters more than any individual rule: a craft in any
-    // state must be able to get back to driving, and driving must be able to
-    // reach the water. With two modes this is exhaustive rather than a sample.
-    expect(nextMode("wheels", probe({ submergedDepth: 1 }))).toBe("hull");
-    expect(nextMode("hull", probe({ grounded: true }))).toBe("wheels");
-  });
-});
-
-describe("forces", () => {
-  it("gives no buoyancy above the waterline and more the deeper it sits", () => {
-    expect(buoyancyForce(0)).toBe(0);
-    expect(buoyancyForce(-1)).toBe(0);
-    expect(buoyancyForce(0.4)).toBeGreaterThan(buoyancyForce(0.2));
-  });
-
-  it("sails fast enough that the strait is a crossing, not a wait", () => {
-    expect(hullTerminalSpeed()).toBeGreaterThan(2);
+  it("spawns inside the bounds that would otherwise recover it", () => {
+    const [x, y, z] = SPAWN_POSITION;
+    expect(x).toBeGreaterThan(WORLD_BOUNDS.minX);
+    expect(x).toBeLessThan(WORLD_BOUNDS.maxX);
+    expect(z).toBeGreaterThan(WORLD_BOUNDS.minZ);
+    expect(z).toBeLessThan(WORLD_BOUNDS.maxZ);
+    expect(y).toBeLessThan(WORLD_BOUNDS.maxY);
   });
 });

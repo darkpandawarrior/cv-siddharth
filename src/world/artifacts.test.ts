@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { WORLD_BOUNDS } from "./craftPhysics.ts";
-import { TERRAIN } from "./worldData.ts";
 
 describe("artifacts are built from real data", () => {
   it("carries a non-empty fact on every one", () => {
@@ -20,21 +19,6 @@ describe("artifacts are built from real data", () => {
   });
 });
 
-describe("completion requires every mechanic", () => {
-  // The whole justification for the collection loop: it is the tutorial. If
-  // every artifact could be reached on the wheels, none of the flying, sailing
-  // or orbiting would ever need to be learned, and the world would be a lawn
-  // with things on it.
-  it("puts artifacts in both media", () => {
-    // Was four media, when the world had flight and orbit. Two now — but the
-    // point is unchanged: the set cannot be completed on the wheels, so
-    // collecting is still how a visitor discovers the car swims.
-    const media = new Set(ARTIFACTS.map((a) => a.medium));
-    expect(media).toEqual(new Set(["land", "water"]));
-  });
-
-});
-
 describe("every artifact is somewhere the craft can legally be", () => {
   it("sits inside the world bounds", () => {
     // An artifact outside the bounds box can never be collected: crossing the
@@ -50,18 +34,9 @@ describe("every artifact is somewhere the craft can legally be", () => {
     }
   });
 
-  it("keeps land artifacts on the mainland, not out over the cliff", () => {
-    for (const a of ARTIFACTS.filter((a) => a.medium === "land")) {
-      const [x, , z] = a.position;
-      expect(Math.abs(x), `${a.id}`).toBeLessThan(TERRAIN.mainland.halfWidth);
-      expect(z, `${a.id}`).toBeGreaterThan(TERRAIN.mainland.z0);
-      expect(z, `${a.id}`).toBeLessThan(TERRAIN.mainland.z1);
-    }
-  });
-
   it("spaces them further apart than the pickup radius", () => {
-    // Two artifacts inside one pickup radius would both fire from a single
-    // drive-through, which reads as a bug even though it is generous.
+    // Two inside one radius would both fire from a single drive-through, which
+    // reads as a bug even though it is generous.
     for (let i = 0; i < ARTIFACTS.length; i++) {
       for (let j = i + 1; j < ARTIFACTS.length; j++) {
         const a = ARTIFACTS[i].position;

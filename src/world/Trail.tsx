@@ -93,9 +93,6 @@ export function Trail(): JSX.Element {
     const dt = clock.current;
     clock.current = 0;
 
-    // Only trail on the ground: a GPS track through the air or underwater is
-    // not the story, and it would clutter the sky.
-    if (telemetry.mode !== "wheels") return;
     // ...and only while actually moving. A parked craft still receives noisy
     // fixes, so sampling at a standstill drew a dense scribble of jitter around
     // the car — technically a correct depiction of GPS noise, and visually just

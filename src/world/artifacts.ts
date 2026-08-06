@@ -15,12 +15,11 @@ import { TERRAIN } from "./worldData.ts";
  * bolted onto a CV, whereas one whose collectibles ARE the CV makes exploring
  * it the same act as reading it.
  *
- * They are spread across both media on purpose. You cannot complete the set on
- * the ground — a good half of them are out over the Ink sea — so collecting is
- * also how you find out the car swims.
+ * They are spread over the whole desk on purpose: collecting the set is what
+ * takes a visitor past every room, which is the only reason a hub needs a
+ * collectible at all.
  */
 
-export type ArtifactMedium = "land" | "water";
 
 export type Artifact = {
   id: string;
@@ -28,19 +27,9 @@ export type Artifact = {
   label: string;
   /** The fact itself. */
   detail: string;
-  medium: ArtifactMedium;
   position: [number, number, number];
 };
 
-/**
- * Which theme token each medium's artifacts wear. Token NAMES, not values —
- * this module is imported by tests and by the pure data layer, so it must not
- * touch the DOM; the components resolve these through palette.ts at render.
- */
-export const MEDIUM_TINT: Record<ArtifactMedium, "signal" | "probe"> = {
-  land: "signal",
-  water: "probe",
-};
 
 /**
  * Deterministic placement. A seeded ring layout rather than Math.random so the
@@ -51,43 +40,36 @@ export const MEDIUM_TINT: Record<ArtifactMedium, "signal" | "probe"> = {
 /** Clearance kept between an artifact and any edge it could be knocked over. */
 const MARGIN = 3;
 
-function place(medium: ArtifactMedium, index: number, total: number): [number, number, number] {
-  const angle = (index / Math.max(1, total)) * Math.PI * 2;
-  switch (medium) {
-    case "land": {
-      // Radii derived from the mainland's own extents rather than hand-picked.
-      // The first version used a fixed radius that put an artifact at z=13.7,
-      // past the south edge at z=12 — floating over the shore at land height,
-      // unreachable by car and unreachable by boat. artifacts.test.ts caught it
-      // before it was ever rendered, which is the entire argument for keeping
-      // placement derived instead of typed out.
-      const cz = (TERRAIN.mainland.z0 + TERRAIN.mainland.z1) / 2;
-      const halfDepth = (TERRAIN.mainland.z1 - TERRAIN.mainland.z0) / 2;
-      const spread = 0.55 + (index % 3) * 0.18; // three concentric rings
-      const rx = (TERRAIN.mainland.halfWidth - MARGIN) * spread;
-      const rz = (halfDepth - MARGIN) * spread;
-      return [
-        Math.cos(angle) * rx,
-        TERRAIN.mainland.groundY + 1.4,
-        cz + Math.sin(angle) * rz,
-      ];
-    }
-    case "water":
-      // Spread across the whole strait rather than one ring, so collecting
-      // them is a sail rather than a lap.
-      return [Math.cos(angle) * 19, 1.6, 30 + Math.sin(angle) * 22];
-  }
+/** 137.5° — the angle that makes a phyllotaxis spiral spread evenly. */
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+function place(index: number, total: number): [number, number, number] {
+  // Phyllotaxis — the sunflower spiral. Points at successive golden angles on a
+  // sqrt radius are the standard way to scatter N things over a disc with no
+  // two of them bunching, which concentric rings emphatically do not do: the
+  // first version put sixteen artifacts on three rings and several landed
+  // inside one pickup radius of each other, so a single drive-through
+  // collected two at once. Deterministic, so a collectible never moves between
+  // reloads and can actually be hunted.
+  const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
+  const angle = index * GOLDEN_ANGLE;
+  const r = Math.sqrt((index + 0.5) / total);
+  return [
+    Math.cos(angle) * r * (halfWidth - MARGIN),
+    groundY + 1.2,
+    (z0 + z1) / 2 + Math.sin(angle) * r * ((z1 - z0) / 2 - MARGIN),
+  ];
 }
 
-type Seed = { id: string; label: string; detail: string; medium: ArtifactMedium };
+type Seed = { id: string; label: string; detail: string };
 
 /** Built from the site's own data modules — see this file's header. */
 function seeds(): Seed[] {
   const out: Seed[] = [];
 
-  // Shipped work, on the ground where the build rooms are.
+  // Shipped work.
   for (const p of projects.slice(0, 5)) {
-    out.push({ id: `project-${p.slug}`, label: p.name, detail: p.status, medium: "land" });
+    out.push({ id: `project-${p.slug}`, label: p.name, detail: p.status });
   }
 
   // Production numbers — the ones the homepage leads with.
@@ -96,7 +78,6 @@ function seeds(): Seed[] {
       id: `metric-${m.label.replace(/\s+/g, "-")}`,
       label: m.value,
       detail: `${m.label} — ${m.detail}`,
-      medium: "land",
     });
   }
 
@@ -111,7 +92,6 @@ function seeds(): Seed[] {
       detail: [modules && `${modules} modules`, screenshots && `${screenshots} screenshots`]
         .filter(Boolean)
         .join(" · "),
-      medium: "water",
     });
   }
 
@@ -123,13 +103,11 @@ function seeds(): Seed[] {
     id: "chess-corpus",
     label: "Chess corpus",
     detail: `${chess.totals.games.toLocaleString()} games · ${chess.totals.wins.toLocaleString()} wins`,
-    medium: "water",
   });
   out.push({
     id: "weeb-corpus",
     label: "Weeb Central",
     detail: `${weeb.anime.total} titles logged, ${weeb.anime.matched} matched`,
-    medium: "water",
   });
 
   // The two facts least visible from a CV: what this site actually is, and
@@ -138,34 +116,20 @@ function seeds(): Seed[] {
     id: "orbit-site",
     label: "This site",
     detail: "A running program, not a PDF with a pulse",
-    medium: "water",
   });
   out.push({
     id: "orbit-loop",
     label: "Still shipping",
     detail: "The archive grows backwards as well as forwards",
-    medium: "water",
   });
 
   return out;
 }
 
-export const ARTIFACTS: Artifact[] = (() => {
-  const all = seeds();
-  const byMedium = new Map<ArtifactMedium, Seed[]>();
-  for (const s of all) {
-    const list = byMedium.get(s.medium) ?? [];
-    list.push(s);
-    byMedium.set(s.medium, list);
-  }
-  const out: Artifact[] = [];
-  for (const [medium, list] of byMedium) {
-    list.forEach((s, i) => {
-      out.push({ ...s, position: place(medium, i, list.length) });
-    });
-  }
-  return out;
-})();
+export const ARTIFACTS: Artifact[] = seeds().map((s, i, all) => ({
+  ...s,
+  position: place(i, all.length),
+}));
 
 /** How close the craft has to get. Generous — hunting a collectible should be
  *  about finding it, not about threading a hitbox. */

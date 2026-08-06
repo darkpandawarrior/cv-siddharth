@@ -4,25 +4,18 @@ import { RigidBody, useRapier, useBeforePhysicsStep, CuboidCollider } from "@rea
 import type { RapierRigidBody, RapierContext } from "@react-three/rapier";
 import * as THREE from "three";
 import {
-  nextMode,
-  buoyancyForce,
-  SEA_LEVEL,
   CHASSIS_MASS,
-  HULL_THRUST,
-  HULL_LINEAR_DAMPING,
   WORLD_BOUNDS,
   SPAWN_POSITION,
   ENGINE_FORCE,
   BASE_LINEAR_DAMPING,
-  type CraftMode,
-  type MediumProbe,
 } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { TERRAIN } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
 import { RoundedBox } from "@react-three/drei";
 import { worldPalette } from "./palette.ts";
-import { playBoost, playImpact, playSplash, updateEngine } from "./audio.ts";
+import { playBoost, playImpact, updateEngine } from "./audio.ts";
 
 /**
  * The one craft. A single dynamic rigid body driven three different ways —
@@ -105,11 +98,6 @@ type VehicleController = ReturnType<RapierContext["world"]["createVehicleControl
 // re-check that comment.
 const MAX_STEER_RAD = 0.6; // ~34°, generous for a snappy toy-car turn radius
 const BRAKE_FORCE = 40;
-// N·m of yaw. Steering afloat has to be its own force: `input.steer` otherwise
-// only feeds vehicle.setWheelSteering, and the wheels are touching nothing
-// while the craft floats, so heading was frozen at whatever it happened to be
-// on splashdown. You could sail, but only in a straight line.
-const HULL_YAW_TORQUE = 900;
 
 /**
  * Boost — hold Shift for a burst of extra drive, on a tank that refills when
@@ -314,13 +302,12 @@ function respawnCraft(chassis: RapierRigidBody): void {
   chassis.resetTorques(true);
 }
 
-export function Craft(props: { onState: (s: { mode: CraftMode; position: [number, number, number] }) => void }) {
+export function Craft(props: { onState: (s: { position: [number, number, number] }) => void }) {
   const c = worldPalette();
   const { world } = useRapier();
   const { camera } = useThree();
   const chassisRef = useRef<RapierRigidBody>(null);
   const vehicleRef = useRef<VehicleController | null>(null);
-  const modeRef = useRef<CraftMode>("wheels");
   const airborneMsRef = useRef(0);
   // Boost charge, 0..1, and whether it is being spent this step. Refs, not
   // state: they change every frame and only the HUD (via telemetry) reads them.
@@ -359,7 +346,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       torque: new THREE.Vector3(),
       camTarget: new THREE.Vector3(),
       lookTarget: new THREE.Vector3(),
-      state: { mode: "wheels" as CraftMode, position: [0, 0, 0] as [number, number, number] },
+      state: { position: [0, 0, 0] as [number, number, number] },
     }),
     [],
   );
@@ -518,12 +505,9 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
      *            is now pointing into the seabed
      *   wings/orbit — never. Being upside down is what flying looks like.
      */
-    // modeRef, not `mode`: this recovery check runs before this frame's mode is
-    // decided (that needs the vehicle raycasts, which have not run yet). Last
     // frame's mode is the right input anyway — being stuck is a state that
     // persists across frames by definition.
-    const lastMode = modeRef.current;
-    const canBeStuck = lastMode === "wheels" || lastMode === "hull";
+    const canBeStuck = true; // one surface, so "stuck" is always meaningful
     const flippedNow =
       canBeStuck &&
       scratch.up.y < FLIP_UP_Y &&
@@ -548,14 +532,12 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       manualRespawn
     ) {
       respawnCraft(chassis);
-      modeRef.current = "wheels";
       airborneMsRef.current = 0;
       flippedMsRef.current = 0;
       beachedMsRef.current = 0;
       return; // next step runs the vehicle controller fresh against the new pose
     }
 
-    const mode = modeRef.current;
 
     // Wheel controls reflect *last* frame's mode decision — updateVehicle()
     // below needs them set before it runs, but this frame's mode isn't known
@@ -570,14 +552,13 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // charge left, throttle down, and on the wheels. Draining it mid-air or
     // mid-ocean would burn the tank on a press that changed nothing.
     // Boost is a wheels-only overtake now that there is nowhere to fly to.
-    const wantsBoost = input.boost && boostRef.current > 0 && mode === "wheels" && input.throttle > 0;
+    const wantsBoost = input.boost && boostRef.current > 0 && input.throttle > 0;
     boostRef.current = Math.max(
       0,
       Math.min(1, boostRef.current + (wantsBoost ? -BOOST_DRAIN_PER_S : BOOST_RECHARGE_PER_S) * dt),
     );
     boostingRef.current = wantsBoost;
-    const engineForce =
-      mode === "wheels" ? input.throttle * ENGINE_FORCE * (wantsBoost ? BOOST_MULTIPLIER : 1) : 0;
+    const engineForce = input.throttle * ENGINE_FORCE * (wantsBoost ? BOOST_MULTIPLIER : 1);
     vehicle.setWheelEngineForce(2, engineForce);
     vehicle.setWheelEngineForce(3, engineForce);
     const brake = input.brake ? BRAKE_FORCE : 0;
@@ -587,18 +568,8 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
 
     let grounded = false;
     for (let i = 0; i < 4; i++) if (vehicle.wheelIsInContact(i)) grounded = true;
-    const t = chassis.translation();
-    const submergedDepth = Math.max(0, SEA_LEVEL - t.y);
-    airborneMsRef.current = grounded || submergedDepth > 0 ? 0 : airborneMsRef.current + dt * 1000;
-    const probe: MediumProbe = {
-      grounded,
-      submergedDepth,
-      airborneMs: airborneMsRef.current,
-      speed: vehicle.currentVehicleSpeed(),
-    };
+    airborneMsRef.current = grounded ? 0 : airborneMsRef.current + dt * 1000;
 
-    const newMode = nextMode(mode, probe);
-    modeRef.current = newMode;
 
     const r = chassis.rotation();
     scratch.quat.set(r.x, r.y, r.z, r.w);
@@ -618,7 +589,7 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // has pitched, applied only on the ground and only when the nose is
     // rising. It cannot fight a genuine ramp launch (airborne, so skipped) and
     // it does nothing at all in normal driving, where pitch stays near zero.
-    if (newMode === "wheels" && grounded) {
+    if (grounded) {
       const nose = scratch.forward.y; // +ve = nose up
       if (nose > ANTI_WHEELIE_PITCH) {
         const correction = (nose - ANTI_WHEELIE_PITCH) * ANTI_WHEELIE_TORQUE;
@@ -627,33 +598,20 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       }
     }
 
-    if (newMode === "hull") {
-      chassis.setLinearDamping(HULL_LINEAR_DAMPING);
-      const buoy = buoyancyForce(probe.submergedDepth);
-      chassis.addForce({ x: 0, y: buoy, z: 0 }, true);
-      const thrust = input.throttle * HULL_THRUST;
-      chassis.addForce({ x: scratch.forward.x * thrust, y: 0, z: scratch.forward.z * thrust }, true);
-      // Yaw about world +Y rather than the craft's local up: a boat wallowing
-      // in swell shouldn't have its steering authority fall off as it rolls.
-      chassis.addTorque({ x: 0, y: -input.steer * HULL_YAW_TORQUE, z: 0 }, true);
-    } else {
-      chassis.setLinearDamping(BASE_LINEAR_DAMPING);
-    }
 
     telemetry.stuck = flippedMsRef.current > 150 || beachedMsRef.current > 1200;
 
-    // Sound rides the state machine rather than being detected separately —
-    // the mode transitions and the speed are already computed here, so the
-    // audio can never disagree with what the craft is actually doing.
-    updateEngine(probe.speed, !grounded);
-    if (newMode === "hull" && mode !== "hull") playSplash();
+    // Sound is driven from the same values the physics just used, so it can
+    // never disagree with what the craft is actually doing.
+    const speed = vehicle.currentVehicleSpeed();
+    updateEngine(speed, !grounded);
     if (wantsBoost && !boostSoundRef.current) playBoost();
     boostSoundRef.current = wantsBoost;
     // A landing or a collision: a sharp drop in forward speed while touching
     // something. Threshold high enough that ordinary braking is silent.
-    const speedDrop = lastSpeedRef.current - Math.abs(probe.speed);
+    const speedDrop = lastSpeedRef.current - Math.abs(speed);
     if (grounded && speedDrop > 4) playImpact(Math.min(1, speedDrop / 14));
-    lastSpeedRef.current = Math.abs(probe.speed);
+    lastSpeedRef.current = Math.abs(speed);
 
     // Launch pads. Deliberately NOT skipped while grounded — the whole design
     // is that you drive onto one and it throws you, and a pad you had to be
@@ -714,7 +672,6 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // this same file's own scratch-object rationale a few lines up.
     // `scratch.state` is mutated in place and handed out by reference
     // instead.
-    scratch.state.mode = modeRef.current;
     scratch.state.position[0] = t.x;
     scratch.state.position[1] = t.y;
     scratch.state.position[2] = t.z;
@@ -730,7 +687,6 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     scratch.forward.set(0, 0, 1).applyQuaternion(scratch.quat);
     telemetry.heading = Math.atan2(scratch.forward.x, scratch.forward.z);
     telemetry.speed = vehicle ? vehicle.currentVehicleSpeed() : 0;
-    telemetry.mode = modeRef.current;
     telemetry.boost = boostRef.current;
     telemetry.boosting = boostingRef.current;
 

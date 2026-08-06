@@ -15,27 +15,11 @@
  *   +Z = south, -Z = north
  *   origin (0,0,0) = the centre of the mainland, at sea level
  *
- * Layout, north to south (two media only — see craftPhysics):
- *   mainland      z in [-18, 12]   the four land rooms, driveable in wheels
- *   shore + ramp  z in [12, 22]    the tapered south coast, and the launch ramp
- *   Ink sea       z in [22, 46]    open water — the strait the atolls sit past
- *   atolls        z ≈ 48           the two water rooms, one either side of x=0
- *   far atolls    z ≈ 62           two more water rooms, a longer sail out
- *
- * Mirrored east/west: everything on the `weeb`/`blueprint` side lives at
- * negative X, everything on the `chess`/`map` side at positive X. That
- * symmetry is deliberate — it means Terrain and Pavilions can build one
- * atoll/island pair and mirror it, instead of two bespoke shapes.
+ * LAYOUT: one desk, eight rooms, two rows. There is no sea and no sky — the
+ * world had three media and most of its defects were states the craft could
+ * enter and not leave, so it has one surface now and every room sits on it.
  */
 
-/**
- * The sea's mesh footprint. Layout data, so it lives here rather than inside
- * Water.tsx — the number that matters about the water plane is not how it
- * looks but whether it is bigger than the box the craft is allowed to move in
- * (craftPhysics.ts's WORLD_BOUNDS). When it wasn't, a craft could come to rest
- * on open sea that was never drawn.
- */
-export const WATER_PLANE = { width: 100, depth: 110, centerZ: 30 } as const;
 
 /**
  * The landmass dimensions, exported so worldGeometry.test.ts can assert the
@@ -56,23 +40,8 @@ export const TERRAIN = {
   mainland: { halfWidth: 21, z0: -18, z1: 12, groundY: 0.5 },
   /** The tapered south coast (and the launch ramp sharing its z run). */
   shore: { z0: 12, z1: 22, xMin: -21, xMax: 21, rampCenterX: -10, rampWidth: 10, rampTopY: 3.4 },
-  /** Atoll cone: wider at the base than the top, so its radius AT THE
-   *  WATERLINE is between the two — that interpolated value is what any
-   *  reachability question is actually about. */
-  atoll: { topRadius: 4.2, baseRadius: 5, height: 0.7, centerOffsetY: -0.35 },
-  /** Sky island slab: `half` is half its width, `thickness` its depth in Y. */
-  skyIsland: { half: 4.5, thickness: 1 },
 } as const;
 
-/** The atoll's radius where it meets the sea (y=0) — linear interpolation up
- *  the cone's flank. This is the number that decides whether a thermal column
- *  has any open water in it and whether a room sensor is reachable afloat. */
-export function atollWaterlineRadius(placementY: number): number {
-  const { topRadius, baseRadius, height, centerOffsetY } = TERRAIN.atoll;
-  const bottomY = placementY + centerOffsetY - height / 2;
-  const t = Math.min(1, Math.max(0, (0 - bottomY) / height));
-  return baseRadius + (topRadius - baseRadius) * t;
-}
 
 // Half-extents of the sensor volume a `medium: "water"` room uses, overriding
 // the per-shape sizes in Pavilions.tsx. Here rather than there because the
@@ -99,39 +68,31 @@ export function tiltedSlabCenterY(y0: number, y1: number, run: number, thickness
   return (y0 + y1) / 2 - (thickness / 2) * Math.cos(angle);
 }
 
-export type Medium = "land" | "water";
 
 export type Placement = {
   to: string; // MUST match a ROOMS[].to
   position: [number, number, number];
-  medium: Medium;
-  shape: "slab" | "crt" | "board" | "atoll" | "pcb";
+  shape: "slab" | "crt" | "board" | "pcb";
 };
 
 // Room-to-medium assignment is fixed by the design doc, not a free choice
 // made here: land = compose/lab/forge/terminal, water = weeb/chess (atolls
 // in the Ink sea), air = blueprint/map (sky islands, thermal-gated).
 export const PLACEMENTS: Placement[] = [
-  // Mainland — the four corners of the land mass, y=0.5 sits each pavilion's
-  // base half a unit above sea level (the mainland's ground plane).
-  { to: "/compose", position: [-10, 0.5, -10], medium: "land", shape: "slab" },
-  { to: "/lab", position: [10, 0.5, -10], medium: "land", shape: "crt" },
-  // Forge sits on the mainland's south edge, next to the ramp the triathlon
-  // launches off — thematically the room about building things is also
-  // where the course leaves the ground.
-  { to: "/forge", position: [-10, 0.5, 10], medium: "land", shape: "pcb" },
-  { to: "/terminal", position: [10, 0.5, 10], medium: "land", shape: "crt" },
-
-  // Atolls — small islands south of the strait, one either side of centre.
-  { to: "/weeb", position: [-14, 0.3, 48], medium: "water", shape: "atoll" },
-  { to: "/chess", position: [14, 0.3, 48], medium: "water", shape: "board" },
-
-  // Were sky islands, reachable only by flight. Flight is gone (see
-  // craftPhysics's transition table for why), so they are atolls like the other
-  // two — every room in this world is now reachable by driving or sailing,
-  // which is the entire job of a hub.
-  { to: "/blueprint", position: [-16, 0.3, 62], medium: "water", shape: "board" },
-  { to: "/map", position: [16, 0.3, 62], medium: "water", shape: "pcb" },
+  // Eight rooms, two rows, all on the desk.
+  //
+  // They were spread across land, sea and sky when the world had three media.
+  // With one surface the layout's only job is to be legible and easy to reach:
+  // a grid you can see across, spaced so you can place the car on one without
+  // clipping its neighbour, and nothing more than a few seconds' drive apart.
+  { to: "/compose", position: [-15, 0.5, -11], shape: "slab" },
+  { to: "/lab", position: [-5, 0.5, -11], shape: "crt" },
+  { to: "/blueprint", position: [5, 0.5, -11], shape: "board" },
+  { to: "/map", position: [15, 0.5, -11], shape: "pcb" },
+  { to: "/forge", position: [-15, 0.5, 5], shape: "pcb" },
+  { to: "/terminal", position: [-5, 0.5, 5], shape: "crt" },
+  { to: "/weeb", position: [5, 0.5, 5], shape: "crt" },
+  { to: "/chess", position: [15, 0.5, 5], shape: "board" },
 ];
 
 

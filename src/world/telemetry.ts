@@ -1,4 +1,3 @@
-import type { CraftMode } from "./craftPhysics.ts";
 
 /**
  * Live craft state, published every physics step and read every animation
@@ -23,13 +22,10 @@ export type Telemetry = {
   heading: number;
   /** Forward speed, m/s. Negative when reversing. */
   speed: number;
-  mode: CraftMode;
   /** 0..1 — how much boost is left in the tank. */
   boost: number;
   /** True while boost is actually being spent, for the meter's lit state. */
   boosting: boolean;
-  /** True on any frame a thermal column is lifting the craft. */
-  inThermal: boolean;
   /** Upside down and going nowhere — the HUD says so before auto-recovery. */
   stuck: boolean;
   /** Metres driven this session — the Mileway lens (see Trail.tsx / gps.ts). */
@@ -45,10 +41,8 @@ export const telemetry: Telemetry = {
   z: 0,
   heading: 0,
   speed: 0,
-  mode: "wheels",
   boost: 1,
   boosting: false,
-  inThermal: false,
   stuck: false,
   odometer: 0,
   rawError: 0,

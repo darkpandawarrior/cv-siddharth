@@ -1,7 +1,7 @@
 import { useMemo, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { ARTIFACTS, MEDIUM_TINT } from "./artifacts.ts";
+import { ARTIFACTS } from "./artifacts.ts";
 import { worldPalette } from "./palette.ts";
 
 /**
@@ -45,9 +45,7 @@ export function Artifacts({ collected }: Props): JSX.Element {
     <group ref={group}>
       {ARTIFACTS.map((a) => {
         const held = collected.has(a.id);
-        // Token resolved here, not baked into the data: artifacts.ts is
-        // imported by tests and must never touch the DOM.
-        const tint = c[MEDIUM_TINT[a.medium]];
+        const tint = c.signal;
         return (
           <mesh
             key={a.id}

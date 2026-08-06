@@ -1,10 +1,9 @@
 import { Fragment, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { PointLight } from "three";
-import { DoubleSide } from "three";
 import { Html } from "@react-three/drei";
 import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
-import { PLACEMENTS, WATER_SENSOR_HALF_EXTENTS, type Placement } from "./worldData.ts";
+import { PLACEMENTS, type Placement } from "./worldData.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
 import { PAVILION_SENSOR_GROUP } from "./collisionGroups.ts";
@@ -47,18 +46,20 @@ import { worldPalette } from "./palette.ts";
 
 const SENSOR_COLLISION_GROUPS = interactionGroups([PAVILION_SENSOR_GROUP], [PAVILION_SENSOR_GROUP]);
 
-// Half-extents (metres) of each shape's sensor volume, keyed off `shape`
-// rather than per-room — every pavilion of a given shape reads as roughly
-// the same "come this close" distance, which matters more for a consistent
-// feel while driving than exactly hugging each shape's silhouette. Sized a
-// little larger than the visuals below so the HUD prompt appears on
-// approach, not on collision.
+// Half-extents (metres) of each shape's approach volume, keyed off `shape`
+// rather than per-room so every pavilion has the same "come this close" feel.
+//
+// GENEROUS ON PURPOSE, and roughly doubled from the first pass. At ~2m you had
+// to park almost on top of a room before it acknowledged you, which for a hub
+// whose entire job is opening doors is the wrong trade — the prompt should meet
+// a driver who is clearly heading for a room, not reward precision parking.
+// PLACEMENTS keeps the rooms 8m+ apart (worldGeometry.test.ts asserts it), so
+// there is room for this without two prompts ever overlapping.
 const SENSOR_HALF_EXTENTS: Record<Placement["shape"], [number, number, number]> = {
-  slab: [2.4, 1.6, 2.4],
-  crt: [2.2, 2.4, 2.2],
-  board: [2.6, 2.2, 2.6],
-  atoll: [3.2, 2.6, 3.2],
-  pcb: [2.4, 1.6, 2.4],
+  slab: [4.2, 2.4, 4.2],
+  crt: [4.2, 3, 4.2],
+  board: [4.4, 3, 4.4],
+  pcb: [4.2, 2.4, 4.2],
 };
 
 
@@ -169,31 +170,6 @@ function Board({ tint }: { tint: string }) {
   );
 }
 
-/** Small island platform: a low dock with a lit rim and a flag marker. */
-function Atoll({ tint }: { tint: string }) {
-  const c = worldPalette();
-  return (
-    <group>
-      <mesh position={[0, 0.2, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[2.6, 2.8, 0.4, 28]} />
-        <meshStandardMaterial color={c.card} roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.41, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.55, 0.06, 8, 40]} />
-        <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.7} />
-      </mesh>
-      <mesh position={[0, 1.4, 0]}>
-        <boxGeometry args={[0.08, 2.0, 0.08]} />
-        <meshStandardMaterial color={c.card} roughness={0.6} />
-      </mesh>
-      <mesh position={[0.35, 2.15, 0]}>
-        <boxGeometry args={[0.7, 0.4, 0.02]} />
-        <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.5} side={DoubleSide} />
-      </mesh>
-    </group>
-  );
-}
-
 /** Circuit slab: a flat board with a handful of raised chips and trace lines. */
 function Pcb({ tint }: { tint: string }) {
   const c = worldPalette();
@@ -232,7 +208,6 @@ const SHAPES: Record<Placement["shape"], (props: { tint: string }) => JSX.Elemen
   slab: Slab,
   crt: Crt,
   board: Board,
-  atoll: Atoll,
   pcb: Pcb,
 };
 
@@ -242,17 +217,7 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
   // world and the list are lit by one number rather than two.
   const counts = usePulseCounts();
   const visits = counts[`room:${placement.to.slice(1)}` as PulseEvent] ?? 0;
-  // Water rooms get a deliberately oversized sensor, and it is not cosmetic.
-  // An atoll (Terrain.tsx) is a cone ~4.5m in radius at the waterline whose
-  // flank above the water is ~41 degrees — far too steep for hull mode's
-  // thrust to climb, and the craft only switches back to wheels once its
-  // chassis centre clears y=0, which buoyancy alone never achieves. So a
-  // visitor CANNOT get on top of an atoll, and a shape-sized sensor (3.2)
-  // sat entirely inside rock they could never reach: /weeb and /chess were
-  // unenterable. Extending the volume past the waterline lets you pull
-  // alongside and enter from the water, which is what the craft can do.
-  const halfExtents =
-    placement.medium === "water" ? WATER_SENSOR_HALF_EXTENTS : SENSOR_HALF_EXTENTS[placement.shape];
+  const halfExtents = SENSOR_HALF_EXTENTS[placement.shape];
   return (
     <RigidBody type="fixed" position={placement.position} colliders={false}>
       <Shape tint={room.tint} />

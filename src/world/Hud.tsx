@@ -4,7 +4,6 @@ import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import { isMuted, toggleMuted } from "./audio.ts";
 import { resetProgress } from "./progressReset.ts";
-import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
 
 /**
@@ -22,10 +21,6 @@ import type { Room } from "../rooms.tsx";
  * is no "hover to reveal" affordance anywhere in this file.
  */
 
-const MODE_LABEL: Record<CraftMode, string> = {
-  wheels: "Wheels",
-  hull: "Hull",
-};
 
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -217,7 +212,6 @@ function SoundToggle() {
 }
 
 export function Hud(props: {
-  mode: CraftMode;
   promptRoom: Room | null;
   onConfirm: () => void;
   onShowList: () => void;
@@ -230,7 +224,6 @@ export function Hud(props: {
   toasts?: Toast[];
 }) {
   const {
-    mode,
     promptRoom,
     onConfirm,
     onShowList,
@@ -271,21 +264,6 @@ export function Hud(props: {
 
       <Compass />
 
-      <div className="flex items-start justify-between gap-3">
-        {/* Mode indicator. aria-live: mode changes are rare (a handful of
-            times per run) and meaningful — worth announcing — unlike the
-            timer below, which ticks every frame and would spam a screen
-            reader if it were live too. */}
-        <div
-          role="status"
-          aria-live="polite"
-          className="pointer-events-auto rounded-full border border-line bg-card/80 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-muted backdrop-blur"
-        >
-          mode: <span className="text-accent">{MODE_LABEL[mode]}</span>
-        </div>
-
-
-      </div>
 
       {/* One wrapper for both the release banner and the room prompt, so the
           outer flex-col's `justify-between` still sees exactly 3 rows
@@ -392,17 +370,7 @@ export function Hud(props: {
         </div>
 
         <div className="flex flex-col items-end gap-3 pr-0 sm:pr-16">
-          {exploredCount !== undefined && totalRooms !== undefined && (
-            <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
-              <span className="text-accent">{exploredCount}</span> / {totalRooms} rooms found
-            </div>
-          )}
-          {collectedCount !== undefined && artifactTotal !== undefined && (
-            <div className="pointer-events-none rounded-full border border-line bg-card/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted backdrop-blur">
-              <span style={{ color: "var(--color-warn)" }}>{collectedCount}</span> / {artifactTotal} artifacts
-            </div>
-          )}
-          <Gauges />
+          <Gauges collected={collectedCount} artifactTotal={artifactTotal} rooms={exploredCount} totalRooms={totalRooms} />
           <div className="hud-touch pointer-events-auto items-end gap-4">
             <Thumbstick />
             <Pedal />
