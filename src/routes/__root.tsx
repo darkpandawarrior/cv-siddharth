@@ -69,7 +69,7 @@ export const Route = createRootRoute({
       { property: "og:url", content: "https://cv-siddharth.vercel.app/" },
       { property: "og:site_name", content: "sid.android" },
       { property: "og:title", content: "Siddharth Pandalai | Senior Android Engineer" },
-      { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose at ~960k LOC." },
+      { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose at ~964k LOC." },
       { property: "og:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -268,7 +268,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <noscript>
           <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "#e8efe9" }}>
             <h1>Siddharth Pandalai — Senior Android Engineer</h1>
-            <p>Platform owner of a ~960k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
+            <p>Platform owner of a ~964k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
             <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
             <ul>
               <li><a href="/llms.txt" style={{ color: "#3ddc84" }}>Profile summary (llms.txt)</a></li>

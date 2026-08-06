@@ -46,7 +46,7 @@ function HirePage() {
           {profile.name} — {profile.title}
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-300">
-          Platform owner of a ~960k-LOC financial SaaS app serving 50,000+ monthly users. Five years
+          Platform owner of a ~964k-LOC financial SaaS app serving 50,000+ monthly users. Five years
           of Android, now building across Kotlin Multiplatform.
         </p>
 

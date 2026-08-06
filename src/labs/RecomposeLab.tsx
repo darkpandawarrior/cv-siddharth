@@ -38,7 +38,7 @@ export function RecomposeLab() {
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
         Tap any cell. In rebuild-the-world mode, one state change repaints the whole screen — that's a
-        legacy view tree, and at ~960k LOC it's molasses. Flip to stable state and only the touched cell
+        legacy view tree, and at ~964k LOC it's molasses. Flip to stable state and only the touched cell
         recomposes. This is what the ~87% migration actually bought.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">

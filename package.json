@@ -31,7 +31,8 @@
     "test:e2e": "playwright test",
     "gen:heroes": "node scripts/gen-project-heroes.mjs",
     "gen:sitemap": "node scripts/gen-sitemap.mjs",
-    "spotify:auth": "node scripts/spotify-auth.mjs"
+    "spotify:auth": "node scripts/spotify-auth.mjs",
+    "resume:pdf": "node scripts/print-resume.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

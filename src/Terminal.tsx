@@ -444,7 +444,7 @@ function buildCommands(jump: Go): Cmd[] {
         <div className="space-y-1">
           <div className="text-zinc-200">
             Senior Android engineer, platform owner at <Hi>50k+ MAU</Hi>. Ships the unglamorous
-            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-80% crashes</Hi>, <Hi>~87% UI-layer Compose</Hi> across ~960k LOC.
+            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-80% crashes</Hi>, <Hi>~87% UI-layer Compose</Hi> across ~964k LOC.
           </div>
           <div className="text-zinc-400">{profile.availability}</div>
           <div className="pt-1">
@@ -681,7 +681,7 @@ function buildCommands(jump: Go): Cmd[] {
       name: "uptime",
       hidden: true,
       help: "",
-      run: () => <span>up <Hi>5+ years</Hi>, load average: <Dim>~960k LOC, 50k MAU, 0 dropped pagers</Dim></span>,
+      run: () => <span>up <Hi>5+ years</Hi>, load average: <Dim>~964k LOC, 50k MAU, 0 dropped pagers</Dim></span>,
     },
     {
       name: "vim",
@@ -957,7 +957,7 @@ function Neofetch() {
     ["location", profile.location],
     ["uptime", "5+ years in production Android"],
     ["kernel", "Kotlin · Jetpack Compose · KMP"],
-    ["scale", `${metrics[0].value} MAU · ~960k LOC`],
+    ["scale", `${metrics[0].value} MAU · ~964k LOC`],
     ["gps", "50% → 95% accuracy"],
     ["crashes", "-80% (structured concurrency)"],
     ["compose", "~87% of UI-layer code (455k of 523k LOC)"],

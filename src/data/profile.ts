@@ -12,18 +12,26 @@ export const profile = {
   linkedin: "https://linkedin.com/in/siddharth-pandalai-3712b215a",
   portfolio: "https://cv-siddharth.vercel.app",
   availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
+  // Same two facts a recruiter acts on — how soon, and where — at a third of
+  // the width, for the one-pager header where a wrap costs a whole line.
+  availabilityShort: "Notice: 15 days · Remote or Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. I own the platform behind a ~960k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
+    "5+ years building production Android. I own the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
+  // One-pager summary. Same claims, a third of the lines — on a single page
+  // every line the summary takes is a line the experience section loses, and
+  // the experience section is what gets him called.
+  summaryShort:
+    "Senior Android Engineer, 5+ years in Kotlin. Technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app — inherited as Java, now ~87% Jetpack Compose on Clean Architecture, Coroutines, Flow and Hilt. Dead-reckoning location, Keystore security, 80% fewer crashes.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer with 5+ years building and scaling production Android applications in Kotlin for enterprise SaaS — technical owner of a ~960k-line, 50,000+ MAU financial Android app — inherited as a Java codebase with no Kotlin in it. Led a Jetpack Compose migration covering ~87% of UI-layer code, Clean Architecture with MVVM/MVI, Kotlin Coroutines and Flow, and Hilt dependency injection. Deep hard-systems experience: staged dead-reckoning location engineering with Kalman smoothing and spike rejection (GPS accuracy 50% to 95%), on-device security (Android Keystore, SSL pinning with build flavors), and an 80% production crash reduction from concurrency root-cause work (Firebase Crashlytics + Sentry observability) across 22,000+ DAU.",
+    "Senior Android Engineer, 5+ years in Kotlin — technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app, inherited as Java with no Kotlin in it and now ~87% Jetpack Compose across the UI layer. Clean Architecture with MVVM/MVI, Coroutines and Flow, Hilt, Room. Hard-systems depth where it counts: staged dead-reckoning location with Kalman smoothing (GPS accuracy 50% to 95%), VAPT-grade on-device security (Android Keystore, SSL pinning), and an 80% production crash reduction at 22,000+ DAU won on the concurrency model, not defensive catches.",
 };
 
 export const education = {
   school: "NIT Bhopal (MANIT)",
   degree: "B.Tech, Computer Science & Engineering",
-  period: "2017 — 2021",
+  period: "2017 - 2021",
 };
 
 export const metrics = [
@@ -31,6 +39,15 @@ export const metrics = [
   { value: "95%", label: "GPS accuracy", detail: "up from 50% — predictive dead reckoning" },
   { value: "80%", label: "crash reduction", detail: "Crashlytics + structured concurrency fixes" },
   { value: "~87%", label: "UI-layer Compose", detail: "~87% of the UI layer, verified screen by screen against the legacy XML" },
+];
+
+// Key Results on the résumé. The homepage metric band is a hard 4-up grid with
+// a parallel METRIC_TARGETS array, so the Play Store turnaround has no cell
+// there — but it is one of the strongest numbers on the page and the résumé
+// line has room, so it rides along here instead of distorting the grid.
+export const resumeMetrics = [
+  ...metrics,
+  { value: "1.6★ → 4.5★", label: "Play Store rating", detail: "67 → 27,300 reviews, via in-app review prompting" },
 ];
 
 // Core competency chips — shown in the résumé header and on LinkedIn
@@ -48,6 +65,15 @@ export const competencies = [
 export interface ExperiencePoint {
   label?: string;
   text: string;
+  /**
+   * Smallest cut this bullet survives into:
+   *   1  — the one-pager, and everything longer
+   *   2  — the two-pager and the full record
+   *   absent — the full record only
+   * Nothing is ever deleted to make a shorter cut fit, so the full record
+   * stays the complete, defensible version and the three can never disagree.
+   */
+  tier?: 1 | 2;
 }
 
 export interface Experience {
@@ -61,50 +87,57 @@ export const experience: Experience[] = [
   {
     company: "Neev Consulting",
     role: "Consulting Engineer, Platform & AI",
-    period: "Apr 2026 — Present",
+    period: "April 2026 - Present",
     points: [
       {
         label: "Agentic ERP",
-        text: "Authored the LLM assistant layer of an ERPNext/Frappe consulting ERP — business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
+        text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP — business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
+        tier: 1,
       },
       {
         label: "Platform",
-        text: "Python and Frappe on MariaDB, running under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
+        text: "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
+        tier: 2,
       },
     ],
   },
   {
     company: "Dice.tech",
     role: "SDE-2, Android & Product Owner",
-    period: "Jun 2023 — Present",
+    period: "June 2023 - Present",
     points: [
       {
         label: "Platform Ownership",
-        text: "Technical owner of the Android platform: a ~960k-LOC Kotlin app serving 50,000+ MAU. Set the module architecture, the release process and the review standards the team builds against.",
+        text: "Own the Android platform end to end — a ~964k-LOC Kotlin app serving 50,000+ MAU — as both technical owner and Product Owner, so requirements and delivery are one job rather than a handoff. Set the module architecture, release process and review standards the team builds against, and own the Room persistence layer across 2 databases with 24 verified production schema migrations.",
+        tier: 1,
       },
       {
         label: "Scope",
-        text: "Product Owner as well as engineer on the same platform — here the requirements and the delivery are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+        text: "Owned requirements as well as delivery on the same platform — here they are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
       },
       {
         label: "Team",
-        text: "Took a junior engineer from Flutter to shipping production Kotlin, Java and React — he now manages this app at the company that acquired it. Ran interview loops for the company and helped hire onto both the frontend and the React Native mobile teams.",
+        text: "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to shipping production Kotlin, Java and React — he now manages this app at the company that acquired it.",
       },
       {
         label: "Compose Migration",
         text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, checked screen by screen against the XML it replaced so nothing regressed on the way.",
+        tier: 1,
       },
       {
         label: "Location Engineering",
         text: "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU — staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jumps never reach the buffer, taking tracking accuracy from 50% to 95%.",
+        tier: 1,
       },
       {
         label: "Crash Reduction",
-        text: "Cut production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch — paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
+        text: "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch — paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
+        tier: 2,
       },
       {
         label: "Security Hardening",
         text: "Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build flavors.",
+        tier: 2,
       },
       {
         label: "Data Layer",
@@ -121,6 +154,7 @@ export const experience: Experience[] = [
       {
         label: "UI Platform",
         text: "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant — cutting UI development friction 60% without touching feature code per client.",
+        tier: 2,
       },
       {
         label: "CI/CD & Automation",
@@ -131,15 +165,17 @@ export const experience: Experience[] = [
   {
     company: "Jugnoo / Tookan / Jungleworks",
     role: "Software Engineer, Android & Vertical Owner",
-    period: "Jan 2021 — May 2023",
+    period: "January 2021 - May 2023",
     points: [
       {
         label: "Multi-Tenant Platform Ownership",
         text: "Owned Android across a multi-vertical super-app — ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet — spanning customer, driver and merchant apps. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.",
+        tier: 2,
       },
       {
         label: "White-Label Platform, Productising Variation",
-        text: "Every client wanted their own branded app, and forking per client would have been unmaintainable within a year. Built a per-tenant flavour system instead — build config, resource overlays, isolated storage and branding — so 150+ clients ship from one codebase across the customer and driver apps. Cut per-client delivery time by 80%.",
+        text: "Built a per-tenant flavour system — build config, resource overlays, isolated storage and branding — so 150+ clients ship from one codebase across the customer and driver apps, instead of the per-client fork that would have been unmaintainable within a year. Cut per-client delivery time 80%.",
+        tier: 1,
       },
       {
         label: "Product-Line Ownership",
@@ -147,11 +183,13 @@ export const experience: Experience[] = [
       },
       {
         label: "Payments at Scale",
-        text: "Personally implemented Razorpay, Stripe, Beyonic, and HyperPay gateway integrations across checkout flows; built Stripe 3DS payment retry/recovery handling and a corporate-account KYC verification flow from scratch.",
+        text: "Implemented Razorpay, Stripe, Beyonic and HyperPay gateway integrations across checkout flows; built Stripe 3DS payment retry/recovery handling and a corporate-account KYC verification flow from scratch.",
+        tier: 2,
       },
       {
         label: "Platform Modernization",
-        text: "Upgraded the toolchain across a multi-branch, multi-client codebase — Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance — without breaking any of the 150+ client builds riding on it.",
+        text: "Migrated the toolchain across a multi-branch, multi-client codebase — Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance — without breaking any of the 150+ client builds riding on it.",
+        tier: 2,
       },
       {
         label: "Cross-Functional Engineering",
@@ -162,8 +200,12 @@ export const experience: Experience[] = [
   {
     company: "John Deere India",
     role: "GET Intern",
-    period: "May — Jul 2020",
+    period: "May 2020 - July 2020",
     points: [
+      // Deliberately not `core`: a 2020 college internship earns nothing on a
+      // senior résumé, and cutting it drops the whole role — which is what
+      // finally bought the short cut its second page back. It creates no gap
+      // (Jugnoo starts Jan 2021) and it survives intact on the full cut.
       { text: "Built a proof of concept integrating social-media sentiment analysis into financial lending systems to enhance credit-risk modeling." },
     ],
   },
@@ -224,7 +266,7 @@ export const caseStudies: CaseStudy[] = [
     metric: "-80% crashes",
     summary: "Systematic triage with Crashlytics turned a noisy crash feed into a fixable backlog.",
     problem:
-      "A fast-growing ~960k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs.",
+      "A fast-growing ~964k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs.",
     approach: [
       "Clustered crashes to collapse dozens of stack traces into a handful of root bugs.",
       "Reconstructed the user journey before each crash with structured breadcrumb instrumentation.",
@@ -237,7 +279,7 @@ export const caseStudies: CaseStudy[] = [
     slug: "compose-migration",
     title: "The theme platform behind a ~964k-LOC Compose migration",
     metric: "~87% UI-layer Compose",
-    summary: "Migrated a ~960k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
+    summary: "Migrated a ~964k-LOC app to Jetpack Compose verified per-screen against the legacy XML baseline and built a theme engine the whole team ships on.",
     problem:
       "XML views made UI changes slow and inconsistent, and design's theming requests meant touching dozens of files.",
     approach: [
@@ -271,21 +313,45 @@ export const languages = ["Kotlin", "Java", "Dart", "C++"];
 export const skills: { group: string; items: string[] }[] = [
   {
     group: "UI & Architecture",
-    items: ["Jetpack Compose + Material 3", "MVVM + Clean Architecture", "MVI / single UiState", "Compose Multiplatform", "Dynamic theme engines"],
+    items: ["Jetpack Compose + Material 3", "MVVM + Clean Architecture", "MVI / single UiState", "Modular architecture", "Repository pattern", "Kotlin/Compose Multiplatform", "Dynamic theme engines"],
   },
   {
     group: "Concurrency & Data",
-    items: ["Kotlin Coroutines", "Flow / StateFlow / SharedFlow", "Room (SQLite, 24 migrations · 2 DBs)", "DataStore + WorkManager", "Retrofit + OkHttp"],
+    items: ["Kotlin Coroutines", "Flow / StateFlow / SharedFlow", "Room (SQLite, 24 migrations · 2 DBs)", "DataStore + WorkManager", "Retrofit + OkHttp (REST APIs)"],
   },
   {
     group: "Platform & Systems",
-    items: ["Android SDK", "Location engineering (dead reckoning + Kalman)", "Foreground services", "Hilt / Dagger", "Firebase Crashlytics + Sentry + Mixpanel"],
+    items: ["Android SDK", "Location engineering (dead reckoning + Kalman)", "Foreground services", "Hilt / Dagger (dependency injection)", "Firebase Crashlytics + Sentry + Mixpanel"],
+  },
+  {
+    // Every item here is evidenced in the experience bullets and verified by
+    // claim-audit: mentoring and hiring loops at Dice, cross-team roadmap work
+    // at Jugnoo, the review standards he sets, and the sprint planning he runs
+    // as Product Owner. They are named here because the bullets carrying them
+    // live on the full record only, and a recruiter searching "mentoring" or
+    // "code review" should still find him on the shorter cuts.
+    group: "Leadership & Process",
+    items: ["Cross-functional collaboration", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
   },
   {
     group: "Security & Ops",
-    items: ["Android Keystore field-level encryption (AES-256)", "SSL pinning (9 domains, 5 SHA-256 pins)", "BiometricPrompt access gate", "EncryptedSharedPreferences / DataStore + Tink", "Fastlane CI/CD · AGP 9 · Gradle KTS", "Agentic workflows (Firebender, MCP)"],
+    items: ["Android Keystore field-level encryption (AES-256)", "SSL pinning (9 domains, 5 SHA-256 pins)", "BiometricPrompt access gate", "EncryptedSharedPreferences / DataStore + Tink", "Fastlane CI/CD · AGP 9 · Gradle KTS · Git", "Agentic workflows (Firebender, MCP)"],
   },
 ];
+
+/**
+ * The one-pager's Technical Skills payload: the same stack as `resumeSkills`,
+ * written as terse parser tokens instead of readable phrases.
+ *
+ * It exists because keyword coverage is the single heaviest ATS dimension and
+ * the one-pager has no room for seven labelled groups. Every token here is
+ * also claimed somewhere in `skills`/`resumeSkills` or the experience bullets —
+ * this is a denser rendering of the same truth, never a longer one. Things he
+ * cannot evidence — encrypted-SQLite libraries, push messaging, formal ANR
+ * profiling — are deliberately absent, which is why coverage stops short of the full 52-keyword basket.
+ */
+export const resumeSkillsCompact =
+  "Jetpack Compose, Material 3, Kotlin Multiplatform, Compose Multiplatform, Android SDK, Clean Architecture, MVVM, MVI, multi-module, repository pattern, Coroutines, Flow, StateFlow, Hilt, Dagger, dependency injection, Room, SQLite, DataStore, Retrofit, OkHttp, Ktor, REST APIs, WorkManager, foreground services, GPS/IMU dead reckoning, Kalman filtering, Firebase Crashlytics, Sentry, Mixpanel, Keystore encryption (AES-256), SSL pinning, BiometricPrompt, VAPT, Gradle KTS, AGP 9, Fastlane, CI/CD, Git, Play Store releases, mentoring, code review, Agile sprint planning, cross-functional collaboration";
 
 // Granular 7-group layout for the résumé view — matches PDF structure for ATS coverage
 export const resumeSkills: { group: string; items: string[] }[] = [
@@ -312,6 +378,10 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   {
     group: "Security",
     items: ["Android Keystore (AES-256)", "SSL pinning", "BiometricPrompt", "EncryptedSharedPreferences", "VAPT compliance"],
+  },
+  {
+    group: "Leadership & Process",
+    items: ["Cross-functional collaboration", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
   },
   {
     group: "Build, CI/CD & Tools",
@@ -393,6 +463,14 @@ export interface Project {
   // Optional brand icon (public/projects/<slug>/brand/*.svg) — swapped into the
   // browser tab favicon while viewing this project's detail page.
   icon?: string;
+  /**
+   * Smallest cut that writes this project up in prose, same scale as
+   * ExperiencePoint.tier. Anything below the bar still ships — it collapses
+   * into one linked line, because a recruiter reading a side project's prose
+   * is a recruiter not reading the employment history. On the one-pager that
+   * is every project; the full record writes up all of them.
+   */
+  tier?: 1 | 2;
 }
 
 export const projects: Project[] = [
@@ -579,6 +657,7 @@ export const projects: Project[] = [
   },
   {
     slug: "mileway",
+    tier: 2,
     name: "Mileway",
     tagline: "Offline-first mileage, travel & expense tracker — one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
     description:
@@ -810,6 +889,7 @@ export const projects: Project[] = [
   },
   {
     slug: "paymentslab",
+    tier: 2,
     name: "PaymentsLab",
     tagline: "An Integration Lab for the Android payments ecosystem — every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
     description:
@@ -966,6 +1046,7 @@ export const projects: Project[] = [
   },
   {
     slug: "hiresignal",
+    tier: 2,
     name: "HireSignal",
     tagline: "A native, multiplatform AI career-intelligence engine — and the open-source project it's built on.",
     description:

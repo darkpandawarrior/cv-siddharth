@@ -84,7 +84,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Jetpack Compose",
     depth: "deep",
-    evidence: "~87% of a ~960k-line production app is Compose, including the View interop layer",
+    evidence: "~87% of a ~964k-line production app is Compose, including the View interop layer",
     aliases: ["jetpack compose", "compose", "compose ui", "material 3", "material3", "material design 3"],
   },
   {
@@ -180,7 +180,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Modular architecture",
     depth: "working",
-    evidence: "Multi-module production codebase at ~960k LOC with feature-level boundaries",
+    evidence: "Multi-module production codebase at ~964k LOC with feature-level boundaries",
     aliases: ["modular", "modularization", "modularisation", "multi-module", "multi module", "monorepo", "feature module"],
   },
   {

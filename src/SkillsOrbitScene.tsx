@@ -17,6 +17,7 @@ const GROUP_COLOR: Record<string, string> = {
   "Concurrency & Data": "#5ee6ff",
   "Platform & Systems": "#8ff0b4",
   "Security & Ops": "#f0883e",
+  "Leadership & Process": "#c9a7ff",
 };
 
 const WORDS = skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group })));

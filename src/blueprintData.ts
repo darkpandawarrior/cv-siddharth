@@ -21,7 +21,7 @@ export const NODES: NodeSpec[] = [
   { key: "work", x: 300, y: 180, w: 260, h: 110, geo: "rectangle", color: "green", fill: "semi", label: "Case studies\nthe numbers" },
   { key: "gps", x: 60, y: 480, w: 220, h: 90, geo: "rectangle", color: "light-green", label: "GPS 50% → 95%" },
   { key: "crash", x: 100, y: 720, w: 220, h: 90, geo: "rectangle", color: "light-green", label: "-80% crashes" },
-  { key: "compose", x: 60, y: 960, w: 240, h: 90, geo: "rectangle", color: "light-green", label: "~87% Compose · ~960k LOC" },
+  { key: "compose", x: 60, y: 960, w: 240, h: 90, geo: "rectangle", color: "light-green", label: "~87% Compose · ~964k LOC" },
   { key: "mileway", x: 700, y: 1150, w: 260, h: 110, geo: "ellipse", color: "light-blue", fill: "semi", label: "Mileway\n5 platforms · offline AI" },
   { key: "kursi", x: 1250, y: 1260, w: 220, h: 100, geo: "ellipse", color: "light-blue", label: "Kursi\nlive web build" },
   { key: "paymentslab", x: 1800, y: 1150, w: 240, h: 100, geo: "ellipse", color: "light-blue", label: "PaymentsLab\ngateway lab" },
@@ -79,7 +79,7 @@ export const METRICS = [
   { key: "m-gps", x: 340, y: 470, value: "95%", label: "gps accuracy — live count" },
   { key: "m-crash", x: 380, y: 715, value: "-80%", label: "production crashes" },
   { key: "m-mau", x: 620, y: 300, value: "50k+", label: "monthly active users" },
-  { key: "m-compose", x: 340, y: 955, value: "~87%", label: "jetpack compose of ~960k loc" },
+  { key: "m-compose", x: 340, y: 955, value: "~87%", label: "jetpack compose of ~964k loc" },
 ];
 
 export const NOTES: { x: number; y: number; color: TLDefaultColorStyle; text: string }[] = [

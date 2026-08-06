@@ -1,10 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ResumeView } from "../ResumeView.tsx";
+import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
+
+// The full record is the default and carries no param, so `/resume` keeps
+// showing everything exactly as it always has. Anything unrecognised falls
+// back to it rather than erroring — a mistyped `?cut=` should still hand a
+// recruiter a résumé, and the safe fallback is the one that omits nothing.
+type Search = { cut?: Exclude<ResumeCut, "full"> };
 
 export const Route = createFileRoute("/resume")({
+  validateSearch: (search: Record<string, unknown>): Search =>
+    search.cut === "one" || search.cut === "two" ? { cut: search.cut } : {},
   head: () => {
-    const desc = "Print-perfect résumé — Siddharth Pandalai, Senior Android Engineer. ~960k-LOC Compose SaaS, GPS 50%→95%, 80% crash reduction.";
+    const desc = "Print-perfect résumé — Siddharth Pandalai, Senior Android Engineer. ~964k-LOC Compose SaaS, GPS 50%→95%, 80% crash reduction.";
     return {
       meta: [
         { title: "Résumé — Siddharth Pandalai | Senior Android Engineer" },
@@ -21,10 +29,11 @@ export const Route = createFileRoute("/resume")({
 });
 
 function ResumePage() {
+  const { cut } = Route.useSearch();
   // The portfolio is dark; the résumé prints on white.
   useEffect(() => {
     document.documentElement.classList.add("resume-mode");
     return () => document.documentElement.classList.remove("resume-mode");
   }, []);
-  return <ResumeView />;
+  return <ResumeView cut={cut ?? "full"} />;
 }

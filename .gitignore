@@ -37,3 +37,7 @@ playwright-report/
 # AniList lookups for the Weeb Central corpus (scripts/gen-weeb.mjs). 176 calls
 # at ~1/sec; cached so a rerun after editing the CSVs costs no network.
 .weeb-cache/
+
+# Code knowledge graph (graphify). Derived, rebuildable, and large; it also mirrors every
+# symbol name in the repo, so it is never committed. Rebuild: node ~/Tools/DevTools/AgentHarness/scripts/graph.mjs build
+graphify-out/
