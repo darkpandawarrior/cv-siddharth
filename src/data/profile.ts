@@ -3,7 +3,7 @@ import { LAB_TABS, countWord } from "./labs.ts";
 export const profile = {
   name: "Siddharth Pandalai",
   title: "Senior Android Engineer",
-  resumeTitle: "Senior Android Engineer — Mobile Architecture & Platform",
+  resumeTitle: "Senior Android Engineer, Mobile Architecture & Platform",
   tagline: "I take Android apps from prototype to platform.",
   location: "Pune, India",
   email: "siddharthpandalai990@gmail.com",
@@ -22,10 +22,10 @@ export const profile = {
   // every line the summary takes is a line the experience section loses, and
   // the experience section is what gets him called.
   summaryShort:
-    "Senior Android Engineer, 5+ years in Kotlin. Technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app — inherited as Java, now ~87% Jetpack Compose on Clean Architecture, Coroutines, Flow and Hilt. Dead-reckoning location, Keystore security, 80% fewer crashes.",
+    "Senior Android Engineer, 5+ years in Kotlin. Technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app, inherited as Java, now ~87% Jetpack Compose on Clean Architecture, Coroutines, Flow and Hilt. Dead-reckoning location, Keystore security, 80% fewer crashes.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer, 5+ years in Kotlin — technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app, inherited as Java with no Kotlin in it and now ~87% Jetpack Compose across the UI layer. Clean Architecture with MVVM/MVI, Coroutines and Flow, Hilt, Room. Hard-systems depth where it counts: staged dead-reckoning location with Kalman smoothing (GPS accuracy 50% to 95%), VAPT-grade on-device security (Android Keystore, SSL pinning), and an 80% production crash reduction at 22,000+ DAU won on the concurrency model, not defensive catches.",
+    "Senior Android Engineer, 5+ years in Kotlin. Technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app, inherited as Java with no Kotlin in it and now ~87% Jetpack Compose across the UI layer. Clean Architecture with MVVM/MVI, Coroutines and Flow, Hilt, Room. Hard-systems depth where it counts: staged dead-reckoning location with Kalman smoothing (GPS accuracy 50% to 95%), VAPT-grade on-device security (Android Keystore, SSL pinning), and an 80% production crash reduction at 22,000+ DAU won on the concurrency model, not defensive catches.",
 };
 
 export const education = {
@@ -91,7 +91,7 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Agentic ERP",
-        text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP — business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
+        text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
         tier: 1,
       },
       {
@@ -108,16 +108,16 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Platform Ownership",
-        text: "Own the Android platform end to end — a ~964k-LOC Kotlin app serving 50,000+ MAU — as both technical owner and Product Owner, so requirements and delivery are one job rather than a handoff. Set the module architecture, release process and review standards the team builds against, and own the Room persistence layer across 2 databases with 24 verified production schema migrations.",
+        text: "Own the Android platform end to end, a ~964k-LOC Kotlin app serving 50,000+ MAU, as both technical owner and Product Owner, so requirements and delivery are one job rather than a handoff. Set the module architecture, release process and review standards the team builds against, and own the Room persistence layer across 2 databases with 24 verified production schema migrations.",
         tier: 1,
       },
       {
         label: "Scope",
-        text: "Owned requirements as well as delivery on the same platform — here they are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
+        text: "Owned requirements as well as delivery on the same platform. Here they are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.",
       },
       {
         label: "Team",
-        text: "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to shipping production Kotlin, Java and React — he now manages this app at the company that acquired it.",
+        text: "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to shipping production Kotlin, Java and React. He now manages this app at the company that acquired it.",
       },
       {
         label: "Compose Migration",
@@ -126,12 +126,12 @@ export const experience: Experience[] = [
       },
       {
         label: "Location Engineering",
-        text: "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU — staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jumps never reach the buffer, taking tracking accuracy from 50% to 95%.",
+        text: "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jumps never reach the buffer, taking tracking accuracy from 50% to 95%.",
         tier: 1,
       },
       {
         label: "Crash Reduction",
-        text: "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch — paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
+        text: "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
         tier: 2,
       },
       {
@@ -145,7 +145,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Product Growth",
-        text: "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300 — the rating a prospective customer sees before they install anything.",
+        text: "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300, the rating a prospective customer sees before they install anything.",
       },
       {
         label: "Travel Platform",
@@ -153,7 +153,7 @@ export const experience: Experience[] = [
       },
       {
         label: "UI Platform",
-        text: "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant — cutting UI development friction 60% without touching feature code per client.",
+        text: "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant, cutting UI development friction 60% without touching feature code per client.",
         tier: 2,
       },
       {
@@ -169,17 +169,17 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Multi-Tenant Platform Ownership",
-        text: "Owned Android across a multi-vertical super-app — ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet — spanning customer, driver and merchant apps. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.",
+        text: "Owned Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.",
         tier: 2,
       },
       {
         label: "White-Label Platform, Productising Variation",
-        text: "Built a per-tenant flavour system — build config, resource overlays, isolated storage and branding — so 150+ clients ship from one codebase across the customer and driver apps, instead of the per-client fork that would have been unmaintainable within a year. Cut per-client delivery time 80%.",
+        text: "Built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase across the customer and driver apps, instead of the per-client fork that would have been unmaintainable within a year. Cut per-client delivery time 80%.",
         tier: 1,
       },
       {
         label: "Product-Line Ownership",
-        text: "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals — writing the specs I then had to build.",
+        text: "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build.",
         tier: 1,
       },
       {
@@ -189,7 +189,7 @@ export const experience: Experience[] = [
       },
       {
         label: "Platform Modernization",
-        text: "Migrated the toolchain across a multi-branch, multi-client codebase — Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance — without breaking any of the 150+ client builds riding on it.",
+        text: "Migrated the toolchain across a multi-branch, multi-client codebase: Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance, without breaking any of the 150+ client builds riding on it.",
       },
       {
         label: "Cross-Functional Engineering",
@@ -347,7 +347,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   },
   {
     group: "Architecture",
-    items: ["Clean Architecture", "MVVM", "MVI", "Modular architecture", "Repository pattern", "Kotlin Multiplatform (KMP — building depth)"],
+    items: ["Clean Architecture", "MVVM", "MVI", "Modular architecture", "Repository pattern", "Kotlin Multiplatform (KMP, building depth)"],
   },
   {
     group: "Concurrency & DI",
@@ -463,7 +463,7 @@ export const projects: Project[] = [
   {
     slug: "kursi",
     name: "Kursi",
-    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances — Kursi ke liye kuch bhi karega.",
+    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances. Kursi ke liye kuch bhi karega.",
     description:
       "Deterministic Kotlin Multiplatform social-deduction game with ISMCTS bot AI, shipped across Android, iOS, Desktop, and Web.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Desktop", "Web (Wasm)"],
@@ -645,7 +645,7 @@ export const projects: Project[] = [
     slug: "mileway",
     tier: 2,
     name: "Mileway",
-    tagline: "Offline-first mileage, travel & expense tracker — one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
+    tagline: "Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
     description:
       "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, zero backend.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
@@ -877,7 +877,7 @@ export const projects: Project[] = [
     slug: "paymentslab",
     tier: 2,
     name: "PaymentsLab",
-    tagline: "An Integration Lab for the Android payments ecosystem — every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
+    tagline: "An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
     description:
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
@@ -1034,12 +1034,12 @@ export const projects: Project[] = [
     slug: "hiresignal",
     tier: 2,
     name: "HireSignal",
-    tagline: "A native, multiplatform AI career-intelligence engine — and the open-source project it's built on.",
+    tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
       "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — rebuilt from scratch in Kotlin Multiplatform, with its scoring engine ported and verified against the open-source career-ops project I actively contribute to upstream.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "68 ATS/board providers"],
     highlights: [
-      "25-module Kotlin Multiplatform clean architecture — 12 feature + 6 core modules — targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
+      "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "68 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
       "4 merged PRs to the public career-ops project (⭐62k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), and an agent-inbox feature (#1472) — every one publicly checkable.",
@@ -1154,8 +1154,8 @@ export const projects: Project[] = [
   },
   {
     slug: "portfolio",
-    name: "This portfolio + “Panda”, my AI assistant",
-    tagline: "The site you're reading — and Panda, a provider-agnostic LLM assistant that answers for me, grounded in my real CV.",
+    name: "cv-siddharth (portfolio + Panda)",
+    tagline: "The site you're reading, plus Panda, a provider-agnostic LLM assistant that answers for me, grounded in my real CV.",
     description:
       "An interactive résumé with a built-in AI assistant. React 19 + Vite + Tailwind on Vercel Edge, with a provider-agnostic chat backend (Groq / Gemini / Claude) and prompt-injection guards.",
     stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM"],
@@ -1286,7 +1286,7 @@ export const projects: Project[] = [
       "The reusable libraries, the shared build logic and the app shape each live in their own repo — vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
-      "kmp-toolkit — 36 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
+      "kmp-toolkit: 36 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
       "kmp-build-logic — 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template — the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
       "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi — the composition is the proof the extraction was real, not a library nobody uses.",
@@ -1302,12 +1302,12 @@ export const projects: Project[] = [
   {
     slug: "cv-siddharth-kmp",
     name: "cv-siddharth-kmp",
-    tagline: "This portfolio, rebuilt in Compose Multiplatform — one commonMain to Web, Desktop, Android and iOS.",
+    tagline: "This portfolio, rebuilt in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
       "A Compose Multiplatform port of this very site: ~16.5k lines of Kotlin across four modules rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS. An experiment in how far CMP reaches on the web — and an honest record of where it does not.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm", "Desktop", "Android", "iOS", "Ktor"],
     highlights: [
-      "Deliberately bleeding edge — Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2. Every version the newest published, pre-release included.",
+      "Deliberately bleeding edge: Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2. Every version the newest published, pre-release included.",
       "Almost no dependencies by design: no nav library, no DI, no markdown parser, no diagram renderer, no icon pack, no shader library. Routing, the Mermaid layout engine, the SkSL ambient wash, the SSE frame parser and every icon are hand-built on Compose and Ktor primitives.",
       "Includes a Compose-subset interpreter that parses a snippet and renders it with real composables — a live playground rather than a screenshot.",
       "Built on kmp-app-template, so it doubles as the proof that the template actually carries a real app to four targets.",
@@ -1323,12 +1323,12 @@ export const projects: Project[] = [
   {
     slug: "the-loopdown",
     name: "The Loopdown",
-    tagline: "Field notes from an engineer who writes — one war story, four channels, one branded card.",
+    tagline: "Field notes from an engineer who writes: one war story, four channels, one branded card.",
     description:
       "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic — plus the consolidated back catalogue.",
     stack: ["Node.js", "Markdown", "SVG generation", "Voice-profile linting"],
     highlights: [
-      "One lesson in, four channel-shaped posts out, each with a branded SVG card — the adaptation is the product, not the writing.",
+      "One lesson in, four channel-shaped posts out, each with a branded SVG card. The adaptation is the product, not the writing.",
       "A voice profile derived from the existing archive, enforced by a lint step, so the generated drafts do not read like a language model wrote them.",
       "Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass.",
       "Public/private split by construction: the engine and the published posts are tracked, drafts and personal notes are gitignored.",

@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
+import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
@@ -532,7 +533,15 @@ export default function World(props: { onShowList: () => void }) {
             unlit faces of the terrain read as pure background, so the mainland
             had no visible edge and the sea and the sky were the same colour.
             Dark is the site's palette; unreadable isn't. */}
-        <ambientLight intensity={0.95} />
+        {/* Three lights, not one. A single overhead key on untextured boxes
+            gives every face the same value and the silhouette disappears; the
+            rim light behind picks out edges against the dark ground, and the
+            cool fill from the opposite side keeps the shadow sides from going
+            to pure black. This is the cheapest thing that makes primitives look
+            deliberate. */}
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[-16, 12, 26]} intensity={0.9} color="#7fd9ff" />
+        <directionalLight position={[10, 6, -20]} intensity={1.1} color="#ffd9a0" />
         <hemisphereLight args={[palette.signalDim, palette.void, 1.0]} />
         <directionalLight
           castShadow
@@ -571,6 +580,14 @@ export default function World(props: { onShowList: () => void }) {
             high enough that only genuinely emissive surfaces bloom, so the
             terrain doesn't turn milky. */}
         <EffectComposer>
+          {/* Ambient occlusion first, and it does more for this scene than
+              everything else in this stack combined. A world built from
+              untextured primitives has no contact information — a box on a
+              plane and a box floating a centimetre above it look identical, so
+              the whole thing reads as flat shapes rather than objects sitting
+              somewhere. AO puts the shadow back into every crease and corner
+              the geometry implies. */}
+          <N8AO aoRadius={1.4} intensity={2.6} distanceFalloff={0.8} quality="low" halfRes />
           {/* Threshold 0.9, not 0.62. At 0.62 the lit terrain itself passed the
               cut and the mainland bloomed into soft white pools — the scene got
               brighter but less readable, which is the opposite of the point.
@@ -578,6 +595,14 @@ export default function World(props: { onShowList: () => void }) {
               glow on the things that are meant to glow. */}
           <Bloom intensity={0.7} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
           <Vignette eskil={false} offset={0.22} darkness={0.72} />
+          {/* ACES filmic, not the renderer's default linear clamp. Everything
+              bright in this world is emissive — room tints, trails, gates — and
+              linear tone mapping clips them all to flat white, which is why the
+              lit surfaces looked like paper cut-outs. ACES rolls the highlights
+              off instead, so a glowing thing reads as bright rather than as a
+              hole in the image. */}
+          <ToneMapping mode={ACES_FILMIC} />
+          <SMAA />
         </EffectComposer>
       </Canvas>
       <Hud

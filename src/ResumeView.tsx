@@ -100,7 +100,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
 
       <article className="resume mx-auto max-w-[210mm] bg-white px-10 py-9 text-zinc-900 shadow-xl print:max-w-none print:px-0 print:py-0 print:shadow-none">
         {/* Header */}
-        <header className={"border-b-2 border-zinc-900 pb-4"}>
+        <header className="pb-1.5">
           {/* text-hero on screen, matching every other route's h1 — but pinned
               back to the original fixed size for print. --text-hero is a
               vw-based clamp, and print media doesn't reliably rebase vw to the
@@ -135,8 +135,9 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           <p className="mt-0.5 text-sm text-zinc-600">
             {profile.location} · {budget === 1 ? profile.availabilityShort : profile.availability}
           </p>
-          {/* Gradient rule replaces the flat 2px black border — the same device
-              the designed CV used to give the header a lid. */}
+          {/* The header's lid. This genuinely replaces the old
+              `border-b-2 border-zinc-900` — leaving both drew two rules stacked
+              on top of each other. */}
           <div className="mt-1.5 h-[2px] w-full bg-gradient-to-r from-violet-600 via-violet-500 to-teal-500" />
         </header>
 
@@ -260,7 +261,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               {budget === 1
                 ? `${linked.slice(0, 3).map((p) => p.name).join(", ")} and ${linked.length - 3} more`
                 : linked.map((p) => p.name).join(", ")}
-              {" "}— written up in full at {profile.portfolio.replace("https://", "")}.
+              {". "}Written up in full at {profile.portfolio.replace("https://", "")}.
               {/* On the one-pager the open-source credit rides on the end of
                   this paragraph instead of claiming its own: a second <p> costs
                   a margin plus a line box to carry eight words. */}
@@ -281,7 +282,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
               {openSource.length} merged PRs to career-ops (public OSS, 60k+ stars)
-              {full ? <> — {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
+              {full ? <>: {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
             </p>
           )}
         </section>

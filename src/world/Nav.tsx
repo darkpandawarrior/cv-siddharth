@@ -238,7 +238,10 @@ export function Gauges(): JSX.Element {
         odoRef.current.textContent = m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`;
       }
       if (accRef.current) {
-        accRef.current.textContent = `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
+        accRef.current.textContent =
+          telemetry.rawError === 0
+            ? "— keep driving"
+            : `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
       }
       if (altRef.current && altNumRef.current) {
         const airborne = telemetry.y > 2;

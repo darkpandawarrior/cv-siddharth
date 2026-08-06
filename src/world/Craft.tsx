@@ -24,6 +24,7 @@ import {
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { SPACE_LIFTS, TERRAIN, THERMALS } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
+import { RoundedBox } from "@react-three/drei";
 import { worldPalette } from "./palette.ts";
 import { playBoost, playImpact, playSplash, updateEngine } from "./audio.ts";
 
@@ -871,16 +872,18 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
           The right source is a low-poly, game-ready CC0 kit (Kenney, Quaternius)
           whose materials are flat colour and need no environment. Until one is
           in hand, primitives look better than a badly-lit showcase asset. */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]} />
-        <meshStandardMaterial color={c.signal} metalness={0.2} roughness={0.5} />
-      </mesh>
+      {/* Rounded, not boxes. A hard-edged cuboid reads as a placeholder no
+          matter how it is lit; a few millimetres of bevel catch the key light
+          along every edge and the same shape reads as a moulded object. It is
+          the cheapest possible step away from programmer art. */}
+      <RoundedBox args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]} radius={0.12} smoothness={3} castShadow receiveShadow>
+        <meshStandardMaterial color={c.signal} metalness={0.35} roughness={0.35} />
+      </RoundedBox>
 
       {/* Cabin */}
-      <mesh castShadow position={[0, HALF.y + 0.16, -0.1]}>
-        <boxGeometry args={[0.68, 0.32, 0.9]} />
-        <meshStandardMaterial color={c.void} metalness={0.4} roughness={0.3} />
-      </mesh>
+      <RoundedBox args={[0.68, 0.32, 0.9]} radius={0.08} smoothness={3} position={[0, HALF.y + 0.16, -0.1]} castShadow>
+        <meshStandardMaterial color={c.void} metalness={0.5} roughness={0.25} />
+      </RoundedBox>
 
       {/* Wheels — a steering group (position + yaw) nesting a spin group
           (roll about local X), so the two rotations never fight over the

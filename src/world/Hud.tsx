@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { LayoutGrid, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Eraser, LayoutGrid, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import { isMuted, toggleMuted } from "./audio.ts";
+import { resetProgress } from "./progressReset.ts";
 import type { CraftMode } from "./craftPhysics.ts";
 import type { Room } from "../rooms.tsx";
 
@@ -171,6 +172,45 @@ function Pedal() {
         style={{ top: `calc(50% + ${knobY}px - 1rem)` }}
       />
     </div>
+  );
+}
+
+/**
+ * Wipes everything the world remembers and reloads into a fresh one.
+ *
+ * Two-step on purpose: this throws away collected artifacts and unlocked
+ * milestones, and a single mis-click next to "List view" destroying an hour of
+ * exploring would be its own bug. The second press is the confirmation.
+ */
+function ResetButton() {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    // Disarms itself, so an accidental first press does not sit there waiting
+    // to become a destructive second press five minutes later.
+    const t = window.setTimeout(() => setArmed(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!armed) {
+          setArmed(true);
+          return;
+        }
+        resetProgress();
+        window.location.reload();
+      }}
+      className={`pointer-events-auto flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm backdrop-blur transition ${
+        armed
+          ? "border-[var(--color-warn)] bg-card text-[var(--color-warn)]"
+          : "border-line bg-card/80 text-zinc-400 hover:border-accent hover:text-accent"
+      }`}
+    >
+      <Eraser size={14} />
+      {armed ? "Erase everything?" : <span className="sr-only">Reset world progress</span>}
+    </button>
   );
 }
 
@@ -383,6 +423,7 @@ export function Hud(props: {
               choice persists. A portfolio that cannot be silenced is one people
               close the tab on. */}
           <SoundToggle />
+          <ResetButton />
 
           <button
             type="button"

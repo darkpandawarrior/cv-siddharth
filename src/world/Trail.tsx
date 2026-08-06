@@ -35,6 +35,9 @@ const TRAIL_Y = TERRAIN.mainland.groundY + 0.06;
  *  and that drift is precisely what the fix is there to correct. */
 const IMU_BIAS = 0.97;
 
+/** Samples needed before the accuracy readout means anything. ~3 seconds. */
+const MIN_SAMPLES_FOR_STATS = 30;
+
 /** The world's tall structures — the same monuments, so the canyon effect lands
  *  where a visitor can see the cause. */
 function structures(): Fix[] {
@@ -122,8 +125,15 @@ export function Trail(): JSX.Element {
       rawErrors.current.shift();
       fusedErrors.current.shift();
     }
-    telemetry.rawError = meanError(rawErrors.current);
-    telemetry.fusedError = meanError(fusedErrors.current);
+    // Only report once there is enough of a track to average. On the first
+    // few samples the mean is dominated by whichever way the noise happened to
+    // fall, so the readout would swing wildly — and, worse, could show the
+    // fused track losing to the raw one purely by chance, which is exactly the
+    // claim the readout exists to support.
+    if (rawErrors.current.length >= MIN_SAMPLES_FOR_STATS) {
+      telemetry.rawError = meanError(rawErrors.current);
+      telemetry.fusedError = meanError(fusedErrors.current);
+    }
 
     rawPoints.current.shift();
     rawPoints.current.push([fix.x, TRAIL_Y, fix.z]);
