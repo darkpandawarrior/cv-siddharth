@@ -83,6 +83,11 @@ export function Trail(): JSX.Element {
     // Only trail on the ground: a GPS track through the air or underwater is
     // not the story, and it would clutter the sky.
     if (telemetry.mode !== "wheels") return;
+    // ...and only while actually moving. A parked craft still receives noisy
+    // fixes, so sampling at a standstill drew a dense scribble of jitter around
+    // the car — technically a correct depiction of GPS noise, and visually just
+    // a mess that buried the thing the trails exist to show.
+    if (Math.abs(telemetry.speed) < 0.6) return;
 
     const truth: Fix = { x: telemetry.x, z: telemetry.z };
     const moved = stepDistance(lastTruth.current, truth);

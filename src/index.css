@@ -318,8 +318,49 @@ html.resume-mode body {
   }
 }
 
+/* The view-switch wipe — see Playground.tsx's runTransition. Covers the whole
+   viewport, including the header, because the two views have different chrome
+   heights and letting the header jump under a half-faded cover is exactly the
+   seam this is hiding. */
+.playground-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--color-void);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.playground-wipe.is-active {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playground-wipe {
+    transition: none;
+    display: none;
+  }
+}
+
 @media print {
-  body {
+  /* The root cause of the black-frame bug: `<meta name="color-scheme"
+     content="dark">` in __root.tsx tells the UA this is a dark document, so
+     Chromium paints the page canvas #121212 — the printed margin — whenever
+     background graphics are on. The DOM is all white by then; nothing in the
+     element tree is dark. Overriding the scheme for print is what actually
+     fixes it, and it is why enabling backgrounds is now safe. */
+  :root {
+    color-scheme: light;
+  }
+
+  /* Belt and braces for the black-frame bug: `html.resume-mode body` outranks a
+     bare `body` selector, so the dark canvas survived into print and painted the
+     page margins #121212 whenever background graphics were enabled. Match that
+     specificity and cover the root element too. */
+  html,
+  body,
+  html.resume-mode body {
     background: white;
   }
   .resume {

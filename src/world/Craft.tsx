@@ -858,7 +858,19 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
           on top would add a second, centred mass to the same body. */}
       <CuboidCollider args={[HALF.x, HALF.y, HALF.z]} density={0} friction={0.4} />
 
-      {/* Body */}
+      {/* Body.
+          NOT a glTF model, and that was tested rather than assumed. The CC0
+          Khronos ToyCar was fetched, optimised 5.4MB -> 1.0MB and wired in as a
+          lazy progressive upgrade; it renders as a dark lump here because it is
+          a PBR *materials showcase* (transmission, clearcoat, sheen) that needs
+          an HDRI environment to look like anything, and this scene has none by
+          design — an env map means fetching an HDRI from a CDN, which the
+          site's offline and CSP story does not want. Converting its materials
+          to plain standard ones kept the geometry and lost everything that made
+          it worth having.
+          The right source is a low-poly, game-ready CC0 kit (Kenney, Quaternius)
+          whose materials are flat colour and need no environment. Until one is
+          in hand, primitives look better than a badly-lit showcase asset. */}
       <mesh castShadow receiveShadow>
         <boxGeometry args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]} />
         <meshStandardMaterial color={c.signal} metalness={0.2} roughness={0.5} />

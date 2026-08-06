@@ -1,7 +1,9 @@
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Github, Globe, Linkedin, Printer } from "lucide-react";
+import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
-import { profile, resumeMetrics, experience, education, resumeSkills, resumeSkillsCompact, skills, languages, competencies, projects, openSource } from "./data/profile.ts";
+import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projects, openSource } from "./data/profile.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { emphasise } from "./lib/resumeEmphasis.tsx";
 
 /**
  * Print-perfect résumé rendered from the same data as the portfolio.
@@ -43,21 +45,23 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
   // them: nine taglines do not survive a single page, but nine names do.
   const shown = projects.filter((p) => fits(p.tier));
   const linked = projects.filter((p) => !fits(p.tier));
-  // Seven ATS groups on the full record, four on the two-pager. The one-pager
-  // runs the compact token line instead: competency chips were tried here and
-  // cost 14 of the 52 basket keywords, and keyword coverage is the heaviest
-  // dimension an ATS scores. Same claims, denser encoding.
+  // Seven ATS groups on the full record, four on the shorter cuts. Grouped and
+  // labelled on every cut: a single comma-run of forty tokens was tried here to
+  // win keyword coverage and it read as keyword stuffing on the page.
   const skillGroups = full ? resumeSkills : skills;
-  const oneLineSkills = budget === 1 ? resumeSkillsCompact : null;
   // Vertical rhythm is the last lever before content has to go: on the
   // one-pager the gaps between sections tighten rather than a bullet dying.
-  const gap = budget === 1 ? "mt-1.5" : "mt-4";
-  const jobGap = budget === 1 ? "mt-2" : "mt-3";
+  const gap = "mt-4";
+  const jobGap = "mt-3";
   // Relaxed leading is a luxury of having a second page. The one-pager reads
   // fine at snug and it is the difference between fitting and not.
-  const lead = budget === 1 ? "leading-snug" : "leading-relaxed";
+  const lead = "leading-relaxed";
   // Heading-to-body margin, same reasoning as `gap`.
-  const headGap = budget === 1 ? "mt-1" : "mt-1.5";
+  const headGap = "mt-1.5";
+  // Two accents carry the whole design: teal labels the structure, violet names
+  // the employers. Everything else stays near-black so the page still reads as
+  // a document rather than a brochure — and prints legibly in greyscale.
+  const h2 = "font-display text-xs font-bold uppercase tracking-widest text-teal-700";
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
       <div className="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
@@ -96,33 +100,49 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
 
       <article className="resume mx-auto max-w-[210mm] bg-white px-10 py-9 text-zinc-900 shadow-xl print:max-w-none print:px-0 print:py-0 print:shadow-none">
         {/* Header */}
-        <header className={`border-b-2 border-zinc-900 ${budget === 1 ? "pb-2.5" : "pb-4"}`}>
+        <header className={"border-b-2 border-zinc-900 pb-4"}>
           {/* text-hero on screen, matching every other route's h1 — but pinned
               back to the original fixed size for print. --text-hero is a
               vw-based clamp, and print media doesn't reliably rebase vw to the
               paper width (Chromium keeps using the on-screen window width),
               so letting it through to print risked ~doubling the header and
               pushing this off its one printed page. */}
-          <h1 className={`font-display text-hero ${budget === 1 ? "print:text-2xl" : "print:text-3xl"} font-bold tracking-tight`}>{profile.name}</h1>
-          <p className={`mt-0.5 ${budget === 1 ? "text-base" : "text-lg"} font-medium text-zinc-700`}>{profile.resumeTitle}</p>
-          {/* Full `linkedin.com/in/…` and `github.com/…`, on every cut. Shorter
-              handles were tried here to save a wrapped line and it cost the
-              one-pager its LinkedIn parse: ATS pipelines match the literal
-              `linkedin.com/in/<handle>`, and `in/<handle>` matches nothing.
-              The line wrapped to two rows either way, so the trim bought no
-              height and lost a contact field. */}
-          <p className="mt-1.5 text-sm text-zinc-600">
-            {profile.phone} · {profile.email} · {profile.linkedin.replace("https://", "")} ·{" "}
-            {profile.github.replace("https://", "")}
+          <h1 className={"font-display text-hero print:text-3xl font-bold tracking-tight"}>{profile.name}</h1>
+          <p className={"mt-0.5 text-lg font-medium text-zinc-700"}>{profile.resumeTitle}</p>
+          {/* Icon + handle rather than a bare URL: shorter, and the anchor keeps
+              the real destination, which Chromium writes into the PDF as a link
+              annotation so the printed copy stays clickable. */}
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-zinc-600">
+            <span>{profile.phone}</span>
+            <span className="text-zinc-300">·</span>
+            <a href={`mailto:${profile.email}`} className="text-zinc-600">
+              {profile.email}
+            </a>
+            {[
+              { Icon: Linkedin, href: profile.linkedin, label: profile.linkedin.replace(/^https:\/\/linkedin\.com\/in\//, "") },
+              { Icon: Github, href: profile.github, label: profile.github.replace(/^https:\/\/github\.com\//, "") },
+              { Icon: Globe, href: profile.portfolio, label: profile.portfolio.replace(/^https:\/\//, "") },
+            ].map(({ Icon, href, label }) => (
+              <Fragment key={href}>
+                <span className="text-zinc-300">·</span>
+                <a href={href} className="inline-flex items-center gap-1 text-zinc-600">
+                  <Icon size={12} className="shrink-0 text-violet-600" aria-hidden="true" />
+                  {label}
+                </a>
+              </Fragment>
+            ))}
           </p>
           <p className="mt-0.5 text-sm text-zinc-600">
             {profile.location} · {budget === 1 ? profile.availabilityShort : profile.availability}
           </p>
+          {/* Gradient rule replaces the flat 2px black border — the same device
+              the designed CV used to give the header a lid. */}
+          <div className="mt-1.5 h-[2px] w-full bg-gradient-to-r from-violet-600 via-violet-500 to-teal-500" />
         </header>
 
         {/* Professional Summary */}
         <section className={gap}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className={h2}>
             Professional Summary
           </h2>
           <p className={`${headGap} text-sm ${lead} text-zinc-700`}>
@@ -138,14 +158,14 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             stays — LinkedIn's skills list still renders from it. */}
         {full && (
           <section className={gap}>
-            <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+            <h2 className={h2}>
               Core Competencies
             </h2>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {competencies.map((c) => (
                 <span
                   key={c}
-                  className="rounded border border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-700"
+                  className="rounded border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-900"
                 >
                   {c}
                 </span>
@@ -154,19 +174,23 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           </section>
         )}
 
-        {/* Key Results */}
+        {/* Key Results — omitted on the one-pager: every number in it also
+            appears in the summary or a bullet, so it is pure duplication, and
+            one page has to spend its height on something that is not. */}
+        {budget !== 1 && (
         <section className={gap}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className={h2}>
             Key Results
           </h2>
           <p className={`${headGap} text-sm ${lead} text-zinc-800`}>
             {resumeMetrics.map((m) => `${m.value} ${m.label}`).join(" · ")}
           </p>
         </section>
+        )}
 
         {/* Experience */}
         <section className={gap}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className={h2}>
             Experience
           </h2>
           {/* A role whose every bullet is non-core drops out entirely on the
@@ -176,10 +200,12 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             .map((job) => ({ job, points: job.points.filter((p) => fits(p.tier)) }))
             .filter(({ points }) => points.length > 0)
             .map(({ job, points }) => (
-            <div key={job.company} className={`${jobGap} break-inside-avoid`}>
-              <div className="flex items-baseline justify-between gap-4">
-                <h3 className="text-sm font-bold">
-                  {job.role} · {job.company}
+            <div key={job.company} className={jobGap}>
+              <div className="flex items-baseline justify-between gap-4 break-after-avoid">
+                <h3 className="text-sm font-bold text-zinc-900">
+                  <span className="font-display text-violet-700">{job.company}</span>
+                  <span className="font-normal text-zinc-400"> · </span>
+                  {job.role}
                 </h3>
                 <p className="shrink-0 text-xs text-zinc-500">{job.period}</p>
               </div>
@@ -187,7 +213,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                 {points.map((p) => (
                   <li key={p.text}>
                     {p.label && <strong className="font-semibold text-zinc-900">{p.label}: </strong>}
-                    {p.text}
+                    {emphasise(p.text)}
                   </li>
                 ))}
               </ul>
@@ -199,18 +225,18 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             below, not here: the full cut is taller than one page, so avoiding
             a break on the whole section would just force one giant gap. */}
         <section className={gap}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className={h2}>
             Projects & Open Source
           </h2>
           {shown.map((p) => (
-            <div key={p.slug} className="mt-2 break-inside-avoid">
+            <div key={p.slug} className="mt-2">
               {/* Two stack items, and the label may shrink. Three plus
                   `shrink-0` ran past the right margin and Chromium clipped it
                   mid-word — "Spring Boot 4" printed as "Spring Boot 4" minus
                   the page. A résumé that loses words at the paper's edge is
                   worse than one that names one fewer framework. */}
               <div className="flex items-baseline justify-between gap-4">
-                <h3 className="shrink-0 text-sm font-bold">{p.name}</h3>
+                <h3 className="shrink-0 text-sm font-bold text-violet-700">{p.name}</h3>
                 <p className="min-w-0 truncate text-xs text-zinc-500">{p.stack.slice(0, 2).join(" · ")}</p>
               </div>
               <p className="text-sm leading-snug text-zinc-700">
@@ -238,7 +264,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               {/* On the one-pager the open-source credit rides on the end of
                   this paragraph instead of claiming its own: a second <p> costs
                   a margin plus a line box to carry eight words. */}
-              {budget === 1 && (
+              {!full && (
                 <>
                   {" "}
                   <span className="font-semibold text-zinc-900">Upstream:</span> {openSource.length} merged PRs to
@@ -251,7 +277,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               line can never drift from the real merged-PR list again. The
               two-pager states the count and stops: four PR titles spelled out
               cost three lines to say what "4 merged PRs" already said. */}
-          {budget !== 1 && (
+          {full && (
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
               {openSource.length} merged PRs to career-ops (public OSS, 60k+ stars)
@@ -261,8 +287,8 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
         </section>
 
         {/* Education */}
-        <section className={`${gap} break-inside-avoid`}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+        <section className={gap}>
+          <h2 className={h2}>
             Education
           </h2>
           <div className={`${headGap} flex items-baseline justify-between gap-4`}>
@@ -274,19 +300,23 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
         </section>
 
         {/* Skills */}
-        <section className={`${gap} break-inside-avoid`}>
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-zinc-500">
+        <section className={gap}>
+          <h2 className={h2}>
             Technical Skills
           </h2>
           <div className={`${headGap} space-y-1`}>
+            {/* One line on the one-pager: a standalone "Languages:" row costs a
+                whole line box to carry four words. */}
             <p className="text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Languages:</span> {languages.join(", ")}
+              {budget === 1 && (
+                <>
+                  {" · "}
+                  <span className="font-semibold text-zinc-900">Core:</span> {competencies.join(", ")}
+                </>
+              )}
             </p>
-            {oneLineSkills ? (
-              <p className="text-sm leading-snug text-zinc-700">
-                <span className="font-semibold text-zinc-900">Core:</span> {oneLineSkills}
-              </p>
-            ) : (
+            {budget === 1 ? null : (
               skillGroups.map((s) => (
                 <p key={s.group} className="text-sm leading-snug text-zinc-700">
                   <span className="font-semibold text-zinc-900">{s.group}:</span> {s.items.join(", ")}

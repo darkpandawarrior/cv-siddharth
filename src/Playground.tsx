@@ -108,6 +108,7 @@ function PlaygroundInner() {
   // has to run before the DOM exists — deciding here rather than inline keeps
   // the first paint deterministic instead of racing a capability check.
   const [forcedList, setForcedList] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const [worldCapable, setWorldCapable] = useState(false);
   // Set by WorldBoundary's onError when the world throws after mounting —
   // see WorldBoundary's own comment for why this lives up here rather than
@@ -125,11 +126,42 @@ function PlaygroundInner() {
   // the grid view's own "3D world" button below calls its counterpart to
   // go the other way. Same localStorage key either direction, so the choice
   // survives a reload.
-  const showList = useCallback(() => {
-    setForcedList(true);
-    saveViewPref("list");
+  /**
+   * Switching views is a WIPE, not a cut.
+   *
+   * The two views are the same eight rooms in different clothes, and swapping
+   * them instantly read as a page break — the world vanished, a list appeared,
+   * and nothing connected the two. A brief cover holds the screen while the
+   * heavy side mounts or tears down, which also hides the one genuinely ugly
+   * frame in the transition: a WebGL context being created or disposed.
+   *
+   * `transitioning` gates the cover; the actual switch happens at the midpoint
+   * so neither view is ever seen half-built.
+   */
+  const runTransition = useCallback((apply: () => void) => {
+    // Reduced motion gets the instant swap: a cover that fades is still motion,
+    // and this one exists for polish rather than for meaning.
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      apply();
+      return;
+    }
+    setTransitioning(true);
+    window.setTimeout(() => {
+      apply();
+      // Long enough for the incoming side to have mounted before the cover
+      // lifts. Shorter and you watch the grid pop in behind a fading veil.
+      window.setTimeout(() => setTransitioning(false), 260);
+    }, 200);
   }, []);
+
+  const showList = useCallback(() => {
+    runTransition(() => {
+      setForcedList(true);
+      saveViewPref("list");
+    });
+  }, [runTransition]);
   const showWorld = useCallback(() => {
+    runTransition(() => {
     setForcedList(false);
     // Also clears a prior crash: worldCapable stays true even after
     // WorldBoundary trips (the browser can still run WebGL — something in
@@ -138,7 +170,8 @@ function PlaygroundInner() {
     // true again and the button would silently do nothing.
     setWorldFailed(false);
     saveViewPref("world");
-  }, []);
+    });
+  }, [runTransition]);
 
   return (
     <div
@@ -180,6 +213,16 @@ function PlaygroundInner() {
           </div>
         </nav>
       </header>
+
+      {/* The transition cover. Sits above both views, fades in over the
+          outgoing one and out over the incoming one, so a switch reads as a
+          wipe rather than as the page breaking. aria-hidden: it is pure
+          decoration and a screen reader has already been told about both
+          views. */}
+      <div
+        aria-hidden="true"
+        className={`playground-wipe${transitioning ? " is-active" : ""}`}
+      />
 
       {wantsWorld ? (
         <main id="main-content" tabIndex={-1} className="playground-world relative min-h-0 flex-1">

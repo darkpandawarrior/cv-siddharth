@@ -9,12 +9,12 @@ export const profile = {
   email: "siddharthpandalai990@gmail.com",
   phone: "+91 8848852062",
   github: "https://github.com/darkpandawarrior",
-  linkedin: "https://linkedin.com/in/siddharth-pandalai-3712b215a",
+  linkedin: "https://linkedin.com/in/siddharth-pandalai",
   portfolio: "https://cv-siddharth.vercel.app",
-  availability: "Notice period: 15 days · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
+  availability: "Available immediately · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
   // Same two facts a recruiter acts on — how soon, and where — at a third of
   // the width, for the one-pager header where a wrap costs a whole line.
-  availabilityShort: "Notice: 15 days · Remote or Pune / Bengaluru",
+  availabilityShort: "Available immediately · Remote or Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
     "5+ years building production Android. I own the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
@@ -180,6 +180,7 @@ export const experience: Experience[] = [
       {
         label: "Product-Line Ownership",
         text: "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals — writing the specs I then had to build.",
+        tier: 1,
       },
       {
         label: "Payments at Scale",
@@ -189,7 +190,6 @@ export const experience: Experience[] = [
       {
         label: "Platform Modernization",
         text: "Migrated the toolchain across a multi-branch, multi-client codebase — Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance — without breaking any of the 150+ client builds riding on it.",
-        tier: 2,
       },
       {
         label: "Cross-Functional Engineering",
@@ -338,20 +338,6 @@ export const skills: { group: string; items: string[] }[] = [
     items: ["Android Keystore field-level encryption (AES-256)", "SSL pinning (9 domains, 5 SHA-256 pins)", "BiometricPrompt access gate", "EncryptedSharedPreferences / DataStore + Tink", "Fastlane CI/CD · AGP 9 · Gradle KTS · Git", "Agentic workflows (Firebender, MCP)"],
   },
 ];
-
-/**
- * The one-pager's Technical Skills payload: the same stack as `resumeSkills`,
- * written as terse parser tokens instead of readable phrases.
- *
- * It exists because keyword coverage is the single heaviest ATS dimension and
- * the one-pager has no room for seven labelled groups. Every token here is
- * also claimed somewhere in `skills`/`resumeSkills` or the experience bullets —
- * this is a denser rendering of the same truth, never a longer one. Things he
- * cannot evidence — encrypted-SQLite libraries, push messaging, formal ANR
- * profiling — are deliberately absent, which is why coverage stops short of the full 52-keyword basket.
- */
-export const resumeSkillsCompact =
-  "Jetpack Compose, Material 3, Kotlin Multiplatform, Compose Multiplatform, Android SDK, Clean Architecture, MVVM, MVI, multi-module, repository pattern, Coroutines, Flow, StateFlow, Hilt, Dagger, dependency injection, Room, SQLite, DataStore, Retrofit, OkHttp, Ktor, REST APIs, WorkManager, foreground services, GPS/IMU dead reckoning, Kalman filtering, Firebase Crashlytics, Sentry, Mixpanel, Keystore encryption (AES-256), SSL pinning, BiometricPrompt, VAPT, Gradle KTS, AGP 9, Fastlane, CI/CD, Git, Play Store releases, mentoring, code review, Agile sprint planning, cross-functional collaboration";
 
 // Granular 7-group layout for the résumé view — matches PDF structure for ATS coverage
 export const resumeSkills: { group: string; items: string[] }[] = [

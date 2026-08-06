@@ -6,6 +6,7 @@ import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
 import { Stunts } from "./Stunts.tsx";
+import { Arenas } from "./Arenas.tsx";
 import { Trail } from "./Trail.tsx";
 import { disposeAudio, initAudio, playOrbit, playPickup } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
@@ -66,6 +67,7 @@ const MemoLaunchPads = memo(LaunchPads);
 const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
 const MemoStunts = memo(Stunts);
+const MemoArenas = memo(Arenas);
 const MemoTrail = memo(Trail);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
@@ -548,6 +550,7 @@ export default function World(props: { onShowList: () => void }) {
           <MemoProps />
           <MemoMonuments />
           <MemoStunts />
+          <MemoArenas />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
