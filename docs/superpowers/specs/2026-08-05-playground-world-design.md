@@ -227,3 +227,40 @@ Each phase leaves `main` green and `/playground` usable.
   that read as intentional rather than as a limitation.
 - Server-side leaderboards, accounts, or anything requiring moderation.
 - Replacing the landing page or any route other than `/playground`.
+
+---
+
+## Scope correction — 2026-08-06
+
+The world above was built, and then kept growing: four craft modes, orbit and
+space, launch pads, thermals, a timed triathlon, sixteen collectibles, six
+achievements, a data skyline, a stunt yard, sky gates, orbit debris. That is
+several features' worth of surface on a hub whose job is **getting a visitor
+into one of eight rooms**.
+
+The cost was not abstract. Three quarters of the defects found by playing it
+were states the craft could enter and not leave — capsized in open water with
+recovery gated on being near the ground, wedged on an atoll with no rule
+describing it, pinned under a sky island by its own updraft — and the screen
+was full of things competing for attention rather than pointing at a door.
+
+**What the world is now:**
+
+| Kept | Why |
+|---|---|
+| Wheels and hull | Two modes reach every room. That is the job. |
+| Drive into a room to enter it | The whole mechanic. |
+| The compass | Eight rooms on a 100m map are unfindable without it. |
+| 16 artifacts, each a real fact from the site's own data | The one progression worth having: exploring the world and reading the CV become the same act. |
+| The Mileway GPS lens | Demonstrates the hero project instead of citing it. |
+| Sound, List view, reset, print/no-WebGL/screen-reader fallbacks | Polish and non-negotiables. |
+
+**Cut:** flight and wings · orbit and space · thermals · launch pads · the
+triathlon and its checkpoints · achievements · the stunt yard · sky gates ·
+orbit debris. The two sky-island rooms became atolls, so every room is now
+reachable by driving or sailing.
+
+The lesson worth keeping: each addition was individually defensible and the sum
+was not, because nothing in the process was asking "does this help someone open
+a door". A hub is a means, and this one had started competing with the rooms it
+exists to advertise.

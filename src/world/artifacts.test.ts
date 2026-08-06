@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
-import { SPACE_ALTITUDE, WORLD_BOUNDS } from "./craftPhysics.ts";
+import { WORLD_BOUNDS } from "./craftPhysics.ts";
 import { TERRAIN } from "./worldData.ts";
 
 describe("artifacts are built from real data", () => {
@@ -25,23 +25,14 @@ describe("completion requires every mechanic", () => {
   // every artifact could be reached on the wheels, none of the flying, sailing
   // or orbiting would ever need to be learned, and the world would be a lawn
   // with things on it.
-  it("puts artifacts in all four media", () => {
+  it("puts artifacts in both media", () => {
+    // Was four media, when the world had flight and orbit. Two now — but the
+    // point is unchanged: the set cannot be completed on the wheels, so
+    // collecting is still how a visitor discovers the car swims.
     const media = new Set(ARTIFACTS.map((a) => a.medium));
-    expect(media).toEqual(new Set(["land", "water", "air", "orbit"]));
+    expect(media).toEqual(new Set(["land", "water"]));
   });
 
-  it("places the orbit ones genuinely above the atmosphere", () => {
-    for (const a of ARTIFACTS.filter((a) => a.medium === "orbit")) {
-      expect(a.position[1]).toBeGreaterThan(SPACE_ALTITUDE);
-    }
-  });
-
-  it("places the air ones above anything a car can reach but below space", () => {
-    for (const a of ARTIFACTS.filter((a) => a.medium === "air")) {
-      expect(a.position[1]).toBeGreaterThan(TERRAIN.mainland.groundY + 8);
-      expect(a.position[1]).toBeLessThan(SPACE_ALTITUDE);
-    }
-  });
 });
 
 describe("every artifact is somewhere the craft can legally be", () => {

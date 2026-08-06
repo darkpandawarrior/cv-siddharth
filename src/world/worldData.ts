@@ -1,4 +1,3 @@
-import type { Checkpoint } from "./triathlon.ts";
 
 /**
  * The world's layout — where every room, checkpoint and thermal sits in
@@ -16,24 +15,12 @@ import type { Checkpoint } from "./triathlon.ts";
  *   +Z = south, -Z = north
  *   origin (0,0,0) = the centre of the mainland, at sea level
  *
- * Layout, north to south:
+ * Layout, north to south (two media only — see craftPhysics):
  *   mainland      z in [-18, 12]   the four land rooms, driveable in wheels
  *   shore + ramp  z in [12, 22]    the tapered south coast, and the launch ramp
  *   Ink sea       z in [22, 46]    open water — the strait the atolls sit past
  *   atolls        z ≈ 48           the two water rooms, one either side of x=0
- *   thermals      z ≈ 62           updraft columns, in OPEN WATER past the atolls
- *   sky islands   z ≈ 62, y ≈ 34   above the thermals, not above the atolls
- *
- * That last separation is load-bearing and was learned the hard way. The
- * atolls and the sky islands originally shared an (x, z) — island directly
- * above atoll — which reads well on paper and is unplayable: the updraft
- * column's footprint at sea level was then entirely inside the atoll's own
- * rock, so the only place you could enter the column was a place you were
- * standing on solid ground, and the column is (correctly) disabled while
- * grounded. The air leg was unreachable and the water rooms were unparkable
- * for the same reason. Pulling the islands 14m further south puts each
- * column over open water, where a craft afloat can sail into it — which is
- * what makes the hull→wings handoff the course is built around possible.
+ *   far atolls    z ≈ 62           two more water rooms, a longer sail out
  *
  * Mirrored east/west: everything on the `weeb`/`blueprint` side lives at
  * negative X, everything on the `chess`/`map` side at positive X. That
@@ -112,7 +99,7 @@ export function tiltedSlabCenterY(y0: number, y1: number, run: number, thickness
   return (y0 + y1) / 2 - (thickness / 2) * Math.cos(angle);
 }
 
-export type Medium = "land" | "water" | "air";
+export type Medium = "land" | "water";
 
 export type Placement = {
   to: string; // MUST match a ROOMS[].to
@@ -139,39 +126,14 @@ export const PLACEMENTS: Placement[] = [
   { to: "/weeb", position: [-14, 0.3, 48], medium: "water", shape: "atoll" },
   { to: "/chess", position: [14, 0.3, 48], medium: "water", shape: "board" },
 
-  // Sky islands — south of their atoll, not above it (see the layout note in
-  // this file's header for why that gap has to exist). Each sits directly
-  // above a THERMALS column standing in open water.
-  { to: "/blueprint", position: [-14, 34, 62], medium: "air", shape: "board" },
-  { to: "/map", position: [14, 34, 62], medium: "air", shape: "pcb" },
+  // Were sky islands, reachable only by flight. Flight is gone (see
+  // craftPhysics's transition table for why), so they are atolls like the other
+  // two — every room in this world is now reachable by driving or sailing,
+  // which is the entire job of a hub.
+  { to: "/blueprint", position: [-16, 0.3, 62], medium: "water", shape: "board" },
+  { to: "/map", position: [16, 0.3, 62], medium: "water", shape: "pcb" },
 ];
 
-/**
- * The triathlon course. Routed so no single craft mode can finish it:
- * a mainland sprint (wheels) ends at a ramp that launches the craft into a
- * glide (wings), it splashes down into the Ink sea (hull), sails the
- * remaining strait to an atoll, then catches that atoll's thermal to climb
- * back into wings and land on the sky island above. Ids are sequential from
- * 0 — triathlon.ts's passCheckpoint() advances one id at a time and ignores
- * anything out of order, so a gap or a duplicate here would silently strand
- * a runner mid-course. triathlon.ts's CHECKPOINT_COUNT is derived from this
- * array's length (not a second hand-maintained number — see that file's
- * comment for why importing the value back is safe despite the type-only
- * import in the other direction), so the array's length IS the contract:
- * whatever the last id here is, the course finishes on it.
- *
- * The course runs the west (weeb/blueprint) corridor; the east corridor
- * exists to drive to and explore but isn't timed.
- */
-export const CHECKPOINTS: Checkpoint[] = [
-  { id: 0, position: [-10, 0.5, -14], radius: 3 }, // sprint start, near Compose
-  { id: 1, position: [-10, 2.5, 16], radius: 3 }, // ramp launch, mainland's south edge
-  { id: 2, position: [-10, 9, 28], radius: 4 }, // glide apex over open water
-  { id: 3, position: [-12, 0.4, 34], radius: 4 }, // splashdown into the Ink sea
-  { id: 4, position: [-14, 0.4, 46], radius: 4 }, // sail the strait to the atoll's shore
-  { id: 5, position: [-14, 20, 62], radius: 5 }, // catch the thermal, climbing
-  { id: 6, position: [-14, 34, 62], radius: 4 }, // land on the Blueprint sky island — finish
-];
 
 // Updraft cylinders, one under each sky island, matching the mirrored x/z of
 // PLACEMENTS above so "rising off the sky islands" is literally true: the
@@ -208,39 +170,3 @@ export const CHECKPOINTS: Checkpoint[] = [
 // the original bug (3080N against a 220kg craft's 2158N weight, applied
 // unconditionally at any altitude) is what made atolls unparkable and pinned
 // or launched a craft that reached a sky island from underneath.
-// RADIUS, corrected: 4 was too small and for the wrong reason. It was shrunk
-// under the sky island's 4.5m half-width to keep the column's footprint inside
-// the slab — but the column no longer needs to hide under anything, because
-// `ceilingY` bounds it in Y and Craft.tsx skips it while grounded. What 4 DID
-// do was make the column narrower than the atoll that used to sit beneath it,
-// so there was no water inside it to enter from. With the islands moved to
-// open water (see the header note), 7 gives a column a craft can plausibly
-// sail into without being so wide it's impossible to avoid.
-/**
- * Launch pads — the route to orbit, one on each sky island.
- *
- * The chain is deliberate and each link teaches the next: ramp to fly, thermal
- * to climb, island to land, pad to leave the atmosphere. Space is 70m up and
- * nothing else in the world gets close — a full boosted climb off the ramp tops
- * out around 10m — so without these it is a mode the craft can enter and no
- * visitor could ever reach.
- *
- * Unlike THERMALS these fire even while GROUNDED: you drive onto the pad and it
- * throws you. That is the point — a column you have to be already airborne to
- * use would be unreachable standing on the island it sits on, which is exactly
- * the mistake the thermals made in their first two versions.
- */
-export const SPACE_LIFTS: {
-  position: [number, number, number];
-  radius: number;
-  strength: number;
-  ceilingY: number;
-}[] = [
-  { position: [-14, 34, 62], radius: 3, strength: 26, ceilingY: 74 },
-  { position: [14, 34, 62], radius: 3, strength: 26, ceilingY: 74 },
-];
-
-export const THERMALS: { position: [number, number, number]; radius: number; strength: number; ceilingY: number }[] = [
-  { position: [-14, 17, 62], radius: 7, strength: 14, ceilingY: 32 },
-  { position: [14, 17, 62], radius: 7, strength: 14, ceilingY: 32 },
-];

@@ -3,13 +3,11 @@ import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
-import { LaunchPads, SpaceSky, Thermals } from "./Sky.tsx";
 import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
-import { Stunts } from "./Stunts.tsx";
 import { Arenas } from "./Arenas.tsx";
 import { Trail } from "./Trail.tsx";
-import { disposeAudio, initAudio, playOrbit, playPickup } from "./audio.ts";
+import { disposeAudio, initAudio, playPickup } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
@@ -18,22 +16,12 @@ import { Pavilions } from "./Pavilions.tsx";
 import { Craft } from "./Craft.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard } from "./input.ts";
-import { telemetry } from "./telemetry.ts";
 import { worldPalette } from "./palette.ts";
 import type { CraftMode } from "./craftPhysics.ts";
-import {
-  beginRun,
-  passCheckpoint,
-  loadBestMs,
-  saveBestMs,
-  type RunState,
-  type Checkpoint,
-} from "./triathlon.ts";
-import { CHECKPOINTS } from "./worldData.ts";
 import { loadExplored, markExplored } from "./explored.ts";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS, MEDIUM_TINT } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
-import { collect, loadCollected, loadUnlocked, unlock } from "./progress.ts";
+import { collect, loadCollected } from "./progress.ts";
 import type { Toast } from "./Nav.tsx";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulse, type PulseEvent } from "../play/pulse.ts";
@@ -63,11 +51,8 @@ const MemoWater = memo(Water);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoCraft = memo(Craft);
-const MemoThermals = memo(Thermals);
-const MemoLaunchPads = memo(LaunchPads);
 const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
-const MemoStunts = memo(Stunts);
 const MemoArenas = memo(Arenas);
 const MemoTrail = memo(Trail);
 
@@ -75,84 +60,11 @@ const MemoTrail = memo(Trail);
 // auto-confirms — the design doc's "~1s dwell" figure.
 const DWELL_MS = 1000;
 
-// The triathlon timer redraws at this cadence instead of once per physics
-// frame. formatTime's centisecond precision would happily show a fresh value
-// 60 times a second, but no one reads a race clock that fast — 10 Hz is
-// still smooth to the eye and cuts World+Hud's re-render rate by 6x for the
-// whole (possibly minutes-long) duration of a run. Start/finish still update
-// immediately regardless of this interval, see handleCraftState below.
-const ELAPSED_UPDATE_INTERVAL_MS = 100;
-
-/** How long after mount before milestones can fire — see tryUnlock. */
-const ACHIEVEMENT_GRACE_MS = 2000;
-
-/** How long a mode must be held before it counts as having been done. */
-const MODE_DWELL_MS = 500;
 
 
 
-function CheckpointRing({
-  checkpoint,
-  passed,
-  active,
-  next,
-}: {
-  checkpoint: Checkpoint;
-  passed: boolean;
-  /** A run is under way. Before one starts, the course is scenery. */
-  active: boolean;
-  /** This is the checkpoint to head for right now. */
-  next: boolean;
-}) {
-  // No rotation: TorusGeometry starts facing +Z, which is exactly a "gate"
-  // orientation for a course that runs mainland (north) to sky island
-  // (south) — see worldData.ts's coordinate scheme. Pavilions' Atoll ring is
-  // the other case (flat, rotated onto the ground); this one stands upright
-  // on purpose, something to drive/glide/sail *through*.
-  const c = worldPalette();
-  return (
-    <mesh position={checkpoint.position}>
-      <torusGeometry args={[checkpoint.radius, 0.14, 8, 32]} />
-      {/* Three states, not two. Seven huge glowing gates at full brightness
-          dominated the view from spawn and read as the point of the world,
-          when the triathlon is an optional side activity most visitors will
-          never start — and with bloom added they became the brightest thing on
-          screen. Dormant until a run begins; only the checkpoint you actually
-          need is lit. */}
-      <meshStandardMaterial
-        color={passed ? c.signal : c.probe}
-        emissive={passed ? c.signal : c.probe}
-        emissiveIntensity={passed ? 0.15 : next ? 1.1 : active ? 0.45 : 0.12}
-        transparent
-        opacity={passed ? 0.14 : next ? 0.9 : active ? 0.4 : 0.12}
-      />
-    </mesh>
-  );
-}
 
-/** `passedCount` is the only prop, so this only re-renders on an actual
- *  checkpoint pass (a handful of times per run) rather than every frame. */
-const CheckpointRings = memo(function CheckpointRings({
-  passedCount,
-  active,
-}: {
-  passedCount: number;
-  active: boolean;
-}) {
-  return (
-    <>
-      {CHECKPOINTS.map((c) => (
-        <CheckpointRing
-          key={c.id}
-          checkpoint={c}
-          passed={c.id < passedCount}
-          active={active}
-          next={active && c.id === passedCount}
-        />
-      ))}
-    </>
-  );
-});
+
 
 export default function World(props: { onShowList: () => void }) {
   const palette = worldPalette();
@@ -167,19 +79,6 @@ export default function World(props: { onShowList: () => void }) {
   const dwellTimerRef = useRef<number | null>(null);
   const confirmHeldRef = useRef(false); // edge-detects input.confirm (a held flag) into a single press
 
-  const runRef = useRef<RunState>({
-    startedAtMs: null,
-    nextCheckpoint: 0,
-    finishedMs: null,
-  });
-  const [checkpointIndex, setCheckpointIndex] = useState(0);
-  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
-  // Whether the craft is sitting in checkpoint 0's sphere with no run under
-  // way — drives the HUD's "press Enter to start" prompt. Mirrored in a ref
-  // so the per-frame state callback can skip the setState when nothing moved.
-  const [atStartLine, setAtStartLine] = useState(false);
-  const atStartLineRef = useRef(false);
-  const [bestMs, setBestMs] = useState<number | null>(() => loadBestMs());
   // How many rooms have been entered from the world, ever. Gives the map a
   // reason to be explored past the first room you happen to bump into — the
   // grid view has always shown all eight at once, so the world needs its own
@@ -190,14 +89,8 @@ export default function World(props: { onShowList: () => void }) {
   // that must not close over a stale value.
   const [collected, setCollected] = useState<Set<string>>(() => loadCollected());
   const collectedRef = useRef(collected);
-  const unlockedRef = useRef<Set<string>>(loadUnlocked());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastTimers = useRef<number[]>([]);
-  // Mirrors `elapsedMs` for the per-frame closure below (handleCraftState's
-  // own dependency list is just `[enterRoom]`, so it never sees a fresh
-  // `elapsedMs` from state — same reason runRef/modeRef/promptToRef exist).
-  const elapsedMsRef = useRef<number | null>(null);
-  const lastElapsedUpdateRef = useRef(0);
 
   // document.hidden, not the list-view toggle: switching to List unmounts
   // this whole component (Playground.tsx), so there is no "paused but still
@@ -246,35 +139,7 @@ export default function World(props: { onShowList: () => void }) {
     toastTimers.current.push(timer);
   }, []);
 
-  // Nothing unlocks in the first moments after mount. The craft spawns in
-  // mid-air and its very first physics frames report a mode derived from a
-  // half-initialised probe — enough to hand out "Afloat: found out the car
-  // swims" to a visitor who had not yet touched a key, which devalues every
-  // other milestone in the set. A milestone has to describe something the
-  // visitor did.
-  const readyAtRef = useRef(0);
-  const modeSinceRef = useRef(0);
-  useEffect(() => {
-    readyAtRef.current = performance.now() + ACHIEVEMENT_GRACE_MS;
-  }, []);
 
-  const tryUnlock = useCallback(
-    (id: string) => {
-      if (performance.now() < readyAtRef.current) return;
-      if (unlockedRef.current.has(id)) return;
-      const achievement = unlock(id);
-      if (!achievement) return;
-      unlockedRef.current.add(id);
-      pushToast({
-        id: `ach-${id}-${achievement.label}`,
-        title: achievement.label,
-        detail: achievement.detail,
-        tint: palette.warn,
-        kind: "unlock",
-      });
-    },
-    [pushToast, palette.warn],
-  );
 
   // Every scheduled toast has to be cancellable: navigating into a room
   // unmounts this component, and a setTimeout calling setToasts afterwards is
@@ -299,12 +164,10 @@ export default function World(props: { onShowList: () => void }) {
       // a visitor entered through.
       bump(`room:${to.slice(1)}` as PulseEvent);
       markExplored(to);
-      const exploredNow = loadExplored().length;
-      setExploredCount(exploredNow);
-      if (exploredNow >= ROOMS.length) tryUnlock("all-rooms");
+      setExploredCount(loadExplored().length);
       navigate({ to });
     },
-    [bump, navigate, tryUnlock],
+    [bump, navigate],
   );
 
   const handlePrompt = useCallback(
@@ -341,29 +204,9 @@ export default function World(props: { onShowList: () => void }) {
     (s: { mode: CraftMode; position: [number, number, number] }) => {
       if (modeRef.current !== s.mode) {
         modeRef.current = s.mode;
-        modeSinceRef.current = performance.now();
         setMode(s.mode);
       }
 
-      // Milestones ride the mode machine — the transitions ARE the moments
-      // worth marking, and deriving them anywhere else would mean a second,
-      // driftable copy of "what counts as flying".
-      //
-      // But they need the mode to STICK. On load the craft falls from its
-      // spawn before the terrain colliders settle, dips below sea level for a
-      // few frames, and is caught by the under-map guard — enough to award
-      // "Afloat: found out the car swims" to a visitor who has not yet touched
-      // a key. A mode held for half a second is something the driver did; a
-      // mode held for three frames is a startup transient.
-      if (performance.now() - modeSinceRef.current > MODE_DWELL_MS) {
-        if (s.mode === "wings") tryUnlock("first-flight");
-        if (s.mode === "hull") tryUnlock("first-sail");
-        if (s.mode === "orbit") {
-          tryUnlock("orbit");
-          playOrbit();
-        }
-      }
-      if (telemetry.inThermal) tryUnlock("thermal");
 
       // Artifact pickups. A plain distance sweep over ~18 positions, run on
       // the frame callback that already exists: eighteen more Rapier sensors
@@ -392,7 +235,6 @@ export default function World(props: { onShowList: () => void }) {
           tint: worldPalette()[MEDIUM_TINT[artifact.medium]],
           kind: "find",
         });
-        if (next.size === ARTIFACTS.length) tryUnlock("all-artifacts");
       }
 
       const confirmed = input.confirm;
@@ -405,84 +247,13 @@ export default function World(props: { onShowList: () => void }) {
         enterRoom(promptToRef.current);
       confirmHeldRef.current = confirmed;
 
-      const run = runRef.current;
-      if (run.finishedMs === null) {
-        const checkpoint = CHECKPOINTS[run.nextCheckpoint];
-        const now = Date.now();
-        const startedAtMs = run.startedAtMs ?? now; // what beginRun(now) would stamp, without mutating state early
-        let next = run;
-        if (checkpoint) {
-          const [cx, cy, cz] = checkpoint.position;
-          const dist = Math.hypot(
-            s.position[0] - cx,
-            s.position[1] - cy,
-            s.position[2] - cz,
-          );
-          const isStartLine = run.startedAtMs === null;
-          // Starting a run is deliberate, not incidental: checkpoint 0 sits
-          // on the natural first drive from spawn, so simply *reaching* it
-          // used to arm a timed run for every casual visitor. It now also
-          // requires the same confirm press (Enter / tap) room entry uses,
-          // fired while standing inside the sphere — driving through no
-          // longer starts anything by itself. Every checkpoint after the
-          // first still passes on physical proximity alone, same as before;
-          // only the start line needs the extra press.
-          const shouldPass =
-            dist <= checkpoint.radius &&
-            (!isStartLine || (confirmPressedThisFrame && !promptToRef.current));
-          // ...which makes the start line invisible unless we say so. The HUD
-          // rendered nothing about the triathlon until a run was already
-          // running, so the press that starts one was undiscoverable: a
-          // visitor had to guess that this particular ring, unlike every
-          // other, wanted a keystroke. Surfacing it only while you're
-          // standing in the sphere keeps the HUD quiet the rest of the time.
-          const nowAtStartLine =
-            isStartLine && dist <= checkpoint.radius && !promptToRef.current;
-          if (nowAtStartLine !== atStartLineRef.current) {
-            atStartLineRef.current = nowAtStartLine;
-            setAtStartLine(nowAtStartLine);
-          }
-          if (shouldPass) {
-            const based = isStartLine ? beginRun(now) : run;
-            next = passCheckpoint(based, checkpoint.id, now);
-            runRef.current = next;
-            if (next.nextCheckpoint !== run.nextCheckpoint)
-              setCheckpointIndex(next.nextCheckpoint);
-            if (next.finishedMs !== null) {
-              saveBestMs(next.finishedMs - startedAtMs);
-              setBestMs(loadBestMs());
-            }
-          }
-        }
-
-        const computedElapsed =
-          next.startedAtMs === null ? null : (next.finishedMs ?? now) - startedAtMs;
-        // Throttled to ELAPSED_UPDATE_INTERVAL_MS instead of writing state
-        // every physics frame (finding 13: that re-rendered World and Hud at
-        // 60 Hz for the entire length of a run). The two edges that must
-        // still land immediately — the run appearing (null -> a number) and
-        // finishing — bypass the throttle so the HUD never looks like it
-        // missed the start or stopped short of the true finish time.
-        const justStarted = elapsedMsRef.current === null && computedElapsed !== null;
-        const justFinished = next.finishedMs !== null;
-        if (
-          justStarted ||
-          justFinished ||
-          now - lastElapsedUpdateRef.current >= ELAPSED_UPDATE_INTERVAL_MS
-        ) {
-          lastElapsedUpdateRef.current = now;
-          elapsedMsRef.current = computedElapsed;
-          setElapsedMs(computedElapsed);
-        }
-      }
     },
-    // pushToast and tryUnlock are both stable useCallbacks, but listing them
-    // is not ceremony: this callback is handed to Craft and captured for the
-    // life of the mount, so anything it closes over that is NOT listed would
-    // silently freeze at its first value. Milestones and pickups going quiet
-    // after a re-render is exactly the kind of bug that looks like "the game
-    // stopped rewarding me" and is untraceable from the symptom.
-    [enterRoom, pushToast, tryUnlock],
+    // pushToast is a stable useCallback, but listing it is not ceremony: this
+    // callback is handed to Craft and captured for the life of the mount, so
+    // anything it closes over that is NOT listed would silently freeze at its
+    // first value — pickups going quiet after a re-render is the kind of bug
+    // that is untraceable from the symptom.
+    [enterRoom, pushToast],
   );
 
   // The HUD's reset control: clears an in-progress or finished run back to
@@ -490,15 +261,6 @@ export default function World(props: { onShowList: () => void }) {
   // `bestMs` alone — that's a persisted personal best across attempts, not
   // per-run state, and resetting it here would defeat the point of
   // saveBestMs "keeping the lower value" across restarts.
-  const resetRun = useCallback(() => {
-    runRef.current = { startedAtMs: null, nextCheckpoint: 0, finishedMs: null };
-    elapsedMsRef.current = null;
-    lastElapsedUpdateRef.current = 0;
-    atStartLineRef.current = false;
-    setAtStartLine(false);
-    setCheckpointIndex(0);
-    setElapsedMs(null);
-  }, []);
 
   const promptRoom: Room | null =
     promptTo === null ? null : (ROOMS.find((r) => r.to === promptTo) ?? null);
@@ -558,7 +320,6 @@ export default function World(props: { onShowList: () => void }) {
           <MemoWater />
           <MemoProps />
           <MemoMonuments />
-          <MemoStunts />
           <MemoArenas />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
@@ -566,10 +327,6 @@ export default function World(props: { onShowList: () => void }) {
         <MemoTrail />
         <MemoMotes />
         <Artifacts collected={collected} />
-        <MemoThermals />
-        <MemoLaunchPads />
-        <SpaceSky />
-        <CheckpointRings passedCount={checkpointIndex} active={elapsedMs !== null} />
         {/* Bloom is doing real work here, not gloss. Every room's identity in
             this world is carried by an emissive material in its tint — the
             phone screen, the CRT face, the atoll's waterline ring, the sky
@@ -610,10 +367,10 @@ export default function World(props: { onShowList: () => void }) {
         promptRoom={promptRoom}
         onConfirm={onHudConfirm}
         onShowList={props.onShowList}
-        elapsedMs={elapsedMs}
-        bestMs={bestMs}
-        onResetRun={resetRun}
-        atStartLine={atStartLine}
+
+
+
+
         exploredCount={exploredCount}
         collectedCount={collected.size}
         artifactTotal={ARTIFACTS.length}

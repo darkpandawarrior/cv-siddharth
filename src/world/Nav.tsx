@@ -2,11 +2,11 @@ import { useEffect, useRef, useState, type JSX } from "react";
 import { PLACEMENTS } from "./worldData.ts";
 import { ROOMS } from "../rooms.tsx";
 import { telemetry } from "./telemetry.ts";
-import { LAUNCH_SPEED, SPACE_ALTITUDE } from "./craftPhysics.ts";
+import { TERMINAL_WHEEL_SPEED } from "./craftPhysics.ts";
 
 /** Top of the speed bar, m/s. Above the craft's terminal speed so the bar
  *  never pins. */
-const GAUGE_MAX_SPEED = 25;
+const GAUGE_MAX_SPEED = Math.ceil(TERMINAL_WHEEL_SPEED);
 
 /**
  * Wayfinding, speed and boost — the HUD layer that turns a dark plane into a
@@ -201,10 +201,8 @@ export function Gauges(): JSX.Element {
   const barRef = useRef<HTMLDivElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
   const boostRef = useRef<HTMLDivElement>(null);
-  const altRef = useRef<HTMLDivElement>(null);
   const odoRef = useRef<HTMLSpanElement>(null);
   const accRef = useRef<HTMLSpanElement>(null);
-  const altNumRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -221,37 +219,20 @@ export function Gauges(): JSX.Element {
         barRef.current.style.width = `${Math.min(100, (speed / GAUGE_MAX_SPEED) * 100)}%`;
         // var(), not a hex: these are CSS values, so the token can be handed
         // straight over and a theme change is picked up without a re-render.
+        // Green in the top third of the range — there is no launch threshold to
+        // mark any more, so the bar just reads "going quickly".
         barRef.current.style.background =
-          speed >= LAUNCH_SPEED ? "var(--color-signal)" : "var(--color-probe)";
+          speed >= GAUGE_MAX_SPEED * 0.66 ? "var(--color-signal)" : "var(--color-probe)";
       }
       if (boostRef.current) {
         boostRef.current.style.width = `${telemetry.boost * 100}%`;
         boostRef.current.style.opacity = telemetry.boosting ? "1" : "0.55";
-      }
-      // Altitude only appears once you actually leave the ground. On the desk
-      // it would be a permanent "0 m" taking up space; in the air it is the
-      // only way to judge a climb, and the only hint that something changes
-      // at a specific height.
-      if (odoRef.current) {
-        // Kilometres once it gets silly, metres before that.
-        const m = telemetry.odometer;
-        odoRef.current.textContent = m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`;
       }
       if (accRef.current) {
         accRef.current.textContent =
           telemetry.rawError === 0
             ? "— keep driving"
             : `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
-      }
-      if (altRef.current && altNumRef.current) {
-        const airborne = telemetry.y > 2;
-        altRef.current.style.display = airborne ? "" : "none";
-        if (airborne) {
-          altNumRef.current.textContent = String(Math.round(telemetry.y));
-          const nearSpace = telemetry.y >= SPACE_ALTITUDE * 0.6;
-          altNumRef.current.style.color =
-            telemetry.y >= SPACE_ALTITUDE ? "var(--color-alt)" : nearSpace ? "var(--color-probe)" : "";
-        }
       }
     };
     raf = requestAnimationFrame(tick);
@@ -275,12 +256,6 @@ export function Gauges(): JSX.Element {
       <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={barRef} className="h-full w-0 rounded-full transition-[background] duration-200" />
       </div>
-      {/* The launch threshold, drawn where LAUNCH_SPEED falls on the bar —
-          read from craftPhysics rather than repeated, so retuning the flight
-          envelope moves the mark with it. */}
-      <div className="relative h-1.5">
-        <span className="absolute h-1.5 w-px bg-accent/50" style={{ left: `${(LAUNCH_SPEED / GAUGE_MAX_SPEED) * 100}%` }} />
-      </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={boostRef} className="h-full w-full rounded-full bg-[var(--color-warn)]" />
       </div>
@@ -301,19 +276,6 @@ export function Gauges(): JSX.Element {
         </span>
       </div>
 
-      <div
-        ref={altRef}
-        style={{ display: "none" }}
-        className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted"
-      >
-        <span>alt</span>
-        <span>
-          <span ref={altNumRef} className="text-zinc-200">
-            0
-          </span>{" "}
-          m
-        </span>
-      </div>
     </div>
   );
 }

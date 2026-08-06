@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Eraser, LayoutGrid, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Eraser, LayoutGrid, Volume2, VolumeX } from "lucide-react";
 import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./Nav.tsx";
 import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
 import { isMuted, toggleMuted } from "./audio.ts";
@@ -25,21 +25,8 @@ import type { Room } from "../rooms.tsx";
 const MODE_LABEL: Record<CraftMode, string> = {
   wheels: "Wheels",
   hull: "Hull",
-  wings: "Wings",
-  orbit: "Orbit",
 };
 
-// mm:ss.cc — centiseconds are plenty of precision for a course measured in
-// single-digit minutes, and reading two digits is easier at a glance than
-// three during a run that's still moving.
-function formatTime(ms: number): string {
-  const totalCentis = Math.floor(ms / 10);
-  const centis = totalCentis % 100;
-  const totalSeconds = Math.floor(totalCentis / 100);
-  const seconds = totalSeconds % 60;
-  const minutes = Math.floor(totalSeconds / 60);
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centis).padStart(2, "0")}`;
-}
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
@@ -234,15 +221,6 @@ export function Hud(props: {
   promptRoom: Room | null;
   onConfirm: () => void;
   onShowList: () => void;
-  elapsedMs: number | null;
-  bestMs: number | null;
-  // Optional: the triathlon has no other way to restart once it's running,
-  // so World.tsx wires this in wherever it owns that reset logic. Rendered
-  // only when supplied — a Hud used somewhere without a restartable run just
-  // omits it rather than this file needing to know when that's the case.
-  onResetRun?: () => void;
-  /** Craft is parked on the triathlon's start line with no run under way. */
-  atStartLine?: boolean;
   /** How many of the eight rooms have been entered from the world. */
   exploredCount?: number;
   totalRooms?: number;
@@ -256,10 +234,6 @@ export function Hud(props: {
     promptRoom,
     onConfirm,
     onShowList,
-    elapsedMs,
-    bestMs,
-    onResetRun,
-    atStartLine,
     exploredCount,
     totalRooms,
     collectedCount,
@@ -310,25 +284,7 @@ export function Hud(props: {
           mode: <span className="text-accent">{MODE_LABEL[mode]}</span>
         </div>
 
-        {elapsedMs === null && atStartLine && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="pointer-events-auto rounded-xl border border-accent/40 bg-card/85 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-muted backdrop-blur"
-          >
-            <span className="text-accent">enter</span> to start the triathlon
-            {bestMs !== null && <span className="ml-2">best {formatTime(bestMs)}</span>}
-          </div>
-        )}
 
-        {elapsedMs !== null && (
-          <div className="pointer-events-auto flex flex-col items-end gap-0.5 rounded-xl border border-line bg-card/80 px-3 py-1.5 font-mono text-[11px] text-muted backdrop-blur">
-            <span>
-              time <span className="text-accent">{formatTime(elapsedMs)}</span>
-            </span>
-            {bestMs !== null && <span>best {formatTime(bestMs)}</span>}
-          </div>
-        )}
       </div>
 
       {/* One wrapper for both the release banner and the room prompt, so the
@@ -433,18 +389,6 @@ export function Hud(props: {
             <LayoutGrid size={14} /> List view
           </button>
 
-          {/* Only offered once there is a run to reset — it used to render
-              unconditionally, so the first thing the HUD told you about the
-              triathlon was how to cancel one you had never started. */}
-          {onResetRun && elapsedMs !== null && (
-            <button
-              type="button"
-              onClick={onResetRun}
-              className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-line bg-card/80 px-3 py-1.5 text-sm text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent"
-            >
-              <RotateCcw size={14} /> Reset run
-            </button>
-          )}
         </div>
 
         <div className="flex flex-col items-end gap-3 pr-0 sm:pr-16">

@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  CHECKPOINTS,
   PLACEMENTS,
   TERRAIN,
-  THERMALS,
   WATER_PLANE,
   WATER_SENSOR_HALF_EXTENTS,
   atollWaterlineRadius,
@@ -11,14 +9,9 @@ import {
 } from "./worldData.ts";
 import {
   CHASSIS_RESTING_HEIGHT,
-  LAUNCH_SPEED,
-  SPACE_ALTITUDE,
   SPAWN_POSITION,
-  STALL_SPEED,
-  TERMINAL_WHEEL_SPEED,
   WORLD_BOUNDS,
   hullTerminalSpeed,
-  levelFlightSpeed,
 } from "./craftPhysics.ts";
 
 /**
@@ -43,7 +36,6 @@ const waterZ1 = WATER_PLANE.centerZ + WATER_PLANE.depth / 2;
 const waterHalfWidth = WATER_PLANE.width / 2;
 
 const atolls = PLACEMENTS.filter((p) => p.medium === "water");
-const skyIslands = PLACEMENTS.filter((p) => p.medium === "air");
 
 describe("the ground is continuous", () => {
   it("hands off from mainland to shore with no gap and no overlap", () => {
@@ -141,45 +133,6 @@ describe("the sea covers everywhere the craft may go", () => {
   });
 });
 
-describe("the air leg is enterable", () => {
-  it("stands every thermal column in open water, clear of the atolls", () => {
-    // THE regression this file exists for. When each column sat directly on an
-    // atoll, every point inside it at sea level was solid rock — and the column
-    // is (correctly) disabled while grounded, so the only place it could be
-    // entered was the one place it never fires. The air leg was unreachable and
-    // the finding that "fixed" it by shrinking the radius made it worse.
-    for (const thermal of THERMALS) {
-      const [tx, , tz] = thermal.position;
-      for (const atoll of atolls) {
-        const [ax, ay, az] = atoll.position;
-        const gap = Math.hypot(tx - ax, tz - az);
-        expect(gap).toBeGreaterThan(thermal.radius + atollWaterlineRadius(ay));
-      }
-    }
-  });
-
-  it("puts a sky island above every column, and stops the column short of it", () => {
-    for (const thermal of THERMALS) {
-      const [tx, , tz] = thermal.position;
-      const island = skyIslands.find((p) => p.position[0] === tx && p.position[2] === tz);
-      // A column that feeds no island lifts you into empty sky; an island with
-      // no column under it cannot be reached at all.
-      expect(island, `no sky island above thermal at ${tx},${tz}`).toBeDefined();
-      const underside = island!.position[1] - TERRAIN.skyIsland.thickness;
-      // Cutting the force off below the slab lets the craft coast the last
-      // metre. Pushing it right up to the underside is a bounce loop, not a
-      // landing.
-      expect(thermal.ceilingY).toBeLessThan(underside);
-    }
-  });
-
-  it("keeps each column narrow enough to sit under the island it feeds", () => {
-    for (const thermal of THERMALS) {
-      expect(thermal.radius).toBeLessThanOrEqual(TERRAIN.skyIsland.half + 4);
-    }
-  });
-});
-
 describe("the water rooms are enterable", () => {
   it("extends their sensors past the waterline, where a craft can actually be", () => {
     // The atoll flank above the water is far too steep for hull thrust to
@@ -200,46 +153,4 @@ describe("the craft can cross what the course asks it to", () => {
     expect(hullTerminalSpeed()).toBeGreaterThan(2);
   });
 
-  it("can stay in the air once it gets there", () => {
-    // The launch threshold has to be ABOVE the speed needed to sustain flight,
-    // or the craft transitions to wings already sinking and splashes down every
-    // time regardless of how it is flown. It was 14 vs 18 — every launch was a
-    // guaranteed descent, and the air leg was arithmetically impossible while
-    // looking completely implemented.
-    expect(levelFlightSpeed()).toBeLessThan(LAUNCH_SPEED);
-    // ...and stalling still has to mean something, or "flight" is just hovering.
-    expect(STALL_SPEED).toBeLessThan(levelFlightSpeed());
-  });
-
-  it("can reach the speed its own ramp demands", () => {
-    expect(TERMINAL_WHEEL_SPEED).toBeGreaterThan(LAUNCH_SPEED);
-  });
-
-  it("puts space far above anything reachable by accident", () => {
-    // Sky islands are the highest ordinary geometry; orbit has to be a
-    // deliberate climb beyond them, not somewhere you arrive by mistake.
-    const highestIsland = Math.max(...skyIslands.map((p) => p.position[1]));
-    expect(SPACE_ALTITUDE).toBeGreaterThan(highestIsland * 1.5);
-  });
-
-  it("routes every checkpoint inside the bounds box", () => {
-    for (const checkpoint of CHECKPOINTS) {
-      const [x, , z] = checkpoint.position;
-      expect(x).toBeGreaterThan(WORLD_BOUNDS.minX);
-      expect(x).toBeLessThan(WORLD_BOUNDS.maxX);
-      expect(z).toBeGreaterThan(WORLD_BOUNDS.minZ);
-      expect(z).toBeLessThan(WORLD_BOUNDS.maxZ);
-    }
-  });
-
-  it("finishes on a sky island, having passed through all three media", () => {
-    // The course's whole justification is that no single mode can complete it.
-    const finish = CHECKPOINTS[CHECKPOINTS.length - 1];
-    const island = skyIslands.find(
-      (p) => p.position[0] === finish.position[0] && p.position[2] === finish.position[2],
-    );
-    expect(island, "the final checkpoint is not on a sky island").toBeDefined();
-    expect(CHECKPOINTS.some((c) => c.position[1] < 1)).toBe(true); // a sea-level leg
-    expect(CHECKPOINTS.some((c) => c.position[1] > 5 && c.position[1] < 30)).toBe(true); // an airborne leg
-  });
 });

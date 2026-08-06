@@ -1,7 +1,7 @@
 /**
  * Wiping everything this world remembers about you.
  *
- * Seven separate keys accumulated across the build — collected artifacts,
+ * Six separate keys accumulated across the build — collected artifacts,
  * unlocked milestones, rooms entered, best triathlon time, the onboarding card,
  * the view preference, the mute setting — and not one of them had a way back.
  * A visitor who wanted to see the intro again, or replay the collection loop,
@@ -15,7 +15,6 @@
  */
 export const PROGRESS_KEYS = [
   "playground:artifacts",
-  "playground:achievements",
   "playground:explored",
   "playground:triathlon:best",
   "playground:onboarded",

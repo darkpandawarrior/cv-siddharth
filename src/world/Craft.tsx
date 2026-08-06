@@ -6,23 +6,19 @@ import * as THREE from "three";
 import {
   nextMode,
   buoyancyForce,
-  liftForce,
   SEA_LEVEL,
   CHASSIS_MASS,
   HULL_THRUST,
   HULL_LINEAR_DAMPING,
   WORLD_BOUNDS,
   SPAWN_POSITION,
-  ORBIT_GRAVITY_SCALE,
-  ORBIT_THRUST,
-  ORBIT_CEILING,
   ENGINE_FORCE,
   BASE_LINEAR_DAMPING,
   type CraftMode,
   type MediumProbe,
 } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
-import { SPACE_LIFTS, TERRAIN, THERMALS } from "./worldData.ts";
+import { TERRAIN } from "./worldData.ts";
 import { telemetry } from "./telemetry.ts";
 import { RoundedBox } from "@react-three/drei";
 import { worldPalette } from "./palette.ts";
@@ -179,29 +175,8 @@ const WHEEL_AXLE = { x: -1, y: 0, z: 0 };
  * assume the name means what it says without checking the sign in the browser.
  */
 const STEER_SIGN = -1;
-const WING_PITCH_TORQUE = 220;
-const WING_ROLL_TORQUE = 260;
-// Yaw generated per unit of bank angle — see the banked-turn comment above.
-const BANK_TURN_TORQUE = 520;
-// Nose-thrust available in wings mode while boosting; the route to orbit.
-const WING_BOOST_THRUST = 2200;
 
-// Orbit. Damping stays low but non-zero: a true vacuum with zero damping means
-// every nudge accumulates forever and the craft ends up tumbling with no way to
-// settle, which is realistic and miserable to control.
-const ORBIT_LINEAR_DAMPING = 0.08;
-const ORBIT_PITCH_TORQUE = 300;
-const ORBIT_YAW_TORQUE = 300;
-const GRAVITY = 9.81;
 
-/**
- * How long a launch pad keeps pushing after the craft last touched down, ms.
- *
- * With net ~16 m/s² over 1.5s the craft leaves the pad at ~24 m/s having
- * climbed ~18m, which coasts it from the island at y=34 comfortably past
- * SPACE_ALTITUDE (70) — checked against the arc, not guessed.
- */
-const PAD_BURN_MS = 1500;
 
 /**
  * Centre of mass, below the chassis centre — this is the flip fix.
@@ -594,13 +569,8 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // Boost only spends while it is actually doing something: held, with
     // charge left, throttle down, and on the wheels. Draining it mid-air or
     // mid-ocean would burn the tank on a press that changed nothing.
-    // Boost works on the wheels AND aloft. On the ground it is the difference
-    // between clearing the ramp and rolling off it; in the air and in orbit it
-    // is the only way to gain real altitude, which is what makes reaching space
-    // a thing a visitor can work out and then execute rather than stumble into.
-    const boostable = mode === "wheels" || mode === "wings" || mode === "orbit";
-    const wantsBoost =
-      input.boost && boostRef.current > 0 && boostable && (mode === "wheels" ? input.throttle > 0 : true);
+    // Boost is a wheels-only overtake now that there is nowhere to fly to.
+    const wantsBoost = input.boost && boostRef.current > 0 && mode === "wheels" && input.throttle > 0;
     boostRef.current = Math.max(
       0,
       Math.min(1, boostRef.current + (wantsBoost ? -BOOST_DRAIN_PER_S : BOOST_RECHARGE_PER_S) * dt),
@@ -625,7 +595,6 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       submergedDepth,
       airborneMs: airborneMsRef.current,
       speed: vehicle.currentVehicleSpeed(),
-      altitude: t.y - SEA_LEVEL,
     };
 
     const newMode = nextMode(mode, probe);
@@ -667,113 +636,10 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
       // Yaw about world +Y rather than the craft's local up: a boat wallowing
       // in swell shouldn't have its steering authority fall off as it rolls.
       chassis.addTorque({ x: 0, y: -input.steer * HULL_YAW_TORQUE, z: 0 }, true);
-    } else if (newMode === "orbit") {
-      // Vacuum: no lift, no drag, almost no weight. Thrust points wherever the
-      // nose points, so flying here is aiming rather than banking — a
-      // deliberately different verb from the wings mode below it.
-      chassis.setLinearDamping(ORBIT_LINEAR_DAMPING);
-      chassis.addForce(
-        {
-          x: 0,
-          // Cancel most of gravity so the craft coasts instead of falling, but
-          // never all of it: what goes up has to be able to come back down, or
-          // orbit becomes a room with no door.
-          y: CHASSIS_MASS * GRAVITY * (1 - ORBIT_GRAVITY_SCALE),
-          z: 0,
-        },
-        true,
-      );
-      if (input.throttle > 0 || wantsBoost) {
-        const thrust = ORBIT_THRUST * (wantsBoost ? 1.6 : Math.max(0, input.throttle));
-        chassis.addForce(
-          {
-            x: scratch.forward.x * thrust,
-            y: scratch.forward.y * thrust,
-            z: scratch.forward.z * thrust,
-          },
-          true,
-        );
-      }
-      // The ceiling, as a force rather than a wall. Past ORBIT_CEILING the
-      // restoring push ramps up with how far over you are, so a craft on full
-      // thrust slows, stops and turns around instead of hitting an invisible
-      // barrier or sailing off to the WORLD_BOUNDS.maxY backstop.
-      if (t.y > ORBIT_CEILING) {
-        const over = t.y - ORBIT_CEILING;
-        chassis.addForce({ x: 0, y: -over * CHASSIS_MASS * 2.2, z: 0 }, true);
-      }
-      // Full attitude authority up here — pitch, roll AND yaw. Without yaw you
-      // can only steer by rolling first, which is fine in atmosphere where a
-      // banked wing turns you, and useless in vacuum where nothing does.
-      scratch.torque
-        .copy(scratch.right)
-        .multiplyScalar(input.pitch * ORBIT_PITCH_TORQUE)
-        .addScaledVector(scratch.up, -input.steer * ORBIT_YAW_TORQUE);
-      chassis.addTorque({ x: scratch.torque.x, y: scratch.torque.y, z: scratch.torque.z }, true);
-    } else if (newMode === "wings") {
-      chassis.setLinearDamping(BASE_LINEAR_DAMPING);
-      const lift = liftForce(probe.speed);
-      chassis.addForce({ x: scratch.up.x * lift, y: scratch.up.y * lift, z: scratch.up.z * lift }, true);
-      // Boost aloft pushes along the nose — the climb that reaches orbit.
-      if (wantsBoost) {
-        chassis.addForce(
-          {
-            x: scratch.forward.x * WING_BOOST_THRUST,
-            y: scratch.forward.y * WING_BOOST_THRUST,
-            z: scratch.forward.z * WING_BOOST_THRUST,
-          },
-          true,
-        );
-      }
-      // Banked turns. A wing with pitch and roll but no yaw can point itself
-      // anywhere and still travel in a straight line, which reads as sliding
-      // rather than flying. Yawing in proportion to how far the craft is
-      // ROLLED is what makes a bank actually turn it — the same coupling a
-      // real aircraft gets from its lift vector tilting.
-      const bank = -scratch.right.y; // +1 when rolled hard left, -1 hard right
-      chassis.addTorque({ x: 0, y: bank * BANK_TURN_TORQUE, z: 0 }, true);
-      // Pitch/roll only — no yaw, no throttle thrust. The design doc is
-      // explicit that sustained flight comes from thermals, not a throttle:
-      // a wing with thrust would let a visitor just power to every sky
-      // island, skipping the "catch a thermal" beat the triathlon is built
-      // around.
-      scratch.torque
-        .copy(scratch.right)
-        .multiplyScalar(input.pitch * WING_PITCH_TORQUE)
-        .addScaledVector(scratch.forward, -input.steer * WING_ROLL_TORQUE);
-      chassis.addTorque({ x: scratch.torque.x, y: scratch.torque.y, z: scratch.torque.z }, true);
     } else {
       chassis.setLinearDamping(BASE_LINEAR_DAMPING);
     }
 
-    // Thermals: an upward force scaled by the craft's own mass, so
-    // THERMALS's `strength` (worldData.ts) reads directly as an upward
-    // acceleration in m/s^2 rather than an opaque force number — a
-    // strength of 14 nets a steady ~4.2 m/s^2 climb once gravity (9.81) is
-    // subtracted out, independent of whatever CHASSIS_MASS ends up tuned to.
-    //
-    // FINDING 2 fix: this used to be horizontal-only with no Y bound and no
-    // grounded check, so a column meant to cover a ~9m atoll or sky island
-    // (worldData.ts's old radius of 7) applied at ANY altitude, including to
-    // a craft just parked on dry land — permanently shoving it skyward the
-    // instant it drove near one. `grounded` (already computed above) skips
-    // the force entirely for a craft with its wheels planted, and
-    // `thermal.ceilingY` (worldData.ts — see its comment for the derivation
-    // and the calculation confirming a craft can still ride this to the
-    // slab) stops it short of the sky island the column feeds, so the craft
-    // coasts the last bit under its own momentum instead of being pushed
-    // through — or pinned against — the slab's underside.
-    let liftedByThermal = false;
-    for (const thermal of THERMALS) {
-      if (grounded || t.y >= thermal.ceilingY) continue;
-      const dx = t.x - thermal.position[0];
-      const dz = t.z - thermal.position[2];
-      if (Math.hypot(dx, dz) <= thermal.radius) {
-        chassis.addForce({ x: 0, y: thermal.strength * chassis.mass(), z: 0 }, true);
-        liftedByThermal = true;
-      }
-    }
-    telemetry.inThermal = liftedByThermal;
     telemetry.stuck = flippedMsRef.current > 150 || beachedMsRef.current > 1200;
 
     // Sound rides the state machine rather than being detected separately —
@@ -794,21 +660,6 @@ export function Craft(props: { onState: (s: { mode: CraftMode; position: [number
     // airborne to trigger would be useless standing on the island it sits on.
     // Bounded below by the island's own surface so the column can't reach down
     // and grab a craft flying past underneath.
-    // The pad ARMS ON CONTACT and stays lit for PAD_BURN_MS after you leave it.
-    // A permanent column here put the craft in an endless bounce — up to 110m,
-    // back down into the same column, boosted again, forever — because falling
-    // back through it re-triggered the lift. Firing only for a burn window
-    // after ground contact makes it a launch rather than a fountain, and means
-    // re-entry through the same airspace does nothing.
-    const padArmed = airborneMsRef.current < PAD_BURN_MS;
-    for (const lift of SPACE_LIFTS) {
-      if (!padArmed || t.y < lift.position[1] - 1 || t.y >= lift.ceilingY) continue;
-      const dx = t.x - lift.position[0];
-      const dz = t.z - lift.position[2];
-      if (Math.hypot(dx, dz) <= lift.radius) {
-        chassis.addForce({ x: 0, y: lift.strength * chassis.mass(), z: 0 }, true);
-      }
-    }
   });
 
   // Read the (now post-step) transform: drive the chase camera, the wheel

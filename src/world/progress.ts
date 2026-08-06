@@ -1,4 +1,3 @@
-import { ARTIFACTS } from "./artifacts.ts";
 
 /**
  * What a visitor has done here, across visits.
@@ -13,7 +12,6 @@ import { ARTIFACTS } from "./artifacts.ts";
  */
 
 const ARTIFACT_KEY = "playground:artifacts";
-const ACHIEVEMENT_KEY = "playground:achievements";
 
 function readSet(key: string): Set<string> {
   try {
@@ -45,43 +43,9 @@ export function collect(id: string): boolean {
   return true;
 }
 
-/**
- * Milestones. Each names something a visitor DID, not something they were
- * given — every one of them corresponds to a mechanic the world would otherwise
- * have to explain in prose.
- *
- * The set is deliberately small. Twenty achievements would turn a portfolio into
- * a chore list; six mark the moments that are genuinely worth noticing, and the
- * last two are the only ones most visitors will never see.
+/*
+ * Achievements were cut with the rest of the scope creep: six milestones on a
+ * hub whose job is opening one of eight doors was a chore list, and every one
+ * of them needed its own trigger, persistence and toast. The collection is the
+ * one progression worth keeping, because each artifact carries a real fact.
  */
-export type Achievement = {
-  id: string;
-  label: string;
-  detail: string;
-};
-
-export const ACHIEVEMENTS: Achievement[] = [
-  { id: "first-flight", label: "Airborne", detail: "Left the ground under your own speed" },
-  { id: "first-sail", label: "Afloat", detail: "Found out the car swims" },
-  { id: "thermal", label: "Thermal rider", detail: "Climbed a column of rising air" },
-  { id: "orbit", label: "Out of atmosphere", detail: "Reached orbit from a launch pad" },
-  { id: "all-rooms", label: "Every door", detail: "Entered all eight rooms from the world" },
-  {
-    id: "all-artifacts",
-    label: "Completionist",
-    detail: `Collected all ${ARTIFACTS.length} artifacts — land, sea, sky and orbit`,
-  },
-];
-
-export const loadUnlocked = (): Set<string> => readSet(ACHIEVEMENT_KEY);
-
-/** Returns the achievement if this call is what unlocked it, else null. */
-export function unlock(id: string): Achievement | null {
-  const held = readSet(ACHIEVEMENT_KEY);
-  if (held.has(id)) return null;
-  const found = ACHIEVEMENTS.find((a) => a.id === id);
-  if (!found) return null;
-  held.add(id);
-  writeSet(ACHIEVEMENT_KEY, held);
-  return found;
-}
