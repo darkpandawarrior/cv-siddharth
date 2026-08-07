@@ -20,6 +20,7 @@ import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { FitCheck } from "./FitCheck.tsx";
+import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
 import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
@@ -1291,6 +1292,12 @@ export function HomePage() {
         <FitCheck />
         <CaseStudies />
         <Projects />
+        {/* Between the projects and the career: the projects section makes
+            claims about work, this one is the work with an install button on
+            it. It sits before the experience list on purpose — a recruiter who
+            reads two sections should have hit a live Play Store rating by the
+            end of the second. */}
+        <ShippedShelf />
         <ExperienceSection />
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}

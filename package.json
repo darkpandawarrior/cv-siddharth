@@ -31,6 +31,7 @@
     "test:e2e": "playwright test",
     "gen:heroes": "node scripts/gen-project-heroes.mjs",
     "gen:sitemap": "node scripts/gen-sitemap.mjs",
+    "gen:store": "node scripts/gen-store.mjs",
     "spotify:auth": "node scripts/spotify-auth.mjs",
     "resume:pdf": "node scripts/print-resume.mjs"
   },
