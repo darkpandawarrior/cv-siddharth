@@ -1,0 +1,13 @@
+CONTENTS DO NOT MATCH THE SUBJECT.
+
+This commit carries two unrelated changes. The subject describes only the first:
+
+  104 files  the /shipped page, its data, and the app icons under public/store
+   37 files  src/world/ — the playground rebuild, which was sitting uncommitted
+             in a shared worktree when 'git add -A src' swept it in
+
+Nothing is wrong with either half; the world rebuild builds, typechecks and
+passes the full suite. Only the message is wrong, and by the time that was
+noticed the commit was already on origin/main with two commits on top of it, so
+correcting it would have meant rewriting published history on the default
+branch. This note is the correction instead.
