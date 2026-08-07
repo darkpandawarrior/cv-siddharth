@@ -170,11 +170,6 @@ export function playImpact(force: number): void {
   burst({ duration: 0.16, gain: 0.08 + force * 0.22, type: "lowpass", from: 1400, to: 120 });
 }
 
-/** Entering the water. */
-export function playSplash(): void {
-  burst({ duration: 0.5, gain: 0.3, type: "bandpass", from: 900, to: 200 });
-}
-
 /** Boost ignition — a short rising hiss under the engine. */
 export function playBoost(): void {
   burst({ duration: 0.35, gain: 0.16, type: "highpass", from: 300, to: 2600 });
@@ -200,23 +195,31 @@ export function playPickup(): void {
   });
 }
 
-/** Reaching orbit: a low swell, the one sound with any length to it. */
-export function playOrbit(): void {
+/**
+ * A patch of the city resolving out of the dust — a soft, short ping.
+ *
+ * Deliberately the quietest and shortest tuned sound in this file: World.tsx
+ * calls this every time `telemetry.resolvedFraction` climbs (throttled there
+ * to a few times a second at most), which is far more often than a pickup or
+ * a boost ignition, so it has to disappear into the ambience rather than
+ * announce itself the way playPickup's two-note chime does.
+ */
+export function playResolveChime(): void {
   if (!engine || muted) return;
   const { ctx, master } = engine;
   const now = ctx.currentTime;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = "sine";
-  osc.frequency.setValueAtTime(110, now);
-  osc.frequency.exponentialRampToValueAtTime(440, now + 1.4);
+  osc.frequency.setValueAtTime(1400, now);
+  osc.frequency.exponentialRampToValueAtTime(1900, now + 0.08);
   g.gain.setValueAtTime(0.0001, now);
-  g.gain.exponentialRampToValueAtTime(0.22, now + 0.4);
-  g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+  g.gain.exponentialRampToValueAtTime(0.06, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
   osc.connect(g);
   g.connect(master);
   osc.start(now);
-  osc.stop(now + 1.9);
+  osc.stop(now + 0.16);
 }
 
 /** Releases the context. The world must not leave an audio graph running after

@@ -2,7 +2,8 @@ import { metrics, projects } from "../data/profile.ts";
 import { projectStats } from "../data/projectStats.ts";
 import { chess } from "../data/chess.ts";
 import { weeb } from "../data/weeb.ts";
-import { TERRAIN } from "./worldData.ts";
+import { TERRAIN, PLACEMENTS } from "./worldData.ts";
+import { CITY } from "./city.ts";
 
 /**
  * The collectibles — and the reason this world is worth driving rather than
@@ -15,9 +16,9 @@ import { TERRAIN } from "./worldData.ts";
  * bolted onto a CV, whereas one whose collectibles ARE the CV makes exploring
  * it the same act as reading it.
  *
- * They are spread over the whole desk on purpose: collecting the set is what
- * takes a visitor past every room, which is the only reason a hub needs a
- * collectible at all.
+ * They are spread the length of the whole boulevard on purpose: collecting
+ * the set is what takes a visitor past every room and every era, which is the
+ * only reason a hub needs a collectible at all.
  */
 
 
@@ -32,33 +33,68 @@ export type Artifact = {
 
 
 /**
- * Deterministic placement. A seeded ring layout rather than Math.random so the
- * same artifact is always in the same place — a collectible that moves between
- * reloads cannot be hunted, and "I know there's one behind the CRT" is the
- * feeling worth protecting.
+ * Deterministic placement on the city's approach apron — `|x|` between the
+ * boulevard's kerb and `CITY.buildInner`, the corridor the design doc's own
+ * lateral-band table reserves for "nothing district-scale, ever" (see
+ * city.ts / districtWest.ts / corpusData.ts, none of which ever site a
+ * structure at `|x| < CITY.buildInner`). That makes it the one strip on
+ * either flank an artifact can sit in without risking a visual collision with
+ * an employer block, a project tower or a corpus pillar — the old disc-shaped
+ * scatter (a phyllotaxis spiral over the whole 21m-wide desk) would now
+ * regularly land ON one of those.
+ *
+ * Still fully deterministic — no `Math.random` — so the same artifact is
+ * always in the same place across reloads; "I know there's one behind the
+ * lab" is the feeling worth protecting. The golden-angle spread that used to
+ * walk a disc now walks the apron's width instead, and z is spread evenly the
+ * length of the whole 168m boulevard rather than clustered near the old 30m
+ * desk's centre.
  */
-/** Clearance kept between an artifact and any edge it could be knocked over. */
-const MARGIN = 3;
-
-/** 137.5° — the angle that makes a phyllotaxis spiral spread evenly. */
+/** 137.5° — the angle that gives a phyllotaxis-style spread with no two
+ *  successive values landing close together. */
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
+/** Clear of the boulevard (`CITY.laneHalf`, always-resolved and never built
+ *  on) at the inner edge, clear of `CITY.buildInner` — where district
+ *  geometry is allowed to start — at the outer one. */
+const APRON_X_MIN = CITY.laneHalf + 1.5;
+const APRON_X_MAX = CITY.buildInner - 1;
+
+/** How far an artifact's z is nudged, and how many times, when it lands
+ *  inside a pavilion's own approach sensor — see `place()` below. Matches
+ *  Pavilions.tsx's sensor half-extent (4.8m) plus a margin, so one nudge is
+ *  always enough in practice; the loop just bounds the pathological case. */
+const ROOM_Z_CLEARANCE = 6.5;
+const MAX_NUDGES = 8;
+
 function place(index: number, total: number): [number, number, number] {
-  // Phyllotaxis — the sunflower spiral. Points at successive golden angles on a
-  // sqrt radius are the standard way to scatter N things over a disc with no
-  // two of them bunching, which concentric rings emphatically do not do: the
-  // first version put sixteen artifacts on three rings and several landed
-  // inside one pickup radius of each other, so a single drive-through
-  // collected two at once. Deterministic, so a collectible never moves between
-  // reloads and can actually be hunted.
-  const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
-  const angle = index * GOLDEN_ANGLE;
-  const r = Math.sqrt((index + 0.5) / total);
-  return [
-    Math.cos(angle) * r * (halfWidth - MARGIN),
-    groundY + 1.2,
-    (z0 + z1) / 2 + Math.sin(angle) * r * ((z1 - z0) / 2 - MARGIN),
-  ];
+  const { z0, z1, groundY } = TERRAIN.mainland;
+  const side = index % 2 === 0 ? -1 : 1;
+
+  // Evenly down the whole boulevard, margined off both kerbs — this alone
+  // keeps same-side neighbours (index, index+2) roughly 2*span/total apart,
+  // comfortably past ARTIFACT_PICKUP_RADIUS for the ~16 artifacts this file
+  // actually seeds.
+  const marginZ = 6;
+  const usableZ = z1 - z0 - marginZ * 2;
+  let z = z0 + marginZ + (index / Math.max(1, total - 1)) * usableZ;
+
+  // A collectible sitting inside a pavilion's approach volume reads as
+  // buried in the doorway rather than found, so nudge south until clear of
+  // every room's z — cheap because there are only eight of them, and
+  // deterministic because the nudge step is fixed, not randomised.
+  for (let tries = 0; tries < MAX_NUDGES; tries++) {
+    const blocked = PLACEMENTS.some((p) => Math.abs(p.position[2] - z) < ROOM_Z_CLEARANCE);
+    if (!blocked) break;
+    z += ROOM_Z_CLEARANCE;
+  }
+
+  // Golden-angle walk across the apron's width, same low-discrepancy idea the
+  // old phyllotaxis spiral used, just bounded to a corridor instead of a disc.
+  const spread = ((index * GOLDEN_ANGLE) % 1 + 1) % 1;
+  const x = side * (APRON_X_MIN + spread * (APRON_X_MAX - APRON_X_MIN));
+
+  return [x, groundY + 1.2, z];
 }
 
 type Seed = { id: string; label: string; detail: string };
@@ -81,8 +117,8 @@ function seeds(): Seed[] {
     });
   }
 
-  // Repo scale, out over the water: these are the numbers that only mean
-  // something once you know the codebase, so they sit past the shore.
+  // Repo scale: the numbers that only mean something once you know the
+  // codebase.
   for (const [slug, stat] of Object.entries(projectStats)) {
     const modules = "modules" in stat ? stat.modules : undefined;
     const screenshots = "screenshots" in stat ? stat.screenshots : undefined;
@@ -95,7 +131,7 @@ function seeds(): Seed[] {
     });
   }
 
-  // The side corpora, out on the water with the rooms that render them.
+  // The side corpora, matching the east flank's chess ridge and weeb field.
   // Shapes read from the generated files themselves, not assumed: chess keys
   // its counts under `totals`, weeb under `anime`. Both are regenerated by
   // npm scripts, so these numbers move on their own.
@@ -111,7 +147,7 @@ function seeds(): Seed[] {
   });
 
   // The two facts least visible from a CV: what this site actually is, and
-  // that it keeps changing. Out in the far water, the longest sail on the map.
+  // that it keeps changing.
   out.push({
     id: "orbit-site",
     label: "This site",

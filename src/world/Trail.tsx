@@ -1,8 +1,9 @@
 import { useMemo, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
-import { projectStats } from "../data/projectStats.ts";
-import { TERRAIN } from "./worldData.ts";
+import { CITY, type TallStructure } from "./city.ts";
+import { westStructures } from "./districtWest.ts";
+import { eastStructures } from "./corpusData.ts";
 import { telemetry } from "./telemetry.ts";
 import { worldPalette } from "./palette.ts";
 import { TrackFilter, meanError, rawFix, stepDistance, type Fix } from "./gps.ts";
@@ -38,8 +39,11 @@ const MAX_POINTS = 44;
 /** A jump further than this between samples is a respawn or a teleport, not
  *  driving — the trail restarts rather than drawing a line across the world. */
 const TELEPORT_M = 12;
-/** Trails float just above the surface so they are not z-fighting the ground. */
-const TRAIL_Y = TERRAIN.mainland.groundY + 0.06;
+/** Trails float just above the surface so they are not z-fighting the ground.
+ *  Reads CITY.groundY (city.ts), not worldData.ts's TERRAIN — city.ts is the
+ *  one shared coordinate source every district and the ground itself derive
+ *  from now, and this module has no other reason to import worldData.ts. */
+const TRAIL_Y = CITY.groundY + 0.06;
 
 /** Scale error on the inertial displacement — a real IMU under-reads slightly
  *  and that drift is precisely what the fix is there to correct. */
@@ -48,19 +52,33 @@ const IMU_BIAS = 0.97;
 /** Samples needed before the accuracy readout means anything. ~3 seconds. */
 const MIN_SAMPLES_FOR_STATS = 30;
 
-/** The world's tall structures — the same monuments, so the canyon effect lands
- *  where a visitor can see the cause. */
-function structures(): Fix[] {
-  const entries = Object.entries(projectStats);
-  return entries.map(([, ], i) => {
-    const side = i % 2 === 0 ? -1 : 1;
-    const depth = TERRAIN.mainland.z1 - TERRAIN.mainland.z0;
-    return {
-      x: side * (TERRAIN.mainland.halfWidth - 4.5),
-      z: TERRAIN.mainland.z0 + depth * (0.3 + Math.floor(i / 2) * 0.28),
-    };
-  });
+/** The world's tall structures, both flanks — the real skyline now, not a
+ *  fixed set this module used to invent from projectStats itself. Every
+ *  employer block, project tower, chess-ridge cluster and corpus pillar
+ *  tall enough to matter is in here, so the canyon effect degrades the raw
+ *  trail near whatever a visitor can actually see casting the shadow. */
+function structures(): TallStructure[] {
+  return [...westStructures(), ...eastStructures()];
 }
+
+/**
+ * The fused GPS estimate, in world space — the ONLY thing ResolveField.tsx
+ * is allowed to stamp the city from.
+ *
+ * This is the tie back to gps.ts that makes "the world resolves as you
+ * drive" honest rather than decorative: a raw fix spikes on purpose (see
+ * gps.ts's SPIKE_M), and if resolution keyed off the raw trail, or off
+ * telemetry.x/z (ground truth — the craft doesn't get to cheat), a single
+ * bad sample two lanes over would resolve a district nobody actually
+ * reached. Only the filtered estimate — the one drawn as the clean trail,
+ * the one the HUD's accuracy readout is proud of — is trusted enough to
+ * draw the map too.
+ *
+ * Mutated in place every accepted sample, never reassigned — same contract
+ * as telemetry.ts's own fields: hold the one reference, no per-frame
+ * allocation.
+ */
+export const fusedFix: Fix = { x: 0, z: 0 };
 
 export function Trail(): JSX.Element {
   const c = worldPalette();
@@ -108,6 +126,8 @@ export function Trail(): JSX.Element {
     if (moved > TELEPORT_M) {
       lastTruth.current = truth;
       lastFused.current = { ...truth };
+      fusedFix.x = truth.x;
+      fusedFix.z = truth.z;
       filter.reset();
       for (let i = 0; i < MAX_POINTS; i++) {
         rawPoints.current[i] = [truth.x, TRAIL_Y, truth.z];
@@ -139,6 +159,8 @@ export function Trail(): JSX.Element {
     const fused = filter.update(fix, predicted, maxJump);
     lastFused.current = { ...fused };
     lastTruth.current = truth;
+    fusedFix.x = fused.x;
+    fusedFix.z = fused.z;
 
     rawErrors.current.push(Math.hypot(fix.x - truth.x, fix.z - truth.z));
     fusedErrors.current.push(Math.hypot(fused.x - truth.x, fused.z - truth.z));

@@ -18,13 +18,13 @@ import {
  * handful of constants that mean something in relation to each other.
  */
 describe("the car's numbers hang together", () => {
-  it("reaches a speed worth having on a desk this size", () => {
-    // Fast enough to cross the mainland in a few seconds, slow enough to place
-    // the car on a room. Both ends matter: a toy that takes half a minute to
-    // cross its own world is tedious, and one that crosses it in one is
-    // unsteerable.
-    expect(TERMINAL_WHEEL_SPEED).toBeGreaterThan(12);
-    expect(TERMINAL_WHEEL_SPEED).toBeLessThan(45);
+  it("reaches a speed worth having on a boulevard this long", () => {
+    // Tightened to [18, 22] now that the slab is a 168m, ten-year traverse
+    // rather than a 30m desk: too slow and the drive is tedious, too fast and
+    // ten years of city blur past in a couple of seconds — the design doc's
+    // own bar is an 8.6s flat-out crossing, which needs a speed in this band.
+    expect(TERMINAL_WHEEL_SPEED).toBeGreaterThan(18);
+    expect(TERMINAL_WHEEL_SPEED).toBeLessThan(22);
   });
 
   it("derives top speed from the two constants that set it", () => {

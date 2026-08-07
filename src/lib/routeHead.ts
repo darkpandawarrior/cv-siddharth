@@ -65,6 +65,11 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
     blurb:
       "Three editions of MANIT Bhopal's institute magazine, readable here in full — English Editor on 2019 and 2020, Joint Chief Editor on 2021.",
   },
+  "/shipped": {
+    label: "The Shelf",
+    blurb:
+      "Every Android app that reached the Play Store from work he touched — three under his own name, the rest white-label clients, reconstructed from the repos and verified one listing at a time.",
+  },
   "/loopdown": {
     label: "The Loopdown",
     blurb:

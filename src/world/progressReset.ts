@@ -16,10 +16,15 @@
 export const PROGRESS_KEYS = [
   "playground:artifacts",
   "playground:explored",
-  "playground:triathlon:best",
   "playground:onboarded",
   "playground:view",
   "playground:muted",
+  // The resolved-cell bitset (resolve.ts) — which of the 147 ground cells a
+  // visitor has already driven through and resolved out of the dust.
+  // Without this on the list, "reset progress" would clear every OTHER piece
+  // of memory but leave the city permanently solid for that browser, which
+  // defeats the entire first-five-seconds design the world is built around.
+  "playground:resolved:v1",
 ] as const;
 
 /** Everything except the view preference — resetting progress should not also

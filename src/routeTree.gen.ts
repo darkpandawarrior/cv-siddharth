@@ -24,6 +24,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as PulseRouteImport } from './routes/pulse'
 import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as ShippedRouteImport } from './routes/shipped'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WeebRouteImport } from './routes/weeb'
 import { Route as ProjectSlugRouteImport } from './routes/project.$slug'
@@ -104,6 +105,11 @@ const ResumeRoute = ResumeRouteImport.update({
   path: '/resume',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShippedRoute = ShippedRouteImport.update({
+  id: '/shipped',
+  path: '/shipped',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TerminalRoute = TerminalRouteImport.update({
   id: '/terminal',
   path: '/terminal',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
+  '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
+  '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
+  '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/pulse'
     | '/resume'
+    | '/shipped'
     | '/terminal'
     | '/weeb'
     | '/project/$slug'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/pulse'
     | '/resume'
+    | '/shipped'
     | '/terminal'
     | '/weeb'
     | '/project/$slug'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/pulse'
     | '/resume'
+    | '/shipped'
     | '/terminal'
     | '/weeb'
     | '/project/$slug'
@@ -271,6 +283,7 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   PulseRoute: typeof PulseRoute
   ResumeRoute: typeof ResumeRoute
+  ShippedRoute: typeof ShippedRoute
   TerminalRoute: typeof TerminalRoute
   WeebRoute: typeof WeebRoute
   ProjectSlugRoute: typeof ProjectSlugRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResumeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shipped': {
+      id: '/shipped'
+      path: '/shipped'
+      fullPath: '/shipped'
+      preLoaderRoute: typeof ShippedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terminal': {
       id: '/terminal'
       path: '/terminal'
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   PulseRoute: PulseRoute,
   ResumeRoute: ResumeRoute,
+  ShippedRoute: ShippedRoute,
   TerminalRoute: TerminalRoute,
   WeebRoute: WeebRoute,
   ProjectSlugRoute: ProjectSlugRoute,

@@ -89,13 +89,12 @@ type VehicleController = ReturnType<RapierContext["world"]["createVehicleControl
 // are the knob, not the vehicle-controller wiring below them.
 //
 // FINDING 3: ENGINE_FORCE and BASE_LINEAR_DAMPING together set the wheels'
-// top speed — 2*ENGINE_FORCE/(CHASSIS_MASS*BASE_LINEAR_DAMPING) ≈ 23.4 m/s —
-// which is the other half of craftPhysics.ts's reconciled flight envelope
-// (that file's liftForce comment has the full numbers): comfortably above
-// both LAUNCH_SPEED (14) and the level-flight speed (18) that envelope is
-// built around, so a driver who builds real speed before the ramp launches
-// into a genuine climb, not a token one. Change either number here and
-// re-check that comment.
+// top speed — 2*ENGINE_FORCE/(CHASSIS_MASS*BASE_LINEAR_DAMPING) ≈ 19.6 m/s,
+// an 8.6s flat-out traverse of the full 168m boulevard (craftPhysics.ts's
+// own comment on ENGINE_FORCE has the retune story — this was ~23.4 m/s
+// before the slab grew from a 30m desk to a ten-year, 168m drive). Change
+// either number in craftPhysics.ts and re-check the traversal-time test in
+// worldGeometry.test.ts.
 const MAX_STEER_RAD = 0.6; // ~34°, generous for a snappy toy-car turn radius
 const BRAKE_FORCE = 40;
 
@@ -208,9 +207,18 @@ const CHASSIS_INERTIA = {
 // Chase camera. Distance grows with speed (a cheap sense of speed with zero
 // extra state), and the follow uses a per-frame lerp rather than a spring —
 // boring, stable, good enough for a chase cam that's never the star.
-const CAMERA_BASE_DISTANCE = 5.5;
+//
+// Base distance 6.2 (was 5.5) and height 1.7 (was 2.6) — the city's buildings
+// are now three times taller than the old desk's tallest prop, and the old
+// height sat the camera 4.3 car-heights up: high enough to look down on
+// everything, which flattened the street into a diorama seen from above
+// rather than a place driven through. 1.7 is 2.8 car-heights, closer to a
+// windshield-height chase view, and is the single change that makes the
+// employer blocks and project towers read as buildings passed BY rather than
+// props glimpsed from a drone.
+const CAMERA_BASE_DISTANCE = 6.2;
 const CAMERA_SPEED_PULLBACK = 0.16;
-const CAMERA_HEIGHT = 2.6;
+const CAMERA_HEIGHT = 1.7;
 const CAMERA_LOOK_HEIGHT = 0.6;
 const CAMERA_FOLLOW_SPEED = 4;
 const CAMERA_BASE_FOV = 55; // matches World.tsx's <Canvas camera={{ fov }}>

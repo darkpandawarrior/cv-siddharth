@@ -33,6 +33,13 @@ export type Telemetry = {
   /** Mean positional error of the raw fix and of the fused track, metres. */
   rawError: number;
   fusedError: number;
+  /** 0..1 — share of the world's 147 resolve cells driven through so far.
+   *  Written every frame by ResolveField.tsx from resolve.ts's own ratchet;
+   *  the HUD's `FIX %` readout reads this instead of reaching into
+   *  resolve.ts directly, for the same reason every other field here exists
+   *  — one place the HUD polls at its own rate, decoupled from whichever
+   *  module actually owns the number. */
+  resolvedFraction: number;
 };
 
 export const telemetry: Telemetry = {
@@ -47,4 +54,5 @@ export const telemetry: Telemetry = {
   odometer: 0,
   rawError: 0,
   fusedError: 0,
+  resolvedFraction: 0,
 };

@@ -1,59 +1,59 @@
-import { type JSX } from "react";
-import { RigidBody } from "@react-three/rapier";
-import { Grid } from "@react-three/drei";
+import { useMemo, type JSX } from "react";
+import * as THREE from "three";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { Grid, Html } from "@react-three/drei";
+import { CITY } from "./city.ts";
+import { YEAR_BANDS, eraColorT } from "./cityData.ts";
 import { TERRAIN } from "./worldData.ts";
 import { dim, mix, worldPalette } from "./palette.ts";
 
 /**
- * The static landmass: mainland, two atolls, two sky islands, all as plain
- * three.js primitives wrapped in `RigidBody type="fixed"` colliders. Nothing
- * here moves or updates per frame — the whole module runs once on mount,
- * which is what lets Water.tsx (which DOES run every frame) stay the only
- * expensive piece of the scene.
+ * The ground. One 56x168m slab (CITY.halfWidth*2 wide, CITY.z0..z1 long) as
+ * a single fixed collider, painted with the city's own calendar: ten
+ * non-collider colour plates, one per year, ramping grey to signal-green
+ * only across Dice's own tenure (cityData.ts's eraColorT — there is no
+ * per-year Kotlin/Compose series anywhere in src/data/, so the ramp only
+ * covers the one span the data can actually support), plus a kerb and a
+ * small lit tick at each year boundary so the calendar is legible from the
+ * driver's seat, not just from directly overhead.
  *
- * Every landmass reuses PLACEMENTS as its source of truth for *where* a
- * room's island sits — this file never invents a second set of coordinates,
- * it only decides how big the ground under each placement is and what it
- * looks like. If worldData.ts ever moves a room, the terrain follows without
- * a second edit.
+ * Nothing here moves or updates per frame — every instanced mesh below is
+ * written once in a ref callback at mount, matching the codebase's existing
+ * InstancedMesh pattern (Monuments.tsx's towers, Props.tsx's debris): one
+ * draw call per family rather than one mesh per instance. Terrain's own
+ * budget is <=6 draw calls total; this file uses 5 (grid, slab, era plates,
+ * kerb, year ticks).
+ *
+ * Every room's position still comes from worldData.ts's PLACEMENTS — this
+ * file never invents a second set of room coordinates, only what the ground
+ * beneath the whole slab looks like.
  */
 
 // Colours come from worldPalette() inside each component, never from
 // module-scope constants: a const here would capture whichever theme was
 // applied at import and never update. See palette.ts.
 
-// The mainland's ground plane. Chosen half a unit above SEA_LEVEL (0) so the
-// four land pavilions (worldData.ts positions them at y=0.5) sit flush on
-// solid ground rather than floating or clipping into it.
-const GROUND_Y = 0.5;
-
+/** Shared scratch for writing instance matrices — never rendered itself. */
+const dummy = new THREE.Object3D();
 
 /**
- * The mainland plateau — one flat slab under the four land rooms. Deliberately
- * stops short of the Ink sea (z=22 per worldData.ts) at z=12: the remaining
- * strip south of it is built by Shore/LaunchRamp below, which taper the
- * ground down to SEA_LEVEL instead of ending in a cliff.
+ * The slab — one fixed cuboid collider, the whole playable surface. Kept as
+ * a single flat box rather than the old mainland+shore split: there is
+ * nowhere else to taper down to now that the world has one surface, and a
+ * flat 168m box is also what lets EraPlates below sit as thin non-collider
+ * decals on top of it rather than needing their own geometry per band.
  */
 function Mainland() {
   const c = worldPalette();
+  const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
   return (
     <RigidBody type="fixed" colliders="cuboid">
-      {/* Depth 30 centred at z=-3 gives z in [-18, 12] — the slab MUST reach
-          z=12, because that is where Shore and LaunchRamp below begin. It was
-          28 at z=-4 (ending at z=10), which left a 2m trench with a 0.5m lip
-          running the full width of the map, directly across the only route
-          south. A craft hit the ramp's leading face instead of its surface and
-          settled in the channel: not out of bounds and not flipped, so nothing
-          respawned it. The launch leg of the triathlon was unrunnable. */}
-      <mesh position={[0, GROUND_Y - 0.5, (TERRAIN.mainland.z0 + TERRAIN.mainland.z1) / 2]} receiveShadow>
-        <boxGeometry args={[TERRAIN.mainland.halfWidth * 2, 1, TERRAIN.mainland.z1 - TERRAIN.mainland.z0]} />
+      <mesh position={[0, groundY - 0.5, (z0 + z1) / 2]} receiveShadow>
+        <boxGeometry args={[halfWidth * 2, 1, z1 - z0]} />
         {/* Lifted NEUTRALLY, toward the text colour rather than toward the
-            accent. --color-card alone is the site's dark panel colour: correct
-            behind text on a web page, far too dark for a surface filling most
-            of the frame, so the ground read as a void with objects floating in
-            it. Lifting it toward --color-signal instead turned the desk into a
-            golf course — a green field is not what "a work surface" looks like.
-            12% toward the text colour is a grey desk mat that AO can bite into. */}
+            accent — see the git history on this line for why a lift toward
+            --color-signal instead reads as a golf course, not a work
+            surface. */}
         <meshStandardMaterial color={mix(c.card, c.text, 0.12)} roughness={0.9} metalness={0.02} />
       </mesh>
     </RigidBody>
@@ -61,20 +61,54 @@ function Mainland() {
 }
 
 /**
- * A raised lip along the mainland's north, east and west edges — the three
- * that end in a sheer 1m drop. The south edge is deliberately left open,
- * because that is where Shore and LaunchRamp taper into the sea: leaving the
- * land is meant to be a decision, not an accident.
+ * Ten thin, non-collider plates 0.01m above the slab, one per year band,
+ * coloured by cityData.ts's eraColorT. This is the "ground changes era with
+ * the city" idea made as honest as the data allows: north of Dice's own
+ * start (June 2023 — the one dated Kotlin baseline anywhere in src/data/)
+ * every plate is flat grey, because nothing says the earlier years were
+ * anything else. South of it the ramp runs toward the signal green that
+ * marks live/lit geometry everywhere else in this world.
  *
- * Found by driving it rather than by reading it. Spawn sits 14m from the north
- * edge and the craft accelerates at ~8.2 m/s², so holding W from a standing
- * start put a first-time visitor in the water in 1.9 seconds — before they had
- * any idea what the controls did, and with the only ramp back onto land 40m
- * away around the far side. Every automated gate passed while that was true;
- * it took a screenshot to see it.
- *
- * Reads as the raised lip of a desk mat, which is the right shape for a world
- * built at desk scale anyway.
+ * A small gap (0.4m) is left between adjacent plates so a year boundary
+ * reads as a seam rather than disappearing into a single continuous colour.
+ */
+function EraPlates() {
+  const c = worldPalette();
+  const { halfWidth, groundY } = TERRAIN.mainland;
+  return (
+    <instancedMesh
+      ref={(mesh) => {
+        if (!mesh) return;
+        const color = new THREE.Color();
+        for (let i = 0; i < YEAR_BANDS.length; i++) {
+          const band = YEAR_BANDS[i];
+          dummy.position.set(0, groundY + 0.01, band.z);
+          dummy.scale.set(halfWidth * 2, 0.02, CITY.yearSpan - 0.4);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(i, dummy.matrix);
+          color.set(mix(c.card, c.signal, eraColorT(band.z)));
+          mesh.setColorAt(i, color);
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      }}
+      args={[undefined, undefined, YEAR_BANDS.length]}
+      receiveShadow
+    >
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial roughness={0.85} metalness={0.02} />
+    </instancedMesh>
+  );
+}
+
+/**
+ * A raised lip around all four edges of the slab, and — the part that keeps
+ * this to one draw call — ONE fixed RigidBody carrying four explicit
+ * CuboidColliders (a standard Rapier compound-body pattern) alongside ONE
+ * InstancedMesh for their visuals, rather than the four separate
+ * RigidBody+mesh pairs this used to be. The physics is unaffected: a
+ * fixed body with several colliders behaves exactly like several fixed
+ * bodies for anything driving into it.
  */
 const KERB_HEIGHT = 0.9;
 const KERB_THICKNESS = 0.5;
@@ -84,68 +118,113 @@ function Kerb() {
   const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
   const depth = z1 - z0;
   const y = groundY + KERB_HEIGHT / 2;
+  const sides = useMemo(
+    () => [
+      { pos: [0, y, z0 + KERB_THICKNESS / 2] as [number, number, number], scale: [halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS] as [number, number, number] },
+      { pos: [0, y, z1 - KERB_THICKNESS / 2] as [number, number, number], scale: [halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS] as [number, number, number] },
+      { pos: [halfWidth - KERB_THICKNESS / 2, y, (z0 + z1) / 2] as [number, number, number], scale: [KERB_THICKNESS, KERB_HEIGHT, depth] as [number, number, number] },
+      { pos: [-(halfWidth - KERB_THICKNESS / 2), y, (z0 + z1) / 2] as [number, number, number], scale: [KERB_THICKNESS, KERB_HEIGHT, depth] as [number, number, number] },
+    ],
+    [halfWidth, z0, z1, y, depth],
+  );
+
+  return (
+    <RigidBody type="fixed" colliders={false}>
+      {sides.map((s, i) => (
+        <CuboidCollider key={i} args={[s.scale[0] / 2, s.scale[1] / 2, s.scale[2] / 2]} position={s.pos} />
+      ))}
+      <instancedMesh
+        ref={(mesh) => {
+          if (!mesh) return;
+          for (let i = 0; i < sides.length; i++) {
+            dummy.position.set(...sides[i].pos);
+            dummy.scale.set(...sides[i].scale);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+          }
+          mesh.instanceMatrix.needsUpdate = true;
+        }}
+        args={[undefined, undefined, sides.length]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={c.surface} roughness={0.8} />
+      </instancedMesh>
+    </RigidBody>
+  );
+}
+
+/**
+ * A small lit marker and a year label at each band's west-kerb edge — the
+ * ground's own calendar made readable from the driver's seat rather than
+ * only legible as a colour gradient seen from above. Non-collider: driving
+ * through one is harmless, the same as this world's other decorative trim.
+ */
+const TICK_INSET = 1.4; // metres in from the west kerb's inner face
+const TICK_SIZE: [number, number, number] = [0.7, 0.3, 0.7];
+
+function YearTicks() {
+  const c = worldPalette();
+  const { halfWidth, groundY } = TERRAIN.mainland;
+  const x = -(halfWidth - TICK_INSET);
   return (
     <>
-      {/* North */}
-      <RigidBody type="fixed" colliders="cuboid" position={[0, y, z0 + KERB_THICKNESS / 2]}>
-        <mesh receiveShadow castShadow>
-          <boxGeometry args={[halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS]} />
-          <meshStandardMaterial color={c.surface} roughness={0.8} />
-        </mesh>
-      </RigidBody>
-      {/* South, too. The gap used to be the way down to the sea; there is no
-          sea, so an open edge is now just a hole to fall through. */}
-      <RigidBody type="fixed" colliders="cuboid" position={[0, y, z1 - KERB_THICKNESS / 2]}>
-        <mesh receiveShadow castShadow>
-          <boxGeometry args={[halfWidth * 2, KERB_HEIGHT, KERB_THICKNESS]} />
-          <meshStandardMaterial color={c.surface} roughness={0.8} />
-        </mesh>
-      </RigidBody>
-      {/* East and west */}
-      {[-1, 1].map((side) => (
-        <RigidBody
-          key={side}
-          type="fixed"
-          colliders="cuboid"
-          position={[side * (halfWidth - KERB_THICKNESS / 2), y, (z0 + z1) / 2]}
+      <instancedMesh
+        ref={(mesh) => {
+          if (!mesh) return;
+          for (let i = 0; i < YEAR_BANDS.length; i++) {
+            dummy.position.set(x, groundY + TICK_SIZE[1] / 2, YEAR_BANDS[i].z);
+            dummy.scale.set(...TICK_SIZE);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+          }
+          mesh.instanceMatrix.needsUpdate = true;
+        }}
+        args={[undefined, undefined, YEAR_BANDS.length]}
+        castShadow
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={c.surface} emissive={c.accent} emissiveIntensity={0.8} roughness={0.5} />
+      </instancedMesh>
+      {/* <Html>, not drei's <Text> — see Monuments.tsx's own tower-label
+          comment for why: troika's SDF atlas build is a real startup cost
+          for ten labels, and this world already pays for the <Html> portal
+          path elsewhere. */}
+      {YEAR_BANDS.map((band) => (
+        <Html
+          key={band.year}
+          center
+          position={[x, groundY + TICK_SIZE[1] + 0.5, band.z]}
+          style={{ pointerEvents: "none" }}
+          zIndexRange={[10, 0]}
         >
-          <mesh receiveShadow castShadow>
-            <boxGeometry args={[KERB_THICKNESS, KERB_HEIGHT, depth]} />
-            <meshStandardMaterial color={c.surface} roughness={0.8} />
-          </mesh>
-        </RigidBody>
+          <span
+            className="whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-widest backdrop-blur"
+            style={{ borderColor: `${c.accent}55`, color: c.accent, background: "rgba(10,13,12,0.65)" }}
+          >
+            {band.year}
+          </span>
+        </Html>
       ))}
     </>
   );
 }
 
-
-
-
-
 /**
- * A handful of right-angled trace paths across a sky island's top face —
- * fixed, hand-placed points rather than procedurally random ones, so the
- * pattern is identical frame to frame and between the mirrored east/west
- * islands (SkyIsland below just reflects x, same as PLACEMENTS already does
- * for the rooms themselves). Reads as circuit-board decoration without
- * needing an actual texture.
- */
-
-
-/** One air-room sky island — a flat PCB-style slab. Bigger and squarer than
- *  the atolls on purpose: the design doc's desk-scale rule reads a slab with
- *  traced circuitry as a populated circuit board, which only sells the
- *  "PCB" read if the board itself looks board-shaped rather than rock-shaped. */
-
-/**
- * The cutting-mat grid printed on the desk.
+ * The cutting-mat grid printed on the slab.
  *
- * The only thing in the scene close enough to the camera to give parallax, so
- * it is what makes speed legible — a car at 23 m/s over an untextured plane
- * looks identical to one at 6. Section lines derive from the theme token via
- * dim() rather than being a literal, so a theme that moves --color-signal moves
- * the floor with it.
+ * The only thing in the scene close enough to the camera to give parallax,
+ * so it is what makes speed legible. Cell size 4 (up from 1) and section
+ * size 16 (up from 5) on a slab that is now 168m long rather than 30m: a 1m
+ * cell on a boulevard this size reads as static noise underfoot, and a 4m
+ * cell (≈2 car-lengths) reads as pavement joints instead. 16m section lines
+ * are the same span as a year band, so the grid is trying to double as the
+ * calendar — it lands close, not exact, because the grid's own local origin
+ * is the slab's z-midpoint (so the visible plane covers the full 168m
+ * without a gap at either end) rather than a year boundary, which sits 4m
+ * off that midpoint. EraPlates and YearTicks above are what actually carry
+ * the year information; this is texture, not a second source of truth.
  */
 function DeskGrid(): JSX.Element {
   const c = worldPalette();
@@ -154,13 +233,13 @@ function DeskGrid(): JSX.Element {
     <Grid
       position={[0, groundY + 0.01, (z0 + z1) / 2]}
       args={[halfWidth * 2, z1 - z0]}
-      cellSize={1}
+      cellSize={4}
       cellThickness={0.5}
       cellColor={dim(c.signal, 0.88)}
-      sectionSize={5}
+      sectionSize={16}
       sectionThickness={0.8}
       sectionColor={dim(c.signal, 0.62)}
-      fadeDistance={70}
+      fadeDistance={100}
       fadeStrength={1.4}
       followCamera={false}
       infiniteGrid={false}
@@ -173,7 +252,9 @@ export function Terrain(): JSX.Element {
     <>
       <DeskGrid />
       <Mainland />
+      <EraPlates />
       <Kerb />
+      <YearTicks />
     </>
   );
 }

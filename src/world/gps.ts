@@ -14,6 +14,8 @@
  * than buried in a render loop.
  */
 
+import type { TallStructure } from "./city.ts";
+
 export type Fix = { x: number; z: number };
 
 /** Metres of horizontal error a consumer GPS fix carries in the open. */
@@ -22,9 +24,15 @@ const BASE_NOISE_M = 1.6;
 /**
  * Urban-canyon multiplier. Real degradation is not uniform: accuracy collapses
  * beside tall structures because the sky view is blocked and signals arrive by
- * reflection. The monuments are this world's tall structures, so error rises
- * near them — which is why the raw trail visibly falls apart in exactly the
- * places the clean one has to work hardest.
+ * reflection. `structures` used to be a fixed set of monuments; it is now
+ * whatever the west and east districts hand back from `westStructures()` /
+ * `eastStructures()` (city.ts's `TallStructure[]`, built from the west
+ * flank's employer blocks and towers plus the east flank's chess ridge and
+ * corpus pillars) — so error now rises near the actual skyline the visitor is
+ * driving through, on both flanks, rather than a fixed set this module used
+ * to own an opinion about. This function stays generic on purpose: it only
+ * ever reads `.x`/`.z`, so it doesn't care which district a structure came
+ * from or how tall it is.
  */
 const CANYON_RADIUS_M = 9;
 const CANYON_MULTIPLIER = 5.5;
@@ -44,7 +52,7 @@ function hashNoise(seed: number): number {
 }
 
 /** Error multiplier at a point, given the tall structures near it. */
-export function canyonFactor(x: number, z: number, structures: { x: number; z: number }[]): number {
+export function canyonFactor(x: number, z: number, structures: TallStructure[]): number {
   let worst = 1;
   for (const s of structures) {
     const d = Math.hypot(x - s.x, z - s.z);
@@ -60,7 +68,7 @@ export function canyonFactor(x: number, z: number, structures: { x: number; z: n
 export function rawFix(
   truth: Fix,
   seed: number,
-  structures: { x: number; z: number }[],
+  structures: TallStructure[],
 ): Fix {
   const factor = canyonFactor(truth.x, truth.z, structures);
   const spike = hashNoise(seed * 7.7) > 1 - SPIKE_CHANCE * 2 ? SPIKE_M : 0;

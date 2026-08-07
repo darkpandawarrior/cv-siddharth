@@ -15,7 +15,8 @@ export const storeApps = [
     "installs": "100K+",
     "url": "https://play.google.com/store/apps/details?id=io.eka.ekav2&hl=en",
     "role": "Technical owner & Product Owner",
-    "employer": "Dice.tech"
+    "employer": "Dice.tech",
+    "icon": "/store/io.eka.ekav2.webp"
   },
   {
     "id": "product.clicklabs.jugnoo",
@@ -24,7 +25,8 @@ export const storeApps = [
     "installs": "5M+",
     "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo&hl=en",
     "role": "Android engineer",
-    "employer": "Jugnoo"
+    "employer": "Jugnoo",
+    "icon": "/store/product.clicklabs.jugnoo.webp"
   },
   {
     "id": "product.clicklabs.jugnoo.driver",
@@ -33,7 +35,8 @@ export const storeApps = [
     "installs": "1M+",
     "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo.driver&hl=en",
     "role": "Android engineer",
-    "employer": "Jugnoo"
+    "employer": "Jugnoo",
+    "icon": "/store/product.clicklabs.jugnoo.driver.webp"
   }
 ] as const;
 
@@ -52,7 +55,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "SmartBike Mobility",
-  "icon": "/store/production.smartbikemobility.customer.webp"
+  "icon": "/store/production.smartbikemobility.customer.webp",
+  "color": "#FD7945"
  },
  {
   "id": "com.snape",
@@ -63,7 +67,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
-  "icon": "/store/com.snape.webp"
+  "icon": "/store/com.snape.webp",
+  "color": "#71A8B6"
  },
  {
   "id": "production.ttrides.customer",
@@ -74,7 +79,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
-  "icon": "/store/production.ttrides.customer.webp"
+  "icon": "/store/production.ttrides.customer.webp",
+  "color": "#CC3333"
  },
  {
   "id": "production.zofeur.customer",
@@ -85,7 +91,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Zofeur",
-  "icon": "/store/production.zofeur.customer.webp"
+  "icon": "/store/production.zofeur.customer.webp",
+  "color": "#000000"
  },
  {
   "id": "com.VivaTaxi",
@@ -96,7 +103,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "Viva Taxi",
-  "icon": "/store/com.VivaTaxi.webp"
+  "icon": "/store/com.VivaTaxi.webp",
+  "color": null
  },
  {
   "id": "com.asap.courier",
@@ -107,7 +115,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TMP S.A.",
-  "icon": "/store/com.asap.courier.webp"
+  "icon": "/store/com.asap.courier.webp",
+  "color": "#35bdb2"
  },
  {
   "id": "production.rydecust.customer",
@@ -118,7 +127,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ryde Technology",
-  "icon": "/store/production.rydecust.customer.webp"
+  "icon": "/store/production.rydecust.customer.webp",
+  "color": "#f79e20"
  },
  {
   "id": "production.togopool.carpool",
@@ -129,7 +139,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Togopool Pvt. Ltd.",
-  "icon": "/store/production.togopool.carpool.webp"
+  "icon": "/store/production.togopool.carpool.webp",
+  "color": "#ff9b05"
  },
  {
   "id": "production.urban.customer",
@@ -140,7 +151,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
-  "icon": "/store/production.urban.customer.webp"
+  "icon": "/store/production.urban.customer.webp",
+  "color": "#000000"
  },
  {
   "id": "production.qooxy.customer",
@@ -151,7 +163,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Qooxy  Technologies",
-  "icon": "/store/production.qooxy.customer.webp"
+  "icon": "/store/production.qooxy.customer.webp",
+  "color": "#F19F41"
  },
  {
   "id": "production.urban.driver",
@@ -162,7 +175,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
-  "icon": "/store/production.urban.driver.webp"
+  "icon": "/store/production.urban.driver.webp",
+  "color": null
  },
  {
   "id": "production.zofeur.driver",
@@ -173,7 +187,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Zofeur",
-  "icon": "/store/production.zofeur.driver.webp"
+  "icon": "/store/production.zofeur.driver.webp",
+  "color": null
  },
  {
   "id": "production.pickupbarbodas.customer",
@@ -184,7 +199,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "PickUp Barbados",
-  "icon": "/store/production.pickupbarbodas.customer.webp"
+  "icon": "/store/production.pickupbarbodas.customer.webp",
+  "color": "#FFB800"
  },
  {
   "id": "production.rydedrive.driver",
@@ -195,7 +211,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ryde Technology",
-  "icon": "/store/production.rydedrive.driver.webp"
+  "icon": "/store/production.rydedrive.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.bena",
@@ -206,7 +223,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "1Bena",
-  "icon": "/store/product.customer.bena.webp"
+  "icon": "/store/product.customer.bena.webp",
+  "color": null
  },
  {
   "id": "production.ttrides.driver",
@@ -217,7 +235,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
-  "icon": "/store/production.ttrides.driver.webp"
+  "icon": "/store/production.ttrides.driver.webp",
+  "color": null
  },
  {
   "id": "app.production.delivermett",
@@ -228,7 +247,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
-  "icon": "/store/app.production.delivermett.webp"
+  "icon": "/store/app.production.delivermett.webp",
+  "color": "#6b1a20"
  },
  {
   "id": "com.hitch",
@@ -239,7 +259,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hitch Limited",
-  "icon": "/store/com.hitch.webp"
+  "icon": "/store/com.hitch.webp",
+  "color": "#10426C"
  },
  {
   "id": "product.customer.rio",
@@ -250,7 +271,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Rio cabs India",
-  "icon": "/store/product.customer.rio.webp"
+  "icon": "/store/product.customer.rio.webp",
+  "color": "#203944"
  },
  {
   "id": "product.customer.one",
@@ -261,7 +283,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
-  "icon": "/store/product.customer.one.webp"
+  "icon": "/store/product.customer.one.webp",
+  "color": null
  },
  {
   "id": "product.driver.snapecabs",
@@ -272,7 +295,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
-  "icon": "/store/product.driver.snapecabs.webp"
+  "icon": "/store/product.driver.snapecabs.webp",
+  "color": null
  },
  {
   "id": "com.hurryup.driver",
@@ -283,7 +307,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
-  "icon": "/store/com.hurryup.driver.webp"
+  "icon": "/store/com.hurryup.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.dailyecuador",
@@ -294,7 +319,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "Daily Latam",
-  "icon": "/store/product.customer.dailyecuador.webp"
+  "icon": "/store/product.customer.dailyecuador.webp",
+  "color": "#48b981"
  },
  {
   "id": "production.hovr.customer",
@@ -305,7 +331,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
-  "icon": "/store/production.hovr.customer.webp"
+  "icon": "/store/production.hovr.customer.webp",
+  "color": "#7CDC54"
  },
  {
   "id": "product.customer.hola",
@@ -316,7 +343,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hola Connect",
-  "icon": "/store/product.customer.hola.webp"
+  "icon": "/store/product.customer.hola.webp",
+  "color": "#2562F7"
  },
  {
   "id": "product.customer.onux",
@@ -327,7 +355,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Onux Services",
-  "icon": "/store/product.customer.onux.webp"
+  "icon": "/store/product.customer.onux.webp",
+  "color": "#249708"
  },
  {
   "id": "production.hum.customer",
@@ -338,7 +367,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
-  "icon": "/store/production.hum.customer.webp"
+  "icon": "/store/production.hum.customer.webp",
+  "color": "#1BAFA1"
  },
  {
   "id": "com.taxiye",
@@ -349,7 +379,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
-  "icon": "/store/com.taxiye.webp"
+  "icon": "/store/com.taxiye.webp",
+  "color": "#93009D"
  },
  {
   "id": "production.hovr.driver",
@@ -360,7 +391,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
-  "icon": "/store/production.hovr.driver.webp"
+  "icon": "/store/production.hovr.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.dailyecuador",
@@ -371,7 +403,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "Daily Latam",
-  "icon": "/store/product.driver.dailyecuador.webp"
+  "icon": "/store/product.driver.dailyecuador.webp",
+  "color": null
  },
  {
   "id": "product.driver.onux",
@@ -382,7 +415,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Onux Services",
-  "icon": "/store/product.driver.onux.webp"
+  "icon": "/store/product.driver.onux.webp",
+  "color": null
  },
  {
   "id": "production.hum.driver",
@@ -393,7 +427,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
-  "icon": "/store/production.hum.driver.webp"
+  "icon": "/store/production.hum.driver.webp",
+  "color": null
  },
  {
   "id": "com.taxiye.driver",
@@ -404,7 +439,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
-  "icon": "/store/com.taxiye.driver.webp"
+  "icon": "/store/com.taxiye.driver.webp",
+  "color": null
  },
  {
   "id": "production.pickupbarbodas.driver",
@@ -415,7 +451,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "PickUp Barbados",
-  "icon": "/store/production.pickupbarbodas.driver.webp"
+  "icon": "/store/production.pickupbarbodas.driver.webp",
+  "color": null
  },
  {
   "id": "production.qooxy.driver",
@@ -426,7 +463,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Qooxy  Technologies",
-  "icon": "/store/production.qooxy.driver.webp"
+  "icon": "/store/production.qooxy.driver.webp",
+  "color": null
  },
  {
   "id": "com.tryapptivities.pamdriver",
@@ -437,7 +475,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pannaga Technologies",
-  "icon": "/store/com.tryapptivities.pamdriver.webp"
+  "icon": "/store/com.tryapptivities.pamdriver.webp",
+  "color": null
  },
  {
   "id": "product.customer.jett",
@@ -448,7 +487,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Jett technology",
-  "icon": "/store/product.customer.jett.webp"
+  "icon": "/store/product.customer.jett.webp",
+  "color": "#4E45B7"
  },
  {
   "id": "production.nairaxi.customer",
@@ -459,7 +499,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TOAST TECHNOLOGIES LTD",
-  "icon": "/store/production.nairaxi.customer.webp"
+  "icon": "/store/production.nairaxi.customer.webp",
+  "color": "#4FB852"
  },
  {
   "id": "com.hurryup",
@@ -470,7 +511,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
-  "icon": "/store/com.hurryup.webp"
+  "icon": "/store/com.hurryup.webp",
+  "color": "#d30e1e"
  },
  {
   "id": "product.driver.jett",
@@ -481,7 +523,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Jett technology",
-  "icon": "/store/product.driver.jett.webp"
+  "icon": "/store/product.driver.jett.webp",
+  "color": null
  },
  {
   "id": "production.woulib.customer",
@@ -492,7 +535,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "WOULIB",
-  "icon": "/store/production.woulib.customer.webp"
+  "icon": "/store/production.woulib.customer.webp",
+  "color": "#F2C50E"
  },
  {
   "id": "production.pikmi.customer",
@@ -503,7 +547,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
-  "icon": "/store/production.pikmi.customer.webp"
+  "icon": "/store/production.pikmi.customer.webp",
+  "color": "#D10A13"
  },
  {
   "id": "production.nawi.customer",
@@ -514,7 +559,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Nawi Rides",
-  "icon": "/store/production.nawi.customer.webp"
+  "icon": "/store/production.nawi.customer.webp",
+  "color": "#2B8741"
  },
  {
   "id": "com.VivaDriver.driver",
@@ -525,7 +571,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "Viva Taxi",
-  "icon": "/store/com.VivaDriver.driver.webp"
+  "icon": "/store/com.VivaDriver.driver.webp",
+  "color": null
  },
  {
   "id": "driver.production.delivermett",
@@ -536,7 +583,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
-  "icon": "/store/driver.production.delivermett.webp"
+  "icon": "/store/driver.production.delivermett.webp",
+  "color": null
  },
  {
   "id": "product.driver.rio",
@@ -547,7 +595,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Rio cabs India",
-  "icon": "/store/product.driver.rio.webp"
+  "icon": "/store/product.driver.rio.webp",
+  "color": null
  },
  {
   "id": "product.limoz.customer",
@@ -558,7 +607,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Limoz, LLC",
-  "icon": "/store/product.limoz.customer.webp"
+  "icon": "/store/product.limoz.customer.webp",
+  "color": "#086A2E"
  },
  {
   "id": "product.customer.superapp",
@@ -569,7 +619,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
-  "icon": "/store/product.customer.superapp.webp"
+  "icon": "/store/product.customer.superapp.webp",
+  "color": "#000000"
  },
  {
   "id": "product.superapp.driver",
@@ -580,7 +631,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
-  "icon": "/store/product.superapp.driver.webp"
+  "icon": "/store/product.superapp.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.yuber",
@@ -591,7 +643,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
-  "icon": "/store/product.customer.yuber.webp"
+  "icon": "/store/product.customer.yuber.webp",
+  "color": null
  },
  {
   "id": "product.customer.roda",
@@ -602,7 +655,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Roda Singapore",
-  "icon": "/store/product.customer.roda.webp"
+  "icon": "/store/product.customer.roda.webp",
+  "color": null
  },
  {
   "id": "product.customer.adonisOville",
@@ -613,7 +667,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Errand Philippines",
-  "icon": "/store/product.customer.adonisOville.webp"
+  "icon": "/store/product.customer.adonisOville.webp",
+  "color": null
  },
  {
   "id": "product.customer.salamtaxi",
@@ -624,7 +679,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "SalamTaxi",
-  "icon": "/store/product.customer.salamtaxi.webp"
+  "icon": "/store/product.customer.salamtaxi.webp",
+  "color": null
  },
  {
   "id": "product.customer.choffer.shuttle",
@@ -635,7 +691,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Choffer Technology",
-  "icon": "/store/product.customer.choffer.shuttle.webp"
+  "icon": "/store/product.customer.choffer.shuttle.webp",
+  "color": "#FF0000"
  },
  {
   "id": "product.customer.driveme",
@@ -646,7 +703,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "DriveMeApp",
-  "icon": "/store/product.customer.driveme.webp"
+  "icon": "/store/product.customer.driveme.webp",
+  "color": "#379CC9"
  },
  {
   "id": "product.customer.ttcab",
@@ -657,7 +715,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
-  "icon": "/store/product.customer.ttcab.webp"
+  "icon": "/store/product.customer.ttcab.webp",
+  "color": "#D90000"
  },
  {
   "id": "com.cabby.customer",
@@ -668,7 +727,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "CABBY FOR ELECTRONIC TRANSPORT SERVICES CO. L.L.C",
-  "icon": "/store/com.cabby.customer.webp"
+  "icon": "/store/com.cabby.customer.webp",
+  "color": "#E62566"
  },
  {
   "id": "com.leiwand.user",
@@ -679,7 +739,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Driverpos",
-  "icon": "/store/com.leiwand.user.webp"
+  "icon": "/store/com.leiwand.user.webp",
+  "color": "#38a1d9"
  },
  {
   "id": "product.driver.hola",
@@ -690,7 +751,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hola Connect",
-  "icon": "/store/product.driver.hola.webp"
+  "icon": "/store/product.driver.hola.webp",
+  "color": null
  },
  {
   "id": "product.driver.driveme",
@@ -701,7 +763,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "DriveMeApp",
-  "icon": "/store/product.driver.driveme.webp"
+  "icon": "/store/product.driver.driveme.webp",
+  "color": null
  },
  {
   "id": "com.hitch.driver",
@@ -712,7 +775,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hitch Limited",
-  "icon": "/store/com.hitch.driver.webp"
+  "icon": "/store/com.hitch.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.tapp",
@@ -723,7 +787,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "TAPP RideShare",
-  "icon": "/store/product.driver.tapp.webp"
+  "icon": "/store/product.driver.tapp.webp",
+  "color": null
  },
  {
   "id": "production.woulib.driver",
@@ -734,7 +799,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "WOULIB",
-  "icon": "/store/production.woulib.driver.webp"
+  "icon": "/store/production.woulib.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.bena",
@@ -745,7 +811,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "1Bena",
-  "icon": "/store/product.driver.bena.webp"
+  "icon": "/store/product.driver.bena.webp",
+  "color": null
  },
  {
   "id": "production.nairaxi.driver",
@@ -756,7 +823,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "TOAST TECHNOLOGIES LTD",
-  "icon": "/store/production.nairaxi.driver.webp"
+  "icon": "/store/production.nairaxi.driver.webp",
+  "color": null
  },
  {
   "id": "com.leiwand.driver",
@@ -767,7 +835,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Driverpos",
-  "icon": "/store/com.leiwand.driver.webp"
+  "icon": "/store/com.leiwand.driver.webp",
+  "color": null
  },
  {
   "id": "production.pikmi.driver",
@@ -778,7 +847,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
-  "icon": "/store/production.pikmi.driver.webp"
+  "icon": "/store/production.pikmi.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.yuber",
@@ -789,7 +859,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
-  "icon": "/store/product.driver.yuber.webp"
+  "icon": "/store/product.driver.yuber.webp",
+  "color": null
  },
  {
   "id": "product.driver.adonisOville",
@@ -800,7 +871,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Errand Philippines",
-  "icon": "/store/product.driver.adonisOville.webp"
+  "icon": "/store/product.driver.adonisOville.webp",
+  "color": null
  },
  {
   "id": "product.clicklabs.ttcab.driver",
@@ -811,7 +883,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
-  "icon": "/store/product.clicklabs.ttcab.driver.webp"
+  "icon": "/store/product.clicklabs.ttcab.driver.webp",
+  "color": null
  },
  {
   "id": "production.nawi.driver",
@@ -822,7 +895,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Nawi Rides",
-  "icon": "/store/production.nawi.driver.webp"
+  "icon": "/store/production.nawi.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.one",
@@ -833,7 +907,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
-  "icon": "/store/product.driver.one.webp"
+  "icon": "/store/product.driver.one.webp",
+  "color": null
  },
  {
   "id": "product.customer.angel",
@@ -844,7 +919,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
-  "icon": "/store/product.customer.angel.webp"
+  "icon": "/store/product.customer.angel.webp",
+  "color": null
  },
  {
   "id": "production.redplate.customer.new",
@@ -855,7 +931,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
-  "icon": "/store/production.redplate.customer.new.webp"
+  "icon": "/store/production.redplate.customer.new.webp",
+  "color": "#e20613"
  },
  {
   "id": "production.romi.customer",
@@ -866,7 +943,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "ROMI ride",
-  "icon": "/store/production.romi.customer.webp"
+  "icon": "/store/production.romi.customer.webp",
+  "color": "#ff570b"
  },
  {
   "id": "product.driver.salamtaxi",
@@ -877,7 +955,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "SalamTaxi",
-  "icon": "/store/product.driver.salamtaxi.webp"
+  "icon": "/store/product.driver.salamtaxi.webp",
+  "color": null
  },
  {
   "id": "product.driver.apilit",
@@ -888,7 +967,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "apilit",
-  "icon": "/store/product.driver.apilit.webp"
+  "icon": "/store/product.driver.apilit.webp",
+  "color": null
  },
  {
   "id": "com.limoz.driver",
@@ -899,7 +979,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Limoz, LLC",
-  "icon": "/store/com.limoz.driver.webp"
+  "icon": "/store/com.limoz.driver.webp",
+  "color": null
  },
  {
   "id": "product.driver.choffer",
@@ -910,7 +991,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Choffer Technology",
-  "icon": "/store/product.driver.choffer.webp"
+  "icon": "/store/product.driver.choffer.webp",
+  "color": null
  },
  {
   "id": "production.redplate.driver",
@@ -921,7 +1003,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
-  "icon": "/store/production.redplate.driver.webp"
+  "icon": "/store/production.redplate.driver.webp",
+  "color": null
  },
  {
   "id": "production.romi.driver",
@@ -932,7 +1015,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "ROMI ride",
-  "icon": "/store/production.romi.driver.webp"
+  "icon": "/store/production.romi.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.dida",
@@ -943,7 +1027,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "DIDA RENTAL",
-  "icon": "/store/product.customer.dida.webp"
+  "icon": "/store/product.customer.dida.webp",
+  "color": "#4DB4E7"
  },
  {
   "id": "product.driver.roda",
@@ -954,7 +1039,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Roda Singapore",
-  "icon": "/store/product.driver.roda.webp"
+  "icon": "/store/product.driver.roda.webp",
+  "color": null
  },
  {
   "id": "product.driver.dida",
@@ -965,7 +1051,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "DIDA RENTAL",
-  "icon": "/store/product.driver.dida.webp"
+  "icon": "/store/product.driver.dida.webp",
+  "color": null
  },
  {
   "id": "product.driver.angel",
@@ -976,7 +1063,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
-  "icon": "/store/product.driver.angel.webp"
+  "icon": "/store/product.driver.angel.webp",
+  "color": null
  },
  {
   "id": "product.customer.btaxi",
@@ -987,7 +1075,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "B TAXI",
-  "icon": "/store/product.customer.btaxi.webp"
+  "icon": "/store/product.customer.btaxi.webp",
+  "color": null
  },
  {
   "id": "product.driver.btaxi",
@@ -998,7 +1087,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "B TAXI",
-  "icon": "/store/product.driver.btaxi.webp"
+  "icon": "/store/product.driver.btaxi.webp",
+  "color": null
  }
 ] as const;
 
@@ -1021,7 +1111,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230523",
   "lastSeen": "20260311",
-  "url": "https://web.archive.org/web/20260311074717/https://play.google.com/store/apps/details?id=product.driver.drivern"
+  "url": "https://web.archive.org/web/20260311074717/https://play.google.com/store/apps/details?id=product.driver.drivern",
+  "icon": "/store/product.driver.drivern.webp",
+  "color": null
  },
  {
   "id": "product.customer.drivern",
@@ -1032,7 +1124,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220716",
   "lastSeen": "20251211",
-  "url": "https://web.archive.org/web/20251211151035/https://play.google.com/store/apps/details?id=product.customer.drivern"
+  "url": "https://web.archive.org/web/20251211151035/https://play.google.com/store/apps/details?id=product.customer.drivern",
+  "icon": "/store/product.customer.drivern.webp",
+  "color": "#000000"
  },
  {
   "id": "product.driver.superfix",
@@ -1043,7 +1137,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20250407",
   "lastSeen": "20250407",
-  "url": "https://web.archive.org/web/20250407170312/https://play.google.com/store/apps/details?id=product.driver.superfix"
+  "url": "https://web.archive.org/web/20250407170312/https://play.google.com/store/apps/details?id=product.driver.superfix",
+  "icon": "/store/product.driver.superfix.webp",
+  "color": null
  },
  {
   "id": "product.customer.superfix",
@@ -1054,7 +1150,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20250404",
   "lastSeen": "20250404",
-  "url": "https://web.archive.org/web/20250404212203/https://play.google.com/store/apps/details?id=product.customer.superfix"
+  "url": "https://web.archive.org/web/20250404212203/https://play.google.com/store/apps/details?id=product.customer.superfix",
+  "icon": "/store/product.customer.superfix.webp",
+  "color": "#ffd404"
  },
  {
   "id": "product.customer.toairportpassenger",
@@ -1065,7 +1163,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20241202",
   "lastSeen": "20241202",
-  "url": "https://web.archive.org/web/20241202144854/https://play.google.com/store/apps/details?id=product.customer.toairportpassenger"
+  "url": "https://web.archive.org/web/20241202144854/https://play.google.com/store/apps/details?id=product.customer.toairportpassenger",
+  "icon": "/store/product.customer.toairportpassenger.webp",
+  "color": "#0572FA"
  },
  {
   "id": "product.customer.etaxi",
@@ -1076,7 +1176,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230322",
   "lastSeen": "20241005",
-  "url": "https://web.archive.org/web/20241005033544/https://play.google.com/store/apps/details?id=product.customer.etaxi"
+  "url": "https://web.archive.org/web/20241005033544/https://play.google.com/store/apps/details?id=product.customer.etaxi",
+  "icon": "/store/product.customer.etaxi.webp",
+  "color": "#FFCA00"
  },
  {
   "id": "product.customer.drivein",
@@ -1087,7 +1189,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20240814",
   "lastSeen": "20240814",
-  "url": "https://web.archive.org/web/20240814081703/https://play.google.com/store/apps/details?id=product.customer.drivein"
+  "url": "https://web.archive.org/web/20240814081703/https://play.google.com/store/apps/details?id=product.customer.drivein",
+  "icon": "/store/product.customer.drivein.webp",
+  "color": "#FFDE59"
  },
  {
   "id": "product.driver.toairportdriver",
@@ -1098,7 +1202,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20240814",
   "lastSeen": "20240814",
-  "url": "https://web.archive.org/web/20240814120329/https://play.google.com/store/apps/details?id=product.driver.toairportdriver"
+  "url": "https://web.archive.org/web/20240814120329/https://play.google.com/store/apps/details?id=product.driver.toairportdriver",
+  "icon": "/store/product.driver.toairportdriver.webp",
+  "color": null
  },
  {
   "id": "product.driver.drivein",
@@ -1109,7 +1215,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20240709",
   "lastSeen": "20240814",
-  "url": "https://web.archive.org/web/20240814081654/https://play.google.com/store/apps/details?id=product.driver.drivein"
+  "url": "https://web.archive.org/web/20240814081654/https://play.google.com/store/apps/details?id=product.driver.drivein",
+  "icon": "/store/product.driver.drivein.webp",
+  "color": null
  },
  {
   "id": "product.driver.etaxi",
@@ -1120,7 +1228,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20240809",
   "lastSeen": "20240809",
-  "url": "https://web.archive.org/web/20240809010220/https://play.google.com/store/apps/details?id=product.driver.etaxi"
+  "url": "https://web.archive.org/web/20240809010220/https://play.google.com/store/apps/details?id=product.driver.etaxi",
+  "icon": "/store/product.driver.etaxi.webp",
+  "color": null
  },
  {
   "id": "com.tryapptivities.pamdrive",
@@ -1131,7 +1241,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190527",
   "lastSeen": "20240525",
-  "url": "https://web.archive.org/web/20240525033016/https://play.google.com/store/apps/details?id=com.tryapptivities.pamdrive"
+  "url": "https://web.archive.org/web/20240525033016/https://play.google.com/store/apps/details?id=com.tryapptivities.pamdrive",
+  "icon": "/store/com.tryapptivities.pamdrive.webp",
+  "color": "#001743"
  },
  {
   "id": "production.jumprydz.customer",
@@ -1142,7 +1254,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210416",
   "lastSeen": "20231128",
-  "url": "https://web.archive.org/web/20231128175935/https://play.google.com/store/apps/details?id=production.jumprydz.customer"
+  "url": "https://web.archive.org/web/20231128175935/https://play.google.com/store/apps/details?id=production.jumprydz.customer",
+  "icon": "/store/production.jumprydz.customer.webp",
+  "color": "#3231ca"
  },
  {
   "id": "product.driver.tama",
@@ -1153,7 +1267,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20230725",
   "lastSeen": "20230725",
-  "url": "https://web.archive.org/web/20230725094941/https://play.google.com/store/apps/details?id=product.driver.tama"
+  "url": "https://web.archive.org/web/20230725094941/https://play.google.com/store/apps/details?id=product.driver.tama",
+  "icon": "/store/product.driver.tama.webp",
+  "color": null
  },
  {
   "id": "product.customer.tama",
@@ -1164,7 +1280,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20230723",
   "lastSeen": "20230723",
-  "url": "https://web.archive.org/web/20230723195155/https://play.google.com/store/apps/details?id=product.customer.tama"
+  "url": "https://web.archive.org/web/20230723195155/https://play.google.com/store/apps/details?id=product.customer.tama",
+  "icon": "/store/product.customer.tama.webp",
+  "color": "#FFF002"
  },
  {
   "id": "production.citycabnamibia.customer",
@@ -1175,7 +1293,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201027",
   "lastSeen": "20230606",
-  "url": "https://web.archive.org/web/20230606095416/https://play.google.com/store/apps/details?id=production.citycabnamibia.customer"
+  "url": "https://web.archive.org/web/20230606095416/https://play.google.com/store/apps/details?id=production.citycabnamibia.customer",
+  "icon": "/store/production.citycabnamibia.customer.webp",
+  "color": "#77BF2B"
  },
  {
   "id": "product.driver.community",
@@ -1186,7 +1306,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20230426",
   "lastSeen": "20230426",
-  "url": "https://web.archive.org/web/20230426141641/https://play.google.com/store/apps/details?id=product.driver.community"
+  "url": "https://web.archive.org/web/20230426141641/https://play.google.com/store/apps/details?id=product.driver.community",
+  "icon": "/store/product.driver.community.webp",
+  "color": null
  },
  {
   "id": "production.alempay.driver",
@@ -1197,7 +1319,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230415",
   "lastSeen": "20230415",
-  "url": "https://web.archive.org/web/20230415202543/https://play.google.com/store/apps/details?id=production.alempay.driver"
+  "url": "https://web.archive.org/web/20230415202543/https://play.google.com/store/apps/details?id=production.alempay.driver",
+  "icon": "/store/production.alempay.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.apilit",
@@ -1208,7 +1332,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20211215",
   "lastSeen": "20230405",
-  "url": "https://web.archive.org/web/20230405155214/https://play.google.com/store/apps/details?id=product.customer.apilit"
+  "url": "https://web.archive.org/web/20230405155214/https://play.google.com/store/apps/details?id=product.customer.apilit",
+  "icon": "/store/product.customer.apilit.webp",
+  "color": "#ED202E"
  },
  {
   "id": "production.takigo.customer",
@@ -1219,7 +1345,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230404",
   "lastSeen": "20230405",
-  "url": "https://web.archive.org/web/20230405155153/https://play.google.com/store/apps/details?id=production.takigo.customer"
+  "url": "https://web.archive.org/web/20230405155153/https://play.google.com/store/apps/details?id=production.takigo.customer",
+  "icon": "/store/production.takigo.customer.webp",
+  "color": "#FF1510"
  },
  {
   "id": "product.driver.onedg",
@@ -1230,7 +1358,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230405",
   "lastSeen": "20230405",
-  "url": "https://web.archive.org/web/20230405155126/https://play.google.com/store/apps/details?id=product.driver.onedg"
+  "url": "https://web.archive.org/web/20230405155126/https://play.google.com/store/apps/details?id=product.driver.onedg",
+  "icon": "/store/product.driver.onedg.webp",
+  "color": null
  },
  {
   "id": "production.amigo.customer",
@@ -1241,7 +1371,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230328",
   "lastSeen": "20230328",
-  "url": "https://web.archive.org/web/20230328075454/https://play.google.com/store/apps/details?id=production.amigo.customer"
+  "url": "https://web.archive.org/web/20230328075454/https://play.google.com/store/apps/details?id=production.amigo.customer",
+  "icon": "/store/production.amigo.customer.webp",
+  "color": "#C1FA00"
  },
  {
   "id": "com.casbahtech.acquisition",
@@ -1252,7 +1384,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230327",
   "lastSeen": "20230327",
-  "url": "https://web.archive.org/web/20230327131818/https://play.google.com/store/apps/details?id=com.casbahtech.acquisition"
+  "url": "https://web.archive.org/web/20230327131818/https://play.google.com/store/apps/details?id=com.casbahtech.acquisition",
+  "icon": "/store/com.casbahtech.acquisition.webp",
+  "color": null
  },
  {
   "id": "production.abay.driver",
@@ -1263,7 +1397,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230308",
   "lastSeen": "20230308",
-  "url": "https://web.archive.org/web/20230308102145/https://play.google.com/store/apps/details?id=production.abay.driver"
+  "url": "https://web.archive.org/web/20230308102145/https://play.google.com/store/apps/details?id=production.abay.driver",
+  "icon": "/store/production.abay.driver.webp",
+  "color": null
  },
  {
   "id": "production.luckyu.driver",
@@ -1274,7 +1410,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20200702",
   "lastSeen": "20230304",
-  "url": "https://web.archive.org/web/20230304150033/https://play.google.com/store/apps/details?id=production.luckyu.driver"
+  "url": "https://web.archive.org/web/20230304150033/https://play.google.com/store/apps/details?id=production.luckyu.driver",
+  "icon": "/store/production.luckyu.driver.webp",
+  "color": null
  },
  {
   "id": "production.dropride.customer",
@@ -1285,7 +1423,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20230128",
   "lastSeen": "20230128",
-  "url": "https://web.archive.org/web/20230128041752/https://play.google.com/store/apps/details?id=production.dropride.customer"
+  "url": "https://web.archive.org/web/20230128041752/https://play.google.com/store/apps/details?id=production.dropride.customer",
+  "icon": "/store/production.dropride.customer.webp",
+  "color": "#7881BE"
  },
  {
   "id": "production.luckyu.customer",
@@ -1296,7 +1436,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20200702",
   "lastSeen": "20230127",
-  "url": "https://web.archive.org/web/20230127194610/https://play.google.com/store/apps/details?id=production.luckyu.customer"
+  "url": "https://web.archive.org/web/20230127194610/https://play.google.com/store/apps/details?id=production.luckyu.customer",
+  "icon": "/store/production.luckyu.customer.webp",
+  "color": "#EA1F24"
  },
  {
   "id": "product.customer.riderentals",
@@ -1307,7 +1449,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20221115",
   "lastSeen": "20221115",
-  "url": "https://web.archive.org/web/20221115051414/https://play.google.com/store/apps/details?id=product.customer.riderentals"
+  "url": "https://web.archive.org/web/20221115051414/https://play.google.com/store/apps/details?id=product.customer.riderentals",
+  "icon": "/store/product.customer.riderentals.webp",
+  "color": "#006136"
  },
  {
   "id": "production.uva.customer",
@@ -1318,7 +1462,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201213",
   "lastSeen": "20221030",
-  "url": "https://web.archive.org/web/20221030002532/https://play.google.com/store/apps/details?id=production.uva.customer"
+  "url": "https://web.archive.org/web/20221030002532/https://play.google.com/store/apps/details?id=production.uva.customer",
+  "icon": "/store/production.uva.customer.webp",
+  "color": "#D10071"
  },
  {
   "id": "product.customer.digitaxiseguro",
@@ -1329,7 +1475,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220916",
   "lastSeen": "20220916",
-  "url": "https://web.archive.org/web/20220916154418/https://play.google.com/store/apps/details?id=product.customer.digitaxiseguro"
+  "url": "https://web.archive.org/web/20220916154418/https://play.google.com/store/apps/details?id=product.customer.digitaxiseguro",
+  "icon": "/store/product.customer.digitaxiseguro.webp",
+  "color": "#E6007E"
  },
  {
   "id": "production.easy.customer",
@@ -1340,7 +1488,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220907",
   "lastSeen": "20220907",
-  "url": "https://web.archive.org/web/20220907142039/https://play.google.com/store/apps/details?id=production.easy.customer"
+  "url": "https://web.archive.org/web/20220907142039/https://play.google.com/store/apps/details?id=production.easy.customer",
+  "icon": "/store/production.easy.customer.webp",
+  "color": "#C14202"
  },
  {
   "id": "production.easy.driver",
@@ -1351,7 +1501,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220907",
   "lastSeen": "20220907",
-  "url": "https://web.archive.org/web/20220907142038/https://play.google.com/store/apps/details?id=production.easy.driver"
+  "url": "https://web.archive.org/web/20220907142038/https://play.google.com/store/apps/details?id=production.easy.driver",
+  "icon": "/store/production.easy.driver.webp",
+  "color": null
  },
  {
   "id": "product.customer.sender",
@@ -1362,7 +1514,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220906",
   "lastSeen": "20220906",
-  "url": "https://web.archive.org/web/20220906195811/https://play.google.com/store/apps/details?id=product.customer.sender"
+  "url": "https://web.archive.org/web/20220906195811/https://play.google.com/store/apps/details?id=product.customer.sender",
+  "icon": "/store/product.customer.sender.webp",
+  "color": "#FFCB00"
  },
  {
   "id": "production.tleva.customer",
@@ -1373,7 +1527,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20191020",
   "lastSeen": "20220901",
-  "url": "https://web.archive.org/web/20220901003725/https://play.google.com/store/apps/details?id=production.tleva.customer"
+  "url": "https://web.archive.org/web/20220901003725/https://play.google.com/store/apps/details?id=production.tleva.customer",
+  "icon": "/store/production.tleva.customer.webp",
+  "color": "#2b2936"
  },
  {
   "id": "production.wystle.driver",
@@ -1384,7 +1540,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201106",
   "lastSeen": "20220819",
-  "url": "https://web.archive.org/web/20220819185911/https://play.google.com/store/apps/details?id=production.wystle.driver"
+  "url": "https://web.archive.org/web/20220819185911/https://play.google.com/store/apps/details?id=production.wystle.driver",
+  "icon": "/store/production.wystle.driver.webp",
+  "color": null
  },
  {
   "id": "com.cabcalltaxis.islamabad",
@@ -1395,7 +1553,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210727",
   "lastSeen": "20220818",
-  "url": "https://web.archive.org/web/20220818024533/https://play.google.com/store/apps/details?id=com.cabcalltaxis.islamabad"
+  "url": "https://web.archive.org/web/20220818024533/https://play.google.com/store/apps/details?id=com.cabcalltaxis.islamabad",
+  "icon": "/store/com.cabcalltaxis.islamabad.webp",
+  "color": "#EC9F25"
  },
  {
   "id": "product.nextnowbaba.driver",
@@ -1406,7 +1566,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211129",
   "lastSeen": "20220811",
-  "url": "https://web.archive.org/web/20220811124754/https://play.google.com/store/apps/details?id=product.nextnowbaba.driver"
+  "url": "https://web.archive.org/web/20220811124754/https://play.google.com/store/apps/details?id=product.nextnowbaba.driver",
+  "icon": "/store/product.nextnowbaba.driver.webp",
+  "color": null
  },
  {
   "id": "production.wystle.customer",
@@ -1417,7 +1579,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210422",
   "lastSeen": "20220726",
-  "url": "https://web.archive.org/web/20220726071405/https://play.google.com/store/apps/details?id=production.wystle.customer"
+  "url": "https://web.archive.org/web/20220726071405/https://play.google.com/store/apps/details?id=production.wystle.customer",
+  "icon": "/store/production.wystle.customer.webp",
+  "color": "#D81F37"
  },
  {
   "id": "production.aqwaaba.customer",
@@ -1428,7 +1592,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220720",
   "lastSeen": "20220720",
-  "url": "https://web.archive.org/web/20220720095904/https://play.google.com/store/apps/details?id=production.aqwaaba.customer"
+  "url": "https://web.archive.org/web/20220720095904/https://play.google.com/store/apps/details?id=production.aqwaaba.customer",
+  "icon": "/store/production.aqwaaba.customer.webp",
+  "color": "#DE0909"
  },
  {
   "id": "production.towncarsnow.driver",
@@ -1439,7 +1605,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20191117",
   "lastSeen": "20220701",
-  "url": "https://web.archive.org/web/20220701152610/https://play.google.com/store/apps/details?id=production.towncarsnow.driver"
+  "url": "https://web.archive.org/web/20220701152610/https://play.google.com/store/apps/details?id=production.towncarsnow.driver",
+  "icon": "/store/production.towncarsnow.driver.webp",
+  "color": null
  },
  {
   "id": "com.mpitsadrive.driver",
@@ -1450,7 +1618,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220614",
   "lastSeen": "20220614",
-  "url": "https://web.archive.org/web/20220614223857/https://play.google.com/store/apps/details?id=com.mpitsadrive.driver"
+  "url": "https://web.archive.org/web/20220614223857/https://play.google.com/store/apps/details?id=com.mpitsadrive.driver",
+  "icon": "/store/com.mpitsadrive.driver.webp",
+  "color": null
  },
  {
   "id": "production.dash.customer",
@@ -1461,7 +1631,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210225",
   "lastSeen": "20220522",
-  "url": "https://web.archive.org/web/20220522120820/https://play.google.com/store/apps/details?id=production.dash.customer"
+  "url": "https://web.archive.org/web/20220522120820/https://play.google.com/store/apps/details?id=production.dash.customer",
+  "icon": "/store/production.dash.customer.webp",
+  "color": "#FFC000"
  },
  {
   "id": "production.bookfast.customer",
@@ -1472,7 +1644,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220518",
   "lastSeen": "20220518",
-  "url": "https://web.archive.org/web/20220518055843/https://play.google.com/store/apps/details?id=production.bookfast.customer"
+  "url": "https://web.archive.org/web/20220518055843/https://play.google.com/store/apps/details?id=production.bookfast.customer",
+  "icon": "/store/production.bookfast.customer.webp",
+  "color": "#2399D1"
  },
  {
   "id": "production.rydekolkata.customer",
@@ -1483,7 +1657,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220430",
   "lastSeen": "20220430",
-  "url": "https://web.archive.org/web/20220430155841/https://play.google.com/store/apps/details?id=production.rydekolkata.customer"
+  "url": "https://web.archive.org/web/20220430155841/https://play.google.com/store/apps/details?id=production.rydekolkata.customer",
+  "icon": "/store/production.rydekolkata.customer.webp",
+  "color": "#7FC241"
  },
  {
   "id": "production.roady.customer",
@@ -1494,7 +1670,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220429",
   "lastSeen": "20220429",
-  "url": "https://web.archive.org/web/20220429114532/https://play.google.com/store/apps/details?id=production.roady.customer"
+  "url": "https://web.archive.org/web/20220429114532/https://play.google.com/store/apps/details?id=production.roady.customer",
+  "icon": "/store/production.roady.customer.webp",
+  "color": "#FEDD14"
  },
  {
   "id": "production.tiliko.customer",
@@ -1505,7 +1683,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220327",
   "lastSeen": "20220327",
-  "url": "https://web.archive.org/web/20220327071844/https://play.google.com/store/apps/details?id=production.tiliko.customer"
+  "url": "https://web.archive.org/web/20220327071844/https://play.google.com/store/apps/details?id=production.tiliko.customer",
+  "icon": "/store/production.tiliko.customer.webp",
+  "color": "#231F1F"
  },
  {
   "id": "product.cabcall.driver",
@@ -1516,7 +1696,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210930",
   "lastSeen": "20220326",
-  "url": "https://web.archive.org/web/20220326040949/https://play.google.com/store/apps/details?id=product.cabcall.driver"
+  "url": "https://web.archive.org/web/20220326040949/https://play.google.com/store/apps/details?id=product.cabcall.driver",
+  "icon": "/store/product.cabcall.driver.webp",
+  "color": null
  },
  {
   "id": "production.azerpoct.customer",
@@ -1527,7 +1709,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220302",
   "lastSeen": "20220318",
-  "url": "https://web.archive.org/web/20220318052347/https://play.google.com/store/apps/details?id=production.azerpoct.customer"
+  "url": "https://web.archive.org/web/20220318052347/https://play.google.com/store/apps/details?id=production.azerpoct.customer",
+  "icon": "/store/production.azerpoct.customer.webp",
+  "color": "#044C7C"
  },
  {
   "id": "product.driver.tiliko",
@@ -1538,7 +1722,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220315",
   "lastSeen": "20220315",
-  "url": "https://web.archive.org/web/20220315115309/https://play.google.com/store/apps/details?id=product.driver.tiliko"
+  "url": "https://web.archive.org/web/20220315115309/https://play.google.com/store/apps/details?id=product.driver.tiliko",
+  "icon": "/store/product.driver.tiliko.webp",
+  "color": null
  },
  {
   "id": "production.rydekolkata.driver",
@@ -1549,7 +1735,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220311",
   "lastSeen": "20220311",
-  "url": "https://web.archive.org/web/20220311012754/https://play.google.com/store/apps/details?id=production.rydekolkata.driver"
+  "url": "https://web.archive.org/web/20220311012754/https://play.google.com/store/apps/details?id=production.rydekolkata.driver",
+  "icon": "/store/production.rydekolkata.driver.webp",
+  "color": null
  },
  {
   "id": "production.snap.customer",
@@ -1560,7 +1748,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220108",
   "lastSeen": "20220210",
-  "url": "https://web.archive.org/web/20220210034651/https://play.google.com/store/apps/details?id=production.snap.customer"
+  "url": "https://web.archive.org/web/20220210034651/https://play.google.com/store/apps/details?id=production.snap.customer",
+  "icon": "/store/production.snap.customer.webp",
+  "color": "#FD7945"
  },
  {
   "id": "product.customer.tapp",
@@ -1571,7 +1761,9 @@ export const delisted = [
   "setUpByHim": true,
   "firstSeen": "20220130",
   "lastSeen": "20220130",
-  "url": "https://web.archive.org/web/20220130130245/https://play.google.com/store/apps/details?id=product.customer.tapp"
+  "url": "https://web.archive.org/web/20220130130245/https://play.google.com/store/apps/details?id=product.customer.tapp",
+  "icon": "/store/product.customer.tapp.webp",
+  "color": "#CFE42F"
  },
  {
   "id": "production.ping.customer",
@@ -1582,7 +1774,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210124",
   "lastSeen": "20220128",
-  "url": "https://web.archive.org/web/20220128175743/https://play.google.com/store/apps/details?id=production.ping.customer"
+  "url": "https://web.archive.org/web/20220128175743/https://play.google.com/store/apps/details?id=production.ping.customer",
+  "icon": "/store/production.ping.customer.webp",
+  "color": "#bc0c1d"
  },
  {
   "id": "production.snap.driver",
@@ -1593,7 +1787,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211225",
   "lastSeen": "20220126",
-  "url": "https://web.archive.org/web/20220126162931/https://play.google.com/store/apps/details?id=production.snap.driver"
+  "url": "https://web.archive.org/web/20220126162931/https://play.google.com/store/apps/details?id=production.snap.driver",
+  "icon": "/store/production.snap.driver.webp",
+  "color": null
  },
  {
   "id": "production.ebit.driver",
@@ -1604,7 +1800,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220116",
   "lastSeen": "20220116",
-  "url": "https://web.archive.org/web/20220116111953/https://play.google.com/store/apps/details?id=production.ebit.driver"
+  "url": "https://web.archive.org/web/20220116111953/https://play.google.com/store/apps/details?id=production.ebit.driver",
+  "icon": "/store/production.ebit.driver.webp",
+  "color": null
  },
  {
   "id": "production.ebit.customer",
@@ -1615,7 +1813,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220115",
   "lastSeen": "20220115",
-  "url": "https://web.archive.org/web/20220115063152/https://play.google.com/store/apps/details?id=production.ebit.customer"
+  "url": "https://web.archive.org/web/20220115063152/https://play.google.com/store/apps/details?id=production.ebit.customer",
+  "icon": "/store/production.ebit.customer.webp",
+  "color": "#00309a"
  },
  {
   "id": "production.ify.customer",
@@ -1626,7 +1826,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20220114",
   "lastSeen": "20220114",
-  "url": "https://web.archive.org/web/20220114214636/https://play.google.com/store/apps/details?id=production.ify.customer"
+  "url": "https://web.archive.org/web/20220114214636/https://play.google.com/store/apps/details?id=production.ify.customer",
+  "icon": "/store/production.ify.customer.webp",
+  "color": "#EA4B1B"
  },
  {
   "id": "product.peindia.customer",
@@ -1637,7 +1839,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210818",
   "lastSeen": "20211222",
-  "url": "https://web.archive.org/web/20211222234449/https://play.google.com/store/apps/details?id=product.peindia.customer"
+  "url": "https://web.archive.org/web/20211222234449/https://play.google.com/store/apps/details?id=product.peindia.customer",
+  "icon": "/store/product.peindia.customer.webp",
+  "color": "#EE0000"
  },
  {
   "id": "production.limocameroun.customer",
@@ -1648,7 +1852,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211115",
   "lastSeen": "20211205",
-  "url": "https://web.archive.org/web/20211205171121/https://play.google.com/store/apps/details?id=production.limocameroun.customer"
+  "url": "https://web.archive.org/web/20211205171121/https://play.google.com/store/apps/details?id=production.limocameroun.customer",
+  "icon": "/store/production.limocameroun.customer.webp",
+  "color": "#EBCB65"
  },
  {
   "id": "production.spark.driver",
@@ -1659,7 +1865,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211030",
   "lastSeen": "20211130",
-  "url": "https://web.archive.org/web/20211130022811/https://play.google.com/store/apps/details?id=production.spark.driver"
+  "url": "https://web.archive.org/web/20211130022811/https://play.google.com/store/apps/details?id=production.spark.driver",
+  "icon": "/store/production.spark.driver.webp",
+  "color": null
  },
  {
   "id": "production.spark.customer",
@@ -1670,7 +1878,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211128",
   "lastSeen": "20211128",
-  "url": "https://web.archive.org/web/20211128163755/https://play.google.com/store/apps/details?id=production.spark.customer"
+  "url": "https://web.archive.org/web/20211128163755/https://play.google.com/store/apps/details?id=production.spark.customer",
+  "icon": "/store/production.spark.customer.webp",
+  "color": "#F70000"
  },
  {
   "id": "product.cafeev.customer",
@@ -1681,7 +1891,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211127",
   "lastSeen": "20211127",
-  "url": "https://web.archive.org/web/20211127232146/https://play.google.com/store/apps/details?id=product.cafeev.customer"
+  "url": "https://web.archive.org/web/20211127232146/https://play.google.com/store/apps/details?id=product.cafeev.customer",
+  "icon": null,
+  "color": null
  },
  {
   "id": "production.limocameroun.driver",
@@ -1692,7 +1904,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211110",
   "lastSeen": "20211110",
-  "url": "https://web.archive.org/web/20211110084351/https://play.google.com/store/apps/details?id=production.limocameroun.driver"
+  "url": "https://web.archive.org/web/20211110084351/https://play.google.com/store/apps/details?id=production.limocameroun.driver",
+  "icon": "/store/production.limocameroun.driver.webp",
+  "color": null
  },
  {
   "id": "production.rydemalta.customer",
@@ -1703,7 +1917,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20211016",
   "lastSeen": "20211016",
-  "url": "https://web.archive.org/web/20211016010532/https://play.google.com/store/apps/details?id=production.rydemalta.customer"
+  "url": "https://web.archive.org/web/20211016010532/https://play.google.com/store/apps/details?id=production.rydemalta.customer",
+  "icon": "/store/production.rydemalta.customer.webp",
+  "color": "#00E2FB"
  },
  {
   "id": "com.droverrideshare.customer",
@@ -1714,7 +1930,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210926",
   "lastSeen": "20210926",
-  "url": "https://web.archive.org/web/20210926175347/https://play.google.com/store/apps/details?id=com.droverrideshare.customer"
+  "url": "https://web.archive.org/web/20210926175347/https://play.google.com/store/apps/details?id=com.droverrideshare.customer",
+  "icon": "/store/com.droverrideshare.customer.webp",
+  "color": "#47b749"
  },
  {
   "id": "production.curbcab.customer",
@@ -1725,7 +1943,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210907",
   "lastSeen": "20210907",
-  "url": "https://web.archive.org/web/20210907043322/https://play.google.com/store/apps/details?id=production.curbcab.customer"
+  "url": "https://web.archive.org/web/20210907043322/https://play.google.com/store/apps/details?id=production.curbcab.customer",
+  "icon": "/store/production.curbcab.customer.webp",
+  "color": "#0085CA"
  },
  {
   "id": "production.ping.driver",
@@ -1736,7 +1956,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190612",
   "lastSeen": "20210818",
-  "url": "https://web.archive.org/web/20210818220217/https://play.google.com/store/apps/details?id=production.ping.driver"
+  "url": "https://web.archive.org/web/20210818220217/https://play.google.com/store/apps/details?id=production.ping.driver",
+  "icon": "/store/production.ping.driver.webp",
+  "color": null
  },
  {
   "id": "production.toda.customer",
@@ -1747,7 +1969,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210620",
   "lastSeen": "20210620",
-  "url": "https://web.archive.org/web/20210620130118/https://play.google.com/store/apps/details?id=production.toda.customer"
+  "url": "https://web.archive.org/web/20210620130118/https://play.google.com/store/apps/details?id=production.toda.customer",
+  "icon": "/store/production.toda.customer.webp",
+  "color": "#ffbd10"
  },
  {
   "id": "com.mpitsa.customer",
@@ -1758,7 +1982,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210514",
   "lastSeen": "20210514",
-  "url": "https://web.archive.org/web/20210514110737/https://play.google.com/store/apps/details?id=com.mpitsa.customer"
+  "url": "https://web.archive.org/web/20210514110737/https://play.google.com/store/apps/details?id=com.mpitsa.customer",
+  "icon": "/store/com.mpitsa.customer.webp",
+  "color": "#560055"
  },
  {
   "id": "production.rideloca.customer",
@@ -1769,7 +1995,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210304",
   "lastSeen": "20210304",
-  "url": "https://web.archive.org/web/20210304050023/https://play.google.com/store/apps/details?id=production.rideloca.customer"
+  "url": "https://web.archive.org/web/20210304050023/https://play.google.com/store/apps/details?id=production.rideloca.customer",
+  "icon": "/store/production.rideloca.customer.webp",
+  "color": "#F8C639"
  },
  {
   "id": "production.idealdigital.customer",
@@ -1780,7 +2008,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210302",
   "lastSeen": "20210302",
-  "url": "https://web.archive.org/web/20210302193915/https://play.google.com/store/apps/details?id=production.idealdigital.customer"
+  "url": "https://web.archive.org/web/20210302193915/https://play.google.com/store/apps/details?id=production.idealdigital.customer",
+  "icon": "/store/production.idealdigital.customer.webp",
+  "color": "#ED3833"
  },
  {
   "id": "production.intertaksi.customer",
@@ -1791,7 +2021,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210127",
   "lastSeen": "20210127",
-  "url": "https://web.archive.org/web/20210127020558/https://play.google.com/store/apps/details?id=production.intertaksi.customer"
+  "url": "https://web.archive.org/web/20210127020558/https://play.google.com/store/apps/details?id=production.intertaksi.customer",
+  "icon": "/store/production.intertaksi.customer.webp",
+  "color": "#fae100"
  },
  {
   "id": "production.uva.driver",
@@ -1802,7 +2034,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20210120",
   "lastSeen": "20210120",
-  "url": "https://web.archive.org/web/20210120204909/https://play.google.com/store/apps/details?id=production.uva.driver"
+  "url": "https://web.archive.org/web/20210120204909/https://play.google.com/store/apps/details?id=production.uva.driver",
+  "icon": "/store/production.uva.driver.webp",
+  "color": null
  },
  {
   "id": "production.smartboda.customer",
@@ -1813,7 +2047,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201225",
   "lastSeen": "20201225",
-  "url": "https://web.archive.org/web/20201225194040/https://play.google.com/store/apps/details?id=production.smartboda.customer"
+  "url": "https://web.archive.org/web/20201225194040/https://play.google.com/store/apps/details?id=production.smartboda.customer",
+  "icon": "/store/production.smartboda.customer.webp",
+  "color": "#A3C941"
  },
  {
   "id": "product.petcloud.driver",
@@ -1824,7 +2060,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201223",
   "lastSeen": "20201223",
-  "url": "https://web.archive.org/web/20201223230646/https://play.google.com/store/apps/details?id=product.petcloud.driver"
+  "url": "https://web.archive.org/web/20201223230646/https://play.google.com/store/apps/details?id=product.petcloud.driver",
+  "icon": "/store/product.petcloud.driver.webp",
+  "color": null
  },
  {
   "id": "production.mira.customer",
@@ -1835,7 +2073,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201117",
   "lastSeen": "20201117",
-  "url": "https://web.archive.org/web/20201117193604/https://play.google.com/store/apps/details?id=production.mira.customer"
+  "url": "https://web.archive.org/web/20201117193604/https://play.google.com/store/apps/details?id=production.mira.customer",
+  "icon": "/store/production.mira.customer.webp",
+  "color": "#0c94bb"
  },
  {
   "id": "production.nation.customer",
@@ -1846,7 +2086,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201114",
   "lastSeen": "20201114",
-  "url": "https://web.archive.org/web/20201114161018/https://play.google.com/store/apps/details?id=production.nation.customer"
+  "url": "https://web.archive.org/web/20201114161018/https://play.google.com/store/apps/details?id=production.nation.customer",
+  "icon": "/store/production.nation.customer.webp",
+  "color": "#edd503"
  },
  {
   "id": "production.mikkels.customer",
@@ -1857,7 +2099,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201101",
   "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101000907/https://play.google.com/store/apps/details?id=production.mikkels.customer"
+  "url": "https://web.archive.org/web/20201101000907/https://play.google.com/store/apps/details?id=production.mikkels.customer",
+  "icon": "/store/production.mikkels.customer.webp",
+  "color": "#3A98A5"
  },
  {
   "id": "production.ori.customer",
@@ -1868,7 +2112,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201101",
   "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101031848/https://play.google.com/store/apps/details?id=production.ori.customer"
+  "url": "https://web.archive.org/web/20201101031848/https://play.google.com/store/apps/details?id=production.ori.customer",
+  "icon": "/store/production.ori.customer.webp",
+  "color": "#F9C847"
  },
  {
   "id": "production.smartride.customer",
@@ -1879,7 +2125,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201101",
   "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101053742/https://play.google.com/store/apps/details?id=production.smartride.customer"
+  "url": "https://web.archive.org/web/20201101053742/https://play.google.com/store/apps/details?id=production.smartride.customer",
+  "icon": "/store/production.smartride.customer.webp",
+  "color": "#CC3333"
  },
  {
   "id": "production.smartride.driver",
@@ -1890,7 +2138,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20201031",
   "lastSeen": "20201031",
-  "url": "https://web.archive.org/web/20201031052436/https://play.google.com/store/apps/details?id=production.smartride.driver"
+  "url": "https://web.archive.org/web/20201031052436/https://play.google.com/store/apps/details?id=production.smartride.driver",
+  "icon": "/store/production.smartride.driver.webp",
+  "color": null
  },
  {
   "id": "production.taxinet.customer",
@@ -1901,7 +2151,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190612",
   "lastSeen": "20200331",
-  "url": "https://web.archive.org/web/20200331160207/https://play.google.com/store/apps/details?id=production.taxinet.customer"
+  "url": "https://web.archive.org/web/20200331160207/https://play.google.com/store/apps/details?id=production.taxinet.customer",
+  "icon": "/store/production.taxinet.customer.webp",
+  "color": "#9e0609"
  },
  {
   "id": "com.ezrydr.driverapp",
@@ -1912,7 +2164,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20191206",
   "lastSeen": "20191206",
-  "url": "https://web.archive.org/web/20191206194428/https://play.google.com/store/apps/details?id=com.ezrydr.driverapp"
+  "url": "https://web.archive.org/web/20191206194428/https://play.google.com/store/apps/details?id=com.ezrydr.driverapp",
+  "icon": "/store/com.ezrydr.driverapp.webp",
+  "color": null
  },
  {
   "id": "production.local.customer",
@@ -1923,7 +2177,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190401",
   "lastSeen": "20191121",
-  "url": "https://web.archive.org/web/20191121065849/https://play.google.com/store/apps/details?id=production.local.customer"
+  "url": "https://web.archive.org/web/20191121065849/https://play.google.com/store/apps/details?id=production.local.customer",
+  "icon": "/store/production.local.customer.webp",
+  "color": "#EE4C23"
  },
  {
   "id": "production.towncarsnow.customer",
@@ -1934,7 +2190,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20191016",
   "lastSeen": "20191016",
-  "url": "https://web.archive.org/web/20191016104859/https://play.google.com/store/apps/details?id=production.towncarsnow.customer"
+  "url": "https://web.archive.org/web/20191016104859/https://play.google.com/store/apps/details?id=production.towncarsnow.customer",
+  "icon": "/store/production.towncarsnow.customer.webp",
+  "color": "#001A45"
  },
  {
   "id": "production.instantryde.customer",
@@ -1945,7 +2203,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190825",
   "lastSeen": "20190825",
-  "url": "https://web.archive.org/web/20190825064943/https://play.google.com/store/apps/details?id=production.instantryde.customer"
+  "url": "https://web.archive.org/web/20190825064943/https://play.google.com/store/apps/details?id=production.instantryde.customer",
+  "icon": "/store/production.instantryde.customer.webp",
+  "color": "#000000"
  },
  {
   "id": "com.luxicate_taxidriver",
@@ -1956,7 +2216,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190821",
   "lastSeen": "20190821",
-  "url": "https://web.archive.org/web/20190821113005/https://play.google.com/store/apps/details?id=com.luxicate_taxidriver"
+  "url": "https://web.archive.org/web/20190821113005/https://play.google.com/store/apps/details?id=com.luxicate_taxidriver",
+  "icon": "/store/com.luxicate_taxidriver.webp",
+  "color": null
  },
  {
   "id": "production.taxiliveafrica.customer",
@@ -1967,7 +2229,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190716",
   "lastSeen": "20190820",
-  "url": "https://web.archive.org/web/20190820121358/https://play.google.com/store/apps/details?id=production.taxiliveafrica.customer"
+  "url": "https://web.archive.org/web/20190820121358/https://play.google.com/store/apps/details?id=production.taxiliveafrica.customer",
+  "icon": "/store/production.taxiliveafrica.customer.webp",
+  "color": "#FFCD00"
  },
  {
   "id": "production.instataxi.customer",
@@ -1978,7 +2242,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190722",
   "lastSeen": "20190722",
-  "url": "https://web.archive.org/web/20190722154238/https://play.google.com/store/apps/details?id=production.instataxi.customer"
+  "url": "https://web.archive.org/web/20190722154238/https://play.google.com/store/apps/details?id=production.instataxi.customer",
+  "icon": "/store/production.instataxi.customer.webp",
+  "color": "#000000"
  },
  {
   "id": "production.hezz.customer",
@@ -1989,7 +2255,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190720",
   "lastSeen": "20190720",
-  "url": "https://web.archive.org/web/20190720051456/https://play.google.com/store/apps/details?id=production.hezz.customer"
+  "url": "https://web.archive.org/web/20190720051456/https://play.google.com/store/apps/details?id=production.hezz.customer",
+  "icon": "/store/production.hezz.customer.webp",
+  "color": "#CF312F"
  },
  {
   "id": "production.taxinet.driver",
@@ -2000,7 +2268,9 @@ export const delisted = [
   "setUpByHim": false,
   "firstSeen": "20190409",
   "lastSeen": "20190409",
-  "url": "https://web.archive.org/web/20190409155110/https://play.google.com/store/apps/details?id=production.taxinet.driver"
+  "url": "https://web.archive.org/web/20190409155110/https://play.google.com/store/apps/details?id=production.taxinet.driver",
+  "icon": "/store/production.taxinet.driver.webp",
+  "color": null
  }
 ] as const;
 

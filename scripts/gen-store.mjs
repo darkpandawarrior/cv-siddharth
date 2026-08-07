@@ -43,7 +43,7 @@
  *
  * Usage: npm run gen:store
  */
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
@@ -51,6 +51,9 @@ import { homedir } from "node:os";
 const CACHE = resolve(process.cwd(), ".store-cache.json");
 /** Written by scripts/gen-store-archive.mjs. Optional — the fleet works without it. */
 const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
+/** Written by scripts/gen-store-flavours.mjs. Optional — brand colours and the
+ *  icons of apps Play cannot supply one for, because they are no longer on it. */
+const FLAVOUR_CACHE = resolve(process.cwd(), ".store-flavours.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
 
@@ -329,8 +332,38 @@ const delisted = clients
   .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
 const archiveChecked = Object.keys(archive).length;
 
-const iconsWritten = await fetchIcons(fleet);
+const iconsWritten = await fetchIcons([...flagships, ...fleet]);
 console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/`);
+
+/* Brand colours and branch-recovered icons (scripts/gen-store-flavours.mjs).
+ *
+ * A delisted app has no Play listing left to take an icon from, but the flavour
+ * that built it still carries the launcher icon it shipped with and the hex its
+ * theme was tinted to. That is why these apps can be shown as themselves rather
+ * than as 90 identical grey rectangles. */
+const flavours = existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
+const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
+for (const app of [...fleet, ...delisted]) {
+  app.color = flavours[app.id]?.color ?? null;
+  // Play's icon is what the app looks like NOW and wins where it exists; the
+  // branch icon is what it looked like when it shipped, and is all a pulled app
+  // has left.
+  if (!app.icon && iconOnDisk(app.id)) app.icon = `branch:${app.id}`;
+}
+
+/* Keep only what is referenced. The flavour sweep recovers an icon for every
+ * client it can find — 1,100-odd — and shipping 5 MB of PNGs for apps that
+ * appear nowhere on the site would be a build artefact masquerading as content. */
+{
+  const keep = new Set([...flagships, ...fleet, ...delisted].filter((a) => a.icon).map((a) => a.id));
+  let pruned = 0;
+  for (const file of readdirSync(ICON_DIR)) {
+    if (!file.endsWith(".webp") || keep.has(file.slice(0, -5))) continue;
+    unlinkSync(resolve(ICON_DIR, file));
+    pruned++;
+  }
+  console.log(`[gen-store] kept ${keep.size} icon(s), pruned ${pruned} unreferenced`);
+}
 
 const stats = {
   branches: branchCount,
@@ -345,7 +378,7 @@ const stats = {
 };
 console.log("[gen-store]", stats);
 
-const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, icon }) => ({
+const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, icon, color }) => ({
   id,
   name,
   rating,
@@ -354,8 +387,12 @@ const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, ic
   side,
   setUpByHim,
   developer,
-  // Downloaded to public/store at generation time; null if the fetch failed.
+  // Written to public/store at generation time: from the live listing where
+  // there is one, otherwise out of the branch that built it.
   icon: icon ? `/store/${id}.webp` : null,
+  // The hex this client's build tinted its theme to, read from the flavour's
+  // own `resValue "color", 'theme_color'`. Null for the ones that never set one.
+  color,
 });
 
 writeFileSync(
@@ -370,7 +407,7 @@ writeFileSync(
 
 /** The three apps that get their own card. */
 export const storeApps = ${JSON.stringify(
-    flagships.map(({ id, name, rating, installs, url, role, employer }) => ({
+    flagships.map(({ id, name, rating, installs, url, role, employer, icon }) => ({
       id,
       name,
       rating,
@@ -378,6 +415,7 @@ export const storeApps = ${JSON.stringify(
       url,
       role,
       employer,
+      icon: icon ? `/store/${id}.webp` : null,
     })),
     null,
     2,
@@ -400,7 +438,7 @@ export const fleet = ${JSON.stringify(fleet.map(pick), null, 1)} as const;
  * no snapshot is not an app that was never published.
  */
 export const delisted = ${JSON.stringify(
-    delisted.map(({ id, name, rating, ratings, side, setUpByHim, firstSeen, lastSeen, url }) => ({
+    delisted.map(({ id, name, rating, ratings, side, setUpByHim, firstSeen, lastSeen, url, icon, color }) => ({
       id,
       name,
       rating,
@@ -410,6 +448,9 @@ export const delisted = ${JSON.stringify(
       firstSeen,
       lastSeen,
       url,
+      // Recovered from the branch: Play has no listing left to ask.
+      icon: icon ? `/store/${id}.webp` : null,
+      color,
     })),
     null,
     1,

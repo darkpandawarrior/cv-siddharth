@@ -34,6 +34,9 @@ const PAGES = [
   // who will not explore, and it was invisible to crawlers until now.
   { path: "/hire", priority: "0.9", changefreq: "monthly" },
   { path: "/resume", priority: "0.9", changefreq: "monthly" },
+  // Ranked with the hiring surfaces: it is the only page on this site that is
+  // entirely other people's verifiable evidence rather than his own account.
+  { path: "/shipped", priority: "0.8", changefreq: "monthly" },
   { path: "/ink", priority: "0.7", changefreq: "monthly" },
   { path: "/excelsior", priority: "0.6", changefreq: "yearly" },
   { path: "/loopdown", priority: "0.7", changefreq: "weekly" },

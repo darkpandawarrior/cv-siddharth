@@ -21,7 +21,11 @@ describe("progress reset", () => {
       if (!file.endsWith(".ts") && !file.endsWith(".tsx")) continue;
       if (file.includes(".test.")) continue;
       const source = readFileSync(new URL(file, import.meta.url), "utf8");
-      for (const match of source.matchAll(/"(playground:[a-z:]+)"/g)) found.add(match[1]);
+      // [a-z0-9:] rather than [a-z:] — resolve.ts's key ends in a version
+      // suffix ("playground:resolved:v1"), and a scanner blind to digits
+      // would silently stop matching partway through it, defeating the
+      // entire point of this test for exactly the key it most needs to catch.
+      for (const match of source.matchAll(/"(playground:[a-z0-9:]+)"/g)) found.add(match[1]);
     }
     const missing = [...found].filter((k) => !PROGRESS_KEYS.includes(k as never));
     expect(missing, `not cleared by resetProgress: ${missing.join(", ")}`).toEqual([]);

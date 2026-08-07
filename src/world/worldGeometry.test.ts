@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PLACEMENTS, TERRAIN } from "./worldData.ts";
-import { CHASSIS_RESTING_HEIGHT, SPAWN_POSITION, WORLD_BOUNDS } from "./craftPhysics.ts";
+import { CHASSIS_RESTING_HEIGHT, SPAWN_POSITION, TERMINAL_WHEEL_SPEED, WORLD_BOUNDS } from "./craftPhysics.ts";
 
 /**
  * Geometry invariants: relationships between numbers, never the numbers.
@@ -58,13 +58,28 @@ describe("every room is somewhere a car can reach", () => {
   });
 
   it("spaces them so one pavilion's approach cannot sit inside another's", () => {
+    // Tightened from 8 to 16 now that the boulevard is 168m long, not 30m —
+    // the design doc's own bar. Each pavilion's sensor half-extent is 4.8m
+    // (Pavilions.tsx), so 8m of gap let two approach volumes overlap; 16m
+    // never does, with room to spare.
     for (let i = 0; i < PLACEMENTS.length; i++) {
       for (let j = i + 1; j < PLACEMENTS.length; j++) {
         const a = PLACEMENTS[i].position;
         const b = PLACEMENTS[j].position;
         const gap = Math.hypot(a[0] - b[0], a[2] - b[2]);
-        expect(gap, `${PLACEMENTS[i].to} vs ${PLACEMENTS[j].to}`).toBeGreaterThan(8);
+        expect(gap, `${PLACEMENTS[i].to} vs ${PLACEMENTS[j].to}`).toBeGreaterThan(16);
       }
     }
+  });
+});
+
+describe("the traverse takes longer than a sneeze", () => {
+  it("crosses the full slab in a driveable stretch of time, flat out", () => {
+    // Nine years must take longer than a few seconds to drive through, and
+    // short enough that a flat-out driver isn't waiting half a minute either.
+    // The design doc's own bar: 7-10 seconds end to end.
+    const seconds = (TERRAIN.mainland.z1 - TERRAIN.mainland.z0) / TERMINAL_WHEEL_SPEED;
+    expect(seconds).toBeGreaterThan(7);
+    expect(seconds).toBeLessThan(10);
   });
 });

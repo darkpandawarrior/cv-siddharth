@@ -10,7 +10,10 @@ import { TrackFilter, accuracyPct, canyonFactor, rawFix, stepDistance } from "./
  * These tests hold the demo to the claim.
  */
 
-const STRUCTURES = [{ x: 10, z: 0 }];
+// height is part of city.ts's TallStructure shape (districts read it when
+// deciding their own per-structure resolve-duration multiplier); canyonFactor
+// and rawFix below only ever read x/z.
+const STRUCTURES = [{ x: 10, z: 0, height: 12 }];
 
 describe("the raw fix behaves like a real receiver", () => {
   it("is deterministic for a given sample, so a parked craft does not shimmer", () => {

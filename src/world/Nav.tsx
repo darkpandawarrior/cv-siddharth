@@ -205,6 +205,7 @@ export function Gauges({
   const boostRef = useRef<HTMLDivElement>(null);
   const odoRef = useRef<HTMLSpanElement>(null);
   const accRef = useRef<HTMLSpanElement>(null);
+  const fixRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -235,6 +236,15 @@ export function Gauges({
           telemetry.rawError === 0
             ? "— keep driving"
             : `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
+      }
+      if (fixRef.current) {
+        // The one line of HUD copy the design doc calls for, in the
+        // instrument that is already about GPS: telemetry.resolvedFraction
+        // is written every frame by ResolveField.tsx from resolve.ts's own
+        // ratchet, so this climbs from the very first stamped cell and never
+        // drops within a session.
+        const pct = Math.round(telemetry.resolvedFraction * 100);
+        fixRef.current.textContent = pct >= 100 ? `${pct}% · resolved` : `${pct}% · drive to resolve`;
       }
     };
     raf = requestAnimationFrame(tick);
@@ -293,6 +303,12 @@ export function Gauges({
           0.0m → 0.0m
         </span>
       </div>
+      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <span title="Share of the city's resolve grid driven through">fix</span>
+        <span ref={fixRef} className="text-accent">
+          0% · drive to resolve
+        </span>
+      </div>
 
     </div>
   );
@@ -304,10 +320,10 @@ const SEEN_KEY = "playground:onboarded";
  * The first-run card: what the controls are, and what the world wants from you.
  *
  * Not decoration. Before this, a visitor arrived in a dark 3D scene with a car
- * they had no reason to know was drivable, no hint that Enter opens a room, and
- * no idea the sea and the sky islands were reachable at all — the entire design
- * was discoverable only by accident. It shows once, remembers, and any driving
- * key dismisses it, so a returning visitor never sees it again.
+ * they had no reason to know was drivable and no hint that Enter opens a room
+ * — the entire design was discoverable only by accident. It shows once,
+ * remembers, and any driving key dismisses it, so a returning visitor never
+ * sees it again.
  */
 export function Onboarding(): JSX.Element | null {
   const [dismissed, setDismissed] = useState(() => {
@@ -344,8 +360,9 @@ export function Onboarding(): JSX.Element | null {
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent/70">// the playground</p>
         <h2 className="font-display mt-2 text-2xl font-bold">Drive it.</h2>
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Every room on this site is somewhere out there. Drive to one and hold still to go in — or
-          take the coast road south, where the land runs out and the car becomes a boat.
+          Nothing here exists until you drive it. North is 2017, south is now — the city resolves
+          out of the dust as you go. Eight rooms wait down the road; drive to one and hold still to
+          go in.
         </p>
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-left font-mono text-[11px] text-muted">
           {[

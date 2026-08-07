@@ -2,98 +2,118 @@ import { useEffect, useMemo, useRef, type JSX, type ReactElement } from "react";
 import { Color, type InstancedMesh } from "three";
 import { InstancedRigidBodies, type InstancedRigidBodyProps, type RigidBodyAutoCollider } from "@react-three/rapier";
 import { PLACEMENTS } from "./worldData.ts";
+import { CITY } from "./city.ts";
 import { PAVILION_SENSOR_GROUP, PROP_COLLISION_GROUPS } from "./collisionGroups.ts";
 import { worldPalette, type WorldPalette } from "./palette.ts";
+import { PROP_FAMILIES, employerBlocks, caseStudyMonuments, projectTowers } from "./districtWest.ts";
 
 /**
- * The knockable debris scattered over the mainland — keycaps, pencils, mugs,
- * crates. Purely physical set-dressing: nothing here is a room, a sensor, or
- * navigable, it exists so the craft driving through feels like it's moving
- * through a real desk rather than an empty plane. Every family is one
- * `InstancedRigidBodies` (per the design doc's "instance anything placed more
- * than a handful of times" rule) so N dynamic bodies cost one draw call each,
- * not N.
+ * SITE DEBRIS — west flank only.
  *
- * Total instance count is the budget line: four families times a few dozen
- * each stays comfortably under the ~120-dynamic-body target the design doc
- * sets for 60fps on a laptop, while still reading as "cluttered" rather than
- * "four objects on an empty table".
+ * The city's build zones read as a place someone actually works, not a
+ * gallery: pallets, cable spools and kerb blocks scattered across the west
+ * flank's build zone, the way a real site looks between the monuments. East
+ * stays clean — the corpus (WS4) is the found archive, not a job site, and
+ * mixing debris into it would blur the one distinction (west = paid for,
+ * east = made anyway) the whole layout exists to draw.
+ *
+ * Four families, each one `InstancedRigidBodies` (N dynamic bodies, one draw
+ * call), same pattern this file has used since the world had a single flat
+ * desk — the geometry changed, the instancing discipline didn't.
  */
 
-// Scatter bounds, matched to Terrain.tsx's actual flat mainland slab (a
-// 42x28 box centred at x=0, z=-4 — so x in [-21,21], z in [-18,10]) rather
-// than worldData.ts's coarser "mainland is z in [-18,18]" comment, which
-// includes the tapered shore/launch-ramp strip south of z=12. A small
-// margin in from the slab's true edges keeps every prop spawning on flat,
-// solid ground instead of at the lip where it could tip off unfairly.
-const MAINLAND_X_HALF = 18;
-const MAINLAND_Z_MIN = -16;
-const MAINLAND_Z_MAX = 8;
-const PAVILION_CLEARANCE = 3.6; // keep debris out from under the room structures
+// The west build zone: everything between the approach apron (CITY.buildInner,
+// the wall that keeps debris out of a pavilion's sensor volume) and the kerb
+// (CITY.halfWidth, with a metre of margin so nothing spawns hanging off the
+// edge), for the full length of the slab.
+const X_MIN = -(CITY.halfWidth - 1);
+const X_MAX = -CITY.buildInner;
+const Z_MIN = CITY.z0 + 2;
+const Z_MAX = CITY.z1 - 2;
+const PAVILION_CLEARANCE = 3.6; // keep debris out from under the west rooms
 
 // Membership in group 0 only, filter left at its default ("interact with
 // every group") — this collider still physically collides with the ground
 // and every other prop exactly as if collisionGroups were never set, but a
-// keycap nudged under a pavilion can no longer satisfy that sensor's
+// spool nudged near a room can no longer satisfy that sensor's
 // group-15-only filter (see Pavilions.tsx's PAVILION_SENSOR_GROUP comment),
 // so it can never fake a "craft entered this room" event.
-
 if (PAVILION_SENSOR_GROUP === 0) {
   // Would silently defeat the whole scheme above — group 0 must stay reserved
   // for props, group 15 for the sensors they need to be invisible to.
   throw new Error("Props.tsx and Pavilions.tsx picked the same interaction group");
 }
 
-// Land pavilion centres, read from the same registry Pavilions.tsx builds
-// from — so if a land room ever moves, this clearing moves with it instead
-// of drifting out of sync with a hand-copied list of coordinates.
-const LAND_CENTRES: [number, number][] = PLACEMENTS.map((p) => [p.position[0], p.position[2]]);
+// West-side room centres only (x < 0 — the design doc's alternating-sides
+// PLACEMENTS table puts /map, /forge, /lab and /terminal here). Debris never
+// needed to avoid the east rooms in the first place since it never spawns
+// there, but filtering explicitly documents that rather than leaving it an
+// accident of the X_MIN/X_MAX bounds above.
+const WEST_ROOM_CENTRES: [number, number][] = PLACEMENTS.filter((p) => p.position[0] < 0).map((p) => [p.position[0], p.position[2]]);
 
 function tooCloseToAPavilion(x: number, z: number): boolean {
-  return LAND_CENTRES.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < PAVILION_CLEARANCE);
+  return WEST_ROOM_CENTRES.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < PAVILION_CLEARANCE);
 }
 
-/** Rejection-samples `count` (x, z) points across the mainland, clear of every
- *  land pavilion's footprint, and returns them as instance props dropped from
- *  a small random height so they fall onto the terrain under gravity rather
- *  than spawning already resting (which would read as static set-dressing,
- *  not physical debris). */
-/**
- * The lanes props are kept out of.
- *
- * Debris scattered uniformly over the mainland put crates directly across the
- * only route south — the first thing a visitor does is hold the throttle from
- * spawn, and about ten metres in they hit something and get spun. "Everything
- * is difficult" starts here: the world's opening move should be a clear run,
- * not an obstacle course nobody was told about.
- *
- * Two corridors: the spawn lane straight down the middle, and the approach to
- * the launch ramp. Props still cover the rest of the mainland, so the place
- * still reads as a cluttered desk — you just have somewhere to drive.
- */
-const SPAWN_LANE_HALF_WIDTH = 4;
-const RAMP_LANE_HALF_WIDTH = 4;
+// Monuments.tsx (WS3) gives every employer block, case-study obelisk and
+// project tower its own FIXED RigidBody collider, sized to the real
+// structure — and Dice.tech's block alone (the whole "June 2023 - Present"
+// span) is a 3m x 23.2m x 52m box. X_MIN..X_MAX above puts every one of
+// those lanes (kerb -16, mid -20.5, outer -25.5) squarely inside the debris
+// scatter zone. Without this, a spool spawning inside that box is a dynamic
+// body sharing volume with a static one — Rapier resolves the overlap by
+// firing it out on the first physics step, so the world would greet a
+// visitor with debris exploding out of solid geometry on load. Same failure
+// mode as `tooCloseToAPavilion`, same fix: reject the sample and try again.
+// Rebuilt from districtWest.ts's own exported shapes rather than duplicated
+// numbers, so a change to a block's height or a tower's width can never
+// leave this exclusion stale.
+const STRUCTURE_CLEARANCE = 1.5; // a prop's own half-extent (<=0.45m) plus room to fall without clipping
+type ExclusionBox = { xMin: number; xMax: number; zMin: number; zMax: number };
+const STRUCTURE_EXCLUSIONS: ExclusionBox[] = [
+  ...employerBlocks().map((b) => ({
+    xMin: b.x - b.width / 2 - STRUCTURE_CLEARANCE,
+    xMax: b.x + b.width / 2 + STRUCTURE_CLEARANCE,
+    zMin: b.zStart - STRUCTURE_CLEARANCE,
+    zMax: b.zEnd + STRUCTURE_CLEARANCE,
+  })),
+  ...caseStudyMonuments().map((m) => ({
+    xMin: m.x - m.radius - STRUCTURE_CLEARANCE,
+    xMax: m.x + m.radius + STRUCTURE_CLEARANCE,
+    zMin: m.z - m.radius - STRUCTURE_CLEARANCE,
+    zMax: m.z + m.radius + STRUCTURE_CLEARANCE,
+  })),
+  ...projectTowers().map((t) => ({
+    xMin: t.x - t.width / 2 - STRUCTURE_CLEARANCE,
+    xMax: t.x + t.width / 2 + STRUCTURE_CLEARANCE,
+    zMin: t.z - t.width / 2 - STRUCTURE_CLEARANCE,
+    zMax: t.z + t.width / 2 + STRUCTURE_CLEARANCE,
+  })),
+];
 
-function inDrivingLane(x: number, z: number): boolean {
-  if (Math.abs(x) < SPAWN_LANE_HALF_WIDTH) return true;
-  // The ramp sits at x=-10 (worldData's CHECKPOINTS/Terrain agree); its
-  // approach only matters on the southern half.
-  if (z > -4 && Math.abs(x + 10) < RAMP_LANE_HALF_WIDTH) return true;
-  return false;
+function insideAStructure(x: number, z: number): boolean {
+  return STRUCTURE_EXCLUSIONS.some((b) => x >= b.xMin && x <= b.xMax && z >= b.zMin && z <= b.zMax);
 }
 
-function scatterMainland(count: number, dropHeight: [number, number]): InstancedRigidBodyProps[] {
+/** Rejection-samples `count` (x, z) points across the west build zone, clear
+ *  of every west pavilion's footprint, and returns them as instance props
+ *  dropped from a small random height so they fall onto the terrain under
+ *  gravity rather than spawning already resting. */
+function scatterWestFlank(count: number, dropHeight: [number, number]): InstancedRigidBodyProps[] {
   const instances: InstancedRigidBodyProps[] = [];
   for (let i = 0; i < count; i++) {
     let x = 0;
     let z = 0;
-    // Bounded rejection sampling — the excluded area (four small circles) is
-    // a small fraction of the mainland, so this converges in a handful of
-    // tries; the iteration cap just guarantees it can never spin forever.
+    // Bounded rejection sampling. The excluded area is no longer just a
+    // handful of small pavilion circles — Dice.tech's own employer block
+    // alone shadows over half the slab's length in the mid lane — but it is
+    // still well under the whole zone, so this converges within the cap;
+    // the cap just guarantees it can never spin forever, and worst case
+    // leaves one prop resting against rather than deep inside a structure.
     for (let tries = 0; tries < 20; tries++) {
-      x = (Math.random() * 2 - 1) * MAINLAND_X_HALF;
-      z = MAINLAND_Z_MIN + Math.random() * (MAINLAND_Z_MAX - MAINLAND_Z_MIN);
-      if (!tooCloseToAPavilion(x, z) && !inDrivingLane(x, z)) break;
+      x = X_MIN + Math.random() * (X_MAX - X_MIN);
+      z = Z_MIN + Math.random() * (Z_MAX - Z_MIN);
+      if (!tooCloseToAPavilion(x, z) && !insideAStructure(x, z)) break;
     }
     const y = dropHeight[0] + Math.random() * (dropHeight[1] - dropHeight[0]);
     instances.push({
@@ -106,19 +126,16 @@ function scatterMainland(count: number, dropHeight: [number, number]): Instanced
 }
 
 // Prop colours, resolved from theme tokens at render — see palette.ts for why
-// these cannot be module-scope constants. The two browns are the only values
-// in this world with no token behind them: there is no "cardboard" in the
-// site's palette, and inventing a token for two crates would be worse than
-// naming the shade here.
-const CRATE_BROWN = "#4a3826";
-const CRATE_BROWN_DARK = "#3a2c1c";
-
+// these cannot be module-scope constants. No hardcoded hex anywhere in this
+// file: the industrial "concrete/rust" read comes from the palette's own
+// muted tokens (card, surface, textDim), the same discipline the rest of
+// src/world/ enforces.
 function propColors(c: WorldPalette) {
   return {
-    keycap: [c.text, c.textDim, c.card, c.accent],
-    mug: [c.text, c.accent2],
-    pencil: [c.accent, c.accentDim],
-    crate: [CRATE_BROWN, CRATE_BROWN_DARK],
+    pallet: [c.textDim, c.card],
+    spool: [c.accent, c.accentDim],
+    kerbBlock: [c.surface, c.card],
+    barrel: [c.signal, c.probe],
   };
 }
 
@@ -126,10 +143,10 @@ function propColors(c: WorldPalette) {
 // literals at each call site below) so they're stable references across
 // renders — PropFamily's useMemo/useEffect deps would otherwise see a "new"
 // array on every render of <Props> and redo the scatter/paint for no reason.
-const KEYCAP_DROP: [number, number] = [1.2, 2.4];
-const PENCIL_DROP: [number, number] = [1.0, 1.8];
-const MUG_DROP: [number, number] = [1.2, 2.0];
-const CRATE_DROP: [number, number] = [1.5, 2.6];
+const PALLET_DROP: [number, number] = [1.0, 1.8];
+const SPOOL_DROP: [number, number] = [1.2, 2.2];
+const KERB_DROP: [number, number] = [1.0, 1.6];
+const BARREL_DROP: [number, number] = [1.2, 2.0];
 
 /** One prop family: N instances of a single geometry, coloured per-instance
  *  via `InstancedMesh.setColorAt` (one draw call for the whole family, no
@@ -151,7 +168,7 @@ function PropFamily({
   colors: string[];
   geometry: ReactElement;
 }) {
-  const instances = useMemo(() => scatterMainland(count, dropHeight), [count, dropHeight]);
+  const instances = useMemo(() => scatterWestFlank(count, dropHeight), [count, dropHeight]);
   const meshRef = useRef<InstancedMesh>(null);
   useEffect(() => {
     const mesh = meshRef.current;
@@ -189,22 +206,26 @@ export function Props(): JSX.Element {
   const colors = propColors(worldPalette());
   return (
     <>
-      <PropFamily count={36} dropHeight={KEYCAP_DROP} colliders="cuboid" colors={colors.keycap} geometry={<boxGeometry args={[0.22, 0.22, 0.22]} />} />
+      {/* Pallets — wide, flat, cuboid. */}
+      <PropFamily count={PROP_FAMILIES[0].count} dropHeight={PALLET_DROP} colliders="cuboid" colors={colors.pallet} geometry={<boxGeometry args={[0.9, 0.15, 0.7]} />} />
+      {/* Cable spools. */}
       <PropFamily
-        count={18}
-        dropHeight={PENCIL_DROP}
+        count={PROP_FAMILIES[1].count}
+        dropHeight={SPOOL_DROP}
         colliders="hull"
-        colors={colors.pencil}
-        geometry={<cylinderGeometry args={[0.035, 0.035, 1.0, 8]} />}
+        colors={colors.spool}
+        geometry={<cylinderGeometry args={[0.35, 0.35, 0.5, 16]} />}
       />
+      {/* Kerb blocks — small, dense cuboids. */}
+      <PropFamily count={PROP_FAMILIES[2].count} dropHeight={KERB_DROP} colliders="cuboid" colors={colors.kerbBlock} geometry={<boxGeometry args={[0.4, 0.3, 0.4]} />} />
+      {/* Barrels. */}
       <PropFamily
-        count={12}
-        dropHeight={MUG_DROP}
+        count={PROP_FAMILIES[3].count}
+        dropHeight={BARREL_DROP}
         colliders="hull"
-        colors={colors.mug}
-        geometry={<cylinderGeometry args={[0.16, 0.13, 0.32, 16]} />}
+        colors={colors.barrel}
+        geometry={<cylinderGeometry args={[0.25, 0.22, 0.55, 12]} />}
       />
-      <PropFamily count={10} dropHeight={CRATE_DROP} colliders="cuboid" colors={colors.crate} geometry={<boxGeometry args={[0.34, 0.28, 0.34]} />} />
     </>
   );
 }

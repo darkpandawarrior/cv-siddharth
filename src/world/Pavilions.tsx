@@ -1,6 +1,7 @@
 import { Fragment, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { PointLight } from "three";
+import { BoxGeometry, type BufferGeometry, type PointLight } from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Html } from "@react-three/drei";
 import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
 import { PLACEMENTS, type Placement } from "./worldData.ts";
@@ -99,6 +100,54 @@ function BreathingLight({
   );
 }
 
+/**
+ * Merged static geometry for the parts of each pavilion skin that share one
+ * material — built once at module scope (the shape is identical for every
+ * room wearing it; only the material's `tint` colour varies per room, and
+ * that's a prop on the `<mesh>`, not the geometry). This is what takes
+ * Pavilions from ~40 draw calls to the design doc's "≤24" bar: eight rooms
+ * at up to 3 meshes each (Crt/Board/Pcb) rather than 4-8. `mergeGeometries`
+ * ([...]three/examples/jsm) concatenates several BufferGeometries that
+ * already carry their own local translate/rotate into one — the standard
+ * three.js way to fold several same-material primitives into a single draw
+ * call without hand-rolling vertex arrays.
+ */
+function mergeBoxes(boxes: BoxGeometry[]): BufferGeometry {
+  return mergeGeometries(boxes);
+}
+
+// Crt: base + neck are both plain `card`-coloured plastic — one geometry.
+const CRT_BASE_GEOMETRY = mergeBoxes([
+  new BoxGeometry(0.7, 0.5, 0.7).translate(0, 0.25, 0),
+  new BoxGeometry(0.35, 0.4, 0.35).translate(0, 0.6, 0),
+]);
+
+// Board: both legs are the same card-coloured strut — one geometry.
+const BOARD_LEGS_GEOMETRY = mergeBoxes([
+  new BoxGeometry(0.14, 1.8, 0.14).translate(-1.1, 0.9, 0.7),
+  new BoxGeometry(0.14, 1.8, 0.14).translate(1.1, 0.9, 0.7),
+]);
+
+// Pcb: the five chips share one tint/emissive material — one geometry.
+const PCB_CHIP_POSITIONS: [number, number][] = [
+  [-1.0, -0.9],
+  [0.6, -0.6],
+  [-0.4, 0.5],
+  [1.1, 1.0],
+  [-1.2, 1.1],
+];
+const PCB_CHIPS_GEOMETRY = mergeBoxes(
+  PCB_CHIP_POSITIONS.map(([x, z]) => new BoxGeometry(0.35, 0.14, 0.35).translate(x, 0.27, z)),
+);
+// Pcb: both trace lines share the other tint/emissive material — one
+// geometry. `rotateY` runs before `translate` so it turns around the box's
+// own centre (matching the original mesh's `rotation` prop, which rotated
+// in place at the same world position) rather than around the world origin.
+const PCB_TRACES_GEOMETRY = mergeBoxes([
+  new BoxGeometry(2.6, 0.01, 0.06).translate(0, 0.21, 0),
+  new BoxGeometry(2.6, 0.01, 0.06).rotateY(Math.PI / 2).translate(0, 0.21, 0),
+]);
+
 /** Phone lying face-up: a flat body with a raised, tinted "screen" inset. */
 function Slab({ tint }: { tint: string }) {
   const c = worldPalette();
@@ -116,17 +165,16 @@ function Slab({ tint }: { tint: string }) {
   );
 }
 
-/** Chunky monitor on a pedestal, tinted screen facing +Z (out of the mainland). */
+/** Chunky monitor on a pedestal, tinted screen facing +Z (out of the mainland).
+ *  Base+neck merged into one draw call (CRT_BASE_GEOMETRY); the monitor body
+ *  and the screen keep their own materials (a different colour, an emissive
+ *  tint) so they stay separate meshes — 3 total, the design doc's per-shape
+ *  ceiling. */
 function Crt({ tint }: { tint: string }) {
   const c = worldPalette();
   return (
     <group>
-      <mesh position={[0, 0.25, 0]} castShadow>
-        <boxGeometry args={[0.7, 0.5, 0.7]} />
-        <meshStandardMaterial color={c.card} roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 0.6, 0]} castShadow>
-        <boxGeometry args={[0.35, 0.4, 0.35]} />
+      <mesh geometry={CRT_BASE_GEOMETRY} castShadow>
         <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <mesh position={[0, 1.65, 0]} castShadow receiveShadow>
@@ -141,17 +189,14 @@ function Crt({ tint }: { tint: string }) {
   );
 }
 
-/** A drafting board tilted on two legs, like a table angled up for drawing. */
+/** A drafting board tilted on two legs, like a table angled up for drawing.
+ *  Both legs merged into one draw call (BOARD_LEGS_GEOMETRY); the board
+ *  surface and its emissive trim keep their own materials — 3 meshes total. */
 function Board({ tint }: { tint: string }) {
   const c = worldPalette();
   return (
     <group>
-      <mesh position={[-1.1, 0.9, 0.7]} castShadow>
-        <boxGeometry args={[0.14, 1.8, 0.14]} />
-        <meshStandardMaterial color={c.card} roughness={0.7} />
-      </mesh>
-      <mesh position={[1.1, 0.9, 0.7]} castShadow>
-        <boxGeometry args={[0.14, 1.8, 0.14]} />
+      <mesh geometry={BOARD_LEGS_GEOMETRY} castShadow>
         <meshStandardMaterial color={c.card} roughness={0.7} />
       </mesh>
       <group position={[0, 1.55, 0]} rotation={[-0.45, 0, 0]}>
@@ -170,34 +215,22 @@ function Board({ tint }: { tint: string }) {
   );
 }
 
-/** Circuit slab: a flat board with a handful of raised chips and trace lines. */
+/** Circuit slab: a flat board with a handful of raised chips and trace lines.
+ *  The five chips merge into one draw call (PCB_CHIPS_GEOMETRY, same tint/
+ *  emissive), the two trace lines into another (PCB_TRACES_GEOMETRY) — base
+ *  + chips + traces is 3 meshes total, down from 8. */
 function Pcb({ tint }: { tint: string }) {
   const c = worldPalette();
-  const chips: [number, number][] = [
-    [-1.0, -0.9],
-    [0.6, -0.6],
-    [-0.4, 0.5],
-    [1.1, 1.0],
-    [-1.2, 1.1],
-  ];
   return (
     <group>
       <mesh position={[0, 0.1, 0]} receiveShadow castShadow>
         <boxGeometry args={[3.2, 0.2, 3.2]} />
         <meshStandardMaterial color={c.surface} roughness={0.6} />
       </mesh>
-      {chips.map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.27, z]}>
-          <boxGeometry args={[0.35, 0.14, 0.35]} />
-          <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.6} roughness={0.4} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0.21, 0]}>
-        <boxGeometry args={[2.6, 0.01, 0.06]} />
-        <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.4} />
+      <mesh geometry={PCB_CHIPS_GEOMETRY}>
+        <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.6} roughness={0.4} />
       </mesh>
-      <mesh position={[0, 0.21, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <boxGeometry args={[2.6, 0.01, 0.06]} />
+      <mesh geometry={PCB_TRACES_GEOMETRY}>
         <meshStandardMaterial color={tint} emissive={tint} emissiveIntensity={0.4} />
       </mesh>
     </group>

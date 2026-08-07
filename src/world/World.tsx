@@ -3,11 +3,12 @@ import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
-import { Motes } from "./Ambience.tsx";
 import { Monuments } from "./Monuments.tsx";
-import { Stunts } from "./Stunts.tsx";
+import { Corpus } from "./Corpus.tsx";
+import { Threads } from "./Threads.tsx";
+import { ResolveField } from "./ResolveField.tsx";
 import { Trail } from "./Trail.tsx";
-import { disposeAudio, initAudio, playPickup } from "./audio.ts";
+import { disposeAudio, initAudio, playPickup, playResolveChime } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Props } from "./Props.tsx";
@@ -20,27 +21,31 @@ import { loadExplored, markExplored } from "./explored.ts";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
 import { collect, loadCollected } from "./progress.ts";
+import { loadResolved, saveResolved } from "./resolve.ts";
+import { telemetry } from "./telemetry.ts";
+import { SPAWN_POSITION } from "./craftPhysics.ts";
 import type { Toast } from "./Nav.tsx";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulse, type PulseEvent } from "../play/pulse.ts";
 
 /**
  * The assembly. Every other module under src/world/ is either pure logic
- * (craftPhysics, triathlon, worldData) or a piece of the scene that knows
- * nothing about the others (Terrain doesn't know Craft exists, Pavilions
- * doesn't know about the triathlon) — this file is the one place that reads
- * one module's output and feeds it into another's input: Pavilions' sensor
- * events become the HUD prompt AND a room-entry decision, Craft's per-frame
- * transform becomes both the HUD's mode readout and the triathlon's
- * checkpoint sequencing.
+ * (craftPhysics, resolve, city/districtWest/corpusData) or a piece of the
+ * scene that knows nothing about the others (Terrain doesn't know Craft
+ * exists, Pavilions doesn't know about the dust field) — this file is the
+ * one place that reads one module's output and feeds it into another's
+ * input: Pavilions' sensor events become the HUD prompt AND a room-entry
+ * decision, Craft's per-frame transform becomes the HUD's speed readout,
+ * and resolve.ts's ratchet (via `telemetry.resolvedFraction`, written every
+ * frame by ResolveField) becomes both the HUD's `FIX %` and the cue for a
+ * resolve chime here.
  *
  * Scene components below are wrapped in `memo` because this component's own
- * state changes fairly often — every checkpoint pass, and once a run is
- * live, every frame (the timer's own comment in Hud.tsx is explicit that it
- * "ticks every frame"). Terrain/Water/Props take no props at all and
+ * state changes fairly often — every artifact pickup, every toast, every
+ * prompt. Terrain/Props/Corpus take no props at all and
  * Pavilions/Craft take one stable `useCallback`, so `memo` turns "World
- * re-rendered" into "five cheap prop-equality checks" instead of five scene
- * subtrees re-evaluating their JSX 60 times a second for no reason. Craft
+ * re-rendered" into a handful of cheap prop-equality checks instead of every
+ * scene subtree re-evaluating its JSX 60 times a second for no reason. Craft
  * still runs its own R3F hooks every frame regardless — this only skips
  * re-running its component *body*.
  */
@@ -48,10 +53,11 @@ const MemoTerrain = memo(Terrain);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoCraft = memo(Craft);
-const MemoMotes = memo(Motes);
 const MemoMonuments = memo(Monuments);
-const MemoStunts = memo(Stunts);
+const MemoCorpus = memo(Corpus);
 const MemoTrail = memo(Trail);
+const MemoResolveField = memo(ResolveField);
+const MemoThreads = memo(Threads);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
 // auto-confirms — the design doc's "~1s dwell" figure.
@@ -68,6 +74,17 @@ export default function World(props: { onShowList: () => void }) {
   const navigate = useNavigate();
   const bump = usePulse();
 
+  // Restores which of the city's 147 resolve cells were already driven
+  // through on a past visit. Must happen before any district's own
+  // `resolveAttributes()` call (Monuments, Corpus) seeds its instances'
+  // starting state from `triggerTimeOf` — an effect fires AFTER children
+  // have already mounted and read that state, which is too late (see
+  // resolve.ts's own comment on this). A lazy `useState` initializer is the
+  // one React hook guaranteed to run during THIS component's render, before
+  // its children's render — exactly the ordering this needs. The state
+  // value itself is never read; it exists only to get `loadResolved()`
+  // called exactly once.
+  useState(loadResolved);
 
   const [promptTo, setPromptTo] = useState<string | null>(null);
   const promptToRef = useRef<string | null>(null);
@@ -87,14 +104,40 @@ export default function World(props: { onShowList: () => void }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastTimers = useRef<number[]>([]);
 
+  // Cue for the resolve chime: how much of the city was resolved as of the
+  // last frame we checked, and when we last actually played the sound.
+  // ResolveField.tsx can stamp up to 11 cells in a single frame (the 3x3
+  // block plus two ahead — see resolve.ts's own `stamp()` comment), and
+  // driving straight into fresh territory keeps finding new cells for
+  // seconds at a time, so a fraction increase is NOT rare enough to trigger
+  // a chime unthrottled — that reads as a rattle, not a chime. The 260ms
+  // floor is short enough to feel responsive to a single new district
+  // resolving, long enough that a sustained drive through unresolved ground
+  // pings a few times a second rather than every frame.
+  const lastResolvedFractionRef = useRef(0);
+  const lastChimeAtRef = useRef(0);
+
   // document.hidden, not the list-view toggle: switching to List unmounts
   // this whole component (Playground.tsx), so there is no "paused but still
   // mounted" state to handle beyond the tab actually being backgrounded.
   const [paused, setPaused] = useState(() => document.hidden);
   useEffect(() => {
-    const onVisibility = () => setPaused(document.hidden);
+    // Persisted here rather than on every cell resolve: resolve.ts's ratchet
+    // already lives in memory for the whole session (it only ever grows), so
+    // the only moment that actually needs a durable write is "the visitor
+    // might not come back" — backgrounding the tab or navigating into a
+    // room (the cleanup below). Saving on every `stamp()` would mean a
+    // localStorage write nearly every frame while driving through new
+    // territory, for no benefit over saving once when it matters.
+    const onVisibility = () => {
+      setPaused(document.hidden);
+      if (document.hidden) saveResolved();
+    };
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      saveResolved();
+    };
   }, []);
 
   useEffect(() => attachKeyboard(), []);
@@ -192,9 +235,9 @@ export default function World(props: { onShowList: () => void }) {
 
   // Craft's own useFrame calls this every rendered frame — the only place in
   // this component tree with a reason to run that often outside the Canvas.
-  // Reused here for three unrelated per-frame jobs (mode readout, the Enter-
-  // key edge, triathlon sequencing) rather than adding three separate frame
-  // loops for them.
+  // Reused here for three unrelated per-frame jobs (artifact pickups, the
+  // Enter-key edge, the resolve chime) rather than adding three separate
+  // frame loops for them.
   const handleCraftState = useCallback(
     (s: { position: [number, number, number] }) => {
 
@@ -224,15 +267,27 @@ export default function World(props: { onShowList: () => void }) {
       }
 
       const confirmed = input.confirm;
-      // Captured before confirmHeldRef is overwritten below, so both the
-      // room-entry edge above and the start-line edge in the checkpoint
-      // block further down see the same single press rather than the room
-      // check silently consuming it first.
+      // Captured before confirmHeldRef is overwritten below, so the
+      // room-entry edge above sees a single press rather than being
+      // re-triggered every frame the key stays held.
       const confirmPressedThisFrame = confirmed && !confirmHeldRef.current;
       if (confirmPressedThisFrame && promptToRef.current)
         enterRoom(promptToRef.current);
       confirmHeldRef.current = confirmed;
 
+      // The resolve chime — see the refs' own comment for the throttle.
+      // `telemetry.resolvedFraction` is written every frame by
+      // ResolveField.tsx from resolve.ts's ratchet, so this only ever climbs
+      // within a session; a drop would mean a bug elsewhere, not something
+      // to chime about, hence the strict `>`.
+      if (telemetry.resolvedFraction > lastResolvedFractionRef.current) {
+        lastResolvedFractionRef.current = telemetry.resolvedFraction;
+        const now = performance.now();
+        if (now - lastChimeAtRef.current > 260) {
+          lastChimeAtRef.current = now;
+          playResolveChime();
+        }
+      }
     },
     // pushToast is a stable useCallback, but listing it is not ceremony: this
     // callback is handed to Craft and captured for the life of the mount, so
@@ -241,12 +296,6 @@ export default function World(props: { onShowList: () => void }) {
     // that is untraceable from the symptom.
     [enterRoom, pushToast],
   );
-
-  // The HUD's reset control: clears an in-progress or finished run back to
-  // the pre-start state so the start line arms again. Deliberately leaves
-  // `bestMs` alone — that's a persisted personal best across attempts, not
-  // per-run state, and resetting it here would defeat the point of
-  // saveBestMs "keeping the lower value" across restarts.
 
   const promptRoom: Room | null =
     promptTo === null ? null : (ROOMS.find((r) => r.to === promptTo) ?? null);
@@ -261,7 +310,13 @@ export default function World(props: { onShowList: () => void }) {
       <Canvas
         shadows
         dpr={[1, 1.5]}
-        camera={{ position: [0, 5, -22], fov: 55 }}
+        // A few metres behind SPAWN_POSITION, matching the direction Craft's
+        // own chase camera sits relative to the craft — this is only what
+        // renders for the handful of frames before that chase cam's useFrame
+        // takes over, but with the slab now running -80..88 in z, leaving
+        // this at its old (pre-city) literal would have shown empty ground
+        // 50m from where the craft actually spawns.
+        camera={{ position: [SPAWN_POSITION[0], SPAWN_POSITION[1] + 2, SPAWN_POSITION[2] - 6], fov: 55 }}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
@@ -305,12 +360,21 @@ export default function World(props: { onShowList: () => void }) {
           <MemoTerrain />
           <MemoProps />
           <MemoMonuments />
-          <MemoStunts />
+          <MemoCorpus />
           <MemoPavilions onPrompt={handlePrompt} />
           <MemoCraft onState={handleCraftState} />
         </Physics>
         <MemoTrail />
-        <MemoMotes />
+        {/* The city's dust — always mounted, never conditional on anything:
+            frame 0's "lit road through a haze" is the design's whole
+            first-five-seconds bet, and that only works if this is here from
+            the very first render, same as the pavilions themselves. */}
+        <MemoResolveField />
+        {/* The two authored/discovered arcs. Overhead-only geometry (x=0,
+            above the boulevard) with no collider — you drive under them,
+            never into them — so it costs nothing to mount unconditionally
+            alongside Trail and the dust field. */}
+        <MemoThreads />
         <Artifacts collected={collected} />
         {/* Bloom is doing real work here, not gloss. Every room's identity in
             this world is carried by an emissive material in its tint — the
