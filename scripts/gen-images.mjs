@@ -26,6 +26,10 @@ for (const src of walk(publicDir)) {
   // gen-excelsior.mjs). Deriving an .avif per page would be ~400 extra files
   // regenerated on every build for no gain — they have no raster source here.
   if (src.includes(`${sep}excelsior${sep}pages${sep}`)) continue;
+  // Play Store icons (scripts/gen-store.mjs) are already 128px webp straight
+  // from Google's CDN — about a kilobyte each. An .avif derivative of a 1 kB
+  // icon is not smaller, and there are 87 of them to redo on every build.
+  if (src.includes(`${sep}store${sep}`)) continue;
   const base = src.slice(0, -ext.length);
   // A .webp sitting next to a same-name .png/.jpg/.jpeg is OUR OWN derivative
   // (generated below from that raster), not a real source — skip it, or the

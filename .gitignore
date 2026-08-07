@@ -21,6 +21,11 @@ public/**/*.webp
 # scripts/gen-excelsior.mjs. Ignoring them would silently ship a reader with no
 # pages in it. gen-images.mjs skips this directory for the same reason.
 !public/excelsior/pages/**/*.webp
+# ...and except the Play Store icons. Same reasoning: not derivatives of
+# anything in this repo. scripts/gen-store.mjs downloads them from the live
+# listings, and it needs the private Jugnoo repos to run, which a build machine
+# does not have. Ignoring them ships a shelf of blank squares.
+!public/store/*.webp
 
 # Playwright output
 test-results/
@@ -44,3 +49,4 @@ graphify-out/
 
 # Play Store probe cache for scripts/gen-store.mjs — regenerable, and large.
 .store-cache.json
+.store-archive-cache.json

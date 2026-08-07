@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Star, Download, ExternalLink } from "lucide-react";
-import { storeApps, fleet, fleetStats, storeGeneratedAt } from "./data/store.ts";
+import { Star, Download, ExternalLink, Archive } from "lucide-react";
+import { storeApps, fleet, delisted, fleetStats, storeGeneratedAt } from "./data/store.ts";
 
 /** How many fleet apps to show before the visitor asks for the rest. */
 const PREVIEW = 18;
@@ -10,6 +10,12 @@ function compact(n: number): string {
   if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 1e3) return `${Math.round(n / 1e3)}K`;
   return String(n);
+}
+
+/** "20211215" → "Dec 2021". Wayback timestamps, trimmed to what's meaningful. */
+function archiveMonth(ts: string): string {
+  const d = new Date(`${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)}T00:00:00Z`);
+  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
 }
 
 /**
@@ -25,15 +31,20 @@ function compact(n: number): string {
  * white-label platform gives every client its own branch, so the rider and
  * driver repos carry ~1,600 of them, each with its own applicationId. Mining all
  * of them turns "I worked on a white-label platform" — a sentence anyone can
- * type — into a number that can be checked one link at a time.
+ * type — into a number that can be checked one link at a time. The developer
+ * name under each app is the argument in one field: 47 different companies,
+ * none of them Jugnoo.
  */
 export function ShippedShelf() {
   const [expanded, setExpanded] = useState(false);
+  const [pastExpanded, setPastExpanded] = useState(false);
   const shown = expanded ? fleet : fleet.slice(0, PREVIEW);
+  const shownPast = pastExpanded ? delisted : delisted.slice(0, PREVIEW);
 
-  // No length guards: both lists are `as const`, so TypeScript knows their exact
-  // length and a `=== 0` check is a comparison it can prove false. The generator
-  // already refuses to write an empty shelf — it throws rather than ship one.
+  // No length guards: these lists are `as const`, so TypeScript knows their
+  // exact length and a `=== 0` check is a comparison it can prove false. The
+  // generator already refuses to write an empty shelf — it throws rather than
+  // ship one.
   return (
     <section id="shipped" className="border-t border-line">
       <div className="section-y mx-auto max-w-5xl px-6">
@@ -101,16 +112,17 @@ export function ShippedShelf() {
               {fleetStats.branches.toLocaleString("en-IN")} of them
             </strong>{" "}
             between them — {fleetStats.clients.toLocaleString("en-IN")} distinct client package ids.
-            Most are demos, pilots and clients long since gone. These{" "}
-            {fleetStats.live} are still on the store today, and you can open any of them.
+            Most were demos and pilots that never shipped. These {fleetStats.live} are on the store
+            right now, published by {fleetStats.developers} different companies, none of them
+            Jugnoo, and you can open any of them.
           </p>
 
           <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
             {[
               [fleetStats.clients.toLocaleString("en-IN"), "client builds in the repos"],
-              [String(fleetStats.live), "still live on Play"],
+              [String(fleetStats.live), "on Play right now"],
+              [String(fleetStats.developers), "publishers, none of them Jugnoo"],
               [`≥ ${compact(fleetStats.installFloor)}`, "installs across them"],
-              [String(fleetStats.setUpByHim), "he set up himself"],
             ].map(([value, label]) => (
               <div key={label}>
                 <dt className="font-display text-3xl font-bold tabular-nums text-accent">{value}</dt>
@@ -127,16 +139,49 @@ export function ShippedShelf() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title={app.id}
-                  className="group flex items-center gap-3 rounded-xl border border-line bg-card/60 px-3 py-2.5 transition hover:border-accent"
+                  className="group flex items-center gap-3 rounded-xl border border-line bg-card/60 p-2.5 transition hover:border-accent"
                 >
-                  <span
-                    aria-hidden
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${app.setUpByHim ? "bg-accent" : "bg-zinc-700"}`}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium transition group-hover:text-accent">
-                      {app.name}
+                  {/* Icons are served from public/store, downloaded at generation
+                      time. No request leaves for a Google CDN when someone reads
+                      this page, and nothing here breaks if play-lh stops allowing
+                      cross-origin loads.
+
+                      Widened deliberately: `fleet` is `as const`, so today every
+                      icon is a string literal and TypeScript narrows the fallback
+                      branch to `never`. That branch is not dead — it is what the
+                      next regeneration renders for an app whose icon fetch
+                      failed — so the annotation keeps it alive. */}
+                  {(app.icon as string | null) ? (
+                    <img
+                      src={app.icon}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-9 w-9 shrink-0 rounded-lg bg-void"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-void font-display text-sm font-bold text-muted"
+                    >
+                      {app.name.slice(0, 1)}
                     </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-medium transition group-hover:text-accent">
+                        {app.name}
+                      </span>
+                      {app.setUpByHim && (
+                        <span
+                          title="He added this client's package id"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                        />
+                      )}
+                    </span>
+                    <span className="block truncate text-xs text-zinc-500">{app.developer}</span>
                     <span className="block font-mono text-[10px] uppercase tracking-wider text-muted">
                       {app.side}
                       {app.installs ? ` · ${app.installs}` : ""}
@@ -167,6 +212,66 @@ export function ShippedShelf() {
             floor, not an estimate. Listings read {storeGeneratedAt}.
           </p>
         </div>
+
+        {/* ── The ones that are gone ────────────────────────────────────── */}
+        {delisted.length > 0 && (
+          <div className="mt-14 border-t border-line pt-10">
+            <h3 className="font-display text-xl font-bold tracking-tight">
+              And {delisted.length} that used to be
+            </h3>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
+              A package id that 404s today has two possible histories: it was never published, or it
+              shipped and was later pulled. Play cannot tell you which — a delisted app and an
+              imaginary one return the same 404. The Internet Archive can: it holds a crawled
+              listing page for each of these, so they were on sale, and the date is the last day
+              anyone can prove it. Which puts{" "}
+              <strong className="font-semibold text-zinc-200">
+                {fleetStats.live + delisted.length} apps
+              </strong>{" "}
+              from this codebase on the store at one time or another.{" "}
+              <span className="text-zinc-500">
+                A floor, not a count: the Archive crawls what it happens to crawl, and a small app
+                in a small market can ship for years without being snapshotted once.
+              </span>
+            </p>
+
+            <ul className="mt-6 grid gap-2 sm:grid-cols-2">
+              {shownPast.map((app) => (
+                <li key={app.id}>
+                  <a
+                    href={app.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={app.id}
+                    className="group flex items-center gap-3 rounded-xl border border-dashed border-line px-3 py-2.5 transition hover:border-zinc-600"
+                  >
+                    <Archive size={14} className="shrink-0 text-zinc-600" aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-zinc-400 transition group-hover:text-zinc-200">
+                        {app.name ?? app.id}
+                      </span>
+                      <span className="block font-mono text-[10px] uppercase tracking-wider text-muted">
+                        {app.side} · last seen {archiveMonth(app.lastSeen)}
+                        {app.rating !== null ? ` · ${app.rating.toFixed(1)}★ then` : ""}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            {delisted.length > PREVIEW && (
+              <button
+                type="button"
+                onClick={() => setPastExpanded((e) => !e)}
+                aria-expanded={pastExpanded}
+                className="mt-5 rounded-full border border-line px-4 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+              >
+                {pastExpanded ? "Show fewer" : `Show all ${delisted.length}`}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
