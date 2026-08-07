@@ -1,52 +1,39 @@
 /**
- * Generates src/data/store.ts — the shipped-app shelf and the white-label fleet.
+ * Generates src/data/store.ts — the shipped-app shelf.
  *
- * NOTHING HERE IS TYPED FROM MEMORY. Every package id is mined out of a git
- * history and then verified against the live Play Store before it is written;
- * an id that does not resolve is dropped rather than shipped as a dead link,
- * because a broken store link on a portfolio reads as a claim that did not
- * survive contact.
+ * NOTHING HERE IS TYPED FROM MEMORY. Every package id is verified against the
+ * live Play Store before it is written, and an id that does not resolve is
+ * dropped rather than shipped as a dead link, because a broken store link on a
+ * portfolio reads as a claim that did not survive contact.
  *
  * WHAT IT PRODUCES:
  *
- * 1. THE FLAGSHIPS — three ids read from the `applicationId` lines of the app
- *    repos' primary flavours. These get their own cards.
+ * 1. THE FLAGSHIPS — the products themselves, one card each.
  *
- * 2. THE WHITE-LABEL FLEET — the interesting one. Jugnoo shipped its rider and
- *    driver apps as a white-label platform, and the way that platform works is
- *    that EVERY CLIENT GETS A BRANCH. So the two repos carry 1,700-odd `wl_*`
- *    branches between them, each one a client build with its own applicationId
- *    in a product flavour. Pass A walks the whole history of those branches for
- *    every applicationId ever committed on one and who introduced it; pass B
- *    reads the branch tips for how much of each build is his. Then Play is asked
- *    which are still live, and the live ones give up their icon, rating, install
- *    bucket and — the whole argument in one field — the name of the company
- *    that publishes them.
- *
- *    An earlier version of this file claimed the white-label apps could not be
- *    linked at all, on the evidence that product.clicklabs.jugnoo.white and
- *    product.customer.tempwl both 404. That was true and the conclusion drawn
- *    from it was wrong: those two are the TEMPLATES on master. The real client
- *    ids were one branch away the whole time.
+ * 2. THE WHITE-LABEL FLEET. The rider and driver apps were a white-label
+ *    platform: every client shipped as its own rebranded build with its own
+ *    package id and its own listing. This collects those ids, asks Play which
+ *    still resolve, and reads each live listing for its icon, rating, install
+ *    bucket, update date and — the whole argument in one field — the name of
+ *    the company that publishes it.
  *
  * 3. THE DELISTED — merged in from scripts/gen-store-archive.mjs, which proves
  *    from the Internet Archive that a dead id was once a real listing. Run that
  *    first if you want the tier; this works without it.
  *
- * WHAT IS DELIBERATELY NOT SHIPPED: branch names. They are internal and some of
- * them carry colleagues' names. Only the package id — which is public the moment
- * the app ships — the public listing data, and aggregate counts leave this file.
+ * 4. THE TENURE RULE (see JOINED) — the part that decides what belongs here at
+ *    all, and the reason the shelf is smaller than the raw data.
  *
- * Needs the private app repos on disk (see REPOS) and refuses to guess without
- * them. The store probe is cached in .store-cache.json (gitignored) so a re-run
- * is cheap; delete it to re-probe, or bump PROBE_V to re-read the live ones.
+ * Reads two source checkouts named by environment variable (see REPOS). The
+ * generated data is committed, so a build never needs them. The Play probe is
+ * cached in .store-cache.json (gitignored) so a re-run is cheap; delete it to
+ * re-probe, or bump PROBE_V to re-read the live listings.
  *
- * Usage: npm run gen:store
+ * Usage: SHELF_RIDER_REPO=... SHELF_DRIVER_REPO=... npm run gen:store
  */
 import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
-import { homedir } from "node:os";
 
 const CACHE = resolve(process.cwd(), ".store-cache.json");
 /** Written by scripts/gen-store-archive.mjs. Optional — the fleet works without it. */
@@ -56,14 +43,27 @@ const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
 const FLAVOUR_CACHE = resolve(process.cwd(), ".store-flavours.json");
 /** First-seen dates for still-live listings, from scripts/gen-store-archive.mjs. */
 const SINCE_CACHE = resolve(process.cwd(), ".store-since-cache.json");
+/** Extra apps of clients already on the shelf, from scripts/gen-store-siblings.mjs. */
+const SIBLINGS_CACHE = resolve(process.cwd(), ".store-siblings.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
 
-/** The two white-label platform repos, and which side of the marketplace each is. */
+/**
+ * The two source checkouts this generator reads, supplied by the operator.
+ *
+ * Deliberately NOT hardcoded and deliberately not named: this repository is
+ * public, the inputs are not, and a path is a statement about what is on
+ * somebody's disk. Set them when you run it:
+ *
+ *   SHELF_RIDER_REPO=... SHELF_DRIVER_REPO=... npm run gen:store
+ *
+ * Without them the script refuses to run rather than inventing a shelf. The
+ * generated src/data/store.ts is committed, so a build never needs either.
+ */
 const REPOS = [
-  { dir: `${homedir()}/Repos/Android/Jugnoo/jugnoo-android-autos`, side: "rider" },
-  { dir: `${homedir()}/Repos/Android/Jugnoo/jugnoo-android-driver`, side: "driver" },
-];
+  { dir: process.env.SHELF_RIDER_REPO, side: "rider" },
+  { dir: process.env.SHELF_DRIVER_REPO, side: "driver" },
+].filter((r) => r.dir);
 
 /** His committer identity in those repos. */
 const AUTHOR = "siddharth.pandalai";
@@ -106,13 +106,15 @@ const git = (dir, args) =>
 
 /* ── 1. Mine ────────────────────────────────────────────────────────────── */
 
-/** Every distinct client applicationId across every wl_* branch, with provenance. */
+/** Every distinct client package id in the sources, with provenance. */
 function mine() {
   const clients = new Map();
   let branchCount = 0;
 
+  if (REPOS.length === 0)
+    throw new Error("[gen-store] set SHELF_RIDER_REPO and SHELF_DRIVER_REPO — refusing to guess");
   for (const { dir, side } of REPOS) {
-    if (!existsSync(dir)) throw new Error(`[gen-store] missing repo ${dir} — refusing to guess`);
+    if (!existsSync(dir)) throw new Error(`[gen-store] no checkout at ${dir}`);
     const base = ["origin/master", "origin/main"].find((r) => {
       try {
         git(dir, ["rev-parse", "--verify", "-q", r]);
@@ -129,22 +131,18 @@ function mine() {
 
     /* Pass A — every applicationId ever COMMITTED, and who introduced it.
      *
-     * Reading branch tips alone misses any client whose id was later changed or
-     * whose branch was rewound, and the first version of this script did miss
-     * 121 of them. One `git log --all -p` walk over the gradle files catches
-     * every id that ever existed and hands over the authoring commit for free —
-     * and it is ~20x faster than pickaxing each id separately, which is what it
-     * replaced. git walks newest-first, so the LAST sighting of an id is the
-     * earliest commit that introduced it: that is who set the client up.
+     * Reading only the current state misses any client whose id was later changed,
+     * and the first version of this script did miss 121 of them. Walking the
+     * history catches every id that ever existed and identifies who introduced
+     * each one for free — and it is ~20x faster than searching per id, which is
+     * what it replaced.
      *
-     * SCOPED TO THE WHITE-LABEL BRANCHES, not --all, and the difference is not
-     * cosmetic. --all also reaches the mainline dev branches, where in 2018 an
-     * engineer at be Group (be.xyz, Vietnam) committed `xyz.be.driver` — an app
-     * that is on the store today with a million installs. It resolves, so it
-     * would have been written into the fleet. But its id never appeared on a
-     * client branch, the commit predates him by two years, and nothing shows
-     * the binary shipping today is that build. Membership of the fleet is
-     * "appeared on a white-label branch", and the glob is what enforces it. */
+     * SCOPED TO THE CLIENT WORK, and the difference is not cosmetic. Widen it and
+     * it reaches product-line history, where in 2018 an outside team set up an
+     * app that is on the store today with a million installs. It resolves, so it
+     * would have been written into the fleet — but it was never a client of this
+     * platform, it predates him by two years, and nothing shows the binary
+     * shipping today is that build. The scope is what keeps it out. */
     const history = git(dir, [
       "log",
       "--glob=refs/remotes/origin/[wW]l[_-]*",
@@ -172,10 +170,11 @@ function mine() {
       });
     }
 
-    /* Pass B — the branch tips, for how much of each client's build is his.
+    /* Pass B — how much of each client's build is his.
      *
-     * Commits of his that a branch's history carries and master's does not: his
-     * work is in that client's build even where he did not cut the branch. */
+     * Work of his that a client's line of development carries and the mainline
+     * does not: his contribution is in that build even where he did not start
+     * it. */
     for (const branch of branches) {
       // git grep -E is POSIX ERE, which has no \s — anchor in JS instead.
       let lines;
@@ -213,7 +212,7 @@ const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 /** Cache schema version. Bump to force a re-probe of everything already live. */
-const PROBE_V = 4;
+const PROBE_V = 5;
 
 const unescape = (s) =>
   s
@@ -265,6 +264,11 @@ async function probe(id) {
           const href = m?.[1];
           return href && !/^\d+$/.test(href) ? unescape(decodeURIComponent(href)) : null;
         })(),
+        // The id as Play writes it in the link, kept alongside the display name:
+        // it is the only form its developer page will answer to, and that page
+        // is where the rest of a client's apps live.
+        developerId:
+          /<a href="\/store\/apps\/dev(?:eloper)?\?id=([^"&]{1,90})"/.exec(html)?.[1] ?? null,
         // First play-lh URL on the page is the app icon, before any screenshot.
         icon: /https:\/\/play-lh\.googleusercontent\.com\/[A-Za-z0-9_-]{20,}/.exec(html)?.[0] ?? null,
         url,
@@ -334,6 +338,31 @@ function installFloor(s) {
 const { clients, branchCount } = mine();
 console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount} branches`);
 
+/* Apps a client shipped under a package id this data never carried — a rebrand,
+ * or a third app in the set. Found on the client's own Play developer page and
+ * kept only where the id matches the client's stem (gen-store-siblings.mjs), so
+ * "same company" alone never gets anything onto the shelf. */
+{
+  const siblings = existsSync(SIBLINGS_CACHE)
+    ? JSON.parse(readFileSync(SIBLINGS_CACHE, "utf8"))
+    : {};
+  const have = new Set(clients.map((c) => c.id));
+  for (const [id, meta] of Object.entries(siblings)) {
+    if (have.has(id)) continue;
+    const sib = clients.find((c) => c.id === meta.siblingOf);
+    clients.push({
+      id,
+      side: /driver|captain|partner|chauffeur/i.test(id) ? "driver" : (sib?.side ?? "rider"),
+      // Nothing in the source data names this app, so no authorship is claimed
+      // for it beyond the client it belongs to.
+      commits: 0,
+      setUpByHim: false,
+    });
+  }
+  if (Object.keys(siblings).length)
+    console.log(`[gen-store] +${Object.keys(siblings).length} sibling app(s) from developer pages`);
+}
+
 const store = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
 
 const flagships = FLAGSHIPS.map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
@@ -388,12 +417,11 @@ console.log(
 const iconsWritten = await fetchIcons([...flagships, ...fleet]);
 console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/`);
 
-/* Brand colours and branch-recovered icons (scripts/gen-store-flavours.mjs).
+/* Brand colours and icons (scripts/gen-store-flavours.mjs).
  *
- * A delisted app has no Play listing left to take an icon from, but the flavour
- * that built it still carries the launcher icon it shipped with and the hex its
- * theme was tinted to. That is why these apps can be shown as themselves rather
- * than as 90 identical grey rectangles. */
+ * A delisted app has no Play listing left to take an icon from, and the Archive
+ * does not keep one. Resolving them separately is what lets these apps be shown
+ * as themselves rather than as ninety identical grey rectangles. */
 const flavours = existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
 const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
 
@@ -402,10 +430,10 @@ const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
  *
  * The Archive proves these were published and holds the page, but its replay
  * endpoint throttles hard and a handful never come back — which left the shelf
- * printing `com.kadere.driver` where a name belongs. The flavour that built the
- * app is named after the client (`crossWind`, `akbartravels`), so it is a fair
- * label, and the tile still links to the archived listing for anyone who wants
- * the real one. Falls back to the distinctive segment of the package id.
+ * printing `com.kadere.driver` where a name belongs. Each build is named after
+ * its client, so that name is a fair label, and the tile still links to the
+ * archived listing for anyone who wants the official one. Falls back to the
+ * distinctive segment of the package id.
  */
 function nameFromCode(id) {
   const flavour = flavours[id]?.flavour;
@@ -473,6 +501,87 @@ function lastShippedByYear(live, past) {
   return Object.values(years).sort((a, b) => a.year - b.year);
 }
 
+/**
+ * Group the apps by the client that shipped them.
+ *
+ * Almost every client shipped a PAIR — one app for riders, one for drivers —
+ * which meant the shelf listed the same company twice, side by side, with the
+ * same logo and the same publisher. Ninety rows became forty-odd companies and
+ * the page stopped reading like a spreadsheet.
+ *
+ * Keyed on the publisher name where Play gives one, since that is the actual
+ * legal owner and is identical across a client's apps. Where it does not (every
+ * delisted app, which has no listing left to ask), the package id with the side
+ * and the platform's own namespace stripped does the same job:
+ * `product.driver.superfix` and `product.customer.superfix` both key to
+ * `superfix`.
+ */
+function groupByClient(apps) {
+  const groups = new Map();
+  for (const app of apps) {
+    const key = (
+      app.developer ??
+      app.id
+        .replace(/^(product|production|products|com|io|app|net)\./, "")
+        .replace(/(^|\.)(customer|driver|rider|user|passenger|partner|courier|agent|chauffeur)(\.|$)/g, ".")
+    )
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(app);
+  }
+
+  return [...groups.entries()].map(([key, list]) => {
+    // Rider first, then whichever has the most installs — the card's identity
+    // (name, icon, colour) comes from that one.
+    const ordered = [...list].sort(
+      (a, b) =>
+        (a.side === "rider" ? -1 : 1) - (b.side === "rider" ? -1 : 1) ||
+        installFloor(b.installs) - installFloor(a.installs),
+    );
+    const lead = ordered[0];
+    return {
+      key,
+      // The shared part of the two app names is the client's actual name:
+      // "Zofeur - Hire a Safe Driver." and "Zofeur - Driver App" → "Zofeur".
+      name: sharedName(ordered.map((a) => a.name).filter(Boolean)) ?? lead.name ?? lead.id,
+      developer: lead.developer ?? null,
+      icon: ordered.find((a) => a.icon)?.icon ?? null,
+      color: ordered.find((a) => a.color)?.color ?? null,
+      setUpByHim: ordered.some((a) => a.setUpByHim),
+      installs: ordered.reduce((s, a) => s + installFloor(a.installs), 0),
+      rating: (() => {
+        const r = ordered.map((a) => a.rating).filter((x) => x != null);
+        return r.length ? Number((r.reduce((s, x) => s + x, 0) / r.length).toFixed(1)) : null;
+      })(),
+      apps: ordered,
+    };
+  });
+}
+
+/**
+ * The longest name shared by a client's apps, trimmed at a word boundary.
+ *
+ * Returns null rather than a fragment: "Ping Rider"/"Ping Driver" share "Ping "
+ * and that is a name, but two unrelated titles sharing one letter is not.
+ */
+function sharedName(names) {
+  if (names.length === 0) return null;
+  if (names.length === 1) return names[0];
+  let prefix = names[0];
+  for (const n of names.slice(1)) {
+    let i = 0;
+    while (i < prefix.length && i < n.length && prefix[i].toLowerCase() === n[i].toLowerCase()) i++;
+    prefix = prefix.slice(0, i);
+  }
+  // Cut back to a word boundary. "Dida Client" and "Dida Chauffeur" share the
+  // six characters "Dida C", which is not a name — the company is "Dida".
+  const endsAWord = names.every((n) => n.length === prefix.length || /[\s\-–—:|,.]/.test(n[prefix.length]));
+  if (!endsAWord && prefix.includes(" ")) prefix = prefix.slice(0, prefix.lastIndexOf(" "));
+  const trimmed = prefix.replace(/[\s\-–—:|,.]+$/, "").trim();
+  return trimmed.length >= 3 ? trimmed : null;
+}
+
 const stats = {
   branches: branchCount,
   clients: clients.length,
@@ -486,6 +595,9 @@ const stats = {
   /** Verified published, but last shipped before he joined. Not counted above. */
   predatingHim: predating.length,
   joined: JOINED,
+  /** Companies, not apps — most shipped a rider app and a driver app. */
+  clientsLive: groupByClient(liveKept).length,
+  clientsGone: groupByClient(pastKept).length,
 };
 console.log("[gen-store]", stats);
 
@@ -503,7 +615,7 @@ const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, ic
   /** Earliest archived crawl of the listing: on the store since AT LEAST this. */
   firstSeen,
   // Written to public/store at generation time: from the live listing where
-  // there is one, otherwise out of the branch that built it.
+  // there is one, otherwise resolved separately.
   icon: icon ? `/store/${id}.webp` : null,
   // The hex this client's build tinted its theme to, read from the flavour's
   // own `resValue "color", 'theme_color'`. Null for the ones that never set one.
@@ -514,10 +626,9 @@ writeFileSync(
   OUT,
   `// AUTO-GENERATED by scripts/gen-store.mjs — do not edit by hand.
 //
-// Package ids mined from the applicationId lines of every wl_* branch in the
-// Jugnoo rider and driver repos, then verified against the live Play Store.
-// Anything that does not resolve is dropped rather than shipped as a dead link.
-// Branch names are deliberately not exported — they are internal.
+// Every entry was verified against its live Play Store listing at generation
+// time; anything that does not resolve is dropped rather than shipped as a dead
+// link. Internal names are deliberately not exported.
 // Run \`npm run gen:store\` to refresh.
 
 /** The three apps that get their own card. */
@@ -544,6 +655,34 @@ export const storeApps = ${JSON.stringify(
 export const fleet = ${JSON.stringify(liveKept.map(pick), null, 1)} as const;
 
 /**
+ * The same live apps, grouped by the company that shipped them — because almost
+ * every client shipped a rider app and a driver app, and listing both as
+ * separate rows made the page twice as long and half as clear.
+ */
+export const liveClients = ${JSON.stringify(
+    groupByClient(liveKept.map(pick)).map(({ key, name, developer, icon, color, setUpByHim, rating, apps }) => ({
+      key,
+      name,
+      developer,
+      icon,
+      color,
+      setUpByHim,
+      rating,
+      apps: apps.map(({ id, name, url, side, installs, rating, updated }) => ({
+        id,
+        name,
+        url,
+        side,
+        installs,
+        rating,
+        updated,
+      })),
+    })),
+    null,
+    1,
+  )} as const;
+
+/**
  * Client builds that are NOT on the store any more, but provably once were:
  * the Internet Archive holds a 200 for the listing URL. \`lastSeen\` is the most
  * recent snapshot — the last date anyone can show the app was on sale — and
@@ -566,6 +705,44 @@ export const delisted = ${JSON.stringify(
       // Recovered from the branch: Play has no listing left to ask.
       icon: icon ? `/store/${id}.webp` : null,
       color,
+    })),
+    null,
+    1,
+  )} as const;
+
+/** The pulled apps, grouped the same way. */
+export const pastClients = ${JSON.stringify(
+    groupByClient(
+      pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
+        id,
+        name,
+        side,
+        setUpByHim,
+        firstSeen,
+        lastSeen,
+        url,
+        icon: icon ? `/store/${id}.webp` : null,
+        color,
+        rating,
+        installs: null,
+        developer: null,
+      })),
+    ).map(({ key, name, icon, color, setUpByHim, apps }) => ({
+      key,
+      name,
+      icon,
+      color,
+      setUpByHim,
+      lastSeen: apps.map((a) => a.lastSeen).sort().at(-1) ?? null,
+      firstSeen: apps.map((a) => a.firstSeen).filter(Boolean).sort()[0] ?? null,
+      apps: apps.map(({ id, name, url, side, rating, lastSeen }) => ({
+        id,
+        name,
+        url,
+        side,
+        rating,
+        lastSeen,
+      })),
     })),
     null,
     1,

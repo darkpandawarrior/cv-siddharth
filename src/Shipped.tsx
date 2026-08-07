@@ -1,7 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Star, Download, ExternalLink } from "lucide-react";
-import { storeApps, fleet, delisted, fleetStats, storeGeneratedAt } from "./data/store.ts";
-import { AppIcon, ShippedTile } from "./ShippedTile.tsx";
+import {
+  storeApps,
+  liveClients,
+  pastClients,
+  delisted,
+  fleetStats,
+  storeGeneratedAt,
+} from "./data/store.ts";
+import { AppIcon } from "./ShippedTile.tsx";
+import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
 import { compact } from "./shippedFormat.ts";
 
@@ -41,8 +49,8 @@ export function Shipped() {
             company on Google Play.
           </p>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-500">
-            I never had a list of them, and nobody there did. This page is the list, rebuilt from
-            the code and then checked one store listing at a time — including {delisted.length} that
+            I never had a list of them, and nobody there did. This page is that list, put back
+            together and then checked one store listing at a time — including {delisted.length} that
             have since been taken down, and can only be shown at all because the Internet Archive
             kept a copy of the page.
           </p>
@@ -135,20 +143,21 @@ export function Shipped() {
 
         <section className="mt-14">
           <h2 className="font-display text-xl font-bold tracking-tight">
-            On the store now &mdash; {fleetStats.live}
+            On the store now &mdash; {liveClients.length} companies
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
-            Every one of these is a link you can open. The rating, install count and update date
-            were read from the listing, the company name is whoever Play says publishes it, and the
-            coloured edge is the colour that client&rsquo;s own build was themed in.
+            Grouped by the company that ships them, because nearly every client put out a pair — one
+            app for riders, one for drivers. That is {fleetStats.live} listings in all, and every one
+            is a link you can open. The rating, install count and update date come from the listing
+            itself; the coloured edge is the colour that client&rsquo;s own app was themed in.
           </p>
           {/* grid-cols-1 is load-bearing on mobile: without a base column
-              class the track is `auto`, which sizes to the widest tile's
+              class the track is `auto`, which sizes to the widest card's
               max-content and pushes the page 50px past a 390px viewport. */}
-          <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {fleet.map((app) => (
-              <li key={app.id}>
-                <ShippedTile app={app} />
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {liveClients.map((client) => (
+              <li key={client.key}>
+                <ShippedClient client={client} />
               </li>
             ))}
           </ul>
@@ -157,7 +166,7 @@ export function Shipped() {
         {/* ── Pulled ────────────────────────────────────────────────────── */}
         <section className="mt-14">
           <h2 className="font-display text-xl font-bold tracking-tight">
-            Pulled since &mdash; {delisted.length}
+            Pulled since &mdash; {pastClients.length} companies
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
             Every one of these was on Google Play and is not any more — clients that closed, moved
@@ -166,16 +175,15 @@ export function Shipped() {
             Each link opens the copy it saved.
           </p>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-            The icons are not from the Archive — they are the real ones, still sitting in the code
-            each app was built from.
+            The icons and colours are the ones each app actually shipped with, not stand-ins.
           </p>
           {/* grid-cols-1 is load-bearing on mobile: without a base column
               class the track is `auto`, which sizes to the widest tile's
               max-content and pushes the page 50px past a 390px viewport. */}
-          <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {delisted.map((app) => (
-              <li key={app.id}>
-                <ShippedTile app={app} past />
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {pastClients.map((client) => (
+              <li key={client.key}>
+                <ShippedClient client={client} past />
               </li>
             ))}
           </ul>
@@ -193,8 +201,8 @@ export function Shipped() {
           <ol className="mt-8 grid gap-6 sm:grid-cols-2">
             {[
               {
-                h: "I still have the code",
-                p: "Every client was a separate branch of the same app — that is what made the platform a platform. The branches are still there, and each one names the app it was going to become. That is where the list starts: not from what I remember shipping, but from what the code says was built.",
+                h: "Every client shipped separately",
+                p: "That is what made it a platform rather than a product: one app, rebuilt and rebranded for each client, each with its own name and its own listing. So the work is not one entry on a CV — it is spread across a lot of store pages, under a lot of company names, and none of them are mine.",
               },
               {
                 h: "Then Google told me which survived",
@@ -202,11 +210,11 @@ export function Shipped() {
               },
               {
                 h: "And the Archive remembered the rest",
-                p: `An app that was taken down and an app that never existed look identical on Play — both are a dead link. The Internet Archive can tell them apart, because it kept a copy of the listing while it was up. That is the only reason ${delisted.length} of these can be named at all, and the icons come from the code, since there is no listing left to take one from.`,
+                p: `An app that was taken down and an app that never existed look identical on Play — both are a dead link. The Internet Archive can tell them apart, because it kept a copy of the listing while it was up. That is the only reason ${delisted.length} of these can be named at all.`,
               },
               {
                 h: "What I left out",
-                p: `${fleetStats.predatingHim} apps that were genuinely published, and whose last build went out before I joined — I cannot have written a line in them. One app with a million installs that was built from this code two years before I arrived. Anything that was only ever a template rather than a real client. And the internal branch names, which are not mine to publish.`,
+                p: `${fleetStats.predatingHim} apps that were genuinely published, but whose last build went out before I joined — I cannot have written a line in them. One with a million installs that came off the same platform two years before I arrived. Anything that was a demo or a template rather than a real client. And anything a former employer would reasonably consider theirs.`,
               },
             ].map((step, i) => (
               <li key={step.h} className="rounded-2xl border border-line bg-card/40 p-5">
@@ -220,8 +228,8 @@ export function Shipped() {
           <p className="mt-8 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
             <span className="inline-block h-1.5 w-1.5 translate-y-[-1px] rounded-full bg-accent align-middle" />{" "}
             marks the {fleetStats.setUpByHim + delisted.filter((a) => a.setUpByHim).length} I set up
-            myself. {fleetStats.carryingHisCommits} of the {fleetStats.live} live ones were built
-            from code I contributed to. Listings read {storeGeneratedAt}.
+            myself. {fleetStats.carryingHisCommits} of the {fleetStats.live} live ones are builds of
+            an app I worked on. Listings read {storeGeneratedAt}.
           </p>
         </section>
       </main>

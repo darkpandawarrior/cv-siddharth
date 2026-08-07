@@ -52,3 +52,4 @@ graphify-out/
 .store-archive-cache.json
 .store-since-cache.json
 .store-flavours.json
+.store-siblings.json

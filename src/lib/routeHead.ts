@@ -68,7 +68,7 @@ const NON_ROOM: Record<string, { label: string; blurb: string }> = {
   "/shipped": {
     label: "The Shelf",
     blurb:
-      "Every Android app that reached the Play Store from work he touched — three under his own name, the rest white-label clients, reconstructed from the repos and verified one listing at a time.",
+      "Every Android app that reached the Play Store from work he touched — three at Dice and Jugnoo, the rest white-label clients of the platform he worked on, each one verified against its live listing.",
   },
   "/loopdown": {
     label: "The Loopdown",

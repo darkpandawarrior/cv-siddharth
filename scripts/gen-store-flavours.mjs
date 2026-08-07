@@ -1,52 +1,37 @@
 /**
- * Harvests each white-label client's OWN brand assets out of the branch that
- * built it: the launcher icon it shipped with, and the brand colour its theme
- * was tinted to.
+ * Per-client brand assets for the shelf: the launcher icon each build shipped
+ * with, and the colour its theme was set to.
  *
- * WHY THIS EXISTS. The Play Store can only give an icon for an app that is still
- * on the Play Store, and 90 of these are not — they were published, pulled, and
- * are now provable only from the Internet Archive. Their icons are not gone
- * though: every white-label build is a product flavour, and a product flavour
- * that rebrands the app has to carry its own `ic_launcher` and its own
- * `resValue "color", 'theme_color'`. Those are still sitting in the branch.
+ * WHY IT IS NEEDED. Google can only serve an icon for an app that is still on
+ * Google Play, and a large share of this shelf is not — those apps were
+ * published, later taken down, and survive only as an archived listing page,
+ * which the Archive does not keep the icon for. Without this step they render
+ * as identical grey squares.
  *
- * So a delisted app can still be shown as the thing it was, in its own colour,
- * with its own icon — recovered from the commit that shipped it rather than
- * left as a blank square.
+ * Reads two source checkouts named by environment variable (see REPOS) and
+ * writes .store-flavours.json plus the icons into public/store/. Both outputs
+ * are committed, so nothing about a build depends on having the inputs.
  *
- * WHAT IT PARSES. One sweep over every wl_* branch tip, reading the
- * `productFlavors { }` block of each build.gradle:
- *
- *     crossWind {
- *         applicationId "product.customer.crossWind"
- *         resValue "color", 'theme_color', "#C4140A"
- *     }
- *
- * — which gives flavour name → package id → brand colour, and the flavour name
- * is what locates the launcher icon under `src/<flavour>/res/mipmap-<density>/`
- * in the same tree.
- *
- * NO FALLING BACK TO THE BASE ICON. A flavour with no icon of its own inherits
- * Jugnoo's, and putting Jugnoo's logo on a client's card would be a small lie
- * told 90 times. Those stay blank and the UI draws an initial.
- *
- * Writes .store-flavours.json (gitignored, ~3 min) and the icons themselves into
- * public/store/. gen-store.mjs reads both.
- *
- * Usage: node scripts/gen-store-flavours.mjs
+ * Usage: SHELF_RIDER_REPO=... SHELF_DRIVER_REPO=... node scripts/gen-store-flavours.mjs
  */
 import { execFileSync } from "node:child_process";
 import { writeFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { homedir } from "node:os";
 import sharp from "sharp";
 
 const OUT = resolve(process.cwd(), ".store-flavours.json");
 const ICON_DIR = resolve(process.cwd(), "public/store");
+/**
+ * The two source checkouts, supplied by the operator.
+ *
+ * Deliberately not hardcoded and deliberately not named: this repository is
+ * public and its inputs are not, and a path is a statement about what sits on
+ * somebody's disk. Absent them, the script refuses to run rather than guessing.
+ */
 const REPOS = [
-  { dir: `${homedir()}/Repos/Android/Jugnoo/jugnoo-android-autos`, side: "rider" },
-  { dir: `${homedir()}/Repos/Android/Jugnoo/jugnoo-android-driver`, side: "driver" },
-];
+  { dir: process.env.SHELF_RIDER_REPO, side: "rider" },
+  { dir: process.env.SHELF_DRIVER_REPO, side: "driver" },
+].filter((r) => r.dir);
 /** Biggest first — the launcher icon we want is the one with the most pixels. */
 const DENSITIES = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "mdpi"];
 
@@ -105,11 +90,13 @@ function parseFlavours(gradle) {
   return out;
 }
 
-/* ── Sweep every branch ─────────────────────────────────────────────────── */
+/* ── Sweep the sources ──────────────────────────────────────────────────── */
 
 const clients = new Map();
+if (REPOS.length === 0)
+  throw new Error("[flavours] set SHELF_RIDER_REPO and SHELF_DRIVER_REPO — refusing to guess");
 for (const { dir, side } of REPOS) {
-  if (!existsSync(dir)) throw new Error(`[flavours] missing repo ${dir}`);
+  if (!existsSync(dir)) throw new Error(`[flavours] no checkout at ${dir}`);
   const branches = git(dir, ["branch", "-r", "--format=%(refname:short)"])
     .split("\n")
     .filter((b) => /\/wl[_-]/i.test(b));
@@ -126,7 +113,7 @@ for (const { dir, side } of REPOS) {
       if (!gradle) continue;
       const moduleDir = path.replace(/\/build\.gradle$/, "");
       for (const f of parseFlavours(gradle)) {
-        // First branch that defines a client wins; later branches are re-cuts.
+        // First definition of a client wins; later ones are re-cuts of it.
         if (clients.has(f.id)) continue;
         clients.set(f.id, { ...f, side, repo: dir, branch, moduleDir });
       }
@@ -136,7 +123,7 @@ for (const { dir, side } of REPOS) {
 }
 console.log(`[flavours] ${clients.size} client flavours located`);
 
-/* ── Pull each one's launcher icon out of its branch ────────────────────── */
+/* ── Resolve each one's launcher icon ───────────────────────────────────── */
 
 mkdirSync(ICON_DIR, { recursive: true });
 let icons = 0;
@@ -168,7 +155,7 @@ for (const [id, f] of clients) {
     missing++;
   }
 }
-console.log(`[flavours] ${icons} icon(s) recovered from branches, ${missing} flavour(s) had none`);
+console.log(`[flavours] ${icons} icon(s) resolved, ${missing} without one`);
 
 const out = {};
 for (const [id, f] of clients) out[id] = { flavour: f.name, color: f.color, side: f.side };

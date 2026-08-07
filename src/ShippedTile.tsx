@@ -2,12 +2,11 @@
  * One app, as a tile. Shared by the homepage shelf and the /shipped page so the
  * two never drift into showing the same app two different ways.
  *
- * THE ICON AND THE COLOUR ARE THE POINT. A white-label build is a product
- * flavour that rebrands the app, so it carries its own launcher icon and its own
- * `resValue "color", 'theme_color'`. Both are recovered at generation time —
- * from the live listing where there still is one, otherwise out of the branch
- * that built it — which is why an app that was pulled from the store in 2019 can
- * still be shown as the thing it was instead of a grey rectangle.
+ * THE ICON AND THE COLOUR ARE THE POINT. Each white-label build was rebranded
+ * for its client, so each one has an icon and a theme colour of its own. Both
+ * are resolved at generation time, which is why an app that was pulled from the
+ * store years ago can still be shown as the thing it was rather than as a grey
+ * rectangle.
  */
 import { archiveMonth, shortDate } from "./shippedFormat.ts";
 

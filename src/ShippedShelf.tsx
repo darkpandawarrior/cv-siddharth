@@ -11,7 +11,7 @@ const WALL = 32;
  * One icon per company, not per app.
  *
  * Nearly every client shipped a matched pair — a rider app and a driver app —
- * built from the two repos with the same logo on both. Taking the first 32 apps
+ * with the same logo on both. Taking the first 32 apps
  * therefore drew about sixteen brands twice, which reads as a rendering bug
  * rather than as sixteen companies. Key on the publisher where Play gives one,
  * and otherwise on the package id with the side and the platform's namespace
@@ -43,8 +43,8 @@ function oneIconPerBrand<T extends { id: string; developer?: string | null }>(ap
  * is typed from memory (see scripts/gen-store.mjs).
  *
  * DELIBERATELY NOT A WALL OF NUMBERS. An earlier version of this section led
- * with the size of the branch estate — 1,642 branches, 1,320 client ids — which
- * is the most interesting fact about the ARCHIVE and close to the least
+ * with the size of the raw candidate set — north of a thousand client ids —
+ * which is the most interesting fact about the DATA and close to the least
  * interesting thing about the person who worked on it. A visitor wants to know
  * what shipped and whether they can open it. The provenance, the counts and the method are one
  * click away at /shipped, where someone who cares how the list was built can go
@@ -120,8 +120,8 @@ export function ShippedShelf() {
             The Jugnoo rider and driver apps were a white-label platform: every client got its own
             build of the same codebase, its own branding, and its own listing on Play under its own
             company. I worked on it for two and a half years and never had a list of what came out
-            of it — so I rebuilt one from the code, and kept only the apps the store shows were
-            still shipping while I was there or after.
+            of it — so I put one together, and kept only the apps the store itself shows were still
+            shipping while I was there or after.
           </p>
 
           <Link
