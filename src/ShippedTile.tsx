@@ -9,7 +9,7 @@
  * that built it — which is why an app that was pulled from the store in 2019 can
  * still be shown as the thing it was instead of a grey rectangle.
  */
-import { archiveMonth } from "./shippedFormat.ts";
+import { archiveMonth, shortDate } from "./shippedFormat.ts";
 
 export type ShippedApp = {
   id: string;
@@ -22,6 +22,11 @@ export type ShippedApp = {
   developer?: string | null;
   url: string;
   setUpByHim?: boolean;
+  /** Play's "Updated on" for a live app: when the installable build went out. */
+  updated?: string | null;
+  /** Earliest archived crawl — on the store since AT LEAST this. */
+  firstSeen?: string | null;
+  /** Last archived crawl of a listing that is gone. */
   lastSeen?: string;
 };
 
@@ -52,14 +57,24 @@ export function AppIcon({ app, size = 40 }: { app: ShippedApp; size?: number }) 
 }
 
 export function ShippedTile({ app, past = false }: { app: ShippedApp; past?: boolean }) {
-  const meta = [
-    app.side,
-    app.installs,
-    app.rating != null ? `${app.rating.toFixed(1)}★` : null,
-    past && app.lastSeen ? `last seen ${archiveMonth(app.lastSeen)}` : null,
-  ]
+  const meta = [app.side, app.installs, app.rating != null ? `${app.rating.toFixed(1)}★` : null]
     .filter(Boolean)
     .join(" · ");
+
+  // The dates get their own line rather than joining the pile above, because
+  // they are what makes an entry checkable: an app whose last build went out
+  // after he arrived is an app his work could be in, and one whose didn't is
+  // not on this page at all.
+  const dates = past
+    ? [
+        app.firstSeen ? `on Play by ${archiveMonth(app.firstSeen)}` : null,
+        app.lastSeen ? `gone after ${archiveMonth(app.lastSeen)}` : null,
+      ]
+    : [
+        app.firstSeen ? `on Play by ${archiveMonth(app.firstSeen)}` : null,
+        app.updated ? `updated ${shortDate(app.updated)}` : null,
+      ];
+  const dateLine = dates.filter(Boolean).join(" · ");
 
   return (
     <a
@@ -99,6 +114,11 @@ export function ShippedTile({ app, past = false }: { app: ShippedApp; past?: boo
         <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-muted">
           {meta}
         </span>
+        {dateLine && (
+          <span className="block truncate font-mono text-[10px] tracking-wider text-zinc-600">
+            {dateLine}
+          </span>
+        )}
       </span>
     </a>
   );

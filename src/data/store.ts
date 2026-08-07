@@ -24,7 +24,7 @@ export const storeApps = [
     "rating": 4.5,
     "installs": "5M+",
     "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo&hl=en",
-    "role": "Android engineer",
+    "role": "Android developer",
     "employer": "Jugnoo",
     "icon": "/store/product.clicklabs.jugnoo.webp"
   },
@@ -34,7 +34,7 @@ export const storeApps = [
     "rating": 4.6,
     "installs": "1M+",
     "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo.driver&hl=en",
-    "role": "Android engineer",
+    "role": "Android developer",
     "employer": "Jugnoo",
     "icon": "/store/product.clicklabs.jugnoo.driver.webp"
   }
@@ -55,6 +55,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "SmartBike Mobility",
+  "updated": "Aug 5, 2026",
+  "firstSeen": null,
   "icon": "/store/production.smartbikemobility.customer.webp",
   "color": "#FD7945"
  },
@@ -67,6 +69,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
+  "updated": "Jul 22, 2025",
+  "firstSeen": null,
   "icon": "/store/com.snape.webp",
   "color": "#71A8B6"
  },
@@ -79,6 +83,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
+  "updated": "Jun 6, 2026",
+  "firstSeen": null,
   "icon": "/store/production.ttrides.customer.webp",
   "color": "#CC3333"
  },
@@ -91,6 +97,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Zofeur",
+  "updated": "Jul 31, 2026",
+  "firstSeen": null,
   "icon": "/store/production.zofeur.customer.webp",
   "color": "#000000"
  },
@@ -103,6 +111,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "Viva Taxi",
+  "updated": "Aug 21, 2024",
+  "firstSeen": null,
   "icon": "/store/com.VivaTaxi.webp",
   "color": null
  },
@@ -115,6 +125,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TMP S.A.",
+  "updated": "Apr 10, 2026",
+  "firstSeen": null,
   "icon": "/store/com.asap.courier.webp",
   "color": "#35bdb2"
  },
@@ -127,6 +139,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ryde Technology",
+  "updated": "Jun 14, 2026",
+  "firstSeen": null,
   "icon": "/store/production.rydecust.customer.webp",
   "color": "#f79e20"
  },
@@ -139,6 +153,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Togopool Pvt. Ltd.",
+  "updated": "Jul 6, 2026",
+  "firstSeen": null,
   "icon": "/store/production.togopool.carpool.webp",
   "color": "#ff9b05"
  },
@@ -151,6 +167,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
+  "updated": "Jun 24, 2026",
+  "firstSeen": null,
   "icon": "/store/production.urban.customer.webp",
   "color": "#000000"
  },
@@ -163,6 +181,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Qooxy  Technologies",
+  "updated": "Aug 21, 2024",
+  "firstSeen": null,
   "icon": "/store/production.qooxy.customer.webp",
   "color": "#F19F41"
  },
@@ -175,6 +195,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
+  "updated": "Jun 29, 2026",
+  "firstSeen": null,
   "icon": "/store/production.urban.driver.webp",
   "color": null
  },
@@ -187,6 +209,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Zofeur",
+  "updated": "Jul 31, 2026",
+  "firstSeen": null,
   "icon": "/store/production.zofeur.driver.webp",
   "color": null
  },
@@ -199,6 +223,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "PickUp Barbados",
+  "updated": "Oct 31, 2025",
+  "firstSeen": null,
   "icon": "/store/production.pickupbarbodas.customer.webp",
   "color": "#FFB800"
  },
@@ -211,6 +237,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ryde Technology",
+  "updated": "Jan 22, 2026",
+  "firstSeen": null,
   "icon": "/store/production.rydedrive.driver.webp",
   "color": null
  },
@@ -223,6 +251,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "1Bena",
+  "updated": "May 15, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.bena.webp",
   "color": null
  },
@@ -235,6 +265,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
+  "updated": "May 4, 2026",
+  "firstSeen": null,
   "icon": "/store/production.ttrides.driver.webp",
   "color": null
  },
@@ -247,6 +279,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
+  "updated": "Apr 13, 2026",
+  "firstSeen": null,
   "icon": "/store/app.production.delivermett.webp",
   "color": "#6b1a20"
  },
@@ -259,6 +293,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hitch Limited",
+  "updated": "May 19, 2026",
+  "firstSeen": "20160529",
   "icon": "/store/com.hitch.webp",
   "color": "#10426C"
  },
@@ -271,6 +307,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Rio cabs India",
+  "updated": "May 5, 2026",
+  "firstSeen": null,
   "icon": "/store/product.customer.rio.webp",
   "color": "#203944"
  },
@@ -283,6 +321,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
+  "updated": "Feb 7, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.one.webp",
   "color": null
  },
@@ -295,6 +335,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
+  "updated": "Jul 22, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.snapecabs.webp",
   "color": null
  },
@@ -307,6 +349,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
+  "updated": "Jun 28, 2023",
+  "firstSeen": null,
   "icon": "/store/com.hurryup.driver.webp",
   "color": null
  },
@@ -319,6 +363,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "Daily Latam",
+  "updated": "Jul 1, 2026",
+  "firstSeen": null,
   "icon": "/store/product.customer.dailyecuador.webp",
   "color": "#48b981"
  },
@@ -331,6 +377,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
+  "updated": "Jun 2, 2026",
+  "firstSeen": null,
   "icon": "/store/production.hovr.customer.webp",
   "color": "#7CDC54"
  },
@@ -343,6 +391,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hola Connect",
+  "updated": "Mar 12, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.hola.webp",
   "color": "#2562F7"
  },
@@ -355,6 +405,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Onux Services",
+  "updated": "Mar 16, 2026",
+  "firstSeen": null,
   "icon": "/store/product.customer.onux.webp",
   "color": "#249708"
  },
@@ -367,6 +419,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
+  "updated": "Sep 3, 2025",
+  "firstSeen": null,
   "icon": "/store/production.hum.customer.webp",
   "color": "#1BAFA1"
  },
@@ -379,6 +433,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
+  "updated": "Jul 19, 2026",
+  "firstSeen": null,
   "icon": "/store/com.taxiye.webp",
   "color": "#93009D"
  },
@@ -391,6 +447,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
+  "updated": "May 9, 2026",
+  "firstSeen": null,
   "icon": "/store/production.hovr.driver.webp",
   "color": null
  },
@@ -403,6 +461,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "Daily Latam",
+  "updated": "Jun 29, 2026",
+  "firstSeen": null,
   "icon": "/store/product.driver.dailyecuador.webp",
   "color": null
  },
@@ -415,6 +475,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Onux Services",
+  "updated": "Mar 16, 2026",
+  "firstSeen": null,
   "icon": "/store/product.driver.onux.webp",
   "color": null
  },
@@ -427,6 +489,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
+  "updated": "Dec 16, 2025",
+  "firstSeen": null,
   "icon": "/store/production.hum.driver.webp",
   "color": null
  },
@@ -439,6 +503,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
+  "updated": "Jul 19, 2026",
+  "firstSeen": null,
   "icon": "/store/com.taxiye.driver.webp",
   "color": null
  },
@@ -451,6 +517,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "PickUp Barbados",
+  "updated": "Sep 11, 2025",
+  "firstSeen": null,
   "icon": "/store/production.pickupbarbodas.driver.webp",
   "color": null
  },
@@ -463,6 +531,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Qooxy  Technologies",
+  "updated": "Aug 21, 2024",
+  "firstSeen": null,
   "icon": "/store/production.qooxy.driver.webp",
   "color": null
  },
@@ -475,6 +545,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pannaga Technologies",
+  "updated": "Nov 10, 2023",
+  "firstSeen": null,
   "icon": "/store/com.tryapptivities.pamdriver.webp",
   "color": null
  },
@@ -487,6 +559,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Jett technology",
+  "updated": "Apr 17, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.jett.webp",
   "color": "#4E45B7"
  },
@@ -499,6 +573,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "TOAST TECHNOLOGIES LTD",
+  "updated": "Apr 17, 2024",
+  "firstSeen": null,
   "icon": "/store/production.nairaxi.customer.webp",
   "color": "#4FB852"
  },
@@ -511,6 +587,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
+  "updated": "Mar 22, 2023",
+  "firstSeen": null,
   "icon": "/store/com.hurryup.webp",
   "color": "#d30e1e"
  },
@@ -523,6 +601,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Jett technology",
+  "updated": "Aug 20, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.jett.webp",
   "color": null
  },
@@ -535,6 +615,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "WOULIB",
+  "updated": "Nov 26, 2025",
+  "firstSeen": null,
   "icon": "/store/production.woulib.customer.webp",
   "color": "#F2C50E"
  },
@@ -547,6 +629,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
+  "updated": "May 15, 2024",
+  "firstSeen": null,
   "icon": "/store/production.pikmi.customer.webp",
   "color": "#D10A13"
  },
@@ -559,6 +643,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Nawi Rides",
+  "updated": "Aug 21, 2024",
+  "firstSeen": null,
   "icon": "/store/production.nawi.customer.webp",
   "color": "#2B8741"
  },
@@ -571,6 +657,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "Viva Taxi",
+  "updated": "Aug 21, 2024",
+  "firstSeen": null,
   "icon": "/store/com.VivaDriver.driver.webp",
   "color": null
  },
@@ -583,6 +671,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
+  "updated": "Jan 15, 2026",
+  "firstSeen": null,
   "icon": "/store/driver.production.delivermett.webp",
   "color": null
  },
@@ -595,6 +685,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Rio cabs India",
+  "updated": "May 5, 2026",
+  "firstSeen": null,
   "icon": "/store/product.driver.rio.webp",
   "color": null
  },
@@ -607,6 +699,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Limoz, LLC",
+  "updated": "Apr 24, 2026",
+  "firstSeen": null,
   "icon": "/store/product.limoz.customer.webp",
   "color": "#086A2E"
  },
@@ -619,6 +713,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
+  "updated": "Apr 28, 2026",
+  "firstSeen": null,
   "icon": "/store/product.customer.superapp.webp",
   "color": "#000000"
  },
@@ -631,6 +727,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
+  "updated": "Sep 10, 2024",
+  "firstSeen": null,
   "icon": "/store/product.superapp.driver.webp",
   "color": null
  },
@@ -643,6 +741,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
+  "updated": "May 28, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.yuber.webp",
   "color": null
  },
@@ -655,6 +755,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Roda Singapore",
+  "updated": "Sep 12, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.roda.webp",
   "color": null
  },
@@ -667,6 +769,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Errand Philippines",
+  "updated": "Oct 29, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.adonisOville.webp",
   "color": null
  },
@@ -679,6 +783,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "SalamTaxi",
+  "updated": "Dec 8, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.salamtaxi.webp",
   "color": null
  },
@@ -691,6 +797,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Choffer Technology",
+  "updated": "Feb 5, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.choffer.shuttle.webp",
   "color": "#FF0000"
  },
@@ -703,6 +811,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "DriveMeApp",
+  "updated": "Aug 30, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.driveme.webp",
   "color": "#379CC9"
  },
@@ -715,6 +825,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
+  "updated": "Oct 29, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.ttcab.webp",
   "color": "#D90000"
  },
@@ -727,6 +839,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "CABBY FOR ELECTRONIC TRANSPORT SERVICES CO. L.L.C",
+  "updated": "Nov 30, 2025",
+  "firstSeen": null,
   "icon": "/store/com.cabby.customer.webp",
   "color": "#E62566"
  },
@@ -739,6 +853,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Driverpos",
+  "updated": "Oct 29, 2024",
+  "firstSeen": null,
   "icon": "/store/com.leiwand.user.webp",
   "color": "#38a1d9"
  },
@@ -751,6 +867,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hola Connect",
+  "updated": "Sep 19, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.hola.webp",
   "color": null
  },
@@ -763,6 +881,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "DriveMeApp",
+  "updated": "Aug 30, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.driveme.webp",
   "color": null
  },
@@ -775,6 +895,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hitch Limited",
+  "updated": "Jul 14, 2026",
+  "firstSeen": "20160915",
   "icon": "/store/com.hitch.driver.webp",
   "color": null
  },
@@ -787,6 +909,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "TAPP RideShare",
+  "updated": "Sep 19, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.tapp.webp",
   "color": null
  },
@@ -799,6 +923,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "WOULIB",
+  "updated": "Oct 28, 2025",
+  "firstSeen": null,
   "icon": "/store/production.woulib.driver.webp",
   "color": null
  },
@@ -811,6 +937,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "1Bena",
+  "updated": "Jan 2, 2026",
+  "firstSeen": null,
   "icon": "/store/product.driver.bena.webp",
   "color": null
  },
@@ -823,6 +951,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "TOAST TECHNOLOGIES LTD",
+  "updated": "Jul 31, 2023",
+  "firstSeen": null,
   "icon": "/store/production.nairaxi.driver.webp",
   "color": null
  },
@@ -835,6 +965,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Driverpos",
+  "updated": "Jun 9, 2024",
+  "firstSeen": null,
   "icon": "/store/com.leiwand.driver.webp",
   "color": null
  },
@@ -847,6 +979,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
+  "updated": "Aug 6, 2024",
+  "firstSeen": null,
   "icon": "/store/production.pikmi.driver.webp",
   "color": null
  },
@@ -859,6 +993,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
+  "updated": "Feb 25, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.yuber.webp",
   "color": null
  },
@@ -871,6 +1007,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Errand Philippines",
+  "updated": "Oct 9, 2023",
+  "firstSeen": null,
   "icon": "/store/product.driver.adonisOville.webp",
   "color": null
  },
@@ -883,6 +1021,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
+  "updated": "Mar 20, 2023",
+  "firstSeen": null,
   "icon": "/store/product.clicklabs.ttcab.driver.webp",
   "color": null
  },
@@ -895,6 +1035,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Nawi Rides",
+  "updated": "Oct 10, 2024",
+  "firstSeen": null,
   "icon": "/store/production.nawi.driver.webp",
   "color": null
  },
@@ -907,6 +1049,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
+  "updated": "Feb 7, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.one.webp",
   "color": null
  },
@@ -919,6 +1063,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
+  "updated": "Dec 12, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.angel.webp",
   "color": null
  },
@@ -931,6 +1077,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
+  "updated": "Apr 6, 2026",
+  "firstSeen": null,
   "icon": "/store/production.redplate.customer.new.webp",
   "color": "#e20613"
  },
@@ -943,6 +1091,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "ROMI ride",
+  "updated": "Apr 29, 2025",
+  "firstSeen": null,
   "icon": "/store/production.romi.customer.webp",
   "color": "#ff570b"
  },
@@ -955,6 +1105,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "SalamTaxi",
+  "updated": "Aug 27, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.salamtaxi.webp",
   "color": null
  },
@@ -967,6 +1119,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "apilit",
+  "updated": "May 8, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.apilit.webp",
   "color": null
  },
@@ -979,6 +1133,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Limoz, LLC",
+  "updated": "Oct 22, 2024",
+  "firstSeen": null,
   "icon": "/store/com.limoz.driver.webp",
   "color": null
  },
@@ -991,6 +1147,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Choffer Technology",
+  "updated": "Aug 3, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.choffer.webp",
   "color": null
  },
@@ -1003,6 +1161,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
+  "updated": "Sep 11, 2024",
+  "firstSeen": null,
   "icon": "/store/production.redplate.driver.webp",
   "color": null
  },
@@ -1015,6 +1175,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "ROMI ride",
+  "updated": "Apr 29, 2025",
+  "firstSeen": null,
   "icon": "/store/production.romi.driver.webp",
   "color": null
  },
@@ -1027,6 +1189,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": true,
   "developer": "DIDA RENTAL",
+  "updated": "May 20, 2024",
+  "firstSeen": null,
   "icon": "/store/product.customer.dida.webp",
   "color": "#4DB4E7"
  },
@@ -1039,6 +1203,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Roda Singapore",
+  "updated": "Jun 26, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.roda.webp",
   "color": null
  },
@@ -1051,6 +1217,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": true,
   "developer": "DIDA RENTAL",
+  "updated": "May 20, 2024",
+  "firstSeen": null,
   "icon": "/store/product.driver.dida.webp",
   "color": null
  },
@@ -1063,6 +1231,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
+  "updated": "Dec 12, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.angel.webp",
   "color": null
  },
@@ -1075,6 +1245,8 @@ export const fleet = [
   "side": "rider",
   "setUpByHim": false,
   "developer": "B TAXI",
+  "updated": "Mar 7, 2025",
+  "firstSeen": null,
   "icon": "/store/product.customer.btaxi.webp",
   "color": null
  },
@@ -1087,6 +1259,8 @@ export const fleet = [
   "side": "driver",
   "setUpByHim": false,
   "developer": "B TAXI",
+  "updated": "Mar 7, 2025",
+  "firstSeen": null,
   "icon": "/store/product.driver.btaxi.webp",
   "color": null
  }
@@ -1467,6 +1641,19 @@ export const delisted = [
   "color": "#D10071"
  },
  {
+  "id": "com.kadere.driver",
+  "name": "Kadere",
+  "rating": null,
+  "ratings": null,
+  "side": "driver",
+  "setUpByHim": false,
+  "firstSeen": "20210403",
+  "lastSeen": "20221028",
+  "url": "https://web.archive.org/web/20221028134807/https://play.google.com/store/apps/details?id=com.kadere.driver",
+  "icon": null,
+  "color": null
+ },
+ {
   "id": "product.customer.digitaxiseguro",
   "name": "DIGITAXI Ec Cliente",
   "rating": null,
@@ -1519,6 +1706,32 @@ export const delisted = [
   "color": "#FFCB00"
  },
  {
+  "id": "com.liftethiopia.customer",
+  "name": "Lift Ethiopia",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20220903",
+  "lastSeen": "20220903",
+  "url": "https://web.archive.org/web/20220903150254/https://play.google.com/store/apps/details?id=com.liftethiopia.customer",
+  "icon": null,
+  "color": "#FF2B1A"
+ },
+ {
+  "id": "com.liftethiopia.driver",
+  "name": "Lift Ethiopia",
+  "rating": null,
+  "ratings": null,
+  "side": "driver",
+  "setUpByHim": false,
+  "firstSeen": "20220903",
+  "lastSeen": "20220903",
+  "url": "https://web.archive.org/web/20220903154413/https://play.google.com/store/apps/details?id=com.liftethiopia.driver",
+  "icon": null,
+  "color": null
+ },
+ {
   "id": "production.tleva.customer",
   "name": "T'Leva",
   "rating": 4.111111164093018,
@@ -1530,6 +1743,19 @@ export const delisted = [
   "url": "https://web.archive.org/web/20220901003725/https://play.google.com/store/apps/details?id=production.tleva.customer",
   "icon": "/store/production.tleva.customer.webp",
   "color": "#2b2936"
+ },
+ {
+  "id": "com.habesharide.passenger",
+  "name": "Habesharide",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20210618",
+  "lastSeen": "20220819",
+  "url": "https://web.archive.org/web/20220819205118/https://play.google.com/store/apps/details?id=com.habesharide.passenger",
+  "icon": null,
+  "color": "#F39E1D"
  },
  {
   "id": "production.wystle.driver",
@@ -1556,6 +1782,19 @@ export const delisted = [
   "url": "https://web.archive.org/web/20220818024533/https://play.google.com/store/apps/details?id=com.cabcalltaxis.islamabad",
   "icon": "/store/com.cabcalltaxis.islamabad.webp",
   "color": "#EC9F25"
+ },
+ {
+  "id": "com.nextnowbaba.customer",
+  "name": "Nextnow",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20210518",
+  "lastSeen": "20220817",
+  "url": "https://web.archive.org/web/20220817053511/https://play.google.com/store/apps/details?id=com.nextnowbaba.customer",
+  "icon": null,
+  "color": "#7350FC"
  },
  {
   "id": "product.nextnowbaba.driver",
@@ -1673,6 +1912,32 @@ export const delisted = [
   "url": "https://web.archive.org/web/20220429114532/https://play.google.com/store/apps/details?id=production.roady.customer",
   "icon": "/store/production.roady.customer.webp",
   "color": "#FEDD14"
+ },
+ {
+  "id": "products.peindia.customer",
+  "name": "Peindia",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20220413",
+  "lastSeen": "20220413",
+  "url": "https://web.archive.org/web/20220413174442/https://play.google.com/store/apps/details?id=products.peindia.customer",
+  "icon": null,
+  "color": "#EE0000"
+ },
+ {
+  "id": "com.matattu.rider",
+  "name": "Matatu",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20220401",
+  "lastSeen": "20220401",
+  "url": "https://web.archive.org/web/20220401121002/https://play.google.com/store/apps/details?id=com.matattu.rider",
+  "icon": null,
+  "color": "#262626"
  },
  {
   "id": "production.tiliko.customer",
@@ -1961,6 +2226,19 @@ export const delisted = [
   "color": null
  },
  {
+  "id": "com.giffi.courier",
+  "name": "Giffi",
+  "rating": null,
+  "ratings": null,
+  "side": "driver",
+  "setUpByHim": false,
+  "firstSeen": "20210623",
+  "lastSeen": "20210623",
+  "url": "https://web.archive.org/web/20210623120436/https://play.google.com/store/apps/details?id=com.giffi.courier",
+  "icon": null,
+  "color": null
+ },
+ {
   "id": "production.toda.customer",
   "name": "Toda Rider",
   "rating": null,
@@ -1987,6 +2265,32 @@ export const delisted = [
   "color": "#560055"
  },
  {
+  "id": "com.kadere.customer",
+  "name": "Kadere",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20210331",
+  "lastSeen": "20210331",
+  "url": "https://web.archive.org/web/20210331050040/https://play.google.com/store/apps/details?id=com.kadere.customer",
+  "icon": null,
+  "color": "#6EC4E8"
+ },
+ {
+  "id": "com.giffi.customer",
+  "name": "Giffi",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20200815",
+  "lastSeen": "20210307",
+  "url": "https://web.archive.org/web/20210307030437/https://play.google.com/store/apps/details?id=com.giffi.customer",
+  "icon": null,
+  "color": "#ffd900"
+ },
+ {
   "id": "production.rideloca.customer",
   "name": "Ride Loca",
   "rating": 5,
@@ -2000,6 +2304,19 @@ export const delisted = [
   "color": "#F8C639"
  },
  {
+  "id": "producton.takigo.driver",
+  "name": "Takigo Driver rideshare Taxi",
+  "rating": null,
+  "ratings": null,
+  "side": "driver",
+  "setUpByHim": false,
+  "firstSeen": "20210304",
+  "lastSeen": "20210304",
+  "url": "https://web.archive.org/web/20210304165313/https://play.google.com/store/apps/details?id=producton.takigo.driver",
+  "icon": null,
+  "color": null
+ },
+ {
   "id": "production.idealdigital.customer",
   "name": "Limo App",
   "rating": null,
@@ -2011,6 +2328,19 @@ export const delisted = [
   "url": "https://web.archive.org/web/20210302193915/https://play.google.com/store/apps/details?id=production.idealdigital.customer",
   "icon": "/store/production.idealdigital.customer.webp",
   "color": "#ED3833"
+ },
+ {
+  "id": "com.petcloud.customer",
+  "name": "Petcloud",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20210127",
+  "lastSeen": "20210127",
+  "url": "https://web.archive.org/web/20210127083446/https://play.google.com/store/apps/details?id=com.petcloud.customer",
+  "icon": null,
+  "color": "#FF1D5B"
  },
  {
   "id": "production.intertaksi.customer",
@@ -2037,240 +2367,6 @@ export const delisted = [
   "url": "https://web.archive.org/web/20210120204909/https://play.google.com/store/apps/details?id=production.uva.driver",
   "icon": "/store/production.uva.driver.webp",
   "color": null
- },
- {
-  "id": "production.smartboda.customer",
-  "name": "Smart Ride",
-  "rating": 4.666666507720947,
-  "ratings": 9,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201225",
-  "lastSeen": "20201225",
-  "url": "https://web.archive.org/web/20201225194040/https://play.google.com/store/apps/details?id=production.smartboda.customer",
-  "icon": "/store/production.smartboda.customer.webp",
-  "color": "#A3C941"
- },
- {
-  "id": "product.petcloud.driver",
-  "name": "PetCloud Driver App",
-  "rating": null,
-  "ratings": null,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": "20201223",
-  "lastSeen": "20201223",
-  "url": "https://web.archive.org/web/20201223230646/https://play.google.com/store/apps/details?id=product.petcloud.driver",
-  "icon": "/store/product.petcloud.driver.webp",
-  "color": null
- },
- {
-  "id": "production.mira.customer",
-  "name": "Mira  Ride safe, cheap and fast",
-  "rating": 4.2178215980529785,
-  "ratings": 102,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201117",
-  "lastSeen": "20201117",
-  "url": "https://web.archive.org/web/20201117193604/https://play.google.com/store/apps/details?id=production.mira.customer",
-  "icon": "/store/production.mira.customer.webp",
-  "color": "#0c94bb"
- },
- {
-  "id": "production.nation.customer",
-  "name": "Nation Ride Taxi",
-  "rating": null,
-  "ratings": null,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201114",
-  "lastSeen": "20201114",
-  "url": "https://web.archive.org/web/20201114161018/https://play.google.com/store/apps/details?id=production.nation.customer",
-  "icon": "/store/production.nation.customer.webp",
-  "color": "#edd503"
- },
- {
-  "id": "production.mikkels.customer",
-  "name": "Weriderz",
-  "rating": 4.25,
-  "ratings": 16,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201101",
-  "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101000907/https://play.google.com/store/apps/details?id=production.mikkels.customer",
-  "icon": "/store/production.mikkels.customer.webp",
-  "color": "#3A98A5"
- },
- {
-  "id": "production.ori.customer",
-  "name": "Ori Rides",
-  "rating": 3.8591549396514893,
-  "ratings": 71,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201101",
-  "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101031848/https://play.google.com/store/apps/details?id=production.ori.customer",
-  "icon": "/store/production.ori.customer.webp",
-  "color": "#F9C847"
- },
- {
-  "id": "production.smartride.customer",
-  "name": "SMART RIDE",
-  "rating": 3.6600000858306885,
-  "ratings": 340,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20201101",
-  "lastSeen": "20201101",
-  "url": "https://web.archive.org/web/20201101053742/https://play.google.com/store/apps/details?id=production.smartride.customer",
-  "icon": "/store/production.smartride.customer.webp",
-  "color": "#CC3333"
- },
- {
-  "id": "production.smartride.driver",
-  "name": "SMART RIDE DRIVER",
-  "rating": 4.219047546386719,
-  "ratings": 1042,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": "20201031",
-  "lastSeen": "20201031",
-  "url": "https://web.archive.org/web/20201031052436/https://play.google.com/store/apps/details?id=production.smartride.driver",
-  "icon": "/store/production.smartride.driver.webp",
-  "color": null
- },
- {
-  "id": "production.taxinet.customer",
-  "name": "TaxiNet Kenya",
-  "rating": 4.686747074127197,
-  "ratings": 83,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190612",
-  "lastSeen": "20200331",
-  "url": "https://web.archive.org/web/20200331160207/https://play.google.com/store/apps/details?id=production.taxinet.customer",
-  "icon": "/store/production.taxinet.customer.webp",
-  "color": "#9e0609"
- },
- {
-  "id": "com.ezrydr.driverapp",
-  "name": "EZ-RYDR Driver",
-  "rating": null,
-  "ratings": null,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": "20191206",
-  "lastSeen": "20191206",
-  "url": "https://web.archive.org/web/20191206194428/https://play.google.com/store/apps/details?id=com.ezrydr.driverapp",
-  "icon": "/store/com.ezrydr.driverapp.webp",
-  "color": null
- },
- {
-  "id": "production.local.customer",
-  "name": "Local - Ride Hailing, Rider Share App",
-  "rating": 4.041666507720947,
-  "ratings": 96,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190401",
-  "lastSeen": "20191121",
-  "url": "https://web.archive.org/web/20191121065849/https://play.google.com/store/apps/details?id=production.local.customer",
-  "icon": "/store/production.local.customer.webp",
-  "color": "#EE4C23"
- },
- {
-  "id": "production.towncarsnow.customer",
-  "name": "Towncarsnow",
-  "rating": null,
-  "ratings": null,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20191016",
-  "lastSeen": "20191016",
-  "url": "https://web.archive.org/web/20191016104859/https://play.google.com/store/apps/details?id=production.towncarsnow.customer",
-  "icon": "/store/production.towncarsnow.customer.webp",
-  "color": "#001A45"
- },
- {
-  "id": "production.instantryde.customer",
-  "name": "Instant Ryde",
-  "rating": 3.3043477535247803,
-  "ratings": 23,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190825",
-  "lastSeen": "20190825",
-  "url": "https://web.archive.org/web/20190825064943/https://play.google.com/store/apps/details?id=production.instantryde.customer",
-  "icon": "/store/production.instantryde.customer.webp",
-  "color": "#000000"
- },
- {
-  "id": "com.luxicate_taxidriver",
-  "name": "Taxi Live Africa Driver",
-  "rating": 4.583333492279053,
-  "ratings": 12,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": "20190821",
-  "lastSeen": "20190821",
-  "url": "https://web.archive.org/web/20190821113005/https://play.google.com/store/apps/details?id=com.luxicate_taxidriver",
-  "icon": "/store/com.luxicate_taxidriver.webp",
-  "color": null
- },
- {
-  "id": "production.taxiliveafrica.customer",
-  "name": "Taxi Live Africa",
-  "rating": 2.142857074737549,
-  "ratings": 7,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190716",
-  "lastSeen": "20190820",
-  "url": "https://web.archive.org/web/20190820121358/https://play.google.com/store/apps/details?id=production.taxiliveafrica.customer",
-  "icon": "/store/production.taxiliveafrica.customer.webp",
-  "color": "#FFCD00"
- },
- {
-  "id": "production.instataxi.customer",
-  "name": "InstaTaxi",
-  "rating": 3,
-  "ratings": 2,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190722",
-  "lastSeen": "20190722",
-  "url": "https://web.archive.org/web/20190722154238/https://play.google.com/store/apps/details?id=production.instataxi.customer",
-  "icon": "/store/production.instataxi.customer.webp",
-  "color": "#000000"
- },
- {
-  "id": "production.hezz.customer",
-  "name": "Hezz Taxi - هزطاكسي",
-  "rating": 4.370370388031006,
-  "ratings": 27,
-  "side": "rider",
-  "setUpByHim": false,
-  "firstSeen": "20190720",
-  "lastSeen": "20190720",
-  "url": "https://web.archive.org/web/20190720051456/https://play.google.com/store/apps/details?id=production.hezz.customer",
-  "icon": "/store/production.hezz.customer.webp",
-  "color": "#CF312F"
- },
- {
-  "id": "production.taxinet.driver",
-  "name": null,
-  "rating": null,
-  "ratings": null,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": "20190409",
-  "lastSeen": "20190409",
-  "url": "https://web.archive.org/web/20190409155110/https://play.google.com/store/apps/details?id=production.taxinet.driver",
-  "icon": "/store/production.taxinet.driver.webp",
-  "color": null
  }
 ] as const;
 
@@ -2283,8 +2379,48 @@ export const fleetStats = {
   "carryingHisCommits": 80,
   "installFloor": 2920170,
   "developers": 47,
-  "delisted": 90,
-  "archiveChecked": 1189
+  "delisted": 84,
+  "archiveChecked": 1241,
+  "predatingHim": 22,
+  "joined": "2021-01"
 } as const;
+
+/**
+ * The year each app's last shipped build went out — `live` from Play's own
+ * "Updated on", `gone` from the last archived crawl of a listing that no
+ * longer exists. Both are floors, and neither has anything before he joined.
+ */
+export const lastShipped = [
+ {
+  "year": 2021,
+  "live": 0,
+  "gone": 21
+ },
+ {
+  "year": 2022,
+  "live": 0,
+  "gone": 37
+ },
+ {
+  "year": 2023,
+  "live": 6,
+  "gone": 15
+ },
+ {
+  "year": 2024,
+  "live": 26,
+  "gone": 7
+ },
+ {
+  "year": 2025,
+  "live": 26,
+  "gone": 3
+ },
+ {
+  "year": 2026,
+  "live": 29,
+  "gone": 1
+ }
+] as const;
 
 export const storeGeneratedAt = "2026-08-07";

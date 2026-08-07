@@ -50,3 +50,5 @@ graphify-out/
 # Play Store probe cache for scripts/gen-store.mjs — regenerable, and large.
 .store-cache.json
 .store-archive-cache.json
+.store-since-cache.json
+.store-flavours.json

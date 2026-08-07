@@ -54,6 +54,8 @@ const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
 /** Written by scripts/gen-store-flavours.mjs. Optional — brand colours and the
  *  icons of apps Play cannot supply one for, because they are no longer on it. */
 const FLAVOUR_CACHE = resolve(process.cwd(), ".store-flavours.json");
+/** First-seen dates for still-live listings, from scripts/gen-store-archive.mjs. */
+const SINCE_CACHE = resolve(process.cwd(), ".store-since-cache.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
 
@@ -66,11 +68,31 @@ const REPOS = [
 /** His committer identity in those repos. */
 const AUTHOR = "siddharth.pandalai";
 
+/**
+ * January 2021 — the month he joined Jugnoo. The whole shelf hinges on it.
+ *
+ * A white-label branch estate is nine years deep and most of it predates him.
+ * An app whose last shipped build went out in 2019 cannot contain a line he
+ * wrote, and listing it as work he touched would be the exact kind of quiet
+ * inflation this generator exists to prevent. So an app is only counted when
+ * there is evidence it was still on the store on or after this date:
+ *
+ *   - a live app carries Play's own "Updated on", i.e. when the binary you can
+ *     install right now was published;
+ *   - a delisted one carries the last date the Internet Archive saw its listing.
+ *
+ * The second is a LOWER BOUND, not a death certificate — the Archive stops
+ * crawling long before an app stops existing — so this rule under-counts, and
+ * under-counting is the right direction for a portfolio. The apps it removes are
+ * reported rather than silently dropped.
+ */
+const JOINED = "2021-01";
+
 /** Read from the primary flavours. These get their own cards. */
 const FLAGSHIPS = [
   { id: "io.eka.ekav2", role: "Technical owner & Product Owner", employer: "Dice.tech" },
-  { id: "product.clicklabs.jugnoo", role: "Android engineer", employer: "Jugnoo" },
-  { id: "product.clicklabs.jugnoo.driver", role: "Android engineer", employer: "Jugnoo" },
+  { id: "product.clicklabs.jugnoo", role: "Android developer", employer: "Jugnoo" },
+  { id: "product.clicklabs.jugnoo.driver", role: "Android developer", employer: "Jugnoo" },
 ];
 
 /**
@@ -191,7 +213,7 @@ const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 /** Cache schema version. Bump to force a re-probe of everything already live. */
-const PROBE_V = 3;
+const PROBE_V = 4;
 
 const unescape = (s) =>
   s
@@ -221,6 +243,11 @@ async function probe(id) {
         name: unescape(name),
         rating: Number(html.match(/aria-label="Rated ([0-9.]+) stars/)?.[1]) || null,
         installs: html.match(/([0-9.,]+[KMB]?\+)\s*<\/div><div[^>]*>Downloads/)?.[1] ?? null,
+        // "Updated on Jul 22, 2025" — the date the CURRENT binary was published.
+        // This is the field that decides whether an app is his: he was at Jugnoo
+        // from January 2021, so a client whose shipped build predates that was
+        // not built from any commit of his.
+        updated: html.match(/Updated on<\/div><div[^>]*>([^<]{4,30})</)?.[1]?.trim() ?? null,
         // The developer name is the whole white-label argument in one field: the
         // listing belongs to the client's own company, not to Jugnoo.
         //
@@ -332,6 +359,32 @@ const delisted = clients
   .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
 const archiveChecked = Object.keys(archive).length;
 
+/* First-seen dates for the live listings, also from the Archive. Play never
+ * says when an app appeared, only when it was last updated; the earliest crawl
+ * of a listing is the closest anyone outside Google gets. */
+const since = existsSync(SINCE_CACHE) ? JSON.parse(readFileSync(SINCE_CACHE, "utf8")) : {};
+for (const app of fleet) app.firstSeen = since[app.id]?.firstSeen ?? null;
+
+/* Apply the tenure rule. See JOINED. */
+const monthOf = (app) =>
+  app.updated
+    ? new Date(`${app.updated} UTC`).toISOString().slice(0, 7)
+    : app.lastSeen
+      ? `${app.lastSeen.slice(0, 4)}-${app.lastSeen.slice(4, 6)}`
+      : null;
+const withinTenure = (app) => {
+  const m = monthOf(app);
+  // No date at all: keep it only on the direct evidence that he set it up.
+  if (!m) return !!app.setUpByHim;
+  return m >= JOINED;
+};
+const predating = [...fleet, ...delisted].filter((a) => !withinTenure(a));
+const liveKept = fleet.filter(withinTenure);
+const pastKept = delisted.filter(withinTenure);
+console.log(
+  `[gen-store] tenure rule removed ${predating.length} app(s) last shipped before ${JOINED}`,
+);
+
 const iconsWritten = await fetchIcons([...flagships, ...fleet]);
 console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/`);
 
@@ -343,8 +396,39 @@ console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/
  * than as 90 identical grey rectangles. */
 const flavours = existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
 const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
+
+/**
+ * A readable name for a pulled app whose archived page would not load.
+ *
+ * The Archive proves these were published and holds the page, but its replay
+ * endpoint throttles hard and a handful never come back — which left the shelf
+ * printing `com.kadere.driver` where a name belongs. The flavour that built the
+ * app is named after the client (`crossWind`, `akbartravels`), so it is a fair
+ * label, and the tile still links to the archived listing for anyone who wants
+ * the real one. Falls back to the distinctive segment of the package id.
+ */
+function nameFromCode(id) {
+  const flavour = flavours[id]?.flavour;
+  const raw =
+    flavour ??
+    id
+      .split(".")
+      .filter((p) => !/^(product|production|products|com|io|app|net|customer|driver|rider|user|passenger|partner)$/.test(p))
+      .sort((a, b) => b.length - a.length)[0];
+  if (!raw) return null;
+  // camelCase and snake_case both become words: "akbarTravels" → "Akbar Travels".
+  // A trailing side word goes too — the tile already says RIDER or DRIVER, and
+  // "Kaderedriver" is not a name anyone chose.
+  return raw
+    .replace(/(driver|rider|customer|passenger|partner)$/i, (m, _w, i) => (i > 2 ? "" : m))
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
 for (const app of [...fleet, ...delisted]) {
   app.color = flavours[app.id]?.color ?? null;
+  app.name ??= nameFromCode(app.id);
   // Play's icon is what the app looks like NOW and wins where it exists; the
   // branch icon is what it looked like when it shipped, and is all a pulled app
   // has left.
@@ -355,7 +439,7 @@ for (const app of [...fleet, ...delisted]) {
  * client it can find — 1,100-odd — and shipping 5 MB of PNGs for apps that
  * appear nowhere on the site would be a build artefact masquerading as content. */
 {
-  const keep = new Set([...flagships, ...fleet, ...delisted].filter((a) => a.icon).map((a) => a.id));
+  const keep = new Set([...flagships, ...liveKept, ...pastKept].filter((a) => a.icon).map((a) => a.id));
   let pruned = 0;
   for (const file of readdirSync(ICON_DIR)) {
     if (!file.endsWith(".webp") || keep.has(file.slice(0, -5))) continue;
@@ -365,20 +449,47 @@ for (const app of [...fleet, ...delisted]) {
   console.log(`[gen-store] kept ${keep.size} icon(s), pruned ${pruned} unreferenced`);
 }
 
+/**
+ * When each app's last shipped build went out, by year.
+ *
+ * Live apps use Play's "Updated on" — the binary you can install today. Gone
+ * ones use the last date the Internet Archive saw the listing, which is a lower
+ * bound on the same thing.
+ *
+ * Both are dates this generator already relies on to decide what belongs on the
+ * shelf at all, which is the point of drawing them: the chart has nothing before
+ * the month he joined, and that is a fact a visitor can see instead of a rule
+ * they have to take on trust.
+ */
+function lastShippedByYear(live, past) {
+  const years = {};
+  const bump = (year, key) => {
+    if (!year) return;
+    years[year] ??= { year: Number(year), live: 0, gone: 0 };
+    years[year][key]++;
+  };
+  for (const a of live) bump(a.updated && new Date(`${a.updated} UTC`).getUTCFullYear(), "live");
+  for (const a of past) bump(Number((a.lastSeen ?? "").slice(0, 4)) || null, "gone");
+  return Object.values(years).sort((a, b) => a.year - b.year);
+}
+
 const stats = {
   branches: branchCount,
   clients: clients.length,
-  live: fleet.length,
-  setUpByHim: fleet.filter((a) => a.setUpByHim).length,
-  carryingHisCommits: fleet.filter((a) => a.commits > 0).length,
-  installFloor: fleet.reduce((s, a) => s + installFloor(a.installs), 0),
-  developers: new Set(fleet.map((a) => a.developer).filter(Boolean)).size,
-  delisted: delisted.length,
+  live: liveKept.length,
+  setUpByHim: liveKept.filter((a) => a.setUpByHim).length,
+  carryingHisCommits: liveKept.filter((a) => a.commits > 0).length,
+  installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
+  developers: new Set(liveKept.map((a) => a.developer).filter(Boolean)).size,
+  delisted: pastKept.length,
   archiveChecked,
+  /** Verified published, but last shipped before he joined. Not counted above. */
+  predatingHim: predating.length,
+  joined: JOINED,
 };
 console.log("[gen-store]", stats);
 
-const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, icon, color }) => ({
+const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, icon, color, updated, firstSeen }) => ({
   id,
   name,
   rating,
@@ -387,6 +498,10 @@ const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, ic
   side,
   setUpByHim,
   developer,
+  /** Play's own "Updated on" — when the binary you can install now was published. */
+  updated,
+  /** Earliest archived crawl of the listing: on the store since AT LEAST this. */
+  firstSeen,
   // Written to public/store at generation time: from the live listing where
   // there is one, otherwise out of the branch that built it.
   icon: icon ? `/store/${id}.webp` : null,
@@ -426,7 +541,7 @@ export const storeApps = ${JSON.stringify(
  * the Play Store. \`setUpByHim\` means he authored the commit that introduced
  * that client's applicationId; the rest carry his commits in their history.
  */
-export const fleet = ${JSON.stringify(fleet.map(pick), null, 1)} as const;
+export const fleet = ${JSON.stringify(liveKept.map(pick), null, 1)} as const;
 
 /**
  * Client builds that are NOT on the store any more, but provably once were:
@@ -438,7 +553,7 @@ export const fleet = ${JSON.stringify(fleet.map(pick), null, 1)} as const;
  * no snapshot is not an app that was never published.
  */
 export const delisted = ${JSON.stringify(
-    delisted.map(({ id, name, rating, ratings, side, setUpByHim, firstSeen, lastSeen, url, icon, color }) => ({
+    pastKept.map(({ id, name, rating, ratings, side, setUpByHim, firstSeen, lastSeen, url, icon, color }) => ({
       id,
       name,
       rating,
@@ -458,6 +573,13 @@ export const delisted = ${JSON.stringify(
 
 /** Counts behind the fleet, all derived — see scripts/gen-store.mjs. */
 export const fleetStats = ${JSON.stringify(stats, null, 2)} as const;
+
+/**
+ * The year each app's last shipped build went out — \`live\` from Play's own
+ * "Updated on", \`gone\` from the last archived crawl of a listing that no
+ * longer exists. Both are floors, and neither has anything before he joined.
+ */
+export const lastShipped = ${JSON.stringify(lastShippedByYear(liveKept, pastKept), null, 1)} as const;
 
 export const storeGeneratedAt = ${JSON.stringify(new Date().toISOString().slice(0, 10))};
 `,

@@ -31,6 +31,8 @@ import { resolve } from "node:path";
 
 const STORE_CACHE = resolve(process.cwd(), ".store-cache.json");
 const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
+/** First-seen dates for the listings that are still live. */
+const LIVE_SINCE = resolve(process.cwd(), ".store-since-cache.json");
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
@@ -239,6 +241,24 @@ if (failed.size) console.warn(`[archive] ${failed.size} namespace(s) unavailable
 
 const hits = dead.filter((id) => seen.has(id));
 console.log(`[archive] ${hits.length} of ${dead.length} were archived at least once`);
+
+/* The live apps get a first-seen date out of the same sweep.
+ *
+ * Play's listing tells you when an app was last updated and never when it first
+ * appeared. The earliest crawl of its listing is an upper bound on that — "on
+ * the store since at least 2021" — which is weaker than a release date and is
+ * the only version of it anyone outside Google can actually stand behind. */
+// MERGED, never overwritten. A namespace that failed this run must not erase a
+// date a previous run already proved — the same downgrade bug as the delisted
+// cache, which turned 88 published apps into 25 the first time it bit.
+const liveSince = existsSync(LIVE_SINCE) ? JSON.parse(readFileSync(LIVE_SINCE, "utf8")) : {};
+for (const id of Object.keys(store)) {
+  if (!store[id].live) continue;
+  const stamps = seen.get(id);
+  if (stamps) liveSince[id] = { firstSeen: stamps[0].slice(0, 8), snapshots: stamps.length };
+}
+console.log(`[archive] first-seen date recovered for ${Object.keys(liveSince).length} live listing(s)`);
+writeFileSync(LIVE_SINCE, JSON.stringify(liveSince));
 
 /* ── 2. Read the last snapshot of each one that was ─────────────────────── */
 

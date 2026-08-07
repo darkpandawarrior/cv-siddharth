@@ -16,6 +16,13 @@ export function archiveMonth(ts: string): string {
   });
 }
 
+/** "Jul 22, 2025" → "Jul 2025". Play's own update date, without the day. */
+export function shortDate(d: string | null | undefined): string | null {
+  if (!d) return null;
+  const m = /^([A-Za-z]{3})\s+\d{1,2},\s+(\d{4})$/.exec(d.trim());
+  return m ? `${m[1]} ${m[2]}` : d;
+}
+
 /** 2920170 → "2.9M". Install counts are Play's buckets, so any total is a floor. */
 export function compact(n: number): string {
   if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M`;

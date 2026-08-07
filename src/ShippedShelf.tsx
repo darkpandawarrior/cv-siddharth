@@ -119,8 +119,9 @@ export function ShippedShelf() {
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
             The Jugnoo rider and driver apps were a white-label platform: every client got its own
             build of the same codebase, its own branding, and its own listing on Play under its own
-            company. I worked on that platform for two and a half years and never had a list of what
-            came out of it.
+            company. I worked on it for two and a half years and never had a list of what came out
+            of it — so I rebuilt one from the code, and kept only the apps the store shows were
+            still shipping while I was there or after.
           </p>
 
           <Link
