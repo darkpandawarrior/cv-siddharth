@@ -200,9 +200,11 @@ export function CommandPalette() {
         aria-label="Open command palette (Cmd+K)"
         className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
       >
+        {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it
+            rendered as "⌘ ⌘K". Icon carries the modifier, text carries the key. */}
         <Command size={13} />
         <span className="sm:hidden">Search</span>
-        <span className="hidden sm:inline">⌘K</span>
+        <span className="hidden sm:inline">K</span>
       </button>
 
       {open && (
