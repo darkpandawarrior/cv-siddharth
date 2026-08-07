@@ -15,6 +15,32 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
   const [line, setLine] = useState("");
   const base = `/projects/${slug}/showcase`;
 
+  /**
+   * Reload when the project changes.
+   *
+   * THE BUG THIS FIXES: navigating between two project pages left the previous
+   * project's film on screen and playing. The source URL lives on a <source>
+   * child, and a media element only reads its <source> children when it LOADS —
+   * changing the attribute afterwards updates the DOM and nothing else, so the
+   * element happily keeps playing the media it already has. React had no reason
+   * to replace the <video> either: same component, same position, so the same
+   * DOM node was reused across the route change.
+   *
+   * `load()` is the only thing that makes an element re-read its sources. It
+   * also resets `ended`, which would otherwise leave the replay button showing
+   * over a film that has not been watched yet.
+   *
+   * (The sibling <DeviceWall key={slug}> already carried a remount key for the
+   * same class of problem. This component did not.)
+   */
+  useEffect(() => {
+    const el = video.current;
+    if (!el) return;
+    el.load();
+    setEnded(false);
+    setLine("");
+  }, [base]);
+
   useEffect(() => {
     const el = video.current;
     if (!el) return;
@@ -51,7 +77,10 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
     track.addEventListener("cuechange", onCue);
     onCue();
     return () => track.removeEventListener("cuechange", onCue);
-  }, []);
+    // Re-bound per project: load() above swaps the <track>, so a listener
+    // attached once would be reading the previous film's narration — the same
+    // staleness as the video itself, one layer down.
+  }, [base]);
 
   return (
     <figure className="group overflow-hidden rounded-2xl border border-line bg-void">
