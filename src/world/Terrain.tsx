@@ -1,7 +1,7 @@
 import { useMemo, type JSX } from "react";
 import * as THREE from "three";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { Grid, Html } from "@react-three/drei";
+import { Grid } from "@react-three/drei";
 import { CITY } from "./city.ts";
 import { YEAR_BANDS, eraColorT } from "./cityData.ts";
 import { TERRAIN } from "./worldData.ts";
@@ -187,26 +187,12 @@ function YearTicks() {
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={c.surface} emissive={c.accent} emissiveIntensity={0.8} roughness={0.5} />
       </instancedMesh>
-      {/* <Html>, not drei's <Text> — see Monuments.tsx's own tower-label
-          comment for why: troika's SDF atlas build is a real startup cost
-          for ten labels, and this world already pays for the <Html> portal
-          path elsewhere. */}
-      {YEAR_BANDS.map((band) => (
-        <Html
-          key={band.year}
-          center
-          position={[x, groundY + TICK_SIZE[1] + 0.5, band.z]}
-          style={{ pointerEvents: "none" }}
-          zIndexRange={[10, 0]}
-        >
-          <span
-            className="whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-widest backdrop-blur"
-            style={{ borderColor: `${c.accent}55`, color: c.accent, background: "rgba(10,13,12,0.65)" }}
-          >
-            {band.year}
-          </span>
-        </Html>
-      ))}
+      {/* The year pills that used to float here are now part of the world's
+          one label layer (labels.ts). They were the least useful text on
+          screen and the most numerous — ten of them, visible from the whole
+          length of the boulevard, for a marker that only means anything while
+          you are driving through that band. There they carry 24m and lose
+          every collision to a room name. */}
     </>
   );
 }

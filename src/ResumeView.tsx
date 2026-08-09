@@ -109,9 +109,12 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               pushing this off its one printed page. */}
           <h1 className={"font-display text-hero print:text-3xl font-bold tracking-tight"}>{profile.name}</h1>
           <p className={"mt-0.5 text-lg font-medium text-zinc-700"}>{profile.resumeTitle}</p>
-          {/* Icon + handle rather than a bare URL: shorter, and the anchor keeps
-              the real destination, which Chromium writes into the PDF as a link
-              annotation so the printed copy stays clickable. */}
+          {/* Icon + host/handle. Chromium does write the anchor into the PDF as
+              a link annotation, so the printed copy is clickable — but an ATS
+              reads the text layer and discards annotations, and the bare handle
+              form put no `linkedin.com` or `github.com` string anywhere in it.
+              Verified: `pdftotext | grep -c 'linkedin.com\|github.com'` was 0,
+              so the profile fields never populated. The host earns its width. */}
           <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-zinc-600">
             <span>{profile.phone}</span>
             <span className="text-zinc-300">·</span>
@@ -119,8 +122,8 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               {profile.email}
             </a>
             {[
-              { Icon: Linkedin, href: profile.linkedin, label: profile.linkedin.replace(/^https:\/\/linkedin\.com\/in\//, "") },
-              { Icon: Github, href: profile.github, label: profile.github.replace(/^https:\/\/github\.com\//, "") },
+              { Icon: Linkedin, href: profile.linkedin, label: profile.linkedin.replace(/^https:\/\//, "") },
+              { Icon: Github, href: profile.github, label: profile.github.replace(/^https:\/\//, "") },
               { Icon: Globe, href: profile.portfolio, label: profile.portfolio.replace(/^https:\/\//, "") },
             ].map(({ Icon, href, label }) => (
               <Fragment key={href}>
@@ -269,7 +272,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                 <>
                   {" "}
                   <span className="font-semibold text-zinc-900">Upstream:</span> {openSource.length} merged PRs to
-                  career-ops (public OSS, 60k+ stars).
+                  career-ops (public OSS, 63k+ stars).
                 </>
               )}
             </p>
@@ -277,11 +280,11 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           {/* Rendered from the same openSource data as the homepage so this
               line can never drift from the real merged-PR list again. The
               two-pager states the count and stops: four PR titles spelled out
-              cost three lines to say what "4 merged PRs" already said. */}
+              cost three lines to say what "9 merged PRs" already said. */}
           {full && (
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
-              {openSource.length} merged PRs to career-ops (public OSS, 60k+ stars)
+              {openSource.length} merged PRs to career-ops (public OSS, 63k+ stars)
               {full ? <>: {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
             </p>
           )}

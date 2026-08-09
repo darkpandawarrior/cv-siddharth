@@ -205,12 +205,28 @@ function hashNoise(seed: number): number {
   return (s - Math.floor(s)) * 2 - 1;
 }
 
-/** How far a scattered instance sits from its eventual target before it has
- *  ever resolved — wide enough to read as "no shape yet", tight enough that
- *  the cloud stays over the world it belongs to rather than drifting into a
- *  neighbouring district. */
-const SCATTER_SPREAD_XZ = 26;
-const SCATTER_SPREAD_Y = 9;
+/**
+ * How far a scattered instance sits from its eventual target before it has
+ * ever resolved.
+ *
+ * Was 26m/9m, and that is the single number that made this world look like
+ * noise. At ±26m every unresolved shard in the city was somewhere else in
+ * the city: a building's worth of dust didn't hover over its own footprint,
+ * it smeared across two districts and the boulevard between them, and 26,000
+ * of them at up to 9m of altitude filled the entire upper half of the frame
+ * with white confetti. You could not see the road, the rooms, or the
+ * buildings that were already resolved — and worse, nothing ever visibly
+ * BECAME anything, because a shard travelling 26m to its target just reads as
+ * one more speck moving in a blizzard of specks.
+ *
+ * 5m/2.4m keeps each structure's dust over its own footprint. The city now
+ * reads as a set of blurred shapes that sharpen into buildings as you drive
+ * past them, which is what the resolution rule was always supposed to look
+ * like, and the sky stays empty — so fog, horizon and the lit rooms are
+ * visible for the first time.
+ */
+const SCATTER_SPREAD_XZ = 5;
+const SCATTER_SPREAD_Y = 2.4;
 
 /**
  * Builds the four per-instance buffers a resolving family needs, from

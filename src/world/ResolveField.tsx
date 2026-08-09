@@ -39,15 +39,26 @@ import {
  * so the whole 26,000-instance field is exactly 2 draw calls.
  */
 
-/** 60% of the ~26,000-instance dust budget. */
-const GROUND_HAZE_COUNT = 15600;
+/**
+ * The ground haze.
+ *
+ * Was 15,600 — 60% of a 26,000-instance budget, and every one of them a
+ * white shard. Featureless noise scattered over the flanks does not read as
+ * "unbuilt ground": at that density it reads as static, and it was drowning
+ * the structure dust (which is the family that actually MEANS something,
+ * because it carries each building's own shape and tint). A third as many,
+ * dimmer and tinted, still gives the flanks a texture that visibly clears as
+ * you drive — while letting the buildings resolving out of it be the thing
+ * you notice.
+ */
+const GROUND_HAZE_COUNT = 5200;
 
 /** Kept off the ground plane by this much so the shards don't z-fight the
  *  slab (or, pre-resolve, whatever they're scattered near). */
 const HAZE_Y = 0.4;
 
 /** Small enough to read as a shard from the driver's seat, not a boulder. */
-const DUST_RADIUS = 0.16;
+const DUST_RADIUS = 0.13;
 
 /** Ground haze never targets the boulevard (|x| <= CITY.laneHalf) — that
  *  strip is always-resolved, static geometry Terrain.tsx owns outright, and
@@ -117,10 +128,16 @@ function DustField({
   attrs,
   colors,
   opacity,
+  color,
 }: {
   attrs: DustFamilyAttrs;
   colors?: Float32Array;
   opacity: number;
+  /** Flat tint for a family with no per-instance colours. Ground haze used
+   *  to fall through to the material default — pure white — which is why the
+   *  unbuilt flanks read as paper confetti rather than as haze over ground
+   *  that hasn't been drawn yet. */
+  color?: string;
 }): JSX.Element {
   const count = attrs.aTarget.count;
   return (
@@ -141,6 +158,7 @@ function DustField({
         ref={(mat) => {
           if (mat) applyResolveShader(mat, "dust");
         }}
+        color={color}
         transparent
         opacity={opacity}
         depthWrite={false}
@@ -150,6 +168,7 @@ function DustField({
 }
 
 export function ResolveField(): JSX.Element {
+  const palette = worldPalette();
   const groundAttrs = useMemo(() => resolveAttributes(groundHazeTargets()), []);
   const structData = useMemo(structureDustData, []);
   const structAttrs = useMemo(() => resolveAttributes(structData.targets), [structData]);
@@ -169,7 +188,7 @@ export function ResolveField(): JSX.Element {
 
   return (
     <>
-      <DustField attrs={groundAttrs} opacity={0.5} />
+      <DustField attrs={groundAttrs} opacity={0.26} color={palette.signalDim} />
       <DustField attrs={structAttrs} colors={structData.colors} opacity={0.85} />
     </>
   );

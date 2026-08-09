@@ -190,7 +190,7 @@ export function ReposShowcase() {
         <div className="mt-8">
           <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h4 className="font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">Merged upstream</h4>
-            <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐60k+)</span>
+            <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐63k+)</span>
           </div>
           <ul className="space-y-2">
             {openSource.map((c) => (

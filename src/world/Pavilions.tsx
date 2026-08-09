@@ -2,9 +2,9 @@ import { Fragment, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, type BufferGeometry, type PointLight } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { Html } from "@react-three/drei";
 import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
 import { PLACEMENTS, type Placement } from "./worldData.ts";
+import { SENSOR_HALF_EXTENTS } from "./pavilionGeometry.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
 import { PAVILION_SENSOR_GROUP } from "./collisionGroups.ts";
@@ -47,21 +47,10 @@ import { worldPalette } from "./palette.ts";
 
 const SENSOR_COLLISION_GROUPS = interactionGroups([PAVILION_SENSOR_GROUP], [PAVILION_SENSOR_GROUP]);
 
-// Half-extents (metres) of each shape's approach volume, keyed off `shape`
-// rather than per-room so every pavilion has the same "come this close" feel.
-//
-// GENEROUS ON PURPOSE, and roughly doubled from the first pass. At ~2m you had
-// to park almost on top of a room before it acknowledged you, which for a hub
-// whose entire job is opening doors is the wrong trade — the prompt should meet
-// a driver who is clearly heading for a room, not reward precision parking.
-// PLACEMENTS keeps the rooms 8m+ apart (worldGeometry.test.ts asserts it), so
-// there is room for this without two prompts ever overlapping.
-const SENSOR_HALF_EXTENTS: Record<Placement["shape"], [number, number, number]> = {
-  slab: [4.8, 2.6, 4.8],
-  crt: [4.8, 3.2, 4.8],
-  board: [4.8, 3.2, 4.8],
-  pcb: [4.8, 2.6, 4.8],
-};
+// SENSOR_HALF_EXTENTS moved to pavilionGeometry.ts — the world's label
+// layer needs the same numbers to float a room's name above it, and a plain
+// data module is the one place both a scene component and a DOM overlay can
+// import from.
 
 
 /**
@@ -254,24 +243,12 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
   return (
     <RigidBody type="fixed" position={placement.position} colliders={false}>
       <Shape tint={room.tint} />
-      {/* Floating label. drei's <Html>, not <Text> — Text (troika-three-text)
-          fetches its glyph atlas from a font file/CDN by default, and every
-          other three.js label on this site (Blueprint3D, StoryMapScene)
-          already uses <Html> for exactly that reason: it's a real DOM node
-          styled with this site's own fonts, no extra network fetch. */}
-      {/* No distanceFactor: these are labels, not geometry. Scaling them in
-          world space meant the nearest one filled a third of the screen while
-          the far ones vanished — one read "THE TERMINAL" at 40px tall across
-          the viewport. Fixed screen size makes them behave like the compass
-          chips they visually match. */}
-      <Html center position={[0, halfExtents[1] + 0.7, 0]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
-        <span
-          className="whitespace-nowrap rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.25em] backdrop-blur"
-          style={{ borderColor: `${room.tint}55`, color: room.tint, background: "rgba(10,13,12,0.6)" }}
-        >
-          {room.label}
-        </span>
-      </Html>
+      {/* The floating room name used to be right here, as its own drei <Html>
+          portal. It now belongs to the world's one label layer (labels.ts /
+          WorldLabels.tsx), which is the only place that can see every label at
+          once and therefore the only place that can stop them stacking on top
+          of each other at the horizon. LABEL_HEIGHT (pavilionGeometry.ts) is
+          the shared number that keeps that label sitting over this structure. */}
       {/* Each room lights its own patch of the world in its tint. Landmarks
           you can see from distance are what make a dark map navigable — before
           this, a pavilion was a small dim shape that only resolved once you

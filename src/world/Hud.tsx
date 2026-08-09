@@ -1,7 +1,26 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Eraser, LayoutGrid, Volume2, VolumeX } from "lucide-react";
-import { Compass, Gauges, Onboarding, StuckNotice, Toasts, type Toast } from "./Nav.tsx";
-import { isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
+import { Eraser, LayoutGrid, Play, Volume2, VolumeX, Hand } from "lucide-react";
+import {
+  Gauges,
+  Minimap,
+  Onboarding,
+  StuckNotice,
+  Toasts,
+  Waypoint,
+  type Toast,
+  type WaypointTarget,
+} from "./Nav.tsx";
+import {
+  isAutoDriving,
+  isCaptured,
+  recapture,
+  setAutoDriving,
+  setTouchSteer,
+  setTouchThrottle,
+  subscribeAuto,
+  subscribeCaptured,
+  toggleAutoDriving,
+} from "./input.ts";
 import { isMuted, toggleMuted } from "./audio.ts";
 import { resetProgress } from "./progressReset.ts";
 import type { Room } from "../rooms.tsx";
@@ -196,6 +215,35 @@ function ResetButton() {
   );
 }
 
+/**
+ * The auto-drive toggle.
+ *
+ * A real, labelled, always-visible button rather than a keybinding alone: the
+ * whole point of auto-drive is to serve the visitor who has not read anything,
+ * and "press T" is a thing you only know if you read the card they skipped.
+ * Wide and worded in the on state ("Auto-driving · tap to take over") because
+ * that is the state where a visitor most needs to know that they CAN take over
+ * — a car steering itself with no visible explanation reads as broken input.
+ */
+function AutoToggle({ on }: { on: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={() => toggleAutoDriving()}
+      className={`pointer-events-auto flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm backdrop-blur transition ${
+        on
+          ? "border-accent bg-accent/15 text-accent"
+          : "border-line bg-card/80 text-zinc-400 hover:border-accent hover:text-accent"
+      }`}
+    >
+      {on ? <Hand size={14} /> : <Play size={14} />}
+      <span className="hidden sm:inline">{on ? "Auto-driving · take over" : "Drive me there"}</span>
+      <span className="sr-only sm:hidden">{on ? "Stop auto-driving" : "Auto-drive to the next room"}</span>
+    </button>
+  );
+}
+
 function SoundToggle() {
   const [muted, setMuted] = useState(() => isMuted());
   return (
@@ -215,6 +263,12 @@ export function Hud(props: {
   promptRoom: Room | null;
   onConfirm: () => void;
   onShowList: () => void;
+  /** Where the world is currently pointing the driver. */
+  waypoint: WaypointTarget | null;
+  /** That waypoint's route, so the minimap can halo the same dot. */
+  waypointTo: string | null;
+  /** Rooms already entered, for the minimap's filled dots. */
+  visited: ReadonlySet<string>;
   /** How many of the eight rooms have been entered from the world. */
   exploredCount?: number;
   totalRooms?: number;
@@ -227,6 +281,9 @@ export function Hud(props: {
     promptRoom,
     onConfirm,
     onShowList,
+    waypoint,
+    waypointTo,
+    visited,
     exploredCount,
     totalRooms,
     collectedCount,
@@ -241,6 +298,13 @@ export function Hud(props: {
   // more direct fit — see input.ts's subscribeCaptured doc.
   const [captured, setCapturedState] = useState(isCaptured());
   useEffect(() => subscribeCaptured(setCapturedState), []);
+  // Same pattern for auto-drive, and it has to be a subscription rather than
+  // local state: auto is turned OFF from three places this component can't see
+  // — the T key, Escape, and a hand on the wheel (input.ts hands the axes back
+  // the moment a driving control moves). A button holding its own `on` flag
+  // would go stale the first time any of those fired.
+  const [auto, setAuto] = useState(isAutoDriving());
+  useEffect(() => subscribeAuto(setAuto), []);
 
   return (
     // pointer-events-none on the wrapper: most of this overlay is readout,
@@ -260,10 +324,9 @@ export function Hud(props: {
         }
       `}</style>
 
-      <Onboarding />
+      <Onboarding onTour={() => setAutoDriving(true)} />
 
-      <Compass />
-
+      <Waypoint target={waypoint} auto={auto} />
 
       {/* One wrapper for both the release banner and the room prompt, so the
           outer flex-col's `justify-between` still sees exactly 3 rows
@@ -357,6 +420,7 @@ export function Hud(props: {
           {/* Sound is on by default but always one click from off, and the
               choice persists. A portfolio that cannot be silenced is one people
               close the tab on. */}
+          <AutoToggle on={auto} />
           <SoundToggle />
           <ResetButton />
 
@@ -371,6 +435,12 @@ export function Hud(props: {
         </div>
 
         <div className="flex flex-col items-end gap-3 pr-0 sm:pr-16">
+          {/* Hidden on the narrowest screens, where the touch sticks and the
+              gauge panel already own this column — the waypoint above carries
+              the navigation on a phone. */}
+          <div className="hidden sm:block">
+            <Minimap visited={visited} targetTo={waypointTo} />
+          </div>
           <Gauges collected={collectedCount} artifactTotal={artifactTotal} rooms={exploredCount} totalRooms={totalRooms} />
           <div className="hud-touch pointer-events-auto items-end gap-4">
             <Thumbstick />

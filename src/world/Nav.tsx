@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState, type JSX } from "react";
-import { PLACEMENTS } from "./worldData.ts";
+import { PLACEMENTS, TERRAIN } from "./worldData.ts";
 import { ROOMS } from "../rooms.tsx";
 import { telemetry } from "./telemetry.ts";
 import { TERMINAL_WHEEL_SPEED } from "./craftPhysics.ts";
+import { angleDelta, bearingTo } from "./autopilot.ts";
 
 /** Top of the speed bar, m/s. Above the craft's terminal speed so the bar
  *  never pins. */
 const GAUGE_MAX_SPEED = Math.ceil(TERMINAL_WHEEL_SPEED);
 
 /**
- * Wayfinding, speed and boost — the HUD layer that turns a dark plane into a
+ * Wayfinding and instruments — the HUD layer that turns a dark plane into a
  * place you can navigate.
  *
  * Everything here updates every animation frame from the `telemetry` singleton
@@ -18,176 +19,212 @@ const GAUGE_MAX_SPEED = Math.ceil(TERMINAL_WHEEL_SPEED);
  * every memo boundary under them along with it, which is exactly the cost
  * telemetry.ts exists to avoid. React's only job here is to mount the nodes
  * once; after that these are hand-driven elements.
+ *
+ * WHAT CHANGED, and why. This file used to render a bearing strip carrying the
+ * five nearest rooms — tinted chips, packed into up to three rows because the
+ * map is mirrored east/west and they collided constantly — above a panel of
+ * six readouts (speed, boost, rooms, artifacts, trip, GPS error, resolve
+ * percentage). Together with the world's own floating labels that put roughly
+ * two dozen pieces of text on screen at once, none of which answered the only
+ * question a first-time visitor actually has: where am I supposed to go?
+ *
+ * So the strip became ONE waypoint — the next stop, its distance, and an arrow
+ * — and the panel lost the three readouts that were instrumentation rather
+ * than navigation (one of which, the odometer, had been wired to a ref that was
+ * never written and displayed a permanent "0 m"). The rooms you aren't heading
+ * for moved to a minimap, where being eight dots on a road is legible in a way
+ * eight overlapping labels never were.
  */
 
-// How much of the world's bearing range the compass strip spans, each side of
-// centre. 90° means a room dead ahead sits centre, one directly left sits at
-// the far left edge, and anything behind you clamps to an edge with an arrow.
-const COMPASS_HALF_ARC = Math.PI / 2;
+// ---------------------------------------------------------------------------
+// Waypoint
 
-// Only the nearest few rooms get a marker — see the sort in the frame loop.
-const COMPASS_MAX_MARKERS = 5;
-
-// Row height and minimum horizontal gap used by the collision packing below.
-const COMPASS_ROW_PX = 22;
-const COMPASS_GAP_PX = 6;
-
-
-type Marker = {
-  to: string;
-  label: string;
-  tint: string;
-  x: number;
-  z: number;
-  el: HTMLDivElement | null;
-  distEl: HTMLSpanElement | null;
-};
-
-/** Signed shortest angle from `from` to `to`, in (-π, π]. */
-function angleDelta(from: number, to: number): number {
-  let d = (to - from) % (Math.PI * 2);
-  if (d > Math.PI) d -= Math.PI * 2;
-  if (d < -Math.PI) d += Math.PI * 2;
-  return d;
-}
+export type WaypointTarget = { label: string; tint: string; x: number; z: number };
 
 /**
- * A bearing strip across the top of the screen with a marker per room —
- * tinted, labelled, and showing live distance. Markers slide as you turn, and
- * clamp to the edges (dimmed, with a chevron) when the room is behind you.
+ * The next stop: name, live distance, and an arrow pointing at it.
  *
- * This replaces guessing. The rooms are floating labels a few metres wide on a
- * ~100m map: without this you can drive for a minute without finding one, and
- * "wander until something appears" is not navigation.
+ * The arrow is the part that matters. Distance alone tells a driver they are
+ * 26m from a room and nothing about which way to turn, which is precisely the
+ * state the old compass strip left people in once two chips shared a bearing.
+ *
+ * ROTATION SIGN: `angleDelta` is positive when the target needs a heading
+ * increase, and heading increases toward world +X — which is the driver's LEFT
+ * (right = forward × up = -X; see autopilot.ts). CSS rotation is clockwise-
+ * positive, so a target to the left is a NEGATIVE css rotation. Hence the minus.
  */
-export function Compass(): JSX.Element {
-  const markersRef = useRef<Marker[]>([]);
-  const rootRef = useRef<HTMLDivElement>(null);
+export function Waypoint({
+  target,
+  auto,
+}: {
+  target: WaypointTarget | null;
+  auto: boolean;
+}): JSX.Element | null {
+  const arrowRef = useRef<HTMLSpanElement>(null);
+  const distRef = useRef<HTMLSpanElement>(null);
 
-  if (markersRef.current.length === 0) {
-    markersRef.current = PLACEMENTS.map((p) => {
-      const room = ROOMS.find((r) => r.to === p.to);
-      return {
-        to: p.to,
-        label: room?.label ?? p.to,
-        tint: room?.tint ?? "var(--color-signal)",
-        x: p.position[0],
-        z: p.position[2],
-        el: null,
-        distEl: null,
-      };
-    });
-  }
+  useEffect(() => {
+    if (!target) return;
+    let raf = 0;
+    let shown = -1;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const distance = Math.round(Math.hypot(target.x - telemetry.x, target.z - telemetry.z));
+      if (distance !== shown && distRef.current) {
+        shown = distance;
+        distRef.current.textContent = `${distance}m`;
+      }
+      if (arrowRef.current) {
+        const delta = angleDelta(telemetry.heading, bearingTo(telemetry, target));
+        arrowRef.current.style.transform = `rotate(${-delta}rad)`;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+
+  if (!target) return null;
+
+  return (
+    <div className="pointer-events-none mx-auto flex justify-center">
+      <div
+        className="flex items-center gap-3 rounded-full border px-4 py-2 backdrop-blur"
+        style={{ borderColor: `${target.tint}55`, background: "rgba(10,13,12,0.78)" }}
+      >
+        <span
+          ref={arrowRef}
+          aria-hidden
+          className="flex h-5 w-5 items-center justify-center"
+          style={{ color: target.tint, transition: "transform 90ms linear" }}
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20V5M12 5l-6 6M12 5l6 6" />
+          </svg>
+        </span>
+        <span className="flex flex-col leading-tight">
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted">
+            {auto ? "auto · driving to" : "next stop"}
+          </span>
+          <span className="font-display text-sm font-bold" style={{ color: target.tint }}>
+            {target.label}
+          </span>
+        </span>
+        <span ref={distRef} className="font-mono text-xs tabular-nums text-zinc-300">
+          0m
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Minimap
+
+// The slab, in world metres. The map is the whole world at once rather than a
+// radar window around the craft: it is a 56m-wide, 168m-long boulevard, so the
+// entire thing fits in a strip the size of a phone's status bar and a visitor
+// can see where they are in ten years of timeline without any panning logic.
+const { halfWidth: MAP_HALF_WIDTH, z0: MAP_Z0, z1: MAP_Z1 } = TERRAIN.mainland;
+const MAP_PAD = 4; // metres of margin so an edge-hugging craft is still drawn
+
+/**
+ * The whole boulevard, top-down, with your car on it.
+ *
+ * SVG coordinates ARE world coordinates here (viewBox is set in metres), which
+ * removes the entire class of scale/offset bug that a hand-written projection
+ * invites. World +X is svg +x and world +Z is svg +y, so north (2017) is at the
+ * top and now is at the bottom — the same orientation the ground's own era
+ * colour uses.
+ *
+ * The craft marker rotates by NEGATIVE heading: heading is measured from +Z
+ * toward +X, which in this frame is from svg +y toward svg +x — counter-
+ * clockwise — while svg's rotate() is clockwise-positive.
+ */
+export function Minimap({ visited, targetTo }: { visited: ReadonlySet<string>; targetTo: string | null }): JSX.Element {
+  const craftRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
-      const width = rootRef.current?.clientWidth ?? 0;
-      if (!width) return;
-
-      // Measure everything, then show only the nearest few. All eight at once
-      // collided into an unreadable pile the moment two rooms shared a bearing
-      // — which they do constantly, since the map is deliberately mirrored
-      // east/west. Nearest-first is also the right editorial call: the compass
-      // should answer "what can I get to from here", not "list the map".
-      const measured = markersRef.current.map((m) => {
-        const dx = m.x - telemetry.x;
-        const dz = m.z - telemetry.z;
-        return {
-          m,
-          distance: Math.hypot(dx, dz),
-          delta: angleDelta(telemetry.heading, Math.atan2(dx, dz)),
-        };
-      });
-      measured.sort((a, b) => a.distance - b.distance);
-
-      const visible: { m: Marker; offset: number; behind: boolean; distance: number }[] = [];
-      for (let i = 0; i < measured.length; i++) {
-        const { m, distance, delta } = measured[i];
-        if (!m.el) continue;
-        if (i >= COMPASS_MAX_MARKERS) {
-          m.el.style.display = "none";
-          continue;
-        }
-        m.el.style.display = "";
-        const clamped = Math.max(-COMPASS_HALF_ARC, Math.min(COMPASS_HALF_ARC, delta));
-        visible.push({
-          m,
-          offset: (clamped / COMPASS_HALF_ARC) * (width / 2),
-          behind: Math.abs(delta) > COMPASS_HALF_ARC,
-          distance,
-        });
-      }
-
-      // Pack into rows by measured width, left to right. Alternating rows by
-      // index wasn't enough: the map is mirrored east/west, so pairs of rooms
-      // routinely share a bearing AND a row parity, and the labels landed on
-      // the same pixels. This walks them in screen order and drops a marker to
-      // the next row only when it would actually collide with the one before
-      // it — so the common case stays a single tidy line.
-      visible.sort((a, b) => a.offset - b.offset);
-      const rowRightEdge: number[] = [];
-      for (const v of visible) {
-        const halfW = v.m.el!.offsetWidth / 2;
-        const left = v.offset - halfW;
-        let row = rowRightEdge.findIndex((edge) => left > edge + COMPASS_GAP_PX);
-        if (row === -1) {
-          row = rowRightEdge.length;
-          rowRightEdge.push(0);
-        }
-        rowRightEdge[row] = v.offset + halfW;
-        v.m.el!.style.transform = `translate(${v.offset}px, ${row * COMPASS_ROW_PX}px) translateX(-50%)`;
-        // Behind-you markers stay visible but recede, so the strip reads as
-        // "everything near me, oriented" rather than "whatever I'm facing".
-        v.m.el!.style.opacity = v.behind ? "0.4" : "1";
-        if (v.m.distEl) v.m.distEl.textContent = `${Math.round(v.distance)}m`;
-      }
+      if (!craftRef.current) return;
+      const heading = (telemetry.heading * 180) / Math.PI;
+      craftRef.current.setAttribute(
+        "transform",
+        `translate(${telemetry.x.toFixed(2)} ${telemetry.z.toFixed(2)}) rotate(${(-heading).toFixed(1)})`,
+      );
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
 
   return (
-    <div
-      ref={rootRef}
-      aria-hidden="true"
-      className="pointer-events-none relative mx-auto h-16 w-full max-w-xl"
-    >
-      {markersRef.current.map((m, i) => (
-        <div
-          key={m.to}
-          ref={(el) => {
-            markersRef.current[i].el = el;
-          }}
-          className="absolute left-1/2 top-0 flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur transition-opacity"
-          style={{
-            borderColor: `${m.tint}55`,
-            color: m.tint,
-            background: "rgba(10,13,12,0.7)",
-          }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.tint }} />
-          {m.label}
-          <span
-            ref={(el) => {
-              markersRef.current[i].distEl = el;
-            }}
-            className="text-muted"
-          />
-        </div>
-      ))}
+    <div aria-hidden="true" className="pointer-events-none flex flex-col items-center gap-1">
+      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-muted">2017</span>
+      <svg
+        viewBox={`${-MAP_HALF_WIDTH - MAP_PAD} ${MAP_Z0 - MAP_PAD} ${(MAP_HALF_WIDTH + MAP_PAD) * 2} ${MAP_Z1 - MAP_Z0 + MAP_PAD * 2}`}
+        className="h-[136px] w-[52px] rounded-lg border border-line bg-void/70 backdrop-blur"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {/* The slab itself. */}
+        <rect
+          x={-MAP_HALF_WIDTH}
+          y={MAP_Z0}
+          width={MAP_HALF_WIDTH * 2}
+          height={MAP_Z1 - MAP_Z0}
+          rx="3"
+          className="fill-card/60 stroke-line"
+          vectorEffect="non-scaling-stroke"
+        />
+        {PLACEMENTS.map((p) => {
+          const room = ROOMS.find((r) => r.to === p.to);
+          const tint = room?.tint ?? "var(--color-signal)";
+          const seen = visited.has(p.to);
+          const isTarget = targetTo === p.to;
+          return (
+            <g key={p.to}>
+              {isTarget && (
+                // A halo, not a bigger dot: the target has to be findable at a
+                // glance in a 52px-wide map without changing the dot's meaning.
+                <circle cx={p.position[0]} cy={p.position[2]} r="7" fill="none" stroke={tint} strokeOpacity="0.5" vectorEffect="non-scaling-stroke" />
+              )}
+              <circle
+                cx={p.position[0]}
+                cy={p.position[2]}
+                r="3.4"
+                fill={seen ? tint : "transparent"}
+                fillOpacity={seen ? 0.9 : 0}
+                stroke={tint}
+                strokeOpacity={seen ? 1 : 0.65}
+                vectorEffect="non-scaling-stroke"
+              />
+            </g>
+          );
+        })}
+        {/* The craft. Apex at +y because heading 0 faces world +Z, which is
+            down the screen in this frame. */}
+        <g ref={craftRef}>
+          <polygon points="0,5 -3.6,-3.4 3.6,-3.4" className="fill-accent" />
+        </g>
+      </svg>
+      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-muted">now</span>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Gauges
+
 /**
- * Speed readout and boost tank.
+ * Speed, boost, and how much of the world is left to find.
  *
- * One panel for everything the driver needs at a glance: speed, boost, how
- * much of the world is left to find, and the location lens. It replaced four
- * separate floating pills, which is what happens when each feature adds its own
- * readout and nothing ever asks whether the corner is full.
+ * Four rows, down from seven. What went: the odometer (wired to a ref nothing
+ * ever wrote — it read "0 m" permanently), and the raw-vs-fused GPS error pair,
+ * which is a genuinely interesting number presented as an unreadable one. The
+ * dead-reckoning demo it belongs to is DRAWN — Trail.tsx paints the raw track
+ * in orange and the fused one in green, right behind the car — so the readout
+ * was labelling a thing you can already see with a units-and-arrows string that
+ * needed a paragraph to explain.
  */
 export function Gauges({
   collected,
@@ -203,27 +240,25 @@ export function Gauges({
   const barRef = useRef<HTMLDivElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
   const boostRef = useRef<HTMLDivElement>(null);
-  const odoRef = useRef<HTMLSpanElement>(null);
-  const accRef = useRef<HTMLSpanElement>(null);
-  const fixRef = useRef<HTMLSpanElement>(null);
+  const resolveRef = useRef<HTMLDivElement>(null);
+  const resolveNumRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     let raf = 0;
-    let shown = -1;
+    let shownSpeed = -1;
+    let shownResolve = -1;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const speed = Math.abs(telemetry.speed);
       const rounded = Math.round(speed);
-      if (rounded !== shown && numRef.current) {
-        shown = rounded;
+      if (rounded !== shownSpeed && numRef.current) {
+        shownSpeed = rounded;
         numRef.current.textContent = String(rounded);
       }
       if (barRef.current) {
         barRef.current.style.width = `${Math.min(100, (speed / GAUGE_MAX_SPEED) * 100)}%`;
         // var(), not a hex: these are CSS values, so the token can be handed
         // straight over and a theme change is picked up without a re-render.
-        // Green in the top third of the range — there is no launch threshold to
-        // mark any more, so the bar just reads "going quickly".
         barRef.current.style.background =
           speed >= GAUGE_MAX_SPEED * 0.66 ? "var(--color-signal)" : "var(--color-probe)";
       }
@@ -231,20 +266,14 @@ export function Gauges({
         boostRef.current.style.width = `${telemetry.boost * 100}%`;
         boostRef.current.style.opacity = telemetry.boosting ? "1" : "0.55";
       }
-      if (accRef.current) {
-        accRef.current.textContent =
-          telemetry.rawError === 0
-            ? "— keep driving"
-            : `${telemetry.rawError.toFixed(1)}m → ${telemetry.fusedError.toFixed(1)}m`;
-      }
-      if (fixRef.current) {
-        // The one line of HUD copy the design doc calls for, in the
-        // instrument that is already about GPS: telemetry.resolvedFraction
-        // is written every frame by ResolveField.tsx from resolve.ts's own
-        // ratchet, so this climbs from the very first stamped cell and never
-        // drops within a session.
-        const pct = Math.round(telemetry.resolvedFraction * 100);
-        fixRef.current.textContent = pct >= 100 ? `${pct}% · resolved` : `${pct}% · drive to resolve`;
+      // The city's resolve grid, as a bar rather than the old "FIX 81% · DRIVE
+      // TO RESOLVE" line. Same number; it just no longer needs the visitor to
+      // already know what a fix is.
+      const pct = Math.round(telemetry.resolvedFraction * 100);
+      if (pct !== shownResolve) {
+        shownResolve = pct;
+        if (resolveRef.current) resolveRef.current.style.width = `${pct}%`;
+        if (resolveNumRef.current) resolveNumRef.current.textContent = `${pct}%`;
       }
     };
     raf = requestAnimationFrame(tick);
@@ -271,13 +300,10 @@ export function Gauges({
       <div className="h-1 w-full overflow-hidden rounded-full bg-void/80">
         <div ref={boostRef} className="h-full w-full rounded-full bg-[var(--color-warn)]" />
       </div>
-      {/* Progress, then the Mileway lens. One panel rather than four floating
-          pills: the HUD had a mode chip, a rooms counter, an artifacts counter
-          and a gauge block all competing for the same corner, which is three
-          more surfaces than a hub needs. */}
+
       {rooms !== undefined && totalRooms !== undefined && (
         <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-          <span>rooms</span>
+          <span>rooms opened</span>
           <span>
             <span className="text-accent">{rooms}</span> / {totalRooms}
           </span>
@@ -285,47 +311,47 @@ export function Gauges({
       )}
       {collected !== undefined && artifactTotal !== undefined && (
         <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-          <span>found</span>
+          <span>things found</span>
           <span>
             <span className="text-[var(--color-signal)]">{collected}</span> / {artifactTotal}
           </span>
         </div>
       )}
-      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-        <span>trip</span>
-        <span ref={odoRef} className="text-zinc-200">
-          0 m
+      <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <span>city drawn</span>
+        <span ref={resolveNumRef} className="text-accent">
+          0%
         </span>
       </div>
-      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-        <span title="Mean positional error: the raw GPS fix versus the dead-reckoned track">gps err</span>
-        <span ref={accRef} className="text-[var(--color-signal)]">
-          0.0m → 0.0m
-        </span>
+      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-void/80">
+        <div ref={resolveRef} className="h-full w-0 rounded-full bg-accent/70 transition-[width] duration-300" />
       </div>
-      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
-        <span title="Share of the city's resolve grid driven through">fix</span>
-        <span ref={fixRef} className="text-accent">
-          0% · drive to resolve
-        </span>
-      </div>
-
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Onboarding
+
 const SEEN_KEY = "playground:onboarded";
 
 /**
- * The first-run card: what the controls are, and what the world wants from you.
+ * The first-run card — and the one screen that decides whether this world is
+ * usable by someone who did not come here to play a driving game.
  *
- * Not decoration. Before this, a visitor arrived in a dark 3D scene with a car
- * they had no reason to know was drivable and no hint that Enter opens a room
- * — the entire design was discoverable only by accident. It shows once,
- * remembers, and any driving key dismisses it, so a returning visitor never
- * sees it again.
+ * It used to be a dismiss-on-anything card listing six keybindings. That asks
+ * every visitor to opt into learning controls before they are allowed to see
+ * anything, which for a portfolio hub is exactly backwards: most people want
+ * the rooms, not the car. So the card now offers the two real choices as
+ * buttons — watch it drive itself, or drive it — and the keys are a footnote
+ * for the people who picked the second one.
+ *
+ * It no longer dismisses on any keypress either. That behaviour meant the card
+ * vanished the instant someone leaned on W, before they had read the sentence
+ * that told them what the world wanted; the two buttons (and Escape) are the
+ * only ways out, and the choice is remembered.
  */
-export function Onboarding(): JSX.Element | null {
+export function Onboarding({ onTour }: { onTour: () => void }): JSX.Element | null {
   const [dismissed, setDismissed] = useState(() => {
     try {
       return localStorage.getItem(SEEN_KEY) === "1";
@@ -334,22 +360,24 @@ export function Onboarding(): JSX.Element | null {
     }
   });
 
+  const dismiss = (tour: boolean) => {
+    setDismissed(true);
+    if (tour) onTour();
+    try {
+      localStorage.setItem(SEEN_KEY, "1");
+    } catch {
+      /* private browsing — it just shows again next time */
+    }
+  };
+
   useEffect(() => {
     if (dismissed) return;
-    const dismiss = () => {
-      setDismissed(true);
-      try {
-        localStorage.setItem(SEEN_KEY, "1");
-      } catch {
-        /* private browsing — it just shows again next time */
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss(false);
     };
-    window.addEventListener("keydown", dismiss, { once: true });
-    window.addEventListener("pointerdown", dismiss, { once: true });
-    return () => {
-      window.removeEventListener("keydown", dismiss);
-      window.removeEventListener("pointerdown", dismiss);
-    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dismiss is stable enough; only `dismissed` gates the listener
   }, [dismissed]);
 
   if (dismissed) return null;
@@ -358,40 +386,44 @@ export function Onboarding(): JSX.Element | null {
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-6">
       <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-line bg-card/95 p-6 text-center backdrop-blur">
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent/70">// the playground</p>
-        <h2 className="font-display mt-2 text-2xl font-bold">Drive it.</h2>
+        <h2 className="font-display mt-2 text-2xl font-bold">Eight rooms, one road.</h2>
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Nothing here exists until you drive it. North is 2017, south is now — the city resolves
-          out of the dust as you go. Eight rooms wait down the road; drive to one and hold still to
-          go in.
+          Every interactive thing on this site is a building on this street, and the street is a
+          timeline — north is 2017, south is now. The city draws itself as you drive it.
         </p>
-        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-left font-mono text-[11px] text-muted">
-          {[
-            ["W A S D", "drive"],
-            ["shift", "boost"],
-            ["enter", "enter a room"],
-            ["R", "recover"],
-            ["esc", "release controls"],
-            ["space", "brake"],
-          ].map(([key, what]) => (
-            // dt/dd inside the wrapping div, not kbd/span. A <dl> may group
-            // its children in divs, but each group still has to be a real
-            // term/description pair — axe flags anything else as a serious
-            // violation, and /playground is covered by e2e/a11y.spec.ts.
-            <div key={key} className="flex items-center gap-2">
-              <dt>
-                <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-300">{key}</kbd>
-              </dt>
-              <dd>{what}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-5 font-mono text-[10px] uppercase tracking-widest text-muted">
-          press anything to start · List view for the plain grid
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => dismiss(true)}
+            className="flex-1 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+          >
+            Drive me there
+          </button>
+          <button
+            type="button"
+            onClick={() => dismiss(false)}
+            className="flex-1 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
+          >
+            I'll drive
+          </button>
+        </div>
+        <p className="mt-4 font-mono text-[10px] leading-relaxed text-muted">
+          <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">W A S D</kbd> drive ·{" "}
+          <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">shift</kbd> boost ·{" "}
+          <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">enter</kbd> go in ·{" "}
+          <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">T</kbd> auto ·{" "}
+          <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">R</kbd> unstick
+        </p>
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+          or take the plain grid — List view, bottom left
         </p>
       </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Notices
 
 export type Toast = { id: string; title: string; detail: string; tint: string; kind: "find" | "unlock" };
 
@@ -437,7 +469,6 @@ export function Toasts({ items }: { items: Toast[] }): JSX.Element {
     </div>
   );
 }
-
 
 /**
  * The stuck notice.

@@ -116,10 +116,89 @@ let keyThrottle = 0;
 let touchSteer = 0;
 let touchThrottle = 0;
 
+/**
+ * Auto-drive — the third source, and the only one that is EXCLUSIVE rather
+ * than additive.
+ *
+ * Blending an autopilot with a human would be the worst of both: nudge the
+ * wheel and you'd fight a machine that is still steering, with no way to tell
+ * whose input produced the result. So while auto is engaged it owns the axes
+ * outright, and the first real touch of a driving control hands them straight
+ * back (`recomputeAxes` below). That single rule is why nothing downstream —
+ * Craft, the HUD, the touch sticks — needs to know an autopilot exists.
+ */
+let autoEngaged = false;
+let autoSteer = 0;
+let autoThrottle = 0;
+let autoBrake = false;
+let autoBoost = false;
+const autoListeners = new Set<(on: boolean) => void>();
+
 function recomputeAxes(): void {
-  input.steer = clamp(keySteer + touchSteer, -1, 1);
-  input.throttle = clamp(keyThrottle + touchThrottle, -1, 1);
+  // A human touching a driving control always wins, immediately. Checked here
+  // rather than in the key handler so the HUD's touch sticks disengage auto
+  // too, without either control surface having to know about it.
+  if (autoEngaged && (keySteer !== 0 || keyThrottle !== 0 || touchSteer !== 0 || touchThrottle !== 0)) {
+    setAutoDriving(false);
+  }
+  if (autoEngaged) {
+    input.steer = autoSteer;
+    input.throttle = autoThrottle;
+    input.brake = autoBrake;
+    input.boost = autoBoost;
+  } else {
+    input.steer = clamp(keySteer + touchSteer, -1, 1);
+    input.throttle = clamp(keyThrottle + touchThrottle, -1, 1);
+  }
   input.pitch = input.throttle;
+}
+
+/** Whether the world is currently driving itself. */
+export function isAutoDriving(): boolean {
+  return autoEngaged;
+}
+
+/** Notifies `fn` on every auto-drive change; returns an unsubscribe function.
+ *  Same shape as subscribeCaptured, and for the same reason: the HUD's toggle
+ *  is a separate React tree from whatever flipped the state. */
+export function subscribeAuto(fn: (on: boolean) => void): () => void {
+  autoListeners.add(fn);
+  return () => autoListeners.delete(fn);
+}
+
+export function setAutoDriving(on: boolean): void {
+  if (autoEngaged === on) return;
+  autoEngaged = on;
+  if (!on) {
+    // Leave nothing of the autopilot's last frame behind — a throttle of 0.8
+    // stuck on after a handover is the same defect class as input.ts's
+    // original stuck-key bug.
+    autoSteer = 0;
+    autoThrottle = 0;
+    autoBrake = false;
+    autoBoost = false;
+    input.brake = false;
+    input.boost = false;
+  }
+  recomputeAxes();
+  for (const fn of autoListeners) fn(autoEngaged);
+}
+
+export function toggleAutoDriving(): boolean {
+  setAutoDriving(!autoEngaged);
+  return autoEngaged;
+}
+
+/** Called once per frame by World.tsx while auto is engaged. A no-op
+ *  otherwise, so a stale frame callback can never drive the craft after the
+ *  visitor has taken over. */
+export function setAutoAxes(axes: { steer: number; throttle: number; brake: boolean; boost: boolean }): void {
+  if (!autoEngaged) return;
+  autoSteer = clamp(axes.steer, -1, 1);
+  autoThrottle = clamp(axes.throttle, -1, 1);
+  autoBrake = axes.brake;
+  autoBoost = axes.boost;
+  recomputeAxes();
 }
 
 /** Called by the HUD's left thumbstick. See recomputeAxes for why this
@@ -151,6 +230,7 @@ export function setTouchThrottle(v: number): void {
 export function attachKeyboard(): () => void {
   const pressed = new Set<string>();
   setCaptured(true); // every fresh mount starts captured
+  setAutoDriving(false); // ...and with a human at the wheel until asked otherwise
   keySteer = 0;
   keyThrottle = 0;
   touchSteer = 0; // and with no phantom stick input left over from a previous mount
@@ -170,9 +250,15 @@ export function attachKeyboard(): () => void {
     keySteer = (right ? 1 : 0) - (left ? 1 : 0);
     keyThrottle = (fwd ? 1 : 0) - (back ? 1 : 0);
     recomputeAxes();
-    input.brake = pressed.has(" ");
+    // Brake and boost are the autopilot's while it holds the axes — writing
+    // key state over them here would zero the autopilot's brake for a frame
+    // on every unrelated keypress. Confirm is never the autopilot's: Enter
+    // opens a room whoever is driving.
+    if (!autoEngaged) {
+      input.brake = pressed.has(" ");
+      input.boost = pressed.has("shift");
+    }
     input.confirm = pressed.has("enter");
-    input.boost = pressed.has("shift");
   };
 
   const releaseAll = () => {
@@ -195,8 +281,18 @@ export function attachKeyboard(): () => void {
     // keyboard accessibility (Escape blurs, Tab moves focus) and neither is
     // safe to swallow just because the craft happens to be driving.
     if (key === "escape") {
+      // Auto goes with it. "Controls released" while the car drives itself
+      // off down the boulevard is a state nobody can read.
+      setAutoDriving(false);
       setCaptured(false);
       releaseAll();
+      return;
+    }
+    // T for tour. Handled ahead of the CAPTURED_KEYS gate below because it is
+    // not a driving axis — it's the one key that decides who is driving.
+    if (key === "t") {
+      if (!captured) setCaptured(true);
+      toggleAutoDriving();
       return;
     }
     // Tab must never recapture — it's the one key a keyboard user relies on

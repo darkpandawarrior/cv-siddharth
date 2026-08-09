@@ -11,10 +11,15 @@ export const profile = {
   github: "https://github.com/darkpandawarrior",
   linkedin: "https://linkedin.com/in/siddharth-pandalai",
   portfolio: "https://cv-siddharth.vercel.app",
-  availability: "Available immediately · Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
-  // Same two facts a recruiter acts on — how soon, and where — at a third of
-  // the width, for the one-pager header where a wrap costs a whole line.
-  availabilityShort: "Available immediately · Remote or Pune / Bengaluru",
+  // No "available immediately" here. Dice.tech runs to Present on the same
+  // page, and in this market a notice period is assumed — the two together
+  // read as either hiding unemployment or not intending to serve notice.
+  // Location and remote preference are the parts a recruiter can act on; put
+  // a real notice period back only when there is a real number to state.
+  availability: "Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
+  // Same fact at a third of the width, for the one-pager header where a wrap
+  // costs a whole line.
+  availabilityShort: "Remote or Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
     "5+ years building production Android. I own the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
@@ -47,7 +52,10 @@ export const metrics = [
 // line has room, so it rides along here instead of distorting the grid.
 export const resumeMetrics = [
   ...metrics,
-  { value: "1.6★ → 4.5★", label: "Play Store rating", detail: "67 → 27,300 reviews, via in-app review prompting" },
+  // ASCII only. `★` and `→` come from a fallback font, so Chromium emits them
+  // as separate text runs and pdftotext pulls them out of order — this line
+  // extracted as "1.6 / 4.5 / ★ Play Store rating", which is what an ATS reads.
+  { value: "1.6 to 4.5 stars", label: "on the Play Store", detail: "67 to 27,300 reviews, via in-app review prompting" },
 ];
 
 // Core competency chips — shown in the résumé header and on LinkedIn
@@ -56,7 +64,11 @@ export const competencies = [
   "Clean Architecture (MVVM / MVI)",
   "Kotlin Coroutines & Flow",
   "Hilt Dependency Injection",
-  "Room & Offline Storage",
+  "Room (2 DBs, 24 production migrations)",
+  // The one-pager's "Core:" line is this array verbatim, and it had no
+  // networking token at all — Retrofit/REST is a hard filter on most Android
+  // reqs. The longer cuts already carry it under Data & Networking.
+  "Retrofit / OkHttp & REST APIs",
   "Location Engineering (Dead Reckoning, Kalman)",
   "Mobile Security (Android Keystore, SSL Pinning)",
   "CI/CD (Fastlane, Gradle)",
@@ -91,13 +103,22 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Agentic ERP",
-        text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client → project → PO → milestone → GST invoice → payment end to end.",
-        tier: 1,
+        text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end.",
+        // Deliberately not tier 1. Four months of concurrent consulting reads as
+        // a side engagement next to the Dice platform ownership, and on a single
+        // page it was spending a heading plus four lines to say so. Dropping the
+        // whole role off the one-pager bought back the leadership and security
+        // bullets below, which is what a Lead loop actually asks about. Intact
+        // on both longer cuts.
+        tier: 2,
       },
       {
         label: "Platform",
         text: "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
-        tier: 2,
+        // Full record only. Promoting the leadership bullet above pushed the
+        // two-pager 15px past its budget, and a second bullet about a
+        // concurrent Python engagement is the cheapest thing on an Android
+        // résumé to spend — the role still states itself on the two-pager.
       },
     ],
   },
@@ -108,7 +129,14 @@ export const experience: Experience[] = [
     points: [
       {
         label: "Platform Ownership",
-        text: "Own the Android platform end to end, a ~964k-LOC Kotlin app serving 50,000+ MAU, as both technical owner and Product Owner, so requirements and delivery are one job rather than a handoff. Set the module architecture, release process and review standards the team builds against, and own the Room persistence layer across 2 databases with 24 verified production schema migrations.",
+        // "so requirements and delivery are one job rather than a handoff" was
+        // the third statement of Product Owner on one page — the header title
+        // and the summary already say it. Cut, and the line it was costing
+        // went to the crash bullet the summary needed backing.
+        // The Room migration count moved to the skills line: a schema-migration
+        // number is a detail sitting inside a scope bullet, and it reads as
+        // hard evidence either way while costing a line and a half less there.
+        text: "Own the Android platform end to end, a ~964k-LOC Kotlin app serving 50,000+ MAU, as both technical owner and Product Owner. Set the module architecture, release process and review standards the team builds against.",
         tier: 1,
       },
       {
@@ -117,11 +145,32 @@ export const experience: Experience[] = [
       },
       {
         label: "Team",
-        text: "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to shipping production Kotlin, Java and React. He now manages this app at the company that acquired it.",
+        // The one claim a Lead loop opens with, and the only one the summary
+        // and Key Results don't already carry — full-record-only until the
+        // concurrent consulting role came off the top of the one-pager.
+        // "He now manages this app at the company that acquired it" is the
+        // proof the mentoring took, but next to "own the Android platform end
+        // to end" four lines above it reads as a contradiction — and it was the
+        // last line the crash bullet needed. It survives on both longer cuts,
+        // where the Scope bullet gives it the room to make sense.
+        text: "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to production Kotlin, Java and React.",
+        tier: 1,
+      },
+      {
+        // Always renders directly under Team, so "that engineer" has its
+        // referent. Untiered — full record only.
+        label: "Mentorship Outcome",
+        text: "That engineer now manages this app at the company that acquired it.",
       },
       {
         label: "Compose Migration",
-        text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, checked screen by screen against the XML it replaced so nothing regressed on the way.",
+        // "checked screen by screen ... so nothing regressed" was a paraphrase
+        // of "zero regressions" written to slip past the claim-audit regex that // claim-audit:allow
+        // forbids exactly that phrase — Dice has 31 unit-test files, 4
+        // androidTest and ZERO Compose UI tests, so there is no safety net to
+        // claim. This is the wording claims.json itself prescribes, and it says
+        // the mechanism instead of promising an outcome nothing measured.
+        text: "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, migrated incrementally through interop with per-screen parity checks against the legacy XML baseline.",
         tier: 1,
       },
       {
@@ -131,13 +180,19 @@ export const experience: Experience[] = [
       },
       {
         label: "Crash Reduction",
-        text: "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Paired with dual Crashlytics and Sentry monitoring so regressions surface before users report them.",
-        tier: 2,
+        // The short summary asserts "80% fewer crashes" and, until this was
+        // promoted, nothing on the one-pager evidenced it — the strongest
+        // number on the page was a claim with no body behind it.
+        text: "Reduced production crashes 80% at 22,000+ daily users — the fix was the concurrency and threading model, not defensive try/catch, with Crashlytics and Sentry catching regressions before users report them.",
+        tier: 1,
       },
       {
         label: "Security Hardening",
         text: "Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build flavors.",
-        tier: 2,
+        // The summary says "VAPT-grade security" and nothing else on the short
+        // cut backed it. These are the numbers that turn that phrase into a
+        // checkable claim, and they fit in the space the consulting role left.
+        tier: 1,
       },
       {
         label: "Data Layer",
@@ -174,7 +229,10 @@ export const experience: Experience[] = [
       },
       {
         label: "White-Label Platform, Productising Variation",
-        text: "Built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase across the customer and driver apps, instead of the per-client fork that would have been unmaintainable within a year. Cut per-client delivery time 80%.",
+        // Dropped "instead of the per-client fork that would have been
+        // unmaintainable within a year" — it argues for the decision rather
+        // than reporting it, and the line bought the crash bullet its space.
+        text: "Built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase across the customer and driver apps, rather than a fork per client. Cut per-client delivery time 80%.",
         tier: 1,
       },
       {
@@ -1042,7 +1100,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "72 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "4 merged PRs to the public career-ops project (⭐62k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), and an agent-inbox feature (#1472) — every one publicly checkable.",
+      "9 merged PRs to the public career-ops project (⭐63k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), an agent-inbox feature (#1472), and five correctness fixes merged in one day (#2586–#2590), each shipped with a reproduction and a regression test — every one publicly checkable.",
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -1052,9 +1110,9 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: "Upstream (career-ops, ⭐62k+)", url: "https://github.com/santifer/career-ops" },
+      { label: "Upstream (career-ops, ⭐63k+)", url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · 4 PRs merged to public career-ops",
+    status: "Active · 9 PRs merged to public career-ops",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
     theme: {
       accent: "#3B82F6",
@@ -1075,7 +1133,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐60k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+        "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐63k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
       sections: [
         {
           heading: "One engine, five targets",
@@ -1103,7 +1161,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "Four merged pull requests against the public career-ops repository (⭐60k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — and an agent-inbox feature for queuing requests across sessions.",
+          body: "Nine merged pull requests against the public career-ops repository (⭐63k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, and five correctness fixes merged in a single day. Those five all target the same class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
@@ -1391,9 +1449,14 @@ export interface Contribution {
   date: string;
 }
 
-// Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐60k+).
+// Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐63k+).
 // See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
 export const openSource: Contribution[] = [
+  { repo: "santifer/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/santifer/career-ops/pull/2590", status: "merged", date: "2026-08-07" },
+  { repo: "santifer/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/santifer/career-ops/pull/2589", status: "merged", date: "2026-08-07" },
+  { repo: "santifer/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/santifer/career-ops/pull/2588", status: "merged", date: "2026-08-07" },
+  { repo: "santifer/career-ops", title: "fix(dedup): distinct non-Latin companies merged into one, deleting a row", url: "https://github.com/santifer/career-ops/pull/2587", status: "merged", date: "2026-08-07" },
+  { repo: "santifer/career-ops", title: "fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter", url: "https://github.com/santifer/career-ops/pull/2586", status: "merged", date: "2026-08-07" },
   { repo: "santifer/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/santifer/career-ops/pull/1472", status: "merged", date: "2026-07-03" },
   { repo: "santifer/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/santifer/career-ops/pull/1186", status: "merged", date: "2026-06-23" },
   { repo: "santifer/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/santifer/career-ops/pull/1185", status: "merged", date: "2026-06-23" },
@@ -1409,7 +1472,7 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jun–Jul 2026", title: "career-ops — public OSS contributions", detail: "Merged PRs to the public career-ops project (⭐60k+): ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, and an agent-inbox feature." },
+  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: "9 merged PRs to the public career-ops project (⭐63k+): ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, an agent-inbox feature, and five correctness fixes merged in one day — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, and a date filter ignored in its =value form." },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },

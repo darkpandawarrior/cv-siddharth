@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 import * as THREE from "three";
 import { Color } from "three";
-import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { RigidBody, CuboidCollider, CylinderCollider } from "@react-three/rapier";
 import {
@@ -356,23 +355,14 @@ function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element
   );
 }
 
-function ProjectTowerLabels({ towers }: { towers: ProjectTower[] }): JSX.Element {
-  const c = worldPalette();
-  return (
-    <>
-      {towers.map((t) => (
-        <Html key={t.slug} center position={[t.x, t.height + 1.1 + CITY.groundY, t.z]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
-          <span
-            className="whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest backdrop-blur"
-            style={{ borderColor: `${t.dated ? c.signal : c.textDim}55`, color: t.dated ? c.signal : c.textDim, background: "rgba(10,13,12,0.65)" }}
-          >
-            {`${t.slug} · ${t.modules} modules`}
-          </span>
-        </Html>
-      ))}
-    </>
-  );
-}
+/*
+ * ProjectTowerLabels lived here — one drei <Html> portal per tower, always on
+ * and always the same screen size, which is how "MILEWAY · 36 MODULES" ended
+ * up printed across the horizon from forty metres away. The names now come
+ * from the world's single label layer (labels.ts), which ranges them to the
+ * district you have to drive into to read them and drops any that would
+ * collide with a room name.
+ */
 
 export function Monuments(): JSX.Element {
   const blocks = useMemo(() => employerBlocks(), []);
@@ -388,7 +378,6 @@ export function Monuments(): JSX.Element {
       <ProjectTowerColliders towers={towers} />
       <ProjectTowerShafts towers={towers} />
       <ProjectTowerCrowns towers={towers} />
-      <ProjectTowerLabels towers={towers} />
     </>
   );
 }
