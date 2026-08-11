@@ -576,14 +576,20 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 <button
                   key={it.src}
                   onClick={() => setIdx(i)}
-                  className="group/shot w-40 shrink-0 snap-start sm:w-44"
+                  className="group/shot shrink-0 snap-start"
                   title={it.caption}
                 >
-                  <span className="gallery-item block overflow-hidden rounded-2xl border border-line bg-card">
-                    <Picture src={it.src} alt={it.caption} className="aspect-[9/19] h-full w-full object-cover" />
+                  {/* Fixed HEIGHT, natural width. This used to force aspect-[9/19] + object-cover on
+                      every capture, which is a phone frame — so Kursi, whose captures are 46 desktop
+                      1440x900 frames against 10 phone ones, had its landscape screenshots cropped to
+                      a vertical sliver. Mileway is almost all 411x891, so the bug was invisible there
+                      and shipped. A rail of equal-height, varying-width tiles keeps every project's
+                      real shape and still lines up. */}
+                  <span className="gallery-item block h-72 overflow-hidden rounded-2xl border border-line bg-card">
+                    <Picture src={it.src} alt={it.caption} className="h-full w-auto max-w-none object-contain" />
                   </span>
                   {it.caption && (
-                    <span className="mt-2 line-clamp-2 block text-center text-xs text-muted transition group-hover/shot:text-accent">
+                    <span className="mt-2 line-clamp-2 block max-w-64 text-center text-xs text-muted transition group-hover/shot:text-accent">
                       {it.caption}
                     </span>
                   )}
