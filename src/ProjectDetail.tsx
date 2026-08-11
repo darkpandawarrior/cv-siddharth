@@ -13,6 +13,7 @@ import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 import { openLab, type LabKey } from "./LabBench.tsx";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
+import { CompareSection } from "./Compare.tsx";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
@@ -538,6 +539,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
           </div>
         </section>
       )}
+
+      {/* Design directions — renders only for projects that have a compare set */}
+      <CompareSection slug={slug} />
 
       {/* Gallery — horizontal carousel (space-saving), hover glow, navigable lightbox */}
       {items.length > 0 && (

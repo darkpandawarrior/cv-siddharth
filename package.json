@@ -19,8 +19,8 @@
     "gen:images": "node scripts/gen-images.mjs",
     "showcase": "node scripts/rebuild-showcase.mjs",
     "refresh": "npm run sync:media && npm run showcase && npm run gen:stats && npm run gen:hiresignal && npm run gen:galleries && npm run gen:images && npm run gen:loopdown && npm run gen:feed && npm run gen:sitemap && npm run gen:heroes && npm run gen:og && npm run gen:chess && npm run gen:chess-deep && npm run gen:system-prompt",
-    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
-    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
+    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
+    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4173 --strictPort",
@@ -33,7 +33,8 @@
     "gen:sitemap": "node scripts/gen-sitemap.mjs",
     "gen:store": "node scripts/gen-store.mjs",
     "spotify:auth": "node scripts/spotify-auth.mjs",
-    "resume:pdf": "node scripts/print-resume.mjs"
+    "resume:pdf": "node scripts/print-resume.mjs",
+    "gen:compare": "node scripts/gen-compare-sets.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
