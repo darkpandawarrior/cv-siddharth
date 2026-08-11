@@ -1,14 +1,29 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { projects } from "../data/profile.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { ProjectDetail } from "../ProjectDetail.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
 
+/**
+ * Slugs that used to be their own project and now live inside another one. They stay resolvable
+ * forever: they were in the sitemap and are the kind of URL that ends up in a message to a
+ * recruiter, and a 404 there is worse than a redirect nobody notices.
+ *
+ * cv-siddharth-kmp merged into `portfolio` — the two were separate entries where one bounced you
+ * to the live site you were already on and the other bounced you to GitHub, so neither ever
+ * explained what it was.
+ */
+const PROJECT_SLUG_ALIASES: Record<string, string> = {
+  "cv-siddharth-kmp": "portfolio",
+};
+
 export const Route = createFileRoute("/project/$slug")({
   // Unknown slug → the designed 404 (real 404 status + noindex + landmarks),
   // not a bare 200 "not found" div. Reuses the root notFoundComponent (C1).
   beforeLoad: ({ params }) => {
+    const alias = PROJECT_SLUG_ALIASES[params.slug];
+    if (alias) throw redirect({ to: "/project/$slug", params: { slug: alias }, statusCode: 301 });
     if (!projects.some((x) => x.slug === params.slug)) throw notFound();
   },
   head: ({ params }) => {

@@ -1211,22 +1211,68 @@ export const projects: Project[] = [
     ],
   },
   {
+    // Was two entries — "portfolio" and "cv-siddharth-kmp" — and both were dead ends: one bounced
+    // you to the live site you were already on, the other bounced you to GitHub. Neither ever
+    // explained what either thing IS. One entry now, with the breakdown on the page.
     slug: "portfolio",
-    name: "cv-siddharth (portfolio + Panda)",
-    tagline: "The site you're reading, plus Panda, a provider-agnostic LLM assistant that answers for me, grounded in my real CV.",
+    name: "cv-siddharth — this site, and its Compose Multiplatform twin",
+    tagline: "The site you're reading, plus Panda the assistant that answers for me — and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
-      "An interactive résumé with a built-in AI assistant. React 19 + Vite + Tailwind on Vercel Edge, with a provider-agnostic chat backend (Groq / Gemini / Claude) and prompt-injection guards.",
-    stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM"],
+      "An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from ~16.5k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS — an honest test of how far CMP reaches on the web, including where it doesn't.",
+    stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
     highlights: [
-      "3D scroll-driven hero, printable résumé view, and case studies with real production metrics.",
-      "Provider-agnostic chat backend — the assistant is grounded in this same source-of-truth profile data.",
+      "Two full implementations of one portfolio — the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
+      "Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file — the same source of truth the pages render from, so the assistant cannot drift from the site.",
+      "Every claim on this site is checked mechanically before it ships, not recalled: a claim-audit script verifies the facts and scans every outward-facing surface for phrases already disproven.",
     ],
     links: [
       { label: "Live", url: "https://cv-siddharth.vercel.app" },
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/cv-siddharth" },
+      { label: "React source", url: "https://github.com/darkpandawarrior/cv-siddharth" },
+      { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
+      { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
     ],
-    status: "Live",
-    badges: ["React 19", "Vercel", "LLM chat"],
+    status: "Live · React on Vercel, CMP across 4 targets",
+    badges: ["React 19", "Vercel", "LLM chat", "Compose Multiplatform", "Wasm"],
+    detail: {
+      overview:
+        "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. Everything on both versions is rendered from one TypeScript file of profile data, which is also what the AI assistant is grounded in — so the pages, the résumé, the OG images and the chat answers cannot disagree with each other.",
+      sections: [
+        {
+          heading: "The React site — how it is put together",
+          body: "React 19 + Vite 7 + Tailwind v4, file-routed with TanStack Router and server-rendered, deployed on Vercel Edge. There is no CMS and no database: profile.ts is the single source of truth, and a set of prebuild generators derive everything else from disk — galleries from the screenshot folders, comparison sets, the sitemap, the RSS feed, OG images, llms.txt, and AVIF/WebP derivatives for every raster. Adding a screenshot is a file drop, never a list edit, which is the only reason the media stays honest as it grows.",
+        },
+        {
+          heading: "The surfaces — a guide to what is where",
+          body: "The home page carries the case studies and experience. /resume is the printable résumé; /shipped is the shelf and timeline of apps that actually reached a store; /project/<slug> is a project breakdown like this one, including a slide-to-compare viewer for design work. Then the rooms, which are the point of the site as much as the CV is: /map is The 3D Storyboard, the projects as a constellation; /forge is The Particle Forge, physics on a canvas; /blueprint is a 3D walkthrough; /compose is a live Compose-subset interpreter that parses a snippet and renders real composables rather than a screenshot; /terminal and /playground are interactive toys; /pulse and /lab are instrument views over the site's own data. /loopdown is Notes From The Loop, /read/<slug> the writing itself, /excelsior a magazine archive, /ink The Board — seven years of games, mined, /chess a chess corpus, /weeb a hand-kept list read as evidence. /hire runs a job description against the documented experience and reports the fit, including the gaps.",
+        },
+        {
+          heading: "Panda, and why it cannot oversell",
+          body: "A provider-agnostic assistant over Groq, Gemini and Claude with prompt-injection guards, running on Vercel Edge functions. It is grounded in this same profile data rather than a separate prompt-authored biography, so it cannot invent a role or a metric that the site does not also show. The job-description check is explicitly instructed to be straight about where the fit is weak — an assistant that oversells its own person is worth nothing to a recruiter, and the honesty is what makes the rest credible.",
+        },
+        {
+          heading: "The Compose Multiplatform twin",
+          body: "~16.5k lines of Kotlin across four modules rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. Deliberately bleeding edge — Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2, every version the newest published including pre-release — because the question it exists to answer is where the edge actually is.",
+        },
+        {
+          heading: "What the CMP build refuses to depend on",
+          body: "Almost nothing, by design: no navigation library, no DI framework, no markdown parser, no diagram renderer, no icon pack, no shader library. Routing, the Mermaid layout engine, the SkSL ambient wash, the SSE frame parser and every icon are hand-built on Compose and Ktor primitives. It is built on kmp-app-template, so it doubles as the proof that the template carries a real app to four targets rather than a hello-world.",
+        },
+        {
+          heading: "Honest about the edges",
+          body: "The CMP port is an experiment and is described as one. Compose Multiplatform on Wasm reaches further than most people expect and still costs something real in bundle size and first paint against a React build that was tuned for exactly this. Both versions exist here so the trade is visible rather than argued.",
+        },
+      ],
+      techStack: [
+        { group: "React site", items: ["React 19", "Vite 7", "Tailwind v4", "TanStack Router + Start", "three.js / R3F", "Vercel Edge", "Playwright", "Vitest"] },
+        { group: "Assistant", items: ["Groq", "Gemini", "Claude", "SSE streaming", "Prompt-injection guards"] },
+        { group: "CMP twin", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm", "Desktop (JVM)", "Android", "iOS", "Ktor"] },
+      ],
+      extraLinks: [
+        { label: "React source", url: "https://github.com/darkpandawarrior/cv-siddharth" },
+        { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
+        { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+      ],
+    },
   },
   {
     slug: "deadlock",
@@ -1356,27 +1402,6 @@ export const projects: Project[] = [
     ],
     status: "Active · MIT · vendored across 5 repos",
     badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
-  },
-  {
-    slug: "cv-siddharth-kmp",
-    name: "cv-siddharth-kmp",
-    tagline: "This portfolio, rebuilt in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
-    description:
-      "A Compose Multiplatform port of this very site: ~16.5k lines of Kotlin across four modules rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS. An experiment in how far CMP reaches on the web — and an honest record of where it does not.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm", "Desktop", "Android", "iOS", "Ktor"],
-    highlights: [
-      "Deliberately bleeding edge: Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2. Every version the newest published, pre-release included.",
-      "Almost no dependencies by design: no nav library, no DI, no markdown parser, no diagram renderer, no icon pack, no shader library. Routing, the Mermaid layout engine, the SkSL ambient wash, the SSE frame parser and every icon are hand-built on Compose and Ktor primitives.",
-      "Includes a Compose-subset interpreter that parses a snippet and renders it with real composables — a live playground rather than a screenshot.",
-      "Built on kmp-app-template, so it doubles as the proof that the template actually carries a real app to four targets.",
-    ],
-    links: [
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
-      { label: "The React original", url: "https://cv-siddharth.vercel.app" },
-      { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
-    ],
-    status: "Experiment · public · 4 targets",
-    badges: ["Kotlin Multiplatform", "Compose Multiplatform", "Wasm", "Bleeding edge"],
   },
   {
     slug: "the-loopdown",
