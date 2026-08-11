@@ -1,0 +1,30 @@
+name: screenshot-sentinel
+
+# Weekly plus on any PR that touches captures. Weekly matters more than the PR trigger: rot here
+# arrives by the code moving on while the images stay still, which no single PR ever shows.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sentinel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python3 -m pip install --quiet Pillow
+      # Warn-only for now: --fail-on is intentionally not set. These repos have existing findings,
+      # and a gate that fails from day one on pre-existing debt gets switched off within a week.
+      # Add `--fail-on broken,duplicate` once the current findings are cleared.
+      - run: python3 scripts/screenshot-sentinel.py --write-report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sentinel-report
+          path: '**/SENTINEL_REPORT.md'
+          if-no-files-found: ignore

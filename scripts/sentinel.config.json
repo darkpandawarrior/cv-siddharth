@@ -1,0 +1,14 @@
+{
+  "shots": "docs/screenshots",
+  "sources": [
+    "src/routes/*.tsx"
+  ],
+  "screenRegex": "createFileRoute\\(\"/([a-z][a-z-]*)\"",
+  "minBytes": 1000,
+  "checkOrphaned": true,
+  "ignore": [
+    "site_home",
+    "site_project_detail",
+    "site_project_detail_with_compare"
+  ]
+}

@@ -32,7 +32,6 @@ export const galleries: Record<string, string[]> = {
     "/projects/kursi/screenshots/4p_pick_action.png",
     "/projects/kursi/screenshots/4p_pick_action_nocoach.png",
     "/projects/kursi/screenshots/4p_pick_target.png",
-    "/projects/kursi/screenshots/4p_reaction.png",
     "/projects/kursi/screenshots/4p_reaction_block.png",
     "/projects/kursi/screenshots/career.gif",
     "/projects/kursi/screenshots/career.png",
@@ -173,16 +172,13 @@ export const galleries: Record<string, string[]> = {
     "/projects/mileway/screenshots/wear_dashboard.png",
     "/projects/mileway/screenshots/wear_trip_list.png",
     "/projects/mileway/screenshots/widget_glance.png",
-    "/projects/mileway/screenshots/widget_ios_home.png",
-    "/projects/mileway/screenshots/widget_ios_lockscreen.png"
+    "/projects/mileway/screenshots/widget_ios_home.png"
   ],
   "paymentslab": [
     "/projects/paymentslab/screenshots/activity_flow.gif",
     "/projects/paymentslab/screenshots/animated_amount.png",
     "/projects/paymentslab/screenshots/checkout_flow.gif",
     "/projects/paymentslab/screenshots/checkout_screen_order_summary.png",
-    "/projects/paymentslab/screenshots/checkout_screen_paying.png",
-    "/projects/paymentslab/screenshots/checkout_screen_settled_success.png",
     "/projects/paymentslab/screenshots/explore_verify_flow.gif",
     "/projects/paymentslab/screenshots/failure_shake.png",
     "/projects/paymentslab/screenshots/gateway_badges.png",
