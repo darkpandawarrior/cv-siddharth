@@ -34,7 +34,9 @@
     "gen:store": "node scripts/gen-store.mjs",
     "spotify:auth": "node scripts/spotify-auth.mjs",
     "resume:pdf": "node scripts/print-resume.mjs",
-    "gen:compare": "node scripts/gen-compare-sets.mjs"
+    "gen:compare": "node scripts/gen-compare-sets.mjs",
+    "capture:site": "node scripts/capture-site.mjs",
+    "sentinel": "python3 scripts/screenshot-sentinel.py --write-report"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

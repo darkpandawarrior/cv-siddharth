@@ -1,0 +1,25 @@
+{
+  "base": "http://localhost:4173",
+  "count": 19,
+  "routes": [
+    "blueprint",
+    "chess",
+    "compose",
+    "excelsior",
+    "forge",
+    "hire",
+    "home",
+    "ink",
+    "lab",
+    "loopdown",
+    "map",
+    "playground",
+    "pulse",
+    "resume",
+    "shipped",
+    "terminal",
+    "weeb",
+    "project_detail",
+    "project_detail_with_compare"
+  ]
+}
