@@ -579,14 +579,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   className="group/shot shrink-0 snap-start"
                   title={it.caption}
                 >
-                  {/* Fixed HEIGHT, natural width. This used to force aspect-[9/19] + object-cover on
+                  {/* Fixed height, natural width, capped. This used to force aspect-[9/19] + object-cover on
                       every capture, which is a phone frame — so Kursi, whose captures are 46 desktop
                       1440x900 frames against 10 phone ones, had its landscape screenshots cropped to
                       a vertical sliver. Mileway is almost all 411x891, so the bug was invisible there
                       and shipped. A rail of equal-height, varying-width tiles keeps every project's
-                      real shape and still lines up. */}
-                  <span className="gallery-item block h-72 overflow-hidden rounded-2xl border border-line bg-card">
-                    <Picture src={it.src} alt={it.caption} className="h-full w-auto max-w-none object-contain" />
+                      real shape and still lines up. The width cap matters as much: PaymentsLab
+                      ships component strips as wide as 6.67:1, which at this height would render
+                      1,920px across and swallow the whole rail. */}
+                  <span className="gallery-item flex h-72 max-w-[26rem] items-center justify-center overflow-hidden rounded-2xl border border-line bg-card">
+                    <Picture src={it.src} alt={it.caption} className="max-h-full max-w-full object-contain" />
                   </span>
                   {it.caption && (
                     <span className="mt-2 line-clamp-2 block max-w-64 text-center text-xs text-muted transition group-hover/shot:text-accent">

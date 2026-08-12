@@ -104,17 +104,29 @@ function FitImage({
   className?: string;
 }) {
   const [contain, setContain] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+
+  // >20% aspect delta means this capture doesn't match the frame's shape — letterbox rather than
+  // crop it.
+  const measure = (img: HTMLImageElement | null) => {
+    if (!img || !img.naturalWidth) return;
+    const aspect = img.naturalWidth / img.naturalHeight;
+    setContain(Math.abs(aspect - targetAspect) / targetAspect > 0.2);
+  };
+
+  // onLoad alone was not enough and the failure was invisible: this page is server-rendered, so an
+  // image already in cache is `complete` before React attaches the handler, onLoad never fires, and
+  // the state stays at its object-cover default. PaymentsLab's 320x470 screens are 43.7% off the
+  // phone frame — comfortably past the threshold — and were still being cropped on the live site,
+  // cutting "PaymentsLab" down to "mentsLab". Measure on mount too.
+  useEffect(() => measure(ref.current), [src]);
+
   return (
     <img
+      ref={ref}
       src={src}
       alt={alt}
-      onLoad={(e) => {
-        const img = e.currentTarget;
-        const aspect = img.naturalWidth / img.naturalHeight;
-        // ponytail: >20% aspect delta means this capture doesn't match the
-        // frame's shape — letterbox instead of cropping it.
-        setContain(Math.abs(aspect - targetAspect) / targetAspect > 0.2);
-      }}
+      onLoad={(e) => measure(e.currentTarget)}
       className={`${className} ${contain ? "bg-black object-contain" : "object-cover object-top"}`}
     />
   );

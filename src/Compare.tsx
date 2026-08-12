@@ -16,13 +16,18 @@ type Props = {
   subject: string;
   className?: string;
   /**
-   * Frame aspect ratio. Deliberately *not* the full 9:19.5 of the phone screenshots underneath:
-   * at full height the frame runs past 1,500px and the reader has to scroll to compare, which
-   * defeats a side-by-side. Cropping to the top with `object-top` keeps the status bar, title,
-   * tabs and first cards — which is exactly where the treatments differ — and drops the empty
-   * tail of a half-filled list, which is identical in all of them anyway.
+   * Frame width in CSS px, and how much of the screen's height to show.
+   *
+   * NOT an aspect ratio. Forcing one wider than the screenshot's own made `object-cover` scale to
+   * cover the width — a 411px-wide capture stretched across a 768px frame is a 1.9x magnification,
+   * so the reader got a huge crop of the middle of the layout instead of a screen they could read.
+   *
+   * Sized near the capture's natural width instead, so the scale factor is ~1 and the crop is
+   * purely vertical: the title, tabs and first cards stay, the empty tail of a half-filled list
+   * goes. Cropping is right; magnifying is not.
    */
-  aspect?: string;
+  frameWidth?: number;
+  frameHeight?: number;
 };
 
 /**
@@ -37,7 +42,13 @@ type Props = {
  * The clipping is CSS `clip-path` driven by inline percentages, so the frame is already correct on
  * first paint rather than after a layout measurement.
  */
-export function Compare({ layers, subject, className = "", aspect = "9 / 13" }: Props) {
+export function Compare({
+  layers,
+  subject,
+  className = "",
+  frameWidth = 420,
+  frameHeight = 560,
+}: Props) {
   const count = layers.length;
   const [positions, setPositions] = useState(() => evenPositions(count));
   const frameRef = useRef<HTMLDivElement>(null);
@@ -78,7 +89,10 @@ export function Compare({ layers, subject, className = "", aspect = "9 / 13" }: 
   if (count === 1) {
     return (
       <div className={className}>
-        <div className="overflow-hidden rounded-sm border border-line bg-surface" style={{ aspectRatio: aspect }}>
+        <div
+          className="mx-auto overflow-hidden rounded-sm border border-line bg-surface"
+          style={{ width: frameWidth, height: frameHeight, maxWidth: "100%" }}
+        >
           <Picture src={layers[0].src} alt={`${subject} — ${layers[0].label}`} className="h-full w-full object-cover object-top" />
         </div>
       </div>
@@ -100,8 +114,8 @@ export function Compare({ layers, subject, className = "", aspect = "9 / 13" }: 
       <div
         ref={frameRef}
         id={`${id}-frame`}
-        className="relative select-none overflow-hidden rounded-sm border border-line bg-surface"
-        style={{ aspectRatio: aspect }}
+        className="relative mx-auto select-none overflow-hidden rounded-sm border border-line bg-surface"
+        style={{ width: frameWidth, height: frameHeight, maxWidth: "100%" }}
       >
         {layers.map((layer, i) => (
           <div
@@ -226,7 +240,7 @@ export function CompareSection({ slug }: { slug: string }) {
           </div>
         )}
 
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-xl">
           <Compare key={active} layers={current} subject={prettySet(active)} />
         </div>
       </div>
