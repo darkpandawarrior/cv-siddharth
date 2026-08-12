@@ -5,8 +5,8 @@
 //   public/projects/mileway/compare/expenses/1-ledger.png
 //   public/projects/mileway/compare/expenses/2-signal.png
 //
-// The numeric prefix is the order the versions sit in left-to-right; the rest of the filename is
-// the label shown in the band. Ordering is explicit rather than alphabetical because the reading
+// The numeric prefix orders the toggle; the rest of the filename is the label on it. A file
+// ending `-dark` pairs with its light sibling rather than becoming its own toggle entry. Ordering is explicit rather than alphabetical because the reading
 // order of a comparison is a design decision — "before" belongs on the left, and "paper" sorting
 // after "instrument" is an accident of the alphabet, not an argument.
 import { readdirSync, writeFileSync, existsSync, statSync } from "node:fs";
@@ -43,13 +43,28 @@ if (existsSync(projectsDir)) {
     for (const setName of readdirSync(compareDir)) {
       const setDir = join(compareDir, setName);
       if (!statSync(setDir).isDirectory()) continue;
-      const layers = readdirSync(setDir)
+      const files = readdirSync(setDir)
         .filter((f) => /\.(png|jpe?g|webp)$/i.test(f) && !isDerivative(setDir, f))
-        .sort()
-        .map((f) => ({ src: `/projects/${slug}/compare/${setName}/${f}`, label: label(f) }));
-      // One version is not a comparison. Emitting it anyway would render a viewer whose dividers
-      // do nothing, which reads as broken rather than as empty.
-      if (layers.length >= 2) sets[setName] = layers;
+        .sort();
+      // A `-dark` file pairs with its light sibling instead of becoming its own option: the toggle
+      // picks a treatment, the drag compares that treatment's two faces. Two axes, two controls.
+      const byLabel = new Map();
+      for (const f of files) {
+        const raw = label(f);
+        const isDark = /\s*dark$/.test(raw);
+        const key = isDark ? raw.replace(/\s*dark$/, "").trim() : raw;
+        const entry = byLabel.get(key) ?? { label: key, light: null, dark: null };
+        const url = `/projects/${slug}/compare/${setName}/${f}`;
+        if (isDark) entry.dark = url;
+        else entry.light = url;
+        byLabel.set(key, entry);
+      }
+      // A dark file with no light sibling is a naming mistake, not an option — dropping it keeps a
+      // half-pair from rendering as a treatment whose toggle shows nothing.
+      const layers = [...byLabel.values()]
+        .filter((e) => e.light)
+        .map((e) => (e.dark ? e : { label: e.label, light: e.light }));
+      if (layers.length >= 1) sets[setName] = layers;
     }
     if (Object.keys(sets).length) out[slug] = sets;
   }
@@ -61,8 +76,8 @@ const banner =
 writeFileSync(
   join(root, "src", "data", "compareSets.ts"),
   banner +
-    "export type CompareLayer = { src: string; label: string };\n" +
-    `export const compareSets: Record<string, Record<string, CompareLayer[]>> = ${JSON.stringify(out, null, 2)};\n`,
+    "export type CompareOption = { label: string; light: string; dark?: string };\n" +
+    `export const compareSets: Record<string, Record<string, CompareOption[]>> = ${JSON.stringify(out, null, 2)};\n`,
 );
 console.log(
   "[gen-compare-sets]",
