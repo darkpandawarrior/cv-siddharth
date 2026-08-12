@@ -1231,6 +1231,24 @@ export const projects: Project[] = [
       { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
       { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
     ],
+    targets: [
+      {
+        // One target, not two. A "React" entry would be a device frame around the page the reader
+        // is already looking at — redundant, and it proves nothing that being here does not.
+        platform: "Web",
+        deviceFrame: "browser",
+        screens: [],
+        // The actual compiled Compose-Multiplatform/Wasm build of this same portfolio, running
+        // beside the React one. Built from cv-siddharth-kmp's :cmp-web wasmJsBrowserDistribution —
+        // 15MB, in line with the kursi/mileway/paymentslab embeds already here.
+        //
+        // This is the whole point of the project, and until now the page could only assert it. A
+        // screenshot of a cross-platform build proves nothing that a screenshot of anything else
+        // does not; the build actually running is the only checkable version of the claim.
+        liveUrl: "/portfolio-app/index.html",
+        note: "Live — the Compose Multiplatform build of this very site, compiled to Wasm and running in your browser. Same content, one commonMain, a different stack entirely.",
+      },
+    ],
     status: "Live · React on Vercel, CMP across 4 targets",
     badges: ["React 19", "Vercel", "LLM chat", "Compose Multiplatform", "Wasm"],
     detail: {

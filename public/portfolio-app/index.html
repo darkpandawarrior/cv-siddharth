@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Siddharth Pandalai — Senior Android Engineer</title>
+    <meta name="description" content="Senior Android Engineer, Pune. 5+ years Kotlin, Jetpack Compose and Kotlin Multiplatform. A Compose Multiplatform (Kotlin/Wasm) port of cv-siddharth.vercel.app.">
+    <link rel="canonical" href="https://cv-siddharth.vercel.app/">
+    <meta property="og:title" content="Siddharth Pandalai — Senior Android Engineer">
+    <meta property="og:description" content="Compose Multiplatform port of an interactive CV — one Kotlin codebase, four platforms.">
+    <meta property="og:type" content="profile">
+    <!-- Inline so there is no favicon round-trip (and no 404 in the console). Android green dot. -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%233ddc84'/></svg>">
+    <style>
+        /* --color-void from the source site's @theme. Set on html so the skiko payload downloads
+           over the site's own ground instead of a white flash. */
+        html, body { margin: 0; padding: 0; height: 100%; background: #05070a; color: #e8efe9;
+                     font-family: "Space Grotesk", system-ui, sans-serif; }
+        #compose { position: fixed; inset: 0; }
+        #boot {
+            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            font: 400 13px/1.6 ui-monospace, monospace; color: #8b909a;
+            letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none;
+        }
+        #boot b { color: #3ddc84; font-weight: 400; }
+        /* The crawlable layer. Visible until Compose paints (main() hides it), so a crawler, a
+           reader with JS disabled, and any browser without wasm all get real text. It is a SIBLING
+           of #compose, never a child — Compose clears its own container on mount and would delete
+           this if it lived inside. */
+        #seo { max-width: 46rem; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.65; }
+        #seo h1 { font-size: 2rem; margin: 0 0 .25rem; }
+        #seo h2 { font-size: 1.1rem; margin: 2rem 0 .5rem; color: #3ddc84; }
+        #seo a { color: #3ddc84; }
+        #seo .muted { color: #8b909a; }
+    </style>
+</head>
+<body>
+    <div id="compose"></div>
+    <div id="boot">loading <b>compose multiplatform</b> · kotlin/wasm</div>
+
+    <noscript><style>#boot{display:none}</style></noscript>
+
+    <!-- ponytail: hand-written for the four shipped routes. The planned Gradle prerender task
+         (W4) generates this per-route from the same Kotlin data classes so it can't drift —
+         until then, this is the floor, not the ceiling. -->
+    <div id="seo">
+        <h1>Siddharth Pandalai</h1>
+        <p class="muted">Senior Android Engineer · Pune, India · 5+ years</p>
+        <p>
+            I take Android apps from prototype to platform. Currently SDE-2 and Android platform
+            owner at Dice.tech, where the app serves 50,000+ monthly and 22,000+ daily active users.
+        </p>
+
+        <h2>Selected work</h2>
+        <ul>
+            <li><b>Dice.tech</b> — Android platform owner. Play Store rating 1.6★ to 4.5★, crash rate
+                down 80%, GPS accuracy from 50% to 95% via staged dead reckoning with Kalman smoothing.</li>
+            <li><b>Mileway</b> — Kotlin Multiplatform mileage tracker: 33 modules, five platforms from
+                one commonMain, with a real Ktor server module.</li>
+            <li><b>PaymentsLab</b> — 39-module KMP payments sandbox spanning a wide provider matrix.</li>
+            <li><b>Jugnoo / Jungleworks</b> — multi-tenant white-label SaaS across 150+ client codebases.</li>
+        </ul>
+
+        <h2>Stack</h2>
+        <p>Kotlin · Jetpack Compose · Compose Multiplatform · Kotlin Multiplatform · Coroutines and Flow ·
+           Hilt · Room · Ktor · Retrofit · WorkManager · Gradle convention plugins</p>
+
+        <h2>This build</h2>
+        <p>
+            A Compose Multiplatform port rendering to web, desktop, Android and iOS from one Kotlin
+            source set. The canonical portfolio is
+            <a href="https://cv-siddharth.vercel.app/">cv-siddharth.vercel.app</a>.
+        </p>
+
+        <h2>Contact</h2>
+        <p><a href="mailto:siddharthpandalai990@gmail.com">siddharthpandalai990@gmail.com</a></p>
+    </div>
+
+    <!-- type="module" is REQUIRED once Ktor is on the classpath: kotlinx-io's wasm glue emits
+         `import.meta`, which is a syntax error in a classic script and kills the whole bundle
+         before main() runs (the page then silently falls through to #seo above). The template
+         shipped a classic script because it had no such dependency. -->
+    <script type="module" src="cmpWeb.js"></script>
+</body>
+</html>
