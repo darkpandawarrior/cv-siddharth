@@ -37,7 +37,11 @@ export const societies: Society[] = [
       "The institute's student media body, publishing Excelsior since 1963. Three editions on the board; Joint Chief Editor and Chief English Editor on the last one.",
     links: [
       { label: "Read Excelsior", url: "/excelsior" },
-      { label: "Instagram", url: "https://www.instagram.com/editorialboardmanit/" },
+      // Handle corrected 2026-08-12: this pointed at `editorialboardmanit`, which is not the
+      // account the board actually runs. Both return HTTP 200 — Instagram serves a 200 for dead
+      // handles too — so status is not evidence here; this is the one supplied by the board.
+      { label: "Instagram", url: "https://www.instagram.com/editorialboard.nitb" },
+      { label: "LinkedIn", url: "https://www.linkedin.com/company/editorial-board-manit-bhopal" },
       { label: "Blog", url: "https://edboardmanit.wordpress.com/" },
     ],
   },
@@ -51,6 +55,8 @@ export const societies: Society[] = [
       "MANIT's oldest (and only) English literary society. Member since 2018. Ran the society's recruitment: 250+ students went through it. Wrote for Scribbled, the society blog. Helped run Illuminati 8.0, the Technosearch'18 fest event with 1500+ footfall from other colleges. Coordinated Ripple'20, MANIT's Literary Fest.",
     links: [
       { label: "D Buzz 2019 (PDF)", url: "https://drishtantnitbhopal.wordpress.com/wp-content/uploads/2022/01/d-buzz-2019.pdf" },
+      { label: "Instagram", url: "https://www.instagram.com/drishtant_nitb/" },
+      { label: "LinkedIn", url: "https://www.linkedin.com/company/drishtant-the-literary-society-of-manit/" },
       { label: "Blog", url: "https://drishtantnitbhopal.wordpress.com/" },
     ],
   },
