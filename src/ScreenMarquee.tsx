@@ -32,7 +32,11 @@ export function ScreenMarquee({ screens, alt }: { screens: string[]; alt: string
           <div className="screen-marquee-row" key={copy}>
             {row.map((src, i) => (
               <div className="screen-marquee-item" key={`${copy}-${src}-${i}`}>
-                <Picture src={src} alt="" className="h-full w-full object-cover" />
+                {/* Sizing lives in .screen-marquee-item img — a Tailwind `h-full w-full
+                    object-cover` here is what forced every landscape capture into a phone
+                    crop, and utilities sit in @layer utilities where specificity alone
+                    would not reliably beat them back. */}
+                <Picture src={src} alt="" />
               </div>
             ))}
           </div>

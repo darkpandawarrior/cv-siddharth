@@ -2,6 +2,22 @@
 // Add versions under public/projects/<slug>/compare/<set>/N-label.png and they appear automatically.
 export type CompareOption = { label: string; light: string; dark?: string };
 export const compareSets: Record<string, Record<string, CompareOption[]>> = {
+  "kursi": {
+    "density": [
+      {
+        "label": "focus",
+        "light": "/projects/kursi/compare/density/1-focus.png"
+      },
+      {
+        "label": "guided",
+        "light": "/projects/kursi/compare/density/2-guided.png"
+      },
+      {
+        "label": "analyst",
+        "light": "/projects/kursi/compare/density/3-analyst.png"
+      }
+    ]
+  },
   "mileway": {
     "direction-approvals": [
       {
@@ -245,6 +261,22 @@ export const compareSets: Record<string, Record<string, CompareOption[]>> = {
       {
         "label": "paper",
         "light": "/projects/mileway/compare/redesign-search-masterSearch-results/2-paper.png"
+      }
+    ]
+  },
+  "paymentslab": {
+    "checkout-lifecycle": [
+      {
+        "label": "order summary",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/1-order-summary.png"
+      },
+      {
+        "label": "paying",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/2-paying.png"
+      },
+      {
+        "label": "settled success",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/3-settled-success.png"
       }
     ]
   }

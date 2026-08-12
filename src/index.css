@@ -1611,12 +1611,26 @@ html.resume-mode body {
 
 .screen-marquee-item {
   height: clamp(11rem, 22vw, 17rem);
-  aspect-ratio: 9 / 19.5;
+  /* No forced aspect-ratio. `aspect-ratio: 9/19.5` is a phone, and object-cover
+     inside it cropped every landscape capture to an unreadable vertical sliver —
+     this site's own route captures are all 1440x900, and Kursi's are mostly
+     1440x900 desktop frames. Exactly the bug the gallery rail below already
+     fixed for itself: fixed height, natural width, capped. The cap lives on the
+     img (with object-contain) so a genuinely extreme strip — PaymentsLab ships
+     component captures as wide as 6.67:1 — letterboxes instead of running
+     1,900px across the band. */
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 0.9rem;
   border: 1px solid var(--color-line);
   background-color: var(--color-card);
+}
+
+.screen-marquee-item img {
+  height: 100%;
+  width: auto;
+  max-width: 26rem;
+  object-fit: contain;
 }
 
 /* Reduced motion: no crawl. It becomes a scroller the reader drives, so the

@@ -204,5 +204,27 @@ export const galleries: Record<string, string[]> = {
     "/projects/paymentslab/screenshots/step_timeline_dark.png",
     "/projects/paymentslab/screenshots/step_timeline_light.png",
     "/projects/paymentslab/screenshots/success_burst.png"
+  ],
+  "portfolio": [
+    "/projects/portfolio/screenshots/cmp_web.png",
+    "/projects/portfolio/screenshots/site_blueprint.png",
+    "/projects/portfolio/screenshots/site_chess.png",
+    "/projects/portfolio/screenshots/site_compose.png",
+    "/projects/portfolio/screenshots/site_excelsior.png",
+    "/projects/portfolio/screenshots/site_forge.png",
+    "/projects/portfolio/screenshots/site_hire.png",
+    "/projects/portfolio/screenshots/site_home.png",
+    "/projects/portfolio/screenshots/site_ink.png",
+    "/projects/portfolio/screenshots/site_lab.png",
+    "/projects/portfolio/screenshots/site_loopdown.png",
+    "/projects/portfolio/screenshots/site_map.png",
+    "/projects/portfolio/screenshots/site_playground.png",
+    "/projects/portfolio/screenshots/site_project_detail.png",
+    "/projects/portfolio/screenshots/site_project_detail_with_compare.png",
+    "/projects/portfolio/screenshots/site_pulse.png",
+    "/projects/portfolio/screenshots/site_resume.png",
+    "/projects/portfolio/screenshots/site_shipped.png",
+    "/projects/portfolio/screenshots/site_terminal.png",
+    "/projects/portfolio/screenshots/site_weeb.png"
   ]
 };

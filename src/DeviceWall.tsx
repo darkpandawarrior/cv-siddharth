@@ -33,8 +33,16 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
  *  instant the ~2 KB index.html loads, long before the ~14 MB Wasm downloads,
  *  compiles and paints (and it fires even when the canvas never paints at all),
  *  leaving a dark box with no way to fall back. Instead we poll the (same-origin)
- *  child canvas: Skiko only grows its backing buffer past the default 300×150
- *  once it's actually rendering. Reveal on that; otherwise keep the screenshot. */
+ *  child document for a real first frame; otherwise keep the screenshot.
+ *
+ *  Two shapes of build ship here, and the probe has to cover both. Kursi, Mileway
+ *  and PaymentsLab render through a Skiko <canvas>, which only grows past its
+ *  default 300×150 once it is genuinely rendering. The portfolio's CMP twin
+ *  (Compose Multiplatform 1.12) ships NO canvas at all — it renders into a plain
+ *  #compose div and its main() hides the #boot overlay on the first frame. The
+ *  probe used to look up `#ComposeTarget` by id, which that build does not have,
+ *  so it polled for 18s, gave up, and — with no fallback screenshot configured —
+ *  the "live" embed on /project/portfolio was a permanently black box. */
 function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
   const [ref, inView] = useInView<HTMLDivElement>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -46,8 +54,13 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
     const started = Date.now();
     const iv = window.setInterval(() => {
       try {
-        const c = iframeRef.current?.contentDocument?.getElementById("ComposeTarget") as HTMLCanvasElement | null;
-        if (c && (c.width > 300 || c.height > 150)) {
+        const doc = iframeRef.current?.contentDocument;
+        const c = doc?.querySelector("canvas");
+        const boot = doc?.getElementById("boot");
+        if (
+          (c && (c.width > 300 || c.height > 150)) ||
+          (boot && doc?.defaultView?.getComputedStyle(boot).display === "none")
+        ) {
           setPainted(true);
           window.clearInterval(iv);
           return;
