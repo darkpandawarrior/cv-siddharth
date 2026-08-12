@@ -7,7 +7,7 @@ export const projectStats = {
     "features": 13,
     "cores": 12,
     "dbVersion": 48,
-    "screenshots": 159
+    "screenshots": 326
   },
   "paymentslab": {
     "modules": 15,

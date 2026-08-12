@@ -179,6 +179,8 @@ export const galleries: Record<string, string[]> = {
     "/projects/paymentslab/screenshots/animated_amount.png",
     "/projects/paymentslab/screenshots/checkout_flow.gif",
     "/projects/paymentslab/screenshots/checkout_screen_order_summary.png",
+    "/projects/paymentslab/screenshots/checkout_screen_paying.png",
+    "/projects/paymentslab/screenshots/checkout_screen_settled_success.png",
     "/projects/paymentslab/screenshots/explore_verify_flow.gif",
     "/projects/paymentslab/screenshots/failure_shake.png",
     "/projects/paymentslab/screenshots/gateway_badges.png",
