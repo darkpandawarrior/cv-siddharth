@@ -2,6 +2,25 @@
 // Add versions under public/projects/<slug>/compare/<set>/N-label.png and they appear automatically.
 export type CompareOption = { label: string; light: string; dark?: string };
 export const compareSets: Record<string, Record<string, CompareOption[]>> = {
+  "hiresignal": {
+    "theme": [
+      {
+        "label": "dashboard",
+        "light": "/projects/hiresignal/compare/theme/1-dashboard.png",
+        "dark": "/projects/hiresignal/compare/theme/1-dashboard-dark.png"
+      },
+      {
+        "label": "board",
+        "light": "/projects/hiresignal/compare/theme/2-board.png",
+        "dark": "/projects/hiresignal/compare/theme/2-board-dark.png"
+      },
+      {
+        "label": "pipeline",
+        "light": "/projects/hiresignal/compare/theme/3-pipeline.png",
+        "dark": "/projects/hiresignal/compare/theme/3-pipeline-dark.png"
+      }
+    ]
+  },
   "kursi": {
     "density": [
       {
