@@ -1099,7 +1099,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "74 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "9 merged PRs to the public career-ops project (⭐63k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), a dashboard status-cell fix (#1186), an agent-inbox feature (#1472), and five correctness fixes merged in one day (#2586–#2590), each shipped with a reproduction and a regression test — every one publicly checkable.",
+      "17 merged PRs to the public career-ops project (⭐63k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612) — each shipped with a reproduction and a regression test, every one publicly checkable.",
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -1111,7 +1111,7 @@ export const projects: Project[] = [
     links: [
       { label: "Upstream (career-ops, ⭐63k+)", url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · 9 PRs merged to public career-ops",
+    status: "Active · 17 PRs merged to public career-ops",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
     theme: {
       accent: "#3B82F6",
@@ -1160,7 +1160,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "Nine merged pull requests against the public career-ops repository (⭐63k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, and five correctness fixes merged in a single day. Those five all target the same class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "Seventeen merged pull requests against the public career-ops repository (⭐63k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
@@ -1566,6 +1566,14 @@ export interface Contribution {
 // Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐63k+).
 // See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
 export const openSource: Contribution[] = [
+  { repo: "santifer/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/santifer/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/santifer/career-ops/pull/2639", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "fix(agent-inbox): concurrent adds silently dropped queued requests", url: "https://github.com/santifer/career-ops/pull/2614", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "fix(liveness): a rate-limited posting was classified expired, not uncertain", url: "https://github.com/santifer/career-ops/pull/2613", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate", url: "https://github.com/santifer/career-ops/pull/2612", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "feat(rank): opt-in LLM relevance re-ranker for pipeline.md", url: "https://github.com/santifer/career-ops/pull/2579", status: "merged", date: "2026-08-12" },
+  { repo: "santifer/career-ops", title: "fix(cv): Korean and Traditional Chinese CVs had no font rule", url: "https://github.com/santifer/career-ops/pull/2616", status: "merged", date: "2026-08-11" },
+  { repo: "santifer/career-ops", title: "fix(states): aliases the engine accepts were missing from states.yml", url: "https://github.com/santifer/career-ops/pull/2615", status: "merged", date: "2026-08-11" },
   { repo: "santifer/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/santifer/career-ops/pull/2590", status: "merged", date: "2026-08-07" },
   { repo: "santifer/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/santifer/career-ops/pull/2589", status: "merged", date: "2026-08-07" },
   { repo: "santifer/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/santifer/career-ops/pull/2588", status: "merged", date: "2026-08-07" },
@@ -1586,7 +1594,7 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: "9 merged PRs to the public career-ops project (⭐63k+): ATS providers (BambooHR, Breezy HR), a dashboard status-cell fix, an agent-inbox feature, and five correctness fixes merged in one day — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, and a date filter ignored in its =value form." },
+  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: "17 merged PRs to the public career-ops project (⭐63k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history." },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
