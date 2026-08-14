@@ -75,7 +75,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
             )}
           </div>
           {client.developer && client.developer !== client.name && (
-            <span className="block truncate text-xs text-zinc-500">{client.developer}</span>
+            <span className="block truncate text-xs text-muted">{client.developer}</span>
           )}
           {past && client.lastSeen && (
             <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-muted">
@@ -97,7 +97,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
               title={app.name ?? app.id}
               className="group flex items-baseline gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/[0.04]"
             >
-              <span className="w-[52px] shrink-0 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+              <span className="w-[52px] shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted">
                 {SIDE_LABEL[app.side ?? ""] ?? "App"}
               </span>
               <span className="min-w-0 flex-1 truncate font-mono text-[10px] uppercase tracking-wider text-muted">

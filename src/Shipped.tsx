@@ -48,7 +48,7 @@ export function Shipped() {
             Jugnoo — each one a separate build of the same two codebases, shipped under its own
             company on Google Play.
           </p>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-500">
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
             I never had a list of them, and nobody there did. This page is that list, put back
             together and then checked one store listing at a time — including {delisted.length} that
             have since been taken down, and can only be shown at all because the Internet Archive
@@ -174,7 +174,7 @@ export function Shipped() {
             reason these can be named is that the Internet Archive saved the page while it was up.
             Each link opens the copy it saved.
           </p>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
             The icons and colours are the ones each app actually shipped with, not stand-ins.
           </p>
           {/* grid-cols-1 is load-bearing on mobile: without a base column

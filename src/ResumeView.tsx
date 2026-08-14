@@ -115,8 +115,20 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               form put no `linkedin.com` or `github.com` string anywhere in it.
               Verified: `pdftotext | grep -c 'linkedin.com\|github.com'` was 0,
               so the profile fields never populated. The host earns its width. */}
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-zinc-600">
-            <span>{profile.phone}</span>
+          {/* <address>, because that is what this is: the contact details for
+              the document's subject. It carries the semantic for a screen
+              reader and for anything parsing the page, and `not-italic`
+              cancels the UA default so nothing changes visually.
+
+              The phone was the one contact field that was plain text while
+              email and all three profile links were already anchors — so on a
+              phone, the number a recruiter most wants to tap was the one thing
+              they could not. Spaces are stripped from the href (a `tel:` URI
+              takes no whitespace) while the displayed text keeps them. */}
+          <address className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm not-italic text-zinc-600">
+            <a href={`tel:${profile.phone.replace(/\s+/g, "")}`} className="text-zinc-600">
+              {profile.phone}
+            </a>
             <span className="text-zinc-300">·</span>
             <a href={`mailto:${profile.email}`} className="text-zinc-600">
               {profile.email}
@@ -134,7 +146,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                 </a>
               </Fragment>
             ))}
-          </p>
+          </address>
           <p className="mt-0.5 text-sm text-zinc-600">
             {profile.location} · {budget === 1 ? profile.availabilityShort : profile.availability}
           </p>

@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { surfaces } from "../src/data/surfaces.ts";
 
 // Phase C2: axe locks in the a11y pass instead of just documenting it.
 // Four routes cover every layout shape on the site — SSR content page (/),
@@ -9,23 +10,29 @@ import AxeBuilder from "@axe-core/playwright";
 // compose, forge, map, playground, loopdown) — the original four never scanned
 // any of these, so their ARIA/keyboard wiring shipped unverified like the chat
 // console did before the dedicated test below was added.
+/**
+ * Every scannable route, derived rather than listed.
+ *
+ * This was a hand-kept array, and it had drifted exactly the way hand-kept
+ * arrays do: /excelsior, /ink and /shipped were all live routes that nothing
+ * ever scanned. Each one is a real page a recruiter can land on, and each was
+ * shipping unverified — /ink in particular carries `--color-accent2` (#cf8f63)
+ * on the ink-world ground, a pairing that had never been contrast-checked at
+ * body weight.
+ *
+ * Taking the paths from the surfaces registry means adding a surface widens
+ * this gate automatically, and `src/data/surfaces.test.ts` already fails the
+ * build if a route file exists with no surface. So a new route cannot be
+ * unscanned without two separate gates going red first.
+ *
+ * The two `$param` routes are not surfaces — they need a concrete param to
+ * render — so they stay explicit, one representative each.
+ */
 const ROUTES = [
   "/",
-  "/hire",
   "/read/deadline",
-  "/resume",
   "/project/mileway",
-  "/lab",
-  "/terminal",
-  "/blueprint",
-  "/compose",
-  "/forge",
-  "/map",
-  "/playground",
-  "/pulse",
-  "/loopdown",
-  "/chess",
-  "/weeb",
+  ...surfaces.map((s) => s.to),
 ];
 
 /* The reveal animations on the card grids fade in from transparent, and axe
