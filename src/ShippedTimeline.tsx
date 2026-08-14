@@ -50,7 +50,7 @@ export function ShippedTimeline() {
                   title={`${y.live} still on the store`}
                 />
               </div>
-              <span className="font-mono text-[10px] tabular-nums text-zinc-500">{y.year}</span>
+              <span className="font-mono text-[10px] tabular-nums text-muted">{y.year}</span>
             </div>
           );
         })}

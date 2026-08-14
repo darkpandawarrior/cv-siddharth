@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
+import { FloatingChat } from "../FloatingChat.tsx";
 
 // The full record is the default and carries no param, so `/resume` keeps
 // showing everything exactly as it always has. Anything unrecognised falls
@@ -35,5 +36,18 @@ function ResumePage() {
     document.documentElement.classList.add("resume-mode");
     return () => document.documentElement.classList.remove("resume-mode");
   }, []);
-  return <ResumeView cut={cut ?? "full"} />;
+  return (
+    <>
+      <ResumeView cut={cut ?? "full"} />
+      {/* Matching the thirteen other route files that already mount it. Two
+          bits of chatContext.ts had been dead code since the day they were
+          written — PAGE_CHIPS["/resume"] and its three résumé-specific
+          prompts — because the console they belong to was never on this
+          route. It also puts the JD fit check one click from the page a
+          recruiter who has already decided to read the résumé is standing on.
+          Both the launcher and the panel carry print:hidden, so the printed
+          PDF is byte-for-byte unchanged. */}
+      <FloatingChat />
+    </>
+  );
 }

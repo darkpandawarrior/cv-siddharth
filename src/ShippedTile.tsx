@@ -108,7 +108,7 @@ export function ShippedTile({ app, past = false }: { app: ShippedApp; past?: boo
           )}
         </span>
         {app.developer && (
-          <span className="block truncate text-xs text-zinc-500">{app.developer}</span>
+          <span className="block truncate text-xs text-muted">{app.developer}</span>
         )}
         <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-muted">
           {meta}

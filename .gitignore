@@ -26,6 +26,12 @@ public/**/*.webp
 # listings, and it needs the private Jugnoo repos to run, which a build machine
 # does not have. Ignoring them ships a shelf of blank squares.
 !public/store/*.webp
+# ...and except the surface posters. Same reasoning again: scripts/gen-surfaces.mjs
+# derives them from docs/screenshots/, which scripts/capture-site.mjs fills by
+# driving a real browser over a running dev server — neither of which a build
+# machine has. Ignoring them fails surfaces.test.ts on a fresh clone and ships
+# a homepage wall of empty frames.
+!public/surfaces/*.webp
 
 # Playwright output
 test-results/

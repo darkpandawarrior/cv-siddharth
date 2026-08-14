@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { surfaces } from "../src/data/surfaces.ts";
 
 // Phase C2: axe locks in the a11y pass instead of just documenting it.
 // Four routes cover every layout shape on the site — SSR content page (/),
@@ -9,23 +10,29 @@ import AxeBuilder from "@axe-core/playwright";
 // compose, forge, map, playground, loopdown) — the original four never scanned
 // any of these, so their ARIA/keyboard wiring shipped unverified like the chat
 // console did before the dedicated test below was added.
+/**
+ * Every scannable route, derived rather than listed.
+ *
+ * This was a hand-kept array, and it had drifted exactly the way hand-kept
+ * arrays do: /excelsior, /ink and /shipped were all live routes that nothing
+ * ever scanned. Each one is a real page a recruiter can land on, and each was
+ * shipping unverified — /ink in particular carries `--color-accent2` (#cf8f63)
+ * on the ink-world ground, a pairing that had never been contrast-checked at
+ * body weight.
+ *
+ * Taking the paths from the surfaces registry means adding a surface widens
+ * this gate automatically, and `src/data/surfaces.test.ts` already fails the
+ * build if a route file exists with no surface. So a new route cannot be
+ * unscanned without two separate gates going red first.
+ *
+ * The two `$param` routes are not surfaces — they need a concrete param to
+ * render — so they stay explicit, one representative each.
+ */
 const ROUTES = [
   "/",
-  "/hire",
   "/read/deadline",
-  "/resume",
   "/project/mileway",
-  "/lab",
-  "/terminal",
-  "/blueprint",
-  "/compose",
-  "/forge",
-  "/map",
-  "/playground",
-  "/pulse",
-  "/loopdown",
-  "/chess",
-  "/weeb",
+  ...surfaces.map((s) => s.to),
 ];
 
 /* The reveal animations on the card grids fade in from transparent, and axe
@@ -70,6 +77,47 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
  * (Kept OUTSIDE the template literal: a backtick in a comment inside a tagged
  * template is parsed as JS, which silently yielded "No tests found".) */
 
+/**
+ * Run the scan, retrying ONLY when hydration navigated out from under it.
+ *
+ * color-contrast is ENFORCED (no allowlist). Phase B1 retired the C2
+ * exception: the failing muted-text tokens (text-zinc-500/600, 3.5–2.2:1 on
+ * the dark grounds) were replaced sitewide with a single `text-muted` token
+ * (#8b909a) that passes AA (>=4.5:1) on every dark ground incl. the lightest
+ * themed card (#33241c → 4.65:1). The résumé (dark-on-light) already passed
+ * and was left untouched. If this regresses, a new muted-on-dark or
+ * accent-on-dark pairing slipped in.
+ *
+ * THE RETRY, and why it is not a papered-over failure. TanStack Start
+ * re-navigates to the same URL when the router hydrates — measured on
+ * /playground, `framenavigated → /playground` fires once for the document and
+ * again after the load event. When that second navigation lands mid-walk, axe
+ * dies with "Execution context was destroyed", which is a statement about the
+ * harness, not about the page: no rule ran, so there is no verdict to trust.
+ *
+ * Whether hydration beat the fixed 1500ms wait depended on machine load, so
+ * /playground passed alone and failed in the full 19-test suite — the same
+ * load-dependent shape as the .reveal race above. `waitForLoadState("networkidle")`
+ * was tried first and did NOT fix it (the route polls, so it never goes idle).
+ *
+ * So: retry that one error, at most twice, and re-throw everything else
+ * untouched. A real violation still fails on the first attempt, because a real
+ * violation returns results rather than throwing.
+ */
+async function scanWithRetry(page: Page) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+    } catch (e) {
+      const destroyed = String(e).includes("Execution context was destroyed");
+      if (!destroyed || attempt >= 2) throw e;
+      await page.waitForTimeout(1200);
+    }
+  }
+}
+
 for (const path of ROUTES) {
   test(`${path} has no serious/critical axe violations`, async ({ page }) => {
     await page.goto(path, { waitUntil: "domcontentloaded" });
@@ -77,16 +125,7 @@ for (const path of ROUTES) {
     // Let the route's client render land before scanning it.
     await page.waitForSelector("#main-content", { state: "attached" });
     await page.waitForTimeout(1500);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      // color-contrast is ENFORCED (no allowlist). Phase B1 retired the
-      // C2 exception: the failing muted-text tokens (text-zinc-500/600,
-      // 3.5–2.2:1 on the dark grounds) were replaced sitewide with a single
-      // `text-muted` token (#8b909a) that passes AA (>=4.5:1) on every dark
-      // ground incl. the lightest themed card (#33241c → 4.65:1). The résumé
-      // (dark-on-light) already passed and was left untouched. If this
-      // regresses, a new muted-on-dark or accent-on-dark pairing slipped in.
-      .analyze();
+    const results = await scanWithRetry(page);
 
     const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
     const report = bad
@@ -187,6 +226,25 @@ test("every chess pane has no serious/critical axe violations", async ({ page })
 // CommandPalette is mounted on "/" (scanned above), but the loop never
 // presses ⌘K, so its role="dialog"/combobox/listbox wiring was unverified —
 // same class of gap the chat-console test above exists to catch.
+/* The launcher renders nothing until it is opened, so the route loop above can
+ * never see it — the same blind spot that let the chat console's combobox
+ * wiring ship unverified. It is opened from inside a ROOM on purpose: that is
+ * the case it exists for (moving sideways between rooms instead of going back
+ * to the hub), and it puts a dialog on top of a full-screen WebGL route, which
+ * is the least forgiving ground it will ever land on. */
+test("the launcher has no serious/critical axe violations when open", async ({ page }) => {
+  await page.goto("/forge", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /Surfaces/ }).first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  const results = await scanWithRetry(page);
+  const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  const report = bad
+    .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
+    .join("\n\n");
+  expect(bad, report).toEqual([]);
+});
+
 test("the command palette has no serious/critical axe violations when open", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.keyboard.press("Meta+k");

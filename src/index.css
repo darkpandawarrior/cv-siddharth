@@ -343,7 +343,34 @@ html.resume-mode body {
   }
 }
 
+/* The printed sheet itself.
+ *
+ * There was no `@page` rule anywhere in this stylesheet, so the résumé — the
+ * one artifact that actually leaves this site and sits in a recruiter's
+ * downloads folder weeks later — printed at whatever paper size and margin the
+ * browser's print dialog happened to default to, which is Letter in a US
+ * locale and A4 elsewhere. Same document, two different layouts, neither
+ * chosen.
+ *
+ * Margins are asymmetric on purpose: 14mm top/bottom leaves room for the
+ * browser's own header/footer when a user leaves those on, while 12mm sides
+ * keep the measure from stretching past comfortable reading length. */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
 @media print {
+  /* No orphaned first lines or widowed last lines in the résumé's prose. A
+     bullet whose final word lands alone on the next page reads as a printing
+     error rather than a layout, and this is the document being skim-read
+     under time pressure. */
+  .resume p,
+  .resume li {
+    orphans: 3;
+    widows: 3;
+  }
+
   /* The root cause of the black-frame bug: `<meta name="color-scheme"
      content="dark">` in __root.tsx tells the UA this is a dark document, so
      Chromium paints the page canvas #121212 — the printed margin — whenever

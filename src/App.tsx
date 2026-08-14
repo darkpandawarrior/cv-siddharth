@@ -34,7 +34,9 @@ import { ChapterWord, GiantCTA } from "./Editorial.tsx";
 import { WorldSwitch } from "./WorldSwitch.tsx";
 import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
-import { ROOMS } from "./rooms.tsx";
+import { SurfaceWall } from "./SurfaceWall.tsx";
+import { DeviceMorph } from "./DeviceMorph.tsx";
+import { LauncherButton } from "./Launcher.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -318,6 +320,9 @@ function Nav() {
               worth reflowing the bar for. The hero eyebrow carries it always. */}
           <NavClock className="hidden 2xl:flex" />
           <MobileMenu />
+          {/* Hidden below lg: the bar is already at capacity at xl, and on a
+              phone the wall itself is a short scroll away. */}
+          <LauncherButton className="hidden lg:flex" />
           <CommandPalette />
           <button
             onClick={() => openChat()}
@@ -1242,25 +1247,14 @@ function Doorway() {
             </strong>
             .
           </p>
-          <div className="flex flex-wrap gap-2">
-            {ROOMS.map(({ to, label, icon: Icon, tint }) => (
-              <Link
-                key={to}
-                to={to}
-                className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-zinc-300 transition hover:border-accent/50 hover:text-zinc-100"
-              >
-                <Icon size={13} style={{ color: tint }} />
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              to="/playground"
-              className="btn-primary inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
-            >
-              Enter the Playground →
-            </Link>
+          {/* Was a flat row of eight room chips. It listed the rooms and
+              nothing else, so the nine finished non-room routes — /hire,
+              /resume, /shipped, /pulse, /blueprint, /forge, /terminal, /map,
+              /weeb — had no path from this page at all. The wall renders every
+              surface from the registry, so the set can't drift from the routes
+              again. */}
+          <SurfaceWall />
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link
               to="/chess"
               className="inline-flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold transition hover:border-accent"
@@ -1286,6 +1280,12 @@ export function HomePage() {
       <main id="main-content" tabIndex={-1}>
         <Hero />
         <Metrics />
+        {/* The multiplatform claim, proved rather than asserted, straight after
+            the numbers that make someone care. Not in the hero: the hero's
+            right column is 280px, which cannot show a foldable beside a TV, and
+            the hero heading is the LCP element. Nothing here boots until it is
+            clicked, so this section costs the initial load one lazy poster. */}
+        <DeviceMorph />
         {/* Straight after the numbers: they're what makes a recruiter want to
             check fit, and the scorecard links down into the case studies that
             follow it. Below the hero, so it costs LCP nothing. */}

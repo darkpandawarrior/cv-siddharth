@@ -1,4 +1,3 @@
-import { LAB_TABS, countWord } from "./labs.ts";
 
 export const profile = {
   name: "Siddharth Pandalai",
@@ -1641,80 +1640,11 @@ export const cardMedia: Record<string, { src: string; alt: string }> = {
 };
 
 /* ── The site's own interactive surfaces ──────────────────────────────────
- * The DATA half of Playground.tsx's ROOMS (route + copy). It lives here, in
- * the single source of truth, because two very different consumers need it:
- * the Playground UI (which merges in the React-only `icon`/`tint` per route)
- * and scripts/gen-system-prompt.mjs, which can't import a .tsx. Without this,
- * the AI assistant had no idea these rooms existed and denied them when asked.
+ * MOVED to src/data/surfaces.ts, which is now the single registry of every
+ * navigable route — rooms and ordinary pages alike. The split that used to
+ * live here (rooms in profile.ts, everything else in routeHead.ts's NON_ROOM)
+ * is exactly what let nine finished routes go unlinked from the homepage.
+ *
+ * Re-exported so the eleven existing importers keep compiling unchanged.
  */
-export interface SiteRoom {
-  to: string;
-  label: string;
-  blurb: string;
-  tag: string;
-}
-
-export const siteRooms: SiteRoom[] = [
-  {
-    to: "/compose",
-    label: "Compose Playground",
-    blurb: "Write Jetpack Compose, watch it recompose live in a phone frame — reactive state, animation, and an AI that writes it for you.",
-    tag: "live editor · AI",
-  },
-  {
-    to: "/lab",
-    label: "The Lab Bench",
-    // Kept under 158 chars: routeHead clamps descriptions at that length and
-    // this one used to render truncated. The project roll-call moved out — it
-    // was the part that pushed it over, and the projects section already names
-    // them.
-    blurb: `${countWord(LAB_TABS.length)} experiments that prove the numbers — Dice.tech production metrics, five personal builds and seven years of chess — running in your browser.`,
-    tag: "canvas · physics",
-  },
-  {
-    to: "/blueprint",
-    label: "The Blueprint Room",
-    blurb: "The whole portfolio as an infinite canvas — a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.",
-    tag: "3D · WebGL",
-  },
-  {
-    to: "/map",
-    label: "The 3D Storyboard",
-    blurb: "The projects and the ideas that connect them, as a constellation you can orbit — every edge is a real dependency.",
-    tag: "3D · graph",
-  },
-  {
-    to: "/forge",
-    label: "The Particle Forge",
-    blurb: "A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.",
-    tag: "canvas · interactive",
-  },
-  {
-    to: "/terminal",
-    label: "The Terminal",
-    blurb: "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
-    tag: "text · easter egg",
-  },
-  // No game count in this blurb, deliberately: the corpus grows every time he
-  // plays, and this string feeds the SEO head tags and the assistant's system
-  // prompt as well as the Playground card. Live counts belong in the home
-  // teaser and ChessFindings, both of which import the generated chess.ts.
-  {
-    to: "/chess",
-    label: "The Board",
-    blurb:
-      "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot that plays like me.",
-    tag: "3d · engine",
-  },
-  // No counts in this blurb for the same reason as /chess above: the corpus is
-  // re-exported whenever he updates Notion, and this string feeds the SEO head
-  // tags and the assistant's system prompt as well as the Playground card.
-  // Live figures belong in WeebRoom, which renders from the generated weeb.ts.
-  {
-    to: "/weeb",
-    label: "Weeb Central",
-    blurb:
-      "Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.",
-    tag: "corpus · data",
-  },
-];
+export { siteRooms, type Surface, type Surface as SiteRoom } from "./surfaces.ts";
