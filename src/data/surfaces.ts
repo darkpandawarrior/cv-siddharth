@@ -382,6 +382,23 @@ const pageSurfaces: SurfaceInput[] = [
     railId: "loopdown",
   },
   {
+    to: "/anthology",
+    label: "The Morkinstar Journals",
+    blurb:
+      "A galactic field reporter files twenty short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+    tag: "fiction · starmap",
+    group: "writing",
+    // The ink-world's own ochre, not a new colour — this tile lives inside
+    // /ink's palette, not beside it, so it should read as that world's
+    // furthest room rather than a competing accent.
+    tint: "#d9a441",
+    device: "tablet",
+    // No poster: /anthology's whole surface is the 3D starmap, which a static
+    // capture can't represent honestly. "none" ships a legible tile today —
+    // icon, label, blurb, tag — without gen:surfaces owing it a screenshot.
+    preview: "none",
+  },
+  {
     to: "/playground",
     label: "The Playground",
     // Was an enumeration of the rooms, and `wall: false` on the grounds that

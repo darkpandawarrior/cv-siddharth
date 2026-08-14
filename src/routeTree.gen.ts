@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
+import { Route as AnthologyRouteImport } from './routes/anthology'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnthologyRoute = AnthologyRouteImport.update({
+  id: '/anthology',
+  path: '/anthology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlueprintRoute = BlueprintRouteImport.update({
@@ -134,6 +140,7 @@ const ReadSlugRoute = ReadSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/anthology'
     | '/blueprint'
     | '/chess'
     | '/compose'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
+    | '/anthology'
     | '/blueprint'
     | '/chess'
     | '/compose'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$'
+    | '/anthology'
     | '/blueprint'
     | '/chess'
     | '/compose'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
+  AnthologyRoute: typeof AnthologyRoute
   BlueprintRoute: typeof BlueprintRoute
   ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/$'
       fullPath: '/$'
       preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anthology': {
+      id: '/anthology'
+      path: '/anthology'
+      fullPath: '/anthology'
+      preLoaderRoute: typeof AnthologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blueprint': {
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  AnthologyRoute: AnthologyRoute,
   BlueprintRoute: BlueprintRoute,
   ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
