@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Smartphone, Watch, Monitor, Globe, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import type { ProjectTarget } from "./data/profile.ts";
+import { useLivePaint } from "./lib/livePaint.ts";
 
 const PLATFORM_ICON: Record<ProjectTarget["platform"], React.ComponentType<{ size?: number }>> = {
   Android: Smartphone,
@@ -46,35 +47,11 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
 function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
   const [ref, inView] = useInView<HTMLDivElement>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [painted, setPainted] = useState(false);
-  const [gaveUp, setGaveUp] = useState(false);
-
-  useEffect(() => {
-    if (!inView || painted || gaveUp) return;
-    const started = Date.now();
-    const iv = window.setInterval(() => {
-      try {
-        const doc = iframeRef.current?.contentDocument;
-        const c = doc?.querySelector("canvas");
-        const boot = doc?.getElementById("boot");
-        if (
-          (c && (c.width > 300 || c.height > 150)) ||
-          (boot && doc?.defaultView?.getComputedStyle(boot).display === "none")
-        ) {
-          setPainted(true);
-          window.clearInterval(iv);
-          return;
-        }
-      } catch {
-        /* cross-origin guard — first-party same-origin, so this shouldn't hit */
-      }
-      if (Date.now() - started > 18000) {
-        setGaveUp(true); // slow link or unsupported browser — keep the screenshot floor
-        window.clearInterval(iv);
-      }
-    }, 400);
-    return () => window.clearInterval(iv);
-  }, [inView, painted, gaveUp]);
+  // The detector moved to lib/livePaint.ts so DeviceMorph can share it rather
+  // than keep a second copy of the canvas-vs-#boot logic. Same behaviour:
+  // starts when the frame scrolls into view, gives up after 18s and keeps the
+  // screenshot floor.
+  const { painted, gaveUp } = useLivePaint(iframeRef, inView);
 
   return (
     <div ref={ref} className="relative aspect-video w-full overflow-hidden bg-black">

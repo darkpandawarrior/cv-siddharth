@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import AnomalyRail from "../AnomalyRail.tsx";
+import { Launcher } from "../Launcher.tsx";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -262,6 +263,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
+        {/* The launcher overlay. Global like AnomalyRail and for the same
+            reason: it belongs to the shell, not to any one route. Mounted
+            after the routed content and outside <main id="main-content">, so
+            the skip link still jumps past it, and it renders nothing at all
+            until something calls openLauncher(). */}
+        <Launcher />
         <AnomalyRail />
         <SpeedInsights />
         <Scripts />
