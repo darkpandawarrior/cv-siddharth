@@ -191,7 +191,7 @@ function PlaygroundInner() {
             onClick={() => goToSection("top")}
             className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent"
           >
-            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
+            <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
           </button>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
@@ -208,7 +208,7 @@ function PlaygroundInner() {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="hidden sm:inline">my AI</span>
+              Ask <span className="label-wide">my AI</span>
             </button>
           </div>
         </nav>
@@ -248,6 +248,14 @@ function PlaygroundInner() {
               button but zero room links — the ternary this replaced rendered
               RoomGrid *instead of* the world, never alongside it. */}
           <div className="sr-only print:not-sr-only">
+            {/* World view had no <h1> at all — the visible one lives in the
+                list-view branch below, and this is the branch that renders by
+                default. The canvas above is aria-hidden, so the page announced
+                itself with no heading of any level to a screen reader and
+                shipped an h1-less document to crawlers. sr-only rather than
+                visible: the world is full-bleed chrome with nowhere to put a
+                title, which is exactly why RoomFrame does the same thing. */}
+            <h1>The Playground — every interactive room, one street</h1>
             <RoomGrid />
           </div>
         </main>

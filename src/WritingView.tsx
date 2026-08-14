@@ -35,11 +35,14 @@ export function WritingView() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        {/* Wraps. "Back to portfolio" plus the Ask pill is wider than a 320px
+            window — a Fold's cover screen — and with html{overflow-x:hidden}
+            the page does not scroll, it just loses the right-hand button. */}
+        <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
           <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
             <ArrowLeft size={16} /> Back to portfolio
           </button>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
             <button type="button" onClick={() => goToSection("projects")} className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
               Projects
             </button>

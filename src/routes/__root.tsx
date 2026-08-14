@@ -3,6 +3,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
+import { surfaces } from "../data/surfaces.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import AnomalyRail from "../AnomalyRail.tsx";
 import { Launcher } from "../Launcher.tsx";
@@ -144,7 +145,21 @@ function RootErrorComponent({ error }: ErrorComponentProps) {
 // (or `?project=<slug>`) is redirected to the real path; on-page section
 // anchors (#work, #projects, #skills, #writing, #contact, #experience) are
 // left alone so home-page scroll links keep working.
-const HASH_ROUTES = new Set(["resume", "loopdown", "terminal", "blueprint", "compose", "playground", "lab", "map", "forge"]);
+//
+// Derived, because the hand-kept version drifted the way every hand-kept copy
+// of the route list on this site has: it listed nine of the sixteen routes, so
+// `#chess`, `#weeb`, `#hire`, `#pulse`, `#ink`, `#excelsior` and `#shipped`
+// were all legacy links that silently did nothing. The registry already knows
+// every route — surfaces.test.ts fails the build if it does not.
+//
+// Minus the section ids, and that subtraction is the whole subtlety: `shipped`
+// is both a route and a home-page section, and if the route wins then the
+// homepage's own "#shipped" scroll link navigates off the homepage. A section
+// id shadows a same-named route here for the same reason it does in
+// classifyHash.
+const HASH_ROUTES = new Set(
+  surfaces.map((s) => s.to.replace(/^\//, "")).filter((slug) => !SECTION_IDS.has(slug)),
+);
 
 // Home-page-only scroll targets (ids live in src/App.tsx). Isolated routes
 // (/lab, /terminal, /project/*, ...) reuse these same "#top" / "#contact"

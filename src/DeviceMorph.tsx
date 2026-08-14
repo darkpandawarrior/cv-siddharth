@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
+import { FitImage } from "./DeviceWall.tsx";
 
 /**
  * One codebase, re-framed across form factors — running, not described.
@@ -33,7 +34,15 @@ type Form = {
   label: string;
   /** CSS width of the viewport handed to the app. */
   width: string;
-  aspect: string;
+  /**
+   * A number, not a CSS string. `aspectRatio` takes either, but the poster has
+   * to be *measured* against the frame to decide whether cropping it is honest,
+   * and a string cannot be compared. When this was "9 / 19.5" the poster was
+   * cropped unconditionally: the heroes are 1000x370 banners, so a 2.7:1 image
+   * was filling a 0.46:1 phone at roughly 6x, and the pre-boot state of the
+   * homepage's multiplatform section was an unreadable smear of one word.
+   */
+  aspect: number;
   radius: string;
   /** What the width means in Android terms — the vocabulary of the job. */
   note: string;
@@ -46,11 +55,11 @@ type Form = {
  * visitor through the same thresholds the code does.
  */
 const FORMS: Form[] = [
-  { id: "phone", label: "Phone", width: "22rem", aspect: "9 / 19.5", radius: "2rem", note: "compact · <600dp" },
-  { id: "foldable", label: "Foldable", width: "34rem", aspect: "5 / 4", radius: "1.2rem", note: "medium · 600–840dp" },
-  { id: "tablet", label: "Tablet", width: "44rem", aspect: "4 / 3", radius: "1rem", note: "expanded · >840dp" },
-  { id: "desktop", label: "Desktop", width: "56rem", aspect: "16 / 10", radius: "0.6rem", note: "expanded · resizable" },
-  { id: "tv", label: "TV", width: "56rem", aspect: "16 / 9", radius: "0.4rem", note: "expanded · 10-foot" },
+  { id: "phone", label: "Phone", width: "22rem", aspect: 9 / 19.5, radius: "2rem", note: "compact · <600dp" },
+  { id: "foldable", label: "Foldable", width: "34rem", aspect: 5 / 4, radius: "1.2rem", note: "medium · 600–840dp" },
+  { id: "tablet", label: "Tablet", width: "44rem", aspect: 4 / 3, radius: "1rem", note: "expanded · >840dp" },
+  { id: "desktop", label: "Desktop", width: "56rem", aspect: 16 / 10, radius: "0.6rem", note: "expanded · resizable" },
+  { id: "tv", label: "TV", width: "56rem", aspect: 16 / 9, radius: "0.4rem", note: "expanded · 10-foot" },
 ];
 
 /**
@@ -148,12 +157,22 @@ export function DeviceMorph() {
             className="device relative w-full overflow-hidden transition-all duration-500"
             style={{ maxWidth: form.width, aspectRatio: form.aspect, borderRadius: form.radius }}
           >
-            <img
+            {/* FitImage, not a plain <img>: it letterboxes rather than crops
+                once a capture is more than 20% off the frame's shape, which is
+                every combination here — the heroes are 1000x370 banners and the
+                narrowest frame is 9/19.5. Same component DeviceWall uses for
+                the same reason, and its comment records the same bug landing
+                there first ("PaymentsLab" cropped down to "mentsLab").
+                ponytail: a banner letterboxed in a phone is honest but sparse;
+                per-form captures would fill it, when there are per-form
+                captures to use. */}
+            <FitImage
               src={app.poster}
               alt=""
+              targetAspect={form.aspect}
               loading="lazy"
               decoding="async"
-              className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${
+              className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
                 painted ? "opacity-0" : "opacity-100"
               }`}
             />
@@ -175,7 +194,13 @@ export function DeviceMorph() {
               <button
                 type="button"
                 onClick={() => setBooted(true)}
-                className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-sm font-semibold text-zinc-100 transition hover:text-accent"
+                // A flat scrim, not a bottom-up gradient. The gradient was
+                // transparent exactly where this label sits, which was fine
+                // while the poster was cropped to a dark edge and unreadable
+                // once it started letterboxing the real banner into the middle
+                // of the frame — "Run Kursi here" was printing on top of
+                // "Kursi — a Hinglish social-deduction bluffing game".
+                className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink/70 text-sm font-semibold text-zinc-100 transition hover:bg-ink/60 hover:text-accent"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-full border border-accent/50 bg-ink/80 text-accent">
                   <Play size={18} />

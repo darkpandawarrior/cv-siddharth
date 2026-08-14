@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
-import { profile, metrics, caseStudies } from "../data/profile.ts";
+import { profile, metrics, caseStudies, projects } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
 
 /**
@@ -66,11 +66,16 @@ function HirePage() {
 
         {/* The two actions. Everything else on this page is evidence for them. */}
         <div className="mt-8 flex flex-wrap gap-3">
+          {/* max-w-full + break-all: the address is 29 unbreakable characters
+              and the pill around it is ~364px, so on a 320px window the primary
+              call to action on the hiring page had its last few characters cut
+              off — html{overflow-x:hidden} clips rather than scrolls, so there
+              was no way to see the rest of it. */}
           <a
             href={`mailto:${profile.email}`}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
+            className="flex max-w-full items-center gap-2 break-all rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
           >
-            <Mail size={17} /> {profile.email}
+            <Mail size={17} className="shrink-0" /> {profile.email}
           </a>
           <Link
             to="/resume"
@@ -86,11 +91,21 @@ function HirePage() {
         <div className="mt-12 border-t border-line pt-8">
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted">The work behind the numbers</p>
           <ul className="mt-4 divide-y divide-line">
-            {featured.map((c) => (
+            {featured.map((c) => {
+              // A case study is not always a project. `mileway` is both and has
+              // a full detail page; `gps-accuracy` and `crash-reduction` exist
+              // only in `caseStudies`, and linking them to /project/$slug sent
+              // two of the three links on this page — the page a recruiter is
+              // handed — to a 404. The homepage renders every case study with
+              // its slug as an anchor, so this fallback can never miss.
+              const detail = projects.some((p) => p.slug === c.slug);
+              const linkProps = detail
+                ? ({ to: "/project/$slug", params: { slug: c.slug } } as const)
+                : ({ to: "/", hash: c.slug } as const);
+              return (
               <li key={c.slug}>
                 <Link
-                  to="/project/$slug"
-                  params={{ slug: c.slug }}
+                  {...linkProps}
                   className="group flex items-baseline justify-between gap-4 py-3.5"
                 >
                   <span>
@@ -109,7 +124,8 @@ function HirePage() {
                   />
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
 

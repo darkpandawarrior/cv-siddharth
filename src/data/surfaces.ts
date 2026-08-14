@@ -53,7 +53,7 @@ import { LAB_TABS, countWord } from "./labs.ts";
  * evidence, a thing that runs, a corpus, or writing — the legibility the
  * reference portfolios get from plain category chips.
  */
-export type SurfaceGroup = "proof" | "runs" | "corpus" | "writing" | "index";
+export type SurfaceGroup = "proof" | "runs" | "corpus" | "writing";
 
 /**
  * Device chrome a surface's tile wears on the wall.
@@ -73,6 +73,48 @@ export type DeviceFrame =
   | "desktop"
   | "browser"
   | "widget";
+
+/**
+ * Device geometry, owned here because three consumers need it and only one of
+ * them is React: SurfaceWall draws the frame, capture-site.mjs sizes the
+ * browser viewport a poster is shot in, and gen-surfaces.mjs crops to it.
+ *
+ * It lives here rather than in SurfaceWall.tsx because that file cannot be
+ * imported from a script (it imports React and lucide-react), and the two were
+ * already out of step: every poster was captured at 1440x900 and cropped to
+ * 16:9, then rendered `object-cover` inside a 9/16 phone. A desktop layout
+ * cropped to a phone's shape is a sliver of a desktop layout — /hire's tile
+ * showed "th Pandalai — ndroid Enginee", clipped on both sides. A device wall
+ * whose devices all show the same desktop capture is arguing against itself.
+ *
+ * `aspect` is the screen only; the bezel is `.device`'s border, which is why a
+ * watch and a TV can share one component. Purely presentational values (the
+ * fraction of the wall's band a frame occupies, its corner radius) stay in
+ * SurfaceWall.tsx — nothing outside the wall has any use for them.
+ */
+export const DEVICE: Record<DeviceFrame, { aspect: number; label: string; width: number }> = {
+  phone: { aspect: 9 / 16, label: "Phone", width: 390 },
+  foldable: { aspect: 5 / 4, label: "Foldable", width: 840 },
+  tablet: { aspect: 4 / 3, label: "Tablet", width: 1024 },
+  watch: { aspect: 1, label: "Watch", width: 400 },
+  tv: { aspect: 16 / 9, label: "TV", width: 1280 },
+  desktop: { aspect: 16 / 10, label: "Desktop", width: 1440 },
+  browser: { aspect: 16 / 10, label: "Web", width: 1440 },
+  widget: { aspect: 2, label: "Widget", width: 480 },
+};
+
+/**
+ * The viewport a surface's poster is captured in.
+ *
+ * Height is the frame's own aspect, floored at 600: a widget is 2:1, and
+ * shooting /pulse in a 480x240 window renders a page nothing on the site
+ * targets. Shooting it at 480x600 and cropping the top to 2:1 gives the same
+ * frame filled with a layout that actually exists.
+ */
+export const captureViewport = (device: DeviceFrame) => {
+  const { aspect, width } = DEVICE[device];
+  return { width, height: Math.max(600, Math.round(width / aspect)) };
+};
 
 export interface Surface {
   /** Route path. Must resolve to a file in src/routes/ — the gate checks. */
@@ -108,8 +150,6 @@ export interface Surface {
   preview: "none" | "poster" | "live";
   /** Capture basename under public/surfaces/. Required when preview !== "none". */
   poster?: string;
-  /** Does this surface get a tile on the homepage wall? */
-  wall: boolean;
   /**
    * The `id` of this surface's entry in facets.ts, when it has one.
    *
@@ -143,7 +183,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "phone",
     preview: "poster",
     poster: "compose",
-    wall: true,
   },
   {
     to: "/lab",
@@ -159,7 +198,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "desktop",
     preview: "poster",
     poster: "lab",
-    wall: true,
     railId: "lab",
   },
   {
@@ -173,7 +211,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "desktop",
     preview: "poster",
     poster: "blueprint",
-    wall: true,
   },
   {
     to: "/map",
@@ -186,7 +223,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "desktop",
     preview: "poster",
     poster: "map",
-    wall: true,
   },
   {
     to: "/forge",
@@ -199,7 +235,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "browser",
     preview: "poster",
     poster: "forge",
-    wall: true,
   },
   {
     to: "/terminal",
@@ -212,7 +247,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "desktop",
     preview: "poster",
     poster: "terminal",
-    wall: true,
   },
   // No game count in this blurb, deliberately: the corpus grows every time he
   // plays, and this string feeds the SEO head tags and the assistant's system
@@ -232,7 +266,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "tablet",
     preview: "poster",
     poster: "chess",
-    wall: true,
     railId: "chess",
   },
   // No counts in this blurb for the same reason as /chess above: the corpus is
@@ -250,7 +283,6 @@ const roomSurfaces: SurfaceInput[] = [
     device: "tv",
     preview: "poster",
     poster: "weeb",
-    wall: true,
     railId: "weeb",
   },
 ];
@@ -268,7 +300,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "phone",
     preview: "poster",
     poster: "hire",
-    wall: true,
   },
   {
     to: "/resume",
@@ -284,7 +315,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "desktop",
     preview: "poster",
     poster: "resume",
-    wall: true,
   },
   {
     to: "/shipped",
@@ -297,7 +327,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "phone",
     preview: "poster",
     poster: "shipped",
-    wall: true,
   },
   {
     to: "/pulse",
@@ -310,7 +339,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "widget",
     preview: "poster",
     poster: "pulse",
-    wall: true,
   },
   {
     to: "/ink",
@@ -323,7 +351,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "tablet",
     preview: "poster",
     poster: "ink",
-    wall: true,
     // The rail's "board" entry is /ink#board — same destination, and it owns
     // the 2019-authored / 2026-discovered pair.
     railId: "board",
@@ -339,7 +366,6 @@ const pageSurfaces: SurfaceInput[] = [
     device: "tablet",
     preview: "poster",
     poster: "excelsior",
-    wall: true,
     railId: "excelsior",
   },
   {
@@ -353,30 +379,32 @@ const pageSurfaces: SurfaceInput[] = [
     device: "phone",
     preview: "poster",
     poster: "loopdown",
-    wall: true,
     railId: "loopdown",
   },
-  // Not on the wall: the wall IS this page's job now. Kept as a surface so it
-  // still gets a <head>, and so the gate counts it as a covered route.
-  // Candidate for retirement once the wall has shipped and proven itself.
   {
     to: "/playground",
-    // Deliberately does NOT enumerate the rooms. It used to, and the list grew
-    // past the 158-char cut — the rendered description ended at "a typable…",
-    // losing both the terminal and the experiment count entirely. An
-    // enumeration of a growing set can't survive a fixed clamp, so this
-    // describes the shape instead and lets the counts carry the specifics.
     label: "The Playground",
+    // Was an enumeration of the rooms, and `wall: false` on the grounds that
+    // "the wall IS this page's job now". Both were wrong in the same way: they
+    // described this route as an index, and an index really is what the wall
+    // replaced. What it could never replace is the thing that only exists
+    // here — the rooms as a drivable 3D street laid out as a timeline. Once the
+    // blurb said "index", taking it off the wall looked like tidying rather
+    // than what it was: deleting the last link to the world from the homepage,
+    // leaving it reachable only from two footers.
+    //
+    // Describes the shape, never the roll-call. The list used to run past
+    // routeHead's 158-char clamp and the rendered description ended at "a
+    // typable…", losing the terminal and the experiment count outright.
     blurb:
-      `${countWord(roomSurfaces.length)} interactive rooms — a live Compose playground, an infinite canvas, ` +
-      `3D scenes, a typable terminal and ${countWord(LAB_TABS.length).toLowerCase()} running experiments.`,
-    tag: "index",
-    group: "index",
+      `Every interactive room on this site as a building on one street, drivable in 3D — and the street is a timeline, ` +
+      `north is 2017 and south is now.`,
+    tag: "3d world · drivable",
+    group: "runs",
     tint: "#3ddc84",
     device: "browser",
     preview: "poster",
     poster: "playground",
-    wall: false,
   },
 ];
 
@@ -385,7 +413,13 @@ export const surfaces: Surface[] = [
   ...pageSurfaces.map((s): Surface => ({ ...s, kind: "page" })),
 ];
 
-/** Display order of the wall's groups. "index" is intentionally absent. */
+/**
+ * Display order of the wall's groups — and, since every group is rendered, the
+ * gate that a surface cannot be grouped into somewhere the wall never draws.
+ * There used to be a fifth, "index", carrying exactly one surface that was also
+ * the only one with `wall: false`; a group nothing displays is how a route goes
+ * quietly missing.
+ */
 export const WALL_GROUPS: { group: SurfaceGroup; label: string; note: string }[] = [
   { group: "proof", label: "Proof", note: "the numbers, and what verifies them" },
   { group: "runs", label: "Things that run", note: "real programs, in the page" },
@@ -395,10 +429,20 @@ export const WALL_GROUPS: { group: SurfaceGroup; label: string; note: string }[]
 
 export const surfaceBy = (to: string) => surfaces.find((s) => s.to === to);
 
-/** Surfaces that get a tile, grouped, in wall order. */
+/**
+ * Every surface, grouped, in wall order — and there is no opt-out.
+ *
+ * There used to be a `wall: boolean` here. Exactly one surface ever set it
+ * false, and that surface (/playground, the drivable 3D world) promptly lost
+ * its last link from the homepage while every gate stayed green: the registry
+ * covered the route, the route had a poster, the poster was on disk, and none
+ * of that meant anyone could reach it. "On the registry" now means "on the
+ * wall", so the only way to hide a route from the homepage again is to delete
+ * its surface — which surfaces.test.ts fails the build for.
+ */
 export const wallSurfaces = WALL_GROUPS.map((g) => ({
   ...g,
-  items: surfaces.filter((s) => s.wall && s.group === g.group),
+  items: surfaces.filter((s) => s.group === g.group),
 }));
 
 /**

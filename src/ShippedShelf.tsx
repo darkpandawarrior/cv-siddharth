@@ -124,11 +124,18 @@ export function ShippedShelf() {
             shipping while I was there or after.
           </p>
 
-          <Link
-            to="/shipped"
-            aria-label={`See all ${reached} apps and how the list was reconstructed`}
-            className="group mt-8 block rounded-2xl border border-line bg-card/40 p-6 transition hover:border-accent"
-          >
+          {/* The card is a container; the SENTENCE is the link, stretched over
+              the card by a pseudo-element so the whole block stays clickable.
+              It used to be one <Link> wrapping everything with an aria-label,
+              which is two problems: a screen reader either announced the label
+              and lost the three statistics, or (with the label removed)
+              announced "173 apps reached the store 4 companies published them
+              ≥500K installs..." as the NAME OF A LINK. axe flags the first as
+              WCAG 2.5.3 — an accessible name has to contain the visible label,
+              and the visible label of that element was all of it. Now the
+              stats are read as the content they are, and the link is called
+              what it says. */}
+          <div className="group relative mt-8 rounded-2xl border border-line bg-card/40 p-6 transition hover:border-accent">
             {/* Not links individually — a wall of 32 competing hit targets in a
                 summary is noise. The whole block goes to /shipped, where each
                 icon becomes its own link with a name and a store page. */}
@@ -158,11 +165,14 @@ export function ShippedShelf() {
               ))}
             </dl>
 
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300 transition group-hover:text-accent">
-              See all {reached}, and how the list was rebuilt
-              <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+            <Link
+              to="/shipped"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300 transition after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-accent"
+            >
+              See all {reached} apps, and how the list was rebuilt
+              <ArrowRight size={15} aria-hidden className="transition group-hover:translate-x-0.5" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

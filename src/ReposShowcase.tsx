@@ -117,7 +117,12 @@ function RepoCard({ r }: { r: Repo }) {
       href={r.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5"
+      // min-w-0: a grid item's automatic minimum is its min-content width, and
+      // `darkpandawarrior/kmp-build-logic` in a nowrap mono span is wider than a
+      // 327px column. The card sat 29px outside its own track and the homepage
+      // scrolled 5px sideways on a phone — the truncate below never got the
+      // chance to fire, because the track was never the constraint.
+      className="group flex h-full min-w-0 flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5"
       style={{ borderColor: undefined }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.accent}66`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}

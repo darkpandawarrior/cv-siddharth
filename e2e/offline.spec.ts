@@ -75,7 +75,9 @@ test("the home chess teaser renders its thesis with no network", async ({ page }
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  const section = page.locator("#chess");
+  // #surfaces, not #chess: the section kept the chess id long after the surface
+  // wall moved into it. The chess thesis is still the paragraph this asserts on.
+  const section = page.locator("#surfaces");
 
   /* The thesis figure. Matched as a shape, not a value: the corpus grows every
    * time he plays (it gained three games within an hour of first generation),

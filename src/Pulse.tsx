@@ -54,14 +54,14 @@ function PulseInner() {
               to="/playground"
               className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent"
             >
-              <LayoutGrid size={14} /> <span className="hidden sm:inline">Playground</span>
+              <LayoutGrid size={14} /> <span className="label-wide">Playground</span>
             </Link>
             <button
               type="button"
               onClick={() => goToSection("top")}
               className="flex items-center gap-1.5 text-sm text-muted transition hover:text-accent"
             >
-              <ArrowLeft size={14} /> <span className="hidden sm:inline">Portfolio</span>
+              <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
@@ -73,7 +73,7 @@ function PulseInner() {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="hidden sm:inline">my AI</span>
+              Ask <span className="label-wide">my AI</span>
             </button>
           </div>
         </nav>

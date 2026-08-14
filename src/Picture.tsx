@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEventHandler } from "react";
+import { rasterSources } from "./lib/rasterSources.ts";
 
 // AVIF → WebP → original fallback. src is the original raster path
 // (e.g. "/projects/kursi/screenshots/home.png"); siblings are produced by
@@ -14,16 +15,14 @@ type Props = {
 };
 
 export function Picture({ src, alt, className, loading = "lazy", onClick, style }: Props) {
-  const dot = src.lastIndexOf(".");
-  const ext = dot >= 0 ? src.slice(dot + 1).toLowerCase() : "";
-  if (ext === "gif" || dot < 0) {
+  const sources = rasterSources(src);
+  if (!sources) {
     return <img src={src} alt={alt} loading={loading} className={className} onClick={onClick} style={style} />;
   }
-  const base = src.slice(0, dot);
   return (
     <picture onClick={onClick}>
-      <source srcSet={`${base}.avif`} type="image/avif" />
-      {ext !== "webp" && <source srcSet={`${base}.webp`} type="image/webp" />}
+      <source srcSet={sources.avif} type="image/avif" />
+      {sources.webp && <source srcSet={sources.webp} type="image/webp" />}
       <img src={src} alt={alt} loading={loading} className={className} style={style} />
     </picture>
   );

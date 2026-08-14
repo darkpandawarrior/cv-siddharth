@@ -10,7 +10,9 @@ import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
-import { openLab, type LabKey } from "./LabBench.tsx";
+// See App.tsx: the deep-link signal lives in the plain-data registry, so a
+// project page linking into a lab does not have to ship the lab.
+import { openLab, type LabKey } from "./data/labs.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
@@ -588,7 +590,19 @@ export function ProjectDetail({ slug }: { slug: string }) {
                       ships component strips as wide as 6.67:1, which at this height would render
                       1,920px across and swallow the whole rail. */}
                   <span className="gallery-item flex h-72 max-w-[26rem] items-center justify-center overflow-hidden rounded-2xl border border-line bg-card">
-                    <Picture src={it.src} alt={it.caption} className="max-h-full max-w-full object-contain" />
+                    {/* alt="" when the caption is already on screen. The
+                        caption sits directly below this image AND is the
+                        button's `title`, so alt={it.caption} made a screen
+                        reader say the same sentence twice inside one control —
+                        Lighthouse flags all 64 of them as redundant alt text.
+                        A decorative alt is correct here: the image is not
+                        conveying anything the caption does not. When there is
+                        no caption the alt has to do the work instead. */}
+                    <Picture
+                      src={it.src}
+                      alt={it.caption ? "" : "Screenshot"}
+                      className="max-h-full max-w-full object-contain"
+                    />
                   </span>
                   {it.caption && (
                     <span className="mt-2 line-clamp-2 block max-w-64 text-center text-xs text-muted transition group-hover/shot:text-accent">

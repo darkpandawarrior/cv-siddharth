@@ -41,7 +41,10 @@ import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
-import { openLab, type LabKey } from "./LabBench.tsx";
+// data/labs.ts, not LabBench.tsx: these two names are all the homepage wants,
+// and taking them from the component put the whole 53 kB bench — instruments,
+// scenes and all — in the chunk every visitor to `/` downloads.
+import { openLab, type LabKey } from "./data/labs.ts";
 import { writing } from "./data/writing.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
@@ -324,11 +327,16 @@ function Nav() {
               phone the wall itself is a short scroll away. */}
           <LauncherButton className="hidden lg:flex" />
           <CommandPalette />
+          {/* label-wide, not `hidden sm:inline`: display:none took this label
+              out of the accessibility tree as well as the layout, so below
+              640px this was an icon with no accessible name — a WCAG 4.1.2
+              failure on every route, and one the axe suite could not see
+              because it only ever scanned a desktop viewport. See index.css. */}
           <button
             onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
-            <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
+            <MessageCircle size={15} aria-hidden /> <span className="label-wide">Ask my AI</span>
           </button>
         </div>
       </nav>
@@ -354,7 +362,9 @@ function Hero() {
               document that got uploaded once. */}
           <NavClock className="flex" />
         </p>
-        <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
+        {/* rise-in-lcp, not rise-in: this heading is the page's LCP element
+            and must be paintable from the first frame. See index.css. */}
+        <h1 className="rise-in rise-in-lcp rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
         <Typewriter />
@@ -561,12 +571,23 @@ function CaseStudies() {
       {featured && (
         <Reveal className="mb-6">
           <TiltCard maxTilt={2.5}>
-            <article
+            {/* A div for the same reason as the projects card below: ARIA
+                does not allow role="link" to override <article>'s implicit
+                role, and Lighthouse flags every card on the live site. */}
+            <div
+              // Every case study carries its own slug as an anchor. /hire lists
+              // three of them and used to link all three to /project/$slug —
+              // but only `mileway` is a project; `gps-accuracy` and
+              // `crash-reduction` live in `caseStudies` alone, so two of the
+              // three links on the page a recruiter is sent to were 404s.
+              // Anchoring here makes the fallback total: a case study always
+              // has somewhere to land, whether or not it is also a project.
+              id={featured.slug}
               onClick={() => navigate({ to: "/project/$slug", params: { slug: "mileway" } })}
               role="link"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
-              className="card-elevated group grid cursor-pointer gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
+              className="card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
             >
               {/* Was multiplatform.gif — 108 frames cycling phone → watch →
                   widgets. Rendered at this card's crop, 3 of 4 sampled frames
@@ -608,7 +629,7 @@ function CaseStudies() {
                   </button>
                 </div>
               </div>
-            </article>
+            </div>
           </TiltCard>
         </Reveal>
       )}
@@ -617,7 +638,7 @@ function CaseStudies() {
         {rest.map((cs, i) => (
           <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
             <TiltCard>
-              <article className="card-elevated group flex h-full flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+              <article id={cs.slug} className="card-elevated group flex h-full scroll-mt-24 flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
                   {/* Ornamental index, deliberately a ghost at 10% accent
@@ -704,7 +725,13 @@ function Projects() {
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
-                <article
+                {/* A div, not an <article>. `role="link"` is not an allowed
+                    role on <article> — it has an implicit `article` role that
+                    ARIA will not let a link override, and Lighthouse flags
+                    every one of these cards on the live site. The card really
+                    is a link and never was an article, so the element follows
+                    the role rather than the role fighting the element. */}
+                <div
                   onClick={go}
                   role="link"
                   tabIndex={0}
@@ -821,7 +848,7 @@ function Projects() {
                     })}
                   </div>
                   </div>
-                </article>
+                </div>
               </TiltCard>
             </Reveal>
             );
@@ -1224,16 +1251,20 @@ function InkDoorway() {
  * The one "go poke at something" doorway — collapsed from the two teasers
  * (Playground, Chess) that used to sit back to back answering the same
  * impulse. No canvases and no tables here, so it still costs the main scroll
- * nothing; the interactive rooms live behind `/playground`, the full chess
- * analysis (thesis decile table, repertoire drift, "the cast") behind
- * `/chess`'s Findings tab. Keeps `id="chess"` — the registered anchor the
- * command palette, Terminal quick-command and offline e2e all target — over
- * the old Playground teaser's `id="explore"`, which nothing else linked to.
+ * nothing; the full chess analysis (thesis decile table, repertoire drift,
+ * "the cast") lives behind `/chess`'s Findings tab.
+ *
+ * `id="surfaces"`, not `id="chess"`. It kept the chess id through the merge of
+ * the two teasers, which was right then and stopped being right the moment the
+ * wall moved in: the section is fifteen tiles covering every route on the site,
+ * and one paragraph of them is about chess. An anchor named for the paragraph
+ * sent ⌘K's "The Board", the terminal's `go chess` and a legacy `/#chess` link
+ * to a wall. They now reach the /chess room, which is what all three meant.
  */
 function Doorway() {
   const { thesis, totals } = chess;
   return (
-    <section id="chess" className="border-t border-line bg-surface">
+    <section id="surfaces" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
           <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// not a PDF with a pulse</p>
