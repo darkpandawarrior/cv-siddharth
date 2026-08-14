@@ -1,7 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { LauncherButton } from "./Launcher.tsx";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
+import { surfaces } from "./data/surfaces.ts";
 import {
   profile,
   metrics,
@@ -57,24 +59,42 @@ const THEMES: Record<string, { accent: string; dim: string }> = {
   mono: { accent: "#e8efe9", dim: "#9aa5a0" },
 };
 
+/** Home-page sections, in page order. Routes come from the registry below. */
+const SECTION_LABELS: Record<SectionId, string> = {
+  top: "The top",
+  morph: "One codebase, every form factor",
+  fit: "Fit check",
+  work: "Case studies",
+  projects: "Projects",
+  source: "The Source",
+  shipped: "Apps you can install",
+  experience: "Experience",
+  surfaces: "Every surface",
+  writing: "Writing",
+  skills: "Skills",
+  contact: "Contact",
+};
+
+/**
+ * What `go`, `ls` and `sitemap` can reach.
+ *
+ * Derived, in the order these resolve. This file opens by promising that
+ * "everything the recruiter can find by scrolling, they can also *type* their
+ * way to" — as a hand-written list it named 17 targets and missed six real
+ * routes (/chess, /weeb, /hire, /shipped, /ink, /excelsior) and two home
+ * sections, so `go weeb` answered "no such room" about a room on the wall.
+ *
+ * Routes first, sections second, so a section shadows a same-named route:
+ * `#shipped` has to scroll the homepage shelf rather than navigate away from
+ * it, which is the same precedence classifyHash and __root.tsx's HASH_ROUTES
+ * keep. classifyHash resolves each `#name` — a section id scrolls, anything
+ * else is routed — so this map never needs to say which is which.
+ */
 const SECTION_ROUTES: Record<string, { hash: string; label: string }> = {
-  work: { hash: "#work", label: "Case studies" },
+  ...Object.fromEntries(surfaces.map((s) => [s.to.slice(1), { hash: `#${s.to.slice(1)}`, label: s.label }])),
+  ...Object.fromEntries(SECTION_ID_LIST.map((id) => [id, { hash: `#${id}`, label: SECTION_LABELS[id] }])),
+  /** The one alias worth keeping: "cases" is what people type for #work. */
   cases: { hash: "#work", label: "Case studies" },
-  projects: { hash: "#projects", label: "Projects" },
-  experience: { hash: "#experience", label: "Experience" },
-  skills: { hash: "#skills", label: "Skills" },
-  writing: { hash: "#writing", label: "Writing" },
-  contact: { hash: "#contact", label: "Contact" },
-  resume: { hash: "#resume", label: "Résumé" },
-  loopdown: { hash: "#loopdown", label: "The Loopdown" },
-  blueprint: { hash: "#blueprint", label: "The Blueprint Room" },
-  map: { hash: "#map", label: "The 3D Storyboard" },
-  lab: { hash: "#lab", label: "The Signal Lab" },
-  forge: { hash: "#forge", label: "The Particle Forge" },
-  compose: { hash: "#compose", label: "The Compose Playground" },
-  chess: { hash: "#chess", label: "The Board" },
-  playground: { hash: "#playground", label: "The Playground" },
-  source: { hash: "#source", label: "The Source" },
 };
 
 /* Small presentational helpers so command output stays declarative. `A` is a
@@ -1221,9 +1241,14 @@ export function Terminal() {
       <div className="term-scanlines pointer-events-none absolute inset-0 z-0" aria-hidden />
       {/* Title bar */}
       <header className="relative z-10 flex items-center justify-between border-b border-line bg-ink/80 px-4 py-2.5 backdrop-blur">
-        <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
-          <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to portfolio</span>
-        </button>
+        {/* See BlueprintRoom: rooms with hand-rolled chrome never picked up
+            RoomFrame's launcher. */}
+        <span className="flex items-center gap-2">
+          <LauncherButton />
+          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
+            <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to portfolio</span>
+          </button>
+        </span>
         <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
           <TerminalSquare size={13} className="text-[var(--t-accent)]" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh

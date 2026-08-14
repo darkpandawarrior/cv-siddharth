@@ -2,15 +2,16 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
-// time — harmless client-side, but fatal during SSR now that the home route
-// (which imports LabBench for openLab/LabKey) is server-rendered (Task 6).
-// Lazy-loading defers that eval to the client, same pattern as BlueprintRoom/
-// ComposePlayground in App.tsx.
+// time — harmless client-side, fatal during SSR. Lazy-loading defers that eval
+// to the client, same pattern as BlueprintRoom/ComposePlayground in App.tsx.
+// The reason recorded here used to be "the home route imports LabBench for
+// openLab/LabKey"; it no longer does — that signal moved to data/labs.ts — but
+// /lab is itself server-rendered, so the hazard is unchanged.
 const SignalLabPane = lazy(() => import("./labs/SignalLab.tsx").then((m) => ({ default: m.SignalLabPane })));
-// ponytail: same hazard, second cause. ChessSearchLab reaches the chess
+// ponytail: same treatment, different cost. ChessSearchLab reaches the chess
 // engine worker; a static import would put the worker chunk's entry (and
-// chess.js behind it) on the home page's critical path, since the home route
-// imports this file for openLab/LabKey.
+// chess.js behind it) on the critical path of anyone opening /lab, whichever
+// of the eleven instruments they came for.
 const ChessSearchLab = lazy(() => import("./labs/ChessSearchLab.tsx").then((m) => ({ default: m.ChessSearchLab })));
 import { CrashLab } from "./labs/CrashLab.tsx";
 import { RecomposeLab } from "./labs/RecomposeLab.tsx";
@@ -22,7 +23,7 @@ import { FanoutLab } from "./labs/FanoutLab.tsx";
 import { ReplayLab } from "./labs/ReplayLab.tsx";
 // Static: ClockLab reads data/chess.ts and nothing else — no engine, no worker.
 import { ClockLab } from "./labs/ClockLab.tsx";
-import { LAB_TABS, countWord, type LabKey } from "./data/labs.ts";
+import { LAB_TABS, countWord, openLab, peekPendingLab, clearPendingLab, onOpenLab, type LabKey } from "./data/labs.ts";
 
 /**
  * The Lab Bench — one live experiment per case study. Not screenshots of
@@ -35,37 +36,22 @@ import { LAB_TABS, countWord, type LabKey } from "./data/labs.ts";
  */
 
 export type { LabKey };
-
-const OPEN_LAB_EVENT = "open-lab";
-// The Lab Bench now lives on its own /lab route (inside the Playground hub), so
-// a deep-link from a case-study card navigates there and hands the desired tab
-// across — via an event if the bench is already mounted, or this pending slot
-// for a fresh mount after the route change. The actual SPA navigation happens
-// at the call site via useNavigate() (router.navigate would need the mounted
-// router instance, which isn't available here); this just records the tab and
-// notifies an already-mounted bench.
-let pendingLab: LabKey | null = null;
-export function openLab(tab: LabKey) {
-  pendingLab = tab;
-  window.scrollTo({ top: 0 });
-  window.dispatchEvent(new CustomEvent(OPEN_LAB_EVENT, { detail: tab }));
-}
+// Re-exported so the /lab route and anything else already reaching for the
+// bench keeps one import. The signal itself now lives in data/labs.ts beside
+// the registry: App.tsx wants openLab and nothing else, and taking it from
+// here meant every homepage visitor downloaded the whole bench to set a string.
+export { openLab };
 
 /* ── The bench ───────────────────────────────────────────────────────── */
 
 const TABS = LAB_TABS;
 
 export function LabBench() {
-  const [tab, setTab] = useState<LabKey>(() => pendingLab ?? "signal");
+  const [tab, setTab] = useState<LabKey>(() => peekPendingLab() ?? "signal");
 
   useEffect(() => {
-    pendingLab = null; // consumed by the initial state above
-    const onOpen = (e: Event) => {
-      const t = (e as CustomEvent).detail as LabKey;
-      if (TABS.some((x) => x.key === t)) setTab(t);
-    };
-    window.addEventListener(OPEN_LAB_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_LAB_EVENT, onOpen);
+    clearPendingLab(); // consumed by the initial state above
+    return onOpenLab(setTab);
   }, []);
 
   return (

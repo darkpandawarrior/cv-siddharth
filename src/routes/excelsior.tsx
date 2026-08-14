@@ -105,6 +105,9 @@ function ExcelsiorRoute() {
               to="/excelsior"
               search={{ year: Number(m.year), page: m.page }}
               replace
+              // Same reason as the Flipbook callbacks below: these jump the
+              // book to a page, they do not change what page you are on.
+              viewTransition={false}
               title={m.note}
               className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
                 m.kind === "wrote"
@@ -125,8 +128,16 @@ function ExcelsiorRoute() {
           <Flipbook
             year={String(year)}
             page={page}
-            onYearChange={(y) => navigate({ search: { year: Number(y), page: 1 }, replace: true })}
-            onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }), replace: true })}
+            // viewTransition: false, because a page turn is not a route change
+            // to look at. The router runs with defaultViewTransition on for the
+            // shared-element moves (nav wordmark, project titles), and here that
+            // meant every turn started a document-wide transition on top of the
+            // leaf's own CSS 3D flip — two animations of the same event. Turn
+            // faster than one completes and the browser skips it, which throws
+            // "Transition was skipped": an uncaught error on every page turn,
+            // and the only page error the whole site was still emitting.
+            onYearChange={(y) => navigate({ search: { year: Number(y), page: 1 }, replace: true, viewTransition: false })}
+            onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }), replace: true, viewTransition: false })}
           />
         </div>
       </main>

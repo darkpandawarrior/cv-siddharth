@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
-import { profile, metrics, caseStudies } from "../data/profile.ts";
+import { profile, metrics, caseStudies, projects } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
 
 /**
@@ -86,11 +86,21 @@ function HirePage() {
         <div className="mt-12 border-t border-line pt-8">
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted">The work behind the numbers</p>
           <ul className="mt-4 divide-y divide-line">
-            {featured.map((c) => (
+            {featured.map((c) => {
+              // A case study is not always a project. `mileway` is both and has
+              // a full detail page; `gps-accuracy` and `crash-reduction` exist
+              // only in `caseStudies`, and linking them to /project/$slug sent
+              // two of the three links on this page — the page a recruiter is
+              // handed — to a 404. The homepage renders every case study with
+              // its slug as an anchor, so this fallback can never miss.
+              const detail = projects.some((p) => p.slug === c.slug);
+              const linkProps = detail
+                ? ({ to: "/project/$slug", params: { slug: c.slug } } as const)
+                : ({ to: "/", hash: c.slug } as const);
+              return (
               <li key={c.slug}>
                 <Link
-                  to="/project/$slug"
-                  params={{ slug: c.slug }}
+                  {...linkProps}
                   className="group flex items-baseline justify-between gap-4 py-3.5"
                 >
                   <span>
@@ -109,7 +119,8 @@ function HirePage() {
                   />
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
 

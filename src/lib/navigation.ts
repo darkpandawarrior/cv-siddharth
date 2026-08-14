@@ -48,10 +48,16 @@ function prefersReducedMotion() {
 // Exported so scripts/gen-system-prompt.mjs derives the assistant's list of
 // linkable home sections from here instead of hand-mirroring it (this file's
 // generator warns that hand-mirroring is how a past drift bug happened).
-// NOTE on `chess`: `#chess` is the home-page teaser (App.tsx's ChessTeaser),
-// while `/chess` is the room route with the full analysis (ChessFindings.tsx,
-// one of its tabs). classifyHash only ever sees `#`-shaped targets, so
-// registering the section here cannot shadow the route.
+// NOTE on `shipped`: `#shipped` is the home-page shelf and `/shipped` is the
+// full route. The section wins, deliberately — classifyHash checks SECTION_IDS
+// before falling through to a route, so a section id shadows a same-named
+// route by design. The route is still reachable by its own path; what a bare
+// `#shipped` must never do is navigate away from the page it is scrolling.
+//
+// `chess` used to be registered here and is not any more. The section it named
+// stopped being a chess teaser when the surface wall moved into it — see
+// App.tsx — so `#chess` now falls through to the /chess room, which is where
+// someone typing it wanted to go in the first place.
 /**
  * Every home-page section id, in home-scroll order, and the single source of
  * truth for "is this hash a section?".
@@ -66,17 +72,28 @@ function prefersReducedMotion() {
  * SECTION_ANCHORS, the palette's jump list, and the counts in routeHead.ts.
  * All three drifted — SECTION_ANCHORS's own comment records `source` and
  * `writing` being stranded once, and every one of them was missing `chess`.
+ *
+ * Deriving the copies fixed the copies and not the original: this array was
+ * still hand-kept, and by the time the surfaces refactor landed it was missing
+ * `morph` (added with DeviceMorph and never registered, so ⌘K could not jump
+ * to the multiplatform section and `#morph` classified as a route to a page
+ * that does not exist) and `shipped`, and listed the rest in an order the page
+ * had not used for some time. e2e/navigation.spec.ts now reads the ids out of
+ * the rendered homepage and asserts this array matches, order included — the
+ * one check that could have caught any of it.
  */
 export const SECTION_ID_LIST = [
   "top",
+  "morph",
   "fit",
   "work",
   "projects",
-  "experience",
-  "skills",
-  "writing",
-  "chess",
   "source",
+  "shipped",
+  "experience",
+  "surfaces",
+  "writing",
+  "skills",
   "contact",
 ] as const;
 

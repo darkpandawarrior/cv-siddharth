@@ -71,16 +71,20 @@ describe("surface completeness", () => {
     expect(iconless, `surface(s) with no icon in rooms.tsx SURFACE_ICON: ${iconless.join(", ")}`).toEqual([]);
   });
 
-  it("puts every walled surface in a rendered group", () => {
+  it("puts every surface in a rendered group", () => {
     const rendered = new Set(WALL_GROUPS.map((g) => g.group));
-    const stranded = surfaces.filter((f) => f.wall && !rendered.has(f.group)).map((f) => f.to);
-    expect(stranded, `surface(s) marked wall:true but in a group the wall never renders: ${stranded.join(", ")}`).toEqual([]);
+    const stranded = surfaces.filter((f) => !rendered.has(f.group)).map((f) => f.to);
+    expect(stranded, `surface(s) in a group the wall never renders: ${stranded.join(", ")}`).toEqual([]);
   });
 
-  it("renders every walled surface exactly once", () => {
-    const walled = surfaces.filter((f) => f.wall).map((f) => f.to).sort();
+  // The invariant the registry exists for, stated as one line: every route
+  // reaches the homepage. It used to read "every WALLED surface", which was
+  // vacuously true of the one surface that had opted out — /playground went
+  // unlinked from the homepage with this test green.
+  it("renders every surface on the wall exactly once", () => {
+    const all = surfaces.map((f) => f.to).sort();
     const tiled = wallSurfaces.flatMap((g) => g.items.map((f) => f.to)).sort();
-    expect(tiled).toEqual(walled);
+    expect(tiled).toEqual(all);
   });
 
   it("resolves every railId to a facet in the chronology registry", () => {

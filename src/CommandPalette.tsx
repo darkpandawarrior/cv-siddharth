@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Command, CornerDownLeft, MessageCircle, FileText, Compass, PenLine, Target, TerminalSquare } from "lucide-react";
+import { Command, CornerDownLeft, MessageCircle, Compass, PenLine, Target, TerminalSquare } from "lucide-react";
 import { projects } from "./data/profile.ts";
+import { SURFACES } from "./rooms.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { useSectionNav, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
@@ -25,6 +26,35 @@ interface PaletteCommand {
  * `SECTION_ID_LIST` means the palette follows the page's own scroll order
  * rather than keeping a second opinion about it.
  */
+/**
+ * Extra search terms per route — the words a visitor types that the registry's
+ * own label, tag and blurb do not contain.
+ *
+ * Deliberately additive and deliberately small. The labels and blurbs come from
+ * surfaces.ts so they can never drift from the wall, the <head> or the
+ * assistant; these are the search synonyms that would be noise in all three
+ * ("tldraw", "tldr", "arcade"). A route with nothing here still matches on
+ * everything the registry already says about it.
+ */
+const SURFACE_SYNONYMS: Record<string, string> = {
+  "/map": "constellation connections graph storyboard",
+  "/lab": "gps dead reckoning simulation demo signal kalman",
+  "/forge": "particles swarm wordmark cursor",
+  "/pulse": "stats counter dashboard analytics activity",
+  "/playground": "demos index rooms explore hub arcade world street",
+  "/loopdown": "blog field notes archive lessons hub",
+  "/blueprint": "tldraw whiteboard draw sketch canvas ascii",
+  "/compose": "jetpack kotlin android code editor preview recompose",
+  "/terminal": "shell console cli command line easter egg bash",
+  "/hire": "recruiter cv metrics contact summary tldr 90 seconds",
+  "/resume": "cv download print pdf",
+  "/chess": "lichess chess.com rating openings scandinavian blitz board hobby",
+  "/weeb": "anime manga anilist watchlist seasons",
+  "/ink": "writing editor magazine literary society",
+  "/excelsior": "magazine manit institute pdf scan pages",
+  "/shipped": "play store published apps install listing rating white label",
+};
+
 const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
   top: { label: "Top / Hero", icon: <Compass size={15} /> },
   fit: {
@@ -32,17 +62,31 @@ const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon:
     keywords: "jd job description recruiter hiring role match score analyse analyze fit",
     icon: <Target size={15} />,
   },
-  work: { label: "Case studies", icon: <Compass size={15} /> },
-  projects: { label: "Projects", icon: <Compass size={15} /> },
-  experience: { label: "Experience", icon: <Compass size={15} /> },
-  skills: { label: "Skills", icon: <Compass size={15} /> },
-  writing: { label: "Writing", keywords: "loopdown blog lessons", icon: <PenLine size={15} /> },
-  chess: {
-    label: "Chess — 18k games, mined",
-    keywords: "chess lichess chess.com rating openings scandinavian blitz board games hobby",
+  morph: {
+    label: "One codebase, every form factor",
+    keywords: "multiplatform kmp compose device phone foldable tablet desktop tv wasm live build responsive adaptive",
     icon: <Compass size={15} />,
   },
+  work: { label: "Case studies", icon: <Compass size={15} /> },
+  projects: { label: "Projects", icon: <Compass size={15} /> },
   source: { label: "The Source — every public repo", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} /> },
+  shipped: {
+    label: "Apps you can install",
+    keywords: "play store shipped published apps install listing rating white label",
+    icon: <Compass size={15} />,
+  },
+  experience: { label: "Experience", icon: <Compass size={15} /> },
+  // Replaces the "Chess — 18k games, mined" row, which jumped to this section
+  // back when it was a chess teaser and kept jumping here after it became the
+  // wall. The chess keywords move to the /chess row below, which is where they
+  // were always going to be more useful.
+  surfaces: {
+    label: "Every surface — the whole site as a wall",
+    keywords: "wall rooms surfaces explore index grid everything demo live",
+    icon: <Compass size={15} />,
+  },
+  writing: { label: "Writing", keywords: "loopdown blog lessons", icon: <PenLine size={15} /> },
+  skills: { label: "Skills", icon: <Compass size={15} /> },
   contact: { label: "Contact", icon: <Compass size={15} /> },
 };
 
@@ -76,15 +120,23 @@ export function CommandPalette() {
         ...SECTION_JUMPS[id],
         run: () => goToSection(id),
       })),
-      { id: "map", label: "The Storyboard", hint: "Jump", keywords: "constellation map connections", icon: <Compass size={15} />, run: () => navigate({ to: "/map" }) },
-      { id: "lab", label: "The Signal Lab — GPS filter, live", hint: "Jump", keywords: "gps dead reckoning simulation demo", icon: <Compass size={15} />, run: () => navigate({ to: "/lab" }) },
-      { id: "forge", label: "The Particle Forge — cursor-reactive swarm", hint: "Jump", keywords: "particles canvas physics interactive swarm wordmark", icon: <Compass size={15} />, run: () => navigate({ to: "/forge" }) },
-      { id: "pulse", label: "The Pulse — what visitors actually touch", hint: "Open", keywords: "stats counter dashboard analytics interactions live activity", icon: <Compass size={15} />, run: () => navigate({ to: "/pulse" }) },
-      { id: "playground", label: "The Playground — every interactive room", hint: "Open", keywords: "interactive demos playground index rooms explore hub arcade", icon: <Compass size={15} />, run: () => navigate({ to: "/playground" }) },
-      { id: "loopdown", label: "The Loopdown — full writing hub", hint: "Open", keywords: "writing blog field notes archive", icon: <PenLine size={15} />, run: () => navigate({ to: "/loopdown" }) },
-      { id: "blueprint", label: "The Blueprint Room — infinite canvas", hint: "Open", keywords: "tldraw whiteboard map draw sketch", icon: <Compass size={15} />, run: () => navigate({ to: "/blueprint" }) },
-      { id: "compose", label: "The Compose Playground — write Compose, live", hint: "Open", keywords: "jetpack compose kotlin android code editor playground live preview", icon: <TerminalSquare size={15} />, run: () => navigate({ to: "/compose" }) },
-      { id: "terminal", label: "The Terminal — a faux shell you can type in", hint: "Open", keywords: "shell console cli command line easter egg bash", icon: <TerminalSquare size={15} />, run: () => navigate({ to: "/terminal" }) },
+      // One row per route, from the registry. The Launcher's docstring says
+      // "⌘K already reaches every surface — by name", and it did not: this was
+      // eleven hand-written rows out of sixteen routes, missing /chess, /weeb,
+      // /ink, /excelsior and /shipped entirely. You cannot search for a room
+      // you do not know exists, and you could not search for these by name
+      // either.
+      ...SURFACES.map((s) => ({
+        // Prefixed: three route slugs (`shipped`, `playground`, `resume`) also
+        // name something already in this list, and two rows with one id is a
+        // duplicate React key and an ambiguous option.
+        id: `surface-${s.to.slice(1)}`,
+        label: s.label,
+        hint: "Open",
+        keywords: `${s.tag} ${s.blurb} ${SURFACE_SYNONYMS[s.to] ?? ""}`,
+        icon: <s.icon size={15} />,
+        run: () => navigate({ to: s.to }),
+      })),
       {
         id: "books-before-bros",
         label: `${BOOKS_BEFORE_BROS.name} — the origin blog`,
@@ -93,10 +145,6 @@ export function CommandPalette() {
         icon: <PenLine size={15} />,
         run: () => window.open(BOOKS_BEFORE_BROS.url, "_blank", "noreferrer"),
       },
-      // First in the jump list on purpose: it is the one surface built for
-      // someone who does not want to explore the site at all.
-      { id: "hire", label: "Hire me — the 90-second version", hint: "Open", keywords: "hire recruiter cv numbers metrics contact summary tldr", icon: <FileText size={15} />, run: () => navigate({ to: "/hire" }) },
-      { id: "resume", label: "Résumé", hint: "Open", icon: <FileText size={15} />, run: () => navigate({ to: "/resume" }) },
       {
         id: "chat",
         label: "Ask my AI assistant",

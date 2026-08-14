@@ -55,3 +55,53 @@ const WORDS = [
 export function countWord(n: number): string {
   return WORDS[n] ?? String(n);
 }
+
+/* ── The deep-link signal ─────────────────────────────────────────────────
+ *
+ * A case-study card opens a specific bench tab: openLab(tab), then navigate to
+ * /lab. If the bench is already mounted the event reaches it; if the route is
+ * about to mount it fresh, `pendingLab` carries the choice across.
+ *
+ * It lives HERE, next to the registry, and not in LabBench.tsx — for the same
+ * reason the registry itself was moved out, one consumer later. App.tsx wants
+ * `openLab` and nothing else from the bench, and importing it from LabBench.tsx
+ * put the entire bench in the homepage's own chunk: 53 kB of instruments, plus
+ * their scene code, downloaded by every visitor to `/` so that two buttons
+ * could set a string before navigating away. This module is plain data with no
+ * React import, which is what makes it safe to reach for from anywhere.
+ */
+const OPEN_LAB_EVENT = "open-lab";
+let pendingLab: LabKey | null = null;
+
+export function openLab(tab: LabKey) {
+  pendingLab = tab;
+  window.scrollTo({ top: 0 });
+  window.dispatchEvent(new CustomEvent(OPEN_LAB_EVENT, { detail: tab }));
+}
+
+/**
+ * Read and clear are deliberately separate calls, not one `take()`.
+ *
+ * The bench reads this from a useState initializer, and React invokes those
+ * twice under StrictMode — a read that also cleared would hand the tab to the
+ * first invocation and "signal" to the second. Peek in the initializer, clear
+ * in the effect, exactly as the bench did when both lived in one file.
+ */
+export function peekPendingLab(): LabKey | null {
+  return pendingLab;
+}
+
+export function clearPendingLab() {
+  pendingLab = null;
+}
+
+/** Subscribes to openLab() calls while the bench is mounted. Returns an
+ *  unsubscribe, so a caller's effect can just `return onOpenLab(...)`. */
+export function onOpenLab(handler: (tab: LabKey) => void): () => void {
+  const listener = (e: Event) => {
+    const tab = (e as CustomEvent).detail as LabKey;
+    if (LAB_TABS.some((x) => x.key === tab)) handler(tab);
+  };
+  window.addEventListener(OPEN_LAB_EVENT, listener);
+  return () => window.removeEventListener(OPEN_LAB_EVENT, listener);
+}

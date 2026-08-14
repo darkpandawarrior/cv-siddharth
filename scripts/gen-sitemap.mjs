@@ -14,7 +14,8 @@
 import { writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { projects, siteRooms } from "../src/data/profile.ts";
+import { projects } from "../src/data/profile.ts";
+import { surfaces } from "../src/data/surfaces.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://cv-siddharth.vercel.app";
@@ -28,43 +29,43 @@ const SITE = "https://cv-siddharth.vercel.app";
  * own title, description and canonical (src/lib/routeHead.ts) and each is a
  * genuine destination worth finding.
  */
-const PAGES = [
-  { path: "/", priority: "1.0", changefreq: "weekly" },
+/**
+ * Weight and refresh rate per route. ONLY the routes that differ from the
+ * default — everything else is 0.5/monthly and appears automatically the day
+ * its surface is registered.
+ *
+ * The route list itself comes from `surfaces`, never from here. The rooms were
+ * already derived (this file's own note records `/chess` shipping with a title,
+ * a description and a canonical while absent from the sitemap), but the *pages*
+ * beside them stayed hand-listed — the identical bug, one row up, waiting for
+ * the next page route. surfaces.test.ts fails the build if a route file has no
+ * surface, so nothing can now reach production unlisted.
+ */
+const WEIGHT = {
+  "/": { priority: "1.0", changefreq: "weekly" },
   // Ranked with /resume, not below it: /hire is the surface built for someone
   // who will not explore, and it was invisible to crawlers until now.
-  { path: "/hire", priority: "0.9", changefreq: "monthly" },
-  { path: "/resume", priority: "0.9", changefreq: "monthly" },
+  "/hire": { priority: "0.9", changefreq: "monthly" },
+  "/resume": { priority: "0.9", changefreq: "monthly" },
   // Ranked with the hiring surfaces: it is the only page on this site that is
   // entirely other people's verifiable evidence rather than his own account.
-  { path: "/shipped", priority: "0.8", changefreq: "monthly" },
-  { path: "/ink", priority: "0.7", changefreq: "monthly" },
-  { path: "/excelsior", priority: "0.6", changefreq: "yearly" },
-  { path: "/loopdown", priority: "0.7", changefreq: "weekly" },
-  { path: "/playground", priority: "0.6", changefreq: "monthly" },
-  { path: "/pulse", priority: "0.5", changefreq: "daily" },
-];
+  "/shipped": { priority: "0.8", changefreq: "monthly" },
+  "/ink": { priority: "0.7", changefreq: "monthly" },
+  "/loopdown": { priority: "0.7", changefreq: "weekly" },
+  "/excelsior": { priority: "0.6", changefreq: "yearly" },
+  "/lab": { priority: "0.6", changefreq: "monthly" },
+  "/playground": { priority: "0.6", changefreq: "monthly" },
+  "/pulse": { priority: "0.5", changefreq: "daily" },
+  "/forge": { priority: "0.4", changefreq: "monthly" },
+  "/terminal": { priority: "0.4", changefreq: "monthly" },
+};
 
-/**
- * The rooms are derived from `siteRooms`, not listed here.
- *
- * They used to be hand-listed alongside the pages above, and it drifted the
- * moment a room was added: `/chess` shipped with its own title, description and
- * canonical (routeHead.ts reads the same array) yet was absent from the sitemap
- * — invisible from inside the site, exactly like the `/project/portfolio`
- * omission this generator was written to fix. Same class of bug, one layer up.
- *
- * `ROOM_PRIORITY` only carries the paths whose weight differs from the default;
- * a new room gets 0.5 and appears automatically.
- */
-const ROOM_PRIORITY = { "/lab": "0.6", "/forge": "0.4", "/terminal": "0.4" };
+const DEFAULT_WEIGHT = { priority: "0.5", changefreq: "monthly" };
 
-const ROOM_PAGES = siteRooms.map((r) => ({
-  path: r.to,
-  priority: ROOM_PRIORITY[r.to] ?? "0.5",
-  changefreq: "monthly",
+const STATIC = ["/", ...surfaces.map((s) => s.to)].map((path) => ({
+  path,
+  ...(WEIGHT[path] ?? DEFAULT_WEIGHT),
 }));
-
-const STATIC = [...PAGES, ...ROOM_PAGES];
 
 // Date only, no clock time: a sitemap that changes every build for no reason
 // trains crawlers to ignore its lastmod.

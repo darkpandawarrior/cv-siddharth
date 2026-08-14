@@ -64,7 +64,9 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
   const h2 = "font-display text-xs font-bold uppercase tracking-widest text-teal-700";
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
-      <div className="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
+      {/* Wraps: back-link + three cut links + a pill button is wider than a
+          375px phone, and the bar ran 5px past the viewport. */}
+      <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 print:hidden">
         <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900">
           <ArrowLeft size={16} /> Back to portfolio
         </button>
@@ -251,8 +253,14 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                   mid-word — "Spring Boot 4" printed as "Spring Boot 4" minus
                   the page. A résumé that loses words at the paper's edge is
                   worse than one that names one fewer framework. */}
+              {/* min-w-0, not shrink-0. The comment above is about the stack
+                  label; the NAME had the same bug in the other direction —
+                  "cv-siddharth — this site, and its Compose Multiplatform twin"
+                  is 409px of unshrinkable heading, so /resume scrolled 74px
+                  sideways on a phone. It still wins the space it needs on
+                  paper, where the sheet is 210mm and there is room. */}
               <div className="flex items-baseline justify-between gap-4">
-                <h3 className="shrink-0 text-sm font-bold text-violet-700">{p.name}</h3>
+                <h3 className="min-w-0 text-sm font-bold text-violet-700">{p.name}</h3>
                 <p className="min-w-0 truncate text-xs text-zinc-500">{p.stack.slice(0, 2).join(" · ")}</p>
               </div>
               <p className="text-sm leading-snug text-zinc-700">

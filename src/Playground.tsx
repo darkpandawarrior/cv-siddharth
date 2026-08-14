@@ -248,6 +248,14 @@ function PlaygroundInner() {
               button but zero room links — the ternary this replaced rendered
               RoomGrid *instead of* the world, never alongside it. */}
           <div className="sr-only print:not-sr-only">
+            {/* World view had no <h1> at all — the visible one lives in the
+                list-view branch below, and this is the branch that renders by
+                default. The canvas above is aria-hidden, so the page announced
+                itself with no heading of any level to a screen reader and
+                shipped an h1-less document to crawlers. sr-only rather than
+                visible: the world is full-bleed chrome with nowhere to put a
+                title, which is exactly why RoomFrame does the same thing. */}
+            <h1>The Playground — every interactive room, one street</h1>
             <RoomGrid />
           </div>
         </main>

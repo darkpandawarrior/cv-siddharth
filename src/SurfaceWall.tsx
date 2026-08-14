@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { wallSurfaces, type DeviceFrame, type Surface } from "./data/surfaces.ts";
+import { wallSurfaces, DEVICE, type DeviceFrame, type Surface } from "./data/surfaces.ts";
 import { SURFACE_ICON } from "./rooms.tsx";
 import { facets } from "./data/facets.ts";
 
@@ -38,18 +38,20 @@ const BAND = "11rem";
  * TV that reads wide-and-short, which is the entire argument the wall is here
  * to make.
  *
- * `aspect` is the screen; the bezel is `.device`'s border, which is why a
- * watch and a TV can share one component.
+ * Only the presentational half lives here. The aspect and the label come from
+ * DEVICE in the registry, because the capture script and the poster cropper
+ * need the same numbers and cannot import this file — when they were separate,
+ * every poster was cropped to 16:9 no matter which frame it landed in.
  */
-const FRAME: Record<DeviceFrame, { aspect: string; height: string; radius?: string; label: string }> = {
-  phone: { aspect: "9 / 16", height: "100%", label: "Phone" },
-  foldable: { aspect: "5 / 4", height: "84%", label: "Foldable" },
-  tablet: { aspect: "4 / 3", height: "88%", label: "Tablet" },
-  watch: { aspect: "1 / 1", height: "52%", radius: "1.9rem", label: "Watch" },
-  tv: { aspect: "16 / 9", height: "72%", radius: "0.6rem", label: "TV" },
-  desktop: { aspect: "16 / 10", height: "76%", radius: "0.7rem", label: "Desktop" },
-  browser: { aspect: "16 / 10", height: "76%", radius: "0.7rem", label: "Web" },
-  widget: { aspect: "2 / 1", height: "42%", radius: "1.1rem", label: "Widget" },
+const FRAME: Record<DeviceFrame, { height: string; radius?: string }> = {
+  phone: { height: "100%" },
+  foldable: { height: "84%" },
+  tablet: { height: "88%" },
+  watch: { height: "52%", radius: "1.9rem" },
+  tv: { height: "72%", radius: "0.6rem" },
+  desktop: { height: "76%", radius: "0.7rem" },
+  browser: { height: "76%", radius: "0.7rem" },
+  widget: { height: "42%", radius: "1.1rem" },
 };
 
 /** Year-pair for a surface the rail has dates for, e.g. "2021 :: 2026". */
@@ -64,6 +66,7 @@ function stamp(surface: Surface): string | null {
 function SurfaceTile({ surface }: { surface: Surface }) {
   const Icon = SURFACE_ICON[surface.to];
   const frame = FRAME[surface.device];
+  const device = DEVICE[surface.device];
   const dates = stamp(surface);
 
   return (
@@ -85,7 +88,7 @@ function SurfaceTile({ surface }: { surface: Surface }) {
             className="device block"
             style={{
               height: frame.height,
-              aspectRatio: frame.aspect,
+              aspectRatio: String(device.aspect),
               maxWidth: "100%",
               ...(frame.radius ? { borderRadius: frame.radius } : {}),
             }}
@@ -111,7 +114,7 @@ function SurfaceTile({ surface }: { surface: Surface }) {
       <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-widest text-muted">
         <span>{surface.tag}</span>
         <span aria-hidden>·</span>
-        <span>{frame.label}</span>
+        <span>{device.label}</span>
         {dates && (
           <>
             <span aria-hidden>·</span>

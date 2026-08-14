@@ -4,17 +4,24 @@
 // scripts/capture-site.mjs has been screenshotting every route for a while —
 // deriving the route list from src/routes/*.tsx, so it never misses one — and
 // writing the PNGs into docs/, which Vite does not serve. Nineteen captures
-// nobody could see. This is the missing half: downscale each one a facet asks
+// nobody could see. This is the missing half: downscale each one a surface asks
 // for into a webp the homepage wall can actually render.
 //
 // Committed output, same posture as gen-og.mjs: the Vercel build needs no
-// browser and no image toolchain. Re-run after `npm run capture`.
+// browser and no image toolchain. Re-run after `npm run capture:site`.
+//
+// EACH POSTER IS CROPPED TO ITS OWN DEVICE. Every capture used to be squeezed
+// into one hardcoded 16:9, then rendered `object-cover` inside whatever frame
+// the surface declared — so a phone tile showed a 16:9 desktop capture with the
+// sides cut off ("th Pandalai — ndroid Enginee" on /hire). The aspect now comes
+// from DEVICE in the registry, the same map SurfaceWall draws the frame from
+// and capture-site.mjs sizes the browser window with, so the three cannot drift.
 
 import { readdirSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { surfaces } from "../src/data/surfaces.ts";
+import { surfaces, DEVICE } from "../src/data/surfaces.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const srcDir = join(root, "docs", "screenshots");
@@ -33,17 +40,26 @@ const missing = [];
 let written = 0;
 
 for (const surface of wanted) {
-  const file = `site_${surface.poster}.png`;
+  // Prefer the device-viewport capture; fall back to the 1440x900 one the
+  // sentinel keeps, so a surface added before the next capture run still gets a
+  // poster rather than failing the build.
+  const sized = `surface_${surface.poster}.png`;
+  const file = available.has(sized) ? sized : `site_${surface.poster}.png`;
   if (!available.has(file)) {
-    missing.push(`${surface.to} → docs/screenshots/${file}`);
+    missing.push(`${surface.to} → docs/screenshots/${sized}`);
     continue;
   }
-  const out = join(outDir, `${facet.poster}.webp`);
+  const out = join(outDir, `${surface.poster}.webp`);
   await sharp(join(srcDir, file))
-    // Captures are 1440x900 full-viewport. Take the top of the page — that is
-    // where each route's identity lives — at the tile's own aspect ratio,
-    // rather than squashing the whole scroll into a thumbnail.
-    .resize({ width: WIDTH, height: Math.round((WIDTH * 9) / 16), fit: "cover", position: "top" })
+    // Take the top of the page — that is where each route's identity lives —
+    // at the frame's own aspect ratio, rather than squashing the whole scroll
+    // into a thumbnail.
+    .resize({
+      width: WIDTH,
+      height: Math.round(WIDTH / DEVICE[surface.device].aspect),
+      fit: "cover",
+      position: "top",
+    })
     .webp({ quality: 82 })
     .toFile(out);
   written++;
@@ -52,10 +68,10 @@ for (const surface of wanted) {
 console.log(`[surfaces] wrote ${written} poster(s) to public/surfaces/`);
 
 if (missing.length) {
-  // Loud, and fatal: a facet promising a poster it has no capture for is the
+  // Loud, and fatal: a surface promising a poster it has no capture for is the
   // exact half-finished state this whole registry exists to make impossible.
-  console.error(`[surfaces] no capture for ${missing.length} facet(s):`);
+  console.error(`[surfaces] no capture for ${missing.length} surface(s):`);
   for (const m of missing) console.error(`  ${m}`);
-  console.error(`[surfaces] run \`npm run capture\` against a running dev server first.`);
+  console.error(`[surfaces] run \`npm run capture:site\` against a running dev server first.`);
   process.exit(1);
 }

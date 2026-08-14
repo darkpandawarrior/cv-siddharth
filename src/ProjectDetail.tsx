@@ -10,7 +10,9 @@ import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { DeviceWall } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
-import { openLab, type LabKey } from "./LabBench.tsx";
+// See App.tsx: the deep-link signal lives in the plain-data registry, so a
+// project page linking into a lab does not have to ship the lab.
+import { openLab, type LabKey } from "./data/labs.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";

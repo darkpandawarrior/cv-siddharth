@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { LauncherButton } from "./Launcher.tsx";
 import { ArrowLeft, Play, RotateCcw, Smartphone, Wand2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
@@ -702,9 +703,14 @@ export default function ComposePlayground() {
     <div className="flex h-screen flex-col bg-void">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
-          </button>
+          {/* See BlueprintRoom: rooms with hand-rolled chrome never picked up
+              RoomFrame's launcher. */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LauncherButton />
+            <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+              <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
+            </button>
+          </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
           </span>

@@ -194,9 +194,15 @@ export function WeebRoom() {
 
           <ul className="mt-6 divide-y divide-line">
             {stale.slice(0, 8).map((s) => (
-              <li key={s.name} className="flex items-baseline justify-between gap-4 py-3">
-                <span className="text-sm text-zinc-300">{s.name}</span>
-                <span className="shrink-0 text-right font-mono text-[11px] text-muted">
+              // Wraps. Both halves are anime titles pulled from AniList, and
+              // "I Was Reincarnated as the 7th Prince so I Can Take My Time
+              // Perfecting My Magical Ability Season 2" is 686px of shrink-0
+              // text — /weeb scrolled 439px sideways on a phone and 46px on a
+              // tablet. A generated string cannot be given a fixed share of the
+              // row; it has no length anyone here controls.
+              <li key={s.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+                <span className="min-w-0 text-sm text-zinc-300">{s.name}</span>
+                <span className="min-w-0 font-mono text-[11px] text-muted sm:text-right">
                   {s.sequel}
                   {s.year ? ` · ${s.year}` : ""}
                 </span>

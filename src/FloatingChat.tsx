@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Volume2, VolumeX, X } from "lucide-react";
 import { projects, projectBySlug } from "./data/profile.ts";
-import { ChatMessageBody } from "./ChatWidgets.tsx";
+// ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
+// every route as a closed button. Rendering a message is the FIRST moment any
+// of it is needed, and it cannot happen before someone opens the panel — so
+// the whole markdown renderer was arriving before `load` on every page for a
+// panel most visitors never open. Same code-split idiom as ParticleHeroScene.
+const ChatMessageBody = lazy(() => import("./ChatWidgets.tsx").then((m) => ({ default: m.ChatMessageBody })));
 import { plainText, speakableText } from "./lib/chatBlocks.ts";
 import { matchJd, toFitReport } from "./lib/skillMatch.ts";
 import { HOME_GREETING, JD_PROMPT, canonicalRoute, chipsFor, greetingFor } from "./lib/chatContext.ts";
@@ -643,6 +648,7 @@ export function FloatingChat() {
                         // from its stored content — that's what makes it
                         // acknowledge where you are without ever becoming a
                         // second message or resetting the conversation.
+                        <Suspense fallback={<span className="animate-pulse text-muted">thinking…</span>}>
                         <ChatMessageBody
                           content={m === GREETING ? greeting : m.content}
                           // Not streaming = the reply is final, so a directive
@@ -652,6 +658,7 @@ export function FloatingChat() {
                           done={!streaming}
                           onNavigate={() => setOpen(false)}
                         />
+                        </Suspense>
                       )}
                     </div>
                     {!streaming && m !== GREETING && m.content && (

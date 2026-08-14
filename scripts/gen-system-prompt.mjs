@@ -124,9 +124,12 @@ const roomLines = siteRooms.map((r) => `- ${r.label} (${r.to}) — ${r.blurb} [$
 // from the sections HashCompat/useSectionNav actually accept.
 const SECTION_LABELS = {
   top: "hero",
+  morph: "the live Wasm builds re-framed across phone, foldable, tablet, desktop and TV",
   fit: "paste a job description, get an honest fit scorecard — the same analyzer as /jd in this console",
   work: "case studies",
   source: "public repos",
+  shipped: "the Play Store shelf",
+  surfaces: "the wall — every route on the site as a tile",
 };
 const sectionList = [...SECTION_IDS].map((id) => `/#${id}${SECTION_LABELS[id] ? ` (${SECTION_LABELS[id]})` : ""}`).join(", ");
 

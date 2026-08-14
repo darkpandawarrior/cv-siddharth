@@ -1023,9 +1023,17 @@ html.resume-mode body {
   }
 }
 
-/* Title row: name left, bracketed category right, hairline under. */
+/* Title row: name left, bracketed category right, hairline under.
+
+   The tag wraps to its own line rather than pushing the page sideways. It used
+   to be flex-shrink:0 on a row that did not wrap, and the tags are written by
+   hand and get long — "[ In development · private repo, public case study ]" is
+   378px of unbreakable row inside a 327px column, so the homepage and /ink both
+   scrolled horizontally on a phone. A tag is a label; it has no claim on space
+   the viewport does not have. */
 .meta-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
@@ -1033,7 +1041,7 @@ html.resume-mode body {
   padding-bottom: 0.625rem;
 }
 .meta-row-tag {
-  flex-shrink: 0;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.06em;
@@ -1576,12 +1584,34 @@ html.resume-mode body {
   .flipbook-side-left {
     display: none;
   }
+  /* Width leads on a phone, height follows. Sizing by height alone is right on
+     a laptop, where the window is wider than a page is tall, and wrong on a
+     phone, where it is not: min(66vh,34rem) at 375x812 is a 536px-tall sheet,
+     and a 950/1230 page that tall is 414px wide inside a 375px window. The
+     spread ran 71px off the right edge of the document. */
   .flipbook-side,
   .flipbook-leaf {
-    height: min(66vh, 34rem);
+    height: auto;
+    width: min(100%, calc(66vh * 950 / 1230));
   }
   .flipbook-leaf-right {
     left: 0;
+  }
+  /* And the two nav buttons stop flanking the page. In flow they are ~96px of
+     a 327px column — nearly a third of the phone spent on two arrows, taken
+     from the one thing on the route anybody came to look at. */
+  .flipbook-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    transform: translateY(-50%);
+    background-color: rgba(5, 7, 10, 0.72);
+  }
+  .flipbook-nav-prev {
+    left: 0;
+  }
+  .flipbook-nav-next {
+    right: 0;
   }
 }
 

@@ -1,4 +1,5 @@
 import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
+import { LauncherButton } from "./Launcher.tsx";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { TOUR } from "./blueprintData.ts";
@@ -158,9 +159,17 @@ function BlueprintRoomInner() {
     <div className="flex h-screen flex-col">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
-          </BackToPortfolio>
+          {/* This room draws its own chrome instead of RoomFrame's, which is
+              how it (and /compose and /terminal) missed the launcher entirely —
+              three of the eight rooms offered "back to the portfolio" and no
+              sideways move, while the other five had the whole wall a click
+              away. */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LauncherButton />
+            <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+              <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
+            </BackToPortfolio>
+          </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
           </span>
