@@ -449,6 +449,20 @@ export const writing: Writing = {
       "blurb": "A scholar number, a prophecy, and campus mythology."
     },
     {
+      "title": "The Legend Of K'öæluæ's Scales",
+      "slug": "legend-of-koaeluae-scales",
+      "form": "short-fiction",
+      "era": "2021",
+      "words": "1804",
+      "tags": [
+        "world-building",
+        "mythology",
+        "sci-fi",
+        "framed-narrative"
+      ],
+      "blurb": "A galactic field reporter transcribes why it snows on a frozen planet — a fire serpent, a water god, and the fisherwoman who talked one of them out of giving up."
+    },
+    {
       "title": "The Loopdown",
       "slug": "the-loopdown-story",
       "form": "short-fiction",
