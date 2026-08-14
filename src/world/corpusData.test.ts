@@ -21,10 +21,18 @@ import {
 } from "./corpusData.ts";
 
 describe("chess ridge", () => {
-  it("carries exactly one instance per rating sample across all six series — 473", () => {
+  // The count is derived, not hardcoded. It used to assert a literal 473, which broke the moment
+  // gen:chess pulled a newer corpus (474) — and it would break again on every future game played.
+  // A test over a growing dataset that pins its exact size fails for reasons that are not bugs, and
+  // the fix each time is to edit the number, which teaches everyone to edit the number.
+  //
+  // The invariant worth holding is the one in this test's name: one ridge instance per rating
+  // sample, nothing dropped and nothing duplicated. The non-empty check keeps that from passing
+  // vacuously if the corpus ever arrives empty — 0 === 0 would otherwise be green.
+  it("carries exactly one instance per rating sample across all six series", () => {
     const total = chess.arc.reduce((s, series) => s + series.points.length, 0);
-    expect(total).toBe(473);
-    expect(chessRidge()).toHaveLength(473);
+    expect(total).toBeGreaterThan(0);
+    expect(chessRidge()).toHaveLength(total);
   });
 
   it("is z-monotone with t within each series — the data arrives time-ordered and nothing here reorders it", () => {
