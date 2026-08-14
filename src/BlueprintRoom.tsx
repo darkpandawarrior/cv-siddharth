@@ -173,7 +173,11 @@ function BlueprintRoomInner() {
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
           </span>
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Wraps: the mode pills, the tour, Reset and Ask add up to ~339px,
+              which does not fit a 320px window even on its own line — and
+              html{overflow-x:hidden} means the surplus is silently cut off
+              rather than scrollable. */}
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             <div className="flex items-center rounded-full border border-line p-0.5 text-sm font-semibold">
               {MODES.map((m) => {
                 const { id, label, icon: Icon, unavailable, hint } = m;

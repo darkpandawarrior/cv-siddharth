@@ -79,8 +79,14 @@ export function ParticleHero() {
       <Suspense fallback={null}>
         <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
       </Suspense>
+      {/* lg:right-[8.25rem] pulls the hint back inside the viewport. At
+          ≥1024px .particle-hero deliberately bleeds `right: -7.75rem` past its
+          section (masked, decorative), and `right-2` put this label in the
+          bled-off part — so between 1024px and ~1148px the only thing telling
+          you the swarm is draggable was itself clipped away, on exactly the
+          widths where dragging is first enabled. */}
       {dragEnabled && (
-        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-muted lg:right-[8.25rem]">
           drag to spin
         </span>
       )}

@@ -66,11 +66,16 @@ function HirePage() {
 
         {/* The two actions. Everything else on this page is evidence for them. */}
         <div className="mt-8 flex flex-wrap gap-3">
+          {/* max-w-full + break-all: the address is 29 unbreakable characters
+              and the pill around it is ~364px, so on a 320px window the primary
+              call to action on the hiring page had its last few characters cut
+              off — html{overflow-x:hidden} clips rather than scrolls, so there
+              was no way to see the rest of it. */}
           <a
             href={`mailto:${profile.email}`}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
+            className="flex max-w-full items-center gap-2 break-all rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
           >
-            <Mail size={17} /> {profile.email}
+            <Mail size={17} className="shrink-0" /> {profile.email}
           </a>
           <Link
             to="/resume"
