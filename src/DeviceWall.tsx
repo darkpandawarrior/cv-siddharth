@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Smartphone, Watch, Monitor, Globe, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import type { ProjectTarget } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
+import { rasterSources } from "./lib/rasterSources.ts";
 
 const PLATFORM_ICON: Record<ProjectTarget["platform"], React.ComponentType<{ size?: number }>> = {
   Android: Smartphone,
@@ -118,7 +119,15 @@ export function FitImage({
   // decision would be frozen at whichever form factor happened to render first.
   useEffect(() => measure(ref.current), [src, targetAspect]);
 
-  return (
+  // <picture>, so these go through the same AVIF/WebP pipeline every other
+  // image on the site uses. They did not: FitImage cannot call Picture (it
+  // needs the ref and onLoad to measure the decoded image), so it had quietly
+  // been serving raw PNGs — including DeviceMorph's homepage poster, 104 kB
+  // where its AVIF sibling is 13 kB. `display: contents` keeps the wrapper out
+  // of layout entirely, so the <img>'s own positioning classes behave exactly
+  // as they did when it had no parent.
+  const sources = rasterSources(src);
+  const img = (
     <img
       ref={ref}
       src={src}
@@ -128,6 +137,14 @@ export function FitImage({
       onLoad={(e) => measure(e.currentTarget)}
       className={`${className} ${contain ? "bg-black object-contain" : "object-cover object-top"}`}
     />
+  );
+  if (!sources) return img;
+  return (
+    <picture style={{ display: "contents" }}>
+      <source srcSet={sources.avif} type="image/avif" />
+      {sources.webp && <source srcSet={sources.webp} type="image/webp" />}
+      {img}
+    </picture>
   );
 }
 

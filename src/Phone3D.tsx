@@ -6,10 +6,17 @@ const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 
 // Real shipped UI cycled on the 3D screen. Phone-aspect portraits only —
 // PaymentsLab's frames are 320x470 card crops, so it sits this one out.
+//
+// .webp, not .png. These are three.js TEXTURES, so they cannot go through
+// <picture>'s AVIF→WebP→original negotiation like every other image on the
+// site — a texture is one URL, chosen here. As PNGs the three of them were
+// 252 kB of the homepage; the same three as WebP are 35 kB. WebP rather than
+// the smaller AVIF because this scene only renders where WebGL does, and
+// Safari 15 has WebGL without AVIF — a texture that 404s is a black phone.
 const SHOTS: PhoneShot[] = [
-  { src: "/projects/mileway/screenshots/track_data_preview_overview_tab.png", label: "Mileway" },
-  { src: "/projects/kursi/screenshots/home_phone.png", label: "Kursi" },
-  { src: "/projects/mileway/screenshots/tracking_success_screen.png", label: "Mileway" },
+  { src: "/projects/mileway/screenshots/track_data_preview_overview_tab.webp", label: "Mileway" },
+  { src: "/projects/kursi/screenshots/home_phone.webp", label: "Kursi" },
+  { src: "/projects/mileway/screenshots/tracking_success_screen.webp", label: "Mileway" },
 ];
 
 function supportsWebGL(): boolean {
