@@ -355,19 +355,6 @@ export const writing: Writing = {
       "blurb": "Growing up between two worlds as a Non-Resident kid."
     },
     {
-      "title": "College Clubs: Why Aren't You In Any?",
-      "slug": "college-clubs",
-      "form": "opinion",
-      "era": "opinion",
-      "words": "363",
-      "tags": [
-        "opinion",
-        "college",
-        "soft-skills"
-      ],
-      "blurb": "The case for joining a society when time, sleep, and parties are all in deficit."
-    },
-    {
       "title": "CTC: Cost To Company",
       "slug": "ctc-cost-to-company",
       "form": "short-fiction",
@@ -489,20 +476,6 @@ export const writing: Writing = {
         "world-building"
       ],
       "blurb": "An origin myth for the pun, narrated by the punniest man alive. The building block of humor, weaponized."
-    },
-    {
-      "title": "The Tour",
-      "slug": "the-tour",
-      "form": "short-fiction",
-      "era": "2020",
-      "words": "1071",
-      "tags": [
-        "time-travel",
-        "lockdown",
-        "satire",
-        "campus-lore"
-      ],
-      "blurb": "Researchers from 2436 study a locked-down student of 2020, logged as timestamped field notes. He never gets a name — only a scholar number, and the notes stop before the record does."
     }
   ],
   "cast": [

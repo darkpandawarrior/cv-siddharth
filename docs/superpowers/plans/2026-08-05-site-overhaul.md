@@ -517,8 +517,13 @@ node scripts/gen-archive-text.mjs
 
 - [ ] **Step 2: Verify it renders**
 
-Run: `npm run dev`, open `/read/the-tour`.
-Expected: renders, markers visible, dual stamp shows `2020-08-14 :: 2026-08-05`.
+Run: `npm run dev`, open `/read/deadline`.
+Expected: renders, markers visible, dual stamp shows its authored :: discovered pair.
+
+> The piece this step originally named, `/read/the-tour`, was removed in
+> 2026-08-15 along with `/read/college-clubs` — neither was his writing. The
+> step is unchanged in substance; only the example slug moved to one that still
+> exists, so the instruction stays runnable.
 
 - [ ] **Step 3: Commit**
 
