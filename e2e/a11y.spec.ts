@@ -104,18 +104,72 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
  * untouched. A real violation still fails on the first attempt, because a real
  * violation returns results rather than throwing.
  */
+/**
+ * The rule set, in one place because three call sites had hand-copied it.
+ *
+ * Beyond the four WCAG tags: `best-practice` and the one experimental rule that
+ * matters here. Lighthouse runs both against the live site and found three real
+ * defects this suite was green on, because axe's tag filter excluded them:
+ *
+ *   aria-allowed-role            — best-practice, so filtered out. Six clickable
+ *                                  cards carried role="link" on <article>, which
+ *                                  ARIA does not permit.
+ *   label-content-name-mismatch  — WCAG 2.5.3 but EXPERIMENTAL, so off unless
+ *                                  named explicitly. Two controls had an
+ *                                  accessible name that did not contain their
+ *                                  own visible label.
+ *
+ * The third (button-name, plain wcag2a) was missed for a different reason
+ * entirely — see MOBILE below.
+ */
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
+const AXE_EXPERIMENTAL = ["label-content-name-mismatch"];
+
+const axeFor = (page: Page) =>
+  new AxeBuilder({ page })
+    .withTags(AXE_TAGS)
+    .options({ rules: Object.fromEntries(AXE_EXPERIMENTAL.map((id) => [id, { enabled: true }])) });
+
 async function scanWithRetry(page: Page) {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-        .analyze();
+      return await axeFor(page).analyze();
     } catch (e) {
       const destroyed = String(e).includes("Execution context was destroyed");
       if (!destroyed || attempt >= 2) throw e;
       await page.waitForTimeout(1200);
     }
   }
+}
+
+/**
+ * MOBILE. The suite only ever scanned Playwright's default 1280x720, and this
+ * site hides text at breakpoints — `hidden sm:inline` on a label leaves an icon
+ * button with no accessible name at all below 640px. The nav's "Ask my AI"
+ * button shipped exactly that, on every route, and axe never saw it because axe
+ * never looked at a phone. Lighthouse (which emulates a Moto G) found it in one
+ * run against the live site.
+ *
+ * One representative width, not a matrix: 390px is where every `sm:` label is
+ * hidden, which is the class of bug this is here for. The routes loop below
+ * keeps the desktop layout covered.
+ */
+const MOBILE = { width: 390, height: 844 };
+
+for (const path of ["/", "/hire", "/lab"]) {
+  test(`${path} has no serious/critical axe violations at ${MOBILE.width}px`, async ({ page }) => {
+    await page.setViewportSize(MOBILE);
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    await page.addStyleTag({ content: SETTLE_ANIMATIONS });
+    await page.waitForSelector("#main-content", { state: "attached" });
+    await page.waitForTimeout(1500);
+    const results = await scanWithRetry(page);
+    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    const report = bad
+      .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
+      .join("\n\n");
+    expect(bad, report).toEqual([]);
+  });
 }
 
 for (const path of ROUTES) {
@@ -147,9 +201,7 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   await expect(input).toBeVisible();
 
   const scan = async (label: string) => {
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
+    const results = await axeFor(page).analyze();
     const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
     expect(bad, `${label}: ${bad.map((v) => `${v.id} — ${v.help}`).join("; ")}`).toEqual([]);
   };
@@ -212,9 +264,7 @@ test("every chess pane has no serious/critical axe violations", async ({ page })
   for (const pane of CHESS_PANES) {
     await page.getByRole("button", { name: pane.tab }).click();
     await expect(pane.ready(page)).toBeVisible({ timeout: 20_000 });
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
+    const results = await axeFor(page).analyze();
     const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
     const report = bad
       .map((v) => `${pane.tab} — ${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
@@ -250,7 +300,7 @@ test("the command palette has no serious/critical axe violations when open", asy
   await page.keyboard.press("Meta+k");
   await expect(page.getByRole("dialog")).toBeVisible();
 
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await axeFor(page).analyze();
   const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   const report = bad
     .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)

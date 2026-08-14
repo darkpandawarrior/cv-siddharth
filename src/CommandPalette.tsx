@@ -245,7 +245,12 @@ export function CommandPalette() {
     <>
       <button
         onClick={() => setOpen(true)}
-        aria-label="Open command palette (Cmd+K)"
+        // Leads with "Search" because that is the visible label below 640px,
+        // and WCAG 2.5.3 requires the accessible name to contain the visible
+        // one — "Open command palette (Cmd+K)" contained the desktop label
+        // ("K", inside "Cmd+K") but not the mobile one, so this failed on
+        // phones only. Both visible strings are substrings of this.
+        aria-label="Search — open the command palette (Cmd+K)"
         className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
       >
         {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it

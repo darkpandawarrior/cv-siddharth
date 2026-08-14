@@ -167,7 +167,7 @@ function BlueprintRoomInner() {
           <div className="flex items-center gap-2 sm:gap-3">
             <LauncherButton />
             <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-              <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
+              <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
@@ -188,23 +188,34 @@ function BlueprintRoomInner() {
                     onClick={() => setModeFresh(id)}
                     disabled={disabled}
                     title={disabled ? unavailable : hint}
-                    aria-label={disabled ? `${label} — ${unavailable}` : hint}
+                    // Leads with `label` in BOTH branches. The enabled branch
+                    // used to be the hint alone — "The same room, rendered as
+                    // glyphs" for a button that visibly reads "ASCII" — so the
+                    // accessible name did not contain its own visible label
+                    // (WCAG 2.5.3), and someone driving by voice could not say
+                    // the word they could see. The disabled branch already had
+                    // it right.
+                    aria-label={`${label} — ${disabled ? unavailable : hint}`}
                     aria-pressed={mode === id}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition disabled:cursor-not-allowed disabled:opacity-40 ${
                       mode === id ? "bg-accent text-ink" : "text-zinc-400 hover:text-accent"
                     }`}
                   >
-                    <Icon size={13} /> <span className="hidden sm:inline">{label}</span>
+                    <Icon size={13} /> <span className="label-wide">{label}</span>
                   </button>
                 );
               })}
             </div>
             <button
               onClick={tourNext}
-              aria-label={stop === -1 ? "Start guided tour" : `Guided tour: next stop, ${TOUR[(stop + 1) % TOUR.length].title}`}
+              // Both branches contain the visible label verbatim. The second
+              // used to read "Guided tour: next stop, X" for a button showing
+              // "next: X" — a 2.5.3 mismatch that only appears after the first
+              // click, which is why the scan (which never clicks) missed it.
+              aria-label={stop === -1 ? "Start guided tour" : `Guided tour — next: ${TOUR[(stop + 1) % TOUR.length].title}`}
               className="flex items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10 sm:px-4"
             >
-              <Play size={13} /> <span className="hidden sm:inline">{stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}</span>
+              <Play size={13} /> <span className="label-wide">{stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}</span>
             </button>
             {mode !== "sketch" && (
               <div className="flex items-center rounded-full border border-line">
@@ -232,14 +243,14 @@ function BlueprintRoomInner() {
               aria-label="Reset the camera and layout"
               className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
             >
-              <RotateCcw size={13} /> <span className="hidden sm:inline">Reset</span>
+              <RotateCcw size={13} /> <span className="label-wide">Reset</span>
             </button>
             <PresenceBadge className="hidden md:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="hidden sm:inline">my AI</span>
+              Ask <span className="label-wide">my AI</span>
             </button>
           </div>
         </nav>

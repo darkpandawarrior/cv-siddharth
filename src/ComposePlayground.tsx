@@ -708,7 +708,7 @@ export default function ComposePlayground() {
           <div className="flex items-center gap-2 sm:gap-3">
             <LauncherButton />
             <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-              <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to portfolio</span>
+              <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
           <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
@@ -725,7 +725,7 @@ export default function ComposePlayground() {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="hidden sm:inline">my AI</span>
+              Ask <span className="label-wide">my AI</span>
             </button>
           </div>
         </nav>

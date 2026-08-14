@@ -1,4 +1,4 @@
-# Screenshot sentinel — 2026-08-14
+# Screenshot sentinel — 2026-08-15
 
 28 captures in `docs/screenshots` · 16 screens found in source
 

@@ -81,6 +81,43 @@ html {
   overflow-x: hidden; /* decorative layers (e.g. .particle-hero) intentionally bleed past their section on wide viewports — never a page scrollbar */
 }
 
+/* A control label that is hidden from SIGHT on a narrow screen, and never
+   hidden from assistive technology.
+ *
+ * The site used `hidden sm:inline` for this, which is display:none — it removes
+ * the text from the accessibility tree as well as the layout. Every control
+ * whose whole label sat in one of those spans became an icon with NO accessible
+ * name below 640px: the nav's "Ask my AI", the launcher's "Surfaces", and every
+ * room's "Back to portfolio". A WCAG 4.1.2 failure on almost every route, and
+ * invisible to the axe suite, which only ever scanned a desktop viewport.
+ *
+ * sr-only semantics rather than `hidden`, so the name is always there. Because
+ * the visible label and the accessible name are the SAME NODE, they cannot
+ * drift the way a hand-written aria-label beside a visible string does — which
+ * is how /shipped ended up announcing "reconstructed" for a link that reads
+ * "rebuilt" (WCAG 2.5.3). */
+.label-wide {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (min-width: 40rem) {
+  .label-wide {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+}
+
 /* Anchored sections land below the sticky nav instead of under it */
 [id] {
   scroll-margin-top: 76px;
@@ -705,6 +742,32 @@ html.resume-mode body {
 
 .rise-in {
   animation: rise-in 0.7s ease-out both;
+}
+
+/* The same entrance, minus the fade — for the ONE element that is the page's
+   Largest Contentful Paint.
+ *
+ * `rise-in` starts at opacity 0 with `both` fill, so the element is invisible
+ * through its delay and most of its 0.7s. Chrome does not count a transparent
+ * element as painted, so putting this on the hero <h1> means the browser has
+ * nothing to report as LCP until the animation has substantially run — the
+ * page measures ~0.8s slower than it renders, on the one metric that decides
+ * whether it reads as fast. Lighthouse: LCP 6.7s against FCP 5.6s, with total
+ * blocking time of 10ms and zero layout shift; nothing was actually blocking,
+ * the headline was just still fading in.
+ *
+ * The translate survives, so the stagger still reads as a stagger. Only the
+ * element that sets LCP needs this; everything below the fold can fade. */
+.rise-in-lcp {
+  animation-name: rise-in-lcp;
+}
+@keyframes rise-in-lcp {
+  from {
+    transform: translateY(22px);
+  }
+  to {
+    transform: none;
+  }
 }
 
 .rise-in-1 {

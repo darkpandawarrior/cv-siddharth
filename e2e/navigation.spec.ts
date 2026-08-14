@@ -48,7 +48,7 @@ test.describe("the home page matches its own registry", () => {
     // times: the palette makes the rest of the document inert while it is up,
     // so a fill racing the close animation targets a node that is on its way
     // out. Same assertion, one state transition.
-    await page.getByRole("button", { name: "Open command palette (Cmd+K)" }).click();
+    await page.getByRole("button", { name: /open the command palette/i }).click();
     const search = page.getByRole("combobox", { name: "Command palette search" });
     await expect(search).toBeVisible();
     for (const surface of surfaces) {
@@ -96,7 +96,7 @@ test.describe("primary nav surfaces (footer, command palette)", () => {
 
   test("command palette route command navigates to /loopdown", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Open command palette (Cmd+K)" }).click();
+    await page.getByRole("button", { name: /open the command palette/i }).click();
     await page.getByRole("combobox", { name: "Command palette search" }).fill("Loopdown");
     await page.getByRole("option", { name: /The Loopdown/i }).click();
 

@@ -1246,7 +1246,7 @@ export function Terminal() {
         <span className="flex items-center gap-2">
           <LauncherButton />
           <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
-            <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to portfolio</span>
+            <ArrowLeft size={14} /> <span className="label-wide">Back to portfolio</span>
           </button>
         </span>
         <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">

@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await (await b.newContext({viewport:{width:1440,height:900}})).newPage();
+const fonts=[];
+p.on("response", async r=>{ if(/\.(woff2?|ttf)$/.test(r.url())){ try{fonts.push([r.url().split("/").pop(), (await r.body()).length]);}catch{} } });
+await p.goto("http://localhost:4173/",{waitUntil:"load"});
+await p.waitForTimeout(3000);
+fonts.sort((a,b)=>b[1]-a[1]);
+console.log("fonts on / ("+fonts.length+", "+(fonts.reduce((a,x)=>a+x[1],0)/1024).toFixed(0)+"KB):");
+for(const [n,s] of fonts) console.log(`  ${(s/1024).toFixed(0).padStart(4)}KB  ${n}`);
+await b.close();

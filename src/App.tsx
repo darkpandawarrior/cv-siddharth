@@ -327,11 +327,16 @@ function Nav() {
               phone the wall itself is a short scroll away. */}
           <LauncherButton className="hidden lg:flex" />
           <CommandPalette />
+          {/* label-wide, not `hidden sm:inline`: display:none took this label
+              out of the accessibility tree as well as the layout, so below
+              640px this was an icon with no accessible name — a WCAG 4.1.2
+              failure on every route, and one the axe suite could not see
+              because it only ever scanned a desktop viewport. See index.css. */}
           <button
             onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
-            <MessageCircle size={15} /> <span className="hidden sm:inline">Ask my AI</span>
+            <MessageCircle size={15} aria-hidden /> <span className="label-wide">Ask my AI</span>
           </button>
         </div>
       </nav>
@@ -357,7 +362,9 @@ function Hero() {
               document that got uploaded once. */}
           <NavClock className="flex" />
         </p>
-        <h1 className="rise-in rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
+        {/* rise-in-lcp, not rise-in: this heading is the page's LCP element
+            and must be paintable from the first frame. See index.css. */}
+        <h1 className="rise-in rise-in-lcp rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
         <Typewriter />
@@ -564,7 +571,10 @@ function CaseStudies() {
       {featured && (
         <Reveal className="mb-6">
           <TiltCard maxTilt={2.5}>
-            <article
+            {/* A div for the same reason as the projects card below: ARIA
+                does not allow role="link" to override <article>'s implicit
+                role, and Lighthouse flags every card on the live site. */}
+            <div
               // Every case study carries its own slug as an anchor. /hire lists
               // three of them and used to link all three to /project/$slug —
               // but only `mileway` is a project; `gps-accuracy` and
@@ -619,7 +629,7 @@ function CaseStudies() {
                   </button>
                 </div>
               </div>
-            </article>
+            </div>
           </TiltCard>
         </Reveal>
       )}
@@ -715,7 +725,13 @@ function Projects() {
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
               <TiltCard>
-                <article
+                {/* A div, not an <article>. `role="link"` is not an allowed
+                    role on <article> — it has an implicit `article` role that
+                    ARIA will not let a link override, and Lighthouse flags
+                    every one of these cards on the live site. The card really
+                    is a link and never was an article, so the element follows
+                    the role rather than the role fighting the element. */}
+                <div
                   onClick={go}
                   role="link"
                   tabIndex={0}
@@ -832,7 +848,7 @@ function Projects() {
                     })}
                   </div>
                   </div>
-                </article>
+                </div>
               </TiltCard>
             </Reveal>
             );
