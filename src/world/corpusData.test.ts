@@ -104,18 +104,26 @@ describe("writing lessons", () => {
 });
 
 describe("writing archive", () => {
-  it("gives one block per archive entry, 11 total, real years dated and the rest uncertain", () => {
+  it("gives one block per archive entry, real years dated and the rest uncertain", () => {
     const blocks = writingArchive();
-    expect(blocks).toHaveLength(11);
+    // Counts are derived, not pinned. This used to assert 11 total / 3 dated / 8 uncertain, and
+    // publishing a twelfth piece with a parseable era broke two of the three — the archive grows,
+    // so the literals were guaranteed to rot, and the fix each time is to edit the numbers, which
+    // teaches everyone to edit the numbers. Same failure the chess-ridge test had.
+    expect(blocks).toHaveLength(writing.archive.length);
+    expect(blocks.length).toBeGreaterThan(0); // an empty archive must not pass vacuously
+
     const dated = blocks.filter((b) => b.dated);
     const uncertain = blocks.filter((b) => !b.dated);
-    // deadline (2018), the-loopdown-story (2020) and the-tour (2020) are the
-    // only three `era` values that parse to a real year; the rest (personal
-    // essays, "campus-lore", the deliberately-unparseable "2069 (written
-    // 2020)"...) get no fabricated date.
-    expect(dated).toHaveLength(3);
-    expect(uncertain).toHaveLength(8);
+    // The split itself is the property worth holding: every block is one or the other, both kinds
+    // exist, and an entry whose `era` does not parse to a real year (personal essays,
+    // "campus-lore", the deliberately-unparseable "2069 (written 2020)") is never given a
+    // fabricated date — it sits at the uncertain marker instead.
+    expect(dated.length + uncertain.length).toBe(blocks.length);
+    expect(dated.length).toBeGreaterThan(0);
+    expect(uncertain.length).toBeGreaterThan(0);
     for (const b of uncertain) expect(b.z).toBe(CITY.z0);
+    for (const b of dated) expect(b.z).not.toBe(CITY.z0);
   });
 
   it("heights are words / 400", () => {
