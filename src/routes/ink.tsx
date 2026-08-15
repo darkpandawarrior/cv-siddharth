@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WritingSection } from "../WritingSection.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
@@ -42,6 +42,22 @@ function InkRoute() {
             Three years of a college magazine, a literary society, and everything I wrote before I
             wrote software. It reads differently because it was a different life.
           </p>
+
+          {/* The Morkinstar Journals live on their own starmap page rather than
+              this scroll, so a plain anchor here — not a typed Link — because
+              that route ships separately and this file shouldn't have to know
+              or care what order the two land in. */}
+          <a
+            href="/anthology"
+            className="group mt-8 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
+          >
+            <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+              <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span> Twenty
+              pieces of framed short fiction, a galactic field reporter filing what he finds until he
+              stops filing.
+            </p>
+            <ArrowRight size={18} className="shrink-0 text-accent transition group-hover:translate-x-1" />
+          </a>
         </div>
         <WritingSection />
       </main>

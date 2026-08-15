@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, type LucideIcon } from "lucide-react";
+import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { LauncherButton } from "./Launcher.tsx";
@@ -50,6 +50,7 @@ export const SURFACE_ICON: Record<string, LucideIcon> = {
   "/ink": PenLine,
   "/excelsior": BookOpen,
   "/loopdown": ScrollText,
+  "/anthology": Orbit,
   "/playground": LayoutGrid,
 };
 
