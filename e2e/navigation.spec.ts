@@ -44,13 +44,22 @@ test.describe("the home page matches its own registry", () => {
     // name". It reached eleven of sixteen: /chess, /weeb, /ink, /excelsior and
     // /shipped had no row at all.
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    // Opened once and re-queried, rather than opened and dismissed sixteen
+    const search = page.getByRole("combobox", { name: "Command palette search" });
+    // Retry the OPEN, not the assertions. `domcontentloaded` fires before React
+    // hydrates, so a click can land on a button that has no handler yet and be
+    // swallowed silently — the palette simply never appears. It passed alone and
+    // failed after a11y.spec.ts, which is the signature of a hydration race
+    // rather than a broken palette: the slower the machine, the wider the gap.
+    // toPass re-clicks until the combobox is actually there, so a genuinely
+    // broken palette still fails, just twenty seconds later.
+    await expect(async () => {
+      await page.getByRole("button", { name: /open the command palette/i }).click();
+      await expect(search).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 20000 });
+    // Opened once and re-queried, rather than opened and dismissed seventeen
     // times: the palette makes the rest of the document inert while it is up,
     // so a fill racing the close animation targets a node that is on its way
     // out. Same assertion, one state transition.
-    await page.getByRole("button", { name: /open the command palette/i }).click();
-    const search = page.getByRole("combobox", { name: "Command palette search" });
-    await expect(search).toBeVisible();
     for (const surface of surfaces) {
       await search.fill(surface.label);
       // Substring, not exact: an option's accessible name is its whole text,
