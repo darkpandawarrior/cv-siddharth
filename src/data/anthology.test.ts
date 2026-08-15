@@ -15,10 +15,11 @@ import { anthology, anthologyEntries, entriesOfSeason, entryBySlug } from "./ant
  * lint was happy, and it took looking at the live DOM to find it.
  */
 describe("anthology data", () => {
-  it("has both seasons, ten entries each", () => {
-    expect(anthologyEntries).toHaveLength(20);
+  it("has all three seasons, 34 entries, 10/10/14", () => {
+    expect(anthologyEntries).toHaveLength(34);
     expect(entriesOfSeason(1)).toHaveLength(10);
     expect(entriesOfSeason(2)).toHaveLength(10);
+    expect(entriesOfSeason(3)).toHaveLength(14);
   });
 
   it("never leaves a markdown H1 in a body", () => {
@@ -43,9 +44,20 @@ describe("anthology data", () => {
 
   it("numbers each season the way that season is filed", () => {
     // Season one files to the Directory and is numbered by entry. Season two
-    // refuses to file and is numbered by page. Exactly one is ever set.
+    // refuses to file and is numbered by page. Season three burns its own
+    // case and is numbered by kindling ordinal (1-14). Exactly one is ever set.
     for (const e of entriesOfSeason(1)) expect(e.entry, e.slug).toBeGreaterThan(0);
     for (const e of entriesOfSeason(2)) expect(e.page, e.slug).toBeGreaterThan(0);
+    for (const e of entriesOfSeason(3)) expect(e.kindling, e.slug).toBeGreaterThan(0);
+  });
+
+  it("caps season three's kindling ordinal at 14, with piece 14 the only one kept", () => {
+    // Bible: "A page with nothing on it cannot be Concluded." Piece 14 is the
+    // one page he keeps — the only one that should ever carry that ordinal.
+    const s3 = entriesOfSeason(3);
+    expect(s3.map((e) => e.kindling).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual(
+      Array.from({ length: 14 }, (_, i) => i + 1),
+    );
   });
 
   it("keeps slugs unique so /read/$slug can resolve them", () => {
