@@ -64,7 +64,23 @@ export const societies: Society[] = [
 
 /**
  * The EB Profiles pieces — written about me, by the board, in my own voice.
- * `quote` is verbatim from the page; keep it that way.
+ *
+ * QUOTES ARE TRIMMED, AND EVERY CUT IS MARKED WITH AN ELLIPSIS. They are not
+ * verbatim and never were: all three went in already shortened, in the same
+ * commit as a docstring promising the opposite (471ffb1). Nothing compared them
+ * to the source afterwards, because nothing generates this file — it was
+ * transcribed by eye from the page scans and then trusted.
+ *
+ * The trims are deliberate and stay. Each one removes either another student's
+ * name (Arpith in '19, Sakshi in '21) or a line that reads badly out of context
+ * on a hiring page. What was wrong was cutting AND claiming otherwise — the '21
+ * piece had a sentence taken out of the middle and the two remaining halves
+ * spliced into continuous speech.
+ *
+ * If you edit a quote: mark the cut. The full page is in
+ * `public/excelsior/pages/<year>/p<page>.webp` and each card already links
+ * to it, so anyone can check this in one click. That is the only reason the
+ * trimming is honest rather than convenient.
  */
 export interface BoardProfile {
   year: string;
@@ -86,7 +102,7 @@ export const boardProfiles: BoardProfile[] = [
     role: "English Editor",
     question: "What's your new year resolution?",
     quote:
-      "Do you mean Re; Solution? I bought that for my hair. It's shiz only intellectuals understand. I plan to paint my hair yellow and visit every eatery with my NRI squad. Also, I plan to learn how to ride a bike and enhance my collection of nerve-wrenching puns.",
+      "Do you mean Re; Solution? I bought that for my hair. It's shiz only intellectuals understand. I plan to paint my hair yellow and visit every eatery with my NRI squad. Also, I plan to learn how to ride a bike and enhance my collection of nerve-wrenching puns…",
     direction: "RHM: Rapid Hand Movement",
   },
   {
@@ -96,7 +112,7 @@ export const boardProfiles: BoardProfile[] = [
     role: "English Editor",
     question: "What are you doing?",
     quote:
-      "I have been so caught up with trying to shorten this article that I can't find time. Can't we keep it as it is? It's just 25 pages.",
+      "…I have been so caught up with trying to shorten this article that I can't find time. Can't we keep it as it is? It's just 25 pages.",
     direction: "types more jargon",
   },
   {
@@ -106,7 +122,7 @@ export const boardProfiles: BoardProfile[] = [
     role: "Joint Chief Editor & Chief English Editor",
     question: "How's it going?",
     quote:
-      "This JC will hold the fort for as long as it takes. For a mother can't trust anybody with her child, yk. Doesn't matter if y'all don't reply to my messages, don't turn in work at deadlines, etc etc. Yaar tumhare liye design teams se gaali bhi kha lunga but never abandon EB.",
+      "…This JC will hold the fort for as long as it takes. For a mother can't trust anybody with her child, yk. … Doesn't matter if y'all don't reply to my messages, don't turn in work at deadlines, etc etc. Yaar tumhare liye design teams se gaali bhi kha lunga but never abandon EB.",
     direction: "Pastes his write-up in a freshly error-checked code",
     gloss: "FYC — Final Year Crisis",
   },
