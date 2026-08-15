@@ -23,6 +23,6 @@ export const projectStats = {
   },
   "kursi": {
     "modules": 13,
-    "screenshots": 51
+    "screenshots": 61
   }
 } as const;
