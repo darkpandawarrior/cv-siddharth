@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
 import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
@@ -205,7 +206,36 @@ function ReadPiece() {
           )}
 
           <div className="piece-body mt-10">
-            <ReactMarkdown>{piece.body}</ReactMarkdown>
+            <ReactMarkdown
+              // GFM is not optional for these. Three of the twenty entries carry
+              // real tables, and in two of them the table IS the entry: page
+              // thirty is a weighing whose whole point is a difference column
+              // that climbs, and page ninety one is the charter schedule where
+              // an interval that never had a length finally has one. Without
+              // this plugin react-markdown does not parse tables at all, and
+              // those pages shipped as one mangled line of pipes.
+              remarkPlugins={[remarkGfm]}
+              components={{
+                // A horizontal rule inside an anthology entry becomes the mark:
+                // Tveggi's single vertical scratch from Entry #2250, the name
+                // with no sound that a mouth with no hands could never reach.
+                // So the thing dividing the parts of a story is the object that
+                // made writing possible in the first place. Build-time SVG from
+                // our own repo, never user input.
+                hr: () =>
+                  piece.kind === "anthology" && anthology.mark ? (
+                    <div
+                      aria-hidden
+                      className="mx-auto my-12 h-14 w-5 text-accent/70"
+                      dangerouslySetInnerHTML={{ __html: anthology.mark }}
+                    />
+                  ) : (
+                    <hr className="my-10 border-line" />
+                  ),
+              }}
+            >
+              {piece.body}
+            </ReactMarkdown>
           </div>
 
           {/* The reason the story exists, framed as an aside rather than

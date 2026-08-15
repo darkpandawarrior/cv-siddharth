@@ -154,10 +154,16 @@ function FieldStars({ concluded }: { concluded: number }) {
 // The named worlds.
 
 const NAMED_RADIUS = 3.4;
-// World units, not pixels — roughly where the field shell begins, so labels
-// surface as the reader crosses from "looking at the whole sky" into "looking
-// at one cluster", instead of appearing at some fixed pixel radius on screen.
-const LABEL_DISTANCE = 260;
+// Every named world's label is always on — that's the whole point of a map
+// versus a list — so what these three control is only how much it fades as
+// the world recedes, never whether it's there. LABEL_NEAR is full opacity;
+// past LABEL_FAR the label settles at LABEL_MIN_OPACITY and stays legible
+// rather than continuing to fade toward invisible. World units, not pixels,
+// same reasoning as the old fixed-reveal-radius this replaced: distance in
+// the scene, not a fixed pixel size on screen.
+const LABEL_NEAR = 200;
+const LABEL_FAR = 750;
+const LABEL_MIN_OPACITY = 0.5;
 
 interface NamedWorldProps {
   world: StarWorld;
@@ -176,15 +182,19 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWor
   const key = world.k;
 
   const meshRef = useRef<Mesh>(null);
-  const [near, setNear] = useState(false);
+  const [opacity, setOpacity] = useState(1);
   useFrame(({ camera }) => {
     const mesh = meshRef.current;
     if (!mesh) return;
-    // Toggled, not stored raw: setState only fires on the frame the reader
-    // actually crosses the threshold, not on every one of the ~60 frames a
-    // second they spend on either side of it.
-    const isNear = camera.position.distanceTo(mesh.position) < LABEL_DISTANCE;
-    if (isNear !== near) setNear(isNear);
+    const distance = camera.position.distanceTo(mesh.position);
+    const raw = 1 - (distance - LABEL_NEAR) / (LABEL_FAR - LABEL_NEAR);
+    const eased = Math.min(1, Math.max(LABEL_MIN_OPACITY, raw));
+    // Quantized to 5% steps and only committed on an actual change: with all
+    // twenty labels running this every frame, setState on every fractional
+    // wobble would be twenty re-renders a frame for a fade nobody can see the
+    // difference of at that resolution.
+    const quantized = Math.round(eased * 20) / 20;
+    if (quantized !== opacity) setOpacity(quantized);
   });
 
   return (
@@ -226,46 +236,60 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWor
         </>
       )}
 
-      {(near || isHovered) && (
-        <Html center distanceFactor={120} position={[0, NAMED_RADIUS + 3, 0]} style={{ pointerEvents: key ? "auto" : "none" }}>
-          {key ? (
-            <button
-              type="button"
-              onClick={() => onOpen(key)}
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                whiteSpace: "nowrap",
-                cursor: "pointer",
-                color: "var(--color-text)",
-                background: "rgba(20,16,12,0.75)",
-                padding: "3px 10px",
-                borderRadius: "999px",
-                border: `1px solid ${withAlpha(color, 0.53)}`,
-              }}
-            >
-              {world.n}
-              {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
-            </button>
-          ) : (
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                whiteSpace: "nowrap",
-                color: "var(--color-text)",
-                background: "rgba(20,16,12,0.6)",
-                padding: "3px 10px",
-                borderRadius: "999px",
-                border: `1px solid ${withAlpha(color, 0.33)}`,
-              }}
-            >
-              {world.n}
-              {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
-            </span>
-          )}
-        </Html>
-      )}
+      {/* Always mounted — a map where you have to hover every world to find
+          out what it's called isn't a map. Opacity (not presence) is what
+          fades with distance, and hover pins it back to full regardless of
+          how far the world has receded. The name is always readable; `d`
+          joins it only on hover, so the twenty labels a reader sees at once
+          stay to one line each instead of a paragraph pile. Text colour is
+          fixed to the theme foreground rather than the world's state colour
+          on purpose: `concluded` worlds are a near-black grey, and a label
+          in that colour on this canvas would be unreadable exactly when the
+          reader most wants to confirm a world went dark. The state colour
+          still does its job on the sphere itself and on the label border. */}
+      <Html
+        center
+        distanceFactor={120}
+        position={[0, NAMED_RADIUS + 3, 0]}
+        style={{ pointerEvents: key ? "auto" : "none", opacity: isHovered ? 1 : opacity }}
+      >
+        {key ? (
+          <button
+            type="button"
+            onClick={() => onOpen(key)}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              whiteSpace: "nowrap",
+              cursor: "pointer",
+              color: "var(--color-text)",
+              background: "rgba(20,16,12,0.75)",
+              padding: "3px 10px",
+              borderRadius: "999px",
+              border: `1px solid ${withAlpha(color, 0.53)}`,
+            }}
+          >
+            {world.n}
+            {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
+          </button>
+        ) : (
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              whiteSpace: "nowrap",
+              color: "var(--color-text)",
+              background: "rgba(20,16,12,0.6)",
+              padding: "3px 10px",
+              borderRadius: "999px",
+              border: `1px solid ${withAlpha(color, 0.33)}`,
+            }}
+          >
+            {world.n}
+            {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
+          </span>
+        )}
+      </Html>
     </mesh>
   );
 }
