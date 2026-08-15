@@ -1,6 +1,9 @@
+import { Children, cloneElement, isValidElement } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
@@ -43,6 +46,30 @@ import { FloatingChat } from "../FloatingChat.tsx";
 // copies quietly drifting apart.
 type ReadView = ({ kind: "printed" } & PrintedPiece) | ({ kind: "anthology" } & AnthologyEntry);
 
+// Every generated entry closes with exactly one "\n\n---\n\n" before its
+// Terminologies block (src/data/anthology.test.ts guards the shape this
+// depends on), so splitting on it is a safe way to render the story and the
+// tape separately without the generator needing to mark that boundary itself.
+const TERMINOLOGIES_DIVIDER = "\n\n---\n\n";
+
+// Season 3's kindling ordinal runs 1-13 for a withdrawn page and 14 for the
+// one page kept. React's own CSSProperties type does not know about custom
+// properties, so this is a narrow, explicit augmentation rather than `any`.
+type ScorchStyle = CSSProperties & { "--scorch"?: number };
+const KINDLING_FINALE = 14;
+const KINDLING_MAX_SCORCH = 13;
+
+// react-markdown hands a table row's cells to us as elements, not text, and
+// the row-marking rule below has to read that text to work at all — walking
+// the tree once here is cheaper than teaching every caller to do it.
+function nodeText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join("");
+  if (isValidElement(node)) return nodeText((node.props as { children?: ReactNode }).children);
+  return "";
+}
+
 export const Route = createFileRoute("/read/$slug")({
   loader: ({ params }): ReadView => {
     // archiveText is the older, printed set, so it resolves first — a slug
@@ -72,6 +99,92 @@ function ReadPiece() {
   // The loader throws notFound() for an unknown slug, so by the time this
   // renders the piece exists — but the inferred type does not know that.
   const piece = Route.useLoaderData()!;
+
+  // Entry #2300 is filed incomplete on purpose: its own frontmatter says so,
+  // and its last sentence has no closing punctuation because the Directory
+  // never got one. This check is generic — any anthology entry whose story
+  // (everything before the Terminologies divider) ends without terminal
+  // punctuation gets the treatment — so it stays correct if the corpus ever
+  // grows a second entry that stops the same way, without a hardcoded slug.
+  const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
+  const storyBody = dividerIndex >= 0 ? piece.body.slice(0, dividerIndex) : piece.body;
+  const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
+  const trimmedStory = storyBody.trim();
+  const endsMidSentence = piece.kind === "anthology" && !/[.!?"'”’)\]]$/.test(trimmedStory);
+  // The cut line renders outside ReactMarkdown, as its own paragraph, rather
+  // than wrapping the whole story in an extra element to hang a CSS hook
+  // off — that wrapper would sit between .piece-body and every other
+  // paragraph and quietly break the Terminologies block's :last-of-type
+  // selector further down in this file, for every entry, not just this one.
+  const lastParagraphBreak = endsMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
+  const storyBeforeCut = lastParagraphBreak >= 0 ? trimmedStory.slice(0, lastParagraphBreak) : storyBody;
+  const cutLine = lastParagraphBreak >= 0 ? trimmedStory.slice(lastParagraphBreak + 2).trim() : null;
+
+  // Shared by the story half and the Terminologies half so the mark and the
+  // row-marking rule below behave identically on both sides of the split.
+  const markdownComponents: Components = {
+    // A horizontal rule inside an anthology entry becomes the mark:
+    // Tveggi's single vertical scratch from Entry #2250, the name
+    // with no sound that a mouth with no hands could never reach.
+    // So the thing dividing the parts of a story is the object that
+    // made writing possible in the first place. Build-time SVG from
+    // our own repo, never user input.
+    hr: () =>
+      piece.kind === "anthology" && anthology.mark ? (
+        <div
+          aria-hidden
+          className="mx-auto my-12 h-14 w-5 text-accent/70"
+          dangerouslySetInnerHTML={{ __html: anthology.mark }}
+        />
+      ) : (
+        <hr className="my-10 border-line" />
+      ),
+    // The charter table in s2-10 has one row where a "not yet required"
+    // interval finally got a length (see the Standard Intervals table:
+    // Elysheim and Vænheim are the two founding-blank rows, told apart from
+    // the six that were assigned from day one because their Interval and
+    // Realm columns repeat the same name). Marking it this way reads the
+    // row's own cells rather than a row index, so it keeps working if the
+    // source ever reorders the table or adds another reserved interval.
+    tr: ({ children }) => {
+      if (piece.kind !== "anthology") return <tr>{children}</tr>;
+      const cells = Children.toArray(children);
+      const texts = cells.map((cell) => nodeText(cell).trim());
+      const isReservedInterval = cells.length >= 3 && texts[0].length > 0 && texts[0] === texts[1];
+      const length = texts[texts.length - 1];
+      const isNewlyAssigned = isReservedInterval && length.length > 0 && !/not yet required/i.test(length);
+      if (!isNewlyAssigned) return <tr>{children}</tr>;
+      const lastIndex = cells.length - 1;
+      return (
+        <tr className="anthology-row-changed">
+          {cells.map((cell, i) => {
+            if (i !== lastIndex || !isValidElement(cell)) return cell;
+            const td = cell as ReactElement<{ children?: ReactNode }>;
+            return cloneElement(td, { key: td.key ?? i }, [
+              td.props.children,
+              <span key="changed-note" className="sr-only">
+                . Assigned for the first time since the founding.
+              </span>,
+            ]);
+          })}
+        </tr>
+      );
+    },
+  };
+
+  // The scorch deepens with the entry's own kindling ordinal (1-13), never a
+  // hardcoded slug, and piece 14 — the page he keeps — gets no scorch at
+  // all: it is the one undamaged thing in the season. Season 3 pieces filed
+  // before the field lands (kindling undefined) fall through to no scorch
+  // too, which is the correct behaviour until the data arrives, not a bug.
+  const kindling = piece.kind === "anthology" ? piece.kindling : undefined;
+  const isFinalePage = kindling === KINDLING_FINALE;
+  const scorchFraction =
+    piece.kind === "anthology" && piece.season === 3 && !isFinalePage && typeof kindling === "number"
+      ? Math.min(1, Math.max(0, kindling) / KINDLING_MAX_SCORCH)
+      : 0;
+  const scorchClassName = scorchFraction > 0 ? " season-three-scorched" : "";
+  const scorchStyle: ScorchStyle | undefined = scorchFraction > 0 ? { "--scorch": scorchFraction } : undefined;
 
   return (
     <div className="ink-world min-h-screen">
@@ -205,7 +318,20 @@ function ReadPiece() {
             />
           )}
 
-          <div className="piece-body mt-10">
+          <div
+            className={`piece-body mt-10${
+              piece.kind === "anthology" && (piece.season === 2 || piece.season === 3) ? " season-two-paper" : ""
+            }${scorchClassName}`}
+            style={scorchStyle}
+          >
+            {/* Season 1 filed through a rig and reached the reader — this is
+                that arrival, logged. Season 2 stops filing (see the season
+                blurb), so RelayHeader is simply never called for it: the
+                absence is the tell, not a hidden or greyed-out state. Season
+                3 is neither: he is withdrawing a page, not receiving or
+                refusing one, so it gets its own quiet marker instead. */}
+            {piece.kind === "anthology" && piece.season === 1 && <RelayHeader entry={piece} />}
+            {piece.kind === "anthology" && piece.season === 3 && <WithdrawnMarker entry={piece} />}
             <ReactMarkdown
               // GFM is not optional for these. Three of the twenty entries carry
               // real tables, and in two of them the table IS the entry: page
@@ -215,27 +341,41 @@ function ReadPiece() {
               // this plugin react-markdown does not parse tables at all, and
               // those pages shipped as one mangled line of pipes.
               remarkPlugins={[remarkGfm]}
-              components={{
-                // A horizontal rule inside an anthology entry becomes the mark:
-                // Tveggi's single vertical scratch from Entry #2250, the name
-                // with no sound that a mouth with no hands could never reach.
-                // So the thing dividing the parts of a story is the object that
-                // made writing possible in the first place. Build-time SVG from
-                // our own repo, never user input.
-                hr: () =>
-                  piece.kind === "anthology" && anthology.mark ? (
-                    <div
-                      aria-hidden
-                      className="mx-auto my-12 h-14 w-5 text-accent/70"
-                      dangerouslySetInnerHTML={{ __html: anthology.mark }}
-                    />
-                  ) : (
-                    <hr className="my-10 border-line" />
-                  ),
-              }}
+              components={markdownComponents}
             >
-              {piece.body}
+              {endsMidSentence ? storyBeforeCut : storyBody}
             </ReactMarkdown>
+
+            {/* Entry #2300 stops mid-sentence and is filed that way on
+                purpose — the fiction never gets to finish it, so this never
+                completes the sentence for it. The last line is pulled out of
+                ReactMarkdown and rendered by hand so the cut mark can sit
+                right against the real last word; the status line under it is
+                the Directory's own sign-off for a transmission that didn't
+                arrive, in the same institutional register as RelayHeader. */}
+            {endsMidSentence && cutLine && (
+              <>
+                <p className="piece-body__cut-line">
+                  {cutLine}
+                  <span aria-hidden="true" className="piece-body__cut-mark" />
+                </p>
+                <div className="transmission-terminated">
+                  <p className="transmission-terminated__status">
+                    <span aria-hidden="true">RELAY ENDS. NO FURTHER PACKET RECEIVED. ENTRY FILED INCOMPLETE.</span>
+                    <span className="sr-only">
+                      The transmission cuts off here, mid-sentence. This entry was filed incomplete, and the
+                      sentence is never finished.
+                    </span>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {terminologiesBody !== null && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                {`---\n\n${terminologiesBody}`}
+              </ReactMarkdown>
+            )}
           </div>
 
           {/* The reason the story exists, framed as an aside rather than
@@ -310,4 +450,39 @@ function ReadPiece() {
       <FloatingChat />
     </div>
   );
+}
+
+// The transmission chrome, and only for season one. A restrained telex stamp
+// ahead of the transcript, not a sci-fi HUD: which entry, where it sits in
+// the ten he filed, which system it came from, and that the signal actually
+// arrived. `entry.idx` is already the Directory's own 1-based filing order
+// for the season, so it doubles as the position without a second lookup.
+function RelayHeader({ entry }: { entry: AnthologyEntry }) {
+  const total = entriesOfSeason(1).length;
+  const line = [
+    `ENTRY №${entry.entry}`,
+    `POSITION ${entry.idx} OF ${total}`,
+    entry.system ? `${entry.system.toUpperCase()} SYSTEM` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <div className="relay-header">
+      <p>RELAY · GALACTIC DIRECTORY</p>
+      <p>{line}</p>
+      <p>STATUS · RECEIVED</p>
+    </div>
+  );
+}
+
+// The withdrawal, in place of RelayHeader's arrival. Season 3 numbers by the
+// same page-of-91 scheme season 2 established (entry.page), so no new
+// numbering is invented here — only the verb changes, from filed to
+// withdrawn. Piece 14 withdraws nothing; it is the one page kept, so it
+// gets the bible's own line for that instead of a "page 0 withdrawn" that
+// would otherwise fall out of the general case.
+function WithdrawnMarker({ entry }: { entry: AnthologyEntry }) {
+  const line = entry.kindling === KINDLING_FINALE ? "one page kept" : `page ${entry.page} withdrawn`;
+  return <p className="withdrawn-marker">&gt; Kindling · {line}</p>;
 }
