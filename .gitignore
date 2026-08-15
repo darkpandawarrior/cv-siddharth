@@ -32,6 +32,12 @@ public/**/*.webp
 # machine has. Ignoring them fails surfaces.test.ts on a fresh clone and ships
 # a homepage wall of empty frames.
 !public/surfaces/*.webp
+# ...and once more for the README's wall capture. Same reasoning as all three
+# above: it is a screenshot of the LIVE site taken by driving a real browser,
+# not a derivative of any source in this repo, so gen-images.mjs has nothing to
+# regenerate it from. Ignoring it ships a README whose main illustration 404s on
+# GitHub — which is exactly the state this rule was written to prevent.
+!public/assets/readme/*.webp
 
 # Playwright output
 test-results/

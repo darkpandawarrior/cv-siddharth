@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0b0f0d">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-7-blue?logo=typescript&logoColor=white">
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
   <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white">
   <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
@@ -16,27 +16,28 @@
 
 Interactive CV for **Siddharth Pandalai** — Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
-production metrics, a pointer-tracked phone mockup (pure CSS 3D transforms, no
-WebGL), a print-perfect
-[résumé view](https://cv-siddharth.vercel.app/resume) (PDF via
-the print dialog), and an AI assistant ("Panda") that answers questions about
-his experience in first person.
+production metrics, four Kotlin Multiplatform builds running as WebAssembly in
+the page, a print-perfect [résumé view](https://cv-siddharth.vercel.app/resume)
+(A4, PDF via the print dialog), and an AI assistant ("Panda") that answers
+questions about his experience in the third person.
 
 Inspired by [santifer/cv-santiago](https://github.com/santifer/cv-santiago),
 rebuilt and simplified: the entire CV fits in an LLM's context, so there is no
-RAG pipeline — knowledge lives in a single system prompt
+RAG pipeline — knowledge lives in a single generated system prompt
 ([api/_lib/system-prompt.ts](api/_lib/system-prompt.ts)).
 
 <p align="center">
-  <b><a href="#stack">Stack</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#quick-start">Quick start</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#deploy">Deploy</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#structure">Structure</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#interactive-surfaces">Interactive surfaces</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#generators">Generators</a></b>
+  <b><a href="#stack">Stack</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#quick-start">Quick start</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#the-surfaces">The surfaces</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#one-registry">One registry</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#deploy">Deploy</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#structure">Structure</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#generators">Generators</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#gates">Gates</a></b>
 </p>
 
 ## Stack
 
 React 19 · TypeScript 7 · Vite 8 · TanStack Start · Tailwind v4 · Vercel ·
-**provider-agnostic chat backend** — streams from Groq (Llama 3.3, free tier),
-Google Gemini, or Anthropic Claude, whichever key is configured, normalized to
-one SSE format so the widget never knows the difference.
+**provider-agnostic chat backend** — four providers behind one SSE format, so
+the widget never knows which answered: **Groq** (`openai/gpt-oss-120b` by
+default), **Google Gemini**, **Cerebras**, **Anthropic Claude**. Whichever keys
+are configured are tried in order, with fallback on failure; model names are
+overridable per provider (`GROQ_MODEL`, `GEMINI_MODEL`, `CEREBRAS_MODEL`).
 
 **TypeScript 7.0.2 compatibility note:** The repo runs TypeScript 7.0.2 for compilation (`npx tsc --version` confirms it). Because `typescript-eslint` doesn't support TS 7's compiler API yet (support lands in 7.1), `package.json` uses Microsoft's documented side-by-side pattern: `@typescript/native` (real TS 7.0.2) + `@typescript/typescript6` (TS 6.0-API shim for lint). If lint ever fails with "typescript-eslint does not support TS 7.0" after an `npm install`, check `npx tsc --version` first — if it's not 7.0.2, run `npm install` again to resolve the `tsc` binary race.
 
@@ -44,15 +45,85 @@ one SSE format so the widget never knows the difference.
 
 ```bash
 npm install
-cp .env.local.example .env.local   # add your ANTHROPIC_API_KEY to enable chat
+cp .env.local.example .env.local   # add a chat key to enable Panda
 npm run dev
 ```
 
 Open http://localhost:5173. The site works without a key; the chat widget
 shows a contact fallback until one of `GROQ_API_KEY` / `GEMINI_API_KEY` /
-`ANTHROPIC_API_KEY` is set. In dev, a Vite middleware
+`CEREBRAS_API_KEY` / `ANTHROPIC_API_KEY` is set. In dev, a Vite middleware
 ([vite.config.ts](vite.config.ts)) serves `/api/chat` with the same handler
 Vercel runs in production — no `vercel dev` needed.
+
+## The surfaces
+
+The site is not a page with a few easter eggs; it is **seventeen destinations**,
+each its own route. The homepage renders every one of them as a tile in the
+device frame it is best seen in, and the same grid is reachable from anywhere
+via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
+shows what exists — you cannot search for a room you do not know about.
+
+<p align="center">
+  <img src="./public/assets/readme/wall.webp" width="100%" alt="The homepage surface wall — every route as a tile in its own device frame, grouped under Proof, Things that run, Corpus and Writing">
+  <br/>
+  <sub><i>One group of four. Each poster is the route captured at that device's own viewport, not a desktop screenshot cropped to shape.</i></sub>
+</p>
+
+| | | |
+|---|---|---|
+| [`/hire`](https://cv-siddharth.vercel.app/hire) | the 90-second version | numbers, résumé, contact — for someone who will not explore |
+| [`/resume`](https://cv-siddharth.vercel.app/resume) | print · pdf | A4 `@page`, no chrome, straight to PDF from the browser |
+| [`/shipped`](https://cv-siddharth.vercel.app/shipped) | store · verified | every Android app that reached Play from work he touched, each checked against its live listing |
+| [`/lab`](https://cv-siddharth.vercel.app/lab) | canvas · physics | **11 experiments** that prove the numbers — GPS filtering, crash triage, recomposition, module graphs — running in your browser |
+| [`/pulse`](https://cv-siddharth.vercel.app/pulse) | telemetry · live | a live count of what visitors actually touch across the site |
+| [`/compose`](https://cv-siddharth.vercel.app/compose) | live editor · AI | write Jetpack Compose, watch it recompose in a phone frame |
+| [`/blueprint`](https://cv-siddharth.vercel.app/blueprint) | 3D · WebGL | the portfolio as an infinite canvas: a three.js fly-through, an ASCII render of the same scene, and a sketchable tldraw whiteboard |
+| [`/map`](https://cv-siddharth.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
+| [`/forge`](https://cv-siddharth.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
+| [`/terminal`](https://cv-siddharth.vercel.app/terminal) | text · easter egg | a faux shell you can type in — `ls`, `open mileway`, `ask <q>`, `chess clock`. Backtick summons it from any route |
+| [`/playground`](https://cv-siddharth.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D — and the street is a timeline |
+| [`/chess`](https://cv-siddharth.vercel.app/chess) | 3d · engine | seven years across lichess and chess.com, mined: the rating arc in 3D, a shifting repertoire, a bot that plays like him |
+| [`/weeb`](https://cv-siddharth.vercel.app/weeb) | corpus · data | a hand-kept anime list read as evidence — a status column with no word for quitting |
+| [`/ink`](https://cv-siddharth.vercel.app/ink) | archive · world | the writing years, before the code |
+| [`/excelsior`](https://cv-siddharth.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
+| [`/loopdown`](https://cv-siddharth.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
+| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals — twenty short stories and a navigable starmap |
+
+Plus, on the scroll itself:
+
+- **The multiplatform section** — the four Kotlin Multiplatform builds that ship
+  a web target, compiled to Wasm and served from this domain, re-framed live
+  across the real Android window size classes (compact / medium / expanded).
+  One iframe, so changing the form factor re-lays-out the running app instead
+  of reloading it. Nothing boots until you click it.
+- **Fit check** — paste a job description and the assistant scores the fit
+  honestly, gaps included. Same analyzer as `/jd` in the chat console.
+- **Compare viewers** — on project pages, drag to compare two treatments of the
+  same screen (light/dark, before/after) where genuine variants exist.
+- **Per-project share cards** — each `/project/<slug>` is server-rendered with
+  its own OG/Twitter meta and a branded 1200×630 card (`/p/<slug>/og.png`).
+- **Live Signal** — Spotify now-playing and recent GitHub activity, one polling
+  hook feeding a footer chip, terminal commands (`spotify`/`np`, `activity`/`gh`)
+  and a card on the Blueprint canvas. GitHub works keyless; Spotify needs
+  `npm run spotify:auth` once. No keys, no crash — every surface says
+  "not connected".
+- **`/read/<slug>`** — the magazine prose as selectable, searchable text rather
+  than photographs of paper, each piece linked to the scanned page it ran on.
+
+## One registry
+
+[`src/data/surfaces.ts`](src/data/surfaces.ts) is the single source for every
+route on the site. It feeds the homepage wall, the launcher, the command
+palette, the per-route `<head>`, the terminal's `go`/`ls`/`sitemap`, the
+sitemap generator, the legacy-hash redirects and the assistant's prompt.
+
+This was four registries and two hardcoded JSX lists. Every one of them
+drifted — nine finished routes were unreachable from the homepage, the palette
+reached eleven of sixteen, and the legacy-hash map knew about nine. Adding a
+surface now means one entry, and `surfaces.test.ts` derives the route list from
+`src/routes/*.tsx` **on disk** and fails the build if a route has no surface, a
+surface has no route, a declared poster is missing, an icon is absent or a
+`railId` dangles.
 
 ## Deploy
 
@@ -63,9 +134,9 @@ together.
 npx vercel
 ```
 
-Set `ANTHROPIC_API_KEY` (or `GROQ_API_KEY` / `GEMINI_API_KEY`) in the Vercel
-project's environment variables. `api/chat.ts` runs on the Edge runtime and
-streams SSE straight through to the widget — no separate chat host.
+Set at least one chat key in the Vercel project's environment variables.
+`api/chat.ts` runs on the Edge runtime and streams SSE straight through to the
+widget — no separate chat host.
 
 That endpoint spends the owner's API key, so it defends itself
 ([api/\_lib/chat-handler.ts](api/_lib/chat-handler.ts)): an **origin allowlist**
@@ -84,67 +155,94 @@ maintain.
 ## Structure
 
 <details>
-<summary><b>The map</b> — where the API, the chat handler, and the single source of truth live</summary>
+<summary><b>The map</b> — where the registries, the API and the generated data live</summary>
 <br/>
 
 ```
 api/
 ├── chat.ts                  # Vercel Edge entry
 └── _lib/
-    ├── chat-handler.ts      # Web-standard handler (shared dev/prod)
-    └── system-prompt.ts     # Panda persona + CV knowledge + guardrails
+    ├── chat-handler.ts      # Web-standard handler (shared dev/prod), 4 providers
+    ├── system-prompt.ts     # GENERATED — Panda persona + CV knowledge
+    └── jd-prompt.ts         # GENERATED — the fit-check analyzer
 src/
-├── App.tsx                  # All sections (hero, metrics, case studies…)
-├── FloatingChat.tsx         # Chat widget — SSE streaming, quick prompts
-├── data/profile.ts          # CV content (single source of truth)
+├── App.tsx                  # The homepage sections, in scroll order
+├── routes/                  # One file per route — the router derives from disk
+├── data/
+│   ├── surfaces.ts          # THE registry: every route, its tile, its device
+│   ├── profile.ts           # CV content (single source of truth)
+│   ├── labs.ts              # the 11 Lab Bench experiments
+│   └── *.ts                 # GENERATED: chess, weeb, store, writing, galleries…
+├── lib/navigation.ts        # section ids + hash classification
+├── Launcher.tsx             # the wall, from anywhere
+├── SurfaceWall.tsx          # the homepage grid
 └── index.css                # Tailwind v4 theme tokens
+e2e/                         # Playwright: a11y, nav, offline, visitors, smoke
+scripts/                     # 18 generators + the capture/sentinel tooling
 ```
 
 </details>
-
-## Interactive surfaces
-
-Beyond the scroll, the site is navigable as an environment:
-
-- **`#terminal`** — a faux shell ([src/Terminal.tsx](src/Terminal.tsx)) that's
-  a real interface: `help`, `projects`, `open mileway`, `cat resume.txt`,
-  `skills`, `ask <question>` (hands off to the AI), `hire`, `theme <name>`,
-  with ↑/↓ history and Tab completion. Everything reads `profile.ts`, so it
-  can't drift. Reachable from ⌘K, the footer, and the mobile menu.
-- **`#blueprint`** — the portfolio as an infinite tldraw canvas with live
-  React/three.js custom shapes. Ships with a **Reset** button and a recovery
-  boundary so a stale local snapshot or a lost WebGL context is never a dead
-  blank screen.
-- **Per-project share cards** — each project route (`/project/<slug>`) is
-  server-rendered with its own Open Graph / Twitter meta and a branded
-  1200×630 card (`/p/<slug>/og.png`), so a shared link previews the project,
-  not the generic site. (Legacy `/p/<slug>` links 301-redirect to the route.)
-- **Live Signal** — Spotify now-playing/recently-played and recent GitHub
-  activity, one shared polling hook feeding three surfaces: a footer chip,
-  the terminal's `spotify`/`np` and `activity`/`gh` commands, and a live
-  card on the Blueprint canvas. GitHub activity works keyless; Spotify
-  needs a free Spotify Developer app — run `npm run spotify:auth` once to
-  mint `SPOTIFY_REFRESH_TOKEN`. No keys, no crash: every surface just shows
-  "not connected".
 
 ## Generators
 
 <details>
-<summary><b>Nothing is hand-mirrored</b> — content and assets generate from <code>profile.ts</code> and the source repos</summary>
+<summary><b>Nothing is hand-mirrored</b> — content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
+Eighteen `gen:` scripts. The ones you will actually reach for:
+
 ```bash
-npm run gen:og        # branded per-project OG cards (/p/<slug>/og.png)
-npm run refresh       # media sync + all generators (stats, galleries, og, prompt…)
+npm run refresh           # media sync + every generator (stats, galleries, og, prompt…)
+npm run gen:system-prompt # rebuild Panda's prompt after editing profile.ts
+npm run gen:surfaces      # route captures -> the wall's device-framed posters
+npm run gen:og            # branded per-project OG cards (/p/<slug>/og.png)
+npm run capture:site      # screenshot every route (feeds gen:surfaces + the sentinel)
 ```
 
-`gen:og` rasterizes the cards with a headless Chromium at author time and
-commits the PNGs — the Vercel build needs no browser.
+`gen:og` and `gen:surfaces` rasterize at author time and commit their output —
+the Vercel build needs no browser and no image toolchain.
 
 </details>
 
+## Gates
+
+The recurring failure in this repo has been a hand-kept list quietly falling
+behind the thing it mirrors, with every test green. The gates exist for that
+specific shape:
+
+```bash
+npm test          # 642 unit tests
+npm run test:e2e  # 65 Playwright tests across 11 spec files
+npm run lint
+npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
+```
+
+- `surfaces.test.ts` — the route list on disk against the registry.
+- `navigation.spec.ts` — reads the section ids out of the **rendered** homepage
+  and asserts `SECTION_ID_LIST` matches, order included, then proves the command
+  palette can reach every route.
+- `a11y.spec.ts` — axe over every route, at desktop **and** 390px, with
+  `best-practice` and the experimental `label-content-name-mismatch` rule
+  enabled. Lighthouse scores the live site 1.00 on accessibility.
+- `beforeTheCode.test.ts` — every magazine citation points at a scan that exists
+  and a `/read` piece that still exists.
+- `claim-audit` (in the private harness) — mechanically re-checks every claim
+  this site makes about his work before anything outward-facing ships.
+
 ## Updating content
 
-Edit [src/data/profile.ts](src/data/profile.ts) for the page and
-[api/_lib/system-prompt.ts](api/_lib/system-prompt.ts) for the chatbot —
-keep the two in sync so Panda never contradicts the page.
+Edit [src/data/profile.ts](src/data/profile.ts), then regenerate:
+
+```bash
+npm run gen:system-prompt
+```
+
+**Do not hand-edit `api/_lib/system-prompt.ts` or `api/_lib/jd-prompt.ts`** —
+both are generated from `profile.ts` and say so in their first line. Editing
+them directly gets silently overwritten on the next build, and the page and
+Panda drift apart. The generator is what keeps them in sync.
+
+Adding a route? One entry in [src/data/surfaces.ts](src/data/surfaces.ts) and
+one file in `src/routes/`. The wall, the launcher, the palette, the terminal,
+the sitemap, the `<head>` and the assistant all pick it up; the gates fail the
+build if you do only half of it.
