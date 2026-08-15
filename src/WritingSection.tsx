@@ -228,8 +228,12 @@ export function WritingSection() {
                 magazine with EB Profiles: each member gets a question, and a
                 teammate answers it in that member's voice. Three years of
                 those are the only outside record of what I was actually like
-                to work with — so they run verbatim, credited to the board,
-                not paraphrased into something flattering. */}
+                to work with.
+                This used to end "so they run verbatim, credited to the board,
+                not paraphrased into something flattering". They do not run
+                verbatim — they never have — and the cuts had in fact made me
+                look better, which is the exact thing that sentence promised
+                they had not done. Trimmed, cuts marked, page linked. */}
             <div id="board" className="mt-12 scroll-mt-24 border-t border-line pt-8">
               <div className="meta-row">
                 <span className="font-display text-base font-bold tracking-tight">How the board wrote me</span>
@@ -237,8 +241,10 @@ export function WritingSection() {
               </div>
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
                 Each year every board member gets one question, answered by a teammate impersonating
-                them. Affectionate, accurate, and not written by me — which is the only reason
-                they're worth reading.
+                them. Affectionate, unsparing, and not written by me — which is the only reason
+                they're worth reading. Trimmed here to keep other people's names out of it;{" "}
+                <span className="text-zinc-300">…</span> marks every cut, and each card opens the
+                scanned page it came from.
               </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
                 {boardProfiles.map((p) => (
@@ -258,6 +264,15 @@ export function WritingSection() {
                     <p className="mt-3 font-mono text-[11px] text-muted">
                       ~「{p.direction}」~{p.gloss ? ` · ${p.gloss}` : ""}
                     </p>
+                    {/* The card has always linked to the scan; nothing said so,
+                        so the one thing that could verify these quotes was an
+                        invisible affordance. A trimmed quote is only honest if
+                        the untrimmed one is reachable, and reachable means
+                        someone can tell it is there. Not a nested <a> — the
+                        whole card is already the link. */}
+                    <span className="mt-4 font-mono text-[10px] uppercase tracking-wider text-muted transition group-hover:text-accent2">
+                      Excelsior &rsquo;{p.year.slice(2)} · page {p.page} &rarr;
+                    </span>
                   </Link>
                 ))}
               </div>
