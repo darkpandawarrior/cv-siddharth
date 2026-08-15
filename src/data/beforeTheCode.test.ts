@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { boardProfiles } from "./beforeTheCode.ts";
+import { excelsiorMarks } from "./excelsiorMarks.ts";
+import { pieceBySlug } from "./archiveText.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -64,5 +66,35 @@ describe("board profiles cite a page a reader can actually open", () => {
       }
       expect(p.page, `${p.year} page`).toBeGreaterThan(0);
     }
+  });
+});
+
+/**
+ * The same class of citation, in the file next door.
+ *
+ * excelsiorMarks is hand-curated too — its own docstring says so — and it
+ * carries the same two kinds of pointer the board profiles do: a page in the
+ * scans, and a slug at /read. Both were verified by hand once and then trusted,
+ * which is precisely how the board quotes went wrong.
+ *
+ * The readSlug check earns its place from this session specifically: two
+ * archive pieces were removed for not being his writing, and a removal is
+ * exactly what silently dangles a link like this. They happened not to be
+ * referenced here. Nothing made that true, and nothing would have said so.
+ */
+describe("excelsior marks point at things that exist", () => {
+  it("cites a scanned page that is on disk", () => {
+    const missing = excelsiorMarks
+      .map((m) => ({ m, file: `public/excelsior/pages/${m.year}/p${String(m.page).padStart(3, "0")}.webp` }))
+      .filter(({ file }) => !existsSync(join(root, file)))
+      .map(({ m, file }) => `${m.year} "${m.label}" → ${file}`);
+    expect(missing, `mark citing a page that is not in the scans: ${missing.join(", ")}`).toEqual([]);
+  });
+
+  it("links only to /read pieces that still exist", () => {
+    const dangling = excelsiorMarks
+      .filter((m) => m.readSlug && !pieceBySlug(m.readSlug))
+      .map((m) => `${m.year} "${m.label}" → /read/${m.readSlug}`);
+    expect(dangling, `mark pointing at a /read piece that is gone: ${dangling.join(", ")}`).toEqual([]);
   });
 });
