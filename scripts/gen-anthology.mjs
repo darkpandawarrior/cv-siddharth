@@ -46,8 +46,15 @@ if (!src?.entries?.length) bail("registry carries no anthology block");
 
 // Strip the frontmatter and the H1: the page renders its own title, and a second
 // one in the body would be a duplicate heading (axe flags it, and it reads badly).
+// The .trim() between the two replaces is load-bearing and was missing at first.
+// A source file reads `---\n...\n---\n\n# Title`, so removing the frontmatter
+// leaves a blank line in front of the heading and `^#` never matches. The H1
+// survived into the body, react-markdown rendered it, and every anthology
+// reading page shipped with two h1 elements: the page's own and the body's.
+// Caught on the live site, not by a type error, which is why anthology.test.ts
+// now asserts it.
 const strip = (md) =>
-  md.replace(/^---\n[\s\S]*?\n---\n/, "").replace(/^#\s+.*\n+/, "").trim();
+  md.replace(/^---\n[\s\S]*?\n---\n/, "").trim().replace(/^#\s+.*\n+/, "").trim();
 
 mkdirSync(plateDir, { recursive: true });
 let failed = 0;
