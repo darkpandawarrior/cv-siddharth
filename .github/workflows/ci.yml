@@ -1,0 +1,41 @@
+name: CI
+
+# The gate that did not exist. Until now the only workflows were Lighthouse,
+# a nightly media refresh and a screenshot sentinel — so 668 unit tests, the
+# Playwright suite and eslint never ran on a pull request at all, and nothing
+# stopped a red commit reaching main.
+#
+# Deliberately does NOT run `npm run build`. lighthouse.yml already builds on
+# every PR, and a second vite build here would be the same work paid twice on
+# every push forever. vitest and eslint need neither a bundle nor a server;
+# `tsc -b` type-checks without one. The e2e suite DOES need a build and a
+# server, so it lives in lighthouse.yml beside the build that already exists.
+on:
+  push: { branches: [main] }
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+
+      # One consolidated job, but every check still reports. `!cancelled()`
+      # means a failing type-check does not hide a lint error and a lint error
+      # does not hide eleven failing tests — one run tells you everything that
+      # is wrong, which is what makes a single gate as informative as three.
+      - name: Type-check
+        run: npx tsc -b
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+      - name: Unit tests
+        if: ${{ !cancelled() }}
+        run: npm run test

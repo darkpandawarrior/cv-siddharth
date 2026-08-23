@@ -37,6 +37,7 @@ import { Picture } from "./Picture.tsx";
 import { SurfaceWall } from "./SurfaceWall.tsx";
 import { DeviceMorph } from "./DeviceMorph.tsx";
 import { LauncherButton, openLauncher } from "./Launcher.tsx";
+import { excelsiorMarks } from "./data/excelsiorMarks.ts";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -1222,6 +1223,19 @@ function Contact() {
  * seam, and the panel below it is already wearing the ink palette. You can see
  * the other life from here before you decide to walk into it.
  */
+/**
+ * How many of his Excelsior pieces are actually readable on this site.
+ *
+ * The copy below said "Four published stories, all readable here". Six carry
+ * kind "wrote" and five of those have a readSlug — the Cover Prologue has no
+ * reader page — so the sentence undercounted the work by one while claiming
+ * "all readable here", which is the specific pairing that makes it wrong
+ * rather than merely conservative. Derived now, because a number typed into a
+ * paragraph next to the data that decides it is a drift waiting to happen.
+ */
+const READABLE_PIECES = excelsiorMarks.filter((m) => m.kind === "wrote" && m.readSlug).length;
+const COUNT_WORD = ["no", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+
 function InkDoorway() {
   return (
     <section id="writing" className="border-t border-line">
@@ -1233,7 +1247,7 @@ function InkDoorway() {
           <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
             Before the Android work there were three years of a college magazine and a literary
             society — English Editor, then Joint Chief Editor of a 128-page edition shipped entirely
-            remotely. Four published stories, all readable here, and the pieces the board wrote
+            remotely. {COUNT_WORD[READABLE_PIECES] ?? READABLE_PIECES} published stories, all readable here, and the pieces the board wrote
             about me. It's a different life, so it gets a different room.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

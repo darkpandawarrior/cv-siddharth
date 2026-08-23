@@ -2,17 +2,68 @@
   "ci": {
     "collect": {
       "startServerCommand": "npm run serve",
-      "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/mileway", "http://localhost:4173/lab", "http://localhost:4173/blueprint", "http://localhost:4173/chess"],
+      "url": [
+        "http://localhost:4173/",
+        "http://localhost:4173/resume",
+        "http://localhost:4173/hire",
+        "http://localhost:4173/project/mileway",
+        "http://localhost:4173/lab",
+        "http://localhost:4173/shipped",
+        "http://localhost:4173/anthology",
+        "http://localhost:4173/blueprint",
+        "http://localhost:4173/chess",
+        "http://localhost:4173/playground"
+      ],
       "numberOfRuns": 3
     },
     "assert": {
       "assertions": {
-        "categories:performance": ["warn", { "minScore": 0.8 }],
-        "largest-contentful-paint": ["warn", { "maxNumericValue": 3500 }],
-        "total-byte-weight": ["warn", { "maxNumericValue": 3500000 }],
-        "resource-summary:script:size": ["error", { "maxNumericValue": 1800000 }]
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "categories:seo": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:performance": [
+          "warn",
+          {
+            "minScore": 0.8
+          }
+        ],
+        "largest-contentful-paint": [
+          "warn",
+          {
+            "maxNumericValue": 3500
+          }
+        ],
+        "cumulative-layout-shift": [
+          "warn",
+          {
+            "maxNumericValue": 0.1
+          }
+        ],
+        "total-byte-weight": [
+          "warn",
+          {
+            "maxNumericValue": 3500000
+          }
+        ],
+        "resource-summary:script:size": [
+          "warn",
+          {
+            "maxNumericValue": 1800000
+          }
+        ]
       }
     },
-    "upload": { "target": "temporary-public-storage" }
+    "upload": {
+      "target": "temporary-public-storage"
+    }
   }
 }

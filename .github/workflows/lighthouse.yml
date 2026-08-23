@@ -2,6 +2,10 @@ name: Lighthouse CI
 on:
   push: { branches: [main] }
   pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lhci:
     runs-on: ubuntu-latest
@@ -10,6 +14,25 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npx playwright install-deps chromium
+      # Installed once: both the e2e suite and lhci drive chromium.
+      - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - run: npx @lhci/cli autorun
+
+      # The Playwright suite lives here rather than in ci.yml because it needs
+      # a production build and a served origin, and this workflow already pays
+      # for both. Running it in its own workflow would mean a second vite build
+      # on every PR for no extra signal.
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Lighthouse
+        if: ${{ !cancelled() }}
+        run: npx @lhci/cli autorun
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
