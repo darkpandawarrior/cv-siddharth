@@ -36,7 +36,7 @@ import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { SurfaceWall } from "./SurfaceWall.tsx";
 import { DeviceMorph } from "./DeviceMorph.tsx";
-import { LauncherButton } from "./Launcher.tsx";
+import { LauncherButton, openLauncher } from "./Launcher.tsx";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -151,7 +151,12 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
   return { progressRef, active };
 }
 
-// Everything reachable from the phone drawer — sections plus the sub-worlds.
+// A curated shortlist for the phone drawer — the sections and sub-worlds worth
+// promoting, NOT an index of the site. The index is the surfaces wall, which
+// the drawer now opens: `LauncherButton` is `hidden lg:flex`, so before this
+// the only way to reach all seventeen surfaces from a phone was a blind
+// command-palette search or scrolling 70% of a 20,000px page. A shortlist is
+// fine as long as the full list is one tap away; it was not.
 const DRAWER_EXTRAS = [
   { href: "#playground", label: "▶ The Playground" },
   { href: "/ink", label: "The Ink — writing" },
@@ -220,6 +225,12 @@ function MobileMenu() {
                   {l.label}
                 </button>
               ))}
+              <button
+                onClick={() => { setOpen(false); openLauncher(); }}
+                className="col-span-2 rounded-xl border border-accent/40 bg-card px-4 py-3 text-sm font-semibold text-accent transition hover:border-accent"
+              >
+                All surfaces →
+              </button>
               <button
                 onClick={() => { setOpen(false); openChat(); }}
                 className="col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"

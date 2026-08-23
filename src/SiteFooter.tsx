@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { profile } from "./data/profile.ts";
 import { elsewhere } from "./data/elsewhere.ts";
+import { surfaces, type SurfaceGroup } from "./data/surfaces.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
@@ -18,6 +19,35 @@ type FooterLink =
  * Sitemap footer — every surface of the site (and its satellites) reachable
  * from one place, so no page is a dead end. External links open new tabs.
  */
+/**
+ * Route links, straight off the registry.
+ *
+ * These two columns used to be hand-written, and had fallen to 8 of the
+ * registry's 17 surfaces — /lab, /chess, /weeb, /pulse, /shipped, /ink,
+ * /excelsior, /anthology and /forge were all unreachable from the footer
+ * while its own docstring claimed "every surface of the site... so no page is
+ * a dead end". That is this repo's signature defect: a hand-kept list that
+ * mirrors src/data/surfaces.ts and quietly falls behind it, which no unit
+ * test catches because a hand-kept list always agrees with itself.
+ *
+ * Same treatment the Elsewhere column already gets from elsewhere.ts. Add a
+ * surface to the registry and it appears here; there is nothing left to
+ * forget. SiteFooter.test.ts fails if any registry route is ever unlinked.
+ */
+/** Surfaces the Explore column promotes by hand, with a recruiter-facing
+ *  label the registry has no business carrying ("Hire me (90 seconds)"). They
+ *  are skipped below so they appear once, not twice. Promotion is editorial;
+ *  OMISSION is the bug — so this list may only ever shrink the derived
+ *  columns, never the set of reachable surfaces, and the test enforces that
+ *  every entry here really is linked somewhere. */
+const PROMOTED: readonly string[] = ["/hire", "/resume", "/playground"];
+
+function fromRegistry(...groups: SurfaceGroup[]): FooterLink[] {
+  return surfaces
+    .filter((s) => groups.includes(s.group) && !PROMOTED.includes(s.to))
+    .map((s) => ({ label: s.label, kind: "route" as const, to: s.to }));
+}
+
 const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
@@ -42,17 +72,16 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       { label: "PaymentsLab", kind: "route", to: "/project/$slug", params: { slug: "paymentslab" } },
       { label: "HireSignal", kind: "route", to: "/project/$slug", params: { slug: "hiresignal" } },
       { label: "DEADLOCK", kind: "route", to: "/project/$slug", params: { slug: "deadlock" } },
-      { label: "▶ The Playground", kind: "route", to: "/playground" },
-      { label: "Compose Playground", kind: "route", to: "/compose" },
-      { label: "Blueprint Room", kind: "route", to: "/blueprint" },
-      { label: "3D Storyboard", kind: "route", to: "/map" },
-      { label: "Terminal ⌘", kind: "route", to: "/terminal" },
     ],
+  },
+  {
+    title: "Rooms",
+    links: fromRegistry("runs", "proof"),
   },
   {
     title: "Writing",
     links: [
-      { label: "The Loopdown", kind: "route", to: "/loopdown" },
+      ...fromRegistry("writing", "corpus"),
       { label: BOOKS_BEFORE_BROS.name, kind: "external", href: BOOKS_BEFORE_BROS.url },
       { label: "the-loopdown repo", kind: "external", href: LOOPDOWN_REPO },
       { label: "dev.to", kind: "external", href: "https://dev.to/darkpandawarrior" },
