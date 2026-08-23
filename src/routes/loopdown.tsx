@@ -8,7 +8,6 @@ import { SiteFooter } from "../SiteFooter.tsx";
 
 export const Route = createFileRoute("/loopdown")({
   head: () => roomHead("/loopdown"),
-  ssr: false,
   component: () => (
     <div className="min-h-screen">
       <AmbientBackground />

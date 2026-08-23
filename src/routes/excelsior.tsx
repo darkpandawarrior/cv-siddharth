@@ -19,7 +19,6 @@ type Search = { year: number; page: number };
 
 export const Route = createFileRoute("/excelsior")({
   head: () => roomHead("/excelsior"),
-  ssr: false,
   validateSearch: (search: Record<string, unknown>): Search => {
     const year = Number(search.year);
     const known = excelsiorEditions.some((e) => Number(e.year) === year);

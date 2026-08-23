@@ -18,7 +18,6 @@ import { WorldSwitch } from "../WorldSwitch.tsx";
  */
 export const Route = createFileRoute("/ink")({
   head: () => roomHead("/ink"),
-  ssr: false,
   component: InkRoute,
 });
 
