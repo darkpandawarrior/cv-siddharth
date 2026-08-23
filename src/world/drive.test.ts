@@ -160,4 +160,39 @@ describe("drive — invariants that must hold for any input", () => {
     };
     expect(run(0)).toBeLessThan(run(Math.PI)); // uphill ends slower than downhill
   });
+  it("steers the way the driver asked — right goes right", () => {
+    // The invariant tests above all passed while the car turned the WRONG WAY,
+    // because every one of them asserted a magnitude and none asserted a
+    // direction. heading is a bearing from world +Z and the driver's right is
+    // world -X, so holding right must move the car toward negative X and must
+    // lower the heading. This is the test that was missing.
+    const e = env();
+    const drive = (steer: number) => {
+      let s: DriveState = { x: 0, z: 0, y: 0, heading: 0, speed: 12 };
+      for (let i = 0; i < 45; i++) s = step(s, { steer, throttle: 1, boost: false }, MAX_DT, e);
+      return s;
+    };
+    const right = drive(1);
+    const left = drive(-1);
+
+    expect(right.x, "holding right must travel toward -X").toBeLessThan(0);
+    expect(left.x, "holding left must travel toward +X").toBeGreaterThan(0);
+    expect(right.heading, "steering right lowers the bearing").toBeLessThan(0);
+    expect(left.heading, "steering left raises the bearing").toBeGreaterThan(0);
+    // and the two are mirror images, so no asymmetric drift is hiding in there
+    expect(right.x).toBeCloseTo(-left.x, 5);
+  });
+
+  it("cannot leave the ground — flight is unrepresentable, not merely unlikely", () => {
+    // The old physics could get airborne and stay there. Here y is not a
+    // degree of freedom at all: it is read from the heightfield every step.
+    const bumpy: DriveEnv["heightAt"] = (x, z) => 1.5 + Math.sin(x * 0.3) + Math.cos(z * 0.2);
+    const e = env([], bumpy);
+    const r = rng(21);
+    let s = spawnState(0, 0, e);
+    for (let i = 0; i < 3000; i++) {
+      s = step(s, { steer: r() * 2 - 1, throttle: 1, boost: true }, MAX_DT, e);
+      expect(s.y).toBeCloseTo(bumpy(s.x, s.z), 9);
+    }
+  });
 });

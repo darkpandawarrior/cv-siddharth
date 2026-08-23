@@ -69,6 +69,9 @@ const BRAKE = 26;                     // m/s^2 when throttle opposes travel
 const DRAG = 0.9;                     // per second, proportional to speed
 const ROLLING = 1.6;                  // m/s^2 constant, so the car actually stops
 const STEER_RATE = 2.0;               // rad/s at full lock
+/** +1 steer means "right", and right is -X, so heading must go down. See the
+ *  block comment at the use site — this is the sign the whole world agrees on. */
+const STEER_SIGN = -1;
 const BOOST_MULTIPLIER = 1.7;
 /** Uphill bleeds speed, downhill returns it. This is what makes the terrain
  *  legible through the wheels rather than only through the eyes. */
@@ -168,8 +171,17 @@ function substep(s: DriveState, input: DriveInput, dt: number, env: DriveEnv): D
   // Steering authority scales with speed — a parked car cannot pivot, and the
   // sign flips in reverse so backing out of a wall steers the way a driver
   // expects.
+  //
+  // STEER_SIGN is NOT cosmetic and NOT a taste call. `heading` is
+  // atan2(forward.x, forward.z), a bearing from world +Z, and with +Y up the
+  // driver's right is world -X (right = forward x up = (-1,0,0)). So steering
+  // RIGHT must DECREASE heading. autopilot.ts documents the same convention
+  // and carries the matching minus in steerFor(); the old Craft.tsx carried it
+  // as a STEER_SIGN constant. This model shipped without it for one commit and
+  // the car turned the wrong way — the invariant tests all passed, because
+  // none of them asserted a DIRECTION. driveDirection in drive.test.ts does.
   const authority = clamp(Math.abs(speed) / 6, 0, 1);
-  const heading = s.heading + steer * STEER_RATE * authority * dt * (speed < 0 ? -1 : 1);
+  const heading = s.heading + STEER_SIGN * steer * STEER_RATE * authority * dt * (speed < 0 ? -1 : 1);
 
   let x = s.x + Math.sin(heading) * speed * dt;
   let z = s.z + Math.cos(heading) * speed * dt;
