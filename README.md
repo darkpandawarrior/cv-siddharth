@@ -41,9 +41,9 @@ order, with fallback on failure; model names are overridable per provider
 
 The order is chosen per request by prompt size, not fixed. `providerOrderFor()`
 sends anything above `GROQ_TPM_HEADROOM` (7,000 tokens) to the roomier
-providers first. The generated system prompt is currently ~31k chars ≈ 7.8k
-tokens on its own, so in practice **every chat request leads with Gemini** and
-Groq is the fast path for the short non-chat modes only. This is measured, not
+providers first. The generated system prompt is ~26k chars ≈ 6.6k tokens
+on its own, so in practice **every chat request leads with Gemini** and Groq
+is the fast path for the short non-chat modes only. This is measured, not
 assumed — `chat-handler.test.ts` carries a tripwire that fails if the prompt
 grows past the headroom, and it is currently past it. If Groq-first matters,
 the fix is a smaller prompt, not a reordered list.
@@ -220,8 +220,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 644 unit tests
-npm run test:e2e  # 65 Playwright tests across 11 spec files
+npm test          # unit tests (vitest)
+npm run test:e2e  # Playwright, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

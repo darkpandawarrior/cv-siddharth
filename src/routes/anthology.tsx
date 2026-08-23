@@ -30,11 +30,10 @@ const Starmap = lazy(() => import("../Starmap.tsx").then((m) => ({ default: m.St
  */
 export const Route = createFileRoute("/anthology")({
   head: () => roomHead("/anthology"),
-  ssr: false,
   component: AnthologyRoute,
 });
 
-type Tab = number | "starmap" | "tellers";
+type Tab = number | "starmap" | "tellers" | "canon";
 
 function AnthologyRoute() {
   const [tab, setTab] = useState<Tab>(1);
@@ -106,6 +105,18 @@ function AnthologyRoute() {
             >
               The Tellers
             </button>
+            <button
+              type="button"
+              onClick={() => setTab("canon")}
+              aria-pressed={tab === "canon"}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                tab === "canon"
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+              }`}
+            >
+              The Canon
+            </button>
           </div>
 
           {anthology.seasons.map((s) =>
@@ -125,6 +136,7 @@ function AnthologyRoute() {
 
           {tab === "starmap" && <StarmapTab />}
           {tab === "tellers" && <TellersTab />}
+          {tab === "canon" && <CanonTab />}
         </div>
       </main>
       <SiteFooter />
@@ -200,15 +212,20 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
 }
 
 function TheFourteenPlate() {
+  // The source raster is a portrait plate, 1200x1560. Capping the *figure*
+  // (not just the image) at 520px and centring it is what keeps the caption
+  // the same width as the art below it — capping only the <img> left the
+  // caption spanning the old full-width container, which is what read as a
+  // broken image with letterbox bars either side on desktop.
   return (
-    <figure className="card-elevated mt-8 overflow-hidden rounded-2xl border border-line bg-void/40">
+    <figure className="card-elevated mx-auto mt-8 w-full max-w-[520px] overflow-hidden rounded-2xl border border-line bg-void/40">
       <Picture
         src={anthology.fourteen}
         alt="Thirteen sigils in a ring, and one empty slot where a fourteenth should be."
         loading="lazy"
-        width={600}
-        height={780}
-        className="mx-auto h-auto max-h-[520px] w-auto"
+        width={1200}
+        height={1560}
+        className="h-auto w-full"
       />
       <figcaption className="border-t border-line px-6 py-4 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
         Thirteen sigils and one empty slot. Every world he has surveyed reports the same fourteen, and
@@ -357,5 +374,131 @@ function StateLegend({ swatch, term, desc }: { swatch: string; term: string; des
         {desc}
       </span>
     </li>
+  );
+}
+
+// The seven laws, each cut down to the one line a reader actually needs. The
+// full reasoning for each lives in the source bible; this tab is a panel a
+// reader visits once to look something up, not the place to re-argue it.
+const SEVEN_LAWS: { name: string; gloss: string }[] = [
+  { name: "The Count of Fourteen", gloss: "Every world reports fourteen gods and fourteen monsters, independently, with no contact between them." },
+  { name: "The Unnamed Fourteenth", gloss: "Ask anyone to list the fourteen monsters and you get thirteen names and a pause." },
+  { name: "The Halving", gloss: "A deadlock ends only when someone voluntarily divides themselves and spends both halves." },
+  { name: "The Residue", gloss: "Whatever is left over becomes the phenomenon he can actually measure: snow, silence, a tide, a count." },
+  { name: "The Witness Who Tells It", gloss: "Every legend keeps one mortal who was there and told it afterward. The heroes lose; the tellers are why there is a story at all." },
+  { name: "The Two Facings", gloss: "One storyteller's account of why thirteen of the fourteen split and one did not. Not settled canon." },
+  { name: "Concluded", gloss: "The Directory's status flag for a world with no phenomena outstanding and no further contact indicated." },
+];
+
+// Realm is blank for Galaxal and Milgalaxal in the founding charter itself;
+// they are not tied to any one world's day, so there is nothing to put there.
+const STANDARD_INTERVALS: { interval: string; realm: string; length: string }[] = [
+  { interval: "Flick", realm: "Nifheim", length: "1.2 Earth hours" },
+  { interval: "Tick", realm: "Limheim", length: "1 Earth day" },
+  { interval: "Momenta", realm: "Purgaheim", length: "50 Earth days" },
+  { interval: "Click", realm: "Hellheim", length: "2 Earth years" },
+  { interval: "Galaxal", realm: "", length: "228 Hellheims · 456 Earth years" },
+  { interval: "Milgalaxal", realm: "", length: "2228 Hellheims · 2455 Earth years" },
+  { interval: "Elysheim", realm: "Elysheim", length: "not yet required" },
+  { interval: "Vænheim", realm: "Vænheim", length: "not yet required" },
+];
+
+// Every claim on this tab traces to one of these four files, so the links are
+// the receipt rather than decoration. The record file names, not "the bible"
+// or "the council", so a reader who wants to check the arithmetic in law six
+// can go straight to the line it came from.
+const CANON_SOURCES: { file: string; note: string }[] = [
+  { file: "bible.md", note: "the seven laws, the unit table, the succession of the count" },
+  { file: "s2-bible.md", note: "the season two spine and the two dreads" },
+  { file: "council-2026-08-15.md", note: "the record of the season one council" },
+  { file: "council-s2-2026-08-15.md", note: "the cross-lab audit that killed six of the first ten season two premises" },
+];
+const CANON_SOURCE_BASE = "https://github.com/darkpandawarrior/the-loopdown/blob/main/fiction/morkinstar-journals/";
+
+function CanonTab() {
+  return (
+    <div className="mt-8">
+      {/* The count and its resolution, distilled from laws one, two and six.
+          This is the fact every entry in both seasons assumes the reader
+          already has, and until now the site never actually stated it. */}
+      <p className="max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+        Every world he has ever surveyed independently reports the same census: fourteen gods, fourteen
+        monsters. Ask anyone to list the fourteen monsters and you get thirteen names and a pause. The
+        resolution comes from one storyteller's account: thirteen of the fourteen split into a god-face
+        and a monster-face when observed from both sides at once, and the one that never split keeps its
+        single name on the god list, out of gratitude, and holds an unnamed line on the monster list,
+        because it only ever had the one face to give. Twenty-eight lines. Twenty-seven names.
+      </p>
+
+      <section className="card-elevated mt-8 rounded-2xl border border-line bg-void/40 p-6">
+        <h2 className="font-display text-lg font-bold">The Seven Laws</h2>
+        <ol className="mt-4 space-y-3 pl-5 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+          {SEVEN_LAWS.map((law) => (
+            <li key={law.name} className="list-decimal">
+              <strong className="font-semibold" style={{ color: "var(--color-text)" }}>
+                {law.name}.
+              </strong>{" "}
+              {law.gloss}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="card-elevated mt-6 rounded-2xl border border-line bg-void/40 p-6">
+        <h2 className="font-display text-lg font-bold">Standard Intervals</h2>
+        {/* Wrapped for narrow screens: five columns' worth of monospace data
+            does not fit a phone width, and this table needs to scroll inside
+            its own box rather than force the whole page wider. */}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[420px] border-collapse font-mono text-sm">
+            <thead>
+              <tr className="border-b border-line text-left text-xs uppercase tracking-widest text-muted">
+                <th className="py-2 pr-4 font-semibold">Interval</th>
+                <th className="py-2 pr-4 font-semibold">Realm</th>
+                <th className="py-2 font-semibold">Length</th>
+              </tr>
+            </thead>
+            <tbody>
+              {STANDARD_INTERVALS.map((row) => (
+                <tr key={row.interval} className="border-b border-line/50 last:border-0">
+                  <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
+                    {row.interval}
+                  </td>
+                  <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
+                    {row.realm}
+                  </td>
+                  <td className="py-2" style={{ color: "var(--color-text-dim)" }}>
+                    {row.length}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+          The milgalaxal line does not multiply out from the click above it. That is inherited from the
+          2021 source story rather than a typo, and Entry #2300 is built on it.
+        </p>
+      </section>
+
+      <p className="mt-8 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+        Nothing above is asserted without a source. The two bibles and the two council records this tab
+        was drawn from are public:{" "}
+        {CANON_SOURCES.map((s, i) => (
+          <span key={s.file}>
+            <a
+              href={`${CANON_SOURCE_BASE}${s.file}`}
+              target="_blank"
+              rel="noreferrer"
+              title={s.note}
+              className="font-mono text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+            >
+              {s.file}
+            </a>
+            {i < CANON_SOURCES.length - 1 ? ", " : "."}
+          </span>
+        ))}
+      </p>
+    </div>
   );
 }

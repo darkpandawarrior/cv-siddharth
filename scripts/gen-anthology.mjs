@@ -46,8 +46,15 @@ if (!src?.entries?.length) bail("registry carries no anthology block");
 
 // Strip the frontmatter and the H1: the page renders its own title, and a second
 // one in the body would be a duplicate heading (axe flags it, and it reads badly).
+// The .trim() between the two replaces is load-bearing and was missing at first.
+// A source file reads `---\n...\n---\n\n# Title`, so removing the frontmatter
+// leaves a blank line in front of the heading and `^#` never matches. The H1
+// survived into the body, react-markdown rendered it, and every anthology
+// reading page shipped with two h1 elements: the page's own and the body's.
+// Caught on the live site, not by a type error, which is why anthology.test.ts
+// now asserts it.
 const strip = (md) =>
-  md.replace(/^---\n[\s\S]*?\n---\n/, "").replace(/^#\s+.*\n+/, "").trim();
+  md.replace(/^---\n[\s\S]*?\n---\n/, "").trim().replace(/^#\s+.*\n+/, "").trim();
 
 mkdirSync(plateDir, { recursive: true });
 let failed = 0;
@@ -86,6 +93,11 @@ for (const e of src.entries) {
       // nobody and is numbered by page. Exactly one of these is ever set.
       entry: e.entry ? Number(e.entry) : 0,
       page: e.page ? Number(e.page) : 0,
+      // Season 3 only, from the entry's own frontmatter. Left undefined (so
+      // JSON.stringify drops the key) for seasons 1 and 2 rather than
+      // defaulted to 0, since 0 isn't a valid kindling ordinal to guard
+      // against on the reading page.
+      ...(e.kindling ? { kindling: Number(e.kindling) } : {}),
       planet: e.planet || "",
       system: e.system && e.system !== "[none]" ? e.system : "",
       phenomenon: e.phenomenon || "",
@@ -174,6 +186,8 @@ writeFileSync(
     `  season: number;\n  idx: number;\n  slug: string;\n  title: string;\n` +
     `  /** Season 1 only. The Directory's journal number. 0 in season 2. */\n  entry: number;\n` +
     `  /** Season 2 only. Page N of 91. 0 in season 1. */\n  page: number;\n` +
+    `  /** Season 3 only. The frontmatter burn order, 1-13 for a withdrawn page,\n` +
+    `   *  14 for the one page he keeps. Absent for seasons 1 and 2. */\n  kindling?: number;\n` +
     `  planet: string;\n  system: string;\n  phenomenon: string;\n  blurb: string;\n  words: number;\n` +
     `  /** Path under public/, or "" if the plate could not be fetched. */\n  plate: string;\n` +
     `  /** Inline animated SVG, hashed from the entity the entry is about. */\n  sigil: string;\n` +

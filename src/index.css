@@ -1396,11 +1396,17 @@ html.resume-mode body {
 .piece-body h3 { font-size: 1.2rem; }
 .piece-body em { color: #efe7d8; }
 .piece-body strong { color: #efe7d8; font-weight: 600; }
+/* Tape cannot lie; testimony can. A blockquote is always quoted charter
+   text or a log line someone filed, never the narrator's own voice, so it
+   gets the mono register instead of the reading serif — quiet, not neon:
+   same size and colour family as body prose, just the other typeface. */
 .piece-body blockquote {
   margin: 1.75em 0;
   border-left: 2px solid var(--color-accent);
   padding-left: 1.15rem;
-  font-style: italic;
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-style: normal;
   color: #cfc3b2;
 }
 .piece-body ul,
@@ -1414,6 +1420,187 @@ html.resume-mode body {
   color: var(--color-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+/* The trailing Terminologies block (every generated entry ends with one) is
+   also tape — measured unit conversions, not narration — so it gets the
+   same mono register as a blockquote. It is always the last list in the
+   body, so :last-of-type finds it without react-markdown needing to know
+   anything special about it. */
+.piece-body ul:last-of-type {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-text-dim);
+}
+
+/* GFM tables are always the Directory's own paperwork inside the prose — a
+   charter's interval schedule, a weighing's climbing difference column —
+   never the narrator's own voice, so they get the same mono register as a
+   blockquote, matching the Canon tab's Standard Intervals table rather than
+   inventing a second table style. */
+.piece-body table {
+  width: 100%;
+  margin: 1.75em 0;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+.piece-body th {
+  padding: 0.5em 1em 0.5em 0;
+  border-bottom: 1px solid var(--color-line);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-dim);
+}
+.piece-body td {
+  padding: 0.5em 1em 0.5em 0;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+  color: var(--color-text-dim);
+}
+.piece-body tr:last-child td {
+  border-bottom: 0;
+}
+/* The one row across the corpus where a "not yet required" interval
+   finally received a length (s2-10, The Back Of The Case). Found in
+   read.$slug.tsx by comparing a row's own Interval and Realm cells, not by
+   a row index, so this keeps working if the table is ever reordered. */
+.piece-body tr.anthology-row-changed td {
+  color: var(--color-text);
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+.piece-body tr.anthology-row-changed td:first-child {
+  border-left: 2px solid var(--color-accent);
+  padding-left: 0.75em;
+}
+
+/* Entry #2300 ends without a period, on purpose, and is filed that way — see
+   endsMidSentence in read.$slug.tsx. The cut mark is a solid block set
+   after the real last word, not a fade on the text itself, because fading
+   the type would quietly drop its contrast below AA right where a reader's
+   eye lands. The word stays fully legible; only what follows it is missing. */
+.piece-body__cut-line {
+  position: relative;
+}
+.piece-body__cut-mark {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.2em;
+  vertical-align: text-bottom;
+  background-color: var(--color-accent);
+}
+.transmission-terminated {
+  margin: 0.5rem 0 2.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-line);
+  border-left: 2px solid var(--color-accent);
+  border-top-style: dashed;
+}
+.transmission-terminated__status {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* --- Season-aware dispatch chrome -----------------------------------------
+   Season 1 was broadcast: numbered entries, filed to a rig, addressed to
+   "my dear readers". Season 2 was never sent: ninety-one pages into a
+   wooden case nobody transmitted. The relay header below is that broadcast,
+   made visible; season 2 gets no equivalent element at all — see RelayHeader
+   in read.$slug.tsx, which simply isn't called for season 2. This CSS only
+   covers season 2's half: the bare-paper ground that stands in for chrome
+   it isn't getting. */
+
+.relay-header {
+  margin-bottom: 1.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-line);
+  border-left: 2px solid var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+.relay-header p {
+  margin: 0;
+}
+.relay-header p:first-child {
+  color: var(--color-accent);
+}
+
+/* Warm paper tone and rule lines, consistent with the season 2 field plates
+   (#E9DFC9 paper / #1F1A12 ink), but kept as a low-alpha wash over the
+   existing dark ink-world ground rather than a literal light panel — this
+   world stays dark, the paper is only implied. rgba() throughout, never a
+   hex value with alpha digits appended (that fails themeConcat.test.ts). */
+.ink-world .season-two-paper {
+  padding: 1.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(233, 223, 201, 0.14);
+  background-color: rgba(233, 223, 201, 0.03);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(233, 223, 201, 0.06) 0,
+    rgba(233, 223, 201, 0.06) 1px,
+    transparent 1px,
+    transparent 1.85rem
+  );
+}
+
+/* Season 3: the same case as season 2 (every season-3 piece also carries
+   .season-two-paper — see read.$slug.tsx), because it is the same paper,
+   marked by the fire he is setting to it rather than a different ground.
+   This class adds only the mark. --scorch is 0..1, set inline from the
+   entry's own `kindling` frontmatter ordinal (1-13) so the damage deepens
+   across the season without a single hardcoded slug; piece 14 (the page he
+   keeps) never receives this class at all, per the bible: "The only
+   undamaged object in the season."
+
+   Every dark stop below is sized well inside season-two-paper's own
+   padding (1.75rem/1.5rem) and the box-shadow is a plain outward blur, so
+   at --scorch: 1 the damage still never reaches the content box the words
+   sit in — the instruction was "never under the words" and this is how
+   that's enforced, not just aimed for. rgba() throughout: never a hex
+   literal with alpha digits appended, see themeConcat.test.ts. */
+.ink-world .season-three-scorched {
+  position: relative;
+  border-color: rgba(35, 16, 8, calc(0.2 + 0.5 * var(--scorch, 0)));
+  box-shadow: 0 0 calc(12px + 22px * var(--scorch, 0)) rgba(15, 6, 2, calc(0.12 + 0.26 * var(--scorch, 0)));
+}
+.ink-world .season-three-scorched::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle 16px at 0% 0%, rgba(24, 10, 3, calc(0.55 * var(--scorch, 0))), transparent 100%),
+    radial-gradient(circle 16px at 100% 0%, rgba(24, 10, 3, calc(0.5 * var(--scorch, 0))), transparent 100%),
+    radial-gradient(circle 16px at 0% 100%, rgba(24, 10, 3, calc(0.45 * var(--scorch, 0))), transparent 100%),
+    radial-gradient(circle 18px at 100% 100%, rgba(24, 10, 3, calc(0.6 * var(--scorch, 0))), transparent 100%);
+}
+
+/* The withdrawal line, in place of season 1's RelayHeader — see
+   WithdrawnMarker in read.$slug.tsx. RelayHeader is loud institutional
+   chrome (a bordered, uppercase, three-line stamp) because season 1 is
+   still performing for a Directory. Season 3 has stopped performing for
+   anyone, per the bible's own voice note that "the address should thin out
+   as the pile does", so this is the opposite gesture: one line, no border,
+   no caps. */
+.withdrawn-marker {
+  margin: 0 0 1.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-dim);
 }
 
 /* --- Excelsior reader ----------------------------------------------------
