@@ -1075,16 +1075,22 @@ describe("provider failover", () => {
 
   it("the fast tier is unreachable: the shipped system prompt alone exceeds Groq's headroom", () => {
     // A TRIPWIRE, not a preference. Groq's free ceiling is 8,000 tokens per
-    // MINUTE and providerOrderFor drops to ROOMY_FIRST above 7,000. The
-    // generated system prompt is now ~7.8k tokens on its own, so EVERY request
-    // routes roomy-first and the fast tier is dead code — Groq is only ever
-    // reached as a failover.
+    // MINUTE and providerOrderFor drops to ROOMY_FIRST above 7,000.
     //
-    // That is a product fact worth surfacing rather than a bug in this file:
-    // the fix is either a smaller prompt or dropping the fast tier, and both
-    // are decisions, not cleanups. If someone shrinks the prompt back under the
-    // line, this test fails on purpose — go and revisit the two failover tests
-    // above, which encode the resulting order.
+    // 2026-08-24: the 2026-08 shrink pass (scripts/gen-system-prompt.mjs) cut
+    // this from 29,885 to ~26.3k chars — restructured prose, deduped
+    // highlights against their own tagline/description, capped "Recently
+    // shipped" to its non-redundant tail — WITHOUT cutting a fact (see
+    // system-prompt.test.ts's coverage gate). That still isn't enough: with
+    // maxOutput folded in, the estimate is ~7.6k tokens, still over the 7,000
+    // line. Projects & open source (~7.5k chars) plus Work history (~4.7k)
+    // are CV source data rendered close to verbatim by design — the same
+    // "don't hand-mirror facts" rule this generator exists to enforce — so
+    // closing the rest of the gap means either cutting real facts (a product
+    // call, not a cleanup) or shrinking profile.ts itself.
+    //
+    // If someone gets it under the line, this test fails on purpose — go and
+    // revisit the two failover tests above, which encode the resulting order.
     const estimated = estimateTokens(SYSTEM_PROMPT, [{ role: "user", content: "hi" }], 700);
     expect(estimated).toBeGreaterThan(7_000);
     expect(providerOrderFor("chat", estimated)[0]).toBe("gemini");

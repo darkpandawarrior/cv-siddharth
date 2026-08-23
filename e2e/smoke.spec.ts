@@ -1,10 +1,30 @@
 import { test, expect } from "@playwright/test";
+import { surfaces } from "../src/data/surfaces.ts";
+
+/**
+ * Four hand-listed routes used to be the whole of this file, so fifteen of the
+ * site's nineteen got no console-error check at all — a route could throw on
+ * every load and nothing here would notice. The list is derived now, so a new
+ * surface is smoke-tested the moment it joins the registry rather than whenever
+ * someone remembers this file.
+ *
+ * The content assertion comes from the registry too: every room's <title> is
+ * built by routeHead() from the same `label`, so "the page rendered the thing
+ * it says it is" needs no per-route knowledge. The four routes that predate
+ * this keep their richer body assertions on top.
+ */
+const BODY_EXPECTATIONS: Record<string, RegExp> = {
+  "/": /Senior Android Engineer/i,
+  "/resume": /Experience/i,
+  "/project/mileway": /mileway/i,
+  "/lab": /Lab Bench/i,
+};
 
 const routes = [
-  { path: "/", expect: /Senior Android Engineer/i },
-  { path: "/resume", expect: /Experience/i },
-  { path: "/project/mileway", expect: /mileway/i },
-  { path: "/lab", expect: /Lab Bench/i },
+  ...surfaces.map((s) => ({ path: s.to, title: s.label, expect: BODY_EXPECTATIONS[s.to] })),
+  { path: "/", title: "Siddharth Pandalai", expect: BODY_EXPECTATIONS["/"] },
+  { path: "/project/mileway", title: "Mileway", expect: BODY_EXPECTATIONS["/project/mileway"] },
+  { path: "/read/deadline", title: "Deadline", expect: undefined },
 ];
 
 // Two requests are EXPECTED to 404 under local `vite preview` and only resolve
@@ -59,7 +79,10 @@ for (const r of routes) {
     });
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(r.path, { waitUntil: "networkidle" });
-    await expect(page.locator("body")).toContainText(r.expect);
+    // Derived from the registry: proves the route rendered its own identity,
+    // not merely that something rendered.
+    await expect(page).toHaveTitle(new RegExp(r.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+    if (r.expect) await expect(page.locator("body")).toContainText(r.expect);
     expect(errors, errors.join("\n")).toEqual([]);
   });
 }

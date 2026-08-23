@@ -25,7 +25,24 @@ import { surfaces } from "../src/data/surfaces.ts";
  */
 
 const MOBILE = { width: 390, height: 844 };
-const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/mileway", "/read/deadline"];
+/**
+ * /blueprint is exempt, and only /blueprint.
+ *
+ * It is not a page with a layout — it is an r3f scene whose cards are drei
+ * <Html> portals positioned in WORLD space inside a <group>, on a canvas you
+ * orbit and pan. "Ghosts In The Recomposition" sits at x:2520 in
+ * blueprintData.ts and is reached by moving the camera, not by scrolling. A
+ * viewport-edge test cannot say anything true about it, so asserting here
+ * would only teach the next person to add exemptions.
+ *
+ * Its DOM chrome — the toolbar, the back link, the tour controls — is still
+ * covered by e2e/a11y.spec.ts at 390px.
+ */
+const CANVAS_ROUTES = new Set(["/blueprint"]);
+
+const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/mileway", "/read/deadline"].filter(
+  (p) => !CANVAS_ROUTES.has(p),
+);
 
 for (const path of ROUTES) {
   test(`${path} does not silently clip content at ${MOBILE.width}px`, async ({ page }) => {
@@ -40,16 +57,39 @@ for (const path of ROUTES) {
       const ALLOWED = [".chapter-word-wrap", ".particle-hero"];
       const out: { tag: string; cls: string; right: number; text: string }[] = [];
 
-      const inScroller = (el: Element): boolean => {
-        for (let p = el.parentElement; p; p = p.parentElement) {
+      // Only a REAL scroller owns its overflow. Treating overflow:hidden as
+      // containment was tried and rejected: a full-viewport `fixed inset-0
+      // overflow-hidden` HUD wrapper would then hide genuinely off-screen
+      // controls, which is exactly the /playground bug this exists to catch.
+      // documentElement is excluded regardless — html{overflow-x:hidden} is
+      // the rule that makes real clipping silent in the first place.
+      const contained = (el: Element): boolean => {
+        for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
           const o = getComputedStyle(p).overflowX;
           if (o === "auto" || o === "scroll") return true;
         }
         return false;
       };
 
+      // Decorative bleed is legitimate and common here — a masked marquee is
+      // SUPPOSED to run past the edge. What is never acceptable is a control
+      // you cannot press or words you cannot read. So this only judges
+      // elements that are interactive or carry their own text.
+      const INTERACTIVE = "a[href], button, input, select, textarea, [role=button], [role=link], [tabindex]:not([tabindex='-1'])";
+      const ownText = (el: Element) =>
+        Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 0);
+
       for (const el of Array.from(document.body.querySelectorAll("*"))) {
         if (ALLOWED.some((sel) => el.closest(sel))) continue;
+        if (!el.matches(INTERACTIVE) && !ownText(el)) continue;
+        // Author-declared decoration. WorldLabels renders its 3D room names
+        // into `aria-hidden pointer-events-none absolute inset-0`, and the
+        // Blueprint Room's nodes live on a pannable infinite canvas — both are
+        // positioned in world/canvas space, not laid out, so "off the viewport
+        // right now" is the camera, not a clipped page. Anything the author
+        // has already marked hidden-from-AT and unclickable is not the content
+        // this gate protects.
+        if (el.closest('[aria-hidden="true"]') && !el.matches(INTERACTIVE)) continue;
         const cs = getComputedStyle(el);
         if (cs.visibility === "hidden" || cs.display === "none" || cs.opacity === "0") continue;
         // World-space 3D labels are positioned by the renderer, not by layout.
@@ -57,7 +97,7 @@ for (const path of ROUTES) {
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) continue;
         if (r.right <= limit + 1) continue;
-        if (inScroller(el)) continue;
+        if (contained(el)) continue;
         out.push({
           tag: el.tagName.toLowerCase(),
           cls: typeof el.className === "string" ? el.className.slice(0, 70) : "",
