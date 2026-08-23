@@ -82,7 +82,10 @@ function PulseInner() {
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-4xl flex-1 px-6">
         <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the pulse</p>
         <h1 className="font-display text-hero font-bold tracking-tight">
-          {total.toLocaleString()} <span className="text-accent">interaction{total === 1 ? "" : "s"}</span>
+          {/* aria-hidden on the figures only: the <h1> keeps its heading role
+              and its place in the document outline, while the numbers are
+              announced once by the status region above instead of twice. */}
+          <span aria-hidden="true">{total.toLocaleString()}</span> <span className="text-accent" aria-hidden="true">interaction{total === 1 ? "" : "s"}</span>
           {people > 0 && (
             <>
               {" "}
@@ -91,6 +94,21 @@ function PulseInner() {
             </>
           )}
         </h1>
+        {/* The headline above is live — it moves whenever anyone, anywhere,
+            touches a room. Without this a screen-reader visitor is handed a
+            number once and never told it changed, which is the one thing this
+            page exists to show. Same shape as FloatingChat's voice status: a
+            separate sr-only status node rather than aria-live on the <h1>,
+            because making the heading itself a live region re-announces the
+            whole heading and its markup on every tick.
+
+            Deliberately `polite` and deliberately a single summary sentence
+            rather than a region per row — 30-odd counters each announcing
+            themselves would be unusable. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {total.toLocaleString()} interaction{total === 1 ? "" : "s"}
+          {people > 0 ? ` from ${people.toLocaleString()} ${people === 1 ? "person" : "people"}` : ""} so far.
+        </p>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Every room on this site writes to one shared counter. This is the whole of it — what gets opened,
           what gets played with, and what nobody has touched yet.

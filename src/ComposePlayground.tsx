@@ -822,7 +822,20 @@ export default function ComposePlayground() {
               className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[13px] leading-[1.6] text-zinc-100 outline-none"
               style={{ tabSize: 4 }}
               onKeyDown={(e) => {
+                // WCAG 2.1.2, No Keyboard Trap. Swallowing Tab to indent means
+                // a keyboard-only visitor who tabs INTO this editor can never
+                // tab out of it — the rest of the page becomes unreachable
+                // without a mouse. The criterion is satisfied by providing a
+                // standard exit and telling the user about it, so Escape
+                // leaves the editor and the hint below the field says so.
+                if (e.key === "Escape") {
+                  e.currentTarget.blur();
+                  return;
+                }
                 if (e.key === "Tab") {
+                  // Shift+Tab always means "go back" — never indent on it, or
+                  // the trap is only half-opened.
+                  if (e.shiftKey) return;
                   e.preventDefault();
                   const t = e.currentTarget;
                   const s = t.selectionStart;
@@ -833,10 +846,14 @@ export default function ComposePlayground() {
                 }
               }}
               aria-label="Compose code editor"
+              aria-describedby="compose-editor-escape-hint"
             />
           </div>
           <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
             <Play size={11} className="text-accent" /> live · renders as you type
+            <span id="compose-editor-escape-hint" className="ml-auto">
+              Tab indents · <kbd className="rounded border border-line px-1">Esc</kbd> leaves the editor
+            </span>
           </div>
         </div>
 

@@ -351,6 +351,7 @@ export function SignalLabPane() {
           <canvas
             ref={canvasRef}
             className="pointer-events-none absolute inset-0 h-full w-full"
+            role="img"
             aria-label={`Live GPS pipeline over a real ${(ROUTE_LENGTH_M / 1000).toFixed(1)} km driving loop in Pune, India`}
           />
           <style>{`

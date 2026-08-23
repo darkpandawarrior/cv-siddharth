@@ -171,7 +171,7 @@ export function GatewayLab() {
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" aria-label="PaymentsLab gateway routing simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab gateway routing simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
