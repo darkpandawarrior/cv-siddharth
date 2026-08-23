@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 import * as THREE from "three";
 import { Color } from "three";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import {
   chessRidge,
   activityPlates,
@@ -335,29 +334,9 @@ function OldTown(): JSX.Element {
   );
 }
 
-/** Fixed colliders for old town's three editions only — the one east-flank
- *  family tall and box-shaped enough (7.75-9m) that driving straight through
- *  it would read as a bug, the same bar Monuments.tsx's shells/obelisks/
- *  towers clear and its many small floor slabs don't. Everything else here
- *  is small, thin or too numerous (176 weeb markers, 473 ridge cubes) for a
- *  per-instance collider to be worth its physics cost. */
-function OldTownColliders(): JSX.Element {
-  const editions = useMemo(() => excelsiorEditionBlocks(), []);
-  return (
-    <>
-      {editions.map((e) => (
-        <RigidBody key={e.year} type="fixed" colliders={false} position={[e.x, 0, e.z]}>
-          <CuboidCollider args={[EDITION_FOOTPRINT / 2, e.height / 2, EDITION_FOOTPRINT / 2]} position={[0, e.height / 2 + CITY.groundY, 0]} />
-        </RigidBody>
-      ))}
-    </>
-  );
-}
-
 export function Corpus(): JSX.Element {
   return (
     <>
-      <OldTownColliders />
       <ChessRidge />
       <ActivityPlates />
       <Repertoire />

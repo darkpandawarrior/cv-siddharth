@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, type JSX, type ReactElement } from "react";
-import { Color, type InstancedMesh } from "three";
-import { InstancedRigidBodies, type InstancedRigidBodyProps, type RigidBodyAutoCollider } from "@react-three/rapier";
+import { Color, Object3D, type InstancedMesh } from "three";
 import { PLACEMENTS } from "./worldData.ts";
 import { CITY } from "./city.ts";
-import { PAVILION_SENSOR_GROUP, PROP_COLLISION_GROUPS } from "./collisionGroups.ts";
+import { heightAt } from "./heightfield.ts";
 import { worldPalette, type WorldPalette } from "./palette.ts";
 import { PROP_FAMILIES, employerBlocks, caseStudyMonuments, projectTowers } from "./districtWest.ts";
 
@@ -17,9 +16,13 @@ import { PROP_FAMILIES, employerBlocks, caseStudyMonuments, projectTowers } from
  * mixing debris into it would blur the one distinction (west = paid for,
  * east = made anyway) the whole layout exists to draw.
  *
- * Four families, each one `InstancedRigidBodies` (N dynamic bodies, one draw
- * call), same pattern this file has used since the world had a single flat
- * desk — the geometry changed, the instancing discipline didn't.
+ * Four families, each one plain `<instancedMesh>` (one draw call), same
+ * instancing discipline this file has always used. Each piece used to be an
+ * `InstancedRigidBodies` dynamic body dropped from a height and left to
+ * settle under gravity; now it's placed at rest directly on the ground —
+ * `heightAt(x, z) + halfHeight` — with its matrix written once rather than
+ * every physics step, because there is no longer a physics step to write it
+ * from.
  */
 
 // The west build zone: everything between the approach apron (CITY.buildInner,
@@ -32,18 +35,6 @@ const Z_MIN = CITY.z0 + 2;
 const Z_MAX = CITY.z1 - 2;
 const PAVILION_CLEARANCE = 3.6; // keep debris out from under the west rooms
 
-// Membership in group 0 only, filter left at its default ("interact with
-// every group") — this collider still physically collides with the ground
-// and every other prop exactly as if collisionGroups were never set, but a
-// spool nudged near a room can no longer satisfy that sensor's
-// group-15-only filter (see Pavilions.tsx's PAVILION_SENSOR_GROUP comment),
-// so it can never fake a "craft entered this room" event.
-if (PAVILION_SENSOR_GROUP === 0) {
-  // Would silently defeat the whole scheme above — group 0 must stay reserved
-  // for props, group 15 for the sensors they need to be invisible to.
-  throw new Error("Props.tsx and Pavilions.tsx picked the same interaction group");
-}
-
 // West-side room centres only (x < 0 — the design doc's alternating-sides
 // PLACEMENTS table puts /map, /forge, /lab and /terminal here). Debris never
 // needed to avoid the east rooms in the first place since it never spawns
@@ -55,20 +46,19 @@ function tooCloseToAPavilion(x: number, z: number): boolean {
   return WEST_ROOM_CENTRES.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < PAVILION_CLEARANCE);
 }
 
-// Monuments.tsx (WS3) gives every employer block, case-study obelisk and
-// project tower its own FIXED RigidBody collider, sized to the real
-// structure — and Dice.tech's block alone (the whole "June 2023 - Present"
-// span) is a 3m x 23.2m x 52m box. X_MIN..X_MAX above puts every one of
-// those lanes (kerb -16, mid -20.5, outer -25.5) squarely inside the debris
-// scatter zone. Without this, a spool spawning inside that box is a dynamic
-// body sharing volume with a static one — Rapier resolves the overlap by
-// firing it out on the first physics step, so the world would greet a
-// visitor with debris exploding out of solid geometry on load. Same failure
-// mode as `tooCloseToAPavilion`, same fix: reject the sample and try again.
-// Rebuilt from districtWest.ts's own exported shapes rather than duplicated
-// numbers, so a change to a block's height or a tower's width can never
-// leave this exclusion stale.
-const STRUCTURE_CLEARANCE = 1.5; // a prop's own half-extent (<=0.45m) plus room to fall without clipping
+// Monuments.tsx (WS3) draws every employer block, case-study obelisk and
+// project tower at real size — and Dice.tech's block alone (the whole "June
+// 2023 - Present" span) is a 3m x 23.2m x 52m box. X_MIN..X_MAX above puts
+// every one of those lanes (kerb -16, mid -20.5, outer -25.5) squarely
+// inside the debris scatter zone. Without this, a piece of debris resting
+// "inside" that box would visually clip through solid geometry — no physics
+// step to fire it back out any more, so a bad sample would just sit there
+// wrong forever rather than resolving itself. Same failure mode as
+// `tooCloseToAPavilion`, same fix: reject the sample and try again. Rebuilt
+// from districtWest.ts's own exported shapes rather than duplicated numbers,
+// so a change to a block's height or a tower's width can never leave this
+// exclusion stale.
+const STRUCTURE_CLEARANCE = 1.5; // a prop's own half-extent (<=0.45m) plus a little breathing room
 type ExclusionBox = { xMin: number; xMax: number; zMin: number; zMax: number };
 const STRUCTURE_EXCLUSIONS: ExclusionBox[] = [
   ...employerBlocks().map((b) => ({
@@ -95,12 +85,19 @@ function insideAStructure(x: number, z: number): boolean {
   return STRUCTURE_EXCLUSIONS.some((b) => x >= b.xMin && x <= b.xMax && z >= b.zMin && z <= b.zMax);
 }
 
+type PropInstance = { position: [number, number, number]; rotationY: number };
+
 /** Rejection-samples `count` (x, z) points across the west build zone, clear
- *  of every west pavilion's footprint, and returns them as instance props
- *  dropped from a small random height so they fall onto the terrain under
- *  gravity rather than spawning already resting. */
-function scatterWestFlank(count: number, dropHeight: [number, number]): InstancedRigidBodyProps[] {
-  const instances: InstancedRigidBodyProps[] = [];
+ *  of every west pavilion's footprint, and returns them resting directly on
+ *  the terrain — `heightAt(x, z) + halfHeight` puts each piece's centre
+ *  exactly `halfHeight` above the ground it's standing on, the same
+ *  distance a settled physics body used to end up at once gravity and its
+ *  own collider shape finished with it. Only the yaw varies (a physics drop
+ *  used to tumble onto an arbitrary face too, which mattered less once these
+ *  were dynamic bodies than it does for a fixed placement — an upright rest
+ *  pose reads as "placed debris" rather than "wreckage" either way). */
+function scatterWestFlank(count: number, halfHeight: number): PropInstance[] {
+  const instances: PropInstance[] = [];
   for (let i = 0; i < count; i++) {
     let x = 0;
     let z = 0;
@@ -109,18 +106,13 @@ function scatterWestFlank(count: number, dropHeight: [number, number]): Instance
     // alone shadows over half the slab's length in the mid lane — but it is
     // still well under the whole zone, so this converges within the cap;
     // the cap just guarantees it can never spin forever, and worst case
-    // leaves one prop resting against rather than deep inside a structure.
+    // leaves one prop resting against rather than inside a structure.
     for (let tries = 0; tries < 20; tries++) {
       x = X_MIN + Math.random() * (X_MAX - X_MIN);
       z = Z_MIN + Math.random() * (Z_MAX - Z_MIN);
       if (!tooCloseToAPavilion(x, z) && !insideAStructure(x, z)) break;
     }
-    const y = dropHeight[0] + Math.random() * (dropHeight[1] - dropHeight[0]);
-    instances.push({
-      key: `${i}`,
-      position: [x, y, z],
-      rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-    });
+    instances.push({ position: [x, heightAt(x, z) + halfHeight, z], rotationY: Math.random() * Math.PI * 2 });
   }
   return instances;
 }
@@ -139,66 +131,56 @@ function propColors(c: WorldPalette) {
   };
 }
 
-// Drop-height ranges, hoisted to module scope (rather than inline array
-// literals at each call site below) so they're stable references across
-// renders — PropFamily's useMemo/useEffect deps would otherwise see a "new"
-// array on every render of <Props> and redo the scatter/paint for no reason.
-const PALLET_DROP: [number, number] = [1.0, 1.8];
-const SPOOL_DROP: [number, number] = [1.2, 2.2];
-const KERB_DROP: [number, number] = [1.0, 1.6];
-const BARREL_DROP: [number, number] = [1.2, 2.0];
+// Resting half-heights — half the geometry's own Y extent, so a piece
+// centred at `heightAt(x,z) + halfHeight` sits with its bottom face exactly
+// on the ground rather than floating or embedded. One per family, matched to
+// the geometry passed to that family's `<PropFamily>` call below.
+const PALLET_HALF_HEIGHT = 0.075; // boxGeometry [0.9, 0.15, 0.7]
+const SPOOL_HALF_HEIGHT = 0.25; // cylinderGeometry [0.35, 0.35, 0.5, 16]
+const KERB_HALF_HEIGHT = 0.15; // boxGeometry [0.4, 0.3, 0.4]
+const BARREL_HALF_HEIGHT = 0.275; // cylinderGeometry [0.25, 0.22, 0.55, 12]
 
-/** One prop family: N instances of a single geometry, coloured per-instance
- *  via `InstancedMesh.setColorAt` (one draw call for the whole family, no
- *  material-per-instance overhead) rather than one mesh per prop. `colliders`
- *  picks the auto-collider shape Rapier derives from the child geometry once
- *  at mount. Colour is painted imperatively in an effect because `count` and
- *  `colors` are only known at the JSX call site below — there's no declarative
- *  per-instance-colour prop on `<instancedMesh>` to hand them to directly. */
+const dummy = new Object3D();
+
+/** One prop family: N static instances of a single geometry, coloured
+ *  per-instance via `InstancedMesh.setColorAt` (one draw call for the whole
+ *  family, no material-per-instance overhead) rather than one mesh per prop.
+ *  Matrix and colour are both painted once in an effect, keyed on `count` —
+ *  there is nothing left to update per frame now that nothing here moves. */
 function PropFamily({
   count,
-  dropHeight,
-  colliders,
+  halfHeight,
   colors,
   geometry,
 }: {
   count: number;
-  dropHeight: [number, number];
-  colliders: RigidBodyAutoCollider;
+  halfHeight: number;
   colors: string[];
   geometry: ReactElement;
 }) {
-  const instances = useMemo(() => scatterWestFlank(count, dropHeight), [count, dropHeight]);
+  const instances = useMemo(() => scatterWestFlank(count, halfHeight), [count, halfHeight]);
   const meshRef = useRef<InstancedMesh>(null);
   useEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
     const color = new Color();
     for (let i = 0; i < count; i++) {
+      const inst = instances[i];
+      dummy.position.set(...inst.position);
+      dummy.rotation.set(0, inst.rotationY, 0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
       color.set(colors[i % colors.length]);
       mesh.setColorAt(i, color);
     }
+    mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [count, colors]);
+  }, [count, colors, instances]);
   return (
-    <InstancedRigidBodies
-      instances={instances}
-      colliders={colliders}
-      friction={0.9}
-      restitution={0.15}
-      // Light. At Rapier's default density these were heavy enough relative to
-      // a 220kg chassis to stop it dead or flip it — a crate the size of the
-      // car's own body, hit at 8 m/s, ended the drive. Debris should burst out
-      // of the way and tumble, which is the fun part; being wrecked by desk
-      // clutter is not.
-      density={0.08}
-      collisionGroups={PROP_COLLISION_GROUPS}
-    >
-      <instancedMesh ref={meshRef} args={[undefined, undefined, count]} count={count} castShadow receiveShadow>
-        {geometry}
-        <meshStandardMaterial roughness={0.55} />
-      </instancedMesh>
-    </InstancedRigidBodies>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, count]} count={count} castShadow receiveShadow>
+      {geometry}
+      <meshStandardMaterial roughness={0.55} />
+    </instancedMesh>
   );
 }
 
@@ -207,22 +189,20 @@ export function Props(): JSX.Element {
   return (
     <>
       {/* Pallets — wide, flat, cuboid. */}
-      <PropFamily count={PROP_FAMILIES[0].count} dropHeight={PALLET_DROP} colliders="cuboid" colors={colors.pallet} geometry={<boxGeometry args={[0.9, 0.15, 0.7]} />} />
+      <PropFamily count={PROP_FAMILIES[0].count} halfHeight={PALLET_HALF_HEIGHT} colors={colors.pallet} geometry={<boxGeometry args={[0.9, 0.15, 0.7]} />} />
       {/* Cable spools. */}
       <PropFamily
         count={PROP_FAMILIES[1].count}
-        dropHeight={SPOOL_DROP}
-        colliders="hull"
+        halfHeight={SPOOL_HALF_HEIGHT}
         colors={colors.spool}
         geometry={<cylinderGeometry args={[0.35, 0.35, 0.5, 16]} />}
       />
       {/* Kerb blocks — small, dense cuboids. */}
-      <PropFamily count={PROP_FAMILIES[2].count} dropHeight={KERB_DROP} colliders="cuboid" colors={colors.kerbBlock} geometry={<boxGeometry args={[0.4, 0.3, 0.4]} />} />
+      <PropFamily count={PROP_FAMILIES[2].count} halfHeight={KERB_HALF_HEIGHT} colors={colors.kerbBlock} geometry={<boxGeometry args={[0.4, 0.3, 0.4]} />} />
       {/* Barrels. */}
       <PropFamily
         count={PROP_FAMILIES[3].count}
-        dropHeight={BARREL_DROP}
-        colliders="hull"
+        halfHeight={BARREL_HALF_HEIGHT}
         colors={colors.barrel}
         geometry={<cylinderGeometry args={[0.25, 0.22, 0.55, 12]} />}
       />

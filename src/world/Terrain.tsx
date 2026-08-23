@@ -1,6 +1,5 @@
 import { useMemo, type JSX } from "react";
 import * as THREE from "three";
-import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Grid } from "@react-three/drei";
 import { CITY } from "./city.ts";
 import { YEAR_BANDS, eraColorT } from "./cityData.ts";
@@ -37,26 +36,29 @@ import { dim, mix, worldPalette } from "./palette.ts";
 const dummy = new THREE.Object3D();
 
 /**
- * The slab — one fixed cuboid collider, the whole playable surface. Kept as
- * a single flat box rather than the old mainland+shore split: there is
- * nowhere else to taper down to now that the world has one surface, and a
- * flat 168m box is also what lets EraPlates below sit as thin non-collider
- * decals on top of it rather than needing their own geometry per band.
+ * The slab — the whole playable surface, as one flat box. Kept as a single
+ * mesh rather than the old mainland+shore split: there is nowhere else to
+ * taper down to now that the world has one surface, and a flat 168m box is
+ * also what lets EraPlates below sit as thin decals on top of it rather than
+ * needing their own geometry per band.
+ *
+ * No collider: obstacles.ts's derived list is what the car's kinematic model
+ * (drive.ts) actually drives against, and the ground itself is handled by
+ * heightAt() rather than a physics body — see the design doc's "kinematic,
+ * deterministic" physics section for why there's no physics engine here at all.
  */
 function Mainland() {
   const c = worldPalette();
   const { halfWidth, z0, z1, groundY } = TERRAIN.mainland;
   return (
-    <RigidBody type="fixed" colliders="cuboid">
-      <mesh position={[0, groundY - 0.5, (z0 + z1) / 2]} receiveShadow>
-        <boxGeometry args={[halfWidth * 2, 1, z1 - z0]} />
-        {/* Lifted NEUTRALLY, toward the text colour rather than toward the
-            accent — see the git history on this line for why a lift toward
-            --color-signal instead reads as a golf course, not a work
-            surface. */}
-        <meshStandardMaterial color={mix(c.card, c.text, 0.12)} roughness={0.9} metalness={0.02} />
-      </mesh>
-    </RigidBody>
+    <mesh position={[0, groundY - 0.5, (z0 + z1) / 2]} receiveShadow>
+      <boxGeometry args={[halfWidth * 2, 1, z1 - z0]} />
+      {/* Lifted NEUTRALLY, toward the text colour rather than toward the
+          accent — see the git history on this line for why a lift toward
+          --color-signal instead reads as a golf course, not a work
+          surface. */}
+      <meshStandardMaterial color={mix(c.card, c.text, 0.12)} roughness={0.9} metalness={0.02} />
+    </mesh>
   );
 }
 
@@ -102,13 +104,12 @@ function EraPlates() {
 }
 
 /**
- * A raised lip around all four edges of the slab, and — the part that keeps
- * this to one draw call — ONE fixed RigidBody carrying four explicit
- * CuboidColliders (a standard Rapier compound-body pattern) alongside ONE
- * InstancedMesh for their visuals, rather than the four separate
- * RigidBody+mesh pairs this used to be. The physics is unaffected: a
- * fixed body with several colliders behaves exactly like several fixed
- * bodies for anything driving into it.
+ * A raised lip around all four edges of the slab, as ONE InstancedMesh for
+ * its visuals — one draw call for all four sides, same as when this was a
+ * fixed RigidBody carrying four CuboidColliders. There is no collider any
+ * more: the kerb isn't in obstacles.ts's derived list either, so driving
+ * onto it is (as it always visually implied) harmless — the WORLD_BOUNDS box
+ * in craftPhysics.ts is what actually stops the car at the edge of the slab.
  */
 const KERB_HEIGHT = 0.9;
 const KERB_THICKNESS = 0.5;
@@ -129,29 +130,24 @@ function Kerb() {
   );
 
   return (
-    <RigidBody type="fixed" colliders={false}>
-      {sides.map((s, i) => (
-        <CuboidCollider key={i} args={[s.scale[0] / 2, s.scale[1] / 2, s.scale[2] / 2]} position={s.pos} />
-      ))}
-      <instancedMesh
-        ref={(mesh) => {
-          if (!mesh) return;
-          for (let i = 0; i < sides.length; i++) {
-            dummy.position.set(...sides[i].pos);
-            dummy.scale.set(...sides[i].scale);
-            dummy.updateMatrix();
-            mesh.setMatrixAt(i, dummy.matrix);
-          }
-          mesh.instanceMatrix.needsUpdate = true;
-        }}
-        args={[undefined, undefined, sides.length]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={c.surface} roughness={0.8} />
-      </instancedMesh>
-    </RigidBody>
+    <instancedMesh
+      ref={(mesh) => {
+        if (!mesh) return;
+        for (let i = 0; i < sides.length; i++) {
+          dummy.position.set(...sides[i].pos);
+          dummy.scale.set(...sides[i].scale);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(i, dummy.matrix);
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+      }}
+      args={[undefined, undefined, sides.length]}
+      castShadow
+      receiveShadow
+    >
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={c.surface} roughness={0.8} />
+    </instancedMesh>
   );
 }
 

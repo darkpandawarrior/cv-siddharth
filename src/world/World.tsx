@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Physics } from "@react-three/rapier";
 import { Stars } from "@react-three/drei";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
@@ -14,7 +13,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
-import { Craft } from "./Craft.tsx";
+import { Vehicle } from "./Vehicle.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard, isAutoDriving, setAutoAxes } from "./input.ts";
 import {
@@ -59,16 +58,16 @@ import { usePulse, type PulseEvent } from "../play/pulse.ts";
  * Scene components below are wrapped in `memo` because this component's own
  * state changes fairly often — every artifact pickup, every toast, every
  * prompt. Terrain/Props/Corpus take no props at all and
- * Pavilions/Craft take one stable `useCallback`, so `memo` turns "World
- * re-rendered" into a handful of cheap prop-equality checks instead of every
- * scene subtree re-evaluating its JSX 60 times a second for no reason. Craft
- * still runs its own R3F hooks every frame regardless — this only skips
- * re-running its component *body*.
+ * Pavilions/Vehicle take a small number of stable `useCallback`/state values,
+ * so `memo` turns "World re-rendered" into a handful of cheap prop-equality
+ * checks instead of every scene subtree re-evaluating its JSX 60 times a
+ * second for no reason. Vehicle still runs its own R3F hooks every frame
+ * regardless — this only skips re-running its component *body*.
  */
 const MemoTerrain = memo(Terrain);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
-const MemoCraft = memo(Craft);
+const MemoVehicle = memo(Vehicle);
 const MemoMonuments = memo(Monuments);
 const MemoCorpus = memo(Corpus);
 const MemoTrail = memo(Trail);
@@ -513,14 +512,12 @@ export default function World(props: { onShowList: () => void }) {
           shadow-camera-top={40}
           shadow-camera-bottom={-40}
         />
-        <Physics paused={paused}>
-          <MemoTerrain />
-          <MemoProps />
-          <MemoMonuments />
-          <MemoCorpus />
-          <MemoPavilions onPrompt={handlePrompt} />
-          <MemoCraft onState={handleCraftState} />
-        </Physics>
+        <MemoTerrain />
+        <MemoProps />
+        <MemoMonuments />
+        <MemoCorpus />
+        <MemoPavilions onPrompt={handlePrompt} />
+        <MemoVehicle onState={handleCraftState} paused={paused} />
         <MemoTrail />
         {/* The city's dust — always mounted, never conditional on anything:
             frame 0's "lit road through a haze" is the design's whole
