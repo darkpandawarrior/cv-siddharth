@@ -59,6 +59,18 @@
           {
             "maxNumericValue": 1800000
           }
+        ],
+        "total-blocking-time": [
+          "warn",
+          {
+            "maxNumericValue": 300
+          }
+        ],
+        "first-contentful-paint": [
+          "warn",
+          {
+            "maxNumericValue": 3000
+          }
         ]
       }
     },

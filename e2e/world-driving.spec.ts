@@ -122,7 +122,7 @@ test.describe("the world drives on a phone", () => {
   // group because it would force a new worker, and it is the one field of the
   // preset this suite does not want — everything else (touch, coarse pointer,
   // viewport, DPR) is exactly the point.
-  const { defaultBrowserType: _browser, ...pixel5 } = devices["Pixel 5"];
+  const { defaultBrowserType: _unused, ...pixel5 } = devices["Pixel 5"];
   test.use(pixel5);
 
   test("the thumbstick moves the car", async ({ page }) => {
