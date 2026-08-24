@@ -16,13 +16,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const profilePath = join(root, "src", "data", "profile.ts");
 const token = process.env.GITHUB_TOKEN;
 const headers = { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
 async function prCount() {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     "https://api.github.com/search/issues?q=repo:santifer/career-ops+type:pr+is:merged+author:darkpandawarrior",
     { headers },
   );
@@ -31,7 +32,7 @@ async function prCount() {
 }
 
 async function providerCount() {
-  const res = await fetch("https://api.github.com/repos/santifer/career-ops/contents/providers", { headers });
+  const res = await fetchWithTimeout("https://api.github.com/repos/santifer/career-ops/contents/providers", { headers });
   if (!res.ok) throw new Error(`${res.status} providers dir`);
   const list = await res.json();
   // Upstream's own convention: infra files are underscore-prefixed, provider modules aren't.

@@ -23,6 +23,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "weeb.ts");
 const cacheDir = join(root, ".weeb-cache");
@@ -88,7 +89,7 @@ async function lookup(title, type) {
   const search = ALIAS[title] ?? title;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(API, {
+      const res = await fetchWithTimeout(API, {
         method: "POST",
         headers: HEADERS,
         body: JSON.stringify({ query: QUERY, variables: { s: search, t: type } }),

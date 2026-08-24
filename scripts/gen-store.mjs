@@ -35,6 +35,7 @@ import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, unlink
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const CACHE = resolve(process.cwd(), ".store-cache.json");
 /** Written by scripts/gen-store-archive.mjs. Optional — the fleet works without it. */
 const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
@@ -226,7 +227,7 @@ async function probe(id) {
   const url = `https://play.google.com/store/apps/details?id=${id}&hl=en`;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, { headers: { "user-agent": UA } });
+      const res = await fetchWithTimeout(url, { headers: { "user-agent": UA } });
       if (res.status === 404) return { v: PROBE_V, live: false };
       if (res.status === 429 || res.status >= 500) {
         await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
@@ -293,7 +294,7 @@ async function fetchIcons(apps) {
       const file = resolve(ICON_DIR, `${a.id}.webp`);
       if (!a.icon || existsSync(file)) return;
       try {
-        const res = await fetch(`${a.icon}=s128-rw`, { headers: { "user-agent": UA } });
+        const res = await fetchWithTimeout(`${a.icon}=s128-rw`, { headers: { "user-agent": UA } });
         if (!res.ok) return;
         writeFileSync(file, Buffer.from(await res.arrayBuffer()));
         written++;

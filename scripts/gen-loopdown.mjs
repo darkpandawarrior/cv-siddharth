@@ -6,6 +6,7 @@ import { writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "writing.ts");
 const SRC = "https://raw.githubusercontent.com/darkpandawarrior/the-loopdown/main/data/registry.json";
@@ -35,7 +36,7 @@ function emit(reg) {
 }
 
 try {
-  const res = await fetch(SRC, { signal: AbortSignal.timeout(10000) });
+  const res = await fetchWithTimeout(SRC, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   emit(await res.json());
 } catch (e) {

@@ -25,6 +25,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const STORE_CACHE = resolve(process.cwd(), ".store-cache.json");
 const OUT = resolve(process.cwd(), ".store-siblings.json");
 const UA =
@@ -69,7 +70,7 @@ await Promise.all(
       const [devId, ownIds] = entry;
       const stems = new Set(ownIds.map(stem).filter(Boolean));
       try {
-        const res = await fetch(`https://play.google.com/store/apps/dev?id=${devId}&hl=en`, {
+        const res = await fetchWithTimeout(`https://play.google.com/store/apps/dev?id=${devId}&hl=en`, {
           headers: { "user-agent": UA },
         });
         if (!res.ok) continue;

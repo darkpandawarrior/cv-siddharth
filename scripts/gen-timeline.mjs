@@ -22,6 +22,7 @@ import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(root, "src/data/timeline.ts");
 
@@ -83,7 +84,7 @@ async function openSourceLane() {
     let json;
     try {
       if (token) {
-        const res = await fetch("https://api.github.com/graphql", {
+        const res = await fetchWithTimeout("https://api.github.com/graphql", {
           method: "POST",
           headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
           body: JSON.stringify({ query: q }),

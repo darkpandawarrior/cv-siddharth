@@ -37,11 +37,12 @@ function compressGif(path) {
 
 import { sync } from "./media-manifest.mjs";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const raw = (repo, path) => `https://raw.githubusercontent.com/${repo}/main/docs/${path}`;
 
 async function pull(repo, srcPath, dest) {
   try {
-    const res = await fetch(raw(repo, srcPath), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    const res = await fetchWithTimeout(raw(repo, srcPath), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
     if (!res.ok) return console.warn(`[sync-media] MISS ${res.status} ${srcPath}`);
     const buf = Buffer.from(await res.arrayBuffer());
     writeFileSync(dest, buf);
