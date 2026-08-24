@@ -39,7 +39,7 @@ function HirePage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-ink">
       <div className="mx-auto max-w-4xl px-6 section-y">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
+        <p className="kicker-accent">
           {profile.location} · open to remote
         </p>
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
@@ -89,7 +89,7 @@ function HirePage() {
         {/* Three case studies, one line each. A hiring manager who wants depth
             clicks; one who does not has already got what they came for. */}
         <div className="mt-12 border-t border-line pt-8">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted">The work behind the numbers</p>
+          <p className="kicker">The work behind the numbers</p>
           <ul className="mt-4 divide-y divide-line">
             {featured.map((c) => {
               // A case study is not always a project. `mileway` is both and has
@@ -129,11 +129,14 @@ function HirePage() {
           </ul>
         </div>
 
-        {/* Stated once, as a claim about method — never as a theme. */}
+        {/* The fact, and only the fact. This used to continue "I do the same
+            thing to sensor data now", which drew the line between the editing
+            years and the engineering for the reader. That is the one thing the
+            site must never do in copy: the connection is left for the reader to
+            make, or it is not made at all. The link does the work instead. */}
         <p className="mt-10 max-w-2xl border-l-2 border-accent/40 pl-4 leading-relaxed text-zinc-300">
-          Before I wrote software I spent three years as an editor, finding what was wrong in other
-          people's drafts. I do the same thing to sensor data now — most of my best work has been
-          noticing that a signal everyone trusted was lying.{" "}
+          Before I wrote software I spent three years editing a college magazine, finding what was
+          wrong in other people's drafts.{" "}
           <Link to="/ink" className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent">
             That half is here too
           </Link>

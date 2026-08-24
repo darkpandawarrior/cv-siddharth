@@ -77,7 +77,7 @@ function ExcelsiorRoute() {
             invisible to search, and on a phone it is unusable. Read it here,
             then go look at the page it ran on. */}
         <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">
+          <p className="kicker-accent">
             Rather read it? The five I wrote, in full
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

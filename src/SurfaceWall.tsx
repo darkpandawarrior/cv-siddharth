@@ -111,7 +111,7 @@ function SurfaceTile({ surface }: { surface: Surface }) {
         </span>
       </span>
 
-      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-widest text-muted">
+      <span className="kicker mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         <span>{surface.tag}</span>
         <span aria-hidden>·</span>
         <span>{device.label}</span>
@@ -138,7 +138,7 @@ export function SurfaceWall() {
             <h3 id={`wall-${group.group}`} className="font-display text-lg font-bold text-zinc-100">
               {group.label}
             </h3>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-muted">{group.note}</p>
+            <p className="kicker">{group.note}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {group.items.map((surface) => (

@@ -119,7 +119,7 @@ export function DeviceMorph() {
               {f.label}
             </button>
           ))}
-          <span className="ml-1 font-mono text-[11px] uppercase tracking-widest text-muted">{form.note}</span>
+          <span className="kicker ml-1">{form.note}</span>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -206,7 +206,7 @@ export function DeviceMorph() {
                   <Play size={18} />
                 </span>
                 Run {app.name} here
-                <span className="font-mono text-[11px] font-normal uppercase tracking-widest text-muted">
+                <span className="kicker font-normal">
                   ~14 MB Wasm · loads on click
                 </span>
               </button>
@@ -226,7 +226,7 @@ export function DeviceMorph() {
           </div>
         </div>
 
-        <p className="mt-4 text-center font-mono text-[11px] uppercase tracking-widest text-muted">
+        <p className="kicker mt-4 text-center">
           {app.name} · {form.label} · {form.note}
         </p>
       </div>

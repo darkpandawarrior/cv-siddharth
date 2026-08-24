@@ -90,7 +90,7 @@ export function LabBench() {
         </Reveal>
         <Reveal>
           <div className="mb-2">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Dice.tech — production</p>
+            <p className="kicker mb-2 font-semibold">Dice.tech — production</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "production").map((t) => (
                 <button
@@ -108,7 +108,7 @@ export function LabBench() {
                 </button>
               ))}
             </div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Personal builds</p>
+            <p className="kicker mb-2 font-semibold">Personal builds</p>
             <div className="mb-6 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "personal").map((t) => (
                 <button

@@ -323,7 +323,7 @@ export function VisitorPlaque() {
 
       {knowsRoom && (
         <div className="min-w-0 sm:w-[45%]">
-          <div className="flex items-baseline justify-between gap-3 font-mono text-[10px] uppercase tracking-widest text-muted">
+          <div className="kicker flex items-baseline justify-between gap-3">
             <span>visits · last {PLAQUE_SPAN} days</span>
             <span className="text-accent2">{todayCount} today</span>
           </div>
@@ -367,7 +367,7 @@ export function VisitorLedgerPanel() {
         <span className="font-mono text-[11px] text-muted">{total.toLocaleString()} in all</span>
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between gap-3 font-mono text-[10px] uppercase tracking-widest text-muted">
+      <div className="kicker mt-4 flex items-baseline justify-between gap-3">
         <span>visits · last {PANEL_SPAN} days</span>
         <span>{visits.toLocaleString()} in the window</span>
       </div>
@@ -379,7 +379,7 @@ export function VisitorLedgerPanel() {
 
       {zones.length > 0 && (
         <>
-          <p className="mt-8 font-mono text-[10px] uppercase tracking-widest text-muted">
+          <p className="kicker mt-8">
             {zones.length} time zone{zones.length === 1 ? "" : "s"}
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">

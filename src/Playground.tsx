@@ -193,7 +193,7 @@ function PlaygroundInner() {
           >
             <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
           </button>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
           <div className="flex items-center gap-2 sm:gap-3">

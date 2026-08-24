@@ -166,7 +166,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 py-10 sm:grid-cols-4">
         {COLUMNS.map((col) => (
           <div key={col.title}>
-            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent/70">{col.title}</h3>
+            <h3 className="kicker-accent font-semibold">{col.title}</h3>
             <ul className="mt-3 space-y-2">
               {col.links.map((l) => (
                 <li key={l.label}>

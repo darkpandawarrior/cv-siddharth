@@ -64,7 +64,7 @@ function PulseInner() {
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <Activity size={13} className="text-accent" /> The Pulse — what visitors actually touch
           </span>
           <div className="flex items-center gap-2 sm:gap-3">

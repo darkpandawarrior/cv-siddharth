@@ -120,7 +120,7 @@ export function WritingView() {
                   <div className="mt-auto pt-4">
                     {links.length > 0 && (
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
-                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Read on</span>
+                        <span className="kicker">Read on</span>
                         {links.map((p) => (
                           <a
                             key={p.key}
@@ -233,7 +233,7 @@ export function WritingView() {
                   <span className="shrink-0 font-mono text-[11px] text-muted">{a.form}</span>
                 </div>
                 {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted">
+                <div className="kicker mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                   {a.era && <span>{a.era}</span>}
                   {a.words && <span>{Number(a.words).toLocaleString()} words</span>}
                   {a.words && <span>~{Math.max(1, Math.round(Number(a.words) / 220))} min read</span>}

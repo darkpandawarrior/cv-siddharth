@@ -85,7 +85,7 @@ export function WritingSection() {
                   <div className="mt-auto pt-5">
                     {featuredLinks.length > 0 && (
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Read on</span>
+                        <span className="kicker">Read on</span>
                         {featuredLinks.map((p) => (
                           <a
                             key={p.key}
@@ -258,7 +258,7 @@ export function WritingSection() {
                       <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
                       <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
                     </div>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{p.role}</p>
+                    <p className="kicker mt-1">{p.role}</p>
                     <p className="mt-3 text-xs italic text-zinc-500">Q: {p.question}</p>
                     <blockquote className="mt-2 grow text-sm leading-relaxed text-zinc-300">"{p.quote}"</blockquote>
                     <p className="mt-3 font-mono text-[11px] text-muted">
@@ -270,7 +270,7 @@ export function WritingSection() {
                         the untrimmed one is reachable, and reachable means
                         someone can tell it is there. Not a nested <a> — the
                         whole card is already the link. */}
-                    <span className="mt-4 font-mono text-[10px] uppercase tracking-wider text-muted transition group-hover:text-accent2">
+                    <span className="kicker mt-4 transition group-hover:text-accent2">
                       Excelsior &rsquo;{p.year.slice(2)} · page {p.page} &rarr;
                     </span>
                   </Link>
@@ -287,7 +287,7 @@ export function WritingSection() {
                     <span className="font-display text-sm font-bold">{s.name}</span>
                     <span className="meta-row-tag">[&nbsp;{s.years}&nbsp;]</span>
                   </div>
-                  <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-accent/80">{s.role}</p>
+                  <p className="kicker-accent mt-3">{s.role}</p>
                   <p className="mt-2 text-sm leading-relaxed text-zinc-400">{s.blurb}</p>
                   <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
                     {s.links.map((l) =>

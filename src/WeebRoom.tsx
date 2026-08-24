@@ -63,7 +63,7 @@ export function WeebRoom() {
       {/* ---------------------------------------------------------------- 1 */}
       <Reveal>
         <section className="mt-14">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 01</p>
+          <p className="kicker-accent">Finding 01</p>
           <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             {hasDropped ? "Quitting is recorded" : "There is no word for quitting"}
           </h2>
@@ -124,7 +124,7 @@ export function WeebRoom() {
       {/* ---------------------------------------------------------------- 2 */}
       <Reveal>
         <section className="mt-16">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 02</p>
+          <p className="kicker-accent">Finding 02</p>
           <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             The bottom of the scale has never been used
           </h2>
@@ -157,7 +157,7 @@ export function WeebRoom() {
 
           {divergence.n > 0 && (
             <div className="mt-8">
-              <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+              <p className="kicker">
                 Against the crowd — {divergence.n} titles where both scores exist
               </p>
               <ul className="mt-3 divide-y divide-line">
@@ -181,7 +181,7 @@ export function WeebRoom() {
       {/* ---------------------------------------------------------------- 3 */}
       <Reveal>
         <section className="mt-16">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">Finding 03</p>
+          <p className="kicker-accent">Finding 03</p>
           <h2 className="font-display mt-2 text-h2 font-bold tracking-tight">
             A hand-kept list cannot see the present
           </h2>
@@ -227,7 +227,7 @@ export function WeebRoom() {
           third act. */}
       <Reveal>
         <section className="mt-16 border-t border-line pt-8">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+          <p className="kicker">
             The manga half
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">

@@ -90,7 +90,7 @@ export function Shipped() {
                   className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1 hover:border-accent"
                 >
                   <AppIcon app={app} size={48} />
-                  <span className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <span className="kicker mt-4">
                     {app.employer}
                   </span>
                   <span className="font-display mt-1 text-lg font-bold transition group-hover:text-accent">

@@ -1117,11 +1117,37 @@ html.resume-mode body {
 }
 
 /* Small caps-ish label above a brief / deliverables column. */
+/* THE KICKER — the small mono uppercase label above a heading, in a metric
+   tile, on a HUD readout. It was hand-rolled as raw utilities in 43 files, 90
+   times, in more than twenty different combinations: three sizes (10px, 11px,
+   12px), three letter-spacings, and five colours. Nobody chose that; it
+   accumulated.
+
+   The canonical values below are the DOMINANT ones, not .brief-label's
+   original. .brief-label used 0.14em, but 0.1em (tracking-widest) outnumbered
+   it fifty to two, and 11px sat exactly between the 10px and 12px camps. So
+   consolidating downward keeps every migrated instance within a pixel of
+   where it already was, instead of moving eighty-eight of them to match two.
+
+   Two colour variants because both are real: muted for meta and readouts,
+   accent for the "// section" kickers. accent2 kickers and the two deliberate
+   wide-tracking display labels (0.3em, 0.4em) are NOT part of this and keep
+   their own classes. */
+.kicker,
 .brief-label {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.kicker {
+  color: var(--color-muted);
+}
+
+/* .brief-label keeps its name: it is the accent kicker and predates the sweep. */
+.brief-label,
+.kicker-accent {
   color: var(--color-accent);
 }
 

@@ -711,7 +711,7 @@ export default function ComposePlayground() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -733,7 +733,7 @@ export default function ComposePlayground() {
 
       <div className="border-b border-line bg-ink/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
-          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-muted">examples</span>
+          <span className="kicker mr-1">examples</span>
           {PRESETS.map((p) => (
             <button
               key={p.label}

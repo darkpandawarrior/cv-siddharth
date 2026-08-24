@@ -170,7 +170,7 @@ function BlueprintRoomInner() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
           </span>
           {/* Wraps: the mode pills, the tour, Reset and Ask add up to ~339px,

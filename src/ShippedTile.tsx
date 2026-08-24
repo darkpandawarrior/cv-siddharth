@@ -110,7 +110,7 @@ export function ShippedTile({ app, past = false }: { app: ShippedApp; past?: boo
         {app.developer && (
           <span className="block truncate text-xs text-muted">{app.developer}</span>
         )}
-        <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-muted">
+        <span className="kicker block truncate">
           {meta}
         </span>
         {dateLine && (

@@ -153,7 +153,7 @@ function RepoGroup({ label, hint, repos }: { label: string; hint: string; repos:
   return (
     <div className="mt-8 first:mt-0">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h4 className="font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">{label}</h4>
+        <h4 className="kicker-accent font-semibold">{label}</h4>
         <span className="font-mono text-[11px] text-muted">{hint}</span>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -194,7 +194,7 @@ export function ReposShowcase() {
 
         <div className="mt-8">
           <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">Merged upstream</h4>
+            <h4 className="kicker-accent font-semibold">Merged upstream</h4>
             <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐63k+)</span>
           </div>
           <ul className="space-y-2">

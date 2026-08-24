@@ -51,7 +51,7 @@ function AnthologyRoute() {
 
       <main id="main-content" tabIndex={-1}>
         <div className="section-y mx-auto max-w-5xl px-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// twenty entries, two seasons</p>
+          <p className="kicker-accent">// twenty entries, two seasons</p>
           <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
             {anthology.tagline}
@@ -186,7 +186,7 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
         // silently reusing a stale image — this is that state rendered, not
         // an <img> pointed at an empty src.
         <div
-          className="flex items-center justify-center bg-void/40 font-mono text-[10px] uppercase tracking-widest text-muted"
+          className="kicker flex items-center justify-center bg-void/40"
           style={{ aspectRatio: "600 / 780" }}
         >
           plate lost
@@ -317,7 +317,7 @@ function StarmapTab() {
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
-        <label htmlFor="concluded-count" className="font-mono text-xs uppercase tracking-widest text-muted">
+        <label htmlFor="concluded-count" className="kicker">
           Concluded count
         </label>
         <input
@@ -340,14 +340,14 @@ function StarmapTab() {
       <div className="card-elevated relative mt-6 h-[520px] overflow-hidden rounded-2xl border border-line bg-void/60">
         <Suspense
           fallback={
-            <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-widest text-muted">
+            <div className="kicker flex h-full items-center justify-center">
               loading the starmap…
             </div>
           }
         >
           <Starmap concluded={concluded} onOpen={openWorld} />
         </Suspense>
-        <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <span className="kicker pointer-events-none absolute bottom-3 right-4">
           drag to orbit
         </span>
       </div>

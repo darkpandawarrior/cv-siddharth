@@ -36,7 +36,7 @@ function RoomCard({ r, i }: { r: Room; i: number }) {
         >
           <Icon size={20} />
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-muted">{r.tag}</span>
+        <span className="kicker">{r.tag}</span>
       </div>
       <h3 className="font-display mt-4 text-lg font-bold transition group-hover:text-accent">{r.label}</h3>
       <p className="mt-2 grow text-sm leading-relaxed text-zinc-400">{r.blurb}</p>

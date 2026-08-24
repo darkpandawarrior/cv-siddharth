@@ -73,9 +73,9 @@ function Tile({ surface, current, onGo }: { surface: Surface; current: boolean; 
       <span className="min-w-0">
         <span className="block font-display text-sm font-bold text-zinc-100 transition group-hover:text-accent">
           {surface.label}
-          {current && <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-accent">here</span>}
+          {current && <span className="kicker-accent ml-2">here</span>}
         </span>
-        <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-widest text-muted">{surface.tag}</span>
+        <span className="kicker mt-0.5 block">{surface.tag}</span>
       </span>
     </Link>
   );
@@ -157,7 +157,7 @@ export function Launcher() {
             <h2 id="launcher-title" className="font-display text-lg font-bold text-zinc-100">
               Every surface
             </h2>
-            <p className="mt-0.5 font-mono text-[11px] uppercase tracking-widest text-muted">
+            <p className="kicker mt-0.5">
               ⌘K searches · this shows what exists
             </p>
           </div>
@@ -177,7 +177,7 @@ export function Launcher() {
             <section key={group.group} aria-labelledby={`launcher-${group.group}`}>
               <h3
                 id={`launcher-${group.group}`}
-                className="mb-2 font-mono text-[11px] uppercase tracking-widest text-muted"
+                className="kicker mb-2"
               >
                 {group.label}
               </h3>

@@ -1249,7 +1249,7 @@ export function Terminal() {
             <ArrowLeft size={14} /> <span className="label-wide">Back to portfolio</span>
           </button>
         </span>
-        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
+        <span className="kicker flex items-center gap-2">
           <TerminalSquare size={13} className="text-[var(--t-accent)]" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh
         </span>

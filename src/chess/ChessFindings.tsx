@@ -105,7 +105,7 @@ export function ChessFindings() {
           <TiltCard>
             <article className="card-elevated flex h-full flex-col rounded-2xl border border-line bg-card p-6 sm:p-8">
               <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-accent">
+                <span className="kicker-accent flex items-center gap-2">
                   <Clock size={13} /> Clock remaining, by game progress
                 </span>
                 <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
@@ -155,7 +155,7 @@ export function ChessFindings() {
         <Reveal delay={120} className="h-full">
           <div className="flex h-full flex-col gap-3">
             <div className="card-elevated rounded-xl border border-line bg-card p-4">
-              <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted">
+              <p className="kicker flex items-center gap-2">
                 <Swords size={12} /> Corpus
               </p>
               <p className="font-display mt-1 text-2xl font-bold tabular-nums text-accent">{num(totals.games)}</p>
@@ -166,7 +166,7 @@ export function ChessFindings() {
             </div>
 
             <div className="card-elevated rounded-xl border border-line bg-card p-4">
-              <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted">
+              <p className="kicker flex items-center gap-2">
                 <Clock size={12} /> Time at the board
               </p>
               <p className="font-display mt-1 text-2xl font-bold tabular-nums text-accent2">
@@ -181,7 +181,7 @@ export function ChessFindings() {
             </div>
 
             <div className="card-elevated rounded-xl border border-line bg-card p-4">
-              <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted">
+              <p className="kicker flex items-center gap-2">
                 <CalendarDays size={12} /> Showing up
               </p>
               <p className="font-display mt-1 text-2xl font-bold tabular-nums text-accent">{pct(daysPlayed)}</p>
@@ -198,7 +198,7 @@ export function ChessFindings() {
       {/* repertoire as Black, joined to the platform handoff it is confounded with */}
       <Reveal delay={100}>
         <div className="card-elevated mt-6 rounded-2xl border border-line bg-card p-6 sm:p-8">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-accent">Repertoire as Black</p>
+          <p className="kicker-accent">Repertoire as Black</p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
             {repertoire[0] && (
               <>
@@ -409,7 +409,7 @@ export function ChessFindings() {
           which is exactly why they are here. */}
       <Reveal>
         <div className="mt-12 border-t border-line pt-8">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">
+          <p className="kicker-accent">
             Second pass — four fields the first analysis never read
           </p>
 

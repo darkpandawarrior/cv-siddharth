@@ -374,7 +374,7 @@ export function SignalLabPane() {
 
         {/* The ladder. */}
         <div className="border-t border-line px-5 py-4">
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-wider text-muted">
+          <p className="kicker mb-3">
             the pipeline, one stage at a time
           </p>
           <div className="space-y-1.5">
@@ -507,7 +507,7 @@ function Figure({ label, value, sub, tone }: { label: string; value: string; sub
   const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-warn" : "text-zinc-200";
   return (
     <div className="bg-void/70 px-5 py-3">
-      <p className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</p>
+      <p className="kicker">{label}</p>
       <p className={`font-display text-xl font-bold ${color}`}>{value}</p>
       <p className="font-mono text-[11px] text-muted">{sub}</p>
     </div>

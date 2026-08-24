@@ -45,7 +45,7 @@ function NextProject({ slug }: { slug: string }) {
           className="card-elevated group flex items-center justify-between gap-4 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50"
         >
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-accent/70">next build</p>
+            <p className="kicker-accent">next build</p>
             <p className="font-display mt-1 text-xl font-bold transition group-hover:text-accent">{next.name}</p>
             <p className="mt-1 text-sm text-zinc-400">{next.tagline}</p>
           </div>

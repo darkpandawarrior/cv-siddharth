@@ -103,7 +103,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             {title} — {tagline}
           </span>
           <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
                 <next.icon size={15} />
               </span>
               <span>
-                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted">next room</span>
+                <span className="kicker block">next room</span>
                 <span className="font-display text-sm font-bold text-zinc-100 transition group-hover:text-accent">
                   {next.label}
                 </span>

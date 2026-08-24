@@ -201,7 +201,7 @@ function ReadPiece() {
             // Four of these never ran anywhere, so there is no edition to name.
             // Saying "First published here" is better than inventing a
             // provenance, and it is also the more interesting claim.
-            <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
+            <p className="kicker-accent">
               {[
                 piece.form,
                 piece.page > 0 ? `Excelsior '${piece.year.slice(2)}` : piece.year ? `'${piece.year.slice(2)}` : null,
@@ -215,7 +215,7 @@ function ReadPiece() {
             // numbers by page out of 91 — the two seasons don't share a
             // counting scheme, so the byline has to ask which season it is
             // before it can say which number.
-            <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
+            <p className="kicker-accent">
               {[
                 anthology.seasons.find((s) => s.n === piece.season)?.title,
                 piece.season === 1 ? `Journal Entry #${piece.entry}` : `Page ${piece.page} of 91`,
@@ -392,7 +392,7 @@ function ReadPiece() {
                 className="h-24 w-40 shrink-0 rounded-lg object-cover"
               />
               <div>
-                <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">The teller</p>
+                <p className="kicker-accent">The teller</p>
                 <p className="font-display mt-1 text-base font-bold">{piece.witness.name}</p>
                 <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                   {piece.witness.did}

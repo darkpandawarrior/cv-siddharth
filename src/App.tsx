@@ -981,7 +981,7 @@ function ExperienceSection() {
                   </ul>
                   {job.company.toLowerCase().includes("dice") && (
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted">receipts</span>
+                      <span className="kicker">receipts</span>
                       {["50% → 95% GPS", "-80% crashes", "~87% UI Compose"].map((r) => (
                         <button
                           key={r}
@@ -1094,7 +1094,7 @@ function Skills() {
 
       {active && PROVEN_IN[active] && (
         <div className="fade-in mt-5 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted">proven in</span>
+          <span className="kicker">proven in</span>
           {PROVEN_IN[active].map((p) => {
             const provenClass = "rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent";
             const c = classifyHash(p.href);
@@ -1242,7 +1242,7 @@ function InkDoorway() {
       <div className="ink-threshold" aria-hidden />
       <div className="ink-world">
         <div className="section-y mx-auto max-w-5xl px-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
+          <p className="kicker-accent">// before the code</p>
           <h2 className="font-display mt-3 text-h2">The Ink</h2>
           <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
             Before the Android work there were three years of a college magazine and a literary

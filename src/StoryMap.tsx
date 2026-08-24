@@ -315,7 +315,7 @@ export function StoryMap() {
               <StoryMapCanvas onNavigate={go} />
             ))}
           {use3D && (
-            <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-muted">
+            <span className="kicker pointer-events-none absolute bottom-3 right-4">
               drag to orbit
             </span>
           )}
