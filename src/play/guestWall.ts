@@ -37,9 +37,12 @@ export function sanitizeNote(raw: string): { ok: true; text: string } | { ok: fa
   return { ok: true, text };
 }
 
-/** Append a note, keeping the wall inside its cap (oldest out first). */
-export function appendNote(notes: WallNote[], note: WallNote): WallNote[] {
-  return [...notes, note].slice(-WALL_MAX_NOTES);
+/** Append a note, keeping the collection inside its cap (oldest out first).
+ *  `max` defaults to the wall's own cap; margin notes (marginNotes.ts) pass a
+ *  smaller per-piece cap through the same function rather than re-deriving
+ *  the "oldest out first" rule. */
+export function appendNote(notes: WallNote[], note: WallNote, max: number = WALL_MAX_NOTES): WallNote[] {
+  return [...notes, note].slice(-max);
 }
 
 /** A stable tint per note, so the wall looks composed rather than random. */

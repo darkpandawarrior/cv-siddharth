@@ -11,6 +11,8 @@ import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { MarginNotes } from "../play/MarginNotes.tsx";
+import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
 /**
  * Read a piece — the prose, not a photograph of the prose.
@@ -187,6 +189,7 @@ function ReadPiece() {
   const scorchStyle: ScorchStyle | undefined = scorchFraction > 0 ? { "--scorch": scorchFraction } : undefined;
 
   return (
+    <DeferredPlayRoom>
     <div className="ink-world min-h-screen">
       {/* The root skip link targets #main-content on every route; without it
           here, "Skip to content" went nowhere and the a11y gate timed out
@@ -402,6 +405,8 @@ function ReadPiece() {
           )}
         </article>
 
+        <MarginNotes pieceSlug={piece.slug} />
+
         <nav className="mt-16 border-t border-line pt-8">
           {piece.kind === "printed" ? (
             <>
@@ -449,6 +454,7 @@ function ReadPiece() {
       <SiteFooter />
       <FloatingChat />
     </div>
+    </DeferredPlayRoom>
   );
 }
 

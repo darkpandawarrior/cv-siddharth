@@ -5,6 +5,8 @@ import { WritingSection } from "../WritingSection.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
+import { MarginNotes } from "../play/MarginNotes.tsx";
+import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
 import { anthology, anthologyEntries } from "../data/anthology.ts";
 /**
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/ink")({
 
 function InkRoute() {
   return (
+    <DeferredPlayRoom>
     <div className="ink-world min-h-screen">
       <header className="border-b border-line">
         <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
@@ -64,9 +67,13 @@ function InkRoute() {
           </a>
         </div>
         <WritingSection />
+        <div className="mx-auto max-w-5xl px-6">
+          <MarginNotes pieceSlug="ink" />
+        </div>
       </main>
       <SiteFooter />
       <FloatingChat />
     </div>
+    </DeferredPlayRoom>
   );
 }

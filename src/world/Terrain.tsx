@@ -7,6 +7,7 @@ import { visualHeightAt } from "./terrainRelief.ts";
 import { buildPlateTexture, PLATE_TILES_Z } from "./terrainPlate.ts";
 import { createLitMapTexture, stampLitMap } from "./litMap.ts";
 import { telemetry } from "./telemetry.ts";
+import { deviceTier, tierBudget } from "./deviceTier.ts";
 import { laneColors, mix, READHEAD_HEX, worldPalette, type WorldPalette } from "./palette.ts";
 
 /**
@@ -47,7 +48,14 @@ type TerrainAssets = {
 };
 
 function buildGeometry(): THREE.PlaneGeometry {
-  const geo = new THREE.PlaneGeometry(CITY.halfWidth * 2, CITY.z1 - CITY.z0, 28, 184);
+  // §10 drop 3 — a throttled device gets the coarser
+  // PlaneGeometry(56,168,14,92) the art-direction doc names explicitly;
+  // every other tier keeps the full 28x184 this shipped with. Read once at
+  // geometry build time (Terrain.tsx's own "displaced ONCE at load"
+  // contract) — device tier never changes mid-session (deviceTier.ts), so
+  // there is nothing to react to later.
+  const [widthSegments, depthSegments] = tierBudget(deviceTier()).groundSegments;
+  const geo = new THREE.PlaneGeometry(CITY.halfWidth * 2, CITY.z1 - CITY.z0, widthSegments, depthSegments);
   geo.rotateX(-Math.PI / 2);
   // The plane is built centred at its own local origin (z spanning
   // +/-(CITY.z1-CITY.z0)/2); CITY's own span is NOT centred on zero

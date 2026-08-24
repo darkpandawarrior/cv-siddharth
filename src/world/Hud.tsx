@@ -222,8 +222,71 @@ function SoundToggle() {
   );
 }
 
+/** A room's prompt and a landmark's prompt are the same card wearing two
+ *  verbs — extracted so the world's ONE dwell-then-confirm affordance has
+ *  one piece of markup, not two copies that could drift apart in styling.
+ *  The dwell ring itself is real: DWELL_MS in World.tsx (via dwell.ts) is
+ *  what it drains over, for whichever mechanism is currently prompting. */
+function PromptCard({
+  label,
+  tint,
+  verb,
+  onConfirm,
+}: {
+  label: string;
+  tint: string;
+  verb: "enter" | "view";
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      className="pointer-events-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-2xl border bg-card/90 px-5 py-4 text-center backdrop-blur"
+      style={{ borderColor: `${tint}55` }}
+    >
+      <span className="font-display text-base font-bold" style={{ color: tint }}>
+        {label}
+      </span>
+      {/* The dwell is a real ~one-second timer (dwell.ts), and until now it
+          was invisible: the prompt said "hold to enter" and then the page
+          changed, with nothing in between to say it was working or how long
+          was left. The ring drains over exactly the dwell duration, so
+          driving away mid-dwell reads as a cancel rather than a mystery. */}
+      <span className="relative flex h-8 w-8 items-center justify-center">
+        <svg viewBox="0 0 36 36" className="absolute h-8 w-8 -rotate-90">
+          <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-line" />
+          <circle
+            cx="18"
+            cy="18"
+            r="16"
+            fill="none"
+            stroke={tint}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="100.5"
+            className="hud-dwell-ring"
+          />
+        </svg>
+      </span>
+      <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        hold to {verb} · press Enter
+      </span>
+      <button
+        type="button"
+        onClick={onConfirm}
+        className="mt-1 rounded-full px-4 py-1.5 text-sm font-semibold text-ink transition"
+        style={{ background: tint }}
+      >
+        {verb === "enter" ? "Enter" : "View"}
+      </button>
+    </div>
+  );
+}
+
 export function Hud(props: {
   promptRoom: Room | null;
+  /** The project/case-study equivalent of `promptRoom` — Landmarks.tsx's
+   *  own approach prompt, carrying only what the card needs to render. */
+  promptLandmark: { label: string; tint: string } | null;
   onConfirm: () => void;
   onShowList: () => void;
   /** Where the world is currently pointing the driver. */
@@ -242,6 +305,7 @@ export function Hud(props: {
 }) {
   const {
     promptRoom,
+    promptLandmark,
     onConfirm,
     onShowList,
     waypoint,
@@ -333,44 +397,14 @@ export function Hud(props: {
           // component language matters here more than most places in the
           // world — this card is the one moment the 3D world and the card grid
           // are describing literally the same action (enter this room).
-          <div
-            className="pointer-events-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-2xl border bg-card/90 px-5 py-4 text-center backdrop-blur"
-            style={{ borderColor: `${promptRoom.tint}55` }}
-          >
-            <span className="font-display text-base font-bold" style={{ color: promptRoom.tint }}>
-              {promptRoom.label}
-            </span>
-            {/* The dwell is a real one-second timer in World.tsx, and until now
-                it was invisible: the prompt said "hold to enter" and then the
-                page changed, with nothing in between to say it was working or
-                how long was left. The ring drains over exactly DWELL_MS, so
-                driving away mid-dwell reads as a cancel rather than a mystery. */}
-            <span className="relative flex h-8 w-8 items-center justify-center">
-              <svg viewBox="0 0 36 36" className="absolute h-8 w-8 -rotate-90">
-                <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-line" />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  fill="none"
-                  stroke={promptRoom.tint}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeDasharray="100.5"
-                  className="hud-dwell-ring"
-                />
-              </svg>
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-widest text-muted">hold to enter · press Enter</span>
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="mt-1 rounded-full px-4 py-1.5 text-sm font-semibold text-ink transition"
-              style={{ background: promptRoom.tint }}
-            >
-              Enter
-            </button>
-          </div>
+          <PromptCard label={promptRoom.label} tint={promptRoom.tint} verb="enter" onConfirm={onConfirm} />
+        )}
+
+        {promptLandmark && (
+          // The project/case-study equivalent — same dwell ring, same
+          // family, different verb: entering a landmark opens an in-world
+          // panel over the running scene rather than navigating anywhere.
+          <PromptCard label={promptLandmark.label} tint={promptLandmark.tint} verb="view" onConfirm={onConfirm} />
         )}
       </div>
 

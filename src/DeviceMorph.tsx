@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 import { FitImage } from "./DeviceWall.tsx";
 
 /**
@@ -87,6 +88,7 @@ export function DeviceMorph() {
   const [booted, setBooted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { painted, gaveUp } = useLivePaint(iframeRef, booted);
+  const { goToSection } = useSectionNav();
 
   if (!app) return null;
 
@@ -228,6 +230,21 @@ export function DeviceMorph() {
 
         <p className="kicker mt-4 text-center">
           {app.name} · {form.label} · {form.note}
+        </p>
+
+        {/* SurfaceWall (#surfaces) makes this exact claim again, 12,000px
+            further down the page, with its own device-frame grid — and the
+            two used to have no link between them, so a visitor who saw one
+            had no reason to know the other existed. This is the forward half
+            of that pair; SurfaceWall carries the matching link back up. */}
+        <p className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={() => goToSection("surfaces")}
+            className="kicker-accent transition hover:opacity-80"
+          >
+            Same one codebase, across every route on this site →
+          </button>
         </p>
       </div>
     </section>

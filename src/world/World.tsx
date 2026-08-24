@@ -15,6 +15,10 @@ import { Wake } from "./Wake.tsx";
 import { Fixtures } from "./Fixtures.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
+import { Landmarks } from "./Landmarks.tsx";
+import { LandmarkPanel } from "./LandmarkPanel.tsx";
+import { type Destination } from "./destinations.ts";
+import { useDwellEnter } from "./dwell.ts";
 import { Vehicle } from "./Vehicle.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard, isAutoDriving, setAutoAxes } from "./input.ts";
@@ -31,6 +35,7 @@ import {
   type Stop,
 } from "./autopilot.ts";
 import { LabelCameraBridge, WorldLabels } from "./WorldLabels.tsx";
+import { deviceTier, tierBudget } from "./deviceTier.ts";
 import { PLACEMENTS } from "./worldData.ts";
 import type { WaypointTarget } from "./Nav.tsx";
 import { worldPalette, worldTint} from "./palette.ts";
@@ -72,6 +77,7 @@ const MemoWake = memo(Wake);
 const MemoFixtures = memo(Fixtures);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
+const MemoLandmarks = memo(Landmarks);
 const MemoVehicle = memo(Vehicle);
 const MemoMonuments = memo(Monuments);
 const MemoCorpus = memo(Corpus);
@@ -115,26 +121,24 @@ const ABANDON_RADIUS = 14;
 
 
 
-/** §4 fog distance, desktop vs. mobile — a plain width probe at mount, not
- *  §10's full device-tier system (which also halves instance counts, probes
- *  MAX_TEXTURE_SIZE, and re-benchmarks under load: out of scope here). */
-function fogNearFar(): [number, number] {
-  const mobile = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 820px)").matches;
-  return mobile ? [12, 70] : [18, 130];
-}
-
 export default function World(props: { onShowList: () => void }) {
   const palette = worldPalette();
   const navigate = useNavigate();
   const bump = usePulse();
+  // §10 — the one device-tier probe every tier-aware piece of this world
+  // now reads (deviceTier.ts). Read once per mount, not per render: the
+  // probe itself is already memoised for the session, but there is no
+  // reason for this component to re-run the (cheap, but real) lookup logic
+  // on every re-render either.
+  const budget = useMemo(() => tierBudget(deviceTier()), []);
   const fogArgs = useMemo<[string, number, number]>(() => {
-    const [near, far] = fogNearFar();
+    const [near, far] = budget.fogNearFar;
     // Matches Sky.tsx's own horizon stop (owner's "blue hour, not black"
     // refinement) rather than `palette.void`: fog is what distant terrain
     // actually fades toward, so a darker fog colour would silently pull the
     // far ridges back toward black regardless of how bright the sky reads.
     return [HORIZON_HEX, near, far];
-  }, []);
+  }, [budget]);
 
   // Restores which of the city's 147 resolve cells were already driven
   // through on a past visit. Must happen before any district's own
@@ -148,9 +152,6 @@ export default function World(props: { onShowList: () => void }) {
   // called exactly once.
   useState(loadResolved);
 
-  const [promptTo, setPromptTo] = useState<string | null>(null);
-  const promptToRef = useRef<string | null>(null);
-  const dwellTimerRef = useRef<number | null>(null);
   const confirmHeldRef = useRef(false); // edge-detects input.confirm (a held flag) into a single press
 
   // How many rooms have been entered from the world, ever. Gives the map a
@@ -219,17 +220,6 @@ export default function World(props: { onShowList: () => void }) {
     };
   }, []);
 
-  // Navigating away from a room's sensor volume before its dwell timer fires
-  // must not leave a stray setTimeout that fires `navigate()` after this
-  // component (and the craft inside it) is gone.
-  useEffect(
-    () => () => {
-      if (dwellTimerRef.current !== null)
-        window.clearTimeout(dwellTimerRef.current);
-    },
-    [],
-  );
-
   /** Shows a notice and schedules its own removal. */
   const pushToast = useCallback((toast: Toast) => {
     setToasts((prev) => [...prev.slice(-2), toast]);
@@ -253,12 +243,6 @@ export default function World(props: { onShowList: () => void }) {
 
   const enterRoom = useCallback(
     (to: string) => {
-      if (dwellTimerRef.current !== null) {
-        window.clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
-      }
-      promptToRef.current = null;
-      setPromptTo(null);
       // Same pulse event RoomGrid's <Link> fires on click, so the visit
       // counters on /pulse stay one shared number regardless of which view
       // a visitor entered through.
@@ -270,35 +254,47 @@ export default function World(props: { onShowList: () => void }) {
     [bump, navigate],
   );
 
-  const handlePrompt = useCallback(
-    (to: string | null) => {
-      promptToRef.current = to;
-      setPromptTo(to);
-      if (dwellTimerRef.current !== null) {
-        window.clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
-      }
-      // The dwell is a HUMAN gesture — "stop here and I'll take you in". While
-      // the autopilot is driving, arriving is what it does at every stop, so
-      // leaving the dwell armed would have the tour navigate into the first
-      // room it reached and unmount the world it was meant to be showing off.
-      // The prompt card (and its Enter button) still comes up either way.
-      if (to !== null && !isAutoDriving()) {
-        dwellTimerRef.current = window.setTimeout(() => {
-          dwellTimerRef.current = null;
-          // Re-check rather than trust the closed-over `to`: the craft may
-          // have left this pavilion's sensor (or entered another's) in the
-          // second between the timer starting and firing.
-          if (promptToRef.current === to) enterRoom(to);
-        }, DWELL_MS);
-      }
+  // THE DWELL/PROMPT MECHANISM — dwell.ts, extracted from what used to be
+  // this file's only copy of it. Wired twice: rooms fire straight into
+  // `enterRoom` (navigate, scene tears down); landmarks fire into
+  // `openLandmark` below (open the in-world panel, scene keeps running).
+  // `handlePrompt` — Pavilions.tsx's `onPrompt` prop — is `roomDwell.setPrompt`
+  // directly; there is nothing left for this file to do in between.
+  const roomDwell = useDwellEnter<string>(DWELL_MS, enterRoom);
+
+  const [panelDestination, setPanelDestination] = useState<Destination | null>(null);
+  const openLandmark = useCallback((d: Destination) => setPanelDestination(d), []);
+  const closeLandmarkPanel = useCallback(() => setPanelDestination(null), []);
+  const landmarkDwell = useDwellEnter<Destination>(DWELL_MS, openLandmark);
+  // A landmark already open in the panel doesn't need its own approach card
+  // prompting to open it again — Landmarks.tsx's edge detector still fires
+  // on every genuine approach/exit, but re-arming the SAME destination's
+  // dwell while its panel is already open would be visible only as a
+  // needless card flicker behind the panel, never a second panel.
+  const handleLandmarkPrompt = useCallback(
+    (d: Destination | null) => {
+      if (panelDestination && d?.key === panelDestination.key) return;
+      landmarkDwell.setPrompt(d);
     },
-    [enterRoom],
+    // landmarkDwell.setPrompt is dwell.ts's own stable useCallback — the
+    // linter can't see through the destructure, and listing the whole
+    // `landmarkDwell` object (a fresh literal every render) would just
+    // recreate this callback every render for no benefit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panelDestination, landmarkDwell.setPrompt],
   );
 
+  // The HUD's Enter button, and (below) the Enter key: each dwell's own
+  // `confirm()` is a no-op unless it currently has a prompt, so firing both
+  // unconditionally is simpler and just as correct as first working out
+  // which (if either) is active — room and landmark approach volumes never
+  // overlap (Landmarks.tsx's own comment on why), so at most one ever does
+  // anything.
   const onHudConfirm = useCallback(() => {
-    if (promptToRef.current) enterRoom(promptToRef.current);
-  }, [enterRoom]);
+    roomDwell.confirm();
+    landmarkDwell.confirm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomDwell.confirm, landmarkDwell.confirm]);
 
   /**
    * The tour's own state, in a ref because it is read and written from the
@@ -435,8 +431,10 @@ export default function World(props: { onShowList: () => void }) {
       // room-entry edge above sees a single press rather than being
       // re-triggered every frame the key stays held.
       const confirmPressedThisFrame = confirmed && !confirmHeldRef.current;
-      if (confirmPressedThisFrame && promptToRef.current)
-        enterRoom(promptToRef.current);
+      if (confirmPressedThisFrame) {
+        roomDwell.confirm();
+        landmarkDwell.confirm();
+      }
       confirmHeldRef.current = confirmed;
 
       // The resolve chime — see the refs' own comment for the throttle.
@@ -457,12 +455,25 @@ export default function World(props: { onShowList: () => void }) {
     // callback is handed to Craft and captured for the life of the mount, so
     // anything it closes over that is NOT listed would silently freeze at its
     // first value — pickups going quiet after a re-render is the kind of bug
-    // that is untraceable from the symptom.
-    [enterRoom, pushToast],
+    // that is untraceable from the symptom. roomDwell.confirm/landmarkDwell.confirm
+    // are dwell.ts's own stable useCallbacks (see its doc comment) — the
+    // linter can't see through the destructure; listing the whole dwell
+    // object here would recreate this callback (and re-subscribe Craft)
+    // every render for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enterRoom, pushToast, roomDwell.confirm, landmarkDwell.confirm],
   );
 
   const promptRoom: Room | null =
-    promptTo === null ? null : (ROOMS.find((r) => r.to === promptTo) ?? null);
+    roomDwell.current === null ? null : (ROOMS.find((r) => r.to === roomDwell.current) ?? null);
+
+  // Landmarks.tsx hands the whole Destination through; the HUD only ever
+  // needs its label and a colour to paint the same PromptCard rooms use.
+  // Project vs case-study reuses exactly the two tints Monuments.tsx
+  // already paints those families in (signal for a project tower, accent
+  // for a case-study obelisk) — no new hue invented for this card.
+  const landmarkTint = landmarkDwell.current?.kind === "project" ? palette.signal : palette.accent;
+  const promptLandmark = landmarkDwell.current ? { label: landmarkDwell.current.label, tint: landmarkTint } : null;
 
   return (
     <>
@@ -472,7 +483,9 @@ export default function World(props: { onShowList: () => void }) {
           grid, not a described car". Hud below is the entire accessible
           surface of this route while the world is showing. */}
       <Canvas
-        dpr={[1, 1.5]}
+        // §10 drop 1/3 — "pixelRatio clamped to 2" everywhere, pulled down
+        // further on a throttled device (deviceTier.ts's own budget).
+        dpr={[1, budget.dprMax]}
         // A few metres behind SPAWN_POSITION, matching the direction Craft's
         // own chase camera sits relative to the craft — this is only what
         // renders for the handful of frames before that chase cam's useFrame
@@ -523,7 +536,11 @@ export default function World(props: { onShowList: () => void }) {
         <MemoProps />
         <MemoMonuments />
         <MemoCorpus />
-        <MemoPavilions onPrompt={handlePrompt} />
+        <MemoPavilions onPrompt={roomDwell.setPrompt} />
+        {/* PART 1 — the project/case-study equivalent of the line above.
+            Renders nothing itself (Monuments.tsx already draws the solid
+            tower/obelisk); it only decides whether the car is near one. */}
+        <MemoLandmarks onPrompt={handleLandmarkPrompt} />
         <MemoVehicle onState={handleCraftState} paused={paused} />
         <MemoTrail />
         {/* Mounted after Vehicle so their own useFrame subscriptions run
@@ -562,12 +579,9 @@ export default function World(props: { onShowList: () => void }) {
       <WorldLabels targetTo={tourRef.current.targetTo} />
       <Hud
         promptRoom={promptRoom}
+        promptLandmark={panelDestination ? null : promptLandmark}
         onConfirm={onHudConfirm}
         onShowList={props.onShowList}
-
-
-
-
         waypoint={waypoint}
         waypointTo={tourRef.current.targetTo}
         visited={explored}
@@ -577,6 +591,10 @@ export default function World(props: { onShowList: () => void }) {
         toasts={toasts}
         totalRooms={ROOMS.length}
       />
+      {/* PART 1's actual deliverable: a DOM panel over the still-running
+          scene. Not rendered at all while closed (see LandmarkPanel.tsx's
+          own doc comment on why that matters for a screen reader). */}
+      <LandmarkPanel destination={panelDestination} onClose={closeLandmarkPanel} />
     </>
   );
 }

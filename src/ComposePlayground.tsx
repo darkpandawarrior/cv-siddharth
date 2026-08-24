@@ -648,6 +648,36 @@ export default function ComposePlayground() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
 
+  // The phone mockup is a fixed ~280x640 block — plenty of room in the
+  // lg:grid-cols-2 desktop layout, but grid-rows-2 on mobile only ever gives
+  // it half the viewport, so it needs to shrink to fit rather than get
+  // clipped by the pane's overflow-auto. A ResizeObserver on the pane (not a
+  // one-shot matchMedia breakpoint check) keeps it fitted through rotation
+  // and any window resize, on both sides of the lg breakpoint. offsetWidth /
+  // offsetHeight are the mockup's un-transformed layout size — CSS transform
+  // never affects those — so they stay a stable "natural size" to scale from
+  // even while the transform below is actively shrinking it on screen.
+  const previewPaneRef = useRef<HTMLDivElement>(null);
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const [previewBox, setPreviewBox] = useState({ scale: 1, w: 0, h: 0 });
+  useEffect(() => {
+    const pane = previewPaneRef.current;
+    const mockup = mockupRef.current;
+    if (!pane || !mockup) return;
+    const PAD = 48; // pane's p-6, both sides
+    const recompute = () => {
+      const natW = mockup.offsetWidth;
+      const natH = mockup.offsetHeight;
+      if (!natW || !natH) return;
+      const scale = Math.min(1, (pane.clientWidth - PAD) / natW, (pane.clientHeight - PAD) / natH);
+      setPreviewBox({ scale, w: natW * scale, h: natH * scale });
+    };
+    const ro = new ResizeObserver(recompute);
+    ro.observe(pane);
+    recompute();
+    return () => ro.disconnect();
+  }, []);
+
   const generate = async (scenario: string) => {
     const s = scenario.trim();
     if (!s || aiBusy) return;
@@ -858,29 +888,37 @@ export default function ComposePlayground() {
         </div>
 
         {/* Preview */}
-        <div className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6">
-          <div className="relative">
-            <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-              {/* status bar */}
-              <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
-                <span>9:41</span>
-                <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
-                <span>▮▮▮ 100%</span>
+        <div
+          ref={previewPaneRef}
+          className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6"
+        >
+          {/* Reserves the mockup's SCALED footprint in the flex layout — a
+              transform alone shrinks the paint but not the box it's centered
+              in, which would leave this pane scrolling past empty space. */}
+          <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
+            <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
+              <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+                {/* status bar */}
+                <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
+                  <span>9:41</span>
+                  <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
+                  <span>▮▮▮ 100%</span>
+                </div>
+                <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
+                  {error ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                      <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
+                      <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
+                    </div>
+                  ) : program ? (
+                    <div className="flex h-full flex-col">
+                      {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
-              <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
-                {error ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                    <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                    <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
-                  </div>
-                ) : program ? (
-                  <div className="flex h-full flex-col">
-                    {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
-                  </div>
-                ) : null}
-              </div>
+              <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
             </div>
-            <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
           </div>
         </div>
       </main>

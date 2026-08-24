@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { wallSurfaces, DEVICE, type DeviceFrame, type Surface } from "./data/surfaces.ts";
 import { SURFACE_ICON } from "./rooms.tsx";
 import { facets } from "./data/facets.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 
 /**
  * The homepage wall: every navigable surface on this site, grouped, each in the
@@ -18,6 +19,12 @@ import { facets } from "./data/facets.ts";
  * Compose codebase adapting across phone, foldable, tablet, watch, TV, desktop
  * and web — so the wall renders the matrix instead of describing it. No copy
  * anywhere explains that; if it needed a sentence it would have failed.
+ *
+ * That is the same claim DeviceMorph (#morph) makes 12,000px up the page,
+ * live, with a running build instead of a static poster — a visitor who only
+ * scrolls this far has no reason to know that section exists. The one line
+ * at the top of this component is the link back up to it; DeviceMorph
+ * carries the matching link down here.
  *
  * PERFORMANCE. Every poster is a ~22 kB webp, `loading="lazy"` and
  * `decoding="async"`, below the fold. The wall adds no JS beyond this file and
@@ -130,8 +137,18 @@ function SurfaceTile({ surface }: { surface: Surface }) {
 }
 
 export function SurfaceWall() {
+  const { goToSection } = useSectionNav();
   return (
     <div className="mt-10 space-y-12">
+      <p className="kicker mb-2">
+        <button
+          type="button"
+          onClick={() => goToSection("morph")}
+          className="kicker-accent transition hover:opacity-80"
+        >
+          ↑ Same one codebase, running live above
+        </button>
+      </p>
       {wallSurfaces.map((group) => (
         <section key={group.group} aria-labelledby={`wall-${group.group}`}>
           <div className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line pb-2">

@@ -1,7 +1,9 @@
 import { Component, type ReactNode } from "react";
 import { PlayProvider, useCursorPresences } from "@playhtml/react";
+import { useRouterState } from "@tanstack/react-router";
 import { Users } from "lucide-react";
 import { VisitorProvider } from "./Visitors.tsx";
+import { canShowCursors } from "./cursorRoutes.ts";
 
 /**
  * The shared layer — playhtml (https://github.com/spencerc99/playhtml) over a
@@ -68,6 +70,12 @@ class SharedLayerBoundary extends Component<{ children: ReactNode; fallback: Rea
 }
 
 export function PlayRoom({ children }: { children: ReactNode }) {
+  // cursorRoutes.ts's allowlist had zero consumers before this — cursors were
+  // either on everywhere PlayRoom mounted or off nowhere it didn't. Gating on
+  // the actual pathname here is what makes "never on /resume, /hire or
+  // /project/*" true by construction rather than by accident of which routes
+  // happen to mount this component today.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <SharedLayerBoundary fallback={children}>
       <PlayProvider
@@ -76,7 +84,7 @@ export function PlayRoom({ children }: { children: ReactNode }) {
           // Cursors get their own scope: "page" keeps presence per route, so the
           // badge means "people in this room" while the shared documents above
           // stay site-wide.
-          cursors: { enabled: true, room: "page" },
+          cursors: { enabled: canShowCursors(pathname), room: "page" },
         }}
       >
         {/* Inside the provider because it reads the shared document, and around

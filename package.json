@@ -20,8 +20,8 @@
     "gen:images": "node scripts/gen-images.mjs",
     "showcase": "node scripts/rebuild-showcase.mjs",
     "refresh": "npm run sync:media && npm run showcase && npm run gen:stats && npm run gen:hiresignal && npm run gen:galleries && npm run gen:images && npm run gen:loopdown && npm run gen:anthology && npm run gen:timeline && npm run gen:feed && npm run gen:sitemap && npm run gen:heroes && npm run gen:og && npm run gen:surfaces && npm run gen:weeb && npm run gen:chess && npm run gen:chess-deep && npm run gen:system-prompt",
-    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
-    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-images.mjs",
+    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-images.mjs",
+    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-images.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4173 --strictPort",
@@ -39,7 +39,8 @@
     "capture:site": "node scripts/capture-site.mjs",
     "sentinel": "python3 scripts/screenshot-sentinel.py --write-report",
     "gen:anthology": "node scripts/gen-anthology.mjs",
-    "gen:timeline": "node scripts/gen-timeline.mjs"
+    "gen:timeline": "node scripts/gen-timeline.mjs",
+    "gen:world-plate": "node scripts/gen-world-plate.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

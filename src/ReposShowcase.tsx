@@ -169,81 +169,90 @@ function RepoGroup({ label, hint, repos, intro }: { label: string; hint: string;
   );
 }
 
+/**
+ * Promoted from a `<div id="source">` buried near the end of #projects to its
+ * own top-level section — the same treatment #shipped already gets right
+ * after #projects. #source is a first-class destination in the footer, the
+ * command palette and navigation.ts; #projects was 6,423px (eight viewport
+ * screens) partly because this sub-section never got promoted out of it.
+ */
 export function ReposShowcase() {
   return (
-    <Reveal>
-      <div id="source" className="mt-14 scroll-mt-24">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="section-eyebrow mb-2">// the source</p>
-            <h3 className="font-display text-h2 font-bold tracking-tight">It's all public</h3>
-            <p className="mt-2 max-w-2xl text-zinc-400">
-              Every app, the libraries they share, the tooling, and the upstream PRs — open, and one click away.
-              The numbers are pulled from each repo, not typed by hand.
-            </p>
-          </div>
-          <a
-            href="https://github.com/darkpandawarrior"
-            target="_blank"
-            rel="noreferrer"
-            className="flex shrink-0 items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
-          >
-            <GitBranch size={14} /> @darkpandawarrior
-          </a>
-        </div>
-
-        <RepoGroup label="Apps" hint="shipped, end-to-end" repos={APPS} />
-        <RepoGroup
-          label="Shared foundation"
-          hint="written once, reused across the apps"
-          repos={FOUNDATION}
-          intro={
-            /* Moved here from App.tsx, which rendered this blurb and graph
-               under its OWN "Shared foundation" heading immediately above this
-               group's identically-named one. One heading, one block. */
-            <div className="panel mb-4 p-6">
-              <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
-              <FoundationGraph />
+    <section id="source" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="section-eyebrow mb-2">// the source</p>
+              <h3 className="font-display text-h2 font-bold tracking-tight">It's all public</h3>
+              <p className="mt-2 max-w-2xl text-zinc-400">
+                Every app, the libraries they share, the tooling, and the upstream PRs — open, and one click away.
+                The numbers are pulled from each repo, not typed by hand.
+              </p>
             </div>
-          }
-        />
-        <RepoGroup label="Tooling & writing" hint="the surrounding surface" repos={TOOLING} />
-
-        <div className="mt-8">
-          <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h4 className="kicker-accent font-semibold">Merged upstream</h4>
-            <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐63k+)</span>
+            <a
+              href="https://github.com/darkpandawarrior"
+              target="_blank"
+              rel="noreferrer"
+              className="flex shrink-0 items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
+            >
+              <GitBranch size={14} /> @darkpandawarrior
+            </a>
           </div>
-          <ul className="space-y-2">
-            {openSource.map((c) => (
-              <li key={c.url}>
-                <a
-                  href={c.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
-                >
-                  <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
-                  <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
-                  <span className="font-mono text-xs text-muted">{c.repo}</span>
-                  <span className="ml-auto flex items-center gap-2">
-                    <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
-                    <span className="font-mono text-[11px] text-muted">{c.date}</span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-          <a
-            href="https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
-          >
-            <Star size={11} /> all my PRs on career-ops <ArrowUpRight size={11} />
-          </a>
-        </div>
+
+          <RepoGroup label="Apps" hint="shipped, end-to-end" repos={APPS} />
+          <RepoGroup
+            label="Shared foundation"
+            hint="written once, reused across the apps"
+            repos={FOUNDATION}
+            intro={
+              /* Moved here from App.tsx, which rendered this blurb and graph
+                 under its OWN "Shared foundation" heading immediately above this
+                 group's identically-named one. One heading, one block. */
+              <div className="panel mb-4 p-6">
+                <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
+                <FoundationGraph />
+              </div>
+            }
+          />
+          <RepoGroup label="Tooling & writing" hint="the surrounding surface" repos={TOOLING} />
+
+          <div className="mt-8">
+            <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h4 className="kicker-accent font-semibold">Merged upstream</h4>
+              <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐63k+)</span>
+            </div>
+            <ul className="space-y-2">
+              {openSource.map((c) => (
+                <li key={c.url}>
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
+                  >
+                    <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
+                    <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
+                    <span className="font-mono text-xs text-muted">{c.repo}</span>
+                    <span className="ml-auto flex items-center gap-2">
+                      <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
+                      <span className="font-mono text-[11px] text-muted">{c.date}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
+            >
+              <Star size={11} /> all my PRs on career-ops <ArrowUpRight size={11} />
+            </a>
+          </div>
+        </Reveal>
       </div>
-    </Reveal>
+    </section>
   );
 }

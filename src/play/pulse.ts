@@ -30,6 +30,7 @@ export const PULSE_EVENTS = {
   "playground:move": { label: "Rearranged the room tiles", group: "In the Playground" },
   "playground:tidy": { label: "Tidied the tiles back up", group: "In the Playground" },
   "wall:note": { label: "Left a note on the wall", group: "In the Playground" },
+  "ink:margin-note": { label: "Left a margin note", group: "In the Ink" },
   "chess:guess": { label: "Called a game won or lost", group: "In the Chess Room" },
   "chess:puzzle": { label: "Tried the daily puzzle", group: "In the Chess Room" },
 } as const;

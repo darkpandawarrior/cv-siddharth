@@ -868,15 +868,6 @@ function Projects() {
           })}
         </div>
 
-        {/* The blurb and the dependency graph used to live here under their
-            own "Shared foundation" h3, immediately above ReposShowcase — which
-            renders a RepoGroup labelled "Shared foundation" too. Two identical
-            headings, back to back, describing the same two libraries. They are
-            one block now, inside the group that names them, and the pointer
-            down to The Source went with it since the cards it pointed at are
-            now directly beneath the text. */}
-        <ReposShowcase />
-
         <Reveal>
           <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
             Recently shipped
@@ -1372,6 +1363,11 @@ export function HomePage() {
         <FitCheck />
         <CaseStudies />
         <Projects />
+        {/* #source promoted to its own top-level section — was a <div> buried
+            near the end of #projects even though it's a first-class
+            destination in the footer, palette and navigation.ts. Same
+            treatment #shipped already gets: right after #projects. */}
+        <ReposShowcase />
         {/* Between the projects and the career: the projects section makes
             claims about work, this one is the work with an install button on
             it. It sits before the experience list on purpose — a recruiter who

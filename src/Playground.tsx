@@ -12,6 +12,7 @@ import { VisitorPlaque } from "./play/Visitors.tsx";
 import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
 import { Sandbox } from "./play/Sandbox.tsx";
 
+import { CorridorPlate } from "./world/CorridorPlate.tsx";
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
  * These used to be scattered down the scroll and behind hotkeys; gathering them
@@ -265,6 +266,18 @@ function PlaygroundInner() {
             Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a
             small proof of the engineering the rest of the site describes. Pick one and poke it.
           </p>
+          {/* The corridor, as a picture, for the visitors who will never see
+              it move: no WebGL, or reduced-motion. It is baked at build time
+              by scripts/gen-world-plate.mjs from the SAME heightfield the
+              drivable terrain uses, so it cannot drift from the world it
+              stands in for — the work ramp toward 2026, the 2020-12 chess
+              spike, writing thinning out, open source flat then flooding.
+              It sits ABOVE the room grid rather than replacing it: the grid
+              is the navigation and always was. Without this the branch was a
+              card list with no hint that the thing it replaces is a shape
+              worth seeing. */}
+          {!worldCapable && <CorridorPlate />}
+
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
               to="/pulse"

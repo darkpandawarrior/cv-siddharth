@@ -8,6 +8,7 @@ import { timeline } from "../data/timeline.ts";
 import { heightAt, laneCenterX, LANE_WIDTH, MONTH_DEPTH } from "./heightfield.ts";
 import { worldPalette, type WorldPalette } from "./palette.ts";
 import { glslVec3 } from "./Terrain.tsx";
+import { deviceTier, tierBudget } from "./deviceTier.ts";
 
 /**
  * NIGHT SURVEY §5 — THE FOUR FIXTURE FAMILIES, and §6 — THE STATIONING RANK.
@@ -41,14 +42,6 @@ function monthZ(index: number): number {
 }
 
 const dummy = new THREE.Object3D();
-
-function isMobileTier(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(max-width: 820px)").matches
-  );
-}
 
 /** A tiny deterministic PRNG (mulberry-ish LCG) — every scattered family
  *  below has to look identical on every load, never reshuffle on reload. */
@@ -362,7 +355,10 @@ function speckleInstances(count: number): SpeckleInstance[] {
 }
 
 function OpensourceSpeckle({ c }: { c: WorldPalette }): JSX.Element {
-  const budget = useMemo(() => (isMobileTier() ? 140 : 480), []);
+  // §10's drop 2/3 speckle budget — deviceTier.ts is the one probe every
+  // tier-aware piece of this world now reads (see its own doc comment on
+  // the duplicate matchMedia checks this replaced).
+  const budget = useMemo(() => tierBudget(deviceTier()).speckleCount, []);
   const instances = useMemo(() => speckleInstances(budget), [budget]);
 
   return (
