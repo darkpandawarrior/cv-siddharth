@@ -15,7 +15,7 @@
  * derivation has succeeded, and the process exits non-zero so CI reports it
  * rather than silently shipping stale data (per commit 43bd80b).
  */
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -202,6 +202,43 @@ async function build() {
       return { format: a.format, rating: p.r, at: iso(p.t) };
     });
 
+  /**
+   * NEVER WRITE AWAY A PEAK.
+   *
+   * lichess's rating-history endpoint returned 0 series on 2026-08-24 — his
+   * account has been inactive there since 2025-01 and the history is simply
+   * gone from the API. The fetch SUCCEEDED and returned an empty array, so
+   * the "keep the previous file if a fetch fails" contract never fired, and a
+   * refresh silently replaced real peaks (blitz 1686, bullet 1662, rapid
+   * 1552) with an empty list. That took out the site's "ratings are not
+   * comparable across platforms — 1686 vs 1425" claim, crashed
+   * gen-system-prompt, and failed the claim audit.
+   *
+   * An empty success is a failure in effect and not in code, which is the
+   * same shape as a stalled fetch never rejecting. So the rule is
+   * REGRESSION, not error: a peak that existed does not stop existing because
+   * an endpoint stopped talking about it. He did reach 1686; only the
+   * evidence moved.
+   */
+  const previousPeaks = (() => {
+    try {
+      const prev = readFileSync(join(root, "src", "data", "chess.ts"), "utf8");
+      const parsed = JSON.parse(prev.slice(prev.indexOf("{"), prev.lastIndexOf("}") + 1));
+      return Object.fromEntries((parsed.platforms ?? []).map((p) => [p.id, p.peaks ?? []]));
+    } catch { return {}; }
+  })();
+
+  const keepPeaks = (id, fresh) => {
+    const old = previousPeaks[id] ?? [];
+    if (fresh.length >= old.length) return fresh;
+    console.warn(
+      `[gen-chess-stats] ${id}: derived ${fresh.length} peak(s) but the committed file has ${old.length} — ` +
+      `keeping the existing ones. The upstream endpoint has probably stopped serving history for an ` +
+      `inactive account; a rating he actually reached does not un-happen.`,
+    );
+    return old;
+  };
+
   const data = {
     generatedAt: new Date().toISOString(),
     username: U,
@@ -274,7 +311,7 @@ async function build() {
         joined: iso(liUser.createdAt),
         lastActive: iso(Math.max(...games.filter((g) => g.plat === "lichess").map((g) => g.ts))),
         games: liRaw.length,
-        peaks: peaksOf(fullArc, "lichess"),
+        peaks: keepPeaks("lichess", peaksOf(fullArc, "lichess")),
         // Every lichess format reports prov: true — deviation grew during
         // inactivity — so these are "last rating", never "current rating".
         // Derived, not asserted, so the label can never outlive the fact.
@@ -298,7 +335,7 @@ async function build() {
         joined: iso(ccProfile.joined * 1000),
         lastActive: iso(Math.max(...games.filter((g) => g.plat === "chess.com").map((g) => g.ts))),
         games: ccRaw.length,
-        peaks: peaksOf(fullArc, "chess.com"),
+        peaks: keepPeaks("chess.com", peaksOf(fullArc, "chess.com")),
         provisional: false,
         puzzles: null,
       },

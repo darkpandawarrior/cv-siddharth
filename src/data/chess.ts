@@ -6,7 +6,7 @@
 export type ChessData = typeof chess;
 
 export const chess = {
-  "generatedAt": "2026-08-24T10:00:38.905Z",
+  "generatedAt": "2026-08-24T10:28:38.720Z",
   "username": "darkpandawarrior",
   "totals": {
     "games": 18906,
@@ -186,7 +186,23 @@ export const chess = {
       "joined": "2019-02-06",
       "lastActive": "2025-01-16",
       "games": 14119,
-      "peaks": [],
+      "peaks": [
+        {
+          "format": "bullet",
+          "rating": 1662,
+          "at": "2019-02-09"
+        },
+        {
+          "format": "blitz",
+          "rating": 1686,
+          "at": "2020-08-03"
+        },
+        {
+          "format": "rapid",
+          "rating": 1552,
+          "at": "2019-11-24"
+        }
+      ],
       "provisional": true,
       "puzzles": {
         "peak": 1661,
@@ -642,7 +658,7 @@ export const chess = {
       "c4c3",
       "a7a8q"
     ],
-    "rating": 1930,
+    "rating": 1906,
     "themes": [
       "veryLong",
       "endgame",
