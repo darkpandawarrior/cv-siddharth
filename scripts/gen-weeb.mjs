@@ -47,6 +47,32 @@ const ALIAS = {
   // actively corrupting the row it was written to help, giving the series the
   // film's episode count, sequels and crowd score. The full title resolves
   // correctly on its own. Verified against AniList directly, 2026-08-24.
+  // Typos and shorthands in the source rows, mapped to what AniList answers
+  // to. Aliasing here rather than editing his CSV on purpose: the CSV is his
+  // record of what he watched and how he wrote it down, and a generator has
+  // no business silently correcting a person's own list. This map is the
+  // seam where "what he typed" meets "what the API calls it".
+  // Added 2026-08-25 after a full-corpus run left 33 of 479 unmatched.
+  Hormiya: "Horimiya",
+  "The Misfit Of Demon King Academyu": "The Misfit of Demon King Academy",
+  "Akuma Drive": "Akudama Drive",
+  "Uramuchi oniisan": "Uramichi Oniisan",
+  "Ganbare Doki-chan": "Ganbare Douki-chan",
+  "FMA Brotherhood": "Fullmetal Alchemist: Brotherhood",
+  "ReZero: Starting Life In Another World": "Re:ZERO -Starting Life in Another World-",
+  "Daily Life Of Highschool Boys": "Daily Lives of High School Boys",
+  "Daily Lives of Highschool Boys": "Daily Lives of High School Boys",
+  "Akashic Record Of Bastard Magic Instructor": "Akashic Records of Bastard Magic Instructor",
+  "Komi San Can’t Communicate": "Komi Can't Communicate",
+  "5 Centimetres Per Second": "5 Centimeters per Second",
+  "How To Raise A Boring Girlfriend Fine": "Saenai Heroine no Sodatekata Fine",
+  "Peter Grill and The Philosophers Time": "Peter Grill and the Philosopher's Time",
+  "I couldnt become a hero so I reluctantly decided to get a job": "I Couldn't Become a Hero, So I Reluctantly Decided to Get a Job",
+  "Problem children are coming from another world arent they": "Problem Children Are Coming from Another World, Aren't They?",
+  "I have been killing slimes for 300 years and maxed out my level": "I've Been Killing Slimes for 300 Years and Maxed Out My Level",
+  "A big sister is all you need": "Imouto sae Ireba Ii.",
+  "Flavours of Youth": "Flavors of Youth",
+  "Let Me Eat Your Pancreas": "I Want to Eat Your Pancreas",
 };
 
 /**
@@ -90,7 +116,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function lookup(title, type) {
   const key = `${type}:${title}`;
   if (key in cache) return cache[key];
-  const search = ALIAS[title] ?? title;
+  // Straighten curly quotes and collapse stray whitespace before searching.
+  // AniList indexes ASCII apostrophes, so "Komi San Can’t Communicate" and
+  // "The World’s Finest Assassin" missed on a character the CSV export chose,
+  // not on anything he typed wrong. A trailing space did the same to
+  // "Go Go Loser Ranger! ". Normalising the SEARCH leaves his rows untouched.
+  const search = (ALIAS[title] ?? title).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetchWithTimeout(API, {
@@ -106,7 +137,13 @@ async function lookup(title, type) {
       if (!res.ok) throw new Error(String(res.status));
       const json = await res.json();
       const m = json?.data?.Page?.media?.[0] ?? null;
-      cache[key] = m;
+      // A MISS IS NOT CACHED. The cache key is the CSV title, but the SEARCH
+      // is ALIAS[title] ?? title — so a cached null survives the very fix
+      // meant to resolve it: add an alias for a typo, rerun, and the lookup
+      // short-circuits on last run's null and nothing changes. Caching only
+      // hits means an alias takes effect on the next run, which is the whole
+      // point of having the alias map.
+      if (m) cache[key] = m;
       fetched++;
       await sleep(700);
       return m;

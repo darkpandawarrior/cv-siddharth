@@ -3,13 +3,13 @@
 export const weeb = {
   "generatedAt": "2026-08-24",
   "anime": {
-    "total": 185,
-    "matched": 171,
+    "total": 479,
+    "matched": 467,
     "byWatch": {
       "Watching": 5,
       "Completed": 115,
       "Paused": 50,
-      "To Watch": 3,
+      "To Watch": 297,
       "Ongoing": 12
     },
     "scoreDist": {
@@ -181,6 +181,15 @@ export const weeb = {
       "status": "FINISHED"
     },
     {
+      "name": "The Misfit Of Demon King Academyu",
+      "title": "The Misfit of Demon King Academy: History’s Strongest Demon King Reincarnates and Goes to School with His Descendants",
+      "romaji": "Maou Gakuin no Futekigousha: Shijou Saikyou no Maou no Shiso, Tensei shite Shison-tachi no Gakkou e Kayou",
+      "english": "The Misfit of Demon King Academy: History’s Strongest Demon King Reincarnates and Goes to School with His Descendants",
+      "sequel": "The Misfit of Demon King Academy Ⅱ: History's Strongest Demon King Reincarnates and Goes to School with His Descendants",
+      "year": 2023,
+      "status": "FINISHED"
+    },
+    {
       "name": "Dead Mount Death Play",
       "title": "Dead Mount Death Play",
       "romaji": "Dead Mount Death Play",
@@ -223,6 +232,15 @@ export const weeb = {
       "english": "<DOGEZA>I Tried Asking While Kowtowing.",
       "sequel": "Dogeza de Tanondemita: Isekai-hen",
       "year": 2021,
+      "status": "FINISHED"
+    },
+    {
+      "name": "ReZero: Starting Life In Another World",
+      "title": "Re:ZERO -Starting Life in Another World-",
+      "romaji": "Re:Zero kara Hajimeru Isekai Seikatsu",
+      "english": "Re:ZERO -Starting Life in Another World-",
+      "sequel": "Re:ZERO -Starting Life in Another World- Season 2",
+      "year": 2020,
       "status": "FINISHED"
     },
     {
@@ -451,6 +469,15 @@ export const weeb = {
       "status": "FINISHED"
     },
     {
+      "name": "The World’s Finest Assassin Gets Reincarnated In Another World As An Aristocrat",
+      "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "romaji": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru",
+      "english": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "sequel": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru 2nd Season",
+      "year": null,
+      "status": "NOT_YET_RELEASED"
+    },
+    {
       "name": "Loner Life In Another World",
       "title": "Loner Life in Another World",
       "romaji": "Hitoribocchi no Isekai Kouryaku",
@@ -469,9 +496,64 @@ export const weeb = {
       "status": "NOT_YET_RELEASED"
     }
   ],
-  "duplicates": [],
+  "duplicates": [
+    {
+      "anilistId": 11843,
+      "rows": [
+        "Daily Life Of Highschool Boys",
+        "Daily Lives of Highschool Boys"
+      ],
+      "english": "Daily Lives of High School Boys",
+      "romaji": "Danshi Koukousei no Nichijou"
+    },
+    {
+      "anilistId": 5114,
+      "rows": [
+        "Fullmetal Alchemist: Brotherhood",
+        "FMA Brotherhood"
+      ],
+      "english": "Fullmetal Alchemist: Brotherhood",
+      "romaji": "Hagane no Renkinjutsushi: FULLMETAL ALCHEMIST"
+    },
+    {
+      "anilistId": 171018,
+      "rows": [
+        "Dan Da Dan",
+        "Dandadan"
+      ],
+      "english": "DAN DA DAN",
+      "romaji": "Dandadan"
+    },
+    {
+      "anilistId": 116566,
+      "rows": [
+        "Akuma Drive",
+        "Akudama Drive"
+      ],
+      "english": "Akudama Drive",
+      "romaji": "Akudama Drive"
+    },
+    {
+      "anilistId": 99629,
+      "rows": [
+        "Angels of Death",
+        "Angel of Slaughter"
+      ],
+      "english": "Angels of Death",
+      "romaji": "Satsuriku no Tenshi"
+    },
+    {
+      "anilistId": 114232,
+      "rows": [
+        "Hige Wo Soru",
+        "Higehiro: After Being Rejected, I Shaved and Took in a High School Runaway"
+      ],
+      "english": "Higehiro: After Being Rejected, I Shaved and Took in a High School Runaway",
+      "romaji": "Hige wo Soru. Soshite Joshikousei wo Hirou."
+    }
+  ],
   "divergence": {
-    "n": 47,
+    "n": 48,
     "top": [
       {
         "name": "Boruto: Naruto Next Generations",
