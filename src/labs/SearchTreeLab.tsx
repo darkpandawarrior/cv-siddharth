@@ -19,7 +19,7 @@ const TIERS = [
 
 const ROLES = ["Netaji Vachan", "Bhai Teja", "Babu Filewala", "Jugaadu Chhotu", "Vakil Loophole", "Patrakaar"];
 
-const GOLD = "#E8C874";
+const GOLD = "var(--lab-gold)";
 const HEADING_FONT = "'Rozha One', Georgia, serif";
 
 interface TreeNode {
@@ -231,8 +231,8 @@ export function SearchTreeLab() {
                 aria-pressed={tierIndex === i}
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition ${
                   tierIndex === i
-                    ? "border-[#E8C874] bg-[#E8C874]/15 text-[#E8C874]"
-                    : "border-line text-zinc-400 hover:border-[#E8C874]/40 hover:text-zinc-200"
+                    ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-[var(--lab-gold)]"
+                    : "border-line text-zinc-400 hover:border-[var(--lab-gold)]/40 hover:text-zinc-200"
                 }`}
               >
                 {t.label}
@@ -241,7 +241,7 @@ export function SearchTreeLab() {
           </div>
           <button
             onClick={runSearch}
-            className="rounded-full border border-[#E8C874]/50 bg-[#E8C874]/10 px-3 py-1 font-mono text-[11px] font-semibold text-[#E8C874] transition hover:bg-[#E8C874]/20"
+            className="rounded-full border border-[var(--lab-gold)]/50 bg-[var(--lab-gold)]/10 px-3 py-1 font-mono text-[11px] font-semibold text-[var(--lab-gold)] transition hover:bg-[var(--lab-gold)]/20"
           >
             run search
           </button>
@@ -249,7 +249,7 @@ export function SearchTreeLab() {
             iterations: {display.iterations} / {display.target} · difficulty: {display.tier}
           </span>
           {result && (
-            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-[#E8C874]">
+            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-[var(--lab-gold)]">
               role: {result.role}, chosen
             </span>
           )}
