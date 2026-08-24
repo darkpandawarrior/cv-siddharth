@@ -1346,6 +1346,12 @@ export function HomePage() {
             end of the second. */}
         <ShippedShelf />
         <ExperienceSection />
+        {/* Skills sits with the evidence it proves, not after the gear change.
+            It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
+            the comment below calls the move from career evidence into
+            exploration — so the page's own stated narrative had a piece of
+            evidence stranded on the wrong side of its own divider. */}
+        <Skills />
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}
         <Circuit />
@@ -1354,7 +1360,6 @@ export function HomePage() {
             doorway — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
         <InkDoorway />
-        <Skills />
         <Contact />
       </main>
       <ScrollBot />

@@ -175,7 +175,7 @@ export function ReposShowcase() {
       <div id="source" className="mt-14 scroll-mt-24">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the source</p>
+            <p className="section-eyebrow mb-2">// the source</p>
             <h3 className="font-display text-h2 font-bold tracking-tight">It's all public</h3>
             <p className="mt-2 max-w-2xl text-zinc-400">
               Every app, the libraries they share, the tooling, and the upstream PRs — open, and one click away.

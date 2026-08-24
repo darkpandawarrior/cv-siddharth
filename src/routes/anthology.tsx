@@ -45,7 +45,7 @@ function AnthologyRoute() {
       <div className="ink-world min-h-screen">
         <header className="border-b border-line">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-            <Link to="/ink" className="flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+            <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
               <ArrowLeft size={16} /> The Ink
             </Link>
             <WorldSwitch current="ink" />
