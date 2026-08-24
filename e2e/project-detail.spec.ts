@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./lib/test.ts";
 import { compareSets } from "../src/data/compareSets.ts";
 
 /**

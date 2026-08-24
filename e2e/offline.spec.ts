@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
+import { type Page } from "@playwright/test";
 
 /* ── The chess section renders with the network cut ──────────────────────
  *
@@ -38,6 +39,11 @@ async function cutTheNetwork(page: Page): Promise<string[]> {
 }
 
 test("/chess renders the room from committed data with no network", async ({ page }) => {
+  // This one genuinely does heavy work: it parses the whole chess corpus. It
+  // passes comfortably on its own and only misses under a full parallel run,
+  // where a hundred tests share one preview server. Declaring that is honest;
+  // relying on a CI retry to paper over it is not.
+  test.slow();
   const blocked = await cutTheNetwork(page);
 
   await page.goto("/chess", { waitUntil: "domcontentloaded" });
@@ -47,7 +53,20 @@ test("/chess renders the room from committed data with no network", async ({ pag
   // Findings is the default tab and doesn't touch the fetched corpus, so
   // switch to Arc — the pane this test actually exercises — before asserting
   // on corpus-derived content.
-  await page.getByRole("button", { name: "The Arc" }).click();
+  // Re-click until the tab actually reports itself selected.
+  //
+  // The button is server-rendered, so Playwright finds it and clicks it
+  // happily while React has not hydrated yet — the click lands on inert
+  // markup and is simply lost. The test then waits out its budget for Arc
+  // content that was never asked for, which is why raising the assertion's
+  // timeout did nothing: the click, not the render, was what went missing.
+  // Only visible under a full parallel run, where hydration is late enough
+  // for the race to open.
+  const arc = page.getByRole("button", { name: "The Arc" });
+  await expect(async () => {
+    await arc.click();
+    await expect(arc).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 });
+  }).toPass({ timeout: 30_000 });
 
   // The honest failure state the loader renders when corpus.json doesn't
   // arrive. Asserting against it directly means a broken fetch can't pass as

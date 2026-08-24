@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./lib/test.ts";
 
 /**
  * The showcase film must belong to the project you are looking at.

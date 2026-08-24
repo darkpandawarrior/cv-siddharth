@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, waitForHydration } from "./lib/test.ts";
+import { type Page } from "@playwright/test";
 
 // The design doc's second constraint is the one this file exists to pin:
 // "Navigation must survive without WebGL. A hub whose only affordance is a
@@ -93,6 +94,10 @@ test.describe("playground world — List view toggle", () => {
     // hidden so a real startup regression still shows up as a failure.
     await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
+    // Same reason as the chess tabs: a swallowed pre-hydration click leaves
+    // this waiting on a grid nobody asked for. Not retried, because the
+    // control is a toggle — a second click would undo the first.
+    await waitForHydration(page);
     await page.getByRole("button", { name: "List view" }).click();
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
     await expect(page.locator(".playground-world canvas")).toHaveCount(0);

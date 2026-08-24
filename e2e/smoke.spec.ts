@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 import { surfaces } from "../src/data/surfaces.ts";
 
 /**
@@ -75,13 +75,26 @@ for (const r of routes) {
       // Resource-load failures are caught (with URL) by the response handler
       // above; their console form has no URL, so drop it here as redundant.
       if (m.text().includes("Failed to load resource:")) return;
+      // The shared layer's remote PartyKit room, not this site. Several
+      // browsers arriving at once can make it drop and answer the resulting
+      // burst of reconnects with a reset-sync timeout. PlayRoom is built for
+      // exactly this — the rooms render plain without it — so a handled
+      // reconnect failure in a dependency we do not host is not a smoke
+      // failure. The narrow string keeps every other playhtml error caught.
+      if (m.text().includes("Failed to reconnect after room-reset")) return;
       errors.push(m.text());
     });
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(r.path, { waitUntil: "networkidle" });
     // Derived from the registry: proves the route rendered its own identity,
     // not merely that something rendered.
-    await expect(page).toHaveTitle(new RegExp(r.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+    // 20s: the WebGL rooms are `ssr: false`, so their <title> does not exist
+    // until the client bundle hydrates — an empty title here is a slow route,
+    // not a broken one, and how fast it renders is lighthouse.yml's gate to
+    // keep, not this one's.
+    await expect(page).toHaveTitle(new RegExp(r.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), {
+      timeout: 20_000,
+    });
     if (r.expect) await expect(page.locator("body")).toContainText(r.expect);
     expect(errors, errors.join("\n")).toEqual([]);
   });

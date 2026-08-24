@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 import { SECTION_ID_LIST } from "../src/lib/navigation.ts";
 import { surfaces } from "../src/data/surfaces.ts";
 
@@ -114,7 +114,11 @@ test.describe("primary nav surfaces (footer, command palette)", () => {
     await page.goto("/");
     await page.getByRole("button", { name: /open the command palette/i }).click();
     await page.getByRole("combobox", { name: "Command palette search" }).fill("Loopdown");
-    await page.getByRole("option", { name: /The Loopdown/i }).click();
+    // Anchored, because "Loopdown" now matches two commands: the surface
+    // ("The Loopdown / Open") and the project ("Open project: The Loopdown").
+    // Both are wanted — the room and its project page are different
+    // destinations — but only the first is the route command under test.
+    await page.getByRole("option", { name: /^The Loopdown/ }).click();
 
     await expect(page).toHaveURL(/\/loopdown$/);
     await expect(page.locator("dialog, [role=dialog]")).toHaveCount(0);

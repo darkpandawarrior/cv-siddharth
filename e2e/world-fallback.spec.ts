@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 
 /**
  * The two surfaces the world rebuild added, neither of which any existing
@@ -25,7 +25,13 @@ test.describe("the static corridor, for visitors who never see it move", () => {
     // The list branch is what reduced-motion resolves to; the plate sits above
     // the room grid, which remains the navigation.
     const plate = page.locator('img[src*="corridor"]');
-    await expect(plate).toBeVisible();
+    // 20s, not the 5s default: /playground is `ssr: false`, so the route puts
+    // NOTHING in the DOM until the client bundle has loaded and hydrated, and
+    // under a full parallel run that can outlast the default budget. An
+    // earlier read of this failure blamed the reduced-motion emulation for
+    // losing to the 3D branch — the plate was simply not rendered yet, by
+    // either branch.
+    await expect(plate).toBeVisible({ timeout: 20_000 });
 
     // It has to SAY something. A decorative bake with an empty alt would leave
     // a screen-reader user with a heading and nothing between it and the grid.

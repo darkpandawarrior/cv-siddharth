@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 import { surfaces } from "../src/data/surfaces.ts";
 
 /**
