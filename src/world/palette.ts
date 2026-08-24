@@ -28,6 +28,10 @@ export function worldPalette() {
   const style = typeof document === "undefined" ? null : getComputedStyle(document.documentElement);
   const read = (name: string, fallback: string) => style?.getPropertyValue(name).trim() || fallback;
   return {
+    /** Night Survey's ground base — the darkest surface tone in the scene. */
+    ink: read("--color-ink", "#0a0d0c"),
+    /** Seams and unlit trim — the recessed month/lane lines before they light. */
+    line: read("--color-line", "#262e2b"),
     /** Lit, live, active — the craft, the land rooms, the collectible glow. */
     signal: read("--color-signal", "#3ddc84"),
     /** The attenuated signal: dust, faint trim. */
@@ -54,6 +58,25 @@ export function worldPalette() {
 }
 
 export type WorldPalette = ReturnType<typeof worldPalette>;
+
+/**
+ * The timeline's four lanes (`src/data/timeline.ts`'s own order: work,
+ * chess, writing, opensource — see art-direction doc §5's table), as their
+ * fixed colour tokens. One place for that mapping so Terrain.tsx's baked
+ * GLSL literals and Wake.tsx's per-vertex ribbon colour can't quietly
+ * disagree about which lane is which hue.
+ */
+export function laneColors(c: WorldPalette): readonly [string, string, string, string] {
+  return [c.signal, c.probe, c.accent, c.text];
+}
+
+/**
+ * The read-line cursor's own colour — signal mixed toward white (Night
+ * Survey art-direction doc §2's `readhead` row). Not a CSS token: it is
+ * deliberately "the one colour nothing else in the world is allowed to be",
+ * so it is a fixed literal rather than something `worldPalette()` resolves.
+ */
+export const READHEAD_HEX = "#d8fbe6";
 
 /**
  * A token, dimmed toward the background.

@@ -1,8 +1,6 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
-import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { Monuments } from "./Monuments.tsx";
 import { Corpus } from "./Corpus.tsx";
 import { Threads } from "./Threads.tsx";
@@ -11,6 +9,9 @@ import { Trail } from "./Trail.tsx";
 import { disposeAudio, initAudio, playPickup, playResolveChime } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
+import { HORIZON_HEX, Sky } from "./Sky.tsx";
+import { SpawnFlyIn } from "./SpawnFlyIn.tsx";
+import { Wake } from "./Wake.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
 import { Vehicle } from "./Vehicle.tsx";
@@ -65,6 +66,8 @@ import { usePulse, type PulseEvent } from "../play/pulse.ts";
  * regardless — this only skips re-running its component *body*.
  */
 const MemoTerrain = memo(Terrain);
+const MemoSky = memo(Sky);
+const MemoWake = memo(Wake);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoVehicle = memo(Vehicle);
@@ -110,10 +113,26 @@ const ABANDON_RADIUS = 14;
 
 
 
+/** §4 fog distance, desktop vs. mobile — a plain width probe at mount, not
+ *  §10's full device-tier system (which also halves instance counts, probes
+ *  MAX_TEXTURE_SIZE, and re-benchmarks under load: out of scope here). */
+function fogNearFar(): [number, number] {
+  const mobile = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 820px)").matches;
+  return mobile ? [12, 70] : [18, 130];
+}
+
 export default function World(props: { onShowList: () => void }) {
   const palette = worldPalette();
   const navigate = useNavigate();
   const bump = usePulse();
+  const fogArgs = useMemo<[string, number, number]>(() => {
+    const [near, far] = fogNearFar();
+    // Matches Sky.tsx's own horizon stop (owner's "blue hour, not black"
+    // refinement) rather than `palette.void`: fog is what distant terrain
+    // actually fades toward, so a darker fog colour would silently pull the
+    // far ridges back toward black regardless of how bright the sky reads.
+    return [HORIZON_HEX, near, far];
+  }, []);
 
   // Restores which of the city's 147 resolve cells were already driven
   // through on a past visit. Must happen before any district's own
@@ -451,7 +470,6 @@ export default function World(props: { onShowList: () => void }) {
           grid, not a described car". Hud below is the entire accessible
           surface of this route while the world is showing. */}
       <Canvas
-        shadows
         dpr={[1, 1.5]}
         // A few metres behind SPAWN_POSITION, matching the direction Craft's
         // own chase camera sits relative to the craft — this is only what
@@ -464,54 +482,40 @@ export default function World(props: { onShowList: () => void }) {
           antialias: true,
           powerPreference: "high-performance",
           failIfMajorPerformanceCaveat: false,
+          // ACES directly on the renderer, not `@react-three/postprocessing`'s
+          // <ToneMapping> pass — Night Survey has no EffectComposer at all
+          // (art-direction doc §1: "Bloom is off by default even on
+          // desktop"; §10 confirms it stays off on every device tier).
+          // Emissive materials plus this tone curve carry the glow instead.
+          toneMapping: ACES_FILMIC,
         }}
         className="absolute inset-0"
         aria-hidden="true"
       >
         <color attach="background" args={[palette.void]} />
-        {/* A SKY, finally.
-            With the dust storm pulled in to hug its own buildings (see
-            resolve.ts's SCATTER_SPREAD), the top half of the frame stopped
-            being full of confetti and started being pure #000 — which reads
-            as a rendering failure rather than as night. A thin star field
-            gives the void a ceiling and, more usefully, gives the horizon
-            somewhere to be: the slab's far edge now sits against something
-            instead of dissolving into the background colour.
-            Radius is well outside WORLD_BOUNDS.maxZ so you can never drive
-            into it, and the count is deliberately low — this is a backdrop,
-            not a feature, and it must not become the next thing competing for
-            attention in a scene this rework spent its whole time quieting. */}
-        <Stars radius={180} depth={60} count={900} factor={4} saturation={0} fade speed={0.4} />
-        {/* Fog starts further out than it did (30 -> 55). At 30 the far half
-            of the mainland was already fading into the background colour, so a
-            driver couldn't see the room they were heading for — which on a
-            surface whose entire job is navigation is the wrong trade. */}
-        <fog attach="fog" args={[palette.void, 55, 140]} />
-        {/* Lifted from 0.55/0.6/1.4. The first render of this scene was legible
-            in a screenshot only if you already knew what you were looking at:
-            unlit faces of the terrain read as pure background, so the mainland
-            had no visible edge and the sea and the sky were the same colour.
-            Dark is the site's palette; unreadable isn't. */}
-        {/* Three lights, not one. A single overhead key on untextured boxes
-            gives every face the same value and the silhouette disappears; the
-            rim light behind picks out edges against the dark ground, and the
-            cool fill from the opposite side keeps the shadow sides from going
-            to pure black. This is the cheapest thing that makes primitives look
-            deliberate. */}
-        <ambientLight intensity={0.85} />
-        <directionalLight position={[-16, 12, 26]} intensity={1.2} color="#7fd9ff" />
-        <directionalLight position={[10, 6, -20]} intensity={1.4} color="#ffd9a0" />
-        <hemisphereLight args={[palette.signalDim, palette.void, 1.0]} />
-        <directionalLight
-          castShadow
-          position={[18, 26, -12]}
-          intensity={2.6}
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-40}
-          shadow-camera-right={40}
-          shadow-camera-top={40}
-          shadow-camera-bottom={-40}
-        />
+        <MemoSky />
+        {/* §4 fog — desktop (18, 130) / mobile (12, 70): a hard linear range
+            is also this world's LOD cliff, which is why it's Linear and not
+            Exp2. The device split is the one piece of §10's mobile ladder
+            this file reaches for on its own: a two-number `matchMedia` read
+            at mount, not the tier/benchmark system (fixture counts, texture
+            probing) — that system is out of scope here. */}
+        <fog attach="fog" args={fogArgs} />
+        {/* §4 — exactly two Light objects in the whole scene. Nothing else
+            in this file may be a light: relief legibility comes from the
+            13° key's n·l falloff plus the emissive fixture/seam rhythm, not
+            from a shadow map — there is no shadow map (no `shadows` prop on
+            <Canvas>, no `castShadow`/shadow-camera props here), which also
+            silences the "PCFSoftShadowMap has been deprecated" warning that
+            used to fire on every load. */}
+        {/* Owner refinement: "blue hour, not black" — the doc's 1.15/0.35
+            read as an unlit room before any fixture exists to carry the
+            scene (step 3, not built yet). Same two lights, same colours,
+            same 13° raking angle (unchanged — that's what makes relief
+            legible); only the two intensities are raised so the terrain
+            reads from shading and silhouette alone. */}
+        <directionalLight color="#bfe8e0" intensity={1.35} position={[-122, 28, 18]} />
+        <hemisphereLight args={["#0a1416", "#0f1a14", 0.75]} />
         <MemoTerrain />
         <MemoProps />
         <MemoMonuments />
@@ -519,6 +523,13 @@ export default function World(props: { onShowList: () => void }) {
         <MemoPavilions onPrompt={handlePrompt} />
         <MemoVehicle onState={handleCraftState} paused={paused} />
         <MemoTrail />
+        {/* Mounted after Vehicle so their own useFrame subscriptions run
+            after Vehicle's within the same rendered frame — SpawnFlyIn's
+            per-frame camera hold has to win any frame it's still active,
+            and Wake's read-line furniture reads telemetry Vehicle just
+            wrote this frame rather than last frame's. */}
+        <SpawnFlyIn />
+        <MemoWake />
         {/* The city's dust — always mounted, never conditional on anything:
             frame 0's "lit road through a haze" is the design's whole
             first-five-seconds bet, and that only works if this is here from
@@ -530,40 +541,11 @@ export default function World(props: { onShowList: () => void }) {
             alongside Trail and the dust field. */}
         <MemoThreads />
         <Artifacts collected={collected} />
-        {/* Bloom is doing real work here, not gloss. Every room's identity in
-            this world is carried by an emissive material in its tint — the
-            phone screen, the CRT face, the atoll's waterline ring, the sky
-            islands' PCB traces, the checkpoint gates. Unbloomed they read as
-            flat coloured rectangles in a dark scene; with it they read as lit
-            objects and become visible from much further away, which is the
-            difference between navigating and hunting. luminanceThreshold is set
-            high enough that only genuinely emissive surfaces bloom, so the
-            terrain doesn't turn milky. */}
-        <EffectComposer>
-          {/* Ambient occlusion first, and it does more for this scene than
-              everything else in this stack combined. A world built from
-              untextured primitives has no contact information — a box on a
-              plane and a box floating a centimetre above it look identical, so
-              the whole thing reads as flat shapes rather than objects sitting
-              somewhere. AO puts the shadow back into every crease and corner
-              the geometry implies. */}
-          <N8AO aoRadius={1.4} intensity={2.6} distanceFalloff={0.8} quality="low" halfRes />
-          {/* Threshold 0.9, not 0.62. At 0.62 the lit terrain itself passed the
-              cut and the mainland bloomed into soft white pools — the scene got
-              brighter but less readable, which is the opposite of the point.
-              The room emissives sit well above 0.9, so raising it keeps the
-              glow on the things that are meant to glow. */}
-          <Bloom intensity={0.7} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
-          <Vignette eskil={false} offset={0.22} darkness={0.72} />
-          {/* ACES filmic, not the renderer's default linear clamp. Everything
-              bright in this world is emissive — room tints, trails, gates — and
-              linear tone mapping clips them all to flat white, which is why the
-              lit surfaces looked like paper cut-outs. ACES rolls the highlights
-              off instead, so a glowing thing reads as bright rather than as a
-              hole in the image. */}
-          <ToneMapping mode={ACES_FILMIC} />
-          <SMAA />
-        </EffectComposer>
+        {/* No <EffectComposer> — art-direction doc §1: "Bloom is off by
+            default even on desktop", and §10 confirms no device tier ever
+            re-adds it. Emissive materials (every room tint, the read-line,
+            the seams) plus the renderer's own ACES tone mapping (set above,
+            on `gl`) carry the glow instead of a post-process bloom pass. */}
         {/* Publishes the camera to the label layer below. Renders nothing, and
             deliberately sits outside <Physics> — it reads the camera the chase
             cam has already moved this frame, and has no business in the
