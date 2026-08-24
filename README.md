@@ -187,7 +187,7 @@ src/
 ├── SurfaceWall.tsx          # the homepage grid
 └── index.css                # Tailwind v4 theme tokens
 e2e/                         # Playwright: a11y, nav, offline, visitors, smoke
-scripts/                     # 18 generators + the capture/sentinel tooling
+scripts/                     # the generators + the capture/sentinel tooling
 ```
 
 </details>
