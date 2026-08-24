@@ -71,6 +71,43 @@ export function laneColors(c: WorldPalette): readonly [string, string, string, s
 }
 
 /**
+ * Snap any site tint onto the world's own palette.
+ *
+ * src/data/surfaces.ts gives every surface a tint for its tile on the
+ * homepage wall, and those are drawn from the SITE's palette, which is wider
+ * than this world's — /blueprint is #db61ff, a violet that is a perfectly
+ * legitimate --color-alt out there and is not one of the four colours in
+ * here. Used raw, it put a magenta label and a magenta ground glow in a
+ * corridor whose whole identity is four lanes and nothing else.
+ *
+ * The answer is not to change the surface's tint, which is correct on the
+ * wall. It is that the world reads site colour through its own palette,
+ * which is what this does: nearest lane colour by hue, so a room keeps its
+ * relative identity without importing a fifth hue.
+ */
+export function worldTint(hex: string, c: WorldPalette): string {
+  const lanes = laneColors(c);
+  const h = (v: string) => {
+    const n = parseInt(v.replace("#", ""), 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((x) => x / 255);
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (d === 0) return -1; // achromatic: matches the text lane
+    const deg = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (deg * 60 + 360) % 360;
+  };
+  const target = h(hex);
+  if (target < 0) return c.text;
+  let best = lanes[0], bestD = Infinity;
+  for (const lane of lanes) {
+    const lh = h(lane);
+    if (lh < 0) continue;
+    const d = Math.min(Math.abs(lh - target), 360 - Math.abs(lh - target));
+    if (d < bestD) { bestD = d; best = lane; }
+  }
+  return best;
+}
+
+/**
  * The read-line cursor's own colour — signal mixed toward white (Night
  * Survey art-direction doc §2's `readhead` row). Not a CSS token: it is
  * deliberately "the one colour nothing else in the world is allowed to be",

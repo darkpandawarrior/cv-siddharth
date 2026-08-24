@@ -16,7 +16,7 @@ import {
 } from "./corpusData.ts";
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
-import { worldPalette, dim } from "./palette.ts";
+import { worldPalette, dim , laneColors} from "./palette.ts";
 
 /**
  * EAST DISTRICT'S GEOMETRY — "what he made anyway," built.
@@ -168,7 +168,7 @@ const BOX = <boxGeometry args={[1, 1, 1]} />;
 
 function ChessRidge(): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn, c.accent, c.accent2], [c.signal, c.probe, c.alt, c.warn, c.accent, c.accent2]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const items = useMemo(() => chessRidge(), []);
   return (
     <InstancedFamily
@@ -226,8 +226,8 @@ function Repertoire(): JSX.Element {
 function WeebField(): JSX.Element {
   const c = worldPalette();
   const items = useMemo(() => weebField(), []);
-  const litColor = useMemo(() => c.alt, [c.alt]);
-  const unlitColor = useMemo(() => dim(c.alt, 0.7), [c.alt]);
+  const litColor = useMemo(() => c.accent, [c.accent]);
+  const unlitColor = useMemo(() => dim(c.accent, 0.7), [c.accent]);
   return (
     <InstancedFamily
       items={items}
@@ -315,10 +315,10 @@ function OldTown(): JSX.Element {
     const markKindColor: Record<"wrote" | "about" | "credit", string> = { wrote: c.signal, about: c.probe, credit: c.warn };
     return (item: OldTownItem): string => {
       if (item.kind === "edition") return c.accent2;
-      if (item.kind === "profile") return c.alt;
+      if (item.kind === "profile") return c.text;
       return markKindColor[item.markKind];
     };
-  }, [c.signal, c.probe, c.warn, c.accent2, c.alt]);
+  }, [c.signal, c.probe, c.warn, c.accent2, c.text]);
 
   return (
     <InstancedFamily

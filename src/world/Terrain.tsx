@@ -33,7 +33,7 @@ const dummy = new THREE.Object3D();
  *  per mount (see resolve.ts's own `uVoid`), never per frame, so there is no
  *  reason to spend a uniform (and a per-frame write) on a value that never
  *  changes after the material compiles. */
-function glslVec3(hex: string): string {
+export function glslVec3(hex: string): string {
   const c = new THREE.Color(hex);
   return `vec3(${c.r.toFixed(4)}, ${c.g.toFixed(4)}, ${c.b.toFixed(4)})`;
 }

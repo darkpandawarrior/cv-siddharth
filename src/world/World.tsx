@@ -12,6 +12,7 @@ import { Terrain } from "./Terrain.tsx";
 import { HORIZON_HEX, Sky } from "./Sky.tsx";
 import { SpawnFlyIn } from "./SpawnFlyIn.tsx";
 import { Wake } from "./Wake.tsx";
+import { Fixtures } from "./Fixtures.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
 import { Vehicle } from "./Vehicle.tsx";
@@ -32,7 +33,7 @@ import {
 import { LabelCameraBridge, WorldLabels } from "./WorldLabels.tsx";
 import { PLACEMENTS } from "./worldData.ts";
 import type { WaypointTarget } from "./Nav.tsx";
-import { worldPalette } from "./palette.ts";
+import { worldPalette, worldTint} from "./palette.ts";
 import { loadExplored, markExplored } from "./explored.ts";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
@@ -68,6 +69,7 @@ import { usePulse, type PulseEvent } from "../play/pulse.ts";
 const MemoTerrain = memo(Terrain);
 const MemoSky = memo(Sky);
 const MemoWake = memo(Wake);
+const MemoFixtures = memo(Fixtures);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
 const MemoVehicle = memo(Vehicle);
@@ -392,7 +394,7 @@ export default function World(props: { onShowList: () => void }) {
         tour.targetTo = target?.to ?? null;
         const room = target ? ROOMS.find((r) => r.to === target.to) : null;
         setWaypoint(
-          target && room ? { label: room.label, tint: room.tint, x: target.x, z: target.z } : null,
+          target && room ? { label: room.label, tint: worldTint(room.tint, worldPalette()), x: target.x, z: target.z } : null,
         );
       }
 
@@ -517,6 +519,7 @@ export default function World(props: { onShowList: () => void }) {
         <directionalLight color="#bfe8e0" intensity={1.35} position={[-122, 28, 18]} />
         <hemisphereLight args={["#0a1416", "#0f1a14", 0.75]} />
         <MemoTerrain />
+        <MemoFixtures />
         <MemoProps />
         <MemoMonuments />
         <MemoCorpus />
@@ -530,10 +533,10 @@ export default function World(props: { onShowList: () => void }) {
             wrote this frame rather than last frame's. */}
         <SpawnFlyIn />
         <MemoWake />
-        {/* The city's dust — always mounted, never conditional on anything:
-            frame 0's "lit road through a haze" is the design's whole
-            first-five-seconds bet, and that only works if this is here from
-            the very first render, same as the pavilions themselves. */}
+        {/* Renders nothing (Night Survey §12 step 3 removed its dust) — still
+            mounted unconditionally because its useFrame is what advances
+            resolve.ts's ratchet every frame, which Monuments/Corpus's own
+            "rise" reveal and the HUD's FIX % both depend on. */}
         <MemoResolveField />
         {/* The two authored/discovered arcs. Overhead-only geometry (x=0,
             above the boulevard) with no collider — you drive under them,

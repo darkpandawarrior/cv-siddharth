@@ -7,7 +7,7 @@ import { SENSOR_HALF_EXTENTS } from "./pavilionGeometry.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
 import { telemetry } from "./telemetry.ts";
-import { worldPalette } from "./palette.ts";
+import { worldPalette, worldTint} from "./palette.ts";
 
 /**
  * One physical structure per room, built entirely from three.js primitives —
@@ -245,7 +245,7 @@ function Pavilion({ placement, room }: { placement: Placement; room: Room }) {
   const halfExtents = SENSOR_HALF_EXTENTS[placement.shape];
   return (
     <group position={placement.position}>
-      <Shape tint={room.tint} />
+      <Shape tint={worldTint(room.tint, worldPalette())} />
       {/* The floating room name used to be right here, as its own drei <Html>
           portal. It now belongs to the world's one label layer (labels.ts /
           WorldLabels.tsx), which is the only place that can see every label at
@@ -260,7 +260,7 @@ function Pavilion({ placement, room }: { placement: Placement; room: Room }) {
           shadow-casting point lights would cost far more than they add, and
           these exist to mark a position, not to model illumination. */}
       <BreathingLight
-        tint={room.tint}
+        tint={worldTint(room.tint, worldPalette())}
         y={halfExtents[1] + 1.2}
         seed={placement.position[0] + placement.position[2]}
         visits={visits}

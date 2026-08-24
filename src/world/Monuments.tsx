@@ -12,7 +12,7 @@ import {
 } from "./districtWest.ts";
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
-import { worldPalette, dim } from "./palette.ts";
+import { worldPalette, dim , laneColors} from "./palette.ts";
 
 /**
  * WEST DISTRICT'S GEOMETRY — "what he was paid for," built.
@@ -129,7 +129,7 @@ function useRiseGeometry(meshRef: RefObject<THREE.InstancedMesh | null>, matRef:
 
 function EmployerShells({ blocks }: { blocks: EmployerBlock[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const targets = useMemo(
@@ -240,7 +240,7 @@ function CaseStudyObelisks({ monuments }: { monuments: CaseStudyMonument[] }): J
 
 function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
@@ -285,7 +285,7 @@ function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element
 
 function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const targets = useMemo(

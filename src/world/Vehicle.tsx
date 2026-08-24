@@ -8,7 +8,7 @@ import { worldObstacles } from "./obstacles.ts";
 import { SPAWN_POSITION, WORLD_BOUNDS, CHASSIS_RESTING_HEIGHT } from "./craftPhysics.ts";
 import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { telemetry } from "./telemetry.ts";
-import { worldPalette } from "./palette.ts";
+import { worldPalette, READHEAD_HEX } from "./palette.ts";
 import { playBoost, playImpact, updateEngine } from "./audio.ts";
 
 /**
@@ -25,18 +25,33 @@ import { playBoost, playImpact, updateEngine } from "./audio.ts";
  * [x,y,z] }`, called every frame) World.tsx depends on unchanged.
  */
 
-// Chassis half-extents (metres) — unchanged from Craft.tsx: a toy car, ~1.1m
-// wide, 0.6m tall, 1.9m long, matching worldData.ts's desk-scale primitives.
-const HALF = { x: 0.55, y: 0.3, z: 0.95 };
+// Chassis half-extents (metres) — §9's site-inspection cart, ~2.4m x 1.5m.
+// Purely a render size now (drive.ts's collision model reads obstacles.ts's
+// footprints, not this box), so this can carry the doc's real dimensions
+// without touching craftPhysics.ts's WORLD_BOUNDS/SPAWN_POSITION, which are
+// sized for clearance rather than for the car's own silhouette.
+const HALF = { x: 0.75, y: 0.28, z: 1.2 };
 
-// Wheel layout, in the chassis's local frame — identical to Craft.tsx's.
-// Front is +Z because forward is +Z; the leading pair steers, the trailing
-// pair only spins (there is no separate "driven" distinction to visualise
-// any more — every wheel just rolls at the car's own speed).
-const TRACK_X = 0.62;
-const AXLE_FRONT_Z = 0.82;
-const AXLE_REAR_Z = -0.82;
-const WHEEL_RADIUS = 0.3;
+// Wheel layout, in the chassis's local frame. Front is +Z because forward is
+// +Z; the leading pair steers, the trailing pair only spins (there is no
+// separate "driven" distinction to visualise any more — every wheel just
+// rolls at the car's own speed). Pushed wider/further out than the old toy
+// car to sit under the wider tray, and the tread itself is oversized (§9).
+const TRACK_X = 0.82;
+const AXLE_FRONT_Z = 0.95;
+const AXLE_REAR_Z = -0.95;
+const WHEEL_RADIUS = 0.34;
+const WHEEL_WIDTH = 0.42; // "oversized tread" — a chunky offroad-cart tyre, not a car wheel
+
+// §9 body — the one fixed literal on this cart (not a CSS token: it is
+// deliberately near-black-but-not-void, the same "structural colour that
+// isn't in the theme's own palette rotation" exception READHEAD_HEX carries
+// in palette.ts) plus its hazard-trim geometry, in local (chassis) space.
+const CART_BODY_HEX = "#0d100f";
+const TRIM_WIDTH = 0.06;
+const CORNER_X = HALF.x - TRIM_WIDTH / 2;
+const CORNER_Z = HALF.z - TRIM_WIDTH / 2;
+const TRIM_HEIGHT = HALF.y * 2 + 0.1;
 
 type WheelDef = { x: number; z: number; steer: boolean };
 const WHEELS: WheelDef[] = [
@@ -244,30 +259,105 @@ export function Vehicle(props: {
           is offset up from there by CHASSIS_RESTING_HEIGHT, the same number
           the old rigid body's suspension used to hold the chassis above the
           surface — kept here purely as a visual constant now. */}
+
+      {/* §9 — THE SITE-INSPECTION CART. Body #0d100f, roughness 0.45,
+          metalness 0.5: matte enough to read as equipment, metallic enough
+          to pick up rim light off the fixtures it passes (gantries,
+          bollards, lampposts) rather than reading as flat geometry — the
+          whole point of a non-zero metalness on a night scene with exactly
+          two lights. No chrome, no gloss, no racing cues. */}
       <RoundedBox
         args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]}
         position={[0, CHASSIS_RESTING_HEIGHT, 0]}
-        radius={0.12}
-        smoothness={3}
+        radius={0.08}
+        smoothness={2}
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial color={c.signal} metalness={0.35} roughness={0.35} />
+        <meshStandardMaterial color={CART_BODY_HEX} metalness={0.5} roughness={0.45} />
       </RoundedBox>
 
-      {/* Cabin */}
+      {/* Boxy cab, pushed toward the front (+Z). */}
       <RoundedBox
-        args={[0.68, 0.32, 0.9]}
-        radius={0.08}
-        smoothness={3}
-        position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + 0.16, -0.1]}
+        args={[0.92, 0.62, 0.9]}
+        radius={0.05}
+        smoothness={2}
+        position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + 0.31, 0.35]}
         castShadow
       >
-        <meshStandardMaterial color={c.void} metalness={0.5} roughness={0.25} />
+        <meshStandardMaterial color={CART_BODY_HEX} metalness={0.5} roughness={0.45} />
       </RoundedBox>
 
-      {/* Wheels — planted on the ground plane (y = WHEEL_RADIUS) rather than
-          hung off a suspension: nothing left to bounce, there is no suspension. */}
+      {/* Exposed roll bar over the cab — two verticals plus a top rail, bare
+          equipment steel, no shell around it. */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 0.42, CHASSIS_RESTING_HEIGHT + HALF.y + 0.68, 0.05]} castShadow>
+          <cylinderGeometry args={[0.025, 0.025, 0.62, 8]} />
+          <meshStandardMaterial color={CART_BODY_HEX} metalness={0.6} roughness={0.4} />
+        </mesh>
+      ))}
+      <mesh
+        position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + 0.98, 0.05]}
+        rotation={[0, 0, Math.PI / 2]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.025, 0.025, 0.84, 8]} />
+        <meshStandardMaterial color={CART_BODY_HEX} metalness={0.6} roughness={0.4} />
+      </mesh>
+
+      {/* Roof light bar — a physical fixture, not itself a Light. */}
+      <mesh position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + 0.72, 0.35]} castShadow>
+        <boxGeometry args={[0.5, 0.1, 0.16]} />
+        <meshStandardMaterial color={CART_BODY_HEX} metalness={0.55} roughness={0.4} />
+      </mesh>
+
+      {/* Whip antenna, off the rear deck. */}
+      <mesh position={[-0.55, CHASSIS_RESTING_HEIGHT + HALF.y + 0.55, -1.0]} rotation={[0.12, 0, 0.08]} castShadow>
+        <cylinderGeometry args={[0.012, 0.02, 1.15, 6]} />
+        <meshStandardMaterial color={CART_BODY_HEX} metalness={0.5} roughness={0.45} />
+      </mesh>
+
+      {/* Corner-guard hazard trim — the ONLY saturated paint on the cart, on
+          all four verticals of the tray, the livery real inspection
+          equipment wears. */}
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sz) => (
+          <mesh key={`${sx}-${sz}`} position={[sx * CORNER_X, CHASSIS_RESTING_HEIGHT, sz * CORNER_Z]} castShadow>
+            <boxGeometry args={[TRIM_WIDTH, TRIM_HEIGHT, TRIM_WIDTH]} />
+            <meshStandardMaterial color={c.signal} emissive={c.signal} emissiveIntensity={0.25} roughness={0.4} />
+          </mesh>
+        )),
+      )}
+
+      {/* The "lamp" — NOT a Light. An emissive bar plus a small additive
+          sprite, so the real light count in the scene stays at two; the
+          ground ahead is lit by Terrain.tsx's read-line band instead. */}
+      <mesh position={[0, CHASSIS_RESTING_HEIGHT, HALF.z + 0.02]}>
+        <boxGeometry args={[0.6, 0.08, 0.04]} />
+        <meshStandardMaterial color={READHEAD_HEX} emissive={READHEAD_HEX} emissiveIntensity={1.6} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, CHASSIS_RESTING_HEIGHT, HALF.z + 0.05]}>
+        <planeGeometry args={[0.7, 0.24]} />
+        <meshBasicMaterial
+          color={READHEAD_HEX}
+          transparent
+          opacity={0.5}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Tail strip — the wake ribbon's emit point. */}
+      <mesh position={[0, CHASSIS_RESTING_HEIGHT, -HALF.z - 0.02]}>
+        <boxGeometry args={[0.5, 0.06, 0.03]} />
+        <meshStandardMaterial color={c.signal} emissive={c.signal} emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
+
+      {/* Wheels — oversized tread, planted on the ground plane
+          (y = WHEEL_RADIUS) rather than hung off a suspension: nothing left
+          to bounce, there is no suspension. */}
       {WHEELS.map((w, i) => (
         <group
           key={i}
@@ -282,8 +372,8 @@ export function Vehicle(props: {
             }}
           >
             <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, 0.26, 14]} />
-              <meshStandardMaterial color={c.void} roughness={0.7} />
+              <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 14]} />
+              <meshStandardMaterial color={c.void} roughness={0.8} />
             </mesh>
           </group>
         </group>

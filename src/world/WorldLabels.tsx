@@ -149,7 +149,13 @@ export function WorldLabels({ targetTo }: { targetTo: string | null }): JSX.Elem
               // object rather than two unrelated pieces of UI.
               boxShadow: isTarget ? `0 0 0 1px ${label.tint}, 0 0 18px -4px ${label.tint}` : undefined,
             }}
-            className={`whitespace-nowrap rounded-full border backdrop-blur ${
+            // §12 step 3 — was `rounded-full`: a pill reads as a chat bubble,
+            // not as signage. A hairline-radius rectangular tag (Survey
+            // Deck's "infrastructure signage grammar", per the doc's own
+            // grafted-in credit) matches the stationing posts' baked
+            // numerals and the ground's own seam geometry, which are all
+            // rectangular — nothing else in this world is a rounded pill.
+            className={`whitespace-nowrap rounded-[2px] border backdrop-blur ${
               label.kind === "room"
                 ? "px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em]"
                 : "px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
