@@ -46,7 +46,23 @@ try {
     .replace(/"\d+ ATS\/board providers"/, `"${providers} ATS/board providers"`)
     .replace(/\d+ ATS & job-board provider integrations/, `${providers} ATS & job-board provider integrations`)
     .replace(/Contributor upstream — \d+ merged PRs/, `Contributor upstream — ${prs} merged PRs`)
-    .replace(/status: "Active · \d+ PRs merged upstream"/, `status: "Active · ${prs} PRs merged upstream"`);
+    .replace(/status: "Active · \d+ PRs merged upstream"/, `status: "Active · ${prs} PRs merged upstream"`)
+    // Four more sites this script could not see until 2026-08-24, and which
+    // had therefore frozen while the four above kept moving: the case study
+    // said 76 providers and 62 providers on the same page, and 17 merged PRs
+    // and 4 merged PRs. Every number below is the same fact as one above, so
+    // it belongs to the same refresh or it goes stale again by definition.
+    .replace(/\{ value: "\d+", label: "ATS & job-board providers" \}/, `{ value: "${providers}", label: "ATS & job-board providers" }`)
+    .replace(/\d+ ATS & job-board provider modules/, `${providers} ATS & job-board provider modules`)
+    .replace(/"\d+ ATS\/job-board providers"/, `"${providers} ATS/job-board providers"`)
+    .replace(/\{ value: "\d+", label: "PRs merged upstream" \}/, `{ value: "${prs}", label: "PRs merged upstream" }`)
+    .replace(/HireSignal — active, \d+ PRs merged upstream/, `HireSignal — active, ${prs} PRs merged upstream`)
+    // Three more, found the same day, that the patterns above missed because
+    // they word the same fact differently ("merged to public career-ops", not
+    // "merged upstream"). Matching the NUMBER beside the phrase rather than a
+    // whole sentence keeps this working when the prose is edited.
+    .replace(/\d+ merged PRs to the public career-ops project/g, `${prs} merged PRs to the public career-ops project`)
+    .replace(/status: "Active · \d+ PRs merged to public career-ops"/, `status: "Active · ${prs} PRs merged to public career-ops"`);
   writeFileSync(profilePath, src);
   console.log(`[gen-hiresignal-stats] prs=${prs} providers=${providers}`);
 } catch (err) {
