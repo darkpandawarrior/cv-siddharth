@@ -47,6 +47,20 @@ describe("hasTldrawLicense", () => {
     expect(hasTldrawLicense(new Date("2026-08-24T00:00:00Z"))).toBe(false);
   });
 
+  it("accepts a real-shaped key that has not expired yet", () => {
+    // The shape tldraw actually issues, confirmed against their own licence
+    // email: `tldraw-YYYY-MM-DD/<base64 payload>.<signature>`. This asserts
+    // the replacement Hobby key will be accepted the moment it is pasted into
+    // VITE_TLDRAW_LICENSE_KEY on Vercel, with no code change — the failure
+    // mode worth guarding is a parser that only ever saw the expired one.
+    vi.stubEnv(
+      "VITE_TLDRAW_LICENSE_KEY",
+      "tldraw-2027-08-12/WyJqM2tNS3Y3cSIsWyIqIl0sMTYsIjIwMjctMDgtMTIiXQ.scQXXsignature",
+    );
+    at("https:", "cv-siddharth.vercel.app");
+    expect(hasTldrawLicense(new Date("2026-08-24T00:00:00Z"))).toBe(true);
+  });
+
   it("trusts a key whose shape it cannot parse", () => {
     // tldraw may change its format. Rejecting something unreadable would
     // disable a mode that would have worked.

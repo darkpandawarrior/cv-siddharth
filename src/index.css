@@ -2162,6 +2162,18 @@ html.resume-mode body {
 /* The shell input is always the focus target and the blinking caret marks
    the cursor, so the global focus box would just read as a stray search
    field. Suppress it here (only here). */
+/* iOS Safari zooms the whole page when a focused field is under 16px, and it
+   does not zoom back out. The terminal's own text stays at its designed size;
+   only the INPUT is bumped, and only below the sm breakpoint, so the shell
+   still looks like a shell on a desktop. Same treatment as the Compose
+   editor's textarea. */
+@media (max-width: 639px) {
+  .term-root input,
+  .term-root textarea {
+    font-size: 16px;
+  }
+}
+
 .term-root input:focus-visible {
   outline: none;
 }

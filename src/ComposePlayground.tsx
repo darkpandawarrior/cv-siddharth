@@ -819,7 +819,7 @@ export default function ComposePlayground() {
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
-              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[13px] leading-[1.6] text-zinc-100 outline-none"
+              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[16px] leading-[1.6] text-zinc-100 outline-none sm:text-[13px]"
               style={{ tabSize: 4 }}
               onKeyDown={(e) => {
                 // WCAG 2.1.2, No Keyboard Trap. Swallowing Tab to indent means
