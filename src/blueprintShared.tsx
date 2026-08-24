@@ -34,8 +34,37 @@ export function hasWebGL(): boolean {
  * host check tldraw's own LicenseManager uses), which is why dev, preview and
  * CI never saw it. So we only offer Sketch where it will survive; drop a key
  * in VITE_TLDRAW_LICENSE_KEY and the mode comes back everywhere. */
-export function hasTldrawLicense(): boolean {
-  if (import.meta.env.VITE_TLDRAW_LICENSE_KEY) return true;
+/**
+ * The expiry baked into a tldraw key, or null if the string is not one.
+ *
+ * Keys look like `tldraw-YYYY-MM-DD/payload.signature`, and that date is the
+ * whole point: an EXPIRED key is worse than no key at all. With no key,
+ * hasTldrawLicense() returns false on an https host and Sketch mode is never
+ * offered, so a visitor sees Fly and ASCII and nothing is broken. With an
+ * expired key the gate below used to return true on the mere presence of a
+ * string, so the site advertised a mode that tldraw's own LicenseManager then
+ * refused: the editor rendered for about five seconds and vanished.
+ *
+ * Verified against the live site on 2026-08-24 — the key in play expired
+ * 2026-08-12, and /blueprint's Sketch mode mounted at 2.5s and was gone by
+ * 6.5s. Presence is not validity.
+ */
+export function tldrawKeyExpiry(key: string | undefined): Date | null {
+  const m = /^tldraw-(\d{4})-(\d{2})-(\d{2})\//.exec(key ?? "");
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export function hasTldrawLicense(now: Date = new Date()): boolean {
+  const key = import.meta.env.VITE_TLDRAW_LICENSE_KEY;
+  if (key) {
+    const expiry = tldrawKeyExpiry(key);
+    // An unrecognised shape is trusted: tldraw may change its format, and
+    // refusing a key we simply cannot parse would disable a mode that would
+    // have worked. Only a key we can read AND that has passed is rejected.
+    if (expiry === null || expiry.getTime() >= now.getTime()) return true;
+  }
   if (typeof location === "undefined") return false;
   // Mirrors LicenseManager.getIsDevelopment(): tldraw exempts anything not
   // served over https as well as the loopback hosts, so a plain-http preview
