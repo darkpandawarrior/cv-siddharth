@@ -40,6 +40,13 @@ test.describe("the home page matches its own registry", () => {
   });
 
   test("the command palette can reach every route in the registry", async ({ page }) => {
+    // This walks EVERY registry route through the palette in one test body,
+    // and the registry keeps growing while the routes themselves got heavier
+    // (six of them now server-render real content instead of an empty shell).
+    // It passes alone and times out in a full run at the default 30s — not a
+    // logic failure, just a test doing seventeen navigations on one budget.
+    // test.slow() triples it rather than hiding the cost behind a retry.
+    test.slow();
     // The Launcher's docstring claims "⌘K already reaches every surface — by
     // name". It reached eleven of sixteen: /chess, /weeb, /ink, /excelsior and
     // /shipped had no row at all.

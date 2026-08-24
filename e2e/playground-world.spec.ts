@@ -74,6 +74,11 @@ test.describe("playground world — no WebGL", () => {
 
 test.describe("playground world — List view toggle", () => {
   test("HUD List view switches to the grid, and the choice survives a reload", async ({ page }) => {
+    // /playground now mounts a rebuilt terrain, four instanced fixture
+    // families and a shader-driven ground, and this test loads it TWICE to
+    // prove the choice survives a reload. Alone it is comfortable; in a full
+    // run it exceeds the default budget. The cost is real, so it is declared.
+    test.slow();
     await page.goto("/playground");
 
     // WebGL is available in this test environment (SwiftShader), so the
