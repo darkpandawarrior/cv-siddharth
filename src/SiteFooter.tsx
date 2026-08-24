@@ -133,7 +133,24 @@ function NowChip() {
       : undefined;
   const nowArt = spotifyConnected ? (spotify.isPlaying ? spotify.albumArt : spotify.recent[0]?.albumArt) : undefined;
   const nowUrl = spotifyConnected ? (spotify.isPlaying ? spotify.url : spotify.recent[0]?.url) : undefined;
-  const latestActivity = activity?.connected ? activity.items[0] : undefined;
+  /**
+   * The feed, not one line of it.
+   *
+   * This rendered `items[0]` — a single push — while the endpoint returned
+   * twenty across a dozen repositories, four of them other people's. On a
+   * site whose whole argument is "here is the work", surfacing one event and
+   * discarding nineteen was the wrong end of the trade.
+   *
+   * Collapsed to one row per REPOSITORY, most recent first, because five
+   * pushes to the same repo in a morning is one fact, not five. Upstream
+   * contributions are marked: a commit to someone else's project is a
+   * different claim from a commit to your own, and the shape now says which.
+   */
+  const recent = activity?.connected ? activity.items : [];
+  const byRepo = new Map<string, (typeof recent)[number]>();
+  for (const item of recent) if (!byRepo.has(item.repo)) byRepo.set(item.repo, item);
+  const repos = [...byRepo.values()].slice(0, 5);
+  const latestActivity = repos[0];
 
   if (!nowTrack && !latestActivity) return null;
 
@@ -153,10 +170,23 @@ function NowChip() {
           </span>
         </span>
       )}
-      {latestActivity && (
-        <a href={latestActivity.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-          {latestActivity.type === "push" ? "Pushed to" : latestActivity.type === "pr" ? "Opened a PR on" : "Created a ref on"} {latestActivity.repo.split("/")[1]}
-        </a>
+      {repos.length > 0 && (
+        <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <span className="kicker">recently</span>
+          {repos.map((a) => (
+            <a
+              key={a.repo}
+              href={a.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-accent"
+              title={`${a.type === "pr" ? "Opened a PR on" : a.type === "create" ? "Created a ref on" : "Pushed to"} ${a.repo}`}
+            >
+              {a.repo.split("/")[1]}
+              {a.upstream && <span className="kicker-accent" title="a contribution to someone else's project">↗</span>}
+            </a>
+          ))}
+        </span>
       )}
     </div>
   );
