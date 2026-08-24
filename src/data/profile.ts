@@ -1565,6 +1565,20 @@ export interface Contribution {
 
 // Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐63k+).
 // See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
+/**
+ * Merged PRs upstream, as the live GitHub search reports it.
+ *
+ * NOT openSource.length. That array is a CURATED subset — 17 entries against
+ * 18 merged — and hiresignalNumbers.test.ts documents shorter as expected.
+ * ResumeView used the array length and so printed 17 while every other
+ * surface on the site said 18, which is the kind of one-off disagreement a
+ * reader notices and an owner never does.
+ *
+ * Refreshed by scripts/gen-hiresignal-stats.mjs alongside the nine other
+ * places this number appears.
+ */
+export const upstreamMergedPRs = 18;
+
 export const openSource: Contribution[] = [
   { repo: "santifer/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/santifer/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
   { repo: "santifer/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/santifer/career-ops/pull/2639", status: "merged", date: "2026-08-12" },

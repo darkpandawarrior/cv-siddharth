@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /**
- * The Fan-out Lab — HireSignal's 62-provider aggregation, running live.
- * A query fans out to a ring of 62 ATS/job-board providers (three of them —
+ * The Fan-out Lab — HireSignal's provider aggregation, running live.
+ * A query fans out to a ring of ATS/job-board providers (three of them —
  * Greenhouse, Ashby, Lever — are the named structured-API integrations the
  * scan path hits directly, zero LLM cost). Listings travel back toward a
  * collection zone; some are near-duplicates of the same posting from
@@ -12,9 +12,14 @@ import { useCanvasLoop } from "./useCanvasLoop.ts";
  * they just pile up.
  */
 
-const TOTAL_PROVIDERS = 62;
+// Kept in step with profile.ts by scripts/gen-hiresignal-stats.mjs, which
+// already refreshes this figure from the live GitHub API in nine other places.
+// It was a bare 62 while HireSignal's own data said 78 — the lab was
+// understating the work it exists to demonstrate.
+const TOTAL_PROVIDERS = 78;
 const NAMED_PROVIDERS = ["Greenhouse", "Ashby", "Lever"];
-const NAMED_INDEXES = [0, 21, 41]; // spread evenly around the 62-dot ring
+// Spread evenly around the ring, whatever its size.
+const NAMED_INDEXES = [0, Math.round(TOTAL_PROVIDERS / 3), Math.round((2 * TOTAL_PROVIDERS) / 3)];
 const BLUE = "#3B82F6"; // HireSignal's real accent — reserved for this sim's own visuals
 
 type V = { x: number; y: number };
@@ -160,7 +165,7 @@ export function FanoutLab() {
       ctx.fillStyle = "rgba(59, 130, 246, 0.55)";
       ctx.fillText("collected listings", 26, collTop - 6);
 
-      // 62-provider ring
+      // provider ring
       for (let i = 0; i < TOTAL_PROVIDERS; i++) {
         const p = ringPoint(i);
         const namedIdx = NAMED_INDEXES.indexOf(i);
@@ -237,7 +242,7 @@ export function FanoutLab() {
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="HireSignal 62-provider fan-out and de-duplication simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="HireSignal provider fan-out and de-duplication simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <button

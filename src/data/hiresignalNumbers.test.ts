@@ -39,4 +39,22 @@ describe("HireSignal's numbers agree with themselves", () => {
     expect(claimed).toBeGreaterThan(0);
     expect(openSource.length).toBeLessThanOrEqual(claimed);
   });
+
+  it("keeps the lab instruments from contradicting the case study", () => {
+    // FanoutLab hardcoded 62 providers while profile.ts said 78, and ThemeLab
+    // said "20+" white-label clients where profile says 150+. Both UNDERSTATED
+    // his work, on the surfaces that exist specifically to demonstrate it —
+    // which is the direction of error nobody ever notices, because a number
+    // that is too small never looks like a bug.
+    const fanout = readFileSync(new URL("../labs/FanoutLab.tsx", import.meta.url), "utf8");
+    const theme = readFileSync(new URL("../labs/ThemeLab.tsx", import.meta.url), "utf8");
+    const providers = [...src.matchAll(/(\d+) ATS/g)][0]?.[1];
+    expect(providers).toBeDefined();
+    expect(fanout, `FanoutLab must show ${providers} providers`).toContain(`const TOTAL_PROVIDERS = ${providers};`);
+
+    const clients = [...src.matchAll(/(\d+)\+ (?:white-label )?client/g)][0]?.[1];
+    expect(clients).toBeDefined();
+    const themeCounts = [...new Set([...theme.matchAll(/(\d+)\+ (?:white-label )?client/g)].map((m) => m[1]))];
+    expect(themeCounts, `ThemeLab claims ${themeCounts.join("/")} clients, profile says ${clients}`).toEqual([clients]);
+  });
 });

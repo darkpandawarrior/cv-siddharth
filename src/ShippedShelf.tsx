@@ -61,7 +61,7 @@ export function ShippedShelf() {
         <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
           // on the store
         </p>
-        <h2 className="font-display text-section font-bold tracking-tight">Apps you can install</h2>
+        <h2 className="font-display text-h2 font-bold tracking-tight">Apps you can install</h2>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Shipped Android work, live on Google Play. Every rating and install count below was read
           from the listing itself, not quoted.

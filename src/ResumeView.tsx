@@ -1,7 +1,7 @@
 import { ArrowLeft, Github, Globe, Linkedin, Printer } from "lucide-react";
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
-import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projects, openSource } from "./data/profile.ts";
+import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projects, openSource, upstreamMergedPRs} from "./data/profile.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { emphasise } from "./lib/resumeEmphasis.tsx";
 
@@ -291,7 +291,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               {!full && (
                 <>
                   {" "}
-                  <span className="font-semibold text-zinc-900">Upstream:</span> {openSource.length} merged PRs to
+                  <span className="font-semibold text-zinc-900">Upstream:</span> {upstreamMergedPRs} merged PRs to
                   career-ops (public OSS, 63k+ stars).
                 </>
               )}
@@ -304,7 +304,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           {full && (
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
-              {openSource.length} merged PRs to career-ops (public OSS, 63k+ stars)
+              {upstreamMergedPRs} merged PRs to career-ops (public OSS, 63k+ stars)
               {full ? <>: {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
             </p>
           )}

@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const profilePath = join(root, "src", "data", "profile.ts");
+const fanoutPath = join(root, "src", "labs", "FanoutLab.tsx");
 const token = process.env.GITHUB_TOKEN;
 const headers = { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
@@ -63,8 +64,23 @@ try {
     // "merged upstream"). Matching the NUMBER beside the phrase rather than a
     // whole sentence keeps this working when the prose is edited.
     .replace(/\d+ merged PRs to the public career-ops project/g, `${prs} merged PRs to the public career-ops project`)
-    .replace(/status: "Active · \d+ PRs merged to public career-ops"/, `status: "Active · ${prs} PRs merged to public career-ops"`);
+    .replace(/status: "Active · \d+ PRs merged to public career-ops"/, `status: "Active · ${prs} PRs merged to public career-ops"`)
+    // The single source the résumé prints, so it stops disagreeing with the
+    // rest of the site by using the curated array's length instead.
+    .replace(/export const upstreamMergedPRs = \d+;/, `export const upstreamMergedPRs = ${prs};`)
+    ;
   writeFileSync(profilePath, src);
+
+  // The Fan-out Lab's ring size lives in its own file, so it needs its own
+  // write — chaining it onto profile.ts's contents would never have matched.
+  // It was a bare 62 while this same script kept profile.ts at 78: the lab
+  // understating the very work it exists to demonstrate.
+  const fanout = readFileSync(fanoutPath, "utf8").replace(
+    /const TOTAL_PROVIDERS = \d+;/,
+    `const TOTAL_PROVIDERS = ${providers};`,
+  );
+  writeFileSync(fanoutPath, fanout);
+
   console.log(`[gen-hiresignal-stats] prs=${prs} providers=${providers}`);
 } catch (err) {
   console.warn("[gen-hiresignal-stats] fetch failed, leaving profile.ts untouched —", err.message);

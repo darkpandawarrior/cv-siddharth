@@ -6,6 +6,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 
+import { anthology, anthologyEntries } from "../data/anthology.ts";
 /**
  * The Ink — the writing years, given their own world.
  *
@@ -51,9 +52,13 @@ function InkRoute() {
             className="group mt-8 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
           >
             <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-              <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span> Twenty
-              pieces of framed short fiction, a galactic field reporter filing what he finds until he
-              stops filing.
+              <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span>{" "}
+              {/* Derived. This said "Twenty" and had been wrong since Season Three
+                  shipped — the corpus is 34 entries across 3 seasons. A count typed
+                  into a sentence beside the data that decides it always drifts. */}
+              {anthologyEntries.length} pieces of framed short fiction across{" "}
+              {anthology.seasons.length} seasons, a galactic field reporter filing what he finds
+              until he stops filing.
             </p>
             <ArrowRight size={18} className="shrink-0 text-accent transition group-hover:translate-x-1" />
           </a>
