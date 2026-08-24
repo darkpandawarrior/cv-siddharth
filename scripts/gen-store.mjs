@@ -278,7 +278,13 @@ async function probe(id) {
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
-  return { v: PROBE_V, live: false };
+  // Out of attempts, which is NOT the same answer as "not on the store". Only a
+  // 404, or a 200 whose HTML carries no itemprop="name", is evidence of absence;
+  // a 429 storm or three timeouts are evidence of nothing at all, and this line
+  // used to launder them into `live: false` — which is how a throttled probe
+  // could quietly delist a working app. Null means unknown, and every caller
+  // has to say what it does about that.
+  return null;
 }
 
 /**
@@ -312,6 +318,8 @@ async function verifyAll(ids) {
   // Re-probe anything live that predates the current schema, so the icon and
   // developer fields land. A dead id stays dead — no point spending a request.
   const queue = ids.filter((id) => !(id in cache) || (cache[id].live && cache[id].v !== PROBE_V));
+  /** Ids Play never gave an answer for, and that no earlier run has either. */
+  const unresolved = [];
   console.log(`[gen-store] probing ${queue.length} listing(s), ${ids.length - queue.length} cached`);
   let done = 0;
   await Promise.all(
@@ -319,13 +327,21 @@ async function verifyAll(ids) {
       for (;;) {
         const id = queue.shift();
         if (!id) return;
-        cache[id] = await probe(id);
+        const r = await probe(id);
+        // A probe that came back with nothing must not overwrite a record that
+        // did. An app that resolved last run keeps its cached listing; an id
+        // that has never resolved stays OUT of the cache, so the next run
+        // retries it instead of writing it off forever, and lands in
+        // `unresolved` so this run knows its own answer is incomplete.
+        if (r) cache[id] = r;
+        else if (!(id in cache)) unresolved.push(id);
         if (++done % 100 === 0) writeFileSync(CACHE, JSON.stringify(cache));
       }
     }),
   );
   writeFileSync(CACHE, JSON.stringify(cache));
-  return cache;
+  if (unresolved.length) console.warn(`[gen-store] ${unresolved.length} id(s) never answered`);
+  return { store: cache, unresolved };
 }
 
 /* ── 3. Write ───────────────────────────────────────────────────────────── */
@@ -364,7 +380,7 @@ console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount
     console.log(`[gen-store] +${Object.keys(siblings).length} sibling app(s) from developer pages`);
 }
 
-const store = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
+const { store, unresolved } = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
 
 const flagships = FLAGSHIPS.map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
 for (const f of FLAGSHIPS) if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
@@ -414,6 +430,46 @@ const pastKept = delisted.filter(withinTenure);
 console.log(
   `[gen-store] tenure rule removed ${predating.length} app(s) last shipped before ${JOINED}`,
 );
+
+/* THE BULK-DROP BACKSTOP.
+ *
+ * Deliberately NOT the monotonic guard gen-chess-stats and gen-timeline use. A
+ * rating he reached cannot un-happen, so "never fewer than last time" is the
+ * right rule there. A Play listing genuinely can be pulled, and this generator
+ * already models that by moving the app into `delisted` — so a monotonic rule
+ * would fire on the TRUE case, turn every real delisting into a hard failure
+ * needing a manual override, and be deleted within a month for crying wolf.
+ *
+ * The test is mass, not direction. A real delisting is one or two apps; a
+ * throttled probe is dozens. Inside the tolerance the departures are named and
+ * the file is written; past it, or with any id Play never answered for at all,
+ * this refuses and leaves the committed shelf standing.
+ */
+const prevSrc = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
+const prevLive = +(/export const fleetStats = \{[\s\S]*?"live": (\d+)/.exec(prevSrc)?.[1] ?? 0);
+/** The calibration knob: wide enough to absorb a genuine round of delistings,
+ *  narrow enough to catch the cliff. */
+const SHRINK_TOLERANCE = 3;
+const fleetIdsIn = (src) => {
+  const i = src.indexOf("export const fleet = [");
+  return i < 0 ? [] : [...src.slice(i, src.indexOf("] as const;", i)).matchAll(/"id": "([^"]+)"/g)].map((m) => m[1]);
+};
+
+if (unresolved.length || liveKept.length < prevLive - SHRINK_TOLERANCE) {
+  const why = `${liveKept.length} live vs ${prevLive} committed, ${unresolved.length} unresolved`;
+  // The one legitimate day a client pulls five apps at once should not require
+  // editing this script: STORE_ALLOW_SHRINK=1 npm run gen:store.
+  if (!process.env.STORE_ALLOW_SHRINK)
+    throw new Error(
+      `[gen-store] ${why} — refusing to write; Play probably throttled the probe. ` +
+        `Re-run it, or set STORE_ALLOW_SHRINK=1 if the drop is real.`,
+    );
+  console.warn(`[gen-store] STORE_ALLOW_SHRINK set, writing anyway (${why})`);
+} else if (liveKept.length < prevLive) {
+  const now = new Set(liveKept.map((a) => a.id));
+  const gone = fleetIdsIn(prevSrc).filter((id) => !now.has(id));
+  console.warn(`[gen-store] ${prevLive - liveKept.length} app(s) left the fleet: ${gone.join(", ")}`);
+}
 
 const iconsWritten = await fetchIcons([...flagships, ...fleet]);
 console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/`);

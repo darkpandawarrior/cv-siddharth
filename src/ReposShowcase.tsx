@@ -4,6 +4,7 @@ import { Reveal } from "./Reveal.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { openSource, sharedFoundation } from "./data/profile.ts";
 import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
+import { repoStatLine } from "./lib/projectStatLine.ts";
 
 /**
  * The Source — every public repo behind the work, in one place. The project
@@ -32,8 +33,31 @@ type Repo = {
   accent: string;
 };
 
-// Curated from the same source-of-truth data the rest of the site reads —
-// stats mirror projectStats.ts / the status lines, so nothing here is invented.
+/**
+ * The stat line under each app card is COMPUTED, by the same repoStatLine the
+ * homepage project grid uses. The comment that used to sit here claimed these
+ * "mirror projectStats.ts, so nothing here is invented" while the strings
+ * beside it said 39 modules and 71 gateways and the generated data said 40 and
+ * 66. A hand-kept mirror always agrees with itself, which is exactly why it
+ * cannot be trusted to agree with anything else.
+ *
+ * The tail is the part no generator produces — PaymentsLab's five rails,
+ * Kursi's ten AI personas — kept here by slug for the same reason
+ * FOUNDATION_CHROME below keeps `lang` and `accent`: it is card copy, not a
+ * repo measurement.
+ */
+const APPS_CHROME: Record<string, string> = {
+  paymentslab: "5 rails",
+  kursi: "10 AI personas",
+  // 159 Roborazzi tests, spelled out because repoStatLine's `screenshots` is a
+  // different number measuring a different thing (a PNG count under
+  // docs/screenshots). Hand-kept until gen-project-stats.mjs parses Mileway's
+  // own README banner for a real test count — see the deferred note.
+  mileway: "159 Roborazzi tests",
+};
+
+const statOf = (slug: string) => [repoStatLine(slug), APPS_CHROME[slug]].filter(Boolean).join(" · ");
+
 const APPS: Repo[] = [
   {
     name: "Mileway",
@@ -41,7 +65,7 @@ const APPS: Repo[] = [
     lang: "Kotlin",
     kind: "KMP app · 5 platforms",
     role: "A 5-surface fintech from one Kotlin codebase — dead-reckoning location engine with Kalman smoothing and IMU motion filtering, reimbursement-policy layer, durable submit-outbox and an offline on-device AI assistant.",
-    stat: "36 modules · 13 features · 159 tests",
+    stat: statOf("mileway"),
     url: "https://github.com/darkpandawarrior/Mileway",
     accent: "#5ee6ff",
   },
@@ -51,7 +75,7 @@ const APPS: Repo[] = [
     lang: "Kotlin",
     kind: "KMP app · payments",
     role: "A payments lab beyond one-shot pay-in: payouts, mandates, a card vault, marketplace Connect and a double-entry wallet ledger — every rail MOCK_MODE-honest.",
-    stat: "39 modules · 71 gateways · 5 rails",
+    stat: statOf("paymentslab"),
     url: "https://github.com/darkpandawarrior/PaymentsLab",
     accent: "#a78bfa",
   },
@@ -61,7 +85,7 @@ const APPS: Repo[] = [
     lang: "Kotlin",
     kind: "KMP game",
     role: "A deterministic social-deduction engine — one pure (GameState, Intent) → GameState reducer driving ISMCTS bots, the UI and a server, identical on four platforms.",
-    stat: "13 modules · 4 platforms · 10 AI personas",
+    stat: statOf("kursi"),
     url: "https://github.com/darkpandawarrior/Kursi",
     accent: "#E8C874",
   },

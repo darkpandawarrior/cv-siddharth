@@ -1,4 +1,9 @@
 
+import { providerCount, upstreamStars } from "./hiresignal.ts";
+import { repoStats } from "./repoStats.ts";
+import { fleetStats } from "./store.ts";
+import { writing } from "./writing.ts";
+
 export const profile = {
   name: "Siddharth Pandalai",
   title: "Senior Android Engineer",
@@ -515,6 +520,40 @@ export interface Project {
    */
   tier?: 1 | 2;
 }
+
+/* Re-exported so the résumé and the repo showcase keep reading upstream facts
+ * from profile.ts, the one import path they already use for `upstreamMergedPRs`.
+ * See hiresignal.ts for why the declaration cannot live in this file. */
+export { providerCount, upstreamStars };
+
+/* ── The Loopdown, counted rather than remembered ─────────────────────────
+ *
+ * writing.ts is regenerated from the-loopdown on every prebuild, and the case
+ * study below used to restate its contents in hand-typed prose: seventeen
+ * lessons, eight series, a ten-piece archive, which series ran longest, which
+ * pillar carried the most, which lesson had actually been published. Every one
+ * of those is a query over data this file already imports, and every one of
+ * them was a number somebody had to remember to change.
+ *
+ * Rank claims are derived too, not just counts. "Sensors Who Lie runs longest"
+ * is as capable of going stale as "5 episodes", and rather more embarrassing,
+ * because it reads as editorial judgement instead of arithmetic.
+ */
+const lessons = writing.lessons;
+const seriesByLength = [...writing.series].sort((a, b) => b.episodes - a.episodes);
+const lessonsByPillar = Object.entries(
+  lessons.reduce<Record<string, number>>((acc, l) => {
+    const key = l.pillar ?? "other";
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {}),
+).sort((a, b) => b[1] - a[1]);
+const published = lessons.filter((l) => l.status === "published");
+const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) => {
+  const key = a.form ?? "other";
+  acc[key] = (acc[key] ?? 0) + 1;
+  return acc;
+}, {});
 
 export const projects: Project[] = [
   {
@@ -1097,7 +1136,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "78 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "18 merged PRs to the public career-ops project (⭐63k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612) — each shipped with a reproduction and a regression test, every one publicly checkable.",
+      `18 merged PRs to the public career-ops project (⭐${upstreamStars}) — two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612) — each shipped with a reproduction and a regression test, every one publicly checkable.`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -1107,7 +1146,7 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: "Upstream (career-ops, ⭐63k+)", url: "https://github.com/santifer/career-ops" },
+      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/santifer/career-ops" },
     ],
     status: "Active · 18 PRs merged to public career-ops",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
@@ -1130,7 +1169,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐63k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+        `HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
       sections: [
         {
           heading: "One engine, five targets",
@@ -1158,7 +1197,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "Seventeen merged pull requests against the public career-ops repository (⭐63k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "18 merged pull requests against the public career-ops repository (⭐" + upstreamStars + ", independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
@@ -1285,12 +1324,18 @@ export const projects: Project[] = [
       // Every figure below is measured off this repo (or the twin's), not recalled.
       // Re-derive them with, in order:
       //   node -e "..." over docs/screenshots/CAPTURED.json   → 19 routes
-      //   npx vitest run                                      → 619 tests / 46 files
       //   (cv-siddharth-kmp) find . -name '*.kt' -not -path '*/build/*' | xargs wc -l → 16,180
       //   du -sk public/portfolio-app                         → 15,048 KB = 14.7 MB
+      //
+      // The test counts are NOT on that list any more. They were, and the
+      // ritual is exactly why they read 619 tests / 46 files against an actual
+      // 777 / 67: a documented manual step is still a hand-kept number, and
+      // this one changes on nearly every commit. It comes from repoStats.ts
+      // now, and the label is interpolated alongside the value because a stale
+      // file count is no better than a stale test count.
       metrics: [
         { value: "19", label: "routes · every one captured" },
-        { value: "619", label: "unit tests · 46 files" },
+        { value: String(repoStats.tests), label: `unit tests · ${repoStats.testFiles} files` },
         { value: "16.2k", label: "lines of Kotlin · the CMP twin" },
         { value: "14.7 MB", label: "the Wasm twin's honest cost" },
       ],
@@ -1558,7 +1603,7 @@ export const projects: Project[] = [
     badges: ["Node.js", "Content engine", "Open source"],
     detail: {
       overview:
-        "The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted — never re-derived from scratch — for every place it will be read. 17 lessons across 8 series sit alongside a 10-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.",
+        `The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. ${lessons.length} lessons across ${writing.series.length} series sit alongside a ${writing.archive.length}-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.`,
       sections: [
         {
           heading: "One lesson, four channel-shaped posts",
@@ -1566,11 +1611,11 @@ export const projects: Project[] = [
         },
         {
           heading: "Field notes tied to a real production win",
-          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Mileway's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from shipping Mileway across five platforms. The writing has somewhere real to point back to.",
+          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Mileway's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from PaymentsLab's expect/actual split across targets. The writing has somewhere real to point back to.",
         },
         {
-          heading: "Eight series, seventeen lessons",
-          body: "\"Sensors Who Lie\" runs longest at 5 episodes; \"Chain of Custody\" runs 4; the rest are 1–2 episodes each. By pillar, data-integrity carries the most lessons (9 of 17) — Kalman-filtered sensors and Room migrations produce more \"the data lied to you and here's the invariant that catches it\" moments than any other pillar the archive covers.",
+          heading: "Series and lessons",
+          body: `"${seriesByLength[0]?.title}" runs longest at ${seriesByLength[0]?.episodes} episodes; "${seriesByLength[1]?.title}" runs ${seriesByLength[1]?.episodes}; the rest are shorter. By pillar, ${lessonsByPillar[0]?.[0]} carries the most lessons (${lessonsByPillar[0]?.[1]} of ${lessons.length}): Kalman-filtered sensors and Room migrations produce more "the data lied to you and here's the invariant that catches it" moments than any other pillar the archive covers.`,
         },
         {
           heading: "A voice profile enforced by a lint step",
@@ -1578,11 +1623,11 @@ export const projects: Project[] = [
         },
         {
           heading: "Written, adapted, mostly still queued",
-          body: "16 of the 17 lessons are drafted and channel-adapted (status: ready); one — \"The Concussed Witness,\" from the sensors-who-lie series — has actually gone out across all four channels. The engine is built to produce four-channel output per lesson; the publishing backlog is the honest, unfinished part.",
+          body: `${lessons.length - published.length} of the ${lessons.length} lessons are drafted and channel-adapted (status: ready). Actually out across all four channels so far: ${published.length}, "${published[0]?.title}", from the ${published[0]?.series} series. The engine is built to produce four-channel output per lesson; the publishing backlog is the honest, unfinished part.`,
         },
         {
-          heading: "The archive — ten pieces from before the code",
-          body: "A consolidated back catalogue from Books Before Bros, the original blog: campus lore and short fiction predating the engineering work, six pieces of short fiction, two essays and two humor pieces, kept in the same repo as the lessons rather than left to rot on an old WordPress install.",
+          heading: `The archive: ${writing.archive.length} pieces from before the code`,
+          body: `A consolidated back catalogue from Books Before Bros, the original blog: campus lore and short fiction predating the engineering work, ${archiveByForm["short-fiction"] ?? 0} pieces of short fiction, ${archiveByForm.essay ?? 0} essays and ${archiveByForm.humor ?? 0} humor pieces, kept in the same repo as the lessons rather than left to rot on an old WordPress install.`,
         },
         {
           heading: "Framed as a time loop",
@@ -1590,10 +1635,10 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "17", label: "lessons · 8 series" },
+        { value: String(lessons.length), label: `lessons · ${writing.series.length} series` },
         { value: "4", label: "channels per lesson · dev.to, LinkedIn, Medium, Hashnode" },
-        { value: "10", label: "archive pieces · from before the code" },
-        { value: "1", label: "lesson published across all four channels so far" },
+        { value: String(writing.archive.length), label: "archive pieces · from before the code" },
+        { value: String(published.length), label: "lesson published across all four channels so far" },
       ],
       techStack: [
         { group: "Engine", items: ["Node.js", "Markdown", "SVG generation (branded cards)", "Voice-profile lint"] },
@@ -1656,7 +1701,7 @@ export interface Contribution {
   date: string;
 }
 
-// Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐63k+).
+// Real public open-source contributions — merged PRs to career-ops, a public OSS project.
 // See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
 /**
  * Merged PRs upstream, as the live GitHub search reports it.
@@ -1701,13 +1746,13 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: "18 merged PRs to the public career-ops project (⭐63k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history." },
+  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: `18 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
   { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
-  { date: "Aug 2026", title: "Portfolio — the fleet made checkable", detail: "New /shipped page: 89 live listings plus 84 delisted ones recovered via the Internet Archive — 173 apps traced across 1,642 branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted." },
+  { date: "Aug 2026", title: "Portfolio — the fleet made checkable", detail: `New /shipped page: ${fleetStats.live} live listings plus ${fleetStats.delisted} delisted ones recovered via the Internet Archive, ${fleetStats.live + fleetStats.delisted} apps traced across ${fleetStats.branches.toLocaleString("en-US")} branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted.` },
   { date: "Aug 2026", title: "Portfolio — the anthology and The Board, published", detail: "New /ink surfaces: the Morkinstar Journals anthology across three seasons (The Directory, The Ninety-One Pages, The Kindling) plus a starmap, and The Board — seven years of forum games, mined and republished." },
 ];
 

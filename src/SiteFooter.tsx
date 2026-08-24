@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { profile } from "./data/profile.ts";
+import { profile, projects } from "./data/profile.ts";
 import { elsewhere } from "./data/elsewhere.ts";
 import { surfaces, type SurfaceGroup } from "./data/surfaces.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
@@ -65,14 +65,21 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
+    /* Same treatment as the registry columns, one file over: a `detail` block
+       is exactly what makes /project/$slug renderable, so it is the honest
+       filter. The hand-kept version listed five of the eight and had never
+       been told about cv-siddharth, the KMP toolkit family or The Loopdown.
+       Short label per DeviceMorph's convention, because the portfolio entry's
+       full name is a 60-character sentence. */
     title: "Builds",
-    links: [
-      { label: "Mileway", kind: "route", to: "/project/$slug", params: { slug: "mileway" } },
-      { label: "Kursi", kind: "route", to: "/project/$slug", params: { slug: "kursi" } },
-      { label: "PaymentsLab", kind: "route", to: "/project/$slug", params: { slug: "paymentslab" } },
-      { label: "HireSignal", kind: "route", to: "/project/$slug", params: { slug: "hiresignal" } },
-      { label: "DEADLOCK", kind: "route", to: "/project/$slug", params: { slug: "deadlock" } },
-    ],
+    links: projects
+      .filter((p) => p.detail)
+      .map((p) => ({
+        label: p.name.split(" — ")[0],
+        kind: "route" as const,
+        to: "/project/$slug",
+        params: { slug: p.slug },
+      })),
   },
   {
     title: "Rooms",

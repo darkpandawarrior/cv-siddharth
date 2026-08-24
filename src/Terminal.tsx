@@ -12,10 +12,10 @@ import {
   skills,
   projects,
   caseStudies,
-  recentGrowth,
   sharedFoundation,
   openSource,
 } from "./data/profile.ts";
+import { shippedNewestFirst } from "./lib/shipped.ts";
 import { chess } from "./data/chess.ts";
 import { writing } from "./data/writing.ts";
 import { RELATED_SERIES } from "./data/connections.ts";
@@ -436,7 +436,7 @@ function buildCommands(jump: Go): Cmd[] {
       help: "recently shipped, newest first",
       run: () => (
         <div className="space-y-0.5">
-          {recentGrowth.slice(-6).reverse().map((g) => (
+          {shippedNewestFirst.map((g) => (
             <div key={g.title}>
               <Dim>{g.date}</Dim> <span className="text-zinc-200">{g.title}</span>
             </div>

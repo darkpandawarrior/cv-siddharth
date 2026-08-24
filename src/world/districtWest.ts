@@ -192,7 +192,7 @@ export interface ProjectTower {
   dated: boolean;
 }
 
-/** Nine towers, one per `profile.projects` entry. Height is `modules *
+/** One tower per `profile.projects` entry. Height is `modules *
  *  0.55` (projectStats when the slug has an entry, else the same 8-module
  *  fallback Monuments.tsx used before this rewrite). Z comes from, in
  *  order: an explicit dated shipping/contribution entry; else the

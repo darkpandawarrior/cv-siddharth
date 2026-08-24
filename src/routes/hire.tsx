@@ -45,9 +45,15 @@ function HirePage() {
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
           {profile.name} — {profile.title}
         </h1>
+        {/* "Five years" read as an exact figure and was the only surface
+            spelling it out, so it could not be found by the same grep that
+            finds the other ten. The hedge every other surface uses is a lower
+            bound, which is the one direction a hiring page may drift. It is
+            still hand-typed: the real fix is one anchor date in profile.ts,
+            interpolated everywhere, and that lives outside this file. */}
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-300">
-          Platform owner of a ~964k-LOC financial SaaS app serving 50,000+ monthly users. Five years
-          of Android, now building across Kotlin Multiplatform.
+          Platform owner of a ~964k-LOC financial SaaS app serving 50,000+ monthly users. 5+ years of
+          Android, now building across Kotlin Multiplatform.
         </p>
 
         {/* The numbers, before anything else asks for attention. */}

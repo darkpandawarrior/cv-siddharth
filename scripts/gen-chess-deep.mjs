@@ -26,7 +26,8 @@ if (!existsSync(cache)) {
   process.exit(0);
 }
 
-const games = JSON.parse(readFileSync(cache, "utf8")).games ?? [];
+const corpus = JSON.parse(readFileSync(cache, "utf8"));
+const games = corpus.games ?? [];
 
 const sideOf = (g) => {
   const p = g.players ?? {};
@@ -74,7 +75,14 @@ const deep = rate((r) => (r.g.opening?.ply ?? 0) >= 8, 90);
 const shallow = rate((r) => { const p = r.g.opening?.ply ?? 0; return p > 0 && p <= 4; }, 100);
 
 const out = {
-  generatedAt: new Date(JSON.parse(readFileSync(cache, "utf8")).seenAt).toISOString().slice(0, 10),
+  // When this ran. It used to be lichess's `seenAt`, which is when he was last
+  // ONLINE — a field that stops moving the moment he stops playing, so the
+  // freshness test read a working generator as a month-stale one. The corpus is
+  // a frozen archive, so the run stamp is the only figure here that can ever be
+  // current, and the lichess one keeps its real name below.
+  generatedAt: new Date().toISOString(),
+  /** lichess's own `seenAt`: the last time the account was online. */
+  lastSeenOnLichess: corpus.seenAt ? new Date(corpus.seenAt).toISOString().slice(0, 10) : null,
   sampleSize: total,
   bySource,
   byTimeControl,
@@ -85,6 +93,24 @@ const out = {
     shallow: shallow ?? { n: 0, winRate: 0 },
   },
 };
+
+/* The cache is gitignored and rebuilt by gen-chess-stats, so a truncated or
+ * half-written one is a normal accident rather than an exotic one — and it
+ * arrives here as a perfectly valid JSON file with a fraction of the games in
+ * it. The corpus is an ARCHIVE: games already played do not un-play. So a
+ * sample smaller than the committed file means the input is broken, not that
+ * the findings changed, and yesterday's numbers are the better answer. Exit 0
+ * like gen-timeline, because a bad cache should not fail a deploy. */
+const previousSample = existsSync(outPath)
+  ? +(/"sampleSize":\s*(\d+)/.exec(readFileSync(outPath, "utf8"))?.[1] ?? 0)
+  : 0;
+if (total < previousSample) {
+  console.warn(
+    `[gen-chess-deep] cache holds ${total} games but the committed file was built from ` +
+      `${previousSample} — leaving src/data/chessDeep.ts alone (re-run gen:chess to refill the cache)`,
+  );
+  process.exit(0);
+}
 
 writeFileSync(
   outPath,

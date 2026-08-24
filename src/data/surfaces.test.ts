@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 import { surfaces, WALL_GROUPS, wallSurfaces, siteRooms } from "./surfaces.ts";
 import { facets } from "./facets.ts";
 import { SURFACE_ICON } from "../rooms.tsx";
+import { anthologyEntries } from "./anthology.ts";
 
 const root = join(import.meta.dirname, "..", "..");
 
@@ -129,5 +130,31 @@ describe("back-compat", () => {
       "/chess",
       "/weeb",
     ]);
+  });
+});
+
+describe("the registry's spelled-out counts still match the data", () => {
+  // surfaces.ts cannot import the corpora it describes: every consumer imports
+  // the registry, so deriving one word would drag the whole of the fiction
+  // into every chunk. The number stays written out and this test is what stops
+  // it drifting. It had said "twenty" since season 2, while the corpus grew to
+  // thirty-four.
+  const WORDS: Record<number, string> = {
+    20: "twenty", 30: "thirty", 34: "thirty-four", 35: "thirty-five",
+    36: "thirty-six", 40: "forty", 44: "forty-four", 50: "fifty",
+  };
+
+  it("the anthology tile names as many stories as the anthology has", () => {
+    const tile = surfaces.find((s) => s.to === "/anthology");
+    expect(tile, "the anthology tile went missing from the registry").toBeDefined();
+    const word = WORDS[anthologyEntries.length];
+    expect(
+      word,
+      `no spelled-out form for ${anthologyEntries.length}; add it to WORDS above`,
+    ).toBeDefined();
+    expect(
+      tile!.blurb,
+      `the tile should say "${word} short stories" — the corpus holds ${anthologyEntries.length}`,
+    ).toContain(`${word} short stories`);
   });
 });

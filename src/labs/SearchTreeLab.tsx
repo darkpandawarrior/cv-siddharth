@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { projectBySlug } from "../data/profile.ts";
 
 /* ── Kursi ISMCTS Search Tree Lab ────────────────────────────────────── */
 // Real numbers from src/data/profile.ts "kursi" entry: 1.5k-16k ISMCTS
-// search iterations depending on difficulty tier, and the 6 named roles
-// under detail.roles. The source data does not enumerate all 10 bot
-// personas by name, so only these 6 roles are used for the "who's
-// deciding" readout.
+// search iterations depending on difficulty tier. The source data does not
+// enumerate all 10 bot personas by name, so the "who's deciding" readout
+// draws from the named roles it does carry.
 
 const TIERS = [
   { label: "Easy", target: 1500 },
@@ -17,7 +17,9 @@ const TIERS = [
   { label: "Grandmaster", target: 16000 },
 ];
 
-const ROLES = ["Netaji Vachan", "Bhai Teja", "Babu Filewala", "Jugaadu Chhotu", "Vakil Loophole", "Patrakaar"];
+// Straight off the case study's own roster — the names used to be re-typed
+// here, which is a second copy of a list that only ever lives in one place.
+const ROLES = projectBySlug("kursi")?.detail?.roles?.map((r) => r.name) ?? [];
 
 const GOLD = "var(--lab-gold)";
 const HEADING_FONT = "'Rozha One', Georgia, serif";

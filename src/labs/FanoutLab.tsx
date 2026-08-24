@@ -235,7 +235,7 @@ export function FanoutLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        62 ATS &amp; job-board providers, one query. Greenhouse, Ashby and Lever get hit directly by
+        {TOTAL_PROVIDERS} ATS &amp; job-board providers, one query. Greenhouse, Ashby and Lever get hit directly by
         structured APIs — zero LLM cost — while listings fan back in toward a collection zone. The same
         posting often comes back from more than one board; SimHash fingerprinting is what tells them
         apart from something actually new. Flip de-dup off and watch the duplicates pile up instead.
@@ -259,8 +259,8 @@ export function FanoutLab() {
           </label>
           <span className="font-mono text-xs text-zinc-400">
             {dedup
-              ? `62 providers queried · ${stats.total} listings → ${stats.unique} unique after de-dup`
-              : `62 providers queried · ${stats.total} listings, 0 de-duped`}
+              ? `${TOTAL_PROVIDERS} providers queried · ${stats.total} listings → ${stats.unique} unique after de-dup`
+              : `${TOTAL_PROVIDERS} providers queried · ${stats.total} listings, 0 de-duped`}
           </span>
           <span className="font-mono text-xs text-accent">0 LLM tokens spent</span>
           <Link
@@ -268,7 +268,7 @@ export function FanoutLab() {
             params={{ slug: "hiresignal" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → HireSignal's 62 providers
+            the full story → HireSignal's {TOTAL_PROVIDERS} providers
           </Link>
         </div>
       </div>

@@ -26,6 +26,12 @@ describe("SiteFooter", () => {
     for (const p of promoted) expect(handWritten, `${p} is promoted but never linked`).toContain(p);
   });
 
+  it("derives its Builds column from the project registry", () => {
+    // Any literal `params: { slug: "..." }` in the source means the hand-kept
+    // list of project links came back; the derived version contains none.
+    expect(src).not.toMatch(/params:\s*\{\s*slug:\s*"/);
+  });
+
   it("reaches every registry surface through a derived group", () => {
     const groups = new Set([...src.matchAll(/fromRegistry\(([^)]*)\)/g)].flatMap((m) => m[1].split(",").map((g) => g.trim().replace(/"/g, ""))));
     const unreachable = surfaces.filter((s) => !groups.has(s.group));

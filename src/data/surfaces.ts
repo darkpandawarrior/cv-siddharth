@@ -44,6 +44,7 @@
 // live in `rooms.tsx`'s FACET_ICON map, keyed by path; `surfaces.test.ts`
 // fails the build if that map misses one.
 
+import { excelsiorEditions } from "./excelsior.ts";
 import { LAB_TABS, countWord } from "./labs.ts";
 
 /**
@@ -360,7 +361,10 @@ const pageSurfaces: SurfaceInput[] = [
     label: "Excelsior",
     blurb:
       "Three editions of MANIT Bhopal's institute magazine, readable here in full — English Editor on 2019 and 2020, Joint Chief Editor on 2021.",
-    tag: "396 pages",
+    // Summed from the generated edition list rather than added up by hand —
+    // three editions today, and the tile is the one place a fourth would not
+    // announce itself.
+    tag: `${excelsiorEditions.reduce((n, e) => n + e.pages, 0)} pages`,
     group: "writing",
     tint: "#cf8f63",
     device: "tablet",
@@ -385,7 +389,14 @@ const pageSurfaces: SurfaceInput[] = [
     to: "/anthology",
     label: "The Morkinstar Journals",
     blurb:
-      "A galactic field reporter files twenty short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+      "A galactic field reporter files thirty-four short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+    // The count is spelled out rather than interpolated on purpose: this file
+    // is the route registry and every consumer imports it, so pulling the
+    // anthology corpus in here to derive one word would put the whole of the
+    // fiction into every chunk. surfaces.test.ts pins the word to
+    // anthologyEntries.length instead, which costs nothing at runtime. It said
+    // "twenty" while the corpus held thirty-four, undercounting his own work
+    // on a public tile.
     tag: "fiction · starmap",
     group: "writing",
     // The ink-world's own ochre, not a new colour — this tile lives inside

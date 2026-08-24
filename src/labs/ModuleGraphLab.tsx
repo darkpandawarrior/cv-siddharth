@@ -1,29 +1,51 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { projectStats } from "../data/projectStats.ts";
+import { countWord } from "../data/labs.ts";
 
 /**
- * The Module Graph Lab — Mileway's 46-module clean architecture, drawn as a
- * radial graph. Thirteen feature modules meet only at the :app composition
+ * The Module Graph Lab — Mileway's clean architecture, drawn as a radial
+ * graph. Every feature module meets the others only at the :app composition
  * root; six of them are the names confirmed in the architecture diagram
  * (tracking, logging, travel, approvals, payables, agent), the rest are
- * generic "feature" nodes — the source data doesn't name the other seven.
+ * generic "feature" nodes — the source data doesn't name the others.
  * Static SVG + React state: nothing here animates per-frame, so there's no
  * canvas/RAF loop to own.
+ *
+ * The counts come from projectStats.ts, generated off Mileway's own
+ * settings.gradle.kts. They used to be typed here in five places (the divisor,
+ * the label array's length, the prose, the aria-label and the chip) and a
+ * fourteenth feature module would have drawn thirteen nodes across fourteen
+ * slots without anything failing.
  */
 
 const CX = 210;
 const CY = 175;
 const FEATURE_R = 108;
 const OUTER_R = 142;
-const N_FEATURES = 13;
-const N_OTHER = 46 - N_FEATURES; // 33 shared & composed modules, unlabeled
+const LOCAL = projectStats.mileway.modules;
+const N_FEATURES = projectStats.mileway.features;
+/**
+ * The modules Mileway consumes through `includeBuild("external/kmp-toolkit")`
+ * rather than declaring itself, so they never appear as `include(` lines and
+ * gen-project-stats.mjs does not count them today. Hand-kept until the
+ * generator emits a `composedModules` for mileway the way it already does for
+ * paymentslab — see the deferred note in this change.
+ */
+const COMPOSED = 10;
+const TOTAL = LOCAL + COMPOSED;
+const N_OTHER = TOTAL - N_FEATURES; // shared & composed modules, unlabeled
 const CYAN = "#5ee6ff";
 
-// Interleaved so the six confirmed names don't clump on one side of the circle.
-const FEATURE_LABELS = [
-  "tracking", "feature", "logging", "feature", "travel", "feature",
-  "approvals", "feature", "payables", "feature", "agent", "feature", "feature",
-];
+/** The six feature modules the architecture diagram actually names. */
+const NAMED = ["tracking", "logging", "travel", "approvals", "payables", "agent"];
+
+// Built to N_FEATURES rather than listed, so the ring always has exactly as
+// many nodes as it has slots. Interleaved so the confirmed names don't clump
+// on one side of the circle.
+const FEATURE_LABELS = Array.from({ length: N_FEATURES }, (_, i) =>
+  i % 2 === 0 && NAMED[i / 2] ? NAMED[i / 2] : "feature",
+);
 
 const features = FEATURE_LABELS.map((label, i) => {
   const angle = (2 * Math.PI * i) / N_FEATURES - Math.PI / 2;
@@ -35,7 +57,7 @@ const otherDots = Array.from({ length: N_OTHER }, (_, i) => {
   return { x: CX + OUTER_R * Math.cos(angle), y: CY + OUTER_R * Math.sin(angle) };
 });
 
-// All 78 possible feature-to-feature pairs — the "tangled" hypothetical.
+// Every possible feature-to-feature pair — the "tangled" hypothetical.
 const crossEdges: { a: number; b: number }[] = [];
 for (let i = 0; i < N_FEATURES; i++) {
   for (let j = i + 1; j < N_FEATURES; j++) crossEdges.push({ a: i, b: j });
@@ -64,10 +86,11 @@ export function ModuleGraphLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        Mileway's 46-module Gradle graph: thirteen feature modules — tracking, logging, travel,
-        approvals, payables, agent and seven more — that never depend on each other, wired together
-        only at the <span className="text-zinc-300">:app</span> composition root. Isolate features off
-        shows the alternative: every feature reaching into every other one.
+        Mileway's {TOTAL}-module Gradle graph: {countWord(N_FEATURES).toLowerCase()} feature modules —
+        tracking, logging, travel, approvals, payables, agent and {countWord(N_FEATURES - NAMED.length).toLowerCase()} more
+        — that never depend on each other, wired together only at the{" "}
+        <span className="text-zinc-300">:app</span> composition root. Isolate features off shows the
+        alternative: every feature reaching into every other one.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
@@ -75,7 +98,7 @@ export function ModuleGraphLab() {
             viewBox="0 0 420 380"
             className="h-full w-full"
             role="img"
-            aria-label="Radial graph of Mileway's 46 Gradle modules, centered on the :app composition root"
+            aria-label={`Radial graph of Mileway's ${TOTAL} Gradle modules, centered on the :app composition root`}
           >
             {!isolate &&
               crossEdges.map((e, idx) => {
@@ -181,13 +204,15 @@ export function ModuleGraphLab() {
           <span className={`font-mono text-xs ${isolate ? "text-accent" : "text-danger"}`}>
             cross-feature dependencies: {crossDeps}
           </span>
-          <span className="font-mono text-xs text-muted">46 modules total · 36 local + 10 composed</span>
+          <span className="font-mono text-xs text-muted">
+            {TOTAL} modules total · {LOCAL} local + {COMPOSED} composed
+          </span>
           <Link
             to="/project/$slug"
             params={{ slug: "mileway" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → Mileway's 46 modules
+            the full story → Mileway's {TOTAL} modules
           </Link>
         </div>
       </div>

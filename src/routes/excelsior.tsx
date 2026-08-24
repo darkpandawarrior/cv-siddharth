@@ -4,6 +4,7 @@ import { roomHead } from "../lib/routeHead.ts";
 import { Flipbook } from "../Flipbook.tsx";
 import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
+import { countWord } from "../data/labs.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 
 /**
@@ -36,6 +37,10 @@ export const Route = createFileRoute("/excelsior")({
 function ExcelsiorRoute() {
   const { year, page } = Route.useSearch();
   const navigate = useNavigate({ from: "/excelsior" });
+  // The same filter the pill row runs, hoisted so the sentence above it counts
+  // the pills it actually renders. "The five I wrote" was typed in beside the
+  // list that decides it, which is the arrangement that always drifts.
+  const readable = excelsiorMarks.filter((m) => m.readSlug);
 
   return (
     // The print-era artefact `/ink` and `/read/$slug` exist to host — it
@@ -72,27 +77,26 @@ function ExcelsiorRoute() {
           </p>
         </div>
 
-        {/* The pieces, as prose. This row comes FIRST because 396 page images
+        {/* The pieces, as prose. This row comes FIRST because the page scans
             are the artefact, not the reading — the text is unselectable and
             invisible to search, and on a phone it is unusable. Read it here,
             then go look at the page it ran on. */}
         <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
           <p className="kicker-accent">
-            Rather read it? The five I wrote, in full
+            {/* countWord returns "Five", capitalised, and this sits mid-sentence. */}
+            Rather read it? The {countWord(readable.length).toLowerCase()} I wrote, in full
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {excelsiorMarks
-              .filter((m) => m.readSlug)
-              .map((m) => (
-                <Link
-                  key={m.readSlug}
-                  to="/read/$slug"
-                  params={{ slug: m.readSlug! }}
-                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
-                >
-                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
-                </Link>
-              ))}
+            {readable.map((m) => (
+              <Link
+                key={m.readSlug}
+                to="/read/$slug"
+                params={{ slug: m.readSlug! }}
+                className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
+              >
+                {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+              </Link>
+            ))}
           </div>
         </div>
 

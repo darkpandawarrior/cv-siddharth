@@ -8,8 +8,13 @@
  *
  * Plain data, no component imports: routeHead.ts runs on the SSR path, and
  * importing LabBench.tsx there would drag in SignalLab's leaflet dependency,
- * which touches `window` at module-load time.
+ * which touches `window` at module-load time. The provider count comes from
+ * data/hiresignal.ts and NOT from profile.ts for a related reason: profile.ts
+ * re-exports siteRooms from surfaces.ts, surfaces.ts imports this file, and
+ * reaching back into profile.ts from here closes that ring — LAB_TABS reads as
+ * undefined in whichever module loses the race.
  */
+import { providerCount } from "./hiresignal.ts";
 
 export type LabKey =
   | "signal"
@@ -39,7 +44,10 @@ export const LAB_TABS: LabTab[] = [
   { key: "modules", label: "Module Graph", metric: "46 modules", group: "personal" },
   { key: "gateways", label: "Gateway Lab", metric: "66 gateways", group: "personal" },
   { key: "search", label: "Search Tree", metric: "10 personas", group: "personal" },
-  { key: "fanout", label: "Provider Fan-out", metric: "62 providers", group: "personal" },
+  // Interpolated, not typed. This said 62 while the case study two files over
+  // said 78, because the generator that moves the case study's number had no
+  // pattern for a tab label — the lab understating the work it exists to show.
+  { key: "fanout", label: "Provider Fan-out", metric: `${providerCount} providers`, group: "personal" },
   { key: "replay", label: "Deterministic Replay", metric: "0-tolerance", group: "personal" },
   { key: "chess-search", label: "Chess Search", metric: "alpha-beta", group: "personal" },
   { key: "chess-clock", label: "Clock Burn", metric: "+8.5 pts", group: "personal" },

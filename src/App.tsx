@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapPin,
   ArrowUpRight,
@@ -14,7 +14,7 @@ import {
   Target,
   Crown,
 } from "lucide-react";
-import {profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, cardMedia, siteRooms } from "./data/profile.ts";
+import {profile, metrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
@@ -39,6 +39,7 @@ import { excelsiorMarks } from "./data/excelsiorMarks.ts";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
+import { Expandable } from "./Expandable.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 // data/labs.ts, not LabBench.tsx: these two names are all the homepage wants,
 // and taking them from the component put the whole 53 kB bench — instruments,
@@ -47,6 +48,8 @@ import { openLab, type LabKey } from "./data/labs.ts";
 import { writing } from "./data/writing.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { repoStatLine } from "./lib/projectStatLine.ts";
+import { shippedNewestFirst } from "./lib/shipped.ts";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -71,24 +74,6 @@ function platformsOf(stack: string[]) {
     const hit = PLATFORM_ICONS.find((p) => p.match(s));
     return hit ? [hit] : [];
   });
-}
-
-// Projects with a playable web build — hints the "▶ Live" badge on the card;
-// the detail page is where it's actually embedded/linked.
-const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway", "paymentslab"]);
-
-// Real repo stats surfaced on the card, drawn from projectStats.ts (generated
-// from each repo). Only the apps with generated stats get a strip.
-function repoStatLine(slug: string): string | null {
-  const s = projectStats[slug as keyof typeof projectStats];
-  if (!s) return null;
-  if (slug === "mileway" && "features" in s) return `${s.modules} modules · ${s.features} features · ${s.screenshots} tests`;
-  if (slug === "paymentslab" && "gatewaysNative" in s) {
-    const gateways = s.gatewaysNative + s.gatewaysHosted + s.gatewaysMobileMoney + s.gatewaysStub;
-    return `${s.modules + s.composedModules} modules · ${gateways} gateways`;
-  }
-  if (slug === "kursi") return `${s.modules} modules · 4 platforms`;
-  return `${s.modules} modules`;
 }
 
 /**
@@ -479,7 +464,7 @@ function Circuit() {
 /** Live pulse under the hero: the latest ship and the latest field note. */
 function LiveTicker() {
   const { goToSection } = useSectionNav();
-  const latestShip = recentGrowth[recentGrowth.length - 1];
+  const latestShip = shippedNewestFirst[0];
   const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
   if (!latestShip && !latestPost) return null;
   return (
@@ -728,7 +713,11 @@ function Projects() {
               if (externalHref) window.open(externalHref, "_blank", "noreferrer");
             };
             const platforms = platformsOf(p.stack);
-            const isLive = LIVE_WEB_PROJECTS.has(p.slug);
+            // A playable web build is a fact the data already carries:
+            // `liveUrl` is documented Web-only (see ProjectTarget in
+            // profile.ts), so the presence of one IS the badge. The hand-kept
+            // Set beside it had never been told about the portfolio target.
+            const isLive = !!p.targets?.some((t) => t.liveUrl);
             const statLine = repoStatLine(p.slug);
             const media = cardMedia[p.slug];
             return (
@@ -873,7 +862,7 @@ function Projects() {
             Recently shipped
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {recentGrowth.slice(-4).reverse().map((g) => (
+            {shippedNewestFirst.map((g) => (
               <div key={g.title} className="panel-sm p-4">
                 <p className="text-xs text-muted">{g.date}</p>
                 <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
@@ -884,49 +873,6 @@ function Projects() {
         </Reveal>
       </div>
     </section>
-  );
-}
-
-/**
- * A hard `.slice()` drops real content with no way to see it. Expandable
- * renders the first `visibleCount` items, then — only if there's more — a
- * real toggle button ("+N more") that reveals the rest. Collapsed by
- * default. One component, reused wherever a list gets truncated.
- */
-function Expandable<T>({
-  items,
-  visibleCount,
-  renderItem,
-}: {
-  items: T[];
-  visibleCount: number;
-  renderItem: (item: T) => ReactNode;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const id = useId();
-  const hiddenCount = items.length - visibleCount;
-  if (hiddenCount <= 0) return <>{items.map(renderItem)}</>;
-  return (
-    <>
-      {items.slice(0, visibleCount).map(renderItem)}
-      <li className="flex flex-col gap-2">
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-controls={id}
-          // Some call sites (the project cards) nest this inside a
-          // click-to-navigate wrapper — stop the toggle from also firing that.
-          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-          onKeyDown={(e) => e.stopPropagation()}
-          className="kicker-accent w-fit transition hover:opacity-80"
-        >
-          {expanded ? "show less" : `+ ${hiddenCount} more`}
-        </button>
-        <ul id={id} hidden={!expanded} className="space-y-2">
-          {items.slice(visibleCount).map(renderItem)}
-        </ul>
-      </li>
-    </>
   );
 }
 
@@ -1054,7 +1000,7 @@ function ExperienceSection() {
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
     { label: "~87% UI-layer Compose migration", href: "#work" },
-    { label: "Mileway · 35 modules", href: "#project/mileway" },
+    { label: `Mileway · ${projectStats.mileway.modules} modules`, href: "#project/mileway" },
   ],
   "Concurrency & Data": [
     { label: "-80% crashes", href: "#work" },

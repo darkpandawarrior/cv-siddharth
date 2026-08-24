@@ -5,6 +5,7 @@ import { TiltCard } from "./TiltCard.tsx";
 import { ReactionRow } from "./play/ReactionRow.tsx";
 
 import { DeferredPlayRoom } from "./play/DeferredPlayRoom.tsx";
+import { Expandable } from "./Expandable.tsx";
 /**
  * Weeb Central — a hand-kept anime list, read as evidence rather than displayed
  * as a collection.
@@ -195,43 +196,47 @@ export function WeebRoom() {
               moment it is written. The only fix is to ask something outside the list.
             </p>
 
-            <ul className="mt-6 divide-y divide-line">
-              {stale.slice(0, 8).map((s) => (
-                // Wraps. Both halves are anime titles pulled from AniList, and
-                // "I Was Reincarnated as the 7th Prince so I Can Take My Time
-                // Perfecting My Magical Ability Season 2" is 686px of shrink-0
-                // text — /weeb scrolled 439px sideways on a phone and 46px on a
-                // tablet. A generated string cannot be given a fixed share of the
-                // row; it has no length anyone here controls.
-                <li key={s.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
-                  {/* AniList's canonical name, not the CSV spelling. His rows
-                      were typed over years and mix English with romaji —
-                      "Seven Deadly Sins" beside "Nanatsu no Taizai" — so the
-                      list read as two naming conventions with no rule. 26 of
-                      43 rows here differ from their canonical name. The
-                      Japanese title goes underneath where it says something
-                      different, rather than replacing anything. */}
-                  <span className="min-w-0 text-sm text-zinc-300">
-                    {s.title}
-                    {s.romaji && s.romaji !== s.title && (
-                      <span className="kicker ml-2 align-middle">{s.romaji}</span>
-                    )}
-                  </span>
-                  <span className="flex min-w-0 items-center gap-3 sm:justify-end">
-                    <span className="font-mono text-[11px] text-muted">
-                      {s.sequel}
-                      {s.year ? ` · ${s.year}` : ""}
+            {/* Expandable, not `.slice(8)`: the tail used to be unreachable,
+                which is why the line under it had to apologise for the
+                ordering. The rows the finding is ABOUT were the ones a reader
+                could not get to. `border-t` per row rather than `divide-y` on
+                the list, because the revealed rows live in Expandable's own
+                nested <ul> and a parent's divide-y never reaches them. */}
+            <ul className="mt-6">
+              <Expandable
+                items={stale}
+                visibleCount={8}
+                renderItem={(s) => (
+                  // Wraps. Both halves are anime titles pulled from AniList, and
+                  // "I Was Reincarnated as the 7th Prince so I Can Take My Time
+                  // Perfecting My Magical Ability Season 2" is 686px of shrink-0
+                  // text — /weeb scrolled 439px sideways on a phone and 46px on a
+                  // tablet. A generated string cannot be given a fixed share of the
+                  // row; it has no length anyone here controls.
+                  <li key={s.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-line py-3">
+                    {/* AniList's canonical name, not the CSV spelling. His rows
+                        were typed over years and mix English with romaji —
+                        "Seven Deadly Sins" beside "Nanatsu no Taizai" — so the
+                        list read as two naming conventions with no rule. The
+                        Japanese title goes underneath where it says something
+                        different, rather than replacing anything. */}
+                    <span className="min-w-0 text-sm text-zinc-300">
+                      {s.title}
+                      {s.romaji && s.romaji !== s.title && (
+                        <span className="kicker ml-2 align-middle">{s.romaji}</span>
+                      )}
                     </span>
-                    <ReactionRow surface="weeb" itemId={s.name} />
-                  </span>
-                </li>
-              ))}
+                    <span className="flex min-w-0 items-center gap-3 sm:justify-end">
+                      <span className="font-mono text-[11px] text-muted">
+                        {s.sequel}
+                        {s.year ? ` · ${s.year}` : ""}
+                      </span>
+                      <ReactionRow surface="weeb" itemId={s.name} />
+                    </span>
+                  </li>
+                )}
+              />
             </ul>
-            {stale.length > 8 && (
-              <p className="mt-3 font-mono text-[11px] text-muted">
-                + {stale.length - 8} more, oldest first in the data.
-              </p>
-            )}
 
             <p className="mt-6 flex items-center gap-2 text-sm text-muted">
               <CalendarClock size={15} className="text-accent" />

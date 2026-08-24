@@ -73,7 +73,7 @@ function place(index: number, total: number): [number, number, number] {
 
   // Evenly down the whole boulevard, margined off both kerbs — this alone
   // keeps same-side neighbours (index, index+2) roughly 2*span/total apart,
-  // comfortably past ARTIFACT_PICKUP_RADIUS for the ~16 artifacts this file
+  // comfortably past ARTIFACT_PICKUP_RADIUS for the ~19 artifacts this file
   // actually seeds.
   const marginZ = 6;
   const usableZ = z1 - z0 - marginZ * 2;
@@ -103,8 +103,11 @@ type Seed = { id: string; label: string; detail: string };
 function seeds(): Seed[] {
   const out: Seed[] = [];
 
-  // Shipped work.
-  for (const p of projects.slice(0, 5)) {
+  // Shipped work — every project, not the first five. The slice silently
+  // dropped whatever was authored last, and `place()` already takes the final
+  // count and redistributes the whole boulevard around it, so there was never
+  // a spacing reason to cap it.
+  for (const p of projects) {
     out.push({ id: `project-${p.slug}`, label: p.name, detail: p.status });
   }
 

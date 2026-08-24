@@ -47,10 +47,24 @@ describe("HireSignal's numbers agree with themselves", () => {
     // which is the direction of error nobody ever notices, because a number
     // that is too small never looks like a bug.
     const fanout = readFileSync(new URL("../labs/FanoutLab.tsx", import.meta.url), "utf8");
+    const labs = readFileSync(new URL("./labs.ts", import.meta.url), "utf8");
     const theme = readFileSync(new URL("../labs/ThemeLab.tsx", import.meta.url), "utf8");
     const providers = [...src.matchAll(/(\d+) ATS/g)][0]?.[1];
     expect(providers).toBeDefined();
     expect(fanout, `FanoutLab must show ${providers} providers`).toContain(`const TOTAL_PROVIDERS = ${providers};`);
+
+    // The bench's own tab label was a tenth site, and it said 62. Asserting
+    // that labs.ts carries NO digit-literal provider count, rather than that
+    // it carries the right one, is what makes an eleventh site fail here
+    // instead of quietly joining the split.
+    expect(
+      [...labs.matchAll(/(\d+) providers/g)].map((m) => m[1]),
+      "labs.ts should interpolate providerCount, not type a number",
+    ).toEqual([]);
+    const shared = readFileSync(new URL("./hiresignal.ts", import.meta.url), "utf8");
+    expect(shared, `providerCount must track the ${providers} the generator writes into the case study`).toContain(
+      `export const providerCount = ${providers};`,
+    );
 
     const clients = [...src.matchAll(/(\d+)\+ (?:white-label )?client/g)][0]?.[1];
     expect(clients).toBeDefined();

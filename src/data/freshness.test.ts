@@ -34,8 +34,27 @@ describe("generated data has not quietly aged out", () => {
     .map((f) => ({ file: f, at: /"generatedAt":\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1] }))
     .filter((x): x is { file: string; at: string } => Boolean(x.at));
 
-  it("finds the timestamped datasets it is meant to be watching", () => {
-    expect(stamped.length).toBeGreaterThanOrEqual(3);
+  /**
+   * Datasets whose source is live and external, so a stale file is a broken
+   * generator rather than a quiet week.
+   *
+   * Named, not counted. `stamped.length >= 3` passed just as happily when a
+   * generator DROPPED its stamp as when it kept it: the file falls out of the
+   * scan, the set shrinks by one, and the 45-day alarm above simply stops
+   * being able to see it. Removing the alarm is the failure this catches.
+   *
+   * timeline.ts is deliberately absent. Its generator recomputes lanes from
+   * local files on every prebuild, so its stamp says a build happened, not
+   * that data moved — a member that can never go red is padding, not cover.
+   */
+  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "weeb.ts"];
+
+  it.each(MUST_BE_STAMPED)("%s still carries a generatedAt stamp", (file) => {
+    expect(
+      stamped.map((s) => s.file),
+      `${file} lost its generatedAt — the ${MAX_AGE_DAYS}-day alarm below cannot see it any more. ` +
+        `Restore the stamp in its generator rather than deleting this line.`,
+    ).toContain(file);
   });
 
 /**
