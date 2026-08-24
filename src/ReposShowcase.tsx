@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { GitBranch, Star, ArrowUpRight, GitPullRequestArrow } from "lucide-react";
 import { Reveal } from "./Reveal.tsx";
-import { openSource } from "./data/profile.ts";
+import { FoundationGraph } from "./FoundationGraph.tsx";
+import { openSource, sharedFoundation } from "./data/profile.ts";
 import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
 
 /**
@@ -65,28 +67,29 @@ const APPS: Repo[] = [
   },
 ];
 
-const FOUNDATION: Repo[] = [
-  {
-    name: "kmp-build-logic",
-    path: "darkpandawarrior/kmp-build-logic",
-    lang: "Kotlin",
-    kind: "Library · build",
-    role: "Gradle convention plugins — one place that configures every KMP module's targets, Compose, lint and test wiring.",
-    stat: "composite build · Mileway + PaymentsLab",
-    url: "https://github.com/darkpandawarrior/kmp-build-logic",
-    accent: "#3ddc84",
-  },
-  {
-    name: "kmp-toolkit",
-    path: "darkpandawarrior/kmp-toolkit",
-    lang: "Kotlin",
-    kind: "Library · MVI",
-    role: "The (State, Event) → Effects mvi-core base — the reducer/store contract the payments state machine is built on — plus shared feedback modules.",
-    stat: "the contract the apps share",
-    url: "https://github.com/darkpandawarrior/kmp-toolkit",
-    accent: "#3ddc84",
-  },
-];
+/**
+ * Derived from profile.ts's `sharedFoundation.libs`, which already describes
+ * these two libraries for the case studies and the assistant. It used to be a
+ * fourth hand-typed copy of the same two repos, and the name/role/url in it
+ * had to be kept in step with profile.ts by hand — the exact shape of drift
+ * this repo keeps rediscovering.
+ *
+ * The presentation bits a repo card needs and the data does not carry (lang,
+ * kind, accent, the one-line stat) stay here, keyed by name, because they are
+ * about how a card LOOKS and have no business in profile.ts.
+ */
+const FOUNDATION_CHROME: Record<string, Pick<Repo, "lang" | "kind" | "stat" | "accent">> = {
+  "kmp-build-logic": { lang: "Kotlin", kind: "Library · build", stat: "composite build · Mileway + PaymentsLab", accent: "#3ddc84" },
+  "kmp-toolkit": { lang: "Kotlin", kind: "Library · MVI", stat: "the contract the apps share", accent: "#3ddc84" },
+};
+
+const FOUNDATION: Repo[] = sharedFoundation.libs.map((lib) => ({
+  name: lib.name,
+  path: lib.url.replace("https://github.com/", ""),
+  role: lib.role,
+  url: lib.url,
+  ...(FOUNDATION_CHROME[lib.name] ?? { lang: "Kotlin", kind: "Library", stat: "", accent: "#3ddc84" }),
+}));
 
 const TOOLING: Repo[] = [
   {
@@ -149,13 +152,14 @@ function RepoCard({ r }: { r: Repo }) {
   );
 }
 
-function RepoGroup({ label, hint, repos }: { label: string; hint: string; repos: Repo[] }) {
+function RepoGroup({ label, hint, repos, intro }: { label: string; hint: string; repos: Repo[]; intro?: ReactNode }) {
   return (
     <div className="mt-8 first:mt-0">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h4 className="kicker-accent font-semibold">{label}</h4>
         <span className="font-mono text-[11px] text-muted">{hint}</span>
       </div>
+      {intro}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {repos.map((r) => (
           <RepoCard key={r.path} r={r} />
@@ -189,7 +193,20 @@ export function ReposShowcase() {
         </div>
 
         <RepoGroup label="Apps" hint="shipped, end-to-end" repos={APPS} />
-        <RepoGroup label="Shared foundation" hint="written once, reused across the apps" repos={FOUNDATION} />
+        <RepoGroup
+          label="Shared foundation"
+          hint="written once, reused across the apps"
+          repos={FOUNDATION}
+          intro={
+            /* Moved here from App.tsx, which rendered this blurb and graph
+               under its OWN "Shared foundation" heading immediately above this
+               group's identically-named one. One heading, one block. */
+            <div className="mb-4 rounded-2xl border border-line bg-card p-6">
+              <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
+              <FoundationGraph />
+            </div>
+          }
+        />
         <RepoGroup label="Tooling & writing" hint="the surrounding surface" repos={TOOLING} />
 
         <div className="mt-8">

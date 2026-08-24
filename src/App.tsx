@@ -14,7 +14,7 @@ import {
   Target,
   Crown,
 } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia, siteRooms } from "./data/profile.ts";
+import {profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
@@ -27,7 +27,6 @@ import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
-import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
 import { WorldSwitch } from "./WorldSwitch.tsx";
@@ -865,19 +864,13 @@ function Projects() {
           })}
         </div>
 
-        <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
-            Shared foundation
-          </h3>
-          <div className="rounded-2xl border border-line bg-card p-6">
-            <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
-            <FoundationGraph />
-            <p className="mt-4 font-mono text-[11px] text-muted">
-              ↓ both libraries are in <button type="button" onClick={() => goToSection("source")} className="text-accent transition hover:text-accent-dim">The Source</button>, one click from the code.
-            </p>
-          </div>
-        </Reveal>
-
+        {/* The blurb and the dependency graph used to live here under their
+            own "Shared foundation" h3, immediately above ReposShowcase — which
+            renders a RepoGroup labelled "Shared foundation" too. Two identical
+            headings, back to back, describing the same two libraries. They are
+            one block now, inside the group that names them, and the pointer
+            down to The Source went with it since the cards it pointed at are
+            now directly beneath the text. */}
         <ReposShowcase />
 
         <Reveal>

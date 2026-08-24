@@ -684,7 +684,6 @@ export const projects: Project[] = [
       { file: "gazette_roles.png", caption: "Niyam Gazette — the roles" },
       { file: "4p_pick_action.png", caption: "Your turn — pick an action" },
       { file: "4p_confirm.png", caption: "Declare, then confirm" },
-      { file: "4p_reaction.png", caption: "Block, challenge or pass" },
       { file: "4p_reaction_block.png", caption: "Block — with odds" },
       { file: "4p_exchange.png", caption: "Card exchange on loss" },
       { file: "4p_pick_target.png", caption: "Target selection" },
@@ -745,7 +744,7 @@ export const projects: Project[] = [
         // Widget/Live-Activity captures are genuinely wide-short — a
         // bezel-less "widget" frame, not a phone bezel that would crop them.
         deviceFrame: "widget",
-        screens: ["widget_ios_home.png", "widget_ios_lockscreen.png", "live_activity.png", "live_activity_dynamic_island.png"],
+        screens: ["widget_ios_home.png", "live_activity.png", "live_activity_dynamic_island.png"],
         note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces, shown at their real widget shape.",
       },
       {
@@ -920,7 +919,6 @@ export const projects: Project[] = [
       { file: "watchos_app.png", caption: "watchOS (SwiftUI) app" },
       { file: "widget_glance.png", caption: "Android widget (Glance)" },
       { file: "widget_ios_home.png", caption: "iOS home-screen widget" },
-      { file: "widget_ios_lockscreen.png", caption: "iOS Lock Screen widget" },
       { file: "live_activity.png", caption: "iOS Live Activity" },
       { file: "live_activity_dynamic_island.png", caption: "Dynamic Island — tracking" },
       { file: "desktop_dashboard.png", caption: "Compose Desktop window" },
