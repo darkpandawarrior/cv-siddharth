@@ -4,6 +4,7 @@ import { chess } from "../data/chess.ts";
 import { chessDeep } from "../data/chessDeep.ts";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
+import { ReactionRow } from "../play/ReactionRow.tsx";
 
 /**
  * "The Findings" tab of the Chess room — the analysis that used to be a
@@ -362,6 +363,7 @@ export function ChessFindings() {
                 of every loss, decided by the clock rather than the board. Not an opponent —
                 a deadline.
               </p>
+              <ReactionRow surface="chess" itemId="the-flagfall" className="mt-3" />
             </article>
 
             {ninth && (
@@ -377,6 +379,7 @@ export function ChessFindings() {
                 <p className="mt-2 font-mono text-[10px] text-muted">
                   {plural(ninth.n, "game")} — a thin tail, shown with its n
                 </p>
+                <ReactionRow surface="chess" itemId="the-ninth-game" className="mt-3" />
               </article>
             )}
 
@@ -390,6 +393,7 @@ export function ChessFindings() {
                 displaced almost entirely on the other account. First loves are a repertoire
                 choice.
               </p>
+              <ReactionRow surface="chess" itemId="the-returner" className="mt-3" />
             </article>
           </div>
         </div>

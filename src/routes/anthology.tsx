@@ -10,7 +10,9 @@ import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
 import { anthology, anthologyEntries, entriesOfSeason } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
+import { ReactionRow } from "../play/ReactionRow.tsx";
 
+import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 // Starmap.tsx is a named export, not a default one — the plain object shape
 // React.lazy() requires is built here rather than by changing that file's
 // export style for the convenience of one caller.
@@ -39,109 +41,111 @@ function AnthologyRoute() {
   const [tab, setTab] = useState<Tab>(1);
 
   return (
-    <div className="ink-world min-h-screen">
-      <header className="border-b border-line">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-          <Link to="/ink" className="flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
-            <ArrowLeft size={16} /> The Ink
-          </Link>
-          <WorldSwitch current="ink" />
-        </nav>
-      </header>
+    <DeferredPlayRoom>
+      <div className="ink-world min-h-screen">
+        <header className="border-b border-line">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+            <Link to="/ink" className="flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+              <ArrowLeft size={16} /> The Ink
+            </Link>
+            <WorldSwitch current="ink" />
+          </nav>
+        </header>
 
-      <main id="main-content" tabIndex={-1}>
-        <div className="section-y mx-auto max-w-5xl px-6">
-          <p className="kicker-accent">// twenty entries, two seasons</p>
-          <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
-            {anthology.tagline}
-          </p>
-          {/* Three sentences, the whole premise: a correspondent, a recurring
-              census he cannot explain, and the one figure that never adds up. */}
-          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-            A correspondent visits worlds that cannot yet leave them, and writes down the story each one
-            tells about its own weather. Every world he has ever surveyed independently reports fourteen
-            gods and fourteen monsters, the same count, worlds apart, with no contact between them. Nobody,
-            on any of them, can name the fourteenth.
-          </p>
+        <main id="main-content" tabIndex={-1}>
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <p className="kicker-accent">// twenty entries, two seasons</p>
+            <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
+              {anthology.tagline}
+            </p>
+            {/* Three sentences, the whole premise: a correspondent, a recurring
+                census he cannot explain, and the one figure that never adds up. */}
+            <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+              A correspondent visits worlds that cannot yet leave them, and writes down the story each one
+              tells about its own weather. Every world he has ever surveyed independently reports fourteen
+              gods and fourteen monsters, the same count, worlds apart, with no contact between them. Nobody,
+              on any of them, can name the fourteenth.
+            </p>
 
-          <div role="group" aria-label="Choose a season" className="mt-10 flex flex-wrap gap-2">
-            {anthology.seasons.map((s) => (
+            <div role="group" aria-label="Choose a season" className="mt-10 flex flex-wrap gap-2">
+              {anthology.seasons.map((s) => (
+                <button
+                  key={s.n}
+                  type="button"
+                  onClick={() => setTab(s.n)}
+                  aria-pressed={tab === s.n}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    tab === s.n
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                  }`}
+                >
+                  {s.title}
+                </button>
+              ))}
               <button
-                key={s.n}
                 type="button"
-                onClick={() => setTab(s.n)}
-                aria-pressed={tab === s.n}
+                onClick={() => setTab("starmap")}
+                aria-pressed={tab === "starmap"}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tab === s.n
+                  tab === "starmap"
                     ? "border-accent bg-accent/15 text-accent"
                     : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
                 }`}
               >
-                {s.title}
+                The Starmap
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setTab("starmap")}
-              aria-pressed={tab === "starmap"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "starmap"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Starmap
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("tellers")}
-              aria-pressed={tab === "tellers"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "tellers"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Tellers
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("canon")}
-              aria-pressed={tab === "canon"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "canon"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Canon
-            </button>
+              <button
+                type="button"
+                onClick={() => setTab("tellers")}
+                aria-pressed={tab === "tellers"}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  tab === "tellers"
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                }`}
+              >
+                The Tellers
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("canon")}
+                aria-pressed={tab === "canon"}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  tab === "canon"
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                }`}
+              >
+                The Canon
+              </button>
+            </div>
+
+            {anthology.seasons.map((s) =>
+              tab === s.n ? (
+                <div key={s.n}>
+                  <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                    {s.blurb}
+                  </p>
+                  {/* The most load-bearing image in the set, and it only belongs
+                      on the season that files legends in the first place —
+                      Season Two's pages are a case file, not a census. */}
+                  {s.n === 1 && <TheFourteenPlate />}
+                  <SeasonGrid season={s.n} />
+                </div>
+              ) : null,
+            )}
+
+            {tab === "starmap" && <StarmapTab />}
+            {tab === "tellers" && <TellersTab />}
+            {tab === "canon" && <CanonTab />}
           </div>
-
-          {anthology.seasons.map((s) =>
-            tab === s.n ? (
-              <div key={s.n}>
-                <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                  {s.blurb}
-                </p>
-                {/* The most load-bearing image in the set, and it only belongs
-                    on the season that files legends in the first place —
-                    Season Two's pages are a case file, not a census. */}
-                {s.n === 1 && <TheFourteenPlate />}
-                <SeasonGrid season={s.n} />
-              </div>
-            ) : null,
-          )}
-
-          {tab === "starmap" && <StarmapTab />}
-          {tab === "tellers" && <TellersTab />}
-          {tab === "canon" && <CanonTab />}
-        </div>
-      </main>
-      <SiteFooter />
-      <FloatingChat />
-    </div>
+        </main>
+        <SiteFooter />
+        <FloatingChat />
+      </div>
+  </DeferredPlayRoom>
   );
 }
 
@@ -165,47 +169,54 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
   const rotate = cool ? 0 : index % 2 === 0 ? -0.6 : 0.7;
 
   const card = (
-    <Link
-      to="/read/$slug"
-      params={{ slug: e.slug }}
+    // The border and group-hover live on this wrapper, not the Link, so the
+    // reaction row below can sit inside the same card without nesting a
+    // <button> inside an <a> — invalid HTML, and it would fire the Link's
+    // navigation on every reaction click.
+    <div
       className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition ${
         cool ? "rounded-lg border-line hover:border-zinc-500" : "rounded-2xl border-accent/25 hover:border-accent/60"
       }`}
       style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
     >
-      {e.plate ? (
-        <Picture
-          src={e.plate}
-          alt=""
-          loading="lazy"
-          className={`w-full object-cover ${cool ? "grayscale-[35%] sepia-[10%]" : ""}`}
-          style={{ aspectRatio: "600 / 780" }}
-        />
-      ) : (
-        // The generator marks a plate "" when the fetch failed rather than
-        // silently reusing a stale image — this is that state rendered, not
-        // an <img> pointed at an empty src.
-        <div
-          className="kicker flex items-center justify-center bg-void/40"
-          style={{ aspectRatio: "600 / 780" }}
-        >
-          plate lost
+      <Link to="/read/$slug" params={{ slug: e.slug }} className="flex flex-1 flex-col">
+        {e.plate ? (
+          <Picture
+            src={e.plate}
+            alt=""
+            loading="lazy"
+            className={`w-full object-cover ${cool ? "grayscale-[35%] sepia-[10%]" : ""}`}
+            style={{ aspectRatio: "600 / 780" }}
+          />
+        ) : (
+          // The generator marks a plate "" when the fetch failed rather than
+          // silently reusing a stale image — this is that state rendered, not
+          // an <img> pointed at an empty src.
+          <div
+            className="kicker flex items-center justify-center bg-void/40"
+            style={{ aspectRatio: "600 / 780" }}
+          >
+            plate lost
+          </div>
+        )}
+        <div className="flex flex-1 flex-col p-4">
+          <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
+            {kicker}
+          </span>
+          <h3 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h3>
+          <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
+            {e.planet}
+            {e.system ? ` · ${e.system}` : ""}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+            {e.blurb}
+          </p>
         </div>
-      )}
-      <div className="flex flex-1 flex-col p-4">
-        <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
-          {kicker}
-        </span>
-        <h3 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h3>
-        <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
-          {e.planet}
-          {e.system ? ` · ${e.system}` : ""}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-          {e.blurb}
-        </p>
+      </Link>
+      <div className="border-t border-line px-4 py-2">
+        <ReactionRow surface="anthology" itemId={e.slug} />
       </div>
-    </Link>
+    </div>
   );
 
   return <Reveal delay={(index % 3) * 80}>{cool ? card : <TiltCard>{card}</TiltCard>}</Reveal>;
