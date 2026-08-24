@@ -13,6 +13,7 @@ import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
 import { compact } from "./shippedFormat.ts";
 
+import { SiteFooter } from "./SiteFooter.tsx";
 /**
  * The shelf, in full.
  *
@@ -233,6 +234,10 @@ export function Shipped() {
           </p>
         </section>
       </main>
+      {/* surfaces.ts types this a "page"-kind surface, and the registry
+          docs promise those get the footer. These two were the exceptions:
+          ordinary scroll pages that dead-ended with no sitemap out. */}
+      <SiteFooter />
     </div>
   );
 }

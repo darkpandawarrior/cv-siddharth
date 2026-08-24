@@ -23,6 +23,7 @@ import "@fontsource/jetbrains-mono/600.css";
 import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url";
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
+import { CommandPalette } from "../CommandPalette.tsx";
 const PERSON_LD = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -285,6 +286,14 @@ function RootDocument({ children }: { children: ReactNode }) {
             until something calls openLauncher(). */}
         <Launcher />
         <AnomalyRail />
+        {/* Global, like the two above. It was mounted in three places instead
+            — App.tsx, rooms.tsx and Playground.tsx — so every route that is
+            not the homepage and does not use RoomFrame had no palette at all:
+            /shipped, /pulse, /ink, /excelsior, /anthology, /loopdown,
+            /read/$slug, /hire, /resume and /project/$slug. Its own docstring
+            called itself "Global ⌘K". One mount makes that true, and avoids
+            the duplicate ⌘K listeners three mounts would have caused. */}
+        <CommandPalette />
         <SpeedInsights />
         <Scripts />
         <noscript>

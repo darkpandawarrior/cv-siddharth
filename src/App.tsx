@@ -27,7 +27,6 @@ import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
@@ -338,7 +337,6 @@ function Nav() {
           {/* Hidden below lg: the bar is already at capacity at xl, and on a
               phone the wall itself is a short scroll away. */}
           <LauncherButton className="hidden lg:flex" />
-          <CommandPalette />
           {/* label-wide, not `hidden sm:inline`: display:none took this label
               out of the accessibility tree as well as the layout, so below
               640px this was an icon with no accessible name — a WCAG 4.1.2

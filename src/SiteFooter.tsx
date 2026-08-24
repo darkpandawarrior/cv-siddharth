@@ -89,8 +89,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
   {
     title: "Elsewhere",
-    // Derived from src/data/elsewhere.ts so the footer, the /elsewhere index and
-    // anything else that lists his presences can never drift apart. A web sweep
+    // Derived from src/data/elsewhere.ts so the footer and anything else that
+    // lists his presences can never drift apart. (This used to also promise an
+    // "/elsewhere index" route. There is no such route and there does not need
+    // to be: this column, the palette's synonym coverage and /hire's outbound
+    // links already surface every profile. A comment describing a page that
+    // was never built is how a reader concludes the site is half-finished.) A web sweep
     // found four profiles the site had never linked — Stack Overflow, X, the
     // Dice org chart, and the Editorial Board's own site.
     links: [

@@ -240,7 +240,7 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
-  color: #e8efe9;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -434,8 +434,15 @@ html.resume-mode body {
   html.resume-mode body {
     background: white;
   }
-  .resume {
+  /* On :root, not .resume. Every child sizes in rem-based Tailwind classes,
+     which resolve against the ROOT font size — so scoping the shrink to
+     .resume set a value nothing inherited from and the print size never
+     actually changed. */
+  :root {
     font-size: 11px;
+  }
+
+  .resume {
   }
 
   /* Project case-study pages print like the résumé: white paper, dark ink,
@@ -1254,7 +1261,7 @@ html.resume-mode body {
 }
 
 .world-switch-side:hover .world-switch-label {
-  color: #e8efe9;
+  color: var(--color-text);
 }
 /* The current side lights up in ITS world's colour, not the ambient accent —
    that is what makes the control read as a map rather than a toggle. */
@@ -1418,7 +1425,10 @@ html.resume-mode body {
   font-family: var(--font-mono);
   font-size: 0.92em;
   font-style: normal;
-  color: #cfc3b2;
+  /* var(), not the literal. #cfc3b2 IS --color-text-dim's BASE value, so a
+     quoted charter inside .ink-world kept the Build world's cool grey while
+     everything around it went warm. Same bug as .flipbook-year, same file. */
+  color: var(--color-text-dim);
 }
 .piece-body ul,
 .piece-body ol {
@@ -1645,7 +1655,7 @@ html.resume-mode body {
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
 }
 .flipbook-year:hover {
-  color: #e8efe9;
+  color: var(--color-text);
   border-color: var(--color-accent);
 }
 .flipbook-year.is-active {
@@ -1674,7 +1684,7 @@ html.resume-mode body {
   border-radius: 9999px;
   border: 1px solid var(--color-line);
   padding: 0.5rem;
-  color: #d4d4d8;
+  color: var(--color-text-dim);
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
 }
 .flipbook-tool:hover {
@@ -1780,7 +1790,7 @@ html.resume-mode body {
   border-radius: 9999px;
   border: 1px solid var(--color-line);
   padding: 0.625rem;
-  color: #d4d4d8;
+  color: var(--color-text-dim);
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), opacity var(--dur-fast) linear;
 }
 .flipbook-nav:hover:not(:disabled) {
@@ -2063,7 +2073,7 @@ html.resume-mode body {
   color: var(--color-muted);
 }
 .magazine-action-quiet:hover {
-  color: #e8efe9;
+  color: var(--color-text);
 }
 
 /* Reduced motion: the books stay shut. The lightbox still opens the spread,

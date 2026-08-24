@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Activity, LayoutGrid } from "lucide-react";
+import {ArrowLeft, Activity } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
@@ -7,6 +6,8 @@ import { groupPulse, totalInteractions, usePulseCounts } from "./play/pulse.ts";
 import { VisitorLedgerPanel, useVisitorLedger } from "./play/Visitors.tsx";
 import { totalVisitors } from "./play/visitors.ts";
 
+import { SiteFooter } from "./SiteFooter.tsx";
+import { LauncherButton } from "./Launcher.tsx";
 /**
  * /pulse — what visitors actually do here, counted across everyone.
  *
@@ -50,12 +51,13 @@ function PulseInner() {
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/playground"
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent"
-            >
-              <LayoutGrid size={14} /> <span className="label-wide">Playground</span>
-            </Link>
+            {/* This was a Link to /playground wearing LauncherButton's exact
+                class string. Same pill, same icon, same hover — and it
+                navigated instead of opening the surfaces wall, so /pulse's
+                header looked like every other room's and behaved differently.
+                Looking identical while doing something else is worse than
+                looking different. */}
+            <LauncherButton />
             <button
               type="button"
               onClick={() => goToSection("top")}
@@ -161,6 +163,10 @@ function PulseInner() {
           identifier, and nowhere to keep one even if I wanted it.
         </p>
       </main>
+      {/* surfaces.ts types this a "page"-kind surface, and the registry
+          docs promise those get the footer. These two were the exceptions:
+          ordinary scroll pages that dead-ended with no sitemap out. */}
+      <SiteFooter />
     </div>
   );
 }

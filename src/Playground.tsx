@@ -2,7 +2,6 @@ import { Component, Suspense, lazy, useCallback, useEffect, useState, type React
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { hasWebGL } from "./blueprintShared.tsx";
 import { RoomGrid } from "./RoomGrid.tsx";
@@ -202,7 +201,6 @@ function PlaygroundInner() {
                 link to itself. But it was also missing the palette, so the one
                 page whose whole job is "every room, one door" was the one page
                 you couldn't reach the other rooms from by keyboard. */}
-            <CommandPalette />
             <PresenceBadge className="hidden sm:flex" />
             <button
               onClick={() => openChat()}

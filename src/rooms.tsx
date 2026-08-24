@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
@@ -107,7 +106,6 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             {title} — {tagline}
           </span>
           <div className="flex items-center gap-2">
-            <CommandPalette />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
