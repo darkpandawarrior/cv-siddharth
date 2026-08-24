@@ -42,7 +42,11 @@ const ALIAS = {
   "Stein’s;Gate": "Steins;Gate",
   "Bayblade: Metal Fusion": "Beyblade: Metal Fusion",
   Bayblade: "Beyblade",
-  "Boruto: Naruto Next Generations": "Boruto",
+  // NOT aliased to "Boruto". That search returns the 1-episode MOVIE (id
+  // 21220), not the 293-episode TV series (id 97938) — so this alias was
+  // actively corrupting the row it was written to help, giving the series the
+  // film's episode count, sequels and crowd score. The full title resolves
+  // correctly on its own. Verified against AniList directly, 2026-08-24.
 };
 
 /**
@@ -76,7 +80,7 @@ const cache = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, "utf8")
 let fetched = 0, failed = 0;
 
 const QUERY = `query($s:String,$t:MediaType){ Page(perPage:1){ media(search:$s, type:$t){
-  id title{romaji english} episodes chapters seasonYear status averageScore popularity genres siteUrl
+  id title{romaji english native} synonyms episodes chapters seasonYear status averageScore popularity genres siteUrl
   coverImage{ medium }
   relations{ edges{ relationType node{ id type title{romaji english} status seasonYear format } } } } } }`;
 
@@ -114,6 +118,32 @@ async function lookup(title, type) {
   return null;
 }
 
+/**
+ * BOTH names, never one.
+ *
+ * This used to emit `m.title.english || m.title.romaji`, which collapsed every
+ * show to a single string — so the corpus displayed English where AniList had
+ * an English title and Japanese romaji where it did not, and the page read as
+ * a mix of the two with no rule behind it.
+ *
+ * Keeping both also fixes something no string comparison could: "Seven Deadly
+ * Sins" and "Nanatsu no Taizai" are the same show, and his lists contain both.
+ * No amount of punctuation-stripping unifies those, but they resolve to the
+ * same AniList id, which is what `duplicates` below is built from.
+ */
+const alOf = (m) => ({
+  id: m.id,
+  english: m.title.english ?? null,
+  romaji: m.title.romaji ?? null,
+  native: m.title.native ?? null,
+  /** The one to render. English where it exists, romaji otherwise — stated as
+   *  a rule here rather than re-decided at each call site. */
+  title: m.title.english || m.title.romaji,
+  crowd: m.averageScore ?? null,
+  url: m.siteUrl ?? "",
+  cover: m.coverImage?.medium ?? "",
+});
+
 const stars = (s) => (s.match(/⭐/g) || []).length;
 const int = (s) => (/^\d+$/.test(s.trim()) ? Number(s.trim()) : null);
 
@@ -148,8 +178,7 @@ for (const r of anime) {
     genres: (r.Genre || "").split(",").map((g) => g.trim()).filter(Boolean),
     al: m
       ? {
-          id: m.id,
-          title: m.title.english || m.title.romaji,
+          ...alOf(m),
           episodes: m.episodes ?? null,
           crowd: m.averageScore ?? null,
           genres: m.genres ?? [],
@@ -175,7 +204,7 @@ for (const r of manga) {
     score: stars(r["Score /5"] ?? ""),
     chaptersRead: int(r["Chapters Read"] ?? ""),
     chaptersTotal: int(r["Total Chapters"] ?? "") ?? m?.chapters ?? null,
-    al: m ? { id: m.id, title: m.title.english || m.title.romaji, crowd: m.averageScore ?? null, url: m.siteUrl ?? "", cover: m.coverImage?.medium ?? "" } : null,
+    al: m ? alOf(m) : null,
   });
 }
 
@@ -205,8 +234,52 @@ const caughtUpRate = (status) => {
 // exists. This is the list the Notion table structurally cannot produce.
 const stale = shows
   .filter((s) => s.al?.sequels.length && s.done != null && s.out != null && s.done >= s.out)
-  .map((s) => ({ name: s.name, sequel: s.al.sequels[0].title, year: s.al.sequels[0].year, status: s.al.sequels[0].status }))
+  .map((s) => ({
+    // `name` is HIS spelling from the CSV, which is a mix of English and
+    // romaji because that is how he typed them over the years. `title` is
+    // AniList's canonical English-or-romaji, and `romaji` is beside it — so a
+    // surface can render ONE convention consistently instead of showing
+    // whatever each row happened to be typed as, and can still show the other
+    // name where that is the useful thing.
+    name: s.name,
+    title: s.al.title,
+    romaji: s.al.romaji,
+    english: s.al.english,
+    sequel: s.al.sequels[0].title,
+    year: s.al.sequels[0].year,
+    status: s.al.sequels[0].status,
+  }))
   .sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
+
+/**
+ * The same show, listed twice under two languages.
+ *
+ * His lists carry "Seven Deadly Sins" AND "Nanatsu no Taizai"; the corpus had
+ * no way to know those are one show, because no amount of case-folding or
+ * punctuation-stripping turns one into the other. AniList does know — both
+ * resolve to the same media id — so the id is the only reliable key, and this
+ * is the one duplicate check that actually works.
+ *
+ * Reported rather than auto-merged. Which of the two spellings he wants to
+ * keep, and which row holds the score he meant, is his call, not a
+ * generator's. Silently collapsing rows in a corpus whose whole argument is
+ * that it is honestly kept would be the wrong kind of clever.
+ */
+const byAniListId = new Map();
+for (const s0 of shows) {
+  if (!s0.al?.id) continue;
+  const list = byAniListId.get(s0.al.id) ?? [];
+  list.push(s0.name);
+  byAniListId.set(s0.al.id, list);
+}
+const duplicates = [...byAniListId.entries()]
+  .filter(([, names]) => names.length > 1)
+  .map(([id, names]) => ({
+    anilistId: id,
+    rows: names,
+    english: shows.find((x) => x.al?.id === id)?.al?.english ?? null,
+    romaji: shows.find((x) => x.al?.id === id)?.al?.romaji ?? null,
+  }));
 
 // Taste vs the crowd. AniList scores 0-100, his are 1-5 — compare each on its
 // own scale (his ×20) only where BOTH exist, and say n out loud.
@@ -247,6 +320,7 @@ const out = {
     chaptersRead: books.reduce((n, b) => n + (b.chaptersRead ?? 0), 0),
   },
   stale,
+  duplicates,
   divergence: { n: rated.length, top: divergence.slice(0, 6), bottom: divergence.slice(-6).reverse() },
   // The per-title arrays are deliberately NOT emitted. Nothing renders them —
   // the room shows aggregates and eight example rows — and shipping all 154
@@ -265,6 +339,6 @@ writeFileSync(
 
 console.log(
   `[gen-weeb] ${shows.length} anime + ${books.length} manga · ${fetched} fetched, ${Object.keys(cache).length} cached · ` +
-    `${out.anime.matched}/${shows.length} matched · ${stale.length} stale rows · ` +
+    `${out.anime.matched}/${shows.length} matched · ${stale.length} stale rows · ${duplicates.length} cross-language duplicate(s) · ` +
     `${out.anime.unwatchedSeasons} unwatched seasons → src/data/weeb.ts`,
 );

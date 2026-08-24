@@ -72,11 +72,17 @@ describe("repertoire", () => {
 });
 
 describe("weeb field", () => {
-  it("totals 176 — every anime plus every manga, from real status counts", () => {
+  it("places one marker per title, however many titles there are", () => {
+    // This asserted the literal 176 and broke the moment the corpus grew,
+    // which is the wrong thing to be brittle about: the count is DATA and
+    // changes whenever he watches something. What must hold is the
+    // RELATIONSHIP — the field carries exactly one marker per row, so nothing
+    // is silently dropped on the way into the world.
     const animeTotal = Object.values(weeb.anime.byWatch).reduce((a, b) => a + b, 0);
     const mangaTotal = Object.values(weeb.manga.byRead).reduce((a, b) => a + b, 0);
-    expect(animeTotal + mangaTotal).toBe(176);
-    expect(weebField()).toHaveLength(176);
+    const total = animeTotal + mangaTotal;
+    expect(total).toBeGreaterThan(100);
+    expect(weebField()).toHaveLength(total);
   });
 
   it("sits entirely inside the 2026 band, z in [64, 80]", () => {

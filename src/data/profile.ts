@@ -1489,6 +1489,56 @@ export const projects: Project[] = [
     ],
     status: "Active · MIT · vendored across 5 repos",
     badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
+    detail: {
+      overview:
+        "The KMP toolkit family is three decoupled repos — kmp-toolkit, kmp-build-logic and kmp-app-template — instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Mileway, PaymentsLab, Kursi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
+      sections: [
+        {
+          heading: "kmp-toolkit — 36 modules, extracted, never designed",
+          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction — 36 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Mileway and PaymentsLab build their reducer/store layer on.",
+        },
+        {
+          heading: "kmp-build-logic — the setup written once",
+          body: "17 convention plugins live in this repo (22 authored across the whole family). AGP, Kotlin, Compose, test, lint, Firebase, Room and Koin configuration for a module is one line — apply the plugin — instead of a build.gradle.kts a new module has to get right from scratch. This is the other half of the shared foundation: the composite build every consumer app pulls in for its module wiring.",
+        },
+        {
+          heading: "kmp-app-template — the shape a new app starts from",
+          body: "The third repo is the app shape the toolkit and build logic slot into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android and Desktop shells, and a customizer.sh script that renames the whole project in one command. A new app starts at \"write the feature\", not at \"stand up the module graph\".",
+        },
+        {
+          heading: "The composition is the proof",
+          body: "Mileway consumes 10 of its 46 modules from the toolkit; PaymentsLab consumes 25 of its 40; Kursi draws on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world — the same claim this family makes about itself, checked by a fourth independent consumer.",
+        },
+        {
+          heading: "One MVI contract, two apps",
+          body: "Mileway and PaymentsLab are not two isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale — one seam, reused, instead of the same decision made differently five times.",
+        },
+      ],
+      metrics: [
+        { value: "36", label: "modules · kmp-toolkit" },
+        { value: "17", label: "convention plugins here · 22 across the family" },
+        { value: "5", label: "repos vendoring this family" },
+        { value: "19", label: "gateway providers behind one abstraction" },
+      ],
+      techStack: [
+        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "offline-first store", "network + security", "on-device AI seam", "device-integrity", "operation-log outbox", "19-provider payment-gateway abstraction"] },
+        { group: "kmp-build-logic", items: ["AGP", "Kotlin", "Compose", "test + lint", "Firebase", "Room", "Koin"] },
+        { group: "kmp-app-template", items: ["Shared Compose UI", "Splash → Login → Home nav scaffold", "Android + Desktop shells", "customizer.sh"] },
+        { group: "Distribution", items: ["Gradle includeBuild", "MIT license"] },
+      ],
+      diagrams: [
+        {
+          title: "Three repos, one seam each",
+          code: `graph LR
+  bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Mileway"]
+  bl -.->|"includeBuild"| p["PaymentsLab"]
+  tk["kmp-toolkit<br/>36 modules"] -.->|"includeBuild"| m
+  tk -.->|"includeBuild"| p
+  tk -.->|"includeBuild"| ku["Kursi"]
+  at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
+        },
+      ],
+    },
   },
   {
     slug: "the-loopdown",
@@ -1506,6 +1556,51 @@ export const projects: Project[] = [
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/the-loopdown" }],
     status: "Active · public",
     badges: ["Node.js", "Content engine", "Open source"],
+    detail: {
+      overview:
+        "The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted — never re-derived from scratch — for every place it will be read. 17 lessons across 8 series sit alongside a 10-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.",
+      sections: [
+        {
+          heading: "One lesson, four channel-shaped posts",
+          body: "A lesson is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with its own generated branded SVG card. The adaptation is the product, not the writing — a dev.to post reads like a dev.to post and a LinkedIn post reads like a LinkedIn post, from the same source material.",
+        },
+        {
+          heading: "Field notes tied to a real production win",
+          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Mileway's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from shipping Mileway across five platforms. The writing has somewhere real to point back to.",
+        },
+        {
+          heading: "Eight series, seventeen lessons",
+          body: "\"Sensors Who Lie\" runs longest at 5 episodes; \"Chain of Custody\" runs 4; the rest are 1–2 episodes each. By pillar, data-integrity carries the most lessons (9 of 17) — Kalman-filtered sensors and Room migrations produce more \"the data lied to you and here's the invariant that catches it\" moments than any other pillar the archive covers.",
+        },
+        {
+          heading: "A voice profile enforced by a lint step",
+          body: "The generated drafts are checked against a voice profile derived from the existing archive rather than trusted on read — a lint step, not a style guide nobody reads, so a draft that sounds like a language model wrote it fails before it reaches a channel.",
+        },
+        {
+          heading: "Written, adapted, mostly still queued",
+          body: "16 of the 17 lessons are drafted and channel-adapted (status: ready); one — \"The Concussed Witness,\" from the sensors-who-lie series — has actually gone out across all four channels. The engine is built to produce four-channel output per lesson; the publishing backlog is the honest, unfinished part.",
+        },
+        {
+          heading: "The archive — ten pieces from before the code",
+          body: "A consolidated back catalogue from Books Before Bros, the original blog: campus lore and short fiction predating the engineering work, six pieces of short fiction, two essays and two humor pieces, kept in the same repo as the lessons rather than left to rot on an old WordPress install.",
+        },
+        {
+          heading: "Framed as a time loop",
+          body: "The whole archive is framed as an engineer stuck in a time loop, filing field notes on the same lying systems each pass — the sensor that reports a position it cannot back up, the coroutine that outlives the screen that launched it. The conceit gives every lesson the same voice without flattening what each one is actually about.",
+        },
+      ],
+      metrics: [
+        { value: "17", label: "lessons · 8 series" },
+        { value: "4", label: "channels per lesson · dev.to, LinkedIn, Medium, Hashnode" },
+        { value: "10", label: "archive pieces · from before the code" },
+        { value: "1", label: "lesson published across all four channels so far" },
+      ],
+      techStack: [
+        { group: "Engine", items: ["Node.js", "Markdown", "SVG generation (branded cards)", "Voice-profile lint"] },
+        { group: "Channels", items: ["dev.to", "LinkedIn", "Medium", "Hashnode"] },
+        { group: "Repo hygiene", items: ["Public engine + published posts tracked", "Drafts + personal notes gitignored"] },
+      ],
+    },
   },
 ];
 
@@ -1612,6 +1707,8 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
+  { date: "Aug 2026", title: "Portfolio — the fleet made checkable", detail: "New /shipped page: 89 live listings plus 84 delisted ones recovered via the Internet Archive — 173 apps traced across 1,642 branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted." },
+  { date: "Aug 2026", title: "Portfolio — the anthology and The Board, published", detail: "New /ink surfaces: the Morkinstar Journals anthology across three seasons (The Directory, The Ninety-One Pages, The Kindling) plus a starmap, and The Board — seven years of forum games, mined and republished." },
 ];
 
 /* ── Card thumbnails ──────────────────────────────────────────────────────

@@ -3,25 +3,25 @@
 export const weeb = {
   "generatedAt": "2026-08-24",
   "anime": {
-    "total": 154,
-    "matched": 145,
+    "total": 185,
+    "matched": 171,
     "byWatch": {
       "Watching": 5,
-      "Completed": 88,
-      "Paused": 46,
+      "Completed": 115,
+      "Paused": 50,
       "To Watch": 3,
       "Ongoing": 12
     },
     "scoreDist": {
       "3": 4,
       "4": 18,
-      "5": 27
+      "5": 26
     },
-    "scored": 49,
-    "seasonsOut": 242,
-    "seasonsDone": 195,
+    "scored": 48,
+    "seasonsOut": 220,
+    "seasonsDone": 173,
     "behindCount": 26,
-    "pairedCount": 115,
+    "pairedCount": 114,
     "unwatchedSeasons": 47,
     "deepestGaps": [
       {
@@ -59,7 +59,7 @@ export const weeb = {
     ],
     "caughtUp": {
       "completed": {
-        "n": 84,
+        "n": 83,
         "pct": 97.6
       },
       "paused": {
@@ -73,282 +73,412 @@ export const weeb = {
     }
   },
   "manga": {
-    "total": 22,
+    "total": 26,
     "byRead": {
       "Completed": 5,
-      "Reading": 17
+      "Reading": 21
     },
     "chaptersRead": 1924
   },
   "stale": [
     {
       "name": "Frieren: Beyond Journey’s End",
+      "title": "Frieren: Beyond Journey’s End",
+      "romaji": "Sousou no Frieren",
+      "english": "Frieren: Beyond Journey’s End",
       "sequel": "Frieren: Beyond Journey’s End Season 2",
       "year": 2026,
       "status": "FINISHED"
     },
     {
       "name": "Grand Blue",
+      "title": "Grand Blue Dreaming",
+      "romaji": "Grand Blue",
+      "english": "Grand Blue Dreaming",
       "sequel": "Grand Blue Dreaming Season 2",
       "year": 2025,
       "status": "FINISHED"
     },
     {
       "name": "Chainsaw Man",
+      "title": "Chainsaw Man",
+      "romaji": "Chainsaw Man",
+      "english": "Chainsaw Man",
       "sequel": "Chainsaw Man – The Movie: Reze Arc",
       "year": 2025,
       "status": "FINISHED"
     },
     {
       "name": "Undead Unluck",
+      "title": "Undead Unluck",
+      "romaji": "Undead Unluck",
+      "english": "Undead Unluck",
       "sequel": "Undead Unluck: Winter Arc",
       "year": 2025,
       "status": "FINISHED"
     },
     {
       "name": "I Was Reincarnated As The 7th Prince So I Can Take My Time Perfecting My Magical Ability",
+      "title": "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
+      "romaji": "Tensei Shitara Dai Nana Ouji Datta node, Kimamani Majutsu wo Kiwamemasu",
+      "english": "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
       "sequel": "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability Season 2",
       "year": 2025,
       "status": "FINISHED"
     },
     {
       "name": "Tower Of God",
+      "title": "Tower of God",
+      "romaji": "Kami no Tou: Tower of God",
+      "english": "Tower of God",
       "sequel": "Tower of God Season 2",
       "year": 2024,
       "status": "FINISHED"
     },
     {
       "name": "Tsukimichi: Moonlit Fantasy",
+      "title": "TSUKIMICHI -Moonlit Fantasy-",
+      "romaji": "Tsuki ga Michibiku Isekai Douchuu",
+      "english": "TSUKIMICHI -Moonlit Fantasy-",
       "sequel": "TSUKIMICHI -Moonlit Fantasy- Season 2",
       "year": 2024,
       "status": "FINISHED"
     },
     {
       "name": "Ron Kamonohashi's Forbidden Deductions",
+      "title": "Ron Kamonohashi's Forbidden Deductions",
+      "romaji": "Kamonohashi Ron no Kindan Suiri",
+      "english": "Ron Kamonohashi's Forbidden Deductions",
       "sequel": "Ron Kamonohashi’s Forbidden Deductions Season 2",
       "year": 2024,
       "status": "FINISHED"
     },
     {
       "name": "Mashle: Magic and Muscles",
+      "title": "MASHLE: MAGIC AND MUSCLES",
+      "romaji": "MASHLE",
+      "english": "MASHLE: MAGIC AND MUSCLES",
       "sequel": "MASHLE: MAGIC AND MUSCLES Season 2",
       "year": 2024,
       "status": "FINISHED"
     },
     {
       "name": "The Eminence In Shadow",
+      "title": "The Eminence in Shadow",
+      "romaji": "Kage no Jitsuryokusha ni Naritakute!",
+      "english": "The Eminence in Shadow",
       "sequel": "The Eminence in Shadow Season 2",
       "year": 2023,
       "status": "FINISHED"
     },
     {
       "name": "That Time I Got Reincarnated As A Slime",
+      "title": "That Time I Got Reincarnated as a Slime",
+      "romaji": "Tensei Shitara Slime Datta Ken",
+      "english": "That Time I Got Reincarnated as a Slime",
       "sequel": "That Time I Got Reincarnated as a Slime: Visions of Coleus",
       "year": 2023,
       "status": "FINISHED"
     },
     {
       "name": "Dead Mount Death Play",
+      "title": "Dead Mount Death Play",
+      "romaji": "Dead Mount Death Play",
+      "english": "Dead Mount Death Play",
       "sequel": "Dead Mount Death Play Part 2",
       "year": 2023,
       "status": "FINISHED"
     },
     {
       "name": "Classroom Of The Elite",
+      "title": "Classroom of the Elite",
+      "romaji": "Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e",
+      "english": "Classroom of the Elite",
       "sequel": "Classroom of the Elite Season 2",
       "year": 2022,
       "status": "FINISHED"
     },
     {
       "name": "Dr Stone",
+      "title": "Dr. STONE",
+      "romaji": "Dr. STONE",
+      "english": "Dr. STONE",
       "sequel": "Dr. STONE: STONE WARS",
       "year": 2021,
       "status": "FINISHED"
     },
     {
       "name": "The Quintessential Quintuplets",
+      "title": "The Quintessential Quintuplets",
+      "romaji": "Go-toubun no Hanayome",
+      "english": "The Quintessential Quintuplets",
       "sequel": "The Quintessential Quintuplets 2",
       "year": 2021,
       "status": "FINISHED"
     },
     {
       "name": "Dogeza: I Tried Asking While Kowtowing",
+      "title": "<DOGEZA>I Tried Asking While Kowtowing.",
+      "romaji": "Dogeza de Tanondemita",
+      "english": "<DOGEZA>I Tried Asking While Kowtowing.",
       "sequel": "Dogeza de Tanondemita: Isekai-hen",
       "year": 2021,
       "status": "FINISHED"
     },
     {
       "name": "Kaguya Sama: Love Is War",
+      "title": "Kaguya-sama: Love is War",
+      "romaji": "Kaguya-sama wa Kokurasetai: Tensaitachi no Renai Zunousen",
+      "english": "Kaguya-sama: Love is War",
       "sequel": "Kaguya-sama: Love is War?",
       "year": 2020,
       "status": "FINISHED"
     },
     {
       "name": "Fire Force",
+      "title": "Fire Force",
+      "romaji": "Enen no Shouboutai",
+      "english": "Fire Force",
       "sequel": "Fire Force Season 2",
       "year": 2020,
       "status": "FINISHED"
     },
     {
       "name": "Rascal Does Not Dream Of Bunny Girl Senpai",
+      "title": "Rascal Does Not Dream of Bunny Girl Senpai",
+      "romaji": "Seishun Buta Yarou wa Bunny Girl Senpai no Yume wo Minai",
+      "english": "Rascal Does Not Dream of Bunny Girl Senpai",
       "sequel": "Rascal Does Not Dream of a Dreaming Girl",
       "year": 2019,
       "status": "FINISHED"
     },
     {
       "name": "The Disastrous Life Of Saiki K",
+      "title": "The Disastrous Life of Saiki K.",
+      "romaji": "Saiki Kusuo no Ψ-nan",
+      "english": "The Disastrous Life of Saiki K.",
       "sequel": "The Disastrous Life of Saiki K. Season 2",
       "year": 2018,
       "status": "FINISHED"
     },
     {
       "name": "Highschool DxD",
+      "title": "High School DxD BorN",
+      "romaji": "High School DxD BorN",
+      "english": null,
       "sequel": "High School DxD HERO",
       "year": 2018,
       "status": "FINISHED"
     },
     {
       "name": "Konosuba",
+      "title": "KONOSUBA -God's blessing on this wonderful world!",
+      "romaji": "Kono Subarashii Sekai ni Shukufuku wo!",
+      "english": "KONOSUBA -God's blessing on this wonderful world!",
       "sequel": "KONOSUBA -God's blessing on this wonderful world! 2",
       "year": 2017,
       "status": "FINISHED"
     },
     {
       "name": "How To Raise A Boring Girlfriend",
+      "title": "Saekano: How to Raise a Boring Girlfriend",
+      "romaji": "Saenai Heroine no Sodatekata",
+      "english": "Saekano: How to Raise a Boring Girlfriend",
       "sequel": "Saekano: How to Raise a Boring Girlfriend ♭",
       "year": 2017,
       "status": "FINISHED"
     },
     {
       "name": "Blood Blockade Battlefront",
+      "title": "Blood Blockade Battlefront",
+      "romaji": "Kekkai Sensen",
+      "english": "Blood Blockade Battlefront",
       "sequel": "Blood Blockade Battlefront & Beyond",
       "year": 2017,
       "status": "FINISHED"
     },
     {
       "name": "Sakamoto Desu Ga?",
+      "title": "Haven't You Heard? I'm Sakamoto",
+      "romaji": "Sakamoto desu ga?",
+      "english": "Haven't You Heard? I'm Sakamoto",
       "sequel": "Haven't You Heard? I'm Sakamoto: Haven’t You Heard? I was Sakamoto",
       "year": 2016,
       "status": "FINISHED"
     },
     {
       "name": "Bungo Stray Dogs",
+      "title": "Bungo Stray Dogs",
+      "romaji": "Bungou Stray Dogs",
+      "english": "Bungo Stray Dogs",
       "sequel": "Bungo Stray Dogs 2",
       "year": 2016,
       "status": "FINISHED"
     },
     {
       "name": "Prison School",
+      "title": "Prison School",
+      "romaji": "Prison School",
+      "english": "Prison School",
       "sequel": "Prison School: Mad Wax",
       "year": 2016,
       "status": "FINISHED"
     },
     {
       "name": "My Wife Is The Student Council President",
+      "title": "My Wife is the Student Council President",
+      "romaji": "Okusama ga Seitokaichou!",
+      "english": "My Wife is the Student Council President",
       "sequel": "My Wife is the Student Council President OVA",
       "year": 2016,
       "status": "FINISHED"
     },
     {
       "name": "Ajin: Demi-Human",
+      "title": "AJIN: Demi-Human",
+      "romaji": "Ajin",
+      "english": "AJIN: Demi-Human",
       "sequel": "AJIN: Demi-Human 2",
       "year": 2016,
       "status": "FINISHED"
     },
     {
-      "name": "Naruto Shippudden",
-      "sequel": "Boruto: Naruto the Movie - The Day Naruto Became Hokage",
-      "year": 2016,
-      "status": "FINISHED"
-    },
-    {
       "name": "Haikyuu",
+      "title": "HAIKYU!!",
+      "romaji": "Haikyuu!!",
+      "english": "HAIKYU!!",
       "sequel": "HAIKYU!! 2nd Season",
       "year": 2015,
       "status": "FINISHED"
     },
     {
       "name": "Beyond The Boundary",
+      "title": "Beyond the Boundary",
+      "romaji": "Kyoukai no Kanata",
+      "english": "Beyond the Boundary",
       "sequel": "Beyond the Boundary -I'LL BE HERE-: Future",
       "year": 2015,
       "status": "FINISHED"
     },
     {
       "name": "Noragami",
+      "title": "Noragami",
+      "romaji": "Noragami",
+      "english": "Noragami",
       "sequel": "Noragami Aragoto",
       "year": 2015,
       "status": "FINISHED"
     },
     {
       "name": "Nisemonogatari",
+      "title": "Nisemonogatari",
+      "romaji": "Nisemonogatari",
+      "english": "Nisemonogatari",
       "sequel": "Monogatari Series Second Season",
       "year": 2013,
       "status": "FINISHED"
     },
     {
       "name": "Love, Chunibyo & Other Delusions",
+      "title": "Love, Chunibyo & Other Delusions",
+      "romaji": "Chuunibyou demo Koi ga Shitai!",
+      "english": "Love, Chunibyo & Other Delusions",
       "sequel": "Love, Chunibyo & Other Delusions: Glimmering...Explosive Festival (Slapstick Noel)",
       "year": 2013,
       "status": "FINISHED"
     },
     {
       "name": "Stein’s;Gate",
+      "title": "Steins;Gate",
+      "romaji": "Steins;Gate",
+      "english": "Steins;Gate",
       "sequel": "Steins;Gate: Egoistic Poriomania",
       "year": 2012,
       "status": "FINISHED"
     },
     {
       "name": "Bakemonogatari",
+      "title": "Bakemonogatari",
+      "romaji": "Bakemonogatari",
+      "english": "Bakemonogatari",
       "sequel": "Nisemonogatari",
       "year": 2012,
       "status": "FINISHED"
     },
     {
       "name": "Highschool Of The Dead",
+      "title": "High School of the Dead",
+      "romaji": "Gakuen Mokushiroku: HIGHSCHOOL OF THE DEAD",
+      "english": "High School of the Dead",
       "sequel": "High School of the Dead: Drifters of the Dead",
       "year": 2011,
       "status": "FINISHED"
     },
     {
       "name": "Nekomonogatari: Black",
+      "title": "Nekomonogatari Black",
+      "romaji": "Nekomonogatari (Kuro)",
+      "english": "Nekomonogatari Black",
       "sequel": "Bakemonogatari",
       "year": 2009,
       "status": "FINISHED"
     },
     {
       "name": "Naruto",
+      "title": "Naruto",
+      "romaji": "NARUTO",
+      "english": "Naruto",
       "sequel": "Naruto: Shippuden",
       "year": 2007,
       "status": "FINISHED"
     },
     {
       "name": "Dragon Ball Z",
+      "title": "Dragon Ball Z",
+      "romaji": "Dragon Ball Z",
+      "english": "Dragon Ball Z",
       "sequel": "Dragon Ball GT",
       "year": 1996,
       "status": "FINISHED"
     },
     {
       "name": "Ranma ½",
+      "title": "Ranma ½",
+      "romaji": "Ranma 1/2",
+      "english": "Ranma ½",
       "sequel": "Ranma ½ (1989)",
       "year": 1989,
       "status": "FINISHED"
     },
     {
       "name": "Loner Life In Another World",
+      "title": "Loner Life in Another World",
+      "romaji": "Hitoribocchi no Isekai Kouryaku",
+      "english": "Loner Life in Another World",
       "sequel": "Hitoribocchi no Isekai Kouryaku 2nd Season",
       "year": null,
       "status": "NOT_YET_RELEASED"
     },
     {
       "name": "The Wrong Way To Use Healing Magic",
+      "title": "The Wrong Way to Use Healing Magic",
+      "romaji": "Chiyu Mahou no Machigatta Tsukaikata",
+      "english": "The Wrong Way to Use Healing Magic",
       "sequel": "The Wrong Way to Use Healing Magic Season 2",
       "year": null,
       "status": "NOT_YET_RELEASED"
     }
   ],
+  "duplicates": [],
   "divergence": {
-    "n": 48,
+    "n": 47,
     "top": [
+      {
+        "name": "Boruto: Naruto Next Generations",
+        "mine": 5,
+        "crowd": 57,
+        "delta": 43
+      },
       {
         "name": "Platinum End",
         "mine": 5,
@@ -366,12 +496,6 @@ export const weeb = {
         "mine": 5,
         "crowd": 68,
         "delta": 32
-      },
-      {
-        "name": "Boruto: Naruto Next Generations",
-        "mine": 5,
-        "crowd": 71,
-        "delta": 29
       },
       {
         "name": "Highschool DxD",

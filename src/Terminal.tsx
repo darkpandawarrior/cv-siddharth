@@ -383,7 +383,9 @@ function buildCommands(jump: Go): Cmd[] {
             <div key={job.company}>
               <Hi>{job.role}</Hi> <Dim>@ {job.company}</Dim> <Dim>· {job.period}</Dim>
               <ul className="ml-3 text-zinc-400">
-                {job.points.slice(0, 3).map((pt) => (
+                {/* Terminal output is print-once text, not a card — a click-to-expand
+                    control doesn't fit here, so print every bullet instead of slicing. */}
+                {job.points.map((pt) => (
                   <li key={pt.text}>- {pt.label ? `${pt.label}: ` : ""}{pt.text}</li>
                 ))}
               </ul>

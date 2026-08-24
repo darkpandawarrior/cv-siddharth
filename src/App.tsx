@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   MapPin,
   ArrowUpRight,
@@ -809,12 +809,16 @@ function Projects() {
                   )}
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
                   <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {p.highlights.slice(0, 2).map((h) => (
-                      <li key={h} className="flex gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                        {h}
-                      </li>
-                    ))}
+                    <Expandable
+                      items={p.highlights}
+                      visibleCount={2}
+                      renderItem={(h) => (
+                        <li key={h} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                          {h}
+                        </li>
+                      )}
+                    />
                   </ul>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {p.badges.map((b) => (
@@ -893,6 +897,49 @@ function Projects() {
 }
 
 /**
+ * A hard `.slice()` drops real content with no way to see it. Expandable
+ * renders the first `visibleCount` items, then — only if there's more — a
+ * real toggle button ("+N more") that reveals the rest. Collapsed by
+ * default. One component, reused wherever a list gets truncated.
+ */
+function Expandable<T>({
+  items,
+  visibleCount,
+  renderItem,
+}: {
+  items: T[];
+  visibleCount: number;
+  renderItem: (item: T) => ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const id = useId();
+  const hiddenCount = items.length - visibleCount;
+  if (hiddenCount <= 0) return <>{items.map(renderItem)}</>;
+  return (
+    <>
+      {items.slice(0, visibleCount).map(renderItem)}
+      <li className="flex flex-col gap-2">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={id}
+          // Some call sites (the project cards) nest this inside a
+          // click-to-navigate wrapper — stop the toggle from also firing that.
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="kicker-accent w-fit transition hover:opacity-80"
+        >
+          {expanded ? "show less" : `+ ${hiddenCount} more`}
+        </button>
+        <ul id={id} hidden={!expanded} className="space-y-2">
+          {items.slice(visibleCount).map(renderItem)}
+        </ul>
+      </li>
+    </>
+  );
+}
+
+/**
  * The vertical spine's accent fill tracks scroll progress through the
  * timeline — a lightweight rAF-to-DOM readout, same pattern as ScrollBot.
  */
@@ -960,15 +1007,19 @@ function ExperienceSection() {
                     <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{job.period}</span>
                   </div>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {job.points.slice(0, 4).map((p) => (
-                      <li key={p.text} className="flex gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                        <span>
-                          {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
-                          {p.text}
-                        </span>
-                      </li>
-                    ))}
+                    <Expandable
+                      items={job.points}
+                      visibleCount={4}
+                      renderItem={(p) => (
+                        <li key={p.text} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                          <span>
+                            {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
+                            {p.text}
+                          </span>
+                        </li>
+                      )}
+                    />
                   </ul>
                   {job.company.toLowerCase().includes("dice") && (
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -984,24 +1035,6 @@ function ExperienceSection() {
                         </button>
                       ))}
                     </div>
-                  )}
-                  {job.points.length > 4 && (
-                    <details className="expander mt-3">
-                      <summary className="cursor-pointer select-none text-sm font-semibold text-accent/80 transition hover:text-accent">
-                        + {job.points.length - 4} more
-                      </summary>
-                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-300">
-                        {job.points.slice(4).map((p) => (
-                          <li key={p.text} className="flex gap-2">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                            <span>
-                              {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
-                              {p.text}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
                   )}
                 </div>
               </div>

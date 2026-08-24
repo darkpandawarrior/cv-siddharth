@@ -204,7 +204,19 @@ export function WeebRoom() {
                 // tablet. A generated string cannot be given a fixed share of the
                 // row; it has no length anyone here controls.
                 <li key={s.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
-                  <span className="min-w-0 text-sm text-zinc-300">{s.name}</span>
+                  {/* AniList's canonical name, not the CSV spelling. His rows
+                      were typed over years and mix English with romaji —
+                      "Seven Deadly Sins" beside "Nanatsu no Taizai" — so the
+                      list read as two naming conventions with no rule. 26 of
+                      43 rows here differ from their canonical name. The
+                      Japanese title goes underneath where it says something
+                      different, rather than replacing anything. */}
+                  <span className="min-w-0 text-sm text-zinc-300">
+                    {s.title}
+                    {s.romaji && s.romaji !== s.title && (
+                      <span className="kicker ml-2 align-middle">{s.romaji}</span>
+                    )}
+                  </span>
                   <span className="flex min-w-0 items-center gap-3 sm:justify-end">
                     <span className="font-mono text-[11px] text-muted">
                       {s.sequel}
