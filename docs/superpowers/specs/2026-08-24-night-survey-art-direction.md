@@ -85,7 +85,7 @@ fill = HemisphereLight('#0a1416', '#0f1a14', 0.35)
 | Lane | Colour | Non-colour channel (load-bearing) |
 |---|---|---|
 | **work** | signal `#3ddc84` | **Gantry arches.** 26 of them, one per documented milestone, 2.2 m tall spanning 8 m of the lane, green emissive strip on the top chord. Tallest furniture in the world. Plus the 0.25 m terrace risers. |
-| **chess** | probe `#5ee6ff` | **Pulsing bollards**, one per month on the lane centreline, 0.5 m. Period `clamp(0.25 + 2.75 * (1 - g/619), 0.25, 3.0)` s and intensity `0.15 + 0.85 * sqrt(g/619)`. 2020-12 flickers at 4 Hz; 2023 is a 3 s dying blink. A heartbeat flatlining, no legend. |
+| **chess** | probe `#5ee6ff` | **Pulsing bollards**, one per month on the lane centreline, 0.5 m. Period `clamp(0.25 + 2.75 * (1 - g/619), 0.25, 3.0)` s and intensity `0.15 + 0.85 * sqrt(g/619)`. 2020-12 flickers at 4 Hz. NOTE: the "2023 is a dying blink / heartbeat flatlining" framing this row shipped with was based on a lichess-only lane and is wrong — he moved to chess.com and kept playing (1,092 games in 2026). The bollards thin after lockdown, they do not stop. |
 | **writing** | accent `#f2a13d` | **Sodium lampposts**, 3.2 m, lit in exactly the 24 real months and nowhere else, each with a baked 3 m warm pool decal. The loneliest fixture on the field. |
 | **opensource** | achromatic `#e8efe9` | **Static speckle field** — 480 desktop / 140 mobile 0.12 m emissive quads, density ∝ monthly contributions, absent before 2025-10 then flooding. No rhythm at all, which is what separates it from chess before colour does. |
 

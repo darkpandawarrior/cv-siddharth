@@ -18,7 +18,7 @@
  * a missing or unparseable source NEVER fails the build and NEVER writes a
  * degraded file — the previous committed output is left exactly as it was.
  */
-import { writeFileSync, readFileSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,28 +47,79 @@ const MONTHS = monthRange(FROM, TO);
 const zero = () => Object.fromEntries(MONTHS.map((m) => [m, 0]));
 const ymOf = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 
-/* ── chess: 14,119 lichess games, one row per game, real timestamps ───────── */
-function chessLane() {
-  const cache = join(root, ".chess-cache/lichess-games.json");
-  if (!existsSync(cache)) return null;
-  let games;
+/* ── chess: BOTH platforms, because one of them is the whole story ───────── */
+
+const CHESSCOM_UA = "cv-siddharth/1.0 (portfolio build; +https://cv-siddharth.vercel.app)";
+const chesscomCachePath = join(root, ".chess-cache/chesscom-months.json");
+
+/**
+ * Monthly game counts from chess.com.
+ *
+ * This lane was lichess-only, and it was telling a FALSE story. Lichess ends
+ * in early 2023, so the terrain said chess mountained in lockdown and then
+ * died as the career took over — a tidy narrative, and wrong. He moved
+ * platforms. chess.com holds 2,017 games in 2023, 1,043 in 2024, 590 in 2025
+ * and 1,092 in 2026, none of which the lane could see. src/data/chess.ts knew
+ * all along; the generator just never asked it.
+ *
+ * Counts come from the public archives endpoint, one URL per month, no auth.
+ * A past month can never change, so it is cached forever and only the current
+ * month is refetched — 46 archives becomes one request on a normal run.
+ */
+async function chesscomMonths() {
+  let cache = {};
+  try { cache = JSON.parse(readFileSync(chesscomCachePath, "utf8")); } catch { /* first run */ }
+  const thisMonth = TO;
+  let list;
   try {
-    const parsed = JSON.parse(readFileSync(cache, "utf8"));
-    games = Array.isArray(parsed) ? parsed : parsed.games ?? Object.values(parsed)[0];
-  } catch { return null; }
-  if (!Array.isArray(games) || games.length === 0) return null;
+    const res = await fetchWithTimeout("https://api.chess.com/pub/player/darkpandawarrior/games/archives", { headers: { "User-Agent": CHESSCOM_UA } });
+    if (!res.ok) return Object.keys(cache).length ? cache : null;
+    list = (await res.json()).archives ?? [];
+  } catch { return Object.keys(cache).length ? cache : null; }
+
+  for (const url of list) {
+    const ym = url.split("/games/").pop().replace("/", "-");
+    if (cache[ym] !== undefined && ym !== thisMonth) continue; // settled history
+    try {
+      const res = await fetchWithTimeout(url, { headers: { "User-Agent": CHESSCOM_UA } });
+      if (!res.ok) continue;
+      cache[ym] = ((await res.json()).games ?? []).length;
+    } catch { /* leave the month as it was */ }
+  }
+  try {
+    mkdirSync(dirname(chesscomCachePath), { recursive: true });
+    writeFileSync(chesscomCachePath, JSON.stringify(cache));
+  } catch { /* cache is an optimisation, never a requirement */ }
+  return cache;
+}
+
+async function chessLane() {
   const months = zero();
   let counted = 0;
-  for (const g of games) {
-    const t = g.createdAt ?? g.lastMoveAt;
-    if (typeof t !== "number") continue;
-    const ym = ymOf(new Date(t));
-    if (ym in months) { months[ym]++; counted++; }
+
+  const cachePath = join(root, ".chess-cache/lichess-games.json");
+  if (existsSync(cachePath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(cachePath, "utf8"));
+      const games = Array.isArray(parsed) ? parsed : parsed.games ?? Object.values(parsed)[0];
+      for (const g of games ?? []) {
+        const t = g.createdAt ?? g.lastMoveAt;
+        if (typeof t !== "number") continue;
+        const ym = ymOf(new Date(t));
+        if (ym in months) { months[ym]++; counted++; }
+      }
+    } catch { /* fall through to chess.com alone */ }
   }
+
+  const cc = await chesscomMonths();
+  if (cc) for (const [ym, n] of Object.entries(cc)) {
+    if (ym in months && Number.isFinite(n)) { months[ym] += n; counted += n; }
+  }
+
   if (counted === 0) return null;
   return {
     key: "chess", label: "chess", unit: "games played", resolution: "month",
-    source: "lichess game archive, one row per game",
+    source: "lichess game archive plus chess.com monthly archives, one row per game — BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
     months, total: counted,
   };
 }

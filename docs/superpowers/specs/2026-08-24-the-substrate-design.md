@@ -45,13 +45,25 @@ is exactly the inversion the current build gets wrong.
 
 ### The story the terrain already tells
 
-From `.chess-cache/lichess-games.json`, verified: 14,119 games, per-game
-`createdAt`, 58 months 2019-02 -> 2025-01. Peak 2020-12 at 619 games
-(lockdown). Collapse to 2023-08:2, 2023-09:1, 2023-12:9, 2025-01:3.
+CORRECTED 2026-08-24, and the correction matters more than the original.
 
-The chess ridge mountains up in lockdown and flatlines from 2023 as the work
-ridge rises. One life replacing another, told by shape alone. No copy states
-it. This is the structural expression the loop-thesis law demands.
+The lane was first built from `.chess-cache/lichess-games.json` alone: 14,119
+games, peak 2020-12 at 619 (lockdown), collapsing to almost nothing from 2023.
+That produced a tidy story — chess mountains in lockdown, then dies as the
+career takes over, one life replacing another — and it was FALSE. Lichess ends
+in early 2023 because he MOVED PLATFORMS. chess.com holds 2,017 games in 2023,
+1,043 in 2024, 590 in 2025 and 1,092 in 2026. src/data/chess.ts knew that the
+whole time; the generator never asked it.
+
+The lane reads both platforms now, 18,906 games, and matches
+chess.ts's own per-year totals within a handful. The real shape is a lockdown
+peak and then a LOWER, CONTINUOUS line running alongside the work ridge rather
+than under it — he did not stop, he changed venue and kept going while the
+career grew.
+
+That is a better fact and a worse slogan, which is exactly why it needed
+checking. A terrain is a claim; the tidiest reading of a dataset is the one to
+distrust.
 
 ## 3. Data contract
 

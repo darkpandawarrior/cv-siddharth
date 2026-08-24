@@ -176,13 +176,26 @@ const li = chess.platforms.find((p) => p.id === "lichess");
 const cc = chess.platforms.find((p) => p.id === "chess.com");
 const handoffYear = chess.activityByYear.find((a) => a.chesscom > a.lichess)?.year;
 const falseStart = chess.activityByYear.find((a) => a.year < handoffYear && a.chesscom > 0);
-const topPeak = (p) => p.peaks.reduce((a, b) => (b.rating > a.rating ? b : a));
+/* Empty-safe. A bare reduce with no seed throws on an empty array, and on
+ * 2026-08-24 a chess refresh produced a lichess platform with zero peaks —
+ * which crashed `npm run refresh` AND `prebuild`, because gen-system-prompt
+ * runs in both. A generator that dies on legitimately-absent data takes the
+ * whole build with it, so this returns null and the line below drops the
+ * comparison rather than inventing half of one. */
+const topPeak = (p) => (p?.peaks?.length ? p.peaks.reduce((a, b) => (b.rating > a.rating ? b : a)) : null);
 const pc = (x, d = 1) => `${(x * 100).toFixed(d)}%`;
 const n = (x) => x.toLocaleString("en-US");
 
 const chessLines = `- ${n(chess.totals.games)} games, ${chess.span.from} → ${chess.span.to}: lichess ${n(li.games)}, chess.com ${n(cc.games)}, ${n(chess.discipline.distinctDays)}/${n(chess.discipline.spanDays)} days (${pc(chess.discipline.distinctDays / chess.discipline.spanDays)}) — live from both APIs.
 - Timeline (often misstated): lichess from **Feb 2019**, handoff to **chess.com Jan ${handoffYear}** — not 2018/2020. chess.com opened ${cc.joined}, only ${falseStart.chesscom} games in ${falseStart.year} (false start), nothing until ${handoffYear}. **Never parallel** — sequential; an earlier 4-yr-overlap claim is retracted. lichess rating history reaches ${li.lastActive} via a few games that month only — rating dates ≠ activity.
-- Ratings **don't compare across platforms**: ${topPeak(li).rating} (lichess ${topPeak(li).format}) vs ${topPeak(cc).rating} (chess.com ${topPeak(cc).format}) — two pools; lichess figures are his LAST ratings, not current.
+${(() => {
+  const a = topPeak(li), b = topPeak(cc);
+  if (a && b) return `- Ratings **don't compare across platforms**: ${a.rating} (lichess ${a.format}) vs ${b.rating} (chess.com ${b.format}) — two pools; lichess figures are his LAST ratings, not current.`;
+  const only = a ? { p: "lichess", v: a } : b ? { p: "chess.com", v: b } : null;
+  return only
+    ? `- Peak rating ${only.v.rating} (${only.p} ${only.v.format}). Ratings do not compare across platforms, and only one platform reported peaks on this refresh — do not infer the other.`
+    : `- No peak-rating data on this refresh. Do not state a rating.`;
+})()}
 - Finding: ${pc(chess.thesis.lossesOnTime)} of losses ended on time, ${pc(chess.thesis.winsOnTime)} of wins came on the opponent's clock, ~${pc(chess.thesis.decidedOnClock)} of decided games settled by clock not board (${n(chess.thesis.sampleSize)} blitz traces) — time lost early-middlegame, not a late blunder.
 - Care: ~${n(chess.boardTime.combinedHours)}h at the board = lichess self-reported ${n(chess.boardTime.lichessHours)}h + ${n(chess.boardTime.chesscomHours)}h from chess.com PGN clock; accuracy covers only ${n(chess.accuracy.covered)}/${n(chess.accuracy.total)} chess.com games (${pc(chess.accuracy.covered / chess.accuracy.total)}), never "his accuracy"; bot presets ${Object.values(PRESETS).map((p) => `${p.label} (${p.rating})`).join(" and ")} are named after his OLD ratings, not measured Elo — "calibrated after", never "plays at".
 - Hobby → dataset: he plays a lot, then mines his own games — [The Board](/chess) is that analysis.`;
