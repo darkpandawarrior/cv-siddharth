@@ -58,7 +58,7 @@ export function ShippedShelf() {
   return (
     <section id="shipped" className="border-t border-line">
       <div className="section-y mx-auto max-w-5xl px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
+        <p className="section-eyebrow mb-2">
           // on the store
         </p>
         <h2 className="font-display text-h2 font-bold tracking-tight">Apps you can install</h2>
@@ -74,7 +74,7 @@ export function ShippedShelf() {
                 href={app.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1 hover:border-accent"
+                className="panel group flex h-full flex-col p-5 transition hover:-translate-y-1 hover:border-accent"
               >
                 <AppIcon app={app} size={44} />
                 <span className="kicker mt-4">

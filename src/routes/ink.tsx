@@ -49,7 +49,7 @@ function InkRoute() {
               or care what order the two land in. */}
           <a
             href="/anthology"
-            className="group mt-8 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
+            className="panel group mt-8 flex max-w-2xl items-center justify-between gap-4 p-5 transition hover:border-accent/50"
           >
             <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span>{" "}

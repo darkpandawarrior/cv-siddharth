@@ -35,7 +35,7 @@ export function WritingSection() {
     <section id="writing" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the loopdown</p>
+          <p className="section-eyebrow mb-2">// the loopdown</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
           <p className="mb-5 max-w-2xl text-zinc-400">
             Field notes from real Android and KMP work, told through a recurring cast of personified
@@ -63,7 +63,7 @@ export function WritingSection() {
             <Reveal className="h-full">
               <TiltCard>
                 <article
-                  className="card-elevated flex h-full flex-col rounded-2xl border border-line bg-card p-6 sm:p-8"
+                  className="panel card-elevated flex h-full flex-col p-6 sm:p-8"
                   style={{ borderLeft: `3px solid ${featuredAccent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -122,7 +122,7 @@ export function WritingSection() {
                 return (
                   <div
                     key={l.slug}
-                    className="card-elevated rounded-xl border border-line bg-card p-4"
+                    className="panel-sm card-elevated p-4"
                     style={{ borderLeft: `3px solid ${accent}` }}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -173,7 +173,7 @@ export function WritingSection() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <Link
               to="/loopdown"
-              className="card-elevated group flex flex-col rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
+              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent/50"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
@@ -190,7 +190,7 @@ export function WritingSection() {
               href={BOOKS_BEFORE_BROS.url}
               target="_blank"
               rel="noreferrer"
-              className="card-elevated group flex flex-col rounded-2xl border border-line bg-card p-5 transition hover:border-accent2/50"
+              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent2/50"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
@@ -207,7 +207,7 @@ export function WritingSection() {
             128-page institute magazine with my signature in the masthead — so
             it gets shown as a magazine, not as a line in a list. */}
         <Reveal delay={120}>
-          <div className="mt-10 rounded-2xl border border-line bg-card p-6 sm:p-8">
+          <div className="panel mt-10 p-6 sm:p-8">
             <div className="meta-row">
               <span className="font-display text-base font-bold tracking-tight">
                 Excelsior — MANIT's institute magazine

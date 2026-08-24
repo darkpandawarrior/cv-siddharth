@@ -98,7 +98,7 @@ export function WritingView() {
                 <Reveal key={l.slug} className="h-full" delay={(i % 2) * 100}>
                 <TiltCard>
                 <div
-                  className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-5"
+                  className="panel-sm card-elevated flex h-full flex-col p-5"
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">

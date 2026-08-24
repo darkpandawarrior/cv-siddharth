@@ -110,7 +110,7 @@ export function ThemeLab() {
               {CLIENTS.map((c, i) => (
                 <div
                   key={c}
-                  className="overflow-hidden rounded-xl border border-line bg-card"
+                  className="panel-sm overflow-hidden"
                   style={{ transition: `border-color 0.4s ${i * 90}ms`, borderColor: `${brand.color}44` }}
                 >
                   <div

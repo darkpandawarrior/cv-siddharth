@@ -88,7 +88,7 @@ export function Shipped() {
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1 hover:border-accent"
+                  className="panel group flex h-full flex-col p-5 transition hover:-translate-y-1 hover:border-accent"
                 >
                   <AppIcon app={app} size={48} />
                   <span className="kicker mt-4">

@@ -72,7 +72,7 @@ function SurfaceTile({ surface }: { surface: Surface }) {
   return (
     <Link
       to={surface.to}
-      className="group flex flex-col rounded-2xl border border-line bg-card p-4 transition hover:border-accent/50 focus-visible:border-accent/50"
+      className="panel group flex flex-col p-4 transition hover:border-accent/50 focus-visible:border-accent/50"
     >
       {/* The frame. A surface with no capture skips this entirely and still
           renders a complete, legible tile — that degradation is the whole

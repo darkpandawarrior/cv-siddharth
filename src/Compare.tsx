@@ -203,7 +203,7 @@ export function CompareSection({ slug }: { slug: string }) {
     <section className="border-t border-line">
       <div className="section-y mx-auto max-w-6xl px-6">
         <div className="mb-8">
-          <p className="section-eyebrow mb-2 text-xs font-semibold tracking-widest text-accent/70 uppercase">
+          <p className="section-eyebrow mb-2">
             // directions
           </p>
           <h2 className="font-display text-h2 font-bold tracking-tight">

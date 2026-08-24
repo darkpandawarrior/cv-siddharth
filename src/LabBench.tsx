@@ -72,7 +72,7 @@ export function LabBench() {
     <section id="lab" className="border-t border-line bg-void/40">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the lab bench</p>
+          <p className="section-eyebrow mb-2">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
             {countWord(LAB_TABS.length)} instruments spanning Dice.tech's production case studies, five personal open-source

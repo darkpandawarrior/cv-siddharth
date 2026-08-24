@@ -92,7 +92,7 @@ export function Sandbox() {
 
       <div
         id={BOUNDS_ID}
-        className="relative mt-5 h-64 overflow-hidden rounded-2xl border border-line bg-card sm:h-72"
+        className="panel relative mt-5 h-64 overflow-hidden sm:h-72"
         style={{
           backgroundImage:
             "linear-gradient(rgba(61,220,132,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(61,220,132,0.05) 1px, transparent 1px)",

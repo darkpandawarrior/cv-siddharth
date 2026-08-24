@@ -104,7 +104,7 @@ export function ChessFindings() {
         {/* the thesis, as the divergence curve */}
         <Reveal className="h-full">
           <TiltCard>
-            <article className="card-elevated flex h-full flex-col rounded-2xl border border-line bg-card p-6 sm:p-8">
+            <article className="panel card-elevated flex h-full flex-col p-6 sm:p-8">
               <div className="flex items-center justify-between gap-3">
                 <span className="kicker-accent flex items-center gap-2">
                   <Clock size={13} /> Clock remaining, by game progress
@@ -155,7 +155,7 @@ export function ChessFindings() {
         {/* scale and discipline */}
         <Reveal delay={120} className="h-full">
           <div className="flex h-full flex-col gap-3">
-            <div className="card-elevated rounded-xl border border-line bg-card p-4">
+            <div className="panel-sm card-elevated p-4">
               <p className="kicker flex items-center gap-2">
                 <Swords size={12} /> Corpus
               </p>
@@ -166,7 +166,7 @@ export function ChessFindings() {
               </p>
             </div>
 
-            <div className="card-elevated rounded-xl border border-line bg-card p-4">
+            <div className="panel-sm card-elevated p-4">
               <p className="kicker flex items-center gap-2">
                 <Clock size={12} /> Time at the board
               </p>
@@ -181,7 +181,7 @@ export function ChessFindings() {
               </p>
             </div>
 
-            <div className="card-elevated rounded-xl border border-line bg-card p-4">
+            <div className="panel-sm card-elevated p-4">
               <p className="kicker flex items-center gap-2">
                 <CalendarDays size={12} /> Showing up
               </p>
@@ -198,7 +198,7 @@ export function ChessFindings() {
 
       {/* repertoire as Black, joined to the platform handoff it is confounded with */}
       <Reveal delay={100}>
-        <div className="card-elevated mt-6 rounded-2xl border border-line bg-card p-6 sm:p-8">
+        <div className="panel card-elevated mt-6 p-6 sm:p-8">
           <p className="kicker-accent">Repertoire as Black</p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
             {repertoire[0] && (
@@ -301,7 +301,7 @@ export function ChessFindings() {
               href={p.url}
               target="_blank"
               rel="noreferrer"
-              className="card-elevated group flex flex-col rounded-2xl border border-line bg-card p-5 transition hover:border-accent/50"
+              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent/50"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-sm font-bold text-zinc-100">{p.id}</span>
@@ -354,7 +354,7 @@ export function ChessFindings() {
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+            <article className="panel-sm card-elevated flex h-full flex-col p-4">
               <h4 className="font-display text-base font-bold">The Flagfall</h4>
               <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
                 {pct(thesis.lossesOnTime)}
@@ -367,7 +367,7 @@ export function ChessFindings() {
             </article>
 
             {ninth && (
-              <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+              <article className="panel-sm card-elevated flex h-full flex-col p-4">
                 <h4 className="font-display text-base font-bold">The Ninth Game</h4>
                 <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
                   {pct(ninth.winRate)}
@@ -383,7 +383,7 @@ export function ChessFindings() {
               </article>
             )}
 
-            <article className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-4">
+            <article className="panel-sm card-elevated flex h-full flex-col p-4">
               <h4 className="font-display text-base font-bold">The Returner</h4>
               <p className="mt-1 font-mono text-lg font-bold tabular-nums text-accent2">
                 {scandinavianLine ? pct(scandinavianLine.share) : "—"}
@@ -418,7 +418,7 @@ export function ChessFindings() {
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="panel p-5">
               <p className="font-display text-base font-bold">More clock does not help me</p>
               <dl className="mt-3 space-y-1.5">
                 {chessDeep.byTimeControl.map((t) => (
@@ -436,7 +436,7 @@ export function ChessFindings() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="panel p-5">
               <p className="font-display text-base font-bold">I leave theory on move one</p>
               <p className="mt-3 font-mono text-sm text-accent2">
                 median book exit: ply {chessDeep.book.medianPly}
@@ -449,7 +449,7 @@ export function ChessFindings() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="panel p-5">
               <p className="font-display text-base font-bold">Where the game came from</p>
               <dl className="mt-3 space-y-1.5">
                 {chessDeep.bySource.map((s) => (
@@ -467,7 +467,7 @@ export function ChessFindings() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="panel p-5">
               <p className="font-display text-base font-bold">How they actually end</p>
               <dl className="mt-3 space-y-1.5">
                 {chessDeep.byEnding.slice(0, 4).map((e) => (

@@ -82,7 +82,7 @@ function PulseInner() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-4xl flex-1 px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the pulse</p>
+        <p className="section-eyebrow mb-2">// the pulse</p>
         <h1 className="font-display text-hero font-bold tracking-tight">
           {/* aria-hidden on the figures only: the <h1> keeps its heading role
               and its place in the document outline, while the numbers are

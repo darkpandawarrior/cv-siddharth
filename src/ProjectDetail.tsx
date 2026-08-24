@@ -42,7 +42,7 @@ function NextProject({ slug }: { slug: string }) {
         <Link
           to="/project/$slug"
           params={{ slug: next.slug }}
-          className="card-elevated group flex items-center justify-between gap-4 rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50"
+          className="panel card-elevated group flex items-center justify-between gap-4 p-6 transition hover:border-accent/50"
         >
           <div>
             <p className="kicker-accent">next build</p>
@@ -177,7 +177,7 @@ function ShareProject({ slug, name }: { slug: string; name: string }) {
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="reveal mb-8">
-      <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// {eyebrow}</p>
+      <p className="section-eyebrow mb-2">// {eyebrow}</p>
       <h2 className="font-display text-h2 font-bold tracking-tight">{title}</h2>
     </div>
   );
@@ -463,7 +463,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             {d.sections.map((s, i) => (
               <div key={s.heading} className="reveal h-full" style={{ transitionDelay: `${(i % 2) * 100}ms` }}>
                 <TiltCard>
-                  <article className="card-elevated h-full rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+                  <article className="panel card-elevated h-full p-6 transition hover:border-accent/50">
                     <h3 className="font-display text-lg font-bold text-accent">{s.heading}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-zinc-300">{s.body}</p>
                   </article>
@@ -483,7 +483,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
               {d.roles.map((r, i) => (
                 <div key={r.name} className="reveal h-full" style={{ transitionDelay: `${(i % 3) * 80}ms` }}>
                   <TiltCard maxTilt={3}>
-                    <div className="card-elevated flex h-full gap-3 rounded-2xl border border-line bg-card p-4">
+                    <div className="panel card-elevated flex h-full gap-3 p-4">
                       <span
                         className="mt-1 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/40"
                         style={{ backgroundColor: r.color }}
@@ -508,7 +508,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <SectionHeader eyebrow="architecture" title="How it's built" />
             <div className="grid gap-6 lg:grid-cols-2">
               {d.diagrams.map((dg, i) => (
-                <div key={dg.title} className="reveal card-elevated rounded-2xl border border-line bg-card p-5">
+                <div key={dg.title} className="panel reveal card-elevated p-5">
                   <h3 className="mb-4 text-sm font-semibold text-zinc-200">{dg.title}</h3>
                   <Mermaid code={dg.code} id={`mmd-${slug}-${i}`} accent={t?.accent} card={t?.card} />
                 </div>
@@ -523,7 +523,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <section className="border-t border-line bg-surface">
           <div className="section-y mx-auto max-w-5xl px-6">
             <SectionHeader eyebrow="under the hood" title="Tech stack" />
-            <div className="card-elevated grid gap-x-6 gap-y-8 rounded-2xl border border-line bg-card p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
+            <div className="panel card-elevated grid gap-x-6 gap-y-8 p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
               {d.techStack.map((ts) => (
                 <div key={ts.group} className="reveal">
                   <h3 className="mb-2 text-sm font-semibold text-accent">{ts.group}</h3>
@@ -551,7 +551,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <div className="section-y mx-auto max-w-6xl px-6">
             <div className="mb-8 flex items-center justify-between gap-4">
               <div>
-                <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// gallery</p>
+                <p className="section-eyebrow mb-2">// gallery</p>
                 <h2 className="font-display text-h2 font-bold tracking-tight">
                   Screens <span className="text-muted">({items.length})</span>
                 </h2>
@@ -589,7 +589,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                       real shape and still lines up. The width cap matters as much: PaymentsLab
                       ships component strips as wide as 6.67:1, which at this height would render
                       1,920px across and swallow the whole rail. */}
-                  <span className="gallery-item flex h-72 max-w-[26rem] items-center justify-center overflow-hidden rounded-2xl border border-line bg-card">
+                  <span className="panel gallery-item flex h-72 max-w-[26rem] items-center justify-center overflow-hidden">
                     {/* alt="" when the caption is already on screen. The
                         caption sits directly below this image AND is the
                         button's `title`, so alt={it.caption} made a screen

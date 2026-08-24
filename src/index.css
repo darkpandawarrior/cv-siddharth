@@ -975,6 +975,25 @@ html.resume-mode body {
    accent LED before the label turns every section header into one instrument
    panel — a consistent telemetry cue across the home sections. Static (no
    animation), so no reduced-motion concern. */
+/* The eyebrow above a section heading. It was a decoration pretending to be a
+   primitive: this class only drew the little dot, while the five typography
+   utilities that actually make it an eyebrow were written out beside it at all
+   seventeen call sites. Measured before moving them — all seventeen were
+   byte-identical (font-semibold text-accent/70 text-xs tracking-widest
+   uppercase), so folding them in changes nothing on screen and removes
+   eighty-five redundant tokens.
+
+   Margin stays at the call site: it is the one thing that legitimately varies
+   (mb-2 mostly, mb-10 once), and these classes sit outside any layer so a
+   property declared here would beat a utility trying to override it. */
+.section-eyebrow {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklab, var(--color-accent) 70%, transparent);
+}
+
 .section-eyebrow::before {
   content: "";
   display: inline-block;
@@ -1110,6 +1129,34 @@ html.resume-mode body {
 }
 
 /* Small caps-ish label above a brief / deliverables column. */
+/* THE PANEL — the bordered, filled surface a card, a readout or a callout
+   sits on. It was written out as `rounded-2xl border border-line bg-card`
+   forty-five times across two dozen files, with the radius drifting between
+   2xl and xl for no reason anyone could point at.
+
+   It sets ONLY the three invariants: border, fill, radius. Padding stays a
+   utility at the call site, deliberately — these custom classes are declared
+   after `@import "tailwindcss"` and outside any layer, so unlayered CSS BEATS
+   a Tailwind utility. A .panel that set its own padding would silently
+   override every `p-6` on the page and nobody would know why. The same reason
+   there are two radius variants rather than one class plus an override.
+
+   Translucent panels (bg-card/40, bg-card/80) are left alone: a see-through
+   surface over a canvas is a different thing doing a different job. */
+.panel,
+.panel-sm {
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+}
+
+.panel {
+  border-radius: var(--radius-2xl, 1rem);
+}
+
+.panel-sm {
+  border-radius: var(--radius-xl, 0.75rem);
+}
+
 /* THE KICKER — the small mono uppercase label above a heading, in a metric
    tile, on a HUD readout. It was hand-rolled as raw utilities in 43 files, 90
    times, in more than twenty different combinations: three sizes (10px, 11px,

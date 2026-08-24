@@ -219,7 +219,7 @@ function MobileMenu() {
                 <button
                   key={l.href}
                   onClick={() => go(l.href)}
-                  className="rounded-xl border border-line bg-card px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
+                  className="panel-sm px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
                 >
                   {l.label}
                 </button>
@@ -570,7 +570,7 @@ function CaseStudies() {
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <ChapterWord>Case studies</ChapterWord>
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
+        <p className="section-eyebrow mb-2">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
@@ -596,7 +596,7 @@ function CaseStudies() {
               role="link"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
-              className="card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
+              className="panel card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
             >
               {/* Was multiplatform.gif — 108 frames cycling phone → watch →
                   widgets. Rendered at this card's crop, 3 of 4 sampled frames
@@ -647,7 +647,7 @@ function CaseStudies() {
         {rest.map((cs, i) => (
           <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
             <TiltCard>
-              <article id={cs.slug} className="card-elevated group flex h-full scroll-mt-24 flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+              <article id={cs.slug} className="panel card-elevated group flex h-full scroll-mt-24 flex-col p-6 transition hover:border-accent/50">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
                   {/* Ornamental index, deliberately a ghost at 10% accent
@@ -714,7 +714,7 @@ function Projects() {
       <div className="section-y mx-auto max-w-5xl px-6">
         <ChapterWord>Things I've built</ChapterWord>
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
+          <p className="section-eyebrow mb-2">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
             Open-source projects and tooling outside employer work — shipped end-to-end.
@@ -745,7 +745,7 @@ function Projects() {
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
-                  className="card-elevated group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-line bg-card transition hover:-translate-y-1 hover:border-accent/50"
+                  className="panel card-elevated group flex h-full cursor-pointer flex-col overflow-hidden transition hover:-translate-y-1 hover:border-accent/50"
                 >
                   {media && (
                     <div className="relative h-44 shrink-0 overflow-hidden border-b border-line bg-void">
@@ -879,7 +879,7 @@ function Projects() {
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {recentGrowth.slice(-4).reverse().map((g) => (
-              <div key={g.title} className="rounded-xl border border-line bg-card p-4">
+              <div key={g.title} className="panel-sm p-4">
                 <p className="text-xs text-muted">{g.date}</p>
                 <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
                 <p className="mt-1 text-sm leading-snug text-zinc-400">{g.detail}</p>
@@ -943,7 +943,7 @@ function ExperienceSection() {
       <div className="section-y mx-auto max-w-5xl px-6">
         <ChapterWord>Experience</ChapterWord>
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
+          <p className="section-eyebrow mb-2">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div ref={trackRef} className="relative space-y-10 pl-8 sm:pl-10">
@@ -952,7 +952,7 @@ function ExperienceSection() {
             <Reveal key={job.company}>
               <div className="relative">
                 <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent bg-ink sm:-left-10" />
-                <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent/40 sm:p-6">
+                <div className="panel card-elevated p-5 transition hover:border-accent/40 sm:p-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="font-display text-xl font-bold">
                       {job.role} <span className="text-accent">@ {job.company}</span>
@@ -1010,7 +1010,7 @@ function ExperienceSection() {
           <Reveal>
             <div className="relative">
               <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent2 bg-ink sm:-left-10" />
-              <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent2/40 sm:p-6">
+              <div className="panel card-elevated p-5 transition hover:border-accent2/40 sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <h3 className="font-display text-xl font-bold">
                     {education.degree} <span className="text-accent2">@ {education.school}</span>
@@ -1055,7 +1055,7 @@ function Skills() {
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// tech stack</p>
+        <p className="section-eyebrow mb-2">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
         <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
@@ -1283,7 +1283,7 @@ function Doorway() {
     <section id="surfaces" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// not a PDF with a pulse</p>
+          <p className="section-eyebrow mb-2">// not a PDF with a pulse</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
             A running program, not a slide deck: {countWord(siteRooms.length)} interactive rooms, each a small proof

@@ -469,7 +469,7 @@ export function ChessRoom() {
         role="region"
         aria-labelledby={`chess-tab-${tab}`}
         aria-busy={tab !== "findings" && !corpus && !error}
-        className="mt-6 rounded-xl border border-line bg-card p-6"
+        className="panel-sm mt-6 p-6"
       >
         {tab === "findings" ? (
           // Renders straight from the bundled `chess.ts` summary, not the

@@ -24,7 +24,7 @@ function RoomCard({ r, i }: { r: Room; i: number }) {
     <Link
       to={r.to}
       onClick={() => bump(event)}
-      className="playground-card group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1"
+      className="panel playground-card group flex h-full flex-col p-5 transition hover:-translate-y-1"
       style={{ animationDelay: `${i * 60}ms` }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.tint}66`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}

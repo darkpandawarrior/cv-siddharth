@@ -259,7 +259,7 @@ function PlaygroundInner() {
         </main>
       ) : (
         <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-6xl flex-1 px-6">
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
+          <p className="section-eyebrow mb-2">// the playground</p>
           <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
             Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a

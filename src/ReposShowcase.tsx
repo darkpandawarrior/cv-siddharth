@@ -125,7 +125,7 @@ function RepoCard({ r }: { r: Repo }) {
       // 327px column. The card sat 29px outside its own track and the homepage
       // scrolled 5px sideways on a phone — the truncate below never got the
       // chance to fire, because the track was never the constraint.
-      className="group flex h-full min-w-0 flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5"
+      className="panel group flex h-full min-w-0 flex-col p-5 transition hover:-translate-y-0.5"
       style={{ borderColor: undefined }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.accent}66`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
@@ -201,7 +201,7 @@ export function ReposShowcase() {
             /* Moved here from App.tsx, which rendered this blurb and graph
                under its OWN "Shared foundation" heading immediately above this
                group's identically-named one. One heading, one block. */
-            <div className="mb-4 rounded-2xl border border-line bg-card p-6">
+            <div className="panel mb-4 p-6">
               <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
               <FoundationGraph />
             </div>
@@ -221,7 +221,7 @@ export function ReposShowcase() {
                   href={c.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-card px-4 py-2.5 text-sm transition hover:border-accent/50"
+                  className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
                 >
                   <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
                   <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>

@@ -93,7 +93,7 @@ export function DeviceMorph() {
   return (
     <section id="morph" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-6xl px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
+        <p className="section-eyebrow mb-2">
           // one codebase
         </p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Resize the device, not the screenshot</h2>
