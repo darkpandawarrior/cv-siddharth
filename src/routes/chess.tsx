@@ -7,7 +7,6 @@ import { FloatingChat } from "../FloatingChat.tsx";
 
 export const Route = createFileRoute("/chess")({
   head: () => roomHead("/chess"),
-  ssr: false,
   component: () => (
     <>
       <CursorAura />
