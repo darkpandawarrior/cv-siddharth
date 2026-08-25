@@ -124,7 +124,7 @@ export const boardProfiles: BoardProfile[] = [
     quote:
       "…This JC will hold the fort for as long as it takes. For a mother can't trust anybody with her child, yk. … Doesn't matter if y'all don't reply to my messages, don't turn in work at deadlines, etc etc. Yaar tumhare liye design teams se gaali bhi kha lunga but never abandon EB.",
     direction: "Pastes his write-up in a freshly error-checked code",
-    gloss: "FYC — Final Year Crisis",
+    gloss: "FYC, Final Year Crisis",
   },
 ];
 
@@ -172,4 +172,4 @@ export const coverStory2021 = {
  * a college magazine to a production codebase.
  */
 export const boardArc =
-  "Three years, three parodies: the punster who over-thought everything, the editor who could not cut his own 25-page draft, and finally the one who held the fort — error-checking other people's work, absorbing the flak from other teams so his own did not have to, and refusing to abandon it in his final year. The last one is still the job description.";
+  "Three years, three parodies: the punster who over-thought everything, the editor who could not cut his own 25-page draft, and finally the one who held the fort, error-checking other people's work, absorbing the flak from other teams so his own did not have to, and refusing to abandon it in his final year. The last one is still the job description.";
