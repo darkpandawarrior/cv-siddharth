@@ -9,10 +9,10 @@
 // This is that failing thing. It is deliberately mechanical: it does not judge
 // whether a surface is good, only whether it is *reachable and complete*.
 
-import { readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readdirSync, existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { describe, it, expect } from "vitest";
-import { surfaces, WALL_GROUPS, wallSurfaces, siteRooms } from "./surfaces.ts";
+import { surfaces, WALL_GROUPS, wallSurfaces, siteRooms, demotedSurfaces } from "./surfaces.ts";
 import { facets } from "./facets.ts";
 import { SURFACE_ICON } from "../rooms.tsx";
 import { anthologyEntries } from "./anthology.ts";
@@ -78,14 +78,38 @@ describe("surface completeness", () => {
     expect(stranded, `surface(s) in a group the wall never renders: ${stranded.join(", ")}`).toEqual([]);
   });
 
-  // The invariant the registry exists for, stated as one line: every route
-  // reaches the homepage. It used to read "every WALLED surface", which was
-  // vacuously true of the one surface that had opted out — /playground went
-  // unlinked from the homepage with this test green.
-  it("renders every surface on the wall exactly once", () => {
-    const all = surfaces.map((f) => f.to).sort();
+  // The invariant the registry exists for: every surface reaches the homepage
+  // wall unless it is one of the two that deliberately does not. It used to
+  // read "every WALLED surface", which was vacuously true of the one surface
+  // that had opted out — /playground went unlinked with this test green.
+  it("renders every surface on the wall exactly once, minus the demoted ones", () => {
+    const expected = surfaces.filter((f) => f.wall !== false).map((f) => f.to).sort();
     const tiled = wallSurfaces.flatMap((g) => g.items.map((f) => f.to)).sort();
-    expect(tiled).toEqual(all);
+    expect(tiled).toEqual(expected);
+  });
+
+  // `wall: false` is the flag that already cost this site a route once, so the
+  // demoted set is pinned rather than trusted. Demoting a third surface is a
+  // failing test somebody has to come here and edit on purpose, which is the
+  // whole difference between a decision and an omission.
+  it("demotes exactly the two surfaces that are meant to be off the wall", () => {
+    expect(demotedSurfaces.map((f) => f.to).sort()).toEqual(["/forge", "/terminal"]);
+  });
+
+  // Off the wall is not off the site, and this is the line between the two.
+  // ⌘K reaches a demoted surface by name, but you cannot search for a room you
+  // do not know exists — the Launcher's own docstring says exactly that about
+  // the nine routes nobody found. So a demotion is only allowed for a `room`,
+  // which the next-room pager walks a visitor into whether they went looking or
+  // not. Demoting an ordinary page would leave it with the palette and nothing
+  // else, which is how /playground was lost.
+  it("only demotes surfaces the room pager still reaches", () => {
+    const paged = new Set(siteRooms.map((r) => r.to));
+    const stranded = demotedSurfaces.filter((f) => !paged.has(f.to)).map((f) => f.to);
+    expect(
+      stranded,
+      `demoted from the wall but not in the room pager either — nothing but ⌘K leads here: ${stranded.join(", ")}`,
+    ).toEqual([]);
   });
 
   it("resolves every railId to a facet in the chronology registry", () => {
@@ -156,5 +180,54 @@ describe("the registry's spelled-out counts still match the data", () => {
       tile!.blurb,
       `the tile should say "${word} short stories" — the corpus holds ${anthologyEntries.length}`,
     ).toContain(`${word} short stories`);
+  });
+});
+
+describe("no surface is a dead end", () => {
+  // /loopdown shipped with ZERO links in it — no nav, no footer, no onward
+  // path, browser-back or nothing — and its route file still carries the
+  // comment saying so. A comment catches that once, for the one route somebody
+  // happened to open. This catches it for all of them.
+  //
+  // The site has two shared ways out and one hand-rolled one, and all three are
+  // honest signals in the source:
+  //   RoomFrame  — the full-screen room chrome, which carries the next-room
+  //                pager (rooms.tsx: "NO DEAD ENDS").
+  //   SiteFooter — the footer whose own docstring says it exists "so no page is
+  //                a dead end".
+  //   to="/…"    — an internal Link. /hire, /excelsior and /resume mount
+  //                neither shared piece on purpose (the résumé is deliberately
+  //                chrome-free so it prints clean) and hand-roll their exits
+  //                instead, which is a way out and has to count as one.
+  // A route with none of the three is the loopdown bug, exactly.
+  const EXIT = /RoomFrame|SiteFooter|to="\//;
+
+  /**
+   * A route's source, plus the source of the src/ modules it imports directly.
+   *
+   * One hop, because the thin-route pattern is one hop: /blueprint, /compose,
+   * /pulse, /shipped, /terminal and /playground are all a `createFileRoute`
+   * shell around a component that mounts the chrome. Going deeper would start
+   * matching a footer that lives four imports away from anything a visitor
+   * sees on this page, which is not the same claim.
+   */
+  function routeSource(path: string): string {
+    const file = join(root, "src", "routes", `${path.slice(1)}.tsx`);
+    const own = readFileSync(file, "utf8");
+    const hops = [...own.matchAll(/"(\.\.?\/[^"]+)"/g)]
+      .map((m) => resolve(dirname(file), m[1]))
+      .map((f) => (f.endsWith(".tsx") ? f : `${f}.tsx`))
+      .filter((f) => existsSync(f));
+    return own + hops.map((f) => readFileSync(f, "utf8")).join("\n");
+  }
+
+  it("gives every registered route a way out", () => {
+    const trapped = surfaces
+      .filter((s) => !EXIT.test(routeSource(s.to)))
+      .map((s) => `${s.to} (src/routes/${s.to.slice(1)}.tsx)`);
+    expect(
+      trapped,
+      `route(s) with no pager, no footer and no internal link — a visitor who lands here can only go back: ${trapped.join(", ")}`,
+    ).toEqual([]);
   });
 });

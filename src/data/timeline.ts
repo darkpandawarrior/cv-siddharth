@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-08-25T04:00:50.006Z",
+  "generatedAt": "2026-08-25T04:59:11.685Z",
   "from": "2019-01",
   "to": "2026-08",
   "months": [
@@ -289,7 +289,7 @@ export const timeline: Timeline = {
           "ym": "2025-01",
           "lane": "work",
           "kind": "delivered",
-          "label": "Reduced production crashes 80% at 22,000+ daily users — the fix was the concurrency and threading model, not defensive try/catch, with Crashlytics and Sentry catching regressions b"
+          "label": "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Crashlytics and Sentry catch regressions before use"
         },
         {
           "ym": "2025-04",
@@ -485,9 +485,9 @@ export const timeline: Timeline = {
         "2026-05": 47,
         "2026-06": 296,
         "2026-07": 272,
-        "2026-08": 152
+        "2026-08": 154
       },
-      "total": 18909,
+      "total": 18911,
       "peak": {
         "ym": "2020-12",
         "v": 619

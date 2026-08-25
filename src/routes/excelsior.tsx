@@ -64,7 +64,7 @@ function ExcelsiorRoute() {
           <h1 className="font-display mt-1.5 text-h2 font-bold tracking-tight">Excelsior</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-400">
             MANIT Bhopal's institute magazine, running since 1963. I was an English Editor on the 2019
-            and 2020 editions and Joint Chief Editor on 2021 — the sign-off is on{" "}
+            and 2020 editions and Joint Chief Editor on 2021. The sign-off is on{" "}
             <Link
               to="/excelsior"
               search={{ year: 2021, page: 5 }}

@@ -35,7 +35,7 @@ import { projectTowers } from "./districtWest.ts";
 import { YEAR_BANDS } from "./cityData.ts";
 import { CITY } from "./city.ts";
 import { LABEL_HEIGHT } from "./pavilionGeometry.ts";
-import { worldPalette, worldTint } from "./palette.ts";
+import { worldLane, worldPalette, worldTint } from "./palette.ts";
 
 export type LabelKind = "room" | "project" | "year";
 
@@ -85,7 +85,7 @@ export function worldLabels(): WorldLabel[] {
         // Through the world's palette, not raw. ROOMS carries the SITE tint —
         // /blueprint is violet — and a fifth hue in a corridor whose identity
         // is four lanes reads as a bug. worldTint snaps it to the nearest lane.
-        tint: worldTint(room.tint, worldPalette()),
+        tint: worldLane(room.group, worldPalette()) ?? worldTint(room.tint, worldPalette()),
         to: p.to,
         position: [p.position[0], p.position[1] + LABEL_HEIGHT[p.shape], p.position[2]] as [number, number, number],
       },

@@ -9,6 +9,7 @@ import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
 import { anthology, anthologyEntries } from "../data/anthology.ts";
+import { boardArc } from "../data/beforeTheCode.ts";
 /**
  * The Ink — the writing years, given their own world.
  *
@@ -41,9 +42,19 @@ function InkRoute() {
         <div className="section-y mx-auto max-w-5xl px-6">
           <p className="kicker-accent">// before the code</p>
           <h1 className="font-display mt-3 text-hero">The Ink</h1>
-          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-            Three years of a college magazine, a literary society, and everything I wrote before I
-            wrote software. It reads differently because it was a different life.
+          {/* The epigraph. This sentence spent its life as a caption under the
+              EB Profiles grid, three screens down, summarising the three cards
+              above it. It is not a caption: it is the throughline from a
+              college magazine to a production codebase, and it ends on the
+              only line here that is also a claim about the engineer. So it
+              opens the world.
+
+              Quoted from beforeTheCode.ts, not retyped. The profiles it
+              describes are generated from that same file, and a hand-copied
+              version of a sentence about them would drift the first time one
+              of them was edited. */}
+          <p className="font-display mt-6 max-w-3xl border-l-2 border-accent/50 pl-5 text-lg font-semibold leading-relaxed sm:text-xl">
+            {boardArc}
           </p>
 
           {/* The Morkinstar Journals live on their own starmap page rather than

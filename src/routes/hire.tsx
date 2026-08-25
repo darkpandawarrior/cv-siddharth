@@ -18,12 +18,14 @@ import { roomHead } from "../lib/routeHead.ts";
  *  - Exactly one idea per row, biggest number first.
  *  - Every claim is a link to the thing that proves it.
  *
- * The throughline sentence at the bottom is deliberate. Two separate model
+ * The closing paragraph states the fact and stops. Two separate model
  * ensembles disagreed about the site's narrative: one said never explain it,
- * the other said burying it entirely wastes the strongest thread. Both are
- * right — it must never be presented as a THEME, but stating the connection
- * once, in plain English, as a claim about how he works, costs the reader
- * nothing and is the most senior thing on the page.
+ * the other said burying it entirely wastes the strongest thread. The first
+ * one won. Naming the connection in copy hands the reader the conclusion they
+ * were about to reach on their own, which is the one move that makes it read
+ * as a theme rather than as how he works. The link to the other half is left
+ * where a reader who wants it will find it, and the structure carries the
+ * rest.
  */
 export const Route = createFileRoute("/hire")({
   head: () => roomHead("/hire"),
@@ -39,11 +41,17 @@ function HirePage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-ink">
       <div className="mx-auto max-w-4xl px-6 section-y">
+        {/* The role used to hang off the name in the <h1> behind an em dash,
+            which is a punctuation mark this site's prose does not use. It also
+            made the largest line on the page two ideas wide. The kicker was
+            already the line that says where he is and how he works, so the
+            role joins it there and the heading is left holding the one thing
+            a recruiter came to read. */}
         <p className="kicker-accent">
-          {profile.location} · open to remote
+          {profile.title} · {profile.location} · open to remote
         </p>
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
-          {profile.name} — {profile.title}
+          {profile.name}
         </h1>
         {/* "Five years" read as an exact figure and was the only surface
             spelling it out, so it could not be found by the same grep that

@@ -108,6 +108,51 @@ export function worldTint(hex: string, c: WorldPalette): string {
 }
 
 /**
+ * A room's lane colour, chosen by WHAT THE ROOM IS rather than by the hue of
+ * its tile.
+ *
+ * worldTint below snaps a site tint to the nearest lane by hue, which worked
+ * only for as long as the site's tints happened to be spread across the colour
+ * wheel. They are not any more: the registry deliberately collapsed eight
+ * accents to three so the homepage wall would read as calibrated instead of
+ * decorative, and all three land within ten degrees of each other (33, 39, 43).
+ * Every pavilion, every ground glow and every label in this world therefore
+ * snapped to the same amber, and the corridor's whole identity is that it has
+ * four lanes.
+ *
+ * Hue was always a proxy for meaning. The registry already records the meaning
+ * directly, as a group, and this world already has exactly four lanes with
+ * exactly those meanings: timeline.ts orders them work, chess, writing,
+ * opensource, and laneColors returns them in that order. So the mapping is a
+ * statement rather than a measurement, and a tile can be recoloured on the wall
+ * without the world changing at all.
+ *
+ * palette.test.ts asserts the four groups reach four different lanes, so a
+ * future palette change cannot quietly flatten this again the way the last one
+ * did.
+ */
+export function worldLane(group: string | undefined, c: WorldPalette): string | null {
+  const lanes = laneColors(c);
+  switch (group) {
+    // The case studies and the evidence: this is the work lane.
+    case "proof":
+      return lanes[0];
+    // The corpora he keeps rather than builds, chess and anime among them,
+    // which is the lane the chess strand already owns.
+    case "corpus":
+      return lanes[1];
+    case "writing":
+      return lanes[2];
+    // The rooms that run: demos, instruments, the site watching itself. The
+    // fourth lane, the one the timeline calls opensource.
+    case "runs":
+      return lanes[3];
+    default:
+      return null;
+  }
+}
+
+/**
  * The read-line cursor's own colour — signal mixed toward white (Night
  * Survey art-direction doc §2's `readhead` row). Not a CSS token: it is
  * deliberately "the one colour nothing else in the world is allowed to be",

@@ -1,49 +1,42 @@
-import { ArrowRight, ArrowUpRight, BookOpen, PenLine } from "lucide-react";
+import { ArrowUpRight, PenLine } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
-import { TiltCard } from "./TiltCard.tsx";
 import { ExcelsiorShelf } from "./Excelsior.tsx";
-import { boardProfiles, boardArc, societies, loopdownOrigin } from "./data/beforeTheCode.ts";
-import {
-  BOOKS_BEFORE_BROS,
-  LOOPDOWN_REPO,
-  PLATFORMS,
-  SERIES_PROJECT,
-  accentOf,
-  titleize,
-} from "./data/writingMeta.ts";
+import { boardProfiles, societies, loopdownOrigin } from "./data/beforeTheCode.ts";
+import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 
 /**
- * Writing, folded into the home-page scroll flow — the Loopdown is no longer
- * a top-bar-only destination. A featured published piece, what's queued next,
- * the series map, and the creative lineage back to Books Before Bros; the
- * full hub lives on at /#loopdown.
+ * The creative half of the writing, mounted on /ink — the archive, the
+ * magazine, the board profiles and the societies.
+ *
+ * It used to render the field-note lessons as well: a featured card, a queued
+ * list and the series ticker, all of which /loopdown already renders in full
+ * in its own skin. The same corpus in two places has no canonical copy, so the
+ * split is by world now. The lessons live in the control room, the archive
+ * lives here, and each page carries exactly one sentence pointing at the
+ * other. The archive grid below arrived from WritingView for that reason: it
+ * existed only there, and this is the world those pieces were written in.
  */
 export function WritingSection() {
-  const { lessons, series, archive } = writing;
-  const published = lessons.filter((l) => l.status === "published");
-  const featured = published[0] ?? lessons[0];
-  const queued = lessons
-    .filter((l) => l !== featured)
-    .sort((a, b) => (b.created || "").localeCompare(a.created || ""))
-    .slice(0, 3);
-  const featuredLinks = featured ? PLATFORMS.filter((p) => featured.links?.[p.key]) : [];
-  const featuredAccent = accentOf(featured?.series);
+  const { archive } = writing;
 
   return (
     <section id="writing" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2">// the loopdown</p>
+          <p className="section-eyebrow mb-2">// the archive</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
+          {/* Derived, never typed. This count was a teaser card pointing at a
+              grid on another page; the grid is below it now, so the number and
+              the thing it counts finally sit on the same screen. */}
           <p className="mb-5 max-w-2xl text-zinc-400">
-            Field notes from real Android and KMP work, told through a recurring cast of personified
-            bugs — plus the creative archive that came before the code.
+            {archive.length} pieces of short fiction, campus lore, satire and essays. Everything I
+            wrote before I wrote code, first in a college magazine and then on a blog.
           </p>
           {/* The name is inherited, not invented — worth saying up front, since
               it is the whole reason an Android engineer has a writing section. */}
-          <p className="mb-10 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm leading-relaxed text-zinc-400">
+          <p className="mb-5 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm leading-relaxed text-zinc-400">
             "The Loopdown" isn't a brand I made up. It's a short story I wrote for{" "}
             <Link
               to="/excelsior"
@@ -51,155 +44,61 @@ export function WritingSection() {
               className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
             >
               Excelsior '21
-            </Link>{" "}
-            — a week that refuses to end, 52 iterations of the same Wednesday. The hub, the repo and
+            </Link>
+            , a week that refuses to end, 52 iterations of the same Wednesday. The hub, the repo and
             the series all still carry its name.
+          </p>
+          {/* The one cross-link, replacing the lesson grid that used to be
+              duplicated here. Whoever opened The Ink came for this half. */}
+          <p className="mb-10 max-w-2xl text-zinc-400">
+            That hub is still running. The field notes, the series and the cast of personified bugs
+            they star live in{" "}
+            <Link
+              to="/loopdown"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              The Loopdown
+            </Link>
+            .
           </p>
         </Reveal>
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-          {/* featured published piece */}
-          {featured && (
-            <Reveal className="h-full">
-              <TiltCard>
-                <article
-                  className="panel card-elevated flex h-full flex-col p-6 sm:p-8"
-                  style={{ borderLeft: `3px solid ${featuredAccent}` }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: featuredAccent }}>
-                      {titleize(featured.series) || featured.pillar}
-                    </span>
-                    <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                      {featured.status === "published" ? "LATEST" : "NEXT UP"}
-                    </span>
-                  </div>
-                  <h3 className="font-display mt-3 text-2xl font-bold leading-snug tracking-tight">
-                    {featured.title}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {(featured.tags || []).slice(0, 4).map((t) => (
-                      <span key={t} className="rounded border border-line px-2 py-0.5 text-[11px] text-zinc-400">{t}</span>
-                    ))}
-                  </div>
-                  <div className="mt-auto pt-5">
-                    {featuredLinks.length > 0 && (
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="kicker">Read on</span>
-                        {featuredLinks.map((p) => (
-                          <a
-                            key={p.key}
-                            href={featured.links![p.key]}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-0.5 text-sm font-medium transition hover:underline"
-                            style={{ color: featuredAccent }}
-                          >
-                            {p.label} <ArrowUpRight size={13} />
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                    {featured.series && SERIES_PROJECT[featured.series] && (
-                      <a
-                        href={SERIES_PROJECT[featured.series].href}
-                        className="mt-3 inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-[11px] text-zinc-400 transition hover:border-accent/50 hover:text-accent"
-                      >
-                        {SERIES_PROJECT[featured.series].label} →
-                      </a>
-                    )}
-                  </div>
-                </article>
-              </TiltCard>
-            </Reveal>
-          )}
-
-          {/* queued lessons */}
-          <Reveal delay={120} className="h-full">
-            <div className="flex h-full flex-col gap-3">
-              {queued.map((l) => {
-                const accent = accentOf(l.series);
-                return (
-                  <div
-                    key={l.slug}
-                    className="panel-sm card-elevated p-4"
-                    style={{ borderLeft: `3px solid ${accent}` }}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: accent }}>
-                        {titleize(l.series) || l.pillar}
-                      </span>
-                      <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-muted">
-                        SOON
-                      </span>
-                    </div>
-                    <p className="mt-1.5 font-display text-sm font-bold leading-snug text-zinc-100">{l.title}</p>
-                  </div>
-                );
-              })}
-              <Link
-                to="/loopdown"
-                className="group mt-auto flex items-center justify-between rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/10"
-              >
-                <span className="flex items-center gap-2">
-                  <PenLine size={15} /> Enter the full Loopdown
-                </span>
-                <ArrowRight size={15} className="transition group-hover:translate-x-1" />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* series ticker */}
-        <Reveal>
-          <div className="mt-8 flex flex-wrap gap-2.5">
-            {series.map((s) => (
-              <Link
-                key={s.id}
-                to="/loopdown"
-                className="tag-chip flex items-center gap-2 rounded-full border bg-card px-3.5 py-1.5 text-sm text-zinc-300 transition hover:text-zinc-100"
-                style={{ borderColor: `${accentOf(s.id)}55` }}
-              >
-                <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
-                {s.title}
-                <span className="text-xs text-muted">{s.episodes}</span>
-              </Link>
-            ))}
-          </div>
-        </Reveal>
-
-        {/* lineage: the archive + Books Before Bros */}
+        {/* The archive itself. Books Before Bros is where most of these were
+            first published, so it heads the grid rather than sitting in it. */}
         <Reveal delay={100}>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <Link
-              to="/loopdown"
-              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent/50"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
-                  <BookOpen size={15} className="text-accent" /> The archive
-                </span>
-                <ArrowRight size={14} className="text-muted transition group-hover:translate-x-1 group-hover:text-accent" />
-              </div>
-              <p className="mt-2 text-sm leading-snug text-zinc-400">
-                {archive.length} pieces of short fiction, campus lore, satire and essays — everything I
-                wrote before I wrote code.
-              </p>
-            </Link>
+          <div className="grid gap-3 sm:grid-cols-2">
             <a
               href={BOOKS_BEFORE_BROS.url}
               target="_blank"
               rel="noreferrer"
-              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent2/50"
+              className="group rounded-xl border border-accent2/30 bg-accent2/5 p-4 transition hover:border-accent2/60 sm:col-span-2"
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 font-display text-sm font-bold text-zinc-100">
-                  <PenLine size={15} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
-                </span>
-                <ArrowUpRight size={14} className="text-muted transition group-hover:text-accent2" />
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="flex items-center gap-2 font-semibold text-zinc-100">
+                  <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
+                  <ArrowUpRight size={13} className="text-muted transition group-hover:text-accent2" />
+                </h3>
+                <span className="shrink-0 font-mono text-[11px] text-accent2/80">the origin blog</span>
               </div>
-              <p className="mt-2 text-sm leading-snug text-zinc-400">{BOOKS_BEFORE_BROS.blurb}</p>
+              <p className="mt-1.5 text-sm leading-snug text-zinc-400">
+                {BOOKS_BEFORE_BROS.blurb} Most of the pieces below were first published there, at
+                booksbeforebros.wordpress.com.
+              </p>
             </a>
+            {archive.map((a) => (
+              <div key={a.slug} className="card-elevated rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="font-semibold text-zinc-100">{a.title}</h3>
+                  <span className="shrink-0 font-mono text-[11px] text-muted">{a.form}</span>
+                </div>
+                {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
+                <div className="kicker mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {a.era && <span>{a.era}</span>}
+                  {a.words && <span>{Number(a.words).toLocaleString()} words</span>}
+                  {a.words && <span>~{Math.max(1, Math.round(Number(a.words) / 220))} min read</span>}
+                </div>
+              </div>
+            ))}
           </div>
         </Reveal>
 
@@ -210,12 +109,12 @@ export function WritingSection() {
           <div className="panel mt-10 p-6 sm:p-8">
             <div className="meta-row">
               <span className="font-display text-base font-bold tracking-tight">
-                Excelsior — MANIT's institute magazine
+                Excelsior, MANIT's institute magazine
               </span>
               <span className="meta-row-tag">[&nbsp;print · 2019–21&nbsp;]</span>
             </div>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              Three years on the Editorial Board at NIT Bhopal — English Editor on the 2019 and 2020
+              Three years on the Editorial Board at NIT Bhopal. English Editor on the 2019 and 2020
               editions, Joint Chief Editor on 2021. That last one was 128 pages shipped entirely
               remotely through the pandemic, and its cover story was the whole magazine: one frame
               story branching into three paths a reader chooses between. Hover a cover to open it.
@@ -233,7 +132,12 @@ export function WritingSection() {
                 not paraphrased into something flattering". They do not run
                 verbatim — they never have — and the cuts had in fact made me
                 look better, which is the exact thing that sentence promised
-                they had not done. Trimmed, cuts marked, page linked. */}
+                they had not done. Trimmed, cuts marked, page linked.
+                The arc these three describe used to be summarised in a
+                paragraph under this grid, where it read as a caption. It is
+                the epigraph of /ink now (see routes/ink.tsx), which is why
+                nothing closes this block: the reader was handed that sentence
+                before they got here. */}
             <div id="board" className="mt-12 scroll-mt-24 border-t border-line pt-8">
               <div className="meta-row">
                 <span className="font-display text-base font-bold tracking-tight">How the board wrote me</span>
@@ -241,7 +145,7 @@ export function WritingSection() {
               </div>
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
                 Each year every board member gets one question, answered by a teammate impersonating
-                them. Affectionate, unsparing, and not written by me — which is the only reason
+                them. Affectionate, unsparing, and not written by me, which is the only reason
                 they're worth reading. Trimmed here to keep other people's names out of it;{" "}
                 <span className="text-zinc-300">…</span> marks every cut, and each card opens the
                 scanned page it came from.
@@ -276,7 +180,6 @@ export function WritingSection() {
                   </Link>
                 ))}
               </div>
-              <p className="font-display mt-6 max-w-3xl text-base font-semibold leading-relaxed text-zinc-200 sm:text-lg">{boardArc}</p>
             </div>
 
             {/* The two societies, and what they published. */}
@@ -312,16 +215,6 @@ export function WritingSection() {
               ))}
             </div>
           </div>
-        </Reveal>
-
-        <Reveal delay={140}>
-          <p className="mt-6 text-xs text-muted">
-            Synced from{" "}
-            <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="text-zinc-400 underline decoration-line underline-offset-2 transition hover:text-accent">
-              github.com/darkpandawarrior/the-loopdown
-            </a>{" "}
-            — one idea, written once, adapted to dev.to, Medium, Hashnode and LinkedIn.
-          </p>
         </Reveal>
       </div>
     </section>

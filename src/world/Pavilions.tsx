@@ -7,7 +7,13 @@ import { SENSOR_HALF_EXTENTS } from "./pavilionGeometry.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
 import { telemetry } from "./telemetry.ts";
-import { worldPalette, worldTint} from "./palette.ts";
+import { worldLane, worldPalette, worldTint } from "./palette.ts";
+
+/** The room's lane colour: what it IS first, its tile hue only as a fallback
+ *  for a room the registry has not grouped. See worldLane's own note on why
+ *  hue stopped being a usable proxy for meaning. */
+const laneOf = (room: { group?: string; tint: string }) =>
+  worldLane(room.group, worldPalette()) ?? worldTint(room.tint, worldPalette());
 
 /**
  * One physical structure per room, built entirely from three.js primitives —
@@ -245,7 +251,7 @@ function Pavilion({ placement, room }: { placement: Placement; room: Room }) {
   const halfExtents = SENSOR_HALF_EXTENTS[placement.shape];
   return (
     <group position={placement.position}>
-      <Shape tint={worldTint(room.tint, worldPalette())} />
+      <Shape tint={laneOf(room)} />
       {/* The floating room name used to be right here, as its own drei <Html>
           portal. It now belongs to the world's one label layer (labels.ts /
           WorldLabels.tsx), which is the only place that can see every label at
@@ -260,7 +266,7 @@ function Pavilion({ placement, room }: { placement: Placement; room: Room }) {
           shadow-casting point lights would cost far more than they add, and
           these exist to mark a position, not to model illumination. */}
       <BreathingLight
-        tint={worldTint(room.tint, worldPalette())}
+        tint={laneOf(room)}
         y={halfExtents[1] + 1.2}
         seed={placement.position[0] + placement.position[2]}
         visits={visits}

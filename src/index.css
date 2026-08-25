@@ -280,6 +280,95 @@ html.resume-mode body::before {
   padding-bottom: var(--space-section-y);
 }
 
+/* --- Below-the-fold rendering ------------------------------------------
+ * The homepage ships ~220KB of markup and roughly all of it is real DOM, so
+ * on a throttled mobile CPU the browser styles, lays out and paints thirty
+ * thousand pixels of page before it can show the first screen. Measured on
+ * the live domain: FCP 3.6s, with no render-blocking resource to blame.
+ *
+ * `content-visibility: auto` lets the browser skip style, layout and paint
+ * for a subtree until it is near the viewport. The subtree is still parsed
+ * and still in the DOM — find-in-page, ⌘K, the scroll spy and the anchor
+ * links all keep working — it just stops being laid out until it matters.
+ *
+ * WHY EVERY RULE CARRIES contain-intrinsic-size: skipped content has no
+ * height of its own, so without a stand-in the page collapses and then
+ * lurches back as you scroll. This site's CLS is a perfect 0.000 and
+ * lighthouserc.json asserts it at 0.1; an intrinsic size is not an
+ * optimisation here, it is the thing that keeps the number.
+ *
+ * The `auto` keyword before each length is the important half. It tells the
+ * browser to REMEMBER the real height once the section has been rendered
+ * once and to reuse it if the section is later skipped again on the way back
+ * up — so the literal below only ever has to be right for the very first
+ * render, and a section that has been seen can never lurch.
+ *
+ * The literals are measured, not estimated: playwright against
+ * cv-siddharth.vercel.app, all reveals forced, whole page scrolled so every
+ * lazy child had mounted. Base values are the 412px measurement (Lighthouse
+ * mobile emulates 412x823, so that is the run the CLS assertion grades).
+ * Desktop values are the widest run, because #projects came out between
+ * 6368px and 6831px across measurements depending on which lazy children
+ * had mounted, and of the two directions only one is dangerous: an
+ * over-estimate shrinks as a section renders BELOW the viewport, where a
+ * shift scores nothing, while an under-estimate makes the page grow under
+ * a reader on the way down. Same reason the mobile figure is left to
+ * over-estimate between 640px and 1024px rather than earning a third
+ * breakpoint.
+ *
+ * Checked, not assumed: with these rules injected over the live page and the
+ * whole scroll driven top to bottom and back, CLS stayed 0.0000 at 412px and
+ * fell from 0.0374 to 0.0234 at 1440px.
+ *
+ * Only four sections, and the exclusions are deliberate:
+ *   #top, the metrics band, #morph, #fit — at or near the fold, so the
+ *     browser would render them anyway and there is nothing to skip.
+ *   #work, #skills                — max-w-5xl section boxes, and the paint
+ *     containment that comes with content-visibility would clip the
+ *     full-bleed .chapter-word-wrap (100vw, -50vw) that lives inside them.
+ *   #experience                   — TimelineSpine reads the track's
+ *     getBoundingClientRect() on every scroll frame and divides by its
+ *     height; a skipped subtree measures zero.
+ *   #writing                      — hosts the full-bleed .ink-threshold,
+ *     same clipping problem, and it is 575px, so there is nothing to win.
+ *   #source                       — not on the live domain yet, so there is
+ *     no measured height for it and this file does not guess one.
+ */
+#projects {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 12620px;
+}
+#surfaces {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 6916px;
+}
+#shipped {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1903px;
+}
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1580px;
+}
+
+/* Desktop: the project grid goes two-up and the surface wall goes wide, so
+   the same sections are roughly half as tall. Measured at 1440px; 1024px
+   came in 1-7% shorter, and the taller figure is the safe one to hold. */
+@media (min-width: 64rem) {
+  #projects {
+    contain-intrinsic-size: auto 6831px;
+  }
+  #surfaces {
+    contain-intrinsic-size: auto 3357px;
+  }
+  #shipped {
+    contain-intrinsic-size: auto 1102px;
+  }
+  #contact {
+    contain-intrinsic-size: auto 1189px;
+  }
+}
+
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-ink);
@@ -770,8 +859,22 @@ html.resume-mode body {
  * blocking time of 10ms and zero layout shift; nothing was actually blocking,
  * the headline was just still fading in.
  *
- * The translate survives, so the stagger still reads as a stagger. Only the
- * element that sets LCP needs this; everything below the fold can fade. */
+ * The translate survives, so the stagger still reads as a stagger.
+ *
+ * It is on more than one element now, and that is the point. This started as
+ * "only the element that sets LCP needs this", applied to the hero <h1> — and
+ * then the LCP element moved. The intro paragraph below the headline wraps to
+ * more lines on a phone than the headline does, which makes it the larger
+ * painted block, and it was still fading: LCP 4.24s on the live domain, 3,600ms
+ * of it render delay on that one <p>. Nothing had regressed, the copy had just
+ * grown. The eyebrow above the headline is here for the same reason one rung
+ * earlier: it carries no animation-delay, so it is the first thing that would
+ * paint, and a transparent first paint is no First Contentful Paint either.
+ *
+ * So the rule is not "the LCP element" any more, it is: every block of text in
+ * the hero that a browser could pick as first or largest paint rises without
+ * fading. Anything below the fold can still fade — by the time it is on screen
+ * both metrics are long since recorded. */
 .rise-in-lcp {
   animation-name: rise-in-lcp;
 }

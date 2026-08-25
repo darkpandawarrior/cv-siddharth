@@ -348,7 +348,13 @@ function Hero() {
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
       <div>
-        <p className="hero-eyebrow rise-in mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+        {/* rise-in-lcp on every block of hero text, not just one element. The
+            eyebrow carries no animation-delay, so it is the FIRST thing the
+            page would paint — and while it is fading it counts as nothing
+            painted at all, which pushes First Contentful Paint out by the
+            length of the animation as surely as it pushed LCP out. See the
+            rise-in-lcp comment in index.css. */}
+        <p className="hero-eyebrow rise-in rise-in-lcp mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
           <span className="flex items-center gap-2">
             <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
           </span>
@@ -356,13 +362,21 @@ function Hero() {
               document that got uploaded once. */}
           <NavClock className="flex" />
         </p>
-        {/* rise-in-lcp, not rise-in: this heading is the page's LCP element
+        {/* rise-in-lcp, not rise-in: this heading was the page's LCP element
             and must be paintable from the first frame. See index.css. */}
         <h1 className="rise-in rise-in-lcp rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
         <Typewriter />
-        <p className="rise-in rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        {/* The LCP element MOVED here. On a phone this paragraph wraps to more
+            lines than the headline does, so it is the largest painted block in
+            the viewport — and it was still on plain `rise-in`, fading from
+            opacity 0 behind a 0.16s delay. Measured on the live domain: LCP
+            4.24s of which 3,600ms was render delay on this one <p>, with
+            nothing actually blocking. Same one-class fix the h1 already had. */}
+        <p className="rise-in rise-in-lcp rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">
+          {profile.intro}
+        </p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
             onClick={() => openChat()}
@@ -1134,7 +1148,7 @@ function Contact() {
         </span>
         <h2 className="font-display mt-6 text-h2 font-bold tracking-tight">Hiring for a senior Android role?</h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-          Ask my AI assistant anything about my work, or reach out directly — I reply fast.
+          Ask my AI assistant anything about my work, or reach out directly. I reply fast.
         </p>
         {/* The ask, sized like it matters. Everything below it is a secondary
             route to the same person — so it gets the weight, and they get a row. */}

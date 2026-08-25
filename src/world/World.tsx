@@ -38,7 +38,7 @@ import { LabelCameraBridge, WorldLabels } from "./WorldLabels.tsx";
 import { deviceTier, tierBudget } from "./deviceTier.ts";
 import { PLACEMENTS } from "./worldData.ts";
 import type { WaypointTarget } from "./Nav.tsx";
-import { worldPalette, worldTint} from "./palette.ts";
+import { worldLane, worldPalette, worldTint } from "./palette.ts";
 import { loadExplored, markExplored } from "./explored.ts";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
@@ -390,7 +390,7 @@ export default function World(props: { onShowList: () => void }) {
         tour.targetTo = target?.to ?? null;
         const room = target ? ROOMS.find((r) => r.to === target.to) : null;
         setWaypoint(
-          target && room ? { label: room.label, tint: worldTint(room.tint, worldPalette()), x: target.x, z: target.z } : null,
+          target && room ? { label: room.label, tint: worldLane(room.group, worldPalette()) ?? worldTint(room.tint, worldPalette()), x: target.x, z: target.z } : null,
         );
       }
 
