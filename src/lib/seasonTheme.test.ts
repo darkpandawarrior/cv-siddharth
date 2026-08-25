@@ -141,14 +141,28 @@ describe("a season with no row of its own", () => {
   // A fourth season is a row in the SEASON table and an arm in seasonHero().
   // Until someone adds them it must degrade to something true rather than
   // claim season two's page numbers or throw on the way past.
+  // Season four now has a row of its own, so the unfiled fallback is tested
+  // with FIVE. That was the point of the fallback: an unwritten season renders
+  // as something honest instead of claiming another season's counting scheme,
+  // and this assertion is only meaningful while it points at a season that does
+  // not exist yet. It moved up one when four arrived and it will move again.
+  const five = { ...anthologyEntries[0], season: 5, idx: 7, page: 0, entry: 0 } as AnthologyEntry;
   const four = { ...anthologyEntries[0], season: 4, idx: 7, page: 0, entry: 0 } as AnthologyEntry;
 
   it("falls through to the unfiled row without throwing", () => {
-    expect(() => entryTheme(four)).not.toThrow();
-    const t = entryTheme(four);
+    expect(() => entryTheme(five)).not.toThrow();
+    const t = entryTheme(five);
     expect(t.label).not.toMatch(/OF 91|undefined|NaN/);
     expect(t.label).toContain("7");
-    expect(seasonHero(4)).toBeNull();
+    expect(seasonHero(5)).toBeNull();
+  });
+
+  it("gives season four the wall rather than the fallback", () => {
+    const t = entryTheme(four);
+    expect(t.label).toBe("NOTICE 7 OF 14");
+    expect(t.card).toContain("season-four-notice");
+    expect(t.tilt).toBe(false);
+    expect(seasonHero(4)).toBe("wall");
   });
 });
 

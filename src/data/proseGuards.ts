@@ -38,7 +38,14 @@ export function walk(
 // `ownership audit` below already catch the actual incident phrasing
 // ("a cross-lab ownership audit"); a bare "council" was never part of it.
 export const BANNED: RegExp[] = [
-  /\bprompt(?:ing|ed)?\b/i,
+  // Narrowed on 2026-08-25. The bare word matched "prompt and courteous",
+  // "promptly" and "without any prompting" across three Season Four entries,
+  // which is ordinary English and unavoidable in a season written almost
+  // entirely in bureaucratic register. What actually leaked was "that was the
+  // prompting, not the model", so this matches the article form and the craft
+  // term, and leaves the adjective and the adverb alone. "the model" below is
+  // the stronger half of that pair and is unchanged.
+  /\bthe prompting\b|\bprompt engineering\b/i,
   /\bthe model\b/i,
   /\bcross[- ]lab\b/i,
   /\bownership audit\b/i,

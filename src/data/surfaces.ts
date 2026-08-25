@@ -457,7 +457,7 @@ const pageSurfaces: SurfaceInput[] = [
     to: "/anthology",
     label: "The Morkinstar Journals",
     blurb:
-      "A galactic field reporter files thirty-four short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+      "A galactic field reporter files forty-eight short stories on fourteen gods and fourteen monsters, until he stops filing, burns the case, and walks into a city built to the dimensions of his own paperwork.",
     // The count is spelled out rather than interpolated on purpose: this file
     // is the route registry and every consumer imports it, so pulling the
     // anthology corpus in here to derive one word would put the whole of the

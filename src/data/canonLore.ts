@@ -443,9 +443,9 @@ export const RIG_CONSTRAINTS_NOTE =
  * `anthology` meta object, delete these three and read it from there instead.
  */
 export const TETHER: { value: number; label: string; pattern: string }[] = [
-  { value: 97, label: "times the corpus says hand or hands", pattern: String.raw`\bhands?\b` },
+  { value: 160, label: "times the account says hand or hands", pattern: String.raw`\bhands?\b` },
   { value: 0, label: "times it says fur or limb", pattern: String.raw`\b(?:fur|limb)s?\b` },
-  { value: 8, label: "times it says eye or eyes", pattern: String.raw`\beyes?\b` },
+  { value: 13, label: "times it says eye or eyes", pattern: String.raw`\beyes?\b` },
 ];
 
 export const TETHER_DOCTRINE =
