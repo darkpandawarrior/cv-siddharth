@@ -79,7 +79,12 @@ describe("anthology data", () => {
     for (const e of anthologyEntries) {
       if (e.plate) expect(e.plate, e.slug).toMatch(/^\/p\/anthology\//);
     }
-    for (const w of anthology.witnesses) expect(w.art, w.id).toMatch(/^\/p\/anthology\//);
+    // An undrawn teller carries art: "". The record still ships, because law
+    // five is about who told it and a missing drawing is not a missing teller,
+    // and the site renders that as a deliberate card. So the rule is: IF there
+    // is a path, it points at public/. The same shape as the plate check above,
+    // which has always allowed a plate to be missing.
+    for (const w of anthology.witnesses) if (w.art) expect(w.art, w.id).toMatch(/^\/p\/anthology\//);
   });
 
   it("gives every witness a name and something they did", () => {
@@ -92,7 +97,7 @@ describe("anthology data", () => {
   it("hangs each witness off an entry that exists", () => {
     const withWitness = anthologyEntries.filter((e) => e.witness);
     expect(withWitness.length).toBeGreaterThan(0);
-    for (const e of withWitness) expect(e.witness?.art).toMatch(/^\/p\/anthology\/witnesses\//);
+    for (const e of withWitness) if (e.witness?.art) expect(e.witness.art).toMatch(/^\/p\/anthology\/witnesses\//);
   });
 });
 

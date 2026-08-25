@@ -140,11 +140,26 @@ try {
 // module every reader of the hub has to parse.
 const witnessDir = join(root, "public", "p", "anthology", "witnesses");
 mkdirSync(witnessDir, { recursive: true });
+// A teller ships whether or not there is a drawing of them.
+//
+// This loop used to `continue` past the push when the art fetch failed, so an
+// undrawn teller vanished from the site entirely. The catch below has always
+// said "a missing portrait degrades to no portrait, which is survivable", which
+// is the correct behaviour and was not the behaviour: the comment described one
+// thing and the code four lines above it did another. Season Four's fourteen
+// tellers were harvested, passed the upstream registry, and still did not
+// appear here, because none of them has been drawn yet.
+//
+// Law five is about who told it. The site already renders an undrawn teller as
+// a deliberate card rather than a broken image, so the only thing dropping the
+// record achieved was deciding a person does not exist until an illustrator
+// gets to them.
 const witnesses = [];
 for (const w of src.witnesses ?? []) {
+  let art = "";
   try {
     const r = await fetchWithTimeout(`${REPO}/${w.art}`);
-    if (!r.ok) continue;
+    if (!r.ok) throw new Error(`portrait HTTP ${r.status}`);
     // The source art is ~1.9MB apiece. Nothing on the web needs that, and
     // public/ feeds gen-images.mjs which will derive AVIF/WebP siblings from
     // whatever it finds here, so hand it something already sane.
@@ -152,18 +167,19 @@ for (const w of src.witnesses ?? []) {
       .resize({ width: 1100, withoutEnlargement: true })
       .jpeg({ quality: 82 })
       .toFile(join(witnessDir, `${w.id}.jpg`));
-    witnesses.push({
-      id: w.id, name: w.name, entry: w.entry, of: w.of, did: w.did,
-      art: `/p/anthology/witnesses/${w.id}.jpg`,
-    });
-  } catch { /* a missing portrait degrades to no portrait, which is survivable */ }
+    art = `/p/anthology/witnesses/${w.id}.jpg`;
+  } catch { /* Undrawn, or the fetch failed. Either way the record still ships. */ }
+  witnesses.push({ id: w.id, name: w.name, entry: w.entry, of: w.of, did: w.did, art });
 }
 
 // Hang each portrait off its entry so the reading page can show the teller
 // beside the story they are the reason for.
 for (const e of entries) {
   const key = `s${e.season}-${String(e.idx).padStart(2, "0")}`;
-  const w = witnesses.find((x) => x.entry === key);
+  // `entry` is a key OR a list of them, because one person can be the teller of
+  // more than one piece. Hevrit tells the first Season Four notice and the last.
+  // A strict === here silently gave the finale no teller at all.
+  const w = witnesses.find((x) => (Array.isArray(x.entry) ? x.entry : [x.entry]).includes(key));
   e.witness = w ? { id: w.id, name: w.name, did: w.did, art: w.art } : null;
 }
 
