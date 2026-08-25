@@ -113,7 +113,8 @@ describe("the apparatus", () => {
         .filter(Boolean)
         .slice(1); // the "**Terminologies:**" / "**Notice conditions**" label
       if (lines.length === 0) continue;
-      lines.every((l) => l.startsWith("-") || l.startsWith("*")) ? bulleted++ : paragraph++;
+      if (lines.every((l) => l.startsWith("-") || l.startsWith("*"))) bulleted++;
+      else paragraph++;
     }
     // Both shapes exist in the shipped corpus. If either count ever reaches
     // zero this test stops meaning anything, so it asserts the mixture itself.
