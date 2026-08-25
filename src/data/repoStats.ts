@@ -2,6 +2,6 @@
 // Collected with `vitest list`, which enumerates the suite without running it.
 // Run `npm run gen:repo-stats` to refresh.
 export const repoStats = {
-  "tests": 901,
+  "tests": 904,
   "testFiles": 81
 } as const;

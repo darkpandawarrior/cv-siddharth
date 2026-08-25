@@ -250,7 +250,7 @@ export type RegisterTarget =
 /** /anthology's URL vocabulary. Named layers, never numbers, so a link is
  *  readable and a season renumbering does not silently retarget it. */
 export interface AnthologySearch {
-  layer?: "form" | "case" | "fire" | "map" | "tellers" | "wall";
+  layer?: "form" | "case" | "fire" | "map" | "tellers" | "wall" | "unfiled";
   world?: string;
   at?: number;
 }

@@ -7,7 +7,7 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
-import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
+import { anthology, entriesOfSeason, entryBySlug, unfiledBySlug, type UnfiledPiece } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
 import { registerLines, tellersOf } from "../data/crossnav.ts";
 import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
@@ -51,7 +51,21 @@ import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 // and only the byline/provenance differ. Keeping one component means that
 // "deliberately plain" stays enforced in exactly one place instead of two
 // copies quietly drifting apart.
-type ReadView = ({ kind: "printed" } & PrintedPiece) | ({ kind: "anthology" } & AnthologyEntry);
+/**
+ * The three things this route can render.
+ *
+ * "unfiled" is fiction in this universe with no season, no series and no
+ * designation. It is deliberately NOT an AnthologyEntry: four seasons and
+ * forty-eight entries are printed on four pages and asserted by guards on both
+ * sides of the registry hop, and an unfiled piece is not one of the
+ * forty-eight. It is also deliberately not a PrintedPiece, because that type
+ * carries an era, a magazine page and a print word count, and filing a 2026
+ * piece under those would claim a provenance it does not have.
+ */
+type ReadView =
+  | ({ kind: "printed" } & PrintedPiece)
+  | ({ kind: "anthology" } & AnthologyEntry)
+  | ({ kind: "unfiled" } & UnfiledPiece);
 
 // Every generated entry closes with exactly one "\n\n---\n\n" before its
 // Terminologies block (src/data/anthology.test.ts guards the shape this
@@ -143,6 +157,8 @@ export const Route = createFileRoute("/read/$slug")({
     if (printed) return { kind: "printed", ...printed };
     const entry = entryBySlug(params.slug);
     if (entry) return { kind: "anthology", ...entry };
+    const loose = unfiledBySlug(params.slug);
+    if (loose) return { kind: "unfiled", ...loose };
     throw notFound();
   },
   head: ({ loaderData }) => {
@@ -338,6 +354,16 @@ function ReadPiece() {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+          ) : piece.kind === "unfiled" ? (
+            // An unfiled piece has no season, no world and no counting scheme,
+            // so there is nothing here to format but the designation its own
+            // frontmatter carries. Printed, never resolved: the corpus uses
+            // square brackets for a value a form requires and nobody has filled
+            // in, so "[unassigned]" IS the answer. This branch is explicit
+            // rather than folded into the one below, because "not printed" used
+            // to mean "anthology" here and tsc caught it the moment it stopped
+            // being true.
+            <p className="kicker-accent">{piece.series}</p>
           ) : (
             // The seasons do not share a counting scheme — the Directory
             // numbers by journal entry, The Ninety-One Pages by page out of
@@ -592,6 +618,13 @@ function ReadPiece() {
                   ))}
               </ul>
             </>
+          ) : piece.kind === "unfiled" ? (
+            // No season to offer "more from", and no sibling list either: this
+            // lane holds one piece and a "more from Unfiled" heading over a
+            // grid of one would be a widget describing its own emptiness. The
+            // door back to the collection is the pill above the prose; the only
+            // honest thing to add here is nothing.
+            null
           ) : (
             <>
               <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
