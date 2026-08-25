@@ -115,6 +115,32 @@ const REGISTER_FIXTURE: Record<string, string[]> = {
   // The one page he keeps ends at blank paper. Small print underneath it would
   // be the site annotating the blank.
   "s3-14": [],
+  // Season Four, and every one of these is empty ON PURPOSE rather than by
+  // omission. Worked out from the resolvers before it was written down, not
+  // copied from what the code happened to emit: fateOf only answers for season
+  // two, no season four world is on the starmap, and witnesses.json holds no
+  // season four teller. Three independent reasons for nothing, so a single
+  // regression would not silently turn these green.
+  //
+  // It is also a real gap rather than a settled state. These pieces name their
+  // tellers in the prose (Hevrit on the notice wall, Ondrit and her two tapes,
+  // Noevik on the gate line) and none has been harvested into witnesses.json,
+  // exactly as seasons two and three had none before this week. When they are,
+  // these rows gain a teller line and this fixture SHOULD go red.
+  "s4-01": [],
+  "s4-02": [],
+  "s4-03": [],
+  "s4-04": [],
+  "s4-05": [],
+  "s4-06": [],
+  "s4-07": [],
+  "s4-08": [],
+  "s4-09": [],
+  "s4-10": [],
+  "s4-11": [],
+  "s4-12": [],
+  "s4-13": [],
+  "s4-14": [],
 };
 
 describe("the register", () => {

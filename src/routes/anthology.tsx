@@ -43,6 +43,10 @@ const LAYERS: readonly { key: Layer; label: string; season: number | null }[] = 
   { key: "form", label: "The Form", season: 1 },
   { key: "case", label: "The Case", season: 2 },
   { key: "fire", label: "The Fire", season: 3 },
+  // Season four is the wall he posts on, and the wall keeps everything: paint
+  // is not fire. It sits after the fire in publication order because that is
+  // the order it happened in, not because the row is a season number.
+  { key: "wall", label: "The Wall", season: 4 },
   { key: "map", label: "The Map", season: null },
   { key: "tellers", label: "The Tellers", season: null },
 ];

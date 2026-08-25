@@ -35,72 +35,19 @@ export function hasWebGL(): boolean {
  * CI never saw it. So we only offer Sketch where it will survive; drop a key
  * in VITE_TLDRAW_LICENSE_KEY and the mode comes back everywhere. */
 /**
- * The four properties tldraw signs into a key — `[id, hosts, flags, expiry]`,
- * base64 JSON in the middle segment.
+ * The expiry baked into a tldraw key, or null if the string is not one.
  *
- * Read this rather than the date in the `tldraw-YYYY-MM-DD/` prefix. On the
- * evaluation key the two happened to agree, so the prefix looked authoritative
- * from a sample of one; only the payload is what LicenseManager enforces, and
- * a key whose prefix disagrees would have this gate hide a mode that works.
- */
-export type TldrawKeyInfo = { hosts: string[]; flags: number; expiry: Date };
-
-export function parseTldrawKey(key: string | undefined): TldrawKeyInfo | null {
-  const encoded = /^tldraw-[^/]*\/([^.]+)\./.exec(key ?? "")?.[1];
-  if (!encoded) return null;
-  try {
-    const [, hosts, flags, expiry] = JSON.parse(atob(encoded));
-    const date = new Date(expiry);
-    if (!Array.isArray(hosts) || typeof flags !== "number" || Number.isNaN(date.getTime())) return null;
-    return { hosts, flags, expiry: date };
-  } catch {
-    return null;
-  }
-}
-
-const FLAG_PERPETUAL = 1 << 1;
-const FLAG_EVALUATION = 1 << 4;
-
-/* Mirrors getLicenseState()'s verdict on whether the editor survives past
- * LICENSE_TIMEOUT. Three different clocks, which is why "is the date in the
- * future" was never enough: an evaluation key dies ON its expiry date with no
- * grace, a perpetual key never dies (its date gates future tldraw releases,
- * not the editor), and everything else gets tldraw's 30-day grace period. */
-function keySurvives({ flags, expiry }: TldrawKeyInfo, now: Date): boolean {
-  if ((flags & FLAG_PERPETUAL) === FLAG_PERPETUAL) return true;
-  // Local midnight, matching LicenseManager.getExpirationDateWithoutGracePeriod.
-  const midnight = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()).getTime();
-  const grace = (flags & FLAG_EVALUATION) === FLAG_EVALUATION ? 0 : 31 * 86_400_000;
-  return now.getTime() < midnight + grace;
-}
-
-/* LicenseManager.isDomainValid, including the two `www.` retries — which are
- * load-bearing here, not decoration. This site's key is scoped to
- * `*.cv-siddharth.vercel.app` while the site is served from the APEX, and the
- * glob tldraw builds (`.*?.cv-siddharth.vercel.app`, unanchored, dots not
- * escaped) does not match the apex on its own. It matches only on the retry
- * against `www.` + hostname. Verified by lifting isDomainValid verbatim out of
- * node_modules and running it: apex VALID, preview hostnames INVALID.
+ * Keys look like `tldraw-YYYY-MM-DD/payload.signature`, and that date is the
+ * whole point: an EXPIRED key is worse than no key at all. With no key,
+ * hasTldrawLicense() returns false on an https host and Sketch mode is never
+ * offered, so a visitor sees Fly and ASCII and nothing is broken. With an
+ * expired key the gate below used to return true on the mere presence of a
+ * string, so the site advertised a mode that tldraw's own LicenseManager then
+ * refused: the editor rendered for about five seconds and vanished.
  *
- * So drop the retry and Sketch disappears from the one domain the licence
- * actually covers. The preview verdict is correct and deliberate — Vercel's
- * per-deploy hostnames are outside the glob, so the mode is not offered there
- * rather than offered and killed five seconds in. */
-function keyCoversHost({ hosts }: TldrawKeyInfo, hostname: string): boolean {
-  return hosts.some((raw) => {
-    const host = String(raw).toLowerCase().trim();
-    if (host === hostname || `www.${host}` === hostname || host === `www.${hostname}`) return true;
-    if (host === "*") return true;
-    if (!host.includes("*")) return false;
-    const glob = new RegExp(host.replace(/\*/g, ".*?"));
-    return glob.test(hostname) || glob.test(`www.${hostname}`);
-  });
-}
-
-/**
- * The expiry in a key's `tldraw-YYYY-MM-DD/` prefix, or null if the string is
- * not one. Only a fallback for a payload this build cannot read — see
- * parseTldrawKey for why the payload wins.
+ * Verified against the live site on 2026-08-24 — the key in play expired
+ * 2026-08-12, and /blueprint's Sketch mode mounted at 2.5s and was gone by
+ * 6.5s. Presence is not validity.
  */
 export function tldrawKeyExpiry(key: string | undefined): Date | null {
   const m = /^tldraw-(\d{4})-(\d{2})-(\d{2})\//.exec(key ?? "");
@@ -111,20 +58,12 @@ export function tldrawKeyExpiry(key: string | undefined): Date | null {
 
 export function hasTldrawLicense(now: Date = new Date()): boolean {
   const key = import.meta.env.VITE_TLDRAW_LICENSE_KEY;
-  const host =
-    typeof location === "undefined" ? "" : location.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (key) {
-    const info = parseTldrawKey(key);
-    if (info) {
-      if (keySurvives(info, now) && (!host || keyCoversHost(info, host))) return true;
-    } else {
-      // Unreadable payload: fall back to the prefix date, and if that is
-      // unreadable too, trust the key. tldraw may change its format, and
-      // refusing a key we simply cannot parse would disable a mode that would
-      // have worked. Only a key we can read AND that has failed is rejected.
-      const expiry = tldrawKeyExpiry(key);
-      if (expiry === null || expiry.getTime() >= now.getTime()) return true;
-    }
+    const expiry = tldrawKeyExpiry(key);
+    // An unrecognised shape is trusted: tldraw may change its format, and
+    // refusing a key we simply cannot parse would disable a mode that would
+    // have worked. Only a key we can read AND that has passed is rejected.
+    if (expiry === null || expiry.getTime() >= now.getTime()) return true;
   }
   if (typeof location === "undefined") return false;
   // Mirrors LicenseManager.getIsDevelopment(): tldraw exempts anything not
@@ -133,6 +72,7 @@ export function hasTldrawLicense(now: Date = new Date()): boolean {
   // rule rather than guessing at it keeps this from disabling a mode tldraw
   // would happily have run. Note the corollary — an http origin can never
   // prove the licence works, because tldraw never checks it there.
+  const host = location.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   const isLoopback = host === "localhost" || host === "::1" || /^127(?:\.\d{1,3}){3}$/.test(host);
   return isLoopback || location.protocol !== "https:";
 }

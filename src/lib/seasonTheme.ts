@@ -156,10 +156,30 @@ const unfiled = (e: AnthologyEntry): EntryTheme => ({
   short: `№${e.idx}`,
 });
 
+// Season four, the notice board. Not his paper and not the Directory's form:
+// a civic notice pasted on a public wall, which is exactly what its plates are.
+// The card is flat and hard cornered like season one, because a notice is
+// posted rather than handled, and it carries no tilt for the same reason.
+// --color-coverage is measured at 8.72:1 on the card ground and 9.71:1 on
+// ink, and is the same coverage cyan the plates use, so card and plate agree.
+const wall = (e: AnthologyEntry): EntryTheme => ({
+  card: "rounded-none border-line hover:border-accent/60 season-four-notice",
+  plate: "",
+  kicker: "text-accent",
+  label: `NOTICE ${e.idx} OF 14`,
+  short: `n.${e.idx}`,
+  tiltDeg: 0,
+  tilt: false,
+  vars: { "--color-accent": "var(--color-coverage)" },
+  chrome: "none",
+  body: "",
+});
+
 const SEASON: Record<number, (e: AnthologyEntry) => EntryTheme> = {
   1: directory,
   2: pages,
   3: kindling,
+  4: wall,
 };
 
 export function entryTheme(e: AnthologyEntry): EntryTheme {
@@ -169,7 +189,7 @@ export function entryTheme(e: AnthologyEntry): EntryTheme {
 /** The anchor object above a season's grid. null renders nothing, which is a
  *  stated choice rather than the accident it currently is: season two and
  *  three have no hero image at all, and season one has The Fourteen. */
-export type SeasonHero = "fourteen" | "case-full" | "case-burned" | null;
+export type SeasonHero = "fourteen" | "case-full" | "case-burned" | "wall" | null;
 export function seasonHero(n: number): SeasonHero {
-  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : null;
+  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : n === 4 ? "wall" : null;
 }
