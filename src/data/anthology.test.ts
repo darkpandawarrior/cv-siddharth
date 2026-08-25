@@ -141,3 +141,43 @@ describe("guard B: process vocabulary over the generated corpus", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("guard C: no narrator the account does not have", () => {
+  // The blurbs reach every card, every search result and every shared link, so
+  // they are among the most-read sentences in the project. Several used to be
+  // written from beside the work: "He files.", "He stops filing.", "He burns it
+  // faster than he can explain why he wrote it." The entries say I. A blurb
+  // that says he has hired a narrator who does not exist, and put him between
+  // the reader and the account.
+  //
+  // THIS IS NOT THE CHECK THE RULING SPECIFIED, and the divergence is
+  // deliberate. The ruling proposed asserting that a first-person body implies
+  // a first-person blurb, and predicted it would go red on about seven Season
+  // Three entries. Run against the corrected corpus it goes red on nine, and
+  // every one is a false positive: "Why it snows for a half momenta every click
+  // on Exxobar" is a blurb about a world, it has no narrator at all, and there
+  // is nothing wrong with it. Person-symmetry was a proxy. The defect was
+  // always third-person narration OF HIM, so that is what this asserts.
+  const NARRATES =
+    /\b[Hh]e (?:files|stops|burns|holds|builds|writes|takes|reads|keeps|finds|walks|spends)\b|\bhis own case\b|\btells us\b/;
+
+  const blurbs = [
+    ...anthologyEntries.map((e) => ({ where: e.slug, text: e.blurb })),
+    ...anthology.seasons.map((s) => ({ where: `season ${s.n}`, text: s.blurb })),
+  ];
+
+  it("never narrates the correspondent in the third person", () => {
+    const offenders = blurbs
+      .filter((b) => NARRATES.test(b.text))
+      .map((b) => `${b.where}: ${JSON.stringify(b.text.slice(0, 80))}`);
+    expect(offenders, `blurb(s) written from outside the account: ${offenders.join(" | ")}`).toEqual([]);
+  });
+
+  // The floor. Without it a renamed field or a changed shape leaves this
+  // inspecting an empty array and passing, which is the failure mode three of
+  // this project's four defects had in common.
+  it("actually read the blurbs", () => {
+    expect(blurbs.length).toBeGreaterThan(30);
+    expect(blurbs.every((b) => typeof b.text === "string" && b.text.length > 20)).toBe(true);
+  });
+});
