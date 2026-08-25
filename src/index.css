@@ -1483,6 +1483,12 @@ html.resume-mode .palette-trigger {
   --color-signal-dim: #b58a4e;
   --color-probe: #cf8f63;
   --color-warn: #d97a3d;
+  /* Season four's coverage cyan. The ink world is warm all the way through, so
+     this is the one cold token in it, and that is the point: season four is the
+     only season that is not paper. It matches the "full coverage" cyan the
+     plates use, so a card and its plate agree. Measured: 8.72:1 on the card
+     ground #221b15, 9.71:1 on the ink ground #14100c. */
+  --color-coverage: #5ec8dc;
   --color-danger: #c25a4a;
   --color-alt: #a87ca0;
   --color-text: #efe7d8;
@@ -1925,6 +1931,31 @@ html.resume-mode .palette-trigger {
    biting it is enough, and it cannot break a control. The bite is bottom
    right, which is where charOverlay() puts the burn in the plate art itself,
    so the card and the picture agree about where the fire is. */
+/* Season four, the notice board. Flat, hard cornered and pasted: the top edge
+   carries a paste band the way a fresh notice does, and the bottom corner lifts
+   a little on hover because a wall never quite holds one down. That lift is the
+   season's own image, so it is the one thing here that moves, and it is
+   transform-adjacent only, so prefers-reduced-motion stops it without touching
+   any colour. --color-coverage is measured: 8.72:1 on the card ground. */
+.ink-world .season-four-notice {
+  position: relative;
+  box-shadow: inset 0 3px 0 0 color-mix(in oklab, var(--color-coverage) 22%, transparent);
+}
+.ink-world .season-four-notice::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 auto;
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, transparent 50%, color-mix(in oklab, var(--color-coverage) 16%, transparent) 50%);
+  transition: width 180ms ease, height 180ms ease;
+}
+.ink-world .season-four-notice:hover::after { width: 34px; height: 34px; }
+@media (prefers-reduced-motion: reduce) {
+  .ink-world .season-four-notice::after { transition: none; }
+  .ink-world .season-four-notice:hover::after { width: 26px; height: 26px; }
+}
+
 .ink-world .season-three-torn__plate {
   --bite: calc(6% + 22% * var(--scorch, 0));
   clip-path: polygon(
