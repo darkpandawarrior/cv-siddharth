@@ -29,7 +29,21 @@ export async function fetchWithTimeout(url, init = {}, { timeoutMs = DEFAULT_TIM
   let lastError;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+      // cache: "no-store" is load-bearing and was not here.
+      //
+      // Node's fetch (undici) keeps an HTTP cache, and raw.githubusercontent
+      // serves these files with a cache lifetime. So a generator run minutes
+      // after an upstream merge can quietly rebuild from the PREVIOUS content
+      // and report success: measured on 2026-08-25, `curl` returned a merged
+      // starmap while `node -e "fetch(...)"` on the same URL, in the same
+      // second, returned the version before it. gen-anthology then wrote a
+      // stale src/data/anthology.ts and printed its usual "48 entries" line.
+      //
+      // Every other failure mode in this file is loud. This one is not: it is
+      // the generator confidently emitting yesterday's answer, which is the
+      // one shape a build log cannot show you. It comes BEFORE the spread so a
+      // caller that genuinely wants a cached read can still say so.
+      const res = await fetch(url, { cache: "no-store", ...init, signal: AbortSignal.timeout(timeoutMs) });
       // 429 and 5xx are the ones a second try can fix. Anything else, including
       // a 404, is a real answer and goes back to the caller immediately.
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
