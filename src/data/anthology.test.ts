@@ -24,8 +24,8 @@ const TERMINOLOGIES_DIVIDER = "\n\n---\n\n";
  * lint was happy, and it took looking at the live DOM to find it.
  */
 describe("anthology data", () => {
-  it("has all three seasons, 34 entries, 10/10/14", () => {
-    expect(anthologyEntries).toHaveLength(34);
+  it("has all four seasons, 48 entries, 10/10/14/14", () => {
+    expect(anthologyEntries).toHaveLength(48);
     expect(entriesOfSeason(1)).toHaveLength(10);
     expect(entriesOfSeason(2)).toHaveLength(10);
     expect(entriesOfSeason(3)).toHaveLength(14);
@@ -158,8 +158,13 @@ describe("guard C: no narrator the account does not have", () => {
   // on Exxobar" is a blurb about a world, it has no narrator at all, and there
   // is nothing wrong with it. Person-symmetry was a proxy. The defect was
   // always third-person narration OF HIM, so that is what this asserts.
+  // The verb list grew once already. Season Four's own season blurb shipped as
+  // "He posts on a wall" and this guard let it through, because "posts" was not
+  // on it. A closed list of verbs is a weaker check than the idea behind it, and
+  // the honest fix when one gets past is to add it and say so, rather than to
+  // pretend the list was ever complete.
   const NARRATES =
-    /\b[Hh]e (?:files|stops|burns|holds|builds|writes|takes|reads|keeps|finds|walks|spends)\b|\bhis own case\b|\btells us\b/;
+    /\b[Hh]e (?:files|stops|burns|holds|builds|writes|takes|reads|keeps|finds|walks|spends|posts|arrives|leaves|asks|carries|visits|learns|discovers)\b|\bhis own case\b|\btells us\b/;
 
   const blurbs = [
     ...anthologyEntries.map((e) => ({ where: e.slug, text: e.blurb })),

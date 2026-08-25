@@ -165,7 +165,7 @@ describe("the registry's spelled-out counts still match the data", () => {
   // thirty-four.
   const WORDS: Record<number, string> = {
     20: "twenty", 30: "thirty", 34: "thirty-four", 35: "thirty-five",
-    36: "thirty-six", 40: "forty", 44: "forty-four", 50: "fifty",
+    36: "thirty-six", 40: "forty", 44: "forty-four", 48: "forty-eight", 50: "fifty",
   };
 
   it("the anthology tile names as many stories as the anthology has", () => {
