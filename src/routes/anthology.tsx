@@ -219,7 +219,13 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
           <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
             {kicker}
           </span>
-          <h3 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h3>
+          {/* h2, not h3. These cards sit directly under the page's h1 with no
+              grouping heading between them, so h3 skipped a level, which
+              Lighthouse scores as a real failure and lighthouserc.json asserts
+              accessibility at 1.00 with /anthology in its list. The e2e axe
+              pass misses it because heading-order is moderate and that suite
+              fails only on serious and critical. */}
+          <h2 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h2>
           <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
             {e.planet}
             {e.system ? ` · ${e.system}` : ""}
@@ -296,7 +302,7 @@ function TellerCard({ witness: w }: { witness: AnthologyWitness }) {
     <>
       <img src={w.art} alt={alt} loading="lazy" width={1100} height={600} className="w-full object-cover" />
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-lg font-bold leading-snug">{w.name}</h3>
+        <h2 className="font-display text-lg font-bold leading-snug">{w.name}</h2>
         {w.of && (
           <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
             {w.of}

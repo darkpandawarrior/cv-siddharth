@@ -500,11 +500,15 @@ export function SignalLabPane() {
           </span>
 
           <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
-            <button type="button" onClick={() => goToSection("work")} className="transition hover:text-accent">
+            {/* py-1 lifts these two to the 24px touch minimum. The row is 11px
+                  text, so the bare line box was about 17px and Lighthouse
+                  scored /lab at 96 on target-size. Padding rather than a
+                  layout change keeps them inline in the sentence. */}
+              <button type="button" onClick={() => goToSection("work")} className="inline-block py-1 transition hover:text-accent">
               the full story → Dice.tech
             </button>
             <span className="text-muted">·</span>
-            <Link to="/project/$slug" params={{ slug: "mileway" }} className="transition hover:text-accent">
+            <Link to="/project/$slug" params={{ slug: "mileway" }} className="inline-block py-1 transition hover:text-accent">
               rebuilt again at Mileway
             </Link>
           </span>
