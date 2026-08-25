@@ -197,10 +197,19 @@ export function entryTheme(e: AnthologyEntry): EntryTheme {
   return (SEASON[e.season] ?? unfiled)(e);
 }
 
-/** The anchor object above a season's grid. null renders nothing, which is a
- *  stated choice rather than the accident it currently is: season two and
- *  three have no hero image at all, and season one has The Fourteen. */
-export type SeasonHero = "fourteen" | "case-full" | "case-burned" | "wall" | null;
+/** The anchor object above a season's grid. null renders nothing, and that is a
+ *  stated choice rather than an accident.
+ *
+ *  "wall" was in this union and returned for season four, and SeasonHeroFigure
+ *  had no branch for it, so the page fell through to null and drew nothing. The
+ *  type asserted a hero that no code could draw: an intention encoded correctly
+ *  and executed into nothing, which is this project's most-repeated defect. A
+ *  season with no hero says so by returning null; it does not name one and hope.
+ *
+ *  Every non-null member of this union must have a branch in SeasonHeroFigure.
+ *  seasonTheme.test.ts holds that, so adding a member without drawing it fails
+ *  rather than silently rendering nothing. */
+export type SeasonHero = "fourteen" | "case-full" | "case-burned" | null;
 export function seasonHero(n: number): SeasonHero {
-  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : n === 4 ? "wall" : null;
+  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : null;
 }

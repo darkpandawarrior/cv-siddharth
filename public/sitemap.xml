@@ -103,6 +103,18 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://cv-siddharth.vercel.app/canon</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cv-siddharth.vercel.app/making</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://cv-siddharth.vercel.app/playground</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>monthly</changefreq>

@@ -157,12 +157,23 @@ describe("a season with no row of its own", () => {
     expect(seasonHero(5)).toBeNull();
   });
 
-  it("gives season four the wall rather than the fallback", () => {
+  it("gives season four its own row rather than the fallback", () => {
     const t = entryTheme(four);
     expect(t.label).toBe("NOTICE 7 OF 14");
     expect(t.card).toContain("season-four-notice");
     expect(t.tilt).toBe(false);
-    expect(seasonHero(4)).toBe("wall");
+  });
+
+  // seasonHero(4) used to return "wall" and SeasonHeroFigure had no branch for
+  // it, so the page drew nothing while the type said a hero existed, and this
+  // test asserted the claim rather than the artifact. Season four genuinely has
+  // no hero object above its grid: its plates ARE the notices. null says that.
+  // The union no longer carries "wall", and anthology.tsx narrows `hero` to
+  // null before its final return, so adding a member without drawing it is a
+  // compile error rather than a silent no-op.
+  it("names no hero it cannot draw", () => {
+    expect(seasonHero(4)).toBeNull();
+    expect(seasonHero(5)).toBeNull();
   });
 });
 
