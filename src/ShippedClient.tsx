@@ -78,7 +78,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
             <span className="block truncate text-xs text-muted">{client.developer}</span>
           )}
           {past && client.lastSeen && (
-            <span className="block truncate font-mono text-[10px] uppercase tracking-wider text-muted">
+            <span className="kicker block truncate">
               on the store until {archiveMonth(client.lastSeen)}
             </span>
           )}
@@ -97,10 +97,10 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
               title={app.name ?? app.id}
               className="group flex items-baseline gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/[0.04]"
             >
-              <span className="w-[52px] shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted">
+              <span className="kicker w-[52px] shrink-0">
                 {SIDE_LABEL[app.side ?? ""] ?? "App"}
               </span>
-              <span className="min-w-0 flex-1 truncate font-mono text-[10px] uppercase tracking-wider text-muted">
+              <span className="kicker min-w-0 flex-1 truncate">
                 {[
                   app.installs,
                   app.rating != null ? `${app.rating.toFixed(1)}★` : null,

@@ -37,7 +37,7 @@ export function FitCheck() {
   return (
     <section id="fit" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// fit check</p>
+        <p className="section-eyebrow mb-2">// fit check</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Hiring? Paste the job description.</h2>
         <p className="mb-6 max-w-2xl text-zinc-400">
           My AI assistant reads it against what I've actually shipped and answers the only question that matters:
@@ -61,7 +61,7 @@ export function FitCheck() {
             e.preventDefault();
             run();
           }}
-          className="card-elevated overflow-hidden rounded-2xl border border-line bg-card"
+          className="panel card-elevated overflow-hidden"
         >
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-surface px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest">
             {/* The strip header IS the field's label — visible, not sr-only.

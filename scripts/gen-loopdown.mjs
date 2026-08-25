@@ -2,10 +2,11 @@
 // repo and emits src/data/writing.ts. Runs as a prebuild step so the /#writing hub
 // stays in sync with what's actually published. Network-optional: if the fetch
 // fails and a previous writing.ts exists, it is kept.
-import { writeFileSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "writing.ts");
 const SRC = "https://raw.githubusercontent.com/darkpandawarrior/the-loopdown/main/data/registry.json";
@@ -22,6 +23,32 @@ export type CastMember = { id: string; appearances: number };
 export type Writing = { lessons: Lesson[]; series: Series[]; archive: Archive[]; cast: CastMember[] };
 `;
 
+const COLLECTIONS = ["lessons", "series", "archive", "cast"];
+
+/**
+ * The four collections as the committed writing.ts already has them, or null
+ * when there is no readable previous file.
+ *
+ * The brace is anchored past `export const writing` deliberately. This file
+ * emits its TYPES first, so the FIRST `{` in it opens the PostLinks type and
+ * slicing from there gives TypeScript, not JSON — the parse would throw, the
+ * catch would hand back null, and the guard below would pass on every run
+ * while never once being able to fail.
+ */
+export function previous() {
+  try {
+    const s = readFileSync(outPath, "utf8");
+    return JSON.parse(s.slice(s.indexOf("{", s.indexOf("export const writing")), s.lastIndexOf("}") + 1));
+  } catch {
+    return null;
+  }
+}
+
+/** Which of the four collections came back smaller than the file on disk. */
+export function shrinkage(data, prev) {
+  return prev ? COLLECTIONS.filter((k) => data[k].length < (prev[k]?.length ?? 0)) : [];
+}
+
 function emit(reg) {
   const pick = (o, keys) => Object.fromEntries(keys.filter((k) => o?.[k] !== undefined).map((k) => [k, o[k]]));
   const data = {
@@ -30,19 +57,42 @@ function emit(reg) {
     archive: (reg.archive || []).map((a) => pick(a, ["title", "slug", "form", "era", "words", "tags", "blurb"])),
     cast: (reg.cast || []).map((c) => pick(c, ["id", "appearances"])),
   };
+
+  // The rule is regression, not emptiness. HTTP status is the only failure this
+  // script tested, and a 200 is not proof of a good answer: a truncated file, a
+  // renamed top-level key or a repo mid-rewrite all arrive as a success, and
+  // every branch above falls back to `[]`, so the whole hub blanks without one
+  // error being raised. A published lesson does not un-publish, and neither
+  // does a series, an archive entry or a cast member, so a shrink in ANY of the
+  // four is a failure in effect even when it is not one in code.
+  const shrunk = shrinkage(data, previous());
+  if (shrunk.length) {
+    // Exit 0, like gen-timeline: a degraded upstream should leave yesterday's
+    // good data standing and say so loudly, not fail somebody's deploy.
+    console.warn(
+      `gen-loopdown: registry returned fewer ${shrunk.join("/")} than the committed file — ` +
+      `keeping src/data/writing.ts`,
+    );
+    process.exit(0);
+  }
+
   writeFileSync(outPath, banner + TYPES + `export const writing: Writing = ${JSON.stringify(data, null, 2)};\n`);
   console.log(`gen-loopdown: ${data.lessons.length} lessons, ${data.series.length} series, ${data.archive.length} archive → src/data/writing.ts`);
 }
 
-try {
-  const res = await fetch(SRC, { signal: AbortSignal.timeout(10000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  emit(await res.json());
-} catch (e) {
-  if (existsSync(outPath)) {
-    console.warn(`gen-loopdown: fetch failed (${e.message}); keeping existing src/data/writing.ts`);
-  } else {
-    console.warn(`gen-loopdown: fetch failed (${e.message}); emitting empty writing.ts`);
-    emit({ lessons: [], series: [], archive: [], cast: [] });
+// Only when run as a generator. The test imports this module for `previous`
+// and `shrinkage`, and an import must not reach for the network.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  try {
+    const res = await fetchWithTimeout(SRC);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    emit(await res.json());
+  } catch (e) {
+    if (existsSync(outPath)) {
+      console.warn(`gen-loopdown: fetch failed (${e.message}); keeping existing src/data/writing.ts`);
+    } else {
+      console.warn(`gen-loopdown: fetch failed (${e.message}); emitting empty writing.ts`);
+      emit({ lessons: [], series: [], archive: [], cast: [] });
+    }
   }
 }

@@ -7,6 +7,7 @@ import { writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outFile = join(root, "src", "data", "projectStats.ts");
 const token = process.env.GITHUB_TOKEN;
@@ -15,13 +16,13 @@ const raw = (repo, ref, path) => `https://raw.githubusercontent.com/${repo}/${re
 const contents = (repo, ref, path) => `https://api.github.com/repos/${repo}/contents/${path}?ref=${ref}`;
 
 async function getText(url) {
-  const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const res = await fetchWithTimeout(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
   return res.text();
 }
 
 async function pngCount(repo, ref, path) {
-  const res = await fetch(contents(repo, ref, path), {
+  const res = await fetchWithTimeout(contents(repo, ref, path), {
     headers: { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
   if (!res.ok) throw new Error(`${res.status} ${contents(repo, ref, path)}`);

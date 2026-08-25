@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, waitForHydration } from "./lib/test.ts";
+import { type Page } from "@playwright/test";
 
 // The design doc's second constraint is the one this file exists to pin:
 // "Navigation must survive without WebGL. A hub whose only affordance is a
@@ -60,7 +61,10 @@ test.describe("playground world — no WebGL", () => {
     await expect(cards).toHaveCount(ROOMS.length);
 
     for (const room of ROOMS) {
-      await page.getByRole("link", { name: new RegExp(room.label, "i") }).click();
+      // Scoped to the grid. The anomaly rail is global and links to these same
+      // rooms, so an unscoped name match finds two links now that this route
+      // server-renders and the rail is present the moment the test looks.
+      await page.locator("a.playground-card").filter({ hasText: new RegExp(room.label, "i") }).click();
       await expect(page).toHaveURL(new RegExp(`${room.to}$`));
       // Every room route carries an sr-only <h1> naming it (RoomFrame, or the
       // room's own component for the three that render outside RoomFrame) —
@@ -74,6 +78,11 @@ test.describe("playground world — no WebGL", () => {
 
 test.describe("playground world — List view toggle", () => {
   test("HUD List view switches to the grid, and the choice survives a reload", async ({ page }) => {
+    // /playground now mounts a rebuilt terrain, four instanced fixture
+    // families and a shader-driven ground, and this test loads it TWICE to
+    // prove the choice survives a reload. Alone it is comfortable; in a full
+    // run it exceeds the default budget. The cost is real, so it is declared.
+    test.slow();
     await page.goto("/playground");
 
     // WebGL is available in this test environment (SwiftShader), so the
@@ -88,6 +97,10 @@ test.describe("playground world — List view toggle", () => {
     // hidden so a real startup regression still shows up as a failure.
     await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
+    // Same reason as the chess tabs: a swallowed pre-hydration click leaves
+    // this waiting on a grid nobody asked for. Not retried, because the
+    // control is a toggle — a second click would undo the first.
+    await waitForHydration(page);
     await page.getByRole("button", { name: "List view" }).click();
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
     await expect(page.locator(".playground-world canvas")).toHaveCount(0);

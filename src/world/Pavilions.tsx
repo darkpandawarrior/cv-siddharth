@@ -2,24 +2,38 @@ import { Fragment, useRef, type JSX } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, type BufferGeometry, type PointLight } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { RigidBody, CuboidCollider, interactionGroups } from "@react-three/rapier";
 import { PLACEMENTS, type Placement } from "./worldData.ts";
 import { SENSOR_HALF_EXTENTS } from "./pavilionGeometry.ts";
 import { ROOMS, type Room } from "../rooms.tsx";
 import { usePulseCounts, type PulseEvent } from "../play/pulse.ts";
-import { PAVILION_SENSOR_GROUP } from "./collisionGroups.ts";
-import { worldPalette } from "./palette.ts";
+import { telemetry } from "./telemetry.ts";
+import { worldLane, worldPalette, worldTint } from "./palette.ts";
+
+/** The room's lane colour: what it IS first, its tile hue only as a fallback
+ *  for a room the registry has not grouped. See worldLane's own note on why
+ *  hue stopped being a usable proxy for meaning. */
+const laneOf = (room: { group?: string; tint: string }) =>
+  worldLane(room.group, worldPalette()) ?? worldTint(room.tint, worldPalette());
 
 /**
  * One physical structure per room, built entirely from three.js primitives —
  * no GLTF assets, per the design doc's "desk scale" rule. Each pavilion is a
- * `RigidBody type="fixed"` sitting at its `PLACEMENTS` position, wearing the
- * room's tint (looked up from ROOMS, never hand-duplicated here), with a
- * single sensor `CuboidCollider` as its only collider — there is no solid
- * geometry to bump into, only the approach volume that raises the HUD
- * prompt. That's a deliberate scope cut: the design only asks for a sensor
- * per pavilion, and a second, non-sensor collider (to make these obstacles
- * you can crash into) is easy to add later without touching this shape.
+ * plain `<group>` sitting at its `PLACEMENTS` position, wearing the room's
+ * tint (looked up from ROOMS, never hand-duplicated here). There is no solid
+ * geometry to bump into — pavilions were never in obstacles.ts's derived
+ * list either, drive.ts's own comment on that says so explicitly: "a room
+ * you can drive into the middle of is the point."
+ *
+ * The approach volume that raises the HUD prompt used to be a Rapier sensor
+ * `CuboidCollider` firing `onIntersectionEnter`/`onIntersectionExit`. It is
+ * now a plain AABB test against the car's live position (`telemetry.x/y/z`,
+ * written every frame by Vehicle.tsx), run once per frame across every
+ * placement in `Pavilions()` below — cheap enough on eight boxes that it
+ * doesn't need a physics engine's broadphase to make it fast. Rapier's
+ * interaction groups existed only to keep Props.tsx's dynamic debris from
+ * firing these sensors by rolling through one; there is no dynamic debris
+ * any more (Props.tsx is static geometry now), so that whole mechanism —
+ * collisionGroups.ts included — went with it.
  *
  * CRITICAL: this iterates PLACEMENTS, never a hand-written room list — see
  * worldData.test.ts's registry invariant. Adding a room to profile.ts without
@@ -27,30 +41,25 @@ import { worldPalette } from "./palette.ts";
  * pavilion from the world.
  */
 
-// A sensor volume this size sits low enough (see SENSOR_HALF_EXTENTS below)
-// to geometrically overlap the mainland's own ground collider AND any prop
-// debris that gets knocked underneath a pavilion — Props.tsx's keycaps,
-// pencils etc. are dynamic bodies too, and without this they'd fire the same
-// onIntersectionEnter a driven-up craft does, popping a room prompt for a
-// stray keycap. Rapier's interaction groups solve this at the physics layer
-// instead of teaching this file (or Props.tsx) about each other's object
-// identity: this sensor only ever matches colliders that are members of
-// group 15 in *their own* membership/filter. An unset `collisionGroups`
-// (the default on any collider, including whatever Craft.tsx ends up being —
-// that module isn't built by this task) defaults to "member of every group,
-// filters every group", so the driven craft satisfies this automatically
-// with zero coordination. Props.tsx is the one file that has to opt out,
-// by excluding group 15 from its own membership — see PROP_COLLISION_GROUPS
-// there. (Static-vs-static pairs, e.g. this sensor vs. Terrain's fixed
-// ground, are pruned by Rapier's broadphase before groups are even
-// considered, so the ground never needs this treatment.)
-
-const SENSOR_COLLISION_GROUPS = interactionGroups([PAVILION_SENSOR_GROUP], [PAVILION_SENSOR_GROUP]);
-
 // SENSOR_HALF_EXTENTS moved to pavilionGeometry.ts — the world's label
 // layer needs the same numbers to float a room's name above it, and a plain
 // data module is the one place both a scene component and a DOM overlay can
 // import from.
+
+/** Whether `pos` sits inside a placement's approach box, centred on the
+ *  placement's own position with the given half-extents — the same test a
+ *  `CuboidCollider` sensor used to run inside Rapier's broadphase. */
+function insideApproach(
+  pos: { x: number; y: number; z: number },
+  placement: readonly [number, number, number],
+  half: readonly [number, number, number],
+): boolean {
+  return (
+    Math.abs(pos.x - placement[0]) <= half[0] &&
+    Math.abs(pos.y - placement[1]) <= half[1] &&
+    Math.abs(pos.z - placement[2]) <= half[2]
+  );
+}
 
 
 /**
@@ -233,7 +242,7 @@ const SHAPES: Record<Placement["shape"], (props: { tint: string }) => JSX.Elemen
   pcb: Pcb,
 };
 
-function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: Room; onPrompt: (to: string | null) => void }) {
+function Pavilion({ placement, room }: { placement: Placement; room: Room }) {
   const Shape = SHAPES[placement.shape];
   // The same registry key the card grid uses for its visit counter, so the
   // world and the list are lit by one number rather than two.
@@ -241,8 +250,8 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
   const visits = counts[`room:${placement.to.slice(1)}` as PulseEvent] ?? 0;
   const halfExtents = SENSOR_HALF_EXTENTS[placement.shape];
   return (
-    <RigidBody type="fixed" position={placement.position} colliders={false}>
-      <Shape tint={room.tint} />
+    <group position={placement.position}>
+      <Shape tint={laneOf(room)} />
       {/* The floating room name used to be right here, as its own drei <Html>
           portal. It now belongs to the world's one label layer (labels.ts /
           WorldLabels.tsx), which is the only place that can see every label at
@@ -257,23 +266,38 @@ function Pavilion({ placement, room, onPrompt }: { placement: Placement; room: R
           shadow-casting point lights would cost far more than they add, and
           these exist to mark a position, not to model illumination. */}
       <BreathingLight
-        tint={room.tint}
+        tint={laneOf(room)}
         y={halfExtents[1] + 1.2}
         seed={placement.position[0] + placement.position[2]}
         visits={visits}
       />
-      <CuboidCollider
-        args={halfExtents}
-        sensor
-        collisionGroups={SENSOR_COLLISION_GROUPS}
-        onIntersectionEnter={() => onPrompt(placement.to)}
-        onIntersectionExit={() => onPrompt(null)}
-      />
-    </RigidBody>
+    </group>
   );
 }
 
 export function Pavilions({ onPrompt }: { onPrompt: (to: string | null) => void }) {
+  // The dwell-then-prompt behaviour lives entirely in World.tsx's
+  // `handlePrompt` and is untouched by this rewrite — this only replaces HOW
+  // "the car is now near room X" / "...and now it isn't" gets decided.
+  // `insideRef` is the edge detector: `onPrompt` must fire on the transition
+  // only (matching Rapier's onIntersectionEnter/Exit semantics), not every
+  // frame the car happens to be inside a box, or World.tsx's dwell timer
+  // would restart 60 times a second and never fire.
+  const insideRef = useRef<string | null>(null);
+  useFrame(() => {
+    let hit: string | null = null;
+    for (const placement of PLACEMENTS) {
+      if (insideApproach(telemetry, placement.position, SENSOR_HALF_EXTENTS[placement.shape])) {
+        hit = placement.to;
+        break; // approach volumes never overlap — worldGeometry.test.ts asserts the spacing
+      }
+    }
+    if (hit !== insideRef.current) {
+      insideRef.current = hit;
+      onPrompt(hit);
+    }
+  });
+
   return (
     <>
       {PLACEMENTS.map((placement) => {
@@ -285,7 +309,7 @@ export function Pavilions({ onPrompt }: { onPrompt: (to: string | null) => void 
         if (!room) return null;
         return (
           <Fragment key={placement.to}>
-            <Pavilion placement={placement} room={room} onPrompt={onPrompt} />
+            <Pavilion placement={placement} room={room} />
           </Fragment>
         );
       })}

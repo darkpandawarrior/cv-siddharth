@@ -648,6 +648,36 @@ export default function ComposePlayground() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
 
+  // The phone mockup is a fixed ~280x640 block — plenty of room in the
+  // lg:grid-cols-2 desktop layout, but grid-rows-2 on mobile only ever gives
+  // it half the viewport, so it needs to shrink to fit rather than get
+  // clipped by the pane's overflow-auto. A ResizeObserver on the pane (not a
+  // one-shot matchMedia breakpoint check) keeps it fitted through rotation
+  // and any window resize, on both sides of the lg breakpoint. offsetWidth /
+  // offsetHeight are the mockup's un-transformed layout size — CSS transform
+  // never affects those — so they stay a stable "natural size" to scale from
+  // even while the transform below is actively shrinking it on screen.
+  const previewPaneRef = useRef<HTMLDivElement>(null);
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const [previewBox, setPreviewBox] = useState({ scale: 1, w: 0, h: 0 });
+  useEffect(() => {
+    const pane = previewPaneRef.current;
+    const mockup = mockupRef.current;
+    if (!pane || !mockup) return;
+    const PAD = 48; // pane's p-6, both sides
+    const recompute = () => {
+      const natW = mockup.offsetWidth;
+      const natH = mockup.offsetHeight;
+      if (!natW || !natH) return;
+      const scale = Math.min(1, (pane.clientWidth - PAD) / natW, (pane.clientHeight - PAD) / natH);
+      setPreviewBox({ scale, w: natW * scale, h: natH * scale });
+    };
+    const ro = new ResizeObserver(recompute);
+    ro.observe(pane);
+    recompute();
+    return () => ro.disconnect();
+  }, []);
+
   const generate = async (scenario: string) => {
     const s = scenario.trim();
     if (!s || aiBusy) return;
@@ -711,7 +741,7 @@ export default function ComposePlayground() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -733,7 +763,7 @@ export default function ComposePlayground() {
 
       <div className="border-b border-line bg-ink/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
-          <span className="mr-1 font-mono text-[11px] uppercase tracking-wider text-muted">examples</span>
+          <span className="kicker mr-1">examples</span>
           {PRESETS.map((p) => (
             <button
               key={p.label}
@@ -819,10 +849,23 @@ export default function ComposePlayground() {
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
-              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[13px] leading-[1.6] text-zinc-100 outline-none"
+              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[16px] leading-[1.6] text-zinc-100 outline-none sm:text-[13px]"
               style={{ tabSize: 4 }}
               onKeyDown={(e) => {
+                // WCAG 2.1.2, No Keyboard Trap. Swallowing Tab to indent means
+                // a keyboard-only visitor who tabs INTO this editor can never
+                // tab out of it — the rest of the page becomes unreachable
+                // without a mouse. The criterion is satisfied by providing a
+                // standard exit and telling the user about it, so Escape
+                // leaves the editor and the hint below the field says so.
+                if (e.key === "Escape") {
+                  e.currentTarget.blur();
+                  return;
+                }
                 if (e.key === "Tab") {
+                  // Shift+Tab always means "go back" — never indent on it, or
+                  // the trap is only half-opened.
+                  if (e.shiftKey) return;
                   e.preventDefault();
                   const t = e.currentTarget;
                   const s = t.selectionStart;
@@ -833,37 +876,49 @@ export default function ComposePlayground() {
                 }
               }}
               aria-label="Compose code editor"
+              aria-describedby="compose-editor-escape-hint"
             />
           </div>
           <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
             <Play size={11} className="text-accent" /> live · renders as you type
+            <span id="compose-editor-escape-hint" className="ml-auto">
+              Tab indents · <kbd className="rounded border border-line px-1">Esc</kbd> leaves the editor
+            </span>
           </div>
         </div>
 
         {/* Preview */}
-        <div className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6">
-          <div className="relative">
-            <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-              {/* status bar */}
-              <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
-                <span>9:41</span>
-                <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
-                <span>▮▮▮ 100%</span>
+        <div
+          ref={previewPaneRef}
+          className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6"
+        >
+          {/* Reserves the mockup's SCALED footprint in the flex layout — a
+              transform alone shrinks the paint but not the box it's centered
+              in, which would leave this pane scrolling past empty space. */}
+          <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
+            <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
+              <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+                {/* status bar */}
+                <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
+                  <span>9:41</span>
+                  <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
+                  <span>▮▮▮ 100%</span>
+                </div>
+                <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
+                  {error ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                      <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
+                      <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
+                    </div>
+                  ) : program ? (
+                    <div className="flex h-full flex-col">
+                      {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
-              <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
-                {error ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                    <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                    <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
-                  </div>
-                ) : program ? (
-                  <div className="flex h-full flex-col">
-                    {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
-                  </div>
-                ) : null}
-              </div>
+              <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
             </div>
-            <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
           </div>
         </div>
       </main>

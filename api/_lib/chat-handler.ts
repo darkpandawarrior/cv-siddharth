@@ -661,8 +661,8 @@ const GROQ_TPM_HEADROOM = 7_000;
 /**
  * Which provider to try first, given what this request actually costs.
  *
- * Not a preference — arithmetic. Every call carries a ~5,000-token system
- * prompt, and the free tiers differ by more than an order of magnitude:
+ * Not a preference — arithmetic. The free tiers differ by more than an order
+ * of magnitude:
  *
  *   groq      8K TPM   ·  200K/day  · fastest by a wide margin
  *   gemini  ~250K TPM  ·  generous  · slower, ~30x the per-minute room
@@ -675,6 +675,21 @@ const GROQ_TPM_HEADROOM = 7_000;
  * tier and called it a small request. Size is measured instead; mode only
  * breaks the tie for a JD that happens to be short, since those are still
  * bursty (three per minute are allowed) and TPM is a per-minute budget.
+ */
+/*
+ * WHERE THIS ACTUALLY LANDS TODAY, measured 2026-08-24 — because the design
+ * above assumed a ~5,000-token system prompt and the generated one is now
+ * 26,320 chars ~ 6,580 tokens on its own. Add maxOutput (1,024) and any user
+ * turn and every chat request estimates past 7,000, so FAST_FIRST is
+ * unreachable and Gemini leads in practice. That is a correct outcome for the
+ * arithmetic, not a bug in it: the prompt outgrew its own budget.
+ *
+ * Do NOT "fix" this by raising GROQ_TPM_HEADROOM. It is anchored to Groq's
+ * real 8K/minute free ceiling; raising it just trades a clean failover for a
+ * 429. Restoring the fast tier means a system prompt under ~20,000 chars,
+ * which needs either fewer facts in profile.ts or a tiered prompt that stops
+ * sending the whole catalogue on every turn. Both are product decisions.
+ * api/_lib/system-prompt.test.ts holds the ceiling so it cannot drift further.
  */
 export function providerOrderFor(mode: ChatMode, estimatedTokens = 0): string[] {
   if (estimatedTokens > GROQ_TPM_HEADROOM) return ROOMY_FIRST;

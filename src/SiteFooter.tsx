@@ -1,7 +1,8 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { profile } from "./data/profile.ts";
+import { profile, projects } from "./data/profile.ts";
 import { elsewhere } from "./data/elsewhere.ts";
+import { surfaces, type SurfaceGroup } from "./data/surfaces.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
@@ -18,6 +19,35 @@ type FooterLink =
  * Sitemap footer — every surface of the site (and its satellites) reachable
  * from one place, so no page is a dead end. External links open new tabs.
  */
+/**
+ * Route links, straight off the registry.
+ *
+ * These two columns used to be hand-written, and had fallen to 8 of the
+ * registry's 17 surfaces — /lab, /chess, /weeb, /pulse, /shipped, /ink,
+ * /excelsior, /anthology and /forge were all unreachable from the footer
+ * while its own docstring claimed "every surface of the site... so no page is
+ * a dead end". That is this repo's signature defect: a hand-kept list that
+ * mirrors src/data/surfaces.ts and quietly falls behind it, which no unit
+ * test catches because a hand-kept list always agrees with itself.
+ *
+ * Same treatment the Elsewhere column already gets from elsewhere.ts. Add a
+ * surface to the registry and it appears here; there is nothing left to
+ * forget. SiteFooter.test.ts fails if any registry route is ever unlinked.
+ */
+/** Surfaces the Explore column promotes by hand, with a recruiter-facing
+ *  label the registry has no business carrying ("Hire me (90 seconds)"). They
+ *  are skipped below so they appear once, not twice. Promotion is editorial;
+ *  OMISSION is the bug — so this list may only ever shrink the derived
+ *  columns, never the set of reachable surfaces, and the test enforces that
+ *  every entry here really is linked somewhere. */
+const PROMOTED: readonly string[] = ["/hire", "/resume", "/playground"];
+
+function fromRegistry(...groups: SurfaceGroup[]): FooterLink[] {
+  return surfaces
+    .filter((s) => groups.includes(s.group) && !PROMOTED.includes(s.to))
+    .map((s) => ({ label: s.label, kind: "route" as const, to: s.to }));
+}
+
 const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Explore",
@@ -35,24 +65,30 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
+    /* Same treatment as the registry columns, one file over: a `detail` block
+       is exactly what makes /project/$slug renderable, so it is the honest
+       filter. The hand-kept version listed five of the eight and had never
+       been told about cv-siddharth, the KMP toolkit family or The Loopdown.
+       Short label per DeviceMorph's convention, because the portfolio entry's
+       full name is a 60-character sentence. */
     title: "Builds",
-    links: [
-      { label: "Mileway", kind: "route", to: "/project/$slug", params: { slug: "mileway" } },
-      { label: "Kursi", kind: "route", to: "/project/$slug", params: { slug: "kursi" } },
-      { label: "PaymentsLab", kind: "route", to: "/project/$slug", params: { slug: "paymentslab" } },
-      { label: "HireSignal", kind: "route", to: "/project/$slug", params: { slug: "hiresignal" } },
-      { label: "DEADLOCK", kind: "route", to: "/project/$slug", params: { slug: "deadlock" } },
-      { label: "▶ The Playground", kind: "route", to: "/playground" },
-      { label: "Compose Playground", kind: "route", to: "/compose" },
-      { label: "Blueprint Room", kind: "route", to: "/blueprint" },
-      { label: "3D Storyboard", kind: "route", to: "/map" },
-      { label: "Terminal ⌘", kind: "route", to: "/terminal" },
-    ],
+    links: projects
+      .filter((p) => p.detail)
+      .map((p) => ({
+        label: p.name.split(" — ")[0],
+        kind: "route" as const,
+        to: "/project/$slug",
+        params: { slug: p.slug },
+      })),
+  },
+  {
+    title: "Rooms",
+    links: fromRegistry("runs", "proof"),
   },
   {
     title: "Writing",
     links: [
-      { label: "The Loopdown", kind: "route", to: "/loopdown" },
+      ...fromRegistry("writing", "corpus"),
       { label: BOOKS_BEFORE_BROS.name, kind: "external", href: BOOKS_BEFORE_BROS.url },
       { label: "the-loopdown repo", kind: "external", href: LOOPDOWN_REPO },
       { label: "dev.to", kind: "external", href: "https://dev.to/darkpandawarrior" },
@@ -60,8 +96,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
   {
     title: "Elsewhere",
-    // Derived from src/data/elsewhere.ts so the footer, the /elsewhere index and
-    // anything else that lists his presences can never drift apart. A web sweep
+    // Derived from src/data/elsewhere.ts so the footer and anything else that
+    // lists his presences can never drift apart. (This used to also promise an
+    // "/elsewhere index" route. There is no such route and there does not need
+    // to be: this column, the palette's synonym coverage and /hire's outbound
+    // links already surface every profile. A comment describing a page that
+    // was never built is how a reader concludes the site is half-finished.) A web sweep
     // found four profiles the site had never linked — Stack Overflow, X, the
     // Dice org chart, and the Editorial Board's own site.
     links: [
@@ -100,7 +140,24 @@ function NowChip() {
       : undefined;
   const nowArt = spotifyConnected ? (spotify.isPlaying ? spotify.albumArt : spotify.recent[0]?.albumArt) : undefined;
   const nowUrl = spotifyConnected ? (spotify.isPlaying ? spotify.url : spotify.recent[0]?.url) : undefined;
-  const latestActivity = activity?.connected ? activity.items[0] : undefined;
+  /**
+   * The feed, not one line of it.
+   *
+   * This rendered `items[0]` — a single push — while the endpoint returned
+   * twenty across a dozen repositories, four of them other people's. On a
+   * site whose whole argument is "here is the work", surfacing one event and
+   * discarding nineteen was the wrong end of the trade.
+   *
+   * Collapsed to one row per REPOSITORY, most recent first, because five
+   * pushes to the same repo in a morning is one fact, not five. Upstream
+   * contributions are marked: a commit to someone else's project is a
+   * different claim from a commit to your own, and the shape now says which.
+   */
+  const recent = activity?.connected ? activity.items : [];
+  const byRepo = new Map<string, (typeof recent)[number]>();
+  for (const item of recent) if (!byRepo.has(item.repo)) byRepo.set(item.repo, item);
+  const repos = [...byRepo.values()].slice(0, 5);
+  const latestActivity = repos[0];
 
   if (!nowTrack && !latestActivity) return null;
 
@@ -120,10 +177,23 @@ function NowChip() {
           </span>
         </span>
       )}
-      {latestActivity && (
-        <a href={latestActivity.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-          {latestActivity.type === "push" ? "Pushed to" : latestActivity.type === "pr" ? "Opened a PR on" : "Created a ref on"} {latestActivity.repo.split("/")[1]}
-        </a>
+      {repos.length > 0 && (
+        <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <span className="kicker">recently</span>
+          {repos.map((a) => (
+            <a
+              key={a.repo}
+              href={a.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-accent"
+              title={`${a.type === "pr" ? "Opened a PR on" : a.type === "create" ? "Created a ref on" : "Pushed to"} ${a.repo}`}
+            >
+              {a.repo.split("/")[1]}
+              {a.upstream && <span className="kicker-accent" title="a contribution to someone else's project">↗</span>}
+            </a>
+          ))}
+        </span>
       )}
     </div>
   );
@@ -137,7 +207,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 py-10 sm:grid-cols-4">
         {COLUMNS.map((col) => (
           <div key={col.title}>
-            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent/70">{col.title}</h3>
+            <h3 className="kicker-accent font-semibold">{col.title}</h3>
             <ul className="mt-3 space-y-2">
               {col.links.map((l) => (
                 <li key={l.label}>

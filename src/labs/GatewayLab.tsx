@@ -1,19 +1,24 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { projectStats } from "../data/projectStats.ts";
 
 /* ── PaymentsLab Gateway Lab ─────────────────────────────────────────── */
-/* 66 cataloged gateways: 7 native-SDK + 47 hosted-webview + 8 mobile-money
-   + 4 catalog-only/KYC-gated, all real counts from profile.ts's paymentslab
-   entry — routed through one PaymentGateway abstraction. */
+/* PaymentsLab's cataloged gateways, split by how each one is integrated and
+   routed through one PaymentGateway abstraction. Every count comes from
+   projectStats.ts, which gen-project-stats.mjs parses out of the repo's own
+   generated README banner — the numbers used to be typed here four separate
+   times, and the copy below drifted away from the chart above it. Only the
+   colours are local: those are presentation, not a claim. */
 
+const P = projectStats.paymentslab;
 const CATEGORIES = [
-  { id: "native-SDK", count: 7, color: "#C4B5FD" },
-  { id: "hosted-webview", count: 47, color: "#A78BFA" },
-  { id: "mobile-money", count: 8, color: "#8B5CF6" },
-  { id: "stub / KYC-gated", count: 4, color: "#6D28D9" },
+  { id: "native-SDK", count: P.gatewaysNative, color: "#C4B5FD" },
+  { id: "hosted-webview", count: P.gatewaysHosted, color: "#A78BFA" },
+  { id: "mobile-money", count: P.gatewaysMobileMoney, color: "#8B5CF6" },
+  { id: "stub / KYC-gated", count: P.gatewaysStub, color: "#6D28D9" },
 ];
-const TOTAL_GATEWAYS = CATEGORIES.reduce((a, c) => a + c.count, 0); // 66
+const TOTAL_GATEWAYS = CATEGORIES.reduce((a, c) => a + c.count, 0);
 
 type Call = { x: number; y: number; vx: number; vy: number; bin: number };
 
@@ -30,7 +35,7 @@ export function GatewayLab() {
     let spawnAcc = 0;
     let statsAcc = 0;
 
-    // Weighted by each category's real share of the 66-gateway catalog.
+    // Weighted by each category's real share of the catalog.
     const pickBin = () => {
       const r = Math.random() * TOTAL_GATEWAYS;
       let acc = 0;
@@ -163,15 +168,16 @@ export function GatewayLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        PaymentsLab catalogs 66 real payment gateways — 7 native-SDK integrations, 47 hosted-webview
-        providers, 8 mobile-money flows and 4 catalog-only/KYC-gated entries — behind one
-        PaymentGateway interface. Toggle the abstraction off and every checkout call needs its own
-        bespoke integration; switch it on and the same call routes through a single contract into
-        whichever of the 66 gateways is on the other end.
+        PaymentsLab catalogs {TOTAL_GATEWAYS} real payment gateways — {P.gatewaysNative} native-SDK
+        integrations, {P.gatewaysHosted} hosted-webview providers, {P.gatewaysMobileMoney} mobile-money
+        flows and {P.gatewaysStub} catalog-only/KYC-gated entries — behind one PaymentGateway interface.
+        Toggle the abstraction off and every checkout call needs its own bespoke integration; switch it
+        on and the same call routes through a single contract into whichever of the {TOTAL_GATEWAYS}
+        gateways is on the other end.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" aria-label="PaymentsLab gateway routing simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab gateway routing simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
@@ -180,7 +186,7 @@ export function GatewayLab() {
           </label>
           {routed ? (
             <span className="font-mono text-xs text-accent">
-              {stats.routed} calls routed · 66 gateways reachable · 0 gateway-specific code touched
+              {stats.routed} calls routed · {TOTAL_GATEWAYS} gateways reachable · 0 gateway-specific code touched
             </span>
           ) : (
             <span className="font-mono text-xs text-muted">{stats.blocked} calls blocked · custom integration required per gateway</span>
@@ -190,7 +196,7 @@ export function GatewayLab() {
             params={{ slug: "paymentslab" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → PaymentsLab's 66 gateways
+            the full story → PaymentsLab's {TOTAL_GATEWAYS} gateways
           </Link>
         </div>
       </div>

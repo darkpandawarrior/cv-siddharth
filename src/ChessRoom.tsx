@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState, useEffect } from "react";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
@@ -83,10 +83,21 @@ function supportsWebGL(): boolean {
 /** What this visitor's browser will accept: motion, and a canvas at all.
  *  Read once — neither answer changes mid-visit in any way worth re-rendering. */
 function useEnv(): { reduced: boolean; webgl: boolean } {
-  return useMemo(
-    () => ({ reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches, webgl: supportsWebGL() }),
-    [],
-  );
+  // useState + useEffect, not useMemo. A useMemo runs during RENDER, and
+  // render happens on the server too — so `window.matchMedia` here was the
+  // single reason /chess had to keep `ssr: false`, which cost it its crawlable
+  // text along with the other thirteen routes that carried that flag.
+  //
+  // The initial value is the conservative one on purpose: webgl:false makes
+  // the SERVER render the same non-WebGL fallback a machine without a GPU
+  // gets, which is real text rather than an empty shell. The effect then
+  // upgrades it on a client that can take it. Same shape as
+  // FoundationGraph.tsx, which got this right.
+  const [env, setEnv] = useState({ reduced: false, webgl: false });
+  useEffect(() => {
+    setEnv({ reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches, webgl: supportsWebGL() });
+  }, []);
+  return env;
 }
 
 const sceneFallback = (
@@ -469,7 +480,7 @@ export function ChessRoom() {
         role="region"
         aria-labelledby={`chess-tab-${tab}`}
         aria-busy={tab !== "findings" && !corpus && !error}
-        className="mt-6 rounded-xl border border-line bg-card p-6"
+        className="panel-sm mt-6 p-6"
       >
         {tab === "findings" ? (
           // Renders straight from the bundled `chess.ts` summary, not the

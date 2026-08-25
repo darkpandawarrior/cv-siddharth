@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
+import { useSectionNav } from "./lib/navigation.ts";
 import { FitImage } from "./DeviceWall.tsx";
 
 /**
@@ -87,13 +88,14 @@ export function DeviceMorph() {
   const [booted, setBooted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { painted, gaveUp } = useLivePaint(iframeRef, booted);
+  const { goToSection } = useSectionNav();
 
   if (!app) return null;
 
   return (
     <section id="morph" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-6xl px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
+        <p className="section-eyebrow mb-2">
           // one codebase
         </p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Resize the device, not the screenshot</h2>
@@ -119,7 +121,7 @@ export function DeviceMorph() {
               {f.label}
             </button>
           ))}
-          <span className="ml-1 font-mono text-[11px] uppercase tracking-widest text-muted">{form.note}</span>
+          <span className="kicker ml-1">{form.note}</span>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -206,7 +208,7 @@ export function DeviceMorph() {
                   <Play size={18} />
                 </span>
                 Run {app.name} here
-                <span className="font-mono text-[11px] font-normal uppercase tracking-widest text-muted">
+                <span className="kicker font-normal">
                   ~14 MB Wasm · loads on click
                 </span>
               </button>
@@ -226,8 +228,23 @@ export function DeviceMorph() {
           </div>
         </div>
 
-        <p className="mt-4 text-center font-mono text-[11px] uppercase tracking-widest text-muted">
+        <p className="kicker mt-4 text-center">
           {app.name} · {form.label} · {form.note}
+        </p>
+
+        {/* SurfaceWall (#surfaces) makes this exact claim again, 12,000px
+            further down the page, with its own device-frame grid — and the
+            two used to have no link between them, so a visitor who saw one
+            had no reason to know the other existed. This is the forward half
+            of that pair; SurfaceWall carries the matching link back up. */}
+        <p className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={() => goToSection("surfaces")}
+            className="kicker-accent transition hover:opacity-80"
+          >
+            Same one codebase, across every route on this site →
+          </button>
         </p>
       </div>
     </section>

@@ -86,7 +86,7 @@ export function ParticleHero() {
           you the swarm is draggable was itself clipped away, on exactly the
           widths where dragging is first enabled. */}
       {dragEnabled && (
-        <span className="pointer-events-none absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-wider text-muted lg:right-[8.25rem]">
+        <span className="kicker pointer-events-none absolute bottom-2 right-2 lg:right-[8.25rem]">
           drag to spin
         </span>
       )}

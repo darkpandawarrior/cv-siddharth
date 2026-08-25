@@ -14,7 +14,7 @@ import {
   Target,
   Crown,
 } from "lucide-react";
-import { profile, metrics, experience, education, caseStudies, skills, projects, recentGrowth, sharedFoundation, cardMedia, siteRooms } from "./data/profile.ts";
+import {profile, metrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { ReposShowcase } from "./ReposShowcase.tsx";
@@ -27,8 +27,6 @@ import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
-import { FoundationGraph } from "./FoundationGraph.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
 import { WorldSwitch } from "./WorldSwitch.tsx";
@@ -36,10 +34,12 @@ import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { SurfaceWall } from "./SurfaceWall.tsx";
 import { DeviceMorph } from "./DeviceMorph.tsx";
-import { LauncherButton } from "./Launcher.tsx";
+import { LauncherButton, openLauncher } from "./Launcher.tsx";
+import { excelsiorMarks } from "./data/excelsiorMarks.ts";
 import { FieldNotes } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
+import { Expandable } from "./Expandable.tsx";
 import { SkillsOrbit } from "./SkillsOrbit.tsx";
 // data/labs.ts, not LabBench.tsx: these two names are all the homepage wants,
 // and taking them from the component put the whole 53 kB bench — instruments,
@@ -48,6 +48,8 @@ import { openLab, type LabKey } from "./data/labs.ts";
 import { writing } from "./data/writing.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { repoStatLine } from "./lib/projectStatLine.ts";
+import { shippedNewestFirst } from "./lib/shipped.ts";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -72,24 +74,6 @@ function platformsOf(stack: string[]) {
     const hit = PLATFORM_ICONS.find((p) => p.match(s));
     return hit ? [hit] : [];
   });
-}
-
-// Projects with a playable web build — hints the "▶ Live" badge on the card;
-// the detail page is where it's actually embedded/linked.
-const LIVE_WEB_PROJECTS = new Set(["kursi", "mileway", "paymentslab"]);
-
-// Real repo stats surfaced on the card, drawn from projectStats.ts (generated
-// from each repo). Only the apps with generated stats get a strip.
-function repoStatLine(slug: string): string | null {
-  const s = projectStats[slug as keyof typeof projectStats];
-  if (!s) return null;
-  if (slug === "mileway" && "features" in s) return `${s.modules} modules · ${s.features} features · ${s.screenshots} tests`;
-  if (slug === "paymentslab" && "gatewaysNative" in s) {
-    const gateways = s.gatewaysNative + s.gatewaysHosted + s.gatewaysMobileMoney + s.gatewaysStub;
-    return `${s.modules + s.composedModules} modules · ${gateways} gateways`;
-  }
-  if (slug === "kursi") return `${s.modules} modules · 4 platforms`;
-  return `${s.modules} modules`;
 }
 
 /**
@@ -151,7 +135,12 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
   return { progressRef, active };
 }
 
-// Everything reachable from the phone drawer — sections plus the sub-worlds.
+// A curated shortlist for the phone drawer — the sections and sub-worlds worth
+// promoting, NOT an index of the site. The index is the surfaces wall, which
+// the drawer now opens: `LauncherButton` is `hidden lg:flex`, so before this
+// the only way to reach all seventeen surfaces from a phone was a blind
+// command-palette search or scrolling 70% of a 20,000px page. A shortlist is
+// fine as long as the full list is one tap away; it was not.
 const DRAWER_EXTRAS = [
   { href: "#playground", label: "▶ The Playground" },
   { href: "/ink", label: "The Ink — writing" },
@@ -215,11 +204,17 @@ function MobileMenu() {
                 <button
                   key={l.href}
                   onClick={() => go(l.href)}
-                  className="rounded-xl border border-line bg-card px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
+                  className="panel-sm px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
                 >
                   {l.label}
                 </button>
               ))}
+              <button
+                onClick={() => { setOpen(false); openLauncher(); }}
+                className="col-span-2 rounded-xl border border-accent/40 bg-card px-4 py-3 text-sm font-semibold text-accent transition hover:border-accent"
+              >
+                All surfaces →
+              </button>
               <button
                 onClick={() => { setOpen(false); openChat(); }}
                 className="col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
@@ -326,7 +321,6 @@ function Nav() {
           {/* Hidden below lg: the bar is already at capacity at xl, and on a
               phone the wall itself is a short scroll away. */}
           <LauncherButton className="hidden lg:flex" />
-          <CommandPalette />
           {/* label-wide, not `hidden sm:inline`: display:none took this label
               out of the accessibility tree as well as the layout, so below
               640px this was an icon with no accessible name — a WCAG 4.1.2
@@ -354,7 +348,13 @@ function Hero() {
     <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
       <ParticleHero />
       <div>
-        <p className="hero-eyebrow rise-in mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+        {/* rise-in-lcp on every block of hero text, not just one element. The
+            eyebrow carries no animation-delay, so it is the FIRST thing the
+            page would paint — and while it is fading it counts as nothing
+            painted at all, which pushes First Contentful Paint out by the
+            length of the animation as surely as it pushed LCP out. See the
+            rise-in-lcp comment in index.css. */}
+        <p className="hero-eyebrow rise-in rise-in-lcp mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
           <span className="flex items-center gap-2">
             <MapPin size={14} className="text-accent" /> {profile.location} · {profile.title}
           </span>
@@ -362,13 +362,21 @@ function Hero() {
               document that got uploaded once. */}
           <NavClock className="flex" />
         </p>
-        {/* rise-in-lcp, not rise-in: this heading is the page's LCP element
+        {/* rise-in-lcp, not rise-in: this heading was the page's LCP element
             and must be paintable from the first frame. See index.css. */}
         <h1 className="rise-in rise-in-lcp rise-in-1 font-display max-w-3xl text-hero font-bold tracking-tight">
           I take Android apps from <span className="hero-shimmer">prototype to platform.</span>
         </h1>
         <Typewriter />
-        <p className="rise-in rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">{profile.intro}</p>
+        {/* The LCP element MOVED here. On a phone this paragraph wraps to more
+            lines than the headline does, so it is the largest painted block in
+            the viewport — and it was still on plain `rise-in`, fading from
+            opacity 0 behind a 0.16s delay. Measured on the live domain: LCP
+            4.24s of which 3,600ms was render delay on this one <p>, with
+            nothing actually blocking. Same one-class fix the h1 already had. */}
+        <p className="rise-in rise-in-lcp rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">
+          {profile.intro}
+        </p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <button
             onClick={() => openChat()}
@@ -470,7 +478,7 @@ function Circuit() {
 /** Live pulse under the hero: the latest ship and the latest field note. */
 function LiveTicker() {
   const { goToSection } = useSectionNav();
-  const latestShip = recentGrowth[recentGrowth.length - 1];
+  const latestShip = shippedNewestFirst[0];
   const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
   if (!latestShip && !latestPost) return null;
   return (
@@ -561,7 +569,7 @@ function CaseStudies() {
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <ChapterWord>Case studies</ChapterWord>
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// featured work</p>
+        <p className="section-eyebrow mb-2">// featured work</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Case studies</h2>
         <p className="mb-10 text-zinc-400">
           The work behind the numbers. Ask the chatbot for more depth on any of these.
@@ -587,7 +595,7 @@ function CaseStudies() {
               role="link"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
-              className="card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden rounded-2xl border border-line bg-card transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
+              className="panel card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
             >
               {/* Was multiplatform.gif — 108 frames cycling phone → watch →
                   widgets. Rendered at this card's crop, 3 of 4 sampled frames
@@ -638,7 +646,7 @@ function CaseStudies() {
         {rest.map((cs, i) => (
           <Reveal key={cs.slug} className="h-full" delay={(i % 2) * 120}>
             <TiltCard>
-              <article id={cs.slug} className="card-elevated group flex h-full scroll-mt-24 flex-col rounded-2xl border border-line bg-card p-6 transition hover:border-accent/50">
+              <article id={cs.slug} className="panel card-elevated group flex h-full scroll-mt-24 flex-col p-6 transition hover:border-accent/50">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-metric font-bold leading-none text-accent">{cs.metric}</p>
                   {/* Ornamental index, deliberately a ghost at 10% accent
@@ -705,7 +713,7 @@ function Projects() {
       <div className="section-y mx-auto max-w-5xl px-6">
         <ChapterWord>Things I've built</ChapterWord>
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// projects & open source</p>
+          <p className="section-eyebrow mb-2">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
             Open-source projects and tooling outside employer work — shipped end-to-end.
@@ -719,7 +727,11 @@ function Projects() {
               if (externalHref) window.open(externalHref, "_blank", "noreferrer");
             };
             const platforms = platformsOf(p.stack);
-            const isLive = LIVE_WEB_PROJECTS.has(p.slug);
+            // A playable web build is a fact the data already carries:
+            // `liveUrl` is documented Web-only (see ProjectTarget in
+            // profile.ts), so the presence of one IS the badge. The hand-kept
+            // Set beside it had never been told about the portfolio target.
+            const isLive = !!p.targets?.some((t) => t.liveUrl);
             const statLine = repoStatLine(p.slug);
             const media = cardMedia[p.slug];
             return (
@@ -736,7 +748,7 @@ function Projects() {
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }}
-                  className="card-elevated group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-line bg-card transition hover:-translate-y-1 hover:border-accent/50"
+                  className="panel card-elevated group flex h-full cursor-pointer flex-col overflow-hidden transition hover:-translate-y-1 hover:border-accent/50"
                 >
                   {media && (
                     <div className="relative h-44 shrink-0 overflow-hidden border-b border-line bg-void">
@@ -800,12 +812,16 @@ function Projects() {
                   )}
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
                   <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {p.highlights.slice(0, 2).map((h) => (
-                      <li key={h} className="flex gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                        {h}
-                      </li>
-                    ))}
+                    <Expandable
+                      items={p.highlights}
+                      visibleCount={2}
+                      renderItem={(h) => (
+                        <li key={h} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                          {h}
+                        </li>
+                      )}
+                    />
                   </ul>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {p.badges.map((b) => (
@@ -857,26 +873,11 @@ function Projects() {
 
         <Reveal>
           <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
-            Shared foundation
-          </h3>
-          <div className="rounded-2xl border border-line bg-card p-6">
-            <p className="max-w-3xl text-sm leading-relaxed text-zinc-300">{sharedFoundation.blurb}</p>
-            <FoundationGraph />
-            <p className="mt-4 font-mono text-[11px] text-muted">
-              ↓ both libraries are in <button type="button" onClick={() => goToSection("source")} className="text-accent transition hover:text-accent-dim">The Source</button>, one click from the code.
-            </p>
-          </div>
-        </Reveal>
-
-        <ReposShowcase />
-
-        <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
             Recently shipped
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {recentGrowth.slice(-4).reverse().map((g) => (
-              <div key={g.title} className="rounded-xl border border-line bg-card p-4">
+            {shippedNewestFirst.map((g) => (
+              <div key={g.title} className="panel-sm p-4">
                 <p className="text-xs text-muted">{g.date}</p>
                 <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
                 <p className="mt-1 text-sm leading-snug text-zinc-400">{g.detail}</p>
@@ -940,7 +941,7 @@ function ExperienceSection() {
       <div className="section-y mx-auto max-w-5xl px-6">
         <ChapterWord>Experience</ChapterWord>
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// background</p>
+          <p className="section-eyebrow mb-2">// background</p>
           <h2 className="font-display mb-10 text-h2 font-bold tracking-tight">Experience</h2>
         </Reveal>
         <div ref={trackRef} className="relative space-y-10 pl-8 sm:pl-10">
@@ -949,7 +950,7 @@ function ExperienceSection() {
             <Reveal key={job.company}>
               <div className="relative">
                 <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent bg-ink sm:-left-10" />
-                <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent/40 sm:p-6">
+                <div className="panel card-elevated p-5 transition hover:border-accent/40 sm:p-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="font-display text-xl font-bold">
                       {job.role} <span className="text-accent">@ {job.company}</span>
@@ -957,19 +958,23 @@ function ExperienceSection() {
                     <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">{job.period}</span>
                   </div>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    {job.points.slice(0, 4).map((p) => (
-                      <li key={p.text} className="flex gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                        <span>
-                          {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
-                          {p.text}
-                        </span>
-                      </li>
-                    ))}
+                    <Expandable
+                      items={job.points}
+                      visibleCount={4}
+                      renderItem={(p) => (
+                        <li key={p.text} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
+                          <span>
+                            {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
+                            {p.text}
+                          </span>
+                        </li>
+                      )}
+                    />
                   </ul>
                   {job.company.toLowerCase().includes("dice") && (
                     <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted">receipts</span>
+                      <span className="kicker">receipts</span>
                       {["50% → 95% GPS", "-80% crashes", "~87% UI Compose"].map((r) => (
                         <button
                           key={r}
@@ -982,24 +987,6 @@ function ExperienceSection() {
                       ))}
                     </div>
                   )}
-                  {job.points.length > 4 && (
-                    <details className="expander mt-3">
-                      <summary className="cursor-pointer select-none text-sm font-semibold text-accent/80 transition hover:text-accent">
-                        + {job.points.length - 4} more
-                      </summary>
-                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-300">
-                        {job.points.slice(4).map((p) => (
-                          <li key={p.text} className="flex gap-2">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                            <span>
-                              {p.label && <strong className="text-zinc-100">{p.label}: </strong>}
-                              {p.text}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  )}
                 </div>
               </div>
             </Reveal>
@@ -1007,7 +994,7 @@ function ExperienceSection() {
           <Reveal>
             <div className="relative">
               <span className="timeline-dot absolute -left-8 top-1.5 h-3 w-3 rounded-full border-2 border-accent2 bg-ink sm:-left-10" />
-              <div className="card-elevated rounded-2xl border border-line bg-card p-5 transition hover:border-accent2/40 sm:p-6">
+              <div className="panel card-elevated p-5 transition hover:border-accent2/40 sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <h3 className="font-display text-xl font-bold">
                     {education.degree} <span className="text-accent2">@ {education.school}</span>
@@ -1027,7 +1014,7 @@ function ExperienceSection() {
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
     { label: "~87% UI-layer Compose migration", href: "#work" },
-    { label: "Mileway · 35 modules", href: "#project/mileway" },
+    { label: `Mileway · ${projectStats.mileway.modules} modules`, href: "#project/mileway" },
   ],
   "Concurrency & Data": [
     { label: "-80% crashes", href: "#work" },
@@ -1052,7 +1039,7 @@ function Skills() {
   return (
     <section id="skills" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// tech stack</p>
+        <p className="section-eyebrow mb-2">// tech stack</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Skills</h2>
         <p className="mb-8 text-zinc-400">Filter by area, spin the orbit, or just hover the cloud.</p>
       </Reveal>
@@ -1082,7 +1069,7 @@ function Skills() {
 
       {active && PROVEN_IN[active] && (
         <div className="fade-in mt-5 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted">proven in</span>
+          <span className="kicker">proven in</span>
           {PROVEN_IN[active].map((p) => {
             const provenClass = "rounded-full border border-accent/30 bg-accent/5 px-3 py-1 text-xs text-accent/90 transition hover:border-accent hover:text-accent";
             const c = classifyHash(p.href);
@@ -1161,7 +1148,7 @@ function Contact() {
         </span>
         <h2 className="font-display mt-6 text-h2 font-bold tracking-tight">Hiring for a senior Android role?</h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-          Ask my AI assistant anything about my work, or reach out directly — I reply fast.
+          Ask my AI assistant anything about my work, or reach out directly. I reply fast.
         </p>
         {/* The ask, sized like it matters. Everything below it is a secondary
             route to the same person — so it gets the weight, and they get a row. */}
@@ -1211,18 +1198,31 @@ function Contact() {
  * seam, and the panel below it is already wearing the ink palette. You can see
  * the other life from here before you decide to walk into it.
  */
+/**
+ * How many of his Excelsior pieces are actually readable on this site.
+ *
+ * The copy below said "Four published stories, all readable here". Six carry
+ * kind "wrote" and five of those have a readSlug — the Cover Prologue has no
+ * reader page — so the sentence undercounted the work by one while claiming
+ * "all readable here", which is the specific pairing that makes it wrong
+ * rather than merely conservative. Derived now, because a number typed into a
+ * paragraph next to the data that decides it is a drift waiting to happen.
+ */
+const READABLE_PIECES = excelsiorMarks.filter((m) => m.kind === "wrote" && m.readSlug).length;
+const COUNT_WORD = ["no", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+
 function InkDoorway() {
   return (
     <section id="writing" className="border-t border-line">
       <div className="ink-threshold" aria-hidden />
       <div className="ink-world">
         <div className="section-y mx-auto max-w-5xl px-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// before the code</p>
+          <p className="kicker-accent">// before the code</p>
           <h2 className="font-display mt-3 text-h2">The Ink</h2>
           <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
             Before the Android work there were three years of a college magazine and a literary
             society — English Editor, then Joint Chief Editor of a 128-page edition shipped entirely
-            remotely. Four published stories, all readable here, and the pieces the board wrote
+            remotely. {COUNT_WORD[READABLE_PIECES] ?? READABLE_PIECES} published stories, all readable here, and the pieces the board wrote
             about me. It's a different life, so it gets a different room.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -1267,7 +1267,7 @@ function Doorway() {
     <section id="surfaces" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// not a PDF with a pulse</p>
+          <p className="section-eyebrow mb-2">// not a PDF with a pulse</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">This site is a live demo</h2>
           <p className="mb-6 max-w-2xl text-zinc-400">
             A running program, not a slide deck: {countWord(siteRooms.length)} interactive rooms, each a small proof
@@ -1323,6 +1323,11 @@ export function HomePage() {
         <FitCheck />
         <CaseStudies />
         <Projects />
+        {/* #source promoted to its own top-level section — was a <div> buried
+            near the end of #projects even though it's a first-class
+            destination in the footer, palette and navigation.ts. Same
+            treatment #shipped already gets: right after #projects. */}
+        <ReposShowcase />
         {/* Between the projects and the career: the projects section makes
             claims about work, this one is the work with an install button on
             it. It sits before the experience list on purpose — a recruiter who
@@ -1330,6 +1335,12 @@ export function HomePage() {
             end of the second. */}
         <ShippedShelf />
         <ExperienceSection />
+        {/* Skills sits with the evidence it proves, not after the gear change.
+            It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
+            the comment below calls the move from career evidence into
+            exploration — so the page's own stated narrative had a piece of
+            evidence stranded on the wrong side of its own divider. */}
+        <Skills />
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}
         <Circuit />
@@ -1338,7 +1349,6 @@ export function HomePage() {
             doorway — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
         <InkDoorway />
-        <Skills />
         <Contact />
       </main>
       <ScrollBot />

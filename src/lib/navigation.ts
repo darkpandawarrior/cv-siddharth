@@ -91,9 +91,13 @@ export const SECTION_ID_LIST = [
   "source",
   "shipped",
   "experience",
+  // Skills moved up beside the experience it proves, so every evidence
+  // section now completes BEFORE the Circuit divider that App.tsx's own
+  // comment calls the gear change into exploration. It used to sit after
+  // #surfaces and #writing, i.e. on the far side of that divider.
+  "skills",
   "surfaces",
   "writing",
-  "skills",
   "contact",
 ] as const;
 

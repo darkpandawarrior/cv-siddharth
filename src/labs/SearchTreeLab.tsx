@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
+import { projectBySlug } from "../data/profile.ts";
 
 /* ── Kursi ISMCTS Search Tree Lab ────────────────────────────────────── */
 // Real numbers from src/data/profile.ts "kursi" entry: 1.5k-16k ISMCTS
-// search iterations depending on difficulty tier, and the 6 named roles
-// under detail.roles. The source data does not enumerate all 10 bot
-// personas by name, so only these 6 roles are used for the "who's
-// deciding" readout.
+// search iterations depending on difficulty tier. The source data does not
+// enumerate all 10 bot personas by name, so the "who's deciding" readout
+// draws from the named roles it does carry.
 
 const TIERS = [
   { label: "Easy", target: 1500 },
@@ -17,9 +17,11 @@ const TIERS = [
   { label: "Grandmaster", target: 16000 },
 ];
 
-const ROLES = ["Netaji Vachan", "Bhai Teja", "Babu Filewala", "Jugaadu Chhotu", "Vakil Loophole", "Patrakaar"];
+// Straight off the case study's own roster — the names used to be re-typed
+// here, which is a second copy of a list that only ever lives in one place.
+const ROLES = projectBySlug("kursi")?.detail?.roles?.map((r) => r.name) ?? [];
 
-const GOLD = "#E8C874";
+const GOLD = "var(--lab-gold)";
 const HEADING_FONT = "'Rozha One', Georgia, serif";
 
 interface TreeNode {
@@ -219,7 +221,7 @@ export function SearchTreeLab() {
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" aria-label="ISMCTS search tree growth simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="ISMCTS search tree growth simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -231,8 +233,8 @@ export function SearchTreeLab() {
                 aria-pressed={tierIndex === i}
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition ${
                   tierIndex === i
-                    ? "border-[#E8C874] bg-[#E8C874]/15 text-[#E8C874]"
-                    : "border-line text-zinc-400 hover:border-[#E8C874]/40 hover:text-zinc-200"
+                    ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-[var(--lab-gold)]"
+                    : "border-line text-zinc-400 hover:border-[var(--lab-gold)]/40 hover:text-zinc-200"
                 }`}
               >
                 {t.label}
@@ -241,7 +243,7 @@ export function SearchTreeLab() {
           </div>
           <button
             onClick={runSearch}
-            className="rounded-full border border-[#E8C874]/50 bg-[#E8C874]/10 px-3 py-1 font-mono text-[11px] font-semibold text-[#E8C874] transition hover:bg-[#E8C874]/20"
+            className="rounded-full border border-[var(--lab-gold)]/50 bg-[var(--lab-gold)]/10 px-3 py-1 font-mono text-[11px] font-semibold text-[var(--lab-gold)] transition hover:bg-[var(--lab-gold)]/20"
           >
             run search
           </button>
@@ -249,7 +251,7 @@ export function SearchTreeLab() {
             iterations: {display.iterations} / {display.target} · difficulty: {display.tier}
           </span>
           {result && (
-            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-[#E8C874]">
+            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-[var(--lab-gold)]">
               role: {result.role}, chosen
             </span>
           )}

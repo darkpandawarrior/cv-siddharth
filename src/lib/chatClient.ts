@@ -19,22 +19,33 @@ export const CHAT_API_URL: string = import.meta.env.VITE_CHAT_API_URL || "/api/c
 export const CHAT_FALLBACK =
   "The chat backend isn't configured yet (missing API key). You can reach Siddharth directly at **siddharthpandalai990@gmail.com**.";
 
+// A provider is down, but the site is set up correctly and waiting helps.
+// Kept separate from CHAT_FALLBACK because the two are different facts about
+// the site and only one of them is the owner's fault.
+export const CHAT_UNAVAILABLE =
+  "My assistant is having trouble reaching its provider right now. Try again in a moment, or reach Siddharth directly at **siddharthpandalai990@gmail.com**.";
+
 /**
- * What a visitor should read when a reply fails. Most failures are the site's
- * problem (no key, upstream down) and get the contact fallback; a 429 from the
- * endpoint's rate limiter is the one case where the server's own message is
- * written for the visitor and actually actionable ("wait a moment").
+ * What a visitor should read when a reply fails.
  *
- * 400/413 get their own line: they mean "this request was too big", which is
- * neither the contact fallback's fault nor something waiting fixes. Telling
- * someone the backend isn't configured when the real problem is a long
- * transcript left them stuck with no way out.
+ * The server goes to real trouble to tell 503 (a config or auth failure, which
+ * the owner must fix) apart from 502 (a provider genuinely down, which nobody
+ * can fix by editing anything) and logs them differently. This function used
+ * to throw that distinction away and hand both the same line: "the chat
+ * backend isn't configured yet (missing API key)". On a 502 that is simply
+ * false. Every key is set, the site is fine, and it tells a recruiter the
+ * owner shipped a half-built feature.
+ *
+ * 429 passes the server's own message through, the one case where it is
+ * written for the visitor and actionable. 400/413 mean the request was too
+ * big, which waiting does not fix.
  */
 export function chatErrorText(err: unknown): string {
   const status = err instanceof Error ? err.cause : undefined;
   if (status === 429) return (err as Error).message;
   if (status === 400 || status === 413)
-    return "That was too long for me to take in one go — try a shorter message, or `/clear` to start a fresh conversation.";
+    return "That was too long for me to take in one go. Try a shorter message, or `/clear` to start a fresh conversation.";
+  if (status === 502) return CHAT_UNAVAILABLE;
   return CHAT_FALLBACK;
 }
 

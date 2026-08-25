@@ -23,6 +23,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "weeb.ts");
 const cacheDir = join(root, ".weeb-cache");
@@ -41,7 +42,37 @@ const ALIAS = {
   "Stein’s;Gate": "Steins;Gate",
   "Bayblade: Metal Fusion": "Beyblade: Metal Fusion",
   Bayblade: "Beyblade",
-  "Boruto: Naruto Next Generations": "Boruto",
+  // NOT aliased to "Boruto". That search returns the 1-episode MOVIE (id
+  // 21220), not the 293-episode TV series (id 97938) — so this alias was
+  // actively corrupting the row it was written to help, giving the series the
+  // film's episode count, sequels and crowd score. The full title resolves
+  // correctly on its own. Verified against AniList directly, 2026-08-24.
+  // Typos and shorthands in the source rows, mapped to what AniList answers
+  // to. Aliasing here rather than editing his CSV on purpose: the CSV is his
+  // record of what he watched and how he wrote it down, and a generator has
+  // no business silently correcting a person's own list. This map is the
+  // seam where "what he typed" meets "what the API calls it".
+  // Added 2026-08-25 after a full-corpus run left 33 of 479 unmatched.
+  Hormiya: "Horimiya",
+  "The Misfit Of Demon King Academyu": "The Misfit of Demon King Academy",
+  "Akuma Drive": "Akudama Drive",
+  "Uramuchi oniisan": "Uramichi Oniisan",
+  "Ganbare Doki-chan": "Ganbare Douki-chan",
+  "FMA Brotherhood": "Fullmetal Alchemist: Brotherhood",
+  "ReZero: Starting Life In Another World": "Re:ZERO -Starting Life in Another World-",
+  "Daily Life Of Highschool Boys": "Daily Lives of High School Boys",
+  "Daily Lives of Highschool Boys": "Daily Lives of High School Boys",
+  "Akashic Record Of Bastard Magic Instructor": "Akashic Records of Bastard Magic Instructor",
+  "Komi San Can’t Communicate": "Komi Can't Communicate",
+  "5 Centimetres Per Second": "5 Centimeters per Second",
+  "How To Raise A Boring Girlfriend Fine": "Saenai Heroine no Sodatekata Fine",
+  "Peter Grill and The Philosophers Time": "Peter Grill and the Philosopher's Time",
+  "I couldnt become a hero so I reluctantly decided to get a job": "I Couldn't Become a Hero, So I Reluctantly Decided to Get a Job",
+  "Problem children are coming from another world arent they": "Problem Children Are Coming from Another World, Aren't They?",
+  "I have been killing slimes for 300 years and maxed out my level": "I've Been Killing Slimes for 300 Years and Maxed Out My Level",
+  "A big sister is all you need": "Imouto sae Ireba Ii.",
+  "Flavours of Youth": "Flavors of Youth",
+  "Let Me Eat Your Pancreas": "I Want to Eat Your Pancreas",
 };
 
 /**
@@ -75,7 +106,7 @@ const cache = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, "utf8")
 let fetched = 0, failed = 0;
 
 const QUERY = `query($s:String,$t:MediaType){ Page(perPage:1){ media(search:$s, type:$t){
-  id title{romaji english} episodes chapters seasonYear status averageScore popularity genres siteUrl
+  id title{romaji english native} synonyms episodes chapters seasonYear status averageScore popularity genres siteUrl
   coverImage{ medium }
   relations{ edges{ relationType node{ id type title{romaji english} status seasonYear format } } } } } }`;
 
@@ -85,10 +116,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function lookup(title, type) {
   const key = `${type}:${title}`;
   if (key in cache) return cache[key];
-  const search = ALIAS[title] ?? title;
+  // Straighten curly quotes and collapse stray whitespace before searching.
+  // AniList indexes ASCII apostrophes, so "Komi San Can’t Communicate" and
+  // "The World’s Finest Assassin" missed on a character the CSV export chose,
+  // not on anything he typed wrong. A trailing space did the same to
+  // "Go Go Loser Ranger! ". Normalising the SEARCH leaves his rows untouched.
+  const search = (ALIAS[title] ?? title).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim();
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(API, {
+      const res = await fetchWithTimeout(API, {
         method: "POST",
         headers: HEADERS,
         body: JSON.stringify({ query: QUERY, variables: { s: search, t: type } }),
@@ -101,7 +137,13 @@ async function lookup(title, type) {
       if (!res.ok) throw new Error(String(res.status));
       const json = await res.json();
       const m = json?.data?.Page?.media?.[0] ?? null;
-      cache[key] = m;
+      // A MISS IS NOT CACHED. The cache key is the CSV title, but the SEARCH
+      // is ALIAS[title] ?? title — so a cached null survives the very fix
+      // meant to resolve it: add an alias for a typo, rerun, and the lookup
+      // short-circuits on last run's null and nothing changes. Caching only
+      // hits means an alias takes effect on the next run, which is the whole
+      // point of having the alias map.
+      if (m) cache[key] = m;
       fetched++;
       await sleep(700);
       return m;
@@ -112,6 +154,32 @@ async function lookup(title, type) {
   }
   return null;
 }
+
+/**
+ * BOTH names, never one.
+ *
+ * This used to emit `m.title.english || m.title.romaji`, which collapsed every
+ * show to a single string — so the corpus displayed English where AniList had
+ * an English title and Japanese romaji where it did not, and the page read as
+ * a mix of the two with no rule behind it.
+ *
+ * Keeping both also fixes something no string comparison could: "Seven Deadly
+ * Sins" and "Nanatsu no Taizai" are the same show, and his lists contain both.
+ * No amount of punctuation-stripping unifies those, but they resolve to the
+ * same AniList id, which is what `duplicates` below is built from.
+ */
+const alOf = (m) => ({
+  id: m.id,
+  english: m.title.english ?? null,
+  romaji: m.title.romaji ?? null,
+  native: m.title.native ?? null,
+  /** The one to render. English where it exists, romaji otherwise — stated as
+   *  a rule here rather than re-decided at each call site. */
+  title: m.title.english || m.title.romaji,
+  crowd: m.averageScore ?? null,
+  url: m.siteUrl ?? "",
+  cover: m.coverImage?.medium ?? "",
+});
 
 const stars = (s) => (s.match(/⭐/g) || []).length;
 const int = (s) => (/^\d+$/.test(s.trim()) ? Number(s.trim()) : null);
@@ -147,8 +215,7 @@ for (const r of anime) {
     genres: (r.Genre || "").split(",").map((g) => g.trim()).filter(Boolean),
     al: m
       ? {
-          id: m.id,
-          title: m.title.english || m.title.romaji,
+          ...alOf(m),
           episodes: m.episodes ?? null,
           crowd: m.averageScore ?? null,
           genres: m.genres ?? [],
@@ -174,7 +241,7 @@ for (const r of manga) {
     score: stars(r["Score /5"] ?? ""),
     chaptersRead: int(r["Chapters Read"] ?? ""),
     chaptersTotal: int(r["Total Chapters"] ?? "") ?? m?.chapters ?? null,
-    al: m ? { id: m.id, title: m.title.english || m.title.romaji, crowd: m.averageScore ?? null, url: m.siteUrl ?? "", cover: m.coverImage?.medium ?? "" } : null,
+    al: m ? alOf(m) : null,
   });
 }
 
@@ -204,8 +271,52 @@ const caughtUpRate = (status) => {
 // exists. This is the list the Notion table structurally cannot produce.
 const stale = shows
   .filter((s) => s.al?.sequels.length && s.done != null && s.out != null && s.done >= s.out)
-  .map((s) => ({ name: s.name, sequel: s.al.sequels[0].title, year: s.al.sequels[0].year, status: s.al.sequels[0].status }))
+  .map((s) => ({
+    // `name` is HIS spelling from the CSV, which is a mix of English and
+    // romaji because that is how he typed them over the years. `title` is
+    // AniList's canonical English-or-romaji, and `romaji` is beside it — so a
+    // surface can render ONE convention consistently instead of showing
+    // whatever each row happened to be typed as, and can still show the other
+    // name where that is the useful thing.
+    name: s.name,
+    title: s.al.title,
+    romaji: s.al.romaji,
+    english: s.al.english,
+    sequel: s.al.sequels[0].title,
+    year: s.al.sequels[0].year,
+    status: s.al.sequels[0].status,
+  }))
   .sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
+
+/**
+ * The same show, listed twice under two languages.
+ *
+ * His lists carry "Seven Deadly Sins" AND "Nanatsu no Taizai"; the corpus had
+ * no way to know those are one show, because no amount of case-folding or
+ * punctuation-stripping turns one into the other. AniList does know — both
+ * resolve to the same media id — so the id is the only reliable key, and this
+ * is the one duplicate check that actually works.
+ *
+ * Reported rather than auto-merged. Which of the two spellings he wants to
+ * keep, and which row holds the score he meant, is his call, not a
+ * generator's. Silently collapsing rows in a corpus whose whole argument is
+ * that it is honestly kept would be the wrong kind of clever.
+ */
+const byAniListId = new Map();
+for (const s0 of shows) {
+  if (!s0.al?.id) continue;
+  const list = byAniListId.get(s0.al.id) ?? [];
+  list.push(s0.name);
+  byAniListId.set(s0.al.id, list);
+}
+const duplicates = [...byAniListId.entries()]
+  .filter(([, names]) => names.length > 1)
+  .map(([id, names]) => ({
+    anilistId: id,
+    rows: names,
+    english: shows.find((x) => x.al?.id === id)?.al?.english ?? null,
+    romaji: shows.find((x) => x.al?.id === id)?.al?.romaji ?? null,
+  }));
 
 // Taste vs the crowd. AniList scores 0-100, his are 1-5 — compare each on its
 // own scale (his ×20) only where BOTH exist, and say n out loud.
@@ -246,6 +357,7 @@ const out = {
     chaptersRead: books.reduce((n, b) => n + (b.chaptersRead ?? 0), 0),
   },
   stale,
+  duplicates,
   divergence: { n: rated.length, top: divergence.slice(0, 6), bottom: divergence.slice(-6).reverse() },
   // The per-title arrays are deliberately NOT emitted. Nothing renders them —
   // the room shows aggregates and eight example rows — and shipping all 154
@@ -264,6 +376,6 @@ writeFileSync(
 
 console.log(
   `[gen-weeb] ${shows.length} anime + ${books.length} manga · ${fetched} fetched, ${Object.keys(cache).length} cached · ` +
-    `${out.anime.matched}/${shows.length} matched · ${stale.length} stale rows · ` +
+    `${out.anime.matched}/${shows.length} matched · ${stale.length} stale rows · ${duplicates.length} cross-language duplicate(s) · ` +
     `${out.anime.unwatchedSeasons} unwatched seasons → src/data/weeb.ts`,
 );

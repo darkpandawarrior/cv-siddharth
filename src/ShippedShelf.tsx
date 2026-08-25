@@ -58,10 +58,10 @@ export function ShippedShelf() {
   return (
     <section id="shipped" className="border-t border-line">
       <div className="section-y mx-auto max-w-5xl px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
+        <p className="section-eyebrow mb-2">
           // on the store
         </p>
-        <h2 className="font-display text-section font-bold tracking-tight">Apps you can install</h2>
+        <h2 className="font-display text-h2 font-bold tracking-tight">Apps you can install</h2>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Shipped Android work, live on Google Play. Every rating and install count below was read
           from the listing itself, not quoted.
@@ -74,10 +74,10 @@ export function ShippedShelf() {
                 href={app.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1 hover:border-accent"
+                className="panel group flex h-full flex-col p-5 transition hover:-translate-y-1 hover:border-accent"
               >
                 <AppIcon app={app} size={44} />
-                <span className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <span className="kicker mt-4">
                   {app.employer}
                 </span>
                 <span className="font-display mt-1 text-lg font-bold transition group-hover:text-accent">

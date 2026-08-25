@@ -85,8 +85,8 @@ const MODES: {
     id: "fly",
     label: "Fly",
     icon: Orbit,
-    available: hasWebGL,
-    unavailable: "Needs WebGL — try Sketch mode",
+    available: canDriveWithKeyboard,
+    unavailable: "Needs WebGL and a keyboard for WASD movement — try Sketch mode",
     tagline: "a live 3D fly-through — drag to orbit, WASD to move",
     hint: "Fly through the room in 3D",
   },
@@ -94,8 +94,8 @@ const MODES: {
     id: "ascii",
     label: "ASCII",
     icon: Terminal,
-    available: hasWebGL,
-    unavailable: "Needs WebGL — try Sketch mode",
+    available: canDriveWithKeyboard,
+    unavailable: "Needs WebGL and a keyboard for WASD movement — try Sketch mode",
     tagline: "a real-time ASCII render — drag to orbit, WASD to move",
     hint: "The same room, rendered as glyphs",
   },
@@ -109,6 +109,20 @@ const MODES: {
     hint: "Draw, drag and leave notes on a 2D whiteboard",
   },
 ];
+
+/* Fly/ASCII move the camera with WASD/arrow keys (Blueprint3D.tsx) — orbit
+ * and pinch-zoom work via OrbitControls' own touch support, but the site has
+ * no virtual joystick, so a touch-primary device has no way to drive
+ * movement at all. Same call StoryMap.tsx makes before mounting its own
+ * three.js scene (there: skip 3D below its "isSmallScreen" breakpoint rather
+ * than hand over a scene the device can't drive); here the exact capability
+ * missing is a keyboard, so the check is pointer type, not screen width — a
+ * touch-primary device fails "(pointer: coarse)" even on a large tablet.
+ * hasWebGL() already returns false during SSR (no `document`), so by the
+ * time the `&&` reaches matchMedia we're in a real browser. */
+function canDriveWithKeyboard(): boolean {
+  return hasWebGL() && !window.matchMedia("(pointer: coarse)").matches;
+}
 
 const loadingFallback = <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading…</div>;
 
@@ -131,6 +145,11 @@ function BlueprintRoomInner() {
     [licenseGated],
   );
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0];
+  // Only reachable when NOTHING is available (activeMode falls back to Fly,
+  // unselected) — the header's own tagline for Fly names WASD, which would
+  // repeat the same "press a key you don't have" problem this file exists to
+  // fix, for a mode that isn't even the one on screen.
+  const headline = isAvailable(activeMode) ? activeMode.tagline : activeMode.unavailable;
   const bump = usePulse();
 
   const onLicenseGate = useCallback(() => {
@@ -170,8 +189,8 @@ function BlueprintRoomInner() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
-            <Compass size={13} className="text-accent" /> The Blueprint Room — {activeMode.tagline}
+          <span className="kicker hidden items-center gap-2 lg:flex">
+            <Compass size={13} className="text-accent" /> The Blueprint Room — {headline}
           </span>
           {/* Wraps: the mode pills, the tour, Reset and Ask add up to ~339px,
               which does not fit a 320px window even on its own line — and
@@ -256,7 +275,7 @@ function BlueprintRoomInner() {
         </nav>
       </header>
       <main id="main-content" tabIndex={-1} className="relative min-h-0 flex-1">
-        <h1 className="sr-only">The Blueprint Room — {activeMode.tagline}</h1>
+        <h1 className="sr-only">The Blueprint Room — {headline}</h1>
         <Suspense fallback={loadingFallback}>
           {!isAvailable(activeMode) ? (
             // Only reachable when nothing can run here (no WebGL *and* no

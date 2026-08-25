@@ -17,47 +17,55 @@ import { excelsiorEditions } from "./data/excelsior.ts";
  * out to them for anyone who wants the source file.
  */
 
-/** Page counts come from the generated manifest — never hand-written here. */
-const pagesIn = (year: string) => excelsiorEditions.find((e) => e.year === year)?.pages ?? 0;
-
 interface Edition {
   year: string;
+  /** Page count and MANIT's own PDF, straight off the generated manifest. */
+  pages: number;
+  source: string;
   role: string;
   cover: string;
   /** The spread this site can vouch for — where the masthead credit appears. */
   spread?: { src: string; alt: string; caption: string };
-  flipbook: string;
-  pdf: string;
 }
 
-const EXCELSIOR: Edition[] = [
-  {
-    year: "2021",
+/**
+ * What the manifest cannot know: which masthead seat he held that year, and
+ * which spread this site has actually captured. Everything else on a card is
+ * derived — the year and page count from gen-excelsior.mjs's output, the PDF
+ * from the `source` it recorded, the cover from the file convention
+ * (public/excelsior/cover-<year>.jpg) that Picture then resolves to its
+ * avif/webp siblings.
+ *
+ * A hand-typed `pdf` used to sit beside the manifest's `source` saying the
+ * same thing, and a `flipbook` field sat beside both with no reader at all.
+ * Render a new edition and it appears here with a neutral role rather than
+ * nothing.
+ */
+const EDITION_CHROME: Record<string, Pick<Edition, "role"> & Partial<Pick<Edition, "spread">>> = {
+  "2021": {
     role: "Joint Chief Editor",
-    cover: "/excelsior/cover-2021.jpg",
     spread: {
       src: "/excelsior/spread-2021.jpg",
       alt: "Excelsior '21 page 5 — the editors' farewell letter, signed by Siddharth Pandalai as Joint Chief Editor.",
       caption: "Excelsior '21, p.5 — the sign-off. My last issue on the board.",
     },
-    flipbook: "https://flip.manit.ac.in/",
-    pdf: "https://flip.manit.ac.in/wp-content/uploads/2024/04/Excelsior-2021.pdf",
   },
-  {
-    year: "2020",
-    role: "English Editor",
-    cover: "/excelsior/cover-2020.jpg",
-    flipbook: "https://flip.manit.ac.in/",
-    pdf: "https://flip.manit.ac.in/wp-content/uploads/2024/04/Excelsior-2020.pdf",
-  },
-  {
-    year: "2019",
-    role: "English Editor",
-    cover: "/excelsior/cover-2019.jpg",
-    flipbook: "https://flip.manit.ac.in/",
-    pdf: "https://flip.manit.ac.in/wp-content/uploads/2024/04/Excelsior-2019-.pdf",
-  },
-];
+  "2020": { role: "English Editor" },
+  "2019": { role: "English Editor" },
+};
+
+const EXCELSIOR: Edition[] = excelsiorEditions.map((e) => {
+  const chrome = EDITION_CHROME[e.year];
+  return {
+    ...e,
+    ...chrome,
+    cover: `/excelsior/cover-${e.year}.jpg`,
+    // After the spread, not before it. Written the other way round the
+    // fallback is dead for any year chrome names, which is what tsc -b was
+    // reporting: "specified more than once, so this usage will be overwritten".
+    role: chrome?.role ?? "Editorial Board",
+  };
+});
 
 function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void }) {
   const openable = Boolean(ed.spread);
@@ -79,7 +87,7 @@ function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void
       {/* The whole issue is hosted here now — the shelf is the way in, not a
           teaser that hands you off to somebody else's site. */}
       <Link to="/excelsior" search={{ year: Number(ed.year), page: 1 }} className="magazine-action">
-        Read all {pagesIn(ed.year)} pages <ArrowUpRight size={12} />
+        Read all {ed.pages} pages <ArrowUpRight size={12} />
       </Link>
       {openable && (
         <button type="button" onClick={() => onOpen(ed)} className="magazine-action magazine-action-quiet">
@@ -144,7 +152,7 @@ export function ExcelsiorShelf() {
           />
           <p className="mt-4 max-w-xl text-center text-sm text-zinc-400">{open.spread.caption}</p>
           <a
-            href={open.pdf}
+            href={open.source}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}

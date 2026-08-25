@@ -10,7 +10,9 @@ import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
 import { anthology, anthologyEntries, entriesOfSeason } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
+import { ReactionRow } from "../play/ReactionRow.tsx";
 
+import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 // Starmap.tsx is a named export, not a default one — the plain object shape
 // React.lazy() requires is built here rather than by changing that file's
 // export style for the convenience of one caller.
@@ -19,18 +21,20 @@ const Starmap = lazy(() => import("../Starmap.tsx").then((m) => ({ default: m.St
 /**
  * The Morkinstar Journals — the anthology hub, one room deeper than /ink.
  *
- * Season 1 files a legend for every world it visits and numbers each entry.
- * Season 2 stops filing, so it has pages instead of entries and a case
- * instead of a directory. Same skin, same route, deliberately different
- * objects: season one's cards are flat and sharp-cornered, season two's tilt
- * and glow and sit very slightly askew, the way loose paper does on a desk.
+ * The first season files a legend for every world it visits and numbers each
+ * entry. Every season after it drops something the one before took for
+ * granted, so the counting scheme belongs to the season rather than to the
+ * anthology, and this file asks which season a card is from before it can say
+ * what number to print on it. Same skin, same route, deliberately different
+ * objects: the filing season's cards are flat and sharp-cornered, the later
+ * ones tilt and glow and sit very slightly askew, the way loose paper does on
+ * a desk.
  * The starmap is the third way to arrive at a story — geography instead of a
  * table of contents — and it is the one thing on this page heavy enough to
  * need its own lazy chunk.
  */
 export const Route = createFileRoute("/anthology")({
   head: () => roomHead("/anthology"),
-  ssr: false,
   component: AnthologyRoute,
 });
 
@@ -40,109 +44,119 @@ function AnthologyRoute() {
   const [tab, setTab] = useState<Tab>(1);
 
   return (
-    <div className="ink-world min-h-screen">
-      <header className="border-b border-line">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-          <Link to="/ink" className="flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
-            <ArrowLeft size={16} /> The Ink
-          </Link>
-          <WorldSwitch current="ink" />
-        </nav>
-      </header>
+    <DeferredPlayRoom>
+      <div className="ink-world min-h-screen">
+        <header className="border-b border-line">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+            <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+              <ArrowLeft size={16} /> The Ink
+            </Link>
+            <WorldSwitch current="ink" />
+          </nav>
+        </header>
 
-      <main id="main-content" tabIndex={-1}>
-        <div className="section-y mx-auto max-w-5xl px-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-accent/80">// twenty entries, two seasons</p>
-          <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
-            {anthology.tagline}
-          </p>
-          {/* Three sentences, the whole premise: a correspondent, a recurring
-              census he cannot explain, and the one figure that never adds up. */}
-          <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-            A correspondent visits worlds that cannot yet leave them, and writes down the story each one
-            tells about its own weather. Every world he has ever surveyed independently reports fourteen
-            gods and fourteen monsters, the same count, worlds apart, with no contact between them. Nobody,
-            on any of them, can name the fourteenth.
-          </p>
+        <main id="main-content" tabIndex={-1}>
+          <div className="section-y mx-auto max-w-5xl px-6">
+            {/* Derived. "twenty entries, two seasons" had been wrong since
+                Season Three shipped, and /ink one route over already had the
+                same sentence drift the same way. The word is "pieces" for the
+                same reason it is there: season two and three records carry
+                entry 0, because they are pages and kindling, not Directory
+                entries. */}
+            <p className="kicker-accent">
+              // {anthologyEntries.length} pieces, {anthology.seasons.length} seasons
+            </p>
+            <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
+              {anthology.tagline}
+            </p>
+            {/* Three sentences, the whole premise: a correspondent, a recurring
+                census he cannot explain, and the one figure that never adds up. */}
+            <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+              A correspondent visits worlds that cannot yet leave them, and writes down the story each one
+              tells about its own weather. Every world he has ever surveyed independently reports fourteen
+              gods and fourteen monsters, the same count, worlds apart, with no contact between them. Nobody,
+              on any of them, can name the fourteenth.
+            </p>
 
-          <div role="group" aria-label="Choose a season" className="mt-10 flex flex-wrap gap-2">
-            {anthology.seasons.map((s) => (
+            <div role="group" aria-label="Choose a season" className="mt-10 flex flex-wrap gap-2">
+              {anthology.seasons.map((s) => (
+                <button
+                  key={s.n}
+                  type="button"
+                  onClick={() => setTab(s.n)}
+                  aria-pressed={tab === s.n}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    tab === s.n
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                  }`}
+                >
+                  {s.title}
+                </button>
+              ))}
               <button
-                key={s.n}
                 type="button"
-                onClick={() => setTab(s.n)}
-                aria-pressed={tab === s.n}
+                onClick={() => setTab("starmap")}
+                aria-pressed={tab === "starmap"}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tab === s.n
+                  tab === "starmap"
                     ? "border-accent bg-accent/15 text-accent"
                     : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
                 }`}
               >
-                {s.title}
+                The Starmap
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setTab("starmap")}
-              aria-pressed={tab === "starmap"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "starmap"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Starmap
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("tellers")}
-              aria-pressed={tab === "tellers"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "tellers"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Tellers
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("canon")}
-              aria-pressed={tab === "canon"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                tab === "canon"
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-              }`}
-            >
-              The Canon
-            </button>
+              <button
+                type="button"
+                onClick={() => setTab("tellers")}
+                aria-pressed={tab === "tellers"}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  tab === "tellers"
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                }`}
+              >
+                The Tellers
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("canon")}
+                aria-pressed={tab === "canon"}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  tab === "canon"
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                }`}
+              >
+                The Canon
+              </button>
+            </div>
+
+            {anthology.seasons.map((s) =>
+              tab === s.n ? (
+                <div key={s.n}>
+                  <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                    {s.blurb}
+                  </p>
+                  {/* The most load-bearing image in the set, and it only belongs
+                      on the season that files legends in the first place —
+                      Season Two's pages are a case file, not a census. */}
+                  {s.n === 1 && <TheFourteenPlate />}
+                  <SeasonGrid season={s.n} />
+                </div>
+              ) : null,
+            )}
+
+            {tab === "starmap" && <StarmapTab />}
+            {tab === "tellers" && <TellersTab />}
+            {tab === "canon" && <CanonTab />}
           </div>
-
-          {anthology.seasons.map((s) =>
-            tab === s.n ? (
-              <div key={s.n}>
-                <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                  {s.blurb}
-                </p>
-                {/* The most load-bearing image in the set, and it only belongs
-                    on the season that files legends in the first place —
-                    Season Two's pages are a case file, not a census. */}
-                {s.n === 1 && <TheFourteenPlate />}
-                <SeasonGrid season={s.n} />
-              </div>
-            ) : null,
-          )}
-
-          {tab === "starmap" && <StarmapTab />}
-          {tab === "tellers" && <TellersTab />}
-          {tab === "canon" && <CanonTab />}
-        </div>
-      </main>
-      <SiteFooter />
-      <FloatingChat />
-    </div>
+        </main>
+        <SiteFooter />
+        <FloatingChat />
+      </div>
+  </DeferredPlayRoom>
   );
 }
 
@@ -159,54 +173,72 @@ function SeasonGrid({ season }: { season: number }) {
 }
 
 function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boolean; index: number }) {
-  const kicker = e.season === 1 ? `ENTRY #${e.entry}` : `PAGE ${e.page} OF 91`;
+  // The 91 is canon, not a count: season two is titled The Ninety-One Pages
+  // and season three burns ninety of them. What is not canon is that every
+  // record has a page at all — the page he keeps carries 0, and unguarded
+  // that shipped as "PAGE 0 OF 91".
+  const kicker =
+    e.season === 1 ? `ENTRY #${e.entry}` : e.page ? `PAGE ${e.page} OF 91` : "THE PAGE HE KEEPS";
   // Season two's cards sit a little off true, alternating left and right —
   // the small imperfection that reads as "handled paper" rather than "filed
   // record". Season one gets none of this; a case file does not tilt.
   const rotate = cool ? 0 : index % 2 === 0 ? -0.6 : 0.7;
 
   const card = (
-    <Link
-      to="/read/$slug"
-      params={{ slug: e.slug }}
+    // The border and group-hover live on this wrapper, not the Link, so the
+    // reaction row below can sit inside the same card without nesting a
+    // <button> inside an <a> — invalid HTML, and it would fire the Link's
+    // navigation on every reaction click.
+    <div
       className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition ${
         cool ? "rounded-lg border-line hover:border-zinc-500" : "rounded-2xl border-accent/25 hover:border-accent/60"
       }`}
       style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
     >
-      {e.plate ? (
-        <Picture
-          src={e.plate}
-          alt=""
-          loading="lazy"
-          className={`w-full object-cover ${cool ? "grayscale-[35%] sepia-[10%]" : ""}`}
-          style={{ aspectRatio: "600 / 780" }}
-        />
-      ) : (
-        // The generator marks a plate "" when the fetch failed rather than
-        // silently reusing a stale image — this is that state rendered, not
-        // an <img> pointed at an empty src.
-        <div
-          className="flex items-center justify-center bg-void/40 font-mono text-[10px] uppercase tracking-widest text-muted"
-          style={{ aspectRatio: "600 / 780" }}
-        >
-          plate lost
+      <Link to="/read/$slug" params={{ slug: e.slug }} className="flex flex-1 flex-col">
+        {e.plate ? (
+          <Picture
+            src={e.plate}
+            alt=""
+            loading="lazy"
+            className={`w-full object-cover ${cool ? "grayscale-[35%] sepia-[10%]" : ""}`}
+            style={{ aspectRatio: "600 / 780" }}
+          />
+        ) : (
+          // The generator marks a plate "" when the fetch failed rather than
+          // silently reusing a stale image — this is that state rendered, not
+          // an <img> pointed at an empty src.
+          <div
+            className="kicker flex items-center justify-center bg-void/40"
+            style={{ aspectRatio: "600 / 780" }}
+          >
+            plate lost
+          </div>
+        )}
+        <div className="flex flex-1 flex-col p-4">
+          <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
+            {kicker}
+          </span>
+          {/* h2, not h3. These cards sit directly under the page's h1 with no
+              grouping heading between them, so h3 skipped a level, which
+              Lighthouse scores as a real failure and lighthouserc.json asserts
+              accessibility at 1.00 with /anthology in its list. The e2e axe
+              pass misses it because heading-order is moderate and that suite
+              fails only on serious and critical. */}
+          <h2 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h2>
+          <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
+            {e.planet}
+            {e.system ? ` · ${e.system}` : ""}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+            {e.blurb}
+          </p>
         </div>
-      )}
-      <div className="flex flex-1 flex-col p-4">
-        <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
-          {kicker}
-        </span>
-        <h3 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h3>
-        <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
-          {e.planet}
-          {e.system ? ` · ${e.system}` : ""}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-          {e.blurb}
-        </p>
+      </Link>
+      <div className="border-t border-line px-4 py-2">
+        <ReactionRow surface="anthology" itemId={e.slug} />
       </div>
-    </Link>
+    </div>
   );
 
   return <Reveal delay={(index % 3) * 80}>{cool ? card : <TiltCard>{card}</TiltCard>}</Reveal>;
@@ -270,7 +302,7 @@ function TellerCard({ witness: w }: { witness: AnthologyWitness }) {
     <>
       <img src={w.art} alt={alt} loading="lazy" width={1100} height={600} className="w-full object-cover" />
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-lg font-bold leading-snug">{w.name}</h3>
+        <h2 className="font-display text-lg font-bold leading-snug">{w.name}</h2>
         {w.of && (
           <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
             {w.of}
@@ -318,7 +350,7 @@ function StarmapTab() {
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
-        <label htmlFor="concluded-count" className="font-mono text-xs uppercase tracking-widest text-muted">
+        <label htmlFor="concluded-count" className="kicker">
           Concluded count
         </label>
         <input
@@ -341,14 +373,14 @@ function StarmapTab() {
       <div className="card-elevated relative mt-6 h-[520px] overflow-hidden rounded-2xl border border-line bg-void/60">
         <Suspense
           fallback={
-            <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-widest text-muted">
+            <div className="kicker flex h-full items-center justify-center">
               loading the starmap…
             </div>
           }
         >
           <Starmap concluded={concluded} onOpen={openWorld} />
         </Suspense>
-        <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <span className="kicker pointer-events-none absolute bottom-3 right-4">
           drag to orbit
         </span>
       </div>
@@ -404,13 +436,22 @@ const STANDARD_INTERVALS: { interval: string; realm: string; length: string }[] 
   { interval: "Vænheim", realm: "Vænheim", length: "not yet required" },
 ];
 
-// Every claim on this tab traces to one of these four files, so the links are
-// the receipt rather than decoration. The record file names, not "the bible"
-// or "the council", so a reader who wants to check the arithmetic in law six
-// can go straight to the line it came from.
+// Every claim on this tab traces to one of these files, so the links are the
+// receipt rather than decoration. The record file names, not "the bible" or
+// "the council", so a reader who wants to check the arithmetic in law six can
+// go straight to the line it came from.
+//
+// The bible rows are derived from the seasons themselves, because the upstream
+// filename is mechanical (bible.md for season one, s2-bible.md after it) and a
+// hand-kept list had already fallen a season behind: s3-bible.md exists and
+// this tab was not linking it. A fourth season now arrives with its own
+// receipt. The council records stay written out — they are dated audits of one
+// particular week, not a per-season artefact, so nothing derives them.
 const CANON_SOURCES: { file: string; note: string }[] = [
-  { file: "bible.md", note: "the seven laws, the unit table, the succession of the count" },
-  { file: "s2-bible.md", note: "the season two spine and the two dreads" },
+  ...anthology.seasons.map((s) => ({
+    file: s.n === 1 ? "bible.md" : `s${s.n}-bible.md`,
+    note: `the canon for season ${s.n}, ${s.title}`,
+  })),
   { file: "council-2026-08-15.md", note: "the record of the season one council" },
   { file: "council-s2-2026-08-15.md", note: "the cross-lab audit that killed six of the first ten season two premises" },
 ];
@@ -483,8 +524,8 @@ function CanonTab() {
       </section>
 
       <p className="mt-8 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-        Nothing above is asserted without a source. The two bibles and the two council records this tab
-        was drawn from are public:{" "}
+        Nothing above is asserted without a source. The bibles and the council records this tab was
+        drawn from are public:{" "}
         {CANON_SOURCES.map((s, i) => (
           <span key={s.file}>
             <a

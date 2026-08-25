@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
@@ -103,11 +102,10 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             {title} — {tagline}
           </span>
           <div className="flex items-center gap-2">
-            <CommandPalette />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -145,7 +143,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
                 <next.icon size={15} />
               </span>
               <span>
-                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted">next room</span>
+                <span className="kicker block">next room</span>
                 <span className="font-display text-sm font-bold text-zinc-100 transition group-hover:text-accent">
                   {next.label}
                 </span>

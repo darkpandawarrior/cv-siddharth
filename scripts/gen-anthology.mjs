@@ -18,6 +18,7 @@ import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "anthology.ts");
 const plateDir = join(root, "public", "p", "anthology", "plates");
@@ -34,7 +35,7 @@ const bail = (msg) => {
 
 let registry;
 try {
-  const res = await fetch(`${REPO}/data/registry.json`);
+  const res = await fetchWithTimeout(`${REPO}/data/registry.json`);
   if (!res.ok) throw new Error(`registry HTTP ${res.status}`);
   registry = await res.json();
 } catch (e) {
@@ -62,13 +63,13 @@ const entries = [];
 
 for (const e of src.entries) {
   try {
-    const res = await fetch(`${REPO}/${e.file}`);
+    const res = await fetchWithTimeout(`${REPO}/${e.file}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const body = strip(await res.text());
 
     let plate = "";
     if (e.plate) {
-      const img = await fetch(`${REPO}/${e.plate}`);
+      const img = await fetchWithTimeout(`${REPO}/${e.plate}`);
       if (img.ok) {
         const name = basename(e.plate);
         writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
@@ -81,7 +82,7 @@ for (const e of src.entries) {
     // where a second network round trip would show as a hole in the header.
     let sigil = "";
     const sigKey = `s${e.season}-${String(e.idx).padStart(2, "0")}`;
-    const sig = await fetch(`${REPO}/fiction/morkinstar-journals/assets/sigils/${sigKey}.svg`);
+    const sig = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/sigils/${sigKey}.svg`);
     if (sig.ok) sigil = (await sig.text()).trim();
 
     entries.push({
@@ -119,13 +120,13 @@ if (failed) bail(`${failed} fetch(es) failed`);
 // divider) and the bestiary of the fourteen, whose fourteenth slot is empty.
 let mark = "";
 try {
-  const r = await fetch(`${REPO}/fiction/morkinstar-journals/assets/mark.svg`);
+  const r = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/mark.svg`);
   if (r.ok) mark = (await r.text()).trim();
 } catch { /* the divider degrades to a plain rule, which is fine */ }
 
 let fourteen = "";
 try {
-  const r = await fetch(`${REPO}/fiction/morkinstar-journals/assets/web/the-fourteen.jpg`);
+  const r = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/web/the-fourteen.jpg`);
   if (r.ok) {
     writeFileSync(join(plateDir, "the-fourteen.jpg"), Buffer.from(await r.arrayBuffer()));
     fourteen = "/p/anthology/plates/the-fourteen.jpg";
@@ -142,7 +143,7 @@ mkdirSync(witnessDir, { recursive: true });
 const witnesses = [];
 for (const w of src.witnesses ?? []) {
   try {
-    const r = await fetch(`${REPO}/${w.art}`);
+    const r = await fetchWithTimeout(`${REPO}/${w.art}`);
     if (!r.ok) continue;
     // The source art is ~1.9MB apiece. Nothing on the web needs that, and
     // public/ feeds gen-images.mjs which will derive AVIF/WebP siblings from

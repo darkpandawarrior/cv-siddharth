@@ -1,10 +1,30 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
+import { surfaces } from "../src/data/surfaces.ts";
+
+/**
+ * Four hand-listed routes used to be the whole of this file, so fifteen of the
+ * site's nineteen got no console-error check at all — a route could throw on
+ * every load and nothing here would notice. The list is derived now, so a new
+ * surface is smoke-tested the moment it joins the registry rather than whenever
+ * someone remembers this file.
+ *
+ * The content assertion comes from the registry too: every room's <title> is
+ * built by routeHead() from the same `label`, so "the page rendered the thing
+ * it says it is" needs no per-route knowledge. The four routes that predate
+ * this keep their richer body assertions on top.
+ */
+const BODY_EXPECTATIONS: Record<string, RegExp> = {
+  "/": /Senior Android Engineer/i,
+  "/resume": /Experience/i,
+  "/project/mileway": /mileway/i,
+  "/lab": /Lab Bench/i,
+};
 
 const routes = [
-  { path: "/", expect: /Senior Android Engineer/i },
-  { path: "/resume", expect: /Experience/i },
-  { path: "/project/mileway", expect: /mileway/i },
-  { path: "/lab", expect: /Lab Bench/i },
+  ...surfaces.map((s) => ({ path: s.to, title: s.label, expect: BODY_EXPECTATIONS[s.to] })),
+  { path: "/", title: "Siddharth Pandalai", expect: BODY_EXPECTATIONS["/"] },
+  { path: "/project/mileway", title: "Mileway", expect: BODY_EXPECTATIONS["/project/mileway"] },
+  { path: "/read/deadline", title: "Deadline", expect: undefined },
 ];
 
 // Two requests are EXPECTED to 404 under local `vite preview` and only resolve
@@ -55,11 +75,27 @@ for (const r of routes) {
       // Resource-load failures are caught (with URL) by the response handler
       // above; their console form has no URL, so drop it here as redundant.
       if (m.text().includes("Failed to load resource:")) return;
+      // The shared layer's remote PartyKit room, not this site. Several
+      // browsers arriving at once can make it drop and answer the resulting
+      // burst of reconnects with a reset-sync timeout. PlayRoom is built for
+      // exactly this — the rooms render plain without it — so a handled
+      // reconnect failure in a dependency we do not host is not a smoke
+      // failure. The narrow string keeps every other playhtml error caught.
+      if (m.text().includes("Failed to reconnect after room-reset")) return;
       errors.push(m.text());
     });
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(r.path, { waitUntil: "networkidle" });
-    await expect(page.locator("body")).toContainText(r.expect);
+    // Derived from the registry: proves the route rendered its own identity,
+    // not merely that something rendered.
+    // 20s: the WebGL rooms are `ssr: false`, so their <title> does not exist
+    // until the client bundle hydrates — an empty title here is a slow route,
+    // not a broken one, and how fast it renders is lighthouse.yml's gate to
+    // keep, not this one's.
+    await expect(page).toHaveTitle(new RegExp(r.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), {
+      timeout: 20_000,
+    });
+    if (r.expect) await expect(page.locator("body")).toContainText(r.expect);
     expect(errors, errors.join("\n")).toEqual([]);
   });
 }

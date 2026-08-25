@@ -27,10 +27,46 @@ afterEach(() => {
 });
 
 describe("hasTldrawLicense", () => {
-  it("allows the whiteboard on any host once a licence key is configured", () => {
+  it("allows the whiteboard on any host once a VALID licence key is configured", () => {
     vi.stubEnv("VITE_TLDRAW_LICENSE_KEY", "tldraw-2026-08-12/payload.signature");
     at("https:", "cv-siddharth.vercel.app");
-    expect(hasTldrawLicense()).toBe(true);
+    // `now` is injected rather than mocked so the case states the date it is
+    // asserting about. This test used to pass a key dated 2026-08-12 with no
+    // date at all, which meant it silently became a test about an EXPIRED key
+    // on 2026-08-13 while still claiming to prove the licensed path.
+    expect(hasTldrawLicense(new Date("2026-08-01T00:00:00Z"))).toBe(true);
+  });
+
+  it("refuses an EXPIRED key, because offering the mode is worse than hiding it", () => {
+    // With no key, Sketch is never offered on https and a visitor loses
+    // nothing. With an expired one, the site advertised a mode tldraw then
+    // killed: verified live on 2026-08-24, the editor mounted at 2.5s and was
+    // gone by 6.5s. Degrading to "not offered" is the honest failure.
+    vi.stubEnv("VITE_TLDRAW_LICENSE_KEY", "tldraw-2026-08-12/payload.signature");
+    at("https:", "cv-siddharth.vercel.app");
+    expect(hasTldrawLicense(new Date("2026-08-24T00:00:00Z"))).toBe(false);
+  });
+
+  it("accepts a real-shaped key that has not expired yet", () => {
+    // The shape tldraw actually issues, confirmed against their own licence
+    // email: `tldraw-YYYY-MM-DD/<base64 payload>.<signature>`. This asserts
+    // the replacement Hobby key will be accepted the moment it is pasted into
+    // VITE_TLDRAW_LICENSE_KEY on Vercel, with no code change — the failure
+    // mode worth guarding is a parser that only ever saw the expired one.
+    vi.stubEnv(
+      "VITE_TLDRAW_LICENSE_KEY",
+      "tldraw-2027-08-12/WyJqM2tNS3Y3cSIsWyIqIl0sMTYsIjIwMjctMDgtMTIiXQ.scQXXsignature",
+    );
+    at("https:", "cv-siddharth.vercel.app");
+    expect(hasTldrawLicense(new Date("2026-08-24T00:00:00Z"))).toBe(true);
+  });
+
+  it("trusts a key whose shape it cannot parse", () => {
+    // tldraw may change its format. Rejecting something unreadable would
+    // disable a mode that would have worked.
+    vi.stubEnv("VITE_TLDRAW_LICENSE_KEY", "some-future-format-key");
+    at("https:", "cv-siddharth.vercel.app");
+    expect(hasTldrawLicense(new Date("2030-01-01T00:00:00Z"))).toBe(true);
   });
 
   it("allows it unlicensed on the loopback hosts tldraw exempts, https or not", () => {

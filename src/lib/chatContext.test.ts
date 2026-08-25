@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { projects, siteRooms } from "../data/profile.ts";
+import { surfaces } from "../data/surfaces.ts";
 import {
   HOME_GREETING,
   JD_PROMPT,
@@ -92,5 +93,22 @@ describe("ROUTE_PHRASES (what the server allowlists)", () => {
 
   it("has a phrase for every route routeInfo knows, and vice versa", () => {
     for (const route of Object.keys(ROUTE_PHRASES)) expect(routeInfo(route)?.route).toBe(route);
+  });
+});
+
+describe("the assistant knows every surface it can be standing on", () => {
+  it("has a phrase for every route in the registry", () => {
+    // It used to derive its rooms from profile.ts's siteRooms — one of the
+    // three older registries surfaces.ts replaced — and hand-list three pages
+    // beside them. That left it blind to six surfaces, /hire among them: ask
+    // Panda "what is this page" on the recruiter page and it did not know.
+    const missing = surfaces.filter((s) => !ROUTE_PHRASES[s.to]).map((s) => s.to);
+    expect(missing, `no phrase for: ${missing.join(", ")}`).toEqual([]);
+  });
+
+  it("never invents a route that is not a real surface", () => {
+    const real = new Set([...surfaces.map((s) => s.to), "/"]);
+    const invented = Object.keys(ROUTE_PHRASES).filter((r) => !real.has(r) && !r.startsWith("/project/"));
+    expect(invented, `phrases for routes that do not exist: ${invented.join(", ")}`).toEqual([]);
   });
 });

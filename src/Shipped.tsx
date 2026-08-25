@@ -13,6 +13,7 @@ import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
 import { compact } from "./shippedFormat.ts";
 
+import { SiteFooter } from "./SiteFooter.tsx";
 /**
  * The shelf, in full.
  *
@@ -87,10 +88,10 @@ export function Shipped() {
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-1 hover:border-accent"
+                  className="panel group flex h-full flex-col p-5 transition hover:-translate-y-1 hover:border-accent"
                 >
                   <AppIcon app={app} size={48} />
-                  <span className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <span className="kicker mt-4">
                     {app.employer}
                   </span>
                   <span className="font-display mt-1 text-lg font-bold transition group-hover:text-accent">
@@ -233,6 +234,10 @@ export function Shipped() {
           </p>
         </section>
       </main>
+      {/* surfaces.ts types this a "page"-kind surface, and the registry
+          docs promise those get the footer. These two were the exceptions:
+          ordinary scroll pages that dead-ended with no sitemap out. */}
+      <SiteFooter />
     </div>
   );
 }

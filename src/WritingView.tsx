@@ -6,7 +6,6 @@ import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import {
-  BOOKS_BEFORE_BROS,
   LOOPDOWN_REPO,
   PLATFORMS,
   SERIES_PROJECT,
@@ -15,10 +14,17 @@ import {
 } from "./data/writingMeta.ts";
 
 /**
- * The Loopdown — full writing hub at /#loopdown (teased in the home scroll
- * flow at /#writing). Field notes (dev content) plus the creative archive,
- * pulled from github.com/darkpandawarrior/the-loopdown via
- * scripts/gen-loopdown.mjs so it stays in sync with what's published.
+ * The Loopdown — the engineering half of the writing, at /loopdown. Field
+ * notes and the cast of personified bugs they star, pulled from
+ * github.com/darkpandawarrior/the-loopdown via scripts/gen-loopdown.mjs so it
+ * stays in sync with what's published.
+ *
+ * This used to render the creative archive too, and so did WritingSection on
+ * /ink: the same corpus, twice, in two skins. The two halves are split by
+ * world now. Engineering artifacts are what someone arriving at a control-room
+ * page came for, so the lessons and the cast stay here and the archive lives
+ * in the world it was written in. Each page keeps one sentence pointing at the
+ * other, which is a cross-link; two full grids was a fork.
  */
 
 // Cast accents cycle through the series palette — the characters roam between series.
@@ -26,7 +32,7 @@ const CAST_COLORS = ["#8f74ff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
 
 export function WritingView() {
   const { goToSection } = useSectionNav();
-  const { lessons, series, archive, cast } = writing;
+  const { lessons, series, cast } = writing;
   const sorted = [...lessons].sort((a, b) => {
     if ((a.status === "published") !== (b.status === "published")) return a.status === "published" ? -1 : 1;
     return (b.created || "").localeCompare(a.created || "");
@@ -81,8 +87,8 @@ export function WritingView() {
           </h1>
           <p className="mt-4 max-w-2xl text-zinc-400">
             Short, sharp lessons pulled from real Android and KMP work, each with a recurring cast of
-            personified bugs. Plus an archive of everything I wrote before I wrote code. One idea, written
-            once, adapted to dev.to, Medium, Hashnode, and LinkedIn.
+            personified bugs. One idea, written once, adapted to dev.to, Medium, Hashnode, and
+            LinkedIn.
           </p>
         </section>
 
@@ -98,7 +104,7 @@ export function WritingView() {
                 <Reveal key={l.slug} className="h-full" delay={(i % 2) * 100}>
                 <TiltCard>
                 <div
-                  className="card-elevated flex h-full flex-col rounded-xl border border-line bg-card p-5"
+                  className="panel-sm card-elevated flex h-full flex-col p-5"
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -120,7 +126,7 @@ export function WritingView() {
                   <div className="mt-auto pt-4">
                     {links.length > 0 && (
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
-                        <span className="font-mono text-[11px] uppercase tracking-wider text-muted">Read on</span>
+                        <span className="kicker">Read on</span>
                         {links.map((p) => (
                           <a
                             key={p.key}
@@ -177,7 +183,7 @@ export function WritingView() {
               The cast <span className="text-muted">· the bugs, personified</span>
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-              Every lesson stars a recurring character — the bug itself, given a face and a motive.
+              Every lesson stars a recurring character, the bug itself, given a face and a motive.
               Appearances so far:
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -202,45 +208,22 @@ export function WritingView() {
           </section>
         )}
 
-        {/* archive */}
+        {/* The other world, in one sentence. The archive grid that used to sit
+            here was the same corpus /ink renders, so a reader who followed
+            either page to the end met the same pieces twice and neither page
+            was the canonical one. It is a link now, not a fork. */}
         <section className="border-t border-line section-y">
-          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
-            Archive <span className="text-muted">· earlier writing</span>
-          </h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <a
-              href={BOOKS_BEFORE_BROS.url}
-              target="_blank"
-              rel="noreferrer"
-              className="group rounded-xl border border-accent2/30 bg-accent2/5 p-4 transition hover:border-accent2/60 sm:col-span-2"
+          <p className="max-w-2xl text-zinc-400">
+            Everything I wrote before I wrote code, the magazine years, the societies and the archive
+            they produced, lives in{" "}
+            <Link
+              to="/ink"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
             >
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="flex items-center gap-2 font-semibold text-zinc-100">
-                  <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
-                  <ArrowUpRight size={13} className="text-muted transition group-hover:text-accent2" />
-                </h3>
-                <span className="shrink-0 font-mono text-[11px] text-accent2/80">the origin blog</span>
-              </div>
-              <p className="mt-1.5 text-sm leading-snug text-zinc-400">
-                {BOOKS_BEFORE_BROS.blurb} Most of the pieces below were first published there —
-                booksbeforebros.wordpress.com.
-              </p>
-            </a>
-            {archive.map((a) => (
-              <div key={a.slug} className="rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="font-semibold text-zinc-100">{a.title}</h3>
-                  <span className="shrink-0 font-mono text-[11px] text-muted">{a.form}</span>
-                </div>
-                {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted">
-                  {a.era && <span>{a.era}</span>}
-                  {a.words && <span>{Number(a.words).toLocaleString()} words</span>}
-                  {a.words && <span>~{Math.max(1, Math.round(Number(a.words) / 220))} min read</span>}
-                </div>
-              </div>
-            ))}
-          </div>
+              The Ink
+            </Link>
+            .
+          </p>
         </section>
       </main>
     </div>

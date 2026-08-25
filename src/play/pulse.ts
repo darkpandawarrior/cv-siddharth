@@ -30,6 +30,7 @@ export const PULSE_EVENTS = {
   "playground:move": { label: "Rearranged the room tiles", group: "In the Playground" },
   "playground:tidy": { label: "Tidied the tiles back up", group: "In the Playground" },
   "wall:note": { label: "Left a note on the wall", group: "In the Playground" },
+  "ink:margin-note": { label: "Left a margin note", group: "In the Ink" },
   "chess:guess": { label: "Called a game won or lost", group: "In the Chess Room" },
   "chess:puzzle": { label: "Tried the daily puzzle", group: "In the Chess Room" },
 } as const;
@@ -43,8 +44,21 @@ const CHANNEL = "pulse-v1";
  * shouldn't read as a hundred people. Counting at most one of each event per
  * second per browser keeps a count meaning "someone did this" rather than "an
  * event loop ran". Module-level: shared by every hook instance on the page. */
-const DEDUPE_MS = 1000;
+export const DEDUPE_MS = 1000;
 const lastBump = new Map<PulseEvent, number>();
+
+/**
+ * `true` at most once per `windowMs` for a given key — a held finger or a
+ * mode toggle that fires on every render collapses to one count instead of
+ * forty. Exported so any other module-level counter (reactions.ts) shares the
+ * exact same rule instead of re-deriving it.
+ */
+export function dedupeOncePerSecond<K>(key: K, seen: Map<K, number>, windowMs = DEDUPE_MS): boolean {
+  const now = Date.now();
+  if (now - (seen.get(key) ?? 0) < windowMs) return false;
+  seen.set(key, now);
+  return true;
+}
 
 /** Read the shared counts — for /pulse, and for the per-room tallies. */
 export function usePulseCounts(): PulseCounts {
@@ -59,9 +73,7 @@ export function usePulse(): (event: PulseEvent) => void {
   const [, setCounts] = usePageData<PulseCounts>(CHANNEL, {});
   return useCallback(
     (event: PulseEvent) => {
-      const now = Date.now();
-      if (now - (lastBump.get(event) ?? 0) < DEDUPE_MS) return;
-      lastBump.set(event, now);
+      if (!dedupeOncePerSecond(event, lastBump)) return;
       setCounts((draft) => {
         draft[event] = (draft[event] ?? 0) + 1;
       });

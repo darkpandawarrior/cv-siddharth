@@ -1,49 +1,46 @@
-import { useMemo, useRef, type JSX } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
-import { CITY, type TallStructure } from "./city.ts";
+import type { TallStructure } from "./city.ts";
 import { westStructures } from "./districtWest.ts";
 import { eastStructures } from "./corpusData.ts";
 import { telemetry } from "./telemetry.ts";
-import { worldPalette } from "./palette.ts";
 import { TrackFilter, meanError, rawFix, stepDistance, type Fix } from "./gps.ts";
 
 /**
- * The location lens, drawn.
+ * The location lens — computed, no longer drawn as its own geometry
+ * (art-direction doc §12 step 3).
  *
- * Two trails follow the craft. The scattered one is what a raw GPS fix reports
- * — noisy in the open, falling apart next to the monuments, occasionally
- * spiking somewhere impossible. The clean one is the same signal after the
- * staged filter in gps.ts: spikes rejected, gaps dead-reckoned, the rest
- * smoothed. Drive past a tower and you can watch the raw track scatter while
- * the filtered one holds its line.
+ * This used to render two `<Line>`s: the scattered raw GPS fix and the
+ * filtered track holding its line against it. Night Survey's own read-line
+ * (Wake.tsx's Layer A/B, Terrain.tsx's Layer C — a transverse cursor plus a
+ * decaying wake plus a permanent worn-track groove) now draws "where the
+ * car is and has been" far more legibly than a thin raw/fused line pair
+ * ever did, and a flagged defect of the raw line specifically — "a busy
+ * tangle near the car on mobile" — is gone with it. Its colour (`c.warn`,
+ * `#f0883e`) was also outside §2's locked palette.
  *
- * This is the site's headline claim — GPS accuracy 50% to 95% on Mileway —
- * turned into something a visitor operates rather than reads. The numbers in
- * the HUD are computed from these very samples, not quoted from the CV.
+ * The GPS SIMULATION ITSELF is not decoration — it is the site's headline
+ * claim (GPS accuracy 50% to 95% on Mileway) made operable, and
+ * `fusedFix`/`telemetry.rawError`/`telemetry.fusedError`/
+ * `telemetry.odometer` all still feed real consumers (ResolveField.tsx's
+ * `stamp()` calls, the HUD's accuracy readout). So this file keeps computing
+ * exactly what it always did — the fix, the filter, the running error means
+ * — and only the two `<Line>`s and the point ring-buffers that fed them are
+ * gone.
  *
  * Sampled at a fixed 10Hz rather than per frame: a real receiver reports at
- * roughly this rate, per-frame sampling would make the "fix" suspiciously
- * smooth, and it keeps the buffers small.
+ * roughly this rate, and per-frame sampling would make the "fix" suspiciously
+ * smooth.
  */
 
 const SAMPLE_INTERVAL_S = 0.1;
-// 44, not 160. At 10Hz that is ~4 seconds of history instead of ~16, and the
-// difference is not subtle: a 160-point trail after a few hundred metres of
-// driving is a scribble covering the entire map, and because it also spanned
-// every respawn it drew long straight streaks from wherever you died back to
-// spawn. It read as a rendering bug, not as a GPS track. Short enough to say
-// "here is where you just were" and then get out of the way.
+// At 10Hz, ~4s of history is enough for the running error means below
+// without the buffer growing unbounded.
 const MAX_POINTS = 44;
 
 /** A jump further than this between samples is a respawn or a teleport, not
- *  driving — the trail restarts rather than drawing a line across the world. */
+ *  driving — the estimate resets rather than treating it as real motion. */
 const TELEPORT_M = 12;
-/** Trails float just above the surface so they are not z-fighting the ground.
- *  Reads CITY.groundY (city.ts), not worldData.ts's TERRAIN — city.ts is the
- *  one shared coordinate source every district and the ground itself derive
- *  from now, and this module has no other reason to import worldData.ts. */
-const TRAIL_Y = CITY.groundY + 0.06;
 
 /** Scale error on the inertial displacement — a real IMU under-reads slightly
  *  and that drift is precisely what the fix is there to correct. */
@@ -80,22 +77,9 @@ function structures(): TallStructure[] {
  */
 export const fusedFix: Fix = { x: 0, z: 0 };
 
-export function Trail(): JSX.Element {
-  const c = worldPalette();
+export function Trail(): null {
   const towers = useMemo(structures, []);
   const filter = useMemo(() => new TrackFilter(), []);
-
-  // Ring buffers, pre-filled at the origin so the Line geometries never have to
-  // be rebuilt — drei's <Line> rebuilds on a length change, and a trail that
-  // reallocated every 100ms would stutter.
-  const rawPoints = useRef<[number, number, number][]>(
-    Array.from({ length: MAX_POINTS }, () => [0, TRAIL_Y, 0]),
-  );
-  const fusedPoints = useRef<[number, number, number][]>(
-    Array.from({ length: MAX_POINTS }, () => [0, TRAIL_Y, 0]),
-  );
-  const rawRef = useRef<{ geometry: { setPositions: (p: number[]) => void } } | null>(null);
-  const fusedRef = useRef<{ geometry: { setPositions: (p: number[]) => void } } | null>(null);
 
   const clock = useRef(0);
   const sample = useRef(0);
@@ -103,7 +87,6 @@ export function Trail(): JSX.Element {
   const lastFused = useRef<Fix>({ x: 0, z: 0 });
   const rawErrors = useRef<number[]>([]);
   const fusedErrors = useRef<number[]>([]);
-  const flat = useRef<number[]>(new Array(MAX_POINTS * 3).fill(0));
 
   useFrame((_, delta) => {
     clock.current += delta;
@@ -129,10 +112,6 @@ export function Trail(): JSX.Element {
       fusedFix.x = truth.x;
       fusedFix.z = truth.z;
       filter.reset();
-      for (let i = 0; i < MAX_POINTS; i++) {
-        rawPoints.current[i] = [truth.x, TRAIL_Y, truth.z];
-        fusedPoints.current[i] = [truth.x, TRAIL_Y + 0.02, truth.z];
-      }
       return;
     }
     telemetry.odometer += moved;
@@ -177,48 +156,11 @@ export function Trail(): JSX.Element {
       telemetry.rawError = meanError(rawErrors.current);
       telemetry.fusedError = meanError(fusedErrors.current);
     }
-
-    rawPoints.current.shift();
-    rawPoints.current.push([fix.x, TRAIL_Y, fix.z]);
-    fusedPoints.current.shift();
-    fusedPoints.current.push([fused.x, TRAIL_Y + 0.02, fused.z]);
-
-    for (let i = 0; i < MAX_POINTS; i++) {
-      const p = rawPoints.current[i];
-      flat.current[i * 3] = p[0];
-      flat.current[i * 3 + 1] = p[1];
-      flat.current[i * 3 + 2] = p[2];
-    }
-    rawRef.current?.geometry.setPositions([...flat.current]);
-    for (let i = 0; i < MAX_POINTS; i++) {
-      const p = fusedPoints.current[i];
-      flat.current[i * 3] = p[0];
-      flat.current[i * 3 + 1] = p[1];
-      flat.current[i * 3 + 2] = p[2];
-    }
-    fusedRef.current?.geometry.setPositions([...flat.current]);
   });
 
-  return (
-    <>
-      {/* Raw: dim, warm, and visibly wrong. */}
-      <Line
-        ref={rawRef as never}
-        points={rawPoints.current}
-        color={c.warn}
-        lineWidth={1}
-        transparent
-        opacity={0.25}
-      />
-      {/* Fused: the line the app actually draws for a driver. */}
-      <Line
-        ref={fusedRef as never}
-        points={fusedPoints.current}
-        color={c.signal}
-        lineWidth={1.8}
-        transparent
-        opacity={0.55}
-      />
-    </>
-  );
+  // Nothing left to draw — see the module comment. World.tsx still mounts
+  // this component unconditionally, for the same reason ResolveField.tsx's
+  // own now-invisible half does: the GPS simulation and its telemetry writes
+  // have to run every frame regardless of what (if anything) renders.
+  return null;
 }

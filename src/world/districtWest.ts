@@ -1,7 +1,6 @@
 import { experience, caseStudies, projects, type ExperiencePoint } from "../data/profile.ts";
 import { projectStats } from "../data/projectStats.ts";
 import { CITY, yearZ, dateZ, type TallStructure, type ResolveSource, type PaletteToken } from "./city.ts";
-import { PROP_COLLISION_GROUPS } from "./collisionGroups.ts";
 
 /**
  * WEST DISTRICT — "what he was paid for."
@@ -193,7 +192,7 @@ export interface ProjectTower {
   dated: boolean;
 }
 
-/** Nine towers, one per `profile.projects` entry. Height is `modules *
+/** One tower per `profile.projects` entry. Height is `modules *
  *  0.55` (projectStats when the slug has an entry, else the same 8-module
  *  fallback Monuments.tsx used before this rewrite). Z comes from, in
  *  order: an explicit dated shipping/contribution entry; else the
@@ -277,15 +276,18 @@ function sampleBoxSurface(id: string, cx: number, cy: number, cz: number, w: num
 
 // ── Props.tsx config, mirrored here ─────────────────────────────────────
 // Props.tsx is a component file — exporting a plain constant from it costs
-// fast refresh (see collisionGroups.ts's own comment on the same tradeoff),
-// so the array districtWest.test.ts asserts over lives in this pure module
-// instead. Props.tsx imports it back for its own `.map()` — one source of
-// truth for the counts either side reads.
-export const PROP_FAMILIES: { count: number; collisionGroups: number }[] = [
-  { count: 14, collisionGroups: PROP_COLLISION_GROUPS }, // pallets
-  { count: 12, collisionGroups: PROP_COLLISION_GROUPS }, // cable spools
-  { count: 12, collisionGroups: PROP_COLLISION_GROUPS }, // kerb blocks
-  { count: 10, collisionGroups: PROP_COLLISION_GROUPS }, // barrels
+// fast refresh, so the array districtWest.test.ts asserts over lives in this
+// pure module instead. Props.tsx imports it back for its own `.map()` — one
+// source of truth for the counts either side reads. This used to also carry
+// each family's Rapier `collisionGroups` (props were dynamic bodies that had
+// to opt out of the pavilion sensors' group — see collisionGroups.ts's own,
+// now-deleted, comment); Props.tsx's instances are static geometry now, with
+// nothing to collide with anything, so there is nothing left to carry.
+export const PROP_FAMILIES: { count: number }[] = [
+  { count: 14 }, // pallets
+  { count: 12 }, // cable spools
+  { count: 12 }, // kerb blocks
+  { count: 10 }, // barrels
 ];
 
 /** Structure dust for the west flank's largest landmarks: the four employer

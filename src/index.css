@@ -15,7 +15,6 @@
   /* CAL-1 Channel B — phosphor cyan, the BASELINE a Channel A value is measured
      against. Never decorative: if it is cyan it is the thing being compared to. */
   --color-accent2: #4fd6e0;
-  --color-accent2-dim: #35a8b0;
 
   /* --- Scene palette (NOT new colours — names for colours already shipping) ----
      These were hardcoded across the 3D/canvas scenes, which is why a theme swap
@@ -74,6 +73,14 @@
      `text-muted`. NOT applied to the résumé, which is dark-on-light and passes
      already. See e2e/a11y.spec.ts — color-contrast now runs without allowlist. */
   --color-muted: #8b909a;
+
+  /* SearchTreeLab's local accent. Not a global token — it is used by exactly
+     one lab, where gold reads as "chess" and --color-accent's amber would make
+     the panel indistinguishable from every other amber thing on the site. It
+     lives here rather than as five inline #E8C874 literals so it is findable,
+     themeable, and counted. If a second component ever wants it, that is the
+     moment it earns a real token name. */
+  --lab-gold: #e8c874;
 }
 
 html {
@@ -233,7 +240,7 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-ink);
-  color: #e8efe9;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -273,6 +280,95 @@ html.resume-mode body::before {
   padding-bottom: var(--space-section-y);
 }
 
+/* --- Below-the-fold rendering ------------------------------------------
+ * The homepage ships ~220KB of markup and roughly all of it is real DOM, so
+ * on a throttled mobile CPU the browser styles, lays out and paints thirty
+ * thousand pixels of page before it can show the first screen. Measured on
+ * the live domain: FCP 3.6s, with no render-blocking resource to blame.
+ *
+ * `content-visibility: auto` lets the browser skip style, layout and paint
+ * for a subtree until it is near the viewport. The subtree is still parsed
+ * and still in the DOM — find-in-page, ⌘K, the scroll spy and the anchor
+ * links all keep working — it just stops being laid out until it matters.
+ *
+ * WHY EVERY RULE CARRIES contain-intrinsic-size: skipped content has no
+ * height of its own, so without a stand-in the page collapses and then
+ * lurches back as you scroll. This site's CLS is a perfect 0.000 and
+ * lighthouserc.json asserts it at 0.1; an intrinsic size is not an
+ * optimisation here, it is the thing that keeps the number.
+ *
+ * The `auto` keyword before each length is the important half. It tells the
+ * browser to REMEMBER the real height once the section has been rendered
+ * once and to reuse it if the section is later skipped again on the way back
+ * up — so the literal below only ever has to be right for the very first
+ * render, and a section that has been seen can never lurch.
+ *
+ * The literals are measured, not estimated: playwright against
+ * cv-siddharth.vercel.app, all reveals forced, whole page scrolled so every
+ * lazy child had mounted. Base values are the 412px measurement (Lighthouse
+ * mobile emulates 412x823, so that is the run the CLS assertion grades).
+ * Desktop values are the widest run, because #projects came out between
+ * 6368px and 6831px across measurements depending on which lazy children
+ * had mounted, and of the two directions only one is dangerous: an
+ * over-estimate shrinks as a section renders BELOW the viewport, where a
+ * shift scores nothing, while an under-estimate makes the page grow under
+ * a reader on the way down. Same reason the mobile figure is left to
+ * over-estimate between 640px and 1024px rather than earning a third
+ * breakpoint.
+ *
+ * Checked, not assumed: with these rules injected over the live page and the
+ * whole scroll driven top to bottom and back, CLS stayed 0.0000 at 412px and
+ * fell from 0.0374 to 0.0234 at 1440px.
+ *
+ * Only four sections, and the exclusions are deliberate:
+ *   #top, the metrics band, #morph, #fit — at or near the fold, so the
+ *     browser would render them anyway and there is nothing to skip.
+ *   #work, #skills                — max-w-5xl section boxes, and the paint
+ *     containment that comes with content-visibility would clip the
+ *     full-bleed .chapter-word-wrap (100vw, -50vw) that lives inside them.
+ *   #experience                   — TimelineSpine reads the track's
+ *     getBoundingClientRect() on every scroll frame and divides by its
+ *     height; a skipped subtree measures zero.
+ *   #writing                      — hosts the full-bleed .ink-threshold,
+ *     same clipping problem, and it is 575px, so there is nothing to win.
+ *   #source                       — not on the live domain yet, so there is
+ *     no measured height for it and this file does not guess one.
+ */
+#projects {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 12620px;
+}
+#surfaces {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 6916px;
+}
+#shipped {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1903px;
+}
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1580px;
+}
+
+/* Desktop: the project grid goes two-up and the surface wall goes wide, so
+   the same sections are roughly half as tall. Measured at 1440px; 1024px
+   came in 1-7% shorter, and the taller figure is the safe one to hold. */
+@media (min-width: 64rem) {
+  #projects {
+    contain-intrinsic-size: auto 6831px;
+  }
+  #surfaces {
+    contain-intrinsic-size: auto 3357px;
+  }
+  #shipped {
+    contain-intrinsic-size: auto 1102px;
+  }
+  #contact {
+    contain-intrinsic-size: auto 1189px;
+  }
+}
+
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-ink);
@@ -281,6 +377,23 @@ html.resume-mode body::before {
 /* Résumé route renders on light background */
 html.resume-mode body {
   background-color: #e4e4e7;
+}
+
+/* The command palette trigger is body level, so it sits ON the résumé's light
+   page rather than inside it and keeps the muted zinc it was given for a dark
+   one. That is 2.06:1 against #e4e4e7, which Lighthouse scores as a real
+   contrast failure, and lighthouserc.json asserts accessibility at 1.00 with
+   /resume in its URL list. The e2e axe pass did not catch it: axe computes the
+   same 2.06 but scores colour-contrast as serious only when it can resolve the
+   background, and a body-level element over a themed page is exactly the case
+   it reports differently.
+
+   zinc-600 measures 6.09:1 here, against zinc-400's 2.06. No single value
+   clears 4.5 on both surfaces (zinc-400 is 7.36 on the dark site and fails
+   light; zinc-600 is 2.50 on dark and fails there), so this is scoped to
+   résumé mode rather than changed globally. */
+html.resume-mode .palette-trigger {
+  color: #52525b;
 }
 
 /* Scroll-reveal */
@@ -427,8 +540,15 @@ html.resume-mode body {
   html.resume-mode body {
     background: white;
   }
-  .resume {
+  /* On :root, not .resume. Every child sizes in rem-based Tailwind classes,
+     which resolve against the ROOT font size — so scoping the shrink to
+     .resume set a value nothing inherited from and the print size never
+     actually changed. */
+  :root {
     font-size: 11px;
+  }
+
+  .resume {
   }
 
   /* Project case-study pages print like the résumé: white paper, dark ink,
@@ -756,8 +876,22 @@ html.resume-mode body {
  * blocking time of 10ms and zero layout shift; nothing was actually blocking,
  * the headline was just still fading in.
  *
- * The translate survives, so the stagger still reads as a stagger. Only the
- * element that sets LCP needs this; everything below the fold can fade. */
+ * The translate survives, so the stagger still reads as a stagger.
+ *
+ * It is on more than one element now, and that is the point. This started as
+ * "only the element that sets LCP needs this", applied to the hero <h1> — and
+ * then the LCP element moved. The intro paragraph below the headline wraps to
+ * more lines on a phone than the headline does, which makes it the larger
+ * painted block, and it was still fading: LCP 4.24s on the live domain, 3,600ms
+ * of it render delay on that one <p>. Nothing had regressed, the copy had just
+ * grown. The eyebrow above the headline is here for the same reason one rung
+ * earlier: it carries no animation-delay, so it is the first thing that would
+ * paint, and a transparent first paint is no First Contentful Paint either.
+ *
+ * So the rule is not "the LCP element" any more, it is: every block of text in
+ * the hero that a browser could pick as first or largest paint rises without
+ * fading. Anything below the fold can still fade — by the time it is on screen
+ * both metrics are long since recorded. */
 .rise-in-lcp {
   animation-name: rise-in-lcp;
 }
@@ -889,14 +1023,6 @@ html.resume-mode body {
 
 /* --- SID//OS: boot sequence, workspace, windows ------------------------ */
 
-.sidos-ground {
-  background-color: var(--color-void);
-  background-image:
-    var(--gradient-glow-signal),
-    var(--gradient-glow-depth),
-    radial-gradient(circle, rgba(79, 214, 224, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 32px 32px;
-}
 
 .glass-panel {
   background: var(--color-glass);
@@ -939,19 +1065,6 @@ html.resume-mode body {
   }
 }
 
-@keyframes boot-line-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
-}
-.boot-line {
-  animation: boot-line-in 0.25s ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .boot-line {
-    animation: none;
-  }
-}
-
 /* --- Level-100 revamp: alive metrics, tilt glow, timeline, tags, palette - */
 
 /* TiltCard pointer-tracked spotlight (case studies + project cards) */
@@ -982,6 +1095,25 @@ html.resume-mode body {
    accent LED before the label turns every section header into one instrument
    panel — a consistent telemetry cue across the home sections. Static (no
    animation), so no reduced-motion concern. */
+/* The eyebrow above a section heading. It was a decoration pretending to be a
+   primitive: this class only drew the little dot, while the five typography
+   utilities that actually make it an eyebrow were written out beside it at all
+   seventeen call sites. Measured before moving them — all seventeen were
+   byte-identical (font-semibold text-accent/70 text-xs tracking-widest
+   uppercase), so folding them in changes nothing on screen and removes
+   eighty-five redundant tokens.
+
+   Margin stays at the call site: it is the one thing that legitimately varies
+   (mb-2 mostly, mb-10 once), and these classes sit outside any layer so a
+   property declared here would beat a utility trying to override it. */
+.section-eyebrow {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklab, var(--color-accent) 70%, transparent);
+}
+
 .section-eyebrow::before {
   content: "";
   display: inline-block;
@@ -1117,11 +1249,65 @@ html.resume-mode body {
 }
 
 /* Small caps-ish label above a brief / deliverables column. */
+/* THE PANEL — the bordered, filled surface a card, a readout or a callout
+   sits on. It was written out as `rounded-2xl border border-line bg-card`
+   forty-five times across two dozen files, with the radius drifting between
+   2xl and xl for no reason anyone could point at.
+
+   It sets ONLY the three invariants: border, fill, radius. Padding stays a
+   utility at the call site, deliberately — these custom classes are declared
+   after `@import "tailwindcss"` and outside any layer, so unlayered CSS BEATS
+   a Tailwind utility. A .panel that set its own padding would silently
+   override every `p-6` on the page and nobody would know why. The same reason
+   there are two radius variants rather than one class plus an override.
+
+   Translucent panels (bg-card/40, bg-card/80) are left alone: a see-through
+   surface over a canvas is a different thing doing a different job. */
+.panel,
+.panel-sm {
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+}
+
+.panel {
+  border-radius: var(--radius-2xl, 1rem);
+}
+
+.panel-sm {
+  border-radius: var(--radius-xl, 0.75rem);
+}
+
+/* THE KICKER — the small mono uppercase label above a heading, in a metric
+   tile, on a HUD readout. It was hand-rolled as raw utilities in 43 files, 90
+   times, in more than twenty different combinations: three sizes (10px, 11px,
+   12px), three letter-spacings, and five colours. Nobody chose that; it
+   accumulated.
+
+   The canonical values below are the DOMINANT ones, not .brief-label's
+   original. .brief-label used 0.14em, but 0.1em (tracking-widest) outnumbered
+   it fifty to two, and 11px sat exactly between the 10px and 12px camps. So
+   consolidating downward keeps every migrated instance within a pixel of
+   where it already was, instead of moving eighty-eight of them to match two.
+
+   Two colour variants because both are real: muted for meta and readouts,
+   accent for the "// section" kickers. accent2 kickers and the two deliberate
+   wide-tracking display labels (0.3em, 0.4em) are NOT part of this and keep
+   their own classes. */
+.kicker,
 .brief-label {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.kicker {
+  color: var(--color-muted);
+}
+
+/* .brief-label keeps its name: it is the accent kicker and predates the sweep. */
+.brief-label,
+.kicker-accent {
   color: var(--color-accent);
 }
 
@@ -1242,7 +1428,7 @@ html.resume-mode body {
 }
 
 .world-switch-side:hover .world-switch-label {
-  color: #e8efe9;
+  color: var(--color-text);
 }
 /* The current side lights up in ITS world's colour, not the ambient accent —
    that is what makes the control read as a map rather than a toggle. */
@@ -1286,7 +1472,6 @@ html.resume-mode body {
   --color-accent: #d9a441; /* ochre — 9.0:1 on the ink ground */
   --color-accent-dim: #b8842c;
   --color-accent2: #cf8f63; /* terracotta, replacing the telemetry cyan */
-  --color-accent2-dim: #a86f4a;
   --color-muted: #a4978a; /* 7.1:1 on ink — still passes, still clearly quieter */
   --font-display: "Rozha One", "Iowan Old Style", Georgia, serif;
 
@@ -1407,7 +1592,10 @@ html.resume-mode body {
   font-family: var(--font-mono);
   font-size: 0.92em;
   font-style: normal;
-  color: #cfc3b2;
+  /* var(), not the literal. #cfc3b2 IS --color-text-dim's BASE value, so a
+     quoted charter inside .ink-world kept the Build world's cool grey while
+     everything around it went warm. Same bug as .flipbook-year, same file. */
+  color: var(--color-text-dim);
 }
 .piece-body ul,
 .piece-body ol {
@@ -1634,12 +1822,17 @@ html.resume-mode body {
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
 }
 .flipbook-year:hover {
-  color: #e8efe9;
+  color: var(--color-text);
   border-color: var(--color-accent);
 }
 .flipbook-year.is-active {
   border-color: var(--color-accent);
-  background-color: rgba(242, 161, 61, 0.12);
+  /* Was rgba(242, 161, 61, 0.12) — which is --color-accent at 12%, written out
+     by hand. The Excelsior reader lives inside .ink-world, where accent is
+     overridden to ochre, so the border and text reskinned and this one fill
+     stayed the Build world's amber. The whole point of the token layer is that
+     a scoped override reaches everything; a literal opts out of it silently. */
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
   color: var(--color-accent);
 }
 .flipbook-counter {
@@ -1658,7 +1851,7 @@ html.resume-mode body {
   border-radius: 9999px;
   border: 1px solid var(--color-line);
   padding: 0.5rem;
-  color: #d4d4d8;
+  color: var(--color-text-dim);
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart);
 }
 .flipbook-tool:hover {
@@ -1764,7 +1957,7 @@ html.resume-mode body {
   border-radius: 9999px;
   border: 1px solid var(--color-line);
   padding: 0.625rem;
-  color: #d4d4d8;
+  color: var(--color-text-dim);
   transition: color var(--dur-fast) var(--ease-out-quart), border-color var(--dur-fast) var(--ease-out-quart), opacity var(--dur-fast) linear;
 }
 .flipbook-nav:hover:not(:disabled) {
@@ -2047,7 +2240,7 @@ html.resume-mode body {
   color: var(--color-muted);
 }
 .magazine-action-quiet:hover {
-  color: #e8efe9;
+  color: var(--color-text);
 }
 
 /* Reduced motion: the books stay shut. The lightbox still opens the spread,
@@ -2136,6 +2329,18 @@ html.resume-mode body {
 /* The shell input is always the focus target and the blinking caret marks
    the cursor, so the global focus box would just read as a stray search
    field. Suppress it here (only here). */
+/* iOS Safari zooms the whole page when a focused field is under 16px, and it
+   does not zoom back out. The terminal's own text stays at its designed size;
+   only the INPUT is bumped, and only below the sm breakpoint, so the shell
+   still looks like a shell on a desktop. Same treatment as the Compose
+   editor's textarea. */
+@media (max-width: 639px) {
+  .term-root input,
+  .term-root textarea {
+    font-size: 16px;
+  }
+}
+
 .term-root input:focus-visible {
   outline: none;
 }

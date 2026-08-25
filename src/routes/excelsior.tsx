@@ -4,6 +4,7 @@ import { roomHead } from "../lib/routeHead.ts";
 import { Flipbook } from "../Flipbook.tsx";
 import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
+import { countWord } from "../data/labs.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 
 /**
@@ -19,7 +20,6 @@ type Search = { year: number; page: number };
 
 export const Route = createFileRoute("/excelsior")({
   head: () => roomHead("/excelsior"),
-  ssr: false,
   validateSearch: (search: Record<string, unknown>): Search => {
     const year = Number(search.year);
     const known = excelsiorEditions.some((e) => Number(e.year) === year);
@@ -37,6 +37,10 @@ export const Route = createFileRoute("/excelsior")({
 function ExcelsiorRoute() {
   const { year, page } = Route.useSearch();
   const navigate = useNavigate({ from: "/excelsior" });
+  // The same filter the pill row runs, hoisted so the sentence above it counts
+  // the pills it actually renders. "The five I wrote" was typed in beside the
+  // list that decides it, which is the arrangement that always drifts.
+  const readable = excelsiorMarks.filter((m) => m.readSlug);
 
   return (
     // The print-era artefact `/ink` and `/read/$slug` exist to host — it
@@ -60,7 +64,7 @@ function ExcelsiorRoute() {
           <h1 className="font-display mt-1.5 text-h2 font-bold tracking-tight">Excelsior</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-400">
             MANIT Bhopal's institute magazine, running since 1963. I was an English Editor on the 2019
-            and 2020 editions and Joint Chief Editor on 2021 — the sign-off is on{" "}
+            and 2020 editions and Joint Chief Editor on 2021. The sign-off is on{" "}
             <Link
               to="/excelsior"
               search={{ year: 2021, page: 5 }}
@@ -73,27 +77,26 @@ function ExcelsiorRoute() {
           </p>
         </div>
 
-        {/* The pieces, as prose. This row comes FIRST because 396 page images
+        {/* The pieces, as prose. This row comes FIRST because the page scans
             are the artefact, not the reading — the text is unselectable and
             invisible to search, and on a phone it is unusable. Read it here,
             then go look at the page it ran on. */}
         <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">
-            Rather read it? The five I wrote, in full
+          <p className="kicker-accent">
+            {/* countWord returns "Five", capitalised, and this sits mid-sentence. */}
+            Rather read it? The {countWord(readable.length).toLowerCase()} I wrote, in full
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {excelsiorMarks
-              .filter((m) => m.readSlug)
-              .map((m) => (
-                <Link
-                  key={m.readSlug}
-                  to="/read/$slug"
-                  params={{ slug: m.readSlug! }}
-                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
-                >
-                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
-                </Link>
-              ))}
+            {readable.map((m) => (
+              <Link
+                key={m.readSlug}
+                to="/read/$slug"
+                params={{ slug: m.readSlug! }}
+                className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
+              >
+                {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+              </Link>
+            ))}
           </div>
         </div>
 

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 import * as THREE from "three";
 import { Color } from "three";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import {
   chessRidge,
   activityPlates,
@@ -17,7 +16,7 @@ import {
 } from "./corpusData.ts";
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
-import { worldPalette, dim } from "./palette.ts";
+import { worldPalette, dim , laneColors} from "./palette.ts";
 
 /**
  * EAST DISTRICT'S GEOMETRY — "what he made anyway," built.
@@ -169,7 +168,7 @@ const BOX = <boxGeometry args={[1, 1, 1]} />;
 
 function ChessRidge(): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn, c.accent, c.accent2], [c.signal, c.probe, c.alt, c.warn, c.accent, c.accent2]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const items = useMemo(() => chessRidge(), []);
   return (
     <InstancedFamily
@@ -227,8 +226,8 @@ function Repertoire(): JSX.Element {
 function WeebField(): JSX.Element {
   const c = worldPalette();
   const items = useMemo(() => weebField(), []);
-  const litColor = useMemo(() => c.alt, [c.alt]);
-  const unlitColor = useMemo(() => dim(c.alt, 0.7), [c.alt]);
+  const litColor = useMemo(() => c.accent, [c.accent]);
+  const unlitColor = useMemo(() => dim(c.accent, 0.7), [c.accent]);
   return (
     <InstancedFamily
       items={items}
@@ -316,10 +315,10 @@ function OldTown(): JSX.Element {
     const markKindColor: Record<"wrote" | "about" | "credit", string> = { wrote: c.signal, about: c.probe, credit: c.warn };
     return (item: OldTownItem): string => {
       if (item.kind === "edition") return c.accent2;
-      if (item.kind === "profile") return c.alt;
+      if (item.kind === "profile") return c.text;
       return markKindColor[item.markKind];
     };
-  }, [c.signal, c.probe, c.warn, c.accent2, c.alt]);
+  }, [c.signal, c.probe, c.warn, c.accent2, c.text]);
 
   return (
     <InstancedFamily
@@ -335,29 +334,9 @@ function OldTown(): JSX.Element {
   );
 }
 
-/** Fixed colliders for old town's three editions only — the one east-flank
- *  family tall and box-shaped enough (7.75-9m) that driving straight through
- *  it would read as a bug, the same bar Monuments.tsx's shells/obelisks/
- *  towers clear and its many small floor slabs don't. Everything else here
- *  is small, thin or too numerous (176 weeb markers, 473 ridge cubes) for a
- *  per-instance collider to be worth its physics cost. */
-function OldTownColliders(): JSX.Element {
-  const editions = useMemo(() => excelsiorEditionBlocks(), []);
-  return (
-    <>
-      {editions.map((e) => (
-        <RigidBody key={e.year} type="fixed" colliders={false} position={[e.x, 0, e.z]}>
-          <CuboidCollider args={[EDITION_FOOTPRINT / 2, e.height / 2, EDITION_FOOTPRINT / 2]} position={[0, e.height / 2 + CITY.groundY, 0]} />
-        </RigidBody>
-      ))}
-    </>
-  );
-}
-
 export function Corpus(): JSX.Element {
   return (
     <>
-      <OldTownColliders />
       <ChessRidge />
       <ActivityPlates />
       <Repertoire />

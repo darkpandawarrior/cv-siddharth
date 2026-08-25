@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 import { writing } from "../src/data/writing.ts";
 
 test("feed.xml is served as valid Atom, one entry per lesson", async ({ request }) => {

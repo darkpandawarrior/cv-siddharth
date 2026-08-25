@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 
 // The rail (src/AnomalyRail.tsx) and its instrument-view overlay
 // (src/InstrumentView.tsx) are the most focus-sensitive component on the
@@ -75,8 +75,14 @@ test.describe("instrument view — open, close, focus, inert", () => {
 
     // Closed: zero dialogs in the a11y tree, zero leaked inert.
     await expect(page.locator("dialog, [role=dialog]")).toHaveCount(0);
-    const inertAfter = await page.evaluate(() => document.querySelectorAll("[inert]").length);
-    expect(inertAfter).toBe(0);
+    // Polled, not sampled once. "Leaks nothing" is a claim about the settled
+    // state: while the overlay unmounts and the destination route mounts,
+    // elements can legitimately carry [inert] for a frame or two. Reading a
+    // single frame right after the URL flips scored that in-flight moment as
+    // a leak, which is why this went red roughly one full run in three.
+    await expect
+      .poll(() => page.evaluate(() => document.querySelectorAll("[inert]").length))
+      .toBe(0);
   });
 
   // I2: the terminal's ` hotkey (registered globally in __root.tsx) used to
@@ -94,8 +100,14 @@ test.describe("instrument view — open, close, focus, inert", () => {
     await expect(page).toHaveURL(/\/terminal$/);
 
     await expect(page.locator("dialog, [role=dialog]")).toHaveCount(0);
-    const inertAfter = await page.evaluate(() => document.querySelectorAll("[inert]").length);
-    expect(inertAfter).toBe(0);
+    // Polled, not sampled once. "Leaks nothing" is a claim about the settled
+    // state: while the overlay unmounts and the destination route mounts,
+    // elements can legitimately carry [inert] for a frame or two. Reading a
+    // single frame right after the URL flips scored that in-flight moment as
+    // a leak, which is why this went red roughly one full run in three.
+    await expect
+      .poll(() => page.evaluate(() => document.querySelectorAll("[inert]").length))
+      .toBe(0);
   });
 });
 

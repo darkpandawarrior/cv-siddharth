@@ -1,4 +1,5 @@
-import { test, expect, type Locator, type Page } from "@playwright/test";
+import { test, expect, waitForHydration } from "./lib/test.ts";
+import { type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { surfaces } from "../src/data/surfaces.ts";
 
@@ -260,6 +261,10 @@ test("every chess pane has no serious/critical axe violations", async ({ page })
   await page.goto("/chess", { waitUntil: "domcontentloaded" });
   await page.addStyleTag({ content: SETTLE_ANIMATIONS });
   await page.waitForSelector("#main-content", { state: "attached" });
+
+  // The tabs are server-rendered; clicking one before React owns it loses the
+  // click, and the wait below then times out on a pane nothing ever opened.
+  await waitForHydration(page);
 
   for (const pane of CHESS_PANES) {
     await page.getByRole("button", { name: pane.tab }).click();

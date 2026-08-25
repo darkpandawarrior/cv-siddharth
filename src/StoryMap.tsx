@@ -294,7 +294,7 @@ export function StoryMap() {
   return (
     <section id="map" className="section-y mx-auto max-w-5xl px-6">
       <Reveal>
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the storyboard</p>
+        <p className="section-eyebrow mb-2">// the storyboard</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Everything connects</h2>
         <p className="mb-8 max-w-2xl text-zinc-400">
           The projects share one foundation, the writing is field notes from the work, and the AI
@@ -315,7 +315,7 @@ export function StoryMap() {
               <StoryMapCanvas onNavigate={go} />
             ))}
           {use3D && (
-            <span className="pointer-events-none absolute bottom-3 right-4 font-mono text-[10px] uppercase tracking-wider text-muted">
+            <span className="kicker pointer-events-none absolute bottom-3 right-4">
               drag to orbit
             </span>
           )}

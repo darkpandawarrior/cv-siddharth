@@ -14,6 +14,7 @@ import { writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "archiveText.ts");
 const RAW = "https://raw.githubusercontent.com/darkpandawarrior/the-loopdown/main/archive";
@@ -98,7 +99,7 @@ let failed = 0;
 
 for (const p of PRINTED) {
   try {
-    const res = await fetch(`${RAW}/${p.slug}.md`);
+    const res = await fetchWithTimeout(`${RAW}/${p.slug}.md`);
     if (!res.ok) throw new Error(String(res.status));
     const { meta, body: raw } = split(await res.text());
     // The files open with their own '# Title', which the route already renders

@@ -9,7 +9,6 @@ import {
   westResolveSources,
   PROP_FAMILIES,
 } from "./districtWest.ts";
-import { PROP_COLLISION_GROUPS } from "./collisionGroups.ts";
 
 describe("employer blocks", () => {
   it("gives exactly one block per experience entry", () => {
@@ -108,16 +107,7 @@ describe("the whole west flank stays off the approach apron", () => {
 });
 
 describe("site debris", () => {
-  it("carries PROP_COLLISION_GROUPS on every family — asserted over the array, not by eye", () => {
-    // A dynamic body missing this has shipped twice as a room a stray prop
-    // could navigate a visitor into, four seconds after load, untouched.
-    expect(PROP_FAMILIES.length).toBeGreaterThan(0);
-    for (const family of PROP_FAMILIES) {
-      expect(family.collisionGroups).toBe(PROP_COLLISION_GROUPS);
-    }
-  });
-
-  it("totals 48 dynamic bodies", () => {
+  it("totals 48 static instances", () => {
     const total = PROP_FAMILIES.reduce((sum, f) => sum + f.count, 0);
     expect(total).toBe(48);
   });

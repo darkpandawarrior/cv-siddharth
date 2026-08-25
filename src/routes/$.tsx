@@ -52,7 +52,7 @@ function NotFoundPage() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6 section-y">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent/80">404 // no carrier</p>
+        <p className="kicker-accent">404 // no carrier</p>
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
           A broken link is not a dead end.
         </h1>

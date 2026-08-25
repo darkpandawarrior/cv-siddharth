@@ -16,7 +16,8 @@
  * Pure and DOM-free: `scripts/gen-system-prompt.mjs` imports ROUTE_PHRASES to
  * emit the server's allowlist, and the unit tests import the rest.
  */
-import { projects, siteRooms } from "../data/profile.ts";
+import { projects } from "../data/profile.ts";
+import { surfaces } from "../data/surfaces.ts";
 
 export type RouteKind = "home" | "project" | "room" | "page";
 
@@ -42,17 +43,39 @@ function shortName(name: string): string {
 }
 
 /**
- * Every route the console can be standing on. Rooms and projects are derived
- * from profile.ts (the same arrays the router and the system prompt use); the
- * three remaining pages have no data array to come from, so they're listed —
- * they are static routes, not content that grows.
+ * Every route the console can be standing on.
+ *
+ * Derived from src/data/surfaces.ts, which already carries the `kind` split
+ * this file needs — eight rooms and nine pages. It used to derive its rooms
+ * from profile.ts's `siteRooms` and then hand-list three pages beside them,
+ * and siteRooms is one of the THREE older registries surfaces.ts was written
+ * to replace. It has eight entries against the registry's seventeen, so the
+ * assistant was blind to six surfaces while a visitor was standing on them:
+ * /hire, /shipped, /pulse, /ink, /excelsior and /anthology. /hire is the
+ * recruiter page. Ask Panda "what is this page" there and it did not know.
+ *
+ * Membership derives. PHRASING may be tuned, because a registry label is
+ * written for a tile and these go inside a sentence — "his résumé" reads
+ * where "Résumé" does not. Overrides are presentation only and can never add
+ * or remove a route, which is the distinction that lets this stay honest.
  */
+const PHRASE_OVERRIDES: Record<string, { label?: string; phrase: string }> = {
+  "/resume": { label: "his résumé", phrase: "his résumé" },
+  "/playground": { phrase: "The Playground (the index of every room)" },
+  "/loopdown": { phrase: "The Loopdown (his writing)" },
+};
+
 const ROUTES: RouteInfo[] = [
   { route: "/", label: "the home page", phrase: "the home page", kind: "home" },
-  ...siteRooms.map((r): RouteInfo => ({ route: r.to, label: r.label, phrase: r.label, kind: "room" })),
-  { route: "/resume", label: "his résumé", phrase: "his résumé", kind: "page" },
-  { route: "/playground", label: "The Playground", phrase: "The Playground (the index of every room)", kind: "page" },
-  { route: "/loopdown", label: "The Loopdown", phrase: "The Loopdown (his writing)", kind: "page" },
+  ...surfaces.map((s): RouteInfo => {
+    const o = PHRASE_OVERRIDES[s.to];
+    return {
+      route: s.to,
+      label: o?.label ?? s.label,
+      phrase: o?.phrase ?? s.label,
+      kind: s.kind === "room" ? "room" : "page",
+    };
+  }),
   ...projects.map((p): RouteInfo => {
     const label = shortName(p.name);
     // Possessive rather than "the <name> case study": one of these names is

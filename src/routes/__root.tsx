@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { surfaces } from "../data/surfaces.ts";
+import { profile, experience, education } from "../data/profile.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import AnomalyRail from "../AnomalyRail.tsx";
 import { Launcher } from "../Launcher.tsx";
@@ -23,20 +24,41 @@ import "@fontsource/jetbrains-mono/600.css";
 import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url";
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
+import { CommandPalette } from "../CommandPalette.tsx";
+// Every role still running. Filtered over the whole array, never
+// experience[0] — index 0 is whichever role was added most recently, and an
+// index-based read silently demoted Dice.tech the day the consulting role
+// landed above it.
+const currentRoles = experience.filter((e) => e.period.trim().endsWith("Present"));
+
+// The title, name and links a crawler reads, in one place. Nobody looking at
+// the site would ever notice this block going stale, which is exactly why it
+// derives from profile.ts instead of restating it — the linkedin URL here had
+// already drifted from the one the résumé prints.
+const PAGE_TITLE = `${profile.name} | ${profile.title}`;
+
 const PERSON_LD = {
   "@context": "https://schema.org",
   "@type": "Person",
-  name: "Siddharth Pandalai",
-  url: "https://cv-siddharth.vercel.app/",
-  jobTitle: "Senior Android Engineer",
-  worksFor: { "@type": "Organization", name: "Dice.tech" },
-  email: "mailto:siddharthpandalai990@gmail.com",
-  alumniOf: "NIT Bhopal",
+  name: profile.name,
+  url: `${profile.portfolio}/`,
+  jobTitle: profile.title,
+  // schema.org takes an array here, but a one-element array is noisier for a
+  // scraper that just reads the first value, so a single current role stays a
+  // bare object and only a genuine second one makes it a list.
+  worksFor:
+    currentRoles.length === 1
+      ? { "@type": "Organization", name: currentRoles[0].company }
+      : currentRoles.map((e) => ({ "@type": "Organization", name: e.company })),
+  email: `mailto:${profile.email}`,
+  alumniOf: { "@type": "CollegeOrUniversity", name: education.school },
   address: { "@type": "PostalAddress", addressLocality: "Pune", addressCountry: "IN" },
+  // Hand-written, and staying that way: there is no list of these in
+  // src/data/, and the writing platforms below are not in profile.ts either.
   knowsAbout: ["Android", "Kotlin", "Kotlin Multiplatform", "Jetpack Compose", "Location Engineering", "Dead Reckoning", "Kalman Filtering", "Mobile Security", "Structured Concurrency"],
   sameAs: [
-    "https://github.com/darkpandawarrior",
-    "https://linkedin.com/in/siddharth-pandalai-3712b215a",
+    profile.github,
+    profile.linkedin,
     "https://dev.to/darkpandawarrior",
     "https://medium.com/@siddharthpandalai990",
     "https://darkpandawarrior.hashnode.dev",
@@ -47,13 +69,13 @@ const PERSON_LD = {
 const PROFILEPAGE_LD = {
   "@context": "https://schema.org",
   "@type": "ProfilePage",
-  name: "Siddharth Pandalai | Senior Android Engineer",
-  url: "https://cv-siddharth.vercel.app/",
-  mainEntity: { "@type": "Person", name: "Siddharth Pandalai" },
+  name: PAGE_TITLE,
+  url: `${profile.portfolio}/`,
+  mainEntity: { "@type": "Person", name: profile.name },
   isPartOf: {
     "@type": "WebSite",
     name: "sid.android",
-    url: "https://cv-siddharth.vercel.app/",
+    url: `${profile.portfolio}/`,
   },
 };
 
@@ -62,21 +84,24 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { title: "Siddharth Pandalai | Senior Android Engineer" },
-      { name: "description", content: "Senior Android Engineer. Platform owner at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything." },
-      { name: "author", content: "Siddharth Pandalai" },
+      { title: PAGE_TITLE },
+      // The title leads, then the numbers as prose. The figures stay written
+      // out on purpose: this line is a ~155-character sentence under an SEO
+      // budget, not a list of metrics joined with commas.
+      { name: "description", content: `${profile.title}. Platform owner at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
+      { name: "author", content: profile.name },
       { name: "theme-color", content: "#0b0f0d" },
       { name: "color-scheme", content: "dark" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://cv-siddharth.vercel.app/" },
       { property: "og:site_name", content: "sid.android" },
-      { property: "og:title", content: "Siddharth Pandalai | Senior Android Engineer" },
+      { property: "og:title", content: PAGE_TITLE },
       { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose at ~964k LOC." },
       { property: "og:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Siddharth Pandalai | Senior Android Engineer" },
+      { name: "twitter:title", content: PAGE_TITLE },
       { name: "twitter:description", content: "Interactive CV with an AI assistant, 3D storyboard and an infinite blueprint canvas. Android · Kotlin · KMP." },
       { name: "twitter:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
     ],
@@ -285,19 +310,32 @@ function RootDocument({ children }: { children: ReactNode }) {
             until something calls openLauncher(). */}
         <Launcher />
         <AnomalyRail />
+        {/* Global, like the two above. It was mounted in three places instead
+            — App.tsx, rooms.tsx and Playground.tsx — so every route that is
+            not the homepage and does not use RoomFrame had no palette at all:
+            /shipped, /pulse, /ink, /excelsior, /anthology, /loopdown,
+            /read/$slug, /hire, /resume and /project/$slug. Its own docstring
+            called itself "Global ⌘K". One mount makes that true, and avoids
+            the duplicate ⌘K listeners three mounts would have caused. */}
+        <CommandPalette />
         <SpeedInsights />
         <Scripts />
         <noscript>
           <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "var(--color-text)" }}>
-            <h1>Siddharth Pandalai — Senior Android Engineer</h1>
+            {/* The one body a crawler with no JS ever reads, so it derives
+                too — a stale title here is a stale title everywhere that
+                matters. */}
+            <h1>
+              {profile.name} — {profile.title}
+            </h1>
             <p>Platform owner of a ~964k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
             <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
             <ul>
               <li><a href="/llms.txt" style={{ color: "var(--color-signal)" }}>Profile summary (llms.txt)</a></li>
               <li><a href="/llms-full.txt" style={{ color: "var(--color-signal)" }}>Full profile (llms-full.txt)</a></li>
-              <li><a href="https://github.com/darkpandawarrior" style={{ color: "var(--color-signal)" }}>GitHub</a></li>
-              <li><a href="https://linkedin.com/in/siddharth-pandalai-3712b215a" style={{ color: "var(--color-signal)" }}>LinkedIn</a></li>
-              <li><a href="mailto:siddharthpandalai990@gmail.com" style={{ color: "var(--color-signal)" }}>siddharthpandalai990@gmail.com</a></li>
+              <li><a href={profile.github} style={{ color: "var(--color-signal)" }}>GitHub</a></li>
+              <li><a href={profile.linkedin} style={{ color: "var(--color-signal)" }}>LinkedIn</a></li>
+              <li><a href={`mailto:${profile.email}`} style={{ color: "var(--color-signal)" }}>{profile.email}</a></li>
             </ul>
           </main>
         </noscript>

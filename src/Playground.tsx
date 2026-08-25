@@ -2,17 +2,21 @@ import { Component, Suspense, lazy, useCallback, useEffect, useState, type React
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { hasWebGL } from "./blueprintShared.tsx";
 import { RoomGrid } from "./RoomGrid.tsx";
 import { ROOMS } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
-import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import { VisitorPlaque } from "./play/Visitors.tsx";
-import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
-import { Sandbox } from "./play/Sandbox.tsx";
+import {
+  DeferredPlayRoom,
+  DeferredLivePulse,
+  DeferredPresenceBadge,
+  DeferredVisitorPlaque,
+  DeferredSandbox,
+  DeferredGuestWall,
+} from "./play/DeferredPlayRoom.tsx";
 
+import { CorridorPlate } from "./world/CorridorPlate.tsx";
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
  * These used to be scattered down the scroll and behind hotkeys; gathering them
@@ -94,9 +98,11 @@ export default function Playground() {
   // Everything shared on this page — presence, the tile counts, the sandbox and
   // the wall — reads from this one room.
   return (
-    <PlayRoom>
-      <PlaygroundInner />
-    </PlayRoom>
+    <DeferredPlayRoom>
+      <DeferredLivePulse>
+        <PlaygroundInner />
+      </DeferredLivePulse>
+    </DeferredPlayRoom>
   );
 }
 
@@ -193,7 +199,7 @@ function PlaygroundInner() {
           >
             <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
           </button>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -202,8 +208,7 @@ function PlaygroundInner() {
                 link to itself. But it was also missing the palette, so the one
                 page whose whole job is "every room, one door" was the one page
                 you couldn't reach the other rooms from by keyboard. */}
-            <CommandPalette />
-            <PresenceBadge className="hidden sm:flex" />
+            <DeferredPresenceBadge className="hidden sm:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -261,12 +266,24 @@ function PlaygroundInner() {
         </main>
       ) : (
         <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-6xl flex-1 px-6">
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the playground</p>
+          <p className="section-eyebrow mb-2">// the playground</p>
           <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
             Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a
             small proof of the engineering the rest of the site describes. Pick one and poke it.
           </p>
+          {/* The corridor, as a picture, for the visitors who will never see
+              it move: no WebGL, or reduced-motion. It is baked at build time
+              by scripts/gen-world-plate.mjs from the SAME heightfield the
+              drivable terrain uses, so it cannot drift from the world it
+              stands in for — the work ramp toward 2026, the 2020-12 chess
+              spike, writing thinning out, open source flat then flooding.
+              It sits ABOVE the room grid rather than replacing it: the grid
+              is the navigation and always was. Without this the branch was a
+              card list with no hint that the thing it replaces is a shape
+              worth seeing. */}
+          {!worldCapable && <CorridorPlate />}
+
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
               to="/pulse"
@@ -289,12 +306,12 @@ function PlaygroundInner() {
             )}
           </div>
 
-          <VisitorPlaque />
+          <DeferredVisitorPlaque />
 
           <RoomGrid />
 
-          <Sandbox />
-          {GUEST_WALL_ENABLED && <GuestWall />}
+          <DeferredSandbox />
+          <DeferredGuestWall />
 
           <p className="mt-10 font-mono text-[11px] text-muted">
             tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 import { SECTION_ID_LIST } from "../src/lib/navigation.ts";
 import { surfaces } from "../src/data/surfaces.ts";
 
@@ -40,6 +40,13 @@ test.describe("the home page matches its own registry", () => {
   });
 
   test("the command palette can reach every route in the registry", async ({ page }) => {
+    // This walks EVERY registry route through the palette in one test body,
+    // and the registry keeps growing while the routes themselves got heavier
+    // (six of them now server-render real content instead of an empty shell).
+    // It passes alone and times out in a full run at the default 30s — not a
+    // logic failure, just a test doing seventeen navigations on one budget.
+    // test.slow() triples it rather than hiding the cost behind a retry.
+    test.slow();
     // The Launcher's docstring claims "⌘K already reaches every surface — by
     // name". It reached eleven of sixteen: /chess, /weeb, /ink, /excelsior and
     // /shipped had no row at all.
@@ -107,7 +114,11 @@ test.describe("primary nav surfaces (footer, command palette)", () => {
     await page.goto("/");
     await page.getByRole("button", { name: /open the command palette/i }).click();
     await page.getByRole("combobox", { name: "Command palette search" }).fill("Loopdown");
-    await page.getByRole("option", { name: /The Loopdown/i }).click();
+    // Anchored, because "Loopdown" now matches two commands: the surface
+    // ("The Loopdown / Open") and the project ("Open project: The Loopdown").
+    // Both are wanted — the room and its project page are different
+    // destinations — but only the first is the route command under test.
+    await page.getByRole("option", { name: /^The Loopdown/ }).click();
 
     await expect(page).toHaveURL(/\/loopdown$/);
     await expect(page.locator("dialog, [role=dialog]")).toHaveCount(0);

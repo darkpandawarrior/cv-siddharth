@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   CHAT_FALLBACK,
+  CHAT_UNAVAILABLE,
   JD_MAX_CHARS,
   MAX_SENT_TURNS,
   MAX_TURN_CHARS,
@@ -134,8 +135,25 @@ describe("chatErrorText", () => {
 
   it("still falls back to the contact line for everything else", () => {
     expect(chatErrorText(failure(503, "nope"))).toBe(CHAT_FALLBACK);
-    expect(chatErrorText(failure(502, "nope"))).toBe(CHAT_FALLBACK);
+    // 502 deliberately NO LONGER falls back to the contact line. It means a
+    // provider is down while the site is configured correctly, and telling a
+    // visitor "missing API key" in that state is a false statement about the
+    // site. Asserted in its own test below.
+    expect(chatErrorText(failure(502, "nope"))).toBe(CHAT_UNAVAILABLE);
     expect(chatErrorText(new TypeError("network down"))).toBe(CHAT_FALLBACK);
     expect(chatErrorText("not an error")).toBe(CHAT_FALLBACK);
+  });
+});
+
+describe("a provider outage is not a missing key", () => {
+  it("tells a 502 visitor to wait, not that the site is unconfigured", () => {
+    const err = Object.assign(new Error("bad gateway"), { cause: 502 });
+    expect(chatErrorText(err)).toBe(CHAT_UNAVAILABLE);
+    expect(chatErrorText(err)).not.toContain("missing API key");
+  });
+
+  it("still says unconfigured on a 503, which is the case that is true", () => {
+    const err = Object.assign(new Error("no key"), { cause: 503 });
+    expect(chatErrorText(err)).toContain("missing API key");
   });
 });

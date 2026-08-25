@@ -1,9 +1,6 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Physics } from "@react-three/rapier";
-import { Stars } from "@react-three/drei";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
-import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { Monuments } from "./Monuments.tsx";
 import { Corpus } from "./Corpus.tsx";
 import { Threads } from "./Threads.tsx";
@@ -12,9 +9,17 @@ import { Trail } from "./Trail.tsx";
 import { disposeAudio, initAudio, playPickup, playResolveChime } from "./audio.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
+import { HORIZON_HEX, Sky } from "./Sky.tsx";
+import { SpawnFlyIn } from "./SpawnFlyIn.tsx";
+import { Wake } from "./Wake.tsx";
+import { Fixtures } from "./Fixtures.tsx";
 import { Props } from "./Props.tsx";
 import { Pavilions } from "./Pavilions.tsx";
-import { Craft } from "./Craft.tsx";
+import { Landmarks } from "./Landmarks.tsx";
+import { LandmarkPanel } from "./LandmarkPanel.tsx";
+import { type Destination } from "./destinations.ts";
+import { useDwellEnter } from "./dwell.ts";
+import { Vehicle } from "./Vehicle.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard, isAutoDriving, setAutoAxes } from "./input.ts";
 import {
@@ -30,9 +35,10 @@ import {
   type Stop,
 } from "./autopilot.ts";
 import { LabelCameraBridge, WorldLabels } from "./WorldLabels.tsx";
+import { deviceTier, tierBudget } from "./deviceTier.ts";
 import { PLACEMENTS } from "./worldData.ts";
 import type { WaypointTarget } from "./Nav.tsx";
-import { worldPalette } from "./palette.ts";
+import { worldLane, worldPalette, worldTint } from "./palette.ts";
 import { loadExplored, markExplored } from "./explored.ts";
 import { ARTIFACTS, ARTIFACT_PICKUP_RADIUS } from "./artifacts.ts";
 import { Artifacts } from "./Artifacts.tsx";
@@ -59,16 +65,20 @@ import { usePulse, type PulseEvent } from "../play/pulse.ts";
  * Scene components below are wrapped in `memo` because this component's own
  * state changes fairly often — every artifact pickup, every toast, every
  * prompt. Terrain/Props/Corpus take no props at all and
- * Pavilions/Craft take one stable `useCallback`, so `memo` turns "World
- * re-rendered" into a handful of cheap prop-equality checks instead of every
- * scene subtree re-evaluating its JSX 60 times a second for no reason. Craft
- * still runs its own R3F hooks every frame regardless — this only skips
- * re-running its component *body*.
+ * Pavilions/Vehicle take a small number of stable `useCallback`/state values,
+ * so `memo` turns "World re-rendered" into a handful of cheap prop-equality
+ * checks instead of every scene subtree re-evaluating its JSX 60 times a
+ * second for no reason. Vehicle still runs its own R3F hooks every frame
+ * regardless — this only skips re-running its component *body*.
  */
 const MemoTerrain = memo(Terrain);
+const MemoSky = memo(Sky);
+const MemoWake = memo(Wake);
+const MemoFixtures = memo(Fixtures);
 const MemoProps = memo(Props);
 const MemoPavilions = memo(Pavilions);
-const MemoCraft = memo(Craft);
+const MemoLandmarks = memo(Landmarks);
+const MemoVehicle = memo(Vehicle);
 const MemoMonuments = memo(Monuments);
 const MemoCorpus = memo(Corpus);
 const MemoTrail = memo(Trail);
@@ -115,6 +125,20 @@ export default function World(props: { onShowList: () => void }) {
   const palette = worldPalette();
   const navigate = useNavigate();
   const bump = usePulse();
+  // §10 — the one device-tier probe every tier-aware piece of this world
+  // now reads (deviceTier.ts). Read once per mount, not per render: the
+  // probe itself is already memoised for the session, but there is no
+  // reason for this component to re-run the (cheap, but real) lookup logic
+  // on every re-render either.
+  const budget = useMemo(() => tierBudget(deviceTier()), []);
+  const fogArgs = useMemo<[string, number, number]>(() => {
+    const [near, far] = budget.fogNearFar;
+    // Matches Sky.tsx's own horizon stop (owner's "blue hour, not black"
+    // refinement) rather than `palette.void`: fog is what distant terrain
+    // actually fades toward, so a darker fog colour would silently pull the
+    // far ridges back toward black regardless of how bright the sky reads.
+    return [HORIZON_HEX, near, far];
+  }, [budget]);
 
   // Restores which of the city's 147 resolve cells were already driven
   // through on a past visit. Must happen before any district's own
@@ -128,9 +152,6 @@ export default function World(props: { onShowList: () => void }) {
   // called exactly once.
   useState(loadResolved);
 
-  const [promptTo, setPromptTo] = useState<string | null>(null);
-  const promptToRef = useRef<string | null>(null);
-  const dwellTimerRef = useRef<number | null>(null);
   const confirmHeldRef = useRef(false); // edge-detects input.confirm (a held flag) into a single press
 
   // How many rooms have been entered from the world, ever. Gives the map a
@@ -199,17 +220,6 @@ export default function World(props: { onShowList: () => void }) {
     };
   }, []);
 
-  // Navigating away from a room's sensor volume before its dwell timer fires
-  // must not leave a stray setTimeout that fires `navigate()` after this
-  // component (and the craft inside it) is gone.
-  useEffect(
-    () => () => {
-      if (dwellTimerRef.current !== null)
-        window.clearTimeout(dwellTimerRef.current);
-    },
-    [],
-  );
-
   /** Shows a notice and schedules its own removal. */
   const pushToast = useCallback((toast: Toast) => {
     setToasts((prev) => [...prev.slice(-2), toast]);
@@ -233,12 +243,6 @@ export default function World(props: { onShowList: () => void }) {
 
   const enterRoom = useCallback(
     (to: string) => {
-      if (dwellTimerRef.current !== null) {
-        window.clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
-      }
-      promptToRef.current = null;
-      setPromptTo(null);
       // Same pulse event RoomGrid's <Link> fires on click, so the visit
       // counters on /pulse stay one shared number regardless of which view
       // a visitor entered through.
@@ -250,35 +254,47 @@ export default function World(props: { onShowList: () => void }) {
     [bump, navigate],
   );
 
-  const handlePrompt = useCallback(
-    (to: string | null) => {
-      promptToRef.current = to;
-      setPromptTo(to);
-      if (dwellTimerRef.current !== null) {
-        window.clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
-      }
-      // The dwell is a HUMAN gesture — "stop here and I'll take you in". While
-      // the autopilot is driving, arriving is what it does at every stop, so
-      // leaving the dwell armed would have the tour navigate into the first
-      // room it reached and unmount the world it was meant to be showing off.
-      // The prompt card (and its Enter button) still comes up either way.
-      if (to !== null && !isAutoDriving()) {
-        dwellTimerRef.current = window.setTimeout(() => {
-          dwellTimerRef.current = null;
-          // Re-check rather than trust the closed-over `to`: the craft may
-          // have left this pavilion's sensor (or entered another's) in the
-          // second between the timer starting and firing.
-          if (promptToRef.current === to) enterRoom(to);
-        }, DWELL_MS);
-      }
+  // THE DWELL/PROMPT MECHANISM — dwell.ts, extracted from what used to be
+  // this file's only copy of it. Wired twice: rooms fire straight into
+  // `enterRoom` (navigate, scene tears down); landmarks fire into
+  // `openLandmark` below (open the in-world panel, scene keeps running).
+  // `handlePrompt` — Pavilions.tsx's `onPrompt` prop — is `roomDwell.setPrompt`
+  // directly; there is nothing left for this file to do in between.
+  const roomDwell = useDwellEnter<string>(DWELL_MS, enterRoom);
+
+  const [panelDestination, setPanelDestination] = useState<Destination | null>(null);
+  const openLandmark = useCallback((d: Destination) => setPanelDestination(d), []);
+  const closeLandmarkPanel = useCallback(() => setPanelDestination(null), []);
+  const landmarkDwell = useDwellEnter<Destination>(DWELL_MS, openLandmark);
+  // A landmark already open in the panel doesn't need its own approach card
+  // prompting to open it again — Landmarks.tsx's edge detector still fires
+  // on every genuine approach/exit, but re-arming the SAME destination's
+  // dwell while its panel is already open would be visible only as a
+  // needless card flicker behind the panel, never a second panel.
+  const handleLandmarkPrompt = useCallback(
+    (d: Destination | null) => {
+      if (panelDestination && d?.key === panelDestination.key) return;
+      landmarkDwell.setPrompt(d);
     },
-    [enterRoom],
+    // landmarkDwell.setPrompt is dwell.ts's own stable useCallback — the
+    // linter can't see through the destructure, and listing the whole
+    // `landmarkDwell` object (a fresh literal every render) would just
+    // recreate this callback every render for no benefit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panelDestination, landmarkDwell.setPrompt],
   );
 
+  // The HUD's Enter button, and (below) the Enter key: each dwell's own
+  // `confirm()` is a no-op unless it currently has a prompt, so firing both
+  // unconditionally is simpler and just as correct as first working out
+  // which (if either) is active — room and landmark approach volumes never
+  // overlap (Landmarks.tsx's own comment on why), so at most one ever does
+  // anything.
   const onHudConfirm = useCallback(() => {
-    if (promptToRef.current) enterRoom(promptToRef.current);
-  }, [enterRoom]);
+    roomDwell.confirm();
+    landmarkDwell.confirm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomDwell.confirm, landmarkDwell.confirm]);
 
   /**
    * The tour's own state, in a ref because it is read and written from the
@@ -374,7 +390,7 @@ export default function World(props: { onShowList: () => void }) {
         tour.targetTo = target?.to ?? null;
         const room = target ? ROOMS.find((r) => r.to === target.to) : null;
         setWaypoint(
-          target && room ? { label: room.label, tint: room.tint, x: target.x, z: target.z } : null,
+          target && room ? { label: room.label, tint: worldLane(room.group, worldPalette()) ?? worldTint(room.tint, worldPalette()), x: target.x, z: target.z } : null,
         );
       }
 
@@ -415,8 +431,10 @@ export default function World(props: { onShowList: () => void }) {
       // room-entry edge above sees a single press rather than being
       // re-triggered every frame the key stays held.
       const confirmPressedThisFrame = confirmed && !confirmHeldRef.current;
-      if (confirmPressedThisFrame && promptToRef.current)
-        enterRoom(promptToRef.current);
+      if (confirmPressedThisFrame) {
+        roomDwell.confirm();
+        landmarkDwell.confirm();
+      }
       confirmHeldRef.current = confirmed;
 
       // The resolve chime — see the refs' own comment for the throttle.
@@ -437,12 +455,25 @@ export default function World(props: { onShowList: () => void }) {
     // callback is handed to Craft and captured for the life of the mount, so
     // anything it closes over that is NOT listed would silently freeze at its
     // first value — pickups going quiet after a re-render is the kind of bug
-    // that is untraceable from the symptom.
-    [enterRoom, pushToast],
+    // that is untraceable from the symptom. roomDwell.confirm/landmarkDwell.confirm
+    // are dwell.ts's own stable useCallbacks (see its doc comment) — the
+    // linter can't see through the destructure; listing the whole dwell
+    // object here would recreate this callback (and re-subscribe Craft)
+    // every render for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enterRoom, pushToast, roomDwell.confirm, landmarkDwell.confirm],
   );
 
   const promptRoom: Room | null =
-    promptTo === null ? null : (ROOMS.find((r) => r.to === promptTo) ?? null);
+    roomDwell.current === null ? null : (ROOMS.find((r) => r.to === roomDwell.current) ?? null);
+
+  // Landmarks.tsx hands the whole Destination through; the HUD only ever
+  // needs its label and a colour to paint the same PromptCard rooms use.
+  // Project vs case-study reuses exactly the two tints Monuments.tsx
+  // already paints those families in (signal for a project tower, accent
+  // for a case-study obelisk) — no new hue invented for this card.
+  const landmarkTint = landmarkDwell.current?.kind === "project" ? palette.signal : palette.accent;
+  const promptLandmark = landmarkDwell.current ? { label: landmarkDwell.current.label, tint: landmarkTint } : null;
 
   return (
     <>
@@ -452,8 +483,9 @@ export default function World(props: { onShowList: () => void }) {
           grid, not a described car". Hud below is the entire accessible
           surface of this route while the world is showing. */}
       <Canvas
-        shadows
-        dpr={[1, 1.5]}
+        // §10 drop 1/3 — "pixelRatio clamped to 2" everywhere, pulled down
+        // further on a throttled device (deviceTier.ts's own budget).
+        dpr={[1, budget.dprMax]}
         // A few metres behind SPAWN_POSITION, matching the direction Craft's
         // own chase camera sits relative to the craft — this is only what
         // renders for the handful of frames before that chase cam's useFrame
@@ -465,67 +497,63 @@ export default function World(props: { onShowList: () => void }) {
           antialias: true,
           powerPreference: "high-performance",
           failIfMajorPerformanceCaveat: false,
+          // ACES directly on the renderer, not `@react-three/postprocessing`'s
+          // <ToneMapping> pass — Night Survey has no EffectComposer at all
+          // (art-direction doc §1: "Bloom is off by default even on
+          // desktop"; §10 confirms it stays off on every device tier).
+          // Emissive materials plus this tone curve carry the glow instead.
+          toneMapping: ACES_FILMIC,
         }}
         className="absolute inset-0"
         aria-hidden="true"
       >
         <color attach="background" args={[palette.void]} />
-        {/* A SKY, finally.
-            With the dust storm pulled in to hug its own buildings (see
-            resolve.ts's SCATTER_SPREAD), the top half of the frame stopped
-            being full of confetti and started being pure #000 — which reads
-            as a rendering failure rather than as night. A thin star field
-            gives the void a ceiling and, more usefully, gives the horizon
-            somewhere to be: the slab's far edge now sits against something
-            instead of dissolving into the background colour.
-            Radius is well outside WORLD_BOUNDS.maxZ so you can never drive
-            into it, and the count is deliberately low — this is a backdrop,
-            not a feature, and it must not become the next thing competing for
-            attention in a scene this rework spent its whole time quieting. */}
-        <Stars radius={180} depth={60} count={900} factor={4} saturation={0} fade speed={0.4} />
-        {/* Fog starts further out than it did (30 -> 55). At 30 the far half
-            of the mainland was already fading into the background colour, so a
-            driver couldn't see the room they were heading for — which on a
-            surface whose entire job is navigation is the wrong trade. */}
-        <fog attach="fog" args={[palette.void, 55, 140]} />
-        {/* Lifted from 0.55/0.6/1.4. The first render of this scene was legible
-            in a screenshot only if you already knew what you were looking at:
-            unlit faces of the terrain read as pure background, so the mainland
-            had no visible edge and the sea and the sky were the same colour.
-            Dark is the site's palette; unreadable isn't. */}
-        {/* Three lights, not one. A single overhead key on untextured boxes
-            gives every face the same value and the silhouette disappears; the
-            rim light behind picks out edges against the dark ground, and the
-            cool fill from the opposite side keeps the shadow sides from going
-            to pure black. This is the cheapest thing that makes primitives look
-            deliberate. */}
-        <ambientLight intensity={0.85} />
-        <directionalLight position={[-16, 12, 26]} intensity={1.2} color="#7fd9ff" />
-        <directionalLight position={[10, 6, -20]} intensity={1.4} color="#ffd9a0" />
-        <hemisphereLight args={[palette.signalDim, palette.void, 1.0]} />
-        <directionalLight
-          castShadow
-          position={[18, 26, -12]}
-          intensity={2.6}
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-40}
-          shadow-camera-right={40}
-          shadow-camera-top={40}
-          shadow-camera-bottom={-40}
-        />
-        <Physics paused={paused}>
-          <MemoTerrain />
-          <MemoProps />
-          <MemoMonuments />
-          <MemoCorpus />
-          <MemoPavilions onPrompt={handlePrompt} />
-          <MemoCraft onState={handleCraftState} />
-        </Physics>
+        <MemoSky />
+        {/* §4 fog — desktop (18, 130) / mobile (12, 70): a hard linear range
+            is also this world's LOD cliff, which is why it's Linear and not
+            Exp2. The device split is the one piece of §10's mobile ladder
+            this file reaches for on its own: a two-number `matchMedia` read
+            at mount, not the tier/benchmark system (fixture counts, texture
+            probing) — that system is out of scope here. */}
+        <fog attach="fog" args={fogArgs} />
+        {/* §4 — exactly two Light objects in the whole scene. Nothing else
+            in this file may be a light: relief legibility comes from the
+            13° key's n·l falloff plus the emissive fixture/seam rhythm, not
+            from a shadow map — there is no shadow map (no `shadows` prop on
+            <Canvas>, no `castShadow`/shadow-camera props here), which also
+            silences the "PCFSoftShadowMap has been deprecated" warning that
+            used to fire on every load. */}
+        {/* Owner refinement: "blue hour, not black" — the doc's 1.15/0.35
+            read as an unlit room before any fixture exists to carry the
+            scene (step 3, not built yet). Same two lights, same colours,
+            same 13° raking angle (unchanged — that's what makes relief
+            legible); only the two intensities are raised so the terrain
+            reads from shading and silhouette alone. */}
+        <directionalLight color="#bfe8e0" intensity={1.35} position={[-122, 28, 18]} />
+        <hemisphereLight args={["#0a1416", "#0f1a14", 0.75]} />
+        <MemoTerrain />
+        <MemoFixtures />
+        <MemoProps />
+        <MemoMonuments />
+        <MemoCorpus />
+        <MemoPavilions onPrompt={roomDwell.setPrompt} />
+        {/* PART 1 — the project/case-study equivalent of the line above.
+            Renders nothing itself (Monuments.tsx already draws the solid
+            tower/obelisk); it only decides whether the car is near one. */}
+        <MemoLandmarks onPrompt={handleLandmarkPrompt} />
+        <MemoVehicle onState={handleCraftState} paused={paused} />
         <MemoTrail />
-        {/* The city's dust — always mounted, never conditional on anything:
-            frame 0's "lit road through a haze" is the design's whole
-            first-five-seconds bet, and that only works if this is here from
-            the very first render, same as the pavilions themselves. */}
+        {/* Mounted after Vehicle so their own useFrame subscriptions run
+            after Vehicle's within the same rendered frame — SpawnFlyIn's
+            per-frame camera hold has to win any frame it's still active,
+            and Wake's read-line furniture reads telemetry Vehicle just
+            wrote this frame rather than last frame's. */}
+        <SpawnFlyIn />
+        <MemoWake />
+        {/* Renders nothing (Night Survey §12 step 3 removed its dust) — still
+            mounted unconditionally because its useFrame is what advances
+            resolve.ts's ratchet every frame, which Monuments/Corpus's own
+            "rise" reveal and the HUD's FIX % both depend on. */}
         <MemoResolveField />
         {/* The two authored/discovered arcs. Overhead-only geometry (x=0,
             above the boulevard) with no collider — you drive under them,
@@ -533,40 +561,11 @@ export default function World(props: { onShowList: () => void }) {
             alongside Trail and the dust field. */}
         <MemoThreads />
         <Artifacts collected={collected} />
-        {/* Bloom is doing real work here, not gloss. Every room's identity in
-            this world is carried by an emissive material in its tint — the
-            phone screen, the CRT face, the atoll's waterline ring, the sky
-            islands' PCB traces, the checkpoint gates. Unbloomed they read as
-            flat coloured rectangles in a dark scene; with it they read as lit
-            objects and become visible from much further away, which is the
-            difference between navigating and hunting. luminanceThreshold is set
-            high enough that only genuinely emissive surfaces bloom, so the
-            terrain doesn't turn milky. */}
-        <EffectComposer>
-          {/* Ambient occlusion first, and it does more for this scene than
-              everything else in this stack combined. A world built from
-              untextured primitives has no contact information — a box on a
-              plane and a box floating a centimetre above it look identical, so
-              the whole thing reads as flat shapes rather than objects sitting
-              somewhere. AO puts the shadow back into every crease and corner
-              the geometry implies. */}
-          <N8AO aoRadius={1.4} intensity={2.6} distanceFalloff={0.8} quality="low" halfRes />
-          {/* Threshold 0.9, not 0.62. At 0.62 the lit terrain itself passed the
-              cut and the mainland bloomed into soft white pools — the scene got
-              brighter but less readable, which is the opposite of the point.
-              The room emissives sit well above 0.9, so raising it keeps the
-              glow on the things that are meant to glow. */}
-          <Bloom intensity={0.7} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
-          <Vignette eskil={false} offset={0.22} darkness={0.72} />
-          {/* ACES filmic, not the renderer's default linear clamp. Everything
-              bright in this world is emissive — room tints, trails, gates — and
-              linear tone mapping clips them all to flat white, which is why the
-              lit surfaces looked like paper cut-outs. ACES rolls the highlights
-              off instead, so a glowing thing reads as bright rather than as a
-              hole in the image. */}
-          <ToneMapping mode={ACES_FILMIC} />
-          <SMAA />
-        </EffectComposer>
+        {/* No <EffectComposer> — art-direction doc §1: "Bloom is off by
+            default even on desktop", and §10 confirms no device tier ever
+            re-adds it. Emissive materials (every room tint, the read-line,
+            the seams) plus the renderer's own ACES tone mapping (set above,
+            on `gl`) carry the glow instead of a post-process bloom pass. */}
         {/* Publishes the camera to the label layer below. Renders nothing, and
             deliberately sits outside <Physics> — it reads the camera the chase
             cam has already moved this frame, and has no business in the
@@ -580,12 +579,9 @@ export default function World(props: { onShowList: () => void }) {
       <WorldLabels targetTo={tourRef.current.targetTo} />
       <Hud
         promptRoom={promptRoom}
+        promptLandmark={panelDestination ? null : promptLandmark}
         onConfirm={onHudConfirm}
         onShowList={props.onShowList}
-
-
-
-
         waypoint={waypoint}
         waypointTo={tourRef.current.targetTo}
         visited={explored}
@@ -595,6 +591,10 @@ export default function World(props: { onShowList: () => void }) {
         toasts={toasts}
         totalRooms={ROOMS.length}
       />
+      {/* PART 1's actual deliverable: a DOM panel over the still-running
+          scene. Not rendered at all while closed (see LandmarkPanel.tsx's
+          own doc comment on why that matters for a screen reader). */}
+      <LandmarkPanel destination={panelDestination} onClose={closeLandmarkPanel} />
     </>
   );
 }

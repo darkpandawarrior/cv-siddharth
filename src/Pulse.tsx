@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Activity, LayoutGrid } from "lucide-react";
+import {ArrowLeft, Activity } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
@@ -7,6 +6,8 @@ import { groupPulse, totalInteractions, usePulseCounts } from "./play/pulse.ts";
 import { VisitorLedgerPanel, useVisitorLedger } from "./play/Visitors.tsx";
 import { totalVisitors } from "./play/visitors.ts";
 
+import { SiteFooter } from "./SiteFooter.tsx";
+import { LauncherButton } from "./Launcher.tsx";
 /**
  * /pulse — what visitors actually do here, counted across everyone.
  *
@@ -50,12 +51,13 @@ function PulseInner() {
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/playground"
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent"
-            >
-              <LayoutGrid size={14} /> <span className="label-wide">Playground</span>
-            </Link>
+            {/* This was a Link to /playground wearing LauncherButton's exact
+                class string. Same pill, same icon, same hover — and it
+                navigated instead of opening the surfaces wall, so /pulse's
+                header looked like every other room's and behaved differently.
+                Looking identical while doing something else is worse than
+                looking different. */}
+            <LauncherButton />
             <button
               type="button"
               onClick={() => goToSection("top")}
@@ -64,7 +66,7 @@ function PulseInner() {
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          <span className="hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted lg:flex">
+          <span className="kicker hidden items-center gap-2 lg:flex">
             <Activity size={13} className="text-accent" /> The Pulse — what visitors actually touch
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -80,9 +82,12 @@ function PulseInner() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-4xl flex-1 px-6">
-        <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the pulse</p>
+        <p className="section-eyebrow mb-2">// the pulse</p>
         <h1 className="font-display text-hero font-bold tracking-tight">
-          {total.toLocaleString()} <span className="text-accent">interaction{total === 1 ? "" : "s"}</span>
+          {/* aria-hidden on the figures only: the <h1> keeps its heading role
+              and its place in the document outline, while the numbers are
+              announced once by the status region above instead of twice. */}
+          <span aria-hidden="true">{total.toLocaleString()}</span> <span className="text-accent" aria-hidden="true">interaction{total === 1 ? "" : "s"}</span>
           {people > 0 && (
             <>
               {" "}
@@ -91,6 +96,21 @@ function PulseInner() {
             </>
           )}
         </h1>
+        {/* The headline above is live — it moves whenever anyone, anywhere,
+            touches a room. Without this a screen-reader visitor is handed a
+            number once and never told it changed, which is the one thing this
+            page exists to show. Same shape as FloatingChat's voice status: a
+            separate sr-only status node rather than aria-live on the <h1>,
+            because making the heading itself a live region re-announces the
+            whole heading and its markup on every tick.
+
+            Deliberately `polite` and deliberately a single summary sentence
+            rather than a region per row — 30-odd counters each announcing
+            themselves would be unusable. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {total.toLocaleString()} interaction{total === 1 ? "" : "s"}
+          {people > 0 ? ` from ${people.toLocaleString()} ${people === 1 ? "person" : "people"}` : ""} so far.
+        </p>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
           Every room on this site writes to one shared counter. This is the whole of it — what gets opened,
           what gets played with, and what nobody has touched yet.
@@ -143,6 +163,10 @@ function PulseInner() {
           identifier, and nowhere to keep one even if I wanted it.
         </p>
       </main>
+      {/* surfaces.ts types this a "page"-kind surface, and the registry
+          docs promise those get the footer. These two were the exceptions:
+          ordinary scroll pages that dead-ended with no sitemap out. */}
+      <SiteFooter />
     </div>
   );
 }

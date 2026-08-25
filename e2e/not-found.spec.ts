@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./lib/test.ts";
 
 // Task C1: the $.tsx splat catch-all renders a designed, SSR'd 404 instead of
 // the router's default blank/white-screen not-found state.

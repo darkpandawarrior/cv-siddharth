@@ -12,10 +12,10 @@ import {
   skills,
   projects,
   caseStudies,
-  recentGrowth,
   sharedFoundation,
   openSource,
 } from "./data/profile.ts";
+import { shippedNewestFirst } from "./lib/shipped.ts";
 import { chess } from "./data/chess.ts";
 import { writing } from "./data/writing.ts";
 import { RELATED_SERIES } from "./data/connections.ts";
@@ -383,7 +383,9 @@ function buildCommands(jump: Go): Cmd[] {
             <div key={job.company}>
               <Hi>{job.role}</Hi> <Dim>@ {job.company}</Dim> <Dim>· {job.period}</Dim>
               <ul className="ml-3 text-zinc-400">
-                {job.points.slice(0, 3).map((pt) => (
+                {/* Terminal output is print-once text, not a card — a click-to-expand
+                    control doesn't fit here, so print every bullet instead of slicing. */}
+                {job.points.map((pt) => (
                   <li key={pt.text}>- {pt.label ? `${pt.label}: ` : ""}{pt.text}</li>
                 ))}
               </ul>
@@ -434,7 +436,7 @@ function buildCommands(jump: Go): Cmd[] {
       help: "recently shipped, newest first",
       run: () => (
         <div className="space-y-0.5">
-          {recentGrowth.slice(-6).reverse().map((g) => (
+          {shippedNewestFirst.map((g) => (
             <div key={g.title}>
               <Dim>{g.date}</Dim> <span className="text-zinc-200">{g.title}</span>
             </div>
@@ -1249,7 +1251,7 @@ export function Terminal() {
             <ArrowLeft size={14} /> <span className="label-wide">Back to portfolio</span>
           </button>
         </span>
-        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
+        <span className="kicker flex items-center gap-2">
           <TerminalSquare size={13} className="text-[var(--t-accent)]" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh
         </span>

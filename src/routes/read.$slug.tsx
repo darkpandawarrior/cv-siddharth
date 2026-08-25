@@ -11,14 +11,17 @@ import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { MarginNotes } from "../play/MarginNotes.tsx";
+import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
 /**
  * Read a piece — the prose, not a photograph of the prose.
  *
- * /excelsior hosts 396 rendered magazine pages. That is a faithful artefact and
- * a bad way to read: the text is unselectable, unsearchable, invisible to
- * crawlers, and brutal on a phone. Ten thousand words of his actual writing sat
- * in a public repo the whole time while the site shipped pictures of paper.
+ * /excelsior hosts the magazine as rendered page images. That is a faithful
+ * artefact and a bad way to read: the text is unselectable, unsearchable,
+ * invisible to crawlers, and brutal on a phone. Ten thousand words of his
+ * actual writing sat in a public repo the whole time while the site shipped
+ * pictures of paper.
  *
  * So the magazine becomes the EVIDENCE and this becomes the reading. Every
  * piece carries a link to the exact page it ran on, which is the part a
@@ -187,6 +190,7 @@ function ReadPiece() {
   const scorchStyle: ScorchStyle | undefined = scorchFraction > 0 ? { "--scorch": scorchFraction } : undefined;
 
   return (
+    <DeferredPlayRoom>
     <div className="ink-world min-h-screen">
       {/* The root skip link targets #main-content on every route; without it
           here, "Skip to content" went nowhere and the a11y gate timed out
@@ -201,7 +205,7 @@ function ReadPiece() {
             // Four of these never ran anywhere, so there is no edition to name.
             // Saying "First published here" is better than inventing a
             // provenance, and it is also the more interesting claim.
-            <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
+            <p className="kicker-accent">
               {[
                 piece.form,
                 piece.page > 0 ? `Excelsior '${piece.year.slice(2)}` : piece.year ? `'${piece.year.slice(2)}` : null,
@@ -212,13 +216,20 @@ function ReadPiece() {
             </p>
           ) : (
             // The Directory numbers by journal entry, The Ninety-One Pages
-            // numbers by page out of 91 — the two seasons don't share a
-            // counting scheme, so the byline has to ask which season it is
-            // before it can say which number.
-            <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
+            // numbers by page out of 91 — the seasons don't share a counting
+            // scheme, so the byline has to ask which season it is before it
+            // can say which number. The page he keeps has no page at all, and
+            // null is free here: the array is filtered and joined, so that
+            // byline degrades to the season title and the planet rather than
+            // asserting "Page 0 of 91".
+            <p className="kicker-accent">
               {[
                 anthology.seasons.find((s) => s.n === piece.season)?.title,
-                piece.season === 1 ? `Journal Entry #${piece.entry}` : `Page ${piece.page} of 91`,
+                piece.season === 1
+                  ? `Journal Entry #${piece.entry}`
+                  : piece.page
+                    ? `Page ${piece.page} of 91`
+                    : null,
                 piece.planet ? (piece.system ? `${piece.planet}, ${piece.system}` : piece.planet) : null,
               ]
                 .filter(Boolean)
@@ -333,11 +344,11 @@ function ReadPiece() {
             {piece.kind === "anthology" && piece.season === 1 && <RelayHeader entry={piece} />}
             {piece.kind === "anthology" && piece.season === 3 && <WithdrawnMarker entry={piece} />}
             <ReactMarkdown
-              // GFM is not optional for these. Three of the twenty entries carry
-              // real tables, and in two of them the table IS the entry: page
-              // thirty is a weighing whose whole point is a difference column
-              // that climbs, and page ninety one is the charter schedule where
-              // an interval that never had a length finally has one. Without
+              // GFM is not optional for these. Some entries carry real tables,
+              // and in a couple of them the table IS the entry: page thirty is
+              // a weighing whose whole point is a difference column that
+              // climbs, and page ninety one is the charter schedule where an
+              // interval that never had a length finally has one. Without
               // this plugin react-markdown does not parse tables at all, and
               // those pages shipped as one mangled line of pipes.
               remarkPlugins={[remarkGfm]}
@@ -392,7 +403,7 @@ function ReadPiece() {
                 className="h-24 w-40 shrink-0 rounded-lg object-cover"
               />
               <div>
-                <p className="font-mono text-[11px] uppercase tracking-widest text-accent/80">The teller</p>
+                <p className="kicker-accent">The teller</p>
                 <p className="font-display mt-1 text-base font-bold">{piece.witness.name}</p>
                 <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                   {piece.witness.did}
@@ -401,6 +412,8 @@ function ReadPiece() {
             </aside>
           )}
         </article>
+
+        <MarginNotes pieceSlug={piece.slug} />
 
         <nav className="mt-16 border-t border-line pt-8">
           {piece.kind === "printed" ? (
@@ -449,6 +462,7 @@ function ReadPiece() {
       <SiteFooter />
       <FloatingChat />
     </div>
+    </DeferredPlayRoom>
   );
 }
 

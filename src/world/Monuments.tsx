@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 import * as THREE from "three";
 import { Color } from "three";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody, CuboidCollider, CylinderCollider } from "@react-three/rapier";
 import {
   employerBlocks,
   caseStudyMonuments,
@@ -13,7 +12,7 @@ import {
 } from "./districtWest.ts";
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
-import { worldPalette, dim } from "./palette.ts";
+import { worldPalette, dim , laneColors} from "./palette.ts";
 
 /**
  * WEST DISTRICT'S GEOMETRY — "what he was paid for," built.
@@ -26,14 +25,15 @@ import { worldPalette, dim } from "./palette.ts";
  * resolve.ts's "rise" shader so nothing here exists until the visitor has
  * driven near enough to resolve it.
  *
- * Render and physics are deliberately decoupled: every family renders as ONE
- * InstancedMesh (the render-budget line — see the design doc's "west flank
- * total <= 9 draw calls"), but each STRUCTURE still gets its own fixed
- * RigidBody with an explicit collider sized to just that structure, because
- * a single shared collider across instances of wildly different sizes
- * (Dice's 24.8m block next to John Deere's 5.6m one) isn't something a
- * shared auto-collider can express. Colliders never render, so this costs
- * nothing against the draw-call budget.
+ * Render and physics are decoupled the other way now: every family renders
+ * as ONE InstancedMesh (the render-budget line — see the design doc's "west
+ * flank total <= 9 draw calls"), and there is no per-structure collider here
+ * at all any more. obstacles.ts derives an axis-aligned footprint for every
+ * employer block, case-study monument and project tower straight off the
+ * same `employerBlocks()`/`caseStudyMonuments()`/`projectTowers()` calls this
+ * file renders from, and drive.ts's kinematic model collides against that
+ * list directly — a collider per structure would just be a second,
+ * hand-synced copy of the same footprint.
  */
 
 const dummy = new THREE.Object3D();
@@ -127,21 +127,9 @@ function useRiseGeometry(meshRef: RefObject<THREE.InstancedMesh | null>, matRef:
 
 // ── employer blocks ─────────────────────────────────────────────────────
 
-function EmployerColliders({ blocks }: { blocks: EmployerBlock[] }): JSX.Element {
-  return (
-    <>
-      {blocks.map((b) => (
-        <RigidBody key={b.company} type="fixed" colliders={false} position={[b.x, 0, b.zMid]}>
-          <CuboidCollider args={[b.width / 2, b.height / 2, b.span / 2]} position={[0, b.height / 2 + CITY.groundY, 0]} />
-        </RigidBody>
-      ))}
-    </>
-  );
-}
-
 function EmployerShells({ blocks }: { blocks: EmployerBlock[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const targets = useMemo(
@@ -215,18 +203,6 @@ const FLOOR_HEIGHT = 1.6; // districtWest.ts's own FLOOR_HEIGHT — kept in step
 
 // ── case studies ────────────────────────────────────────────────────────
 
-function CaseStudyColliders({ monuments }: { monuments: CaseStudyMonument[] }): JSX.Element {
-  return (
-    <>
-      {monuments.map((m) => (
-        <RigidBody key={m.slug} type="fixed" colliders={false} position={[m.x, 0, m.z]}>
-          <CylinderCollider args={[m.height / 2, m.radius]} position={[0, m.height / 2 + CITY.groundY, 0]} />
-        </RigidBody>
-      ))}
-    </>
-  );
-}
-
 function CaseStudyObelisks({ monuments }: { monuments: CaseStudyMonument[] }): JSX.Element {
   const c = worldPalette();
   const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -262,21 +238,9 @@ function CaseStudyObelisks({ monuments }: { monuments: CaseStudyMonument[] }): J
 
 // ── project towers ──────────────────────────────────────────────────────
 
-function ProjectTowerColliders({ towers }: { towers: ProjectTower[] }): JSX.Element {
-  return (
-    <>
-      {towers.map((t) => (
-        <RigidBody key={t.slug} type="fixed" colliders={false} position={[t.x, 0, t.z]}>
-          <CuboidCollider args={[t.width / 2, t.height / 2, t.width / 2]} position={[0, t.height / 2 + CITY.groundY, 0]} />
-        </RigidBody>
-      ))}
-    </>
-  );
-}
-
 function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
@@ -321,7 +285,7 @@ function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element
 
 function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element {
   const c = worldPalette();
-  const tints = useMemo(() => [c.signal, c.probe, c.alt, c.warn], [c.signal, c.probe, c.alt, c.warn]);
+  const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const targets = useMemo(
@@ -370,12 +334,9 @@ export function Monuments(): JSX.Element {
   const towers = useMemo(() => projectTowers(), []);
   return (
     <>
-      <EmployerColliders blocks={blocks} />
       <EmployerShells blocks={blocks} />
       <EmployerFloors blocks={blocks} />
-      <CaseStudyColliders monuments={monuments} />
       <CaseStudyObelisks monuments={monuments} />
-      <ProjectTowerColliders towers={towers} />
       <ProjectTowerShafts towers={towers} />
       <ProjectTowerCrowns towers={towers} />
     </>

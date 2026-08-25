@@ -19,7 +19,9 @@ import {
   simulate,
   type Tier,
 } from "./signalEngine.ts";
+import { Link } from "@tanstack/react-router";
 import { readToken } from "../themeColor";
+import { useSectionNav } from "../lib/navigation.ts";
 
 /**
  * The Signal Lab — the "trip distances were off by large margins" bug from
@@ -64,6 +66,11 @@ export function SignalLabPane() {
   const [scenario, setScenario] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [playhead, setPlayhead] = useState(1);
+  // The two footer links leave this lab, so they go through the router rather
+  // than a bare <a>: a document navigation from here would tear down and
+  // remount the whole app, and #work in particular has to survive the home
+  // chunk still loading, which is exactly what goToSection's mount-wait does.
+  const { goToSection } = useSectionNav();
 
   /* ── The engine run. Pure, memoised, and the single source of every number
    *    and every pixel below. */
@@ -335,12 +342,12 @@ export function SignalLabPane() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        At Dice.tech, field users' trip distances were off by large margins — urban canyons, tunnels and
+        At Dice.tech, field users' trip distances were off by large margins. Urban canyons, tunnels and
         OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
         fix, rebuilt from scratch as Mileway's location engine and running over a real 17.4 km loop through
         Pune. Raw GPS reads the drive as roughly <span className="text-warn">40 km</span>, because noise
         adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
-        back. Every figure below is summed geodesic distance over the points a stage actually kept — no
+        back. Every figure below is summed geodesic distance over the points a stage actually kept, no
         fidelity factors, and the tests assert these exact headlines.
       </p>
 
@@ -351,6 +358,7 @@ export function SignalLabPane() {
           <canvas
             ref={canvasRef}
             className="pointer-events-none absolute inset-0 h-full w-full"
+            role="img"
             aria-label={`Live GPS pipeline over a real ${(ROUTE_LENGTH_M / 1000).toFixed(1)} km driving loop in Pune, India`}
           />
           <style>{`
@@ -373,7 +381,7 @@ export function SignalLabPane() {
 
         {/* The ladder. */}
         <div className="border-t border-line px-5 py-4">
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-wider text-muted">
+          <p className="kicker mb-3">
             the pipeline, one stage at a time
           </p>
           <div className="space-y-1.5">
@@ -492,9 +500,17 @@ export function SignalLabPane() {
           </span>
 
           <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
-            <a href="/#work" className="transition hover:text-accent">the full story → Dice.tech</a>
+            {/* py-1 lifts these two to the 24px touch minimum. The row is 11px
+                  text, so the bare line box was about 17px and Lighthouse
+                  scored /lab at 96 on target-size. Padding rather than a
+                  layout change keeps them inline in the sentence. */}
+              <button type="button" onClick={() => goToSection("work")} className="inline-block py-1 transition hover:text-accent">
+              the full story → Dice.tech
+            </button>
             <span className="text-muted">·</span>
-            <a href="/project/mileway" className="transition hover:text-accent">rebuilt again at Mileway</a>
+            <Link to="/project/$slug" params={{ slug: "mileway" }} className="inline-block py-1 transition hover:text-accent">
+              rebuilt again at Mileway
+            </Link>
           </span>
         </div>
       </div>
@@ -506,7 +522,7 @@ function Figure({ label, value, sub, tone }: { label: string; value: string; sub
   const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-warn" : "text-zinc-200";
   return (
     <div className="bg-void/70 px-5 py-3">
-      <p className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</p>
+      <p className="kicker">{label}</p>
       <p className={`font-display text-xl font-bold ${color}`}>{value}</p>
       <p className="font-mono text-[11px] text-muted">{sub}</p>
     </div>

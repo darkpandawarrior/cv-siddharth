@@ -22,8 +22,8 @@ const BRANDS: BrandToken[] = [
 ];
 
 const CLIENTS = ["FleetCo", "ZipRide", "HaulHub", "GoTrux"];
-// The other 16 of the real 20+ white-label clients — shown as a compressed
-// strip, not full cards. Numbered rather than named: the "20+" is the real
+// A compressed strip standing in for the rest of the real 150+ white-label
+// clients, not full cards. Numbered rather than named: the count is the real
 // claim, these fill it out without inventing 16 fictional company names.
 const MORE_CLIENTS = Array.from({ length: 16 }, (_, i) => `C${String(i + 5).padStart(2, "0")}`);
 
@@ -69,7 +69,7 @@ function HeroPreview({ client, brand }: { client: string; brand: BrandToken }) {
           </div>
           <div className="flex gap-5">
             <div>
-              <div className="text-lg font-bold" style={{ color: brand.color }}>20+</div>
+              <div className="text-lg font-bold" style={{ color: brand.color }}>150+</div>
               <div className="font-mono text-[10px] text-muted">clients, one token</div>
             </div>
             <div>
@@ -110,7 +110,7 @@ export function ThemeLab() {
               {CLIENTS.map((c, i) => (
                 <div
                   key={c}
-                  className="overflow-hidden rounded-xl border border-line bg-card"
+                  className="panel-sm overflow-hidden"
                   style={{ transition: `border-color 0.4s ${i * 90}ms`, borderColor: `${brand.color}44` }}
                 >
                   <div
@@ -231,7 +231,7 @@ export function ThemeLab() {
             </span>
           )}
           <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
-            the full story → 20+ clients, one pipeline
+            the full story → 150+ clients, one pipeline
           </button>
         </div>
       </div>

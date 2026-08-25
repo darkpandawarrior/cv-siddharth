@@ -42,6 +42,12 @@ export type { LabKey };
 // here meant every homepage visitor downloaded the whole bench to set a string.
 export { openLab };
 
+/** Shared by the two browser-only panes: their Suspense fallback is also what
+ *  the server renders in their place. One shape, so the swap is invisible. */
+function PaneFallback({ what }: { what: string }) {
+  return <div className="py-10 text-center font-mono text-sm text-muted">loading {what}…</div>;
+}
+
 /* ── The bench ───────────────────────────────────────────────────────── */
 
 const TABS = LAB_TABS;
@@ -49,7 +55,15 @@ const TABS = LAB_TABS;
 export function LabBench() {
   const [tab, setTab] = useState<LabKey>(() => peekPendingLab() ?? "signal");
 
+  // ponytail: lazy() does NOT keep a chunk off the server — React resolves a
+  // lazy child while streaming, and SignalLab's leaflet import touches
+  // `window` at module scope, which killed the whole /lab render. One mount
+  // flag holds both browser-only panes back to the client; the fallback each
+  // already had becomes the server's markup.
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     clearPendingLab(); // consumed by the initial state above
     return onOpenLab(setTab);
   }, []);
@@ -58,7 +72,7 @@ export function LabBench() {
     <section id="lab" className="border-t border-line bg-void/40">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-accent/70">// the lab bench</p>
+          <p className="section-eyebrow mb-2">// the lab bench</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Don't take the numbers on faith</h2>
           <p className="mb-8 max-w-2xl text-zinc-400">
             {countWord(LAB_TABS.length)} instruments spanning Dice.tech's production case studies, five personal open-source
@@ -76,7 +90,7 @@ export function LabBench() {
         </Reveal>
         <Reveal>
           <div className="mb-2">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Dice.tech — production</p>
+            <p className="kicker mb-2 font-semibold">Dice.tech — production</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "production").map((t) => (
                 <button
@@ -94,7 +108,7 @@ export function LabBench() {
                 </button>
               ))}
             </div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted font-mono">Personal builds</p>
+            <p className="kicker mb-2 font-semibold">Personal builds</p>
             <div className="mb-6 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "personal").map((t) => (
                 <button
@@ -114,8 +128,8 @@ export function LabBench() {
             </div>
           </div>
           {tab === "signal" && (
-            <Suspense fallback={<div className="py-10 text-center font-mono text-sm text-muted">loading signal lab…</div>}>
-              <SignalLabPane />
+            <Suspense fallback={<PaneFallback what="signal lab" />}>
+              {mounted ? <SignalLabPane /> : <PaneFallback what="signal lab" />}
             </Suspense>
           )}
           {tab === "crashes" && <CrashLab />}
@@ -127,8 +141,8 @@ export function LabBench() {
           {tab === "fanout" && <FanoutLab />}
           {tab === "replay" && <ReplayLab />}
           {tab === "chess-search" && (
-            <Suspense fallback={<div className="py-10 text-center font-mono text-sm text-muted">loading chess engine…</div>}>
-              <ChessSearchLab />
+            <Suspense fallback={<PaneFallback what="chess engine" />}>
+              {mounted ? <ChessSearchLab /> : <PaneFallback what="chess engine" />}
             </Suspense>
           )}
           {tab === "chess-clock" && <ClockLab />}

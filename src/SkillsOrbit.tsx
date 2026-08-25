@@ -47,7 +47,7 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
         </Suspense>
       )}
       {enabled && (
-        <span className="pointer-events-none absolute bottom-1 right-2 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <span className="kicker pointer-events-none absolute bottom-1 right-2">
           drag to spin · click a skill to filter
         </span>
       )}

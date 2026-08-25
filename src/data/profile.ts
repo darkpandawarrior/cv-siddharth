@@ -1,4 +1,9 @@
 
+import { providerCount, upstreamStars } from "./hiresignal.ts";
+import { repoStats } from "./repoStats.ts";
+import { fleetStats } from "./store.ts";
+import { writing } from "./writing.ts";
+
 export const profile = {
   name: "Siddharth Pandalai",
   title: "Senior Android Engineer",
@@ -21,7 +26,7 @@ export const profile = {
   availabilityShort: "Remote or Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. I own the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users — I joined it with zero Kotlin in the codebase, and ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
+    "5+ years building production Android. I own the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users. I joined it with zero Kotlin in the codebase. ~87% of the UI layer is Compose today. Location accuracy, crash-free sessions, architecture a team can move fast in.",
   // One-pager summary. Same claims, a third of the lines — on a single page
   // every line the summary takes is a line the experience section loses, and
   // the experience section is what gets him called.
@@ -40,7 +45,7 @@ export const education = {
 
 export const metrics = [
   { value: "50k+", label: "monthly active users", detail: "22k+ daily, platform owner at Dice.tech" },
-  { value: "95%", label: "GPS accuracy", detail: "up from 50% — predictive dead reckoning" },
+  { value: "95%", label: "GPS accuracy", detail: "up from 50%, by predictive dead reckoning" },
   { value: "80%", label: "crash reduction", detail: "Crashlytics + structured concurrency fixes" },
   { value: "~87%", label: "UI-layer Compose", detail: "~87% of the UI layer, verified screen by screen against the legacy XML" },
 ];
@@ -182,7 +187,7 @@ export const experience: Experience[] = [
         // The short summary asserts "80% fewer crashes" and, until this was
         // promoted, nothing on the one-pager evidenced it — the strongest
         // number on the page was a claim with no body behind it.
-        text: "Reduced production crashes 80% at 22,000+ daily users — the fix was the concurrency and threading model, not defensive try/catch, with Crashlytics and Sentry catching regressions before users report them.",
+        text: "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Crashlytics and Sentry catch regressions before users report them.",
         tier: 1,
       },
       {
@@ -282,24 +287,24 @@ export interface CaseStudy {
 export const caseStudies: CaseStudy[] = [
   {
     slug: "mileway",
-    title: "Mileway — offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
+    title: "Mileway: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
     metric: "46 modules · 5 platforms · offline AI",
     summary:
-      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend — Room + DataStore only — so the whole thing is reproducible and reviewable by anyone.",
+      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend, Room + DataStore only, so the whole thing is reproducible and reviewable by anyone.",
     problem:
-      "I wanted a clean, inspectable reference for the architecture I advocate for at scale — Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer — built with zero backend so the whole thing is reproducible and reviewable by anyone.",
+      "I wanted a clean, inspectable reference for the architecture I advocate for at scale: Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer. Built with zero backend, so the whole thing is reproducible and reviewable by anyone.",
     approach: [
       "46-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
-      "Shared commonMain core — design system, Room (KMP) + DataStore, and every check-in / hardware-event screen — driving Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
+      "Shared commonMain core: design system, Room (KMP) + DataStore, and every check-in / hardware-event screen. It drives Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
       "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
-      "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals — the real logic a live expense platform needs, all local.",
-      "A durable submit-outbox: a track/voucher submission is journaled locally and reconciled deterministically, so a kill mid-submit never loses or double-counts a record — the repository already looks one implementation-swap away from a real API.",
-      "An on-device AI assistant: retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, chunked streaming and on-device speech I/O — no remote LLM, no server.",
-      "A super-profile & plugin-composition platform (V24, shipped — with a V25→V37 series landed on top spanning on-device intelligence, JWT auth, closeout hardening, home-screen cards/advances and a What's New feature): a single plugin registry — every tile, capability and tunable value gates through it, resolved by layering FORCED > USER > PRESET > DEFAULT — drives four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) that reshape hubs, auth flows and tracking behaviour from one account, plus act-on-behalf session delegation, a verification centre, growth/membership surfaces and wallet/payout identity.",
+      "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals. The real logic a live expense platform needs, all local.",
+      "A durable submit-outbox: a track/voucher submission is journaled locally and reconciled deterministically, so a kill mid-submit never loses or double-counts a record. The repository already looks one implementation-swap away from a real API.",
+      "An on-device AI assistant: retrieval-grounded chat over real local trip/expense/card data, Room-backed history with 5-minute session resume, chunked streaming and on-device speech I/O. No remote LLM, no server.",
+      "A super-profile & plugin-composition platform (V24, shipped, with a V25→V37 series landed on top spanning on-device intelligence, JWT auth, closeout hardening, home-screen cards/advances and a What's New feature): a single plugin registry drives four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) that reshape hubs, auth flows and tracking behaviour from one account, plus act-on-behalf session delegation, a verification centre, growth/membership surfaces and wallet/payout identity. Every tile, capability and tunable value gates through that registry, resolved by layering FORCED > USER > PRESET > DEFAULT.",
       "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 159 Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "All five targets build, run and pass every quality gate from one shared Kotlin codebase — with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
+      "All five targets build, run and pass every quality gate from one shared Kotlin codebase, with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
     tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "46 modules", "Offline AI", "Open source"],
   },
   {
@@ -329,7 +334,7 @@ export const caseStudies: CaseStudy[] = [
       "Reconstructed the user journey before each crash with structured breadcrumb instrumentation.",
       "Hunted concurrency bugs: main-thread violations, coroutine race conditions, lifecycle leaks.",
     ],
-    outcome: "Crashes fell 80% at 22k DAU; Play Store went 1.6★/67 reviews to 4.5★/27.3K — closing 85% of the gap to a perfect 5.0, +181% rating, 407x review volume.",
+    outcome: "Crashes fell 80% at 22k DAU; Play Store went 1.6★/67 reviews to 4.5★/27.3K, closing 85% of the gap to a perfect 5.0, +181% rating, 407x review volume.",
     tags: ["Crashlytics", "Structured concurrency", "Coroutines"],
   },
   {
@@ -353,7 +358,7 @@ export const caseStudies: CaseStudy[] = [
     metric: "858 branches · 80% faster delivery",
     summary: "A configuration-driven pipeline that turned weeks of per-client Android work into days, at a scale where per-client forks were the constraint.",
     problem:
-      "Every new white-label client meant manually forking, rebranding, and re-releasing the app: weeks of error-prone work, and the constraint that mattered was not building the feature once — it was doing that without forking the codebase per tenant.",
+      "Every new white-label client meant manually forking, rebranding, and re-releasing the app: weeks of error-prone work, and the constraint that mattered was not building the feature once. It was doing that without forking the codebase per tenant.",
     approach: [
       "Built configuration-driven theming and feature flags so one codebase served every client.",
       "Automated per-client signing, asset generation, and Play Store packaging end-to-end.",
@@ -516,6 +521,40 @@ export interface Project {
   tier?: 1 | 2;
 }
 
+/* Re-exported so the résumé and the repo showcase keep reading upstream facts
+ * from profile.ts, the one import path they already use for `upstreamMergedPRs`.
+ * See hiresignal.ts for why the declaration cannot live in this file. */
+export { providerCount, upstreamStars };
+
+/* ── The Loopdown, counted rather than remembered ─────────────────────────
+ *
+ * writing.ts is regenerated from the-loopdown on every prebuild, and the case
+ * study below used to restate its contents in hand-typed prose: seventeen
+ * lessons, eight series, a ten-piece archive, which series ran longest, which
+ * pillar carried the most, which lesson had actually been published. Every one
+ * of those is a query over data this file already imports, and every one of
+ * them was a number somebody had to remember to change.
+ *
+ * Rank claims are derived too, not just counts. "Sensors Who Lie runs longest"
+ * is as capable of going stale as "5 episodes", and rather more embarrassing,
+ * because it reads as editorial judgement instead of arithmetic.
+ */
+const lessons = writing.lessons;
+const seriesByLength = [...writing.series].sort((a, b) => b.episodes - a.episodes);
+const lessonsByPillar = Object.entries(
+  lessons.reduce<Record<string, number>>((acc, l) => {
+    const key = l.pillar ?? "other";
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {}),
+).sort((a, b) => b[1] - a[1]);
+const published = lessons.filter((l) => l.status === "published");
+const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) => {
+  const key = a.form ?? "other";
+  acc[key] = (acc[key] ?? 0) + 1;
+  return acc;
+}, {});
+
 export const projects: Project[] = [
   {
     slug: "kursi",
@@ -552,29 +591,29 @@ export const projects: Project[] = [
         platform: "iOS",
         deviceFrame: "phone",
         screens: ["4p_coach_action_phone.png", "tutorial_coup_phone.png", "career_phone.png", "settings_phone.png"],
-        note: "Compose Multiplatform renders pixel-identical UI on iOS — the same composables at phone size.",
+        note: "Compose Multiplatform renders pixel-identical UI on iOS. The same composables at phone size.",
       },
       {
         platform: "Desktop",
         deviceFrame: "desktop",
         screens: ["review_replay.png", "home_ranked.png"],
-        note: "Same engine, windowed — Compose Desktop (JVM) build.",
+        note: "Same engine, windowed. Compose Desktop (JVM) build.",
       },
       {
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home.png"],
         liveUrl: "/kursi-app/index.html",
-        note: "Live — the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
+        note: "Live: the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
       },
     ],
     detail: {
       overview:
-        "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair — the Gaddi — and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
+        "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair, the Gaddi, and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
       sections: [
         {
           heading: "Deterministic engine",
-          body: "The whole game is a pure function: (GameState, Intent) → GameState, with the RNG seed living inside the state. The same module drives single-player, the bots and a future server — and any match can be replayed byte-for-byte from its seed and intent log.",
+          body: "The whole game is a pure function: (GameState, Intent) → GameState, with the RNG seed living inside the state. The same module drives single-player, the bots and a future server. Any match can be replayed byte-for-byte from its seed and intent log.",
         },
         {
           heading: "Same game, three depths (launch overhaul)",
@@ -582,11 +621,11 @@ export const projects: Project[] = [
         },
         {
           heading: "AI Munshi narrator",
-          body: "A diegetic court-scribe turns raw engine events into one calm in-character line — grounded strictly on the redacted PlayerView so it narrates the beat without ever leaking a hidden card or inventing the board. It renders the deterministic templated line instantly and upgrades in place if an LLM is available (on-device Gemini Nano / Apple FoundationModels / BYOK cloud), never enters the intent log, and leaves byte-for-byte replay untouched.",
+          body: "A diegetic court-scribe turns raw engine events into one calm in-character line, grounded strictly on the redacted PlayerView so it narrates the beat without ever leaking a hidden card or inventing the board. It renders the deterministic templated line instantly and upgrades in place if an LLM is available (on-device Gemini Nano / Apple FoundationModels / BYOK cloud), never enters the intent log, and leaves byte-for-byte replay untouched.",
         },
         {
           heading: "ISMCTS expert AI + DARBAR social layer",
-          body: "Bots use Information Set Monte Carlo Tree Search (1.5k–16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs — social manipulation that never breaks engine determinism.",
+          body: "Bots use Information Set Monte Carlo Tree Search (1.5k-16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs. Social manipulation that never breaks engine determinism.",
         },
         {
           heading: "Secrecy boundary",
@@ -594,19 +633,19 @@ export const projects: Project[] = [
         },
         {
           heading: "“Sarkari Noir” visual system",
-          body: "A bespoke lamplit visual language — teak/brass/cream palette, Rozha One display type, Canvas-drawn intaglio role glyphs and stamped-instrument motifs — pushed to an AAA bar in the launch overhaul: every screen dissolved from bordered boxes into one continuous lit table (depth via shadow, never outline), a shared component vocabulary, and an AGSL/Skia runtime-shader material layer (film grain + warm bloom on the felt) with a graceful no-shader fallback. All behind a full Fastlane + CI pipeline with headless screenshot rendering.",
+          body: "A bespoke lamplit visual language: teak/brass/cream palette, Rozha One display type, Canvas-drawn intaglio role glyphs and stamped-instrument motifs. The launch overhaul pushed it to an AAA bar: every screen dissolved from bordered boxes into one continuous lit table (depth via shadow, never outline), a shared component vocabulary, and an AGSL/Skia runtime-shader material layer (film grain + warm bloom on the felt) with a graceful no-shader fallback. All behind a full Fastlane + CI pipeline with headless screenshot rendering.",
         },
         {
           heading: "Game modes",
-          body: "New Game (1v1–1v9, Easy→Grandmaster), a KISSA story campaign, GAUNTLET (Tarakki ki Seedhi — a 5-rung ladder ending in 6-player Grandmaster), TAMASHA (spectate ten AI personas scheme and betray), Team Khel (faction play with un-targetable allies), a Tutorial you can't leave until you catch a bluff, local pass-and-play with a handoff screen guard, and online + LAN multiplayer.",
+          body: "New Game (1v1-1v9, Easy→Grandmaster), a KISSA story campaign, GAUNTLET (Tarakki ki Seedhi, a 5-rung ladder ending in 6-player Grandmaster), TAMASHA (spectate ten AI personas scheme and betray), Team Khel (faction play with un-targetable allies), a Tutorial you can't leave until you catch a bluff, local pass-and-play with a handoff screen guard, and online + LAN multiplayer.",
         },
         {
-          heading: "DARBAR — four live story arcs",
-          body: "Four narrative arcs run at once, fuelled or suppressed by your chat suggestions: GATHBANDHAN (a quiet coalition — watch who breaks first), AFWAAH (a rumour the table acts on even when false), STING (a leaked claim that forces a read), and BADLA (a vendetta that outlives the round). They run on a separate deterministic narrative RNG that never touches card state and resumes byte-for-byte.",
+          heading: "DARBAR: four live story arcs",
+          body: "Four narrative arcs run at once, fuelled or suppressed by your chat suggestions: GATHBANDHAN (a quiet coalition, watch who breaks first), AFWAAH (a rumour the table acts on even when false), STING (a leaked claim that forces a read), and BADLA (a vendetta that outlives the round). They run on a separate deterministic narrative RNG that never touches card state and resumes byte-for-byte.",
         },
         {
           heading: "Built for everyone",
-          body: "All six roles use the Okabe-Ito colourblind-safe palette plus a unique engraved bezel pattern (ring, hatch, dots, weave, double-rule, ticks) so identity reads without colour. Reduced-motion mode swaps every beat for a bespoke static end-frame (GHOTALA = held stamp, SUPARI = tipped chair) — accessibility never flattens the narrative.",
+          body: "All six roles use the Okabe-Ito colourblind-safe palette plus a unique engraved bezel pattern (ring, hatch, dots, weave, double-rule, ticks) so identity reads without colour. Reduced-motion mode swaps every beat for a bespoke static end-frame (GHOTALA = held stamp, SUPARI = tipped chair). Accessibility never flattens the narrative.",
         },
         {
           heading: "Provider-agnostic AI",
@@ -618,16 +657,16 @@ export const projects: Project[] = [
         },
         {
           heading: "Seven toggle variants",
-          body: "Seven additive rule variants (Bail Pe Bahar, Bali Khel, Hawala, Adhyadesh, Khazana Raj, Mehengai, Tangi) combine freely and default off — the engine is byte-for-byte unchanged when they're disabled, expanding the surface without touching core logic.",
+          body: "Seven additive rule variants (Bail Pe Bahar, Bali Khel, Hawala, Adhyadesh, Khazana Raj, Mehengai, Tangi) combine freely and default off. The engine is byte-for-byte unchanged when they're disabled, expanding the surface without touching core logic.",
         },
       ],
       roles: [
-        { name: "Netaji Vachan", power: "The Politician — Tax +3 (GHOTALA); blocks Foreign Aid", color: "#0072B2" },
-        { name: "Bhai Teja", power: "The Don — Assassinate −3 (SUPARI); unblockable except by the Vakil", color: "#D55E00" },
-        { name: "Babu Filewala", power: "The Bureaucrat — Steal 2 (VASOOLI); blocks Steal", color: "#E69F00" },
-        { name: "Jugaadu Chhotu", power: "The Fixer — Exchange cards (SETTING); blocks Steal", color: "#56B4E9" },
-        { name: "Vakil Loophole", power: "The Lawyer — no action; blocks Assassinate only (power through procedure)", color: "#CC79A7" },
-        { name: "Patrakaar", power: "The Journalist — Investigate a card (JAANCH); unblockable", color: "#009E73" },
+        { name: "Netaji Vachan", power: "The Politician: Tax +3 (GHOTALA); blocks Foreign Aid", color: "#0072B2" },
+        { name: "Bhai Teja", power: "The Don: Assassinate −3 (SUPARI); unblockable except by the Vakil", color: "#D55E00" },
+        { name: "Babu Filewala", power: "The Bureaucrat: Steal 2 (VASOOLI); blocks Steal", color: "#E69F00" },
+        { name: "Jugaadu Chhotu", power: "The Fixer: Exchange cards (SETTING); blocks Steal", color: "#56B4E9" },
+        { name: "Vakil Loophole", power: "The Lawyer: no action; blocks Assassinate only (power through procedure)", color: "#CC79A7" },
+        { name: "Patrakaar", power: "The Journalist: Investigate a card (JAANCH); unblockable", color: "#009E73" },
       ],
       metrics: [
         { value: "4", label: "platforms · one engine" },
@@ -648,50 +687,49 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "Deterministic engine — one pure function",
+          title: "Deterministic engine: one pure function",
           code: `graph LR
   s["GameState"] -->|"+ Intent"| r["reduce()<br/>pure · RNG in state"] --> s2["GameState'"]
   s2 -.->|"byte-for-byte replay"| s`,
         },
         {
-          title: "Secrecy boundary — redact per viewer",
+          title: "Secrecy boundary: redact per viewer",
           code: `graph TD
-  full["Full GameState<br/>(authoritative)"] -->|"redact(state, viewer)"| pv1["PlayerView — seat 1"]
-  full -->|"redact(state, viewer)"| pv2["PlayerView — seat 2"]
-  full -->|"redact(state, viewer)"| pv3["PlayerView — seat N"]`,
+  full["Full GameState<br/>(authoritative)"] -->|"redact(state, viewer)"| pv1["PlayerView, seat 1"]
+  full -->|"redact(state, viewer)"| pv2["PlayerView, seat 2"]
+  full -->|"redact(state, viewer)"| pv3["PlayerView, seat N"]`,
         },
       ],
     },
     screens: [
-      { file: "home.gif", caption: "Home — live flow" },
-      { file: "onboarding.gif", caption: "Onboarding — live flow" },
-      { file: "modes.gif", caption: "Game modes — live flow" },
-      { file: "turn.gif", caption: "A turn — claim, block, challenge" },
-      { file: "darbar.gif", caption: "DARBAR arc — live flow" },
-      { file: "coach.gif", caption: "AI coach — live flow" },
-      { file: "online.gif", caption: "Online & LAN — live flow" },
-      { file: "table_sizes.gif", caption: "Table sizes — 2p to 10p" },
-      { file: "career.gif", caption: "Career — live flow" },
-      { file: "reference.gif", caption: "In-game reference — live flow" },
-      { file: "home.png", caption: "Home — mode grid" },
+      { file: "home.gif", caption: "Home: live flow" },
+      { file: "onboarding.gif", caption: "Onboarding: live flow" },
+      { file: "modes.gif", caption: "Game modes: live flow" },
+      { file: "turn.gif", caption: "A turn: claim, block, challenge" },
+      { file: "darbar.gif", caption: "DARBAR arc: live flow" },
+      { file: "coach.gif", caption: "AI coach: live flow" },
+      { file: "online.gif", caption: "Online & LAN: live flow" },
+      { file: "table_sizes.gif", caption: "Table sizes: 2p to 10p" },
+      { file: "career.gif", caption: "Career: live flow" },
+      { file: "reference.gif", caption: "In-game reference: live flow" },
+      { file: "home.png", caption: "Home: mode grid" },
       { file: "home_ranked.png", caption: "Ranked & daily challenge" },
       { file: "home_mode_gauntlet.png", caption: "Gauntlet mode" },
       { file: "home_mode_story.png", caption: "KISSA story campaign" },
-      { file: "setup.png", caption: "Game setup — players" },
+      { file: "setup.png", caption: "Game setup: players" },
       { file: "setup_teams.png", caption: "Team mode setup" },
       { file: "profile_setup.png", caption: "Profile setup" },
       { file: "tutorial_intro.png", caption: "Interactive tutorial" },
-      { file: "gazette_roles.png", caption: "Niyam Gazette — the roles" },
-      { file: "4p_pick_action.png", caption: "Your turn — pick an action" },
+      { file: "gazette_roles.png", caption: "Niyam Gazette: the roles" },
+      { file: "4p_pick_action.png", caption: "Your turn: pick an action" },
       { file: "4p_confirm.png", caption: "Declare, then confirm" },
-      { file: "4p_reaction.png", caption: "Block, challenge or pass" },
-      { file: "4p_reaction_block.png", caption: "Block — with odds" },
+      { file: "4p_reaction_block.png", caption: "Block: with odds" },
       { file: "4p_exchange.png", caption: "Card exchange on loss" },
       { file: "4p_pick_target.png", caption: "Target selection" },
       { file: "darbar_table.png", caption: "DARBAR arc at the table" },
-      { file: "4p_coach_action.png", caption: "AI coach — suggested action" },
-      { file: "4p_coach_reaction.png", caption: "AI coach — reaction" },
-      { file: "4p_game_over.png", caption: "Game over — winner revealed" },
+      { file: "4p_coach_action.png", caption: "AI coach: suggested action" },
+      { file: "4p_coach_reaction.png", caption: "AI coach: reaction" },
+      { file: "4p_game_over.png", caption: "Game over: winner revealed" },
       { file: "results.png", caption: "Match results" },
       { file: "review_replay.png", caption: "Byte-for-byte replay" },
       { file: "leaderboard.png", caption: "ELO leaderboard" },
@@ -745,8 +783,8 @@ export const projects: Project[] = [
         // Widget/Live-Activity captures are genuinely wide-short — a
         // bezel-less "widget" frame, not a phone bezel that would crop them.
         deviceFrame: "widget",
-        screens: ["widget_ios_home.png", "widget_ios_lockscreen.png", "live_activity.png", "live_activity_dynamic_island.png"],
-        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island — genuine iOS surfaces, shown at their real widget shape.",
+        screens: ["widget_ios_home.png", "live_activity.png", "live_activity_dynamic_island.png"],
+        note: "Home-screen widget, Lock Screen widget and a Live Activity / Dynamic Island. Genuine iOS surfaces, shown at their real widget shape.",
       },
       {
         platform: "Wear OS",
@@ -769,12 +807,12 @@ export const projects: Project[] = [
         deviceFrame: "browser",
         screens: ["home_screen_loaded.png"],
         liveUrl: "/mileway-app/index.html",
-        note: "Live — a Compose/Wasm preview shell: dashboard, live simulated tracking and the expense log, running the real design system and location math in your browser.",
+        note: "Live, a Compose/Wasm preview shell: dashboard, live simulated tracking and the expense log, running the real design system and location math in your browser.",
       },
     ],
     detail: {
       overview:
-        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform — running on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
+        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
           heading: "46-module clean architecture (36 local + 10 composed)",
@@ -786,11 +824,11 @@ export const projects: Project[] = [
         },
         {
           heading: "Policy & reimbursement engine",
-          body: "A reimbursement-rate engine computes a payout from configurable per-vehicle rate rules, and the approvals flow flags policy violations against those rules — the real expense-platform logic a live product needs, implemented entirely against local data rather than stubbed with a snackbar.",
+          body: "A reimbursement-rate engine computes a payout from configurable per-vehicle rate rules, and the approvals flow flags policy violations against those rules. This is the real expense-platform logic a live product needs, implemented entirely against local data rather than stubbed with a snackbar.",
         },
         {
           heading: "Durable submit-outbox",
-          body: "Submitting a track or voucher journals the intent locally and reconciles it deterministically, so a process kill mid-submit never loses a record or double-counts one. Repositories are written to look one implementation-swap away from a real API — the backend is deferred, not designed out.",
+          body: "Submitting a track or voucher journals the intent locally and reconciles it deterministically, so a process kill mid-submit never loses a record or double-counts one. Repositories are written to look one implementation-swap away from a real API. The backend is deferred, not designed out.",
         },
         {
           heading: "Five targets, one snapshot model",
@@ -798,11 +836,11 @@ export const projects: Project[] = [
         },
         {
           heading: "Offline AI assistant",
-          body: "A chat assistant grounded entirely in local Room data — trips, expenses, cards — with real chunked streaming (not a fake typing animation), persistent history with a 5-minute session-resume window, on-device speech-to-text/text-to-speech, and local usage analytics. No remote LLM, no server, same offline guarantee as the rest of the app.",
+          body: "A chat assistant grounded entirely in local Room data: trips, expenses, cards. Real chunked streaming (not a fake typing animation), persistent history with a 5-minute session-resume window, on-device speech-to-text/text-to-speech, and local usage analytics. No remote LLM, no server, same offline guarantee as the rest of the app.",
         },
         {
           heading: "Super-profile & plugin-composition platform (V24, shipped)",
-          body: "The newest depth wave: a single plugin registry is the app's composition mechanism — TILE / CAPABILITY / VALUE plugins resolved by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR) — shipped, with a V25→V37 series landed on top (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New), still zero backend.",
+          body: "The newest depth wave: a single plugin registry is the app's composition mechanism. TILE / CAPABILITY / VALUE plugins resolve by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR). All shipped, with a V25→V37 series landed on top (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New), still zero backend.",
         },
         {
           heading: "FOSS-safe distribution & quality gates",
@@ -829,11 +867,11 @@ export const projects: Project[] = [
         { label: "README", url: "https://github.com/darkpandawarrior/Mileway#readme" },
       ],
       videos: [
-        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard — live capture" },
+        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard: live capture" },
       ],
       diagrams: [
         {
-          title: "46-module architecture — features meet only at :app",
+          title: "46-module architecture, features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -847,7 +885,7 @@ export const projects: Project[] = [
   t & s & tr & ap & pa & ag --> core`,
         },
         {
-          title: "Location pipeline — GPS treated as a noisy signal",
+          title: "Location pipeline: GPS treated as a noisy signal",
           code: `graph LR
   gps["Raw GPS"] --> jit["Jitter<br/>suppression"] --> spk["Spike<br/>detection"] --> fus["IMU<br/>fusion"] --> tier["Device-tier<br/>sampling"] --> acc["Four-bucket<br/>distance"] --> out["Clean track"]`,
         },
@@ -865,21 +903,21 @@ export const projects: Project[] = [
     },
     screens: [
       { file: "super_profile_personas.gif", caption: "Super-profile & persona presets (V24)" },
-      { file: "track_a_trip.gif", caption: "Track a trip — live flow" },
-      { file: "delegation_manager.gif", caption: "Delegation — acting as a manager" },
-      { file: "log_and_expense.gif", caption: "Log & expense — live flow" },
-      { file: "approvals_payables.gif", caption: "Approvals & payables — live flow" },
-      { file: "verification_growth.gif", caption: "Verification & growth — live flow" },
-      { file: "membership.gif", caption: "Membership & subscription — live flow" },
-      { file: "ai_assistant.gif", caption: "AI assistant — live flow" },
-      { file: "onboarding_auth.gif", caption: "Onboarding & auth — live flow" },
-      { file: "wallet_payout.gif", caption: "Wallet & payout — live flow" },
-      { file: "account_sessions.gif", caption: "Account & sessions — live flow" },
-      { file: "log_miles.gif", caption: "Log miles — live flow" },
-      { file: "track_miles_idle_screen.png", caption: "Track Miles — ready to start" },
+      { file: "track_a_trip.gif", caption: "Track a trip: live flow" },
+      { file: "delegation_manager.gif", caption: "Delegation: acting as a manager" },
+      { file: "log_and_expense.gif", caption: "Log & expense: live flow" },
+      { file: "approvals_payables.gif", caption: "Approvals & payables: live flow" },
+      { file: "verification_growth.gif", caption: "Verification & growth: live flow" },
+      { file: "membership.gif", caption: "Membership & subscription: live flow" },
+      { file: "ai_assistant.gif", caption: "AI assistant: live flow" },
+      { file: "onboarding_auth.gif", caption: "Onboarding & auth: live flow" },
+      { file: "wallet_payout.gif", caption: "Wallet & payout: live flow" },
+      { file: "account_sessions.gif", caption: "Account & sessions: live flow" },
+      { file: "log_miles.gif", caption: "Log miles: live flow" },
+      { file: "track_miles_idle_screen.png", caption: "Track Miles: ready to start" },
       { file: "tracking_success_screen.png", caption: "Tracking success + reimbursement" },
-      { file: "track_detail_screen.png", caption: "Track detail — route stats" },
-      { file: "track_insights_screen.png", caption: "Track insights — quality score" },
+      { file: "track_detail_screen.png", caption: "Track detail: route stats" },
+      { file: "track_insights_screen.png", caption: "Track insights: quality score" },
       { file: "geo_check_in_screen.png", caption: "Geo check-in with map overlay" },
       { file: "manual_check_in_screen.png", caption: "Manual check-in" },
       { file: "check_in_history_screen.png", caption: "Check-in history" },
@@ -887,8 +925,8 @@ export const projects: Project[] = [
       { file: "hardware_events_log_screen.png", caption: "Hardware-events log" },
       { file: "tracking_setup_guide_screen.png", caption: "Tracking setup guide" },
       { file: "spends_home_screen.png", caption: "Spends home" },
-      { file: "log_miles_step1_screen.png", caption: "Log miles — location search" },
-      { file: "log_miles_step2_screen.png", caption: "Log miles — travelled legs" },
+      { file: "log_miles_step1_screen.png", caption: "Log miles: location search" },
+      { file: "log_miles_step2_screen.png", caption: "Log miles: travelled legs" },
       { file: "expense_entry_screen.png", caption: "Expense entry" },
       { file: "expense_detail_screen.png", caption: "Expense detail + receipt" },
       { file: "expense_history_screen.png", caption: "Expense history" },
@@ -898,14 +936,14 @@ export const projects: Project[] = [
       { file: "create_trip_screen.png", caption: "Create trip request" },
       { file: "booking_history_screen.png", caption: "Booking history" },
       { file: "trip_history_screen.png", caption: "Trip history" },
-      { file: "approvals_screen_pending_tab.png", caption: "Approvals — policy badges" },
+      { file: "approvals_screen_pending_tab.png", caption: "Approvals: policy badges" },
       { file: "payables_home_screen.png", caption: "Payables hub" },
       { file: "create_payment_screen.png", caption: "Pay or request (UPI)" },
       { file: "payments_history_screen.png", caption: "Payments history" },
       { file: "cards_home_screen.png", caption: "Cards home" },
       { file: "profile_account_hub.png", caption: "Account hub" },
       { file: "settings_screen.png", caption: "Settings" },
-      { file: "analytics_home_screen.png", caption: "Analytics — Canvas charts" },
+      { file: "analytics_home_screen.png", caption: "Analytics: Canvas charts" },
       { file: "notification_centre_screen.png", caption: "Notification centre" },
       { file: "search_masterSearch_results.png", caption: "Master search" },
       { file: "media_attachment_selection_screen.png", caption: "Attachment sources" },
@@ -913,21 +951,20 @@ export const projects: Project[] = [
       { file: "agent_chat_screen.png", caption: "AI assistant chat" },
       { file: "agent_history_screen.png", caption: "AI assistant history" },
       { file: "assistant_home_sheet.png", caption: "Assistant home sheet" },
-      { file: "theme_picker_matrix.png", caption: "Theme picker — Matrix" },
+      { file: "theme_picker_matrix.png", caption: "Theme picker: Matrix" },
       { file: "home_screen_loaded.png", caption: "Home dashboard" },
-      { file: "wear_dashboard.png", caption: "Wear OS — dashboard" },
-      { file: "wear_trip_list.png", caption: "Wear OS — recent trips" },
+      { file: "wear_dashboard.png", caption: "Wear OS: dashboard" },
+      { file: "wear_trip_list.png", caption: "Wear OS: recent trips" },
       { file: "watchos_app.png", caption: "watchOS (SwiftUI) app" },
       { file: "widget_glance.png", caption: "Android widget (Glance)" },
       { file: "widget_ios_home.png", caption: "iOS home-screen widget" },
-      { file: "widget_ios_lockscreen.png", caption: "iOS Lock Screen widget" },
       { file: "live_activity.png", caption: "iOS Live Activity" },
-      { file: "live_activity_dynamic_island.png", caption: "Dynamic Island — tracking" },
+      { file: "live_activity_dynamic_island.png", caption: "Dynamic Island: tracking" },
       { file: "desktop_dashboard.png", caption: "Compose Desktop window" },
-      { file: "route_map.png", caption: "Route map — tracked trip" },
+      { file: "route_map.png", caption: "Route map: tracked trip" },
       { file: "login_screen.png", caption: "Login (demo credentials)" },
-      { file: "set_pin_screen.png", caption: "Set PIN — app lock" },
-      { file: "root_guard_screen_clean.png", caption: "Root guard — secure device" },
+      { file: "set_pin_screen.png", caption: "Set PIN: app lock" },
+      { file: "root_guard_screen_clean.png", caption: "Root guard: secure device" },
     ],
   },
   {
@@ -974,36 +1011,36 @@ export const projects: Project[] = [
         deviceFrame: "browser",
         screens: [],
         liveUrl: "/paymentslab-app/index.html",
-        note: "Live — a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
+        note: "Live, a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
       },
     ],
     detail: {
       overview:
-        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs — and step-by-step visualizes — real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, backed by a Ktor server that does the order creation, signature verification and webhook reconciliation a real integration requires — and, beyond one-shot pay-in, models five money-movement rails.",
+        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
       sections: [
         {
           heading: "The one idea worth stealing",
-          body: "A client-side Success is a hint, never proof. Only the server — after signature verification and webhook reconciliation — decides the true state. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
+          body: "A client-side Success is a hint, never proof. Only the server decides the true state, after signature verification and webhook reconciliation. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
           heading: "40 modules, 66 gateways",
-          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code — 15 local modules plus 25 composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans 66 registered gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries — each with its own status badge and region.",
+          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are 15 local modules plus 25 composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans 66 registered gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries, each with its own status badge and region.",
         },
         {
           heading: "Five money-movement rails + split payments",
-          body: "Beyond one-shot checkout the server models payouts (/payouts — money out to a beneficiary), mandates & subscriptions (/mandates + scheduled debits and cancel), a card vault (/vault — tokenize once, charge later by id), marketplace Connect onboarding (/connect — sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (/wallet — seed / debit / refund against a real running balance) — plus split payments, a two-leg orchestration that compensates if one leg fails. Ten provider modules ride these rails (Paystack, Flutterwave, Paytm, Xendit, M-Pesa, Peach, NMI, Stripe Connect, plus wallet and a record-only cash gateway), every one MOCK_MODE-honest until real sandbox keys are set.",
+          body: "Beyond one-shot checkout the server models payouts (/payouts: money out to a beneficiary), mandates & subscriptions (/mandates + scheduled debits and cancel), a card vault (/vault: tokenize once, charge later by id), marketplace Connect onboarding (/connect: sub-merchant KYC + split payouts) and an internal double-entry wallet ledger (/wallet: seed / debit / refund against a real running balance), plus split payments, a two-leg orchestration that compensates if one leg fails. Ten provider modules ride these rails (Paystack, Flutterwave, Paytm, Xendit, M-Pesa, Peach, NMI, Stripe Connect, plus wallet and a record-only cash gateway), every one MOCK_MODE-honest until real sandbox keys are set.",
         },
         {
           heading: "One contract, real SDKs",
-          body: "Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a raw UPI intent flow all implement the same tiny PaymentGateway interface. The Activity-callback SDKs are bridged into suspending coroutines by a PaymentHost that never leaks an Activity upward. A generic hosted-webview archetype covers the whole class of gateways with no native SDK behind the same contract — env-backed credentials auto-degrade from SANDBOX_READY to MOCK_MODE honestly instead of silently pretending to work.",
+          body: "Razorpay, Cashfree, Stripe (+ Google Pay), Square, Omise and a raw UPI intent flow all implement the same tiny PaymentGateway interface. The Activity-callback SDKs are bridged into suspending coroutines by a PaymentHost that never leaks an Activity upward. A generic hosted-webview archetype covers the whole class of gateways with no native SDK behind the same contract. Env-backed credentials auto-degrade from SANDBOX_READY to MOCK_MODE honestly instead of silently pretending to work.",
         },
         {
           heading: "Pure, replayable state machine",
-          body: "The lifecycle is a pure (State, Event) → Effects reducer — zero coroutines/DI/IO — with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants. The MVI base comes from my own kmp-toolkit library, shared with other apps.",
+          body: "The lifecycle is a pure (State, Event) → Effects reducer, zero coroutines/DI/IO, with the orchestrator just executing its effects. A payment's path is a recorded event log that replays byte-for-byte identically, the auditing property money movement wants. The MVI base comes from my own kmp-toolkit library, shared with other apps.",
         },
         {
           heading: "VAPT-grade security",
-          body: "core:security — real Android Keystore AES-256-GCM at-rest encryption, FLAG_SECURE + recursive tapjacking protection, device-integrity checks (root, emulator, debugger, Frida/Xposed hook detection, SSL-pinning-bypass detection), and a certificate-pinning config, with detection kept deliberately separate from enforcement policy.",
+          body: "core:security holds real Android Keystore AES-256-GCM at-rest encryption, FLAG_SECURE + recursive tapjacking protection, device-integrity checks (root, emulator, debugger, Frida/Xposed hook detection, SSL-pinning-bypass detection), and a certificate-pinning config, with detection kept deliberately separate from enforcement policy.",
         },
       ],
       metrics: [
@@ -1020,7 +1057,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "Gateway registry — adding provider N+1 touches no existing code",
+          title: "Gateway registry: adding provider N+1 touches no existing code",
           code: `graph TD
   reg["PaymentGateway registry<br/>Koin getAll()"]
   p1["provider: razorpay"] --> reg
@@ -1031,7 +1068,7 @@ export const projects: Project[] = [
   reg --> orch["PaymentOrchestrator"]`,
         },
         {
-          title: "Client Success is a hint — the server decides truth",
+          title: "Client Success is a hint: the server decides truth",
           code: `graph LR
   cl["Client SDK<br/>callback"] -->|"hint only"| orch["Orchestrator"]
   orch -->|"confirm"| srv["Ktor server"]
@@ -1060,12 +1097,12 @@ export const projects: Project[] = [
       { file: "activity_flow.gif", caption: "Live activity flow" },
       { file: "checkout_flow.gif", caption: "Checkout flow" },
       { file: "explore_verify_flow.gif", caption: "Explore & verify flow" },
-      { file: "home_screen_dashboard.png", caption: "Home dashboard — live stats" },
+      { file: "home_screen_dashboard.png", caption: "Home dashboard: live stats" },
       { file: "lab_home_screen_catalog.png", caption: "Provider catalog" },
       { file: "provider_lab_screen_running.png", caption: "Live payment flow timeline" },
-      { file: "provider_lab_screen_settled_success.png", caption: "Settled — verified success" },
+      { file: "provider_lab_screen_settled_success.png", caption: "Settled: verified success" },
       { file: "payment_flow_diagram_verified.png", caption: "Server-verified flow diagram" },
-      { file: "payment_flow_diagram_unverified.png", caption: "Unverified — client hint only" },
+      { file: "payment_flow_diagram_unverified.png", caption: "Unverified: client hint only" },
       { file: "step_timeline_dark.png", caption: "Step timeline (dark)" },
       { file: "step_timeline_light.png", caption: "Step timeline (light)" },
       { file: "payload_card.png", caption: "Redacted payload card" },
@@ -1075,16 +1112,16 @@ export const projects: Project[] = [
       { file: "success_burst.png", caption: "Success animation" },
       { file: "failure_shake.png", caption: "Failure animation" },
       { file: "animated_amount.png", caption: "Animated amount" },
-      { file: "checkout_screen_order_summary.png", caption: "Checkout — order summary" },
+      { file: "checkout_screen_order_summary.png", caption: "Checkout: order summary" },
       { file: "history_screen_with_filters.png", caption: "Payment history + filters" },
       { file: "gateway_brand_badges.png", caption: "Gateway brand badges" },
-      { file: "checkout_screen_paying.png", caption: "Checkout — paying" },
-      { file: "checkout_screen_settled_success.png", caption: "Checkout — settled success" },
-      { file: "history_screen_all.png", caption: "Payment history — all" },
+      { file: "checkout_screen_paying.png", caption: "Checkout: paying" },
+      { file: "checkout_screen_settled_success.png", caption: "Checkout: settled success" },
+      { file: "history_screen_all.png", caption: "Payment history: all" },
       { file: "shield_pulse.png", caption: "Security shield pulse" },
-      { file: "ios_catalog.png", caption: "iOS — provider catalog" },
-      { file: "ios_catalog_stripe.png", caption: "iOS — Stripe native SDK" },
-      { file: "ios_catalog_all_native.png", caption: "iOS — all native-SDK gateways" },
+      { file: "ios_catalog.png", caption: "iOS: provider catalog" },
+      { file: "ios_catalog_stripe.png", caption: "iOS: Stripe native SDK" },
+      { file: "ios_catalog_all_native.png", caption: "iOS: all native-SDK gateways" },
     ],
   },
   {
@@ -1093,13 +1130,13 @@ export const projects: Project[] = [
     name: "HireSignal",
     tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
-      "A local-first job-search engine — resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés — rebuilt from scratch in Kotlin Multiplatform, with its scoring engine ported and verified against the open-source career-ops project I actively contribute to upstream.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "76 ATS/board providers"],
+      "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "78 ATS/board providers"],
     highlights: [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
-      "core:engine is a no-IO module: A–F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "76 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "17 merged PRs to the public career-ops project (⭐63k+) — two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612) — each shipped with a reproduction and a regression test, every one publicly checkable.",
+      "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
+      "78 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      `18 merged PRs to the public career-ops project (⭐${upstreamStars}): two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612). Each shipped with a reproduction and a regression test, every one publicly checkable.`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -1109,9 +1146,9 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: "Upstream (career-ops, ⭐63k+)", url: "https://github.com/santifer/career-ops" },
+      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/santifer/career-ops" },
     ],
-    status: "Active · 17 PRs merged to public career-ops",
+    status: "Active · 18 PRs merged to public career-ops",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
     theme: {
       accent: "#3B82F6",
@@ -1127,53 +1164,53 @@ export const projects: Project[] = [
         platform: "Android",
         deviceFrame: "phone",
         screens: ["dashboard_screen.png", "board_screen.png", "pipeline_screen.png"],
-        note: "Real Roborazzi captures — first screenshots off the actual Compose UI, not mockups.",
+        note: "Real Roborazzi captures: first screenshots off the actual Compose UI, not mockups.",
       },
     ],
     detail: {
       overview:
-        "HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐63k+) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild — the same A–F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+        `HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
       sections: [
         {
           heading: "One engine, five targets",
-          body: "A 25-module clean-architecture split — 12 feature modules and 6 core modules — targets Android, iOS, Desktop, Web (wasmJs) and a Spring Boot 4 server from one shared Kotlin codebase: 543 files, ~45,000 lines. core:designsystem, core:protocol, core:engine, core:data, core:network and core:ai sit underneath feature modules for dashboard, pipeline, explore, intel, ops, profile, auth, assistant and more.",
+          body: "A 25-module clean-architecture split, 12 feature modules and 6 core modules, targets Android, iOS, Desktop, Web (wasmJs) and a Spring Boot 4 server from one shared Kotlin codebase: 543 files, ~45,000 lines. core:designsystem, core:protocol, core:engine, core:data, core:network and core:ai sit underneath feature modules for dashboard, pipeline, explore, intel, ops, profile, auth, assistant and more.",
         },
         {
           heading: "A no-IO engine, ported and verified",
-          body: "core:engine holds the A–F fit-scoring rubric, ATS search, SimHash fingerprinting for duplicate-listing detection, a liveness classifier, and the funnel math — none of it touches the network or disk. It's ported 1:1 from career-ops's original JavaScript implementation and checked against that implementation's own test vectors, so the scoring behaves identically whether it's running on Android, in a browser tab, or on the server.",
+          body: "core:engine holds the A-F fit-scoring rubric, ATS search, SimHash fingerprinting for duplicate-listing detection, a liveness classifier, and the funnel math. None of it touches the network or disk. It's ported 1:1 from career-ops's original JavaScript implementation and checked against that implementation's own test vectors, so the scoring behaves identically whether it's running on Android, in a browser tab, or on the server.",
         },
         {
           heading: "Offline-first, agent-reachable",
-          body: "Room (KMP) plus DataStore caches everything locally over a Ktor REST + NDJSON/SSE sync layer, so the dashboard stays usable offline and catches up when connectivity returns. An agent-interop surface — Android AppFunctions, iOS App Intents/Shortcuts, hiresignal:// deep links, and a documented OpenAPI contract — lets other agents (and the OS itself) drive the app without going through the UI.",
+          body: "Room (KMP) plus DataStore caches everything locally over a Ktor REST + NDJSON/SSE sync layer, so the dashboard stays usable offline and catches up when connectivity returns. An agent-interop surface lets other agents, and the OS itself, drive the app without going through the UI. It covers Android AppFunctions, iOS App Intents/Shortcuts, hiresignal:// deep links, and a documented OpenAPI contract.",
         },
         {
           heading: "On-device AI, with a fallback that always works",
-          body: "Where an LLM adds real value, it runs on-device first: ML Kit GenAI / Gemini Nano on Android, Apple Foundation Models on iOS. Every AI-assisted step has a deterministic-heuristic fallback, so fit scoring and résumé tailoring keep working with zero model available — the same discipline career-ops applies with its zero-token scan path.",
+          body: "Where an LLM adds real value, it runs on-device first: ML Kit GenAI / Gemini Nano on Android, Apple Foundation Models on iOS. Every AI-assisted step has a deterministic-heuristic fallback, so fit scoring and résumé tailoring keep working with zero model available, the same discipline career-ops applies with its zero-token scan path.",
         },
         {
           heading: "Zero tokens until an LLM is actually needed",
-          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker — 62 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
+          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 78 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
         },
         {
           heading: "One engine, many candidates",
-          body: "career-ops's multi-profile architecture — a profiles.yml registry mapping each candidate to a private data root while sharing one engine install — is the same shape the native app's per-candidate routing follows: one server, N profiles, a strict User/System data contract between them.",
+          body: "career-ops's multi-profile architecture is a profiles.yml registry mapping each candidate to a private data root while sharing one engine install. That is the same shape the native app's per-candidate routing follows: one server, N profiles, a strict User/System data contract between them.",
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "Seventeen merged pull requests against the public career-ops repository (⭐63k+, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix — rewriting only the changed Status cell instead of the whole row — an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "18 merged pull requests against the public career-ops repository (⭐" + upstreamStars + ", independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
         { value: "25", label: "KMP modules · 5 targets" },
         { value: "45k", label: "lines of Kotlin · 543 files" },
-        { value: "62", label: "ATS & job-board providers" },
-        { value: "4", label: "PRs merged upstream" },
+        { value: "78", label: "ATS & job-board providers" },
+        { value: "18", label: "PRs merged upstream" },
       ],
       techStack: [
         { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
         { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
         { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "hiresignal:// deep links", "OpenAPI contract"] },
-        { group: "Open-source engine (career-ops)", items: ["Node.js", "62 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A–F fit rubric"] },
+        { group: "Open-source engine (career-ops)", items: ["Node.js", "78 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
       ],
       extraLinks: [
         { label: "PR: agent-inbox feature", url: "https://github.com/santifer/career-ops/pull/1472" },
@@ -1190,23 +1227,23 @@ export const projects: Project[] = [
   eng --> desk["Desktop"]
   eng --> web["Web (wasmJs)"]
   eng --> srv["Spring Boot 4 server"]
-  eng -.->|"no IO — pure scoring"| rules["A-F fit rubric · SimHash · funnel math"]`,
+  eng -.->|"no IO, pure scoring"| rules["A-F fit rubric · SimHash · funnel math"]`,
         },
         {
           title: "Zero tokens until an LLM is actually needed",
           code: `graph LR
-  scan["scan"] --> apis["Greenhouse / Ashby / Lever APIs<br/>+ local parsers — zero LLM cost"]
+  scan["scan"] --> apis["Greenhouse / Ashby / Lever APIs<br/>+ local parsers, zero LLM cost"]
   apis --> trust["shared trust-validator"]
   trust --> tracker["tracker"]
-  scan -.->|"no structured source"| agent["agent-driven search — fallback only"] --> trust`,
+  scan -.->|"no structured source"| agent["agent-driven search, fallback only"] --> trust`,
         },
       ],
     },
     screens: [
       { file: "banner.gif", caption: "HireSignal banner" },
-      { file: "dashboard_screen.png", caption: "Dashboard — today's action queue, follow-ups due, awaiting decision" },
-      { file: "board_screen.png", caption: "Job board — scored roles, re-scored live against your profile" },
-      { file: "pipeline_screen.png", caption: "Pipeline inbox — keep/discard triage on freshly scanned roles" },
+      { file: "dashboard_screen.png", caption: "Dashboard: today's action queue, follow-ups due, awaiting decision" },
+      { file: "board_screen.png", caption: "Job board: scored roles, re-scored live against your profile" },
+      { file: "pipeline_screen.png", caption: "Pipeline inbox: keep/discard triage on freshly scanned roles" },
     ],
   },
   {
@@ -1214,14 +1251,14 @@ export const projects: Project[] = [
     // you to the live site you were already on, the other bounced you to GitHub. Neither ever
     // explained what either thing IS. One entry now, with the breakdown on the page.
     slug: "portfolio",
-    name: "cv-siddharth — this site, and its Compose Multiplatform twin",
-    tagline: "The site you're reading, plus Panda the assistant that answers for me — and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
+    name: "cv-siddharth: this site, and its Compose Multiplatform twin",
+    tagline: "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
-      "An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 16.2k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS — an honest test of how far CMP reaches on the web, including where it doesn't.",
+      "An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 16.2k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.",
     stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
     highlights: [
-      "Two full implementations of one portfolio — the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
-      "Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file — the same source of truth the pages render from, so the assistant cannot drift from the site.",
+      "Two full implementations of one portfolio: the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
+      "Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file, the same source of truth the pages render from, so the assistant cannot drift from the site.",
       "Every claim on this site is checked mechanically before it ships, not recalled: a claim-audit script verifies the facts and scans every outward-facing surface for phrases already disproven.",
     ],
     links: [
@@ -1250,30 +1287,30 @@ export const projects: Project[] = [
         // frame is a dead black box for the first several seconds, and stays one on a
         // browser that never paints. This capture is of the running build itself.
         screens: ["cmp_web.png"],
-        note: "Live — the Compose Multiplatform build of this very site, compiled to Wasm and running in your browser. Same content, one commonMain, a different stack entirely.",
+        note: "Live: the Compose Multiplatform build of this very site, compiled to Wasm and running in your browser. Same content, one commonMain, a different stack entirely.",
       },
     ],
     status: "Live · React on Vercel, CMP across 4 targets",
     badges: ["React 19", "Vercel", "LLM chat", "Compose Multiplatform", "Wasm"],
     detail: {
       overview:
-        "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. Everything on both versions is rendered from one TypeScript file of profile data, which is also what the AI assistant is grounded in — so the pages, the résumé, the OG images and the chat answers cannot disagree with each other.",
+        "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. Everything on both versions is rendered from one TypeScript file of profile data, which is also what the AI assistant is grounded in, so the pages, the résumé, the OG images and the chat answers cannot disagree with each other.",
       sections: [
         {
-          heading: "The React site — how it is put together",
-          body: "React 19 + Vite 7 + Tailwind v4, file-routed with TanStack Router and server-rendered, deployed on Vercel Edge. There is no CMS and no database: profile.ts is the single source of truth, and a set of prebuild generators derive everything else from disk — galleries from the screenshot folders, comparison sets, the sitemap, the RSS feed, OG images, llms.txt, and AVIF/WebP derivatives for every raster. Adding a screenshot is a file drop, never a list edit, which is the only reason the media stays honest as it grows.",
+          heading: "The React site: how it is put together",
+          body: "React 19 + Vite 7 + Tailwind v4, file-routed with TanStack Router and server-rendered, deployed on Vercel Edge. There is no CMS and no database: profile.ts is the single source of truth, and a set of prebuild generators derive everything else from disk: galleries from the screenshot folders, comparison sets, the sitemap, the RSS feed, OG images, llms.txt, and AVIF/WebP derivatives for every raster. Adding a screenshot is a file drop, never a list edit, which is the only reason the media stays honest as it grows.",
         },
         {
-          heading: "The surfaces — a guide to what is where",
-          body: "The home page carries the case studies and experience. /resume is the printable résumé; /shipped is the shelf and timeline of apps that actually reached a store; /project/<slug> is a project breakdown like this one, including a slide-to-compare viewer for design work. Then the rooms, which are the point of the site as much as the CV is: /map is The 3D Storyboard, the projects as a constellation; /forge is The Particle Forge, physics on a canvas; /blueprint is a 3D walkthrough; /compose is a live Compose-subset interpreter that parses a snippet and renders real composables rather than a screenshot; /terminal and /playground are interactive toys; /pulse and /lab are instrument views over the site's own data. /loopdown is Notes From The Loop, /read/<slug> the writing itself, /excelsior a magazine archive, /ink The Board — seven years of games, mined, /chess a chess corpus, /weeb a hand-kept list read as evidence. /hire runs a job description against the documented experience and reports the fit, including the gaps.",
+          heading: "The surfaces: a guide to what is where",
+          body: "The home page carries the case studies and experience. /resume is the printable résumé; /shipped is the shelf and timeline of apps that actually reached a store; /project/<slug> is a project breakdown like this one, including a slide-to-compare viewer for design work. Then the rooms, which are the point of the site as much as the CV is: /map is The 3D Storyboard, the projects as a constellation; /forge is The Particle Forge, physics on a canvas; /blueprint is a 3D walkthrough; /compose is a live Compose-subset interpreter that parses a snippet and renders real composables rather than a screenshot; /terminal and /playground are interactive toys; /pulse and /lab are instrument views over the site's own data. /loopdown is Notes From The Loop, /read/<slug> the writing itself, /excelsior a magazine archive, /ink The Board, seven years of games, mined, /chess a chess corpus, /weeb a hand-kept list read as evidence. /hire runs a job description against the documented experience and reports the fit, including the gaps.",
         },
         {
           heading: "Panda, and why it cannot oversell",
-          body: "A provider-agnostic assistant over Groq, Gemini and Claude with prompt-injection guards, running on Vercel Edge functions. It is grounded in this same profile data rather than a separate prompt-authored biography, so it cannot invent a role or a metric that the site does not also show. The job-description check is explicitly instructed to be straight about where the fit is weak — an assistant that oversells its own person is worth nothing to a recruiter, and the honesty is what makes the rest credible.",
+          body: "A provider-agnostic assistant over Groq, Gemini and Claude with prompt-injection guards, running on Vercel Edge functions. It is grounded in this same profile data rather than a separate prompt-authored biography, so it cannot invent a role or a metric that the site does not also show. The job-description check is explicitly instructed to be straight about where the fit is weak. An assistant that oversells its own person is worth nothing to a recruiter, and the honesty is what makes the rest credible.",
         },
         {
           heading: "The Compose Multiplatform twin",
-          body: "16,180 lines of Kotlin across 44 files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. Deliberately bleeding edge — Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2, every version the newest published including pre-release — because the question it exists to answer is where the edge actually is.",
+          body: "16,180 lines of Kotlin across 44 files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. Deliberately bleeding edge: Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2, every version the newest published including pre-release. The question it exists to answer is where the edge actually is.",
         },
         {
           heading: "What the CMP build refuses to depend on",
@@ -1287,12 +1324,18 @@ export const projects: Project[] = [
       // Every figure below is measured off this repo (or the twin's), not recalled.
       // Re-derive them with, in order:
       //   node -e "..." over docs/screenshots/CAPTURED.json   → 19 routes
-      //   npx vitest run                                      → 619 tests / 46 files
       //   (cv-siddharth-kmp) find . -name '*.kt' -not -path '*/build/*' | xargs wc -l → 16,180
       //   du -sk public/portfolio-app                         → 15,048 KB = 14.7 MB
+      //
+      // The test counts are NOT on that list any more. They were, and the
+      // ritual is exactly why they read 619 tests / 46 files against an actual
+      // 777 / 67: a documented manual step is still a hand-kept number, and
+      // this one changes on nearly every commit. It comes from repoStats.ts
+      // now, and the label is interpolated alongside the value because a stale
+      // file count is no better than a stale test count.
       metrics: [
         { value: "19", label: "routes · every one captured" },
-        { value: "619", label: "unit tests · 46 files" },
+        { value: String(repoStats.tests), label: `unit tests · ${repoStats.testFiles} files` },
         { value: "16.2k", label: "lines of Kotlin · the CMP twin" },
         { value: "14.7 MB", label: "the Wasm twin's honest cost" },
       ],
@@ -1306,7 +1349,7 @@ export const projects: Project[] = [
           // Checkable: every arrow below is a script in scripts/ that imports
           // ../src/data/profile.ts — gen-og, gen-sitemap, gen-system-prompt,
           // gen-project-heroes — plus print-resume.mjs, which prints /resume.
-          title: "One profile.ts — every surface derived from it",
+          title: "One profile.ts: every surface derived from it",
           code: `graph LR
   p["profile.ts<br/>single source"] --> pages["React pages<br/>+ /resume"]
   p --> og["gen-og<br/>OG cards"]
@@ -1318,7 +1361,7 @@ export const projects: Project[] = [
           // Checkable: cv-siddharth-kmp/settings.gradle.kts includes exactly
           // :cmp-shared, :cmp-android, :cmp-desktop, :cmp-web; cmp-ios is the
           // Xcode project consuming :cmp-shared.
-          title: "Built twice — one portfolio, two stacks",
+          title: "Built twice: one portfolio, two stacks",
           code: `graph TD
   c["the same content"] --> r["React 19 + Vite<br/>TanStack Start"]
   c --> k["cmp-shared<br/>commonMain"]
@@ -1341,26 +1384,26 @@ export const projects: Project[] = [
     // public/projects/portfolio/screenshots/. A portfolio page whose argument is
     // "look how this is built" and which shows nothing is arguing with itself.
     screens: [
-      { file: "site_home.png", caption: "Home — the case studies and the experience" },
+      { file: "site_home.png", caption: "Home: the case studies and the experience" },
       { file: "cmp_web.png", caption: "The Compose Multiplatform twin, running in the browser" },
-      { file: "site_project_detail.png", caption: "/project/portfolio — this very page" },
-      { file: "site_project_detail_with_compare.png", caption: "/project/mileway — the slide-to-compare viewer" },
-      { file: "site_resume.png", caption: "/resume — the printable résumé" },
-      { file: "site_shipped.png", caption: "/shipped — apps that actually reached a store" },
-      { file: "site_hire.png", caption: "/hire — a job description run against the documented experience" },
-      { file: "site_map.png", caption: "/map — The 3D Storyboard" },
-      { file: "site_forge.png", caption: "/forge — The Particle Forge" },
-      { file: "site_blueprint.png", caption: "/blueprint — the 3D walkthrough" },
-      { file: "site_compose.png", caption: "/compose — a live Compose-subset interpreter" },
-      { file: "site_terminal.png", caption: "/terminal — the interactive shell" },
-      { file: "site_playground.png", caption: "/playground — the toy box" },
-      { file: "site_pulse.png", caption: "/pulse — an instrument view over the site's own data" },
-      { file: "site_lab.png", caption: "/lab — the Lab Bench experiments" },
-      { file: "site_loopdown.png", caption: "/loopdown — Notes From The Loop" },
-      { file: "site_excelsior.png", caption: "/excelsior — the magazine archive" },
-      { file: "site_ink.png", caption: "/ink — The Board, seven years of games" },
-      { file: "site_chess.png", caption: "/chess — the chess corpus" },
-      { file: "site_weeb.png", caption: "/weeb — a hand-kept list read as evidence" },
+      { file: "site_project_detail.png", caption: "/project/portfolio: this very page" },
+      { file: "site_project_detail_with_compare.png", caption: "/project/mileway: the slide-to-compare viewer" },
+      { file: "site_resume.png", caption: "/resume: the printable résumé" },
+      { file: "site_shipped.png", caption: "/shipped: apps that actually reached a store" },
+      { file: "site_hire.png", caption: "/hire: a job description run against the documented experience" },
+      { file: "site_map.png", caption: "/map: The 3D Storyboard" },
+      { file: "site_forge.png", caption: "/forge: The Particle Forge" },
+      { file: "site_blueprint.png", caption: "/blueprint: the 3D walkthrough" },
+      { file: "site_compose.png", caption: "/compose: a live Compose-subset interpreter" },
+      { file: "site_terminal.png", caption: "/terminal: the interactive shell" },
+      { file: "site_playground.png", caption: "/playground: the toy box" },
+      { file: "site_pulse.png", caption: "/pulse: an instrument view over the site's own data" },
+      { file: "site_lab.png", caption: "/lab: the Lab Bench experiments" },
+      { file: "site_loopdown.png", caption: "/loopdown: Notes From The Loop" },
+      { file: "site_excelsior.png", caption: "/excelsior: the magazine archive" },
+      { file: "site_ink.png", caption: "/ink: The Board, seven years of games" },
+      { file: "site_chess.png", caption: "/chess: the chess corpus" },
+      { file: "site_weeb.png", caption: "/weeb: a hand-kept list read as evidence" },
     ],
   },
   {
@@ -1368,12 +1411,12 @@ export const projects: Project[] = [
     name: "DEADLOCK",
     tagline: "A first-person time-loop game about a moment someone could not let end.",
     description:
-      "Godot 4.7 in GDScript. A deterministic echo-replay spine — recorded input intent replays through the same physics step — powers cooperative echoes, ghosts, and boss desync from one system. Built solo as an AI-orchestrated dev crew.",
+      "Godot 4.7 in GDScript. A deterministic echo-replay spine powers cooperative echoes, ghosts, and boss desync from one system, with recorded input intent replayed through the same physics step. Built solo as an AI-orchestrated dev crew.",
     stack: ["Godot 4.7", "GDScript", "Deterministic fixed-timestep sim", "gdUnit4", "AI-orchestrated content pipeline"],
     highlights: [
       "One deterministic (state, InputFrame) → state step reused five ways: cooperative Echoes, ghosts, leaderboard replays, the Hunter, and boss desync.",
       "A bit-exact determinism gate guards every change to the time systems, wired into a hook that reruns it automatically on every edit.",
-      "Design-first build: a 4,300+ line, 7-document codex and 24 animated SVG design boards, generated by a checked-in AI dev-crew script — 39 agents, 0 failures, one session.",
+      "Design-first build: a 4,300+ line, 7-document codex and 24 animated SVG design boards, generated by a checked-in AI dev-crew script. 39 agents, 0 failures, one session.",
     ],
     // Repo is private — early solo build, not ready for public code review yet.
     // The case study below is real: verified against the actual source, not marketing copy.
@@ -1395,35 +1438,35 @@ export const projects: Project[] = [
     icon: "/projects/deadlock/brand/deadlock-icon.svg",
     detail: {
       overview:
-        "DEADLOCK is a first-person time-loop game about a moment someone could not let end — a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea — record intent, replay deterministically — is reused, unmodified, five different ways across the game's core systems.",
+        "DEADLOCK is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
       sections: [
         {
           heading: "Record intent, never position",
-          body: "The determinism contract in one line: an InputFrame stores a move vector, jump, and dash — never a position. Motion.step(state, frame) replays it through the same fixed-timestep physics tick every time, so the same state plus the same frame always produces the same state out. Positions are outputs, never inputs, which is what makes an Echo standing on a pressure pad, a ghost racing a past run, and the Hunter's prediction the same handful of lines wearing three different narrative masks.",
+          body: "The determinism contract in one line: an InputFrame stores a move vector, jump, and dash, never a position. Motion.step(state, frame) replays it through the same fixed-timestep physics tick every time, so the same state plus the same frame always produces the same state out. Positions are outputs, never inputs, which is what makes an Echo standing on a pressure pad, a ghost racing a past run, and the Hunter's prediction the same handful of lines wearing three different narrative masks.",
         },
         {
           heading: "One spine, five faces",
-          body: "Recorder is a ring buffer of InputFrames; Echo replays a slice of it tick-for-tick, either incrementally (once per physics tick, for a live cooperating Echo holding a pressure pad open) or in one shot (for ghosts, tests, and the Hunter's prediction). Cooperative Echoes hold a bridge open, ghosts race a past run, the leaderboard replays a full match, and the Hunter — the thing hunting you — predicts your position off the same replay math. No branch of that list touches a second system.",
+          body: "Recorder is a ring buffer of InputFrames; Echo replays a slice of it tick-for-tick, either incrementally (once per physics tick, for a live cooperating Echo holding a pressure pad open) or in one shot (for ghosts, tests, and the Hunter's prediction). Cooperative Echoes hold a bridge open, ghosts race a past run, the leaderboard replays a full match, and the Hunter, the thing hunting you, predicts your position off the same replay math. No branch of that list touches a second system.",
         },
         {
           heading: "The gate that can't be skipped",
-          body: "tests/test_determinism.gd asserts bit-exact field equality with no tolerance, plus a perturbation check that fails if a changed input ever produces an identical output — the test that would catch a gate that silently stopped testing anything. A PostToolUse hook reruns it automatically on any edit to the time or player systems, so drift surfaces the moment it's introduced, not at playtest.",
+          body: "tests/test_determinism.gd asserts bit-exact field equality with no tolerance, plus a perturbation check that fails if a changed input ever produces an identical output, the test that would catch a gate that silently stopped testing anything. A PostToolUse hook reruns it automatically on any edit to the time or player systems, so drift surfaces the moment it's introduced, not at playtest.",
         },
         {
           heading: "The Hunter, built on the same replay math",
-          body: "The Hunter wakes once the player's attention score crosses a threshold, can be frozen by the Stutter ability, and catches the player by proximity — a CharacterBody3D whose prediction runs on the exact same recorded-intent pipeline as the cooperative-Echo and boss-desync mechanics. It isn't a second AI system bolted on; it's the same fifteen lines of replay code with a different narrative job.",
+          body: "The Hunter wakes once the player's attention score crosses a threshold, can be frozen by the Stutter ability, and catches the player by proximity, a CharacterBody3D whose prediction runs on the exact same recorded-intent pipeline as the cooperative-Echo and boss-desync mechanics. It isn't a second AI system bolted on; it's the same fifteen lines of replay code with a different narrative job.",
         },
         {
           heading: "Design bible before geometry",
-          body: "52 logged iterations, 10 entity dossiers, 24 hand-authored animated-SVG design boards, and a 4,300+ line, seven-document codex — written before most of the game's rooms exist. The frame test for every addition is one question: would a grieving mind hold this?",
+          body: "52 logged iterations, 10 entity dossiers, 24 hand-authored animated-SVG design boards, and a 4,300+ line, seven-document codex, written before most of the game's rooms exist. The frame test for every addition is one question: would a grieving mind hold this?",
         },
         {
           heading: "An AI dev crew, checked in, not described",
-          body: "The codex wasn't hand-written — it was generated by a workflow script checked into the repo: three readers distill source material, seven documents generate in a pipeline where critique starts the moment each one finishes its own draft, the four widest creative documents run dual-lens ensembles merged by a judge pass, and every draft clears adversarial critics for frame, fairness, originality, and voice before a reviser is allowed to touch the file. One session: 39 agents, zero failures, ~4.8M tokens.",
+          body: "The codex wasn't hand-written. It was generated by a workflow script checked into the repo: three readers distill source material, seven documents generate in a pipeline where critique starts the moment each one finishes its own draft, the four widest creative documents run dual-lens ensembles merged by a judge pass, and every draft clears adversarial critics for frame, fairness, originality, and voice before a reviser is allowed to touch the file. One session: 39 agents, zero failures, ~4.8M tokens.",
         },
         {
           heading: "Honesty as a design constraint",
-          body: "The project's own README states plainly which systems are playable versus designed-but-unbuilt, and backs every specific number with a literal command a reader could run against the source. The in-fiction lesson — an unreliable room lies about the floor; sending an Echo reveals the truth — is asked of the documentation too.",
+          body: "The project's own README states plainly which systems are playable versus designed-but-unbuilt, and backs every specific number with a literal command a reader could run against the source. The in-fiction lesson is asked of the documentation too. An unreliable room lies about the floor; sending an Echo reveals the truth.",
         },
       ],
       metrics: [
@@ -1444,10 +1487,10 @@ export const projects: Project[] = [
           title: "One deterministic step, five uses",
           code: `graph LR
   s["state"] -->|"InputFrame (intent)"| step["Motion.step()<br/>pure · fixed timestep"] --> s2["state'"]
-  step -.-> echo["Echo — cooperative"]
+  step -.-> echo["Echo, cooperative"]
   step -.-> ghost["Ghost replay"]
   step -.-> board["Leaderboard replay"]
-  step -.-> hunter["The Hunter — prediction"]
+  step -.-> hunter["The Hunter, prediction"]
   step -.-> boss["Boss desync"]`,
         },
         {
@@ -1462,13 +1505,13 @@ export const projects: Project[] = [
       ],
     },
     screens: [
-      { file: "title.webp", caption: "Title — dark maroon, a room that lies about its own floor" },
+      { file: "title.webp", caption: "Title: dark maroon, a room that lies about its own floor" },
       { file: "journey.gif", caption: "Title → false-floor room → two-Echo cooperation → Sense HUD → Pull ability" },
-      { file: "echo-cooperation.webp", caption: "Two Echoes holding a bridge open — same replay math, cooperative use" },
-      { file: "the-sense.webp", caption: "The Sense — reading the room for what it's hiding" },
-      { file: "pull.webp", caption: "Pull ability — one verb, reused across encounters" },
-      { file: "echo-stutter.svg", caption: "Echo / Stutter — the core verb, diagrammed" },
-      { file: "pipeline.gif", caption: "The AI dev-crew pipeline that generated the design codex — 39 agents, one session" },
+      { file: "echo-cooperation.webp", caption: "Two Echoes holding a bridge open: same replay math, cooperative use" },
+      { file: "the-sense.webp", caption: "The Sense: reading the room for what it's hiding" },
+      { file: "pull.webp", caption: "Pull ability: one verb, reused across encounters" },
+      { file: "echo-stutter.svg", caption: "Echo / Stutter: the core verb, diagrammed" },
+      { file: "pipeline.gif", caption: "The AI dev-crew pipeline that generated the design codex: 39 agents, one session" },
     ],
   },
   {
@@ -1476,13 +1519,13 @@ export const projects: Project[] = [
     name: "The KMP toolkit family",
     tagline: "Three decoupled repos so a new app starts at \"write the feature\".",
     description:
-      "The reusable libraries, the shared build logic and the app shape each live in their own repo — vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
+      "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
       "kmp-toolkit: 36 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
-      "kmp-build-logic — 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
-      "kmp-app-template — the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi — the composition is the proof the extraction was real, not a library nobody uses.",
+      "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
+      "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
+      "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi. The composition is the proof the extraction was real, not a library nobody uses.",
     ],
     links: [
       { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
@@ -1491,13 +1534,63 @@ export const projects: Project[] = [
     ],
     status: "Active · MIT · vendored across 5 repos",
     badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
+    detail: {
+      overview:
+        "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Mileway, PaymentsLab, Kursi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
+      sections: [
+        {
+          heading: "kmp-toolkit: 36 modules, extracted, never designed",
+          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 36 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Mileway and PaymentsLab build their reducer/store layer on.",
+        },
+        {
+          heading: "kmp-build-logic: the setup written once",
+          body: "17 convention plugins live in this repo (22 authored across the whole family). AGP, Kotlin, Compose, test, lint, Firebase, Room and Koin configuration for a module is one line (apply the plugin) instead of a build.gradle.kts a new module has to get right from scratch. This is the other half of the shared foundation: the composite build every consumer app pulls in for its module wiring.",
+        },
+        {
+          heading: "kmp-app-template: the shape a new app starts from",
+          body: "The third repo is the app shape the toolkit and build logic slot into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android and Desktop shells, and a customizer.sh script that renames the whole project in one command. A new app starts at \"write the feature\", not at \"stand up the module graph\".",
+        },
+        {
+          heading: "The composition is the proof",
+          body: "Mileway consumes 10 of its 46 modules from the toolkit; PaymentsLab consumes 25 of its 40; Kursi draws on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fourth independent consumer.",
+        },
+        {
+          heading: "One MVI contract, two apps",
+          body: "Mileway and PaymentsLab are not two isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale: one seam, reused, instead of the same decision made differently five times.",
+        },
+      ],
+      metrics: [
+        { value: "36", label: "modules · kmp-toolkit" },
+        { value: "17", label: "convention plugins here · 22 across the family" },
+        { value: "5", label: "repos vendoring this family" },
+        { value: "19", label: "gateway providers behind one abstraction" },
+      ],
+      techStack: [
+        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "offline-first store", "network + security", "on-device AI seam", "device-integrity", "operation-log outbox", "19-provider payment-gateway abstraction"] },
+        { group: "kmp-build-logic", items: ["AGP", "Kotlin", "Compose", "test + lint", "Firebase", "Room", "Koin"] },
+        { group: "kmp-app-template", items: ["Shared Compose UI", "Splash → Login → Home nav scaffold", "Android + Desktop shells", "customizer.sh"] },
+        { group: "Distribution", items: ["Gradle includeBuild", "MIT license"] },
+      ],
+      diagrams: [
+        {
+          title: "Three repos, one seam each",
+          code: `graph LR
+  bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Mileway"]
+  bl -.->|"includeBuild"| p["PaymentsLab"]
+  tk["kmp-toolkit<br/>36 modules"] -.->|"includeBuild"| m
+  tk -.->|"includeBuild"| p
+  tk -.->|"includeBuild"| ku["Kursi"]
+  at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
+        },
+      ],
+    },
   },
   {
     slug: "the-loopdown",
     name: "The Loopdown",
     tagline: "Field notes from an engineer who writes: one war story, four channels, one branded card.",
     description:
-      "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic — plus the consolidated back catalogue.",
+      "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic, plus the consolidated back catalogue.",
     stack: ["Node.js", "Markdown", "SVG generation", "Voice-profile linting"],
     highlights: [
       "One lesson in, four channel-shaped posts out, each with a branded SVG card. The adaptation is the product, not the writing.",
@@ -1508,6 +1601,51 @@ export const projects: Project[] = [
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/the-loopdown" }],
     status: "Active · public",
     badges: ["Node.js", "Content engine", "Open source"],
+    detail: {
+      overview:
+        `The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. ${lessons.length} lessons across ${writing.series.length} series sit alongside a ${writing.archive.length}-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.`,
+      sections: [
+        {
+          heading: "One lesson, four channel-shaped posts",
+          body: "A lesson is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with its own generated branded SVG card. The adaptation is the product, not the writing. A dev.to post reads like a dev.to post and a LinkedIn post reads like a LinkedIn post, from the same source material.",
+        },
+        {
+          heading: "Field notes tied to a real production win",
+          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Mileway's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from PaymentsLab's expect/actual split across targets. The writing has somewhere real to point back to.",
+        },
+        {
+          heading: "Series and lessons",
+          body: `"${seriesByLength[0]?.title}" runs longest at ${seriesByLength[0]?.episodes} episodes; "${seriesByLength[1]?.title}" runs ${seriesByLength[1]?.episodes}; the rest are shorter. By pillar, ${lessonsByPillar[0]?.[0]} carries the most lessons (${lessonsByPillar[0]?.[1]} of ${lessons.length}): Kalman-filtered sensors and Room migrations produce more "the data lied to you and here's the invariant that catches it" moments than any other pillar the archive covers.`,
+        },
+        {
+          heading: "A voice profile enforced by a lint step",
+          body: "The generated drafts are checked against a voice profile derived from the existing archive rather than trusted on read. A lint step, not a style guide nobody reads, so a draft that sounds like a language model wrote it fails before it reaches a channel.",
+        },
+        {
+          heading: "Written, adapted, mostly still queued",
+          body: `${lessons.length - published.length} of the ${lessons.length} lessons are drafted and channel-adapted (status: ready). Actually out across all four channels so far: ${published.length}, "${published[0]?.title}", from the ${published[0]?.series} series. The engine is built to produce four-channel output per lesson; the publishing backlog is the honest, unfinished part.`,
+        },
+        {
+          heading: `The archive: ${writing.archive.length} pieces from before the code`,
+          body: `A consolidated back catalogue from Books Before Bros, the original blog: campus lore and short fiction predating the engineering work, ${archiveByForm["short-fiction"] ?? 0} pieces of short fiction, ${archiveByForm.essay ?? 0} essays and ${archiveByForm.humor ?? 0} humor pieces, kept in the same repo as the lessons rather than left to rot on an old WordPress install.`,
+        },
+        {
+          heading: "Framed as a time loop",
+          body: "The whole archive is framed as an engineer stuck in a time loop, filing field notes on the same lying systems each pass: the sensor that reports a position it cannot back up, the coroutine that outlives the screen that launched it. The conceit gives every lesson the same voice without flattening what each one is actually about.",
+        },
+      ],
+      metrics: [
+        { value: String(lessons.length), label: `lessons · ${writing.series.length} series` },
+        { value: "4", label: "channels per lesson · dev.to, LinkedIn, Medium, Hashnode" },
+        { value: String(writing.archive.length), label: "archive pieces · from before the code" },
+        { value: String(published.length), label: "lesson published across all four channels so far" },
+      ],
+      techStack: [
+        { group: "Engine", items: ["Node.js", "Markdown", "SVG generation (branded cards)", "Voice-profile lint"] },
+        { group: "Channels", items: ["dev.to", "LinkedIn", "Medium", "Hashnode"] },
+        { group: "Repo hygiene", items: ["Public engine + published posts tracked", "Drafts + personal notes gitignored"] },
+      ],
+    },
   },
 ];
 
@@ -1538,18 +1676,18 @@ export const sharedFoundation: {
   libs: SharedLib[];
 } = {
   blurb:
-    "Mileway and PaymentsLab aren't two isolated demos — they're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
+    "Mileway and PaymentsLab aren't two isolated demos. They're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
   libs: [
     {
       name: "kmp-build-logic",
       url: "https://github.com/darkpandawarrior/kmp-build-logic",
-      role: "Gradle convention plugins — one place that configures every KMP module's targets, Compose, lint and test wiring.",
+      role: "Gradle convention plugins: one place that configures every KMP module's targets, Compose, lint and test wiring.",
       usedBy: ["Mileway", "PaymentsLab"],
     },
     {
       name: "kmp-toolkit",
       url: "https://github.com/darkpandawarrior/kmp-toolkit",
-      role: "A vendored KMP toolkit — the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules.",
+      role: "A vendored KMP toolkit: the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules.",
       usedBy: ["Mileway", "PaymentsLab"],
     },
   ],
@@ -1563,8 +1701,22 @@ export interface Contribution {
   date: string;
 }
 
-// Real public open-source contributions — merged PRs to career-ops, a public OSS project (⭐63k+).
+// Real public open-source contributions — merged PRs to career-ops, a public OSS project.
 // See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
+/**
+ * Merged PRs upstream, as the live GitHub search reports it.
+ *
+ * NOT openSource.length. That array is a CURATED subset — 17 entries against
+ * 18 merged — and hiresignalNumbers.test.ts documents shorter as expected.
+ * ResumeView used the array length and so printed 17 while every other
+ * surface on the site said 18, which is the kind of one-off disagreement a
+ * reader notices and an owner never does.
+ *
+ * Refreshed by scripts/gen-hiresignal-stats.mjs alongside the nine other
+ * places this number appears.
+ */
+export const upstreamMergedPRs = 18;
+
 export const openSource: Contribution[] = [
   { repo: "santifer/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/santifer/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
   { repo: "santifer/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/santifer/career-ops/pull/2639", status: "merged", date: "2026-08-12" },
@@ -1593,13 +1745,15 @@ export interface GrowthItem {
 
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
-  { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web — deterministic engine + ISMCTS AI." },
-  { date: "Jun–Aug 2026", title: "career-ops — public OSS contributions", detail: "17 merged PRs to the public career-ops project (⭐63k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes — silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history." },
-  { date: "Jun 2026", title: "Mileway — five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity — 159 Roborazzi tests green." },
-  { date: "Jul 2026", title: "Mileway — offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox — still zero backend." },
-  { date: "Jul 2026", title: "PaymentsLab — 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in — all MOCK_MODE-honest." },
+  { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
+  { date: "Jun–Aug 2026", title: "career-ops: public OSS contributions", detail: `18 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
+  { date: "Jun 2026", title: "Mileway: five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
+  { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, still zero backend." },
+  { date: "Jul 2026", title: "PaymentsLab: 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
-  { date: "Jul 2026", title: "Mileway — super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth — shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
+  { date: "Jul 2026", title: "Mileway: super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
+  { date: "Aug 2026", title: "Portfolio: the fleet made checkable", detail: `New /shipped page: ${fleetStats.live} live listings plus ${fleetStats.delisted} delisted ones recovered via the Internet Archive, ${fleetStats.live + fleetStats.delisted} apps traced across ${fleetStats.branches.toLocaleString("en-US")} branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted.` },
+  { date: "Aug 2026", title: "Portfolio: the anthology and The Board, published", detail: "New /ink surfaces: the Morkinstar Journals anthology across three seasons (The Directory, The Ninety-One Pages, The Kindling) plus a starmap, and The Board, seven years of forum games, mined and republished." },
 ];
 
 /* ── Card thumbnails ──────────────────────────────────────────────────────
@@ -1637,14 +1791,14 @@ export const recentGrowth: GrowthItem[] = [
  * pointing this at an .avif directly would break that chain.
  */
 export const cardMedia: Record<string, { src: string; alt: string }> = {
-  kursi: { src: "/projects/_heroes/kursi.png", alt: "Kursi — 13 modules, 4 platforms, 10 bot personas" },
-  mileway: { src: "/projects/_heroes/mileway.png", alt: "Mileway — 46 modules, 5 platforms, 159 tests" },
-  paymentslab: { src: "/projects/_heroes/paymentslab.png", alt: "PaymentsLab — 40 modules, 66 gateways, 5 rails" },
-  hiresignal: { src: "/projects/_heroes/hiresignal.png", alt: "HireSignal — active, 4 PRs merged upstream" },
-  deadlock: { src: "/projects/_heroes/deadlock.png", alt: "DEADLOCK — in development, private repo with a public case study" },
+  kursi: { src: "/projects/_heroes/kursi.png", alt: "Kursi: 13 modules, 4 platforms, 10 bot personas" },
+  mileway: { src: "/projects/_heroes/mileway.png", alt: "Mileway: 46 modules, 5 platforms, 159 tests" },
+  paymentslab: { src: "/projects/_heroes/paymentslab.png", alt: "PaymentsLab: 40 modules, 66 gateways, 5 rails" },
+  hiresignal: { src: "/projects/_heroes/hiresignal.png", alt: "HireSignal: active, 18 PRs merged upstream" },
+  deadlock: { src: "/projects/_heroes/deadlock.png", alt: "DEADLOCK: in development, private repo with a public case study" },
   // The portfolio card had no media at all before, so it sat visually shorter
   // than every card beside it. It has a hero now like the rest.
-  portfolio: { src: "/projects/_heroes/portfolio.png", alt: "This portfolio and Panda, its AI assistant — live" },
+  portfolio: { src: "/projects/_heroes/portfolio.png", alt: "This portfolio and Panda, its AI assistant: live" },
 };
 
 /* ── The site's own interactive surfaces ──────────────────────────────────

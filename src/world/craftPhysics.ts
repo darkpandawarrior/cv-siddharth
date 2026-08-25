@@ -9,8 +9,8 @@
  *
  * What remains is the handful of constants that only mean anything in relation
  * to numbers in other files, kept here so worldGeometry.test.ts can assert
- * those relationships. Zero three.js/R3F/Rapier imports, so it stays testable
- * headlessly.
+ * those relationships. Zero three.js/R3F/Rapier imports (drive.ts, its one
+ * re-export below, is pure too), so it stays testable headlessly.
  */
 
 
@@ -20,42 +20,14 @@
 export const GROUND_LEVEL = 0;
 
 /**
- * Craft mass, drive force and the playable bounds box.
+ * The playable bounds box and where the craft starts.
  *
- * Here rather than in Craft.tsx because each only means something against a
- * number in another file — ENGINE_FORCE against BASE_LINEAR_DAMPING sets top
- * speed, WORLD_BOUNDS has to contain the desk, SPAWN_POSITION has to clear the
- * craft's own suspension. Every one of those went wrong at least once while
- * they were private literals in a component.
+ * Here rather than in Vehicle.tsx because each only means something against a
+ * number in another file — WORLD_BOUNDS has to contain the desk, SPAWN_POSITION
+ * has to clear the craft's own resting height. Every one of those went wrong at
+ * least once while they were private literals in a component.
  */
-export const CHASSIS_MASS = 220; // kg
 
-/**
- * Engine force per driven wheel, and the damping that caps top speed.
- *
- * Here rather than in Craft.tsx because TERMINAL_WHEEL_SPEED below is derived
- * from them and the geometry test asserts that derived speed clears
- * LAUNCH_SPEED. They were literals in the component with the terminal speed
- * hand-copied here as `900` — the exact duplication that has now produced three
- * separate bugs in this world.
- *
- * 820, DOWN from 1150 (which was itself down from 2100 — see git history for
- * that earlier retune). This one isn't a handling fix, it's a scale fix: the
- * slab grew from a 42m desk to a 168m, ten-year boulevard, and a car that
- * crosses ten years in under five seconds turns the one idea the whole world
- * is built on — that driving is what resolves the city, and the city is a
- * timeline — into a blur. 820 paired with the damping bump below lands
- * TERMINAL_WHEEL_SPEED at ~19.6 m/s, an 8.6s flat-out traverse of the full
- * slab (worldGeometry.test.ts asserts the traversal time directly). Damping
- * absorbed part of the cut rather than force alone, so acceleration feel and
- * cornering traction survive the change instead of just top speed dropping.
- *
- * Every number here is measured in the browser, not calculated: the naive 2F/m
- * figure runs well ahead of real acceleration once the raycast vehicle's
- * traction limit and suspension losses are in play.
- */
-export const ENGINE_FORCE = 820; // N per rear wheel, full throttle
-export const BASE_LINEAR_DAMPING = 0.38;
 /**
  * The playable box. Tight to the slab now that there is nowhere else to be:
  * leave the surface in any direction and you are recovered immediately rather
@@ -99,16 +71,18 @@ export const SPAWN_POSITION: [number, number, number] = [0, 3, -74];
 export const CHASSIS_RESTING_HEIGHT = 0.77;
 
 /**
- * Top speed on the wheels — where engine force and damping balance. Exported
- * so the geometry test can assert the craft can actually reach the launch
- * speed its own ramp requires; ENGINE_FORCE and BASE_LINEAR_DAMPING live in
- * Craft.tsx, so this states the result rather than recomputing it there.
+ * Top speed on the wheels.
+ *
+ * Used to be `2*ENGINE_FORCE/(CHASSIS_MASS*BASE_LINEAR_DAMPING)` — the balance
+ * point of a Rapier vehicle controller's engine force against its linear
+ * damping. None of that exists any more (see drive.ts's block comment for
+ * why). Re-exported from there under its old name so this file's external
+ * contract (Nav.tsx's speed gauge, worldGeometry.test.ts, craftPhysics.test.ts)
+ * doesn't have to change with the physics underneath it, and so the name
+ * still states the truth: MAX_SPEED **is** the car's top speed on the wheels
+ * now, not a coincidentally similar number living in a different file.
  */
-export const TERMINAL_WHEEL_SPEED = (2 * ENGINE_FORCE) / (CHASSIS_MASS * BASE_LINEAR_DAMPING);
-
-
-
-
+export { MAX_SPEED as TERMINAL_WHEEL_SPEED } from "./drive.ts";
 
 
 

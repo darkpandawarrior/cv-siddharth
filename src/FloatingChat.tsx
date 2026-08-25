@@ -559,11 +559,7 @@ export function FloatingChat() {
 
       {open && (
         <div
-          className={`fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl print:hidden ${
-            expanded
-              ? "inset-2 sm:inset-6 lg:inset-10"
-              : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]"
-          }`}
+          className={`panel fixed z-50 flex flex-col overflow-hidden shadow-2xl print:hidden ${ expanded ? "inset-2 sm:inset-6 lg:inset-10" : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]" }`}
         >
           <header className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3">
             <div className="min-w-0">

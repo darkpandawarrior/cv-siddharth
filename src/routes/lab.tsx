@@ -8,7 +8,6 @@ import { LAB_TABS, countWord } from "../data/labs.ts";
 
 export const Route = createFileRoute("/lab")({
   head: () => roomHead("/lab"),
-  ssr: false,
   component: () => (
     <>
       <CursorAura />

@@ -18,12 +18,14 @@ import { roomHead } from "../lib/routeHead.ts";
  *  - Exactly one idea per row, biggest number first.
  *  - Every claim is a link to the thing that proves it.
  *
- * The throughline sentence at the bottom is deliberate. Two separate model
+ * The closing paragraph states the fact and stops. Two separate model
  * ensembles disagreed about the site's narrative: one said never explain it,
- * the other said burying it entirely wastes the strongest thread. Both are
- * right — it must never be presented as a THEME, but stating the connection
- * once, in plain English, as a claim about how he works, costs the reader
- * nothing and is the most senior thing on the page.
+ * the other said burying it entirely wastes the strongest thread. The first
+ * one won. Naming the connection in copy hands the reader the conclusion they
+ * were about to reach on their own, which is the one move that makes it read
+ * as a theme rather than as how he works. The link to the other half is left
+ * where a reader who wants it will find it, and the structure carries the
+ * rest.
  */
 export const Route = createFileRoute("/hire")({
   head: () => roomHead("/hire"),
@@ -39,15 +41,27 @@ function HirePage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-ink">
       <div className="mx-auto max-w-4xl px-6 section-y">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent/80">
-          {profile.location} · open to remote
+        {/* The role used to hang off the name in the <h1> behind an em dash,
+            which is a punctuation mark this site's prose does not use. It also
+            made the largest line on the page two ideas wide. The kicker was
+            already the line that says where he is and how he works, so the
+            role joins it there and the heading is left holding the one thing
+            a recruiter came to read. */}
+        <p className="kicker-accent">
+          {profile.title} · {profile.location} · open to remote
         </p>
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
-          {profile.name} — {profile.title}
+          {profile.name}
         </h1>
+        {/* "Five years" read as an exact figure and was the only surface
+            spelling it out, so it could not be found by the same grep that
+            finds the other ten. The hedge every other surface uses is a lower
+            bound, which is the one direction a hiring page may drift. It is
+            still hand-typed: the real fix is one anchor date in profile.ts,
+            interpolated everywhere, and that lives outside this file. */}
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-300">
-          Platform owner of a ~964k-LOC financial SaaS app serving 50,000+ monthly users. Five years
-          of Android, now building across Kotlin Multiplatform.
+          Platform owner of a ~964k-LOC financial SaaS app serving 50,000+ monthly users. 5+ years of
+          Android, now building across Kotlin Multiplatform.
         </p>
 
         {/* The numbers, before anything else asks for attention. */}
@@ -89,7 +103,7 @@ function HirePage() {
         {/* Three case studies, one line each. A hiring manager who wants depth
             clicks; one who does not has already got what they came for. */}
         <div className="mt-12 border-t border-line pt-8">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted">The work behind the numbers</p>
+          <p className="kicker">The work behind the numbers</p>
           <ul className="mt-4 divide-y divide-line">
             {featured.map((c) => {
               // A case study is not always a project. `mileway` is both and has
@@ -129,11 +143,14 @@ function HirePage() {
           </ul>
         </div>
 
-        {/* Stated once, as a claim about method — never as a theme. */}
+        {/* The fact, and only the fact. This used to continue "I do the same
+            thing to sensor data now", which drew the line between the editing
+            years and the engineering for the reader. That is the one thing the
+            site must never do in copy: the connection is left for the reader to
+            make, or it is not made at all. The link does the work instead. */}
         <p className="mt-10 max-w-2xl border-l-2 border-accent/40 pl-4 leading-relaxed text-zinc-300">
-          Before I wrote software I spent three years as an editor, finding what was wrong in other
-          people's drafts. I do the same thing to sensor data now — most of my best work has been
-          noticing that a signal everyone trusted was lying.{" "}
+          Before I wrote software I spent three years editing a college magazine, finding what was
+          wrong in other people's drafts.{" "}
           <Link to="/ink" className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent">
             That half is here too
           </Link>

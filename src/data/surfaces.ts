@@ -44,6 +44,7 @@
 // live in `rooms.tsx`'s FACET_ICON map, keyed by path; `surfaces.test.ts`
 // fails the build if that map misses one.
 
+import { excelsiorEditions } from "./excelsior.ts";
 import { LAB_TABS, countWord } from "./labs.ts";
 
 /**
@@ -116,6 +117,37 @@ export const captureViewport = (device: DeviceFrame) => {
   return { width, height: Math.max(600, Math.round(width / aspect)) };
 };
 
+/**
+ * THE WALL'S THREE TINTS, AND WHY THERE ARE ONLY THREE.
+ *
+ * index.css states the art direction in one line: "if it is cyan it is the
+ * thing being compared to". A tile tint that is cyan because cyan looked good
+ * spends that meaning on decoration, and eight tints across seventeen tiles
+ * made the homepage read as a wall assembled from separate projects rather
+ * than one site. So the palette collapses to the smallest set that still says
+ * something true:
+ *
+ *   ACCENT     — the build world. Everything that is engineering evidence or a
+ *                running program wears the site's own accent.
+ *   INK_OCHRE  — the writing world. /ink swaps --color-accent to this ochre for
+ *                its whole theme, so a writing tile is that world's colour
+ *                showing through the wall rather than a second accent.
+ *   CHESS_GOLD — kept, because it ENCODES rather than decorates: --lab-gold is
+ *                already the board/game colour SearchTreeLab renders Kursi's
+ *                search tree in, and /chess's own lab draws through that same
+ *                renderer. Change it and two surfaces stop matching.
+ *
+ * These are hex literals and not `var(--color-...)` on purpose: consumers
+ * concatenate an alpha suffix onto them (`${surface.tint}55` in Launcher,
+ * RoomGrid and rooms.tsx) and the 3D world feeds them to r3f/canvas colour
+ * props, neither of which accepts a CSS variable. The values are copied from
+ * the tokens named beside them, never invented; themeConcat.test.ts documents
+ * the same trap for scene colours.
+ */
+const ACCENT = "#f2a13d"; // --color-accent, index.css
+const INK_OCHRE = "#d9a441"; // --color-accent inside .theme-ink, index.css
+const CHESS_GOLD = "#e8c874"; // --lab-gold, index.css
+
 export interface Surface {
   /** Route path. Must resolve to a file in src/routes/ — the gate checks. */
   to: string;
@@ -159,6 +191,25 @@ export interface Surface {
    * a release. The gate fails if a railId resolves to nothing.
    */
   railId?: string;
+  /**
+   * Set `false` to keep a surface registered but off the homepage wall.
+   *
+   * REGISTRATION AND ADVERTISEMENT ARE NOT THE SAME THING, and this is the one
+   * place the difference is expressible. Everything downstream of `surfaces`
+   * still sees a demoted surface: ⌘K lists it (CommandPalette maps SURFACES,
+   * the whole registry), the room pager still walks into it, /playground still
+   * builds it a pavilion, roomHead still writes its <head>, the sitemap still
+   * carries it. What it loses is a tile on the wall, which is advertising
+   * space, not reachability.
+   *
+   * A `wall: boolean` existed here before and was deleted for a good reason:
+   * /playground opted out, lost its last homepage link, and every gate stayed
+   * green because nothing checked *which* surfaces had opted out. That is the
+   * failure this reintroduction is shaped around. The flag is back, and
+   * surfaces.test.ts pins the demoted set by path — adding one is a failing
+   * test that has to be edited deliberately, never a quiet omission.
+   */
+  wall?: false;
 }
 
 /** A surface as authored — `kind` comes from which array it lands in. */
@@ -179,7 +230,7 @@ const roomSurfaces: SurfaceInput[] = [
       "Write Jetpack Compose, watch it recompose live in a phone frame — reactive state, animation, and an AI that writes it for you.",
     tag: "live editor · AI",
     group: "runs",
-    tint: "#3ddc84",
+    tint: ACCENT,
     device: "phone",
     preview: "poster",
     poster: "compose",
@@ -194,7 +245,7 @@ const roomSurfaces: SurfaceInput[] = [
     blurb: `${countWord(LAB_TABS.length)} experiments that prove the numbers — Dice.tech production metrics, five personal builds and seven years of chess — running in your browser.`,
     tag: "canvas · physics",
     group: "proof",
-    tint: "#5ee6ff",
+    tint: ACCENT,
     device: "desktop",
     preview: "poster",
     poster: "lab",
@@ -207,7 +258,7 @@ const roomSurfaces: SurfaceInput[] = [
       "The whole portfolio as an infinite canvas — a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.",
     tag: "3D · WebGL",
     group: "runs",
-    tint: "#db61ff",
+    tint: ACCENT,
     device: "desktop",
     preview: "poster",
     poster: "blueprint",
@@ -219,7 +270,7 @@ const roomSurfaces: SurfaceInput[] = [
       "The projects and the ideas that connect them, as a constellation you can orbit — every edge is a real dependency.",
     tag: "3D · graph",
     group: "proof",
-    tint: "#f0883e",
+    tint: ACCENT,
     device: "desktop",
     preview: "poster",
     poster: "map",
@@ -231,10 +282,17 @@ const roomSurfaces: SurfaceInput[] = [
       "A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.",
     tag: "canvas · interactive",
     group: "runs",
-    tint: "#3ddc84",
+    tint: ACCENT,
     device: "browser",
     preview: "poster",
     poster: "forge",
+    // Off the wall, still registered. It is a screensaver: lovely once, and
+    // nobody navigates to it twice, so a tile spends the wall's scarcest
+    // resource — a visitor's attention on the homepage — on the room with the
+    // least to say about him. ⌘K, the room pager and the /playground street
+    // all still reach it, and it keeps its poster so putting it back is one
+    // deleted line.
+    wall: false,
   },
   {
     to: "/terminal",
@@ -243,10 +301,16 @@ const roomSurfaces: SurfaceInput[] = [
       "A faux shell you can actually type in — ls the site, cat a project, or hit the backtick key from anywhere.",
     tag: "text · easter egg",
     group: "runs",
-    tint: "#5ee6ff",
+    tint: ACCENT,
     device: "desktop",
     preview: "poster",
     poster: "terminal",
+    // Off the wall, still registered — and the tile was arguing with its own
+    // tag. An easter egg advertised on the homepage is not an easter egg, and
+    // this one already has the discovery mechanism it wants: the backtick key
+    // works from anywhere on the site. ⌘K and the room pager still reach it by
+    // name for anyone who would rather not guess.
+    wall: false,
   },
   // No game count in this blurb, deliberately: the corpus grows every time he
   // plays, and this string feeds the SEO head tags and the assistant's system
@@ -259,10 +323,9 @@ const roomSurfaces: SurfaceInput[] = [
       "Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot that plays like me.",
     tag: "3d · engine",
     group: "corpus",
-    // Gold is already this codebase's board/game colour — SearchTreeLab uses
-    // the same value for Kursi's search tree, and the chess engine lab renders
-    // through that renderer, so the two read as one family.
-    tint: "#e8c874",
+    // The one tile that keeps its own colour, because this colour encodes the
+    // thing rather than dressing it: see CHESS_GOLD above.
+    tint: CHESS_GOLD,
     device: "tablet",
     preview: "poster",
     poster: "chess",
@@ -279,7 +342,7 @@ const roomSurfaces: SurfaceInput[] = [
       "Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.",
     tag: "corpus · data",
     group: "corpus",
-    tint: "#f2a13d",
+    tint: ACCENT,
     device: "tv",
     preview: "poster",
     poster: "weeb",
@@ -296,7 +359,7 @@ const pageSurfaces: SurfaceInput[] = [
       "Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.",
     tag: "90 seconds",
     group: "proof",
-    tint: "#3ddc84",
+    tint: ACCENT,
     device: "phone",
     preview: "poster",
     poster: "hire",
@@ -311,7 +374,7 @@ const pageSurfaces: SurfaceInput[] = [
       "The résumé as a page, not a download — no chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.",
     tag: "print · pdf",
     group: "proof",
-    tint: "#f2a13d",
+    tint: ACCENT,
     device: "desktop",
     preview: "poster",
     poster: "resume",
@@ -323,7 +386,7 @@ const pageSurfaces: SurfaceInput[] = [
       "Every Android app that reached the Play Store from work he touched — three at Dice and Jugnoo, the rest white-label clients of the platform he worked on, each one verified against its live listing.",
     tag: "store · verified",
     group: "proof",
-    tint: "#3ddc84",
+    tint: ACCENT,
     device: "phone",
     preview: "poster",
     poster: "shipped",
@@ -334,8 +397,14 @@ const pageSurfaces: SurfaceInput[] = [
     blurb:
       "A live count of what visitors actually touch across this portfolio — which rooms get opened, what gets played with, and what nobody has found yet.",
     tag: "telemetry · live",
-    group: "proof",
-    tint: "#5ee6ff",
+    // Sat in "proof" and made the group label a lie. Everything else under
+    // Proof is evidence about the engineer — shipped apps, the résumé, the lab
+    // that reproduces the metrics. This page counts clicks on this website: it
+    // is a live program reading a shared document, which is exactly what
+    // "things that run" means, and nothing about a visitor opening /forge is
+    // evidence about his Android work.
+    group: "runs",
+    tint: ACCENT,
     device: "widget",
     preview: "poster",
     poster: "pulse",
@@ -347,7 +416,7 @@ const pageSurfaces: SurfaceInput[] = [
       "The writing years — three editions of MANIT's institute magazine, a literary society, four published stories, and everything written before the code.",
     tag: "archive · world",
     group: "writing",
-    tint: "#cf8f63",
+    tint: INK_OCHRE,
     device: "tablet",
     preview: "poster",
     poster: "ink",
@@ -360,9 +429,12 @@ const pageSurfaces: SurfaceInput[] = [
     label: "Excelsior",
     blurb:
       "Three editions of MANIT Bhopal's institute magazine, readable here in full — English Editor on 2019 and 2020, Joint Chief Editor on 2021.",
-    tag: "396 pages",
+    // Summed from the generated edition list rather than added up by hand —
+    // three editions today, and the tile is the one place a fourth would not
+    // announce itself.
+    tag: `${excelsiorEditions.reduce((n, e) => n + e.pages, 0)} pages`,
     group: "writing",
-    tint: "#cf8f63",
+    tint: INK_OCHRE,
     device: "tablet",
     preview: "poster",
     poster: "excelsior",
@@ -375,7 +447,7 @@ const pageSurfaces: SurfaceInput[] = [
       "Field notes from building production Android — what broke, what the fix actually was, and the numbers on either side of it.",
     tag: "field notes",
     group: "writing",
-    tint: "#f2a13d",
+    tint: INK_OCHRE,
     device: "phone",
     preview: "poster",
     poster: "loopdown",
@@ -385,13 +457,19 @@ const pageSurfaces: SurfaceInput[] = [
     to: "/anthology",
     label: "The Morkinstar Journals",
     blurb:
-      "A galactic field reporter files twenty short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+      "A galactic field reporter files thirty-four short stories on fourteen gods and fourteen monsters, until he stops filing and keeps ninety-one pages instead.",
+    // The count is spelled out rather than interpolated on purpose: this file
+    // is the route registry and every consumer imports it, so pulling the
+    // anthology corpus in here to derive one word would put the whole of the
+    // fiction into every chunk. surfaces.test.ts pins the word to
+    // anthologyEntries.length instead, which costs nothing at runtime. It said
+    // "twenty" while the corpus held thirty-four, undercounting his own work
+    // on a public tile.
     tag: "fiction · starmap",
     group: "writing",
-    // The ink-world's own ochre, not a new colour — this tile lives inside
-    // /ink's palette, not beside it, so it should read as that world's
-    // furthest room rather than a competing accent.
-    tint: "#d9a441",
+    // This tile lives inside /ink's palette, not beside it: the furthest room
+    // of the writing world, wearing that world's colour like the rest of it.
+    tint: INK_OCHRE,
     device: "tablet",
     // No poster: /anthology's whole surface is the 3D starmap, which a static
     // capture can't represent honestly. "none" ships a legible tile today —
@@ -418,7 +496,7 @@ const pageSurfaces: SurfaceInput[] = [
       `north is 2017 and south is now.`,
     tag: "3d world · drivable",
     group: "runs",
-    tint: "#3ddc84",
+    tint: ACCENT,
     device: "browser",
     preview: "poster",
     poster: "playground",
@@ -447,20 +525,29 @@ export const WALL_GROUPS: { group: SurfaceGroup; label: string; note: string }[]
 export const surfaceBy = (to: string) => surfaces.find((s) => s.to === to);
 
 /**
- * Every surface, grouped, in wall order — and there is no opt-out.
+ * Every surface the wall advertises, grouped, in wall order.
  *
- * There used to be a `wall: boolean` here. Exactly one surface ever set it
- * false, and that surface (/playground, the drivable 3D world) promptly lost
- * its last link from the homepage while every gate stayed green: the registry
- * covered the route, the route had a poster, the poster was on disk, and none
- * of that meant anyone could reach it. "On the registry" now means "on the
- * wall", so the only way to hide a route from the homepage again is to delete
- * its surface — which surfaces.test.ts fails the build for.
+ * Read by SurfaceWall (the homepage) and by Launcher (the same wall, floated
+ * over any room), so a demotion takes a tile out of both — they are one wall
+ * shown in two places, not two lists.
+ *
+ * The opt-out is `wall: false` and it is guarded rather than trusted: the
+ * previous version of this flag let /playground fall off the homepage with
+ * every gate green, so surfaces.test.ts now asserts the demoted set is exactly
+ * the two entries below and that both are still registered and still carry
+ * their own way in.
  */
 export const wallSurfaces = WALL_GROUPS.map((g) => ({
   ...g,
-  items: surfaces.filter((s) => s.group === g.group),
+  items: surfaces.filter((s) => s.group === g.group && s.wall !== false),
 }));
+
+/**
+ * The surfaces deliberately kept off the wall, as data rather than as a
+ * comment — surfaces.test.ts pins this against the registry so the two cannot
+ * drift, and the failure names whichever route wandered in or out.
+ */
+export const demotedSurfaces = surfaces.filter((s) => s.wall === false);
 
 /**
  * Back-compat view for the modules that still import `siteRooms`.
