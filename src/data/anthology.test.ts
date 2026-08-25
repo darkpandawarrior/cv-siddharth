@@ -191,3 +191,34 @@ describe("guard C: no narrator the account does not have", () => {
     expect(blurbs.every((b) => typeof b.text === "string" && b.text.length > 20)).toBe(true);
   });
 });
+
+describe("guard G: the courtesy is reproduced in full or it is not reproduced", () => {
+  // Season Four prints the correspondent's own disclaimer at the foot of every
+  // piece, licensed, as municipal boilerplate. That is the season's cruellest
+  // running gag and TWO beats depend on it being complete: piece one has the
+  // fare gate play it "All of it. Including the last four words. To a hall",
+  // and piece thirteen has him read his own small print "all the way to the
+  // last four words".
+  //
+  // Two of the fourteen shipped short. One dropped the closing four words and
+  // one dropped the opening question, under a line that says it is reproduced
+  // as the licence requires. The label asserted completeness and the artifact
+  // was short, which is this project's whole defect in one footer.
+  const COURTESY =
+    "Is there truth in their legend? No one knows. My aim is never to prove or disprove the tales I come across. Just to report them to you, my dear readers.";
+
+  const s4 = anthologyEntries.filter((e) => e.season === 4);
+
+  it("reads the whole corpus, not an empty filter", () => {
+    expect(s4.length).toBe(14);
+  });
+
+  it("prints the courtesy in full wherever it prints it at all", () => {
+    const short = s4
+      .filter((e) => /rendering courtesy/i.test(e.body))
+      .filter((e) => !e.body.includes(COURTESY))
+      .map((e) => e.slug);
+    expect(short, `piece(s) claiming to reproduce the courtesy and abridging it: ${short.join(", ")}`).toEqual([]);
+  });
+});
+
