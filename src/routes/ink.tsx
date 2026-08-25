@@ -68,7 +68,7 @@ function InkRoute() {
             <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span>{" "}
               {/* Derived. This said "Twenty" and had been wrong since Season Three
-                  shipped — the corpus is 34 entries across 3 seasons. A count typed
+                  shipped — the corpus is 48 entries across 4 seasons. A count typed
                   into a sentence beside the data that decides it always drifts. */}
               {anthologyEntries.length} pieces of framed short fiction across{" "}
               {anthology.seasons.length} seasons, a galactic field reporter filing what he finds

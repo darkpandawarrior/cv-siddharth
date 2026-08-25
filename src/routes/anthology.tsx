@@ -559,8 +559,19 @@ function SeasonRoll({ season, title }: { season: number; title: string }) {
       </p>
       <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {roll.map((r, i) => (
+          // The id is the ANCHOR TARGET, and it is not the React key. A reading
+          // page links a teller aside at `#teller-${w.id}` and the register
+          // links an argued absence at `#blank-${entry}`; both were being
+          // constructed and neither was ever emitted, so the links resolved to
+          // the right layer and then did nothing. scroll-mt keeps the card off
+          // the top edge when the browser jumps to it.
           <Reveal key={r.id} delay={(i % 3) * 80}>
-            {r.kind === "teller" ? <TellerCard witness={r.w} /> : <BlankCard blank={r.b} />}
+            <div
+              id={r.kind === "teller" ? `teller-${r.w.id}` : `blank-${r.b.entry}`}
+              className="scroll-mt-24"
+            >
+              {r.kind === "teller" ? <TellerCard witness={r.w} /> : <BlankCard blank={r.b} />}
+            </div>
           </Reveal>
         ))}
       </div>

@@ -2,10 +2,10 @@
  * The Morkinstar Journals, as the fiction keeps it about itself.
  *
  * Facts live here, presentation lives in `src/routes/canon.tsx`. Every string
- * below is lifted from one of four files in the-loopdown
+ * below is lifted from one of five files in the-loopdown
  * (`fiction/morkinstar-journals/bible.md`, `species.md`, `s2-bible.md`,
- * `s3-bible.md`) rather than written fresh, which is why every fact here can
- * honestly call itself a receipt.
+ * `s3-bible.md`, `s4-bible.md`) rather than written fresh, which is why every
+ * fact here can honestly call itself a receipt.
  *
  * CHUNK WEIGHT, and it is load-bearing. This file imports `{ anthology }` and
  * never `anthologyEntries`. The two are separate top-level consts in a 408KB
@@ -294,6 +294,38 @@ export const SEASON_CANON: Record<number, SeasonCanon> = {
       },
     ],
     spoils: "the ending.",
+  },
+  4: {
+    thesis:
+      "Season one was a man filing. Season two was the same man refusing to. Season three was that man burning ninety pages of his own work to stay alive. Season four is that man walking into a city that was built out of his filing, and posting on a wall.",
+    points: [
+      {
+        term: "The checkbox",
+        gloss:
+          "He tested the count of fourteen on the gods and never on the bodies. When a merged jurisdiction needed one shared way to describe a body to a body that could not perceive it, the only dataset in the galaxy that held numbers about bodies was Corpus 2300, his. A fare gate plays his own disclaimer back to him in the first piece, stencilled LIC D slash 26, SRC CORPUS 2300, because his sentence was already written, already licensed, and free.",
+      },
+      {
+        term: "His medium is not the notice",
+        gloss:
+          "He is proud of a folded sheet, posted by hand and kept in no copy, and calls it the last thing he owns. What he is actually holding is the schema underneath every civic form in the city: doorway widths, riser heights, the two boxes on a residency return. It is executing, in concrete and in software, across eleven thousand jurisdictions, while he stands in a transit hall with a brush. He never finds out.",
+      },
+      {
+        term: "The count falls because he is good at his job",
+        gloss:
+          "Every fault he writes up gets fixed, correctly, by somebody competent, and the Files Open board drops because of it. There is no villain anywhere in the season. The cruelties are pricing decisions, each defensible alone, and the sum of them is a jurisdiction that has done the arithmetic on the fire and correctly, quarterly, in the public accounts, declined it.",
+      },
+      {
+        term: "Field fourteen",
+        gloss:
+          "The residency return still asks every resident of the galaxy to name their fourteen monsters, and the fourteenth box is printed full size and filled in solid grey rather than shrunk or dropped. A hundred percent null rate across four collection cycles is, honestly, a question that does not work. The Unnamed Fourteenth built a form. The form is disabled and not deleted, so the line is still there, unreachable, in every schema in the galaxy.",
+      },
+      {
+        term: "What painting over is not",
+        gloss:
+          "Nothing in this city is destroyed, only covered, and it is cheaper every quarter to keep covering it than to ever take the weight off. He spends the season posting notices into a wall that keeps every one of them under the primer, getting heavier, and does the arithmetic himself in the last piece. Paint is not fire. The load figure at the Holding Tiers goes up again the same quarter he decides he has finally gone light.",
+      },
+    ],
+    spoils: "what the wall does with everything he posts, and the mistake he makes about it in the last piece.",
   },
 };
 

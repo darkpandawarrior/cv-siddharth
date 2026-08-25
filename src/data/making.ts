@@ -25,8 +25,9 @@
  * `spoils` string and a closed <details>. This file reuses that same field
  * on the two seasons that already declare one (`SEASON_CANON[2].spoils`,
  * `SEASON_CANON[3].spoils`, imported by the route rather than copied) and
- * authors one more for the Season Four material, which has not shipped a
- * single entry yet and so has no entry in that registry at all.
+ * authors one more for the Season Four material. Season Four has shipped all
+ * fourteen of its pieces, but canonLore's SEASON_CANON has no row for it yet,
+ * so there is no spoils string upstream to borrow and this file states its own.
  *
  * NODE-IMPORTABILITY is not required here the way it is for surfaces.ts, but
  * this file stays plain data with no React for the same reason canonLore.ts
@@ -108,9 +109,11 @@ export const S3_FIRST_DESIGN = {
 };
 
 /**
- * The Season Four frame, and the fence the audit forced. Season Four has not
- * shipped a single entry, which is why this is the one item here with no
- * season number to borrow a `spoils` string from.
+ * The Season Four frame, and the fence the audit forced. Its fourteen pieces
+ * have shipped; what has not is a SEASON_CANON row for season four, which is
+ * why this is the one item here with no season number to borrow a `spoils`
+ * string from. Authoring that row upstream is the real fix and would let this
+ * import rather than restate.
  */
 export const S4_FENCE = {
   named: "China Miéville's The City & The City",
@@ -120,7 +123,7 @@ export const S4_FENCE = {
     "That book is about people who can see each other and are forbidden to. It requires a taboo, a transgression, and a police force. This season is ten thousand species who cannot see each other and are sold a utility. There is no prohibition. No transgression is possible. The failure mode is not breach, it is a billing tier.",
 };
 
-/** The method the audit runs on, stated once, generally, because it applied to all three seasons above. */
+/** The method the audit runs on, stated once, generally, because it applied to all four seasons above. */
 export const AUDIT_METHOD = {
   send: "Send the premises to seven labs, none of them Anthropic, with no context about what inspired anything, and ask them to name the source.",
   gate: "If a different training family can name it unaided, ownership failed.",

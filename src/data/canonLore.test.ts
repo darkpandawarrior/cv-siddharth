@@ -158,5 +158,6 @@ describe("the spoiler partition", () => {
     expect(SEASON_CANON[1].spoils).toBeNull();
     expect(SEASON_CANON[2].spoils).toBeTruthy();
     expect(SEASON_CANON[3].spoils).toBeTruthy();
+    expect(SEASON_CANON[4].spoils).toBeTruthy();
   });
 });

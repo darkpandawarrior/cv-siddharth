@@ -96,7 +96,7 @@ shows what exists, and you cannot search for a room you do not know about.
 | [`/ink`](https://cv-siddharth.vercel.app/ink) | archive · world | the writing years, before the code |
 | [`/excelsior`](https://cv-siddharth.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
 | [`/loopdown`](https://cv-siddharth.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
-| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, thirty-four short stories across three seasons and a navigable starmap |
+| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
 
 Plus, on the scroll itself:
 
