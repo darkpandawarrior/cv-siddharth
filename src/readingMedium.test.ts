@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { anthologyEntries } from "./data/anthology.ts";
+import { anthologyEntries, unfiledPieces, unfiledBySlug } from "./data/anthology.ts";
 import { entryTheme } from "./lib/seasonTheme.ts";
 import { splitDocket } from "./lib/docket.ts";
 
@@ -194,5 +194,35 @@ describe("wide paperwork", () => {
     const box = css.slice(css.indexOf(".piece-table {"), css.indexOf("\n}", css.indexOf(".piece-table {")));
     expect(box).toContain("overflow-x: auto");
     expect(route, "a scrolling region must be reachable by keyboard").toMatch(/piece-table"[\s\S]{0,40}tabIndex=\{0\}/);
+  });
+});
+
+describe("the unfiled lane", () => {
+  it("carries the work that has no season, and does not count it as one of the forty-eight", () => {
+    // Four seasons and forty-eight entries are printed on four pages and
+    // asserted by guards on both sides of the registry hop. An unfiled piece is
+    // not one of the forty-eight, which is the entire reason it arrives on its
+    // own array instead of as a season zero.
+    expect(anthologyEntries).toHaveLength(48);
+    expect(new Set(anthologyEntries.map((e) => e.season))).toEqual(new Set([1, 2, 3, 4]));
+    expect(unfiledPieces.length, "the lane shipped and nothing is in it").toBeGreaterThan(0);
+  });
+
+  it("prints the designation its frontmatter carries rather than resolving one", () => {
+    // The corpus uses square brackets for a value a form requires and nobody
+    // has filled in. "[unassigned]" IS the answer; an empty string would be the
+    // site deciding the question is unanswered rather than unanswered-on-purpose.
+    for (const p of unfiledPieces) {
+      expect(p.series, `${p.slug} has no designation at all`).toBeTruthy();
+      expect(p.body.length, `${p.slug} arrived with no body`).toBeGreaterThan(200);
+    }
+  });
+
+  it("keeps every unfiled slug reachable and distinct from the forty-eight", () => {
+    const entrySlugs = new Set(anthologyEntries.map((e) => e.slug));
+    for (const p of unfiledPieces) {
+      expect(entrySlugs.has(p.slug), `${p.slug} is in both arrays`).toBe(false);
+      expect(unfiledBySlug(p.slug), `${p.slug} does not resolve`).toBeTruthy();
+    }
   });
 });

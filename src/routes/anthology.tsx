@@ -8,7 +8,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
-import { anthology, anthologyEntries, entriesOfSeason } from "../data/anthology.ts";
+import { anthology, anthologyEntries, entriesOfSeason, unfiledPieces } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
 // The register's targets and this route's validateSearch have to agree about
 // what a layer is called, so the vocabulary is imported rather than restated.
@@ -49,6 +49,11 @@ const LAYERS: readonly { key: Layer; label: string; season: number | null }[] = 
   { key: "wall", label: "The Wall", season: 4 },
   { key: "map", label: "The Map", season: null },
   { key: "tellers", label: "The Tellers", season: null },
+  // Work in this universe with no season, no series and no designation. It sits
+  // last because it is not part of the run: it is not one of the forty-eight,
+  // and the switch row should not imply it is a fifth season. There is no
+  // `season` for the same reason.
+  { key: "unfiled", label: "Unfiled", season: null },
 ];
 
 // Publication order is still the first-visit path. The form is what
@@ -217,6 +222,7 @@ function AnthologyRoute() {
 
             {layer === "map" && <StarmapTab world={world} at={at} />}
             {layer === "tellers" && <TellersTab />}
+            {layer === "unfiled" && <UnfiledTab />}
           </div>
         </main>
         <SiteFooter />
@@ -552,6 +558,80 @@ function TellersTab() {
       {anthology.seasons.map((s) => (
         <SeasonRoll key={s.n} season={s.n} title={s.title} />
       ))}
+    </div>
+  );
+}
+
+/**
+ * Work in this universe with no season, no series and no designation.
+ *
+ * It is a lane rather than a fifth season, and the distinction is the point.
+ * Four seasons and forty-eight entries are load-bearing numbers, printed on
+ * four pages and asserted by guards on both sides of the registry hop, and a
+ * piece here is not one of the forty-eight. `unfiledPieces` is its own array
+ * for exactly that reason.
+ *
+ * It also does not go in /ink. That page says "// before the code" and every
+ * piece under it carries an era between 2018 and 2021; filing a 2026 piece
+ * there would claim a provenance it does not have.
+ *
+ * No hero, no plate, no sigil. A sigil is hashed from the entity an entry is
+ * about and a plate is a season's object, and an unfiled piece belongs to
+ * neither. What it has instead is the designation its own frontmatter carries,
+ * printed rather than resolved.
+ */
+function UnfiledTab() {
+  return (
+    <div className="mt-8">
+      <p className="max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+        Filed under no season and no series. The Directory has a form for work in this position and
+        the form has a field for the designation, and the field is filled in the way that field is
+        always filled in when nobody has decided yet.
+      </p>
+
+      {unfiledPieces.length === 0 ? (
+        // Not decoration: the lane ships before anything is guaranteed to be in
+        // it, and an empty grid with no words in it reads as a broken page.
+        <p className="mt-8 text-sm" style={{ color: "var(--color-muted)" }}>
+          Nothing here yet.
+        </p>
+      ) : (
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+          {unfiledPieces.map((p) => (
+            <li key={p.slug}>
+              <Link
+                to="/read/$slug"
+                params={{ slug: p.slug }}
+                className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition hover:border-accent/60"
+              >
+                {/* The designation, printed exactly as the frontmatter carries
+                    it. The corpus uses square brackets for a value a form
+                    requires and nobody has filled in, so "[unassigned]" IS the
+                    answer rather than a missing one, and it is set in the mono
+                    register every other filing value on this site uses. */}
+                <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                  {p.series}
+                </span>
+                {/* h3 under the page h1 and the layer's own h2. Heading order is
+                    asserted at 1.00 by lighthouserc.json. Colour stated, not
+                    inherited: see the note on EntryCard's h2. */}
+                <h3
+                  className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
+                  style={{ color: "var(--color-text)" }}
+                >
+                  {p.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                  {p.blurb}
+                </p>
+                <span className="mt-4 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                  {p.words.toLocaleString()} words
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
