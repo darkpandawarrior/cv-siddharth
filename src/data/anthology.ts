@@ -228,7 +228,7 @@ export const anthology = {
       ],
       "of": "The Long Concourse",
       "did": "Resurfaces the Long Concourse notice wall on a forty tick cycle, on a knuckle worn pale and smooth from the bucket she has carried for longer than she is willing to work out. Worked the manual side gate open with a bar for a man the fare gates could not read, handed him the paste brush first, and told him which day she paints, in case that was useful. Reads every notice in the nine minutes the primer takes to flash off, in the order the route gives them to her. Keeps none of them. That is not the job.",
-      "art": ""
+      "art": "/p/anthology/witnesses/hevrit.jpg"
     },
     {
       "id": "ondrit",
@@ -236,7 +236,7 @@ export const anthology = {
       "entry": "s4-02",
       "of": "The Stepped Quarter",
       "did": "Certifies public stairs in the Stepped Quarter and four adjoining districts, about forty thousand of them so far. Carries a second tape, out of code, calibrated at her own expense to a standard retired two rebasings ago, because the old stairs were cut to it and a current tape only tells you a lie about them. Measured twenty two flights that predate the building code three times over, on different cycles, with different hands writing the figures down, and got the same wrong answer every time. Let a stranger hold the whole drum. He gave it back with both hands.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ondrit.jpg"
     },
     {
       "id": "aedrin",
@@ -244,7 +244,7 @@ export const anthology = {
       "entry": "s4-03",
       "of": "Eleven Hold",
       "did": "Keeps the municipal continuation of Ædri's ledger of cold-holds, now four hundred and six entries deep and every one of them a platform rail that has never once been warm at eleven. Before she logs a hold she goes out and takes the rail herself, both hands, and counts, because she will not put a figure in the field she did not get with her own hands. Writes the sheet up flat against her own forearm before she types it in at the end of a shift. Found out one quarter that nobody reads the dataset. Keeps logging it exactly the same.",
-      "art": ""
+      "art": "/p/anthology/witnesses/aedrin.jpg"
     },
     {
       "id": "saevrin",
@@ -252,7 +252,7 @@ export const anthology = {
       "entry": "s4-04",
       "of": "The Middle Window",
       "did": "Administers the midpoint of a queue with no front, and chalks its new position by hand every morning with the outer edge of a hand gone white to the wrist and never washing out. Has never once got the marker exactly right in his whole time on the post, knows the difference between inside the tolerance and right, and moves it anyway, because a marker approximately correct is the entire difference between a queue and a crowd.",
-      "art": ""
+      "art": "/p/anthology/witnesses/saevrin.jpg"
     },
     {
       "id": "ashvi",
@@ -260,7 +260,7 @@ export const anthology = {
       "entry": "s4-05",
       "of": "The Covered Levels",
       "did": "Puts a bowl out at fourteen past every tick, not to catch anything, has done since she was small: two fingers underneath, one on the rim so it does not ring on the grating, then dries it whether it is wet or not. Carries all nine generations of the rain story in the right order, and knows which generation is the one that matters, and it is not the woman who first said it. Asked a stranger twice, once at her stall and once at the transit dock, whether he was all right.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ashvi.jpg"
     },
     {
       "id": "vessik",
@@ -268,7 +268,7 @@ export const anthology = {
       "entry": "s4-06",
       "of": "The Returns Hall",
       "did": "Designs residency return forms for the merged jurisdiction, one hand stained cyan for years and not coming off from reading pages flat under it. Searched every retained return in the archive for one filled fourteenth box before she disabled the field, and found none. Keeps the earlier proof, the one where the box is still white and waiting, in a drawer, because she likes to see what a thing looked like before she changed it. Told him, in passing, what closes a file: somebody fills the last one.",
-      "art": ""
+      "art": "/p/anthology/witnesses/vessik.jpg"
     },
     {
       "id": "ilvath",
@@ -276,7 +276,7 @@ export const anthology = {
       "entry": "s4-07",
       "of": "The Lower Plenum",
       "did": "Runs Mixing House Six, checking a third of the city's air by running the flat of her hand down every lagging seam so she never comes back a stranger to it. Off the clock, opens the calibration kit's certified reference bottles for anyone who asks, warming each one against her own wrist first so it does not read cold and wrong. Agrees with every one of them, every time and without softening, that it is close and not right. They come back next month anyway.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ilvath.jpg"
     },
     {
       "id": "halkri",
@@ -284,7 +284,7 @@ export const anthology = {
       "entry": "s4-08",
       "of": "The Great Gauge",
       "did": "Commutes two flicks each way to service the Great Gauge's door mechanisms, the only fittings in the district still built to her hand. Trues every witness mark with the one fine digit that does the work of the rest of an enormous hand, and scribes her lines with her grandmother's sighting stone, the flattest thing she owns, carried down from a ridge where the old woman could set a bearing to within a third of a degree by eye. Told him twice, unprompted, that she likes the job. Sent him to file a correction on somebody else's stair instead of her own rent, then went and stood on it herself to check.",
-      "art": ""
+      "art": "/p/anthology/witnesses/halkri.jpg"
     },
     {
       "id": "roest",
@@ -292,7 +292,7 @@ export const anthology = {
       "entry": "s4-09",
       "of": "The Settlement Rows",
       "did": "Raises fourteen thousand demands a quarter off a surveyor's figure and answers for every one of them at the counter, wearing through a thimble at a time and keeping the dead ones in the drawer, in order. Has kept her own working of the pension arithmetic folded in eighths in her hip pocket for eleven years, and showed him only as far as the second fold. Asked him directly not to write it, and told him she has never settled whether eleven years of not saying it herself makes her a coward.",
-      "art": ""
+      "art": "/p/anthology/witnesses/roest.jpg"
     },
     {
       "id": "ummi",
@@ -300,7 +300,7 @@ export const anthology = {
       "entry": "s4-10",
       "of": "The Reconciliation Floor",
       "did": "Keeps the reject aisle on the Reconciliation Floor, which is every sentence Morkinstar was ever unsure of, in order, and nothing else of his at all: her flattening hand is worn to a soft grey shine from three strokes on every fold. Noticed, on her own time and not as part of the job, that rejection density per source entry is a curve, found where it spikes and never comes back down, and named the entry to him before he could ask her anything. Files a note about the loss every year. It is acknowledged every year and nothing changes.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ummi.jpg"
     },
     {
       "id": "danvik",
@@ -308,7 +308,7 @@ export const anthology = {
       "entry": "s4-11",
       "of": "Deep Registry Annexe",
       "did": "Works the counter at the Deep Registry Annexe with a hand lamp clipped at his collar and turned down, so the light lands only on the paper in front of him. Went off without being asked and came back with a chair before starting the search. Found the correspondent's own accreditation, unlapsed by a filing error a very long time old, in six minutes without hesitating, then raised it as unvalidated, telling him first exactly what that would do and waiting until he said he understood.",
-      "art": ""
+      "art": "/p/anthology/witnesses/danvik.jpg"
     },
     {
       "id": "osvaer",
@@ -316,7 +316,7 @@ export const anthology = {
       "entry": "s4-12",
       "of": "The Holding Tiers",
       "did": "Counts a shelf on the Holding Tiers by running a thumb worn pale and flat along the box spines without looking, the way you would know a room in the dark. Tells new starters the joke about the thing in the deep aisles that grows by exactly what you file, because a new starter afraid of it writes a careful manifest. Walked a stranger eleven minutes to the pillar where the deep hands cut a measure into the concrete once a year, and put his own thumb in this year's cut without being asked.",
-      "art": ""
+      "art": "/p/anthology/witnesses/osvaer.jpg"
     },
     {
       "id": "yrmund",
@@ -324,7 +324,7 @@ export const anthology = {
       "entry": "s4-13",
       "of": "The Unrendered Mile",
       "did": "Chairs the Unrendered Mile residents' association, forty years at number nine, and finds a page in the tribunal folder by running the edge of her thumb down the stack until it catches, a skill she does not know she has. Applied the hardship cap to a stranger on his first morning without being asked and told him she had. Told him, unasked, that her partner left for a served address after two years and that she likes him better now than when he lived there, then asked if that was a terrible thing to say and did not wait for an answer before putting the kettle on.",
-      "art": ""
+      "art": "/p/anthology/witnesses/yrmund.jpg"
     },
     {
       "id": "guldri",
@@ -332,7 +332,7 @@ export const anthology = {
       "entry": "s4-13",
       "of": "The Unrendered Mile",
       "did": "Holds the maintenance contract on Lot 1, the reserved parcel nobody may live on, and sweeps ground nobody walks, working its edge from the public side because he has never once stepped over the kerb line. Answers every question about the parcel as a clause of that contract and nothing more; asked why he would not simply talk, said only that the contract says maintain. When a lamp went, held the burnt glass out sideways without turning round and took the new one back the same way, both of them silent, and that wordless exchange was the only interview he gave.",
-      "art": ""
+      "art": "/p/anthology/witnesses/guldri.jpg"
     }
   ],
   "title": "The Morkinstar Journals",
@@ -1470,7 +1470,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "hevrit",
       "name": "Hevrit",
       "did": "Resurfaces the Long Concourse notice wall on a forty tick cycle, on a knuckle worn pale and smooth from the bucket she has carried for longer than she is willing to work out. Worked the manual side gate open with a bar for a man the fare gates could not read, handed him the paste brush first, and told him which day she paints, in case that was useful. Reads every notice in the nine minutes the primer takes to flash off, in the order the route gives them to her. Keeps none of them. That is not the job.",
-      "art": ""
+      "art": "/p/anthology/witnesses/hevrit.jpg"
     }
   },
   {
@@ -1492,7 +1492,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "ondrit",
       "name": "Ondrit",
       "did": "Certifies public stairs in the Stepped Quarter and four adjoining districts, about forty thousand of them so far. Carries a second tape, out of code, calibrated at her own expense to a standard retired two rebasings ago, because the old stairs were cut to it and a current tape only tells you a lie about them. Measured twenty two flights that predate the building code three times over, on different cycles, with different hands writing the figures down, and got the same wrong answer every time. Let a stranger hold the whole drum. He gave it back with both hands.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ondrit.jpg"
     }
   },
   {
@@ -1514,7 +1514,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "aedrin",
       "name": "Ædrin",
       "did": "Keeps the municipal continuation of Ædri's ledger of cold-holds, now four hundred and six entries deep and every one of them a platform rail that has never once been warm at eleven. Before she logs a hold she goes out and takes the rail herself, both hands, and counts, because she will not put a figure in the field she did not get with her own hands. Writes the sheet up flat against her own forearm before she types it in at the end of a shift. Found out one quarter that nobody reads the dataset. Keeps logging it exactly the same.",
-      "art": ""
+      "art": "/p/anthology/witnesses/aedrin.jpg"
     }
   },
   {
@@ -1536,7 +1536,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "saevrin",
       "name": "Sævrin",
       "did": "Administers the midpoint of a queue with no front, and chalks its new position by hand every morning with the outer edge of a hand gone white to the wrist and never washing out. Has never once got the marker exactly right in his whole time on the post, knows the difference between inside the tolerance and right, and moves it anyway, because a marker approximately correct is the entire difference between a queue and a crowd.",
-      "art": ""
+      "art": "/p/anthology/witnesses/saevrin.jpg"
     }
   },
   {
@@ -1558,7 +1558,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "ashvi",
       "name": "Ashvi",
       "did": "Puts a bowl out at fourteen past every tick, not to catch anything, has done since she was small: two fingers underneath, one on the rim so it does not ring on the grating, then dries it whether it is wet or not. Carries all nine generations of the rain story in the right order, and knows which generation is the one that matters, and it is not the woman who first said it. Asked a stranger twice, once at her stall and once at the transit dock, whether he was all right.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ashvi.jpg"
     }
   },
   {
@@ -1580,7 +1580,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "vessik",
       "name": "Vessik",
       "did": "Designs residency return forms for the merged jurisdiction, one hand stained cyan for years and not coming off from reading pages flat under it. Searched every retained return in the archive for one filled fourteenth box before she disabled the field, and found none. Keeps the earlier proof, the one where the box is still white and waiting, in a drawer, because she likes to see what a thing looked like before she changed it. Told him, in passing, what closes a file: somebody fills the last one.",
-      "art": ""
+      "art": "/p/anthology/witnesses/vessik.jpg"
     }
   },
   {
@@ -1602,7 +1602,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "ilvath",
       "name": "Ilvath",
       "did": "Runs Mixing House Six, checking a third of the city's air by running the flat of her hand down every lagging seam so she never comes back a stranger to it. Off the clock, opens the calibration kit's certified reference bottles for anyone who asks, warming each one against her own wrist first so it does not read cold and wrong. Agrees with every one of them, every time and without softening, that it is close and not right. They come back next month anyway.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ilvath.jpg"
     }
   },
   {
@@ -1624,7 +1624,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "halkri",
       "name": "Halkri",
       "did": "Commutes two flicks each way to service the Great Gauge's door mechanisms, the only fittings in the district still built to her hand. Trues every witness mark with the one fine digit that does the work of the rest of an enormous hand, and scribes her lines with her grandmother's sighting stone, the flattest thing she owns, carried down from a ridge where the old woman could set a bearing to within a third of a degree by eye. Told him twice, unprompted, that she likes the job. Sent him to file a correction on somebody else's stair instead of her own rent, then went and stood on it herself to check.",
-      "art": ""
+      "art": "/p/anthology/witnesses/halkri.jpg"
     }
   },
   {
@@ -1646,7 +1646,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "roest",
       "name": "Rœst",
       "did": "Raises fourteen thousand demands a quarter off a surveyor's figure and answers for every one of them at the counter, wearing through a thimble at a time and keeping the dead ones in the drawer, in order. Has kept her own working of the pension arithmetic folded in eighths in her hip pocket for eleven years, and showed him only as far as the second fold. Asked him directly not to write it, and told him she has never settled whether eleven years of not saying it herself makes her a coward.",
-      "art": ""
+      "art": "/p/anthology/witnesses/roest.jpg"
     }
   },
   {
@@ -1668,7 +1668,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "ummi",
       "name": "Ummi",
       "did": "Keeps the reject aisle on the Reconciliation Floor, which is every sentence Morkinstar was ever unsure of, in order, and nothing else of his at all: her flattening hand is worn to a soft grey shine from three strokes on every fold. Noticed, on her own time and not as part of the job, that rejection density per source entry is a curve, found where it spikes and never comes back down, and named the entry to him before he could ask her anything. Files a note about the loss every year. It is acknowledged every year and nothing changes.",
-      "art": ""
+      "art": "/p/anthology/witnesses/ummi.jpg"
     }
   },
   {
@@ -1690,7 +1690,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "danvik",
       "name": "Danvik",
       "did": "Works the counter at the Deep Registry Annexe with a hand lamp clipped at his collar and turned down, so the light lands only on the paper in front of him. Went off without being asked and came back with a chair before starting the search. Found the correspondent's own accreditation, unlapsed by a filing error a very long time old, in six minutes without hesitating, then raised it as unvalidated, telling him first exactly what that would do and waiting until he said he understood.",
-      "art": ""
+      "art": "/p/anthology/witnesses/danvik.jpg"
     }
   },
   {
@@ -1712,7 +1712,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "osvaer",
       "name": "Osvær",
       "did": "Counts a shelf on the Holding Tiers by running a thumb worn pale and flat along the box spines without looking, the way you would know a room in the dark. Tells new starters the joke about the thing in the deep aisles that grows by exactly what you file, because a new starter afraid of it writes a careful manifest. Walked a stranger eleven minutes to the pillar where the deep hands cut a measure into the concrete once a year, and put his own thumb in this year's cut without being asked.",
-      "art": ""
+      "art": "/p/anthology/witnesses/osvaer.jpg"
     }
   },
   {
@@ -1734,7 +1734,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "yrmund",
       "name": "Ýrmund",
       "did": "Chairs the Unrendered Mile residents' association, forty years at number nine, and finds a page in the tribunal folder by running the edge of her thumb down the stack until it catches, a skill she does not know she has. Applied the hardship cap to a stranger on his first morning without being asked and told him she had. Told him, unasked, that her partner left for a served address after two years and that she likes him better now than when he lived there, then asked if that was a terrible thing to say and did not wait for an answer before putting the kettle on.",
-      "art": ""
+      "art": "/p/anthology/witnesses/yrmund.jpg"
     }
   },
   {
@@ -1756,7 +1756,7 @@ export const anthologyEntries: AnthologyEntry[] = [
       "id": "hevrit",
       "name": "Hevrit",
       "did": "Resurfaces the Long Concourse notice wall on a forty tick cycle, on a knuckle worn pale and smooth from the bucket she has carried for longer than she is willing to work out. Worked the manual side gate open with a bar for a man the fare gates could not read, handed him the paste brush first, and told him which day she paints, in case that was useful. Reads every notice in the nine minutes the primer takes to flash off, in the order the route gives them to her. Keeps none of them. That is not the job.",
-      "art": ""
+      "art": "/p/anthology/witnesses/hevrit.jpg"
     }
   }
 ];
