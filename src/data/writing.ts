@@ -447,7 +447,7 @@ export const writing: Writing = {
         "sci-fi",
         "framed-narrative"
       ],
-      "blurb": "A galactic field reporter transcribes why it snows on a frozen planet: a fire serpent, a water god, and the fisherwoman who talked one of them out of giving up."
+      "blurb": "A galactic field reporter transcribes why it snows on a frozen planet — a fire serpent, a water god, and the fisherwoman who talked one of them out of giving up."
     },
     {
       "title": "The Loopdown",
@@ -461,7 +461,7 @@ export const writing: Writing = {
         "world-building",
         "diary"
       ],
-      "blurb": "A week that refuses to end. 52 iterations of the same Wednesday, the namesake of this whole repo."
+      "blurb": "A week that refuses to end. 52 iterations of the same Wednesday — the namesake of this whole repo."
     },
     {
       "title": "The Pun Force",

@@ -22,6 +22,8 @@ export const ROUTE_PHRASES: Record<string, string> = {
   "/excelsior": "Excelsior",
   "/loopdown": "The Loopdown (his writing)",
   "/anthology": "The Morkinstar Journals",
+  "/canon": "The Canon",
+  "/making": "The Making",
   "/playground": "The Playground (the index of every room)",
   "/project/kursi": "Kursi's case study",
   "/project/mileway": "Mileway's case study",
