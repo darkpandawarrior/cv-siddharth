@@ -486,6 +486,10 @@ export interface Project {
   highlights: string[];
   links: { label: string; url: string }[];
   status: string;
+  // Where this project is actually installable right now, as opposed to where
+  // its source lives. Every entry is checkable: a repo proves it was written,
+  // a listing proves it ships.
+  deployments?: { channel: string; detail: string; url?: string }[];
   badges: string[];
   // Optional deep-dive page at /#project/<slug>. Screenshots come from the
   // auto-generated galleries.ts (public/projects/<slug>/screenshots/).
@@ -569,6 +573,24 @@ export const projects: Project[] = [
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
     status: "13 modules · 4 platforms · 10 bot personas",
+    deployments: [
+      {
+        channel: "F-Droid",
+        detail:
+          "Live in a self-hosted repository. 16.5 MB, signed, with no Google Play Services and no Firebase in the build.",
+        url: "https://darkpandawarrior.github.io/fdroid/repo",
+      },
+      {
+        channel: "GitHub Releases",
+        detail: "Signed APK per tag, plus desktop and web builds.",
+        url: "https://github.com/darkpandawarrior/Kursi/releases",
+      },
+      {
+        channel: "Headless CLI",
+        detail:
+          "The engine runs with no UI at all. ./gradlew :cli:run simulates 500 games and reports per-seat win rates.",
+      },
+    ],
     badges: ["Kotlin Multiplatform", "Game engine", "ISMCTS AI"],
     theme: {
       accent: "#E8C874",
@@ -754,6 +776,19 @@ export const projects: Project[] = [
       { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
     ],
     status: "46 modules · 5 platforms · 159 tests",
+    deployments: [
+      {
+        channel: "F-Droid",
+        detail:
+          "Live in a self-hosted repository. 66 MB, signed, tagged NonFreeDep because location and on-device receipt OCR use Google Play Services components.",
+        url: "https://darkpandawarrior.github.io/fdroid/repo",
+      },
+      {
+        channel: "GitHub Releases",
+        detail: "Signed APK per tag, for both the Play flavour and the Google-free one.",
+        url: "https://github.com/darkpandawarrior/Mileway/releases",
+      },
+    ],
     badges: ["Kotlin Multiplatform", "46 modules", "5 platforms", "Open source"],
     // Telemetry-cyan — the site's own "depth" accent, reused rather than
     // invented: fitting for a location/tracking app, distinct from Kursi's
@@ -984,6 +1019,19 @@ export const projects: Project[] = [
       { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
     ],
     status: "40 modules · 66 gateways · 5 rails",
+    deployments: [
+      {
+        channel: "F-Droid",
+        detail:
+          "Live in a self-hosted repository. 33 MB, signed, tagged NonFreeDep and NonFreeNet because integrating real gateway SDKs is the whole point of the app.",
+        url: "https://darkpandawarrior.github.io/fdroid/repo",
+      },
+      {
+        channel: "GitHub Releases",
+        detail: "Signed APK per tag.",
+        url: "https://github.com/darkpandawarrior/PaymentsLab/releases",
+      },
+    ],
     badges: ["Kotlin Multiplatform", "40 modules", "66 gateways", "Open source"],
     theme: {
       accent: "#A78BFA",

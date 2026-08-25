@@ -362,6 +362,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 </Link>
               );
             })}
+            {project.deployments?.some((d) => d.url) && (
+              <a
+                href={project.deployments.find((d) => d.url)!.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-5 py-2 text-sm font-semibold text-accent transition hover:bg-accent/20"
+              >
+                Install it <ArrowUpRight size={14} />
+              </a>
+            )}
             {LAB_OF[slug] && (
               <button
                 onClick={() => { openLab(LAB_OF[slug]); navigate({ to: "/lab" }); }}
@@ -411,6 +421,42 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <div className="reveal">
               <ShowcaseFilm slug={slug} title={project.name} />
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Where it actually ships. A repo proves it was written; a listing proves it ships. */}
+      {project.deployments && project.deployments.length > 0 && (
+        <section className="border-b border-line bg-surface">
+          <div className="section-y mx-auto max-w-4xl px-6">
+            <SectionHeader eyebrow="shipping" title="Where you can actually get it" />
+            <p className="reveal -mt-4 mb-8 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              Every line below is checkable. Add the repository in an F-Droid client and the app installs,
+              signed with the same key its listing pins.
+            </p>
+            <ul className="reveal flex flex-col gap-3">
+              {project.deployments.map((dep) => (
+                <li key={dep.channel} className="panel flex flex-col gap-1 p-5 sm:flex-row sm:items-start sm:gap-5">
+                  <span className="font-display shrink-0 text-sm font-bold text-accent sm:w-40">{dep.channel}</span>
+                  <span className="flex-1 text-sm leading-relaxed text-zinc-400">
+                    {dep.detail}
+                    {dep.url && (
+                      <>
+                        {" "}
+                        <a
+                          href={dep.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-[11px] text-accent underline-offset-2 hover:underline"
+                        >
+                          open <ArrowUpRight size={11} />
+                        </a>
+                      </>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}
