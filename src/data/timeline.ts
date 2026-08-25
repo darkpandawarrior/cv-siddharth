@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-08-24T22:58:46.796Z",
+  "generatedAt": "2026-08-25T04:00:50.006Z",
   "from": "2019-01",
   "to": "2026-08",
   "months": [
@@ -485,9 +485,9 @@ export const timeline: Timeline = {
         "2026-05": 47,
         "2026-06": 296,
         "2026-07": 272,
-        "2026-08": 151
+        "2026-08": 152
       },
-      "total": 18908,
+      "total": 18909,
       "peak": {
         "ym": "2020-12",
         "v": 619

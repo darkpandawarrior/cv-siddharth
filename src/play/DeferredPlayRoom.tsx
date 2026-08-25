@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode } from "react";
 
 /**
  * PlayRoom for a route that SERVER-RENDERS.
@@ -32,6 +32,81 @@ export function DeferredPlayRoom({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={children}>
       <PlayRoom>{children}</PlayRoom>
+    </Suspense>
+  );
+}
+
+/**
+ * The same trick for the widgets, not just the provider.
+ *
+ * DeferredPlayRoom above keeps `@playhtml/react` off the server, but it only
+ * covers the provider. The presence badge lives in PlayRoom.tsx itself, and
+ * the plaque, the sandbox and the guest wall each import the library too, so a
+ * page that named any of them still dragged it into the server bundle and
+ * still died with `document is not defined`. That is what kept /playground on
+ * `ssr: false`, and what kept it painting nothing at all until three.js
+ * arrived.
+ *
+ * Each of these renders null on the server and for the first client render,
+ * then loads. Null is the right placeholder: every one of them reports live
+ * shared state, which genuinely does not exist yet at that moment. Nothing
+ * that a visitor reads on arrival goes through here.
+ */
+function useMounted(): boolean {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
+}
+
+function deferred<P extends object>(load: () => Promise<{ default: ComponentType<P> }>) {
+  const Loaded = lazy(load);
+  return function Deferred(props: P) {
+    // Same reason as above: lazy() alone is not enough, because React resolves
+    // a lazy child while streaming on the server.
+    if (!useMounted()) return null;
+    return (
+      <Suspense fallback={null}>
+        <Loaded {...props} />
+      </Suspense>
+    );
+  };
+}
+
+export const DeferredPresenceBadge = deferred<{ className?: string }>(() =>
+  import("./PlayRoom.tsx").then((m) => ({ default: m.PresenceBadge })),
+);
+
+export const DeferredVisitorPlaque = deferred<object>(() =>
+  import("./Visitors.tsx").then((m) => ({ default: m.VisitorPlaque })),
+);
+
+export const DeferredSandbox = deferred<object>(() =>
+  import("./Sandbox.tsx").then((m) => ({ default: m.Sandbox })),
+);
+
+/** Self-gating, so the GUEST_WALL_ENABLED flag stays inside the lazy chunk
+ *  rather than forcing the module back into the server build to be read. */
+export const DeferredGuestWall = deferred<object>(async () => {
+  const m = await import("./GuestWall.tsx");
+  const Gate: ComponentType = () => (m.GUEST_WALL_ENABLED ? <m.GuestWall /> : null);
+  return { default: Gate };
+});
+
+/**
+ * LivePulse, mounted on the client only.
+ *
+ * A provider rather than a widget, so it renders `children` untouched until it
+ * loads, exactly like DeferredPlayRoom above. Consumers see PulseContext's
+ * default in the meantime, which reports no counts and swallows a bump, and is
+ * the honest answer before a socket exists.
+ */
+const LivePulse = lazy(() => import("./LivePulse.tsx"));
+
+export function DeferredLivePulse({ children }: { children: ReactNode }) {
+  if (!useMounted()) return <>{children}</>;
+  return (
+    <Suspense fallback={children}>
+      <LivePulse>{children}</LivePulse>
     </Suspense>
   );
 }

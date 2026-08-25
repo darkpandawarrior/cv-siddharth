@@ -61,7 +61,10 @@ test.describe("playground world — no WebGL", () => {
     await expect(cards).toHaveCount(ROOMS.length);
 
     for (const room of ROOMS) {
-      await page.getByRole("link", { name: new RegExp(room.label, "i") }).click();
+      // Scoped to the grid. The anomaly rail is global and links to these same
+      // rooms, so an unscoped name match finds two links now that this route
+      // server-renders and the rail is present the moment the test looks.
+      await page.locator("a.playground-card").filter({ hasText: new RegExp(room.label, "i") }).click();
       await expect(page).toHaveURL(new RegExp(`${room.to}$`));
       // Every room route carries an sr-only <h1> naming it (RoomFrame, or the
       // room's own component for the three that render outside RoomFrame) —

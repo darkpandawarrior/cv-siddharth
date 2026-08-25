@@ -7,10 +7,14 @@ import { hasWebGL } from "./blueprintShared.tsx";
 import { RoomGrid } from "./RoomGrid.tsx";
 import { ROOMS } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
-import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import { VisitorPlaque } from "./play/Visitors.tsx";
-import { GuestWall, GUEST_WALL_ENABLED } from "./play/GuestWall.tsx";
-import { Sandbox } from "./play/Sandbox.tsx";
+import {
+  DeferredPlayRoom,
+  DeferredLivePulse,
+  DeferredPresenceBadge,
+  DeferredVisitorPlaque,
+  DeferredSandbox,
+  DeferredGuestWall,
+} from "./play/DeferredPlayRoom.tsx";
 
 import { CorridorPlate } from "./world/CorridorPlate.tsx";
 /**
@@ -94,9 +98,11 @@ export default function Playground() {
   // Everything shared on this page — presence, the tile counts, the sandbox and
   // the wall — reads from this one room.
   return (
-    <PlayRoom>
-      <PlaygroundInner />
-    </PlayRoom>
+    <DeferredPlayRoom>
+      <DeferredLivePulse>
+        <PlaygroundInner />
+      </DeferredLivePulse>
+    </DeferredPlayRoom>
   );
 }
 
@@ -202,7 +208,7 @@ function PlaygroundInner() {
                 link to itself. But it was also missing the palette, so the one
                 page whose whole job is "every room, one door" was the one page
                 you couldn't reach the other rooms from by keyboard. */}
-            <PresenceBadge className="hidden sm:flex" />
+            <DeferredPresenceBadge className="hidden sm:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -300,12 +306,12 @@ function PlaygroundInner() {
             )}
           </div>
 
-          <VisitorPlaque />
+          <DeferredVisitorPlaque />
 
           <RoomGrid />
 
-          <Sandbox />
-          {GUEST_WALL_ENABLED && <GuestWall />}
+          <DeferredSandbox />
+          <DeferredGuestWall />
 
           <p className="mt-10 font-mono text-[11px] text-muted">
             tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}
