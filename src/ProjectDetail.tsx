@@ -17,6 +17,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { PipelineShowcase } from "./PipelineShowcase.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
@@ -457,6 +458,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 </li>
               ))}
             </ul>
+            <div className="reveal mt-10">
+              <SectionHeader eyebrow="pipeline" title="The build that put it there" />
+              <p className="-mt-4 mb-6 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                Read live from GitHub Actions and the F-Droid index. Not a badge: the actual runs,
+                what shipped, and the certificate you can check the download against.
+              </p>
+              <PipelineShowcase slug={slug} />
+            </div>
           </div>
         </section>
       )}
