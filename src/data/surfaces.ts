@@ -477,6 +477,25 @@ const pageSurfaces: SurfaceInput[] = [
     preview: "none",
   },
   {
+    to: "/canon",
+    label: "The Canon",
+    // Deliberately says what the page IS rather than what it contains: the
+    // laws, the ledger and the rig states are all spoilers by name, which is
+    // why the page itself gates them behind a marked divider.
+    blurb:
+      "The rules the Morkinstar Journals are written against — seven laws, the count, the fourteen, and what the rendering can and cannot do.",
+    tag: "lore · reference",
+    group: "writing",
+    // Same world as /anthology and /ink, so the same ochre. This is the
+    // reference shelf of the writing world, not a room beside it.
+    tint: INK_OCHRE,
+    device: "tablet",
+    // No poster for the same reason /anthology has none: gen:surfaces would
+    // owe this a capture it cannot take without a build, and "none" ships a
+    // legible tile today rather than a broken frame.
+    preview: "none",
+  },
+  {
     to: "/playground",
     label: "The Playground",
     // Was an enumeration of the rooms, and `wall: false` on the grounds that

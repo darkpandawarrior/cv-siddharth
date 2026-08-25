@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as AnthologyRouteImport } from './routes/anthology'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
+import { Route as CanonRouteImport } from './routes/canon'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
 import { Route as ExcelsiorRouteImport } from './routes/excelsior'
@@ -49,6 +50,11 @@ const AnthologyRoute = AnthologyRouteImport.update({
 const BlueprintRoute = BlueprintRouteImport.update({
   id: '/blueprint',
   path: '/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanonRoute = CanonRouteImport.update({
+  id: '/canon',
+  path: '/canon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChessRoute = ChessRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -284,6 +296,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AnthologyRoute: typeof AnthologyRoute
   BlueprintRoute: typeof BlueprintRoute
+  CanonRoute: typeof CanonRoute
   ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
   ExcelsiorRoute: typeof ExcelsiorRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/blueprint'
       fullPath: '/blueprint'
       preLoaderRoute: typeof BlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canon': {
+      id: '/canon'
+      path: '/canon'
+      fullPath: '/canon'
+      preLoaderRoute: typeof CanonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chess': {
@@ -460,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AnthologyRoute: AnthologyRoute,
   BlueprintRoute: BlueprintRoute,
+  CanonRoute: CanonRoute,
   ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
   ExcelsiorRoute: ExcelsiorRoute,

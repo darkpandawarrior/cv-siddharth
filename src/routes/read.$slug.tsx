@@ -1,5 +1,5 @@
 import { Children, cloneElement, isValidElement } from "react";
-import type { CSSProperties, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +11,7 @@ import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { entryTheme, KINDLING_FINALE } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
@@ -54,13 +55,6 @@ type ReadView = ({ kind: "printed" } & PrintedPiece) | ({ kind: "anthology" } & 
 // depends on), so splitting on it is a safe way to render the story and the
 // tape separately without the generator needing to mark that boundary itself.
 const TERMINOLOGIES_DIVIDER = "\n\n---\n\n";
-
-// Season 3's kindling ordinal runs 1-13 for a withdrawn page and 14 for the
-// one page kept. React's own CSSProperties type does not know about custom
-// properties, so this is a narrow, explicit augmentation rather than `any`.
-type ScorchStyle = CSSProperties & { "--scorch"?: number };
-const KINDLING_FINALE = 14;
-const KINDLING_MAX_SCORCH = 13;
 
 // react-markdown hands a table row's cells to us as elements, not text, and
 // the row-marking rule below has to read that text to work at all — walking
@@ -175,19 +169,28 @@ function ReadPiece() {
     },
   };
 
-  // The scorch deepens with the entry's own kindling ordinal (1-13), never a
-  // hardcoded slug, and piece 14 — the page he keeps — gets no scorch at
-  // all: it is the one undamaged thing in the season. Season 3 pieces filed
-  // before the field lands (kindling undefined) fall through to no scorch
-  // too, which is the correct behaviour until the data arrives, not a bug.
-  const kindling = piece.kind === "anthology" ? piece.kindling : undefined;
-  const isFinalePage = kindling === KINDLING_FINALE;
-  const scorchFraction =
-    piece.kind === "anthology" && piece.season === 3 && !isFinalePage && typeof kindling === "number"
-      ? Math.min(1, Math.max(0, kindling) / KINDLING_MAX_SCORCH)
-      : 0;
-  const scorchClassName = scorchFraction > 0 ? " season-three-scorched" : "";
-  const scorchStyle: ScorchStyle | undefined = scorchFraction > 0 ? { "--scorch": scorchFraction } : undefined;
+  // Which season this is, and therefore which chrome, which numbering and
+  // which tokens — asked once, of the entry, not of the season number. The
+  // page he keeps is an exception inside season three's own row over there
+  // (page 0, no scorch, its own palette), so nothing about it leaks into a
+  // branch here. Printed pieces are not part of that scheme at all and keep
+  // this page exactly as it was.
+  const theme = piece.kind === "anthology" ? entryTheme(piece) : null;
+  const vars = theme?.vars;
+
+  // Season three swaps --color-accent to ember and carries --scorch; both
+  // only work if they sit ABOVE the byline and the prose, so the vars go on
+  // the article and every var() underneath re-resolves. Ember is #d97a3d
+  // (--color-warn), 6.14:1 on the ink ground.
+  //
+  // The kept page goes further: its palette is measured against paper
+  // (#e9dfc9), not against the ink ground this world otherwise paints. Laying
+  // those tokens down without also laying the paper down would put #1f1a12
+  // ink on a near-black ground at 1.10:1 — invisible, and the exact way this
+  // season already shipped a badge at 1.4:1 once. So when a theme brings its
+  // own --color-card, the article paints it and the ratios seasonTheme states
+  // hold as measured: text 13.06:1, dim 5.87:1, accent 5.09:1 on that paper.
+  const onPaper = Boolean(vars && "--color-card" in vars);
 
   return (
     <DeferredPlayRoom>
@@ -200,7 +203,12 @@ function ReadPiece() {
           <ArrowLeft size={16} /> The Ink
         </Link>
 
-        <article className="mt-8">
+        <article
+          className={`mt-8${onPaper ? " rounded-xl p-6 sm:p-8" : ""}`}
+          // color is restated, not inherited: .ink-world sets it on itself, so
+          // without this the paper page would keep the cream it inherited.
+          style={onPaper ? { ...vars, backgroundColor: "var(--color-card)", color: "var(--color-text)" } : vars}
+        >
           {piece.kind === "printed" ? (
             // Four of these never ran anywhere, so there is no edition to name.
             // Saying "First published here" is better than inventing a
@@ -215,21 +223,16 @@ function ReadPiece() {
                 .join(" · ")}
             </p>
           ) : (
-            // The Directory numbers by journal entry, The Ninety-One Pages
-            // numbers by page out of 91 — the seasons don't share a counting
-            // scheme, so the byline has to ask which season it is before it
-            // can say which number. The page he keeps has no page at all, and
-            // null is free here: the array is filtered and joined, so that
-            // byline degrades to the season title and the planet rather than
-            // asserting "Page 0 of 91".
+            // The seasons do not share a counting scheme — the Directory
+            // numbers by journal entry, The Ninety-One Pages by page out of
+            // 91, and the page he keeps has no number at all — so this page
+            // no longer formats one. theme.label is the single place that
+            // knows, which is also why "PAGE 0 OF 91" can no longer be
+            // reached from here: the kept row answers "THE PAGE HE KEEPS".
             <p className="kicker-accent">
               {[
                 anthology.seasons.find((s) => s.n === piece.season)?.title,
-                piece.season === 1
-                  ? `Journal Entry #${piece.entry}`
-                  : piece.page
-                    ? `Page ${piece.page} of 91`
-                    : null,
+                theme?.label,
                 piece.planet ? (piece.system ? `${piece.planet}, ${piece.system}` : piece.planet) : null,
               ]
                 .filter(Boolean)
@@ -249,7 +252,12 @@ function ReadPiece() {
               />
             )}
           </h1>
-          <p className="mt-3 text-sm" style={{ color: "#a4978a" }}>
+          {/* The token, not the literal it happens to equal. --color-muted IS
+              #a4978a inside .ink-world (7.1:1 on ink), so this is a no-op for
+              every page but the one whose theme repaints the ground: there it
+              becomes #6b6153 on paper, 4.58:1, instead of #a4978a on paper,
+              which is 2.15:1 and fails. */}
+          <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>
             {piece.words.toLocaleString()} words · about {Math.max(1, Math.round(piece.words / 220))} min
           </p>
 
@@ -262,7 +270,7 @@ function ReadPiece() {
               This is the draft. Roughly {piece.printWords.toLocaleString()} words of it ran in the
               magazine — about {Math.round((piece.printWords / piece.words) * 100)}% survived the page
               count, so most of what follows has never been read by anyone.{" "}
-              <span style={{ color: "#a4978a" }}>(Print figure is approximate: counted from OCR of the scan.)</span>
+              <span style={{ color: "var(--color-muted)" }}>(Print figure is approximate: counted from OCR of the scan.)</span>
             </p>
           )}
           {piece.kind === "printed" && piece.note === "First published here" && (
@@ -329,20 +337,16 @@ function ReadPiece() {
             />
           )}
 
-          <div
-            className={`piece-body mt-10${
-              piece.kind === "anthology" && (piece.season === 2 || piece.season === 3) ? " season-two-paper" : ""
-            }${scorchClassName}`}
-            style={scorchStyle}
-          >
+          <div className={`piece-body mt-10${theme?.body ? ` ${theme.body}` : ""}`}>
             {/* Season 1 filed through a rig and reached the reader — this is
                 that arrival, logged. Season 2 stops filing (see the season
-                blurb), so RelayHeader is simply never called for it: the
+                blurb), so its chrome is "none" and nothing renders here: the
                 absence is the tell, not a hidden or greyed-out state. Season
                 3 is neither: he is withdrawing a page, not receiving or
-                refusing one, so it gets its own quiet marker instead. */}
-            {piece.kind === "anthology" && piece.season === 1 && <RelayHeader entry={piece} />}
-            {piece.kind === "anthology" && piece.season === 3 && <WithdrawnMarker entry={piece} />}
+                refusing one, so it gets its own quiet marker instead. Which
+                of the three is seasonTheme's call, not this page's. */}
+            {piece.kind === "anthology" && theme?.chrome === "relay" && <RelayHeader entry={piece} />}
+            {piece.kind === "anthology" && theme?.chrome === "withdrawn" && <WithdrawnMarker entry={piece} />}
             <ReactMarkdown
               // GFM is not optional for these. Some entries carry real tables,
               // and in a couple of them the table IS the entry: page thirty is
@@ -418,7 +422,7 @@ function ReadPiece() {
         <nav className="mt-16 border-t border-line pt-8">
           {piece.kind === "printed" ? (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "#a4978a" }}>
+              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from the archive
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -428,7 +432,7 @@ function ReadPiece() {
                     <li key={p.slug}>
                       <Link to="/read/$slug" params={{ slug: p.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "#a4978a" }}>
+                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
                           {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
                         </span>
                       </Link>
@@ -438,7 +442,7 @@ function ReadPiece() {
             </>
           ) : (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "#a4978a" }}>
+              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from {anthology.seasons.find((s) => s.n === piece.season)?.title}
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -448,8 +452,10 @@ function ReadPiece() {
                     <li key={e.slug}>
                       <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "#a4978a" }}>
-                          {e.season === 1 ? `#${e.entry}` : `p.${e.page}`}
+                        {/* Each row wears its OWN season's short form, not
+                            this page's: #12, p.30, p.7 ✕, kept. */}
+                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
+                          {entryTheme(e).short}
                         </span>
                       </Link>
                     </li>

@@ -66,7 +66,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **seventeen destinations**,
+The site is not a page with a few easter eggs; it is **eighteen destinations**,
 each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
@@ -257,7 +257,7 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Sixteen of the twenty-two route files server-render. Six stay client-only, and
+Seventeen of the twenty-three route files server-render. Six stay client-only, and
 each is a room that mounts WebGL at its top level: `/blueprint`, `/compose`,
 `/forge`, `/map`, `/pulse` and `/terminal`.
 

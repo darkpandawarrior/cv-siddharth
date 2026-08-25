@@ -10,6 +10,8 @@ import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
 import { anthology, anthologyEntries, entriesOfSeason } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
+import { entryTheme, seasonHero } from "../lib/seasonTheme.ts";
+import type { ThemeVars } from "../lib/seasonTheme.ts";
 import { ReactionRow } from "../play/ReactionRow.tsx";
 
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
@@ -38,7 +40,7 @@ export const Route = createFileRoute("/anthology")({
   component: AnthologyRoute,
 });
 
-type Tab = number | "starmap" | "tellers" | "canon";
+type Tab = number | "starmap" | "tellers";
 
 function AnthologyRoute() {
   const [tab, setTab] = useState<Tab>(1);
@@ -119,18 +121,19 @@ function AnthologyRoute() {
               >
                 The Tellers
               </button>
-              <button
-                type="button"
-                onClick={() => setTab("canon")}
-                aria-pressed={tab === "canon"}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tab === "canon"
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-                }`}
+              {/* The canon panel outgrew a tab. It is a reference a reader
+                  arrives at, links someone else to, and comes back to, which
+                  is a URL's job and not a useState's, so it lives at /canon
+                  now. Same pill as the tabs beside it because it still
+                  belongs to this row, but it is an anchor, because it
+                  navigates. It never carries the pressed state: it is not one
+                  of the things this row is choosing between any more. */}
+              <Link
+                to="/canon"
+                className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
               >
                 The Canon
-              </button>
+              </Link>
             </div>
 
             {anthology.seasons.map((s) =>
@@ -139,10 +142,7 @@ function AnthologyRoute() {
                   <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                     {s.blurb}
                   </p>
-                  {/* The most load-bearing image in the set, and it only belongs
-                      on the season that files legends in the first place —
-                      Season Two's pages are a case file, not a census. */}
-                  {s.n === 1 && <TheFourteenPlate />}
+                  <SeasonHeroFigure season={s.n} />
                   <SeasonGrid season={s.n} />
                 </div>
               ) : null,
@@ -150,7 +150,6 @@ function AnthologyRoute() {
 
             {tab === "starmap" && <StarmapTab />}
             {tab === "tellers" && <TellersTab />}
-            {tab === "canon" && <CanonTab />}
           </div>
         </main>
         <SiteFooter />
@@ -161,39 +160,39 @@ function AnthologyRoute() {
 }
 
 function SeasonGrid({ season }: { season: number }) {
-  const entries = entriesOfSeason(season);
-  const cool = season === 1;
   return (
     <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {entries.map((e, i) => (
-        <EntryCard key={e.slug} entry={e} cool={cool} index={i} />
+      {entriesOfSeason(season).map((e, i) => (
+        <EntryCard key={e.slug} entry={e} index={i} />
       ))}
     </div>
   );
 }
 
-function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boolean; index: number }) {
-  // The 91 is canon, not a count: season two is titled The Ninety-One Pages
-  // and season three burns ninety of them. What is not canon is that every
-  // record has a page at all — the page he keeps carries 0, and unguarded
-  // that shipped as "PAGE 0 OF 91".
-  const kicker =
-    e.season === 1 ? `ENTRY #${e.entry}` : e.page ? `PAGE ${e.page} OF 91` : "THE PAGE HE KEEPS";
-  // Season two's cards sit a little off true, alternating left and right —
-  // the small imperfection that reads as "handled paper" rather than "filed
-  // record". Season one gets none of this; a case file does not tilt.
-  const rotate = cool ? 0 : index % 2 === 0 ? -0.6 : 0.7;
+// This component no longer knows what a season is, and that is the repair.
+// There is no season number in here, no 91, no entry-versus-page branch: it
+// asks seasonTheme.ts what this particular entry looks like and renders that.
+// A fourth season arrives by adding one row to the table over there.
+function EntryCard({ entry: e, index }: { entry: AnthologyEntry; index: number }) {
+  const t = entryTheme(e);
+  // Alternating the sign is what reads as handled paper rather than as a
+  // consistent skew applied by a stylesheet. 0 degrees disables it outright,
+  // which is season one and the one page he keeps: neither is loose paper.
+  const rot = t.tiltDeg ? (index % 2 === 0 ? -t.tiltDeg : t.tiltDeg) : 0;
 
   const card = (
     // The border and group-hover live on this wrapper, not the Link, so the
     // reaction row below can sit inside the same card without nesting a
     // <button> inside an <a> — invalid HTML, and it would fire the Link's
     // navigation on every reaction click.
+    //
+    // t.vars is scoped token overrides, not decoration: season three swaps
+    // --color-accent to ember and the kept page swaps the whole palette to
+    // paper, and because every child below reads the same var() names, none
+    // of them need to know that happened.
     <div
-      className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition ${
-        cool ? "rounded-lg border-line hover:border-zinc-500" : "rounded-2xl border-accent/25 hover:border-accent/60"
-      }`}
-      style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
+      className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition ${t.card}`}
+      style={{ ...t.vars, ...(rot ? { transform: `rotate(${rot}deg)` } : null) } as ThemeVars}
     >
       <Link to="/read/$slug" params={{ slug: e.slug }} className="flex flex-1 flex-col">
         {e.plate ? (
@@ -201,7 +200,7 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
             src={e.plate}
             alt=""
             loading="lazy"
-            className={`w-full object-cover ${cool ? "grayscale-[35%] sepia-[10%]" : ""}`}
+            className={`w-full object-cover ${t.plate}`}
             style={{ aspectRatio: "600 / 780" }}
           />
         ) : (
@@ -216,8 +215,8 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
           </div>
         )}
         <div className="flex flex-1 flex-col p-4">
-          <span className={`font-mono text-[11px] uppercase tracking-widest ${cool ? "text-zinc-400" : "text-accent"}`}>
-            {kicker}
+          <span className={`font-mono text-[11px] uppercase tracking-widest ${t.kicker}`}>
+            {t.label}
           </span>
           {/* h2, not h3. These cards sit directly under the page's h1 with no
               grouping heading between them, so h3 skipped a level, which
@@ -241,7 +240,19 @@ function EntryCard({ entry: e, cool, index }: { entry: AnthologyEntry; cool: boo
     </div>
   );
 
-  return <Reveal delay={(index % 3) * 80}>{cool ? card : <TiltCard>{card}</TiltCard>}</Reveal>;
+  return <Reveal delay={(index % 3) * 80}>{t.tilt ? <TiltCard>{card}</TiltCard> : card}</Reveal>;
+}
+
+// The anchor object above a season's grid. Season one always had one and the
+// other two opened on a paragraph and a bare grid, which is most of why they
+// read as flat beside it. null is now a stated choice rather than a branch
+// nobody noticed: a fourth season renders nothing here until someone fills in
+// the row in seasonHero().
+function SeasonHeroFigure({ season }: { season: number }) {
+  const hero = seasonHero(season);
+  if (hero === "fourteen") return <TheFourteenPlate />;
+  if (hero === "case-full" || hero === "case-burned") return <TheCase burned={hero === "case-burned"} />;
+  return null;
 }
 
 function TheFourteenPlate() {
@@ -268,6 +279,172 @@ function TheFourteenPlate() {
   );
 }
 
+// Canon, not a count: season two is titled The Ninety-One Pages, and thirteen
+// by seven is exactly ninety-one.
+const CASE_SLOTS = 91;
+
+// The case, and the season's whole plot in one figure. Derived from the
+// entries themselves rather than drawn, so it cannot drift from the corpus and
+// it costs no new art: the ten slots the reader has actually been handed, and,
+// in the burned state, the thirteen the fire has taken in the order it took
+// them. The page he keeps carries page 0 and drops out of both sets, which is
+// right — it goes back into the case blank.
+//
+// The grid is aria-hidden and the figcaption carries the meaning in prose, the
+// same split StateLegend below already uses. Colour is never the only channel
+// either: a filled slot is solid, a read slot is ringed and solid, an emptied
+// slot is an outline with nothing inside it.
+function TheCase({ burned }: { burned: boolean }) {
+  const read = new Set(entriesOfSeason(2).map((e) => e.page));
+  const gone = new Set(burned ? entriesOfSeason(3).map((e) => e.page).filter(Boolean) : []);
+
+  return (
+    <figure className="card-elevated mx-auto mt-8 w-full max-w-[520px] overflow-hidden rounded-2xl border border-line bg-void/40">
+      {/* Thirteen columns, seven rows, set in index.css. */}
+      <div aria-hidden className="case-grid p-5">
+        {Array.from({ length: CASE_SLOTS }, (_, i) => i + 1).map((page) => (
+          <span
+            key={page}
+            className={`case-slot${gone.has(page) ? " case-slot--gone" : read.has(page) ? " case-slot--read" : ""}`}
+          />
+        ))}
+      </div>
+      <figcaption className="border-t border-line px-6 py-4 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+        {burned
+          ? "The same case, thirteen nights later. Every outline is a page he has taken out and burned, in the order he took it, and page ninety-one is the last one to go. The slot he fills again holds a blank sheet."
+          : "Ninety-one slots, and he filled every one of them. The marked ten are the pages you have been handed. He wrote page ninety-one first, at the very back, before he had any right to reach it, and that is what finished the case."}
+      </figcaption>
+    </figure>
+  );
+}
+
+// --- The Tellers -----------------------------------------------------------
+// Canon law five: every legend keeps one mortal who was present and told it
+// afterwards. The tab used to be one flat grid of every witness, which was
+// readable at ten and is not at twenty, and which had no way at all to say
+// that a slot is empty on purpose.
+//
+// The grouping is derived from the witness's own entry key, "s1-04" style, so
+// a fourth season groups itself: anthology.seasons grows, "s4-" parses, and a
+// season with no records renders nothing rather than an empty heading.
+
+const seasonOfKey = (k: string) => Number(k.slice(1, k.indexOf("-")));
+const idxOfKey = (k: string) => Number(k.slice(k.indexOf("-") + 1));
+const keyOfEntry = (e: AnthologyEntry) => `s${e.season}-${String(e.idx).padStart(2, "0")}`;
+const entryOfKey = (k: string) => anthologyEntries.find((e) => keyOfEntry(e) === k);
+
+// A teller files under the season they first tell in, once, however many pages
+// they carry: Ossul tells across all three and belongs to the season his
+// caption comes from. The generated `entry` field is a single key today and
+// widens to an array the moment one teller carries several, so both shapes are
+// accepted here rather than this needing a second edit that day.
+//
+// ponytail: a record with no key at all files under no season and does not
+// render. That is caught upstream, where build-registry.mjs holds both the
+// keys and the entries and can throw on one that resolves to nothing; it
+// cannot be caught here, because here there is nothing to compare against.
+const keysOf = (w: AnthologyWitness): string[] => {
+  const key: string | string[] | undefined = w.entry;
+  return Array.isArray(key) ? key : key ? [key] : [];
+};
+
+/** A slot in a season's roll call that is deliberately empty. */
+interface Blank {
+  /** The entry it belongs to, which is also where it sorts in the roll. */
+  entry: string;
+  /** What kind of empty it is. The two kinds are not the same finding. */
+  kicker: string;
+  title: string;
+  why: string;
+}
+
+// Nine entries have a teller-shaped hole that is deliberate. Omitting them
+// reads as an oversight, which is the exact failure the bible warns about for
+// entry 09's near-empty plate, so they are rows.
+//
+// They live in this file because src/data/anthology.ts is generated and does
+// not carry them yet. When the generator grows an `absences` field this
+// constant is deleted and the two lines below read it instead. Every claim
+// here is in the story file it names.
+const ARGUED_ABSENCES: { entry: string; why: string }[] = [
+  {
+    entry: "s1-09",
+    why: "Forty million people, alive and fed, with no gods, no monsters, no luck and no stories at all. Law five has nothing to attach to, because there is no legend. The nearest thing to a teller is a woman who built a word for why out of their word for by what method, and nobody on that planet ever wrote down a thing she said. A teller is somebody whose account survives them. Hers does not.",
+  },
+  {
+    entry: "s2-06",
+    why: "Aboard ship between two systems he will not name, with no second person in it at any point. Everything that acts is equipment: a hanging scale, a peeling calibration sticker, three rows of a table.",
+  },
+  {
+    entry: "s2-09",
+    why: "Nineteen days out from anywhere, and the page is built out of proving nobody was there. Himself, the crew, the boarding log checked three times, Ossul eleven decks down. When he runs out of suspects the only other party in the room is the case, and a case is not mortal.",
+  },
+  {
+    entry: "s3-05",
+    why: "One sentence about blind fish and an apology for its own length. The nearest thing to a teller is a version of himself he cannot place, on a world he does not remember being on.",
+  },
+  {
+    entry: "s3-06",
+    why: "Three weighings and a difference. Its only witness is a hanging scale by the aft locker with a tolerance printed on its plate, and the whole discipline of the page is leaving a number alone.",
+  },
+  {
+    entry: "s3-08",
+    why: "Kaunis is here as an institution and a wall, not a person. Four hundred names in chalk, resurfaced every generation so nobody stops reading it. A world that gets a wall, and a man who does not.",
+  },
+  {
+    entry: "s3-10",
+    why: "Nobody on any of the six worlds ever saw the map. The graves still point and the poles still point. What stops existing is the pairing, and the only person who could witness that is the one burning it.",
+  },
+  {
+    entry: "s3-12",
+    why: "The alibi run, and its whole structure is the elimination of every other person who could have been in the room. What is left standing is his own sentence: an archive of one author is a self portrait.",
+  },
+  {
+    entry: "s3-14",
+    why: "The case is empty and nothing was witnessed. The only figure invoked is a rule rather than a person, and the plate is clean unmarked paper, the one undamaged object in the season. That is the portrait. Leave it.",
+  },
+];
+
+// The other kind of blank, and the harder one to argue for keeping. Page
+// seventy-three is four names and nothing else. He can place two of them,
+// Sarn and Öyla, and about the other two he says plainly that he cannot tell
+// you a single thing. A teller is somebody whose account survives them, and
+// theirs did not, so there is no account to file and there never will be.
+// They are not absences either, because that entry has two real tellers. They
+// are named, and undrawn, permanently, and a caption reading "did something,
+// once" would clear every check this site has while carrying nothing.
+const UNPLACEABLE: { entry: string; name: string; why: string }[] = [
+  {
+    entry: "s3-11",
+    name: "Ræl",
+    why: "Named on page seventy-three beside Sarn and Öyla, in his own hand, in a hurry, by a man who did not trust himself to come back and finish the thought. Whatever Ræl did is gone from both of the places it ever lived, the page and the man, and it went into the fire with the other three names.",
+  },
+  {
+    entry: "s3-11",
+    name: "Tuvid",
+    why: "The fourth name on a page that is four names and nothing else. He said it out loud twice, on the theory that a name said out loud sometimes drags the rest of the room in behind it. It did not. There is no account here to withhold, only one that was never made.",
+  },
+];
+
+function blanksOfSeason(season: number): Blank[] {
+  return [
+    ...ARGUED_ABSENCES.filter((a) => seasonOfKey(a.entry) === season).map((a) => ({
+      entry: a.entry,
+      kicker: "No teller recorded",
+      // The entry's own title, so the card reads as position nine of ten in a
+      // roll call rather than as a footnote about a missing thing.
+      title: entryOfKey(a.entry)?.title ?? a.entry,
+      why: a.why,
+    })),
+    ...UNPLACEABLE.filter((u) => seasonOfKey(u.entry) === season).map((u) => ({
+      entry: u.entry,
+      kicker: "Named, never told",
+      title: u.name,
+      why: u.why,
+    })),
+  ];
+}
+
 function TellersTab() {
   return (
     <div className="mt-8">
@@ -276,33 +453,83 @@ function TellersTab() {
           drawn because someone actually had to be there to write it down. */}
       <p className="max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
         The gods and monsters in this series get marks generated from their names. The people get drawn,
-        because the people are the reason any of it survived to be written down.
+        because the people are the reason any of it survived to be written down. Where a season leaves a
+        slot empty, the slot is the finding, so it is on the roll too.
       </p>
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {anthology.witnesses.map((w, i) => (
-          <Reveal key={w.id} delay={(i % 3) * 80}>
-            <TellerCard witness={w} />
-          </Reveal>
-        ))}
-      </div>
+      {anthology.seasons.map((s) => (
+        <SeasonRoll key={s.n} season={s.n} title={s.title} />
+      ))}
     </div>
   );
 }
 
+// Heading order is load-bearing: lighthouserc.json asserts accessibility at
+// 1.00 on /anthology, and it scores a skipped level as a real failure. Page
+// h1, season h2, card h3.
+function SeasonRoll({ season, title }: { season: number; title: string }) {
+  const tellers = anthology.witnesses
+    .filter((w) => seasonOfKey(keysOf(w)[0] ?? "") === season)
+    .map((w) => ({ kind: "teller" as const, id: w.id, sort: idxOfKey(keysOf(w)[0]), w }));
+  const blanks = blanksOfSeason(season).map((b) => ({
+    kind: "blank" as const,
+    id: `${b.entry}-${b.title}`,
+    sort: idxOfKey(b.entry),
+    b,
+  }));
+
+  // Interleaved by entry index, not concatenated: an absence clumped at the
+  // end of the grid reads as a footnote, and it is supposed to read as the
+  // ninth of ten pages this season has.
+  const roll = [...tellers, ...blanks].sort((a, b) => a.sort - b.sort);
+  if (!roll.length) return null;
+
+  return (
+    <section className="mt-12">
+      <h2 className="font-display text-xl font-bold">{title}</h2>
+      <p className="kicker mt-1">
+        {tellers.length} tellers · {blanks.length} deliberate blanks
+      </p>
+      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {roll.map((r, i) => (
+          <Reveal key={r.id} delay={(i % 3) * 80}>
+            {r.kind === "teller" ? <TellerCard witness={r.w} /> : <BlankCard blank={r.b} />}
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const ROLL_CARD = "card-elevated group flex h-full flex-col overflow-hidden rounded-lg border bg-card transition";
+
 function TellerCard({ witness: w }: { witness: AnthologyWitness }) {
-  // The witness record in `anthology.witnesses` carries the loose "s1-01"
-  // key it was matched by at generation time; the trustworthy link target is
-  // whichever entry actually kept a copy of this witness, found by id rather
-  // than re-parsed from that key.
-  const entry = anthologyEntries.find((e) => e.witness?.id === w.id);
+  // Resolved from the record's own entry keys rather than by scanning the
+  // corpus for an entry that kept a copy of this witness: that scan was
+  // already fragile and it is outright wrong the moment one teller carries
+  // several pages. The first key is the home page, the count is the rest.
+  const keys = keysOf(w);
+  const home = keys.map(entryOfKey).find(Boolean);
   const alt = `${w.name}. ${w.did}`;
 
   const body = (
     <>
-      <img src={w.art} alt={alt} loading="lazy" width={1100} height={600} className="w-full object-cover" />
+      {w.art ? (
+        <img src={w.art} alt={alt} loading="lazy" width={1100} height={600} className="w-full object-cover" />
+      ) : (
+        // A record with no portrait yet is a real state, not an error: the
+        // record is the law-five claim and the drawing costs money. Same 11:6
+        // box as a portrait, so nothing on the card moves when the art lands.
+        // It carries its own label here because, unlike on the reading page,
+        // there is no adjacent alt text already doing that work.
+        <div className="teller-unrendered" role="img" aria-label={`${w.name}. Portrait not yet rendered.`}>
+          <span className="kicker">Awaiting rendering</span>
+        </div>
+      )}
       <div className="flex flex-1 flex-col p-4">
-        <h2 className="font-display text-lg font-bold leading-snug">{w.name}</h2>
+        {/* h3 under the season's h2. It was an h2 while this tab was one flat
+            grid with no grouping heading above it. */}
+        <h3 className="font-display text-lg font-bold leading-snug">{w.name}</h3>
         {w.of && (
           <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
             {w.of}
@@ -311,18 +538,55 @@ function TellerCard({ witness: w }: { witness: AnthologyWitness }) {
         <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
           {w.did}
         </p>
+        {keys.length > 1 && <p className="kicker mt-3">Tells in {keys.length} entries</p>}
       </div>
     </>
   );
 
-  const className = "card-elevated group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-card transition";
-
-  return entry ? (
-    <Link to="/read/$slug" params={{ slug: entry.slug }} className={`${className} hover:border-accent/60`}>
+  return home ? (
+    <Link to="/read/$slug" params={{ slug: home.slug }} className={`${ROLL_CARD} border-line hover:border-accent/60`}>
       {body}
     </Link>
   ) : (
-    <div className={className}>{body}</div>
+    <div className={`${ROLL_CARD} border-line`}>{body}</div>
+  );
+}
+
+// A slot that is empty on purpose. No plate box at all, which is what tells it
+// apart at a glance from a teller whose portrait has not been drawn yet: that
+// one is a slot waiting to be filled, this one is a slot that is never going
+// to be. The border is dashed for the same reason, and the argument is the
+// body text, because a reader checking law five should find the argument here
+// rather than find nothing and assume an oversight.
+//
+// Colours are existing ink-world tokens, both measured against --color-card
+// #221b15: --color-text-dim #a4978a is 5.97:1 and --color-line #3a2f24 is
+// 1.30:1, which is why the line is only ever a border and never carries a word.
+function BlankCard({ blank: b }: { blank: Blank }) {
+  const entry = entryOfKey(b.entry);
+
+  const body = (
+    <div className="flex flex-1 flex-col p-4">
+      <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-text-dim)" }}>
+        {b.kicker}
+      </span>
+      <h3 className="font-display mt-2 text-lg font-bold leading-snug">{b.title}</h3>
+      <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+        {b.why}
+      </p>
+    </div>
+  );
+
+  return entry ? (
+    <Link
+      to="/read/$slug"
+      params={{ slug: entry.slug }}
+      className={`${ROLL_CARD} border-dashed border-line hover:border-accent/60`}
+    >
+      {body}
+    </Link>
+  ) : (
+    <div className={`${ROLL_CARD} border-dashed border-line`}>{body}</div>
   );
 }
 
@@ -391,6 +655,11 @@ function StarmapTab() {
         <StateLegend swatch="#39424E" term="Concluded" desc="Closed once the count above reaches its number." />
         <StateLegend swatch="#8A6A2F" term="Ruin" desc="Concluded, and the record itself did not survive." />
         <StateLegend swatch="#D9A441" term="Self" desc="The Directory. Him." />
+        <StateLegend
+          swatch="#A85A38"
+          term="Withdrawn"
+          desc="The page burned. The world is still there. The count above never reaches it, because the Directory never had it to file."
+        />
       </ul>
     </div>
   );
@@ -407,140 +676,5 @@ function StateLegend({ swatch, term, desc }: { swatch: string; term: string; des
         {desc}
       </span>
     </li>
-  );
-}
-
-// The seven laws, each cut down to the one line a reader actually needs. The
-// full reasoning for each lives in the source bible; this tab is a panel a
-// reader visits once to look something up, not the place to re-argue it.
-const SEVEN_LAWS: { name: string; gloss: string }[] = [
-  { name: "The Count of Fourteen", gloss: "Every world reports fourteen gods and fourteen monsters, independently, with no contact between them." },
-  { name: "The Unnamed Fourteenth", gloss: "Ask anyone to list the fourteen monsters and you get thirteen names and a pause." },
-  { name: "The Halving", gloss: "A deadlock ends only when someone voluntarily divides themselves and spends both halves." },
-  { name: "The Residue", gloss: "Whatever is left over becomes the phenomenon he can actually measure: snow, silence, a tide, a count." },
-  { name: "The Witness Who Tells It", gloss: "Every legend keeps one mortal who was there and told it afterward. The heroes lose; the tellers are why there is a story at all." },
-  { name: "The Two Facings", gloss: "One storyteller's account of why thirteen of the fourteen split and one did not. Not settled canon." },
-  { name: "Concluded", gloss: "The Directory's status flag for a world with no phenomena outstanding and no further contact indicated." },
-];
-
-// Realm is blank for Galaxal and Milgalaxal in the founding charter itself;
-// they are not tied to any one world's day, so there is nothing to put there.
-const STANDARD_INTERVALS: { interval: string; realm: string; length: string }[] = [
-  { interval: "Flick", realm: "Nifheim", length: "1.2 Earth hours" },
-  { interval: "Tick", realm: "Limheim", length: "1 Earth day" },
-  { interval: "Momenta", realm: "Purgaheim", length: "50 Earth days" },
-  { interval: "Click", realm: "Hellheim", length: "2 Earth years" },
-  { interval: "Galaxal", realm: "", length: "228 Hellheims · 456 Earth years" },
-  { interval: "Milgalaxal", realm: "", length: "2228 Hellheims · 2455 Earth years" },
-  { interval: "Elysheim", realm: "Elysheim", length: "not yet required" },
-  { interval: "Vænheim", realm: "Vænheim", length: "not yet required" },
-];
-
-// Every claim on this tab traces to one of these files, so the links are the
-// receipt rather than decoration. The record file names, not "the bible" or
-// "the council", so a reader who wants to check the arithmetic in law six can
-// go straight to the line it came from.
-//
-// The bible rows are derived from the seasons themselves, because the upstream
-// filename is mechanical (bible.md for season one, s2-bible.md after it) and a
-// hand-kept list had already fallen a season behind: s3-bible.md exists and
-// this tab was not linking it. A fourth season now arrives with its own
-// receipt. The council records stay written out — they are dated audits of one
-// particular week, not a per-season artefact, so nothing derives them.
-const CANON_SOURCES: { file: string; note: string }[] = [
-  ...anthology.seasons.map((s) => ({
-    file: s.n === 1 ? "bible.md" : `s${s.n}-bible.md`,
-    note: `the canon for season ${s.n}, ${s.title}`,
-  })),
-  { file: "council-2026-08-15.md", note: "the record of the season one council" },
-  { file: "council-s2-2026-08-15.md", note: "the cross-lab audit that killed six of the first ten season two premises" },
-];
-const CANON_SOURCE_BASE = "https://github.com/darkpandawarrior/the-loopdown/blob/main/fiction/morkinstar-journals/";
-
-function CanonTab() {
-  return (
-    <div className="mt-8">
-      {/* The count and its resolution, distilled from laws one, two and six.
-          This is the fact every entry in both seasons assumes the reader
-          already has, and until now the site never actually stated it. */}
-      <p className="max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-        Every world he has ever surveyed independently reports the same census: fourteen gods, fourteen
-        monsters. Ask anyone to list the fourteen monsters and you get thirteen names and a pause. The
-        resolution comes from one storyteller's account: thirteen of the fourteen split into a god-face
-        and a monster-face when observed from both sides at once, and the one that never split keeps its
-        single name on the god list, out of gratitude, and holds an unnamed line on the monster list,
-        because it only ever had the one face to give. Twenty-eight lines. Twenty-seven names.
-      </p>
-
-      <section className="card-elevated mt-8 rounded-2xl border border-line bg-void/40 p-6">
-        <h2 className="font-display text-lg font-bold">The Seven Laws</h2>
-        <ol className="mt-4 space-y-3 pl-5 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-          {SEVEN_LAWS.map((law) => (
-            <li key={law.name} className="list-decimal">
-              <strong className="font-semibold" style={{ color: "var(--color-text)" }}>
-                {law.name}.
-              </strong>{" "}
-              {law.gloss}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="card-elevated mt-6 rounded-2xl border border-line bg-void/40 p-6">
-        <h2 className="font-display text-lg font-bold">Standard Intervals</h2>
-        {/* Wrapped for narrow screens: five columns' worth of monospace data
-            does not fit a phone width, and this table needs to scroll inside
-            its own box rather than force the whole page wider. */}
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[420px] border-collapse font-mono text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-widest text-muted">
-                <th className="py-2 pr-4 font-semibold">Interval</th>
-                <th className="py-2 pr-4 font-semibold">Realm</th>
-                <th className="py-2 font-semibold">Length</th>
-              </tr>
-            </thead>
-            <tbody>
-              {STANDARD_INTERVALS.map((row) => (
-                <tr key={row.interval} className="border-b border-line/50 last:border-0">
-                  <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
-                    {row.interval}
-                  </td>
-                  <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
-                    {row.realm}
-                  </td>
-                  <td className="py-2" style={{ color: "var(--color-text-dim)" }}>
-                    {row.length}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-          The milgalaxal line does not multiply out from the click above it. That is inherited from the
-          2021 source story rather than a typo, and Entry #2300 is built on it.
-        </p>
-      </section>
-
-      <p className="mt-8 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-        Nothing above is asserted without a source. The bibles and the council records this tab was
-        drawn from are public:{" "}
-        {CANON_SOURCES.map((s, i) => (
-          <span key={s.file}>
-            <a
-              href={`${CANON_SOURCE_BASE}${s.file}`}
-              target="_blank"
-              rel="noreferrer"
-              title={s.note}
-              className="font-mono text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
-            >
-              {s.file}
-            </a>
-            {i < CANON_SOURCES.length - 1 ? ", " : "."}
-          </span>
-        ))}
-      </p>
-    </div>
   );
 }

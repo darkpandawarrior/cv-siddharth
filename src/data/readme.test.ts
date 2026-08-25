@@ -43,8 +43,20 @@ describe("the README's numbers are the repo's numbers", () => {
     const clientOnly = routes.filter((f) =>
       /^\s*ssr: false,\s*$/m.test(readFileSync(join(ROOT, "src/routes", f), "utf8")),
     );
-    // Sixteen of twenty-two server-render; the rest mount WebGL at the top level.
-    expect(README).toContain(`Sixteen of the twenty-two route files server-render`);
+    // Derived, not typed. Both halves of this sentence were literals and both
+    // went stale the moment /canon landed: the file count said twenty-two
+    // against twenty-three files, and this assertion stayed green through it
+    // because it only compared one hardcoded string to another.
+    const NUM: Record<number, string> = {
+      16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
+      20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
+      24: "Twenty-four", 25: "Twenty-five",
+    };
+    const ssr = NUM[routes.length - clientOnly.length];
+    const total = NUM[routes.length]?.toLowerCase();
+    expect(ssr, `add a word for ${routes.length - clientOnly.length} to NUM`).toBeDefined();
+    expect(total, `add a word for ${routes.length} to NUM`).toBeDefined();
+    expect(README).toContain(`${ssr} of the ${total} route files server-render`);
     expect(clientOnly.length, "the README says six routes are client-only").toBe(6);
     for (const f of clientOnly) {
       const route = "/" + f.replace(/\.tsx$/, "");
