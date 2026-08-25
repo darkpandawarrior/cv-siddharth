@@ -222,3 +222,89 @@ describe("guard G: the courtesy is reproduced in full or it is not reproduced", 
   });
 });
 
+
+/**
+ * Floors on everything that crosses the registry hop.
+ *
+ * The generator FALLS BACK rather than failing: an unreachable starmap.json
+ * becomes `{ systems: {}, worlds: [], fences: [] }`, and the map then renders
+ * empty with a green build behind it. The same shape already bit this project
+ * for real in the other direction: the teller roster went from 20 to 34 when
+ * Season Four landed and the registry stayed at 20, because the generator
+ * filtered on a portrait file existing. The canon fix was correct and invisible,
+ * and nothing said so.
+ *
+ * gen-repo-stats.mjs already refuses to shrink a committed count for exactly
+ * this reason. These are that refusal, for the numbers it does not cover.
+ *
+ * They are FLOORS, not equalities, everywhere the corpus is expected to grow.
+ * A fifth season should not have to edit this file to ship. Where a number is
+ * canon rather than inventory, it is pinned exactly and says why.
+ */
+describe("nothing crosses the registry hop and quietly shrinks", () => {
+  it("keeps every teller on the roll", () => {
+    // 34 is inventory, not canon: it grows with the corpus.
+    expect(anthology.witnesses.length).toBeGreaterThanOrEqual(34);
+    // A teller with no portrait still ships, with art: "". Dropping the record
+    // was the generator deciding a person does not exist until an illustrator
+    // gets to them, so this asserts the ROLL, not the drawings.
+    for (const w of anthology.witnesses) {
+      expect(w.id, "a teller with no id cannot be linked to").toBeTruthy();
+      expect(w.name, `${w.id} has no name`).toBeTruthy();
+    }
+  });
+
+  it("keeps the starmap populated, which nothing asserted at all", () => {
+    const { worlds, fences, systems } = anthology.starmap;
+    expect(worlds.length, "the starmap fetch fell back to empty and the map renders nothing").toBeGreaterThanOrEqual(24);
+    expect(fences.length, "the fences vanished").toBeGreaterThanOrEqual(3);
+    expect(Object.keys(systems).length).toBeGreaterThanOrEqual(19);
+  });
+
+  it("gives every starmap world a name and a status, and a position only if it has one", () => {
+    for (const w of anthology.starmap.worlds) {
+      expect(w.n, "a world with no name").toBeTruthy();
+      expect(w.st, `${w.n} has no status`).toBeTruthy();
+      if (w.o !== null) expect(w.o, `${w.n} has malformed coordinates`).toHaveLength(3);
+    }
+  });
+
+  it("draws no world whose own record says it has no position", () => {
+    // Withheld means UNDRAWN, not drawn under a withheld label. A pin with real
+    // coordinates under "[position withheld]" still supplies the position, and
+    // #2300's whole moral turn is that he refuses to. Three worlds are in this
+    // state and all three used to ship coordinates.
+    //
+    // Matched on the principle rather than a name list: a record that says the
+    // position is not given, or not known, may not carry one. [unremembered] is
+    // the second kind and the sharper one.
+    const unplaced = anthology.starmap.worlds.filter((w) =>
+      /withheld|unrecorded|unremembered/i.test(`${w.n} ${w.s} ${w.d ?? ""}`),
+    );
+    expect(unplaced.length, "no unplaced worlds left, so this guard proves nothing").toBeGreaterThanOrEqual(3);
+    for (const w of unplaced) {
+      expect(w.o, `${w.n} says it has no position and still carries one`).toBeNull();
+    }
+  });
+
+  it("draws no fence to a world that has no position", () => {
+    const byName = new Map(anthology.starmap.worlds.map((w) => [w.n, w]));
+    for (const [a, b] of anthology.starmap.fences) {
+      for (const end of [a, b]) {
+        const w = byName.get(end);
+        if (w) expect(w.o, `a fence reaches ${end}, which has no position`).not.toBeNull();
+      }
+    }
+  });
+
+  it("points every fence at worlds that exist", () => {
+    const names = new Set(anthology.starmap.worlds.map((w) => w.n));
+    for (const f of anthology.starmap.fences) {
+      for (const end of f) {
+        // A fence is a pair of world keys; either end naming a world the map
+        // does not have draws a line to nowhere.
+        if (!/^\d+-\d+$/.test(end)) expect(names.has(end), `fence end "${end}" is not a world on the map`).toBe(true);
+      }
+    }
+  });
+});

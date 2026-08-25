@@ -37,7 +37,12 @@ export interface AnthologyWitness {
 }
 
 export interface StarWorld {
-  n: string; s: string; o: number[];
+  n: string; s: string;
+  /** Offset within its system, or null when the world's own record says its
+   *  position is not given or not known. Null means UNDRAWN: see isUnplaced
+   *  in Starmap.tsx. A sentinel like [0,0,0] would draw the withheld world
+   *  at the centre of the map, which is worse than where it used to be. */
+  o: number[] | null;
   /** lit | open | concluded | ruin | self */
   st: string;
   /** Reader key, "season-idx", when the world has an entry to open. */
@@ -691,11 +696,7 @@ export const anthology = {
       {
         "n": "Mrit'havn",
         "s": "[position withheld]",
-        "o": [
-          6,
-          -8,
-          5
-        ],
+        "o": null,
         "st": "withdrawn",
         "k": "3-2",
         "d": "Page 12, withdrawn. One question, once, for as long as the smoke holds its shape."
@@ -703,11 +704,7 @@ export const anthology = {
       {
         "n": "[unremembered]",
         "s": "[unrecorded]",
-        "o": [
-          -7,
-          6,
-          -6
-        ],
+        "o": null,
         "st": "withdrawn",
         "k": "3-5",
         "d": "Page 34, withdrawn. The blind fish still turn toward the door. He no longer knows which world it was."
@@ -739,11 +736,7 @@ export const anthology = {
       {
         "n": "◇",
         "s": "Alpha Axmoiri",
-        "o": [
-          -98,
-          108,
-          -108
-        ],
+        "o": null,
         "st": "ruin",
         "d": "Designation withheld. Concluded. A Hellheim was keyed to its year, and the only surviving record of that year is a conversion error nobody has corrected."
       }

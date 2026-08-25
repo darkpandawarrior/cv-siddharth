@@ -242,7 +242,12 @@ writeFileSync(
     `  id: string; name: string; did: string; art: string;\n  /** "s1-04" style key of the entry they belong to. */\n  entry?: string;\n  of?: string;\n` +
     `}\n\n` +
     `export interface StarWorld {\n` +
-    `  n: string; s: string; o: number[];\n` +
+    `  n: string; s: string;\n` +
+    `  /** Offset within its system, or null when the world's own record says its\n` +
+    `   *  position is not given or not known. Null means UNDRAWN: see isUnplaced\n` +
+    `   *  in Starmap.tsx. A sentinel like [0,0,0] would draw the withheld world\n` +
+    `   *  at the centre of the map, which is worse than where it used to be. */\n` +
+    `  o: number[] | null;\n` +
     `  /** lit | open | concluded | ruin | self */\n  st: string;\n` +
     `  /** Reader key, "season-idx", when the world has an entry to open. */\n  k?: string;\n` +
     `  d: string;\n` +
