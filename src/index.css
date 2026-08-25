@@ -1555,7 +1555,14 @@ html.resume-mode .palette-trigger {
 .piece-body {
   font-size: 1.0625rem;
   line-height: 1.75;
-  color: #ded3c2;
+  /* The reading page is the one surface a season theme can repaint underneath.
+     /read/one-page-kept paints the article var(--color-card) = #e9dfc9 paper
+     (seasonTheme kept()), and a literal cream here put cream ink on cream paper
+     at ~1.05:1. --color-prose is the escape hatch: unset everywhere else, so
+     the fallback keeps every other reading page on the exact colour it had.
+     Not --color-text-dim, which is #a4978a inside .ink-world and would have
+     quietly restyled all thirty-three other pieces. */
+  color: var(--color-prose, #ded3c2);
 }
 .piece-body p {
   margin-bottom: 1.35em;
@@ -1574,13 +1581,13 @@ html.resume-mode .palette-trigger {
   font-family: var(--font-display);
   margin-top: 2.25em;
   margin-bottom: 0.6em;
-  color: #efe7d8;
+  color: var(--color-text);
   line-height: 1.25;
 }
 .piece-body h2 { font-size: 1.5rem; }
 .piece-body h3 { font-size: 1.2rem; }
-.piece-body em { color: #efe7d8; }
-.piece-body strong { color: #efe7d8; font-weight: 600; }
+.piece-body em { color: var(--color-text); }
+.piece-body strong { color: var(--color-text); font-weight: 600; }
 /* Tape cannot lie; testimony can. A blockquote is always quoted charter
    text or a log line someone filed, never the narrator's own voice, so it
    gets the mono register instead of the reading serif — quiet, not neon:
@@ -1756,12 +1763,33 @@ html.resume-mode .palette-trigger {
    at --scorch: 1 the damage still never reaches the content box the words
    sit in — the instruction was "never under the words" and this is how
    that's enforced, not just aimed for. rgba() throughout: never a hex
-   literal with alpha digits appended, see themeConcat.test.ts. */
+   literal with alpha digits appended, see themeConcat.test.ts.
+
+   THE CORRECTION, and the reason there is a comment here at all. Every stop
+   in this block used to be char: rgba(35,16,8), rgba(15,6,2), rgba(24,10,3).
+   Char is dark, this ground is #14100c, and char on a dark ground is
+   arithmetic that returns the ground. Measured, over that ground:
+   rgba(24,10,3) at alpha 0.55 composites to #160d07, a ratio of 1.01:1, and
+   at kindling 1 (effective alpha 0.042) it composites to #14100c exactly,
+   1.00:1, byte-identical. The season three mark was correct in intent and
+   rendered nothing at every ordinal.
+
+   So the fire goes UP in luminance, never down. Two stops, both above the
+   ground rather than under it: ember #ff8c42 (8.19:1 on #14100c, 7.35:1 on
+   #221b15) and ash #cfc3b2 (10.91:1 on ink, 9.79:1 on card). Both are
+   decorative and owe no floor, because the word carries the word: a
+   withdrawn page prints "PAGE 47 WITHDRAWN" in --color-warn at 5.50:1 and
+   its reading page prints "> Kindling · page 47 withdrawn". They clear the
+   floor they do not owe anyway, because a stop that cannot be seen is the
+   other half of this defect. Do not reach for char here again. */
 .ink-world .season-three-scorched {
   position: relative;
-  border-color: rgba(35, 16, 8, calc(0.2 + 0.5 * var(--scorch, 0)));
-  box-shadow: 0 0 calc(12px + 22px * var(--scorch, 0)) rgba(15, 6, 2, calc(0.12 + 0.26 * var(--scorch, 0)));
+  border-color: rgba(255, 140, 66, calc(0.14 + 0.34 * var(--scorch, 0)));
+  box-shadow: 0 0 calc(12px + 22px * var(--scorch, 0)) rgba(255, 140, 66, calc(0.08 + 0.2 * var(--scorch, 0)));
 }
+/* Ember core, ash falloff, per corner. The alpha coefficients are the ones
+   the char stops used, so the damage still deepens across the season at the
+   same rate; only the hue and the direction of the luminance changed. */
 .ink-world .season-three-scorched::before {
   content: "";
   position: absolute;
@@ -1770,10 +1798,10 @@ html.resume-mode .palette-trigger {
   border-radius: inherit;
   pointer-events: none;
   background-image:
-    radial-gradient(circle 16px at 0% 0%, rgba(24, 10, 3, calc(0.55 * var(--scorch, 0))), transparent 100%),
-    radial-gradient(circle 16px at 100% 0%, rgba(24, 10, 3, calc(0.5 * var(--scorch, 0))), transparent 100%),
-    radial-gradient(circle 16px at 0% 100%, rgba(24, 10, 3, calc(0.45 * var(--scorch, 0))), transparent 100%),
-    radial-gradient(circle 18px at 100% 100%, rgba(24, 10, 3, calc(0.6 * var(--scorch, 0))), transparent 100%);
+    radial-gradient(circle 16px at 0% 0%, rgba(255, 140, 66, calc(0.55 * var(--scorch, 0))), rgba(207, 195, 178, calc(0.2 * var(--scorch, 0))) 45%, transparent 100%),
+    radial-gradient(circle 16px at 100% 0%, rgba(255, 140, 66, calc(0.5 * var(--scorch, 0))), rgba(207, 195, 178, calc(0.18 * var(--scorch, 0))) 45%, transparent 100%),
+    radial-gradient(circle 16px at 0% 100%, rgba(255, 140, 66, calc(0.45 * var(--scorch, 0))), rgba(207, 195, 178, calc(0.16 * var(--scorch, 0))) 45%, transparent 100%),
+    radial-gradient(circle 18px at 100% 100%, rgba(255, 140, 66, calc(0.6 * var(--scorch, 0))), rgba(207, 195, 178, calc(0.22 * var(--scorch, 0))) 45%, transparent 100%);
 }
 
 /* The withdrawal line, in place of season 1's RelayHeader — see
@@ -1789,6 +1817,231 @@ html.resume-mode .palette-trigger {
   font-size: 0.78rem;
   letter-spacing: 0.02em;
   color: var(--color-text-dim);
+}
+
+/* --- The Damage Register -------------------------------------------------
+   What later happened to a record, printed at the foot of it. See
+   DamageRegister in read.$slug.tsx for what may go in it; this is only how it
+   looks, and two things here are load-bearing rather than stylistic.
+
+   It is print in the margin, not a component. No card, no border, no icon, no
+   heading, no motion of any kind, which is also why there is no
+   prefers-reduced-motion block below: there is nothing to reduce. The moment
+   this grows a box it is a related-links widget in a mono font, which is the
+   one thing this anthology is about not being.
+
+   It is Terminologies register because that is what small print in this world
+   already looks like. .piece-body is 1.0625rem and its trailing Terminologies
+   list is 0.85em of that, which is 0.9rem exactly, so the register reads as
+   more of the same tape rather than as site chrome. It lives OUTSIDE
+   .piece-body, which keeps it out of that :last-of-type selector and out of
+   any scraper reading the prose.
+
+   Colour is --color-muted, #a4978a on the ink ground #14100c: 6.65:1, against
+   a 4.5:1 floor. No new colour value is introduced by this block. Season three
+   swaps --color-accent to ember but leaves --color-muted alone, and the one
+   page that repaints the ground to paper renders no register at all. */
+.notice-conditions {
+  margin-top: 2.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.notice-conditions__kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+.notice-conditions__line {
+  margin: 0;
+}
+/* color: inherit, deliberately. --color-accent measures 1.27:1 against
+   --color-muted, so an accent link inside a register line would be
+   distinguished from the text around it by colour alone, well under the 3:1
+   that axe's link-in-text-block rule wants, and louder than this footer is
+   allowed to be. The underline is the cue. The focus ring is the sitewide
+   :focus-visible rule and nothing bespoke. */
+.notice-conditions__link,
+.notice-conditions__link--inline {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+/* A whole-line link has no sibling text to be told apart from, so it may hold
+   its underline back until hover or focus, which is what the fate line asks
+   for. A number inside a sentence cannot: it is a link in a text block, and
+   .piece-body a already underlines permanently, so this is the house rule
+   rather than a second one. */
+.notice-conditions__link {
+  text-decoration: none;
+}
+.notice-conditions__link:hover,
+.notice-conditions__link:focus-visible {
+  text-decoration: underline;
+}
+.notice-conditions__link--inline {
+  text-decoration: underline;
+}
+
+/* --- The anthology hub cards ---------------------------------------------
+   Three seasons, three objects, and the hub had exactly one boolean deciding
+   between them. What follows is the two treatments that boolean collapsed,
+   plus the one exception inside season three. Which card gets which class is
+   decided in src/lib/seasonTheme.ts, not here and not in the route. */
+
+/* Season two, loose warm paper on a desk. The card carries the same ruled
+   lines its reading page does, so a card and the piece it opens are visibly
+   the same stock. Decorative wash, no contrast floor: rgba(233,223,201,0.05)
+   over --color-card #221b15 composites to #25201a, 1.11:1, which is the
+   point — a rule line you can see is a lined notepad, not paper. */
+.ink-world .season-two-card {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(233, 223, 201, 0.05) 0,
+    rgba(233, 223, 201, 0.05) 1px,
+    transparent 1px,
+    transparent 1.85rem
+  );
+}
+
+/* Season three, the fire, on the hub.
+
+   The argument, since it is the one thing a future edit is most likely to
+   undo: this season is NOT carried by colour. The ground is #14100c and the
+   accent is already an ochre, so a hotter border is a twenty-degree hue turn
+   on a page that is already hot, and the reader never sees season two's tab
+   next to it to compare against. See the measurement in .season-three-scorched
+   above for what happened the last time colour was asked to carry it.
+
+   What a burned page actually is, on any ground, in greyscale, at 300px: its
+   edge is missing. So the corners stop being corners. --scorch is 0..1, the
+   entry's own kindling ordinal over 13, so the bite grows as the season
+   burns and scrolling the season IS the season. */
+
+/* The clip goes on the PLATE, never on the card. The card holds the Link, the
+   title and the ReactionRow buttons; a clip-path there would eat hit targets
+   and cut text. The plate is most of the card's visual area at grid width, so
+   biting it is enough, and it cannot break a control. The bite is bottom
+   right, which is where charOverlay() puts the burn in the plate art itself,
+   so the card and the picture agree about where the fire is. */
+.ink-world .season-three-torn__plate {
+  --bite: calc(6% + 22% * var(--scorch, 0));
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--bite)),
+    calc(100% - var(--bite) * 0.7) calc(100% - var(--bite) * 0.35),
+    calc(100% - var(--bite) * 1.6) 100%,
+    calc(100% - var(--bite) * 2.4) calc(100% - var(--bite) * 0.5),
+    0 100%
+  );
+}
+
+/* What shows through the bite. One pseudo-element, no extra DOM, no image.
+   Ember then ash then nothing, both stops LIGHTER than the ground: #ff8c42 is
+   7.35:1 on --color-card #221b15 and #cfc3b2 is 9.79:1. Decorative, and the
+   word still carries the word (the kicker prints PAGE n WITHDRAWN in
+   --color-warn, 5.50:1 on this card). */
+.ink-world .season-three-torn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    120% 90% at 100% 100%,
+    rgba(255, 140, 66, 0.34) 0%,
+    rgba(207, 195, 178, 0.14) 26%,
+    transparent 62%
+  );
+  opacity: calc(0.35 + 0.65 * var(--scorch, 0));
+  transition: opacity var(--dur-base) var(--ease-out-quart);
+}
+/* Same pattern as .ink-world > * further up: a positioned pseudo-element
+   needs the in-flow children lifted over it or it paints on top of them. */
+.ink-world .season-three-torn > * {
+  position: relative;
+  z-index: 1;
+}
+/* Hover does not burn the card further. A page cannot lose more of itself
+   because a cursor is over it, and a card that eats itself on hover is a
+   novelty toy. What hover does is make you look at what is already gone. */
+.ink-world .season-three-torn:hover::before {
+  opacity: 1;
+}
+/* Reduced motion kills the fade, not the feedback: the ember still comes up
+   on hover, it just arrives instantly. Nothing in this season animates on its
+   own, and season three mounts no TiltCard, so it carries strictly less
+   motion than season two does. --bite is deliberately not animated: an
+   unregistered custom property does not interpolate, so it would snap. */
+@media (prefers-reduced-motion: reduce) {
+  .ink-world .season-three-torn::before {
+    transition: none;
+  }
+}
+
+/* The one page he keeps. The bible: "The final plate is clean, unmarked
+   paper. The only undamaged object in the season." So it is the only pale
+   object in the ink world, which breaks this file's own no-cream-mid-scroll
+   rule on purpose: that rule exists to stop a whole route flashing, and this
+   is one card at a third of the grid width arriving after thirteen cards with
+   holes in them. The palette itself is six token overrides set in
+   seasonTheme.ts, so the markup never changes and every child stays legible;
+   this rule only adds the hairline and the drop, so the card reads as a sheet
+   sitting on the ground rather than a hole punched in it. The hairline
+   rgba(233,223,201,0.5) composites to #7f786b on the ink ground, 4.33:1,
+   decorative but nowhere near invisible. */
+.ink-world .season-kept {
+  background-color: var(--color-card);
+  box-shadow:
+    0 0 0 1px rgba(233, 223, 201, 0.5),
+    0 18px 40px -20px rgba(0, 0, 0, 0.8);
+}
+
+/* --- The case, the anchor object for seasons two and three ----------------
+   Season one opens on The Fourteen and the later seasons opened on a
+   paragraph and a bare grid, which is most of why they read as flat. This is
+   the ninety-one slot case, 13 x 7, drawn from the entries themselves. Colour
+   is never the only channel: a filled slot is solid, a read slot is ringed,
+   an emptied slot is an outline with nothing in it. The grid is aria-hidden
+   and the figcaption carries the meaning in prose, the same split
+   StateLegend already uses. */
+.ink-world .case-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 4px;
+}
+.ink-world .case-slot {
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-line);
+  background-color: rgba(233, 223, 201, 0.16);
+}
+/* One of the ten pages the reader has actually been given. */
+.ink-world .case-slot--read {
+  border-color: var(--color-accent);
+  background-color: rgba(217, 164, 65, 0.45);
+}
+/* Withdrawn. Nothing in it, and the outline is what is left of the slot. */
+.ink-world .case-slot--gone {
+  border-color: rgba(255, 140, 66, 0.55);
+  background-color: transparent;
+}
+
+/* A teller with a record and no face yet. The Rendering is how a teller
+   arrives in this series, through the rig and onto a form, so a portrait
+   nobody has commissioned is a rendering that has not come back. Same 11:6
+   box as the drawn portraits, so nothing on the card moves when the art
+   lands. Not a spinner, not a silhouette, not a broken-image glyph: a form
+   with a field not yet filled, which is exactly what it is. */
+.ink-world .teller-unrendered {
+  aspect-ratio: 11 / 6;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid var(--color-line);
+  background:
+    repeating-linear-gradient(135deg, rgba(233, 223, 201, 0.05) 0 6px, transparent 6px 12px),
+    var(--color-surface);
 }
 
 /* --- Excelsior reader ----------------------------------------------------

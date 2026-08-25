@@ -1,5 +1,5 @@
 import { Children, cloneElement, isValidElement } from "react";
-import type { CSSProperties, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -9,8 +9,11 @@ import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
 import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
+import { registerLines, tellersOf } from "../data/crossnav.ts";
+import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { entryTheme, KINDLING_FINALE } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
@@ -55,13 +58,6 @@ type ReadView = ({ kind: "printed" } & PrintedPiece) | ({ kind: "anthology" } & 
 // tape separately without the generator needing to mark that boundary itself.
 const TERMINOLOGIES_DIVIDER = "\n\n---\n\n";
 
-// Season 3's kindling ordinal runs 1-13 for a withdrawn page and 14 for the
-// one page kept. React's own CSSProperties type does not know about custom
-// properties, so this is a narrow, explicit augmentation rather than `any`.
-type ScorchStyle = CSSProperties & { "--scorch"?: number };
-const KINDLING_FINALE = 14;
-const KINDLING_MAX_SCORCH = 13;
-
 // react-markdown hands a table row's cells to us as elements, not text, and
 // the row-marking rule below has to read that text to work at all — walking
 // the tree once here is cheaper than teaching every caller to do it.
@@ -73,6 +69,71 @@ function nodeText(node: ReactNode): string {
   return "";
 }
 
+// Everything before the Terminologies divider: the story as it was filed,
+// without the tape. Hoisted out of the component because `head:` has to ask
+// the same question the body does, and two copies of "where does this stop"
+// is how a meta tag ends up finishing a sentence the prose never finishes.
+const storyOf = (v: ReadView): string => {
+  const at = v.kind === "anthology" ? v.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
+  return at >= 0 ? v.body.slice(0, at) : v.body;
+};
+
+// True when the story has no last sentence. Generic rather than a slug list:
+// entry #2300 is filed incomplete on purpose and s3-09 stops on a stray tag,
+// and the corpus is allowed a third.
+const endsMidSentence = (v: ReadView): boolean =>
+  v.kind === "anthology" && !/[.!?"'”’)\]]$/.test(storyOf(v).trim());
+
+// Letters and digits only, lowercased. A comparison against raw prose is not a
+// guard: the first version of the check below tested `body.includes(blurb)` and
+// a simulated `body.slice(0, 150) + "…"` walked straight through it, because
+// the ellipsis the excerpt added was enough to stop it being a substring. That
+// ellipsis IS the thing being guarded against, so the fingerprint has to be
+// blind to punctuation, wrapping and quote marks or it only catches an excerpt
+// nobody would write.
+const squash = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+// About seven words of prose once squashed. Long enough that no two authored
+// sentences in this corpus collide, short enough that nothing lifted off this
+// story gets past.
+const FINGERPRINT = 40;
+
+/**
+ * The description this page is allowed to publish, or null for none at all.
+ *
+ * It is the AUTHORED blurb and never an excerpt of the prose. Entry #2300 stops
+ * mid-sentence because the Directory never got to finish it, and every excerpt
+ * function ever written either trims to a sentence boundary or appends an
+ * ellipsis. Either one finishes, in a share card, the sentence the whole entry
+ * exists to leave unfinished.
+ *
+ * So the guard is not "do not truncate", which is a promise a comment cannot
+ * keep. On a story with no ending the blurb is fingerprinted against the prose:
+ * if it opens where the story opens, or carries the story's last words, it came
+ * from the body and is refused, and the page ships no description tag at all.
+ * An absent tag is a smaller lie than a completed sentence.
+ *
+ * A blank blurb is refused for the same reason. `gen-anthology.mjs` emits
+ * `e.blurb || ""`, and an empty description tag is exactly the pressure that
+ * makes the next person reach for the body. It should land here, in front of
+ * this comment, rather than in a helper three files away.
+ *
+ * Everything with an ending is handed back untouched. That is deliberate rather
+ * than lazy: nine printed blurbs legitimately ARE their own opening lines, and
+ * a piece that finished its last sentence has no ending for a description to
+ * finish for it.
+ */
+const describes = (v: ReadView): string | null => {
+  const blurb = v.blurb.trim();
+  if (!blurb) return null;
+  if (!endsMidSentence(v)) return blurb;
+  const story = squash(storyOf(v));
+  const said = squash(blurb);
+  const fromTheOpening = story.startsWith(said.slice(0, FINGERPRINT));
+  const carriesTheEnding = said.includes(story.slice(-FINGERPRINT));
+  return fromTheOpening || carriesTheEnding ? null : blurb;
+};
+
 export const Route = createFileRoute("/read/$slug")({
   loader: ({ params }): ReadView => {
     // archiveText is the older, printed set, so it resolves first — a slug
@@ -83,18 +144,25 @@ export const Route = createFileRoute("/read/$slug")({
     if (entry) return { kind: "anthology", ...entry };
     throw notFound();
   },
-  head: ({ loaderData }) =>
-    loaderData
-      ? {
-          meta: [
-            { title: `${loaderData.title} — Siddharth Pandalai` },
-            { name: "description", content: loaderData.blurb },
-            { property: "og:title", content: loaderData.title },
-            { property: "og:description", content: loaderData.blurb },
-            { property: "og:type", content: "article" },
-          ],
-        }
-      : {},
+  head: ({ loaderData }) => {
+    if (!loaderData) return {};
+    // One call, two tags, so description and og:description cannot drift into
+    // disagreeing about what this page is willing to say it ends with.
+    const description = describes(loaderData);
+    return {
+      meta: [
+        { title: `${loaderData.title} — Siddharth Pandalai` },
+        ...(description
+          ? [
+              { name: "description", content: description },
+              { property: "og:description", content: description },
+            ]
+          : []),
+        { property: "og:title", content: loaderData.title },
+        { property: "og:type", content: "article" },
+      ],
+    };
+  },
   component: ReadPiece,
 });
 
@@ -110,16 +178,16 @@ function ReadPiece() {
   // punctuation gets the treatment — so it stays correct if the corpus ever
   // grows a second entry that stops the same way, without a hardcoded slug.
   const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
-  const storyBody = dividerIndex >= 0 ? piece.body.slice(0, dividerIndex) : piece.body;
+  const storyBody = storyOf(piece);
   const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
   const trimmedStory = storyBody.trim();
-  const endsMidSentence = piece.kind === "anthology" && !/[.!?"'”’)\]]$/.test(trimmedStory);
+  const cutMidSentence = endsMidSentence(piece);
   // The cut line renders outside ReactMarkdown, as its own paragraph, rather
   // than wrapping the whole story in an extra element to hang a CSS hook
   // off — that wrapper would sit between .piece-body and every other
   // paragraph and quietly break the Terminologies block's :last-of-type
   // selector further down in this file, for every entry, not just this one.
-  const lastParagraphBreak = endsMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
+  const lastParagraphBreak = cutMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
   const storyBeforeCut = lastParagraphBreak >= 0 ? trimmedStory.slice(0, lastParagraphBreak) : storyBody;
   const cutLine = lastParagraphBreak >= 0 ? trimmedStory.slice(lastParagraphBreak + 2).trim() : null;
 
@@ -175,19 +243,36 @@ function ReadPiece() {
     },
   };
 
-  // The scorch deepens with the entry's own kindling ordinal (1-13), never a
-  // hardcoded slug, and piece 14 — the page he keeps — gets no scorch at
-  // all: it is the one undamaged thing in the season. Season 3 pieces filed
-  // before the field lands (kindling undefined) fall through to no scorch
-  // too, which is the correct behaviour until the data arrives, not a bug.
-  const kindling = piece.kind === "anthology" ? piece.kindling : undefined;
-  const isFinalePage = kindling === KINDLING_FINALE;
-  const scorchFraction =
-    piece.kind === "anthology" && piece.season === 3 && !isFinalePage && typeof kindling === "number"
-      ? Math.min(1, Math.max(0, kindling) / KINDLING_MAX_SCORCH)
-      : 0;
-  const scorchClassName = scorchFraction > 0 ? " season-three-scorched" : "";
-  const scorchStyle: ScorchStyle | undefined = scorchFraction > 0 ? { "--scorch": scorchFraction } : undefined;
+  // Which season this is, and therefore which chrome, which numbering and
+  // which tokens — asked once, of the entry, not of the season number. The
+  // page he keeps is an exception inside season three's own row over there
+  // (page 0, no scorch, its own palette), so nothing about it leaks into a
+  // branch here. Printed pieces are not part of that scheme at all and keep
+  // this page exactly as it was.
+  const theme = piece.kind === "anthology" ? entryTheme(piece) : null;
+  const vars = theme?.vars;
+
+  // Every teller of this record, not the first one that matched. The generated
+  // `witness` field is singular because the generator ran .find(), which kept
+  // the first and dropped the rest on the two pages that have two, so the
+  // reading page asserted a false thing about its own subject. tellersOf
+  // filters the roster instead, so those two come out right the moment the
+  // registry upstream is regenerated, with no edit here.
+  const tellers = piece.kind === "anthology" ? tellersOf(piece) : [];
+
+  // Season three swaps --color-accent to ember and carries --scorch; both
+  // only work if they sit ABOVE the byline and the prose, so the vars go on
+  // the article and every var() underneath re-resolves. Ember is #d97a3d
+  // (--color-warn), 6.14:1 on the ink ground.
+  //
+  // The kept page goes further: its palette is measured against paper
+  // (#e9dfc9), not against the ink ground this world otherwise paints. Laying
+  // those tokens down without also laying the paper down would put #1f1a12
+  // ink on a near-black ground at 1.10:1 — invisible, and the exact way this
+  // season already shipped a badge at 1.4:1 once. So when a theme brings its
+  // own --color-card, the article paints it and the ratios seasonTheme states
+  // hold as measured: text 13.06:1, dim 5.87:1, accent 5.09:1 on that paper.
+  const onPaper = Boolean(vars && "--color-card" in vars);
 
   return (
     <DeferredPlayRoom>
@@ -200,7 +285,12 @@ function ReadPiece() {
           <ArrowLeft size={16} /> The Ink
         </Link>
 
-        <article className="mt-8">
+        <article
+          className={`mt-8${onPaper ? " rounded-xl p-6 sm:p-8" : ""}`}
+          // color is restated, not inherited: .ink-world sets it on itself, so
+          // without this the paper page would keep the cream it inherited.
+          style={onPaper ? { ...vars, backgroundColor: "var(--color-card)", color: "var(--color-text)" } : vars}
+        >
           {piece.kind === "printed" ? (
             // Four of these never ran anywhere, so there is no edition to name.
             // Saying "First published here" is better than inventing a
@@ -215,21 +305,16 @@ function ReadPiece() {
                 .join(" · ")}
             </p>
           ) : (
-            // The Directory numbers by journal entry, The Ninety-One Pages
-            // numbers by page out of 91 — the seasons don't share a counting
-            // scheme, so the byline has to ask which season it is before it
-            // can say which number. The page he keeps has no page at all, and
-            // null is free here: the array is filtered and joined, so that
-            // byline degrades to the season title and the planet rather than
-            // asserting "Page 0 of 91".
+            // The seasons do not share a counting scheme — the Directory
+            // numbers by journal entry, The Ninety-One Pages by page out of
+            // 91, and the page he keeps has no number at all — so this page
+            // no longer formats one. theme.label is the single place that
+            // knows, which is also why "PAGE 0 OF 91" can no longer be
+            // reached from here: the kept row answers "THE PAGE HE KEEPS".
             <p className="kicker-accent">
               {[
                 anthology.seasons.find((s) => s.n === piece.season)?.title,
-                piece.season === 1
-                  ? `Journal Entry #${piece.entry}`
-                  : piece.page
-                    ? `Page ${piece.page} of 91`
-                    : null,
+                theme?.label,
                 piece.planet ? (piece.system ? `${piece.planet}, ${piece.system}` : piece.planet) : null,
               ]
                 .filter(Boolean)
@@ -249,7 +334,12 @@ function ReadPiece() {
               />
             )}
           </h1>
-          <p className="mt-3 text-sm" style={{ color: "#a4978a" }}>
+          {/* The token, not the literal it happens to equal. --color-muted IS
+              #a4978a inside .ink-world (7.1:1 on ink), so this is a no-op for
+              every page but the one whose theme repaints the ground: there it
+              becomes #6b6153 on paper, 4.58:1, instead of #a4978a on paper,
+              which is 2.15:1 and fails. */}
+          <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>
             {piece.words.toLocaleString()} words · about {Math.max(1, Math.round(piece.words / 220))} min
           </p>
 
@@ -262,7 +352,7 @@ function ReadPiece() {
               This is the draft. Roughly {piece.printWords.toLocaleString()} words of it ran in the
               magazine — about {Math.round((piece.printWords / piece.words) * 100)}% survived the page
               count, so most of what follows has never been read by anyone.{" "}
-              <span style={{ color: "#a4978a" }}>(Print figure is approximate: counted from OCR of the scan.)</span>
+              <span style={{ color: "var(--color-muted)" }}>(Print figure is approximate: counted from OCR of the scan.)</span>
             </p>
           )}
           {piece.kind === "printed" && piece.note === "First published here" && (
@@ -329,20 +419,16 @@ function ReadPiece() {
             />
           )}
 
-          <div
-            className={`piece-body mt-10${
-              piece.kind === "anthology" && (piece.season === 2 || piece.season === 3) ? " season-two-paper" : ""
-            }${scorchClassName}`}
-            style={scorchStyle}
-          >
+          <div className={`piece-body mt-10${theme?.body ? ` ${theme.body}` : ""}`}>
             {/* Season 1 filed through a rig and reached the reader — this is
                 that arrival, logged. Season 2 stops filing (see the season
-                blurb), so RelayHeader is simply never called for it: the
+                blurb), so its chrome is "none" and nothing renders here: the
                 absence is the tell, not a hidden or greyed-out state. Season
                 3 is neither: he is withdrawing a page, not receiving or
-                refusing one, so it gets its own quiet marker instead. */}
-            {piece.kind === "anthology" && piece.season === 1 && <RelayHeader entry={piece} />}
-            {piece.kind === "anthology" && piece.season === 3 && <WithdrawnMarker entry={piece} />}
+                refusing one, so it gets its own quiet marker instead. Which
+                of the three is seasonTheme's call, not this page's. */}
+            {piece.kind === "anthology" && theme?.chrome === "relay" && <RelayHeader entry={piece} />}
+            {piece.kind === "anthology" && theme?.chrome === "withdrawn" && <WithdrawnMarker entry={piece} />}
             <ReactMarkdown
               // GFM is not optional for these. Some entries carry real tables,
               // and in a couple of them the table IS the entry: page thirty is
@@ -354,7 +440,7 @@ function ReadPiece() {
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
             >
-              {endsMidSentence ? storyBeforeCut : storyBody}
+              {cutMidSentence ? storyBeforeCut : storyBody}
             </ReactMarkdown>
 
             {/* Entry #2300 stops mid-sentence and is filed that way on
@@ -364,7 +450,7 @@ function ReadPiece() {
                 right against the real last word; the status line under it is
                 the Directory's own sign-off for a transmission that didn't
                 arrive, in the same institutional register as RelayHeader. */}
-            {endsMidSentence && cutLine && (
+            {cutMidSentence && cutLine && (
               <>
                 <p className="piece-body__cut-line">
                   {cutLine}
@@ -391,26 +477,53 @@ function ReadPiece() {
 
           {/* The reason the story exists, framed as an aside rather than
               folded into the prose above — this is a person the correspondent
-              met, not a character in the legend he filed. */}
-          {piece.kind === "anthology" && piece.witness && (
-            <aside aria-label="The teller" className="mt-10 flex gap-4 rounded-xl border border-line bg-void/40 p-4">
-              <img
-                src={piece.witness.art}
-                alt={`${piece.witness.name}. ${piece.witness.did}`}
-                loading="lazy"
-                width={1100}
-                height={600}
-                className="h-24 w-40 shrink-0 rounded-lg object-cover"
-              />
-              <div>
-                <p className="kicker-accent">The teller</p>
-                <p className="font-display mt-1 text-base font-bold">{piece.witness.name}</p>
-                <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                  {piece.witness.did}
-                </p>
-              </div>
+              met, not a character in the legend he filed.
+
+              One landmark, however many tellers. Two asides both labelled "The
+              teller" would be two complementary landmarks with the same
+              accessible name, which is the axe landmark-unique rule, so the
+              cards go inside one aside rather than one aside going round each
+              card. */}
+          {tellers.length > 0 && (
+            <aside aria-label={tellers.length > 1 ? "The tellers" : "The teller"} className="mt-10 space-y-4">
+              {tellers.map((w) => (
+                <div key={w.id} className="flex gap-4 rounded-xl border border-line bg-void/40 p-4">
+                  <img
+                    src={w.art}
+                    alt={`${w.name}. ${w.did}`}
+                    loading="lazy"
+                    width={1100}
+                    height={600}
+                    className="h-24 w-40 shrink-0 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="kicker-accent">The teller</p>
+                    {/* The record to its teller's slot on the roll. The name
+                        becomes the link and nothing else changes: no extra
+                        row, no chevron, no card. The portrait stays outside
+                        the anchor so the accessible name is the name rather
+                        than the whole caption. */}
+                    <p className="font-display mt-1 text-base font-bold">
+                      <a
+                        href={anthologyHref({ search: { layer: "tellers" }, hash: `teller-${w.id}` })}
+                        className="text-accent underline-offset-2 hover:underline focus-visible:underline"
+                      >
+                        {w.name}
+                      </a>
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                      {w.did}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </aside>
           )}
+
+          {/* What later happened to this record. Last thing inside the
+              article, after the teller, before the season list, and OUTSIDE
+              .piece-body on purpose, see DamageRegister. */}
+          {piece.kind === "anthology" && <DamageRegister entry={piece} />}
         </article>
 
         <MarginNotes pieceSlug={piece.slug} />
@@ -418,7 +531,7 @@ function ReadPiece() {
         <nav className="mt-16 border-t border-line pt-8">
           {piece.kind === "printed" ? (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "#a4978a" }}>
+              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from the archive
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -428,7 +541,7 @@ function ReadPiece() {
                     <li key={p.slug}>
                       <Link to="/read/$slug" params={{ slug: p.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "#a4978a" }}>
+                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
                           {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
                         </span>
                       </Link>
@@ -438,7 +551,7 @@ function ReadPiece() {
             </>
           ) : (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "#a4978a" }}>
+              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from {anthology.seasons.find((s) => s.n === piece.season)?.title}
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -448,8 +561,10 @@ function ReadPiece() {
                     <li key={e.slug}>
                       <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "#a4978a" }}>
-                          {e.season === 1 ? `#${e.entry}` : `p.${e.page}`}
+                        {/* Each row wears its OWN season's short form, not
+                            this page's: #12, p.30, p.7 ✕, kept. */}
+                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
+                          {entryTheme(e).short}
                         </span>
                       </Link>
                     </li>
@@ -499,4 +614,86 @@ function RelayHeader({ entry }: { entry: AnthologyEntry }) {
 function WithdrawnMarker({ entry }: { entry: AnthologyEntry }) {
   const line = entry.kindling === KINDLING_FINALE ? "one page kept" : `page ${entry.page} withdrawn`;
   return <p className="withdrawn-marker">&gt; Kindling · {line}</p>;
+}
+
+// /anthology keeps its layer in useState today, so a typed <Link search={...}>
+// has nothing to validate against and would not compile. The URL is the same
+// string either way, and it is the URL the register is actually promising.
+// ponytail: swap both call sites for <Link to="/anthology" search hash> the day
+// that route grows validateSearch, and delete this.
+function anthologyHref(to: { search: AnthologySearch; hash?: string }): string {
+  const q = new URLSearchParams();
+  if (to.search.layer) q.set("layer", to.search.layer);
+  if (to.search.world) q.set("world", to.search.world);
+  if (to.search.at !== undefined) q.set("at", String(to.search.at));
+  return `/anthology?${q.toString()}${to.hash ? `#${to.hash}` : ""}`;
+}
+
+// One fact from the register, as an anchor or as flat text.
+//
+// `to === null` is Law A made structural: it renders the label with no element
+// round it at all, not a disabled link and not a styled span, so there is
+// nothing for a later hover state, a crawler or a well-meaning refactor to turn
+// back into an anchor. Every Season Three fate arrives here null. An anchor
+// from the ash back to the intact page would refund the fire.
+function RegisterFact({ line }: { line: RegisterLine }) {
+  if (line.to === null) return <>{line.label}</>;
+  // An empty lead means the fate IS the destination, so the whole line is the
+  // anchor and has no sibling text to be told apart from: it may hold its
+  // underline back until hover, which is what the ruling asks for. A number
+  // sitting inside a sentence is a link in a text block and carries its
+  // underline permanently. See index.css for the ratio that forces that.
+  const cls = line.lead ? "notice-conditions__link--inline" : "notice-conditions__link";
+  return line.to.kind === "read" ? (
+    <Link to="/read/$slug" params={{ slug: line.to.slug }} className={cls}>
+      {line.label}
+    </Link>
+  ) : (
+    <a href={anthologyHref(line.to)} className={cls}>
+      {line.label}
+    </a>
+  );
+}
+
+/**
+ * The Damage Register: what later happened to this record, and nothing else.
+ *
+ * It composes nothing. `registerLines` walks a fixed four-kind order and asks
+ * each kind once, so the cap and the order are arithmetic in the data layer and
+ * this component physically cannot exceed them or reorder them. That is the
+ * whole reason the join lives over there: a footer that could assemble its own
+ * lines is a related-links box that has not been written yet.
+ *
+ * It sits inside <article> but OUTSIDE .piece-body, which is load-bearing
+ * twice. No scraper ingests it as prose, and it stays clear of
+ * `.piece-body ul:last-of-type`, the selector that styles the Terminologies
+ * block. A <footer> scoped to an article is not a contentinfo landmark, so it
+ * does not collide with SiteFooter.
+ *
+ * Nothing renders when nothing is true. Nine of the ten Season One pages carry
+ * no register at all, and neither terminal page carries one: #2300 ends at
+ * ENTRY FILED INCOMPLETE and the kept page ends at blank paper, and small print
+ * annotating blank paper is the site talking over the one undamaged object in
+ * the season. There is no "none recorded" placeholder, because absence is the
+ * tell and Season Two's chrome: "none" is already that doctrine.
+ */
+function DamageRegister({ entry }: { entry: AnthologyEntry }) {
+  const lines = registerLines(entry);
+  if (lines.length === 0) return null;
+
+  return (
+    <footer className="notice-conditions">
+      {/* Literal caps in the DOM rather than text-transform, matching
+          RelayHeader's own stamp two functions up. Not a heading: this is a
+          label on a filing block, and giving it an <h*> would put it in the
+          document outline as a section of the story. */}
+      <p className="notice-conditions__kicker">NOTICE-CONDITIONS</p>
+      {lines.map((line) => (
+        <p key={line.kind} className="notice-conditions__line">
+          {line.lead}
+          <RegisterFact line={line} />
+        </p>
+      ))}
+    </footer>
+  );
 }

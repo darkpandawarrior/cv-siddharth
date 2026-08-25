@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as AnthologyRouteImport } from './routes/anthology'
 import { Route as BlueprintRouteImport } from './routes/blueprint'
+import { Route as CanonRouteImport } from './routes/canon'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
 import { Route as ExcelsiorRouteImport } from './routes/excelsior'
@@ -21,6 +22,7 @@ import { Route as HireRouteImport } from './routes/hire'
 import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
+import { Route as MakingRouteImport } from './routes/making'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as PulseRouteImport } from './routes/pulse'
@@ -49,6 +51,11 @@ const AnthologyRoute = AnthologyRouteImport.update({
 const BlueprintRoute = BlueprintRouteImport.update({
   id: '/blueprint',
   path: '/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanonRoute = CanonRouteImport.update({
+  id: '/canon',
+  path: '/canon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChessRoute = ChessRouteImport.update({
@@ -89,6 +96,11 @@ const LabRoute = LabRouteImport.update({
 const LoopdownRoute = LoopdownRouteImport.update({
   id: '/loopdown',
   path: '/loopdown',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MakingRoute = MakingRouteImport.update({
+  id: '/making',
+  path: '/making',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapRoute = MapRouteImport.update({
@@ -142,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -150,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -165,6 +179,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -173,6 +188,7 @@ export interface FileRoutesByTo {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -189,6 +205,7 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/anthology': typeof AnthologyRoute
   '/blueprint': typeof BlueprintRoute
+  '/canon': typeof CanonRoute
   '/chess': typeof ChessRoute
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
@@ -197,6 +214,7 @@ export interface FileRoutesById {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -214,6 +232,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -222,6 +241,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -237,6 +257,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -245,6 +266,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -260,6 +282,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/anthology'
     | '/blueprint'
+    | '/canon'
     | '/chess'
     | '/compose'
     | '/excelsior'
@@ -268,6 +291,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -284,6 +308,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AnthologyRoute: typeof AnthologyRoute
   BlueprintRoute: typeof BlueprintRoute
+  CanonRoute: typeof CanonRoute
   ChessRoute: typeof ChessRoute
   ComposeRoute: typeof ComposeRoute
   ExcelsiorRoute: typeof ExcelsiorRoute
@@ -292,6 +317,7 @@ export interface RootRouteChildren {
   InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
   LoopdownRoute: typeof LoopdownRoute
+  MakingRoute: typeof MakingRoute
   MapRoute: typeof MapRoute
   PlaygroundRoute: typeof PlaygroundRoute
   PulseRoute: typeof PulseRoute
@@ -331,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/blueprint'
       fullPath: '/blueprint'
       preLoaderRoute: typeof BlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canon': {
+      id: '/canon'
+      path: '/canon'
+      fullPath: '/canon'
+      preLoaderRoute: typeof CanonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chess': {
@@ -387,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/loopdown'
       fullPath: '/loopdown'
       preLoaderRoute: typeof LoopdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/making': {
+      id: '/making'
+      path: '/making'
+      fullPath: '/making'
+      preLoaderRoute: typeof MakingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/map': {
@@ -460,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AnthologyRoute: AnthologyRoute,
   BlueprintRoute: BlueprintRoute,
+  CanonRoute: CanonRoute,
   ChessRoute: ChessRoute,
   ComposeRoute: ComposeRoute,
   ExcelsiorRoute: ExcelsiorRoute,
@@ -468,6 +509,7 @@ const rootRouteChildren: RootRouteChildren = {
   InkRoute: InkRoute,
   LabRoute: LabRoute,
   LoopdownRoute: LoopdownRoute,
+  MakingRoute: MakingRoute,
   MapRoute: MapRoute,
   PlaygroundRoute: PlaygroundRoute,
   PulseRoute: PulseRoute,

@@ -10,6 +10,8 @@
         "http://localhost:4173/lab",
         "http://localhost:4173/shipped",
         "http://localhost:4173/anthology",
+        "http://localhost:4173/canon",
+        "http://localhost:4173/making",
         "http://localhost:4173/blueprint",
         "http://localhost:4173/chess",
         "http://localhost:4173/playground"

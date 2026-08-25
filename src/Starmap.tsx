@@ -23,17 +23,25 @@ export interface StarmapProps {
   /** Called with a world's reader key ("season-idx") when a clickable named
    *  world is opened. */
   onOpen: (key: string) => void;
+  /** Which season of the record to raise. null (the default) raises all of
+   *  them. Out-of-season worlds keep their position and their state colour
+   *  and lose their glow and their label — the sky is the same sky, so
+   *  nothing re-instances and nothing moves when this changes. */
+  season?: number | null;
 }
 
 // A world's position is its home system, pulled in tight, plus its own offset
 // inside that system, spread out wide. These multipliers came from the data
 // generator, not this file — they were tuned so the labels in Alpha Axmoiri
-// (ten of the twenty named worlds packed into one system) don't collide, and
+// (ten of the named worlds packed into one system) don't collide, and
 // changing them here would silently undo that tuning.
-const SYSTEM_SCALE = 0.82;
-const OFFSET_SCALE = 2.6;
+// Exported, along with worldPosition below, so starmapIntegrity.test.ts
+// asserts against the numbers the renderer actually uses instead of a copy of
+// them. A copy is how a tuning constant drifts out from under its own test.
+export const SYSTEM_SCALE = 0.82;
+export const OFFSET_SCALE = 2.6;
 
-function worldPosition(world: StarWorld): [number, number, number] {
+export function worldPosition(world: StarWorld): [number, number, number] {
   const system = anthology.starmap.systems[world.s];
   // The generator guarantees every world's `s` is a real key in `systems`.
   // Throwing here instead of falling back to the origin means a broken build
@@ -45,21 +53,41 @@ function worldPosition(world: StarWorld): [number, number, number] {
   return [sx * SYSTEM_SCALE + ox * OFFSET_SCALE, sy * SYSTEM_SCALE + oy * OFFSET_SCALE, sz * SYSTEM_SCALE + oz * OFFSET_SCALE];
 }
 
-/** A named world's displayed state can differ from its data `st`: two worlds
- *  carry an `at` (the Concluded count at which they were filed) and render as
- *  their pre-conclusion selves — "lit", an open entry — until the counter
- *  reaches it, then flip to the grey, unlit `st` already baked into the data. */
+/** A named world's displayed state can differ from its data `st`: a world that
+ *  carries an `at` (the Concluded count at which it was filed) renders as its
+ *  pre-conclusion self — "lit", an open entry — until the counter reaches it,
+ *  then flips to the grey, unlit `st` already baked into the data.
+ *
+ *  A world with no `at` is returned untouched at every position of the slider,
+ *  and that is not an oversight for `withdrawn`, it is the whole mechanic: the
+ *  Directory never held those records, so no count can ever reach them. Push
+ *  the slider to 671 and the three scorch bodies are the last things burning. */
 function effectiveState(world: StarWorld, concluded: number): string {
   if (world.at !== undefined && concluded < world.at) return "lit";
   return world.st;
 }
 
-const STATE_COLOR: Record<string, string> = {
+/** Season, read off the reader key rather than stored. null is the furniture
+ *  that belongs to the whole record instead of to one season (today: the
+ *  ruin), which is always shown at full. A season four world is a world with
+ *  `k: "4-3"` — no new field, no new branch, no generator change. */
+export const seasonOf = (world: StarWorld): number | null => (world.k ? Number(world.k.split("-")[0]) : null);
+
+// Exported so the integrity test can assert that every state in the data has
+// a colour here, rather than against a second list that can fall behind.
+export const STATE_COLOR: Record<string, string> = {
   lit: "#8FD3FF",
   open: "#7EE787",
   concluded: "#39424E",
   ruin: "#8A6A2F",
   self: "#D9A441",
+  // Withdrawn: the page was burned by the only person holding it and the
+  // world is still turning. Scorch, lifted from the plate renderer's SCORCH
+  // (#7A4526, morkinstar-plates.mjs) and raised for an emissive body under
+  // bloom. Measured 3.77:1 against the label chip's rgba(20,16,12,0.75)
+  // ground — used only as a border and as a torus, both non-text, where the
+  // WCAG floor is 3:1. It is never used for text.
+  withdrawn: "#A85A38",
 };
 
 /** Six-digit hex to rgba(), for the label borders.
@@ -83,7 +111,11 @@ function withAlpha(hex: string, alpha: number): string {
 // filed entry.
 
 const FIELD_SEED = 20260815;
-const FIELD_COUNT = 671;
+// Exported because the slider's ceiling is the field's population by
+// construction, not by coincidence, and its floor is the count at s1-09.
+// Both numbers are currently written out again in anthology.tsx.
+export const FIELD_COUNT = 671;
+export const CONCLUDED_START = 611;
 const FIELD_RADIUS_MIN = 240;
 const FIELD_RADIUS_MAX = 800;
 const FIELD_Y_SQUASH = 0.6;
@@ -171,28 +203,39 @@ interface NamedWorldProps {
   hoveredName: string | null;
   onHover: (name: string | null) => void;
   onOpen: (key: string) => void;
+  /** false when a season filter is on and this world belongs to another one. */
+  inSeason: boolean;
 }
 
-function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWorldProps): JSX.Element {
+function NamedWorld({ world, concluded, hoveredName, onHover, onOpen, inSeason }: NamedWorldProps): JSX.Element {
   const position = useMemo(() => worldPosition(world), [world]);
   const state = effectiveState(world, concluded);
   const dark = state === "concluded";
   const color = STATE_COLOR[state] ?? STATE_COLOR.lit;
   const isHovered = hoveredName === world.n;
   const key = world.k;
+  const withdrawn = state === "withdrawn";
+  // Lowered, never removed: a filtered world keeps its position and its state
+  // colour so the sky does not change shape, and stays clickable.
+  const glow = dark ? 0 : !inSeason ? 0.2 : isHovered ? 2.2 : withdrawn ? 1.3 : 1.1;
 
   const meshRef = useRef<Mesh>(null);
   const [opacity, setOpacity] = useState(1);
   useFrame(({ camera }) => {
     const mesh = meshRef.current;
-    if (!mesh) return;
+    // Nothing to fade when the label is not mounted, and skipping the work is
+    // the whole reason the season filter unmounts it rather than hiding it.
+    if (!mesh || !inSeason) return;
     const distance = camera.position.distanceTo(mesh.position);
     const raw = 1 - (distance - LABEL_NEAR) / (LABEL_FAR - LABEL_NEAR);
     const eased = Math.min(1, Math.max(LABEL_MIN_OPACITY, raw));
-    // Quantized to 5% steps and only committed on an actual change: with all
-    // twenty labels running this every frame, setState on every fractional
-    // wobble would be twenty re-renders a frame for a fade nobody can see the
-    // difference of at that resolution.
+    // Quantized to 5% steps and only committed on an actual change: with a
+    // label per named world running this every frame, setState on every
+    // fractional wobble would be one re-render per world per frame for a fade
+    // nobody can see the difference of at that resolution.
+    // ponytail: one useFrame per world, hoist to a single imperative loop in
+    // Scene writing el.style.opacity if a trace shows >16ms frames. Measure
+    // first — at 24 worlds this has not been shown to cost anything.
     const quantized = Math.round(eased * 20) / 20;
     if (quantized !== opacity) setOpacity(quantized);
   });
@@ -223,6 +266,22 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWor
           <sphereGeometry args={[NAMED_RADIUS, 12, 8]} />
           <meshBasicMaterial color={color} wireframe />
         </>
+      ) : withdrawn ? (
+        // The exact inverse of a ruin, and the inversion is the point. A ruin
+        // is hollow because nothing is left of either the world or the record.
+        // A withdrawn world is emphatically solid — the graves still point,
+        // the blind fish still turn toward the door — and what is missing is
+        // the record, drawn as a pin with nothing joining it to anything.
+        // s3-10: "the six pins with nothing behind them ... meaning six
+        // positions and nothing else, forever."
+        <>
+          <sphereGeometry args={[NAMED_RADIUS, 20, 16]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={glow} />
+          <mesh rotation={[Math.PI / 2.6, 0, 0]}>
+            <torusGeometry args={[NAMED_RADIUS * 1.9, 0.35, 8, 40]} />
+            <meshBasicMaterial color={color} transparent opacity={inSeason ? 0.35 : 0.12} />
+          </mesh>
+        </>
       ) : (
         <>
           <sphereGeometry args={[NAMED_RADIUS, 20, 16]} />
@@ -231,7 +290,7 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWor
             emissive={dark ? "#000000" : color}
             // A dark world loses its glow entirely rather than just dimming —
             // "filed" is meant to read as off, not as quieter.
-            emissiveIntensity={dark ? 0 : isHovered ? 2.2 : 1.1}
+            emissiveIntensity={glow}
           />
         </>
       )}
@@ -246,56 +305,78 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen }: NamedWor
           on purpose: `concluded` worlds are a near-black grey, and a label
           in that colour on this canvas would be unreadable exactly when the
           reader most wants to confirm a world went dark. The state colour
-          still does its job on the sphere itself and on the label border. */}
-      <Html
-        center
-        distanceFactor={120}
-        position={[0, NAMED_RADIUS + 3, 0]}
-        style={{ pointerEvents: key ? "auto" : "none", opacity: isHovered ? 1 : opacity }}
-      >
-        {key ? (
-          <button
-            type="button"
-            onClick={() => onOpen(key)}
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-              color: "var(--color-text)",
-              background: "rgba(20,16,12,0.75)",
-              padding: "3px 10px",
-              borderRadius: "999px",
-              border: `1px solid ${withAlpha(color, 0.53)}`,
-            }}
-          >
-            {world.n}
-            {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
-          </button>
-        ) : (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              whiteSpace: "nowrap",
-              color: "var(--color-text)",
-              background: "rgba(20,16,12,0.6)",
-              padding: "3px 10px",
-              borderRadius: "999px",
-              border: `1px solid ${withAlpha(color, 0.33)}`,
-            }}
-          >
-            {world.n}
-            {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
-          </span>
-        )}
-      </Html>
+          still does its job on the sphere itself and on the label border.
+
+          Out-of-season labels are not mounted rather than hidden. drei's Html
+          runs its own projection every frame per instance, so this is the only
+          per-frame saving a season filter buys; hiding them would keep paying
+          for all of them. The mesh underneath stays clickable either way. */}
+      {inSeason && (
+        <Html
+          center
+          distanceFactor={120}
+          position={[0, NAMED_RADIUS + 3, 0]}
+          style={{ pointerEvents: key ? "auto" : "none", opacity: isHovered ? 1 : opacity }}
+        >
+          {key ? (
+            <button
+              type="button"
+              onClick={() => onOpen(key)}
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                whiteSpace: "nowrap",
+                cursor: "pointer",
+                // A withdrawn world's name is the one label on this map that is
+                // not intact, so it reads at the same weight as the `d` gloss
+                // rather than as body text. var(--color-muted) on the chip
+                // ground measures 5.91:1 in the default theme and 6.65:1 in
+                // ink, both past the 4.5:1 floor for 11px text.
+                color: withdrawn ? "var(--color-muted)" : "var(--color-text)",
+                background: "rgba(20,16,12,0.75)",
+                padding: "3px 10px",
+                borderRadius: "999px",
+                // Dashed, not a different colour: the border is already the
+                // state colour, and a broken outline is what "this record is
+                // not intact" looks like at 11px. Full alpha rather than the
+                // 0.53 the other states use, because scorch is a dark hue: at
+                // 0.53 over this chip it measures 1.89:1 and at 1.0 it measures
+                // 3.77:1, and 3:1 is the floor for a non-text boundary.
+                border: `1px ${withdrawn ? "dashed" : "solid"} ${withAlpha(color, withdrawn ? 1 : 0.53)}`,
+              }}
+            >
+              {world.n}
+              {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
+            </button>
+          ) : (
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                whiteSpace: "nowrap",
+                color: "var(--color-text)",
+                background: "rgba(20,16,12,0.6)",
+                padding: "3px 10px",
+                borderRadius: "999px",
+                border: `1px solid ${withAlpha(color, 0.33)}`,
+              }}
+            >
+              {world.n}
+              {isHovered && <span style={{ color: "var(--color-muted)", marginLeft: 6, fontSize: "10.5px" }}>{world.d}</span>}
+            </span>
+          )}
+        </Html>
+      )}
     </mesh>
   );
 }
 
 // ---------------------------------------------------------------------------
-// The fences: six lines between named worlds, drawn from the data by name.
+// The fences: lines between named worlds, drawn from the data by name. Three
+// of them today, one per reciprocal pair — s2-07's six fences are six aims
+// along three axes, and drawing them as a closed hexagon (which this file used
+// to do) says the six worlds are one circuit, when the whole horror is that
+// each pair is a private two-hander neither side knows it is in.
 
 function Fences(): JSX.Element {
   const worldByName = useMemo(() => new Map(anthology.starmap.worlds.map((w) => [w.n, w])), []);
@@ -328,7 +409,7 @@ function Fences(): JSX.Element {
 
 // ---------------------------------------------------------------------------
 
-function Scene({ concluded, onOpen }: StarmapProps): JSX.Element {
+function Scene({ concluded, onOpen, season = null }: StarmapProps): JSX.Element {
   const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [quality, setQuality] = useState(true);
   // Read once at mount, same as every other 3D scene in this codebase — a
@@ -351,6 +432,9 @@ function Scene({ concluded, onOpen }: StarmapProps): JSX.Element {
           hoveredName={hoveredName}
           onHover={setHoveredName}
           onOpen={onOpen}
+          // A world with no season belongs to the whole record rather than to
+          // one part of it, so a filter never lowers it.
+          inSeason={season === null || seasonOf(world) === null || seasonOf(world) === season}
         />
       ))}
 
@@ -370,7 +454,7 @@ function Scene({ concluded, onOpen }: StarmapProps): JSX.Element {
   );
 }
 
-export function Starmap({ concluded, onOpen }: StarmapProps): JSX.Element {
+export function Starmap({ concluded, onOpen, season = null }: StarmapProps): JSX.Element {
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <Canvas
@@ -379,7 +463,7 @@ export function Starmap({ concluded, onOpen }: StarmapProps): JSX.Element {
         gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
         style={{ position: "absolute", inset: 0 }}
       >
-        <Scene concluded={concluded} onOpen={onOpen} />
+        <Scene concluded={concluded} onOpen={onOpen} season={season} />
       </Canvas>
     </div>
   );
