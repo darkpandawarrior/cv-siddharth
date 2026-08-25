@@ -57,7 +57,7 @@ const REGISTER_FIXTURE: Record<string, string[]> = {
   // The trapdoor: the foot of the first page of the case, the first thing every
   // Season Two reader reads, moving them across a season boundary.
   "s2-01": ["fate | page 1 withdrawn · Kindling 1 | read"],
-  "s2-02": ["world | Vœrhan · concluded at 615 | anthology"],
+  "s2-02": ["world | Vœrhan · concluded at 617 | anthology"],
   "s2-03": ["world | Dhurin · concluded at 619 | anthology"],
   "s2-04": [
     "fate | page 16 withdrawn · Kindling 3 | read",
@@ -298,11 +298,20 @@ describe("worlds", () => {
   });
 
   it("takes the count from the map first and the record's own words second", () => {
-    // Vœrhan's count is on the starmap, so the starmap's figure wins even
-    // though page four states a different one in its own Terminologies block.
+    // The map's figure wins where it has one. This used to assert Vœrhan at
+    // 615 and the starmap rewrite removed that field, correctly: the entry says
+    // Vœrhan was "Concluded forty galaxals ago", which is roughly eighteen
+    // thousand Earth years before he ever landed, so it is already dark when
+    // the slider starts at 611 and never flips during the season. A world that
+    // closes inside the 611 to 671 window is the only kind this clause is
+    // about, and s1-09 is one: the Directory files it at 611 on the page.
+    const unnamed = worldOf(anthologyEntries.find((e) => e.slug === "the-world-with-no-number")!);
+    expect(unnamed?.world.at).toBe(611);
+    expect(unnamed?.at).toBe(611);
+    // And Vœrhan now falls through to whatever its own Terminologies block
+    // says, which is the second clause of this rule doing the work.
     const voerhan = worldOf(anthologyEntries.find((e) => e.slug === "the-weather-they-made-up")!);
-    expect(voerhan?.world.at).toBe(615);
-    expect(voerhan?.at).toBe(615);
+    expect(voerhan?.world.at).toBeUndefined();
     // Dhurin has no figure on the map, so the record's own count is used, and
     // nothing is interpolated for the eight lit worlds that state no count.
     const dhurin = worldOf(anthologyEntries.find((e) => e.slug === "the-cold-case-of-all-fourteen")!);

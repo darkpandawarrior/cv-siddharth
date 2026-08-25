@@ -22,6 +22,7 @@ import { Route as HireRouteImport } from './routes/hire'
 import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
+import { Route as MakingRouteImport } from './routes/making'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as PulseRouteImport } from './routes/pulse'
@@ -97,6 +98,11 @@ const LoopdownRoute = LoopdownRouteImport.update({
   path: '/loopdown',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MakingRoute = MakingRouteImport.update({
+  id: '/making',
+  path: '/making',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapRoute = MapRouteImport.update({
   id: '/map',
   path: '/map',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
   '/loopdown': typeof LoopdownRoute
+  '/making': typeof MakingRoute
   '/map': typeof MapRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/ink'
     | '/lab'
     | '/loopdown'
+    | '/making'
     | '/map'
     | '/playground'
     | '/pulse'
@@ -305,6 +317,7 @@ export interface RootRouteChildren {
   InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
   LoopdownRoute: typeof LoopdownRoute
+  MakingRoute: typeof MakingRoute
   MapRoute: typeof MapRoute
   PlaygroundRoute: typeof PlaygroundRoute
   PulseRoute: typeof PulseRoute
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoopdownRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/making': {
+      id: '/making'
+      path: '/making'
+      fullPath: '/making'
+      preLoaderRoute: typeof MakingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/map': {
       id: '/map'
       path: '/map'
@@ -489,6 +509,7 @@ const rootRouteChildren: RootRouteChildren = {
   InkRoute: InkRoute,
   LabRoute: LabRoute,
   LoopdownRoute: LoopdownRoute,
+  MakingRoute: MakingRoute,
   MapRoute: MapRoute,
   PlaygroundRoute: PlaygroundRoute,
   PulseRoute: PulseRoute,

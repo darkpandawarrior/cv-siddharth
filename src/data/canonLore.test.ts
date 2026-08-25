@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { anthology, anthologyEntries } from "./anthology.ts";
 import * as lore from "./canonLore.ts";
 import { NAMED_THIRTEEN, RENDERINGS, SEASON_CANON, TETHER } from "./canonLore.ts";
+import { BANNED, walk } from "./proseGuards.ts";
 
 /**
  * The gate on /canon's data.
@@ -13,17 +14,11 @@ import { NAMED_THIRTEEN, RENDERINGS, SEASON_CANON, TETHER } from "./canonLore.ts
  * The recurring defect in this project is an intention encoded correctly and
  * executed into nothing, so each assertion below is written to go red for a
  * specific real failure rather than to be true by construction.
+ *
+ * `walk` and `BANNED` live in ./proseGuards.ts, shared with anthology.test.ts:
+ * see that file's guard on the generated corpus for why a second copy of
+ * either is not an option.
  */
-
-/** Every string reachable from the module's exports, path included for the message. */
-function walk(value: unknown, path: string, out: { path: string; text: string }[] = []) {
-  if (typeof value === "string") out.push({ path, text: value });
-  else if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}[${i}]`, out));
-  else if (value && typeof value === "object") {
-    for (const [k, v] of Object.entries(value)) walk(v, `${path}.${k}`, out);
-  }
-  return out;
-}
 
 describe("the seven laws", () => {
   const laws = Object.values(SEASON_CANON).flatMap((c) => c.laws ?? []);
@@ -70,35 +65,22 @@ describe("the process leak guard", () => {
   // This asserts the reader-visible strings, not the symbol names, because
   // deleting an export and re-adding the same sentence under a new name is the
   // exact way this comes back.
-  const BANNED = [
-    /\bprompt(?:ing|ed)?\b/i,
-    /\bthe model\b/i,
-    /\bcross[- ]lab\b/i,
-    /\bownership audit\b/i,
-    /\bcouncil\b/i,
-    /\bLLM\b/i,
-    /\btoken\b/i,
-    /\bopenrouter\b/i,
-    /\.md\b/,
-  ];
+  const walked = walk(lore, "canonLore");
 
-  const readerVisible = (v: unknown): string[] =>
-    typeof v === "string"
-      ? [v]
-      : Array.isArray(v)
-        ? v.flatMap(readerVisible)
-        : v && typeof v === "object"
-          ? Object.values(v).flatMap(readerVisible)
-          : [];
+  // Guard D. Without a floor on what the walk actually visited, a renamed
+  // export or prose moved into a file this walk does not import leaves
+  // `walked` at zero and the assertion below green over nothing rather than
+  // over a clean module. 169 strings walk today; 100 leaves headroom without
+  // being so low a near-total wipe would still pass.
+  it("actually walked the module, not nothing", () => {
+    expect(walked.length).toBeGreaterThan(100);
+  });
 
-  it("exports nothing a reader could see that names how the work was made", async () => {
-    const mod = (await import("./canonLore.ts")) as Record<string, unknown>;
+  it("exports nothing a reader could see that names how the work was made", () => {
     const offenders: string[] = [];
-    for (const [name, value] of Object.entries(mod)) {
-      for (const line of readerVisible(value)) {
-        for (const re of BANNED) {
-          if (re.test(line)) offenders.push(`${name}: ${re} in ${JSON.stringify(line.slice(0, 90))}`);
-        }
+    for (const { path, text } of walked) {
+      for (const re of BANNED) {
+        if (re.test(text)) offenders.push(`${path}: ${re} in ${JSON.stringify(text.slice(0, 90))}`);
       }
     }
     expect(offenders).toEqual([]);

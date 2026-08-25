@@ -496,6 +496,23 @@ const pageSurfaces: SurfaceInput[] = [
     preview: "none",
   },
   {
+    to: "/making",
+    label: "The Making",
+    // Registered in `proof`, deliberately not `writing`: the anthology is a
+    // thing the portfolio contains, so the portfolio's own frame is allowed
+    // an author where the anthology's pages are not. See src/data/making.ts.
+    blurb:
+      "The craft record for The Morkinstar Journals: the cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost.",
+    tag: "process · receipts",
+    group: "proof",
+    tint: ACCENT,
+    device: "tablet",
+    // No poster, same reasoning as /canon and /anthology: gen:surfaces would
+    // owe this a capture it cannot honestly take without a build, and "none"
+    // ships a legible tile today rather than a broken frame.
+    preview: "none",
+  },
+  {
     to: "/playground",
     label: "The Playground",
     // Was an enumeration of the rooms, and `wall: false` on the grounds that
