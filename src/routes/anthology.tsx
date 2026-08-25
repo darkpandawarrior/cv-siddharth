@@ -515,7 +515,7 @@ function TellersTab() {
           sigils because a sigil is generated from a name; the tellers get
           drawn because someone actually had to be there to write it down. */}
       <p className="max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-        The gods and monsters in this series get marks generated from their names. The people get drawn,
+        A god or a monster reaches us as a mark, the shape its name makes. A person reaches us as a face,
         because the people are the reason any of it survived to be written down. Where a season leaves a
         slot empty, the slot is the finding, so it is on the roll too.
       </p>

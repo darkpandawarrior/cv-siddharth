@@ -291,8 +291,8 @@ function CanonRoute() {
                 The {openLaws.length === 7 ? "Seven" : openLaws.length} Laws
               </h2>
               <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                Every one of them is visible in the 2021 story the anthology grew out of. Nothing here was
-                bolted on afterwards.
+                No law here was pressed onto the record. Each was read out of it, at the entries named on
+                the card.
               </p>
             </Reveal>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -440,7 +440,7 @@ function CanonRoute() {
                   is the ending, so it lives below the line inside season
                   three's gated block. This is the cut. */}
               <p className="mt-8 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                All ten renderings are drawn.{" "}
+                All ten renderings survive.{" "}
                 {/* The roll, not the hub. /anthology's layers are addressable
                     now, so this lands on the tellers with the switch already
                     set instead of dropping the reader on season one to go

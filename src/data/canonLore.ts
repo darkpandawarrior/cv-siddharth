@@ -424,7 +424,8 @@ export const RIG_CONSTRAINTS: { species: string; world: string; constraint: stri
 ];
 
 /** The footnote that makes the table above a floor rather than a catalogue. */
-export const RIG_CONSTRAINTS_NOTE = "Canon is silent on eight of the fourteen species. Silence is permission.";
+export const RIG_CONSTRAINTS_NOTE =
+  "Canon is silent on eight of the fourteen species. What the record does not fix, the rig is free to resolve.";
 
 /**
  * The tether: the measured claim that keeps a cosmic plate reading as a person.
