@@ -64,6 +64,20 @@ const DEFAULT_LAYER: Layer = "form";
 
 const layerOfSeason = (n: number): Layer | undefined => LAYERS.find((l) => l.season === n)?.key;
 
+// The door's numbers, derived rather than typed. This page has already shipped
+// "twenty entries, two seasons" against a corpus of thirty-four across three,
+// and the fix is not a better number, it is not having one to keep.
+const TOTAL_WORDS = anthologyEntries.reduce((n, e) => n + e.words, 0);
+// 220wpm is the same figure the reading page uses for its per-piece estimate.
+const HOURS = Math.round(TOTAL_WORDS / 220 / 60);
+
+// Two doors, both chosen by data so neither becomes a taste claim that goes
+// stale. The first piece in publication order, and the shortest way into the
+// season that needs no prior context: the shortest piece in the CORPUS is 280
+// words deep inside season three and would be a door into the middle of a fire.
+const FIRST = anthologyEntries.filter((e) => e.season === 1).sort((a, b) => a.idx - b.idx)[0];
+const SHORTEST = anthologyEntries.filter((e) => e.season === 1).sort((a, b) => a.words - b.words)[0];
+
 // The slider's domain, which is the Directory's own count of Concluded
 // worlds. Hoisted out of StarmapTab because validateSearch has to clamp an
 // arriving `at` to the range the input will accept, and two copies of a range
@@ -136,7 +150,8 @@ function AnthologyRoute() {
                 entry 0, because they are pages and kindling, not Directory
                 entries. */}
             <p className="kicker-accent">
-              // {anthologyEntries.length} pieces, {anthology.seasons.length} seasons
+              // {anthologyEntries.length} pieces, {anthology.seasons.length} seasons,{" "}
+              {TOTAL_WORDS.toLocaleString()} words
             </p>
             <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
@@ -157,6 +172,36 @@ function AnthologyRoute() {
             <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               Works separately, together, or in any order.
             </p>
+
+            {/* THE DOOR.
+                Three facts a stranger needs and could not otherwise get: how
+                long this is, what the four seasons physically ARE, and where to
+                start. Everything here is derived, so none of it can rot into a
+                claim the corpus stopped supporting: the hours come from the
+                real word count, and both doors are picked by data rather than
+                by taste, which is also why neither is called the best one.
+
+                It does NOT explain the line above it. "Any order" is the
+                claim and it stands unexplained, as it must. This answers a
+                different question, which is what to do when you have twenty
+                minutes and no opinion yet. */}
+            <div className="mt-6 max-w-2xl border-l-2 border-accent/40 pl-4">
+              <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                About {HOURS} hours of reading, in four objects: a Directory survey form, a page in a
+                wooden case, a fire, and a public wall he pastes notices onto.
+              </p>
+              <p className="mt-3 leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                If you would rather be pointed somewhere:{" "}
+                <Link to="/read/$slug" params={{ slug: FIRST.slug }} className="text-accent underline underline-offset-2">
+                  {FIRST.title}
+                </Link>{" "}
+                is where it starts, and{" "}
+                <Link to="/read/$slug" params={{ slug: SHORTEST.slug }} className="text-accent underline underline-offset-2">
+                  {SHORTEST.title}
+                </Link>{" "}
+                is the shortest way in at {SHORTEST.words.toLocaleString()} words.
+              </p>
+            </div>
 
             {/* The switches carry the objects, not the seasons: a season
                 number is what the Directory files a thing under and this row
