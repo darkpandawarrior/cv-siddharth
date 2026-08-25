@@ -1819,6 +1819,71 @@ html.resume-mode .palette-trigger {
   color: var(--color-text-dim);
 }
 
+/* --- The Damage Register -------------------------------------------------
+   What later happened to a record, printed at the foot of it. See
+   DamageRegister in read.$slug.tsx for what may go in it; this is only how it
+   looks, and two things here are load-bearing rather than stylistic.
+
+   It is print in the margin, not a component. No card, no border, no icon, no
+   heading, no motion of any kind, which is also why there is no
+   prefers-reduced-motion block below: there is nothing to reduce. The moment
+   this grows a box it is a related-links widget in a mono font, which is the
+   one thing this anthology is about not being.
+
+   It is Terminologies register because that is what small print in this world
+   already looks like. .piece-body is 1.0625rem and its trailing Terminologies
+   list is 0.85em of that, which is 0.9rem exactly, so the register reads as
+   more of the same tape rather than as site chrome. It lives OUTSIDE
+   .piece-body, which keeps it out of that :last-of-type selector and out of
+   any scraper reading the prose.
+
+   Colour is --color-muted, #a4978a on the ink ground #14100c: 6.65:1, against
+   a 4.5:1 floor. No new colour value is introduced by this block. Season three
+   swaps --color-accent to ember but leaves --color-muted alone, and the one
+   page that repaints the ground to paper renders no register at all. */
+.notice-conditions {
+  margin-top: 2.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.notice-conditions__kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+.notice-conditions__line {
+  margin: 0;
+}
+/* color: inherit, deliberately. --color-accent measures 1.27:1 against
+   --color-muted, so an accent link inside a register line would be
+   distinguished from the text around it by colour alone, well under the 3:1
+   that axe's link-in-text-block rule wants, and louder than this footer is
+   allowed to be. The underline is the cue. The focus ring is the sitewide
+   :focus-visible rule and nothing bespoke. */
+.notice-conditions__link,
+.notice-conditions__link--inline {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+/* A whole-line link has no sibling text to be told apart from, so it may hold
+   its underline back until hover or focus, which is what the fate line asks
+   for. A number inside a sentence cannot: it is a link in a text block, and
+   .piece-body a already underlines permanently, so this is the house rule
+   rather than a second one. */
+.notice-conditions__link {
+  text-decoration: none;
+}
+.notice-conditions__link:hover,
+.notice-conditions__link:focus-visible {
+  text-decoration: underline;
+}
+.notice-conditions__link--inline {
+  text-decoration: underline;
+}
+
 /* --- The anthology hub cards ---------------------------------------------
    Three seasons, three objects, and the hub had exactly one boolean deciding
    between them. What follows is the two treatments that boolean collapsed,

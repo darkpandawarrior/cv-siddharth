@@ -11,12 +11,9 @@ import { ChapterWord, GiantCTA } from "../Editorial.tsx";
 import { anthology } from "../data/anthology.ts";
 import {
   AFTERLIVES_NOTE,
-  CANON_SOURCES,
-  CANON_SOURCE_BASE,
   COUNT_LEDGER,
   MILGALAXAL_NOTE,
   NAMED_THIRTEEN,
-  OUTSIDE_THE_FICTION,
   RENDERINGS,
   RENDERING_DOCTRINE,
   RIG_CONSTRAINTS,
@@ -279,9 +276,15 @@ function CanonRoute() {
           <Mark />
 
           {/* ---- 2. The Seven Laws --------------------------------------
-              Doorways, not glosses. Each card links to the entry where the law
-              actually fires, which is the thing a reference panel could never
-              do. */}
+              Doorways, not glosses. Each card links to every entry whose text
+              actually fires the law, which is the thing a reference panel could
+              never do.
+
+              ONE DIRECTION ONLY. The canon cites its subjects and the subjects
+              do not cite the institution back: no entry anywhere carries "this
+              demonstrates law five". That asymmetry is not an omission, it is
+              the argument. Stamping a category onto every page is how the
+              Killugan hold got filed as Greetings, physical. */}
           <section aria-labelledby="laws-h">
             <Reveal>
               <h2 id="laws-h" className="font-display text-2xl font-bold sm:text-3xl">
@@ -308,13 +311,33 @@ function CanonRoute() {
                         position rather than settled canon, and the seams in this
                         anthology belong at the level of who is telling you. */}
                     {law.contested && <p className="kicker relative mt-3">{law.contested}</p>}
-                    <Link
-                      to="/read/$slug"
-                      params={{ slug: law.seenAt.slug }}
-                      className="relative mt-4 inline-block text-sm text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
-                    >
-                      {law.seenAt.label}
-                    </Link>
+                    {/* Every place the law fires, not just the first, and the
+                        list is however long the corpus made it: three doors on
+                        the halving, one on the two facings. No count, no "and
+                        two more", no ordering by anything but the order the
+                        entries were written, because the variance between one
+                        card and the next is the only thing here that says a
+                        human read the stories.
+
+                        A <ul> rather than a run of inline links: they are
+                        siblings of equal weight, several of them wrap at 360px,
+                        and a list is what a screen reader should announce them
+                        as. Same accent link as before, so no new colour and no
+                        new ratio: --color-accent on the card ground is 8.6:1,
+                        already measured at the top of this file. */}
+                    <ul className="relative mt-4 space-y-1.5">
+                      {[law.seenAt, ...(law.alsoAt ?? [])].map((at) => (
+                        <li key={at.slug}>
+                          <Link
+                            to="/read/$slug"
+                            params={{ slug: at.slug }}
+                            className="text-sm text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+                          >
+                            {at.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
                   </article>
                 </Reveal>
               ))}
@@ -418,11 +441,18 @@ function CanonRoute() {
                   three's gated block. This is the cut. */}
               <p className="mt-8 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                 All ten renderings are drawn.{" "}
+                {/* The roll, not the hub. /anthology's layers are addressable
+                    now, so this lands on the tellers with the switch already
+                    set instead of dropping the reader on season one to go
+                    looking. `layer` is the named vocabulary that route's own
+                    validateSearch accepts, so a typo here is a compile error
+                    rather than a link that silently opens the wrong layer. */}
                 <Link
                   to="/anthology"
+                  search={{ layer: "tellers" }}
                   className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                 >
-                  The tellers are on the anthology page
+                  The tellers are on the roll
                 </Link>
                 .
               </p>
@@ -647,51 +677,27 @@ function CanonRoute() {
             season four that declares no spoiler would otherwise take the
             receipt and the way out down with the divider. */}
         <div className="mx-auto max-w-5xl px-6 pb-24">
-          {/* ---- 9. Sources -------------------------------------- */}
-          <Reveal className="mt-16">
-            <section aria-labelledby="sources-h">
-              <h2 id="sources-h" className="font-display text-2xl font-bold sm:text-3xl">
-                Sources
-              </h2>
-              <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                Nothing above is asserted without one. The bibles and the council records this page was
-                drawn from are public, and the note is printed rather than hidden in a tooltip.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {CANON_SOURCES.map((s) => (
-                  <li key={s.file} className="text-sm">
-                    <a
-                      href={`${CANON_SOURCE_BASE}${s.file}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-mono text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
-                    >
-                      {s.file}
-                    </a>
-                    <span style={{ color: "var(--color-text-dim)" }}> {s.note}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* There is no Sources section here, and no "outside the fiction"
+              note. Both were on this page until 2026-08-25 and both are
+              barred from it.
 
-              {/* The only sentences on the page spoken from outside the
-                  fiction, labelled as such, at the very foot, under everything
-                  else. This is a portfolio, so the process is part of the
-                  claim, but breaking frame is expensive on the one page whose
-                  job is to hold it. */}
-              <div className="mt-10 border-t pt-5" style={{ borderColor: "var(--color-line)" }}>
-                <p className="kicker">outside the fiction</p>
-                {OUTSIDE_THE_FICTION.map((line) => (
-                  <p
-                    key={line}
-                    className="mt-3 max-w-3xl text-sm leading-relaxed"
-                    style={{ color: "var(--color-text-dim)" }}
-                  >
-                    {line}
-                  </p>
-                ))}
-              </div>
-            </section>
-          </Reveal>
+              What was wrong was not only the vocabulary (prompting, the
+              model, a cross-lab ownership audit, .md filenames used as link
+              text). It was that the note undercut the page. The Rendering,
+              several sections up, tells the reader the art varies because it
+              all arrived through a translation rig and a Directory form, and
+              that a plate may hold, strain, or fail. The note then told the
+              same reader the real reason was a bad prompt. The page gave its
+              best answer and then took it back.
+
+              A mention of process is a scratch. A LINK is a door, and those
+              targets were the working bibles: kill records, instructions to
+              whoever writes next, and the arc tables that spoiler-index every
+              entry in reading order.
+
+              The craft record is real and worth keeping. It is not worth
+              keeping HERE. It belongs on a surface a reader chooses, not one
+              they fall into halfway through the lore. */}
 
           <div className="mt-16">
             {/* GiantCTA takes a plain href, so this is a full navigation rather

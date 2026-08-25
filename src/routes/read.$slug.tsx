@@ -9,6 +9,8 @@ import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
 import { anthology, entriesOfSeason, entryBySlug } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
+import { registerLines, tellersOf } from "../data/crossnav.ts";
+import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { entryTheme, KINDLING_FINALE } from "../lib/seasonTheme.ts";
@@ -67,6 +69,71 @@ function nodeText(node: ReactNode): string {
   return "";
 }
 
+// Everything before the Terminologies divider: the story as it was filed,
+// without the tape. Hoisted out of the component because `head:` has to ask
+// the same question the body does, and two copies of "where does this stop"
+// is how a meta tag ends up finishing a sentence the prose never finishes.
+const storyOf = (v: ReadView): string => {
+  const at = v.kind === "anthology" ? v.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
+  return at >= 0 ? v.body.slice(0, at) : v.body;
+};
+
+// True when the story has no last sentence. Generic rather than a slug list:
+// entry #2300 is filed incomplete on purpose and s3-09 stops on a stray tag,
+// and the corpus is allowed a third.
+const endsMidSentence = (v: ReadView): boolean =>
+  v.kind === "anthology" && !/[.!?"'”’)\]]$/.test(storyOf(v).trim());
+
+// Letters and digits only, lowercased. A comparison against raw prose is not a
+// guard: the first version of the check below tested `body.includes(blurb)` and
+// a simulated `body.slice(0, 150) + "…"` walked straight through it, because
+// the ellipsis the excerpt added was enough to stop it being a substring. That
+// ellipsis IS the thing being guarded against, so the fingerprint has to be
+// blind to punctuation, wrapping and quote marks or it only catches an excerpt
+// nobody would write.
+const squash = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+// About seven words of prose once squashed. Long enough that no two authored
+// sentences in this corpus collide, short enough that nothing lifted off this
+// story gets past.
+const FINGERPRINT = 40;
+
+/**
+ * The description this page is allowed to publish, or null for none at all.
+ *
+ * It is the AUTHORED blurb and never an excerpt of the prose. Entry #2300 stops
+ * mid-sentence because the Directory never got to finish it, and every excerpt
+ * function ever written either trims to a sentence boundary or appends an
+ * ellipsis. Either one finishes, in a share card, the sentence the whole entry
+ * exists to leave unfinished.
+ *
+ * So the guard is not "do not truncate", which is a promise a comment cannot
+ * keep. On a story with no ending the blurb is fingerprinted against the prose:
+ * if it opens where the story opens, or carries the story's last words, it came
+ * from the body and is refused, and the page ships no description tag at all.
+ * An absent tag is a smaller lie than a completed sentence.
+ *
+ * A blank blurb is refused for the same reason. `gen-anthology.mjs` emits
+ * `e.blurb || ""`, and an empty description tag is exactly the pressure that
+ * makes the next person reach for the body. It should land here, in front of
+ * this comment, rather than in a helper three files away.
+ *
+ * Everything with an ending is handed back untouched. That is deliberate rather
+ * than lazy: nine printed blurbs legitimately ARE their own opening lines, and
+ * a piece that finished its last sentence has no ending for a description to
+ * finish for it.
+ */
+const describes = (v: ReadView): string | null => {
+  const blurb = v.blurb.trim();
+  if (!blurb) return null;
+  if (!endsMidSentence(v)) return blurb;
+  const story = squash(storyOf(v));
+  const said = squash(blurb);
+  const fromTheOpening = story.startsWith(said.slice(0, FINGERPRINT));
+  const carriesTheEnding = said.includes(story.slice(-FINGERPRINT));
+  return fromTheOpening || carriesTheEnding ? null : blurb;
+};
+
 export const Route = createFileRoute("/read/$slug")({
   loader: ({ params }): ReadView => {
     // archiveText is the older, printed set, so it resolves first — a slug
@@ -77,18 +144,25 @@ export const Route = createFileRoute("/read/$slug")({
     if (entry) return { kind: "anthology", ...entry };
     throw notFound();
   },
-  head: ({ loaderData }) =>
-    loaderData
-      ? {
-          meta: [
-            { title: `${loaderData.title} — Siddharth Pandalai` },
-            { name: "description", content: loaderData.blurb },
-            { property: "og:title", content: loaderData.title },
-            { property: "og:description", content: loaderData.blurb },
-            { property: "og:type", content: "article" },
-          ],
-        }
-      : {},
+  head: ({ loaderData }) => {
+    if (!loaderData) return {};
+    // One call, two tags, so description and og:description cannot drift into
+    // disagreeing about what this page is willing to say it ends with.
+    const description = describes(loaderData);
+    return {
+      meta: [
+        { title: `${loaderData.title} — Siddharth Pandalai` },
+        ...(description
+          ? [
+              { name: "description", content: description },
+              { property: "og:description", content: description },
+            ]
+          : []),
+        { property: "og:title", content: loaderData.title },
+        { property: "og:type", content: "article" },
+      ],
+    };
+  },
   component: ReadPiece,
 });
 
@@ -104,16 +178,16 @@ function ReadPiece() {
   // punctuation gets the treatment — so it stays correct if the corpus ever
   // grows a second entry that stops the same way, without a hardcoded slug.
   const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
-  const storyBody = dividerIndex >= 0 ? piece.body.slice(0, dividerIndex) : piece.body;
+  const storyBody = storyOf(piece);
   const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
   const trimmedStory = storyBody.trim();
-  const endsMidSentence = piece.kind === "anthology" && !/[.!?"'”’)\]]$/.test(trimmedStory);
+  const cutMidSentence = endsMidSentence(piece);
   // The cut line renders outside ReactMarkdown, as its own paragraph, rather
   // than wrapping the whole story in an extra element to hang a CSS hook
   // off — that wrapper would sit between .piece-body and every other
   // paragraph and quietly break the Terminologies block's :last-of-type
   // selector further down in this file, for every entry, not just this one.
-  const lastParagraphBreak = endsMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
+  const lastParagraphBreak = cutMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
   const storyBeforeCut = lastParagraphBreak >= 0 ? trimmedStory.slice(0, lastParagraphBreak) : storyBody;
   const cutLine = lastParagraphBreak >= 0 ? trimmedStory.slice(lastParagraphBreak + 2).trim() : null;
 
@@ -177,6 +251,14 @@ function ReadPiece() {
   // this page exactly as it was.
   const theme = piece.kind === "anthology" ? entryTheme(piece) : null;
   const vars = theme?.vars;
+
+  // Every teller of this record, not the first one that matched. The generated
+  // `witness` field is singular because the generator ran .find(), which kept
+  // the first and dropped the rest on the two pages that have two, so the
+  // reading page asserted a false thing about its own subject. tellersOf
+  // filters the roster instead, so those two come out right the moment the
+  // registry upstream is regenerated, with no edit here.
+  const tellers = piece.kind === "anthology" ? tellersOf(piece) : [];
 
   // Season three swaps --color-accent to ember and carries --scorch; both
   // only work if they sit ABOVE the byline and the prose, so the vars go on
@@ -358,7 +440,7 @@ function ReadPiece() {
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
             >
-              {endsMidSentence ? storyBeforeCut : storyBody}
+              {cutMidSentence ? storyBeforeCut : storyBody}
             </ReactMarkdown>
 
             {/* Entry #2300 stops mid-sentence and is filed that way on
@@ -368,7 +450,7 @@ function ReadPiece() {
                 right against the real last word; the status line under it is
                 the Directory's own sign-off for a transmission that didn't
                 arrive, in the same institutional register as RelayHeader. */}
-            {endsMidSentence && cutLine && (
+            {cutMidSentence && cutLine && (
               <>
                 <p className="piece-body__cut-line">
                   {cutLine}
@@ -395,26 +477,53 @@ function ReadPiece() {
 
           {/* The reason the story exists, framed as an aside rather than
               folded into the prose above — this is a person the correspondent
-              met, not a character in the legend he filed. */}
-          {piece.kind === "anthology" && piece.witness && (
-            <aside aria-label="The teller" className="mt-10 flex gap-4 rounded-xl border border-line bg-void/40 p-4">
-              <img
-                src={piece.witness.art}
-                alt={`${piece.witness.name}. ${piece.witness.did}`}
-                loading="lazy"
-                width={1100}
-                height={600}
-                className="h-24 w-40 shrink-0 rounded-lg object-cover"
-              />
-              <div>
-                <p className="kicker-accent">The teller</p>
-                <p className="font-display mt-1 text-base font-bold">{piece.witness.name}</p>
-                <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                  {piece.witness.did}
-                </p>
-              </div>
+              met, not a character in the legend he filed.
+
+              One landmark, however many tellers. Two asides both labelled "The
+              teller" would be two complementary landmarks with the same
+              accessible name, which is the axe landmark-unique rule, so the
+              cards go inside one aside rather than one aside going round each
+              card. */}
+          {tellers.length > 0 && (
+            <aside aria-label={tellers.length > 1 ? "The tellers" : "The teller"} className="mt-10 space-y-4">
+              {tellers.map((w) => (
+                <div key={w.id} className="flex gap-4 rounded-xl border border-line bg-void/40 p-4">
+                  <img
+                    src={w.art}
+                    alt={`${w.name}. ${w.did}`}
+                    loading="lazy"
+                    width={1100}
+                    height={600}
+                    className="h-24 w-40 shrink-0 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="kicker-accent">The teller</p>
+                    {/* The record to its teller's slot on the roll. The name
+                        becomes the link and nothing else changes: no extra
+                        row, no chevron, no card. The portrait stays outside
+                        the anchor so the accessible name is the name rather
+                        than the whole caption. */}
+                    <p className="font-display mt-1 text-base font-bold">
+                      <a
+                        href={anthologyHref({ search: { layer: "tellers" }, hash: `teller-${w.id}` })}
+                        className="text-accent underline-offset-2 hover:underline focus-visible:underline"
+                      >
+                        {w.name}
+                      </a>
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                      {w.did}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </aside>
           )}
+
+          {/* What later happened to this record. Last thing inside the
+              article, after the teller, before the season list, and OUTSIDE
+              .piece-body on purpose, see DamageRegister. */}
+          {piece.kind === "anthology" && <DamageRegister entry={piece} />}
         </article>
 
         <MarginNotes pieceSlug={piece.slug} />
@@ -505,4 +614,86 @@ function RelayHeader({ entry }: { entry: AnthologyEntry }) {
 function WithdrawnMarker({ entry }: { entry: AnthologyEntry }) {
   const line = entry.kindling === KINDLING_FINALE ? "one page kept" : `page ${entry.page} withdrawn`;
   return <p className="withdrawn-marker">&gt; Kindling · {line}</p>;
+}
+
+// /anthology keeps its layer in useState today, so a typed <Link search={...}>
+// has nothing to validate against and would not compile. The URL is the same
+// string either way, and it is the URL the register is actually promising.
+// ponytail: swap both call sites for <Link to="/anthology" search hash> the day
+// that route grows validateSearch, and delete this.
+function anthologyHref(to: { search: AnthologySearch; hash?: string }): string {
+  const q = new URLSearchParams();
+  if (to.search.layer) q.set("layer", to.search.layer);
+  if (to.search.world) q.set("world", to.search.world);
+  if (to.search.at !== undefined) q.set("at", String(to.search.at));
+  return `/anthology?${q.toString()}${to.hash ? `#${to.hash}` : ""}`;
+}
+
+// One fact from the register, as an anchor or as flat text.
+//
+// `to === null` is Law A made structural: it renders the label with no element
+// round it at all, not a disabled link and not a styled span, so there is
+// nothing for a later hover state, a crawler or a well-meaning refactor to turn
+// back into an anchor. Every Season Three fate arrives here null. An anchor
+// from the ash back to the intact page would refund the fire.
+function RegisterFact({ line }: { line: RegisterLine }) {
+  if (line.to === null) return <>{line.label}</>;
+  // An empty lead means the fate IS the destination, so the whole line is the
+  // anchor and has no sibling text to be told apart from: it may hold its
+  // underline back until hover, which is what the ruling asks for. A number
+  // sitting inside a sentence is a link in a text block and carries its
+  // underline permanently. See index.css for the ratio that forces that.
+  const cls = line.lead ? "notice-conditions__link--inline" : "notice-conditions__link";
+  return line.to.kind === "read" ? (
+    <Link to="/read/$slug" params={{ slug: line.to.slug }} className={cls}>
+      {line.label}
+    </Link>
+  ) : (
+    <a href={anthologyHref(line.to)} className={cls}>
+      {line.label}
+    </a>
+  );
+}
+
+/**
+ * The Damage Register: what later happened to this record, and nothing else.
+ *
+ * It composes nothing. `registerLines` walks a fixed four-kind order and asks
+ * each kind once, so the cap and the order are arithmetic in the data layer and
+ * this component physically cannot exceed them or reorder them. That is the
+ * whole reason the join lives over there: a footer that could assemble its own
+ * lines is a related-links box that has not been written yet.
+ *
+ * It sits inside <article> but OUTSIDE .piece-body, which is load-bearing
+ * twice. No scraper ingests it as prose, and it stays clear of
+ * `.piece-body ul:last-of-type`, the selector that styles the Terminologies
+ * block. A <footer> scoped to an article is not a contentinfo landmark, so it
+ * does not collide with SiteFooter.
+ *
+ * Nothing renders when nothing is true. Nine of the ten Season One pages carry
+ * no register at all, and neither terminal page carries one: #2300 ends at
+ * ENTRY FILED INCOMPLETE and the kept page ends at blank paper, and small print
+ * annotating blank paper is the site talking over the one undamaged object in
+ * the season. There is no "none recorded" placeholder, because absence is the
+ * tell and Season Two's chrome: "none" is already that doctrine.
+ */
+function DamageRegister({ entry }: { entry: AnthologyEntry }) {
+  const lines = registerLines(entry);
+  if (lines.length === 0) return null;
+
+  return (
+    <footer className="notice-conditions">
+      {/* Literal caps in the DOM rather than text-transform, matching
+          RelayHeader's own stamp two functions up. Not a heading: this is a
+          label on a filing block, and giving it an <h*> would put it in the
+          document outline as a section of the story. */}
+      <p className="notice-conditions__kicker">NOTICE-CONDITIONS</p>
+      {lines.map((line) => (
+        <p key={line.kind} className="notice-conditions__line">
+          {line.lead}
+          <RegisterFact line={line} />
+        </p>
+      ))}
+    </footer>
+  );
 }

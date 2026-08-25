@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { anthology, anthologyEntries } from "./anthology.ts";
 import * as lore from "./canonLore.ts";
-import { CANON_SOURCES, NAMED_THIRTEEN, RENDERINGS, SEASON_CANON, TETHER } from "./canonLore.ts";
+import { NAMED_THIRTEEN, RENDERINGS, SEASON_CANON, TETHER } from "./canonLore.ts";
 
 /**
  * The gate on /canon's data.
@@ -60,22 +60,48 @@ describe("the seven laws", () => {
   });
 });
 
-describe("the sources block", () => {
-  // The pattern this page inherited: bible rows DERIVE from the seasons, so a
-  // fourth season arrives with its own receipt and no code edit. The hand-kept
-  // list it replaced had already fallen a season behind.
-  it("derives exactly one bible row per season, named by the upstream rule", () => {
-    const bibles = CANON_SOURCES.filter((s) => s.file.endsWith("bible.md"));
-    expect(bibles).toHaveLength(anthology.seasons.length);
-    expect(bibles.map((b) => b.file)).toEqual(
-      anthology.seasons.map((s) => (s.n === 1 ? "bible.md" : `s${s.n}-bible.md`)),
-    );
-  });
+describe("the process leak guard", () => {
+  // /canon carried a Sources list linking .md filenames straight at the working
+  // bibles, and an "outside the fiction" note naming the prompting, the model
+  // and a cross-lab ownership audit. It shipped, and it read as production
+  // apparatus printed inside the lore. Worse, it undercut The Rendering, which
+  // is the in-world answer to the very question the note answered out of world.
+  //
+  // This asserts the reader-visible strings, not the symbol names, because
+  // deleting an export and re-adding the same sentence under a new name is the
+  // exact way this comes back.
+  const BANNED = [
+    /\bprompt(?:ing|ed)?\b/i,
+    /\bthe model\b/i,
+    /\bcross[- ]lab\b/i,
+    /\bownership audit\b/i,
+    /\bcouncil\b/i,
+    /\bLLM\b/i,
+    /\btoken\b/i,
+    /\bopenrouter\b/i,
+    /\.md\b/,
+  ];
 
-  it("keeps the non-derived records too", () => {
-    const files = CANON_SOURCES.map((s) => s.file);
-    expect(files).toContain("species.md");
-    expect(files).toContain("council-2026-08-15.md");
+  const readerVisible = (v: unknown): string[] =>
+    typeof v === "string"
+      ? [v]
+      : Array.isArray(v)
+        ? v.flatMap(readerVisible)
+        : v && typeof v === "object"
+          ? Object.values(v).flatMap(readerVisible)
+          : [];
+
+  it("exports nothing a reader could see that names how the work was made", async () => {
+    const mod = (await import("./canonLore.ts")) as Record<string, unknown>;
+    const offenders: string[] = [];
+    for (const [name, value] of Object.entries(mod)) {
+      for (const line of readerVisible(value)) {
+        for (const re of BANNED) {
+          if (re.test(line)) offenders.push(`${name}: ${re} in ${JSON.stringify(line.slice(0, 90))}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });
 

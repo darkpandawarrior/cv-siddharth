@@ -1,12 +1,10 @@
-import { anthology } from "./anthology.ts";
-
 /**
  * The Morkinstar Journals, as the fiction keeps it about itself.
  *
  * Facts live here, presentation lives in `src/routes/canon.tsx`. Every string
  * below is lifted from one of four files in the-loopdown
  * (`fiction/morkinstar-journals/bible.md`, `species.md`, `s2-bible.md`,
- * `s3-bible.md`) rather than written fresh, which is why `CANON_SOURCES` can
+ * `s3-bible.md`) rather than written fresh, which is why every fact here can
  * honestly call itself a receipt.
  *
  * CHUNK WEIGHT, and it is load-bearing. This file imports `{ anthology }` and
@@ -31,6 +29,32 @@ export interface CanonLaw {
   contested?: string;
   /** The entry where the law fires. The test fails if the slug is dead. */
   seenAt: { slug: string; label: string };
+  /**
+   * The further entries whose text demonstrates the same law, in corpus order.
+   *
+   * SEPARATE FROM `seenAt` rather than folded into one array, and the reason is
+   * mechanical: `canonLore.test.ts` reads `seenAt.slug` to prove no law points
+   * at a dead entry, and that test is not this change's to rewrite. So `seenAt`
+   * stays the singular doorway it has always been and the rest arrive beside
+   * it. Fold the two together on the day the test can move with them.
+   *
+   * THE ADMISSION BAR, and it is the whole difference between a reference desk
+   * and the Galactic Directory. A row goes in only where the entry's own prose
+   * does the thing the law describes, in words a reader can point at. Not where
+   * the subject is adjacent, not where the theme rhymes, and never because a
+   * word matched. Every row below was read out of the body it names, and the
+   * quote it was read from is in the comment above it.
+   *
+   * A law with no second entry that clears the bar carries none, and law six
+   * and law seven carry none. That absence is the honest state of the corpus
+   * rather than a gap waiting to be filled, so nothing renders in its place.
+   *
+   * There is deliberately no reverse field. An entry does not know which law it
+   * turns on, because a footer telling a reader which law a story proves is the
+   * Directory pressing a familiar shape onto whatever it files, which is the
+   * one crime this anthology is about.
+   */
+  alsoAt?: { slug: string; label: string }[];
 }
 
 /** A season's reading contract: what it is about, and what saying so costs. */
@@ -55,7 +79,9 @@ export interface SeasonCanon {
 // The seven laws, each cut to the one line a reader actually needs, moved
 // verbatim from the tab this page replaced. What is new is `seenAt`: a law
 // stated with no entry behind it is a rule in a vacuum, and the whole point of
-// promoting this off a reference panel was to make each law a doorway.
+// promoting this off a reference panel was to make each law a doorway. `alsoAt`
+// is the rest of that argument: a law fires wherever it fires, so a law with
+// three doors gets three and a law with one gets one.
 const SEVEN_LAWS: CanonLaw[] = [
   {
     n: 1,
@@ -63,18 +89,43 @@ const SEVEN_LAWS: CanonLaw[] = [
     gloss:
       "Every world reports fourteen gods and fourteen monsters, independently, with no contact between them.",
     seenAt: { slug: "legend-of-koaeluae-scales", label: "first stated, Entry #2245" },
+    // #2263 is where the independence stops being an assumption and becomes a
+    // tally he has kept: "Four worlds. Two systems. No contact between any of
+    // them. Fourteen monsters each. Thirteen names each." One world reporting
+    // the count is a legend. Four unconnected ones reporting it is the law.
+    alsoAt: [{ slug: "the-word-marltains-do-not-have", label: "four worlds, no contact, Entry #2263" }],
   },
   {
     n: 2,
     name: "The Unnamed Fourteenth",
     gloss: "Ask anyone to list the fourteen monsters and you get thirteen names and a pause.",
     seenAt: { slug: "the-word-marltains-do-not-have", label: "the blank line, Entry #2263" },
+    // Six worlds give him the pause and #2277 is the only one that gives him a
+    // reason for it, in a quoted sentence: "The fourteenth is not one of ours."
+    // The mason's account is the law's mechanism, so it is a second doorway and
+    // not a second sighting.
+    alsoAt: [{ slug: "the-standing-dead", label: "the mason's reason, Entry #2277" }],
   },
   {
     n: 3,
     name: "The Halving",
     gloss: "A deadlock ends only when someone voluntarily divides themselves and spends both halves.",
     seenAt: { slug: "the-tide-that-owes", label: "named by its absence, Entry #2259" },
+    // Two rows, because this is the one law the corpus argues from both sides
+    // and both arguments are written out.
+    //
+    // #2245 is the law working: the serpent "split himself into two, at the
+    // cost of halving his already diminished powers", one half goes ahead and
+    // burns its life flames, and the war ends. Both halves spent, deadlock over.
+    //
+    // #2277 is the law refused, and the entry says so itself: "He halves. The
+    // gaps halve. Skalde comes in between. He halves again. Every other legend
+    // I have filed in this series has a halving in it exactly once, and it ends
+    // the war." Vör-Angi halves forever and spends nothing, so nothing ends.
+    alsoAt: [
+      { slug: "legend-of-koaeluae-scales", label: "both halves spent, Entry #2245" },
+      { slug: "the-standing-dead", label: "the halving that never ends, Entry #2277" },
+    ],
   },
   {
     n: 4,
@@ -82,6 +133,11 @@ const SEVEN_LAWS: CanonLaw[] = [
     gloss:
       "Whatever is left over becomes the phenomenon he can actually measure: snow, silence, a tide, a count.",
     seenAt: { slug: "the-standing-dead", label: "a line of graves, Entry #2277" },
+    // The gloss lists four residues and #2245 is the one the corpus spells out
+    // as chemistry rather than as image: "the remaining moisture, although not
+    // a lot, mixed itself with the leftover scales of the serpent and became
+    // snow." Left over, measured, filed as the world's phenomenon.
+    alsoAt: [{ slug: "legend-of-koaeluae-scales", label: "the leftover scales, Entry #2245" }],
   },
   {
     n: 5,
@@ -89,6 +145,14 @@ const SEVEN_LAWS: CanonLaw[] = [
     gloss:
       "Every legend keeps one mortal who was there and told it afterward. The heroes lose; the tellers are why there is a story at all.",
     seenAt: { slug: "ninety-nine-names-of-silence", label: "Tveggi, Entry #2250" },
+    // The only place in the corpus where this law has nothing to hold on to,
+    // and the entry establishes it rather than implying it: "No gods, no
+    // monsters, no spirits, no ancestors, no luck. No stories at all, as far as
+    // I could establish, and I spent eleven days establishing it." No legend,
+    // so no teller, so nothing for law five to keep. That is why the anthology
+    // argues that page's missing teller instead of leaving it blank, and it is
+    // the one row here that makes the law falsifiable rather than decorative.
+    alsoAt: [{ slug: "the-world-with-no-number", label: "no legend to keep one, Entry #2296" }],
   },
   {
     n: 6,
@@ -101,6 +165,11 @@ const SEVEN_LAWS: CanonLaw[] = [
     // telling you.
     contested: "the tvænd's account, not settled canon",
     seenAt: { slug: "two-suns-one-shadow", label: "the arithmetic, Entry #2291" },
+    // NO SECOND ROW, and the absence is the point rather than a gap. This law
+    // is one storyteller's account, told once, on Solvei. Every other entry
+    // that reaches the split reaches it through #2291, so citing them would be
+    // citing this page's own echo and would quietly promote a contested claim
+    // to a corroborated one by counting the corroborations.
   },
   {
     n: 7,
@@ -108,6 +177,18 @@ const SEVEN_LAWS: CanonLaw[] = [
     gloss:
       "The Directory's status flag for a world with no phenomena outstanding and no further contact indicated.",
     seenAt: { slug: "the-world-with-no-number", label: "611 of them, Entry #2296" },
+    // #2296 is the flag applied to a world. #2300 is the flag as an
+    // institution, quoted out of the Directory's own procedure: "a Directory
+    // unit may not be keyed to a Concluded world", and "Concluded files are
+    // closed and the designations are numeric".
+    //
+    // Thirteen entries carry a Concluded count in their Terminologies block,
+    // and twelve of them are NOT here. That block is the record's chrome, not
+    // the record demonstrating anything, and a card listing all thirteen would
+    // be the Galactic Directory cross-referencing on a string match, which is
+    // the failure this whole anthology is about. #2300 is on the list because
+    // its prose argues the flag, not because its footer prints it.
+    alsoAt: [{ slug: "why-we-measure-time-in-hells", label: "a unit rebased, Entry #2300" }],
   },
 ];
 
@@ -276,7 +357,7 @@ export const RENDERING_DOCTRINE = {
     {
       term: "Variance is canon, not inconsistency",
       gloss:
-        "A teller who reads humanlike is not a design failure. It is a rendering that resolved toward the familiar, which is exactly what a Directory instrument would do, and the reader is entitled to distrust it.",
+        "A teller who reads humanlike is not an error in the record. It is a rendering that resolved toward the familiar, which is exactly what a Directory instrument would do, and the reader is entitled to distrust it.",
     },
     {
       term: "The correspondent has no body",
@@ -367,7 +448,7 @@ export const TETHER: { value: number; label: string; pattern: string }[] = [
 ];
 
 export const TETHER_DOCTRINE =
-  "However cosmic the plate goes, the hands stay legible and stay busy. A pair of hands doing careful work reads as a person no matter what it is attached to, at any scale, in any medium. Emotion is carried by posture, tension and direction of attention, and never by eyes.";
+  "However far a rendering goes, the hands survive it. A pair of hands doing careful work reads as a person whatever it is attached to, at any scale. What the record carries is posture, tension, and where the attention is aimed. It almost never carries eyes.";
 
 // Realm is blank for Galaxal and Milgalaxal in the founding charter itself;
 // they are not tied to any one world's day, so there is nothing to put there.
@@ -395,42 +476,25 @@ export const MILGALAXAL_NOTE =
 export const AFTERLIVES_NOTE =
   "Galactic Standard time is measured in afterlives. Nobody in-universe has noticed, because appendices to standards documents are the safest place in any civilisation to hide something.";
 
-/**
- * Every claim on this page traces to one of these files, so the links are the
- * receipt rather than decoration.
- *
- * The bible rows derive from the seasons themselves, because the upstream
- * filename is mechanical (bible.md for season one, s{n}-bible.md after it) and
- * the hand-kept list this replaced had already fallen a season behind. A fourth
- * season arrives with its own receipt and no code change. The council records
- * stay written out: they are dated audits of one particular week, not a
- * per-season artefact, so nothing derives them.
- */
-export const CANON_SOURCES: { file: string; note: string }[] = [
-  ...anthology.seasons.map((s) => ({
-    file: s.n === 1 ? "bible.md" : `s${s.n}-bible.md`,
-    note: `the canon for season ${s.n}, ${s.title}`,
-  })),
-  { file: "species.md", note: "the Rendering doctrine and the four surviving constraints" },
-  { file: "council-2026-08-15.md", note: "the record of the season one council" },
-  { file: "council-s2-2026-08-15.md", note: "the cross-lab ownership audit of the season two slate" },
-];
+/* The Sources list and the OUTSIDE THE FICTION note were removed on
+   2026-08-25 and must not come back to this page.
 
-export const CANON_SOURCE_BASE =
-  "https://github.com/darkpandawarrior/the-loopdown/blob/main/fiction/morkinstar-journals/";
+   They carried a link whose TEXT was a filename and whose TARGET was the
+   working bible, plus two sentences naming the prompting, the model and a
+   cross-lab ownership audit. A reader who has fallen into this world hits the
+   word "prompting" and the spell dies.
 
-/**
- * The only two sentences on the page spoken from outside the fiction, and they
- * are labelled as such where they render.
- *
- * This is a portfolio, so the process is part of the claim, but breaking frame
- * is expensive on the one page whose job is to hold it. So: once, at the very
- * foot, under everything else, next to the source links.
- */
-export const OUTSIDE_THE_FICTION = [
-  "The first portraits came back as ten nineteenth-century European humans. That was the prompting, not the model, and fixing it by drawing slightly stranger people would have been the smaller mistake made more carefully. The Rendering is the actual answer, and it is canon rather than a workaround.",
-  "Six of the first ten season two premises were killed by a blind cross-lab ownership audit, and the record of it is public.",
-];
+   The second one was the worse of the two, and not because of its vocabulary.
+   Four sections above, this page tells the reader that the art varies because
+   everything reached them through a translation rig and a Directory form, and
+   that a plate may hold, strain, or fail. That is The Rendering, and it is the
+   best thing on the page. The note then told the same reader the real reason
+   was a bad prompt, which spends the canonical answer to buy a smaller one.
+
+   The craft record is real and worth keeping. It is not worth keeping HERE.
+   It belongs on a surface that is allowed to be about the making, reached on
+   purpose rather than fallen into: see the note in canon.tsx. */
+
 
 /* ---------------------------------------------------------------------------
    WHAT IS NOT HERE, and why. Read this before adding a section.
@@ -444,7 +508,7 @@ export const OUTSIDE_THE_FICTION = [
       authors' books. It is an inventory of things that do not exist, and it
       makes the project read as derivative on the one page whose job is to make
       it read as owned. The credibility claim survives as one sentence in
-      OUTSIDE_THE_FICTION; the inventory does not.
+      the making-of surface, off this page entirely; the inventory does not.
    2. Authoring instructions. "Writing entry eleven and beyond", the four
       gates, the naming rules, the entry-number arithmetic constraint, the
       prompting skeleton, and the "never use: woman, man, clerk, child..."

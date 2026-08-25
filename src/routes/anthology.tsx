@@ -10,6 +10,11 @@ import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
 import { anthology, anthologyEntries, entriesOfSeason } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
+// The register's targets and this route's validateSearch have to agree about
+// what a layer is called, so the vocabulary is imported rather than restated.
+// A second copy of it here is how a link starts pointing at a layer that no
+// longer exists.
+import type { AnthologySearch } from "../data/crossnav.ts";
 import { entryTheme, seasonHero } from "../lib/seasonTheme.ts";
 import type { ThemeVars } from "../lib/seasonTheme.ts";
 import { ReactionRow } from "../play/ReactionRow.tsx";
@@ -19,6 +24,43 @@ import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 // React.lazy() requires is built here rather than by changing that file's
 // export style for the convenience of one caller.
 const Starmap = lazy(() => import("../Starmap.tsx").then((m) => ({ default: m.Starmap })));
+
+/**
+ * The five layers, and the whole URL vocabulary for them.
+ *
+ * The media are the navigation. A reader picked up a form, a case, a fire, a
+ * map or the roll of tellers, so that is what the address says; season numbers
+ * stay out of it, because a number is a filing detail and renumbering one
+ * would silently retarget every link anyone had ever pasted.
+ *
+ * One table doing three jobs: the vocabulary validateSearch accepts, the
+ * switch row in its order, and which season a layer opens. A fourth season
+ * adds a row here, the same way seasonHero() already asks for one.
+ */
+type Layer = NonNullable<AnthologySearch["layer"]>;
+
+const LAYERS: readonly { key: Layer; label: string; season: number | null }[] = [
+  { key: "form", label: "The Form", season: 1 },
+  { key: "case", label: "The Case", season: 2 },
+  { key: "fire", label: "The Fire", season: 3 },
+  { key: "map", label: "The Map", season: null },
+  { key: "tellers", label: "The Tellers", season: null },
+];
+
+// Publication order is still the first-visit path. The form is what
+// /anthology showed before it had an address and it is what it shows now, so
+// the default carries no param at all and the bare URL keeps meaning exactly
+// what it has always meant.
+const DEFAULT_LAYER: Layer = "form";
+
+const layerOfSeason = (n: number): Layer | undefined => LAYERS.find((l) => l.season === n)?.key;
+
+// The slider's domain, which is the Directory's own count of Concluded
+// worlds. Hoisted out of StarmapTab because validateSearch has to clamp an
+// arriving `at` to the range the input will accept, and two copies of a range
+// is how one of them ends up one off.
+const CONCLUDED_START = 611;
+const CONCLUDED_END = 671;
 
 /**
  * The Morkinstar Journals — the anthology hub, one room deeper than /ink.
@@ -37,13 +79,32 @@ const Starmap = lazy(() => import("../Starmap.tsx").then((m) => ({ default: m.St
  */
 export const Route = createFileRoute("/anthology")({
   head: () => roomHead("/anthology"),
+  // An unrecognised or absent layer renders the default rather than throwing:
+  // a truncated or mistyped link should still hand a stranger the anthology.
+  // `layer=form` normalises away for the reason /resume drops its default cut.
+  // The plain URL is the one people paste.
+  validateSearch: (search: Record<string, unknown>): AnthologySearch => {
+    const layer = LAYERS.find((l) => l.key === search.layer)?.key;
+    if (!layer || layer === DEFAULT_LAYER) return {};
+    // `world` and `at` are the map's arrival coordinates and mean nothing on
+    // any other layer, so they are dropped there rather than carried as dead
+    // weight through every switch.
+    if (layer !== "map") return { layer };
+    const at = Number(search.at);
+    return {
+      layer,
+      ...(typeof search.world === "string" && search.world ? { world: search.world } : {}),
+      ...(Number.isFinite(at)
+        ? { at: Math.min(Math.max(Math.trunc(at), CONCLUDED_START), CONCLUDED_END) }
+        : {}),
+    };
+  },
   component: AnthologyRoute,
 });
 
-type Tab = number | "starmap" | "tellers";
-
 function AnthologyRoute() {
-  const [tab, setTab] = useState<Tab>(1);
+  const { layer = DEFAULT_LAYER, world, at } = Route.useSearch();
+  const navigate = useNavigate({ from: "/anthology" });
 
   return (
     <DeferredPlayRoom>
@@ -80,47 +141,47 @@ function AnthologyRoute() {
               gods and fourteen monsters, the same count, worlds apart, with no contact between them. Nobody,
               on any of them, can name the fourteenth.
             </p>
+            {/* Said here, once, and nowhere else on this site. No explanation
+                follows it and none is allowed to: an order that has to be
+                described is an order, and the sentence is only true while the
+                site keeps its mouth shut afterwards. */}
+            <p className="mt-4 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+              Works separately, together, or in any order.
+            </p>
 
-            <div role="group" aria-label="Choose a season" className="mt-10 flex flex-wrap gap-2">
-              {anthology.seasons.map((s) => (
+            {/* The switches carry the objects, not the seasons: a season
+                number is what the Directory files a thing under and this row
+                is what a reader picked up. Three near-identical blocks and a
+                Tab union that could express `4` before a fourth season existed
+                are now rows in LAYERS, which is also what validateSearch reads,
+                so a switch and its own address cannot drift apart. */}
+            <div role="group" aria-label="Choose a layer" className="mt-10 flex flex-wrap gap-2">
+              {LAYERS.map((l) => (
                 <button
-                  key={s.n}
+                  key={l.key}
                   type="button"
-                  onClick={() => setTab(s.n)}
-                  aria-pressed={tab === s.n}
+                  // A layer is a place, so Back returns to the previous one and
+                  // this is a real history entry rather than a replace. Scroll
+                  // reset and the cross-fade both stay off: this is one page
+                  // changing what it shows, and it did neither of those things
+                  // while it was useState.
+                  onClick={() =>
+                    navigate({
+                      search: l.key === DEFAULT_LAYER ? {} : { layer: l.key },
+                      resetScroll: false,
+                      viewTransition: false,
+                    })
+                  }
+                  aria-pressed={layer === l.key}
                   className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                    tab === s.n
+                    layer === l.key
                       ? "border-accent bg-accent/15 text-accent"
                       : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
                   }`}
                 >
-                  {s.title}
+                  {l.label}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setTab("starmap")}
-                aria-pressed={tab === "starmap"}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tab === "starmap"
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-                }`}
-              >
-                The Starmap
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab("tellers")}
-                aria-pressed={tab === "tellers"}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tab === "tellers"
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-                }`}
-              >
-                The Tellers
-              </button>
               {/* The canon panel outgrew a tab. It is a reference a reader
                   arrives at, links someone else to, and comes back to, which
                   is a URL's job and not a useState's, so it lives at /canon
@@ -136,8 +197,10 @@ function AnthologyRoute() {
               </Link>
             </div>
 
+            {/* A season with no row in LAYERS has no address and so renders
+                nothing, which is the same contract seasonHero() already has. */}
             {anthology.seasons.map((s) =>
-              tab === s.n ? (
+              layerOfSeason(s.n) === layer ? (
                 <div key={s.n}>
                   <p className="mt-6 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                     {s.blurb}
@@ -148,8 +211,8 @@ function AnthologyRoute() {
               ) : null,
             )}
 
-            {tab === "starmap" && <StarmapTab />}
-            {tab === "tellers" && <TellersTab />}
+            {layer === "map" && <StarmapTab world={world} at={at} />}
+            {layer === "tellers" && <TellersTab />}
           </div>
         </main>
         <SiteFooter />
@@ -590,12 +653,30 @@ function BlankCard({ blank: b }: { blank: Blank }) {
   );
 }
 
-function StarmapTab() {
+function StarmapTab({ world, at }: { world?: string; at?: number }) {
   // 611 rather than the middle of the range or the top: it is the count on
   // the day of the case's first page (see /read/the-second-chair), so
   // opening this tab starts the reader at the same number the story does.
-  const [concluded, setConcluded] = useState(611);
+  //
+  // An arriving link may state its own count instead, and then the slider is
+  // already at position when the canvas mounts. Nothing animates towards it,
+  // ever. It is local state from there on, because the dragging is the
+  // reader's own and writing sixty history entries into their Back button is
+  // not addressability.
+  const [concluded, setConcluded] = useState(at ?? CONCLUDED_START);
   const navigate = useNavigate();
+
+  // The season filter has been inert since the starmap shipped, because
+  // nothing on this page knew which season a reader had come for. An arrival
+  // does: `?world=` names the world a record is the record of, and that
+  // world's own key names the season. The season is raised, and every other
+  // world keeps its position, its state colour and its click target, so the
+  // sky stays the same sky.
+  // ponytail: derived from the arrival, with no control of its own. A season
+  // picker down here would be a fourth way to choose a season on a page whose
+  // switch row is already one of the other three.
+  const raised = anthology.starmap.worlds.find((w) => w.n === world)?.k?.split("-")[0];
+  const season = raised ? Number(raised) : null;
 
   const openWorld = useCallback(
     (key: string) => {
@@ -620,8 +701,8 @@ function StarmapTab() {
         <input
           id="concluded-count"
           type="range"
-          min={611}
-          max={671}
+          min={CONCLUDED_START}
+          max={CONCLUDED_END}
           value={concluded}
           onChange={(e) => setConcluded(Number(e.target.value))}
           className="h-1 w-56 accent-accent"
@@ -642,7 +723,7 @@ function StarmapTab() {
             </div>
           }
         >
-          <Starmap concluded={concluded} onOpen={openWorld} />
+          <Starmap concluded={concluded} onOpen={openWorld} season={season} />
         </Suspense>
         <span className="kicker pointer-events-none absolute bottom-3 right-4">
           drag to orbit
