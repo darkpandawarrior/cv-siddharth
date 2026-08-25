@@ -45,8 +45,16 @@ export interface EntryTheme {
   /** Scoped token overrides, applied on the card and on the reading body.
    *  Every component inside keeps reading the same var() names. */
   vars?: ThemeVars;
-  /** Which chrome the reading page prints above the prose. */
-  chrome: "relay" | "none" | "withdrawn";
+  /** How the reading page typesets the entry's OWN first line.
+   *  Every entry opens with one, written by the correspondent, and it is the
+   *  entry's medium stated in its own words: a relay slug, a folio, a
+   *  withdrawal, a posted notice carrying the term of its own erasure. This
+   *  says which of the four it is, so the page can set it as a masthead
+   *  instead of dropping all forty-eight through the generic quote style.
+   *  It replaces the old `chrome` field, which asked a narrower question
+   *  ("does the site print a stamp here") and had exactly two answers left
+   *  once the site stopped inventing lines the entries already carry. */
+  docket: "relay" | "folio" | "withdrawn" | "posted";
   /** Classes on the reading page's prose wrapper. */
   body: string;
 }
@@ -63,12 +71,15 @@ const directory = (e: AnthologyEntry): EntryTheme => ({
   short: `#${e.entry}`,
   tiltDeg: 0,
   tilt: false,
-  chrome: "relay",
+  docket: "relay",
   body: "",
 });
 
-// Season two, his own page. Never sent, so it gets no chrome at all and the
-// absence is the tell. Loose warm paper on a desk: it tilts, the corner is
+// Season two, his own page. Never sent, so the site prints nothing of its own
+// above it and the absence is still the tell — a folio is not chrome. "Page 30
+// of 91" is a number he wrote on his own paper, and the site used to wrap it in
+// a bordered mono quote box, the register it reserves for a log line someone
+// filed. Setting it as a bare folio in the reading serif REMOVES chrome. Loose warm paper on a desk: it tilts, the corner is
 // soft, and the card carries the same ruled lines the reading page does.
 const pages = (e: AnthologyEntry): EntryTheme => ({
   card: "rounded-2xl border-accent/25 hover:border-accent/60 season-two-card",
@@ -78,7 +89,7 @@ const pages = (e: AnthologyEntry): EntryTheme => ({
   short: `p.${e.page}`,
   tiltDeg: 0.65,
   tilt: true,
-  chrome: "none",
+  docket: "folio",
   body: "season-two-paper",
 });
 
@@ -108,7 +119,7 @@ const kindling = (e: AnthologyEntry): EntryTheme => {
     // color-mix() against --color-accent, so they re-tint to ember with no
     // class edits. --color-warn already exists in .ink-world.
     vars: { "--scorch": scorch, "--color-accent": "var(--color-warn)" },
-    chrome: "withdrawn",
+    docket: "withdrawn",
     body: "season-two-paper season-three-scorched",
   };
 };
@@ -142,7 +153,7 @@ const kept = (): EntryTheme => ({
     "--color-accent": "#9e3b2e", //  5.09:1
     "--color-accent-dim": "#7d2e23",
   },
-  chrome: "withdrawn",
+  docket: "withdrawn",
   body: "season-two-paper",
 });
 
@@ -171,7 +182,7 @@ const wall = (e: AnthologyEntry): EntryTheme => ({
   tiltDeg: 0,
   tilt: false,
   vars: { "--color-accent": "var(--color-coverage)" },
-  chrome: "none",
+  docket: "posted",
   body: "",
 });
 
@@ -186,10 +197,19 @@ export function entryTheme(e: AnthologyEntry): EntryTheme {
   return (SEASON[e.season] ?? unfiled)(e);
 }
 
-/** The anchor object above a season's grid. null renders nothing, which is a
- *  stated choice rather than the accident it currently is: season two and
- *  three have no hero image at all, and season one has The Fourteen. */
-export type SeasonHero = "fourteen" | "case-full" | "case-burned" | "wall" | null;
+/** The anchor object above a season's grid. null renders nothing, and that is a
+ *  stated choice rather than an accident.
+ *
+ *  "wall" was in this union and returned for season four, and SeasonHeroFigure
+ *  had no branch for it, so the page fell through to null and drew nothing. The
+ *  type asserted a hero that no code could draw: an intention encoded correctly
+ *  and executed into nothing, which is this project's most-repeated defect. A
+ *  season with no hero says so by returning null; it does not name one and hope.
+ *
+ *  Every non-null member of this union must have a branch in SeasonHeroFigure.
+ *  seasonTheme.test.ts holds that, so adding a member without drawing it fails
+ *  rather than silently rendering nothing. */
+export type SeasonHero = "fourteen" | "case-full" | "case-burned" | null;
 export function seasonHero(n: number): SeasonHero {
-  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : n === 4 ? "wall" : null;
+  return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : null;
 }

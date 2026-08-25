@@ -187,7 +187,7 @@ function CanonRoute() {
 
           {/* ---- 1. The Count ------------------------------------------
               First, because without it the rest is trivia: this is the fact
-              every one of the 34 entries assumes the reader already has. Two
+              every one of the 48 entries assumes the reader already has. Two
               up on desktop, stacked below lg. */}
           <Reveal className="mt-16">
             <section aria-labelledby="count-h">

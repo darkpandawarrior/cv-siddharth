@@ -80,3 +80,41 @@ describe("fiction surface link targets", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("guard H: every anchor a link builds has something to land on", () => {
+  // read.$slug.tsx builds `#teller-${w.id}` and crossnav.ts builds
+  // `#blank-${entry}`. Neither id was ever emitted, so both links resolved to
+  // the correct layer and then did nothing at all. The link worked. The jump
+  // did not, and nothing in the suite could tell the difference, because a
+  // hash that matches no element is not an error in a browser.
+  //
+  // This reads the two files as text rather than rendering, which is weaker
+  // than a DOM assertion and is the reason it also asserts a floor: a rename
+  // that breaks the regex would otherwise leave it finding nothing and passing.
+  const hub = readFileSync(join(root, "src/routes/anthology.tsx"), "utf8");
+  const reader = readFileSync(join(root, "src/routes/read.$slug.tsx"), "utf8");
+  const crossnav = readFileSync(join(root, "src/data/crossnav.ts"), "utf8");
+
+  const prefixes = [
+    ...reader.matchAll(/hash:\s*`([a-z]+)-\$\{/g),
+    ...crossnav.matchAll(/hash:\s*`([a-z]+)-\$\{/g),
+  ].map((m) => m[1]);
+
+  it("found the anchor builders at all", () => {
+    expect(new Set(prefixes).size).toBeGreaterThanOrEqual(2);
+  });
+
+  it("emits an id for every anchor prefix a link constructs", () => {
+    // Match the TEMPLATE the id is built from, anywhere in the hub, rather
+    // than `id={` glued to a backtick. The ids are emitted from a ternary
+    // inside one id={...}, so the glued form found nothing and reported both
+    // prefixes orphaned while both were correctly rendered. The guard's own
+    // regex encoded the intention and did not match the artifact, which is the
+    // defect this guard exists to catch, committed inside the guard.
+    const orphans = [...new Set(prefixes)].filter(
+      (prefix) => !hub.includes("`" + prefix + "-${"),
+    );
+    expect(orphans, `anchor prefix(es) nothing renders an id for: ${orphans.join(", ")}`).toEqual([]);
+  });
+});
+

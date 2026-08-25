@@ -96,7 +96,7 @@ shows what exists, and you cannot search for a room you do not know about.
 | [`/ink`](https://cv-siddharth.vercel.app/ink) | archive · world | the writing years, before the code |
 | [`/excelsior`](https://cv-siddharth.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
 | [`/loopdown`](https://cv-siddharth.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
-| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, thirty-four short stories across three seasons and a navigable starmap |
+| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
 
 Plus, on the scroll itself:
 
@@ -221,8 +221,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 817 unit tests across 74 files (vitest)
-npm run test:e2e  # 105 Playwright tests across 14 files, every registry route
+npm test          # 901 unit tests across 81 files (vitest)
+npm run test:e2e  # 115 Playwright tests across 15 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

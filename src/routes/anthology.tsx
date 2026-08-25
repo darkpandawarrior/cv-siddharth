@@ -291,7 +291,27 @@ function EntryCard({ entry: e, index }: { entry: AnthologyEntry; index: number }
               accessibility at 1.00 with /anthology in its list. The e2e axe
               pass misses it because heading-order is moderate and that suite
               fails only on serious and critical. */}
-          <h2 className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent">{e.title}</h2>
+          {/* The colour is stated, not inherited, and that is load-bearing.
+              Without it this h2 inherits .ink-world's cream from an ancestor
+              OUTSIDE the card, and season three's kept page paints its own
+              paper ground (--color-card #e9dfc9) underneath. Measured on the
+              rendered page: cream #efe7d8 on that paper is 1.08:1. The title of
+              the one undamaged object in season three was invisible, and had
+              been since the paper landed. var(--color-text) resolves to the
+              kept theme's own ink, #1f1a12, at 13.06:1.
+
+              Third instance of this exact bug in this repo: see the two notes
+              in index.css about .piece-body blockquote and .flipbook-year. A
+              scoped theme that overrides a token only reaches elements that
+              actually read the token. anthologyContrast.spec.ts now walks all
+              four layers and fails under 4.5:1, so a fourth instance is caught
+              by a measurement rather than by someone looking at the page. */}
+          <h2
+            className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
+            style={{ color: "var(--color-text)" }}
+          >
+            {e.title}
+          </h2>
           <p className="mt-1 text-xs" style={{ color: "var(--color-text-dim)" }}>
             {e.planet}
             {e.system ? ` · ${e.system}` : ""}
@@ -319,6 +339,11 @@ function SeasonHeroFigure({ season }: { season: number }) {
   const hero = seasonHero(season);
   if (hero === "fourteen") return <TheFourteenPlate />;
   if (hero === "case-full" || hero === "case-burned") return <TheCase burned={hero === "case-burned"} />;
+  // Exhaustive by construction: `hero` is null here or tsc fails. That is the
+  // guard, not a comment about one. Season four used to return "wall" from
+  // seasonHero and land in this return, drawing nothing while the type said a
+  // hero existed.
+  hero satisfies null;
   return null;
 }
 
@@ -559,8 +584,19 @@ function SeasonRoll({ season, title }: { season: number; title: string }) {
       </p>
       <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {roll.map((r, i) => (
+          // The id is the ANCHOR TARGET, and it is not the React key. A reading
+          // page links a teller aside at `#teller-${w.id}` and the register
+          // links an argued absence at `#blank-${entry}`; both were being
+          // constructed and neither was ever emitted, so the links resolved to
+          // the right layer and then did nothing. scroll-mt keeps the card off
+          // the top edge when the browser jumps to it.
           <Reveal key={r.id} delay={(i % 3) * 80}>
-            {r.kind === "teller" ? <TellerCard witness={r.w} /> : <BlankCard blank={r.b} />}
+            <div
+              id={r.kind === "teller" ? `teller-${r.w.id}` : `blank-${r.b.entry}`}
+              className="scroll-mt-24"
+            >
+              {r.kind === "teller" ? <TellerCard witness={r.w} /> : <BlankCard blank={r.b} />}
+            </div>
           </Reveal>
         ))}
       </div>

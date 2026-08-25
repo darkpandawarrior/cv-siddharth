@@ -21,6 +21,35 @@ describe("the README's numbers are the repo's numbers", () => {
     );
   });
 
+  /*
+   * The test above compares the README to a GENERATED file, so when repoStats.ts
+   * is itself stale the two agree with each other and the gate passes on a wrong
+   * number. That is not hypothetical: it is how the README shipped 817/74 into a
+   * PR against a suite of 899/81. It only failed in CI, because CI runs
+   * gen-repo-stats before vitest and a developer does not.
+   *
+   * So the generated half gets its own check against something nothing
+   * generates. Counting files is enough — a file count that has drifted is proof
+   * the whole record is stale, and the test total moves with it. Walked rather
+   * than globbed because the suite spans src/, api/ and scripts/.
+   */
+  it("has not let the generated stats go stale under it", () => {
+    const skip = new Set(["node_modules", "dist", ".git", "e2e", ".vercel", "coverage", ".worktrees"]);
+    const walk = (dir: string): number => {
+      let n = 0;
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        if (e.name.startsWith(".") || skip.has(e.name)) continue;
+        if (e.isDirectory()) n += walk(join(dir, e.name));
+        else if (/\.test\.(ts|tsx|mjs)$/.test(e.name)) n += 1;
+      }
+      return n;
+    };
+    expect(
+      walk(ROOT),
+      "src/data/repoStats.ts is stale — run `npm run gen:repo-stats` and update the README",
+    ).toBe(repoStats.testFiles);
+  });
+
   it("states the real Playwright file count", () => {
     const specs = readdirSync(join(ROOT, "e2e")).filter((f) => f.endsWith(".spec.ts")).length;
     expect(README, `README should say ${specs} e2e spec files`).toMatch(

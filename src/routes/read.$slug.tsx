@@ -13,7 +13,8 @@ import { registerLines, tellersOf } from "../data/crossnav.ts";
 import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
-import { entryTheme, KINDLING_FINALE } from "../lib/seasonTheme.ts";
+import { splitDocket } from "../lib/docket.ts";
+import { entryTheme, type EntryTheme } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 
@@ -180,7 +181,13 @@ function ReadPiece() {
   const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
   const storyBody = storyOf(piece);
   const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
-  const trimmedStory = storyBody.trim();
+  // The docket comes off the story before anything else measures it, so the
+  // cut-line arithmetic below and the markdown pass both see the prose alone.
+  // storyOf() is deliberately NOT changed: it feeds describes() and the
+  // meta-tag fingerprint, which are about what this page is willing to say a
+  // piece contains, and that question is unaffected by where the line is set.
+  const { docket, rest: proseBody } = piece.kind === "anthology" ? splitDocket(storyBody) : { docket: null, rest: storyBody };
+  const trimmedStory = proseBody.trim();
   const cutMidSentence = endsMidSentence(piece);
   // The cut line renders outside ReactMarkdown, as its own paragraph, rather
   // than wrapping the whole story in an extra element to hang a CSS hook
@@ -188,7 +195,7 @@ function ReadPiece() {
   // paragraph and quietly break the Terminologies block's :last-of-type
   // selector further down in this file, for every entry, not just this one.
   const lastParagraphBreak = cutMidSentence ? trimmedStory.lastIndexOf("\n\n") : -1;
-  const storyBeforeCut = lastParagraphBreak >= 0 ? trimmedStory.slice(0, lastParagraphBreak) : storyBody;
+  const storyBeforeCut = lastParagraphBreak >= 0 ? trimmedStory.slice(0, lastParagraphBreak) : proseBody;
   const cutLine = lastParagraphBreak >= 0 ? trimmedStory.slice(lastParagraphBreak + 2).trim() : null;
 
   // Shared by the story half and the Terminologies half so the mark and the
@@ -210,6 +217,33 @@ function ReadPiece() {
       ) : (
         <hr className="my-10 border-line" />
       ),
+    // A GFM table is the Directory's own paperwork inside the prose, and on
+    // three pages the table IS the entry. It gets its own scroll box because
+    // the page root sets `overflow-x: hidden`: a wide table on a 390px phone
+    // was not scrolling, it was being CLIPPED, and page thirty's whole point
+    // is a Difference column that climbs — the column at the far right, the
+    // first thing a hidden overflow eats. tabIndex makes the box reachable by
+    // keyboard, which is required the moment a region scrolls; the sitewide
+    // :focus-visible rule already draws the ring.
+    table: ({ children }) => (
+      <div className="piece-table" tabIndex={0} role="region" aria-label="Table">
+        <table>{children}</table>
+      </div>
+    ),
+    // The asides. Eight paragraphs across the corpus open "[Page Fact-" or
+    // "[Fun Fact" and the bible calls them a second, smaller sheet: he is
+    // stepping out of the report to tell you something he could not file. They
+    // are the only rhythm the prose itself contains, and the page was setting
+    // them as more prose. Indent and a hair smaller — the colour does NOT
+    // change, because a fact he wanted you to have is not small print.
+    // Detected on the paragraph's own opening text, so a piece that grows a
+    // ninth needs no edit here. Two more are mid-sentence rather than their own
+    // paragraph and correctly stay inline: an aside inside a sentence is a
+    // sentence.
+    p: ({ children }) => {
+      const isAside = /^\[(Page|Fun) Fact/.test(nodeText(children).trimStart());
+      return isAside ? <p className="piece-aside">{children}</p> : <p>{children}</p>;
+    },
     // The charter table in s2-10 has one row where a "not yet required"
     // interval finally got a length (see the Standard Intervals table:
     // Elysheim and Vænheim are the two founding-blank rows, told apart from
@@ -420,15 +454,11 @@ function ReadPiece() {
           )}
 
           <div className={`piece-body mt-10${theme?.body ? ` ${theme.body}` : ""}`}>
-            {/* Season 1 filed through a rig and reached the reader — this is
-                that arrival, logged. Season 2 stops filing (see the season
-                blurb), so its chrome is "none" and nothing renders here: the
-                absence is the tell, not a hidden or greyed-out state. Season
-                3 is neither: he is withdrawing a page, not receiving or
-                refusing one, so it gets its own quiet marker instead. Which
-                of the three is seasonTheme's call, not this page's. */}
-            {piece.kind === "anthology" && theme?.chrome === "relay" && <RelayHeader entry={piece} />}
-            {piece.kind === "anthology" && theme?.chrome === "withdrawn" && <WithdrawnMarker entry={piece} />}
+            {/* The entry's own first line, set as the masthead of its medium.
+                Which of the four is seasonTheme's call, not this page's, and
+                the words are always the correspondent's — the site no longer
+                invents a line, and no longer prints his twice. */}
+            {docket && theme && <Docket docket={theme.docket} line={docket} />}
             <ReactMarkdown
               // GFM is not optional for these. Some entries carry real tables,
               // and in a couple of them the table IS the entry: page thirty is
@@ -440,7 +470,7 @@ function ReadPiece() {
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
             >
-              {cutMidSentence ? storyBeforeCut : storyBody}
+              {cutMidSentence ? storyBeforeCut : proseBody}
             </ReactMarkdown>
 
             {/* Entry #2300 stops mid-sentence and is filed that way on
@@ -449,7 +479,7 @@ function ReadPiece() {
                 ReactMarkdown and rendered by hand so the cut mark can sit
                 right against the real last word; the status line under it is
                 the Directory's own sign-off for a transmission that didn't
-                arrive, in the same institutional register as RelayHeader. */}
+                arrive, in the same institutional register as the relay docket. */}
             {cutMidSentence && cutLine && (
               <>
                 <p className="piece-body__cut-line">
@@ -468,10 +498,23 @@ function ReadPiece() {
               </>
             )}
 
+            {/* The apparatus. Already its own render pass; what it never had
+                was its own container, so it was styled by
+                `.piece-body ul:last-of-type` — a selector that can only see a
+                LIST. Twenty-three feet in the corpus are bulleted and it found
+                those. Twelve are authored as paragraphs and it could not, so
+                they rendered at full body size: ten of season four's fourteen
+                Notice-conditions blocks, statutory small print impersonating
+                the story, including the finale, whose whole design turns on a
+                reader noticing 397 against a threshold of 400 in exactly that
+                block. Nobody authored that. A wrapper sees all forty-eight
+                regardless of what the markdown underneath happens to be. */}
             {terminologiesBody !== null && (
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                {`---\n\n${terminologiesBody}`}
-              </ReactMarkdown>
+              <div className="piece-apparatus">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {`---\n\n${terminologiesBody}`}
+                </ReactMarkdown>
+              </div>
             )}
           </div>
 
@@ -581,39 +624,65 @@ function ReadPiece() {
   );
 }
 
-// The transmission chrome, and only for season one. A restrained telex stamp
-// ahead of the transcript, not a sci-fi HUD: which entry, where it sits in
-// the ten he filed, which system it came from, and that the signal actually
-// arrived. `entry.idx` is already the Directory's own 1-based filing order
-// for the season, so it doubles as the position without a second lookup.
-function RelayHeader({ entry }: { entry: AnthologyEntry }) {
-  const total = entriesOfSeason(1).length;
-  const line = [
-    `ENTRY №${entry.entry}`,
-    `POSITION ${entry.idx} OF ${total}`,
-    entry.system ? `${entry.system.toUpperCase()} SYSTEM` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <div className="relay-header">
-      <p>RELAY · GALACTIC DIRECTORY</p>
-      <p>{line}</p>
-      <p>STATUS · RECEIVED</p>
-    </div>
-  );
-}
-
-// The withdrawal, in place of RelayHeader's arrival. Season 3 numbers by the
-// same page-of-91 scheme season 2 established (entry.page), so no new
-// numbering is invented here — only the verb changes, from filed to
-// withdrawn. Piece 14 withdraws nothing; it is the one page kept, so it
-// gets the bible's own line for that instead of a "page 0 withdrawn" that
-// would otherwise fall out of the general case.
-function WithdrawnMarker({ entry }: { entry: AnthologyEntry }) {
-  const line = entry.kindling === KINDLING_FINALE ? "one page kept" : `page ${entry.page} withdrawn`;
-  return <p className="withdrawn-marker">&gt; Kindling · {line}</p>;
+/**
+ * The entry's first line, set as the masthead of the medium it names.
+ *
+ * The words are never this component's. They are the line the correspondent
+ * wrote, handed in by splitDocket, and every branch below only decides how it
+ * is set. That is the whole change: two of the four seasons are fixed by
+ * DELETION, and the season with the loudest medium is the only one that gains
+ * anything.
+ *
+ * relay      Season one arrived. The stamp around the line stays, because
+ *            arrival IS the season's medium claim, but the site's own
+ *            POSITION n OF 10 is gone: it was the site's count of what shipped
+ *            printed directly above the Directory's own "Series 7 of 16", two
+ *            registers disagreeing on one screen, and only one of them is
+ *            canon.
+ * folio      Season two was never sent, so nothing institutional may frame it.
+ *            No border, no mono, no caps: a page number in the reading serif,
+ *            because that is what it is. This is the season the old blockquote
+ *            style hurt most — a bordered mono quote box around a number a man
+ *            wrote on his own paper and transmitted to nobody.
+ * withdrawn  Season three's line, once. WithdrawnMarker used to print this
+ *            exact string above a body that already carried it, on all
+ *            fourteen pages.
+ * posted     Season four is signage, and the s4 bible gives signage right of
+ *            way. The district gets one step up in scale and into
+ *            --color-coverage (9.71:1 on the ink ground, measured, not
+ *            inherited from a comment); the clearance term stays small print,
+ *            because the term is the thing the piece is quietly counting. The
+ *            district is hard-capped below the h1: a notice is posted under a
+ *            title, never over it.
+ */
+function Docket({ docket, line }: { docket: EntryTheme["docket"]; line: string }) {
+  if (docket === "relay") {
+    return (
+      <div className="piece-docket piece-docket--relay">
+        <p>RELAY · GALACTIC DIRECTORY</p>
+        <p>{line}</p>
+        <p>STATUS · RECEIVED</p>
+      </div>
+    );
+  }
+  if (docket === "posted") {
+    // "Posted · THE RETURNS HALL · cleared in 12 ticks". Split on the
+    // separator the entries themselves use; anything that does not come apart
+    // into three falls through to one flat line rather than guessing, so a
+    // fifteenth notice with a different shape degrades instead of breaking.
+    const parts = line.split(" · ");
+    if (parts.length === 3) {
+      return (
+        <div className="piece-docket piece-docket--posted">
+          <p className="piece-docket__district">{parts[1]}</p>
+          <p>
+            {parts[0]} · {parts[2]}
+          </p>
+        </div>
+      );
+    }
+  }
+  return <p className={`piece-docket piece-docket--${docket}`}>{line}</p>;
 }
 
 // /anthology keeps its layer in useState today, so a typed <Link search={...}>
@@ -684,7 +753,7 @@ function DamageRegister({ entry }: { entry: AnthologyEntry }) {
   return (
     <footer className="notice-conditions">
       {/* Literal caps in the DOM rather than text-transform, matching
-          RelayHeader's own stamp two functions up. Not a heading: this is a
+          the relay docket's own stamp two functions up. Not a heading: this is a
           label on a filing block, and giving it an <h*> would put it in the
           document outline as a section of the story. */}
       <p className="notice-conditions__kicker">NOTICE-CONDITIONS</p>

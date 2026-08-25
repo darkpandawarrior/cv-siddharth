@@ -1469,10 +1469,10 @@ html.resume-mode .palette-trigger {
   --color-surface: #1b1611;
   --color-card: #221b15;
   --color-line: #3a2f24;
-  --color-accent: #d9a441; /* ochre — 9.0:1 on the ink ground */
+  --color-accent: #d9a441; /* ochre — 8.42:1 on the ink ground, recomputed */
   --color-accent-dim: #b8842c;
   --color-accent2: #cf8f63; /* terracotta, replacing the telemetry cyan */
-  --color-muted: #a4978a; /* 7.1:1 on ink — still passes, still clearly quieter */
+  --color-muted: #a4978a; /* 6.65:1 on ink — still passes, still clearly quieter */
   --font-display: "Rozha One", "Iowan Old Style", Georgia, serif;
 
   /* Scene palette. Without these the 3D rooms kept rendering the CAL-1 green
@@ -1622,28 +1622,105 @@ html.resume-mode .palette-trigger {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-/* The trailing Terminologies block (every generated entry ends with one) is
-   also tape — measured unit conversions, not narration — so it gets the
-   same mono register as a blockquote. It is always the last list in the
-   body, so :last-of-type finds it without react-markdown needing to know
-   anything special about it. */
-.piece-body ul:last-of-type {
+/* --- The apparatus ---------------------------------------------------------
+   The block at the foot of every entry: season 1-3's Terminologies, season
+   4's Notice conditions. It is tape, not narration — measured conversions, a
+   licence line, a citation count — and it is set in the register this world
+   uses for small print.
+
+   THE CORRECTION, and the reason this is a container and not a selector.
+   This rule used to be `.piece-body ul:last-of-type`, which can only see a
+   LIST. Twenty-three of the corpus's feet are bulleted and it found those.
+   Twelve are authored as paragraphs, and on those it matched nothing, so they
+   rendered at the full 1.0625rem/1.75 of body prose — including ten of season
+   four's fourteen Notice-conditions blocks. Statutory small print, set as
+   story, on the pages whose entire subject is a record being read as a
+   record. The finale was one of them: its design turns on a reader noticing
+   "citations this momenta: 397" against "retention threshold: 400", inside
+   the exact block that was being set as prose. Nobody chose that; a selector
+   chose it.
+
+   So the container absorbs the variance instead, which is also why the source
+   files were not normalised: CSS that works on both shapes is one edit here
+   rather than fourteen edits in another repo, and it stays correct for the
+   next foot whatever shape it arrives in. Bullets are dropped for the same
+   reason — a foot with discs and a foot without were the only visible
+   difference left once the type matched.
+
+   Nothing in this block may name a size, colour or measure that
+   `.piece-body p` reads. The prose column is frozen; see the floor below. */
+.piece-apparatus {
   font-family: var(--font-mono);
   font-size: 0.85em;
   color: var(--color-text-dim);
+  /* A citation count that falls across fourteen notices only reads as falling
+     if its digits line up. */
+  font-variant-numeric: tabular-nums;
 }
+.piece-apparatus ul,
+.piece-apparatus ol {
+  margin-left: 0;
+  list-style: none;
+}
+.piece-apparatus li,
+.piece-apparatus p {
+  margin-bottom: 0.55em;
+}
+/* The term being defined, not the definition. Raised rather than tinted:
+   #efe7d8 is 15.41:1 on the ink ground, measured. */
+.piece-apparatus strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* The asides. Eight paragraphs across the corpus open "[Page Fact-" or
+   "[Fun Fact" — the bible calls them a second, smaller sheet: he steps out of
+   the report to tell you something he could not file. The one change this
+   file makes inside the prose column, and it is admitted only because the
+   asides are the sole rhythm the prose already contains. Indent and a hair
+   smaller; the COLOUR does not move, because a fact he wanted you to have is
+   not small print. 0.94em of 1.0625rem is 1rem, which is the floor's own rule
+   that an aside never drops below 0.9em of body. */
+.piece-body p.piece-aside {
+  margin-left: 1.25rem;
+  font-size: 0.94em;
+}
+
+/* --- The floor ------------------------------------------------------------
+   Five values, stated so a later change has to argue with a number rather
+   than with a feeling: `.piece-body p` is 1.0625rem, line-height 1.75,
+   var(--color-prose, #ded3c2) at 12.80:1 on #14100c, max-w-2xl, 1.35em
+   paragraph spacing. Whatever else this file grows: no monospace body, no
+   texture behind reading type, no motion in the prose column, nothing in the
+   column that varies with reader state, and nothing between #2300's last real
+   word and its cut mark. Every colour in any diff here is an existing token
+   with its ratio RECOMPUTED in that diff and never copied from a comment —
+   two comments in this file disagreed with arithmetic until the same pass
+   that wrote this one, and this project has already shipped a gradient at
+   1.024:1 by trusting a number nobody re-ran. readingFloor.test.ts pins it. */
 
 /* GFM tables are always the Directory's own paperwork inside the prose — a
    charter's interval schedule, a weighing's climbing difference column —
    never the narrator's own voice, so they get the same mono register as a
    blockquote, matching the Canon tab's Standard Intervals table rather than
    inventing a second table style. */
-.piece-body table {
-  width: 100%;
+/* The scroll box. The page root sets `overflow-x: hidden`, so a table wider
+   than a 390px phone was not scrolling — it was being clipped, and the column
+   a hidden overflow eats first is the rightmost one. On page thirty that is
+   the Difference column, whose climb is the entire entry. min-width keeps the
+   columns from collapsing into unreadable wraps before the box takes over. */
+.piece-table {
   margin: 1.75em 0;
+  overflow-x: auto;
+}
+.piece-table > table {
+  width: 100%;
+  min-width: 28rem;
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: 0.85em;
+  /* Three of these tables exist to be compared down a column. */
+  font-variant-numeric: tabular-nums;
 }
 .piece-body th {
   padding: 0.5em 1em 0.5em 0;
@@ -1708,17 +1785,38 @@ html.resume-mode .palette-trigger {
   color: var(--color-accent);
 }
 
-/* --- Season-aware dispatch chrome -----------------------------------------
-   Season 1 was broadcast: numbered entries, filed to a rig, addressed to
-   "my dear readers". Season 2 was never sent: ninety-one pages into a
-   wooden case nobody transmitted. The relay header below is that broadcast,
-   made visible; season 2 gets no equivalent element at all — see RelayHeader
-   in read.$slug.tsx, which simply isn't called for season 2. This CSS only
-   covers season 2's half: the bare-paper ground that stands in for chrome
-   it isn't getting. */
+/* --- The docket -----------------------------------------------------------
+   Every one of the forty-eight entries opens with one line the correspondent
+   wrote, and that line is the entry's medium in its own words: a relay slug, a
+   folio, a withdrawal, a posted notice carrying the term of its own erasure.
+   Four seasons, four media, one line each, already authored.
 
-.relay-header {
-  margin-bottom: 1.75rem;
+   All forty-eight used to render through `.piece-body blockquote`, whose own
+   comment a few hundred lines up reserves that register for "quoted charter
+   text or a log line someone filed." A masthead set as a quotation. See
+   splitDocket and Docket in read.$slug.tsx for how it comes off the body.
+
+   Two seasons are fixed here by taking something AWAY. Season three's line
+   used to print twice on all fourteen pages, because a component rendered the
+   exact string the body already carried. Season two's line used to sit in a
+   bordered, uppercase, monospaced institutional box — a page number a man
+   wrote on his own paper and sent to nobody, framed as though the Directory
+   had filed it. Season one keeps its stamp, because arrival is season one's
+   whole medium claim, but loses the site's invented POSITION n OF 10, which
+   printed the site's count of what shipped directly above the Directory's own
+   "Series 7 of 16". Only one of those two registers is canon.
+
+   Season four is the only one that gains, and it is the season that earns it:
+   its plates are civic signage and the s4 bible gives the signage layer right
+   of way. */
+
+.piece-docket {
+  margin: 0 0 1.75rem;
+}
+
+/* Season one: the transmission stamp. A restrained telex header ahead of the
+   transcript, not a sci-fi HUD. */
+.piece-docket--relay {
   padding: 0.7rem 1rem;
   border: 1px solid var(--color-line);
   border-left: 2px solid var(--color-accent);
@@ -1729,14 +1827,59 @@ html.resume-mode .palette-trigger {
   text-transform: uppercase;
   color: var(--color-text-dim);
 }
-.relay-header p {
+.piece-docket--relay p {
   margin: 0;
 }
-.relay-header p:first-child {
+.piece-docket--relay p:first-child {
   color: var(--color-accent);
 }
 
-/* Warm paper tone and rule lines, consistent with the season 2 field plates
+/* Season two: a folio, and nothing else. No border, no mono, no caps, no
+   letterspacing — every one of those is an institution's mark, and the whole
+   canon of this season is that no institution ever touched it. It inherits the
+   reading serif from .piece-body on purpose. --color-muted is 6.65:1 on ink
+   and 6.31:1 over season two's paper wash, both measured in this pass. */
+.piece-docket--folio {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+/* Season three: the withdrawal, once. */
+.piece-docket--withdrawn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-dim);
+}
+
+/* Season four: signage. The district name is the only thing in this file that
+   goes UP in scale, and it is capped below the h1 by rule, not by accident —
+   a notice is posted under a title and never over one. --color-coverage is
+   9.71:1 on the ink ground, recomputed in this diff, and is the same coverage
+   cyan the season's plates use, so page and plate agree. The clearance term
+   stays small print because the term is what the season is quietly counting:
+   from 40 ticks in the first notice to 0 in the last. */
+.piece-docket--posted p {
+  margin: 0;
+}
+.piece-docket--posted p:not(.piece-docket__district) {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+.piece-docket__district {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 4.5vw, 1.5rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--color-coverage, var(--color-accent));
+}
+
+/* --- Season paper ---------------------------------------------------------
+
+   Warm paper tone and rule lines, consistent with the season 2 field plates
    (#E9DFC9 paper / #1F1A12 ink), but kept as a low-alpha wash over the
    existing dark ink-world ground rather than a literal light panel — this
    world stays dark, the paper is only implied. rgba() throughout, never a
@@ -1817,14 +1960,6 @@ html.resume-mode .palette-trigger {
    anyone, per the bible's own voice note that "the address should thin out
    as the pile does", so this is the opposite gesture: one line, no border,
    no caps. */
-.withdrawn-marker {
-  margin: 0 0 1.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  color: var(--color-text-dim);
-}
-
 /* --- The Damage Register -------------------------------------------------
    What later happened to a record, printed at the foot of it. See
    DamageRegister in read.$slug.tsx for what may go in it; this is only how it
