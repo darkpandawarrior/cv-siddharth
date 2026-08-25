@@ -31,10 +31,29 @@ export default tseslint.config(
       // them fire on idiomatic react-three-fiber, where mutating a ref, a
       // material or a uniform inside useFrame is how the library is meant to
       // be used, and that was the real reason the whole set was disabled.
-      // set-state-in-effect is the odd one out: its 21 hits are in ordinary
-      // components and each one is a genuine compiler bail-out worth fixing.
-      // Left as warnings so the backlog is visible and countable instead of
-      // invisible, without turning CI red over work that is not tonight's.
+      //
+      // set-state-in-effect was the odd one out. It fired 22 times; 10 were
+      // genuine and are gone. Five components hand-rolled the same client-only
+      // gate and now share src/lib/useHydrated.ts, which says it with
+      // useSyncExternalStore and so needs no effect at all. Four more reset
+      // state in an effect when a prop changed, which React's own docs name as
+      // a bug because it renders the stale value first: the command palette,
+      // the compare slider and the anomaly rail no longer do. Two probes in
+      // lib/voice.ts read a browser capability that never changes and now read
+      // it through a store.
+      //
+      // The 12 that remain are correct as written and are not a backlog:
+      //   AmbientBackground, ChessRoom, ParticleHero, Phone3D, Playground
+      //     probe WebGL and matchMedia, which do not exist on the server. This
+      //     site server-renders, and moving these into render is precisely how
+      //     /playground lost its SSR once already.
+      //   App, blueprintShared, Visitors, Terminal
+      //     drive a clock, a typing effect, a count-up and a streaming reply.
+      //     Each is a genuine external source of change over time, which is
+      //     what an effect is for.
+      //   Flipbook, LabBench
+      //     synchronise to something outside React on mount.
+      // Warnings rather than off, so a NEW one still shows up next to them.
       "react-hooks/immutability": "warn",
       "react-hooks/refs": "warn",
       "react-hooks/use-memo": "warn",

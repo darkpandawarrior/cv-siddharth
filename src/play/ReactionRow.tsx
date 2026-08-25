@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
+import { useHydrated } from "../lib/useHydrated.ts";
 import {
   REACTION_KEYS,
   REACTIONS,
@@ -70,10 +71,9 @@ export function ReactionRow({
   // lazy() alone is not enough: React resolves a lazy child while streaming on
   // the server, which would pull @playhtml/react back in. The mount flag is
   // what guarantees the server never reaches it.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const hydrated = useHydrated();
   const placeholder = <ReactionRowView counts={{}} className={className} />;
-  if (!mounted) return placeholder;
+  if (!hydrated) return placeholder;
   return (
     <Suspense fallback={placeholder}>
       <LiveReactionRow surface={surface} itemId={itemId} className={className} />

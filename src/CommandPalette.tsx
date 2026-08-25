@@ -95,14 +95,73 @@ const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon:
  * Folded into content: it only jumps to / opens things already on the page,
  * never gates anything. Keyboard-first (arrows + enter + esc), with a small
  * always-visible trigger button so it's reachable on mobile/touch too.
+ *
+ * This half owns only the open/closed bit and the global hotkey. Everything the
+ * palette itself remembers — the query, the highlighted row — lives in
+ * PaletteDialog below, which is mounted only while the palette is open. That
+ * mount IS the reset: a freshly-opened palette gets fresh state because it is a
+ * fresh component, rather than being opened stale and then scrubbed clean by an
+ * effect one render later.
  */
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function onKeydown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setOpen((v) => !v);
+      } else if (e.key === "Escape" && open) {
+        setOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        // Leads with "Search" because that is the visible label below 640px,
+        // and WCAG 2.5.3 requires the accessible name to contain the visible
+        // one — "Open command palette (Cmd+K)" contained the desktop label
+        // ("K", inside "Cmd+K") but not the mobile one, so this failed on
+        // phones only. Both visible strings are substrings of this.
+        aria-label="Search — open the command palette (Cmd+K)"
+        className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+      >
+        {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it
+            rendered as "⌘ ⌘K". Icon carries the modifier, text carries the key. */}
+        <Command size={13} />
+        <span className="sm:hidden">Search</span>
+        <span className="hidden sm:inline">K</span>
+      </button>
+
+      {open && <PaletteDialog onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+/**
+ * The open palette: the overlay, the search field, the filtered list, and the
+ * two pieces of state that only mean anything while it is up.
+ *
+ * Mounted only when open, so its lifetime is exactly one open→close cycle. The
+ * focus bookkeeping that used to hang off `[open]` in the parent hangs off this
+ * component's mount and unmount instead, which is the same two moments.
+ */
+function PaletteDialog({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  // Guards against "phantom hover": if the palette opens with a list row
+  // already under a stationary cursor, the browser can fire a mouseenter
+  // there and steal the default activeIndex before the user moves the mouse.
+  // Starts suppressed on every open for free, because every open is a mount.
+  const suppressHoverRef = useRef(true);
 
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
@@ -173,50 +232,43 @@ export function CommandPalette() {
     return commands.filter((c) => `${c.label} ${c.keywords ?? ""}`.toLowerCase().includes(q));
   }, [commands, query]);
 
-  useEffect(() => setActiveIndex(0), [query]);
+  // The highlight is an index into `filtered`, so a new query means a new list
+  // and the highlight has to go back to its top. Adjusted during render against
+  // the previous query held in state — the pattern React documents for resetting
+  // state when an input to it changes. The `useEffect(… , [query])` this
+  // replaces committed the new list alongside the OLD highlight and corrected
+  // itself one render later, so there was a frame where the highlighted row was
+  // not the row Enter would run. Setting state during render instead makes React
+  // re-run this component before painting anything, so list and highlight always
+  // land in the same commit.
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (prevQuery !== query) {
+    setPrevQuery(query);
+    setActiveIndex(0);
+  }
 
   useEffect(() => {
-    function onKeydown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setOpen((v) => !v);
-      } else if (e.key === "Escape" && open) {
-        setOpen(false);
-      }
-    }
-    window.addEventListener("keydown", onKeydown);
-    return () => window.removeEventListener("keydown", onKeydown);
-  }, [open]);
-
-  // Guards against "phantom hover": if the palette opens with a list row
-  // already under a stationary cursor, the browser can fire a mouseenter
-  // there and steal the default activeIndex before the user moves the mouse.
-  const suppressHoverRef = useRef(true);
-
-  useEffect(() => {
-    if (open) {
-      setQuery("");
-      setActiveIndex(0);
-      suppressHoverRef.current = true;
-      // Whichever control opened the palette (⌘K anywhere, the trigger button)
-      // gets focus back once it closes — same pattern as FloatingChat.tsx.
-      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
-      const clear = () => {
-        suppressHoverRef.current = false;
-      };
-      window.addEventListener("mousemove", clear, { once: true });
-      // Focus after the entrance animation frame so iOS Safari doesn't eat it.
-      requestAnimationFrame(() => inputRef.current?.focus());
-      return () => window.removeEventListener("mousemove", clear);
-    }
-    previouslyFocusedRef.current?.focus();
-  }, [open]);
+    // Whichever control opened the palette (⌘K anywhere, the trigger button)
+    // gets focus back once it closes — same pattern as FloatingChat.tsx.
+    // Captured on mount, restored on unmount, which are the open and the close.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const clear = () => {
+      suppressHoverRef.current = false;
+    };
+    window.addEventListener("mousemove", clear, { once: true });
+    // Focus after the entrance animation frame so iOS Safari doesn't eat it.
+    requestAnimationFrame(() => inputRef.current?.focus());
+    return () => {
+      window.removeEventListener("mousemove", clear);
+      previouslyFocused?.focus();
+    };
+  }, []);
 
   function runActive() {
     const cmd = filtered[activeIndex];
     if (!cmd) return;
     cmd.run();
-    setOpen(false);
+    onClose();
   }
 
   function onInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -242,87 +294,66 @@ export function CommandPalette() {
   }, [activeIndex]);
 
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        // Leads with "Search" because that is the visible label below 640px,
-        // and WCAG 2.5.3 requires the accessible name to contain the visible
-        // one — "Open command palette (Cmd+K)" contained the desktop label
-        // ("K", inside "Cmd+K") but not the mobile one, so this failed on
-        // phones only. Both visible strings are substrings of this.
-        aria-label="Search — open the command palette (Cmd+K)"
-        className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-ink/80 px-4 pt-[12vh] backdrop-blur-md"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="palette-in glass-panel w-full max-w-lg overflow-hidden rounded-2xl"
+        style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it
-            rendered as "⌘ ⌘K". Icon carries the modifier, text carries the key. */}
-        <Command size={13} />
-        <span className="sm:hidden">Search</span>
-        <span className="hidden sm:inline">K</span>
-      </button>
-
-      {open && (
-        <div
-          className="fixed inset-0 z-[60] flex items-start justify-center bg-ink/80 px-4 pt-[12vh] backdrop-blur-md"
-          onClick={() => setOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="palette-in glass-panel w-full max-w-lg overflow-hidden rounded-2xl"
-            style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Command palette"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
-              <Command size={16} className="shrink-0 text-accent" />
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={onInputKeyDown}
-                placeholder="Jump to a section, open a project, or ask the AI…"
-                aria-label="Command palette search"
-                role="combobox"
-                aria-expanded="true"
-                aria-controls="palette-list"
-                aria-activedescendant={filtered[activeIndex] ? `cmd-${filtered[activeIndex].id}` : undefined}
-                className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder-muted outline-none"
-              />
-              <kbd className="hidden shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px] text-muted sm:block">esc</kbd>
-            </div>
-            <div ref={listRef} id="palette-list" role="listbox" className="max-h-[50vh] overflow-y-auto p-2">
-              {filtered.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">No matches.</p>}
-              {filtered.map((c, i) => (
-                <button
-                  key={c.id}
-                  id={`cmd-${c.id}`}
-                  data-index={i}
-                  role="option"
-                  aria-selected={i === activeIndex}
-                  onMouseEnter={() => {
-                    if (!suppressHoverRef.current) setActiveIndex(i);
-                  }}
-                  onClick={() => {
-                    c.run();
-                    setOpen(false);
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
-                    i === activeIndex ? "bg-accent/15 text-zinc-100" : "text-zinc-300"
-                  }`}
-                >
-                  <span className={i === activeIndex ? "text-accent" : "text-muted"}>{c.icon}</span>
-                  <span className="flex-1">{c.label}</span>
-                  <span className="flex items-center gap-1 text-xs text-muted">
-                    {i === activeIndex && <CornerDownLeft size={12} />}
-                    {c.hint}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+          <Command size={16} className="shrink-0 text-accent" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onInputKeyDown}
+            placeholder="Jump to a section, open a project, or ask the AI…"
+            aria-label="Command palette search"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="palette-list"
+            aria-activedescendant={filtered[activeIndex] ? `cmd-${filtered[activeIndex].id}` : undefined}
+            className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder-muted outline-none"
+          />
+          <kbd className="hidden shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px] text-muted sm:block">esc</kbd>
         </div>
-      )}
-    </>
+        <div ref={listRef} id="palette-list" role="listbox" className="max-h-[50vh] overflow-y-auto p-2">
+          {filtered.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted">No matches.</p>}
+          {filtered.map((c, i) => (
+            <button
+              key={c.id}
+              id={`cmd-${c.id}`}
+              data-index={i}
+              role="option"
+              aria-selected={i === activeIndex}
+              onMouseEnter={() => {
+                if (!suppressHoverRef.current) setActiveIndex(i);
+              }}
+              onClick={() => {
+                c.run();
+                onClose();
+              }}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                i === activeIndex ? "bg-accent/15 text-zinc-100" : "text-zinc-300"
+              }`}
+            >
+              <span className={i === activeIndex ? "text-accent" : "text-muted"}>{c.icon}</span>
+              <span className="flex-1">{c.label}</span>
+              <span className="flex items-center gap-1 text-xs text-muted">
+                {i === activeIndex && <CornerDownLeft size={12} />}
+                {c.hint}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

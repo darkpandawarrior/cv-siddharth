@@ -4,11 +4,11 @@
  * has speechSynthesis but no SpeechRecognition, so "supported" is never one
  * flag for both.
  *
- * Everything that touches `window` does so inside an effect or a handler: this
- * component tree is server-rendered on /, /resume and /project/*, where these
- * globals don't exist.
+ * Everything that touches `window` does so inside an effect, a handler, or a
+ * useSyncExternalStore snapshot the server never calls: this component tree is
+ * server-rendered on /, /resume and /project/*, where these globals don't exist.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 /* ── SpeechRecognition types ──────────────────────────────────────────────
  * lib.dom.d.ts ships the *event* types (SpeechRecognitionEvent,
@@ -38,6 +38,23 @@ function recognitionCtor(): SpeechRecognitionCtor | null {
   };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
+
+/* ── Capability probes ────────────────────────────────────────────────────
+ * Whether a browser ships either speech API is fixed for the lifetime of the
+ * page: nothing installs a recognizer at runtime. So there is nothing to
+ * subscribe to, and `subscribe` hands back a no-op unsubscribe. The server
+ * snapshot is a constant `false` — `window` isn't there to ask, and it keeps
+ * the server render and the hydration pass agreeing, exactly as the old
+ * `useState(false)` + effect pair did. Both snapshots return a boolean, so
+ * React's Object.is check on them is stable and never re-renders in a loop.
+ *
+ * Deliberately NOT useHydrated: these read a real browser capability rather
+ * than asking whether we are on the client yet, and useHydrated's own doc
+ * comment rules that use out. */
+const neverChanges = () => () => {};
+const unsupportedOnServer = () => false;
+const hasRecognition = () => recognitionCtor() !== null;
+const hasSynthesis = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
 /**
  * What a visitor should read when the recognizer gives up. `aborted` is the
@@ -76,7 +93,7 @@ export interface SpeechInput {
  * console FILLS the composer rather than submitting — see FloatingChat).
  */
 export function useSpeechInput(onTranscript: (text: string, final: boolean) => void): SpeechInput {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(neverChanges, hasRecognition, unsupportedOnServer);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -87,8 +104,6 @@ export function useSpeechInput(onTranscript: (text: string, final: boolean) => v
   useEffect(() => {
     cbRef.current = onTranscript;
   }, [onTranscript]);
-
-  useEffect(() => setSupported(recognitionCtor() !== null), []);
 
   const cancel = useCallback(() => {
     recRef.current?.abort();
@@ -160,7 +175,7 @@ export interface SpeechOutput {
  * anything, which is the autoplay this is meant to avoid).
  */
 export function useSpeechOutput(): SpeechOutput {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(neverChanges, hasSynthesis, unsupportedOnServer);
   const [enabled, setEnabled] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   // Has this page ever queued an utterance? Until it has, there is nothing to
@@ -170,8 +185,6 @@ export function useSpeechOutput(): SpeechOutput {
   // browsers). The panel stops speech on mount, on close and on every new
   // message, so that would have been a wake-up on every single page load.
   const startedRef = useRef(false);
-
-  useEffect(() => setSupported(typeof window !== "undefined" && "speechSynthesis" in window), []);
 
   const stop = useCallback(() => {
     if (startedRef.current) window.speechSynthesis.cancel();
@@ -184,7 +197,7 @@ export function useSpeechOutput(): SpeechOutput {
 
   const speak = useCallback(
     (text: string) => {
-      if (!enabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      if (!enabled || !hasSynthesis()) return;
       const clean = text.trim();
       if (!clean) return;
       startedRef.current = true;

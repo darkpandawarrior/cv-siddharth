@@ -79,9 +79,20 @@ export default function AnomalyRail() {
   // and the dialog open over a fully reachable background. Closing here runs
   // the exact same cleanup as a normal close (closeInstrument, below), so
   // nothing is left half-inerted.
-  useEffect(() => {
+  //
+  // Adjusted during render against the pathname we last rendered at, rather
+  // than in an effect: this is React's documented way to reset state when
+  // something changes, and it is the only one that never shows the overlay
+  // over a page it has stopped inerting. The effect version needed a second
+  // render pass to close, so for one commit the dialog was painted over the
+  // freshly mounted route. React re-runs this component immediately with the
+  // new state and throws the first pass away, so nothing downstream — the
+  // overlay included — ever sees the stale `true`.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
     setInstrumentOpen(false);
-  }, [pathname]);
+  }
 
   // `\` opens the instrument view from anywhere on the site — same pattern
   // as the terminal's backtick hotkey in __root.tsx: ignore modified presses

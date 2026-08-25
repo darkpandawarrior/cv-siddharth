@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, type FormEvent } from "react";
 import { MessageSquarePlus, Trash2 } from "lucide-react";
+import { useHydrated } from "../lib/useHydrated.ts";
 import { NOTE_MAX_LENGTH, type WallNote } from "./guestWall.ts";
 
 /**
@@ -105,10 +106,9 @@ export function MarginNotes({ pieceSlug, className = "" }: { pieceSlug: string; 
   // lazy() alone is not enough: React resolves a lazy child while streaming on
   // the server, which would pull @playhtml/react back in. The mount flag is
   // what guarantees the server never reaches it.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const hydrated = useHydrated();
   const placeholder = <MarginNotesView notes={[]} className={className} />;
-  if (!mounted) return placeholder;
+  if (!hydrated) return placeholder;
   return (
     <Suspense fallback={placeholder}>
       <LiveMarginNotes pieceSlug={pieceSlug} className={className} />

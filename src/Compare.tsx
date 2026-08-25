@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Picture } from "./Picture.tsx";
 import { compareSets } from "./data/compareSets.ts";
 import { clampPosition, percentAt } from "./compareGeometry.ts";
@@ -54,10 +54,19 @@ export function Compare({
 
   // A different set can arrive on the same page (the section's own picker). Without this the old
   // index sticks and the toggle highlights a treatment that is not on screen.
-  useEffect(() => {
+  //
+  // Adjusted during render against the previous prop held in state, which is what React documents
+  // for resetting state when a prop changes — and this component owns two values that have to reset
+  // together. The `useEffect(…, [options])` this replaces committed the new set with the old index
+  // and the old divider position first and corrected itself one render later, so the reader got a
+  // frame of the wrong treatment at the wrong wipe. Setting state here makes React re-run this
+  // component before it paints, so the set, the index and the divider land in one commit.
+  const [prevOptions, setPrevOptions] = useState(options);
+  if (prevOptions !== options) {
+    setPrevOptions(options);
     setActive(0);
     setPos(50);
-  }, [options]);
+  }
 
   if (options.length === 0) return null;
   const current = options[Math.min(active, options.length - 1)];
