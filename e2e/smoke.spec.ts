@@ -59,6 +59,12 @@ const EXPECTED_404 = [
   "/_vercel/speed-insights/",
   "/api/spotify",
   "/api/github-activity",
+  // Added when the live CI/CD panel landed (#41) and this list did not move
+  // with it, which is what turned main's lighthouse leg red. Verified the way
+  // the note above requires, not assumed:
+  //   curl "https://cv-siddharth.vercel.app/api/pipeline?slug=mileway" -> 200,
+  // returning real GitHub Actions runs.
+  "/api/pipeline",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 
