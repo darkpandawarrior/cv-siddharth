@@ -14,6 +14,8 @@ import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { splitDocket } from "../lib/docket.ts";
+import { Rendering } from "../Rendering.tsx";
+import { describes, endsMidSentence, storyOf } from "../lib/describes.ts";
 import { entryTheme, type EntryTheme } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
@@ -84,70 +86,24 @@ function nodeText(node: ReactNode): string {
   return "";
 }
 
-// Everything before the Terminologies divider: the story as it was filed,
-// without the tape. Hoisted out of the component because `head:` has to ask
-// the same question the body does, and two copies of "where does this stop"
-// is how a meta tag ends up finishing a sentence the prose never finishes.
-const storyOf = (v: ReadView): string => {
-  const at = v.kind === "anthology" ? v.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
-  return at >= 0 ? v.body.slice(0, at) : v.body;
-};
-
-// True when the story has no last sentence. Generic rather than a slug list:
-// entry #2300 is filed incomplete on purpose and s3-09 stops on a stray tag,
-// and the corpus is allowed a third.
-const endsMidSentence = (v: ReadView): boolean =>
-  v.kind === "anthology" && !/[.!?"'”’)\]]$/.test(storyOf(v).trim());
-
-// Letters and digits only, lowercased. A comparison against raw prose is not a
-// guard: the first version of the check below tested `body.includes(blurb)` and
-// a simulated `body.slice(0, 150) + "…"` walked straight through it, because
-// the ellipsis the excerpt added was enough to stop it being a substring. That
-// ellipsis IS the thing being guarded against, so the fingerprint has to be
-// blind to punctuation, wrapping and quote marks or it only catches an excerpt
-// nobody would write.
-const squash = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
-
-// About seven words of prose once squashed. Long enough that no two authored
-// sentences in this corpus collide, short enough that nothing lifted off this
-// story gets past.
-const FINGERPRINT = 40;
-
 /**
- * The description this page is allowed to publish, or null for none at all.
+ * The lib rules, narrowed to what this route may apply them to.
  *
- * It is the AUTHORED blurb and never an excerpt of the prose. Entry #2300 stops
- * mid-sentence because the Directory never got to finish it, and every excerpt
- * function ever written either trims to a sentence boundary or appends an
- * ellipsis. Either one finishes, in a share card, the sentence the whole entry
- * exists to leave unfinished.
- *
- * So the guard is not "do not truncate", which is a promise a comment cannot
- * keep. On a story with no ending the blurb is fingerprinted against the prose:
- * if it opens where the story opens, or carries the story's last words, it came
- * from the body and is refused, and the page ships no description tag at all.
- * An absent tag is a smaller lie than a completed sentence.
- *
- * A blank blurb is refused for the same reason. `gen-anthology.mjs` emits
- * `e.blurb || ""`, and an empty description tag is exactly the pressure that
- * makes the next person reach for the body. It should land here, in front of
- * this comment, rather than in a helper three files away.
- *
- * Everything with an ending is handed back untouched. That is deliberate rather
- * than lazy: nine printed blurbs legitimately ARE their own opening lines, and
- * a piece that finished its last sentence has no ending for a description to
- * finish for it.
+ * The mid-sentence treatment is for ANTHOLOGY ENTRIES ONLY, and that condition
+ * used to be folded inside endsMidSentence itself. Moving the rule to lib/ for
+ * the feed to share meant the condition had to come back out and be stated
+ * here, or a printed piece whose last line happens to end without punctuation
+ * would start rendering a cut mark and a RELAY ENDS banner.
  */
-const describes = (v: ReadView): string | null => {
-  const blurb = v.blurb.trim();
-  if (!blurb) return null;
-  if (!endsMidSentence(v)) return blurb;
-  const story = squash(storyOf(v));
-  const said = squash(blurb);
-  const fromTheOpening = story.startsWith(said.slice(0, FINGERPRINT));
-  const carriesTheEnding = said.includes(story.slice(-FINGERPRINT));
-  return fromTheOpening || carriesTheEnding ? null : blurb;
-};
+const cutsOff = (v: ReadView): boolean => v.kind === "anthology" && endsMidSentence(v.body);
+const describesView = (v: ReadView): string | null =>
+  cutsOff(v) ? describes(v) : v.blurb.trim() || null;
+
+// storyOf / endsMidSentence / describes now live in ../lib/describes.ts, with
+// one implementation and two callers: this page's meta tags and the anthology
+// feed generator. They were written here, and a second copy in the feed is
+// exactly how this repo already shipped a guard that stayed green against a
+// reintroduced defect. See that file's header.
 
 export const Route = createFileRoute("/read/$slug")({
   loader: ({ params }): ReadView => {
@@ -165,7 +121,7 @@ export const Route = createFileRoute("/read/$slug")({
     if (!loaderData) return {};
     // One call, two tags, so description and og:description cannot drift into
     // disagreeing about what this page is willing to say it ends with.
-    const description = describes(loaderData);
+    const description = describesView(loaderData);
     return {
       meta: [
         { title: `${loaderData.title} — Siddharth Pandalai` },
@@ -195,7 +151,7 @@ function ReadPiece() {
   // punctuation gets the treatment — so it stays correct if the corpus ever
   // grows a second entry that stops the same way, without a hardcoded slug.
   const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
-  const storyBody = storyOf(piece);
+  const storyBody = storyOf(piece.body);
   const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
   // The docket comes off the story before anything else measures it, so the
   // cut-line arithmetic below and the markdown pass both see the prose alone.
@@ -204,7 +160,7 @@ function ReadPiece() {
   // piece contains, and that question is unaffected by where the line is set.
   const { docket, rest: proseBody } = piece.kind === "anthology" ? splitDocket(storyBody) : { docket: null, rest: storyBody };
   const trimmedStory = proseBody.trim();
-  const cutMidSentence = endsMidSentence(piece);
+  const cutMidSentence = cutsOff(piece);
   // The cut line renders outside ReactMarkdown, as its own paragraph, rather
   // than wrapping the whole story in an extra element to hang a CSS hook
   // off — that wrapper would sit between .piece-body and every other
@@ -477,6 +433,15 @@ function ReadPiece() {
               loading="lazy"
               className="mt-8 h-auto w-full rounded-xl border border-line"
             />
+          )}
+
+          {/* The instrument, between the byline and the prose. Anthology only:
+              the printed pieces ran in a magazine and were never transmitted,
+              rendered or posted, so there is no in-world channel to play them
+              through and inventing one would be the fifth medium nobody
+              designed. See src/lib/rendering.ts. */}
+          {piece.kind === "anthology" && (
+            <Rendering body={piece.body} season={piece.season} kindling={piece.kindling} />
           )}
 
           <div className={`piece-body mt-10${theme?.body ? ` ${theme.body}` : ""}`}>

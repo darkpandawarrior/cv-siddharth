@@ -226,3 +226,44 @@ describe("the unfiled lane", () => {
     }
   });
 });
+
+describe("the front door", () => {
+  const source = readFileSync(fileURLToPath(new URL("./routes/anthology.tsx", import.meta.url)), "utf8");
+  /** The file with its prose removed. A count this file EXPLAINS in a comment is
+   *  not a count it renders, and the first version of the guard below fired on
+   *  its own documentation, which is the same mistake the apparatus guard made
+   *  two describes() up. */
+  const page = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/.*$/gm, "");
+
+  it("states its size from the corpus rather than from a typed number", () => {
+    // This page shipped "twenty entries, two seasons" against a corpus of
+    // thirty-four across three. The fix is not a better number; it is not
+    // having one to keep.
+    expect(page).toContain("anthologyEntries.reduce((n, e) => n + e.words, 0)");
+    const literals = page.match(/\b(48|83,434|83434|forty-eight|six hours|6 hours)\b/gi);
+    expect(literals, `the door hardcodes ${literals?.join(", ")}`).toBeNull();
+  });
+
+  it("points at two doors that actually exist and are not the same piece", () => {
+    // Both are derived, so this asserts the derivation still lands on real
+    // entries rather than that two particular slugs are present.
+    const first = anthologyEntries.filter((e) => e.season === 1).sort((a, b) => a.idx - b.idx)[0];
+    const shortest = anthologyEntries.filter((e) => e.season === 1).sort((a, b) => a.words - b.words)[0];
+    expect(first).toBeTruthy();
+    expect(shortest).toBeTruthy();
+    expect(first.slug).not.toBe(shortest.slug);
+    // The shortest piece in the whole corpus is 280 words, deep inside season
+    // three, and would be a door into the middle of a fire. The derivation is
+    // scoped to season one on purpose, and this is that reason, asserted.
+    const shortestAnywhere = [...anthologyEntries].sort((a, b) => a.words - b.words)[0];
+    expect(shortestAnywhere.season, "if the shortest piece is now in season one, revisit the door").not.toBe(1);
+    expect(shortest.season).toBe(1);
+  });
+
+  it("still refuses to explain the order it claims", () => {
+    // "Works separately, together, or in any order." is said once and nothing
+    // may follow it that argues for it. The door answers a different question.
+    expect(page).toContain("Works separately, together, or in any order.");
+    expect(page).not.toMatch(/read them in order|recommended order|start with season|correct order/i);
+  });
+});

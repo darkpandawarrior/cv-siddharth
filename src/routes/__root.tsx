@@ -114,6 +114,12 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "alternate", type: "application/atom+xml", href: "/feed.xml", title: "The Loopdown — field notes" },
+      // Two feeds, because they are two different things a reader can want and
+      // a single merged one would put a Kotlin coroutine post next to a page
+      // being withdrawn from a burning case. The anthology's own summaries go
+      // through describes(), so a piece whose blurb came off the prose ships
+      // with no summary rather than a finished sentence.
+      { rel: "alternate", type: "application/atom+xml", href: "/anthology.xml", title: "The Morkinstar Journals" },
       { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "Agent-readable profile" },
       { rel: "icon", href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' fill='%233ddc84' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E" },
       { rel: "preload", as: "font", type: "font/woff2", href: spaceGrotesk700, crossOrigin: "anonymous" },
