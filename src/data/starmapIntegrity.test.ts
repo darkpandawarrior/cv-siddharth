@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { anthology, anthologyEntries } from "./anthology.ts";
 import { STATE_COLOR, worldPosition } from "../Starmap.tsx";
+import { isRevisited, worldKeys, worldSeasons } from "./crossnav.ts";
 
 /**
  * Integrity guards on the starmap half of the generated anthology data.
@@ -53,10 +54,36 @@ describe("starmap integrity", () => {
   });
 
   it("resolves every reader key to a real entry", () => {
+    // EVERY key, not the first one. `k` widened to an array the moment a later
+    // season came back to a place the account had already filed, and a reader
+    // that kept the singular shape would validate #2300 and never look at the
+    // district #2300's ring became. This test caught exactly that on the way
+    // in, as a TypeError on w.k.split.
+    let checked = 0;
     for (const w of worlds) {
-      if (!w.k) continue;
-      const [season, idx] = w.k.split("-").map(Number);
-      expect(anthologyEntries.find((e) => e.season === season && e.idx === idx), `${w.n} -> ${w.k}`).toBeDefined();
+      for (const k of worldKeys(w)) {
+        const [season, idx] = k.split("-").map(Number);
+        expect(anthologyEntries.find((e) => e.season === season && e.idx === idx), `${w.n} -> ${k}`).toBeDefined();
+        checked++;
+      }
+    }
+    // The floor. Without it a rename that emptied worldKeys() would leave this
+    // inspecting nothing and reporting green.
+    expect(checked, "no reader keys visited, so this guard proves nothing").toBeGreaterThanOrEqual(22);
+  });
+
+  it("gives a world more than one record only where a later season came back to it", () => {
+    // Accumulation, asserted rather than assumed. The map draws a cyan ring
+    // around a revisited world and nothing else changes, so a stray second key
+    // would put that ring on a world no later season ever mentions.
+    const revisited = worlds.filter(isRevisited);
+    expect(revisited.map((w) => w.n), "the accumulation ring has nothing to draw").toEqual(["The Directory"]);
+    for (const w of revisited) {
+      const seasons = worldSeasons(w);
+      // Forward in time, same law the register runs on: the later record is
+      // laid over the earlier one, never the other way round.
+      expect([...seasons], `${w.n} lists its records out of order`).toEqual([...seasons].sort((a, b) => a - b));
+      expect(new Set(seasons).size, `${w.n} carries two records from one season`).toBe(seasons.length);
     }
   });
 

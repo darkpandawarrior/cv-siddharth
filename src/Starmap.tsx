@@ -4,6 +4,7 @@ import { Html, Instance, Instances, Line, OrbitControls, PerformanceMonitor } fr
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import type { Mesh } from "three";
 import { anthology } from "./data/anthology.ts";
+import { isRevisited, worldKeys, worldSeasons } from "./data/crossnav.ts";
 import type { StarWorld } from "./data/anthology.ts";
 
 /**
@@ -86,11 +87,6 @@ function effectiveState(world: StarWorld, concluded: number): string {
   return world.st;
 }
 
-/** Season, read off the reader key rather than stored. null is the furniture
- *  that belongs to the whole record instead of to one season (today: the
- *  ruin), which is always shown at full. A season four world is a world with
- *  `k: "4-3"` — no new field, no new branch, no generator change. */
-export const seasonOf = (world: StarWorld): number | null => (world.k ? Number(world.k.split("-")[0]) : null);
 
 // Exported so the integrity test can assert that every state in the data has
 // a colour here, rather than against a second list that can fall behind.
@@ -108,6 +104,12 @@ export const STATE_COLOR: Record<string, string> = {
   // WCAG floor is 3:1. It is never used for text.
   withdrawn: "#A85A38",
 };
+
+/** Season four's full-coverage cyan, the same value as --color-coverage in
+ *  index.css and the same one the season's plates carry. Deliberately NOT a
+ *  member of STATE_COLOR: it is not a state a world can be in, it is the
+ *  colour of the layer a later season lays over one. */
+const COVERAGE_CYAN = "#5ec8dc";
 
 /** Six-digit hex to rgba(), for the label borders.
  *
@@ -222,17 +224,26 @@ interface NamedWorldProps {
   hoveredName: string | null;
   onHover: (name: string | null) => void;
   onOpen: (key: string) => void;
-  /** false when a season filter is on and this world belongs to another one. */
-  inSeason: boolean;
+  /** The season the arrival raised, or null for all of them. */
+  season: number | null;
 }
 
-function NamedWorld({ world, concluded, hoveredName, onHover, onOpen, inSeason }: NamedWorldProps): JSX.Element {
+function NamedWorld({ world, concluded, hoveredName, onHover, onOpen, season }: NamedWorldProps): JSX.Element {
   const position = useMemo(() => worldPosition(world), [world]);
   const state = effectiveState(world, concluded);
   const dark = state === "concluded";
   const color = STATE_COLOR[state] ?? STATE_COLOR.lit;
   const isHovered = hoveredName === world.n;
-  const key = world.k;
+  const seasons = worldSeasons(world);
+  // A world with no record at all belongs to the whole account rather than to
+  // one part of it, so a filter never lowers it.
+  const inSeason = season === null || seasons.length === 0 || seasons.includes(season);
+  // Which record a click opens. A place the account came back to carries more
+  // than one, so a raised season opens its own; with nothing raised it opens
+  // the earliest, which is the record the place is filed under and the one
+  // this map has opened since it shipped.
+  const key = worldKeys(world).find((k) => Number(k.split("-")[0]) === season) ?? worldKeys(world)[0];
+  const revisited = isRevisited(world);
   const withdrawn = state === "withdrawn";
   // Lowered, never removed: a filtered world keeps its position and its state
   // colour so the sky does not change shape, and stays clickable.
@@ -312,6 +323,22 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen, inSeason }
             emissiveIntensity={glow}
           />
         </>
+      )}
+
+      {/* Accumulation, drawn. A later season laid over an earlier one, in the
+          coverage cyan season four uses for a fully served district, flat and
+          wide so it reads as a ring around the body rather than as a second
+          body. Nothing is removed to make room for it: the world underneath
+          keeps its own state, its own colour and its own glow, and it is still
+          visible through the middle. That is the season's whole doctrine, and
+          the ring is the only part of season four this map draws, because the
+          city has no position of its own and a district is not a planet.
+          Non-text, so the 3:1 floor is the applicable one. */}
+      {revisited && (
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[NAMED_RADIUS * 2.9, 0.45, 8, 64]} />
+          <meshBasicMaterial color={COVERAGE_CYAN} transparent opacity={inSeason ? 0.5 : 0.15} />
+        </mesh>
       )}
 
       {/* Always mounted — a map where you have to hover every world to find
@@ -458,9 +485,7 @@ function Scene({ concluded, onOpen, season = null }: StarmapProps): JSX.Element 
           hoveredName={hoveredName}
           onHover={setHoveredName}
           onOpen={onOpen}
-          // A world with no season belongs to the whole record rather than to
-          // one part of it, so a filter never lowers it.
-          inSeason={season === null || seasonOf(world) === null || seasonOf(world) === season}
+          season={season}
         />
       ))}
 

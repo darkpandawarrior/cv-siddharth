@@ -582,8 +582,11 @@ export const anthology = {
           62
         ],
         "st": "self",
-        "k": "1-10",
-        "d": "A ring about the size of a small moon. Nine decks down, on the unlit side, one room and one clerk."
+        "k": [
+          "1-10",
+          "4-11"
+        ],
+        "d": "A ring about the size of a small moon. Nine decks down, on the unlit side, one room and one clerk. One Vænheim later it is a district of a city that grew onto it and then through it, the corridor is listed, and the dark is maintained to a stated level."
       },
       {
         "n": "Vœrhan",
