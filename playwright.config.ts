@@ -56,6 +56,13 @@ export default defineConfig({
     command: "npm run build && npm run serve",
     url: "http://localhost:4173",
     reuseExistingServer: false,
-    timeout: 180_000,
+    // This covers `npm run build && npm run serve`, not a page load. The build
+    // runs eleven generators, several of which fetch over the network, then a
+    // full Vite production build: 63s on a warm local machine and materially
+    // slower on a cold CI runner. At 180_000 it was sitting on the boundary
+    // and failing intermittently — the SAME commit passed on its PR and timed
+    // out on main — which reads as a Lighthouse failure in the checks list
+    // when Lighthouse never ran at all. Its own assertions are warnings.
+    timeout: 420_000,
   },
 });
