@@ -249,7 +249,11 @@ writeFileSync(
     `   *  at the centre of the map, which is worse than where it used to be. */\n` +
     `  o: number[] | null;\n` +
     `  /** lit | open | concluded | ruin | self */\n  st: string;\n` +
-    `  /** Reader key, "season-idx", when the world has an entry to open. */\n  k?: string;\n` +
+    `  /** Reader key, "season-idx", for every record this world is the record\n` +
+    `   *  of. A string while one season is the whole account of a place, and an\n` +
+    `   *  array once a later season comes back to it: the Directory is #2300 and\n` +
+    `   *  it is also the district that #2300's ring became. See worldKeys() in\n` +
+    `   *  Starmap.tsx, which is the only thing that reads either shape. */\n  k?: string | string[];\n` +
     `  d: string;\n` +
     `  /** The Concluded count at which this world goes dark. */\n  at?: number;\n` +
     `}\n\n` +

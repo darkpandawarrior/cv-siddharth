@@ -15,6 +15,11 @@ import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
 // A second copy of it here is how a link starts pointing at a layer that no
 // longer exists.
 import type { AnthologySearch } from "../data/crossnav.ts";
+// Value import, and it costs this chunk nothing: crossnav's only heavy
+// dependency is the corpus, which this route already pulls in whole. Starmap
+// reads the same helper, but it is lazy-loaded, so importing it from there
+// would drag three.js into the wall.
+import { worldSeasons } from "../data/crossnav.ts";
 import { entryTheme, seasonHero } from "../lib/seasonTheme.ts";
 import type { ThemeVars } from "../lib/seasonTheme.ts";
 import { ReactionRow } from "../play/ReactionRow.tsx";
@@ -840,8 +845,13 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
   // ponytail: derived from the arrival, with no control of its own. A season
   // picker down here would be a fourth way to choose a season on a page whose
   // switch row is already one of the other three.
-  const raised = anthology.starmap.worlds.find((w) => w.n === world)?.k?.split("-")[0];
-  const season = raised ? Number(raised) : null;
+  // The earliest record the arriving world carries. A place the account came
+  // back to holds several, and an arrival names a world rather than a record,
+  // so the season raised is the one the place is filed under. Nothing links
+  // here for the later ones yet, and inventing a rule for a link that does not
+  // exist is how a resolver acquires a caller nobody wanted.
+  const arriving = anthology.starmap.worlds.find((w) => w.n === world);
+  const season = arriving ? (worldSeasons(arriving)[0] ?? null) : null;
 
   const openWorld = useCallback(
     (key: string) => {
@@ -905,6 +915,14 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
           swatch="#A85A38"
           term="Withdrawn"
           desc="The page burned. The world is still there. The count above never reaches it, because the Directory never had it to file."
+        />
+        {/* Not a state. Every other row here is a colour a world can be; this
+            one is a ring laid around a world that is already one of them, and
+            the wording says so rather than pretending there is a sixth state. */}
+        <StateLegend
+          swatch="#5ec8dc"
+          term="Ring"
+          desc="A later season came back to this place and the earlier record is still under it. One world carries one."
         />
       </ul>
     </div>

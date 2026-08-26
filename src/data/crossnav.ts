@@ -134,6 +134,42 @@ export const consumed = (e: AnthologyEntry): number | null =>
 
 // --- The map ---------------------------------------------------------------
 
+/** Every record this world is the record of, in the order the account gained
+ *  them. `k` is a string while one season is the whole account of a place, and
+ *  an array once a later season comes back to it.
+ *
+ *  Both shapes are read HERE and nowhere else, which is the same discipline
+ *  crossnav's keysOf() applies to a teller's entries: a field that widens in
+ *  two spellings gets one reader, or the fourth call site is the one that
+ *  keeps the old shape and quietly drops half the data. The witness registry
+ *  already shipped that exact bug with a `find` where it needed a `filter`. */
+export const worldKeys = (world: StarWorld): string[] =>
+  world.k === undefined ? [] : Array.isArray(world.k) ? world.k : [world.k];
+
+/** The seasons whose records this world carries. Empty is the furniture that
+ *  belongs to the whole account instead of to one season (today: the ruin),
+ *  which is always shown at full. */
+export const worldSeasons = (world: StarWorld): number[] =>
+  worldKeys(world).map((k) => Number(k.split("-")[0]));
+
+/**
+ * A world more than one season is the record of.
+ *
+ * Season four's device is accumulation: the wall keeps everything, nothing is
+ * destroyed, only covered, and the latest layer sits on top with the earlier
+ * one still legible under it. Exactly one world is in that state, and it is
+ * the one the season is standing in: the Directory ring of #2300 is a district
+ * now, and s4-11 says so in its first line. The map records that the way the
+ * season does, by laying the later record over the earlier one rather than by
+ * filing a second place, because the city grew onto the ring and then through
+ * it and the corpus gives it no position of its own.
+ *
+ * Derived, never a flag: a second key IS the fact, so there is nothing here to
+ * fall out of step with the data.
+ */
+export const isRevisited = (world: StarWorld): boolean => worldSeasons(world).length > 1;
+
+
 // The Directory's Concluded count exactly as the entry itself states it, in
 // its own Terminologies block, spelled out in English. Thirteen entries carry
 // one. Parsed rather than interpolated: a count the corpus did not write down
@@ -174,7 +210,7 @@ export const concludedOf = (e: AnthologyEntry): number | null => {
  * guess at where the slider belongs.
  */
 export function worldOf(e: AnthologyEntry): { world: StarWorld; at: number | null } | null {
-  const claim = anthology.starmap.worlds.filter((w) => w.k === `${e.season}-${e.idx}`);
+  const claim = anthology.starmap.worlds.filter((w) => worldKeys(w).includes(`${e.season}-${e.idx}`));
   if (claim.length !== 1 || claim[0].st === "self") return null;
   return { world: claim[0], at: claim[0].at ?? concludedOf(e) };
 }
@@ -239,6 +275,70 @@ export const ARGUED_ABSENCES: { entry: string; why: string }[] = [
 export const absenceOf = (e: AnthologyEntry): { entry: string; why: string } | undefined =>
   ARGUED_ABSENCES.find((a) => a.entry === keyOf(e));
 
+// --- The paint -------------------------------------------------------------
+
+/**
+ * The earlier record a Season Four notice is pasted over.
+ *
+ * SEASON THREE'S JOIN, RUN THE OTHER WAY. The fire destroyed and this one
+ * keeps: `s4-bible.md` calls the plates' device "the exact inverse of Season
+ * Three's: that was destruction, this is accumulation", and the mechanism is a
+ * plate "carrying a legible fragment of an earlier S1 or S2 plate under the
+ * current paint ... always from the entry the piece detonates". The site is
+ * told, in the same file, to reuse the damage register for it rather than
+ * invent anything, and never as a banner, a popup or a link card. So it is one
+ * line of small print in the register, like every other join here.
+ *
+ * IT IS A LABEL AND NEVER A ROUTE, for the same reason `consumed()` returns a
+ * number. The notice is the later object and the record under it is the
+ * earlier one, so a link would run backwards, and Law A at the top of this
+ * file is that the register only ever runs forward. Season Three states the
+ * page it burned and cannot link to it; Season Four states the record it
+ * covered and cannot link to it either. Neither hands anything back.
+ *
+ * AUTHORED, AND CHECKED. "The entry the piece detonates" is a judgement about
+ * what a piece is about, which no parser can make: `worldOf` cannot be run
+ * backwards over the prose, because s4-06 mentions Killuga Var in an anecdote
+ * that is not what that notice is over, and a code resolving to the wrong
+ * entry is worse than no code at all. So it is a constant, like
+ * ARGUED_ABSENCES. What keeps it from drifting the way the teller registry
+ * drifted is `quote`: the sentence in the notice's own body that puts the row
+ * here, asserted present in crossnav.test.ts. A row whose sentence has left
+ * the corpus fails rather than lingers.
+ *
+ * FOUR OF FOURTEEN, and the bible's word is "sparingly". The other ten notices
+ * carry no line, and nothing explains why, which is the same variance nine of
+ * the ten Season One records already teach.
+ */
+export const UNDER_PAINT: { entry: string; under: string; quote: string }[] = [
+  { entry: "s4-03", under: "s1-05", quote: "I know because I wrote it, on Killuga Var" },
+  { entry: "s4-04", under: "s1-03", quote: "A long time ago now I filed Vædrun" },
+  { entry: "s4-08", under: "s1-06", quote: "I have written about the Hraedh before" },
+  { entry: "s4-12", under: "s1-07", quote: "with me since Cendre" },
+];
+
+/**
+ * How the earlier record is named, and it is a STRING because a string cannot
+ * be navigated to. Season One is filed by entry number and Season Two by page,
+ * and neither season shares the other's counting scheme, so the number is
+ * formatted where the season is known rather than at the call site.
+ */
+const filedAs = (e: AnthologyEntry): string | null =>
+  e.season === 1 ? `#${e.entry}` : e.season === 2 && e.page > 0 ? `page ${e.page}` : null;
+
+/**
+ * The label for the record legible under this notice, or null.
+ *
+ * Returns no entry and no slug, deliberately. See UNDER_PAINT above: there is
+ * nothing here for a later refactor to turn into an anchor.
+ */
+export const underPaint = (e: AnthologyEntry): string | null => {
+  const row = UNDER_PAINT.find((u) => u.entry === keyOf(e));
+  if (!row) return null;
+  const covered = entryOfKey(row.under);
+  return covered ? filedAs(covered) : null;
+};
+
 // --- The register -----------------------------------------------------------
 
 /** Where a register line points. There is no shape here that names a Season
@@ -274,10 +374,13 @@ export interface RegisterLine {
  * rather than a rule someone has to remember. Adding a fifth kind is a visible
  * edit to a constant that the tests measure.
  *
- * `filing` has no producer, on purpose. No shipped record states a filing fact
- * the register could carry, and writing a producer for a category with no
- * members is how a register becomes a related-links box. It holds its sort
- * position and nothing else.
+ * `filing` held its sort position and nothing else for three seasons, because
+ * no shipped record stated a filing fact the register could carry. Season Four
+ * states one: a notice pasted over an earlier record of his, with a fragment
+ * of it still legible at the torn corner. Where the sheet sits in the pile is
+ * a filing fact and it is the Directory's own word for it, so the category got
+ * its member rather than a fifth kind, and the cap is still four by
+ * arithmetic.
  */
 export const REGISTER_ORDER = ["fate", "world", "teller", "filing"] as const;
 
@@ -323,6 +426,18 @@ const PRODUCERS: Partial<Record<RegisterKind, (e: AnthologyEntry) => RegisterLin
       label: `${w.at}`,
       to: { kind: "anthology", search: { layer: "map", world: w.world.n, at: w.at } },
     };
+  },
+
+  filing: (e) => {
+    // Season Four: what this notice was pasted over. Stated, never linked, for
+    // the same reason Season Three's fate is: the register runs forward, and
+    // the record under the paint is the earlier object. The wall keeps it,
+    // which is the whole difference from the fire, and the line says keeps
+    // rather than took.
+    const covered = underPaint(e);
+    return covered === null
+      ? null
+      : { kind: "filing", lead: "", label: `${covered} · legible under the paint`, to: null };
   },
 
   teller: (e) => {

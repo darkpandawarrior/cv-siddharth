@@ -208,7 +208,23 @@ export function entryTheme(e: AnthologyEntry): EntryTheme {
  *
  *  Every non-null member of this union must have a branch in SeasonHeroFigure.
  *  seasonTheme.test.ts holds that, so adding a member without drawing it fails
- *  rather than silently rendering nothing. */
+ *  rather than silently rendering nothing.
+ *
+ *  SEASON FOUR STAYS NULL, and the reason is canon rather than a gap left over
+ *  from the season landing. The three heroes that exist are objects he holds:
+ *  the Directory's own composite of the fourteen, his case full, his case
+ *  burned. Season four is the season in which he holds nothing. He keeps no
+ *  copies, by choice, since the fire, so every notice he writes exists only
+ *  under paint on somebody else's wall and he cannot read his own work again,
+ *  and s4-bible.md lists that first among the things the season costs and does
+ *  not give back. An anchor object above the grid would be the one thing
+ *  fourteen pieces are spent establishing he does not have.
+ *
+ *  And the wall is not missing from the page: it IS the grid. Fourteen notices
+ *  on one surface, each card flat, hard-cornered, banded at the top where the
+ *  paste went on and lifting at the bottom corner, which is the season's own
+ *  image. The arrangement is the object. A fifteenth notice hung above it
+ *  would be a notice the corpus never posted. */
 export type SeasonHero = "fourteen" | "case-full" | "case-burned" | null;
 export function seasonHero(n: number): SeasonHero {
   return n === 1 ? "fourteen" : n === 2 ? "case-full" : n === 3 ? "case-burned" : null;

@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import { anthology, anthologyEntries, entriesOfSeason, type AnthologyWitness } from "./anthology.ts";
 import { KINDLING_FINALE } from "../lib/seasonTheme.ts";
 import {
+  ARGUED_ABSENCES,
   consumed,
   entriesOfTeller,
+  entryOfKey,
   fateOf,
   keyOf,
   REGISTER_ORDER,
   registerLines,
   tellersOf,
+  UNDER_PAINT,
+  worldKeys,
   worldOf,
 } from "./crossnav.ts";
 
@@ -115,30 +119,32 @@ const REGISTER_FIXTURE: Record<string, string[]> = {
   // The one page he keeps ends at blank paper. Small print underneath it would
   // be the site annotating the blank.
   "s3-14": [],
-  // Season Four, and every one of these is empty ON PURPOSE rather than by
-  // omission. Worked out from the resolvers before it was written down, not
-  // copied from what the code happened to emit: fateOf only answers for season
-  // two, no season four world is on the starmap, and witnesses.json holds no
-  // season four teller. Three independent reasons for nothing, so a single
-  // regression would not silently turn these green.
+  // Season Four. Four notices are pasted over a record of his and say so in
+  // their own prose, and those four print. The other ten print nothing, and
+  // the reason for each is asserted below at the source rather than left to
+  // this fixture: "season four, and the tripwire that could not fire".
   //
-  // It is also a real gap rather than a settled state. These pieces name their
-  // tellers in the prose (Hevrit on the notice wall, Ondrit and her two tapes,
-  // Noevik on the gate line) and none has been harvested into witnesses.json,
-  // exactly as seasons two and three had none before this week. When they are,
-  // these rows gain a teller line and this fixture SHOULD go red.
+  // WHAT THIS BLOCK USED TO SAY, because the correction is the lesson. It
+  // claimed three independent reasons for fourteen empty rows, the third being
+  // that witnesses.json held no season four teller, and it promised that this
+  // fixture SHOULD go red once they were harvested. All fourteen were
+  // harvested, the registry now carries fifteen season four keys, and every
+  // test stayed green, because the teller producer reads ARGUED_ABSENCES and
+  // has never read the registry at all: a record that HAS a teller gets no
+  // line, by design. The tripwire was armed on a mechanism that does not
+  // exist, so it could not have fired for anything.
   "s4-01": [],
   "s4-02": [],
-  "s4-03": [],
-  "s4-04": [],
+  "s4-03": ["filing | #2269 · legible under the paint | none"],
+  "s4-04": ["filing | #2259 · legible under the paint | none"],
   "s4-05": [],
   "s4-06": [],
   "s4-07": [],
-  "s4-08": [],
+  "s4-08": ["filing | #2277 · legible under the paint | none"],
   "s4-09": [],
   "s4-10": [],
   "s4-11": [],
-  "s4-12": [],
+  "s4-12": ["filing | #2284 · legible under the paint | none"],
   "s4-13": [],
   "s4-14": [],
 };
@@ -147,6 +153,24 @@ describe("the register", () => {
   it("is exactly this, for every record in the corpus", () => {
     const actual = Object.fromEntries(anthologyEntries.map((e) => [keyOf(e), rowsOf(keyOf(e))]));
     expect(actual).toEqual(REGISTER_FIXTURE);
+
+    // THE FLOOR, and this fixture is the reason it has to be here. Twenty of
+    // the forty-eight rows are [], and a resolver layer that had stopped
+    // resolving anything at all would satisfy every one of them and fail only
+    // on the twenty-eight that print. Assert the count that prints, so an
+    // empty row is only ever an empty row and never the whole thing collapsing
+    // quietly around it.
+    expect(Object.keys(actual).length, "the corpus shrank").toBe(48);
+    expect(Object.values(actual).filter((rows) => rows.length > 0).length, "the register stopped printing").toBe(28);
+  });
+
+  it("gives every kind in the order at least one member", () => {
+    // A kind with no producer is a sort position pretending to be a category,
+    // and `filing` was exactly that for three seasons: declared, ordered,
+    // tested for position, and never once printed. Season Four gave it a
+    // member. This is what would have said so.
+    const printed = new Set(anthologyEntries.flatMap(registerLines).map((l) => l.kind));
+    expect([...REGISTER_ORDER].filter((k) => !printed.has(k)), "a kind nothing produces").toEqual([]);
   });
 
   it("never exceeds four lines, never repeats a kind, never leaves the order", () => {
@@ -345,5 +369,95 @@ describe("worlds", () => {
     expect(dhurin?.at).toBe(619);
     const exxobar = worldOf(anthologyEntries.find((e) => e.slug === "legend-of-koaeluae-scales")!);
     expect(exxobar?.at).toBeNull();
+  });
+});
+
+describe("season four, and the tripwire that could not fire", () => {
+  // The fourteen rows in the fixture above were pinned to [] with a comment
+  // promising they would go red once the season four tellers were harvested.
+  // They were harvested. Nothing went red. Everything below is what should
+  // have been asserted instead: not that the answer is empty, but why, at the
+  // source of each reason, so that a reason ceasing to hold is a failure.
+
+  it("has a teller on every notice, and gives none of them a register line", () => {
+    // The false premise, stated and disproved in one test. Harvesting a teller
+    // can never add a line, because the teller producer answers ARGUED_ABSENCES
+    // and has never read the registry: the line is "no teller recorded", so a
+    // record that HAS one is exactly the case that gets nothing. The name is
+    // already at the foot of the page in the teller aside, and printing it
+    // again in small print underneath would be the same fact twice.
+    for (const e of entriesOfSeason(4)) {
+      expect(tellersOf(e).length, `${keyOf(e)} has no teller in the shipped registry`).toBeGreaterThan(0);
+      expect(registerLines(e).some((l) => l.kind === "teller"), keyOf(e)).toBe(false);
+    }
+  });
+
+  it("prints a teller line for an argued absence and for nothing else, in any season", () => {
+    // The producer's real relationship, corpus-wide, so the season four case
+    // above is a consequence of a rule rather than a claim about one season.
+    const printed = anthologyEntries
+      .filter((e) => registerLines(e).some((l) => l.kind === "teller"))
+      .map(keyOf);
+    // Nine absences are argued and eight print: the kept page argues one and
+    // still returns nothing, because registerLines stops before the producers
+    // run for it. That is the terminal guard, and it is visible here.
+    const kept = keyOf(anthologyEntries.find((e) => e.kindling === KINDLING_FINALE)!);
+    expect(printed).toEqual(ARGUED_ABSENCES.map((a) => a.entry).filter((k) => k !== kept));
+    expect(ARGUED_ABSENCES.some((a) => a.entry === kept), "the kept page still argues its absence").toBe(true);
+  });
+
+  it("puts a record under the paint only where the notice says so in its own prose", () => {
+    // What stops UNDER_PAINT drifting off the corpus the way the teller
+    // registry did. Every row names the sentence that put it there, and the
+    // sentence has to still be in that notice.
+    expect(UNDER_PAINT.length, "nothing is under the paint, so this proves nothing").toBeGreaterThanOrEqual(4);
+    for (const u of UNDER_PAINT) {
+      const notice = entryOfKey(u.entry);
+      const covered = entryOfKey(u.under);
+      expect(notice, `${u.entry} is not a record`).toBeDefined();
+      expect(covered, `${u.under} is not a record`).toBeDefined();
+      expect(notice!.body, `${u.entry} no longer says it`).toContain(u.quote);
+      // Accumulation runs one way. A notice covers something older than itself.
+      expect(covered!.season, `${u.under} is not earlier than ${u.entry}`).toBeLessThan(notice!.season);
+    }
+    const printed = anthologyEntries
+      .filter((e) => registerLines(e).some((l) => l.kind === "filing"))
+      .map(keyOf);
+    expect(printed).toEqual(UNDER_PAINT.map((u) => u.entry));
+  });
+
+  it("never links a notice to the record it covered", () => {
+    // Law A, the other way round. Season Three states the page it burned and
+    // cannot link to it because the ash does not hand the page back. Season
+    // Four states the record it covered and cannot link to it either, because
+    // the notice is the later object and the register only runs forward. Both
+    // return something with no route in it.
+    for (const e of anthologyEntries) {
+      for (const l of registerLines(e).filter((x) => x.kind === "filing")) {
+        expect(l.to, keyOf(e)).toBeNull();
+      }
+    }
+  });
+
+  it("leaves the other ten notices empty for a reason, and the reason is checkable", () => {
+    const covered = new Set(UNDER_PAINT.map((u) => u.entry));
+    const empty = entriesOfSeason(4).filter((e) => !covered.has(keyOf(e)));
+    expect(empty.length, "the split moved and nobody said so").toBe(10);
+    for (const e of empty) {
+      const at = keyOf(e);
+      // Read at the four sources rather than off the four producers. Each line
+      // below is a fact about the corpus that a later change can falsify, and
+      // when one does this goes red instead of the row staying quietly [].
+      expect(e.page, `${at} carries a page number and would join the kindling arithmetic`).toBe(0);
+      expect(e.kindling, `${at} carries a kindling ordinal`).toBeUndefined();
+      // The Directory ring carries s4-11 as well as #2300, and an institution
+      // that publishes the count is not filed under it. That is the same rule
+      // that leaves #2300's own record with no world line, and it is the only
+      // reason a claimed key here produces nothing.
+      const claiming = anthology.starmap.worlds.filter((w) => worldKeys(w).includes(`${e.season}-${e.idx}`));
+      expect(claiming.every((w) => w.st === "self"), `${at} is claimed by a world that would print`).toBe(true);
+      expect(ARGUED_ABSENCES.some((a) => a.entry === at), `${at} argues an absence`).toBe(false);
+      expect(registerLines(e), at).toEqual([]);
+    }
   });
 });
