@@ -37,7 +37,12 @@ export interface AnthologyWitness {
 }
 
 export interface StarWorld {
-  n: string; s: string; o: number[];
+  n: string; s: string;
+  /** Offset within its system, or null when the world's own record says its
+   *  position is not given or not known. Null means UNDRAWN: see isUnplaced
+   *  in Starmap.tsx. A sentinel like [0,0,0] would draw the withheld world
+   *  at the centre of the map, which is worse than where it used to be. */
+  o: number[] | null;
   /** lit | open | concluded | ruin | self */
   st: string;
   /** Reader key, "season-idx", when the world has an entry to open. */
@@ -691,11 +696,7 @@ export const anthology = {
       {
         "n": "Mrit'havn",
         "s": "[position withheld]",
-        "o": [
-          6,
-          -8,
-          5
-        ],
+        "o": null,
         "st": "withdrawn",
         "k": "3-2",
         "d": "Page 12, withdrawn. One question, once, for as long as the smoke holds its shape."
@@ -703,11 +704,7 @@ export const anthology = {
       {
         "n": "[unremembered]",
         "s": "[unrecorded]",
-        "o": [
-          -7,
-          6,
-          -6
-        ],
+        "o": null,
         "st": "withdrawn",
         "k": "3-5",
         "d": "Page 34, withdrawn. The blind fish still turn toward the door. He no longer knows which world it was."
@@ -739,11 +736,7 @@ export const anthology = {
       {
         "n": "◇",
         "s": "Alpha Axmoiri",
-        "o": [
-          -98,
-          108,
-          -108
-        ],
+        "o": null,
         "st": "ruin",
         "d": "Designation withheld. Concluded. A Hellheim was keyed to its year, and the only surviving record of that year is a conversion error nobody has corrected."
       }
@@ -1792,7 +1785,7 @@ export const unfiledPieces: UnfiledPiece[] = [
       "restatement",
       "pilot"
     ],
-    "body": "> Four documents. Three offices. One figure, restated twice, correct both times.\n\n---\n\n**CLOSURE NOTICE**\nStandards Directorate\nReference: Survey Designation 71-119\nFiled: click 4, galaxal 883\n\nSubject: status change to Concluded\n\nSurvey Designation 71-119 is reclassified from Category 3, Active Survey, to Concluded, effective the date above.\n\nConcluded: survey complete; no phenomena outstanding; no further contact indicated.\n\nThe designation carries no further reporting obligation. No corrective action is required or anticipated. The population of record was assessed as stable, housed, and provisioned at last survey, and no subsequent finding alters that assessment.\n\nStanding Order Six applies. Any Standard value keyed to this designation's period, mass, or extent is to be identified, rebased against an active reference, and republished within one galaxal of this notice.\n\nDistribution: Table Custodianship, all Reaches holding a dependent value. Standing Regulations Office, file copy. Public reading room, Standards Directorate, one posted copy, no removal.\n\n---\n\nStanding Order Six, reproduced for the file, as it is reproduced on every closure notice that triggers it:\n\n> Any Standard value keyed to the period, mass, or extent of a designation that receives the Concluded flag shall be rebased against an active reference within one galaxal of the closure date. Every value derived from it, at any remove, shall be restated and republished before the rebasing takes effect. A value not rebased within the period lapses and may not be relied upon.\n\n---\n\n**REBASING WORKSHEET**\nTable Custodianship, Ferrow\nReference: Standard Span, keyed value SV-71119\nFiled: click 19, galaxal 883\n\nThe Standard Span has been defined, since the founding survey, as one four-hundred-thousandth of the meridian arc of Survey Designation 71-119. Following the closure notice of click 4, galaxal 883, this office identifies the Span as a keyed value requiring rebasing under Standing Order Six.\n\nActive reference assigned: Survey Designation 88-402.\n\n| | Meridian arc | Standard Span |\n|---|---|---|\n| Old (71-119) | reference retired | 1.000000 |\n| New (88-402) | active reference | 1.000038 |\n\nThe Span is a base value and is not itself used for anything. It is used for the values built on it, and this office holds four such values on the standing table. All four are restated below, in the same proportion, on the same date.\n\n| Derived value | Definition | Old | New |\n|---|---|---|---|\n| Standard Assessment Distance | 40 Spans | 40.000000 | 40.001520 |\n| Standard Apprenticeship Term, distance clause | 6 Spans | 6.000000 | 6.000228 |\n| Standard Bond Radius | 900 Spans | 900.000000 | 900.034200 |\n| Standard Reach Boundary, default | 12 Spans | 12.000000 | 12.000456 |\n\nAll four recompute without remainder. No further rounding is applied at this office. Each is republished to its own subscriber list under its own cover; this worksheet is the only document that shows all four together, and it is not required reading for any of them.\n\nDistribution: all Reaches subscribed to any of the four values, 2,206 registries of record in aggregate, republished as an addendum to the standing table. Standards Directorate, copy for reconciliation. Table Custodianship archive, one copy, retained.\n\n---\n\n**NOTICE OF CADASTRAL RESTATEMENT**\nParcel Registry, Coombe Reach\nReference: Cadastral Sheet 12, Boundary Marker CM-118\nFiled: click 61, galaxal 883\n\nBoundary Marker CM-118 defines the eastern easement of Parcel 12-C at a recorded offset of one Standard Assessment Distance from Boundary Marker CM-117.\n\nFollowing the Table Custodianship's republication of click 19, galaxal 883, the Standard Assessment Distance restates from 40.000000 Spans to 40.001520 Spans. The recorded offset of CM-118 is amended accordingly.\n\nOld offset: 40.000000 Spans. New offset: 40.001520 Spans.\n\nNo survey was conducted. No mark was moved. The amendment is arithmetic and takes effect on posting.\n\nAn objection may be lodged at this office within one momenta of the posting date. None was received.\n\nDistribution: holders of record for Cadastral Sheet 12, notice by post. Public notice board, Parcel Registry, Coombe Reach, one copy. Table Custodianship, Ferrow, copy for reconciliation.\n\n---\n\n**FILING NOTE**\nParcel Registry, Coombe Reach\nReference: Notice of Cadastral Restatement, click 61, galaxal 883\n\nCopies posted: 1. Copies requested since posting: 0.\n\nThe public notice board is inspected on a maintenance schedule of one galaxal and was last cleared for repainting on click 40, galaxal 884. The notice was removed at that time, along with eleven others. No record was kept of which."
+    "body": "> Four documents. Three offices. One figure, restated twice, correct both times.\n\n---\n\n**CLOSURE NOTICE**\\\nStandards Directorate\\\nReference: Survey Designation 71-119\\\nFiled: click 4, galaxal 883\n\nSubject: status change to Concluded\n\nSurvey Designation 71-119 is reclassified from Category 3, Active Survey, to Concluded, effective the date above.\n\nConcluded: survey complete; no phenomena outstanding; no further contact indicated.\n\nThe designation carries no further reporting obligation. No corrective action is required or anticipated. The population of record was assessed as stable, housed, and provisioned at last survey, and no subsequent finding alters that assessment.\n\nStanding Order Six applies. Any Standard value keyed to this designation's period, mass, or extent is to be identified, rebased against an active reference, and republished within one galaxal of this notice.\n\nDistribution: Table Custodianship, all Reaches holding a dependent value. Standing Regulations Office, file copy. Public reading room, Standards Directorate, one posted copy, no removal.\n\n---\n\nStanding Order Six, reproduced for the file, as it is reproduced on every closure notice that triggers it:\n\n> Any Standard value keyed to the period, mass, or extent of a designation that receives the Concluded flag shall be rebased against an active reference within one galaxal of the closure date. Every value derived from it, at any remove, shall be restated and republished before the rebasing takes effect. A value not rebased within the period lapses and may not be relied upon.\n\n---\n\n**REBASING WORKSHEET**\\\nTable Custodianship, Ferrow\\\nReference: Standard Span, keyed value SV-71119\\\nFiled: click 19, galaxal 883\n\nThe Standard Span has been defined, since the founding survey, as one four-hundred-thousandth of the meridian arc of Survey Designation 71-119. Following the closure notice of click 4, galaxal 883, this office identifies the Span as a keyed value requiring rebasing under Standing Order Six.\n\nActive reference assigned: Survey Designation 88-402.\n\n| | Meridian arc | Standard Span |\n|---|---|---|\n| Old (71-119) | reference retired | 1.000000 |\n| New (88-402) | active reference | 1.000038 |\n\nThe Span is a base value and is not itself used for anything. It is used for the values built on it, and this office holds four such values on the standing table. All four are restated below, in the same proportion, on the same date.\n\n| Derived value | Definition | Old | New |\n|---|---|---|---|\n| Standard Assessment Distance | 40 Spans | 40.000000 | 40.001520 |\n| Standard Apprenticeship Term, distance clause | 6 Spans | 6.000000 | 6.000228 |\n| Standard Bond Radius | 900 Spans | 900.000000 | 900.034200 |\n| Standard Reach Boundary, default | 12 Spans | 12.000000 | 12.000456 |\n\nAll four recompute without remainder. No further rounding is applied at this office. Each is republished to its own subscriber list under its own cover; this worksheet is the only document that shows all four together, and it is not required reading for any of them.\n\nDistribution: all Reaches subscribed to any of the four values, 2,206 registries of record in aggregate, republished as an addendum to the standing table. Standards Directorate, copy for reconciliation. Table Custodianship archive, one copy, retained.\n\n---\n\n**NOTICE OF CADASTRAL RESTATEMENT**\\\nParcel Registry, Coombe Reach\\\nReference: Cadastral Sheet 12, Boundary Marker CM-118\\\nFiled: click 61, galaxal 883\n\nBoundary Marker CM-118 defines the eastern easement of Parcel 12-C at a recorded offset of one Standard Assessment Distance from Boundary Marker CM-117.\n\nFollowing the Table Custodianship's republication of click 19, galaxal 883, the Standard Assessment Distance restates from 40.000000 Spans to 40.001520 Spans. The recorded offset of CM-118 is amended accordingly.\n\nOld offset: 40.000000 Spans. New offset: 40.001520 Spans.\n\nNo survey was conducted. No mark was moved. The amendment is arithmetic and takes effect on posting.\n\nAn objection may be lodged at this office within one momenta of the posting date. None was received.\n\nDistribution: holders of record for Cadastral Sheet 12, notice by post. Public notice board, Parcel Registry, Coombe Reach, one copy. Table Custodianship, Ferrow, copy for reconciliation.\n\n---\n\n**FILING NOTE**\\\nParcel Registry, Coombe Reach\\\nReference: Notice of Cadastral Restatement, click 61, galaxal 883\n\nCopies posted: 1. Copies requested since posting: 0.\n\nThe public notice board is inspected on a maintenance schedule of one galaxal and was last cleared for repainting on click 40, galaxal 884. The notice was removed at that time, along with eleven others. No record was kept of which."
   }
 ];
 

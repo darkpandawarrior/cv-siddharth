@@ -20,7 +20,19 @@ import { STATE_COLOR, worldPosition } from "../Starmap.tsx";
  * It imports worldPosition and STATE_COLOR from Starmap.tsx rather than
  * restating them, so it cannot pass while disagreeing with the renderer.
  */
-const worlds = anthology.starmap.worlds;
+/**
+ * The worlds that are actually drawn.
+ *
+ * Three carry `o: null` because their own record says the position is not given
+ * or not known, and Starmap.tsx filters them out before rendering. Every
+ * assertion below is about geometry, so it can only be about worlds that have
+ * some. worldPosition() throws on an unplaced world rather than returning the
+ * origin, and that throw is what caught this file when the three landed:
+ * `Starmap: "Mrit'havn" has no position and must not be drawn.`
+ *
+ * anthology.test.ts owns the other half, that the three are still null.
+ */
+const worlds = anthology.starmap.worlds.filter((w) => w.o !== null);
 
 // The tightest pair on the shipping map is 64.9 world units (Exxobar to The
 // Directory), and the tightest the tuning has ever held is 60.5, so 55 clears
