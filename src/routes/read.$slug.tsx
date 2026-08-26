@@ -14,6 +14,7 @@ import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { splitDocket } from "../lib/docket.ts";
+import { Rendering } from "../Rendering.tsx";
 import { describes, endsMidSentence, storyOf } from "../lib/describes.ts";
 import { entryTheme, type EntryTheme } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
@@ -432,6 +433,15 @@ function ReadPiece() {
               loading="lazy"
               className="mt-8 h-auto w-full rounded-xl border border-line"
             />
+          )}
+
+          {/* The instrument, between the byline and the prose. Anthology only:
+              the printed pieces ran in a magazine and were never transmitted,
+              rendered or posted, so there is no in-world channel to play them
+              through and inventing one would be the fifth medium nobody
+              designed. See src/lib/rendering.ts. */}
+          {piece.kind === "anthology" && (
+            <Rendering body={piece.body} season={piece.season} kindling={piece.kindling} />
           )}
 
           <div className={`piece-body mt-10${theme?.body ? ` ${theme.body}` : ""}`}>

@@ -1785,6 +1785,96 @@ html.resume-mode .palette-trigger {
   color: var(--color-accent);
 }
 
+/* --- The Rendering -------------------------------------------------------
+   The control that reads an entry aloud on the reader's own synthesiser, over
+   a carrier generated in the browser. See src/lib/rendering.ts for why there
+   is no published audio file here and src/lib/carrier.ts for what the carrier
+   is doing.
+
+   It is an instrument, not a media player: no rounded pill, no play triangle,
+   no floating bar that follows the reader down the page. It reads as one more
+   piece of Directory furniture, which is what every other stamp on this page
+   already does. Sits between the byline and the prose and scrolls away.
+
+   Every colour is an existing token, so a season that repaints its ground
+   repaints this too, and the kept page's paper does not end up with cream
+   controls on cream. */
+.rendering {
+  margin-top: 2rem;
+  padding: 0.85rem 0 0.9rem;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+}
+.rendering__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.rendering__button {
+  flex: none;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.rendering__button:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.rendering__button--quiet {
+  border-color: var(--color-line);
+  color: var(--color-muted);
+}
+/* The progress rule, not a percentage. This corpus counts things at the reader
+   constantly and one more number would join a conversation it is not part of. */
+.rendering__track {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--color-line);
+}
+.rendering__fill {
+  display: block;
+  height: 1px;
+  background: var(--color-accent);
+  transition: width 0.4s linear;
+}
+.rendering__rig {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+/* --warn is #d97a3d, 6.13:1 on the ink ground, recomputed in this diff. The
+   two damaged states are the only place this file raises a colour, and they
+   raise it to a token season three already uses for the fire. */
+.rendering__rig--strained,
+.rendering__rig--failed {
+  color: var(--color-warn);
+}
+.rendering__note {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+/* Season three's withdrawn pages. The refusal IS the content, so it is printed
+   in the same register as the thing that would have been a control, with no
+   button and nothing to press. A performance of a burned page un-burns it. */
+.rendering--refused .rendering__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--color-warn);
+}
+
 /* --- The docket -----------------------------------------------------------
    Every one of the forty-eight entries opens with one line the correspondent
    wrote, and that line is the entry's medium in its own words: a relay slug, a
