@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Route } from "./routes/anthology.tsx";
 import { anthology } from "./data/anthology.ts";
+import { worldSeasons } from "./data/crossnav.ts";
 
 /**
  * /anthology's layer state lives in the URL now, so the URL is the thing worth
@@ -63,6 +64,13 @@ describe("anthology layer addressing", () => {
     // crossnav's fixture links to at a stated count.
     const named = new Set(anthology.starmap.worlds.map((w) => w.n));
     expect(named.has("Vœrhan")).toBe(true);
-    expect(anthology.starmap.worlds.find((w) => w.n === "Vœrhan")?.k?.split("-")[0]).toBe("2");
+    // Through worldKeys(), not off `.k` directly. A world's key widened from a
+    // string to `string | string[]` when season four arrived, because the
+    // Directory is #2300 and it is also the district #2300's ring became, and
+    // reaching past the helper is how a caller silently stops handling the
+    // second shape. worldKeys is the only thing that reads either.
+    const voerhan = anthology.starmap.worlds.find((w) => w.n === "Vœrhan");
+    expect(voerhan, "Vœrhan is not on the map").toBeTruthy();
+    expect(worldSeasons(voerhan!)).toEqual([2]);
   });
 });
