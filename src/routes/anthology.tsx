@@ -8,7 +8,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
-import { anthology, anthologyEntries, entriesOfSeason, unfiledPieces } from "../data/anthology.ts";
+import { anthology, anthologyEntries, entriesOfSeason, unfiledPieces, siblingSeries } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
 // The register's targets and this route's validateSearch have to agree about
 // what a layer is called, so the vocabulary is imported rather than restated.
@@ -59,6 +59,11 @@ const LAYERS: readonly { key: Layer; label: string; season: number | null }[] = 
   // and the switch row should not imply it is a fifth season. There is no
   // `season` for the same reason.
   { key: "unfiled", label: "Unfiled", season: null },
+  // A separate work in the same universe, not a fifth season. It sits last
+  // because it is not part of the run, and it carries its own name rather than
+  // a "The ..." label like the four media, because it IS a different series and
+  // the switch row should not pretend otherwise.
+  { key: "dark", label: "The Dark Directory", season: null },
 ];
 
 // Publication order is still the first-visit path. The form is what
@@ -273,6 +278,7 @@ function AnthologyRoute() {
             {layer === "map" && <StarmapTab world={world} at={at} />}
             {layer === "tellers" && <TellersTab />}
             {layer === "unfiled" && <UnfiledTab />}
+            {layer === "dark" && <SiblingTab />}
           </div>
         </main>
         <SiteFooter />
@@ -682,6 +688,82 @@ function UnfiledTab() {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/**
+ * A sibling series: a separate work in the same universe.
+ *
+ * Not a fifth season, and the data shape is the argument. Four seasons and
+ * forty-eight entries are printed on four pages and asserted on both sides of
+ * the registry hop; `siblingSeries` is its own array for exactly that reason.
+ *
+ * It carries its own medium line, because the medium is the whole point of the
+ * distinction. The parent's four are four relations between a record and its
+ * reader: broadcast, never sent, destroyed, executed. The Dark Directory's is
+ * retrieval, the only one where somebody asked.
+ */
+function SiblingTab() {
+  return (
+    <div className="mt-8">
+      {siblingSeries.map((s) => (
+        <section key={s.slug} className="mb-12">
+          <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+            {s.medium}
+          </p>
+          {/* h2 under the page h1, h3 on the cards. Heading order is asserted
+              at 1.00 by lighthouserc.json and a skipped level scores as a real
+              failure. */}
+          <h2 className="font-display mt-2 text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+            {s.title}
+          </h2>
+          <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+            {s.tagline}
+          </p>
+
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+            {s.entries.map((e) => (
+              <li key={e.slug}>
+                <Link
+                  to="/read/$slug"
+                  params={{ slug: e.slug }}
+                  className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition hover:border-accent/60"
+                >
+                  {e.plate && (
+                    <img
+                      src={e.plate}
+                      alt=""
+                      width={600}
+                      height={780}
+                      loading="lazy"
+                      className="mb-4 h-auto w-full"
+                    />
+                  )}
+                  <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                    Request {String(e.idx).padStart(2, "0")}
+                  </span>
+                  {/* Colour stated, not inherited. See the note on EntryCard's
+                      h2: a scoped theme only reaches elements that read the
+                      token, and this repo has shipped 1.08:1 that way. */}
+                  <h3
+                    className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
+                    style={{ color: "var(--color-text)" }}
+                  >
+                    {e.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                    {e.blurb}
+                  </p>
+                  <span className="mt-4 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                    {e.words.toLocaleString()} words
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }
