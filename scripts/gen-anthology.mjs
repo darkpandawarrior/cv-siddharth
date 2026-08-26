@@ -116,6 +116,53 @@ for (const e of src.entries) {
 
 if (failed) bail(`${failed} fetch(es) failed`);
 
+// SIBLING SERIES. The Dark Directory and whatever follows it: a separate work
+// in the same universe, with its own medium, its own bible and its own art.
+//
+// It is NOT folded into `entries`. Four seasons and forty-eight entries are
+// printed on four pages and asserted on both sides of this hop, and a sibling
+// is not one of them: it shares a universe and not a cast, and a reader who has
+// read neither must lose nothing. `siblings` is an array because there will be
+// another before there is a fifth season.
+//
+// Plates come across the same way the seasons' do, as real files under public/,
+// because inlining ten more images is a megabyte the client parses for pictures
+// most readers never scroll to.
+const siblings = [];
+for (const sib of src.siblings ?? []) {
+  const entries = [];
+  for (const e of sib.entries) {
+    const res = await fetchWithTimeout(`${REPO}/${e.file}`);
+    if (!res.ok) bail(`${sib.slug} ${e.slug}: HTTP ${res.status}`);
+
+    let plate = "";
+    if (e.plate) {
+      const img = await fetchWithTimeout(`${REPO}/${e.plate}`);
+      if (img.ok) {
+        const name = basename(e.plate);
+        writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
+        plate = `/p/anthology/plates/${name}`;
+      }
+    }
+
+    let sigil = "";
+    const sig = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/sigils/dd-${String(e.idx).padStart(2, "0")}.svg`);
+    if (sig.ok) sigil = (await sig.text()).trim();
+
+    entries.push({
+      idx: Number(e.idx),
+      slug: e.slug,
+      title: e.title,
+      blurb: e.blurb || "",
+      words: Number(e.words) || 0,
+      plate,
+      sigil,
+      body: strip(await res.text()),
+    });
+  }
+  siblings.push({ slug: sib.slug, title: sib.title, tagline: sib.tagline, medium: sib.medium, entries });
+}
+
 // Unfiled work: fiction in this universe with no season, no series and no
 // designation. It is NOT one of the forty-eight, which is why it arrives on its
 // own array from the registry and stays on its own array here. Four seasons and
@@ -276,12 +323,28 @@ writeFileSync(
     `  /** Markdown, frontmatter and H1 removed. */\n  body: string;\n` +
     `}\n\n` +
     `export const unfiledPieces: UnfiledPiece[] = ${JSON.stringify(unfiled, null, 2)};\n\n` +
-    `export const unfiledBySlug = (slug: string) => unfiledPieces.find((p) => p.slug === slug);\n`,
+    `export const unfiledBySlug = (slug: string) => unfiledPieces.find((p) => p.slug === slug);\n\n` +
+    `/** A separate work in the same universe: its own medium, bible and art.\n` +
+    ` *  Deliberately not folded into anthologyEntries, which is the forty-eight. */\n` +
+    `export interface SiblingEntry {\n` +
+    `  idx: number; slug: string; title: string; blurb: string; words: number;\n` +
+    `  plate: string; sigil: string; body: string;\n` +
+    `}\n\n` +
+    `export interface SiblingSeries {\n` +
+    `  slug: string; title: string; tagline: string;\n` +
+    `  /** The relation between a record and its reader. The parent's four are\n` +
+    `   *  broadcast, never sent, destroyed, executed. */\n  medium: string;\n` +
+    `  entries: SiblingEntry[];\n` +
+    `}\n\n` +
+    `export const siblingSeries: SiblingSeries[] = ${JSON.stringify(siblings, null, 2)};\n\n` +
+    `export const siblingBySlug = (slug: string) =>\n` +
+    `  siblingSeries.flatMap((s) => s.entries.map((e) => ({ series: s, entry: e }))).find((x) => x.entry.slug === slug);\n`,
 );
 
 const words = entries.reduce((n, e) => n + e.words, 0);
 console.log(
   `[gen-anthology] ${entries.length} entries across ${meta.seasons.length} seasons, ` +
     `${words.toLocaleString()} words, ${entries.filter((e) => e.plate).length} plates, ` +
-    `${unfiled.length} unfiled → src/data/anthology.ts`,
+    `${unfiled.length} unfiled, ${siblings.reduce((n, s) => n + s.entries.length, 0)} sibling ` +
+    `→ src/data/anthology.ts`,
 );

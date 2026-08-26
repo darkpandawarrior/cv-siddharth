@@ -7,7 +7,7 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { pieceBySlug, printedPieces } from "../data/archiveText.ts";
 import type { PrintedPiece } from "../data/archiveText.ts";
-import { anthology, entriesOfSeason, entryBySlug, unfiledBySlug, type UnfiledPiece } from "../data/anthology.ts";
+import { anthology, entriesOfSeason, entryBySlug, unfiledBySlug, siblingBySlug, type UnfiledPiece, type SiblingEntry, type SiblingSeries } from "../data/anthology.ts";
 import type { AnthologyEntry } from "../data/anthology.ts";
 import { registerLines, tellersOf } from "../data/crossnav.ts";
 import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
@@ -67,7 +67,8 @@ import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
 type ReadView =
   | ({ kind: "printed" } & PrintedPiece)
   | ({ kind: "anthology" } & AnthologyEntry)
-  | ({ kind: "unfiled" } & UnfiledPiece);
+  | ({ kind: "unfiled" } & UnfiledPiece)
+  | ({ kind: "sibling"; series: SiblingSeries } & SiblingEntry);
 
 // Every generated entry closes with exactly one "\n\n---\n\n" before its
 // Terminologies block (src/data/anthology.test.ts guards the shape this
@@ -115,6 +116,8 @@ export const Route = createFileRoute("/read/$slug")({
     if (entry) return { kind: "anthology", ...entry };
     const loose = unfiledBySlug(params.slug);
     if (loose) return { kind: "unfiled", ...loose };
+    const sib = siblingBySlug(params.slug);
+    if (sib) return { kind: "sibling", series: sib.series, ...sib.entry };
     throw notFound();
   },
   head: ({ loaderData }) => {
@@ -151,7 +154,18 @@ function ReadPiece() {
   // punctuation gets the treatment — so it stays correct if the corpus ever
   // grows a second entry that stops the same way, without a hardcoded slug.
   const dividerIndex = piece.kind === "anthology" ? piece.body.indexOf(TERMINOLOGIES_DIVIDER) : -1;
-  const storyBody = storyOf(piece.body);
+  // storyOf() splits at the first "\n\n---\n\n", which in the four seasons is
+  // the Terminologies foot and nowhere else. A SIBLING SERIES does not share
+  // that convention: the Dark Directory's medium is a retrieval file and its
+  // rule is a document boundary, so its first horizontal rule sits two lines in
+  // and every piece rendered as its header line alone, 46 characters of a two
+  // thousand word entry, with no error anywhere. Caught by counting words on
+  // the rendered page, not by a test.
+  //
+  // The split is a fact about the parent's format, so it is applied only to the
+  // parent's records. `dividerIndex` above already guards this way; this line
+  // did not.
+  const storyBody = piece.kind === "anthology" ? storyOf(piece.body) : piece.body;
   const terminologiesBody = dividerIndex >= 0 ? piece.body.slice(dividerIndex + TERMINOLOGIES_DIVIDER.length) : null;
   // The docket comes off the story before anything else measures it, so the
   // cut-line arithmetic below and the markdown pass both see the prose alone.
@@ -310,6 +324,10 @@ function ReadPiece() {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+          ) : piece.kind === "sibling" ? (
+            <p className="kicker-accent">
+              {piece.series.title} · Request {String(piece.idx).padStart(2, "0")}
+            </p>
           ) : piece.kind === "unfiled" ? (
             // An unfiled piece has no season, no world and no counting scheme,
             // so there is nothing here to format but the designation its own
@@ -424,6 +442,17 @@ function ReadPiece() {
               because the title, blurb and byline already say what this is —
               a plate with real alt text would just be reading the page back
               to a screen-reader user a second time. */}
+          {piece.kind === "sibling" && piece.plate && (
+            <img
+              src={piece.plate}
+              alt=""
+              width={600}
+              height={780}
+              loading="lazy"
+              className="mt-8 h-auto w-full rounded-xl border border-line"
+            />
+          )}
+
           {piece.kind === "anthology" && piece.plate && (
             <img
               src={piece.plate}
@@ -577,6 +606,26 @@ function ReadPiece() {
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
                         <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
                           {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            </>
+          ) : piece.kind === "sibling" ? (
+            <>
+              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                More from {piece.series.title}
+              </p>
+              <ul className="mt-4 divide-y divide-line">
+                {piece.series.entries
+                  .filter((e) => e.slug !== piece.slug)
+                  .map((e) => (
+                    <li key={e.slug}>
+                      <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
+                        <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
+                        <span className="shrink-0 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                          {String(e.idx).padStart(2, "0")}
                         </span>
                       </Link>
                     </li>
