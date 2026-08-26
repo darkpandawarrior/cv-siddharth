@@ -41,6 +41,21 @@ export interface StarmapProps {
 export const SYSTEM_SCALE = 0.82;
 export const OFFSET_SCALE = 2.6;
 
+/** True when a world's own record says its position is not given, or not known.
+ *
+ *  `o: null` is the whole of it, and it is structural rather than conventional.
+ *  Three worlds carry it: ◇, whose designation is withheld and whose year IS the
+ *  milgalaxal; Mrit'havn, whose system is literally "[position withheld]"; and
+ *  [unremembered], page thirty four, where the point is not that he will not say
+ *  which world it was but that he cannot. All three used to ship real
+ *  coordinates under those labels, so a reader who opened the map got the exact
+ *  thing #2300 is about not giving them.
+ *
+ *  Null rather than a sentinel like [0,0,0], for the same reason RegisterFact
+ *  renders a label with no element around it: there must be nothing left for a
+ *  later refactor to turn back into a pin. */
+export const isUnplaced = (world: StarWorld): boolean => world.o === null;
+
 export function worldPosition(world: StarWorld): [number, number, number] {
   const system = anthology.starmap.systems[world.s];
   // The generator guarantees every world's `s` is a real key in `systems`.
@@ -48,6 +63,10 @@ export function worldPosition(world: StarWorld): [number, number, number] {
   // of anthology.ts fails loudly in dev rather than quietly stacking worlds
   // on top of each other in production.
   if (!system) throw new Error(`Starmap: "${world.n}" points at an unknown system "${world.s}".`);
+  // Callers must filter with isUnplaced() first. Throwing rather than returning
+  // the origin: a silent [0,0,0] would draw the withheld world at the centre of
+  // the map, which is worse than where it used to be.
+  if (world.o === null) throw new Error(`Starmap: "${world.n}" has no position and must not be drawn.`);
   const [sx, sy, sz] = system;
   const [ox, oy, oz] = world.o;
   return [sx * SYSTEM_SCALE + ox * OFFSET_SCALE, sy * SYSTEM_SCALE + oy * OFFSET_SCALE, sz * SYSTEM_SCALE + oz * OFFSET_SCALE];
@@ -385,6 +404,10 @@ function Fences(): JSX.Element {
       {anthology.starmap.fences.map(([a, b]) => {
         const wa = worldByName.get(a);
         const wb = worldByName.get(b);
+        // A fence to a world with no position cannot be drawn, and drawing it
+        // to a guessed point would reinstate the coordinate the world refuses.
+        if (wa && isUnplaced(wa)) return null;
+        if (wb && isUnplaced(wb)) return null;
         // The generator only ever writes fence pairs it also wrote worlds
         // for, so this should never trigger — it exists so a future edit to
         // the source data fails as a missing line, not a thrown render.
@@ -424,7 +447,10 @@ function Scene({ concluded, onOpen, season = null }: StarmapProps): JSX.Element 
 
       <FieldStars concluded={concluded} />
       <Fences />
-      {anthology.starmap.worlds.map((world) => (
+      {/* Undrawn, not drawn faintly and not drawn under a label. See
+          isUnplaced: three worlds state that their position is not given or not
+          known, and the map used to supply it anyway. */}
+      {anthology.starmap.worlds.filter((w) => !isUnplaced(w)).map((world) => (
         <NamedWorld
           key={world.n}
           world={world}
