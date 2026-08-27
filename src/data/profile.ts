@@ -1570,7 +1570,7 @@ export const projects: Project[] = [
       "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
-      "kmp-toolkit: 36 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
+      "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
       "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
       "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi. The composition is the proof the extraction was real, not a library nobody uses.",
@@ -1581,14 +1581,14 @@ export const projects: Project[] = [
       { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
     ],
     status: "Active · MIT · vendored across 5 repos",
-    badges: ["Kotlin Multiplatform", "36 modules", "22 convention plugins", "MIT"],
+    badges: ["Kotlin Multiplatform", "39 modules", "22 convention plugins", "MIT"],
     detail: {
       overview:
         "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Mileway, PaymentsLab, Kursi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
       sections: [
         {
-          heading: "kmp-toolkit: 36 modules, extracted, never designed",
-          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 36 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Mileway and PaymentsLab build their reducer/store layer on.",
+          heading: "kmp-toolkit: 39 modules, extracted, never designed",
+          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Mileway and PaymentsLab build their reducer/store layer on.",
         },
         {
           heading: "kmp-build-logic: the setup written once",
@@ -1625,7 +1625,7 @@ export const projects: Project[] = [
           code: `graph LR
   bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Mileway"]
   bl -.->|"includeBuild"| p["PaymentsLab"]
-  tk["kmp-toolkit<br/>36 modules"] -.->|"includeBuild"| m
+  tk["kmp-toolkit<br/>39 modules"] -.->|"includeBuild"| m
   tk -.->|"includeBuild"| p
   tk -.->|"includeBuild"| ku["Kursi"]
   at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
