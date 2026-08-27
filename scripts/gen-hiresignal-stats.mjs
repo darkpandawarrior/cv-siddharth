@@ -24,6 +24,7 @@ import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const profilePath = join(root, "src", "data", "profile.ts");
 const fanoutPath = join(root, "src", "labs", "FanoutLab.tsx");
+const hiresignalPath = join(root, "src", "data", "hiresignal.ts");
 const token = process.env.GITHUB_TOKEN;
 const headers = { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
@@ -75,12 +76,24 @@ try {
   sub(/\d+ ATS & job-board provider modules/, `${providers} ATS & job-board provider modules`);
   sub(/"\d+ ATS\/job-board providers"/, `"${providers} ATS/job-board providers"`);
   sub(/\{ value: "\d+", label: "PRs merged upstream" \}/, `{ value: "${prs}", label: "PRs merged upstream" }`);
-  sub(/HireSignal — active, \d+ PRs merged upstream/, `HireSignal — active, ${prs} PRs merged upstream`);
+  /* Punctuation-agnostic, because it was not. This pattern hard-coded an em
+   * dash in "HireSignal — active", the house dash sweep turned that into a
+   * colon, and the regex went dead without anything failing that a reader
+   * would notice. The daily refresh then exited 1 for eight straight days
+   * (2026-08-20 to 08-27), and because it dies at this step every later step
+   * stopped running, which is how chessDeep.ts reached 29 days stale while
+   * its own alarm stayed green. Match the number beside the phrase, never the
+   * punctuation between the words. */
+  sub(/(HireSignal.{0,4}active, )\d+( PRs merged upstream)/, `$1${prs}$2`);
   // Three more, found the same day, that the patterns above missed because they
   // word the same fact differently ("merged to public career-ops", not "merged
   // upstream"). Matching the NUMBER beside the phrase rather than a whole
   // sentence keeps this working when the prose is edited.
   sub(/\d+ merged PRs to the public career-ops project/g, `${prs} merged PRs to the public career-ops project`);
+  // A third wording of the same fact, "merged pull requests AGAINST the public
+  // career-ops REPOSITORY", which neither the "to the public career-ops
+  // project" pattern nor the digit scan could reach.
+  sub(/\d+ merged pull requests against the public career-ops repository/g, `${prs} merged pull requests against the public career-ops repository`);
   sub(/status: "Active · \d+ PRs merged to public career-ops"/, `status: "Active · ${prs} PRs merged to public career-ops"`);
   // The single source the résumé prints, so it stops disagreeing with the rest
   // of the site by using the curated array's length instead.
@@ -95,6 +108,16 @@ try {
   const fanout = readFileSync(fanoutPath, "utf8");
   if (!fanoutRe.test(fanout)) misses.push(`${fanoutRe} (FanoutLab.tsx)`);
   writeFileSync(fanoutPath, fanout.replace(fanoutRe, `const TOTAL_PROVIDERS = ${providers};`));
+
+  /* hiresignal.ts said in its own header that this script refreshes it. It did
+   * not: the file was never opened here, so providerCount sat at 78 while the
+   * same run wrote 81 into the case study and the lab. A comment claiming a
+   * refresh that no code performs is the quietest version of this whole bug
+   * class, and hiresignalNumbers.test.ts is what finally caught it. */
+  const providerRe = /export const providerCount = \d+;/;
+  const hs = readFileSync(hiresignalPath, "utf8");
+  if (!providerRe.test(hs)) misses.push(`${providerRe} (hiresignal.ts)`);
+  writeFileSync(hiresignalPath, hs.replace(providerRe, `export const providerCount = ${providers};`));
 
   /* The other half of the same hole: a number this script never had a pattern
    * for at all. Reading whatever WORD sits in front of the phrase, rather than
