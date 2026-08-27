@@ -92,8 +92,8 @@ describe("surface completeness", () => {
   // demoted set is pinned rather than trusted. Demoting a third surface is a
   // failing test somebody has to come here and edit on purpose, which is the
   // whole difference between a decision and an omission.
-  it("demotes exactly the two surfaces that are meant to be off the wall", () => {
-    expect(demotedSurfaces.map((f) => f.to).sort()).toEqual(["/forge", "/terminal"]);
+  it("demotes exactly the three surfaces that are meant to be off the wall", () => {
+    expect(demotedSurfaces.map((f) => f.to).sort()).toEqual(["/forge", "/terminal", "/weeb"]);
   });
 
   // Off the wall is not off the site, and this is the line between the two.

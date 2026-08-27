@@ -342,6 +342,11 @@ const roomSurfaces: SurfaceInput[] = [
       "Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.",
     tag: "corpus · data",
     group: "corpus",
+    // Off the default wall, same test forge and terminal already fail: a
+    // one-time-read curiosity costing a full tile on the primary scroll,
+    // between the technical demos and the writing. Still in the footer
+    // Rooms column, ⌘K and /playground, so nothing is lost but placement.
+    wall: false,
     tint: ACCENT,
     device: "tv",
     preview: "poster",
