@@ -49,6 +49,11 @@ export function AnimatedMetric({ metric }: { metric: { value: string; label: str
       return;
     }
 
+    // The markup ships the real value so crawlers, LLM screeners and
+    // no-JS readers get the number. Zero it here instead, so the count-up
+    // still starts from 0 for anyone who will actually see it animate.
+    if (valueRef.current) valueRef.current.textContent = `0${parsed.suffix}`;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
@@ -79,7 +84,7 @@ export function AnimatedMetric({ metric }: { metric: { value: string; label: str
     <div ref={rootRef} className="flex items-center gap-4 px-4 py-3">
       <div className="min-w-0">
         <p ref={valueRef} className="font-display text-metric font-bold text-accent">
-          {parsed ? `0${parsed.suffix}` : metric.value}
+          {metric.value}
         </p>
         <p className="mt-1 text-sm font-medium text-zinc-200">{metric.label}</p>
         {metric.detail && <p className="mt-1 text-xs leading-snug text-muted">{metric.detail}</p>}

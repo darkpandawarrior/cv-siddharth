@@ -23,6 +23,28 @@ import { join } from "node:path";
  */
 const MAX_AGE_DAYS = 45;
 
+/**
+ * Per-file SLAs, because one blanket threshold is a licence to rot.
+ *
+ * chessDeep.ts sat 29 days stale under the flat 45-day rule and the suite stayed
+ * green, with 16 more days of legal silence still to run. It was not a dead
+ * generator: the daily job simply never reached it, because gen-hiresignal-stats
+ * exited 1 earlier in the chain and the commit step was gated on success. One
+ * number, tuned for the slowest source in the repo, hid that for over a month.
+ *
+ * So the deadline matches how fast the SOURCE actually moves. A file fed by a
+ * live external API on a daily cron has no business being three weeks old; the
+ * Play Store fleet sweep is deliberately slow and rate-limited, so it gets room.
+ * Anything unlisted keeps the old blanket value.
+ */
+const SLA_DAYS: Record<string, number> = {
+  "chess.ts": 21,
+  "chessDeep.ts": 21,
+  "weeb.ts": 21,
+  "store.ts": 45,
+};
+const slaFor = (file: string) => SLA_DAYS[file] ?? MAX_AGE_DAYS;
+
 /** Which generator to run when one of these fails. Derived from the file name
  *  rather than hand-mapped, so a new generated file is covered on arrival. */
 const generatorFor = (file: string) => `npm run gen:${file.replace(/\.ts$/, "").replace(/([A-Z])/g, (m) => "-" + m.toLowerCase())}`;
@@ -31,7 +53,18 @@ describe("generated data has not quietly aged out", () => {
   const dir = new URL("./", import.meta.url).pathname;
   const stamped = readdirSync(dir)
     .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))
-    .map((f) => ({ file: f, at: /"generatedAt":\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1] }))
+    // Two stamp shapes, because assuming one was a hole big enough to hide the
+    // largest generated file in the repo. The JSON-ish `"generatedAt": "..."`
+    // is what most generators emit; store.ts emits a TypeScript const,
+    // `export const storeGeneratedAt = "..."`. The original pattern only knew
+    // the first, so store.ts (5,150 lines) never entered `stamped` and the
+    // alarm below could not see it at all. It sat 21 days old, unwatched, while
+    // this suite stayed green. A file that opts out by accident is exactly what
+    // this test exists to prevent, so match both shapes.
+    .map((f) => ({
+      file: f,
+      at: /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1],
+    }))
     .filter((x): x is { file: string; at: string } => Boolean(x.at));
 
   /**
@@ -47,7 +80,7 @@ describe("generated data has not quietly aged out", () => {
    * local files on every prebuild, so its stamp says a build happened, not
    * that data moved — a member that can never go red is padding, not cover.
    */
-  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "weeb.ts"];
+  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts"];
 
   it.each(MUST_BE_STAMPED)("%s still carries a generatedAt stamp", (file) => {
     expect(
@@ -97,14 +130,16 @@ describe("the curated 'recent' list is actually recent", () => {
   });
 });
 
-  it.each(stamped)(`$file was regenerated within ${MAX_AGE_DAYS} days`, ({ file, at }) => {
+  it.each(stamped)(`$file was regenerated inside its SLA`, ({ file, at }) => {
     const ageDays = Math.floor((Date.now() - Date.parse(at)) / 86_400_000);
+    const sla = slaFor(file);
     expect(
       ageDays,
-      `${file} was last generated ${at} (${ageDays} days ago). Its generator has probably been ` +
-        `failing silently — they all keep the previous file on a fetch error, which is right, but ` +
-        `means a broken source looks identical to a quiet one. Run ${generatorFor(file)} and read ` +
-        `what it prints.`,
-    ).toBeLessThanOrEqual(MAX_AGE_DAYS);
+      `${file} was last generated ${at} (${ageDays} days ago), against a ${sla}-day SLA. Either its ` +
+        `generator is failing silently, they all keep the previous file on a fetch error, which is ` +
+        `right but makes a broken source look identical to a quiet one, or the job never reached it ` +
+        `because something earlier in the chain exited non-zero. Check the refresh run first, then ` +
+        `run ${generatorFor(file)} and read what it prints.`,
+    ).toBeLessThanOrEqual(sla);
   });
 });

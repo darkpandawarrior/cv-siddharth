@@ -29,7 +29,6 @@ import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ScrollBot } from "./ScrollBot.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
-import { WorldSwitch } from "./WorldSwitch.tsx";
 import { chess } from "./data/chess.ts";
 import { Picture } from "./Picture.tsx";
 import { SurfaceWall } from "./SurfaceWall.tsx";
@@ -142,6 +141,7 @@ function useScrollSpy(): { progressRef: React.RefObject<HTMLDivElement | null>; 
 // command-palette search or scrolling 70% of a 20,000px page. A shortlist is
 // fine as long as the full list is one tap away; it was not.
 const DRAWER_EXTRAS = [
+  { href: "/hire", label: "Hire me" },
   { href: "#playground", label: "▶ The Playground" },
   { href: "/ink", label: "The Ink — writing" },
   { href: "#loopdown", label: "The Loopdown" },
@@ -289,10 +289,16 @@ function Nav() {
         >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
-        {/* Four anchors and the world switch. With the link count halved the
-            old gap-3-at-lg squeeze is gone, so this is one spacing again. */}
+        {/* Hire, four anchors, Résumé. The world switch gave the fiction a
+            permanent slot on every page view while /hire, the one page built
+            for someone who does not want to explore, had no door at all and
+            first appeared 79% down the document. Ink keeps its own section
+            further down the page, the footer and ⌘K; it did not need the bar.
+            Same item count as before, one destination swapped. */}
         <div className="hidden items-center gap-5 text-sm text-zinc-400 lg:flex">
-          <WorldSwitch current="build" />
+          <Link to="/hire" className="transition hover:text-accent">
+            Hire me
+          </Link>
           {NAV_LINKS.map((l) => (
             <button
               key={l.href}
