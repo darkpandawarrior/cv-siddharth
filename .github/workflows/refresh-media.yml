@@ -63,7 +63,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
         run: npm run refresh
+      # always(): one dead generator must not discard the work of the other 26.
+      # gen-hiresignal-stats exits 1 on a dead PATTERN by design, and because
+      # this step was gated on success, eight days of otherwise-good refreshes
+      # were thrown away rather than committed. The run still goes red below.
       - name: Commit if changed
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
