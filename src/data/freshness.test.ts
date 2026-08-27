@@ -31,7 +31,18 @@ describe("generated data has not quietly aged out", () => {
   const dir = new URL("./", import.meta.url).pathname;
   const stamped = readdirSync(dir)
     .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))
-    .map((f) => ({ file: f, at: /"generatedAt":\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1] }))
+    // Two stamp shapes, because assuming one was a hole big enough to hide the
+    // largest generated file in the repo. The JSON-ish `"generatedAt": "..."`
+    // is what most generators emit; store.ts emits a TypeScript const,
+    // `export const storeGeneratedAt = "..."`. The original pattern only knew
+    // the first, so store.ts (5,150 lines) never entered `stamped` and the
+    // alarm below could not see it at all. It sat 21 days old, unwatched, while
+    // this suite stayed green. A file that opts out by accident is exactly what
+    // this test exists to prevent, so match both shapes.
+    .map((f) => ({
+      file: f,
+      at: /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1],
+    }))
     .filter((x): x is { file: string; at: string } => Boolean(x.at));
 
   /**
@@ -47,7 +58,7 @@ describe("generated data has not quietly aged out", () => {
    * local files on every prebuild, so its stamp says a build happened, not
    * that data moved — a member that can never go red is padding, not cover.
    */
-  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "weeb.ts"];
+  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts"];
 
   it.each(MUST_BE_STAMPED)("%s still carries a generatedAt stamp", (file) => {
     expect(
