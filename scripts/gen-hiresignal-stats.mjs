@@ -76,15 +76,22 @@ try {
   sub(/\d+ ATS & job-board provider modules/, `${providers} ATS & job-board provider modules`);
   sub(/"\d+ ATS\/job-board providers"/, `"${providers} ATS/job-board providers"`);
   sub(/\{ value: "\d+", label: "PRs merged upstream" \}/, `{ value: "${prs}", label: "PRs merged upstream" }`);
-  /* Punctuation-agnostic, because it was not. This pattern hard-coded an em
-   * dash in "HireSignal — active", the house dash sweep turned that into a
-   * colon, and the regex went dead without anything failing that a reader
-   * would notice. The daily refresh then exited 1 for eight straight days
-   * (2026-08-20 to 08-27), and because it dies at this step every later step
-   * stopped running, which is how chessDeep.ts reached 29 days stale while
-   * its own alarm stayed green. Match the number beside the phrase, never the
-   * punctuation between the words. */
-  sub(/(HireSignal.{0,4}active, )\d+( PRs merged upstream)/, `$1${prs}$2`);
+  /* REMOVED, not repaired: `cardMedia`'s hand-written alt text.
+   *
+   * This pattern maintained the "HireSignal — active, 24 PRs merged upstream"
+   * string in profile.ts's cardMedia map. It had already gone dead once when
+   * the house dash sweep turned that em dash into a colon, and the daily
+   * refresh exited 1 for eight straight days (2026-08-20 to 08-27) — and
+   * because it dies at this step, every later step stopped running, which is
+   * how chessDeep.ts reached 29 days stale while its own alarm stayed green.
+   *
+   * The string is gone for good now: cardMedia is derived from the registry
+   * (`alt: `${p.name}: ${p.status}``), and `status` is kept current by the
+   * `status: "Active · N PRs merged to public career-ops"` substitution above.
+   * So the alt text still carries a live PR count — it just inherits it
+   * instead of keeping a second copy for this script to chase. One less
+   * hand-written surface is one less pattern that can quietly stop matching.
+   */
   // Three more, found the same day, that the patterns above missed because they
   // word the same fact differently ("merged to public career-ops", not "merged
   // upstream"). Matching the NUMBER beside the phrase rather than a whole
