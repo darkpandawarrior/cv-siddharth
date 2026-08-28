@@ -78,3 +78,74 @@ describe("vercel.json framing", () => {
     for (const h of xfo) expect(h.value.toUpperCase()).toBe("SAMEORIGIN");
   });
 });
+
+/**
+ * The entry document of a live build must never be served stale.
+ *
+ * When X-Frame-Options was corrected from DENY to SAMEORIGIN, the fix deployed
+ * correctly and the embed stayed broken for everyone who had already visited.
+ * Captured from the real iframe request against production, after the deploy:
+ *
+ *   if-none-match: W/"d56d488f10be7173c36e3be72aff779c"
+ *   -> 304 Not Modified
+ *   -> net::ERR_BLOCKED_BY_RESPONSE
+ *
+ * Only the HEADER changed; the file's bytes did not. So the ETag still
+ * matched, the origin answered 304, and the browser reused its STORED
+ * response — including the old X-Frame-Options. `must-revalidate` cannot fix
+ * that, because revalidating is exactly what produced the 304.
+ *
+ * Hence `no-store` rather than a shorter max-age: with no stored entry there
+ * is nothing to revalidate and nothing to reuse, so a header-only change
+ * reaches a returning visitor on their next load. These documents are ~3 KB;
+ * the weight is in the .wasm and .pck beside them, and those stay immutable
+ * because they are content-hashed and their bytes DO change when they change.
+ */
+describe("vercel.json live-build entry documents", () => {
+  const root = new URL("../../", import.meta.url).pathname;
+  const config = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8")) as {
+    headers: { source: string; headers: { key: string; value: string }[] }[];
+  };
+
+  /** The LAST matching Cache-Control wins, which is how Vercel resolves these. */
+  const cacheControlFor = (path: string) => {
+    let value: string | null = null;
+    for (const rule of config.headers) {
+      const re = new RegExp(`^${rule.source.replace(/\/\(\.\*\)/g, "/[^?]*")}$`);
+      let matches = false;
+      try {
+        matches = re.test(path);
+      } catch {
+        matches = false;
+      }
+      if (!matches) continue;
+      const cc = rule.headers.find((h) => h.key === "Cache-Control");
+      if (cc) value = cc.value;
+    }
+    return value;
+  };
+
+  const appDirs = readdirSync(join(root, "public"))
+    .filter((d) => d.endsWith("-app"))
+    .filter((d) => statSync(join(root, "public", d)).isDirectory());
+
+  it("never lets a live build's index.html be stored and revalidated", () => {
+    const reusable = appDirs.filter((d) => {
+      const cc = cacheControlFor(`/${d}/index.html`);
+      // Anything the browser may STORE can come back as a 304 that reuses its
+      // old headers, which is the bug. Only no-store rules that out.
+      return !cc || !cc.includes("no-store");
+    });
+    expect(
+      reusable,
+      `these entry documents can be revalidated into a 304 that reuses stale headers: ${reusable.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("still lets the content-hashed payloads be cached forever", () => {
+    for (const d of appDirs) {
+      const cc = cacheControlFor(`/${d}/abc123.wasm`);
+      expect(cc, `${d} wasm should stay immutable`).toContain("immutable");
+    }
+  });
+});
