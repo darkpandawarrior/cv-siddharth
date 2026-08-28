@@ -4,6 +4,7 @@
 export const projectStats = {
   "mileway": {
     "modules": 36,
+    "composedModules": 10,
     "features": 13,
     "cores": 12,
     "dbVersion": 48,
@@ -22,7 +23,7 @@ export const projectStats = {
     "screenshots": 26
   },
   "kursi": {
-    "modules": 13,
+    "modules": 14,
     "screenshots": 61
   }
 } as const;
