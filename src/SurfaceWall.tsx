@@ -3,6 +3,7 @@ import { wallSurfaces, DEVICE, type DeviceFrame, type Surface } from "./data/sur
 import { SURFACE_ICON } from "./rooms.tsx";
 import { facets } from "./data/facets.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { openLauncher } from "./Launcher.tsx";
 
 /**
  * The homepage wall: every navigable surface on this site, grouped, each in the
@@ -136,6 +137,9 @@ function SurfaceTile({ surface }: { surface: Surface }) {
   );
 }
 
+/** Tiles per group on the homepage — exactly one row at the lg breakpoint. */
+const PER_GROUP = 3;
+
 export function SurfaceWall() {
   const { goToSection } = useSectionNav();
   return (
@@ -149,21 +153,58 @@ export function SurfaceWall() {
           ↑ Same one codebase, running live above
         </button>
       </p>
-      {wallSurfaces.map((group) => (
-        <section key={group.group} aria-labelledby={`wall-${group.group}`}>
-          <div className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line pb-2">
-            <h3 id={`wall-${group.group}`} className="font-display text-lg font-bold text-zinc-100">
-              {group.label}
-            </h3>
-            <p className="kicker">{group.note}</p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {group.items.map((surface) => (
-              <SurfaceTile key={surface.to} surface={surface} />
-            ))}
-          </div>
-        </section>
-      ))}
+      {/* ── One row per group, not all sixteen ─────────────────────────────
+          The full wall ran to seven grid rows and 3,404px — the single tallest
+          thing on a homepage whose length was the complaint. It is also not
+          the only way to reach any of this: Launcher.tsx renders THIS EXACT
+          `wallSurfaces` data ("the homepage wall, available from anywhere")
+          behind the Surfaces button that sits in the nav on every page, and
+          ⌘K reaches every route by name.
+
+          So the wall stays, ungated and content-forward as SIDOS-VISION.md
+          requires — the groups, the device frames, the blurbs are all still
+          here and still readable without clicking anything. It just shows one
+          row of each chapter instead of every tile, and says plainly where the
+          rest are. Nothing became undiscoverable; the page stopped spending a
+          fifth of its height on a grid the nav already offers. */}
+      {wallSurfaces.map((group) => {
+        const shown = group.items.slice(0, PER_GROUP);
+        const rest = group.items.length - shown.length;
+        return (
+          <section key={group.group} aria-labelledby={`wall-${group.group}`}>
+            <div className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line pb-2">
+              <h3 id={`wall-${group.group}`} className="font-display text-lg font-bold text-zinc-100">
+                {group.label}
+              </h3>
+              <p className="kicker">{group.note}</p>
+              {rest > 0 && (
+                <button
+                  type="button"
+                  onClick={openLauncher}
+                  className="kicker-accent ml-auto transition hover:opacity-80"
+                >
+                  +{rest} more →
+                </button>
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((surface) => (
+                <SurfaceTile key={surface.to} surface={surface} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+
+      <p className="mt-2 text-center">
+        <button
+          type="button"
+          onClick={openLauncher}
+          className="panel-sm inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
+        >
+          Open the full wall — all {wallSurfaces.reduce((n, g) => n + g.items.length, 0)} surfaces
+        </button>
+      </p>
     </div>
   );
 }
