@@ -41,3 +41,40 @@ describe("vercel.json wasm caching", () => {
     expect(missing, `these demo apps re-download their wasm on every visit: ${missing.join(", ")}`).toEqual([]);
   });
 });
+
+/**
+ * The whole point of shipping those .wasm bundles is that the site frames them:
+ * DeviceMorph on the homepage and every project page's Live target mount an
+ * <iframe src="/<app>/index.html"> from this same origin.
+ *
+ * X-Frame-Options: DENY refuses framing from EVERY origin, this one included.
+ * It sat on `/(.*)` for months, so all four live builds were a blank black
+ * frame in production while working perfectly in dev, where no such header is
+ * served — the failure was invisible to every local check.
+ *
+ * SAMEORIGIN keeps the clickjacking protection that header is there for: a
+ * third-party page still cannot frame this site.
+ */
+describe("vercel.json framing", () => {
+  const root = new URL("../../", import.meta.url).pathname;
+  const config = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8")) as {
+    headers: { source: string; headers: { key: string; value: string }[] }[];
+  };
+
+  const xfo = config.headers
+    .flatMap((h) => h.headers.map((x) => ({ source: h.source, ...x })))
+    .filter((h) => h.key.toLowerCase() === "x-frame-options");
+
+  it("never sends DENY, which would break every live Wasm embed", () => {
+    const denies = xfo.filter((h) => h.value.toUpperCase() === "DENY");
+    expect(
+      denies.map((d) => d.source),
+      "X-Frame-Options: DENY blocks same-origin framing too — the live builds go blank",
+    ).toEqual([]);
+  });
+
+  it("still refuses cross-origin framing", () => {
+    expect(xfo.length, "X-Frame-Options disappeared entirely").toBeGreaterThan(0);
+    for (const h of xfo) expect(h.value.toUpperCase()).toBe("SAMEORIGIN");
+  });
+});

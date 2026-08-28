@@ -1,8 +1,10 @@
 {
   "base": "http://localhost:4173",
-  "count": 19,
+  "count": 23,
   "routes": [
+    "anthology",
     "blueprint",
+    "canon",
     "chess",
     "compose",
     "excelsior",
@@ -12,7 +14,9 @@
     "ink",
     "lab",
     "loopdown",
+    "making",
     "map",
+    "ops",
     "playground",
     "pulse",
     "resume",

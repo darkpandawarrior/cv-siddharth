@@ -24,6 +24,7 @@ import { Route as LabRouteImport } from './routes/lab'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
 import { Route as MakingRouteImport } from './routes/making'
 import { Route as MapRouteImport } from './routes/map'
+import { Route as OpsRouteImport } from './routes/ops'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as PulseRouteImport } from './routes/pulse'
 import { Route as ResumeRouteImport } from './routes/resume'
@@ -108,6 +109,11 @@ const MapRoute = MapRouteImport.update({
   path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OpsRoute = OpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlaygroundRoute = PlaygroundRouteImport.update({
   id: '/playground',
   path: '/playground',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
+  '/ops': typeof OpsRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
+  '/ops': typeof OpsRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
+  '/ops': typeof OpsRoute
   '/playground': typeof PlaygroundRoute
   '/pulse': typeof PulseRoute
   '/resume': typeof ResumeRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/loopdown'
     | '/making'
     | '/map'
+    | '/ops'
     | '/playground'
     | '/pulse'
     | '/resume'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/loopdown'
     | '/making'
     | '/map'
+    | '/ops'
     | '/playground'
     | '/pulse'
     | '/resume'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/loopdown'
     | '/making'
     | '/map'
+    | '/ops'
     | '/playground'
     | '/pulse'
     | '/resume'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   LoopdownRoute: typeof LoopdownRoute
   MakingRoute: typeof MakingRoute
   MapRoute: typeof MapRoute
+  OpsRoute: typeof OpsRoute
   PlaygroundRoute: typeof PlaygroundRoute
   PulseRoute: typeof PulseRoute
   ResumeRoute: typeof ResumeRoute
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ops': {
+      id: '/ops'
+      path: '/ops'
+      fullPath: '/ops'
+      preLoaderRoute: typeof OpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/playground': {
       id: '/playground'
       path: '/playground'
@@ -511,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoopdownRoute: LoopdownRoute,
   MakingRoute: MakingRoute,
   MapRoute: MapRoute,
+  OpsRoute: OpsRoute,
   PlaygroundRoute: PlaygroundRoute,
   PulseRoute: PulseRoute,
   ResumeRoute: ResumeRoute,

@@ -16,8 +16,17 @@
  * 5 platforms, 66 gateways) rather than whatever was on screen.
  *
  * Design language is deliberately the same as gen-og.mjs — accent edge, dot
- * grid, radial glows, mono eyebrow, stat pills — so a card, a share preview and
- * a project page read as one system.
+ * grid, radial glows, mono eyebrow — so a card, a share preview and a project
+ * page read as one system.
+ *
+ * WHAT THE BANNER DOES NOT SAY. It used to render the tagline, the status
+ * pills and the stack chips as well — every one of which the card prints again
+ * in full within about 100px of the banner's bottom edge. A Kursi card carried
+ * "13 modules / 4 platforms / 10 bot personas" as pills AND as its bracketed
+ * status line, and its tagline twice. The banner is the project's IDENTITY —
+ * its palette, its display face, its name — and the card is where the facts
+ * live. Saying each thing once is why the card got shorter without losing
+ * anything a reader had not already read.
  *
  * Output is committed, like the OG images: this needs a headless Chromium, and
  * without one it warns and leaves the existing PNGs untouched rather than
@@ -45,28 +54,6 @@ const RENDER_H = H + 130;
 
 const esc = (s = "") => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** The first clause of a tagline — the part that fits on one line and lands. */
-function lede(str = "", max = 78) {
-  const first = str.split(/[—–·]/)[0].trim();
-  return first.length > max ? `${first.slice(0, max - 1)}…` : first;
-}
-
-/**
- * A project's stats, as pills.
- *
- * `status` is a human string ("46 modules · 5 platforms · 159 tests"), so split
- * on the separator it already uses. Entries that are prose rather than a metric
- * ("In development", "Active") are kept — they're honest status, and a card
- * that hid them would be overselling.
- */
-function pillsOf(p) {
-  return (p.status ?? "")
-    .split("·")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 3);
-}
-
 function heroHtml(p) {
   const t = p.theme ?? {};
   const accent = t.accent ?? "#3ddc84";
@@ -78,9 +65,11 @@ function heroHtml(p) {
   const display = serif
     ? "'Iowan Old Style', 'Palatino Linotype', Georgia, serif"
     : "'Space Grotesk', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif";
-  const nameSize = p.name.length > 11 ? 62 : 74;
-  const pills = pillsOf(p);
-  const chips = (p.stack ?? []).slice(0, 4);
+  // Sized against the banner's real width now that the name is the only text
+  // in it: the long descriptive titles ("The KMP toolkit family",
+  // "cv-siddharth: this site, and its Compose Multiplatform twin") were set at
+  // the same 62px as "Kursi" and ran straight off the edge.
+  const nameSize = p.name.length > 34 ? 46 : p.name.length > 22 ? 58 : p.name.length > 11 ? 68 : 84;
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   *{margin:0;box-sizing:border-box}
@@ -102,25 +91,20 @@ function heroHtml(p) {
   }
   .eyebrow{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;
     letter-spacing:3.4px;text-transform:uppercase;color:${accent};opacity:.92}
-  .name{font-family:${display};font-weight:800;font-size:${nameSize}px;line-height:1.02;margin-top:10px;
-    ${serif ? "letter-spacing:.5px;" : "letter-spacing:-1px;"}}
-  /* Two lines maximum. A third would push the pills out of the box, and the
-     pills carry the numbers that make the card worth looking at. */
-  .tag{margin-top:12px;font-size:21px;line-height:1.28;color:#cfe3d7;max-width:700px;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-  .pill{border:1px solid ${accent}66;background:${accent}16;color:${accent};
-    border-radius:999px;padding:7px 16px;font-size:16px;font-weight:600;
-    font-family:'JetBrains Mono',ui-monospace,monospace;white-space:nowrap}
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-  .chip{border:1px solid ${line};color:#9fb0a6;border-radius:999px;padding:5px 13px;font-size:14px;white-space:nowrap}
+  /* The name is the whole banner now, so it gets the room the tagline and the
+     pills used to take. */
+  .name{font-family:${display};font-weight:800;font-size:${nameSize}px;line-height:1.04;margin-top:14px;
+    ${serif ? "letter-spacing:.5px;" : "letter-spacing:-1.5px;"}}
+  /* A short accent rule instead of a row of pills: it closes the composition
+     and carries the project's colour without repeating a single word the card
+     prints below. */
+  .rule{margin-top:22px;width:96px;height:4px;border-radius:999px;
+    background:linear-gradient(90deg, ${accent}, ${accent}22)}
   </style></head><body>
   <div class="wrap">
     <div class="eyebrow">${esc(p.slug)}</div>
     <div class="name">${esc(p.name)}</div>
-    <div class="tag">${esc(lede(p.tagline))}</div>
-    ${pills.length ? `<div class="pills">${pills.map((s) => `<div class="pill">${esc(s)}</div>`).join("")}</div>` : ""}
-    ${chips.length ? `<div class="chips">${chips.map((c) => `<div class="chip">${esc(c)}</div>`).join("")}</div>` : ""}
+    <div class="rule"></div>
   </div></body></html>`;
 }
 

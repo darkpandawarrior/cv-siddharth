@@ -39,12 +39,46 @@ import { sync } from "./media-manifest.mjs";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
 const raw = (repo, path) => `https://raw.githubusercontent.com/${repo}/main/docs/${path}`;
+/* The ONLY host that serves the LFS object rather than the pointer. */
+const lfs = (repo, path) => `https://media.githubusercontent.com/media/${repo}/main/docs/${path}`;
+
+/**
+ * Git LFS pointers are ~130 bytes of text beginning with this exact line.
+ *
+ * raw.githubusercontent serves the POINTER, never the binary, for any
+ * LFS-tracked path. DEADLOCK's .gitattributes puts every binary asset through
+ * LFS ("code stays plain text and diffable; binary assets go through Git
+ * LFS"), so four of its screenshots came back as 130-byte text files and this
+ * script wrote them straight over the real committed images — turning
+ * title.webp from 13 KB of WEBP into a pointer, and taking gen-images down
+ * with "Input file contains unsupported image format" on the next step.
+ *
+ * That was invisible for as long as the refresh job died earlier in the chain.
+ * The moment the commit step was changed to always() so one dead generator
+ * could not discard the other 26, the next scheduled run would have COMMITTED
+ * these pointers and shipped four broken images to the live case study.
+ */
+const isLfsPointer = (buf) =>
+  buf.length < 1024 && buf.subarray(0, 40).toString("utf8").startsWith("version https://git-lfs");
+
+async function get(url) {
+  const res = await fetchWithTimeout(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  return res.ok ? Buffer.from(await res.arrayBuffer()) : res.status;
+}
 
 async function pull(repo, srcPath, dest) {
   try {
-    const res = await fetchWithTimeout(raw(repo, srcPath), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-    if (!res.ok) return console.warn(`[sync-media] MISS ${res.status} ${srcPath}`);
-    const buf = Buffer.from(await res.arrayBuffer());
+    let buf = await get(raw(repo, srcPath));
+    if (typeof buf === "number") return console.warn(`[sync-media] MISS ${buf} ${srcPath}`);
+    if (isLfsPointer(buf)) {
+      const viaLfs = await get(lfs(repo, srcPath));
+      if (typeof viaLfs === "number" || isLfsPointer(viaLfs)) {
+        // Never write the pointer. Keeping the committed asset is always
+        // better than replacing a real image with 130 bytes of text.
+        return console.warn(`[sync-media] LFS ${srcPath} — pointer only, kept the committed file`);
+      }
+      buf = viaLfs;
+    }
     writeFileSync(dest, buf);
     compressGif(dest);
     console.log(`[sync-media] ok ${srcPath} -> ${dest}`);

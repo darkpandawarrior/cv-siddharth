@@ -572,7 +572,12 @@ export const projects: Project[] = [
       "ISMCTS AI with 10 bot personas plus a DARBAR social layer for bluffing and alliances.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
-    status: "13 modules · 4 platforms · 10 bot personas",
+    // 14, not 13: Kursi gained a `:cli` module on 2026-08-26 ("headless client
+    // proving :engine is a real SDK"), and this hand-written line went stale
+    // the moment it landed. gen-project-stats.mjs counts the repo's own
+    // settings.gradle.kts, so `repoStatLine` was already printing 14 directly
+    // under this 13 on the same card.
+    status: "14 modules · 4 platforms · 10 bot personas",
     deployments: [
       {
         channel: "F-Droid",
@@ -1057,7 +1062,14 @@ export const projects: Project[] = [
       {
         platform: "Web",
         deviceFrame: "browser",
-        screens: [],
+        // A real capture of THIS build running, at the browser frame's own
+        // shape. LiveEmbed uses screens[0] as the floor while ~14 MB of Wasm
+        // downloads, and this target shipped an EMPTY array — so the one
+        // project whose whole subject is payment UIs showed a dead black
+        // rectangle for the first several seconds, and kept showing one on any
+        // browser that never painted. Its three siblings (kursi, mileway,
+        // portfolio) each had a capture; this is the fourth.
+        screens: ["web_home.png"],
         liveUrl: "/paymentslab-app/index.html",
         note: "Live, a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
       },
@@ -1484,6 +1496,31 @@ export const projects: Project[] = [
       line: "#4A2530",
     },
     icon: "/projects/deadlock/brand/deadlock-icon.svg",
+    targets: [
+      {
+        // The repo stays private; the BUILD does not have to be.
+        //
+        // A straight `--export-release Web` of this project is 310 MB — a
+        // 280 MB .pck alone, which is over GitHub's 100 MB per-file limit and
+        // unservable besides. Two things caused it, and neither was the game:
+        // the preset exported `all_resources`, shipping 29 CC0 models that no
+        // script in the project references, and every texture imported at
+        // `compress/mode=0` (lossless), which turns a 500 KB JPG into ~4 MB of
+        // uncompressed pixels — 258 times over.
+        //
+        // The web build now drops the unreferenced models and imports textures
+        // lossy at a 512px cap, built from a throwaway copy of the project so
+        // the game itself keeps its lossless masters for the desktop build.
+        // Result: 65 MB on disk, ~36 MB over the wire, biggest file 38 MB.
+        // Every chapter the menu offers is playable — this is a trimmed
+        // build, not a trimmed game.
+        platform: "Web",
+        deviceFrame: "browser",
+        liveUrl: "/deadlock-app/index.html",
+        screens: ["web_home.png"],
+        note: "Live: the real Godot build, compiled to WebAssembly. Pick a chapter, then click once to capture the mouse — WASD to move, R to rewind, Esc frees the cursor.",
+      },
+    ],
     detail: {
       overview:
         "DEADLOCK is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
@@ -1837,17 +1874,28 @@ export const recentGrowth: GrowthItem[] = [
  *
  * `src` is the ORIGINAL raster; Picture derives the .avif/.webp siblings, so
  * pointing this at an .avif directly would break that chain.
+ *
+ * DERIVED, not hand-kept. This was a literal map of six slugs while
+ * gen-project-heroes.mjs rendered a banner for every project in the registry,
+ * so `kmp-family` and `the-loopdown` had heroes sitting on disk and cards that
+ * rendered without one — two of eight cards visibly shorter than their
+ * neighbours for no reason a reader could see. Deriving it from `projects` is
+ * the same fix applied to the service worker's bypass list and vercel.json's
+ * cache rules: the shape is known, so nothing has to remember to update a
+ * second list. Guarded by cardMedia.test.ts.
  */
-export const cardMedia: Record<string, { src: string; alt: string }> = {
-  kursi: { src: "/projects/_heroes/kursi.png", alt: "Kursi: 13 modules, 4 platforms, 10 bot personas" },
-  mileway: { src: "/projects/_heroes/mileway.png", alt: "Mileway: 46 modules, 5 platforms, 159 tests" },
-  paymentslab: { src: "/projects/_heroes/paymentslab.png", alt: "PaymentsLab: 40 modules, 66 gateways, 5 rails" },
-  hiresignal: { src: "/projects/_heroes/hiresignal.png", alt: "HireSignal: active, 24 PRs merged upstream" },
-  deadlock: { src: "/projects/_heroes/deadlock.png", alt: "DEADLOCK: in development, private repo with a public case study" },
-  // The portfolio card had no media at all before, so it sat visually shorter
-  // than every card beside it. It has a hero now like the rest.
-  portfolio: { src: "/projects/_heroes/portfolio.png", alt: "This portfolio and Panda, its AI assistant: live" },
-};
+export const cardMedia: Record<string, { src: string; alt: string }> = Object.fromEntries(
+  projects.map((p) => [
+    p.slug,
+    {
+      src: `/projects/_heroes/${p.slug}.png`,
+      // The status line already reads "46 modules · 5 platforms · 159 tests";
+      // it is the same sentence this alt text used to hand-write per project,
+      // and it cannot go stale against the card beside it.
+      alt: `${p.name}: ${p.status}`,
+    },
+  ]),
+);
 
 /* ── The site's own interactive surfaces ──────────────────────────────────
  * MOVED to src/data/surfaces.ts, which is now the single registry of every

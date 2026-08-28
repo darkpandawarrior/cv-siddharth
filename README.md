@@ -66,7 +66,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **nineteen destinations**,
+The site is not a page with a few easter eggs; it is **twenty destinations**,
 each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
@@ -86,6 +86,7 @@ shows what exists, and you cannot search for a room you do not know about.
 | [`/lab`](https://cv-siddharth.vercel.app/lab) | canvas · physics | **11 experiments** that prove the numbers: GPS filtering, crash triage, recomposition and module graphs, running in your browser |
 | [`/pulse`](https://cv-siddharth.vercel.app/pulse) | telemetry · live | a live count of what visitors actually touch across the site |
 | [`/compose`](https://cv-siddharth.vercel.app/compose) | live editor · AI | write Jetpack Compose, watch it recompose in a phone frame |
+| [`/ops`](https://cv-siddharth.vercel.app/ops) | control loop · live | every workflow, every generated dataset against its own SLA, what is published and signed, and a ledger of the failures a green check did not catch |
 | [`/blueprint`](https://cv-siddharth.vercel.app/blueprint) | 3D · WebGL | the portfolio as an infinite canvas: a three.js fly-through, an ASCII render of the same scene, and a sketchable tldraw whiteboard |
 | [`/map`](https://cv-siddharth.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
 | [`/forge`](https://cv-siddharth.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
@@ -221,7 +222,7 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 930 unit tests across 83 files (vitest)
+npm test          # 997 unit tests across 91 files (vitest)
 npm run test:e2e  # 115 Playwright tests across 15 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
@@ -257,7 +258,7 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Eighteen of the twenty-four route files server-render. Six stay client-only, and
+Eighteen of the twenty-five route files server-render. Seven stay client-only, and
 each is a room that mounts WebGL at its top level: `/blueprint`, `/compose`,
 `/forge`, `/map`, `/pulse` and `/terminal`.
 

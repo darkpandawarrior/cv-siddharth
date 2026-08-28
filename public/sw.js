@@ -34,7 +34,15 @@ self.addEventListener("activate", (event) => {
 
 // Never intercept: the streaming chat API and the WASM sub-apps must always hit
 // the network directly (SSE streams + multi-MB binaries break under caching).
-const BYPASS = [/^\/api\//, /^\/(kursi|mileway|paymentslab)-app\//];
+//
+// The sub-app pattern is a SHAPE, not a hand-kept list of names. It used to
+// name three apps explicitly and portfolio-app — added later — was never added
+// to it, so the one build the list forgot had its iframe navigation and its
+// 12 MB of Wasm routed through this worker anyway. Exactly the same drift bit
+// `isLive` in App.tsx and the wasm cache rules in vercel.json; every directory
+// under public/ that serves a Compose build ends in `-app`, so matching that
+// suffix cannot forget the next one. Guarded by src/data/serviceWorker.test.ts.
+const BYPASS = [/^\/api\//, /^\/[a-z0-9-]+-app\//];
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;

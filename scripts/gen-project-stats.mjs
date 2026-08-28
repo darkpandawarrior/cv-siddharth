@@ -56,6 +56,13 @@ async function build() {
   return {
     mileway: {
       modules: count(mSettings, /^include\(/gm),
+      // The kmp-toolkit modules Mileway composes in through `includeBuild` +
+      // `dependencySubstitution`. They are part of the built app but are NOT
+      // `include(` lines, so counting only local includes reported 36 against
+      // an audited claim of 46 (claims.json: "36 local includes + 10 composed
+      // from kmp-toolkit") — and the Mileway card printed both numbers, 30px
+      // apart. Same measurable definition paymentslab already used.
+      composedModules: count(mSettings, /substitute\(module\(/gm),
       features: count(mSettings, /^include\(":feature:/gm),
       cores: count(mSettings, /^include\(":core:/gm),
       dbVersion: Number(dbMatch[1]),

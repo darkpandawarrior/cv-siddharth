@@ -474,7 +474,27 @@ async function build() {
   );
 }
 
+/**
+ * A transient upstream failure is NOT a build failure.
+ *
+ * This catch already said the right thing — "leaving committed data
+ * untouched" — and then exited 1 anyway, which is a contradiction: if the
+ * committed data is intact and correct, nothing is broken. GitHub's commit
+ * SEARCH api allows about 30 requests a minute and this walks it to page 10,
+ * so a 403 here is routine, and it was taking `npm run refresh` down with it
+ * — and with it gen:chess-deep and gen:system-prompt, which run after.
+ *
+ * Same posture gen-project-stats.mjs already takes ("fetch failed, keeping
+ * committed projectStats.ts"). A real bug — a parse error, a bad write —
+ * still exits 1 and still goes red.
+ */
+const TRANSIENT = /\b(403|408|429|5\d\d)\b|rate limit|timeout|timed out|ETIMEDOUT|ECONNRESET|ENOTFOUND|fetch failed|socket hang up/i;
+
 build().catch((err) => {
+  if (TRANSIENT.test(err.message)) {
+    console.warn("gen-chess-stats: upstream unavailable, keeping committed data —", err.message);
+    return; // exit 0: nothing is wrong with the repo
+  }
   console.error("gen-chess-stats failed; leaving committed data untouched:", err.message);
   process.exit(1);
 });

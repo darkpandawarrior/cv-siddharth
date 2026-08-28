@@ -47,7 +47,7 @@ import { openLab, type LabKey } from "./data/labs.ts";
 import { writing } from "./data/writing.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
-import { repoStatLine } from "./lib/projectStatLine.ts";
+import { statLineExtras, badgesBeyondStatus } from "./lib/projectStatLine.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
 
 const SKILL_ICONS: Record<string, string> = {
@@ -738,7 +738,8 @@ function Projects() {
             // profile.ts), so the presence of one IS the badge. The hand-kept
             // Set beside it had never been told about the portfolio target.
             const isLive = !!p.targets?.some((t) => t.liveUrl);
-            const statLine = repoStatLine(p.slug);
+            // Only the part the bracketed status has NOT already said.
+            const statLine = statLineExtras(p.slug, p.status);
             const media = cardMedia[p.slug];
             return (
             <Reveal key={p.slug} className="h-full" delay={(i % 2) * 120}>
@@ -817,20 +818,17 @@ function Projects() {
                     </div>
                   )}
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{p.description}</p>
-                  <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-300">
-                    <Expandable
-                      items={p.highlights}
-                      visibleCount={2}
-                      renderItem={(h) => (
-                        <li key={h} className="flex gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/70" />
-                          {h}
-                        </li>
-                      )}
-                    />
-                  </ul>
+                  {/* The highlights bullets used to render here behind an
+                      "+2 more" expander, which is what turned each card into a
+                      small case study: eight of them made #projects 6,832px on
+                      its own, nearly a third of a 23,000px homepage. Every one
+                      of those bullets is already on /project/<slug>, in full
+                      and in context, which is where the "View case study →"
+                      below goes. The card keeps what makes someone WANT to
+                      click — name, status, the one-line pitch, the platforms
+                      it runs on — and stops trying to be the page it links to. */}
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {p.badges.map((b) => (
+                    {badgesBeyondStatus(p.badges, p.status).map((b) => (
                       <span key={b} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-zinc-400">
                         {b}
                       </span>

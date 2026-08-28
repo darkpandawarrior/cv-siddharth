@@ -65,7 +65,12 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
           src={url}
           title="Live web build"
           loading="lazy"
-          allow="fullscreen"
+          // `pointer-lock` is not optional for the 3D builds. Pointer
+          // Lock is DENIED outright inside an iframe unless the embedder
+          // allows it, so without this a visitor can walk around
+          // DEADLOCK but can never look around — the mouse simply never
+          // gets captured, with no error anywhere.
+          allow="fullscreen; pointer-lock"
           className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${painted ? "opacity-100" : "opacity-0"}`}
         />
       )}

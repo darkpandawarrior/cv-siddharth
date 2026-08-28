@@ -87,7 +87,14 @@ export const sync = {
     // pipeline. More land here as the rest of the app's 13 screens get the
     // same screenshot-test treatment.
     files: [
-      ["assets/banner.gif", "banner.gif"],
+      // `assets/banner.gif` used to be here and 404'd on every single refresh:
+      // upstream replaced it with `assets/banner.svg`. The committed
+      // banner.gif is a real 900x170 GIF, is still referenced by profile.ts
+      // and galleries.ts, and still renders — it just has no upstream to be
+      // refreshed FROM any more, which is a decision upstream made rather than
+      // a fault here. Syncing the .svg instead would put a second banner in
+      // the gallery beside the one already being shown, so the entry is simply
+      // gone and the daily job stops reporting a miss it can do nothing about.
       ["screenshots/dashboard_screen.png", "dashboard_screen.png"],
       ["screenshots/board_screen.png", "board_screen.png"],
       ["screenshots/pipeline_screen.png", "pipeline_screen.png"],

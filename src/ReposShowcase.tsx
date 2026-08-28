@@ -246,8 +246,14 @@ export function ReposShowcase() {
               <h4 className="kicker-accent font-semibold">Merged upstream</h4>
               <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐63k+)</span>
             </div>
+            {/* Six, not all of them. The full list rendered 847px of individual
+                PR titles on the homepage — more vertical space than the entire
+                Skills section — to make a point ("PRs merged into a public
+                project") that the first few make just as well. The rest are one
+                click away on GitHub, where they are checkable anyway, which is
+                the only place the claim actually settles. */}
             <ul className="space-y-2">
-              {openSource.map((c) => (
+              {openSource.slice(0, 6).map((c) => (
                 <li key={c.url}>
                   <a
                     href={c.url}
@@ -272,7 +278,7 @@ export function ReposShowcase() {
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
             >
-              <Star size={11} /> all my PRs on career-ops <ArrowUpRight size={11} />
+              <Star size={11} /> all {openSource.length} of my PRs on career-ops <ArrowUpRight size={11} />
             </a>
           </div>
         </Reveal>
