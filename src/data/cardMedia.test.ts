@@ -33,12 +33,15 @@ describe("project card banners", () => {
   });
 
   it("names a .png, so Picture can derive its .avif/.webp siblings", () => {
+    // Only the ORIGINAL raster is asserted. The .avif/.webp siblings are
+    // gitignored build derivatives (`public/**/*.avif`, `public/**/*.webp`)
+    // that gen-images.mjs writes during prebuild, so they do not exist on a
+    // fresh checkout — asserting them here failed CI, which runs `npm run
+    // test` without a build. Picture derives them from this .png at render
+    // time; that the .png is the committed source is the checkable claim.
     for (const [slug, m] of Object.entries(cardMedia)) {
       expect(m.src.endsWith(".png"), `${slug} must point at the original raster`).toBe(true);
-      for (const ext of [".avif", ".webp"]) {
-        const sibling = m.src.replace(/\.png$/, ext);
-        expect(existsSync(join(root, "public", sibling)), `${sibling} missing — run npm run gen:images`).toBe(true);
-      }
+      expect(existsSync(join(root, "public", m.src)), `${m.src} is missing from the repo`).toBe(true);
     }
   });
 
