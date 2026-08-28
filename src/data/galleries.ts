@@ -7,7 +7,8 @@ export const galleries: Record<string, string[]> = {
     "/projects/deadlock/screenshots/pipeline.gif",
     "/projects/deadlock/screenshots/pull.webp",
     "/projects/deadlock/screenshots/the-sense.webp",
-    "/projects/deadlock/screenshots/title.webp"
+    "/projects/deadlock/screenshots/title.webp",
+    "/projects/deadlock/screenshots/web_home.png"
   ],
   "hiresignal": [
     "/projects/hiresignal/screenshots/banner.gif",
@@ -203,7 +204,8 @@ export const galleries: Record<string, string[]> = {
     "/projects/paymentslab/screenshots/shield_pulse.png",
     "/projects/paymentslab/screenshots/step_timeline_dark.png",
     "/projects/paymentslab/screenshots/step_timeline_light.png",
-    "/projects/paymentslab/screenshots/success_burst.png"
+    "/projects/paymentslab/screenshots/success_burst.png",
+    "/projects/paymentslab/screenshots/web_home.png"
   ],
   "portfolio": [
     "/projects/portfolio/screenshots/cmp_web.png",

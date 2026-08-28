@@ -1,6 +1,6 @@
-# Screenshot sentinel — 2026-08-15
+# Screenshot sentinel — 2026-08-28
 
-28 captures in `docs/screenshots` · 16 screens found in source
+31 captures in `docs/screenshots` · 19 screens found in source
 
 ## Broken captures (blank, flat or unreadable) — 0
 

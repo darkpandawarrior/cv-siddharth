@@ -2,169 +2,175 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://cv-siddharth.vercel.app/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/compose</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/lab</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/blueprint</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/map</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/forge</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/terminal</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/chess</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/weeb</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cv-siddharth.vercel.app/ops</loc>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/hire</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/resume</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/shipped</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/pulse</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/ink</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/excelsior</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/loopdown</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/anthology</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/canon</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/making</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/playground</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/kursi</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/mileway</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/paymentslab</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/hiresignal</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/portfolio</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/deadlock</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/kmp-family</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cv-siddharth.vercel.app/project/the-loopdown</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

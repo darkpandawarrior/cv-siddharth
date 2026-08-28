@@ -77,6 +77,9 @@ describe("the README's numbers are the repo's numbers", () => {
     // against twenty-three files, and this assertion stayed green through it
     // because it only compared one hardcoded string to another.
     const NUM: Record<number, string> = {
+      // Small numbers too, now that the client-only count is derived from this
+      // same table rather than hardcoded.
+      5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
       16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five",
@@ -86,7 +89,15 @@ describe("the README's numbers are the repo's numbers", () => {
     expect(ssr, `add a word for ${routes.length - clientOnly.length} to NUM`).toBeDefined();
     expect(total, `add a word for ${routes.length} to NUM`).toBeDefined();
     expect(README).toContain(`${ssr} of the ${total} route files server-render`);
-    expect(clientOnly.length, "the README says six routes are client-only").toBe(6);
+    // Derived, like the sentence above it. This was `toBe(6)` — a hardcoded
+    // literal inside the very test whose comment complains about hardcoded
+    // literals going stale, and it went stale the moment /ops landed as the
+    // seventh client-only route. Assert the README's own word for the count
+    // instead, so the number can only be wrong in one place.
+    const clientWord = NUM[clientOnly.length];
+    expect(clientWord, `add a word for ${clientOnly.length} to NUM`).toBeDefined();
+    expect(README, `the README should say ${clientWord} routes stay client-only`)
+      .toContain(`${clientWord} stay client-only`);
     for (const f of clientOnly) {
       const route = "/" + f.replace(/\.tsx$/, "");
       expect(README, `${route} is client-only and the README should name it`).toContain(`\`${route}\``);
