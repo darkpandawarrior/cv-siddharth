@@ -248,8 +248,9 @@ export const writing: Writing = {
       "slug": "foreground-service-five-seconds",
       "pillar": "background-execution",
       "series": "the-night-shift",
-      "status": "ready",
+      "status": "published",
       "created": "2026-07-22",
+      "live": "https://dev.to/darkpandawarrior/the-5-second-window-that-crashes-your-service-5cmm",
       "tags": [
         "android",
         "foreground-service",
@@ -257,15 +258,18 @@ export const writing: Writing = {
         "lifecycle",
         "doze"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/the-5-second-window-that-crashes-your-service-5cmm"
+      }
     },
     {
       "title": "CancellationException is not an assassin",
       "slug": "coroutine-cancellation-messenger",
       "pillar": "concurrency",
       "series": "the-coroutine-court",
-      "status": "ready",
+      "status": "published",
       "created": "2026-07-20",
+      "live": "https://dev.to/darkpandawarrior/cancellationexception-is-not-an-assassin-2220",
       "tags": [
         "kotlin",
         "coroutines",
@@ -273,7 +277,9 @@ export const writing: Writing = {
         "structured-concurrency",
         "android"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/cancellationexception-is-not-an-assassin-2220"
+      }
     },
     {
       "title": "Teaching a phone to disbelieve its own GPS",
