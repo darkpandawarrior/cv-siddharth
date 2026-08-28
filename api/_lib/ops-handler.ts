@@ -17,19 +17,16 @@ const OWNER = "darkpandawarrior";
 const REPO = "cv-siddharth";
 
 /**
- * The two keys, and why there are two.
+ * The two keys, imported rather than restated.
  *
- * APK_FINGERPRINT signs the apps. INDEX_FINGERPRINT signs the F-Droid index
- * that tells a device an update exists. They are deliberately DIFFERENT keys —
- * the APK key lives in each app repo, so compromising the site that publishes
- * the index still cannot forge an app update. Both are verifiable by a reader:
- * `apksigner verify --print-certs` on a downloaded APK yields the first, and
- * the F-Droid repo's own README tells you to check the second when you add it.
+ * This file briefly carried its own copy of the APK fingerprint, which is the
+ * duplication every other fix in this repo has been about: two constants that
+ * can disagree, on the one page whose subject is claims quietly ceasing to be
+ * true. pipeline-handler.ts owns both.
  */
-export const APK_FINGERPRINT =
-  "e3cd9ed25baaa6db5501621a2a7399edc0878022f9b64b5d95446db0348dd19c";
-export const INDEX_FINGERPRINT =
-  "31cfddd6396e2941cc478909f19d19864cae281f671e89edd5ae866b607e1504";
+import { SIGNING_FINGERPRINT as APK_FINGERPRINT, INDEX_FINGERPRINT } from "./pipeline-handler.js";
+
+export { APK_FINGERPRINT, INDEX_FINGERPRINT };
 
 const FDROID = "https://darkpandawarrior.github.io/fdroid/repo";
 

@@ -74,6 +74,15 @@
       ]
     },
     {
+      "source": "/(.*)-app/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/sw.js",
       "headers": [
         {

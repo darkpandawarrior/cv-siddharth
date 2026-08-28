@@ -87,11 +87,22 @@ export function PipelineShowcase({ slug }: { slug: string }) {
         <p className="kicker-accent">signing certificate</p>
         <p className="break-all font-mono text-[11px] leading-relaxed text-zinc-400">{data.fingerprint}</p>
         <p className="text-sm leading-relaxed text-zinc-400">
-          Every published APK carries this certificate, and each app pins it in its own F-Droid
-          metadata. Download the APK and run{" "}
+          Every published APK is signed with this certificate, and the live F-Droid index records it
+          as each package&rsquo;s signer. Download the APK and run{" "}
           <code className="font-mono text-[11px] text-accent">apksigner verify --print-certs</code> on
           it: the SHA-256 should match this string exactly. That is the whole claim, and it is
           checkable without trusting anything on this page.
+        </p>
+        {/* The second key, which the card used to omit entirely. Naming only
+            the APK key made the chain look like one key doing two jobs; the
+            separation is the actual security property worth showing. */}
+        <p className="kicker-accent mt-3">index signing key</p>
+        <p className="break-all font-mono text-[11px] leading-relaxed text-zinc-400">{data.indexFingerprint}</p>
+        <p className="text-sm leading-relaxed text-zinc-400">
+          A <em>different</em> key signs the repository index &mdash; the file that tells a device an
+          update exists. The APK key lives in each app&rsquo;s own repo, so compromising the site that
+          publishes this index still cannot forge an app update. This is the fingerprint to check when
+          you first add the repo.
         </p>
         {data.release && (
           <a

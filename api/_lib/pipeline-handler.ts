@@ -2,12 +2,38 @@ declare const process: { env: Record<string, string | undefined> };
 
 const OWNER = "darkpandawarrior";
 
-/** The signing certificate every published APK must carry. Pinned in each app's
- *  F-Droid metadata as AllowedAPKSigningKeys, and shown here so a reader can run
- *  `apksigner verify --print-certs` on a downloaded APK and compare it themselves.
- *  A supply chain you can check beats a badge you cannot. */
+/**
+ * The certificate every published APK is signed with.
+ *
+ * NOT "pinned in each app's F-Droid metadata as AllowedAPKSigningKeys", which
+ * is what this comment used to claim. That field is authored in the app repos
+ * for an eventual fdroiddata submission, and the publishing repo's own
+ * import-metadata.py says in as many words that Binaries, Builds and
+ * AllowedAPKSigningKeys "mean nothing to a local repo" — its KEEP list
+ * deliberately drops them. Overstating how a signature is enforced, on the one
+ * card whose entire authority is precision, is worse than saying less.
+ *
+ * What IS true and what the card now says: the live index records the signer
+ * for every package (`manifest.signer.sha256` and `metadata.preferredSigner`,
+ * verified identical to this value for all three), and a reader can confirm it
+ * against a download with `apksigner verify --print-certs`. A supply chain you
+ * can check beats a badge you cannot.
+ */
 export const SIGNING_FINGERPRINT =
   "e3cd9ed25baaa6db5501621a2a7399edc0878022f9b64b5d95446db0348dd19c";
+
+/**
+ * The key that signs the F-Droid INDEX — deliberately a different key.
+ *
+ * The APK key lives in each app repo; this one lives with the publishing site.
+ * Separating them means compromising the site that announces updates still
+ * cannot forge an app update, and it is the fingerprint the repo's README tells
+ * a user to verify when they add it. Computed from the signed entry.jar:
+ *   unzip -p entry.jar META-INF/INDEX.RSA | openssl pkcs7 -inform DER \
+ *     -print_certs | openssl x509 -outform DER | shasum -a 256
+ */
+export const INDEX_FINGERPRINT =
+  "31cfddd6396e2941cc478909f19d19864cae281f671e89edd5ae866b607e1504";
 
 /** Only apps that actually ship from the F-Droid repo. Adding one here without a
  *  live listing would make this panel claim something untrue. */
@@ -35,6 +61,8 @@ export type Pipeline = {
    *  proves the pipeline reached users rather than merely going green. */
   published: { versionName: string; sizeBytes: number; antiFeatures: string[] } | null;
   fingerprint: string;
+  /** The index-signing key, which is NOT the APK-signing key. */
+  indexFingerprint: string;
 };
 
 const EMPTY = (repo: string): Pipeline => ({
@@ -44,6 +72,7 @@ const EMPTY = (repo: string): Pipeline => ({
   release: null,
   published: null,
   fingerprint: SIGNING_FINGERPRINT,
+  indexFingerprint: INDEX_FINGERPRINT,
 });
 
 function seconds(startedAt: string, updatedAt: string): number | null {
