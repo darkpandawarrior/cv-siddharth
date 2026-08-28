@@ -5,7 +5,7 @@
 export const perimeter = [
   {
     "file": "chess.ts",
-    "generatedAt": "2026-08-24",
+    "generatedAt": "2026-08-28",
     "slaDays": 21,
     "generator": "npm run gen:chess"
   },

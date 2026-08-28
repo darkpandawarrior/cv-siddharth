@@ -82,15 +82,6 @@ export const weeb = {
   },
   "stale": [
     {
-      "name": "Frieren: Beyond Journey’s End",
-      "title": "Frieren: Beyond Journey’s End",
-      "romaji": "Sousou no Frieren",
-      "english": "Frieren: Beyond Journey’s End",
-      "sequel": "Frieren: Beyond Journey’s End Season 2",
-      "year": 2026,
-      "status": "FINISHED"
-    },
-    {
       "name": "Grand Blue",
       "title": "Grand Blue Dreaming",
       "romaji": "Grand Blue",
@@ -105,6 +96,15 @@ export const weeb = {
       "romaji": "Chainsaw Man",
       "english": "Chainsaw Man",
       "sequel": "Chainsaw Man – The Movie: Reze Arc",
+      "year": 2025,
+      "status": "FINISHED"
+    },
+    {
+      "name": "Frieren: Beyond Journey’s End",
+      "title": "Sousou no Frieren: ●● no Mahou",
+      "romaji": "Sousou no Frieren: ●● no Mahou",
+      "english": null,
+      "sequel": "Sousou no Frieren: ●● no Mahou Part 2",
       "year": 2025,
       "status": "FINISHED"
     },
@@ -199,6 +199,15 @@ export const weeb = {
       "status": "FINISHED"
     },
     {
+      "name": "Masamune Kun’s Revenge",
+      "title": "Masamune-kun's Revenge",
+      "romaji": "Masamune-kun no Revenge",
+      "english": "Masamune-kun's Revenge",
+      "sequel": "Masamune-kun's Revenge R",
+      "year": 2023,
+      "status": "FINISHED"
+    },
+    {
       "name": "Classroom Of The Elite",
       "title": "Classroom of the Elite",
       "romaji": "Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e",
@@ -280,15 +289,6 @@ export const weeb = {
       "status": "FINISHED"
     },
     {
-      "name": "Highschool DxD",
-      "title": "High School DxD BorN",
-      "romaji": "High School DxD BorN",
-      "english": null,
-      "sequel": "High School DxD HERO",
-      "year": 2018,
-      "status": "FINISHED"
-    },
-    {
       "name": "Konosuba",
       "title": "KONOSUBA -God's blessing on this wonderful world!",
       "romaji": "Kono Subarashii Sekai ni Shukufuku wo!",
@@ -313,6 +313,15 @@ export const weeb = {
       "english": "Blood Blockade Battlefront",
       "sequel": "Blood Blockade Battlefront & Beyond",
       "year": 2017,
+      "status": "FINISHED"
+    },
+    {
+      "name": "Assassination Classroom",
+      "title": "Assassination Classroom",
+      "romaji": "Ansatsu Kyoushitsu",
+      "english": "Assassination Classroom",
+      "sequel": "Assassination Classroom Second Season",
+      "year": 2016,
       "status": "FINISHED"
     },
     {
@@ -385,6 +394,15 @@ export const weeb = {
       "english": "Noragami",
       "sequel": "Noragami Aragoto",
       "year": 2015,
+      "status": "FINISHED"
+    },
+    {
+      "name": "Highschool DxD",
+      "title": "High School DxD",
+      "romaji": "High School DxD",
+      "english": "High School DxD",
+      "sequel": "High School DxD NEW",
+      "year": 2013,
       "status": "FINISHED"
     },
     {
@@ -574,21 +592,21 @@ export const weeb = {
         "delta": 36
       },
       {
-        "name": "Assassination Classroom",
-        "mine": 5,
-        "crowd": 68,
-        "delta": 32
-      },
-      {
         "name": "Highschool DxD",
         "mine": 5,
-        "crowd": 71,
-        "delta": 29
+        "crowd": 69,
+        "delta": 31
       },
       {
         "name": "Bakugan",
         "mine": 4,
         "crowd": 53,
+        "delta": 27
+      },
+      {
+        "name": "Frieren: Beyond Journey’s End",
+        "mine": 5,
+        "crowd": 73,
         "delta": 27
       }
     ],
