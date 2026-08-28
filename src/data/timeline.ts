@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-08-28T12:23:12.446Z",
+  "generatedAt": "2026-08-28T12:29:11.080Z",
   "from": "2019-01",
   "to": "2026-08",
   "months": [
