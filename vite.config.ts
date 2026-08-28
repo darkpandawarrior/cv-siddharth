@@ -99,5 +99,9 @@ export default defineConfig(async () => ({
     chatApiDevPlugin(),
     edgeGetApiDevPlugin("/api/spotify", "/api/_lib/spotify-handler.ts", "handleSpotify"),
     edgeGetApiDevPlugin("/api/github-activity", "/api/_lib/github-activity-handler.ts", "handleGithubActivity"),
+    // /ops's control tower. Without this the board is only ever testable
+    // against production, which is the wrong way round for a page whose whole
+    // subject is noticing failure early.
+    edgeGetApiDevPlugin("/api/ops", "/api/_lib/ops-handler.ts", "handleOps"),
   ],
 }));

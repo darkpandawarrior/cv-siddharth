@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+// The SLA table, the stamp shapes and the must-be-stamped list moved to
+// freshnessSla.ts so /ops draws this exact perimeter from the same numbers.
+// A dashboard about silent drift keeping a private copy of the thresholds
+// would be the defect it exists to report.
+import { MAX_AGE_DAYS, slaFor, MUST_BE_STAMPED, STAMP_RE, generatorFor } from "./freshnessSla.ts";
 
 /**
  * ROT HAS TO BE LOUD.
@@ -21,34 +26,6 @@ import { join } from "node:path";
  * there so a generator that has been failing for a MONTH cannot keep passing
  * for one that works.
  */
-const MAX_AGE_DAYS = 45;
-
-/**
- * Per-file SLAs, because one blanket threshold is a licence to rot.
- *
- * chessDeep.ts sat 29 days stale under the flat 45-day rule and the suite stayed
- * green, with 16 more days of legal silence still to run. It was not a dead
- * generator: the daily job simply never reached it, because gen-hiresignal-stats
- * exited 1 earlier in the chain and the commit step was gated on success. One
- * number, tuned for the slowest source in the repo, hid that for over a month.
- *
- * So the deadline matches how fast the SOURCE actually moves. A file fed by a
- * live external API on a daily cron has no business being three weeks old; the
- * Play Store fleet sweep is deliberately slow and rate-limited, so it gets room.
- * Anything unlisted keeps the old blanket value.
- */
-const SLA_DAYS: Record<string, number> = {
-  "chess.ts": 21,
-  "chessDeep.ts": 21,
-  "weeb.ts": 21,
-  "store.ts": 45,
-};
-const slaFor = (file: string) => SLA_DAYS[file] ?? MAX_AGE_DAYS;
-
-/** Which generator to run when one of these fails. Derived from the file name
- *  rather than hand-mapped, so a new generated file is covered on arrival. */
-const generatorFor = (file: string) => `npm run gen:${file.replace(/\.ts$/, "").replace(/([A-Z])/g, (m) => "-" + m.toLowerCase())}`;
-
 describe("generated data has not quietly aged out", () => {
   const dir = new URL("./", import.meta.url).pathname;
   const stamped = readdirSync(dir)
@@ -63,7 +40,7 @@ describe("generated data has not quietly aged out", () => {
     // this test exists to prevent, so match both shapes.
     .map((f) => ({
       file: f,
-      at: /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4}-\d{2}-\d{2})/.exec(readFileSync(join(dir, f), "utf8"))?.[1],
+      at: STAMP_RE.exec(readFileSync(join(dir, f), "utf8"))?.[1],
     }))
     .filter((x): x is { file: string; at: string } => Boolean(x.at));
 
@@ -80,7 +57,6 @@ describe("generated data has not quietly aged out", () => {
    * local files on every prebuild, so its stamp says a build happened, not
    * that data moved — a member that can never go red is padding, not cover.
    */
-  const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts"];
 
   it.each(MUST_BE_STAMPED)("%s still carries a generatedAt stamp", (file) => {
     expect(

@@ -65,6 +65,15 @@ const EXPECTED_404 = [
   //   curl "https://cv-siddharth.vercel.app/api/pipeline?slug=mileway" -> 200,
   // returning real GitHub Actions runs.
   "/api/pipeline",
+  // Added with /ops. Verified the way the note above requires, as far as it
+  // CAN be before a deploy: the handler returns real data through the dev
+  // middleware (`curl localhost:5173/api/ops` → the live Actions runs plus the
+  // F-Droid chain), and it is wired into vite.config.ts and api/ops.ts exactly
+  // like /api/pipeline. It has no production URL to curl yet because this is
+  // the commit that introduces it — re-run
+  //   curl "https://cv-siddharth.vercel.app/api/ops"
+  // after the first deploy and remove this entry if it is not 200.
+  "/api/ops",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 

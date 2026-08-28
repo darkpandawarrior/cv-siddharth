@@ -3107,3 +3107,232 @@ html.resume-mode .palette-trigger {
 .card-index::after {
   content: attr(data-index);
 }
+
+/* /ops — the board's grammar, and its one piece of motion.
+   Four fields in a fixed order (LED, SUBJECT, STATE, VERIFIED) and now exactly
+   four grid tracks, so every block reads as one table with rules between it, at
+   a hairline ~26px a row. Dense and still reads as instrumentation; sparse and
+   animated reads as a portfolio.
+
+   The detail is no longer a fifth column — it is the rest of SUBJECT's line,
+   which is what a console line has always been: fixed leading columns, then a
+   message that runs to the end of the line and hangs its continuation.
+
+   Nothing here truncates. STATE and VERIFIED are closed vocabularies, so they
+   are sized to their real longest strings ("DEGRADED" = 8ch; "2026-08-24",
+   "100 modules", "365d to fix" = 11ch) with headroom. SUBJECT is open-ended
+   data — the longest Play listing name in store.ts is 30 characters today and
+   could be 45 after the next sweep — so it takes the free track and is allowed
+   to wrap, rather than being given a width that quietly starts lying. */
+.ops-row {
+  display: grid;
+  /* Measured, not guessed, against the real longest rendered strings at this
+     font size: STATE tops out at "DEGRADED" (77px) and VERIFIED at an ISO date
+     "2026-08-27" (96px). The previous 4.5rem/5.5rem were sized from a
+     character count and came out 8px short, which clipped every date on the
+     board — the one field whose whole job is to say when something was last
+     true. Both tracks now carry headroom over their measured maximum. */
+  grid-template-columns: 10px minmax(0, 1fr) 5.25rem 6.5rem;
+  align-items: start;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-line) 55%, transparent);
+  line-height: 1.35;
+}
+.ops-row:last-child { border-bottom: 0; }
+
+/* The LED carries no text, so `align-items: start` alone would hang it above
+   the cap line. Half the difference between the 16.2px line box and the 8px dot. */
+.ops-led { margin-top: 0.26rem; }
+
+/* SUBJECT and its context are ONE text flow in ONE cell. The hanging indent is
+   the only thing that has to say "this second line belongs to the row above". */
+.ops-cell {
+  min-width: 0;
+  padding-left: 1.25ch;
+  text-indent: -1.25ch;
+  /* break-word, not anywhere: `anywhere` also breaks a word that WOULD have
+     fit on the next line, which split "shipped 2024-04-16" across two lines in
+     the fleet block. break-word only breaks a token too long for a line of its
+     own — which on this board is nothing, down to a 320px viewport. */
+  overflow-wrap: break-word;
+}
+.ops-cell > a {
+  color: var(--color-text);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+.ops-cell > a:hover { color: var(--color-accent); }
+
+/* The context half of the line. Dimmer, same size — shrinking it would break
+   the monospace rhythm that is doing the instrumentation work. */
+.ops-detail { margin-left: 0.75ch; color: var(--color-muted); }
+
+/* A token that must never be split across lines. `overflow-wrap` cannot do
+   this: UAX #14 puts a break opportunity AFTER every hyphen, which is why
+   "shipped 2024-04-16" was rendering as "2024-04-" / "16". The only two fixes
+   are a non-breaking hyphen in the data or a nowrap element around it, and the
+   data should stay copy-pasteable. */
+.ops-atom { white-space: nowrap; }
+
+.ops-state { white-space: nowrap; }
+
+.ops-verified {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+a.ops-verified { transition: color var(--dur-fast) var(--ease-out-quart); }
+a.ops-verified:hover { color: var(--color-accent); }
+
+/* ONLY a BROKEN row moves. One red dot breathing in a field of still rows is
+   striking; six animated things is a screensaver. */
+@keyframes ops-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.ops-pulse { animation: ops-pulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ops-pulse { animation: none; outline: 2px solid var(--color-danger); outline-offset: 2px; }
+}
+
+@media (max-width: 40rem) {
+  /* Nothing is dropped at any width. VERIFIED moves to its own line under the
+     subject instead of a field being deleted — the previous rule here was
+     `display: none` on the detail column, which is data loss dressed as
+     responsiveness on a page whose entire argument is noticing things. */
+  /* 5.25rem here too, not 4.5rem — "DEGRADED" measures 77px and the narrower
+     track clipped it on every one of the 40 degraded rows. A responsive
+     override that re-introduces the bug the desktop rule just fixed is the
+     easiest place in a stylesheet to hide one. */
+  .ops-row { grid-template-columns: 10px minmax(0, 1fr) 5.25rem; gap: 0.15rem 0.6rem; }
+  .ops-verified { grid-column: 2 / -1; text-align: left; }
+}
+
+/* ── /ops console shell ───────────────────────────────────────────────────
+   One full-width console, not two columns of cards. A block heading is a RULE
+   LINE carrying its own census, so the whole page reads as one table with
+   rules through it rather than five widgets stacked. */
+.ops-console {
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  background: var(--color-ink);
+  overflow: hidden;
+}
+
+/* The banner. Sticky, opaque (never a backdrop-filter: a semi-transparent
+   sticky ground is what makes axe report color-contrast as *incomplete*
+   instead of pass, and a blur is a per-frame composite over a long scroll). */
+.ops-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-ink);
+  border-bottom: 2px solid var(--color-line);
+  padding: 0.6rem 0.9rem;
+}
+/* An all-green day has to LOOK different from a day with something on fire.
+   The banner's bottom edge is the worst state in the whole system. */
+.ops-banner[data-worst="BROKEN"] { border-bottom-color: var(--color-danger); }
+.ops-banner[data-worst="DEGRADED"] { border-bottom-color: var(--color-accent); }
+.ops-banner[data-worst="OK"] { border-bottom-color: var(--color-signal); }
+
+.ops-banner__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+.ops-banner__line + .ops-banner__line { margin-top: 0.25rem; }
+.ops-banner__line b { color: var(--color-text); font-weight: 700; }
+.ops-banner__mark { color: var(--color-text); font-weight: 700; letter-spacing: 0.12em; }
+.ops-banner__name { color: var(--color-text); }
+.ops-banner__link { color: var(--color-muted); text-decoration: underline; text-underline-offset: 2px; }
+.ops-banner__link:hover { color: var(--color-accent); }
+
+/* The loop stations. Tabular so the counters sit on a fixed grid and the eye
+   catches a change in magnitude rather than a change in width. */
+.ops-stat {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.ops-stat b {
+  margin-left: 0.45rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.ops-stat[data-hot="true"] b { color: var(--color-accent); }
+
+/* The escalation rail. Real rows, capped so it can never eat the phone it is
+   pinned to; it scrolls internally past that. */
+.ops-rail { margin-top: 0.5rem; }
+.ops-rail__badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+.ops-rail__list {
+  margin-top: 0.35rem;
+  max-height: min(34vh, 15rem);
+  overflow-y: auto;
+  /* `scrollbar-gutter: stable` and an explicit x-hidden, together.
+     overflow-y:auto also makes x auto, and the vertical scrollbar then ate
+     8px of a row that exactly filled its box — which produced a horizontal
+     scrollbar AND clipped the last 8px of VERIFIED, so the rail was the one
+     place on the board still truncating. The gutter reserves the scrollbar's
+     width in the content box instead of stealing it from the row. */
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  border-top: 1px solid var(--color-line);
+}
+.ops-clock { color: var(--color-danger); font-variant-numeric: tabular-nums; }
+
+/* A block heading, demoted from a card header to a rule line. */
+.ops-block { padding: 0 0.9rem 0.75rem; }
+.ops-rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.9rem;
+  margin: 1.1rem 0 0.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--color-line);
+}
+.ops-rule__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+.ops-rule__census,
+.ops-rule__note { font-size: 0.6875rem; color: var(--color-muted); }
+.ops-rule__census b { font-variant-numeric: tabular-nums; }
+.ops-rule__note { flex: 1 1 18rem; min-width: 0; }
+
+/* The lane tag, shown only where a row has been hoisted into the rail, so a
+   pinned row still says which block it belongs to. */
+.ops-lane {
+  margin-left: 0.6ch;
+  padding: 0 0.4ch;
+  border: 1px solid var(--color-line);
+  border-radius: 0.2rem;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.ops-empty { padding: 0.5rem 0.9rem 0.75rem; font-size: 0.6875rem; color: var(--color-muted); }
+
+/* A BROKEN row is washed, so it is findable by shape as well as by colour.
+   6% keeps --color-muted on it at ~5.8:1; do not raise it without measuring. */
+.ops-row[data-state="BROKEN"] {
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+}

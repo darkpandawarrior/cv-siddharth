@@ -358,6 +358,22 @@ const roomSurfaces: SurfaceInput[] = [
 /** Ordinary scroll routes. */
 const pageSurfaces: SurfaceInput[] = [
   {
+    // Under "proof" rather than "things that run": it is not a toy, it is the
+    // evidence that the rest of the numbers on this site are still true. Its
+    // own spec (docs/ops-board.md) calls it the one claim a portfolio almost
+    // never demonstrates.
+    to: "/ops",
+    label: "The Ops Board",
+    blurb:
+      "A control loop rendered as a page: every workflow, every generated dataset against its own SLA, the shipped fleet, and a ledger of the failures a green check did not catch.",
+    tag: "control loop · live",
+    group: "proof",
+    tint: ACCENT,
+    device: "desktop",
+    preview: "poster",
+    poster: "ops",
+  },
+  {
     to: "/hire",
     label: "Hire",
     blurb:
