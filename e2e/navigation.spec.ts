@@ -39,6 +39,25 @@ test.describe("the home page matches its own registry", () => {
     expect(shadowed).toEqual(["shipped"]);
   });
 
+  test("the launcher reaches every registered surface, not just the walled ones", async ({ page }) => {
+    // The dialog is titled "Every surface" and its subtitle says "this shows
+    // what exists". It rendered `wallSurfaces`, which drops the ones carrying
+    // `wall: false`, a homepage editorial demotion about what deserves a
+    // scrolling visitor's attention, which is the opposite question. It showed
+    // 17 of 20, and the three it dropped are rooms it is itself mounted inside.
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const dialog = page.getByRole("dialog", { name: "Every surface" });
+    // Same hydration-race guard as the palette test below: `domcontentloaded`
+    // fires before React attaches the handler, so a click can be swallowed.
+    await expect(async () => {
+      // exact: the wall's own "Open the full wall, all N surfaces" button
+      // matches this name as a substring and opens the same dialog.
+      await page.getByRole("button", { name: "Surfaces", exact: true }).click();
+      await expect(dialog).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 20000 });
+    await expect(dialog.getByRole("link")).toHaveCount(surfaces.length);
+  });
+
   test("the command palette can reach every route in the registry", async ({ page }) => {
     // This walks EVERY registry route through the palette in one test body,
     // and the registry keeps growing while the routes themselves got heavier

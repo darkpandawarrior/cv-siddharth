@@ -32,7 +32,7 @@ const PRINTED = [
   // never said so. printWords is approximate because it comes from OCR of a
   // scan, and it is stated as approximate on the page.
   { slug: "deadline", year: "2019", page: 65, printWords: 838 },
-  { slug: "pointer-games", year: "2019", page: 48, note: "Episode 1 — “Nidra” Thama" },
+  { slug: "pointer-games", year: "2019", page: 48, note: "Episode 1: “Nidra” Thama" },
   // Not print — this one ran on the Editorial Board's blog while he was on the
   // board. The byline there is the society account (as with every post on that
   // blog), so authorship rests on the drafts: v1 2019-06-01, v2 2019-07-17,

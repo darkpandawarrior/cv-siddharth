@@ -42,7 +42,6 @@ const STEPS = [
   "gen:sitemap",
   "gen:heroes",
   "gen:og",
-  "gen:surfaces",
   "gen:weeb",
   "gen:chess",
   "gen:chess-deep",

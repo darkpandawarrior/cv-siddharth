@@ -15,7 +15,6 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { surfaces, captureViewport } from "../src/data/surfaces.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "docs", "screenshots");
@@ -66,45 +65,12 @@ for (const [path, name] of routes()) {
   }
 }
 
-// Second pass: the wall's posters, each shot in the window its own device frame
-// implies. The 1440x900 captures above stay exactly as they were — they are the
-// sentinel's visual record and comparing a desktop page against a phone-width
-// one would flag every route as changed. These are a separate `surface_*` set
-// that only gen-surfaces.mjs reads.
-//
-// Without this the wall was arguing against itself: every tile, phone through
-// TV, showed the same desktop capture with its sides cropped off.
-const surfaced = [];
-for (const surface of surfaces.filter((s) => s.poster)) {
-  const vp = captureViewport(surface.device);
-  // A desktop/browser surface's viewport IS the 1440x900 pass above. Shooting
-  // it twice writes two files with identical pixels, which the sentinel
-  // correctly reports as a duplicate; gen-surfaces.mjs already falls back to
-  // the site_* capture when there is no surface_* one.
-  if (vp.width === 1440 && vp.height === 900) continue;
-  const p = await browser.newPage({ viewport: vp, deviceScaleFactor: 2 });
-  try {
-    const res = await p.goto(base + surface.to, { waitUntil: "networkidle", timeout: 45_000 });
-    if (!res || res.status() >= 400) {
-      console.warn(`[capture] ${surface.to} @${vp.width}x${vp.height} → HTTP ${res?.status() ?? "none"} — skipped`);
-    } else {
-      await p.waitForTimeout(2500);
-      await p.screenshot({ path: join(outDir, `surface_${surface.poster}.png`) });
-      surfaced.push(`${surface.poster}@${vp.width}x${vp.height}`);
-    }
-  } catch (e) {
-    console.warn(`[capture] ${surface.to} @${vp.width}x${vp.height} failed: ${e.message}`);
-  }
-  await p.close();
-}
-
 await browser.close();
 writeFileSync(
   join(outDir, "CAPTURED.json"),
-  JSON.stringify({ base, count: captured.length, routes: captured, surfaces: surfaced }, null, 2) + "\n",
+  JSON.stringify({ base, count: captured.length, routes: captured }, null, 2) + "\n",
 );
 console.log(`[capture] ${captured.length} routes → docs/screenshots/site_*.png`);
-console.log(`[capture] ${surfaced.length} surfaces → docs/screenshots/surface_*.png`);
 if (errors.length) {
   console.warn(`[capture] ${errors.length} page errors while capturing:`);
   for (const e of errors.slice(0, 10)) console.warn("  " + e);

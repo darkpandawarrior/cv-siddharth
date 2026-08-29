@@ -297,6 +297,12 @@ html.resume-mode body::before {
  * lighthouserc.json asserts it at 0.1; an intrinsic size is not an
  * optimisation here, it is the thing that keeps the number.
  *
+ * Re-measured 2026-08-29 against the unified homepage, with content-visibility
+ * forced visible so each section reported its real height rather than the
+ * placeholder it is being given here. The previous literals were left behind by
+ * the section deletions in that pass and were badly over: #projects mobile read
+ * 12620px against a real 4082px, which is a 8.5k-pixel phantom scrollbar.
+ *
  * The `auto` keyword before each length is the important half. It tells the
  * browser to REMEMBER the real height once the section has been rendered
  * once and to reuse it if the section is later skipped again on the way back
@@ -336,19 +342,19 @@ html.resume-mode body::before {
  */
 #projects {
   content-visibility: auto;
-  contain-intrinsic-size: auto 12620px;
+  contain-intrinsic-size: auto 4082px;
 }
 #surfaces {
   content-visibility: auto;
-  contain-intrinsic-size: auto 6916px;
+  contain-intrinsic-size: auto 2149px;
 }
 #shipped {
   content-visibility: auto;
-  contain-intrinsic-size: auto 1903px;
+  contain-intrinsic-size: auto 1947px;
 }
 #contact {
   content-visibility: auto;
-  contain-intrinsic-size: auto 1580px;
+  contain-intrinsic-size: auto 1836px;
 }
 
 /* Desktop: the project grid goes two-up and the surface wall goes wide, so
@@ -356,16 +362,16 @@ html.resume-mode body::before {
    came in 1-7% shorter, and the taller figure is the safe one to hold. */
 @media (min-width: 64rem) {
   #projects {
-    contain-intrinsic-size: auto 6831px;
+    contain-intrinsic-size: auto 2467px;
   }
   #surfaces {
-    contain-intrinsic-size: auto 3357px;
+    contain-intrinsic-size: auto 1420px;
   }
   #shipped {
-    contain-intrinsic-size: auto 1102px;
+    contain-intrinsic-size: auto 1123px;
   }
   #contact {
-    contain-intrinsic-size: auto 1189px;
+    contain-intrinsic-size: auto 1457px;
   }
 }
 
@@ -833,21 +839,6 @@ html.resume-mode .palette-trigger {
   animation: nav-wiggle 2.4s ease-in-out infinite;
 }
 
-/* Scroll bot: walking bob layered under the scroll-driven swing */
-@keyframes bot-bob {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: 0 -4px;
-  }
-}
-
-.bot-bob {
-  animation: bot-bob 0.9s ease-in-out infinite;
-}
-
 /* Hero entrance */
 @keyframes rise-in {
   from {
@@ -919,7 +910,6 @@ html.resume-mode .palette-trigger {
   .gps-draw,
   .gps-pulse,
   .nav-wiggle,
-  .bot-bob,
   .rise-in {
     animation: none;
   }
@@ -2635,7 +2625,10 @@ html.resume-mode .palette-trigger {
   background-color: var(--color-card);
 }
 
-.screen-marquee-item img {
+/* video as well as img: an animated gallery entry ships as the .mp4 sibling
+   gen-images.mjs writes beside the gif, so the tile it lands in is a <video>. */
+.screen-marquee-item img,
+.screen-marquee-item video {
   height: 100%;
   width: auto;
   max-width: 26rem;

@@ -28,14 +28,14 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     page: 44,
     label: "The Loopdown",
     readSlug: "the-loopdown-story",
-    note: "Excelsior '21, on the Rebel path — 52 iterations of the same Wednesday. This site's writing hub is named after it.",
+    note: "Excelsior '21, on the Rebel path: 52 iterations of the same Wednesday. This site's writing hub is named after it.",
     kind: "wrote",
   },
   {
     year: "2021",
     page: 24,
     label: "Cover Prologue",
-    note: "The frame for the whole of Excelsior '21: Mr. Talesman sends you down one of three paths — Compliant (p25), Rebel (p39) or Explorer (p53), each with its own prologue and epilogue.",
+    note: "The frame for the whole of Excelsior '21: Mr. Talesman sends you down one of three paths, Compliant (p25), Rebel (p39) or Explorer (p53), each with its own prologue and epilogue.",
     kind: "wrote",
   },
   {
@@ -43,7 +43,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     page: 36,
     label: "CTC: Cost to Company",
     readSlug: "ctc-cost-to-company",
-    note: "Cover story, Excelsior '20 — a 2069 climate dystopia where salary is paid in days of drinkable water. Printed p34.",
+    note: "Cover story, Excelsior '20: a 2069 climate dystopia where salary is paid in days of drinkable water. Printed p34.",
     kind: "wrote",
   },
   {
@@ -51,7 +51,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     page: 39,
     label: "Prophecy #201112003",
     readSlug: "prophecy-201112003",
-    note: "Cover story, Excelsior '20 — a sentient banyan hands a fresher his prophecy. Printed p37.",
+    note: "Cover story, Excelsior '20: a sentient banyan hands a fresher his prophecy. Printed p37.",
     kind: "wrote",
   },
   {
@@ -59,7 +59,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     page: 65,
     label: "Deadline",
     readSlug: "deadline",
-    note: "Excelsior '19 — Death turns up in a t-shirt and gives you six months. A memento mori in a Deadpool costume.",
+    note: "Excelsior '19: Death turns up in a t-shirt and gives you six months. A memento mori in a Deadpool costume.",
     kind: "wrote",
   },
   {
@@ -67,7 +67,7 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     page: 48,
     label: "Pointer Games",
     readSlug: "pointer-games",
-    note: "Excelsior '19 — Episode 1: \"Nidra\" Thama. Campus lore as a serialised thriller.",
+    note: "Excelsior '19, Episode 1: \"Nidra\" Thama. Campus lore as a serialised thriller.",
     kind: "wrote",
   },
 
@@ -76,14 +76,14 @@ export const excelsiorMarks: ExcelsiorMark[] = [
     year: "2021",
     page: 118,
     label: "Most FYC ever",
-    note: "EB Profiles '21 — the board writing me, in my voice. Joint Chief Editor & Chief English Editor.",
+    note: "EB Profiles '21: the board writing me, in my voice. Joint Chief Editor & Chief English Editor.",
     kind: "about",
   },
   {
     year: "2020",
     page: 119,
     label: "Most Edits Ever",
-    note: "EB Profiles '20 — English Editor, and a fair description of the job. Printed p117.",
+    note: "EB Profiles '20: English Editor, and a fair description of the job. Printed p117.",
     kind: "about",
   },
   {

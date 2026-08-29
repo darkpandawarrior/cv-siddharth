@@ -23,7 +23,7 @@ export const perimeter = [
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-08-28",
+    "generatedAt": "2026-08-29",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
@@ -194,17 +194,17 @@ export const drift: Drift[] = [
   {
     "repo": "HireSignal",
     "upstream": "kmp-build-logic",
-    "pin": "546740d",
-    "behind": null,
-    "pinnedAt": null
+    "pin": "b31574f",
+    "behind": 2,
+    "pinnedAt": "2026-08-27"
   },
   {
     "repo": "HireSignal",
     "upstream": "kmp-toolkit",
-    "pin": "0244007",
-    "behind": 11,
-    "pinnedAt": "2026-08-15"
+    "pin": "774c5c6",
+    "behind": 4,
+    "pinnedAt": "2026-08-27"
   }
 ];
 
-export const opsGeneratedAt = "2026-08-28";
+export const opsGeneratedAt = "2026-08-29";

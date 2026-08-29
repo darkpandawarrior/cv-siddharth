@@ -3,9 +3,6 @@ import {
   MapPin,
   ArrowUpRight,
   MessageCircle,
-  FileText,
-  Github,
-  Linkedin,
   Smartphone,
   Watch,
   Monitor,
@@ -26,7 +23,6 @@ import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
-import { ScrollBot } from "./ScrollBot.tsx";
 import { Reveal } from "./Reveal.tsx";
 import { ChapterWord, GiantCTA } from "./Editorial.tsx";
 import { chess } from "./data/chess.ts";
@@ -89,7 +85,6 @@ const NAV_LINKS = [
   { href: "#fit", label: "Fit check" },
   { href: "#work", label: "Case studies" },
   { href: "#projects", label: "Projects" },
-  { href: "#contact", label: "Contact" },
 ];
 
 /**
@@ -289,16 +284,13 @@ function Nav() {
         >
           sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
         </button>
-        {/* Hire, four anchors, Résumé. The world switch gave the fiction a
-            permanent slot on every page view while /hire, the one page built
-            for someone who does not want to explore, had no door at all and
-            first appeared 79% down the document. Ink keeps its own section
-            further down the page, the footer and ⌘K; it did not need the bar.
-            Same item count as before, one destination swapped. */}
+        {/* Three anchors, and nothing else. The bar used to carry nine items
+            and five of them were doors to something already permanently on
+            screen or one scroll away: the chat button duplicated the FAB that
+            never leaves the viewport, Contact is where the scroll ends anyway,
+            and Résumé is in the hero, the footer and ⌘K. What is left is the
+            three sections a recruiter actually jumps to, plus the one pill. */}
         <div className="hidden items-center gap-5 text-sm text-zinc-400 lg:flex">
-          <Link to="/hire" className="transition hover:text-accent">
-            Hire me
-          </Link>
           {NAV_LINKS.map((l) => (
             <button
               key={l.href}
@@ -310,13 +302,6 @@ function Nav() {
               {l.label}
             </button>
           ))}
-          {/* Playground dropped from the bar — it is a room index reachable
-              from ⌘K, the explore section and the footer, and it was competing
-              with the world switch for the same glance. Résumé stays: it is
-              the one thing a recruiter looks for by name. */}
-          <Link to="/resume" className="flex items-center gap-1 transition hover:text-accent">
-            <FileText size={13} /> Résumé
-          </Link>
         </div>
         <div className="flex items-center gap-3">
           {/* 2xl only. The link row is already at capacity at xl (see the
@@ -327,17 +312,16 @@ function Nav() {
           {/* Hidden below lg: the bar is already at capacity at xl, and on a
               phone the wall itself is a short scroll away. */}
           <LauncherButton className="hidden lg:flex" />
-          {/* label-wide, not `hidden sm:inline`: display:none took this label
-              out of the accessibility tree as well as the layout, so below
-              640px this was an icon with no accessible name — a WCAG 4.1.2
-              failure on every route, and one the axe suite could not see
-              because it only ever scanned a desktop viewport. See index.css. */}
-          <button
-            onClick={() => openChat()}
-            className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+          {/* The bar's one emphasized control, and it is the conversion page.
+              This slot used to hold a filled accent copy of the chat FAB, which
+              is fixed to the corner of every viewport at every scroll position;
+              /hire was a grey text link beside it. */}
+          <Link
+            to="/hire"
+            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
           >
-            <MessageCircle size={15} aria-hidden /> <span className="label-wide">Ask my AI</span>
-          </button>
+            Hire me
+          </Link>
         </div>
       </nav>
       {/* Scroll-progress beam: the journey, measured. */}
@@ -384,18 +368,14 @@ function Hero() {
           {profile.intro}
         </p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
-          <button
-            onClick={() => openChat()}
-            className="btn-primary rounded-full bg-accent px-6 py-2.5 font-semibold text-ink hover:bg-accent-dim"
-          >
-            Chat with my AI assistant
-          </button>
-          {/* The recruiter CTA. Accent2, not accent — it reads as a second
-              distinct offer rather than competing with the chat button. */}
+          {/* The recruiter CTA, and now the hero's primary. It used to sit in
+              accent2 beside a filled "Chat with my AI assistant" button, which
+              opened the same panel as the FAB pinned to the corner of the
+              viewport. Pasting a JD is the one thing here a PDF cannot do. */}
           <button
             type="button"
             onClick={() => goToSection("fit")}
-            className="flex items-center gap-2 rounded-full border border-accent2/40 bg-accent2/5 px-6 py-2.5 font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+            className="btn-primary flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
           >
             <Target size={15} /> Paste a job description
           </button>
@@ -421,10 +401,12 @@ function Hero() {
   );
 }
 
+// Three lines, each saying something the metrics band 250px below does not.
+// The fourth was "GPS 50% → 95% · crashes -80%", which is metrics[1] and
+// metrics[2] typed out again, hardcoded, one screen above the band itself.
 const IDENTITY_LINES = [
   "platform owner · 50k+ MAU fintech",
   "5 platforms · one Kotlin codebase",
-  "GPS 50% → 95% · crashes -80%",
   "an engineer who writes",
 ];
 
@@ -558,6 +540,16 @@ function HowExpander({ items }: { items: string[] }) {
   );
 }
 
+/**
+ * Projects that are a repository rather than an app you can run: the two KMP
+ * libraries, this site, and the writing repo. They render as repo cards in
+ * #source one section below, which is the idiom that suits them; carrying them
+ * here as well made eight of the page's GitHub URLs appear twice, 1,800px
+ * apart, in two different card shapes. They keep their /project/$slug pages,
+ * their footer "Builds" entries and their ⌘K rows.
+ */
+const REPO_ONLY = new Set(["portfolio", "kmp-family", "the-loopdown"]);
+
 // Case study → its Lab Bench experiment.
 const LAB_OF: Record<string, LabKey> = {
   "gps-accuracy": "signal",
@@ -567,10 +559,13 @@ const LAB_OF: Record<string, LabKey> = {
 };
 
 function CaseStudies() {
-  // Mileway leads as a media banner (full story lives at #project/mileway);
-  // the Dice-era studies render as compact stat-led cards.
+  // Four equal stat-led cards, one idiom. Mileway used to lead this section as
+  // a full-bleed media banner that navigated to /project/mileway, the same
+  // destination as its card in #projects one section below, carrying the same
+  // three field-note chips. It is an open-source build, not a Dice-era
+  // employer outcome, so it belongs in the section whose own copy says so.
   const navigate = useNavigate();
-  const [featured, ...rest] = caseStudies;
+  const rest = caseStudies.filter((cs) => cs.slug !== "mileway");
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <ChapterWord>Case studies</ChapterWord>
@@ -581,72 +576,6 @@ function CaseStudies() {
           The work behind the numbers. Ask the chatbot for more depth on any of these.
         </p>
       </Reveal>
-
-      {featured && (
-        <Reveal className="mb-6">
-          <TiltCard maxTilt={2.5}>
-            {/* A div for the same reason as the projects card below: ARIA
-                does not allow role="link" to override <article>'s implicit
-                role, and Lighthouse flags every card on the live site. */}
-            <div
-              // Every case study carries its own slug as an anchor. /hire lists
-              // three of them and used to link all three to /project/$slug —
-              // but only `mileway` is a project; `gps-accuracy` and
-              // `crash-reduction` live in `caseStudies` alone, so two of the
-              // three links on the page a recruiter is sent to were 404s.
-              // Anchoring here makes the fallback total: a case study always
-              // has somewhere to land, whether or not it is also a project.
-              id={featured.slug}
-              onClick={() => navigate({ to: "/project/$slug", params: { slug: "mileway" } })}
-              role="link"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate({ to: "/project/$slug", params: { slug: "mileway" } }); } }}
-              className="panel card-elevated group grid cursor-pointer scroll-mt-24 gap-0 overflow-hidden transition hover:border-accent/50 lg:grid-cols-[1.15fr_1fr]"
-            >
-              {/* Was multiplatform.gif — 108 frames cycling phone → watch →
-                  widgets. Rendered at this card's crop, 3 of 4 sampled frames
-                  were a near-black watch face or empty space, so the flagship
-                  build's thumbnail was a black rectangle as often as not. A
-                  still of the loaded home screen is always the home screen, and
-                  Picture gets it through the AVIF pipeline the GIF bypassed. */}
-              <div className="relative min-h-[220px] overflow-hidden border-b border-line bg-void lg:border-b-0 lg:border-r">
-                <Picture
-                  src="/projects/mileway/screenshots/home_screen_loaded.png"
-                  alt="Mileway home screen — quick actions and 248 km tracked this month"
-                  className="absolute inset-0 h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
-                />
-              </div>
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent/70">
-                  <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> Flagship build
-                </div>
-                <h3 className="font-display mt-2 text-2xl font-bold sm:text-3xl">Mileway</h3>
-                <p className="font-display mt-1 text-sm font-semibold text-accent">{featured.metric}</p>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">{featured.summary}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {featured.tags.map((t) => (
-                    <span key={t} className="rounded-full border border-accent/25 bg-accent/5 px-2.5 py-1 text-xs text-accent/90">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <FieldNotes slug="mileway" className="mt-4" />
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
-                    Full case study →
-                  </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openLab("modules"); navigate({ to: "/lab" }); }}
-                    className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
-                  >
-                    ▶ Open in Lab Bench
-                  </button>
-                </div>
-              </div>
-            </div>
-          </TiltCard>
-        </Reveal>
-      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
         {rest.map((cs, i) => (
@@ -678,13 +607,12 @@ function CaseStudies() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{cs.problem}</p>
                 <p className="mt-3 text-sm font-medium text-zinc-200">{cs.outcome}</p>
                 <HowExpander items={cs.approach} />
+                {/* One action pill per card, and it is the one thing here a
+                    hiring manager cannot get anywhere else. The "ask my AI
+                    about this" chip that used to sit beside it was the fourth
+                    copy of a control the section intro already offers in prose
+                    and the FAB offers at every scroll position. */}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openChat(`Tell me more about "${cs.title}" — what was the hardest part?`); }}
-                    className="flex items-center gap-1.5 rounded-full border border-accent2/30 bg-accent2/5 px-3 py-1 text-[11px] font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
-                  >
-                    <MessageCircle size={11} /> ask my AI about this
-                  </button>
                   {LAB_OF[cs.slug] && (
                     <button
                       onClick={(e) => { e.stopPropagation(); openLab(LAB_OF[cs.slug]); navigate({ to: "/lab" }); }}
@@ -722,11 +650,12 @@ function Projects() {
           <p className="section-eyebrow mb-2">// projects & open source</p>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Things I've built</h2>
           <p className="mb-10 text-zinc-400">
-            Open-source projects and tooling outside employer work — shipped end-to-end.
+            Open-source apps built outside employer work, shipped end-to-end. The libraries
+            and tooling underneath them are in The Source, below.
           </p>
         </Reveal>
         <div className="grid gap-6 sm:grid-cols-2">
-          {projects.map((p, i) => {
+          {projects.filter((p) => !REPO_ONLY.has(p.slug)).map((p, i) => {
             const externalHref = p.links[0]?.url;
             const go = () => {
               if (p.detail) { navigate({ to: "/project/$slug", params: { slug: p.slug } }); return; }
@@ -778,9 +707,7 @@ function Projects() {
                   <div className="meta-row flex-wrap gap-y-1">
                     {/* Shared-element morph: this title lifts into the /project/$slug
                         hero <h1> of the same name. Keyed by slug so each card morphs
-                        to its own detail; unique across the grid (only grid cards
-                        carry it — the featured Mileway case-study card does not, so
-                        `project-title-mileway` is never duplicated on the page). */}
+                        to its own detail, and unique across the page. */}
                     <h3
                       className="font-display text-xl font-bold transition group-hover:text-accent"
                       style={{ viewTransitionName: `project-title-${p.slug}` }}
@@ -842,7 +769,7 @@ function Projects() {
                       </span>
                     )}
                     {p.links.map((l) => {
-                      const linkClass = "flex items-center gap-1 text-sm font-semibold text-zinc-400 transition hover:text-accent";
+                      const linkClass = "flex items-center gap-1 py-1 text-sm font-semibold text-zinc-400 transition hover:text-accent";
                       if (!l.url.startsWith("#")) {
                         return (
                           <a key={l.url} href={l.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className={linkClass}>
@@ -874,21 +801,11 @@ function Projects() {
             );
           })}
         </div>
-
-        <Reveal>
-          <h3 className="font-display mb-4 mt-14 text-sm font-semibold uppercase tracking-widest text-accent/70">
-            Recently shipped
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {shippedNewestFirst.map((g) => (
-              <div key={g.title} className="panel-sm p-4">
-                <p className="text-xs text-muted">{g.date}</p>
-                <p className="mt-1 font-semibold text-zinc-100">{g.title}</p>
-                <p className="mt-1 text-sm leading-snug text-zinc-400">{g.detail}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+        {/* A "Recently shipped" changelog used to close this section: nine
+            entries, every one of them a restatement of a card 2,551px above it,
+            under a heading that collided by name with the real #shipped shelf.
+            The data is untouched: the hero ticker and the terminal's `shipped`
+            command both still read it. */}
       </div>
     </section>
   );
@@ -896,7 +813,7 @@ function Projects() {
 
 /**
  * The vertical spine's accent fill tracks scroll progress through the
- * timeline — a lightweight rAF-to-DOM readout, same pattern as ScrollBot.
+ * timeline — a lightweight rAF-to-DOM readout.
  */
 function TimelineSpine({ trackRef }: { trackRef: React.RefObject<HTMLDivElement | null> }) {
   const fillRef = useRef<HTMLDivElement>(null);
@@ -939,7 +856,6 @@ function TimelineSpine({ trackRef }: { trackRef: React.RefObject<HTMLDivElement 
 
 function ExperienceSection() {
   const trackRef = useRef<HTMLDivElement>(null);
-  const { goToSection } = useSectionNav();
   return (
     <section id="experience" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
@@ -976,21 +892,6 @@ function ExperienceSection() {
                       )}
                     />
                   </ul>
-                  {job.company.toLowerCase().includes("dice") && (
-                    <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                      <span className="kicker">receipts</span>
-                      {["50% → 95% GPS", "-80% crashes", "~87% UI Compose"].map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => goToSection("work")}
-                          className="rounded-full border border-accent/30 bg-accent/5 px-2.5 py-0.5 text-[11px] text-accent/90 transition hover:border-accent hover:text-accent"
-                        >
-                          {r}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </Reveal>
@@ -1120,27 +1021,6 @@ function Skills() {
   );
 }
 
-function CopyEmail() {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(profile.email);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1800);
-        } catch {
-          // clipboard unavailable — the mailto button next door still works
-        }
-      }}
-      className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
-      aria-live="polite"
-    >
-      {copied ? "✓ copied" : "copy email"}
-    </button>
-  );
-}
-
 function Contact() {
   return (
     <section id="contact" className="relative overflow-hidden border-t border-line">
@@ -1154,41 +1034,22 @@ function Contact() {
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
           Ask my AI assistant anything about my work, or reach out directly. I reply fast.
         </p>
-        {/* The ask, sized like it matters. Everything below it is a secondary
-            route to the same person — so it gets the weight, and they get a row. */}
-        <div className="mt-8">
+        {/* The ask, sized like it matters, and the one control the sentence
+            above it names. A five-chip row used to sit here (copy email,
+            Résumé, GitHub, LinkedIn, my writing): four of the five resolve to
+            destinations the footer 40px below already carries in full, so the
+            page's closing frame was one giant CTA surrounded by five smaller
+            competitors, immediately above forty-eight more. The chat door is
+            the one thing the row did NOT have and the copy did promise. */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <GiantCTA label="Let's talk" href={`mailto:${profile.email}`} sub={profile.email} />
-        </div>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <CopyEmail />
-          <Link
-            to="/resume"
+          <button
+            type="button"
+            onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
-            <FileText size={16} /> Résumé / PDF
-          </Link>
-          <a
-            href={profile.github}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
-          >
-            <Github size={16} /> GitHub
-          </a>
-          <a
-            href={profile.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
-          >
-            <Linkedin size={16} /> LinkedIn
-          </a>
-          <Link
-            to="/loopdown"
-            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent2 hover:text-accent2"
-          >
-            ✎ My writing
-          </Link>
+            <MessageCircle size={16} /> Ask my AI
+          </button>
         </div>
       </Reveal>
       <SiteFooter />
@@ -1315,29 +1176,30 @@ export function HomePage() {
       <main id="main-content" tabIndex={-1}>
         <Hero />
         <Metrics />
-        {/* The multiplatform claim, proved rather than asserted, straight after
-            the numbers that make someone care. Not in the hero: the hero's
-            right column is 280px, which cannot show a foldable beside a TV, and
-            the hero heading is the LCP element. Nothing here boots until it is
-            clicked, so this section costs the initial load one lazy poster. */}
-        <DeviceMorph />
-        {/* Straight after the numbers: they're what makes a recruiter want to
-            check fit, and the scorecard links down into the case studies that
-            follow it. Below the hero, so it costs LCP nothing. */}
+        {/* Straight after the numbers, and before anything that has to load:
+            they are what makes a recruiter want to check fit, the scorecard
+            links down into the case studies, and it is the one thing on this
+            page a PDF cannot offer. NAV_LINKS has listed it first for a while;
+            the page did not. Below the hero, so it costs LCP nothing. */}
         <FitCheck />
+        {/* The multiplatform claim, proved rather than asserted. Not in the
+            hero: the hero's right column is 280px, which cannot show a foldable
+            beside a TV, and the hero heading is the LCP element. Nothing here
+            boots until it is clicked, so this section costs the initial load
+            one lazy poster. */}
+        <DeviceMorph />
+        {/* The comment here used to claim "a recruiter who reads two sections
+            should have hit a live Play Store rating by the end of the second"
+            while the shelf itself was the eighth section, 17,800px down. It is
+            now the third, and it breaks the four-in-a-row run of "what have you
+            built?" grids that used to be work → projects → source → shipped. */}
+        <ShippedShelf />
         <CaseStudies />
         <Projects />
         {/* #source promoted to its own top-level section — was a <div> buried
             near the end of #projects even though it's a first-class
-            destination in the footer, palette and navigation.ts. Same
-            treatment #shipped already gets: right after #projects. */}
+            destination in the footer, palette and navigation.ts. */}
         <ReposShowcase />
-        {/* Between the projects and the career: the projects section makes
-            claims about work, this one is the work with an install button on
-            it. It sits before the experience list on purpose — a recruiter who
-            reads two sections should have hit a live Play Store rating by the
-            end of the second. */}
-        <ShippedShelf />
         <ExperienceSection />
         {/* Skills sits with the evidence it proves, not after the gear change.
             It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
@@ -1355,7 +1217,6 @@ export function HomePage() {
         <InkDoorway />
         <Contact />
       </main>
-      <ScrollBot />
       <FloatingChat />
     </div>
   );

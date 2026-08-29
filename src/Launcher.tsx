@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutGrid, X } from "lucide-react";
-import { wallSurfaces, type Surface } from "./data/surfaces.ts";
+import { surfaces, WALL_GROUPS, type Surface } from "./data/surfaces.ts";
 import { SURFACE_ICON } from "./rooms.tsx";
+import { useInertBackdrop } from "./lib/inertBackdrop.ts";
 
 /**
  * The launcher — the homepage wall, available from anywhere.
@@ -27,6 +28,19 @@ import { SURFACE_ICON } from "./rooms.tsx";
  * a third would be one collision waiting to happen for an affordance whose
  * whole point is being visible. It opens from a button and closes with Escape.
  */
+
+/**
+ * Every registered surface, grouped. NOT `wallSurfaces`, which drops the ones
+ * carrying `wall: false`. That flag is a homepage editorial demotion, decided
+ * on whether a tile is worth a scrolling visitor's attention; this dialog is
+ * titled "Every surface" and its own subtitle says "this shows what exists".
+ * It rendered 17 of 20, and the three it omitted (/forge, /terminal, /weeb)
+ * are rooms it is itself mounted inside, so the "here" badge could never fire.
+ */
+const allSurfaces = WALL_GROUPS.map((g) => ({
+  ...g,
+  items: surfaces.filter((s) => s.group === g.group),
+}));
 
 const OPEN_LAUNCHER_EVENT = "sid:open-launcher";
 
@@ -108,32 +122,7 @@ export function Launcher() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  /**
-   * Make the rest of the document inert while this is open.
-   *
-   * `aria-modal="true"` is a hint to assistive tech and nothing more: it does
-   * not remove the page behind from the accessibility tree, and it does not
-   * stop Tab walking straight out of the dialog into the route underneath.
-   * `inert` does both, and it is why the first run of the launcher's own axe
-   * test failed — with the backdrop dimming the page to 1.31:1, every heading
-   * still in the tree behind the overlay reported a serious contrast
-   * violation. Those elements are not the bug; scanning them at all was, and
-   * the same gap let focus escape.
-   *
-   * Body children rather than a wrapper ref: the overlay is mounted in
-   * __root.tsx as a sibling of the routed content, alongside AnomalyRail and
-   * the skip link, so "everything that is not me" is exactly the right set.
-   */
-  useEffect(() => {
-    if (!open) return;
-    const mine = overlayRef.current;
-    const others = ([...document.body.children] as HTMLElement[]).filter((el) => el !== mine);
-    const previous = others.map((el) => el.inert);
-    for (const el of others) el.inert = true;
-    return () => {
-      others.forEach((el, i) => { el.inert = previous[i]; });
-    };
-  }, [open]);
+  useInertBackdrop(open, overlayRef);
 
   if (!open) return null;
 
@@ -173,7 +162,7 @@ export function Launcher() {
         </div>
 
         <div className="space-y-5">
-          {wallSurfaces.map((group) => (
+          {allSurfaces.map((group) => (
             <section key={group.group} aria-labelledby={`launcher-${group.group}`}>
               <h3
                 id={`launcher-${group.group}`}

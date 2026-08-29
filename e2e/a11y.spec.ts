@@ -56,7 +56,8 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
   animation-fill-mode: forwards !important;
   transition-duration: 0s !important;
 }
-.reveal { opacity: 1 !important; transform: none !important; }`;
+.reveal { opacity: 1 !important; transform: none !important; }
+* { content-visibility: visible !important; }`;
 
 /* Why that last rule exists.
  *
@@ -74,6 +75,14 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
  * Forcing the end state is both the deterministic fix and a stricter gate:
  * below-the-fold content is now actually scanned instead of being invisible to
  * axe, and it is the state a visitor who scrolls actually reads.
+ *
+ * The content-visibility rule closes the same hole a second time. index.css
+ * puts `content-visibility: auto` on #projects, #surfaces, #shipped and
+ * #contact; a skipped subtree has no layout box, so axe cannot compute contrast
+ * inside it and four of fourteen homepage sections went unscanned again — which
+ * is how a 2.23:1 line in #shipped stayed green. The rule is written `*` rather
+ * than naming those four ids so a fifth section added to index.css is covered
+ * without editing this file.
  *
  * (Kept OUTSIDE the template literal: a backtick in a comment inside a tagged
  * template is parsed as JS, which silently yielded "No tests found".) */
@@ -120,10 +129,16 @@ const SETTLE_ANIMATIONS = `*, *::before, *::after {
  *                                  accessible name that did not contain their
  *                                  own visible label.
  *
+ *   target-size                  — WCAG 2.2 AA, and the tag list stopped at 2.1,
+ *                                  so filtered out. Fifteen homepage card links
+ *                                  and buttons measured 20px tall; Lighthouse
+ *                                  runs the rule but scans mid-.reveal, so the
+ *                                  cards are transparent when it looks.
+ *
  * The third (button-name, plain wcag2a) was missed for a different reason
  * entirely — see MOBILE below.
  */
-const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 const AXE_EXPERIMENTAL = ["label-content-name-mismatch"];
 
 const axeFor = (page: Page) =>
@@ -144,6 +159,22 @@ async function scanWithRetry(page: Page) {
 }
 
 /**
+ * The verdict, in one place because six call sites had hand-copied it.
+ *
+ * `!== "minor"` rather than serious/critical: bfde6e5 fixed three real defects
+ * that this suite was green on, and its own message says why — "that suite
+ * fails only on serious and critical while all three of these are scored
+ * moderate". The filter was not widened then. It is now.
+ */
+function expectClean(results: Awaited<ReturnType<AxeBuilder["analyze"]>>, label: string) {
+  const bad = results.violations.filter((v) => v.impact !== "minor");
+  const report = bad
+    .map((v) => `${label} — ${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
+    .join("\n\n");
+  expect(bad, report).toEqual([]);
+}
+
+/**
  * MOBILE. The suite only ever scanned Playwright's default 1280x720, and this
  * site hides text at breakpoints — `hidden sm:inline` on a label leaves an icon
  * button with no accessible name at all below 640px. The nav's "Ask my AI"
@@ -151,61 +182,45 @@ async function scanWithRetry(page: Page) {
  * never looked at a phone. Lighthouse (which emulates a Moto G) found it in one
  * run against the live site.
  *
- * One representative width, not a matrix: 390px is where every `sm:` label is
- * hidden, which is the class of bug this is here for. The routes loop below
- * keeps the desktop layout covered.
+ * It ran over a hand-picked three routes ("/", "/hire", "/lab") against the
+ * twenty-two the desktop loop covers, and that list drifted exactly the way the
+ * old hand-kept ROUTES array did: /chess ships a mobile-only
+ * scrollable-region-focusable violation that no chosen route could ever see.
+ * So the two loops are one nested loop now — same body, one extra
+ * setViewportSize — and adding a surface widens both widths at once.
  */
 const MOBILE = { width: 390, height: 844 };
+const VIEWPORTS = [
+  { name: "desktop", size: null },
+  { name: `${MOBILE.width}px`, size: MOBILE },
+];
 
-for (const path of ["/", "/hire", "/lab"]) {
-  test(`${path} has no serious/critical axe violations at ${MOBILE.width}px`, async ({ page }) => {
-    await page.setViewportSize(MOBILE);
-    await page.goto(path, { waitUntil: "domcontentloaded" });
-    await page.addStyleTag({ content: SETTLE_ANIMATIONS });
-    await page.waitForSelector("#main-content", { state: "attached" });
-    await page.waitForTimeout(1500);
-    const results = await scanWithRetry(page);
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    const report = bad
-      .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
-      .join("\n\n");
-    expect(bad, report).toEqual([]);
-  });
-}
-
-for (const path of ROUTES) {
-  test(`${path} has no serious/critical axe violations`, async ({ page }) => {
-    await page.goto(path, { waitUntil: "domcontentloaded" });
-    await page.addStyleTag({ content: SETTLE_ANIMATIONS });
-    // Let the route's client render land before scanning it.
-    await page.waitForSelector("#main-content", { state: "attached" });
-    await page.waitForTimeout(1500);
-    const results = await scanWithRetry(page);
-
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    const report = bad
-      .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
-      .join("\n\n");
-    expect(bad, report).toEqual([]);
-  });
+for (const v of VIEWPORTS) {
+  for (const path of ROUTES) {
+    test(`${path} has no axe violations (${v.name})`, async ({ page }) => {
+      if (v.size) await page.setViewportSize(v.size);
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await page.addStyleTag({ content: SETTLE_ANIMATIONS });
+      // Let the route's client render land before scanning it.
+      await page.waitForSelector("#main-content", { state: "attached" });
+      await page.waitForTimeout(1500);
+      expectClean(await scanWithRetry(page), `${path} (${v.name})`);
+    });
+  }
 }
 
 // The chat console is closed on load, so the loop above never sees it — its
 // combobox/listbox wiring (aria-expanded, aria-controls, aria-activedescendant,
 // role="option") was shipped unverified. Open it, then open the slash menu, and
 // axe the panel in both states.
-test("the chat console has no serious/critical axe violations, closed menu or open", async ({ page }) => {
+test("the chat console has no axe violations, closed menu or open", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open chat" }).click();
 
   const input = page.getByRole("combobox", { name: /Ask Panda/i });
   await expect(input).toBeVisible();
 
-  const scan = async (label: string) => {
-    const results = await axeFor(page).analyze();
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad, `${label}: ${bad.map((v) => `${v.id} — ${v.help}`).join("; ")}`).toEqual([]);
-  };
+  const scan = async (label: string) => expectClean(await axeFor(page).analyze(), label);
 
   await scan("chat open, slash menu closed");
 
@@ -227,6 +242,29 @@ test("the chat console has no serious/critical axe violations, closed menu or op
   // on a control that no longer exists).
   await paste.press("Escape");
   await expect(input).toBeFocused();
+
+  /* Expanded, the panel covers the viewport, so Tab must not walk out of it —
+   * WCAG 2.4.11, focus obscured by the thing on top. It measurably did: ten
+   * stops in, focus landed on AnomalyRail links and a nav button behind the
+   * panel, all of them invisible. axe has no rule for this, so the guard is a
+   * Tab walk.
+   *
+   * `<body>` is allowed and everything else is not. `inert` stops focus
+   * ENTERING the page behind, but it does not make the last control wrap: Tab
+   * off the end goes to the browser's own chrome, which the DOM reports as
+   * body, and the next Tab comes back to the top of the panel. That hop is the
+   * platform's, and it lands on nothing the visitor cannot see. A named control
+   * outside the dialog is the actual defect. */
+  await page.getByRole("button", { name: "Expand chat panel" }).click();
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press("Tab");
+    const where = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el || el === document.body) return "body";
+      return el.closest('[role="dialog"]') ? "dialog" : `${el.tagName} ${el.textContent?.trim().slice(0, 40)}`;
+    });
+    expect(where, `Tab ${i + 1} left the expanded chat panel`).toMatch(/^(dialog|body)$/);
+  }
 });
 
 /* The chess room mounts exactly ONE of its seven panes at a time (three are
@@ -257,7 +295,7 @@ const CHESS_PANES: { tab: string; ready: (page: Page) => Locator }[] = [
   { tab: "Rhythm", ready: (p) => p.getByLabel("Hour of day, IST") },
 ];
 
-test("every chess pane has no serious/critical axe violations", async ({ page }) => {
+test("every chess pane has no axe violations", async ({ page }) => {
   await page.goto("/chess", { waitUntil: "domcontentloaded" });
   await page.addStyleTag({ content: SETTLE_ANIMATIONS });
   await page.waitForSelector("#main-content", { state: "attached" });
@@ -269,12 +307,7 @@ test("every chess pane has no serious/critical axe violations", async ({ page })
   for (const pane of CHESS_PANES) {
     await page.getByRole("button", { name: pane.tab }).click();
     await expect(pane.ready(page)).toBeVisible({ timeout: 20_000 });
-    const results = await axeFor(page).analyze();
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    const report = bad
-      .map((v) => `${pane.tab} — ${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
-      .join("\n\n");
-    expect(bad, report).toEqual([]);
+    expectClean(await axeFor(page).analyze(), pane.tab);
   }
 });
 
@@ -287,28 +320,18 @@ test("every chess pane has no serious/critical axe violations", async ({ page })
  * the case it exists for (moving sideways between rooms instead of going back
  * to the hub), and it puts a dialog on top of a full-screen WebGL route, which
  * is the least forgiving ground it will ever land on. */
-test("the launcher has no serious/critical axe violations when open", async ({ page }) => {
+test("the launcher has no axe violations when open", async ({ page }) => {
   await page.goto("/forge", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /Surfaces/ }).first().click();
   await expect(page.getByRole("dialog")).toBeVisible();
 
-  const results = await scanWithRetry(page);
-  const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  const report = bad
-    .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
-    .join("\n\n");
-  expect(bad, report).toEqual([]);
+  expectClean(await scanWithRetry(page), "launcher open");
 });
 
-test("the command palette has no serious/critical axe violations when open", async ({ page }) => {
+test("the command palette has no axe violations when open", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.keyboard.press("Meta+k");
   await expect(page.getByRole("dialog")).toBeVisible();
 
-  const results = await axeFor(page).analyze();
-  const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  const report = bad
-    .map((v) => `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
-    .join("\n\n");
-  expect(bad, report).toEqual([]);
+  expectClean(await axeFor(page).analyze(), "command palette open");
 });

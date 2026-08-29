@@ -14,6 +14,64 @@ import { surfaces } from "./surfaces.ts";
 const README = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
 const ROOT = new URL("../../", import.meta.url).pathname;
 
+/**
+ * public/llms.txt and public/llms-full.txt are what an AI crawler reads at
+ * cv-siddharth.vercel.app/llms.txt. They were hand-written mirrors of
+ * profile.ts for a year and drifted the LOC figure, the Play Store turnaround,
+ * Mileway's module count, HireSignal's merged-PR count, the published-post
+ * list and the whole current-employer row — and the Compose twin's
+ * CvProfileData.kt was transcribed from the stale copy, so the drift crossed
+ * into a second repo. scripts/gen-system-prompt.mjs emits them now; this
+ * regenerates both in memory and compares them to what is committed, which is
+ * the difference between "generated" and "generated once".
+ *
+ * The specifier is assembled at runtime on purpose: the generator is a .mjs,
+ * this project does not set `allowJs`, and a literal import path would fail
+ * `tsc -b` for want of a declaration file.
+ */
+const generated = (await import(new URL("../../scripts/gen-system-prompt.mjs", import.meta.url).href)) as {
+  llmsTxt: string;
+  llmsFullTxt: string;
+};
+const LLMS = readFileSync(join(ROOT, "public/llms.txt"), "utf8");
+const LLMS_FULL = readFileSync(join(ROOT, "public/llms-full.txt"), "utf8");
+const STALE = "run `npm run gen:system-prompt` — this file is generated from src/data/profile.ts";
+
+describe("the public llms files are generated, not hand-mirrored", () => {
+  it("has public/llms.txt exactly as the generator emits it", () => {
+    expect(LLMS, STALE).toBe(generated.llmsTxt);
+  });
+
+  it("has public/llms-full.txt exactly as the generator emits it", () => {
+    expect(LLMS_FULL, STALE).toBe(generated.llmsFullTxt);
+  });
+
+  /*
+   * The equality above only pins disk to the generator; it would stay green if
+   * the generator itself went back to handing crawlers URLs that need
+   * JavaScript. These two are the content contract. `/#resume` and
+   * `/#loopdown` resolved only through the HashCompat useEffect in
+   * __root.tsx — i.e. never, for the clients this file exists to serve.
+   */
+  it("points agents at real paths, not the client-only legacy forms", () => {
+    for (const f of [LLMS, LLMS_FULL]) {
+      // The URL forms, not the prose: "Notes for agents" names both legacy
+      // shapes in order to tell a crawler not to use them.
+      expect(f).not.toContain(".app/?project=");
+      expect(f).not.toContain(".app/#resume");
+      expect(f).not.toContain(".app/#loopdown");
+    }
+  });
+
+  it("links every registered surface, so the site map cannot go short", () => {
+    for (const s of surfaces) {
+      expect(LLMS, `${s.to} is a registered surface and llms.txt should link it`).toContain(
+        `(https://cv-siddharth.vercel.app${s.to})`,
+      );
+    }
+  });
+});
+
 describe("the README's numbers are the repo's numbers", () => {
   it("states the real unit test count and file count", () => {
     expect(README, `README should say ${repoStats.tests} unit tests`).toContain(
@@ -109,5 +167,21 @@ describe("the README's numbers are the repo's numbers", () => {
     const prose = README.replace(/```[\s\S]*?```/g, "");
     const found = prose.split("\n").filter((l) => /—|–/.test(l));
     expect(found, `dashes left in README prose:\n${found.join("\n")}`).toEqual([]);
+  });
+
+  /*
+   * The same rule on the two files a crawler reads, because they are prose too.
+   *
+   * The README has been held to this since it was written and llms.txt never
+   * was, which was defensible while these files were hand-maintained on a
+   * different schedule and is not now: both are emitted from profile.ts, whose
+   * strings canonLore.test.ts now guards. What the data layer cannot see is the
+   * generator's OWN joins, and that is exactly where the last sixteen lived,
+   * two template literals stitching a metric to its detail with an em dash.
+   * This is the assertion that would have caught them.
+   */
+  it.each([["llms.txt", LLMS], ["llms-full.txt", LLMS_FULL]])("carries no dash in %s either", (_name, text) => {
+    const found = text.split("\n").filter((l) => /—|–/.test(l));
+    expect(found, `dashes left in generated prose:\n${found.join("\n")}`).toEqual([]);
   });
 });

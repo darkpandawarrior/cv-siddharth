@@ -6,6 +6,7 @@ import { SURFACES } from "./rooms.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { useSectionNav, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
+import { useInertBackdrop } from "./lib/inertBackdrop.ts";
 
 interface PaletteCommand {
   id: string;
@@ -156,6 +157,12 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  /* Replaces a hand-rolled Tab trap (an e.preventDefault() on Tab in the
+     input): that pinned focus but left the whole page in the accessibility
+     tree, so browse-mode users walked the route underneath a dialog declaring
+     aria-modal. inert does both jobs. */
+  const paletteRef = useRef<HTMLDivElement>(null);
+  useInertBackdrop(true, paletteRef);
 
   // Guards against "phantom hover": if the palette opens with a list row
   // already under a stationary cursor, the browser can fire a mouseenter
@@ -281,10 +288,6 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       runActive();
-    } else if (e.key === "Tab") {
-      // Simple focus trap: the input is the only natively-focusable control
-      // besides the list buttons, so keep Tab cycling inside the palette.
-      e.preventDefault();
     }
   }
 
@@ -300,6 +303,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       role="presentation"
     >
       <div
+        ref={paletteRef}
         className="palette-in glass-panel w-full max-w-lg overflow-hidden rounded-2xl"
         style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
         role="dialog"
