@@ -5,13 +5,13 @@
 export const perimeter = [
   {
     "file": "chess.ts",
-    "generatedAt": "2026-08-28",
+    "generatedAt": "2026-08-29",
     "slaDays": 21,
     "generator": "npm run gen:chess"
   },
   {
     "file": "chessDeep.ts",
-    "generatedAt": "2026-08-28",
+    "generatedAt": "2026-08-29",
     "slaDays": 21,
     "generator": "npm run gen:chess-deep"
   },
@@ -23,13 +23,13 @@ export const perimeter = [
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-08-28",
+    "generatedAt": "2026-08-29",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-08-28",
+    "generatedAt": "2026-08-29",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   }
@@ -207,4 +207,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-08-28";
+export const opsGeneratedAt = "2026-08-29";
