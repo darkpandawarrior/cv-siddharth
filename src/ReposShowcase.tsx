@@ -4,14 +4,19 @@ import { Reveal } from "./Reveal.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
 import { openSource, sharedFoundation } from "./data/profile.ts";
 import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
-import { repoStatLine } from "./lib/projectStatLine.ts";
 
 /**
- * The Source — every public repo behind the work, in one place. The project
- * cards above sell the apps; this sells the engineering surface: real module
- * counts, the shared libraries the apps stand on, the tooling, and the merged
- * upstream PRs. "It's all public" is the whole point — a hiring manager can
- * click straight through to the code.
+ * The Source: the code under the apps, in one place. The project grid above
+ * sells the builds; this sells what they stand on, the shared libraries, the
+ * tooling and the merged upstream PRs. "It's all public" is the whole point,
+ * a hiring manager can click straight through to the code.
+ *
+ * THERE IS NO "APPS" GROUP HERE ANY MORE. It carried Mileway, PaymentsLab and
+ * Kursi, which are the first three cards of the #projects grid one section up:
+ * the same three repositories, in a second card idiom, 1,800px apart. Eight of
+ * this page's GitHub URLs appeared exactly twice for that reason. The split is
+ * by kind now, #projects is the apps you can run, #source is the code behind
+ * them, and every app card up there already links its own repo.
  */
 
 // GitHub-style language dots.
@@ -32,64 +37,6 @@ type Repo = {
   url: string;
   accent: string;
 };
-
-/**
- * The stat line under each app card is COMPUTED, by the same repoStatLine the
- * homepage project grid uses. The comment that used to sit here claimed these
- * "mirror projectStats.ts, so nothing here is invented" while the strings
- * beside it said 39 modules and 71 gateways and the generated data said 40 and
- * 66. A hand-kept mirror always agrees with itself, which is exactly why it
- * cannot be trusted to agree with anything else.
- *
- * The tail is the part no generator produces — PaymentsLab's five rails,
- * Kursi's ten AI personas — kept here by slug for the same reason
- * FOUNDATION_CHROME below keeps `lang` and `accent`: it is card copy, not a
- * repo measurement.
- */
-const APPS_CHROME: Record<string, string> = {
-  paymentslab: "5 rails",
-  kursi: "10 AI personas",
-  // 159 Roborazzi tests, spelled out because repoStatLine's `screenshots` is a
-  // different number measuring a different thing (a PNG count under
-  // docs/screenshots). Hand-kept until gen-project-stats.mjs parses Mileway's
-  // own README banner for a real test count — see the deferred note.
-  mileway: "159 Roborazzi tests",
-};
-
-const statOf = (slug: string) => [repoStatLine(slug), APPS_CHROME[slug]].filter(Boolean).join(" · ");
-
-const APPS: Repo[] = [
-  {
-    name: "Mileway",
-    path: "darkpandawarrior/Mileway",
-    lang: "Kotlin",
-    kind: "KMP app · 5 platforms",
-    role: "A 5-surface fintech from one Kotlin codebase — dead-reckoning location engine with Kalman smoothing and IMU motion filtering, reimbursement-policy layer, durable submit-outbox and an offline on-device AI assistant.",
-    stat: statOf("mileway"),
-    url: "https://github.com/darkpandawarrior/Mileway",
-    accent: "#5ee6ff",
-  },
-  {
-    name: "PaymentsLab",
-    path: "darkpandawarrior/PaymentsLab",
-    lang: "Kotlin",
-    kind: "KMP app · payments",
-    role: "A payments lab beyond one-shot pay-in: payouts, mandates, a card vault, marketplace Connect and a double-entry wallet ledger — every rail MOCK_MODE-honest.",
-    stat: statOf("paymentslab"),
-    url: "https://github.com/darkpandawarrior/PaymentsLab",
-    accent: "#a78bfa",
-  },
-  {
-    name: "Kursi",
-    path: "darkpandawarrior/Kursi",
-    lang: "Kotlin",
-    kind: "KMP game",
-    role: "A deterministic social-deduction engine — one pure (GameState, Intent) → GameState reducer driving ISMCTS bots, the UI and a server, identical on four platforms.",
-    stat: statOf("kursi"),
-    url: "https://github.com/darkpandawarrior/Kursi",
-    accent: "#E8C874",
-  },
-];
 
 /**
  * Derived from profile.ts's `sharedFoundation.libs`, which already describes
@@ -210,8 +157,8 @@ export function ReposShowcase() {
               <p className="section-eyebrow mb-2">// the source</p>
               <h3 className="font-display text-h2 font-bold tracking-tight">It's all public</h3>
               <p className="mt-2 max-w-2xl text-zinc-400">
-                Every app, the libraries they share, the tooling, and the upstream PRs — open, and one click away.
-                The numbers are pulled from each repo, not typed by hand.
+                The libraries the apps share, the tooling around them, and the upstream PRs: open,
+                and one click away. The numbers are pulled from each repo, not typed by hand.
               </p>
             </div>
             <a
@@ -224,7 +171,6 @@ export function ReposShowcase() {
             </a>
           </div>
 
-          <RepoGroup label="Apps" hint="shipped, end-to-end" repos={APPS} />
           <RepoGroup
             label="Shared foundation"
             hint="written once, reused across the apps"

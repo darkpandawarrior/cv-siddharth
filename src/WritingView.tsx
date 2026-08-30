@@ -163,9 +163,14 @@ export function WritingView() {
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Series</h2>
           <div className="mt-5 flex flex-wrap gap-3">
             {series.map((s) => (
+              // The landing target for FieldNotes' chips, which carry
+              // `hash={`series-${n.id}`}`. Without an id here twelve
+              // differently-labelled chips all resolved to the same unfiltered
+              // index. scroll-mt-24 keeps the chip clear of the sticky header.
               <span
                 key={s.id}
-                className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-zinc-200"
+                id={`series-${s.id}`}
+                className="flex scroll-mt-24 items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-zinc-200"
                 style={{ borderColor: `${accentOf(s.id)}55` }}
               >
                 <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />

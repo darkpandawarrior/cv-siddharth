@@ -17,7 +17,6 @@
     "gen:feed": "node scripts/gen-feed.mjs",
     "gen:anthology-feed": "node scripts/gen-anthology-feed.mjs",
     "gen:og": "node scripts/gen-og.mjs",
-    "gen:surfaces": "node scripts/gen-surfaces.mjs",
     "gen:images": "node scripts/gen-images.mjs",
     "showcase": "node scripts/rebuild-showcase.mjs",
     "refresh": "node scripts/refresh.mjs",

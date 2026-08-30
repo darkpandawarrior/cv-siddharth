@@ -472,7 +472,7 @@ function CanonRoute() {
               {/* Every table on this page needs its own scrolling ancestor:
                   e2e/overflow.spec.ts at 390px only accepts real containment
                   and exempts nothing here. */}
-              <div className="mt-6 overflow-x-auto">
+              <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-label="Rig constraints table">
                 <table className="w-full min-w-[520px] border-collapse font-mono text-sm">
                   <thead>
                     <tr className="border-b border-line text-left text-xs uppercase tracking-widest text-muted">
@@ -538,7 +538,12 @@ function CanonRoute() {
               <p className="mt-3 max-w-2xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                 Section 3 of the Founding Charter. Eight named at founding, six in use.
               </p>
-              <div className="mt-6 overflow-x-auto">
+              {/* tabIndex/role: the table is min-w-[420px] and scrolls sideways at 390px, and a
+                  scrollable region has to be reachable by keyboard. Same remedy as ChessFindings
+                  and the chat transcript. The label is its OWN string, not aria-labelledby on the
+                  section's h2: reusing that name gives the region and its enclosing <section> the
+                  same accessible name, which is a landmark-unique failure. */}
+              <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-label="Standard intervals table">
                 <table className="w-full min-w-[420px] border-collapse font-mono text-sm">
                   <thead>
                     <tr className="border-b border-line text-left text-xs uppercase tracking-widest text-muted">

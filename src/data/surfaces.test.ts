@@ -52,21 +52,6 @@ describe("surfaces ↔ routes", () => {
 });
 
 describe("surface completeness", () => {
-  it("declares a poster whenever it promises one", () => {
-    const missing = surfaces
-      .filter((f) => f.preview !== "none" && !f.poster)
-      .map((f) => f.to);
-    expect(missing, `preview is "poster"/"live" but no poster basename: ${missing.join(", ")}`).toEqual([]);
-  });
-
-  it("has the poster file on disk for every poster it declares", () => {
-    const absent = surfaces
-      .filter((f) => f.poster)
-      .filter((f) => !existsSync(join(root, "public", "surfaces", `${f.poster}.webp`)))
-      .map((f) => `${f.to} → public/surfaces/${f.poster}.webp`);
-    expect(absent, `declared poster not generated — run \`npm run gen:surfaces\`: ${absent.join(", ")}`).toEqual([]);
-  });
-
   it("gives every surface an icon", () => {
     const iconless = surfaces.filter((f) => !SURFACE_ICON[f.to]).map((f) => f.to);
     expect(iconless, `surface(s) with no icon in rooms.tsx SURFACE_ICON: ${iconless.join(", ")}`).toEqual([]);

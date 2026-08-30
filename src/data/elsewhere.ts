@@ -26,19 +26,21 @@ export const elsewhere: Elsewhere[] = [
   { label: "Stack Overflow", url: "https://stackoverflow.com/users/12678663/siddharth-pandalai", what: "answers and reputation", kind: "code" },
   { label: "LinkedIn", url: "https://linkedin.com/in/siddharth-pandalai", what: "work history", kind: "record" },
   { label: "dev.to", url: "https://dev.to/darkpandawarrior", what: "the field notes, syndicated", kind: "writing" },
+  { label: "Medium", url: "https://medium.com/@siddharthpandalai990", what: "the same field notes, syndicated", kind: "writing" },
+  { label: "Hashnode", url: "https://darkpandawarrior.hashnode.dev", what: "the same field notes, syndicated", kind: "writing" },
   { label: "X", url: "https://x.com/pandalaisid18", what: "@pandalaisid18", kind: "social" },
   { label: "Books Before Bros", url: "https://booksbeforebros.wordpress.com/", what: "the blog that predates the code", kind: "writing" },
   {
     label: "Editorial Board, MANIT",
     url: "https://edboardmanit.wordpress.com/",
-    what: "the society whose magazine he edited — and where 'It's A Doggone Life' ran",
+    what: "the society whose magazine he edited, and where 'It's A Doggone Life' ran",
     kind: "record",
   },
   { label: "Drishtant", url: "https://drishtantnitbhopal.wordpress.com/", what: "the literary society, and D Buzz", kind: "record" },
   {
     label: "MANIT Flipbook",
     url: "https://flip.manit.ac.in/",
-    what: "the institute's own archive — the original scans of every Excelsior",
+    what: "the institute's own archive: the original scans of every Excelsior",
     kind: "record",
   },
   {

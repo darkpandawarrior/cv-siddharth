@@ -758,7 +758,7 @@ function buildCommands(jump: Go): Cmd[] {
                   <Dim>gap</Dim>
                   {thesis.deciles.map((d) => (
                     <Fragment key={d.bucket}>
-                      <span className="text-zinc-500">
+                      <span className="text-muted">
                         {Math.round(d.bucket * step)}–{Math.round((d.bucket + 1) * step)}%
                       </span>
                       <span className="text-zinc-300">{pct(d.win)}</span>

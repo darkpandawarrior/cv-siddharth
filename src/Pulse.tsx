@@ -91,7 +91,7 @@ function PulseInner() {
           {people > 0 && (
             <>
               {" "}
-              <span className="text-zinc-500">from</span>{" "}
+              <span className="text-muted">from</span>{" "}
               {people.toLocaleString()} <span className="text-accent2">{people === 1 ? "person" : "people"}</span>
             </>
           )}

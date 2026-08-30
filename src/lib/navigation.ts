@@ -84,12 +84,19 @@ function prefersReducedMotion() {
  */
 export const SECTION_ID_LIST = [
   "top",
-  "morph",
+  // Fit check leads, ahead of the device morph: NAV_LINKS has listed it first
+  // for a while and the page had 1,329px of morph sitting between the metrics
+  // and the one tool on this site a PDF cannot offer.
   "fit",
+  "morph",
+  // The shelf moved up from eighth. App.tsx's own comment beside it claimed a
+  // recruiter who reads two sections should have hit a live store rating by
+  // the end of the second, while it rendered 17,800px down, fourth in a run of
+  // four consecutive sections all answering "what have you built?".
+  "shipped",
   "work",
   "projects",
   "source",
-  "shipped",
   "experience",
   // Skills moved up beside the experience it proves, so every evidence
   // section now completes BEFORE the Circuit divider that App.tsx's own

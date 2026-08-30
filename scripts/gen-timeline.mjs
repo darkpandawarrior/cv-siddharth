@@ -119,7 +119,7 @@ async function chessLane() {
   if (counted === 0) return null;
   return {
     key: "chess", label: "chess", unit: "games played", resolution: "month",
-    source: "lichess game archive plus chess.com monthly archives, one row per game — BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
+    source: "lichess game archive plus chess.com monthly archives, one row per game, from BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
     months, total: counted,
   };
 }
@@ -157,7 +157,7 @@ async function openSourceLane() {
   if (counted === 0) return null;
   return {
     key: "opensource", label: "open source", unit: "public contributions", resolution: "month",
-    source: "GitHub public contribution calendar — PUBLIC repos only; the Jugnoo and Dice work is on private company repos and is deliberately not counted here",
+    source: "GitHub public contribution calendar, PUBLIC repos only; the Jugnoo and Dice work is on private company repos and is deliberately not counted here",
     months, total: counted,
   };
 }
@@ -214,7 +214,7 @@ async function workLane() {
     const scope = Math.max(1, r.points.length);
     for (const ym of span) months[ym] += scope;
 
-    milestones.push({ ym: span[0], lane: "work", kind: "role", label: `${r.label} — ${r.role}`.trim() });
+    milestones.push({ ym: span[0], lane: "work", kind: "role", label: `${r.label}: ${r.role}`.trim() });
 
     // Spread the bullets evenly across the role so they are things you drive
     // PAST rather than a stack at one coordinate. They inherit the role's
@@ -230,7 +230,7 @@ async function workLane() {
   if (total === 0) return null;
   return {
     key: "work", label: "work", unit: "documented deliverables in force", resolution: "month",
-    source: "employment periods and their achievement bullets from profile.ts — measured as documented delivered scope rather than commits, because the Jugnoo and Dice repositories are private and a public commit graph would show a four-year hole where the work actually was",
+    source: "employment periods and their achievement bullets from profile.ts, measured as documented delivered scope rather than commits, because the Jugnoo and Dice repositories are private and a public commit graph would show a four-year hole where the work actually was",
     months, total, milestones,
   };
 }
@@ -263,7 +263,7 @@ async function writingLane() {
   if (counted === 0) return null;
   return {
     key: "writing", label: "writing", unit: "pieces published", resolution: "year",
-    source: "Excelsior editions, printed archive and the facet chronology — most carry a year but no month, so this lane is plotted at year resolution and must not be read month-to-month",
+    source: "Excelsior editions, printed archive and the facet chronology. Most carry a year but no month, so this lane is plotted at year resolution and must not be read month-to-month",
     months, total: counted, milestones,
   };
 }

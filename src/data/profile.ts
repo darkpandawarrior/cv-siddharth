@@ -47,7 +47,7 @@ export const metrics = [
   { value: "50k+", label: "monthly active users", detail: "22k+ daily, platform owner at Dice.tech" },
   { value: "95%", label: "GPS accuracy", detail: "up from 50%, by predictive dead reckoning" },
   { value: "80%", label: "crash reduction", detail: "Crashlytics + structured concurrency fixes" },
-  { value: "~87%", label: "UI-layer Compose", detail: "~87% of the UI layer, verified screen by screen against the legacy XML" },
+  { value: "~87%", label: "UI-layer Compose", detail: "455k of 523k UI-layer LOC, verified screen by screen against the legacy XML" },
 ];
 
 // Key Results on the résumé. The homepage metric band is a hard 4-up grid with
@@ -319,7 +319,7 @@ export const caseStudies: CaseStudy[] = [
       "Rejected physically impossible fixes with spike detection, plus gap-filling for weak signal.",
       "Ran a foreground service with a floating bubble UI to survive OEM battery restrictions.",
     ],
-    outcome: "Tracking accuracy rose from 50% to 95% via staged dead reckoning plus Kalman smoothing, making mileage reliable enough for expense reimbursement.",
+    outcome: "Staged dead reckoning plus Kalman smoothing made mileage reliable enough to bill expense reimbursement against.",
     tags: ["Location", "Dead reckoning", "Kalman filtering", "Foreground services"],
   },
   {
@@ -334,7 +334,7 @@ export const caseStudies: CaseStudy[] = [
       "Reconstructed the user journey before each crash with structured breadcrumb instrumentation.",
       "Hunted concurrency bugs: main-thread violations, coroutine race conditions, lifecycle leaks.",
     ],
-    outcome: "Crashes fell 80% at 22k DAU; Play Store went 1.6★/67 reviews to 4.5★/27.3K, closing 85% of the gap to a perfect 5.0, +181% rating, 407x review volume.",
+    outcome: "At 22k DAU the Play Store listing went 1.6★/67 reviews to 4.5★/27.3K, closing 85% of the gap to a perfect 5.0, +181% rating, 407x review volume.",
     tags: ["Crashlytics", "Structured concurrency", "Coroutines"],
   },
   {
@@ -1354,7 +1354,7 @@ export const projects: Project[] = [
     badges: ["React 19", "Vercel", "LLM chat", "Compose Multiplatform", "Wasm"],
     detail: {
       overview:
-        "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. Everything on both versions is rendered from one TypeScript file of profile data, which is also what the AI assistant is grounded in, so the pages, the résumé, the OG images and the chat answers cannot disagree with each other.",
+        "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. The React version renders everything from one TypeScript file of profile data, which is also what the AI assistant, the résumé, the OG images and the two /llms.txt files are generated from, so none of them can disagree with each other. The Compose twin transcribes that file by hand, which is a different contract and a weaker one.",
       sections: [
         {
           heading: "The React site: how it is put together",
@@ -1413,8 +1413,8 @@ export const projects: Project[] = [
           code: `graph LR
   p["profile.ts<br/>single source"] --> pages["React pages<br/>+ /resume"]
   p --> og["gen-og<br/>OG cards"]
-  p --> sm["gen-sitemap<br/>sitemap + llms.txt"]
-  p --> sp["gen-system-prompt<br/>Panda's grounding"]
+  p --> sm["gen-sitemap<br/>sitemap.xml"]
+  p --> sp["gen-system-prompt<br/>Panda's grounding<br/>+ llms.txt"]
   p --> h["gen-project-heroes<br/>hero art"]`,
         },
         {
@@ -1518,7 +1518,7 @@ export const projects: Project[] = [
         deviceFrame: "browser",
         liveUrl: "/deadlock-app/index.html",
         screens: ["web_home.png"],
-        note: "Live: the real Godot build, compiled to WebAssembly. Pick a chapter, then click once to capture the mouse — WASD to move, R to rewind, Esc frees the cursor.",
+        note: "Live: the real Godot build, compiled to WebAssembly. Pick a chapter, then click once to capture the mouse: WASD to move, R to rewind, Esc frees the cursor.",
       },
     ],
     detail: {
@@ -1831,7 +1831,7 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
-  { date: "Jun–Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
+  { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
   { date: "Jun 2026", title: "Mileway: five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, still zero backend." },
   { date: "Jul 2026", title: "PaymentsLab: 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },

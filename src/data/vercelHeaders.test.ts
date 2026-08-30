@@ -116,7 +116,7 @@ describe("vercel.json live-build entry documents", () => {
       try {
         matches = re.test(path);
       } catch {
-        matches = false;
+        /* an unparseable source pattern is simply not a match */
       }
       if (!matches) continue;
       const cc = rule.headers.find((h) => h.key === "Cache-Control");

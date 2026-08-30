@@ -238,7 +238,10 @@ export function ChessFindings() {
             . Game counts say when someone was actually playing; rating-history dates do not.
           </p>
 
-          <div className="mt-5 overflow-x-auto">
+          {/* tabIndex/role/aria-label: a scrollable region has to be reachable by
+              keyboard, same pattern as FloatingChat's transcript. Without it a
+              keyboard-only visitor on a phone cannot reach columns 3-5. */}
+          <div className="mt-5 overflow-x-auto" tabIndex={0} role="region" aria-label="Openings by year">
             {/* min-w so the wrapper's overflow-x-auto actually scrolls on a
                 phone instead of crushing five columns of opening names into
                 four-line wraps and clipping the last one. */}

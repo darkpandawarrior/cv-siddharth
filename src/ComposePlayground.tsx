@@ -759,8 +759,11 @@ export default function ComposePlayground() {
             </button>
           </div>
         </nav>
-      </header>
 
+      {/* Both toolbars stay INSIDE the banner landmark. Outside it they were
+          content in no landmark at all, so a screen-reader user navigating by
+          landmark skipped the AI scenario input — on the one route whose whole
+          point is that input. */}
       <div className="border-b border-line bg-ink/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
           <span className="kicker mr-1">examples</span>
@@ -827,6 +830,8 @@ export default function ComposePlayground() {
           <p className="mx-auto max-w-7xl px-4 pb-2 font-mono text-[11px] text-[#ff8f8f] sm:px-6">{aiNote}</p>
         )}
       </div>
+
+      </header>
 
       <main id="main-content" tabIndex={-1} className="grid min-h-0 flex-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
         <h1 className="sr-only">The Compose Playground — write it, watch it recompose</h1>
@@ -923,11 +928,11 @@ export default function ComposePlayground() {
         </div>
       </main>
 
-      <div className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
+      <footer className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
         <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-muted" title={SUPPORTED}>
           supported: {SUPPORTED}
         </p>
-      </div>
+      </footer>
     </div>
   );
 }

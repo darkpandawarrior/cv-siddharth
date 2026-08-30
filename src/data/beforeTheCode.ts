@@ -32,7 +32,7 @@ export const societies: Society[] = [
   {
     name: "Editorial Board, MANIT",
     role: "English Editor → Joint Chief Editor",
-    years: "2018–2021",
+    years: "2018 - 2021",
     blurb:
       "The institute's student media body, publishing Excelsior since 1963. Three editions on the board; Joint Chief Editor and Chief English Editor on the last one.",
     links: [
@@ -48,7 +48,7 @@ export const societies: Society[] = [
   {
     name: "Drishtant",
     role: "Online Content Secretary → Online Content Head",
-    years: "2018–2021",
+    years: "2018 - 2021",
     // Source: signed LOR, Dr K. K. Dhote, Faculty Coordinator, Drishtant,
     // dated 11/05/2021. Facts only — the letter itself does not enter this repo.
     blurb:

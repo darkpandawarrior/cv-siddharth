@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { wallSurfaces, DEVICE, type DeviceFrame, type Surface } from "./data/surfaces.ts";
+import { surfaces, wallSurfaces, DEVICE, type Surface } from "./data/surfaces.ts";
 import { SURFACE_ICON } from "./rooms.tsx";
 import { facets } from "./data/facets.ts";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -15,52 +15,16 @@ import { openLauncher } from "./Launcher.tsx";
  * `data/surfaces.ts`; `surfaces.test.ts` fails the build if a route is missing
  * from it, so this wall cannot silently go stale the way the chip row did.
  *
- * ON THE DEVICE FRAMES. An iOS engineer's portfolio can render one iPhone and
- * be done. The claim this site exists to make is the other one — a single
- * Compose codebase adapting across phone, foldable, tablet, watch, TV, desktop
- * and web — so the wall renders the matrix instead of describing it. No copy
- * anywhere explains that; if it needed a sentence it would have failed.
- *
- * That is the same claim DeviceMorph (#morph) makes 12,000px up the page,
- * live, with a running build instead of a static poster — a visitor who only
- * scrolls this far has no reason to know that section exists. The one line
- * at the top of this component is the link back up to it; DeviceMorph
- * carries the matching link down here.
- *
- * PERFORMANCE. Every poster is a ~22 kB webp, `loading="lazy"` and
- * `decoding="async"`, below the fold. The wall adds no JS beyond this file and
- * no third-party anything: the frames are borders and aspect ratios.
+ * WHY THERE ARE NO DEVICE POSTERS ANY MORE. Every tile used to open with a
+ * 176px band holding a static webp inside a drawn device frame, arguing that
+ * one Compose codebase adapts across phone, foldable, watch, TV and web. That
+ * is the same claim DeviceMorph (#morph) makes further up this page, live,
+ * with a running build instead of a static poster, as the docstring here
+ * conceded while the band was still in place. Ten tiles spending 1,760px to
+ * restate a section that proves it is a trade the page cannot afford, and the
+ * argument is not lost: the device NAME is still on every tile, and the one
+ * line at the top of this component is the link up to the running version.
  */
-
-/** Every frame is drawn inside a band of exactly this height. */
-const BAND = "11rem";
-
-/**
- * Proportion per device, sized by HEIGHT rather than width.
- *
- * Width-sizing was the obvious way and it was wrong: a 9/16 phone at 42% of a
- * card stands ~16rem tall while a 16/10 desktop at 92% is ~8rem, so labels
- * stopped aligning across a row and the grid grew a ragged baseline. Pinning
- * each device to a fraction of one fixed band makes rows line up AND makes the
- * form-factor comparison legible — a phone reads as tall-and-narrow against a
- * TV that reads wide-and-short, which is the entire argument the wall is here
- * to make.
- *
- * Only the presentational half lives here. The aspect and the label come from
- * DEVICE in the registry, because the capture script and the poster cropper
- * need the same numbers and cannot import this file — when they were separate,
- * every poster was cropped to 16:9 no matter which frame it landed in.
- */
-const FRAME: Record<DeviceFrame, { height: string; radius?: string }> = {
-  phone: { height: "100%" },
-  foldable: { height: "84%" },
-  tablet: { height: "88%" },
-  watch: { height: "52%", radius: "1.9rem" },
-  tv: { height: "72%", radius: "0.6rem" },
-  desktop: { height: "76%", radius: "0.7rem" },
-  browser: { height: "76%", radius: "0.7rem" },
-  widget: { height: "42%", radius: "1.1rem" },
-};
 
 /** Year-pair for a surface the rail has dates for, e.g. "2021 :: 2026". */
 function stamp(surface: Surface): string | null {
@@ -73,7 +37,6 @@ function stamp(surface: Surface): string | null {
 
 function SurfaceTile({ surface }: { surface: Surface }) {
   const Icon = SURFACE_ICON[surface.to];
-  const frame = FRAME[surface.device];
   const device = DEVICE[surface.device];
   const dates = stamp(surface);
 
@@ -82,36 +45,6 @@ function SurfaceTile({ surface }: { surface: Surface }) {
       to={surface.to}
       className="panel group flex flex-col p-4 transition hover:border-accent/50 focus-visible:border-accent/50"
     >
-      {/* The frame. A surface with no capture skips this entirely and still
-          renders a complete, legible tile — that degradation is the whole
-          reason a new surface can ship the day it exists. */}
-      {surface.poster && (
-        <span
-          className="mb-4 flex items-end justify-center"
-          // One fixed band for every device, so rows line up no matter which
-          // frame a tile wears.
-          style={{ height: BAND }}
-        >
-          <span
-            className="device block"
-            style={{
-              height: frame.height,
-              aspectRatio: String(device.aspect),
-              maxWidth: "100%",
-              ...(frame.radius ? { borderRadius: frame.radius } : {}),
-            }}
-          >
-            <img
-              src={`/surfaces/${surface.poster}.webp`}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.03]"
-            />
-          </span>
-        </span>
-      )}
-
       <span className="flex items-center gap-2">
         {Icon && <Icon size={15} style={{ color: surface.tint }} aria-hidden />}
         <span className="font-display text-base font-bold text-zinc-100 transition group-hover:text-accent">
@@ -167,7 +100,12 @@ export function SurfaceWall() {
           row of each chapter instead of every tile, and says plainly where the
           rest are. Nothing became undiscoverable; the page stopped spending a
           fifth of its height on a grid the nav already offers. */}
-      {wallSurfaces.map((group) => {
+      {/* The writing group is not here: InkDoorway, the very next section on
+          the page, is the same door wearing the ink threshold and the sepia
+          palette that make it read as the seam between the two worlds. Every
+          writing route stays reachable: from that section, from the launcher
+          below, from the footer's whole Writing column and from ⌘K. */}
+      {wallSurfaces.filter((g) => g.group !== "writing").map((group) => {
         const shown = group.items.slice(0, PER_GROUP);
         const rest = group.items.length - shown.length;
         return (
@@ -202,7 +140,7 @@ export function SurfaceWall() {
           onClick={openLauncher}
           className="panel-sm inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
         >
-          Open the full wall — all {wallSurfaces.reduce((n, g) => n + g.items.length, 0)} surfaces
+          Open the full wall, all {surfaces.length} surfaces
         </button>
       </p>
     </div>

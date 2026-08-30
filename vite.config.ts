@@ -5,6 +5,7 @@ import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { config as loadEnv } from "dotenv";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { gzipSync } from "node:zlib";
 
 loadEnv({ path: ".env.local" });
 
@@ -74,6 +75,79 @@ function edgeGetApiDevPlugin(path: string, modulePath: string, exportName: strin
   };
 }
 
+/**
+ * `vite preview` gzips the static assets it serves but hands back the SSR
+ * document as identity, and production (Vercel) compresses both. So Lighthouse
+ * CI was measuring a 207 KB homepage document that no real visitor has ever
+ * received: 182 KB of phantom bytes, first on the critical path, ~885 ms of
+ * invented FCP at the simulated 1.6 Mbit/s link. Measured CI FCP for `/` was
+ * 5,559 ms against a real-world 356 ms.
+ *
+ * That gap is not harmless. It is what a perf budget gets calibrated against,
+ * and a budget set to a measurement artifact catches nothing real.
+ *
+ * node:zlib, no new dependency. Preview only — it never touches dev or the
+ * production build.
+ */
+function gzipPreviewHtmlPlugin(): Plugin {
+  return {
+    name: "gzip-preview-html",
+    configurePreviewServer(server) {
+      server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        if (!/\bgzip\b/.test(String(req.headers["accept-encoding"] ?? ""))) return next();
+        const writeHead = res.writeHead.bind(res);
+        const write = res.write.bind(res);
+        const end = res.end.bind(res);
+        const chunks: Buffer[] = [];
+        let compress = false;
+
+        // A body chunk arrives as a string OR a Uint8Array, and a Uint8Array is
+        // not a Buffer — Buffer.from(String(uint8array)) yields the literal text
+        // "60,33,68,79,…", which is how the first version of this shipped a
+        // 737 KB document of comma-separated byte numbers.
+        const collect = (chunk: unknown) => {
+          if (chunk == null || typeof chunk === "function") return;
+          chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : Buffer.from(chunk as Uint8Array));
+        };
+
+        // The decision has to be made HERE and nowhere later. writeHead() builds
+        // the header block and flips res.headersSent immediately, so a
+        // setHeader("content-encoding") from inside write() or end() throws
+        // ERR_HTTP_HEADERS_SENT and the socket closes with an empty reply.
+        res.writeHead = ((...args: Parameters<typeof res.writeHead>) => {
+          if (String(res.getHeader("content-type") ?? "").startsWith("text/html")) {
+            compress = true;
+            // The gzipped length is not known yet, so this goes out chunked.
+            res.removeHeader("content-length");
+            res.setHeader("content-encoding", "gzip");
+            res.setHeader("vary", "accept-encoding");
+          }
+          return writeHead(...args);
+        }) as typeof res.writeHead;
+
+        res.write = ((chunk: Buffer, ...rest: never[]) => {
+          if (!compress) return write(chunk, ...rest);
+          collect(chunk);
+          return true;
+        }) as typeof res.write;
+
+        res.end = ((chunk?: Buffer, ...rest: never[]) => {
+          if (!compress) return end(chunk, ...rest);
+          collect(chunk);
+          // Buffered, not streamed, on purpose: one ~200 KB SSR document on a
+          // local preview server. A single gzipSync is a lot less code than
+          // re-piping the response through a transform, and nothing
+          // production-facing runs this path.
+          write(gzipSync(Buffer.concat(chunks)));
+          return end();
+        }) as typeof res.end;
+
+        next();
+      });
+    },
+  };
+}
+
 // React Compiler 1.0 runs through the rolldown->babel bridge, since
 // @vitejs/plugin-react v6 moved its own JSX transform off Babel onto oxc.
 // @rolldown/plugin-babel declares itself `enforce: "pre"`, so it always runs
@@ -103,5 +177,8 @@ export default defineConfig(async () => ({
     // against production, which is the wrong way round for a page whose whole
     // subject is noticing failure early.
     edgeGetApiDevPlugin("/api/ops", "/api/_lib/ops-handler.ts", "handleOps"),
+    // Makes `vite preview` (what Lighthouse CI measures) send the SSR document
+    // compressed, the way production does.
+    gzipPreviewHtmlPlugin(),
   ],
 }));

@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-08-29T12:54:21.257Z",
+  "generatedAt": "2026-08-30T07:05:40.051Z",
   "from": "2019-01",
   "to": "2026-08",
   "months": [
@@ -128,7 +128,7 @@ export const timeline: Timeline = {
       "label": "work",
       "unit": "documented deliverables in force",
       "resolution": "month",
-      "source": "employment periods and their achievement bullets from profile.ts — measured as documented delivered scope rather than commits, because the Jugnoo and Dice repositories are private and a public commit graph would show a four-year hole where the work actually was",
+      "source": "employment periods and their achievement bullets from profile.ts, measured as documented delivered scope rather than commits, because the Jugnoo and Dice repositories are private and a public commit graph would show a four-year hole where the work actually was",
       "months": {
         "2019-01": 0,
         "2019-02": 0,
@@ -229,7 +229,7 @@ export const timeline: Timeline = {
           "ym": "2026-04",
           "lane": "work",
           "kind": "role",
-          "label": "Neev Consulting — Consulting Engineer, Platform & AI"
+          "label": "Neev Consulting: Consulting Engineer, Platform & AI"
         },
         {
           "ym": "2026-05",
@@ -247,7 +247,7 @@ export const timeline: Timeline = {
           "ym": "2023-06",
           "lane": "work",
           "kind": "role",
-          "label": "Dice.tech — SDE-2, Android & Product Owner"
+          "label": "Dice.tech: SDE-2, Android & Product Owner"
         },
         {
           "ym": "2023-07",
@@ -331,7 +331,7 @@ export const timeline: Timeline = {
           "ym": "2021-01",
           "lane": "work",
           "kind": "role",
-          "label": "Jugnoo / Tookan / Jungleworks — Software Engineer, Android & Vertical Owner"
+          "label": "Jugnoo / Tookan / Jungleworks: Software Engineer, Android & Vertical Owner"
         },
         {
           "ym": "2021-03",
@@ -373,7 +373,7 @@ export const timeline: Timeline = {
           "ym": "2020-05",
           "lane": "work",
           "kind": "role",
-          "label": "John Deere India — GET Intern"
+          "label": "John Deere India: GET Intern"
         },
         {
           "ym": "2020-06",
@@ -392,7 +392,7 @@ export const timeline: Timeline = {
       "label": "chess",
       "unit": "games played",
       "resolution": "month",
-      "source": "lichess game archive plus chess.com monthly archives, one row per game — BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
+      "source": "lichess game archive plus chess.com monthly archives, one row per game, from BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
       "months": {
         "2019-01": 0,
         "2019-02": 81,
@@ -498,7 +498,7 @@ export const timeline: Timeline = {
       "label": "writing",
       "unit": "pieces published",
       "resolution": "year",
-      "source": "Excelsior editions, printed archive and the facet chronology — most carry a year but no month, so this lane is plotted at year resolution and must not be read month-to-month",
+      "source": "Excelsior editions, printed archive and the facet chronology. Most carry a year but no month, so this lane is plotted at year resolution and must not be read month-to-month",
       "months": {
         "2019-01": 0,
         "2019-02": 0,
@@ -624,7 +624,7 @@ export const timeline: Timeline = {
       "label": "open source",
       "unit": "public contributions",
       "resolution": "month",
-      "source": "GitHub public contribution calendar — PUBLIC repos only; the Jugnoo and Dice work is on private company repos and is deliberately not counted here",
+      "source": "GitHub public contribution calendar, PUBLIC repos only; the Jugnoo and Dice work is on private company repos and is deliberately not counted here",
       "months": {
         "2019-01": 0,
         "2019-02": 0,
@@ -717,9 +717,9 @@ export const timeline: Timeline = {
         "2026-05": 49,
         "2026-06": 1391,
         "2026-07": 2906,
-        "2026-08": 1426
+        "2026-08": 1434
       },
-      "total": 6251,
+      "total": 6259,
       "peak": {
         "ym": "2026-07",
         "v": 2906

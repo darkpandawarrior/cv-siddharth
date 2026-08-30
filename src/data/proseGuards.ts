@@ -61,3 +61,18 @@ export const BANNED: RegExp[] = [
 // never regenerated — the exact reason this has to run on the OUTPUT, not
 // the source prose.
 export const RESIDUE = /<\/?(content|document|response|thinking|antml[^>]*)>|^```\s*$|^---\s*$/m;
+
+// The no-em-dash house rule, as one pattern instead of two.
+//
+// canonLore.test.ts has enforced this on the fiction bible since the /canon
+// pass, with the regex inlined at the assertion. Everything a hiring manager
+// actually reads — the surface blurbs, the metric details, the milestone
+// labels — was outside it, and carried 68 of them. Same fix as BANNED above:
+// one exported pattern, imported by both, rather than a second copy that
+// drifts.
+//
+// Escapes, not the literal glyphs: U+2014 em dash, U+2013 en dash. The
+// verification step is a plain `grep -nE` for those two characters across the
+// data files, and a detector written with the glyphs in it is the one thing
+// guaranteed to show up in its own sweep.
+export const DASHES = /[—–]/;

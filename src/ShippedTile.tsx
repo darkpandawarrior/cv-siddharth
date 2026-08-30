@@ -114,7 +114,7 @@ export function ShippedTile({ app, past = false }: { app: ShippedApp; past?: boo
           {meta}
         </span>
         {dateLine && (
-          <span className="block truncate font-mono text-[10px] tracking-wider text-zinc-600">
+          <span className="block truncate font-mono text-[10px] tracking-wider text-muted">
             {dateLine}
           </span>
         )}

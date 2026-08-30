@@ -12,6 +12,7 @@ import { plainText, speakableText } from "./lib/chatBlocks.ts";
 import { matchJd, toFitReport } from "./lib/skillMatch.ts";
 import { HOME_GREETING, JD_PROMPT, canonicalRoute, chipsFor, greetingFor } from "./lib/chatContext.ts";
 import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
+import { useInertBackdrop } from "./lib/inertBackdrop.ts";
 import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, type ChatMessage } from "./lib/chatClient.ts";
 
 /**
@@ -171,6 +172,8 @@ const MIC_DISCLOSURE =
 export function FloatingChat() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useInertBackdrop(open && expanded, panelRef);
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -558,10 +561,25 @@ export function FloatingChat() {
       )}
 
       {open && (
+        /* role/aria-label: the panel was a bare <div>, so a screen reader
+           announced the combobox inside it with no container context.
+           useInertBackdrop is gated on `expanded` and not on `open`: the
+           docked 400px panel is genuinely non-modal — the page beside it is
+           still readable and still the visitor's — while the expanded one
+           covers the viewport, and Tab used to walk out of it after ten stops
+           onto controls hidden behind it (WCAG 2.4.11). */
         <div
+          ref={panelRef}
+          role="dialog"
+          aria-label="Panda, Siddharth’s AI assistant"
           className={`panel fixed z-50 flex flex-col overflow-hidden shadow-2xl print:hidden ${ expanded ? "inset-2 sm:inset-6 lg:inset-10" : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]" }`}
         >
-          <header className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3">
+          {/* A plain div, not <header>: inside a role="dialog" this is the
+              panel's own title bar, but HTML-AAM still maps <header> to the
+              banner landmark there, so the page had two banners whenever the
+              chat was open — moderate, which is why it sat unseen until the
+              axe filter stopped dropping moderate. */}
+          <div className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3">
             <div className="min-w-0">
               <p className="font-display text-sm font-bold">
                 <span className="mr-1.5 font-mono text-[11px] font-normal text-accent">sid@android:~$</span>
@@ -584,7 +602,7 @@ export function FloatingChat() {
                 <X size={18} />
               </button>
             </div>
-          </header>
+          </div>
 
           {/* tabIndex + role: a scrollable region has to be reachable by
               keyboard, or a visitor who cannot use a pointer has no way to
