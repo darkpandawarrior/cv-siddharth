@@ -43,7 +43,8 @@
     "gen:world-plate": "node scripts/gen-world-plate.mjs",
     "gen:repo-stats": "node scripts/gen-repo-stats.mjs",
     "gen:ops": "node scripts/gen-ops.mjs",
-    "gen:kotlin": "node scripts/gen-kotlin-data.mjs"
+    "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
+    "check:generated": "node scripts/check-generated.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
