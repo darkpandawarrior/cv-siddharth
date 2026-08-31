@@ -3,5 +3,11 @@
 // Run `npm run gen:repo-stats` to refresh.
 export const repoStats = {
   "tests": 1037,
-  "testFiles": 93
+  "testFiles": 93,
+  "kotlinLines": 31542,
+  "kotlinFiles": 63,
+  "kotlin": "2.4.20-RC",
+  "compose": "1.12.0-rc01",
+  "agp": "9.5.0-alpha02",
+  "gradle": "9.7.0"
 } as const;

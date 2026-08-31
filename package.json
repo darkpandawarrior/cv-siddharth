@@ -44,7 +44,8 @@
     "gen:repo-stats": "node scripts/gen-repo-stats.mjs",
     "gen:ops": "node scripts/gen-ops.mjs",
     "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
-    "check:generated": "node scripts/check-generated.mjs"
+    "check:generated": "node scripts/check-generated.mjs",
+    "sync:twin": "node scripts/sync-twin.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
