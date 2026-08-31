@@ -287,9 +287,72 @@ const starWorlds = anthology.starmap.worlds.map((w) => ({
 // by the same generator (scripts/gen-chess-stats.mjs), so they never disagree.
 const corpusPath = join(root, "public/chess/corpus.json");
 assert.ok(existsSync(corpusPath), `gen-kotlin-data: ${corpusPath} is missing; run npm run gen:chess`);
-const corpusHours = JSON.parse(readFileSync(corpusPath, "utf8")).hours;
+const corpus = JSON.parse(readFileSync(corpusPath, "utf8"));
+const corpusHours = corpus.hours;
 assert.equal(corpusHours.chess.length, 24, "corpus.json: hours.chess must carry 24 rows");
 assert.equal(corpusHours.commits.length, 24, "corpus.json: hours.commits must carry 24 rows");
+
+// The three panes ChessRoom.tsx renders as three.js scenes each ship a NON-WEBGL
+// branch that is plain 2D or plain text, and those branches were the thing this
+// emitter was missing rather than a renderer. What each needs:
+//
+//  - The Arc's flat fallback (`src/ChessArc.tsx`) reads `chess.arc`, the WEEKLY
+//    downsample that already ships in the bundled summary: 190 points across
+//    three chess.com formats, not the corpus's 4,500. gen-chess-stats.mjs
+//    asserts the downsample's per-format maximum still equals the peak printed
+//    beside it, so the ranges the fallback quotes are the real ones.
+//  - The Graveyard's no-WebGL branch is `corpus.graveyard`, 64 ints per view.
+//  - Repertoire's is `corpus.repertoireByPlatform`, flattened here into the
+//    year-ordered shape `chess/repertoireModel.ts:repertoireYears` builds, so
+//    the twin does that nesting walk once at generation time rather than in a
+//    composable. A slice's `share` stays NULLABLE: a thin platform-year quotes
+//    no percentage on either side.
+//  - `corpus.positions` is the guess-the-move quiz: 60 final positions, and the
+//    only thing drawn from them is the FEN's piece placement, so no move
+//    generator is involved.
+//
+// Still left behind: `corpus.arc` (the un-downsampled per-game series, only the
+// three.js ribbon needs that resolution) and `corpus.openings` (850 rows the
+// scenes aggregate; nothing 2D reads it).
+const arcSeries = chess.arc.filter((a) => a.points.length > 1);
+assert.ok(arcSeries.length > 0, "chess.ts: arc has no series with more than one point");
+const arcStamps = arcSeries.flatMap((a) => a.points.map((p) => p.t));
+const arcFrom = Math.min(...arcStamps);
+const arcTo = Math.max(...arcStamps);
+const isoDay = (ms) => new Date(ms).toISOString().slice(0, 10);
+// Interior January firsts, the only shared reference between bands. Same range
+// ChessArc.tsx builds: first year + 1 through the last year inclusive.
+const arcYearTicks = [];
+for (let y = new Date(arcFrom).getUTCFullYear() + 1; y <= new Date(arcTo).getUTCFullYear(); y++) {
+  arcYearTicks.push(Date.UTC(y, 0, 1));
+}
+
+assert.equal(corpus.graveyard.losses.length, 64, "corpus.json: graveyard.losses must be 64 squares");
+assert.equal(corpus.graveyard.wins.length, 64, "corpus.json: graveyard.wins must be 64 squares");
+
+const REP_PLATFORMS = ["lichess", "chesscom"];
+const repertoireByPlatform = Object.keys(corpus.repertoireByPlatform)
+  .sort()
+  .map((year) => ({
+    year,
+    platforms: REP_PLATFORMS.flatMap((key) => {
+      const slice = corpus.repertoireByPlatform[year][key];
+      return slice
+        ? [
+            {
+              key,
+              blackGames: slice.blackGames,
+              thin: slice.thin,
+              openings: slice.openings.map((o) => ({ ...o, share: o.share ?? null })),
+            },
+          ]
+        : [];
+    }),
+  }));
+assert.ok(
+  repertoireByPlatform.every((y) => y.platforms.length > 0),
+  "corpus.json: a repertoire year carries no platform",
+);
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
 const Ref = obj("CanonRef", { slug: S, label: S }, "An entry a law points at. `slug` resolves against anthologyEntries.");
@@ -784,12 +847,16 @@ const files = [
     out: "CvChessData.kt",
     source: "src/data/chess.ts, src/data/chessDeep.ts, public/chess/corpus.json",
     note:
-      "Scoped to the two 2D surfaces that port: ChessFindings and ChessVsCommits.\n" +
+      "Scoped to the surfaces that port: ChessFindings, ChessVsCommits, and the\n" +
+      "non-WebGL branch each of ChessRoom's three three.js panes already ships.\n" +
       "Left behind from chess.ts: length, material, firstMoveWhite, clutch,\n" +
-      "checkmate, tilt, colour, accuracy, bestUpset, puzzle and arc — read only by\n" +
-      "the three three.js scenes, the engine-backed board and the puzzle pane,\n" +
-      "none of which port. From corpus.json only `hours` is taken; arc, graveyard,\n" +
-      "repertoireByPlatform, openings and positions belong to those same scenes.\n" +
+      "checkmate, tilt, colour, accuracy, bestUpset and puzzle, read only by the\n" +
+      "scenes themselves, the engine-backed board and the daily puzzle, none of\n" +
+      "which port. `arc` IS taken: it is the weekly downsample the flat fallback\n" +
+      "ChessArc.tsx draws, 190 points rather than corpus.arc's ~4,500.\n" +
+      "From corpus.json: hours, graveyard, repertoireByPlatform and positions.\n" +
+      "Still left there: corpus.arc (per-game resolution only the ribbon needs)\n" +
+      "and corpus.openings (850 aggregate rows nothing 2D reads).\n" +
       "`boardTime` is flattened: its nested chesscom block contributes only\n" +
       "`games`, and its per-class hours are not rendered anywhere.\n" +
       "\n" +
@@ -918,6 +985,75 @@ const files = [
           commits: corpusHours.commits,
           commitSample: corpusHours.commitSample,
         },
+      },
+      {
+        name: "chessArc",
+        doc:
+          "The rating arc as the flat fallback draws it: one band per platform, each on its OWN vertical scale. " +
+          "The two rating pools are not comparable, so a shared axis would draw a decline the games do not support. " +
+          "Only `t` is shared. Weekly-sampled, which is what the fallback's own caption says it is.",
+        type: obj("ChessArcCorpus", {
+          series: list(
+            obj("ChessArcSeries", {
+              platform: S,
+              format: S,
+              points: list(obj("ChessArcPoint", { t: D, rating: I }, "`t` is a ms epoch, held as a Double because it does not fit an Int.")),
+            }),
+          ),
+          fromDay: S,
+          toDay: S,
+          yearTicks: list(D),
+        }),
+        value: {
+          series: arcSeries.map((a) => ({
+            platform: a.platform,
+            format: a.format,
+            points: a.points.map((p) => ({ t: p.t, rating: p.r })),
+          })),
+          fromDay: isoDay(arcFrom),
+          toDay: isoDay(arcTo),
+          yearTicks: arcYearTicks,
+        },
+      },
+      {
+        name: "chessGraveyard",
+        doc:
+          "Terminal-position square counts, index 0-63 = a1-h8: how many games of that outcome ended with a piece, " +
+          "either side's, still standing there. chess.com's games ONLY — lichess's export ships no FEN, so their " +
+          "final positions were never recorded and are not in this board.",
+        type: obj("ChessGraveyard", { losses: list(I), wins: list(I) }),
+        value: { losses: corpus.graveyard.losses, wins: corpus.graveyard.wins },
+      },
+      {
+        name: "chessRepertoireByPlatform",
+        doc:
+          "The black repertoire keyed by year and then platform, already flattened into year order. The nesting is " +
+          "the honest one: an opening's fall on lichess and its return on chess.com are two WITHIN-platform " +
+          "observations either side of the handoff, and nothing may flatten them into one series. `share` is null " +
+          "when the generator marked the platform-year thin, and stays null all the way to the screen.",
+        type: list(
+          obj("ChessRepertoireYearByPlatform", {
+            year: S,
+            platforms: list(
+              obj("ChessRepertoirePlatformSlice", {
+                key: S,
+                blackGames: I,
+                thin: B,
+                openings: list(obj("ChessRepertoirePlatformOpening", { name: S, count: I, share: nul(D) })),
+              }),
+            ),
+          }),
+        ),
+        value: repertoireByPlatform,
+      },
+      {
+        name: "chessPositions",
+        doc:
+          "The guess-the-move quiz: the last position of a finished game, and how it actually went. Only the FEN's " +
+          "piece-placement and side-to-move fields are read, so nothing here needs a move generator. chess.com only, " +
+          "for the same reason the graveyard is.",
+        type: list(obj("ChessQuizPosition", { fen: S, result: S, speed: S, at: S, myRating: I })),
+        value: corpus.positions,
       },
     ],
   },
