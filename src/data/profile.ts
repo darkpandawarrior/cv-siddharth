@@ -1315,7 +1315,7 @@ export const projects: Project[] = [
     name: "cv-siddharth: this site, and its Compose Multiplatform twin",
     tagline: "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
-      "An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 16.2k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.",
+      `An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from ${(repoStats.kotlinLines / 1000).toFixed(1)}k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.`,
     stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
     highlights: [
       "Two full implementations of one portfolio: the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
