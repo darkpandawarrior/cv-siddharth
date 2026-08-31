@@ -1,7 +1,8 @@
 // Emits the Compose Multiplatform twin's data layer from THIS repo's data
-// modules. Four of the eight sources below carry their own AUTO-GENERATED
-// banner (store.ts, weeb.ts, writing.ts, anthology.ts), so a hand-written
-// Kotlin copy of them is a second transcript that no generator refreshes.
+// modules. Nine of the sources below carry their own AUTO-GENERATED banner
+// (store.ts, weeb.ts, writing.ts, anthology.ts, ops.ts, archiveText.ts,
+// chess.ts, chessDeep.ts, excelsior.ts), so a hand-written Kotlin copy of
+// them is a second transcript that no generator refreshes.
 // CvProfileData.kt already paid for that once: it carried ~960k-LOC and
 // ~964k-LOC for the same app, in the same file, transcribed by hand from a
 // stale intermediate. So the Kotlin is generated on the same schedule the
@@ -54,6 +55,12 @@ import {
   RECEIPTS,
 } from "../src/data/making.ts";
 import { perimeter, leverage, drift, opsGeneratedAt } from "../src/data/ops.ts";
+import { printedPieces } from "../src/data/archiveText.ts";
+import { chess } from "../src/data/chess.ts";
+import { chessDeep } from "../src/data/chessDeep.ts";
+import { excelsiorEditions } from "../src/data/excelsior.ts";
+import { excelsiorMarks } from "../src/data/excelsiorMarks.ts";
+import { NODES, EDGES } from "../src/data/storyMap.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kmpRoot = join(root, "..", "cv-siddharth-kmp");
@@ -272,6 +279,18 @@ const starWorlds = anthology.starmap.worlds.map((w) => ({
   darkAt: w.at ?? null,
 }));
 
+// The /chess "rhythm" tab reads `hours` from public/chess/corpus.json, not from
+// src/data/chess.ts — the corpus is 220 KB the React room fetches at runtime so
+// it never lands in a bundle. Only the 24+24 hour rows and the commit-sample
+// footnote are wanted here, and reading them at generation time is what keeps
+// the twin off a network round-trip for fifty numbers. Both files are written
+// by the same generator (scripts/gen-chess-stats.mjs), so they never disagree.
+const corpusPath = join(root, "public/chess/corpus.json");
+assert.ok(existsSync(corpusPath), `gen-kotlin-data: ${corpusPath} is missing; run npm run gen:chess`);
+const corpusHours = JSON.parse(readFileSync(corpusPath, "utf8")).hours;
+assert.equal(corpusHours.chess.length, 24, "corpus.json: hours.chess must carry 24 rows");
+assert.equal(corpusHours.commits.length, 24, "corpus.json: hours.commits must carry 24 rows");
+
 // ── Schemas ─────────────────────────────────────────────────────────────────
 const Ref = obj("CanonRef", { slug: S, label: S }, "An entry a law points at. `slug` resolves against anthologyEntries.");
 const Point = obj("CanonPoint", { term: S, gloss: S }, "A named idea and its gloss. Serves season points and doctrine consequences alike.");
@@ -486,7 +505,7 @@ const files = [
   {
     out: "CvAnthologyData.kt",
     source: "src/data/anthology.ts",
-    note: "Left behind: every story `body` (448 KB) and every `sigil` (206 KB of\ninline animated SVG). /read is not ported and Compose has no SVG-string\nrenderer, so both would be dead weight in a wasm bundle a visitor\ndownloads. `mark` goes with them for the same reason.",
+    note: "Left behind: every story `body` (448 KB), every `sigil` (206 KB of\ninline animated SVG), and `mark`. The ported /read serves the nine\nExcelsior pieces in CvArchiveTextData.kt, not the anthology, and Compose\nhas no SVG-string renderer — so all three would be dead weight in a wasm\nbundle a visitor downloads.",
     vals: [
       {
         name: "anthology",
@@ -717,6 +736,261 @@ const files = [
         value: drift,
       },
       { name: "opsGeneratedAt", type: S, value: opsGeneratedAt },
+    ],
+  },
+
+  {
+    out: "CvArchiveTextData.kt",
+    source: "src/data/archiveText.ts",
+    note:
+      "Bodies are INCLUDED here, unlike CvAnthologyData.kt where they are not.\n" +
+      "/read is the only surface that renders them and they are what it is, so\n" +
+      "dropping them would ship the route as a stub. 85,299 bytes of UTF-8 prose\n" +
+      "across nine pieces, which is 89 KB of Kotlin string literal and compresses\n" +
+      "hard on the wire.\n" +
+      "\n" +
+      "The markdown in these bodies was measured, not assumed: across all nine,\n" +
+      "the only constructs present are `> ` blockquote (9 lines, the leading\n" +
+      "blurb of each piece) and *italic* (3 lines). No headings, bold, lists,\n" +
+      "links, code, rules or tables. A renderer for /read needs those two.",
+    vals: [
+      {
+        name: "printedPieces",
+        doc: "The prose that ran in Excelsior. `page` is the PDF page index, 0 for a piece that never ran in print; `printWords` is what actually ran when the draft was cut, 0 when it was not.",
+        type: list(
+          obj("PrintedPiece", {
+            slug: S,
+            title: S,
+            form: S,
+            era: S,
+            blurb: S,
+            tags: list(S),
+            words: I,
+            year: S,
+            page: I,
+            url: S,
+            published: S,
+            printWords: I,
+            note: S,
+            body: S,
+          }),
+        ),
+        value: printedPieces,
+      },
+    ],
+  },
+
+  {
+    out: "CvChessData.kt",
+    source: "src/data/chess.ts, src/data/chessDeep.ts, public/chess/corpus.json",
+    note:
+      "Scoped to the two 2D surfaces that port: ChessFindings and ChessVsCommits.\n" +
+      "Left behind from chess.ts: length, material, firstMoveWhite, clutch,\n" +
+      "checkmate, tilt, colour, accuracy, bestUpset, puzzle and arc — read only by\n" +
+      "the three three.js scenes, the engine-backed board and the puzzle pane,\n" +
+      "none of which port. From corpus.json only `hours` is taken; arc, graveyard,\n" +
+      "repertoireByPlatform, openings and positions belong to those same scenes.\n" +
+      "`boardTime` is flattened: its nested chesscom block contributes only\n" +
+      "`games`, and its per-class hours are not rendered anywhere.\n" +
+      "\n" +
+      "The three honesty constraints the React copy carries are properties of\n" +
+      "this data, not of that file: combinedHours ADDS two different\n" +
+      "measurements (lichess self-report plus a figure derived from chess.com PGN\n" +
+      "wall clock), the two platforms are a handoff rather than parallel\n" +
+      "accounts, and a repertoire year's Scandinavian share is a floor because it\n" +
+      "sums only the lines that made that year's top five.",
+    vals: [
+      {
+        name: "chess",
+        doc: "Everything the Findings tab renders. Every figure is generator output; nothing here is typed by hand.",
+        type: obj("ChessStats", {
+          generatedAt: S,
+          span: obj("ChessSpan", { from: S, to: S }),
+          totals: obj("ChessTotals", { games: I, wins: I, losses: I, draws: I, hours: I }),
+          boardTime: obj(
+            "ChessBoardTime",
+            { lichessHours: I, chesscomHours: I, combinedHours: I, chesscomGames: I, note: S },
+            "`combinedHours` is two measurement methods added together, not one metric. `note` says which.",
+          ),
+          thesis: obj(
+            "ChessThesis",
+            {
+              decidedOnClock: D,
+              lossesOnTime: D,
+              winsOnTime: D,
+              sampleSize: I,
+              deciles: list(
+                obj(
+                  "ChessDecile",
+                  { bucket: I, win: D, loss: D, gap: D },
+                  "Mean fraction of the starting clock still left. `bucket` is 0-based; the axis step is 100 / deciles.size.",
+                ),
+              ),
+            },
+            "Fractions, not percentages: multiply by 100 to print.",
+          ),
+          discipline: obj("ChessDiscipline", {
+            distinctDays: I,
+            spanDays: I,
+            longestDayStreak: I,
+            longestWin: I,
+            longestLoss: I,
+          }),
+          sessionDecay: list(
+            obj("ChessSessionGame", { position: I, winRate: D, n: I }, "Win rate by how deep into one sitting the game was. `n` is thin at the tail and is rendered with it."),
+          ),
+          activityByYear: list(obj("ChessActivityYear", { year: S, lichess: I, chesscom: I })),
+          repertoire: list(
+            obj("ChessRepertoireYear", {
+              year: S,
+              openings: list(obj("ChessOpeningShare", { name: S, count: I, share: D })),
+            }),
+          ),
+          platforms: list(
+            obj("ChessPlatform", {
+              id: S,
+              url: S,
+              joined: S,
+              lastActive: S,
+              games: I,
+              provisional: B,
+              peaks: list(obj("ChessPeak", { format: S, rating: I, at: nul(S) })),
+              puzzles: nul(obj("ChessPuzzleStats", { peak: I, solved: I })),
+            }),
+          ),
+        }),
+        value: {
+          generatedAt: chess.generatedAt,
+          span: chess.span,
+          totals: chess.totals,
+          boardTime: {
+            lichessHours: chess.boardTime.lichessHours,
+            chesscomHours: chess.boardTime.chesscomHours,
+            combinedHours: chess.boardTime.combinedHours,
+            chesscomGames: chess.boardTime.chesscom.games,
+            note: chess.boardTime.note,
+          },
+          thesis: chess.thesis,
+          discipline: chess.discipline,
+          sessionDecay: chess.sessionDecay,
+          activityByYear: chess.activityByYear,
+          repertoire: chess.repertoire,
+          platforms: chess.platforms.map((p) => ({
+            ...p,
+            peaks: p.peaks.map((k) => ({ ...k, at: k.at ?? null })),
+            // `last` is dropped: the surface prints the peak and the solved count.
+            puzzles: p.puzzles ? { peak: p.puzzles.peak, solved: p.puzzles.solved } : null,
+          })),
+        },
+      },
+      {
+        name: "chessDeep",
+        doc: "The second pass: how the game was found, which time control, how it ended, and when the opening book ran out. Win rates and shares here are PERCENTAGES, unlike chess.thesis.",
+        type: obj("ChessDeep", {
+          generatedAt: S,
+          lastSeenOnLichess: S,
+          sampleSize: I,
+          bySource: list(obj("ChessSourceRow", { source: S, n: I, winRate: D })),
+          byTimeControl: list(obj("ChessTimeControlRow", { tc: S, n: I, winRate: D })),
+          byEnding: list(obj("ChessEndingRow", { status: S, n: I, share: D })),
+          book: obj("ChessBook", {
+            medianPly: I,
+            deep: obj("ChessBookArm", { n: I, winRate: D }),
+            shallow: obj("ChessBookArm", { n: I, winRate: D }),
+          }),
+        }),
+        value: chessDeep,
+      },
+      {
+        name: "chessHours",
+        doc: "The rhythm tab: two 24-hour distributions on one axis, each normalised to its own busiest hour. Hours are IST. `winRate` is a fraction; every hour in the corpus has one, so it is not nullable here.",
+        type: obj("ChessHours", {
+          games: list(obj("ChessHourGames", { hour: I, n: I, winRate: D })),
+          commits: list(obj("ChessHourCommits", { hour: I, n: I })),
+          commitSample: obj(
+            "ChessCommitSample",
+            { n: I, total: I, from: S },
+            "The commit half is capped by GitHub's search API: `n` of `total` matching commits since `from`. Shapes are comparable, volumes are not.",
+          ),
+        }),
+        value: {
+          games: corpusHours.chess,
+          commits: corpusHours.commits,
+          commitSample: corpusHours.commitSample,
+        },
+      },
+    ],
+  },
+
+  {
+    out: "CvStoryMapData.kt",
+    source: "src/data/storyMap.ts",
+    note:
+      "The constellation moved out of StoryMap.tsx into src/data/storyMap.ts so a\n" +
+      "Node script can import it; the component re-exports all three names, so no\n" +
+      "importer changed. `x` and `y` are normalised 0..1 and `r` is a radius in\n" +
+      "the same units the React canvas uses at its own scale — multiply by the\n" +
+      "drawing surface, do not treat either as pixels.\n" +
+      "\n" +
+      "`target` is \"chat\", a \"#hash\", or an external URL. The hash forms are\n" +
+      "\"#top\", \"#work\", \"#project/<slug>\" and \"#<section>\"; classifying it is the\n" +
+      "screen's job, the same single place React classifies it.",
+    vals: [
+      {
+        name: "storyMapNodes",
+        type: list(obj("StoryMapNode", { id: S, label: S, sub: nul(S), x: D, y: D, r: D, color: S, target: S })),
+        value: NODES.map((n) => ({ ...n, sub: n.sub ?? null })),
+      },
+      {
+        name: "storyMapEdges",
+        doc: "Undirected wiring between node ids. Both endpoints resolve against storyMapNodes.",
+        type: list(obj("StoryMapEdge", { from: S, to: S })),
+        value: EDGES.map(([from, to]) => {
+          const ids = new Set(NODES.map((n) => n.id));
+          assert.ok(ids.has(from) && ids.has(to), `storyMap: edge ${from}-${to} names a node that does not exist`);
+          return { from, to };
+        }),
+      },
+    ],
+  },
+
+  {
+    out: "CvExcelsiorData.kt",
+    source: "src/data/excelsior.ts, src/data/excelsiorMarks.ts",
+    note:
+      "The reader ships no bitmaps. Page images stream from the live site at\n" +
+      "/excelsior/pages/<year>/p<NNN>.webp, NNN zero-padded to three — the same\n" +
+      "path src/data/excelsior.ts builds, kept as a rule rather than 396 emitted\n" +
+      "strings. webp on purpose: skiko has no AVIF decoder.\n" +
+      "\n" +
+      "`page` on a mark is the PDF page index the reader addresses, which is NOT\n" +
+      "always the number printed on the page: 2019 and 2021 print at offset 0,\n" +
+      "2020 prints two lower. Every one was verified by opening the rendered\n" +
+      "page, because the PDFs carry no text layer.",
+    vals: [
+      {
+        name: "excelsiorEditions",
+        doc: "`pages` is the page count; `source` is MANIT's own PDF, the canonical copy this was rendered from.",
+        type: list(obj("ExcelsiorEdition", { year: S, pages: I, source: S })),
+        value: excelsiorEditions,
+      },
+      {
+        name: "excelsiorMarks",
+        doc: "Hand-curated deep links into the reader. `kind` is wrote | about | credit. `readSlug` resolves against printedPieces, and is null for a mark with no readable version.",
+        type: list(obj("ExcelsiorMark", { year: S, page: I, label: S, note: S, kind: S, readSlug: nul(S) })),
+        value: excelsiorMarks.map((m) => {
+          // The two corpora are curated apart, so the cross-link is checked
+          // here rather than discovered as a dead tap on the reader.
+          assert.ok(["wrote", "about", "credit"].includes(m.kind), `excelsiorMarks: ${m.label} has kind "${m.kind}"`);
+          const known = excelsiorEditions.some((e) => e.year === m.year);
+          assert.ok(known, `excelsiorMarks: ${m.label} is in ${m.year}, which is not an edition`);
+          if (m.readSlug) {
+            const hit = printedPieces.some((p) => p.slug === m.readSlug);
+            assert.ok(hit, `excelsiorMarks: ${m.label} reads /read/${m.readSlug}, which is not in archiveText.ts`);
+          }
+          return { ...m, readSlug: m.readSlug ?? null };
+        }),
+      },
     ],
   },
 ];
