@@ -1,0 +1,75 @@
+name: Refresh the Compose twin
+
+# Rebuilds cv-siddharth-kmp's Wasm distribution, syncs it into
+# public/portfolio-app (the live demo /project/portfolio embeds), re-derives the
+# twin's figures into repoStats.ts, and commits any drift.
+#
+# WHY THIS EXISTS. The embedded demo was a hand copy with no script behind it.
+# On 2026-09-01 its .wasm files were dated 13 August: nineteen days and thirteen
+# ported surfaces stale, so the page advertising the twin was booting a build
+# with seven routes while the twin had twenty. Nothing in this repo could see it,
+# because a stale binary serves perfectly and a hand-kept number reads fine.
+#
+# Same contract refresh-media.yml already uses for the app repos: pull daily,
+# commit the drift, no manual poke.
+on:
+  schedule:
+    - cron: '41 5 * * *'   # daily 05:41 UTC, before refresh-media at 06:17
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-twin
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The twin is a separate PUBLIC repo, checked out as a sibling because
+      # that is the layout scripts/sync-twin.mjs and gen-repo-stats.mjs both
+      # assume (../cv-siddharth-kmp). Neither fails when it is absent, which is
+      # what keeps a local build offline-safe.
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/cv-siddharth-kmp
+          path: cv-siddharth-kmp-checkout
+      - name: Put the twin where the scripts expect it
+        run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - run: npm ci
+
+      - name: Rebuild and sync the embedded demo
+        run: node scripts/sync-twin.mjs
+
+      # Re-derives kotlinLines, kotlinFiles and the four toolchain versions off
+      # the twin's own tree. profile.ts interpolates them, so the page cannot
+      # quote a version the build stopped using.
+      - name: Re-derive the twin's figures
+        run: npm run gen:repo-stats
+
+      # The same guard CI runs on a push. If a generator and its committed
+      # artifact disagree after all of the above, that is a defect worth failing
+      # on rather than committing over.
+      - name: Generated artifacts match their generators
+        run: npm run check:generated
+
+      - name: Commit if changed
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/portfolio-app src/data/repoStats.ts
+          if git diff --cached --quiet; then
+            echo "The embedded twin is already current."
+          else
+            git commit -m "chore: refresh the embedded Compose twin and its figures"
+            git push
+          fi

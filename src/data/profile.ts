@@ -1,6 +1,7 @@
 
 import { providerCount, upstreamStars } from "./hiresignal.ts";
 import { repoStats } from "./repoStats.ts";
+import { surfaces } from "./surfaces.ts";
 import { fleetStats } from "./store.ts";
 import { writing } from "./writing.ts";
 
@@ -1370,7 +1371,7 @@ export const projects: Project[] = [
         },
         {
           heading: "The Compose Multiplatform twin",
-          body: "16,180 lines of Kotlin across 44 files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. Deliberately bleeding edge: Kotlin 2.4.20-Beta1, Compose Multiplatform 1.12.0-beta02, AGP 9.4.0-alpha04, Gradle 9.7-milestone-2, every version the newest published including pre-release. The question it exists to answer is where the edge actually is.",
+          body: `${repoStats.kotlinLines.toLocaleString("en-US")} lines of hand-written Kotlin across ${repoStats.kotlinFiles} files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. The corpora it renders are generated into Kotlin from this repo's own data rather than transcribed, so the two versions cannot disagree about a number. Deliberately bleeding edge: Kotlin ${repoStats.kotlin}, Compose Multiplatform ${repoStats.compose}, AGP ${repoStats.agp}, Gradle ${repoStats.gradle}, every version the newest published including pre-release. The question it exists to answer is where the edge actually is.`,
         },
         {
           heading: "What the CMP build refuses to depend on",
@@ -1381,22 +1382,28 @@ export const projects: Project[] = [
           body: "The CMP port is an experiment and is described as one. Compose Multiplatform on Wasm reaches further than most people expect and still costs something real in bundle size and first paint against a React build that was tuned for exactly this. Both versions exist here so the trade is visible rather than argued.",
         },
       ],
-      // Every figure below is measured off this repo (or the twin's), not recalled.
-      // Re-derive them with, in order:
-      //   node -e "..." over docs/screenshots/CAPTURED.json   → 19 routes
-      //   (cv-siddharth-kmp) find . -name '*.kt' -not -path '*/build/*' | xargs wc -l → 16,180
-      //   du -sk public/portfolio-app                         → 15,048 KB = 14.7 MB
+      // NOTHING BELOW IS HAND-KEPT ANY MORE, and the history is the argument.
       //
-      // The test counts are NOT on that list any more. They were, and the
-      // ritual is exactly why they read 619 tests / 46 files against an actual
-      // 777 / 67: a documented manual step is still a hand-kept number, and
-      // this one changes on nearly every commit. It comes from repoStats.ts
-      // now, and the label is interpolated alongside the value because a stale
-      // file count is no better than a stale test count.
+      // This comment used to list shell commands to re-derive these figures by
+      // hand, while also explaining that the test counts had been taken OFF that
+      // list because "a documented manual step is still a hand-kept number" and
+      // had drifted to 619/46 against an actual 777/67.
+      //
+      // The twin's figures then did the same thing, one release later: measured
+      // 2026-09-01 this block claimed 16,180 lines across 44 files against a real
+      // 31,479 across 63, and named four toolchain versions that had all moved
+      // on. A ritual that had already failed once was left in place for the
+      // numbers it had not failed on yet.
+      //
+      // So they come from repoStats.ts, which gen-repo-stats.mjs derives from
+      // the twin's own tree, and check-generated.mjs fails CI if the committed
+      // file and the generator disagree. The route count is derived from the
+      // route registry rather than a capture manifest, and the wasm size from
+      // the directory that is actually served.
       metrics: [
-        { value: "19", label: "routes · every one captured" },
+        { value: String(surfaces.length), label: "surfaces · every one on the wall" },
         { value: String(repoStats.tests), label: `unit tests · ${repoStats.testFiles} files` },
-        { value: "16.2k", label: "lines of Kotlin · the CMP twin" },
+        { value: `${(repoStats.kotlinLines / 1000).toFixed(1)}k`, label: "lines of Kotlin · the CMP twin" },
         { value: "14.7 MB", label: "the Wasm twin's honest cost" },
       ],
       techStack: [
