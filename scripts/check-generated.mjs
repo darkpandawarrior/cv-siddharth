@@ -41,10 +41,30 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const KMP = join(root, "..", "cv-siddharth-kmp");
 
+// ORDER IS LOAD-BEARING, and this list got it wrong on its first run. These
+// generators are not independent: gen-kotlin-data reads the corpora the others
+// write, so running it first emits Kotlin from a stale source and the check then
+// fails on an artifact it just produced itself. package.json's prebuild already
+// encodes the right order and this mirrors it: corpora first, the cross-repo
+// emitter last.
 const DETERMINISTIC = [
   "gen-galleries.mjs",
   "gen-compare-sets.mjs",
   "gen-ops.mjs",
+  // Added 2026-09-01 after checking each empirically rather than by reading it:
+  // run the generator three times and watch what settles. All five moved on the
+  // first run and were byte-identical on the second and third, which is the
+  // signature of a STALE artifact rather than a churning generator. Two of the
+  // five were carrying real drift at the time, which is the argument for the
+  // whole list: archiveText.ts still said `Episode 1 — "Nidra" Thama` after the
+  // source had already retired that dash, and repoStats.ts said 1036 tests
+  // against a suite of 1037.
+  "gen-archive-text.mjs",
+  "gen-excelsior.mjs",
+  "gen-repo-stats.mjs",
+  "gen-loopdown.mjs",
+  "gen-anthology.mjs",
+  // Last, always: it reads everything above and writes into the other repo.
   "gen-kotlin-data.mjs",
 ];
 
