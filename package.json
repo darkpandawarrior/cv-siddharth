@@ -20,8 +20,8 @@
     "gen:images": "node scripts/gen-images.mjs",
     "showcase": "node scripts/rebuild-showcase.mjs",
     "refresh": "node scripts/refresh.mjs",
-    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-anthology-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-repo-stats.mjs && node scripts/gen-ops.mjs && node scripts/gen-images.mjs",
-    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-anthology-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-repo-stats.mjs && node scripts/gen-ops.mjs && node scripts/gen-images.mjs",
+    "predev": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-anthology-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-repo-stats.mjs && node scripts/gen-ops.mjs && node scripts/gen-kotlin-data.mjs && node scripts/gen-images.mjs",
+    "prebuild": "node scripts/gen-galleries.mjs && node scripts/gen-compare-sets.mjs && node scripts/gen-loopdown.mjs && node scripts/gen-anthology.mjs && node scripts/gen-timeline.mjs && node scripts/gen-feed.mjs && node scripts/gen-anthology-feed.mjs && node scripts/gen-sitemap.mjs && node scripts/gen-system-prompt.mjs && node scripts/gen-world-plate.mjs && node scripts/gen-repo-stats.mjs && node scripts/gen-ops.mjs && node scripts/gen-kotlin-data.mjs && node scripts/gen-images.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4173 --strictPort",
@@ -42,7 +42,8 @@
     "gen:timeline": "node scripts/gen-timeline.mjs",
     "gen:world-plate": "node scripts/gen-world-plate.mjs",
     "gen:repo-stats": "node scripts/gen-repo-stats.mjs",
-    "gen:ops": "node scripts/gen-ops.mjs"
+    "gen:ops": "node scripts/gen-ops.mjs",
+    "gen:kotlin": "node scripts/gen-kotlin-data.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
