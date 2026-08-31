@@ -39,3 +39,12 @@ jobs:
       - name: Unit tests
         if: ${{ !cancelled() }}
         run: npm run test
+
+      # A committed generated artifact that disagrees with its generator compiles
+      # perfectly right up until someone regenerates it. That is not theoretical
+      # here: a stale CvChessData.kt broke the Compose twin with 159 errors while
+      # both repos' CI was green. Deterministic generators only; the live-source
+      # ones are policed by the dated stamps in freshnessSla.ts instead.
+      - name: Generated artifacts match their generators
+        if: ${{ !cancelled() }}
+        run: npm run check:generated
