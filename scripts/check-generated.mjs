@@ -30,6 +30,14 @@
 //     SHELF_DRIVER_REPO pointing at two private checkouts, so it cannot run on
 //     a CI box at all. It looked deterministic only because an early version of
 //     this check swallowed its exit code.
+//   gen-excelsior.mjs was listed here in #59 and failed on CI every run after,
+//     which is how it was found: its PDF cache is .gitignore'd, so on a runner
+//     the cache is always empty and it curls three PDFs off flip.manit.ac.in
+//     before it can count a page. That is a LIVE SOURCE, and the rule at the
+//     top of this comment already excludes those — it was classified by running
+//     it on a laptop where the cache and poppler both happened to exist. The
+//     committed pages under public/excelsior/pages are tracked and stable; it
+//     is the fetch, not the artifact, that cannot be reproduced.
 //
 // Adding a generator forces the choice: deterministic goes here, live gets an
 // SLA entry. Neither is a default, which is the point.
@@ -60,7 +68,6 @@ const DETERMINISTIC = [
   // source had already retired that dash, and repoStats.ts said 1036 tests
   // against a suite of 1037.
   "gen-archive-text.mjs",
-  "gen-excelsior.mjs",
   "gen-repo-stats.mjs",
   "gen-loopdown.mjs",
   "gen-anthology.mjs",

@@ -40,17 +40,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run test
 
-      # gen-excelsior.mjs joined the deterministic set in #59 and has failed
-      # here on every run since, because it shells out to `pdfinfo` for the page
-      # count BEFORE it reaches its own "already rendered, skipping" branch —
-      # and poppler is not on the runner. All 396 pages are committed, so the
-      # step does no rendering; it just needs the tool to count. Installed here
-      # rather than dropped from the set, because the artifact really is
-      # deterministic from committed inputs. The check has never actually run.
-      - name: poppler, for gen-excelsior's page count
-        if: ${{ !cancelled() }}
-        run: sudo apt-get install -y --no-install-recommends poppler-utils
-
       # A committed generated artifact that disagrees with its generator compiles
       # perfectly right up until someone regenerates it. That is not theoretical
       # here: a stale CvChessData.kt broke the Compose twin with 159 errors while
