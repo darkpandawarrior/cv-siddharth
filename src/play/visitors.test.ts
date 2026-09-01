@@ -17,6 +17,7 @@ import {
   writeVisitor,
   zonePlace,
   zoneRegion,
+  UNPLACEABLE_REGION,
   type VisitorLedger,
   type VisitorRecord,
 } from "./visitors.ts";
@@ -236,6 +237,17 @@ describe("zone labelling", () => {
   it("says Americas, because 'America' as a region name reads as one country", () => {
     expect(zoneRegion("America/Sao_Paulo")).toBe("Americas");
     expect(zoneRegion("Australia/Perth")).toBe("Australia");
+  });
+
+  it("refuses to turn a zone with no place in it into a continent", () => {
+    // "UTC" is what every headless browser and CI runner reports, and it passes
+    // isPlausibleZone, so it reaches /pulse's world section as a real tally. Its
+    // first segment is itself, which drew it as its own coloured region under a
+    // heading that says "Where in the world".
+    expect(zoneRegion("UTC")).toBe(UNPLACEABLE_REGION);
+    expect(zoneRegion("Zulu")).toBe(UNPLACEABLE_REGION);
+    // Still a place when there is one to name.
+    expect(zoneRegion("Etc/GMT+5")).toBe("Etc");
   });
 
   it("accepts the shapes Intl actually emits and refuses the rest", () => {

@@ -273,6 +273,57 @@ html.resume-mode body::before {
   }
 }
 
+/* THE ROOM PREVIEWS.
+ *
+ * Eight rooms behind eight lucide icons is eight blind clicks, so each card now
+ * leads with the capture of the room itself. Desaturated at rest because eight
+ * full-colour screenshots at once read as eight competing posters rather than
+ * one grid; hover or focus brings the real colours back, which is also the
+ * cheapest way to say "this is a picture of a live thing".
+ *
+ * :focus-within rather than :hover alone — the whole card is one <Link>, so a
+ * keyboard visitor arrives at it with no pointer anywhere near it, and
+ * :focus-within matches the focused element itself, not only its descendants.
+ */
+.playground-shot {
+  filter: grayscale(45%) brightness(0.85);
+  transition: filter var(--dur-base) var(--ease-out-quart);
+}
+
+/* Where there is no hover there is no reveal to earn the rest state back, so a
+   touch visitor has to be able to read the preview as it lands.
+
+   `(hover: none)`, not a width. This was `max-width: 39.99rem`, which asks the
+   wrong question and answered it wrong for every tablet: iPad Mini at 768px,
+   Galaxy Tab S4 at 712px and an iPad in landscape at 1080px all report
+   `(hover: none)` and all sat in the full grayscale(45%) rest state with no
+   pointer to lift it. The query subsumes the phone case rather than adding to
+   it. */
+@media (hover: none) {
+  .playground-shot {
+    filter: grayscale(35%) brightness(0.9);
+  }
+}
+
+.playground-card:hover .playground-shot,
+.playground-card:focus-within .playground-shot {
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playground-shot {
+    transition: none;
+  }
+  /* The lift was the half of this card's hover feedback nobody had guarded —
+     the block above only ever silenced the entrance keyframe. `translate`, not
+     `transform`: Tailwind v4 compiles `hover:-translate-y-1` to the standalone
+     `translate` property (verified in tailwindcss/dist/lib.js), so a
+     `transform: none` here would cancel nothing. */
+  .playground-card:hover {
+    translate: none;
+  }
+}
+
 /* Fluid section rhythm — swap in for fixed py-20 where sections want to breathe
    with viewport size instead of a constant 80px top/bottom. */
 .section-y {
@@ -3101,6 +3152,64 @@ html.resume-mode .palette-trigger {
   content: attr(data-index);
 }
 
+/* /pulse — the two live cues, and the one-shot a tick earns.
+
+   Position is load-bearing. src/data/ops.test.ts slices this file from the
+   comment that opens the /ops block immediately below and asserts exactly one
+   @keyframes rule in that slice. Appended to the end of the file instead,
+   these three would land inside that slice and turn an unrelated board's test
+   red from a /pulse change. Nothing animated may go below this point.
+
+   Every rule pairs with a reduced-motion substitute rather than a bare
+   `animation: none` — the .ops-pulse convention. A visitor who asked for less
+   motion still has to be able to tell which bar is today's. */
+@keyframes pulse-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* The masthead dot. Deliberately the same 1.6s cadence as the /ops LED below,
+   so the two live things on this site breathe at one rate rather than two. */
+.pulse-live-dot { animation: pulse-breathe 1.6s ease-in-out infinite; }
+
+/* Today's bar in the 60-day trace. A glow rather than an opacity or colour
+   animation, because DayBars computes both of those from the day's own count
+   and a CSS animation outranks the inline style carrying them — breathing the
+   bar's opacity would overwrite the number it encodes. box-shadow paints
+   outside the border box without contributing to layout or scroll width, so
+   the 390px overflow check is unaffected by it.
+
+   That only works because DayBars keeps THIS bar at `opacity: 1` and folds its
+   alpha into the fill instead (see the comment on that branch). The `opacity`
+   property composites the whole element, so the earlier version multiplied the
+   glow below — and the reduced-motion outline further down — by the day's own
+   count, which on a day with no visits meant 0.16 and no cue at all. */
+@keyframes pulse-edge-glow {
+  0%, 100% { box-shadow: 0 0 3px 0 color-mix(in srgb, var(--color-accent2) 50%, transparent); }
+  50% { box-shadow: 0 0 9px 2px color-mix(in srgb, var(--color-accent2) 75%, transparent); }
+}
+.pulse-edge { animation: pulse-edge-glow 1.6s ease-in-out infinite; }
+
+/* The headline acknowledging that its number just moved. One shot; it restarts
+   because Pulse.tsx remounts the figure on each new delta rather than toggling
+   a class, which is the only way to replay a CSS animation without a reflow
+   hack. brightness, not scale: the figure sits on a baseline with two more
+   words, and scaling it would nudge them. */
+@keyframes pulse-tick {
+  0% { filter: brightness(1); }
+  30% { filter: brightness(1.7); }
+  100% { filter: brightness(1); }
+}
+.pulse-flash { animation: pulse-tick 600ms var(--ease-out-quart); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-live-dot { animation: none; outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  /* The glow is how today's bar is picked out of sixty. With the animation off
+     it has to become a static mark, not nothing. */
+  .pulse-edge { animation: none; outline: 1px solid var(--color-accent2); }
+  .pulse-flash { animation: none; }
+}
+
 /* /ops — the board's grammar, and its one piece of motion.
    Four fields in a fixed order (LED, SUBJECT, STATE, VERIFIED) and now exactly
    four grid tracks, so every block reads as one table with rules between it, at
@@ -3328,4 +3437,265 @@ a.ops-verified:hover { color: var(--color-accent); }
    6% keeps --color-muted on it at ~5.8:1; do not raise it without measuring. */
 .ops-row[data-state="BROKEN"] {
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+}
+
+/* ── /ops, the summary layer ──────────────────────────────────────────────
+   Everything below is additive to the grammar above: nothing is deleted, no
+   row is filtered, and nothing here animates. The whole point of the layer is
+   that ~145 rows of near-identical text made the board's own argument hard to
+   read in the first three seconds, and the fix for that is a shape you can
+   look at, not a row you can no longer reach.
+
+   NOTHING in this section may add a second keyframes rule or a transition on
+   a chart element. Only BROKEN moves, and ops.test.ts counts the keyframes in
+   this slice of the file and expects exactly the one the LED already has —
+   which is also why the word above is not spelled with its at-sign. */
+
+/* The verdict sentence. The only prose in the banner, and the largest type in
+   it, because "18" is a number a reader has to interpret and "nothing is
+   broken" is not. Deliberately NOT .ops-banner__line's muted 11px. */
+.ops-verdict {
+  margin: 0.4rem 0 0.35rem;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+/* The same worst-state channel the banner's bottom edge already carries, so
+   the sentence and the rule under it can never disagree. */
+.ops-verdict[data-worst="BROKEN"] { color: var(--color-danger); }
+
+/* A figure is an extension of the rule line above it, not a card. Same 0.9rem
+   gutter as .ops-block so the console still reads as one table. */
+.ops-figure { margin: 0; padding: 0 0.9rem; }
+.ops-figure--wide { padding: 0.9rem; }
+.ops-figure__cap {
+  margin-top: 0.4rem;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+.ops-figure__cap b { color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+/* The board census. One bar, three segments, severity order. */
+.ops-census {
+  display: flex;
+  height: 14px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--color-line);
+}
+.ops-census__seg { display: block; height: 100%; }
+
+/* The disclosure. A block folds only when it holds nothing BROKEN, and every
+   non-OK row it contains is already pinned in the rail above — so a closed
+   block can only ever be hiding rows that are also on screen. It is closed at
+   every width, on desktop and phone alike: this is one affordance, not a
+   responsive hide, and this file's own rule is that nothing on /ops is ever
+   display:none to save space. */
+.ops-details { margin-top: 0.2rem; }
+.ops-summary {
+  cursor: pointer;
+  padding: 0.35rem 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.ops-summary:hover { color: var(--color-accent); }
+.ops-summary:focus-visible { outline: 2px solid var(--color-text); outline-offset: 2px; }
+
+/* The runway. One lane per thing with a declared deadline, drawn as the share
+   of that deadline already spent — per-lane normalisation, so a 21-day file
+   and a 45-day file at the same mark are equally worried, not equally old. */
+.ops-runwaySection { padding: 0 0.9rem 0.75rem; }
+.ops-runway {
+  /* Named once, used by both the lane rows and the scale strip above them, so
+     the gridline labels can never drift out of alignment with the tracks. */
+  --runway-cols: minmax(5rem, 12rem) minmax(0, 1fr) 8.5rem;
+  padding: 0;
+}
+.ops-runway__scale,
+.ops-runway__lane {
+  display: grid;
+  grid-template-columns: var(--runway-cols);
+  align-items: center;
+  gap: 0.6rem;
+}
+.ops-runway__scale { font-size: 0.625rem; color: var(--color-muted); }
+/* Placed by column rather than padded out with empty spacer spans, so the
+   mobile rule below can move it to column 1 without touching the markup. */
+.ops-runway__scaleTrack { grid-column: 2; position: relative; display: block; height: 1.1rem; }
+.ops-runway__gridlabel {
+  position: absolute;
+  bottom: 0;
+  /* Right-anchored so a label ENDS on the line it names, and so the one at
+     100% cannot overhang the viewport — e2e/overflow.spec.ts fails any element
+     whose right edge passes clientWidth at 390px. */
+  transform: translateX(-100%);
+  padding-right: 0.3rem;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Six lanes of height, whether or not six arrive: five come from committed data
+   (the perimeter files) and the published index only appears once /api/ops
+   resolves. /ops is already this site's worst CLS offender at a measured 0.162
+   against a 0.25 error-severity ceiling, so a strip that grows a row when a
+   fetch lands is a measurable regression rather than a cosmetic one.
+
+   Both numbers here are MEASURED at the full six lanes, not derived from a
+   per-lane guess — 137.25px at 1440 and 293.81px at 390, with a few px of
+   headroom each. They were 11rem/19rem when a duplicate "Play Store fleet
+   sweep" lane made seven: the mobile figure under-reserved the real 342.78px
+   by 39px and shifted the entire board below it on every load, which is the
+   exact regression this rule exists to prevent. Re-measure both if a lane is
+   ever added or a lane name grows long enough to wrap. */
+.ops-runway__lanes { min-height: 8.75rem; }
+.ops-runway__lane {
+  padding: 0.2rem 0;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.ops-runway__lane:focus-visible { outline: 2px solid var(--color-text); outline-offset: 2px; }
+.ops-runway__name {
+  font-size: 0.6875rem;
+  color: var(--color-text);
+  overflow-wrap: break-word;
+}
+.ops-runway__lane:hover .ops-runway__name { color: var(--color-accent); }
+.ops-runway__track {
+  display: block;
+  width: 100%;
+  height: 10px;
+  border-radius: 2px;
+  /* preserveAspectRatio="none" stretches the viewBox to whatever width the
+     column gets, which is exactly what a percentage-of-SLA axis wants; the
+     gridline carries vectorEffect so the stretch cannot thin it. */
+}
+.ops-runway__readout {
+  font-size: 0.6875rem;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 40rem) {
+  /* Lanes stack rather than shrink — the same move .ops-row already makes at
+     this breakpoint, and for the same reason: a narrower track would quietly
+     compress the one distance this figure exists to show.
+
+     The scale strip follows the track to column 1 instead of being dropped.
+     `display: none` here would delete the DEGRADED boundary's own label on
+     phones, which is the same data-loss-dressed-as-responsiveness this file
+     already calls out on .ops-row — and on this figure it would be deleting
+     the label for the exact line the figure exists to draw. */
+  .ops-runway__scale,
+  .ops-runway__lane { grid-template-columns: minmax(0, 1fr) 8.5rem; }
+  .ops-runway__scaleTrack { grid-column: 1; }
+  .ops-runway__name { grid-column: 1 / -1; }
+  /* 300px against a measured 293.81px for six lanes. A mobile lane is ~49px,
+     not ~23px, because the name takes its own grid row at this width. */
+  .ops-runway__lanes { min-height: 18.75rem; }
+}
+
+/* Horizontal bars: name, track, value. Used by leverage, the fleet histogram,
+   drift and the control tower, so the four figures share one grammar the way
+   the four row fields already do. No transition on the fill — a bar that grows
+   into place is the second animated thing on a page that allows one. */
+.ops-bars__row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 13rem) minmax(0, 1fr) 9.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.12rem 0;
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+.ops-bars__name { color: var(--color-text); overflow-wrap: break-word; }
+.ops-bars__track {
+  display: block;
+  height: 8px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-line) 60%, transparent);
+  overflow: hidden;
+}
+.ops-bars__fill {
+  display: block;
+  height: 100%;
+  /* A row with a real, nonzero count must never render as an empty track: the
+     ten zero-module plugins ARE the finding here, so the difference between
+     "zero" and "one" has to survive at every width. Same intent as Pulse.tsx's
+     Bar, different unit — that one floors at 3 PERCENT because its track is
+     always the full column; these bars share a column with a name and a value,
+     so the floor is in px. */
+  min-width: 4px;
+}
+/* The ceiling marker sits in the track column and is right-anchored, so it
+   ends on the line it names and cannot push past the viewport at 390px. */
+.ops-bars__row--scale { padding-bottom: 0.2rem; }
+.ops-bars__ceiling {
+  display: block;
+  text-align: right;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  overflow-wrap: break-word;
+}
+.ops-bars__value { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 40rem) {
+  /* Label above its bar, value beside it — the same stack .ops-row and the
+     runway already make here. Nothing is dropped. */
+  .ops-bars__row { grid-template-columns: minmax(0, 1fr) 9.5rem; }
+  .ops-bars__name { grid-column: 1 / -1; }
+  .ops-bars__row--scale > span:first-child { display: none; }
+  .ops-bars__ceiling { grid-column: 1 / -1; }
+}
+
+/* Height for five workflows, held whether or not the Actions API answers.
+   These rows populate after fetch("/api/ops") on the route lighthouserc.json
+   already measures at 0.162 CLS against an error-severity 0.25 ceiling, so
+   the reservation is a budget item rather than a nicety. */
+.ops-bars--tower { min-height: 6.4rem; }
+
+/* Time to resolution. Eleven points is not a distribution: no jitter, no
+   beeswarm, and the incidents fixed on the day they were found are one dot
+   carrying a count. */
+.ops-mttr { padding: 0.4rem 6px 0; }
+.ops-mttr__track {
+  position: relative;
+  height: 12px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-line) 60%, transparent);
+}
+.ops-mttr__dot {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  /* Centred on its value, which puts half a dot past each end of the track —
+     hence the 6px gutter on .ops-mttr, so the dot at the maximum cannot push
+     the figure past the viewport at 390px. */
+  transform: translateX(-50%);
+  background: var(--color-signal);
+}
+.ops-mttr__dot b {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.ops-mttr__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
 }

@@ -40,7 +40,6 @@ import {
 const CHANNEL = "visitors-v1";
 
 const PLAQUE_SPAN = 30;
-const PANEL_SPAN = 60;
 const COUNT_UP_MS = 1100;
 
 /**
@@ -210,8 +209,13 @@ function prefersReducedMotion(): boolean {
 }
 
 /** Runs the number up to its value once, for the one visit that earned it.
- *  Everyone else — and anyone who asked for less motion — gets it straight. */
-function useCountUp(target: number, run: boolean): number {
+ *  Everyone else — and anyone who asked for less motion — gets it straight.
+ *
+ *  Exported for /pulse's headline. Note the effect re-runs on every `target`
+ *  change and restarts from zero: correct for a number that is fixed once
+ *  known, wrong for one that ticks, so a live caller has to drop `run` after
+ *  the first pass rather than leave it armed. */
+export function useCountUp(target: number, run: boolean): number {
   const [shown, setShown] = useState(() => (run ? 0 : target));
   useEffect(() => {
     if (!run || target <= 0 || prefersReducedMotion()) {
@@ -232,30 +236,69 @@ function useCountUp(target: number, run: boolean): number {
   return shown;
 }
 
-function DayBars({ days, className = "" }: { days: DayTally[]; className?: string }) {
+/** `liveEdge` glows today's bar, and only today's. Off by default so the
+ *  plaque's call site renders exactly as it did — the glow belongs to /pulse,
+ *  where the whole page is an argument that this thing is running right now. */
+export function DayBars({
+  days,
+  className = "",
+  liveEdge = false,
+}: {
+  days: DayTally[];
+  className?: string;
+  liveEdge?: boolean;
+}) {
   const max = Math.max(1, ...days.map((d) => d.count));
-  const today = days[days.length - 1]?.day;
+  const last = days[days.length - 1];
+  const today = last?.day;
   return (
     <div
       className={`flex items-end gap-[2px] ${className}`}
       role="img"
-      aria-label={`Visits per day over the last ${days.length} days — ${sumDays(days)} in total`}
+      /* The "N today" clause is the live edge's accessible half, so it is on the
+         same flag the glow is. The plaque on /playground shares this component
+         and its aria-label was byte-identical before liveEdge existed — the
+         prop exists precisely to keep it that way. */
+      aria-label={
+        `Visits per day over the last ${days.length} days — ${sumDays(days)} in total` +
+        (liveEdge ? `, ${last?.count ?? 0} today` : "")
+      }
     >
-      {days.map((d) => (
-        <span
-          key={d.day}
-          aria-hidden="true"
-          title={`${d.day} — ${d.count} visit${d.count === 1 ? "" : "s"}`}
-          className="min-w-0 flex-1 rounded-[1px] transition-[height] duration-700"
-          style={{
-            // Empty days keep a hairline so the axis stays readable — a gap
-            // and a quiet day should not look like the same thing.
-            height: d.count ? `${Math.max(12, (d.count / max) * 100)}%` : "6%",
-            background: d.day === today ? "var(--color-accent2)" : "var(--color-accent)",
-            opacity: d.count ? 0.35 + 0.65 * (d.count / max) : 0.16,
-          }}
-        />
-      ))}
+      {days.map((d) => {
+        // How strongly the day is drawn — its count against the busiest day.
+        const alpha = d.count ? 0.35 + 0.65 * (d.count / max) : 0.16;
+        const glowing = liveEdge && d.day === today;
+        return (
+          <span
+            key={d.day}
+            aria-hidden="true"
+            title={`${d.day} — ${d.count} visit${d.count === 1 ? "" : "s"}`}
+            className={`min-w-0 flex-1 rounded-[1px] transition-[height] duration-700 ${glowing ? "pulse-edge" : ""}`}
+            style={{
+              // Empty days keep a hairline so the axis stays readable — a gap
+              // and a quiet day should not look like the same thing.
+              height: d.count ? `${Math.max(12, (d.count / max) * 100)}%` : "6%",
+              /* The glowing bar carries its alpha IN THE FILL and stays at
+                 opacity 1; every other bar dims with the `opacity` property.
+                 Same encoding, different property, because `opacity`
+                 composites the whole element — box-shadow and outline
+                 included. The glow is how today's bar is picked out of sixty,
+                 and on a quiet day (42 of the last 60 on production had no
+                 visits at all) `opacity: 0.16` was multiplying both the glow
+                 and its reduced-motion outline substitute down to invisible.
+                 The .pulse-edge comment in index.css already explains why the
+                 cue is a box-shadow rather than an opacity animation; this is
+                 the other half of that. */
+              background: glowing
+                ? `color-mix(in srgb, var(--color-accent2) ${Math.round(alpha * 100)}%, transparent)`
+                : d.day === today
+                  ? "var(--color-accent2)"
+                  : "var(--color-accent)",
+              opacity: glowing ? 1 : alpha,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -340,61 +383,6 @@ export function VisitorPlaque() {
             </Link>
           </p>
         </div>
-      )}
-    </section>
-  );
-}
-
-/**
- * The same ledger opened up, for /pulse — where the numbers are the page
- * rather than a detail on it.
- */
-export function VisitorLedgerPanel() {
-  const ledger = useVisitorLedger();
-  const total = totalVisitors(ledger);
-  const days = recentDays(ledger, isoDay(new Date()), PANEL_SPAN);
-  const zones = topZones(ledger);
-  const visits = sumDays(days);
-
-  if (total === 0 && visits === 0) return null;
-
-  return (
-    <section className="mt-12" aria-labelledby="pulse-visitors">
-      <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
-        <h2 id="pulse-visitors" className="font-display text-lg font-bold tracking-tight">
-          Who came through
-        </h2>
-        <span className="font-mono text-[11px] text-muted">{total.toLocaleString()} in all</span>
-      </div>
-
-      <div className="kicker mt-4 flex items-baseline justify-between gap-3">
-        <span>visits · last {PANEL_SPAN} days</span>
-        <span>{visits.toLocaleString()} in the window</span>
-      </div>
-      <DayBars days={days} className="mt-2 h-16" />
-      <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted">
-        <span>{days[0]?.day}</span>
-        <span className="text-accent2">today</span>
-      </div>
-
-      {zones.length > 0 && (
-        <>
-          <p className="kicker mt-8">
-            {zones.length} time zone{zones.length === 1 ? "" : "s"}
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {zones.map((z) => (
-              <li
-                key={z.zone}
-                title={`${z.zone} — ${z.count} visitor${z.count === 1 ? "" : "s"}`}
-                className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-300"
-              >
-                {z.place}
-                <span className="font-mono text-[10px] text-muted">{z.count}</span>
-              </li>
-            ))}
-          </ul>
-        </>
       )}
     </section>
   );

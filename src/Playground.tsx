@@ -261,7 +261,7 @@ function PlaygroundInner() {
                 visible: the world is full-bleed chrome with nowhere to put a
                 title, which is exactly why RoomFrame does the same thing. */}
             <h1>The Playground — every interactive room, one street</h1>
-            <RoomGrid />
+            <RoomGrid previews={false} />
           </div>
         </main>
       ) : (
@@ -270,7 +270,8 @@ function PlaygroundInner() {
           <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
             Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a
-            small proof of the engineering the rest of the site describes. Pick one and poke it.
+            small proof of the engineering the rest of the site describes. Pick one and poke it. If you only have
+            two minutes, start here.
           </p>
           {/* The corridor, as a picture, for the visitors who will never see
               it move: no WebGL, or reduced-motion. It is baked at build time
@@ -281,8 +282,17 @@ function PlaygroundInner() {
               It sits ABOVE the room grid rather than replacing it: the grid
               is the navigation and always was. Without this the branch was a
               card list with no hint that the thing it replaces is a shape
-              worth seeing. */}
-          {!worldCapable && <CorridorPlate />}
+              worth seeing.
+
+              NO CONDITION, deliberately. This was `!worldCapable`, which asked
+              the wrong question: a visitor whose browser can run the world but
+              who chose the list anyway (or whose world just crashed) got no
+              plate at all — the majority cohort on this branch, and the one
+              most likely to wonder what they opted out of. This whole branch
+              is the `!wantsWorld` case by construction (see the ternary above),
+              so `!wantsWorld && …` here would be a condition that is always
+              true; the honest version is no condition and this note. */}
+          <CorridorPlate />
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
@@ -308,10 +318,46 @@ function PlaygroundInner() {
 
           <DeferredVisitorPlaque />
 
+          {/* ponytail: the spec's visit-chip flash — a one-shot highlight when
+              a card's counter ticks — is deliberately not built. It would be
+              the only motion this redesign ADDS, on a page that already has the
+              card entrance keyframe and a reduced-motion branch guarding it,
+              and the chip it would animate is below the fold on every card but
+              the lead. Build it if the counter ever moves fast enough that a
+              visitor could watch it happen. */}
           <RoomGrid />
 
-          <DeferredSandbox />
-          <DeferredGuestWall />
+          {/* The two shared toys under one heading, because the thing they
+              have in common is not "toy" — it is that what you do in them
+              outlives your visit. They shipped as two unrelated sections and
+              read as a scrap drawer at the bottom of the page.
+
+              Their own <h2>s stay exactly as they are: this heading is their
+              sibling in level, not their parent, which keeps the document at
+              h1 → h2 → h3 with nothing skipped (heading-order is scored
+              moderate and e2e/a11y.spec.ts fails on anything above minor).
+              Restyling either section's internals would have put the visitor
+              plaque guards in e2e/visitors.spec.ts at risk for no gain. */}
+          {/* `[&>section:first-of-type]:mt-8` rather than editing Sandbox: both
+              inner sections carry their own `mt-16`, which was the right gap
+              when they were top-level siblings and is a 64px hole between this
+              heading and the first thing it heads. The second section keeps its
+              full gap — it is still separating two things. */}
+          <section aria-labelledby="extras-h" className="mt-16 [&>section:first-of-type]:mt-8">
+            <h2 id="extras-h" className="font-display text-lg font-bold tracking-tight">
+              What you leave behind
+            </h2>
+            {/* Not .kicker. That is a label style — 11px mono, uppercased,
+                0.1em tracked — and it is right for the four-word band notes
+                above ("REAL PROGRAMS, IN THE PAGE"). This is two sentences,
+                and it rendered as two full lines of letterspaced caps. */}
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-400">
+              Two shared patches of this page. Move a tile or leave a note and it stays that way for whoever opens
+              this next.
+            </p>
+            <DeferredSandbox />
+            <DeferredGuestWall />
+          </section>
 
           <p className="mt-10 font-mono text-[11px] text-muted">
             tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}

@@ -20,11 +20,21 @@ import { corridorPlateMeta } from "./corridorPlate.ts";
  *
  * Alt text names the four strands and the date range — description, not
  * metaphor exposition (§11's own line, and this world's project law 1).
+ *
+ * It used to end "...because this browser cannot run the interactive 3D
+ * version", which was true for every visitor it had while the call site was
+ * gated on `!worldCapable`. It is no longer: the plate now renders for the
+ * whole list branch, and the largest cohort there is someone whose browser
+ * runs WebGL perfectly well and chose the list anyway. Telling that reader
+ * their browser cannot do something it can is a false claim in the one string
+ * a screen-reader user is given instead of the image — on a site whose whole
+ * argument is that a claim has to stay true. The alt now describes what the
+ * picture IS and leaves the reason to the branch that actually knows it.
  */
 export function CorridorPlate(): JSX.Element {
   const meta = corridorPlateMeta;
   const laneNames = meta.lanes.map((l) => l.label).join(", ");
-  const alt = `A terrain chart of four tracked strands of work — ${laneNames} — from ${meta.from} to ${meta.to}, rendered as a static image because this browser cannot run the interactive 3D version.`;
+  const alt = `A terrain chart of four tracked strands of work — ${laneNames} — from ${meta.from} to ${meta.to}, baked as a static image from the same heightfield the drivable 3D version is built on.`;
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>

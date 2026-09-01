@@ -207,4 +207,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-08-31";
+export const opsGeneratedAt = "2026-09-01";
