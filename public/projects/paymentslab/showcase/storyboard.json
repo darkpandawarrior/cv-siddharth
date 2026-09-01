@@ -1,6 +1,7 @@
 {
   "slug": "paymentslab",
   "voice": "Karen",
+  "piperVoice": "en_GB-jenny_dioco-medium",
   "shots": [
     { "src": "home_screen_dashboard.png", "caption": "71 gateways, one abstraction", "narration": "One abstraction sits behind seventy-one payment gateways, and this dashboard tracks every one of them live.", "seconds": 5 },
     { "src": "lab_home_screen_catalog.png", "caption": "Every gateway, an honest status", "narration": "Every provider carries its real status — sandbox-ready, mock mode, or KYC-gated — nothing here is faked.", "seconds": 4 },

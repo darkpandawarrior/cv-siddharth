@@ -1,37 +1,37 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:07.541
+00:00:00.000 --> 00:00:07.926
 This is Mileway — an offline-first mileage and expense tracker, one Kotlin codebase, forty-five modules.
 
-00:00:07.541 --> 00:00:14.001
+00:00:07.926 --> 00:00:14.935
 It starts like any app — sign in, or continue as a guest, no account required to explore.
 
-00:00:14.001 --> 00:00:21.683
+00:00:14.935 --> 00:00:23.418
 The home screen surfaces mileage, cards and quick actions, reading straight from Room on-device — no network required.
 
-00:00:21.683 --> 00:00:25.127
+00:00:23.418 --> 00:00:27.246
 Tap start, and the location engine takes over.
 
-00:00:25.127 --> 00:00:34.370
+00:00:27.246 --> 00:00:37.413
 GPS fixes and accelerometer data fuse in real time, with spike detection filtering jitter so the route stays accurate even when the signal doesn't.
 
-00:00:34.370 --> 00:00:42.959
+00:00:37.413 --> 00:00:46.686
 When the trip ends, the policy engine turns distance into money — reimbursement computed from per-vehicle rate rules, instantly and offline.
 
-00:00:42.959 --> 00:00:47.549
+00:00:46.686 --> 00:00:51.965
 Expenses, receipts and vouchers live in the same offline data model.
 
-00:00:47.549 --> 00:00:53.382
+00:00:51.965 --> 00:00:58.323
 Approvals flag policy violations automatically, before a manager ever taps approve.
 
-00:00:53.382 --> 00:01:00.561
+00:00:58.323 --> 00:01:06.876
 Every submission is journaled to a durable outbox first — kill the app mid-submit, and nothing is lost or double-counted.
 
-00:01:00.561 --> 00:01:08.901
+00:01:06.876 --> 00:01:16.091
 An on-device AI assistant answers questions over your own trips and expenses — no remote model, no server, still offline.
 
-00:01:08.901 --> 00:01:15.604
+00:01:16.091 --> 00:01:23.378
 Under it all sits a plugin-composition platform — four personas reshape the entire app from one account.
 
-00:01:15.604 --> 00:01:24.941
+00:01:23.378 --> 00:01:33.092
 And the same shared Kotlin core drives the phone, the watch, and this desktop window — five platforms, one codebase, zero backend.

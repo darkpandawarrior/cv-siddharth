@@ -1,6 +1,7 @@
 {
   "slug": "mileway",
   "voice": "Samantha",
+  "piperVoice": "en_US-amy-medium",
   "shots": [
     { "src": "splash_screen.png", "caption": "One codebase. Offline-first. Zero backend.", "narration": "This is Mileway — an offline-first mileage and expense tracker, one Kotlin codebase, forty-five modules.", "seconds": 3 },
     { "src": "login_screen.png", "caption": "Sign in, or skip it entirely", "narration": "It starts like any app — sign in, or continue as a guest, no account required to explore.", "seconds": 3 },
