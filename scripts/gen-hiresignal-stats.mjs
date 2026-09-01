@@ -1,5 +1,5 @@
 // Refreshes the two fastest-drifting HireSignal numbers (merged PR count,
-// provider count) in profile.ts via targeted regex — santifer/career-ops
+// provider count) in profile.ts via targeted regex — career-ops-hq/career-ops
 // merges provider PRs regularly, so these go stale faster than anything else
 // on the site. The rest of the project card stays hand-curated prose. A fetch
 // error or a suspicious count leaves profile.ts untouched and exits 0; a DEAD
@@ -7,7 +7,7 @@
 // and then exits non-zero so `npm run refresh` says so. Nothing here runs in
 // prebuild, so neither outcome can break a deploy.
 //
-// Points at santifer/career-ops (public, the real verified upstream Siddharth
+// Points at career-ops-hq/career-ops (public, the real verified upstream Siddharth
 // contributes to) — NOT kirklazar-android/hiresignal, which is a private repo
 // owned by a third party where Siddharth is one of several collaborators.
 // That repo's PR/provider counts describe someone else's project, not his
@@ -30,7 +30,12 @@ const headers = { Accept: "application/vnd.github+json", ...(token ? { Authoriza
 
 async function prCount() {
   const res = await fetchWithTimeout(
-    "https://api.github.com/search/issues?q=repo:santifer/career-ops+type:pr+is:merged+author:darkpandawarrior",
+    // career-ops-hq, NOT the old santifer path. The repo was renamed, and the SEARCH api does
+    // not follow that redirect the way the repos api does: the old path returns total_count 0,
+    // which the suspicious-count guard below turns into "refuse to write" — so the numbers would
+    // quietly freeze at their last value while this script kept exiting 0. Verified 2026-09-02:
+    // new path 24, old path 0.
+    "https://api.github.com/search/issues?q=repo:career-ops-hq/career-ops+type:pr+is:merged+author:darkpandawarrior",
     { headers },
   );
   if (!res.ok) throw new Error(`${res.status} PR search`);
@@ -38,7 +43,7 @@ async function prCount() {
 }
 
 async function providerCount() {
-  const res = await fetchWithTimeout("https://api.github.com/repos/santifer/career-ops/contents/providers", { headers });
+  const res = await fetchWithTimeout("https://api.github.com/repos/career-ops-hq/career-ops/contents/providers", { headers });
   if (!res.ok) throw new Error(`${res.status} providers dir`);
   const list = await res.json();
   // Upstream's own convention: infra files are underscore-prefixed, provider modules aren't.
@@ -101,7 +106,13 @@ try {
   // career-ops REPOSITORY", which neither the "to the public career-ops
   // project" pattern nor the digit scan could reach.
   sub(/\d+ merged pull requests against the public career-ops repository/g, `${prs} merged pull requests against the public career-ops repository`);
-  sub(/status: "Active · \d+ PRs merged to public career-ops"/, `status: "Active · ${prs} PRs merged to public career-ops"`);
+  // The trailing clause (org membership, etc.) is captured and preserved rather than
+  // rewritten: hand-editing the status line used to kill this pattern outright, and a dead
+  // pattern freezes the PR count at whatever it last wrote while the script still exits 0.
+  sub(
+    /status: "Active · \d+ PRs merged to public career-ops(?<rest>[^"]*)"/,
+    (_m, rest) => `status: "Active · ${prs} PRs merged to public career-ops${rest}"`,
+  );
   // The single source the résumé prints, so it stops disagreeing with the rest
   // of the site by using the curated array's length instead.
   sub(/export const upstreamMergedPRs = \d+;/, `export const upstreamMergedPRs = ${prs};`);

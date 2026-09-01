@@ -43,6 +43,61 @@ const probeDur = (f) =>
   Number(run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]));
 
 const hasSay = spawnSync("which", ["say"]).status === 0;
+const hasPiper = spawnSync("which", ["piper"]).status === 0;
+
+/**
+ * Where piper keeps its voice models. Gitignored: a voice is ~61 MB of weights
+ * that anyone can re-fetch from the same URL, and the repo already refuses to
+ * carry regenerable binaries (see .gitignore's avif/webp block).
+ */
+const PIPER_DIR = join(root, ".piper-voices");
+
+/**
+ * piper's own wheel ships a broken espeak-ng-data path — it points at the
+ * absolute build directory of the machine that built it
+ * (`/Users/runner/work/piper1-gpl/...`), so a fresh install synthesises
+ * nothing and fails with "phontab: No such file or directory". Every install
+ * has to be told where the real data lives, so this looks in the two places it
+ * actually is: Homebrew on a Mac, /usr/share on a Debian runner.
+ */
+function espeakDataDir() {
+  for (const d of ["/opt/homebrew/share/espeak-ng-data", "/usr/share/espeak-ng-data", "/usr/local/share/espeak-ng-data"]) {
+    if (existsSync(d)) return d;
+  }
+  return null;
+}
+
+/**
+ * Fetch a piper voice on first use. Named `<lang>-<name>-<quality>`, which is
+ * exactly the path segment layout the model host uses, so the URL is derived
+ * rather than mapped — a new voice needs no table entry here.
+ */
+function ensurePiperVoice(voice) {
+  const onnx = join(PIPER_DIR, `${voice}.onnx`);
+  if (existsSync(onnx) && existsSync(`${onnx}.json`)) return onnx;
+  const [lang, name, quality] = voice.split("-");
+  const base = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${lang.split("_")[0]}/${lang}/${name}/${quality}`;
+  mkdirSync(PIPER_DIR, { recursive: true });
+  console.log(`[piper] fetching voice ${voice}…`);
+  run("curl", ["-sL", "--fail", "-o", onnx, `${base}/${voice}.onnx`]);
+  run("curl", ["-sL", "--fail", "-o", `${onnx}.json`, `${base}/${voice}.onnx.json`]);
+  return onnx;
+}
+
+/** One line through piper, to a wav the same ffmpeg step already handles. */
+function recordPiper(text, voice, out) {
+  const data = espeakDataDir();
+  if (!data) {
+    throw new Error("piper needs espeak-ng data — `brew install espeak-ng` (macOS) or `apt-get install -y espeak-ng-data` (Linux)");
+  }
+  const model = ensurePiperVoice(voice);
+  const r = spawnSync("piper", ["-m", model, "-f", out], {
+    input: text,
+    env: { ...process.env, ESPEAK_DATA_PATH: data, PIPER_ESPEAKNG_DATA_DIR: data },
+    encoding: "utf8",
+  });
+  if (r.status !== 0) throw new Error(`piper failed: ${(r.stderr || "").slice(0, 300)}`);
+}
 
 const CARTESIA_KEY = process.env.CARTESIA_API_KEY ?? "";
 // Pinned, not floating: `sonic-3.6` auto-updates and a voice that shifts under a

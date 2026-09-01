@@ -219,7 +219,7 @@ export function ReposShowcase() {
               ))}
             </ul>
             <a
-              href="https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior"
+              href="https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior"
               target="_blank"
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"

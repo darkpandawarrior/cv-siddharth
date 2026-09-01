@@ -16,7 +16,7 @@ import { useCanvasLoop } from "./useCanvasLoop.ts";
 // already refreshes this figure from the live GitHub API in nine other places.
 // It was a bare 62 while HireSignal's own data said 78 — the lab was
 // understating the work it exists to demonstrate.
-const TOTAL_PROVIDERS = 81;
+const TOTAL_PROVIDERS = 83;
 const NAMED_PROVIDERS = ["Greenhouse", "Ashby", "Lever"];
 // Spread evenly around the ring, whatever its size.
 const NAMED_INDEXES = [0, Math.round(TOTAL_PROVIDERS / 3), Math.round((2 * TOTAL_PROVIDERS) / 3)];

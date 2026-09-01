@@ -1192,11 +1192,11 @@ export const projects: Project[] = [
     tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
       "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "81 ATS/board providers"],
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "83 ATS/board providers"],
     highlights: [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "81 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "83 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
       `24 merged PRs to the public career-ops project (⭐${upstreamStars}): two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612). Each shipped with a reproduction and a regression test, every one publicly checkable.`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
@@ -1207,9 +1207,9 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/santifer/career-ops" },
+      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/career-ops-hq/career-ops" },
     ],
-    status: "Active · 24 PRs merged to public career-ops",
+    status: "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
     theme: {
       accent: "#3B82F6",
@@ -1250,7 +1250,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Zero tokens until an LLM is actually needed",
-          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 81 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
+          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 83 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
         },
         {
           heading: "One engine, many candidates",
@@ -1264,20 +1264,20 @@ export const projects: Project[] = [
       metrics: [
         { value: "25", label: "KMP modules · 5 targets" },
         { value: "45k", label: "lines of Kotlin · 543 files" },
-        { value: "81", label: "ATS & job-board providers" },
+        { value: "83", label: "ATS & job-board providers" },
         { value: "24", label: "PRs merged upstream" },
       ],
       techStack: [
         { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
         { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
         { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "hiresignal:// deep links", "OpenAPI contract"] },
-        { group: "Open-source engine (career-ops)", items: ["Node.js", "81 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
+        { group: "Open-source engine (career-ops)", items: ["Node.js", "83 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
       ],
       extraLinks: [
-        { label: "PR: agent-inbox feature", url: "https://github.com/santifer/career-ops/pull/1472" },
-        { label: "PR: dashboard Status-cell fix", url: "https://github.com/santifer/career-ops/pull/1186" },
-        { label: "PR: Breezy HR provider", url: "https://github.com/santifer/career-ops/pull/1185" },
-        { label: "PR: BambooHR provider", url: "https://github.com/santifer/career-ops/pull/1141" },
+        { label: "PR: agent-inbox feature", url: "https://github.com/career-ops-hq/career-ops/pull/1472" },
+        { label: "PR: dashboard Status-cell fix", url: "https://github.com/career-ops-hq/career-ops/pull/1186" },
+        { label: "PR: Breezy HR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1185" },
+        { label: "PR: BambooHR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1141" },
       ],
       diagrams: [
         {
@@ -1794,7 +1794,7 @@ export interface Contribution {
 }
 
 // Real public open-source contributions — merged PRs to career-ops, a public OSS project.
-// See https://github.com/santifer/career-ops/pulls?q=author%3Adarkpandawarrior
+// See https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior
 /**
  * Merged PRs upstream, as the live GitHub search reports it.
  *
@@ -1810,23 +1810,23 @@ export interface Contribution {
 export const upstreamMergedPRs = 24;
 
 export const openSource: Contribution[] = [
-  { repo: "santifer/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/santifer/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/santifer/career-ops/pull/2639", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "fix(agent-inbox): concurrent adds silently dropped queued requests", url: "https://github.com/santifer/career-ops/pull/2614", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "fix(liveness): a rate-limited posting was classified expired, not uncertain", url: "https://github.com/santifer/career-ops/pull/2613", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate", url: "https://github.com/santifer/career-ops/pull/2612", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "feat(rank): opt-in LLM relevance re-ranker for pipeline.md", url: "https://github.com/santifer/career-ops/pull/2579", status: "merged", date: "2026-08-12" },
-  { repo: "santifer/career-ops", title: "fix(cv): Korean and Traditional Chinese CVs had no font rule", url: "https://github.com/santifer/career-ops/pull/2616", status: "merged", date: "2026-08-11" },
-  { repo: "santifer/career-ops", title: "fix(states): aliases the engine accepts were missing from states.yml", url: "https://github.com/santifer/career-ops/pull/2615", status: "merged", date: "2026-08-11" },
-  { repo: "santifer/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/santifer/career-ops/pull/2590", status: "merged", date: "2026-08-07" },
-  { repo: "santifer/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/santifer/career-ops/pull/2589", status: "merged", date: "2026-08-07" },
-  { repo: "santifer/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/santifer/career-ops/pull/2588", status: "merged", date: "2026-08-07" },
-  { repo: "santifer/career-ops", title: "fix(dedup): distinct non-Latin companies merged into one, deleting a row", url: "https://github.com/santifer/career-ops/pull/2587", status: "merged", date: "2026-08-07" },
-  { repo: "santifer/career-ops", title: "fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter", url: "https://github.com/santifer/career-ops/pull/2586", status: "merged", date: "2026-08-07" },
-  { repo: "santifer/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/santifer/career-ops/pull/1472", status: "merged", date: "2026-07-03" },
-  { repo: "santifer/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/santifer/career-ops/pull/1186", status: "merged", date: "2026-06-23" },
-  { repo: "santifer/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/santifer/career-ops/pull/1185", status: "merged", date: "2026-06-23" },
-  { repo: "santifer/career-ops", title: "feat(providers): add BambooHR provider", url: "https://github.com/santifer/career-ops/pull/1141", status: "merged", date: "2026-06-20" },
+  { repo: "career-ops-hq/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/career-ops-hq/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/career-ops-hq/career-ops/pull/2639", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "fix(agent-inbox): concurrent adds silently dropped queued requests", url: "https://github.com/career-ops-hq/career-ops/pull/2614", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "fix(liveness): a rate-limited posting was classified expired, not uncertain", url: "https://github.com/career-ops-hq/career-ops/pull/2613", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate", url: "https://github.com/career-ops-hq/career-ops/pull/2612", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "feat(rank): opt-in LLM relevance re-ranker for pipeline.md", url: "https://github.com/career-ops-hq/career-ops/pull/2579", status: "merged", date: "2026-08-12" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv): Korean and Traditional Chinese CVs had no font rule", url: "https://github.com/career-ops-hq/career-ops/pull/2616", status: "merged", date: "2026-08-11" },
+  { repo: "career-ops-hq/career-ops", title: "fix(states): aliases the engine accepts were missing from states.yml", url: "https://github.com/career-ops-hq/career-ops/pull/2615", status: "merged", date: "2026-08-11" },
+  { repo: "career-ops-hq/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/career-ops-hq/career-ops/pull/2590", status: "merged", date: "2026-08-07" },
+  { repo: "career-ops-hq/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/career-ops-hq/career-ops/pull/2589", status: "merged", date: "2026-08-07" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/career-ops-hq/career-ops/pull/2588", status: "merged", date: "2026-08-07" },
+  { repo: "career-ops-hq/career-ops", title: "fix(dedup): distinct non-Latin companies merged into one, deleting a row", url: "https://github.com/career-ops-hq/career-ops/pull/2587", status: "merged", date: "2026-08-07" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter", url: "https://github.com/career-ops-hq/career-ops/pull/2586", status: "merged", date: "2026-08-07" },
+  { repo: "career-ops-hq/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/career-ops-hq/career-ops/pull/1472", status: "merged", date: "2026-07-03" },
+  { repo: "career-ops-hq/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/career-ops-hq/career-ops/pull/1186", status: "merged", date: "2026-06-23" },
+  { repo: "career-ops-hq/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1185", status: "merged", date: "2026-06-23" },
+  { repo: "career-ops-hq/career-ops", title: "feat(providers): add BambooHR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1141", status: "merged", date: "2026-06-20" },
 ];
 
 export interface GrowthItem {
