@@ -2,8 +2,14 @@
 // (public/projects/<slug>/showcase/storyboard.json) + the daily-synced frame
 // pool. Voiceover is content-addressed: audio/shotN.m4a is reused unless the
 // narration text (or voice) changed — so CI can refresh VISUALS whenever the
-// app repos ship new screenshots, and only a narration edit needs a macOS
-// machine (`say`) to re-record.
+// app repos ship new screenshots, and only a narration edit needs the recording
+// engine to be reachable.
+//
+// Two engines. A storyboard with a `voiceId` (a Cartesia voice UUID) records
+// through Cartesia Sonic and needs CARTESIA_API_KEY; one without falls back to
+// macOS `say -v <board.voice>`, which is mac-only and sounds it. The engine is
+// part of the cache key, so a machine that cannot reach the chosen engine fails
+// loudly rather than quietly re-recording good audio with the other one.
 //
 // Self-healing invariants enforced here:
 //  1. Every storyboard frame must be in scripts/media-manifest.mjs — if it
@@ -16,7 +22,11 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
+import { config } from "dotenv";
+
 import { sync } from "./media-manifest.mjs";
+
+config({ path: ".env.local" });
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
@@ -33,6 +43,66 @@ const probeDur = (f) =>
   Number(run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]));
 
 const hasSay = spawnSync("which", ["say"]).status === 0;
+
+const CARTESIA_KEY = process.env.CARTESIA_API_KEY ?? "";
+// Pinned, not floating: `sonic-3.6` auto-updates and a voice that shifts under a
+// content-addressed cache is a silent diff nobody asked for. Bump deliberately.
+const CARTESIA_MODEL = process.env.CARTESIA_MODEL ?? "sonic-3.6-2026-08-27";
+const CARTESIA_VERSION = "2026-08-14";
+
+const cartesia = (path, init = {}) =>
+  fetch(`https://api.cartesia.ai${path}`, {
+    ...init,
+    headers: {
+      "Cartesia-Version": CARTESIA_VERSION,
+      Authorization: `Bearer ${CARTESIA_KEY}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+
+// `npm run showcase -- --voices` — you cannot pick a voiceId without seeing the
+// library, and the UUIDs are not in the docs.
+if (process.argv.includes("--voices")) {
+  // A missing key here is the EXPECTED first run, not a crash: this is the
+  // very command the setup notes tell you to run, and until someone has been
+  // to play.cartesia.ai there is no key to find. A twelve-line stack trace
+  // about it buries the one sentence that says what to do, so this path
+  // prints and exits rather than throwing. A genuine failure below — a 401, a
+  // 500, malformed JSON — still throws with its stack, because that is a bug
+  // and the trace is the useful part.
+  if (!CARTESIA_KEY) {
+    console.error("No CARTESIA_API_KEY.\n  1. get one at play.cartesia.ai\n  2. add CARTESIA_API_KEY=… to .env.local\n  3. re-run: node scripts/rebuild-showcase.mjs --voices");
+    process.exit(1);
+  }
+  const res = await cartesia("/voices?limit=100");
+  if (!res.ok) throw new Error(`cartesia /voices ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const body = await res.json();
+  for (const v of body.data ?? body) console.log(`${v.id}  ${v.name}  [${v.language ?? "?"}]  ${v.description ?? ""}`.trim());
+  process.exit(0);
+}
+
+/**
+ * One narration line → a wav on disk.
+ *
+ * /tts/bytes is a single POST that returns the audio inline. The streaming
+ * websocket API exists and is not wanted here: these are one-sentence lines
+ * written to a file, so there is nothing to stream to.
+ */
+async function recordCartesia(text, voiceId, out) {
+  const res = await cartesia("/tts/bytes", {
+    method: "POST",
+    body: JSON.stringify({
+      model_id: CARTESIA_MODEL,
+      transcript: text,
+      voice: { id: voiceId },
+      language: "en",
+      output_format: { container: "wav", encoding: "pcm_s16le", sample_rate: 44100 },
+    }),
+  });
+  if (!res.ok) throw new Error(`cartesia /tts/bytes ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  writeFileSync(out, Buffer.from(await res.arrayBuffer()));
+}
 
 const fmtTs = (s) => {
   const h = String(Math.floor(s / 3600)).padStart(2, "0");
@@ -65,30 +135,51 @@ for (const dirent of readdirSync(join(root, "public", "projects"), { withFileTyp
   }
 
   // Voiceover cache: regenerate only when narration/voice changed.
+  //
+  // The hash key is unchanged from the `say`-only era on purpose: a Cartesia
+  // UUID can never collide with a macOS voice NAME, so the speaker already
+  // identifies the engine and existing audio stays valid. Adding "cartesia|" to
+  // the key would have re-recorded all 29 committed shots for no audible change.
+  //
+  // The engine is decided by the COMMITTED storyboard, never by what this
+  // machine happens to have — so the wanted hash is the same everywhere, and a
+  // box without the key (or without `say`) throws instead of re-recording the
+  // line through the other engine and committing the downgrade.
   const audioDir = join(showcaseDir, "audio");
   mkdirSync(audioDir, { recursive: true });
+  const engine = board.voiceId ? "cartesia" : "say";
+  const speaker = board.voiceId ?? board.voice;
   const audioHashes = [];
-  board.shots.forEach((shot, i) => {
+  for (const [i, shot] of board.shots.entries()) {
     const n = i + 1;
-    const want = sha(`${board.voice}|${shot.narration}`);
+    const want = sha(`${speaker}|${shot.narration}`);
     const m4a = join(audioDir, `shot${n}.m4a`);
     const sidecar = join(audioDir, `shot${n}.hash`);
     const have = existsSync(sidecar) ? readFileSync(sidecar, "utf8").trim() : "";
     if (!existsSync(m4a) || have !== want) {
-      if (!hasSay) {
-        throw new Error(
-          `[${slug}] shot ${n} narration changed but \`say\` is unavailable — re-record locally on macOS (npm run showcase)`,
-        );
+      const raw = join(audioDir, `shot${n}.${engine === "cartesia" ? "wav" : "aiff"}`);
+      if (engine === "cartesia") {
+        if (!CARTESIA_KEY) {
+          throw new Error(
+            `[${slug}] shot ${n} needs re-recording through Cartesia but CARTESIA_API_KEY is unset — put it in .env.local, then npm run showcase`,
+          );
+        }
+        await recordCartesia(shot.narration, speaker, raw);
+      } else {
+        if (!hasSay) {
+          throw new Error(
+            `[${slug}] shot ${n} narration changed but \`say\` is unavailable — re-record locally on macOS (npm run showcase), or give this storyboard a Cartesia voiceId`,
+          );
+        }
+        run("say", ["-v", speaker, "-o", raw, shot.narration]);
       }
-      const aiff = join(audioDir, `shot${n}.aiff`);
-      run("say", ["-v", board.voice, "-o", aiff, shot.narration]);
-      run("ffmpeg", ["-nostdin", "-y", "-i", aiff, "-c:a", "aac", "-b:a", "96k", m4a]);
-      rmSync(aiff);
+      run("ffmpeg", ["-nostdin", "-y", "-i", raw, "-c:a", "aac", "-b:a", "96k", m4a]);
+      rmSync(raw);
       writeFileSync(sidecar, want);
-      console.log(`[${slug}] re-recorded voiceover shot ${n}`);
+      console.log(`[${slug}] re-recorded voiceover shot ${n} (${engine})`);
     }
     audioHashes.push(want);
-  });
+  }
 
   // Invariant 2: rebuild only when inputs changed.
   const inputHash = sha(
