@@ -5,11 +5,22 @@
 // app repos ship new screenshots, and only a narration edit needs the recording
 // engine to be reachable.
 //
-// Two engines. A storyboard with a `voiceId` (a Cartesia voice UUID) records
-// through Cartesia Sonic and needs CARTESIA_API_KEY; one without falls back to
-// macOS `say -v <board.voice>`, which is mac-only and sounds it. The engine is
-// part of the cache key, so a machine that cannot reach the chosen engine fails
-// loudly rather than quietly re-recording good audio with the other one.
+// Three engines, chosen by the storyboard in this order:
+//   voiceId     a Cartesia voice UUID   -> Sonic, needs CARTESIA_API_KEY (paid tier above ~27 min/mo)
+//   piperVoice  e.g. "en_US-amy-medium" -> piper, FREE, no key, no account, runs on Linux
+//   neither                             -> macOS `say -v <board.voice>`, mac-only and sounds it
+// The engine is decided by the COMMITTED storyboard, never by what the machine
+// happens to have, so the wanted hash is identical everywhere and a box that
+// cannot reach the chosen engine fails loudly rather than quietly re-recording
+// good audio through a different one and committing the downgrade.
+//
+// piper is the one that closes the original gap. `say` is why CI could refresh
+// a film's VISUALS but never its narration, and Cartesia only moved that gate
+// from "needs a Mac" to "needs a key nobody has yet". piper needs neither: it
+// is an offline neural model, so a Linux runner can re-record a changed line.
+// The speaker string still identifies the engine on its own — a Cartesia UUID,
+// a piper `lang-name-quality` id and a macOS voice name cannot collide — so the
+// cache key stays sha(speaker|narration) and no committed shot is invalidated.
 //
 // Self-healing invariants enforced here:
 //  1. Every storyboard frame must be in scripts/media-manifest.mjs — if it
@@ -202,8 +213,8 @@ for (const dirent of readdirSync(join(root, "public", "projects"), { withFileTyp
   // line through the other engine and committing the downgrade.
   const audioDir = join(showcaseDir, "audio");
   mkdirSync(audioDir, { recursive: true });
-  const engine = board.voiceId ? "cartesia" : "say";
-  const speaker = board.voiceId ?? board.voice;
+  const engine = board.voiceId ? "cartesia" : board.piperVoice ? "piper" : "say";
+  const speaker = board.voiceId ?? board.piperVoice ?? board.voice;
   const audioHashes = [];
   for (const [i, shot] of board.shots.entries()) {
     const n = i + 1;
@@ -212,7 +223,7 @@ for (const dirent of readdirSync(join(root, "public", "projects"), { withFileTyp
     const sidecar = join(audioDir, `shot${n}.hash`);
     const have = existsSync(sidecar) ? readFileSync(sidecar, "utf8").trim() : "";
     if (!existsSync(m4a) || have !== want) {
-      const raw = join(audioDir, `shot${n}.${engine === "cartesia" ? "wav" : "aiff"}`);
+      const raw = join(audioDir, `shot${n}.${engine === "say" ? "aiff" : "wav"}`);
       if (engine === "cartesia") {
         if (!CARTESIA_KEY) {
           throw new Error(
@@ -220,10 +231,17 @@ for (const dirent of readdirSync(join(root, "public", "projects"), { withFileTyp
           );
         }
         await recordCartesia(shot.narration, speaker, raw);
+      } else if (engine === "piper") {
+        if (!hasPiper) {
+          throw new Error(
+            `[${slug}] shot ${n} needs re-recording through piper, which is not on PATH — pip install piper-tts (and brew/apt install espeak-ng), then npm run showcase`,
+          );
+        }
+        recordPiper(shot.narration, speaker, raw);
       } else {
         if (!hasSay) {
           throw new Error(
-            `[${slug}] shot ${n} narration changed but \`say\` is unavailable — re-record locally on macOS (npm run showcase), or give this storyboard a Cartesia voiceId`,
+            `[${slug}] shot ${n} narration changed but \`say\` is unavailable — re-record locally on macOS (npm run showcase), or give this storyboard a piperVoice (free, no key, runs on Linux) or a Cartesia voiceId`,
           );
         }
         run("say", ["-v", speaker, "-o", raw, shot.narration]);

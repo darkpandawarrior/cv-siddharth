@@ -65,3 +65,7 @@ graphify-out/
 .store-since-cache.json
 .store-flavours.json
 .store-siblings.json
+
+# piper voice models — ~61MB of weights, re-fetchable from the same URL the
+# script derives. Same rule as the avif/webp block above: regenerable, not carried.
+.piper-voices/
