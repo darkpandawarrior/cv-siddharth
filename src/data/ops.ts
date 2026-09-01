@@ -11,7 +11,7 @@ export const perimeter = [
   },
   {
     "file": "chessDeep.ts",
-    "generatedAt": "2026-08-31",
+    "generatedAt": "2026-09-01",
     "slaDays": 21,
     "generator": "npm run gen:chess-deep"
   },
@@ -23,13 +23,13 @@ export const perimeter = [
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-08-31",
+    "generatedAt": "2026-09-01",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-08-31",
+    "generatedAt": "2026-09-01",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   }

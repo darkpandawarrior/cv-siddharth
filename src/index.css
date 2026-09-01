@@ -3210,7 +3210,7 @@ html.resume-mode .palette-trigger {
   .pulse-flash { animation: none; }
 }
 
-/* /ops — the board's grammar, and its one piece of motion.
+/* /ops — the board's grammar, and the layer above it that is allowed to move.
    Four fields in a fixed order (LED, SUBJECT, STATE, VERIFIED) and now exactly
    four grid tracks, so every block reads as one table with rules between it, at
    a hairline ~26px a row. Dense and still reads as instrumentation; sparse and
@@ -3286,16 +3286,23 @@ html.resume-mode .palette-trigger {
 a.ops-verified { transition: color var(--dur-fast) var(--ease-out-quart); }
 a.ops-verified:hover { color: var(--color-accent); }
 
-/* ONLY a BROKEN row moves. One red dot breathing in a field of still rows is
-   striking; six animated things is a screensaver. */
+/* THE ALARM, and the only endless loop on this page. Everything else in the
+   slice runs once and stops; a thing still moving after the first second is
+   BROKEN, by construction rather than by convention — ops.test.ts asserts that
+   `infinite` appears on this selector and no other.
+
+   Two call sites, both gated on the same check: the row LED, and the ESCALATE
+   station in the loop trace. The second one carries its own arrival animation
+   at the same specificity, so it cannot take this rule as written — it takes
+   the composited `.ops-trace__node.ops-pulse` rule further down instead, and
+   that is deliberate rather than a duplicate. Both reduced-motion substitutes
+   live in the single consolidated block at the end of this file, with every
+   other guard. */
 @keyframes ops-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
 }
 .ops-pulse { animation: ops-pulse 1.6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .ops-pulse { animation: none; outline: 2px solid var(--color-danger); outline-offset: 2px; }
-}
 
 @media (max-width: 40rem) {
   /* Nothing is dropped at any width. VERIFIED moves to its own line under the
@@ -3366,7 +3373,123 @@ a.ops-verified:hover { color: var(--color-accent); }
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
-.ops-stat[data-hot="true"] b { color: var(--color-accent); }
+/* The counter takes its own station's state, straight out of STATE_COLOR's two
+   non-OK values. It used to be one amber rule for both live stations, which
+   painted ESCALATE — whose number IS brokenCount — a different colour from the
+   same count everywhere else on the board. */
+.ops-stat[data-state="DEGRADED"] b { color: var(--color-accent); }
+.ops-stat[data-state="BROKEN"] b { color: var(--color-danger); }
+
+/* THE LOOP TRACE. Five stations on a wire, in the order the loop runs.
+
+   A grid, not an SVG overlay, and that is the whole reason it survives 390px:
+   one media query turns five columns into five rows and stands the wires up
+   between them. An overlay aligned against text that reflows would have had to be
+   dropped on phones, and this file's rule is that nothing on /ops is ever
+   display:none to save space. */
+.ops-trace {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  /* Zero, deliberately: the wire is the spacing between stations, and a gap
+     would put a hole in the middle of it. */
+  gap: 0;
+  margin-top: 0.3rem;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+}
+.ops-trace__station {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+/* The counter is a flex child now, so the row's own gap does the spacing the
+   0.45rem margin used to. Both together read as a stray indent. */
+.ops-trace__station b { margin-left: 0; }
+.ops-trace__node {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+/* The wire out of each station. `flex: 1` eats whatever the station's own text
+   does not, and the grid gap is zero, so it runs unbroken from this station's
+   count to the next station's node. It was a ::before spanning only the gap
+   first, which on a wide console drew a 15px dash in 190px of empty column and
+   read as a stray rule rather than a track. */
+.ops-trace__wire {
+  flex: 1;
+  min-width: 0.5rem;
+  height: 1px;
+  margin: 0 0.5rem;
+  background: var(--color-line);
+  transform-origin: left;
+}
+
+/* ARRIVAL, once. opacity AND scale, so it reads as a node coming online rather
+   than a fade — and both are compositor-only properties, which is what keeps
+   nine simultaneous elements off the layout path. */
+@keyframes ops-node-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+.ops-trace__node { animation: ops-node-in 220ms var(--ease-out-quart) both; }
+.ops-trace__wire { animation: ops-node-in 220ms var(--ease-out-quart) both; }
+/* THE ALARM AT THIS STATION, composited rather than colliding. `.ops-pulse`
+   (see the alarm block above) and `.ops-trace__node` are both specificity
+   (0,1,0), so whichever is written later wins outright — and this file's node
+   rule is 130-odd lines below the alarm, which silently killed the pulse on
+   the ESCALATE dot for as long as both existed. One combined selector runs
+   BOTH: arrival first, alarm last, because a later entry in the list wins the
+   properties the two share and it is the alarm that must keep opacity. */
+.ops-trace__node.ops-pulse {
+  animation: ops-node-in 220ms var(--ease-out-quart) both,
+    ops-pulse 1.6s ease-in-out infinite;
+}
+
+/* Left to right, one mark every 90ms: station N's node, then the wire that
+   leaves it, then station N+1's node. The last node starts at 360ms, the track
+   is fully drawn at 580ms, and the count-up finishes at 900ms.
+
+   animation-delay is deliberately NOT an `animation:` declaration, and
+   ops.test.ts's guard check does not treat it as one — a stagger on a selector
+   that is already guarded is not a second animation to guard. */
+.ops-trace__station:nth-child(1) .ops-trace__wire,
+.ops-trace__station:nth-child(2) .ops-trace__node { animation-delay: 90ms; }
+.ops-trace__station:nth-child(2) .ops-trace__wire,
+.ops-trace__station:nth-child(3) .ops-trace__node { animation-delay: 180ms; }
+.ops-trace__station:nth-child(3) .ops-trace__wire,
+.ops-trace__station:nth-child(4) .ops-trace__node { animation-delay: 270ms; }
+.ops-trace__station:nth-child(4) .ops-trace__wire,
+.ops-trace__station:nth-child(5) .ops-trace__node { animation-delay: 360ms; }
+
+/* BROKEN's permanent shape at this station. No animation in it: a screenshot,
+   a greyscale render and a reduced-motion visitor all still get a ring, so the
+   alarm is never carried by motion alone or by colour alone. */
+.ops-trace__station[data-state="BROKEN"] .ops-trace__node {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+@media (max-width: 40rem) {
+  /* Stack, never drop. The SAME wire element turns vertical and drops into the
+     row gap under its own node — nothing is display:none'd and nothing is
+     replaced by a second mechanism. */
+  .ops-trace { grid-template-columns: 1fr; gap: 0.4rem 0; }
+  .ops-trace__wire {
+    position: absolute;
+    left: 3px;
+    bottom: calc(-0.4rem - 1px);
+    flex: none;
+    /* min-width from the desktop rule is 0.5rem and would win over width. */
+    min-width: 0;
+    width: 1px;
+    height: 0.4rem;
+    margin: 0;
+    transform-origin: top;
+  }
+}
 
 /* The escalation rail. Real rows, capped so it can never eat the phone it is
    pinned to; it scrolls internally past that. */
@@ -3440,16 +3563,28 @@ a.ops-verified:hover { color: var(--color-accent); }
 }
 
 /* ── /ops, the summary layer ──────────────────────────────────────────────
-   Everything below is additive to the grammar above: nothing is deleted, no
-   row is filtered, and nothing here animates. The whole point of the layer is
-   that ~145 rows of near-identical text made the board's own argument hard to
-   read in the first three seconds, and the fix for that is a shape you can
-   look at, not a row you can no longer reach.
+   Everything below is additive to the grammar above: nothing is deleted and no
+   row is filtered. The whole point of the layer is that ~145 rows of
+   near-identical text made the board's own argument hard to read in the first
+   three seconds, and the fix for that is a shape you can look at, not a row
+   you can no longer reach.
 
-   NOTHING in this section may add a second keyframes rule or a transition on
-   a chart element. Only BROKEN moves, and ops.test.ts counts the keyframes in
-   this slice of the file and expects exactly the one the LED already has —
-   which is also why the word above is not spelled with its at-sign. */
+   THIS LAYER IS THE ONLY PART OF THE PAGE ALLOWED TO ANIMATE. The grammar
+   layer above it — 145 near-identical rows — never joins in and never will: a
+   one-shot reveal on every row is 145 animations and a keyboard user waiting
+   on them. ops.test.ts fails the build for a transition or an animation on any
+   rule reaching a board row.
+
+   Everything here fires once, on mount or on first scroll into view, and then
+   stops for good. The single exception is the alarm above, which may loop only
+   while a row is actually BROKEN. Every animated selector in this slice must
+   reappear in the consolidated prefers-reduced-motion block at the end of this
+   file with a REAL substitute — a bare `animation: none` that leaves an element
+   carrying nothing is a build failure, not a style choice. And no rule here may
+   park an instrument at opacity 0 or a nonzero dashoffset as its BASE state: a
+   figure that is blank until JS runs is blank to the axe scan too, which
+   freezes animation but does not scroll. Render the finished instrument and let
+   JS un-do it. */
 
 /* The verdict sentence. The only prose in the banner, and the largest type in
    it, because "18" is a number a reader has to interpret and "nothing is
@@ -3541,9 +3676,11 @@ a.ops-verified:hover { color: var(--color-accent); }
 
 /* Six lanes of height, whether or not six arrive: five come from committed data
    (the perimeter files) and the published index only appears once /api/ops
-   resolves. /ops is already this site's worst CLS offender at a measured 0.162
-   against a 0.25 error-severity ceiling, so a strip that grows a row when a
-   fetch lands is a measurable regression rather than a cosmetic one.
+   resolves. /ops was this site's worst CLS offender at a measured 0.162 when
+   this reservation was written, against a 0.25 error-severity ceiling; with it
+   and the tower's in place the route re-measures at 0.0086 (npx lighthouse,
+   mobile preset, 2026-09-01). That is what the reservations bought — deleting
+   one because "the number is fine now" puts the number back.
 
    Both numbers here are MEASURED at the full six lanes, not derived from a
    per-lane guess — 137.25px at 1440 and 293.81px at 390, with a few px of
@@ -3600,10 +3737,19 @@ a.ops-verified:hover { color: var(--color-accent); }
   .ops-runway__lanes { min-height: 18.75rem; }
 }
 
-/* Horizontal bars: name, track, value. Used by leverage, the fleet histogram,
-   drift and the control tower, so the four figures share one grammar the way
-   the four row fields already do. No transition on the fill — a bar that grows
-   into place is the second animated thing on a page that allows one. */
+/* Horizontal bars: name, track, value. Used by leverage, the fleet histogram
+   and the control tower — three figures sharing one grammar the way the four
+   row fields already do. (Vendored drift used to be a fourth; it has no figure
+   now, see the note in OpsBoard.tsx.)
+
+   These three DELIBERATELY DO NOT ARRIVE, on a page where two figures do. The
+   rule the board follows is that a one-shot may deliver a value; it is not a
+   decoration to be applied evenly. Thirty-four bars here — 12 install buckets,
+   17 plugins, 5 workflows — staggering into place is a second wall of motion
+   directly above 145 still rows, and it would say nothing the first wall has
+   not already said. The two figures that
+   do animate are twelve bars and seventeen edges, and each is delivering a
+   shape a reader has not seen before. */
 .ops-bars__row {
   display: grid;
   grid-template-columns: minmax(5rem, 13rem) minmax(0, 1fr) 9.5rem;
@@ -3654,10 +3800,134 @@ a.ops-verified:hover { color: var(--color-accent); }
   .ops-bars__ceiling { grid-column: 1 / -1; }
 }
 
+/* SHIPPING CADENCE. Twelve rectangles diverging from one baseline — divs, not
+   an SVG: twelve boxes on a shared axis do not need a viewBox, and a grid
+   reflows at 390px for free where a viewBox has to be re-thought.
+
+   The zero line is the year band's own two edges, so the axis is a thing you
+   can point at rather than an implied middle. Both halves take the SAME linear
+   scale; the maximum is computed in CadenceFigure and printed in its caption.
+
+   Nothing here is reserved-height machinery: this is committed synchronous
+   data, so the box is its final size at first paint and there is no fetch to
+   shift it. The row heights below ARE the reservation, and they add to ~153px. */
+.ops-cadence { padding-left: 0.9rem; padding-right: 0.9rem; }
+.ops-cadence__plot {
+  display: grid;
+  /* Six columns over the console's full 1400px put 36px bars in 230px cells and
+     the chart stopped reading as one shape. Capped at a width where the six
+     columns sit close enough to compare, and left-aligned on the same gutter
+     every other figure uses. */
+  max-width: 44rem;
+  grid-template-columns: repeat(6, 1fr);
+  /* No column gap: the year band's rules butt up against each other and the
+     baseline reads as one continuous line rather than six dashes. */
+  gap: 0;
+}
+.ops-cadence__col {
+  display: grid;
+  /* `auto` for the year band, not a fixed 1rem. The band renders 20.2px — 10px
+     of text, 0.1rem of padding each side, and its own two 1px borders — so a
+     16px row plus `align-items: center` pushed 2.1px of it into each half.
+     Both halves then drew ON TOP of the baseline: 2026's single delisting
+     (1.4px) landed entirely inside the band and rendered as literally nothing,
+     on the one chart whose argument is that zero is drawn as zero. Sizing the
+     row to its content puts both gaps at exactly 0. */
+  grid-template-rows: 0.9rem 3.25rem auto 3.25rem 0.9rem;
+  align-items: center;
+  justify-items: center;
+  min-width: 0;
+}
+.ops-cadence__val {
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+}
+.ops-cadence__year {
+  display: block;
+  width: 100%;
+  padding: 0.1rem 0;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  text-align: center;
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.ops-cadence__half {
+  display: flex;
+  width: 100%;
+  max-width: 3rem;
+  height: 100%;
+  padding: 0 0.15rem;
+}
+.ops-cadence__half--up { align-items: flex-end; }
+.ops-cadence__half--down { align-items: flex-start; }
+.ops-cadence__bar { display: block; width: 100%; border-radius: 1px; }
+/* Grow away from the baseline in both directions, so the axis stays put. */
+.ops-cadence__half--up .ops-cadence__bar { transform-origin: bottom; }
+.ops-cadence__half--down .ops-cadence__bar { transform-origin: top; }
+
+@keyframes ops-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+/* `data-arrive` is set ONLY by JS, and only when the visitor has not asked for
+   less motion — so the base state of every bar, the one React renders and the
+   one the axe harness scans, is its real height. "armed" is the un-doing;
+   "run" is the putting-back. Neither exists until useArrival writes it. */
+.ops-cadence[data-arrive] .ops-cadence__bar { transform: scaleY(0); }
+.ops-cadence[data-arrive="run"] .ops-cadence__bar { animation: ops-grow 500ms var(--ease-out-quart) both; }
+/* One year every 60ms, left to right — 300ms end to end. */
+.ops-cadence__col:nth-child(2) .ops-cadence__bar { animation-delay: 60ms; }
+.ops-cadence__col:nth-child(3) .ops-cadence__bar { animation-delay: 120ms; }
+.ops-cadence__col:nth-child(4) .ops-cadence__bar { animation-delay: 180ms; }
+.ops-cadence__col:nth-child(5) .ops-cadence__bar { animation-delay: 240ms; }
+.ops-cadence__col:nth-child(6) .ops-cadence__bar { animation-delay: 300ms; }
+
+@media (max-width: 40rem) {
+  /* Six columns still fit at 390px — ~55px each. Both value labels stay: this
+     file's rule is that a value is always text beside its bar, at every width. */
+  .ops-cadence__val,
+  .ops-cadence__year { font-size: 0.5625rem; }
+  .ops-cadence__half { max-width: 1.6rem; }
+}
+
+/* THE DEPENDENCY WEB. An aspect-ratio box CAPPED at 30rem, not a fixed height
+   at width:100%. Uncapped, a 460x360 viewBox in the console's full-width
+   column would be 1100px tall — which is what the fixed 340px height was
+   avoiding, and it paid for it by leaving the drawing 434px wide inside a
+   1332px band at 1440, 898px of empty stripe that read as a rendering failure
+   rather than a size. The cap does the same job the height did (discs stay
+   circular, the figure stays the size of the bars above it) without the band:
+   at 1440 the box IS the drawing, and below 480px it is fluid, which is where
+   the figure was already at its best.
+
+   No animation lives here at all. The edges draw in through an inline
+   transition set by useArrival, which never runs under reduced motion — the
+   guard is in OpsBoard.tsx rather than in this file, and ops.test.ts scopes its
+   check to `animation` for exactly that reason. */
+.ops-web { padding-left: 0.9rem; padding-right: 0.9rem; }
+.ops-web__svg { display: block; width: 100%; max-width: 30rem; height: auto; aspect-ratio: 460 / 360; }
+.ops-web__head {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  fill: var(--color-muted);
+}
+/* Real SVG text, so axe's colour-contrast rule reaches it: --color-text on the
+   console ground, not a dimmed decorative grey. */
+.ops-web__label {
+  font-size: 14px;
+  fill: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Height for five workflows, held whether or not the Actions API answers.
-   These rows populate after fetch("/api/ops") on the route lighthouserc.json
-   already measures at 0.162 CLS against an error-severity 0.25 ceiling, so
-   the reservation is a budget item rather than a nicety. */
+   These rows populate after fetch("/api/ops"), which is the one thing on this
+   route that can still shift it. With this reservation and the runway's, /ops
+   measures 0.0086 CLS against an error-severity 0.25 ceiling (npx lighthouse,
+   mobile preset, 2026-09-01); lighthouserc.json's 0.162 is the pre-reservation
+   number and is annotated as such. A budget item, not a nicety. */
 .ops-bars--tower { min-height: 6.4rem; }
 
 /* Time to resolution. Eleven points is not a distribution: no jitter, no
@@ -3698,4 +3968,31 @@ a.ops-verified:hover { color: var(--color-accent); }
   font-size: 0.625rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-muted);
+}
+
+/* ── /ops, the one reduced-motion block ───────────────────────────────────
+   Every animated selector in the slice above reappears here, and ops.test.ts
+   fails the build for one that does not. Consolidated rather than scattered
+   beside each rule for a mechanical reason as well as a readable one: these
+   overrides carry no extra specificity, so they only win by coming later, and
+   "later" is only guaranteed if there is exactly one place they live.
+
+   None of these is a bare `animation: none`. A visitor who asked for less
+   motion is not asking for less information — they get the finished
+   instrument, which is what the markup rendered before JS touched it. */
+@media (prefers-reduced-motion: reduce) {
+  /* The alarm becomes a static outline. BROKEN is still red, still washed,
+     still worded, and at the ESCALATE station still ringed. */
+  .ops-pulse { animation: none; outline: 2px solid var(--color-danger); outline-offset: 2px; }
+  /* The composited node+alarm rule needs its own entry: it is a different,
+     higher-specificity selector, so neither line above reaches it. */
+  .ops-trace__node.ops-pulse { animation: none; opacity: 1; transform: none; outline: 2px solid var(--color-danger); outline-offset: 2px; }
+  /* The trace arrives already arrived. */
+  .ops-trace__node { animation: none; opacity: 1; transform: none; }
+  .ops-trace__wire { animation: none; opacity: 1; transform: none; }
+  /* The cadence keeps its real heights. Both rules, because useArrival is
+     supposed to never write the attribute at all under reduced motion and this
+     is what makes that a guarantee rather than a promise. */
+  .ops-cadence[data-arrive] .ops-cadence__bar { transform: none; }
+  .ops-cadence[data-arrive="run"] .ops-cadence__bar { animation: none; transform: none; }
 }

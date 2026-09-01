@@ -184,34 +184,218 @@ describe("/ops cannot lie about itself", () => {
     });
   });
 
-  describe("only BROKEN moves", () => {
+  describe("motion: arrival once, alarm forever, nothing else", () => {
     /**
-     * The spec's motion rule, proved mechanically rather than by eye — the way
-     * the perimeter was proved. One animated selector, and its only call site
-     * is gated on BROKEN.
+     * The old rule was "exactly one @keyframes in the slice". That was the
+     * right test for a page with one animation and the wrong one the moment a
+     * second was allowed: it would have gone red on an animation that was
+     * perfectly guarded, and stayed green on an unguarded one if a guarded one
+     * were deleted in the same change. How many animations exist was never the
+     * point. What matters is that every one of them says what a visitor who
+     * asked for less motion gets instead, and that only BROKEN never stops.
      */
-    it("gates the pulse on BROKEN at its single call site", () => {
-      const board = readFileSync(join(root, "src", "OpsBoard.tsx"), "utf8");
+    const css = readFileSync(join(root, "src", "index.css"), "utf8");
+    /* From the /ops comment to EOF. /pulse's three keyframes sit immediately
+       above that comment on purpose — see the positional note there. */
+    const opsCss = css.slice(css.indexOf("/* /ops — the board's grammar"));
+    const board = readFileSync(join(root, "src", "OpsBoard.tsx"), "utf8");
+
+    const REDUCED_RE = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/g;
+    /** The slice's reduced-motion block(s), concatenated. */
+    const reduced = [...opsCss.matchAll(REDUCED_RE)].map((m) => m[1]).join("\n");
+    /** The slice WITHOUT them, so a guard is never mistaken for a call site. */
+    const normal = opsCss.replace(REDUCED_RE, "");
+
+    const defined = [...opsCss.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]);
+
+    /**
+     * Every `@keyframes` in the slice, as {name, body, full}, found by COUNTING
+     * BRACES rather than by looking for a `}` at the start of a line.
+     *
+     * The two readers below used `/@keyframes[\s\S]*?\n\}/`, which silently
+     * assumes a formatting convention no test enforces — the exact defect this
+     * file already names one level up, where a selector list was read with
+     * `.split("\n").pop()`. A keyframe written on one line was invisible to
+     * both: `@keyframes x { from { color: var(--color-danger) } to { … } }`
+     * sailed through the alarm-colour assertion, and the same blindness left
+     * its `from {` to be mis-read as a selector by the blank-base-state check.
+     * Nothing in the slice is written that way today, which is precisely why
+     * it was worth fixing — the guard was reading as protection it did not give.
+     */
+    function keyframeBlocks(css: string): { name: string; body: string; full: string }[] {
+      const out: { name: string; body: string; full: string }[] = [];
+      const head = /@keyframes\s+([\w-]+)\s*\{/g;
+      for (let m = head.exec(css); m; m = head.exec(css)) {
+        let depth = 1;
+        let i = m.index + m[0].length;
+        for (; i < css.length && depth > 0; i++) {
+          if (css[i] === "{") depth++;
+          else if (css[i] === "}") depth--;
+        }
+        out.push({ name: m[1], body: css.slice(m.index + m[0].length, i - 1), full: css.slice(m.index, i) });
+        head.lastIndex = i;
+      }
+      return out;
+    }
+    const keyframes = keyframeBlocks(opsCss);
+
+    /**
+     * The selector list a `[^{}]+` capture ends with, as its INDIVIDUAL parts.
+     *
+     * Every rule below matches its selector by running `[^{}]+` back to the
+     * previous brace, which drags along whatever comment sat above it. The old
+     * reduction was `.split("\n").pop()` — the last line only — and it threw
+     * away every selector above the last one in a comma list. `.ops-verdict,`
+     * newline `.ops-trace__node { animation: … }` therefore shipped with
+     * `.ops-verdict` completely unchecked, while a comment three lines up
+     * asserted the single-line convention that made the shortcut safe. A
+     * convention no test enforces is a convention.
+     *
+     * So: strip comments, walk back from the last line for as long as the line
+     * before it ends in a comma, then split on the commas. Whitespace is
+     * collapsed so a descendant selector compares equal however it was wrapped.
+     */
+    const selectorsOf = (blob: string): string[] => {
+      const lines = blob.replace(/\/\*[\s\S]*?\*\//g, "").trimEnd().split("\n");
+      const parts = [lines.pop() ?? ""];
+      while (lines.length && lines[lines.length - 1].trim().endsWith(",")) parts.unshift(lines.pop()!);
+      return parts
+        .join(" ")
+        .split(",")
+        .map((sel) => sel.trim().replace(/\s+/g, " "))
+        .filter(Boolean);
+    };
+
+    /** Every selector the reduced-motion block actually names, as a SET. */
+    const guarded = new Set(
+      [...reduced.matchAll(/([^{}]+)\{[^{}]*\}/g)].flatMap((m) => selectorsOf(m[1])),
+    );
+
+    /* Every `animation` / `animation-name` declaration outside the guard, with
+       the selector it sits on. `animation-delay` deliberately does not match:
+       a stagger on an already-guarded selector is not a second animation. */
+    const applied = [...normal.matchAll(/([^{}]+)\{[^{}]*animation(?:-name)?\s*:\s*([\w-]+)/g)]
+      .filter((m) => m[2] !== "none")
+      .flatMap((m) => selectorsOf(m[1]).map((selector) => ({ selector, name: m[2] })));
+
+    it("defines no keyframes nothing uses", () => {
+      // Dead motion is motion nobody guarded and nobody deleted.
+      expect(defined.filter((n) => !applied.some((a) => a.name === n))).toEqual([]);
+    });
+
+    it("gives EVERY animated selector a reduced-motion substitute", () => {
+      // The whole rule, mechanically. Add motion here freely; you may not add
+      // it without saying what a visitor who asked for less gets instead.
+      // Set MEMBERSHIP, not `reduced.includes(sel)`. A substring test passes
+      // any selector that happens to be a prefix of a guarded one, which is
+      // every figure ROOT on this page: `.ops-trace` is inside
+      // `.ops-trace__node`, `.ops-cadence` inside `.ops-cadence__bar`,
+      // `.ops-web` inside `.ops-web__svg`. Animating a root — the likeliest
+      // next edit here — was silently exempt from the entire rule.
+      expect(applied.length, "the animated rules went missing from the slice").toBeGreaterThan(0);
+      const unguarded = [...new Set(applied.map((a) => a.selector))].filter((sel) => !guarded.has(sel));
+      expect(unguarded, "animated on /ops with no prefers-reduced-motion rule").toEqual([]);
+    });
+
+    it("never lets a substitute be a bare `animation: none`", () => {
+      // `animation: none` alone leaves an element that was carrying
+      // information carrying nothing — a blank ring where a value used to be.
+      // Every guarded rule must also restore a final state or a static mark.
+      const bare = [...reduced.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+        .filter(([, , body]) => /animation\s*:\s*none/.test(body))
+        .filter(([, , body]) => body.replace(/animation\s*:\s*none\s*;?/, "").trim() === "")
+        .flatMap(([, sel]) => selectorsOf(sel));
+      expect(bare, "say what the visitor gets instead, don't just switch it off").toEqual([]);
+    });
+
+    it("never parks an instrument at a blank base state", () => {
+      /* Render the final value and let JS un-do it — AnimatedMetric.tsx's
+         pattern, and the one this board follows. The blank state belongs in JS
+         because JS can read the reduced-motion query and simply not arm;
+         a blank state in CSS needs a second rule to take it back, and the rule
+         someone forgets to write is the one that ships.
+     
+         `transform: scale*(0)` counts, and did not before — which is a hole the
+         size of this whole change, because scaleY(0) is exactly how the cadence
+         bars are armed. The check knew `opacity: 0` and `stroke-dashoffset`,
+         i.e. the two mechanisms already in the file, and was blind to the third
+         the moment it arrived.
+     
+         A selector gated on a `data-` attribute is exempt, because that is the
+         ARMING, not the base state: only useArrival writes it, and only when
+         the visitor has not asked for less. Exempt, but not unchecked — an
+         armed blank must still appear verbatim in the reduced-motion block, or
+         "JS never arms under reduced motion" is a promise rather than a
+         guarantee. */
+      const outside = keyframeBlocks(normal).reduce((acc, k) => acc.replace(k.full, ""), normal);
+      const blanks = [...outside.matchAll(
+        /([^{}]+)\{([^{}]*(?:opacity:\s*0\s*[;}]|stroke-dashoffset:\s*(?!0)[\d.]+|transform:\s*scale[XY]?\(\s*0)[^{}]*)\}/g,
+      )].flatMap(([, sel]) => selectorsOf(sel));
+      expect(
+        blanks.filter((sel) => !sel.includes("[data-")),
+        "the markup must ship the finished instrument",
+      ).toEqual([]);
+      expect(
+        blanks.filter((sel) => sel.includes("[data-") && !guarded.has(sel)),
+        "an armed blank state needs its own reduced-motion un-doing",
+      ).toEqual([]);
+    });
+
+    it("reserves the only endless loop for BROKEN", () => {
+      /* BOTH spellings of forever, because the old check only knew one.
+         `animation: <name> … infinite` was matched by taking the FIRST name in
+         the declaration and then scanning to the semicolon for `infinite` —
+         which reads a composited list wrong in both directions: it names the
+         wrong animation when the looping one is second, and it never sees
+         `animation-iteration-count: infinite` at all. A rule spelt the longhand
+         way, on a selector that already has a reduced-motion substitute, looped
+         forever in a colour that is not the alarm and no test noticed. */
+      const shorthand = [...opsCss.matchAll(/animation\s*:\s*([^;}]+)/g)]
+        .flatMap((m) => m[1].split(","))
+        .filter((part) => /\binfinite\b/.test(part))
+        .map((part) => part.trim().split(/\s+/).find((tok) => defined.includes(tok)) ?? part.trim());
+      const longhand = [...opsCss.matchAll(/\{([^{}]*)\}/g)]
+        .map((m) => m[1])
+        .filter((body) => /animation-iteration-count\s*:\s*infinite/.test(body))
+        .map((body) => body.match(/animation-name\s*:\s*([\w-]+)/)?.[1] ?? "(unnamed loop)");
+      expect([...new Set([...shorthand, ...longhand])], "only the BROKEN pulse may loop").toEqual([
+        "ops-pulse",
+      ]);
+    });
+
+    it("keeps the alarm colour out of every other animation", () => {
+      /* ops-pulse itself animates OPACITY on an element whose colour is already
+         --color-danger, so the token does not appear in its keyframe body and
+         this list is empty today. The assertion is the one that can actually
+         break: no OTHER keyframe in the slice may reach for the alarm colour,
+         which is what makes "still red after the first second" mean BROKEN and
+         nothing else. */
+      const reds = keyframes
+        .filter((k) => k.body.includes("--color-danger"))
+        .map((k) => k.name)
+        .filter((n) => n !== "ops-pulse");
+      expect(reds, "--color-danger may animate in ops-pulse and nowhere else").toEqual([]);
+    });
+
+    it("gates the pulse on BROKEN at EVERY call site", () => {
+      // Widened from "exactly one site": the count was never the point, the
+      // gate is. A second site is fine as long as it is also a BROKEN check.
       const sites = board.split("\n").filter((l) => l.includes("ops-pulse"));
-      expect(sites).toHaveLength(1);
-      expect(sites[0]).toContain("BROKEN");
+      expect(sites.length).toBeGreaterThan(0);
+      for (const s of sites) expect(s, "ops-pulse used outside a BROKEN check").toContain("BROKEN");
     });
 
     it("gates the ticking clock on BROKEN too", () => {
-      const board = readFileSync(join(root, "src", "OpsBoard.tsx"), "utf8");
       expect(board).toMatch(/worstState === "BROKEN" && worst\?\.sinceIso && <BrokenClock/);
     });
 
-    it("defines exactly one keyframes animation for the board", () => {
-      const css = readFileSync(join(root, "src", "index.css"), "utf8");
-      const opsCss = css.slice(css.indexOf("/* /ops — the board's grammar"));
-      expect((opsCss.match(/@keyframes/g) ?? []).length).toBe(1);
-    });
-
-    it("still honours prefers-reduced-motion", () => {
-      const css = readFileSync(join(root, "src", "index.css"), "utf8");
-      const opsCss = css.slice(css.indexOf("/* /ops — the board's grammar"));
-      expect(opsCss).toContain("prefers-reduced-motion");
+    it("never animates the grammar layer", () => {
+      // 145 rows staggering in is 145 animations and a keyboard user waiting on
+      // them. Motion belongs to the summary layer and stops there.
+      const moved = [...opsCss.matchAll(/(\.ops-row[^{}]*)\{([^{}]*)\}/g)]
+        .filter(([, , body]) => /animation|transition/.test(body))
+        .flatMap(([, sel]) => selectorsOf(sel));
+      expect(moved, "a row may not animate").toEqual([]);
     });
   });
 

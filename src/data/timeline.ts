@@ -25,9 +25,9 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-08-31T14:05:39.931Z",
+  "generatedAt": "2026-09-01T11:55:20.708Z",
   "from": "2019-01",
-  "to": "2026-08",
+  "to": "2026-09",
   "months": [
     "2019-01",
     "2019-02",
@@ -120,7 +120,8 @@ export const timeline: Timeline = {
     "2026-05",
     "2026-06",
     "2026-07",
-    "2026-08"
+    "2026-08",
+    "2026-09"
   ],
   "lanes": [
     {
@@ -221,9 +222,10 @@ export const timeline: Timeline = {
         "2026-05": 15,
         "2026-06": 15,
         "2026-07": 15,
-        "2026-08": 15
+        "2026-08": 15,
+        "2026-09": 15
       },
-      "total": 694,
+      "total": 709,
       "milestones": [
         {
           "ym": "2026-04",
@@ -238,7 +240,7 @@ export const timeline: Timeline = {
           "label": "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test provin"
         },
         {
-          "ym": "2026-07",
+          "ym": "2026-08",
           "lane": "work",
           "kind": "delivered",
           "label": "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of"
@@ -286,43 +288,43 @@ export const timeline: Timeline = {
           "label": "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jump"
         },
         {
-          "ym": "2025-01",
+          "ym": "2025-02",
           "lane": "work",
           "kind": "delivered",
           "label": "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Crashlytics and Sentry catch regressions before use"
         },
         {
-          "ym": "2025-04",
+          "ym": "2025-05",
           "lane": "work",
           "kind": "delivered",
           "label": "Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build f"
         },
         {
-          "ym": "2025-07",
+          "ym": "2025-08",
           "lane": "work",
           "kind": "delivered",
           "label": "Own the Room persistence layer across two databases with 24 verified production schema migrations."
         },
         {
-          "ym": "2025-10",
+          "ym": "2025-11",
           "lane": "work",
           "kind": "delivered",
           "label": "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300, the rating a prospective customer sees before they install an"
         },
         {
-          "ym": "2026-01",
+          "ym": "2026-02",
           "lane": "work",
           "kind": "delivered",
           "label": "Shipped the Android side of Trip V2: Itinerary V2, GIN screens, and full Mixpanel instrumentation."
         },
         {
-          "ym": "2026-04",
+          "ym": "2026-05",
           "lane": "work",
           "kind": "delivered",
           "label": "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, use"
         },
         {
-          "ym": "2026-07",
+          "ym": "2026-08",
           "lane": "work",
           "kind": "delivered",
           "label": "Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, and wired agent tooling into the build itself (Fi"
@@ -485,9 +487,10 @@ export const timeline: Timeline = {
         "2026-05": 47,
         "2026-06": 296,
         "2026-07": 272,
-        "2026-08": 203
+        "2026-08": 205,
+        "2026-09": 7
       },
-      "total": 18960,
+      "total": 18969,
       "peak": {
         "ym": "2020-12",
         "v": 619
@@ -591,7 +594,8 @@ export const timeline: Timeline = {
         "2026-05": 0,
         "2026-06": 0,
         "2026-07": 2,
-        "2026-08": 2
+        "2026-08": 2,
+        "2026-09": 0
       },
       "total": 24,
       "milestones": [
@@ -717,9 +721,10 @@ export const timeline: Timeline = {
         "2026-05": 49,
         "2026-06": 1391,
         "2026-07": 2906,
-        "2026-08": 1466
+        "2026-08": 1479,
+        "2026-09": 50
       },
-      "total": 6291,
+      "total": 6354,
       "peak": {
         "ym": "2026-07",
         "v": 2906
