@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Ops, OpsRun } from "../api/_lib/ops-handler.ts";
 import { perimeter, leverage, drift, opsGeneratedAt } from "./data/ops.ts";
 import { MAX_AGE_DAYS, ageDays, stateForAge, type OpsState } from "./data/freshnessSla.ts";
-import { fleet, fleetStats, storeGeneratedAt } from "./data/store.ts";
+import { fleet, fleetStats, lastShipped, storeGeneratedAt } from "./data/store.ts";
 import { incidents } from "./data/incidents.ts";
 import { projects } from "./data/profile.ts";
 import { SiteFooter } from "./SiteFooter.tsx";
@@ -42,10 +42,26 @@ import { LauncherButton } from "./Launcher.tsx";
  * make the block read clean when it is not.
  *
  * ── MOTION ───────────────────────────────────────────────────────────────
- * Only BROKEN moves, in two places that are the same BROKEN thing: the LED
- * breathes, and the rail counts how long the worst row has been wrong.
- * Nothing else animates. Both stop under reduced motion, and BROKEN is still
- * carried by colour, a word and a static outline without them.
+ * The board used to hold still because only BROKEN was allowed to move, and
+ * one red dot in a field of 145 still rows was the whole trick. It worked, and
+ * it stopped being the only option once the summary layer above the rows
+ * became instruments rather than a wall of text.
+ *
+ * Two kinds of motion now, and there is no third. ARRIVAL: an animation may
+ * run once, to deliver a value that is genuinely arriving, and it must be able
+ * to skip straight to that value with nothing lost — which is exactly what
+ * reduced motion does to it. Every animated value RENDERS FINAL; JS only ever
+ * un-does that, and only when the visitor has not asked for less. ALARM: an
+ * animation may loop forever only while the thing it shows has not stopped
+ * being true — a BROKEN row, and the clock counting how long. That is the only
+ * endless loop on the page, and --color-danger animates in no other.
+ *
+ * BROKEN is never carried by motion alone and never by colour alone: the row
+ * is washed, the LED takes an outline, the ESCALATE station takes a permanent
+ * ring. All three survive a screenshot, greyscale and reduced motion.
+ *
+ * ops.test.ts enforces every clause of that mechanically — see the
+ * "motion: arrival once, alarm forever, nothing else" block there.
  *
  * ── PROVENANCE ───────────────────────────────────────────────────────────
  * Nothing on this page claims current access to an employer's code. The Dice
@@ -114,7 +130,7 @@ function budget(age: number, sla: number): string {
 
 const bytes = (n: number) => `${(n / 1_048_576).toFixed(1)} MB`;
 
-/** The LED. The only thing on the page allowed to move, and only when BROKEN. */
+/** The LED. One of the two things allowed to move FOREVER, and only when BROKEN. */
 function Led({ state }: { state: OpsState }) {
   return (
     <span
@@ -253,10 +269,12 @@ function Runway({ lanes, indexNote }: { lanes: RowModel[]; indexNote: boolean })
 
       {/* Reserved for six lanes whether or not six arrive. Five render from
           committed data (the perimeter files); the published index only appears
-          once /api/ops resolves, and /ops is already the site's worst CLS
-          offender at 0.162 against a 0.25 error ceiling. A lane that pushes the
-          whole board down when a fetch lands is a measurable regression, not a
-          cosmetic one. */}
+          once /api/ops resolves. /ops measured 0.162 CLS against a 0.25 error
+          ceiling before these reservations existed and 0.0086 with them (npx
+          lighthouse, mobile preset, 2026-09-01). A lane that pushes the whole
+          board down when a fetch lands is a measurable regression, not a
+          cosmetic one — the low number is the reservation working, not a
+          licence to drop it. */}
       <div className="ops-runway__lanes">
         {lanes.map((m) => {
           const { age, sla } = m.clock!;
@@ -411,6 +429,297 @@ function LeverageFigure() {
 }
 
 /**
+ * ARRIVAL, for a figure below the fold.
+ *
+ * The order matters and it is the opposite of the obvious one. React renders
+ * the FINISHED figure; this hook un-does it on mount and puts it back when the
+ * reader first scrolls to it. Same shape as AnimatedMetric.tsx, which zeroes
+ * its counter on mount rather than rendering a zero.
+ *
+ * Under reduced motion the hook does nothing at all, so nothing is un-done and
+ * the finished figure is simply what stays. That is the reason for the order:
+ * the blank state lives in JS, which reads the media query, rather than in CSS,
+ * which would need a second rule to take it back — and a base state that is
+ * already correct cannot be un-taken-back by a rule someone forgets to write.
+ *
+ * It is NOT an axe argument, and an earlier version of this comment claimed it
+ * was. Measured against the real harness (e2e/a11y.spec.ts freezes animation
+ * and never scrolls): `arm` runs on mount, the observer never fires, and axe
+ * scans 12 zero-height bars and 17 undrawn edges — exactly the outcome "park it
+ * blank in CSS" would give. It is harmless for a different reason: each
+ * figure's GRAPHIC LAYER is aria-hidden — the twelve cadence halves and the
+ * web's <svg>, NOT the <figure>, which stays exposed because hiding it would
+ * take the caption and every number with it — and every value those graphics
+ * encode is real text in the DOM beside them, so there is nothing for axe to
+ * get wrong either way. The same gap means
+ * a window.print() before the reader has scrolled prints two empty plots;
+ * accepted, because the numbers are all still in the caption and the labels.
+ *
+ * `arm` and `run` are module constants, never inline closures — an inline one
+ * changes identity every render and re-arms a figure the reader has already
+ * watched arrive.
+ */
+function useArrival<T extends Element>(arm: (el: T) => void, run: (el: T) => void) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    arm(el);
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        // One frame after arming, so the browser has a style to animate FROM.
+        requestAnimationFrame(() => run(el));
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [arm, run]);
+  return ref;
+}
+
+const armCadence = (el: HTMLElement) => { el.dataset.arrive = "armed"; };
+const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
+
+/**
+ * SHIPPING CADENCE — the only real time series on this page, and until now the
+ * only dataset in store.ts that nothing rendered.
+ *
+ * `lastShipped` is six years of one fact: the year each listing's last build
+ * went out, split by whether Play still shows the listing. It belongs in the
+ * fleet block rather than anywhere else because it is the same 173 listings the
+ * block already counts — 89 live and 84 delisted, and both halves sum to
+ * fleetStats exactly.
+ *
+ * ONE SHARED SCALE, both directions, topping out at the real maximum rather
+ * than a rounded one. Unlike ChessArc's two rating pools these are the same
+ * unit — a count of apps — so a shared scale is the honest choice and a
+ * per-series one would flatter whichever half happens to run lower.
+ *
+ * COLOUR IS POPULATION, NOT STATE — and on this page that rules out
+ * --color-signal, which is the obvious pick and the wrong one. Site-wide the
+ * token means "lit/live/active", which is exactly what the live half is; but
+ * /ops binds it to STATE_COLOR.OK, so it paints every OK LED, every .ops-state
+ * reading OK, and the "ok" digit in all eight block censuses — including the
+ * one 40px above this chart. In that neighbourhood a green bar reads "89 OK",
+ * a verdict on the one block whose own note is that there is no SLA on
+ * anything in it. So: live is --color-probe ("unlit/idle counterpart", already
+ * the counting-into colour for the web's discs and edges) and gone is
+ * --color-muted. Two tokens this page has not bound to a state, which is what
+ * keeps the caption's claim true. Neither is --color-danger, for the same
+ * reason at the other end: a listing delisted in 2021 is not a broken row, and
+ * painting half a chart red would invent the severity FleetFigure directly
+ * above refuses to invent.
+ *
+ * ZERO IS DRAWN AS ZERO. 2021 and 2022 have live: 0 and render at literally no
+ * height. The 4px floor .ops-bars__fill carries is deliberately NOT ported: on
+ * those bars "zero versus one" is the leverage finding, and here "nothing that
+ * shipped before 2023 is still on the Store" is the finding. A stub would erase
+ * it.
+ */
+function CadenceFigure() {
+  const ref = useArrival<HTMLElement>(armCadence, runCadence);
+  /* Computed, printed in the caption, and never rounded up to a nice number:
+     an axis bound with no rule behind it is the thing this board refuses. */
+  const top = Math.max(...lastShipped.flatMap((y) => [y.live, y.gone]));
+  /* The caption's two year references are DERIVED, not typed. Both happened to
+     be right — 37 is 2022's `gone`, and 2021/2022 are the years with live: 0 —
+     but store.ts regenerates on a 45-day SLA and a frozen "the 2022 delistings"
+     beside a recomputed 37 is precisely the caption-drifts-from-the-figure
+     defect this whole board exists to catch. */
+  const peak = lastShipped.find((y) => y.gone === top || y.live === top)!;
+  const peakHalf = peak.gone === top ? "delistings" : "still live";
+  const wipedOut = lastShipped.filter((y) => y.live === 0).map((y) => y.year);
+  const dated = lastShipped.reduce((n, y) => n + y.live + y.gone, 0);
+  return (
+    <figure ref={ref} className="ops-figure ops-cadence">
+      <div className="ops-cadence__plot">
+        {lastShipped.map((y) => (
+          <div className="ops-cadence__col" key={y.year}>
+            {/* Every value is real text beside its own bar — the same rule
+                Bars follows, and the reason neither figure needs an aria-label
+                reciting numbers the DOM already carries. The bars themselves
+                are the position layer and nothing else. */}
+            <span className="ops-cadence__val">
+              {y.live}<span className="sr-only"> still live</span>
+            </span>
+            <span className="ops-cadence__half ops-cadence__half--up" aria-hidden>
+              <span
+                className="ops-cadence__bar"
+                style={{ height: `${(y.live / top) * 100}%`, background: "var(--color-probe)" }}
+              />
+            </span>
+            <span className="ops-cadence__year">{y.year}</span>
+            <span className="ops-cadence__half ops-cadence__half--down" aria-hidden>
+              <span
+                className="ops-cadence__bar"
+                style={{ height: `${(y.gone / top) * 100}%`, background: "var(--color-muted)" }}
+              />
+            </span>
+            <span className="ops-cadence__val">
+              {y.gone}<span className="sr-only"> since delisted</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <figcaption className="ops-figure__cap">
+        {dated} last-shipped dates, one column per year. Above the line, the {fleetStats.live}{" "}
+        listings Play still shows as live; below it, the {fleetStats.delisted} that are gone, dated
+        by the last archived crawl. One scale both ways, topping out at the real maximum — {top},
+        the {peak.year} {peakHalf} — not a rounded number.{" "}
+        {wipedOut.length > 0 && `Nothing that shipped in ${wipedOut.join(" or ")} is still on the Store. `}
+        Both halves are floors: a listing&rsquo;s date is the last build Play admits
+        to, not every build there was.
+      </figcaption>
+    </figure>
+  );
+}
+
+const armWeb = (el: SVGSVGElement) => {
+  for (const ln of el.querySelectorAll<SVGLineElement>(".ops-web__edge")) {
+    const len = ln.getTotalLength();
+    ln.style.strokeDasharray = String(len);
+    ln.style.strokeDashoffset = String(len);
+  }
+};
+const runWeb = (el: SVGSVGElement) => {
+  /* An inline transition rather than a keyframe, and set here rather than in
+     the stylesheet, precisely so that reduced motion is enforced in ONE place:
+     useArrival never calls this, so there is nothing to guard in CSS. Each edge
+     leaves 25ms after the one before, so the last of 17 finishes at ~700ms. */
+  el.querySelectorAll<SVGLineElement>(".ops-web__edge").forEach((ln, i) => {
+    ln.style.transition = `stroke-dashoffset 300ms linear ${i * 25}ms`;
+    ln.style.strokeDashoffset = "0";
+  });
+};
+
+/* Geometry, named once. The viewBox is 40 units wider than the drawing needs
+   so the right-hand labels have somewhere to end: e2e/overflow.spec.ts fails
+   any element whose right edge passes clientWidth at 390px, and a label that
+   runs out of viewBox is exactly how that happens. */
+const WEB = { w: 460, h: 360, left: 14, right: 300, label: 318, top: 34, rowGap: 19 };
+
+/**
+ * THE DEPENDENCY WEB — the same 17 plugins the bars above rank, drawn as the
+ * graph they actually form.
+ *
+ * The bars can say "ten of these are applied by nothing". They cannot say what
+ * the seven that ARE applied are wired into, or that five repos absorb all
+ * seventeen edges between them. That is a shape, and it is a shape made only
+ * of `repos` entries that exist in committed data — which is the difference
+ * between this and the fleet constellation docs/ops-board.md still refuses:
+ * that one's edges would have to be invented.
+ *
+ * DETERMINISTIC LAYOUT, no physics. Left column sorted by `modules` descending
+ * — the SAME sort LeverageFigure computes, so the graph and the bars directly
+ * above it read as one figure and cannot disagree. Right column sorted by
+ * fan-in descending, which is a computed order rather than alphabetical
+ * decoration.
+ *
+ * EVERY EDGE IS THE SAME THICKNESS, and the caption says why: `repos` is a bare
+ * string array. There is one `modules` integer per PLUGIN and no per-repo
+ * count anywhere in the data, so mapping modules to edge width would assert
+ * "31 modules land on HireSignal" and "31 on Mileway" and "31 on PaymentsLab"
+ * simultaneously — three fabricated magnitudes out of one real number.
+ *
+ * REPO RADIUS IS AREA-PROPORTIONAL, sqrt not linear, and with NO floor added
+ * to it. Fan-in 6 against fan-in 1 drawn as radius 14 against radius 5 reads as
+ * roughly 8x by area for a 6x difference; the sqrt fixes that. A `5 +` offset
+ * in front of the sqrt un-fixes it — it flattened 6-against-1 to 14.0 against
+ * 8.7, an area ratio of 2.6 for a 6x count, and made 6/5/4 (14.0/13.2/12.4)
+ * visually the same disc. Without it the area IS the number: r = 14*sqrt(n/max),
+ * and the smallest disc on this data is r 5.7, still larger than the 4px plugin
+ * dots in the left column.
+ *
+ * NO INTERACTIVITY, and that is the considered call rather than an omission.
+ * Hover or focus could reveal a plugin id — but all 17 ids, their counts and
+ * their repos are in the list ~40px below, in the same order. Twenty-two tab
+ * stops in front of that list is a keyboard regression on the page whose job is
+ * trust, and it would also mean reaching for ModuleGraphLab's role="img"
+ * wrapper around focusable children, which is a latent AT bug rather than a
+ * precedent.
+ */
+function WebFigure() {
+  const ref = useArrival<SVGSVGElement>(armWeb, runWeb);
+  const plugins = [...leverage].sort((a, b) => b.modules - a.modules);
+  const fanIn = new Map<string, number>();
+  for (const l of plugins) for (const r of l.repos) fanIn.set(r, (fanIn.get(r) ?? 0) + 1);
+  /* Fan-in descending, name as the tie-break so two repos on one edge each
+     cannot swap places between renders. */
+  const repos = [...fanIn].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const maxFan = Math.max(...fanIn.values());
+  const py = (i: number) => WEB.top + i * WEB.rowGap;
+  const ry = (i: number) => WEB.top + 16 + i * ((plugins.length - 1) * WEB.rowGap - 32) / (repos.length - 1);
+  const edges = plugins.flatMap((l, i) =>
+    l.repos.map((r) => ({ key: `${l.id}->${r}`, y1: py(i), y2: ry(repos.findIndex(([n]) => n === r)) })),
+  );
+  const wired = plugins.filter((l) => l.repos.length > 0).length;
+  return (
+    <figure className="ops-figure ops-web">
+      <svg
+        ref={ref}
+        className="ops-web__svg"
+        viewBox={`0 0 ${WEB.w} ${WEB.h}`}
+        /* The CSS box now carries this same 460/360 ratio, so there is nothing
+           left to letterbox and this is belt-and-braces: if a future width rule
+           ever breaks the ratio, the discs stay circular and the drawing stays
+           on the 0.9rem gutter instead of stretching into ellipses. */
+        preserveAspectRatio="xMinYMid meet"
+        aria-hidden
+        focusable="false"
+      >
+        <text className="ops-web__head" x={WEB.left} y="12">{plugins.length} PLUGINS</text>
+        <text className="ops-web__head" x={WEB.right} y="12">{repos.length} REPOS</text>
+        {edges.map((e) => (
+          <line
+            key={e.key}
+            className="ops-web__edge"
+            x1={WEB.left} y1={e.y1} x2={WEB.right} y2={e.y2}
+            stroke="var(--color-probe)"
+            strokeOpacity="0.45"
+            strokeWidth="1"
+          />
+        ))}
+        {plugins.map((l, i) => (
+          <circle
+            key={l.id}
+            cx={WEB.left} cy={py(i)} r="4"
+            /* The literal expression leverageRows uses, copied rather than
+               re-derived, so the dot and the row below it cannot disagree.
+               ponytail: two call sites do not earn a stateForModules(). */
+            fill={l.modules > 0 ? STATE_COLOR.OK : STATE_COLOR.DEGRADED}
+          />
+        ))}
+        {repos.map(([name, n], i) => (
+          <g key={name}>
+            <circle
+              cx={WEB.right} cy={ry(i)} r={14 * Math.sqrt(n / maxFan)}
+              /* NOT a STATE_COLOR. A repo is not passing or failing here — it
+                 is the thing being counted into, which is what --color-probe
+                 means everywhere else on this board. */
+              fill="var(--color-probe)"
+              fillOpacity="0.85"
+            />
+            <text className="ops-web__label" x={WEB.label} y={ry(i) + 4}>{name} {n}</text>
+          </g>
+        ))}
+      </svg>
+      <figcaption className="ops-figure__cap">
+        The same {plugins.length} plugins the bars above rank, drawn as the graph they actually
+        form: {edges.length} edges into {repos.length} repos. {wired} plugins carry all of them;
+        the other {plugins.length - wired} leave the left column with no line at all, which is what
+        &ldquo;applied by nothing&rdquo; looks like. Node size on the right is fan-in by area —{" "}
+        {repos.map(([n, c]) => `${n} ${c}`).join(", ")}. Every line is a <code>repos</code> entry
+        that exists in the source, and every line is the same thickness: there is no per-edge
+        module count in the data to draw one from.
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
  * Play's install buckets, in MAGNITUDE order, written out.
  *
  * Not a sort. These are strings, and every string sort puts "1K+" before
@@ -480,8 +789,9 @@ function TowerFigure({ runs, neverRan }: { runs: OpsRun[]; neverRan: number }) {
   return (
     <figure className="ops-figure">
       {/* Height for five workflows, held whether or not the Actions API
-          answers. These rows arrive after fetch on the route already measured
-          at 0.162 CLS against a 0.25 error ceiling. */}
+          answers. These rows arrive after fetch, which is the last thing on
+          this route that can shift it; with this held, /ops measures 0.0086
+          CLS against a 0.25 error ceiling. */}
       <div className="ops-bars--tower">
         <Bars
           rows={runs.map((r) => ({
@@ -574,6 +884,91 @@ function MttrFigure() {
    of figure to collapse 53px of rows. The rows already say "2 commits behind"
    in words, which at two distinct values is the whole of the finding.
    ponytail: revisit only if the spread ever needs a shape to be read at all. */
+
+/**
+ * THE LOOP TRACE. The five stations, wired.
+ *
+ * The counts and the words are the same ones that were here before; what is
+ * new is the WIRE. They used to sit in a wrapped flex row, which reads as a
+ * stat bar — the page had to say "control loop" in prose because the shape did
+ * not. Five nodes on a connected track say it without the sentence.
+ *
+ * What each mark encodes, and nothing more:
+ *   SLOT   the loop's own order, which is a declared datum (docs/ops-board.md,
+ *          and the array order below). Ordinal. No axis, no magnitude.
+ *   NODE   that station's own state, out of STATE_COLOR — or --color-probe,
+ *          whose documented meaning is the unlit counterpart to signal, i.e.
+ *          "counting, nothing wrong". Not a fourth state and not decoration.
+ *   COUNT  the real number, zero-padded to three so the track cannot reflow
+ *          when the Actions API lands and DETECT goes from 136 to 145.
+ *
+ * No return arc and no arrowheads. Both would need an SVG overlay aligned
+ * against text that reflows, and neither carries a fact the order does not.
+ * ponytail: add the arrowheads the day someone reads this as five unrelated
+ * stats; the return arc after that.
+ *
+ * Grid, not SVG, for one concrete reason: at 40rem the five stations stack and
+ * the wires rotate, in one media query, with the same markup. An overlay would
+ * have had to be dropped on phones, and nothing on this page is ever
+ * display:none to save space.
+ *
+ * The wire is a real element rather than a ::before, and that is not a style
+ * preference. A pseudo-element can only be placed relative to its own station,
+ * so it could bridge the 0.75rem grid gap and nothing else — which on a 1440px
+ * console left a 15px dash floating in 190px of empty column and read as a
+ * stray rule, not a track. A flex child with `flex: 1` fills whatever the
+ * station's text does not, so the wire runs from this station's count to the
+ * next station's node at every width.
+ */
+function LoopTrace({ stations }: { stations: readonly (readonly [string, number, OpsState | null])[] }) {
+  /* ONE, not zero. React renders the finished counters — which is what a
+     reduced-motion visitor keeps, and what e2e/a11y.spec.ts scans, since that
+     harness freezes CSS animation but never runs this effect's rival. The
+     effect below is the only thing that ever un-does the final value, and it
+     declines to when the visitor has asked for less motion.
+
+     Local state rather than a ref and textContent: `stations` changes once,
+     when /api/ops resolves, and an imperative write would then be fighting
+     React for the same text node — the count-up would win and the board would
+     be left showing 136 for the rest of the session. Rendering
+     `n * progress` cannot desync, and re-renders stop at these five spans. */
+  const [progress, setProgress] = useState(1);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const start = performance.now();
+    /* The same cubic ease-out AnimatedMetric uses for every other count-up on
+       the site, so the two read as one behaviour rather than two. */
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / 900, 1);
+      setProgress(1 - (1 - t) ** 3);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    setProgress(0);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div className="ops-trace">
+      {stations.map(([label, n, st], i) => (
+        <span key={label} className="ops-stat ops-trace__station" data-state={st ?? ""}>
+          {/* Decoration with no text, so it is not in the accessibility tree
+              at all and the station's own words stay the whole equivalent. */}
+          <span
+            aria-hidden
+            className={`ops-trace__node${st === "BROKEN" ? " ops-pulse" : ""}`}
+            style={{ background: st ? STATE_COLOR[st] : "var(--color-probe)" }}
+          />
+          {label}<b>{String(Math.round(n * progress)).padStart(3, "0")}</b>
+          {/* The wire OUT of this station, so the last one does not draw one
+              into empty space. Decoration, no text, not in the a11y tree. */}
+          {i < stations.length - 1 && <span aria-hidden className="ops-trace__wire" />}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /**
  * The one ticking readout on the page, and the only thing that says "right
@@ -886,13 +1281,30 @@ export function OpsBoard() {
   const worst = escalated[0];
   const worstState: OpsState = worst?.state ?? "OK";
 
-  const loop = [
-    ["DETECT", all.length, false],
-    ["ANNOUNCE", escalated.length, escalated.length > 0],
-    ["ESCALATE", brokenCount, brokenCount > 0],
-    ["REPAIR", incidents.filter((i) => !i.resolved).length, false],
-    ["RECORD", incidents.length, false],
-  ] as const;
+  /**
+   * The five loop stations, each carrying the STATE its own count implies —
+   * not a boolean "hot".
+   *
+   * `hot` painted both live stations amber, and ESCALATE's number IS
+   * `brokenCount`: the same figure the census bar, the rail and every BROKEN
+   * row draw in --color-danger. One counter reading amber while the number
+   * beside it reads red is the board disagreeing with itself about severity,
+   * on the page whose argument is that a number means what it says. Reading
+   * the colour out of STATE_COLOR is also the only version that cannot drift:
+   * change the palette and this follows.
+   *
+   * `null` is "counting, nothing wrong" — not a fourth state. DETECT counts
+   * everything and REPAIR counts unresolved incidents, and neither is a
+   * severity: an OK-coloured DETECT would claim 145 passing checks, which is
+   * exactly what the census bar beside it is there to deny.
+   */
+  const loop: readonly (readonly [string, number, OpsState | null])[] = [
+    ["DETECT", all.length, null],
+    ["ANNOUNCE", escalated.length, escalated.length > 0 ? "DEGRADED" : null],
+    ["ESCALATE", brokenCount, brokenCount > 0 ? "BROKEN" : null],
+    ["REPAIR", incidents.filter((i) => !i.resolved).length, null],
+    ["RECORD", incidents.length, null],
+  ];
 
   const closed = incidents.filter((i) => i.resolved);
   const guarded = closed.filter((i) => i.evidenceHref.includes(".test.")).length;
@@ -976,7 +1388,9 @@ export function OpsBoard() {
           blown, and <b style={{ color: STATE_COLOR.DEGRADED }}>DEGRADED</b> —{" "}
           <i>passing, succeeding daily, and quietly aging toward its deadline</i> — is the state every
           failure this board was built after actually lived in. The runway below is where you can watch it
-          happening.
+          happening. Load it fresh and the banner assembles: five stations light in the order the loop
+          runs, each pulling its own count as it comes online. It does that once. After that nothing on
+          this page moves unless something is still wrong.
         </p>
 
         <div className="ops-console font-mono-os">
@@ -995,13 +1409,7 @@ export function OpsBoard() {
                 counters and above the rail: the counters are its receipts. */}
             <p className="ops-verdict" data-worst={worstState}>{verdict}</p>
 
-            <div className="ops-banner__line">
-              {loop.map(([label, n, hot]) => (
-                <span key={label} className="ops-stat" data-hot={hot}>
-                  {label}<b>{String(n).padStart(3, "0")}</b>
-                </span>
-              ))}
-            </div>
+            <LoopTrace stations={loop} />
 
             {/* THE RAIL. The actual non-OK rows, so the worst thing in the
                 system is on screen at every scroll position. They stay in
@@ -1121,14 +1529,14 @@ export function OpsBoard() {
               </>
             }
             rows={fleetRows}
-            figure={<FleetFigure />}
+            figure={<><FleetFigure /><CadenceFigure /></>}
             collapse={`See all ${fleetRows.length}, oldest release first`}
           />
           <Block
             title="Leverage"
             note="convention plugins by the modules that apply them — a plugin nothing applies is DEGRADED, not absent"
             rows={leverageRows}
-            figure={<LeverageFigure />}
+            figure={<><LeverageFigure /><WebFigure /></>}
             collapse={`See all ${leverageRows.length}, applied first`}
           />
           <Block
