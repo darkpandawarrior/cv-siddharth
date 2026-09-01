@@ -82,27 +82,39 @@ describe("surface completeness", () => {
   });
 
   /**
-   * Every room's preview capture, and both of its derivatives, exist.
+   * Every room has a COMMITTED preview capture.
    *
    * RoomGrid's cards lead with `site_<slug>.png` through <Picture>, which emits
    * `<source srcSet=".avif">` and `<source srcSet=".webp">` beside it. A
    * <picture> chooses its source on `type` alone and does NOT fall back to the
    * <img> when that source 404s (lib/rasterSources.ts's docstring names the
    * outage this caused before), so a room added without running capture-site
-   * and gen-images renders a broken image on the hub rather than no image.
-   * Nothing else can check this: the paths are built from `to`, so TypeScript
-   * sees a valid string either way.
+   * renders a broken image on the hub rather than no image. Nothing else can
+   * check this: the paths are built from `to`, so TypeScript sees a valid
+   * string either way.
+   *
+   * The .png ONLY, and that is the whole correction. This asserted all three
+   * extensions for one commit and turned CI red on the first run: `.gitignore`
+   * ignores `public/**` + `*.avif` and `*.webp` because gen-images.mjs derives
+   * them at build time, and the CI job runs `tsc -> lint -> test ->
+   * check:generated` without ever running `npm run build`. So the derivatives
+   * never exist there, and the assertion passed locally only because a
+   * previous build had left them lying on the author's disk — a test reading
+   * contaminated state, which is the one thing this file exists to prevent.
+   *
+   * The .png is the real risk anyway: it is the tracked artifact a human adds
+   * by hand and can forget. gen-images.mjs walks the whole of public/ and emits
+   * a sibling for every .png it finds, so the derivatives follow from this
+   * assertion rather than needing one of their own.
    */
-  it("has a preview capture, and its derivatives, for every room", () => {
+  it("has a committed preview capture for every room", () => {
     const shots = join(root, "public", "projects", "portfolio", "screenshots");
-    const missing = siteRooms.flatMap((r) =>
-      ["png", "avif", "webp"]
-        .map((ext) => `site_${r.to.slice(1)}.${ext}`)
-        .filter((file) => !existsSync(join(shots, file))),
-    );
+    const missing = siteRooms
+      .map((r) => `site_${r.to.slice(1)}.png`)
+      .filter((file) => !existsSync(join(shots, file)));
     expect(
       missing,
-      `RoomGrid renders these and <picture> will not fall back: run npm run capture:site then npm run gen:images — ${missing.join(", ")}`,
+      `RoomGrid renders these and <picture> will not fall back: run npm run capture:site — ${missing.join(", ")}`,
     ).toEqual([]);
   });
 

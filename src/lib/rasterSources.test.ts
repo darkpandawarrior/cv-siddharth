@@ -30,19 +30,38 @@ describe("rasterSources only claims derivatives that get generated", () => {
     expect(rasterSources("/a/no-extension")).toBeNull();
   });
 
-  it("never points a real gallery image at a derivative that is not on disk", () => {
+  /**
+   * Checks the SOURCE is committed, not that its derivatives are on disk.
+   *
+   * This asserted `existsSync(sources.avif)` and was red in CI on every run:
+   * `.gitignore` ignores `public/**` + `*.avif` / `*.webp` because
+   * gen-images.mjs derives them at build time, and the CI job runs
+   * `tsc -> lint -> test -> check:generated` and never `npm run build`. So the
+   * derivatives are absent there by design, and the assertion only ever passed
+   * on a machine where an earlier build had left them lying around — it was
+   * reading contaminated local state, and it reported that as a 404.
+   *
+   * The protection is not lost, because it never lived here: a `<source>`
+   * pointing at a derivative no generator writes is caught by the two tests
+   * above, which pin rasterSources' allow-list against gen-images.mjs's own
+   * list exhaustively. That is what actually caught DEADLOCK's .svg.
+   *
+   * What is left is the half that is real and was never covered: a screen
+   * naming a file nobody committed. gen-images walks all of public/ and emits
+   * a sibling for every source it finds, so a committed source implies its
+   * derivatives and an absent one is the only way to get a broken image.
+   */
+  it("never points a gallery image at a source nobody committed", () => {
     const root = new URL("../../", import.meta.url).pathname;
     const dead: string[] = [];
     for (const p of projects) {
       for (const s of (p.screens ?? []) as { file?: string }[]) {
         if (!s.file) continue;
         const src = `/projects/${p.slug}/screenshots/${s.file}`;
-        const sources = rasterSources(src);
-        if (!sources) continue; // correctly claims nothing
-        // The .avif is the one a browser will choose first and fail hard on.
-        if (!existsSync(join(root, "public", sources.avif))) dead.push(sources.avif);
+        if (!rasterSources(src)) continue; // correctly claims nothing
+        if (!existsSync(join(root, "public", src))) dead.push(src);
       }
     }
-    expect(dead, `these <source> paths 404 and will break their image: ${dead.join(", ")}`).toEqual([]);
+    expect(dead, `these gallery sources are not committed, so nothing can derive from them: ${dead.join(", ")}`).toEqual([]);
   });
 });
