@@ -81,6 +81,31 @@ describe("surface completeness", () => {
     expect(demotedSurfaces.map((f) => f.to).sort()).toEqual(["/forge", "/terminal", "/weeb"]);
   });
 
+  /**
+   * Every room's preview capture, and both of its derivatives, exist.
+   *
+   * RoomGrid's cards lead with `site_<slug>.png` through <Picture>, which emits
+   * `<source srcSet=".avif">` and `<source srcSet=".webp">` beside it. A
+   * <picture> chooses its source on `type` alone and does NOT fall back to the
+   * <img> when that source 404s (lib/rasterSources.ts's docstring names the
+   * outage this caused before), so a room added without running capture-site
+   * and gen-images renders a broken image on the hub rather than no image.
+   * Nothing else can check this: the paths are built from `to`, so TypeScript
+   * sees a valid string either way.
+   */
+  it("has a preview capture, and its derivatives, for every room", () => {
+    const shots = join(root, "public", "projects", "portfolio", "screenshots");
+    const missing = siteRooms.flatMap((r) =>
+      ["png", "avif", "webp"]
+        .map((ext) => `site_${r.to.slice(1)}.${ext}`)
+        .filter((file) => !existsSync(join(shots, file))),
+    );
+    expect(
+      missing,
+      `RoomGrid renders these and <picture> will not fall back: run npm run capture:site then npm run gen:images — ${missing.join(", ")}`,
+    ).toEqual([]);
+  });
+
   // Off the wall is not off the site, and this is the line between the two.
   // ⌘K reaches a demoted surface by name, but you cannot search for a room you
   // do not know exists — the Launcher's own docstring says exactly that about

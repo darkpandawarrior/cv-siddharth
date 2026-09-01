@@ -215,6 +215,57 @@ describe("/ops cannot lie about itself", () => {
     });
   });
 
+  describe("a collapsed block can never hide a failure", () => {
+    /**
+     * The long blocks — fleet, leverage, drift, the ledger — fold their rows
+     * behind a <details>. That is only honest because of two facts that no
+     * rendered snapshot can show, and that a later "tidier if they all just
+     * collapse" edit would quietly destroy:
+     *
+     *   1. a block's disclosure opens itself when the block holds a BROKEN
+     *      row, derived from the rows rather than passed in by a caller;
+     *   2. every Block still receives its FULL row array, so the rail — built
+     *      from `all` — really does already contain every non-OK row that a
+     *      closed block holds.
+     *
+     * Break either one and a closed disclosure becomes somewhere a failure can
+     * sit unseen, on the one page whose entire argument is that a failure
+     * nobody noticed is the expensive kind.
+     */
+    const board = readFileSync(join(root, "src", "OpsBoard.tsx"), "utf8");
+
+    it("derives the disclosure's open state from a BROKEN check", () => {
+      const open = /<details[^>]*\sopen=\{([A-Za-z0-9_]+)\}/.exec(board);
+      expect(open, "the collapsible block lost its open= derivation").toBeTruthy();
+      const name = open![1];
+      const decl = board
+        .split("\n")
+        .filter((l) => new RegExp(`\\b(?:const|let)\\s+${name}\\s*=`).test(l));
+      expect(decl, `${name} drives the disclosure but is declared ${decl.length} times`).toHaveLength(1);
+      expect(
+        decl[0],
+        "a block may open itself on a BROKEN row and on nothing else — a row count, a length, or a hard-coded false all hide a failure",
+      ).toContain('"BROKEN"');
+    });
+
+    it("never hands a Block a filtered row array", () => {
+      const given = [...board.matchAll(/\brows=\{([^}]*)\}/g)].map((m) => m[1]);
+      expect(given.length, "the Block call sites went missing").toBeGreaterThanOrEqual(8);
+      const narrowed = given.filter((p) => /\.(filter|slice|splice)\(/.test(p));
+      expect(
+        narrowed,
+        "a Block was given a subset of its rows: its census would then read clean while the rail counted the rest",
+      ).toEqual([]);
+    });
+
+    it("builds the rail from every row on the board", () => {
+      expect(
+        board,
+        "the rail must be filtered out of the WHOLE board, or a collapsed block can hold a non-OK row that is nowhere else on the page",
+      ).toMatch(/const escalated = \[\.\.\.all\]\.filter\(\(m\) => m\.state !== "OK"\)/);
+    });
+  });
+
   describe("a build machine without the sibling repos keeps the committed board", () => {
     /**
      * gen-ops.mjs scans the KMP repos next to this one, which a CI runner does

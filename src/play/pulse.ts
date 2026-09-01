@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { usePageData } from "@playhtml/react";
+import { PULSE_EVENTS, type PulseCounts, type PulseEvent } from "./pulseEvents.ts";
 
 /**
  * The interaction counter — how often each part of this site actually gets
@@ -11,32 +12,11 @@ import { usePageData } from "@playhtml/react";
  * change to `usePulseCounts` and `usePulse` alone — no caller touches storage.
  */
 
-/* The closed set of things worth counting. A registry rather than free-form
- * strings so /pulse can label and group without a second lookup table, and so a
- * typo is a type error instead of a section that silently counts into nowhere. */
-export const PULSE_EVENTS = {
-  "room:compose": { label: "Compose Playground", group: "Rooms entered" },
-  "room:lab": { label: "The Lab Bench", group: "Rooms entered" },
-  "room:blueprint": { label: "The Blueprint Room", group: "Rooms entered" },
-  "room:map": { label: "The 3D Storyboard", group: "Rooms entered" },
-  "room:forge": { label: "The Particle Forge", group: "Rooms entered" },
-  "room:terminal": { label: "The Terminal", group: "Rooms entered" },
-  "room:chess": { label: "The Board", group: "Rooms entered" },
-  "blueprint:fly": { label: "Flew through it in 3D", group: "In the Blueprint Room" },
-  "blueprint:ascii": { label: "Switched to the ASCII render", group: "In the Blueprint Room" },
-  "blueprint:sketch": { label: "Opened the whiteboard", group: "In the Blueprint Room" },
-  "blueprint:tour": { label: "Took the guided tour", group: "In the Blueprint Room" },
-  "blueprint:reset": { label: "Reset the view", group: "In the Blueprint Room" },
-  "playground:move": { label: "Rearranged the room tiles", group: "In the Playground" },
-  "playground:tidy": { label: "Tidied the tiles back up", group: "In the Playground" },
-  "wall:note": { label: "Left a note on the wall", group: "In the Playground" },
-  "ink:margin-note": { label: "Left a margin note", group: "In the Ink" },
-  "chess:guess": { label: "Called a game won or lost", group: "In the Chess Room" },
-  "chess:puzzle": { label: "Tried the daily puzzle", group: "In the Chess Room" },
-} as const;
-
-export type PulseEvent = keyof typeof PULSE_EVENTS;
-export type PulseCounts = Partial<Record<PulseEvent, number>>;
+/* The registry and the pure arithmetic over it live in pulseEvents.ts, which
+ * imports nothing — see that file for why. Re-exported here so every existing
+ * `from "./pulse.ts"` import keeps working. */
+export { PULSE_EVENTS, totalInteractions, touchedCount } from "./pulseEvents.ts";
+export type { PulseCounts, PulseEvent } from "./pulseEvents.ts";
 
 const CHANNEL = "pulse-v1";
 
@@ -80,11 +60,6 @@ export function usePulse(): (event: PulseEvent) => void {
     },
     [setCounts],
   );
-}
-
-/** Total across every counted event — the one headline number on /pulse. */
-export function totalInteractions(counts: PulseCounts): number {
-  return Object.values(counts).reduce((sum: number, n) => sum + (n ?? 0), 0);
 }
 
 /** Counts folded into the registry's display groups, ordered by the registry so

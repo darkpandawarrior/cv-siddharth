@@ -87,9 +87,18 @@ describe("the README's numbers are the repo's numbers", () => {
    * gen-repo-stats before vitest and a developer does not.
    *
    * So the generated half gets its own check against something nothing
-   * generates. Counting files is enough — a file count that has drifted is proof
-   * the whole record is stale, and the test total moves with it. Walked rather
-   * than globbed because the suite spans src/, api/ and scripts/.
+   * generates. Walked rather than globbed because the suite spans src/, api/
+   * and scripts/.
+   *
+   * WHAT THIS DOES NOT COVER, said out loud because it has now failed that way
+   * once. This asserts `testFiles` only, on the reasoning that a drifted file
+   * count proves the record is stale. The converse does not hold: adding ten
+   * tests to files that already exist leaves the count correct and the TOTAL
+   * ten short, which is exactly how 1045 shipped against a suite of 1058 — the
+   * number `profile.ts` renders as a headline CV metric. Nothing here can
+   * cheaply assert the total; only `vitest list` knows it, which is why
+   * gen-repo-stats.mjs is in check-generated.mjs's DETERMINISTIC set. That
+   * script is the guard for the total. This one is the guard for the shape.
    */
   it("has not let the generated stats go stale under it", () => {
     const skip = new Set(["node_modules", "dist", ".git", "e2e", ".vercel", "coverage", ".worktrees"]);

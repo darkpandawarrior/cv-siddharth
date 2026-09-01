@@ -210,9 +210,21 @@ export function zonePlace(zone: string): string {
   return (zone.split("/").pop() ?? zone).replace(/_/g, " ");
 }
 
-/** "Asia/Kolkata" → "Asia". Continent-ish, and good enough to group by. */
+/**
+ * "Asia/Kolkata" → "Asia". Continent-ish, and good enough to group by.
+ *
+ * A zone with no "/" is not a place and must not be drawn as one. "UTC" is what
+ * every headless browser, CI runner and server-side fetch reports, and taking
+ * its first segment made it its own continent — on the localhost room that
+ * rendered as a coloured slice reading "UTC · 1,217 · 45%" inside a section
+ * headed "Where in the world". The same goes for the deprecated single-segment
+ * aliases ("Zulu", "Universal"). They are still counted and still shown as
+ * their own chip group; they are just not claimed to be somewhere.
+ */
+export const UNPLACEABLE_REGION = "No place given";
 export function zoneRegion(zone: string): string {
-  const region = zone.split("/")[0] ?? zone;
+  if (!zone.includes("/")) return UNPLACEABLE_REGION;
+  const region = zone.split("/")[0];
   return region === "America" ? "Americas" : region;
 }
 
