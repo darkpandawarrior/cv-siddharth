@@ -1192,11 +1192,11 @@ export const projects: Project[] = [
     tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
       "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "83 ATS/board providers"],
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "85 ATS/board providers"],
     highlights: [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "83 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "85 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
       `24 merged PRs to the public career-ops project (⭐${upstreamStars}): two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612). Each shipped with a reproduction and a regression test, every one publicly checkable.`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
@@ -1250,7 +1250,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Zero tokens until an LLM is actually needed",
-          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 83 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
+          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 85 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
         },
         {
           heading: "One engine, many candidates",
@@ -1264,14 +1264,14 @@ export const projects: Project[] = [
       metrics: [
         { value: "25", label: "KMP modules · 5 targets" },
         { value: "45k", label: "lines of Kotlin · 543 files" },
-        { value: "83", label: "ATS & job-board providers" },
+        { value: "85", label: "ATS & job-board providers" },
         { value: "24", label: "PRs merged upstream" },
       ],
       techStack: [
         { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
         { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
         { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "hiresignal:// deep links", "OpenAPI contract"] },
-        { group: "Open-source engine (career-ops)", items: ["Node.js", "83 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
+        { group: "Open-source engine (career-ops)", items: ["Node.js", "85 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
       ],
       extraLinks: [
         { label: "PR: agent-inbox feature", url: "https://github.com/career-ops-hq/career-ops/pull/1472" },
