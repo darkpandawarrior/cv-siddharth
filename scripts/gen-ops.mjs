@@ -210,7 +210,13 @@ writeFileSync(
     // upstream, which is a compile break caused purely by today's data.
     `export type Drift = { repo: string; upstream: string; pin: string; behind: number | null; pinnedAt: string | null };\n` +
     `export const drift: Drift[] = ${JSON.stringify(drift, null, 2)};\n\n` +
-    `export const opsGeneratedAt = ${JSON.stringify(new Date().toISOString().slice(0, 10))};\n`,
+    // Stamped from the newest input, never the wall clock. This file sits in
+    // check-generated's DETERMINISTIC list and ci.yml runs that check, so a
+    // `new Date()` here failed the gate on every day after the commit day with
+    // nothing changed. A board is exactly as fresh as its freshest input.
+    `export const opsGeneratedAt = ${JSON.stringify(
+      perimeter.reduce((mx, x) => (x.generatedAt > mx ? x.generatedAt : mx), "1970-01-01").slice(0, 10),
+    )};\n`,
 );
 
 console.log(
