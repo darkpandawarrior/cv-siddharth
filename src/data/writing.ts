@@ -199,8 +199,9 @@ export const writing: Writing = {
       "slug": "collectasstate-leak",
       "pillar": "compose-performance",
       "series": "ghosts-in-the-recomposition",
-      "status": "ready",
+      "status": "published",
       "created": "2026-07-31",
+      "live": "https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0",
       "tags": [
         "android",
         "jetpack-compose",
@@ -208,15 +209,18 @@ export const writing: Writing = {
         "lifecycle",
         "collectAsStateWithLifecycle"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0"
+      }
     },
     {
       "title": "expect/actual is the wrong default in KMP",
       "slug": "kmp-expect-actual-default",
       "pillar": "kmp",
       "series": "one-brain-two-bodies",
-      "status": "ready",
+      "status": "published",
       "created": "2026-07-29",
+      "live": "https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p",
       "tags": [
         "kotlin",
         "kmp",
@@ -225,15 +229,18 @@ export const writing: Writing = {
         "expect-actual",
         "di"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p"
+      }
     },
     {
       "title": "Your LazyColumn recomposes on every scroll",
       "slug": "lazycolumn-recomposition",
       "pillar": "compose-performance",
       "series": "ghosts-in-the-recomposition",
-      "status": "ready",
+      "status": "published",
       "created": "2026-07-24",
+      "live": "https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj",
       "tags": [
         "android",
         "jetpack-compose",
@@ -241,7 +248,9 @@ export const writing: Writing = {
         "stability",
         "performance"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj"
+      }
     },
     {
       "title": "The 5-second window that crashes your service",

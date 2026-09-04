@@ -82,6 +82,15 @@ export const weeb = {
   },
   "stale": [
     {
+      "name": "The World’s Finest Assassin Gets Reincarnated In Another World As An Aristocrat",
+      "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "romaji": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru",
+      "english": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "sequel": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru 2nd Season",
+      "year": 2027,
+      "status": "NOT_YET_RELEASED"
+    },
+    {
       "name": "Grand Blue",
       "title": "Grand Blue Dreaming",
       "romaji": "Grand Blue",
@@ -485,15 +494,6 @@ export const weeb = {
       "sequel": "Ranma ½ (1989)",
       "year": 1989,
       "status": "FINISHED"
-    },
-    {
-      "name": "The World’s Finest Assassin Gets Reincarnated In Another World As An Aristocrat",
-      "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
-      "romaji": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru",
-      "english": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
-      "sequel": "Sekai Saikou no Ansatsusha, Isekai Kizoku ni Tensei suru 2nd Season",
-      "year": null,
-      "status": "NOT_YET_RELEASED"
     },
     {
       "name": "Loner Life In Another World",

@@ -167,11 +167,14 @@ Field notes from real Android and KMP work, told through recurring personified-b
 Series: Chain Of Custody (4), Crossing The Schema (1), Ghosts In The Recomposition (2), Notes From The Loop (2), One Brain Two Bodies (1), Sensors Who Lie (5), The Coroutine Court (1), The Night Shift (1).
 
 Published:
+- "collectAsState is quietly leaking your work": https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0
+- "expect/actual is the wrong default in KMP": https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p
+- "Your LazyColumn recomposes on every scroll": https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj
 - "The 5-second window that crashes your service": https://dev.to/darkpandawarrior/the-5-second-window-that-crashes-your-service-5cmm
 - "CancellationException is not an assassin": https://dev.to/darkpandawarrior/cancellationexception-is-not-an-assassin-2220
 - "Teaching a phone to disbelieve its own GPS": https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip (also on linkedin https://www.linkedin.com/posts/siddharth-pandalai_the-concussed-witness-ugcPost-7484693809122045952-8zta, medium https://medium.com/p/5ed5819043d7, hashnode https://darkpandawarrior.hashnode.dev/the-concussed-witness)
 
-Queued: "The captain routes. The captain never rows.", "I audited my own migrations. It was not fine.", "Plausible is worse than wrong", "Your thresholds do not belong in constants", "Invariants are cheap. Silent corruption is not.", "Every filter needs a documented exception", "Never silently change a number someone gets paid on", "When two sensors disagree, rank them", "Your data model is where uncertainty goes to die", "One global threshold is how you delete valid data", "Filtered should never mean deleted", "collectAsState is quietly leaking your work", "expect/actual is the wrong default in KMP", "Your LazyColumn recomposes on every scroll".
+Queued: "The captain routes. The captain never rows.", "I audited my own migrations. It was not fine.", "Plausible is worse than wrong", "Your thresholds do not belong in constants", "Invariants are cheap. Silent corruption is not.", "Every filter needs a documented exception", "Never silently change a number someone gets paid on", "When two sensors disagree, rank them", "Your data model is where uncertainty goes to die", "One global threshold is how you delete valid data", "Filtered should never mean deleted".
 
 Creative archive, written before the code and originally on https://booksbeforebros.wordpress.com/: Chronicles Of An NRE Kid (essay), CTC: Cost To Company (short-fiction), Deadline (short-fiction), Honest College Fests (humor), It's A Doggone Life (essay), Pointer Games (short-fiction), Prophecy #201112003 (short-fiction), The Legend Of K'öæluæ's Scales (short-fiction), The Loopdown (short-fiction), The Pun Force (humor). The writing years, including the magazine editions these ran in, are at https://cv-siddharth.vercel.app/ink.
 
