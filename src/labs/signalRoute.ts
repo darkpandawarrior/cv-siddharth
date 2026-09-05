@@ -174,6 +174,13 @@ export interface Zone {
   spikeChance: number;
 }
 
+// ponytail: five arbitrary hexes, not the site's two-channel amber/cyan
+// system — a deliberate local exception, same footing as index.css's
+// --lab-gold. Five zones model five physically distinct, simultaneously-
+// visible GPS failure modes on one legend; collapsing them onto two hues via
+// opacity would make adjacent zones (e.g. canyon vs. parking, both "GPS
+// confidently wrong") indistinguishable at a glance, which is worse than an
+// off-token palette for a legend whose whole job is telling zones apart.
 export const ZONES: readonly Zone[] = [
   { id: "open",    label: "OPEN ROAD",         color: "#8ff0b4", from: 0,    to: 0.28, speedMps: 14, sigmaM: 4,  accuracyM: 5,  dropoutChance: 0,    spikeChance: 0    },
   { id: "canyon",  label: "URBAN CANYON",      color: "#f0883e", from: 0.28, to: 0.52, speedMps: 9,  sigmaM: 13, accuracyM: 9,  dropoutChance: 0,    spikeChance: 0.30 },
