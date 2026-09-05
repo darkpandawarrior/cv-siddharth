@@ -1,13 +1,17 @@
-<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="pg" x1="6" y1="6" x2="102" y2="102" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#EC4899"/>
-    </linearGradient>
-    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
-  </defs>
-  <g clip-path="url(#r)"><rect width="108" height="108" fill="url(#pg)"/></g>
-  <!-- Shield = "a client success is a hint, the server is truth" verification motif from the banner -->
-  <path d="M54,22 L78,31 C78,52 68,68 54,78 C40,68 30,52 30,31 Z" fill="#fff" fill-opacity="0.14" stroke="#fff" stroke-width="4"/>
-  <path d="M43,51 L51,60 L67,40" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<rect width="256" height="256" fill="#0A0D0C"/>
+<g style="color:#A78BFA">
+<g stroke-linecap="round" stroke-linejoin="round">
+  <line x1="53.33" y1="53.33" x2="53.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="85.33" y1="53.33" x2="85.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="117.33" y1="53.33" x2="117.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="149.33" y1="53.33" x2="149.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="181.33" y1="53.33" x2="181.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="213.33" y1="53.33" x2="213.33" y2="117.33" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <line x1="42.67" y1="138.67" x2="213.33" y2="138.67" stroke="currentColor" stroke-width="21.33" fill="none"/>
+  <line x1="128" y1="138.67" x2="128" y2="202.67" stroke="currentColor" stroke-width="21.33" fill="none"/>
+  <line x1="42.67" y1="160" x2="213.33" y2="160" stroke="currentColor" stroke-width="10.67" fill="none"/>
+  <circle cx="128" cy="202.67" r="16" fill="currentColor" stroke="none"/>
+</g>
+</g>
 </svg>

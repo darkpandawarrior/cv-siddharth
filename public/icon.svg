@@ -1,5 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="20" fill="#0b0f0d"/>
-  <text x="46" y="68" font-size="52" font-family="sans-serif" font-weight="bold" fill="#3ddc84" text-anchor="middle">S</text>
-  <circle cx="78" cy="63" r="6" fill="#5ee6ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <rect x="0" y="0" width="48" height="48" fill="#0A0D0C"/>
+  <g fill="none" stroke="#F2A13D" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="40" height="40" rx="10" stroke-width="2"/>
+    <rect x="22" y="18" width="12" height="12" rx="4" stroke-width="2"/>
+    <rect x="18" y="18" width="12" height="12" rx="4" stroke-width="4"/>
+    <line x1="24" y1="8" x2="24" y2="12" stroke-width="2"/>
+    <line x1="24" y1="36" x2="24" y2="40" stroke-width="2"/>
+    <line x1="8" y1="24" x2="12" y2="24" stroke-width="2"/>
+    <line x1="36" y1="24" x2="40" y2="24" stroke-width="2"/>
+  </g>
+  <circle cx="12" cy="12" r="3" fill="#F2A13D"/>
 </svg>

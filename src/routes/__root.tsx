@@ -121,7 +121,7 @@ export const Route = createRootRoute({
       // with no summary rather than a finished sentence.
       { rel: "alternate", type: "application/atom+xml", href: "/anthology.xml", title: "The Morkinstar Journals" },
       { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "Agent-readable profile" },
-      { rel: "icon", href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0f0d'/%3E%3Ctext x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' fill='%233ddc84' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E" },
+      { rel: "icon", href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E %3Crect x='0' y='0' width='48' height='48' fill='%230A0D0C'/%3E %3Cg fill='none' stroke='%23F2A13D' stroke-linecap='round' stroke-linejoin='round'%3E %3Crect x='4' y='4' width='40' height='40' rx='10' stroke-width='2'/%3E %3Crect x='22' y='18' width='12' height='12' rx='4' stroke-width='2'/%3E %3Crect x='18' y='18' width='12' height='12' rx='4' stroke-width='4'/%3E %3Cline x1='24' y1='8' x2='24' y2='12' stroke-width='2'/%3E %3Cline x1='24' y1='36' x2='24' y2='40' stroke-width='2'/%3E %3Cline x1='8' y1='24' x2='12' y2='24' stroke-width='2'/%3E %3Cline x1='36' y1='24' x2='40' y2='24' stroke-width='2'/%3E %3C/g%3E %3Ccircle cx='12' cy='12' r='3' fill='%23F2A13D'/%3E %3C/svg%3E" },
       { rel: "preload", as: "font", type: "font/woff2", href: spaceGrotesk700, crossOrigin: "anonymous" },
       { rel: "preload", as: "font", type: "font/woff2", href: inter400, crossOrigin: "anonymous" },
     ],
