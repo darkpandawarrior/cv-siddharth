@@ -220,6 +220,21 @@ export const galleries: Record<string, string[]> = {
     "/projects/portfolio/screenshots/site_terminal.png",
     "/projects/portfolio/screenshots/site_weeb.png"
   ],
+  "sinc-p": [
+    "/projects/sinc-p/screenshots/01-landing.png",
+    "/projects/sinc-p/screenshots/02-transparency.png",
+    "/projects/sinc-p/screenshots/03-officer-queue.png",
+    "/projects/sinc-p/screenshots/04-case-view.png",
+    "/projects/sinc-p/screenshots/05-compliance.png",
+    "/projects/sinc-p/screenshots/06-student-portal.png",
+    "/projects/sinc-p/screenshots/07-file-grievance.png",
+    "/projects/sinc-p/screenshots/08-systemic-patterns.png",
+    "/projects/sinc-p/screenshots/09-disclosures.png",
+    "/projects/sinc-p/screenshots/10-status-lookup.png",
+    "/projects/sinc-p/screenshots/11-student-case.png",
+    "/projects/sinc-p/screenshots/12-news.png",
+    "/projects/sinc-p/screenshots/13-handbook.png"
+  ],
   "stutter": [
     "/projects/stutter/screenshots/echo-cooperation.webp",
     "/projects/stutter/screenshots/journey.gif",

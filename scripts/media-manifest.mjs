@@ -126,4 +126,22 @@ export const sync = {
       ["screenshots/results.png", "results.png"],
     ],
   },
+  "sinc-p": {
+    repo: "darkpandawarrior/SINC-P",
+    files: [
+      ["screenshots/01-landing.png", "01-landing.png"],
+      ["screenshots/02-transparency.png", "02-transparency.png"],
+      ["screenshots/03-officer-queue.png", "03-officer-queue.png"],
+      ["screenshots/04-case-view.png", "04-case-view.png"],
+      ["screenshots/05-compliance.png", "05-compliance.png"],
+      ["screenshots/06-student-portal.png", "06-student-portal.png"],
+      ["screenshots/07-file-grievance.png", "07-file-grievance.png"],
+      ["screenshots/08-systemic-patterns.png", "08-systemic-patterns.png"],
+      ["screenshots/09-disclosures.png", "09-disclosures.png"],
+      ["screenshots/10-status-lookup.png", "10-status-lookup.png"],
+      ["screenshots/11-student-case.png", "11-student-case.png"],
+      ["screenshots/12-news.png", "12-news.png"],
+      ["screenshots/13-handbook.png", "13-handbook.png"],
+    ],
+  },
 };

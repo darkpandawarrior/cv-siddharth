@@ -4,6 +4,7 @@ import { repoStats } from "./repoStats.ts";
 import { surfaces } from "./surfaces.ts";
 import { fleetStats } from "./store.ts";
 import { writing } from "./writing.ts";
+import { cast, titleize } from "./writingMeta.ts";
 
 export const profile = {
   name: "Siddharth Pandalai",
@@ -291,9 +292,9 @@ export const caseStudies: CaseStudy[] = [
     title: "Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
     metric: "46 modules · 5 platforms · offline AI",
     summary:
-      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend, Room + DataStore only, so the whole thing is reproducible and reviewable by anyone.",
+      "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Offline-first on Room + DataStore, with a real Kotlin/Ktor backend built and tested, off by default, so the whole thing stays reproducible and reviewable by anyone.",
     problem:
-      "I wanted a clean, inspectable reference for the architecture I advocate for at scale: Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer. Built with zero backend, so the whole thing is reproducible and reviewable by anyone.",
+      "I wanted a clean, inspectable reference for the architecture I advocate for at scale: Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer. Built offline-first, with the real backend opt-in, so the whole thing stays reproducible and reviewable by anyone.",
     approach: [
       "46-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core: design system, Room (KMP) + DataStore, and every check-in / hardware-event screen. It drives Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
@@ -559,6 +560,9 @@ const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) =>
   acc[key] = (acc[key] ?? 0) + 1;
   return acc;
 }, {});
+// The recurring cast, most-appeared first — same derive-don't-type-it
+// discipline as the series/pillar ranks above.
+const castByAppearances = [...cast].sort((a, b) => b.appearances - a.appearances);
 
 export const projects: Project[] = [
   {
@@ -653,7 +657,7 @@ export const projects: Project[] = [
         },
         {
           heading: "ISMCTS expert AI + DARBAR social layer",
-          body: "Bots use Information Set Monte Carlo Tree Search (1.5k-16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs. Social manipulation that never breaks engine determinism.",
+          body: "Bots use Information Set Monte Carlo Tree Search (1.5k-16k iterations depending on difficulty tier) with an optional cloud-LLM upgrade (Anthropic / OpenAI / Gemini). Built on kmp-toolkit's own generic bots-policy shell (Policy/GameRules/Ismcts/SearchBudget, zero deps), not a bespoke search implementation. Ten personas each have a personality profile driving targeting and bluff frequency. The DARBAR layer lets bots form alliances, hold grudges and trade Hinglish table-talk across four story arcs. Social manipulation that never breaks engine determinism.",
         },
         {
           heading: "Secrecy boundary",
@@ -770,7 +774,7 @@ export const projects: Project[] = [
     name: "Doori",
     tagline: "Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
     description:
-      "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, zero backend.",
+      "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, with a real Kotlin/Ktor backend built in, off by default.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
       "46-module clean architecture: 13 feature modules meeting only at the composition root.",
@@ -853,7 +857,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Doori is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
+        "Doori is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, offline-first with a real Kotlin/Ktor backend built in and off by default, so the whole thing stays reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
           heading: "46-module clean architecture (36 local + 10 composed)",
@@ -869,7 +873,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Durable submit-outbox",
-          body: "Submitting a track or voucher journals the intent locally and reconciles it deterministically, so a process kill mid-submit never loses a record or double-counts one. Repositories are written to look one implementation-swap away from a real API. The backend is deferred, not designed out.",
+          body: "Submitting a track or voucher journals the intent locally and reconciles it deterministically, so a process kill mid-submit never loses a record or double-counts one. Repositories were written to look one implementation-swap away from a real API, and that bet paid off: a real Kotlin/Ktor `:server` module now exists, sharing `:contract` DTOs with the client so the wire format can't drift, with JWT auth guarding every route. Off by default behind one flag, so the offline guarantee above is unchanged until someone flips it.",
         },
         {
           heading: "Five targets, one snapshot model",
@@ -881,7 +885,11 @@ export const projects: Project[] = [
         },
         {
           heading: "Super-profile & plugin-composition platform (V24, shipped)",
-          body: "The newest depth wave: a single plugin registry is the app's composition mechanism. TILE / CAPABILITY / VALUE plugins resolve by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR). All shipped, with a V25→V37 series landed on top (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New), still zero backend.",
+          body: "The newest depth wave: a single plugin registry is the app's composition mechanism. TILE / CAPABILITY / VALUE plugins resolve by layering FORCED > USER > PRESET > DEFAULT, editable live from a Master Plugin page with source chips. Four persona presets (Corporate Commuter, Super-App Consumer, Gig Driver, Minimal Guest) reshape hubs, auth flows, tracking behaviour and tunables from one account. Built on top: act-on-behalf session delegation with an app-wide \"Acting as\" banner, a verification centre with corporate-email/OTP + card KYC, growth surfaces (referral, coupons, scratch rewards), membership (club, subscriptions, incentives), external wallet linking via OTP, and payout identity (masked bank + editable UPI handle + QR). All shipped, with a V25→V37 series landed on top (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New), still offline-first by default with the real backend opt-in.",
+        },
+        {
+          heading: "Master search, dynamic forms and document intelligence",
+          body: "A registry-based master search fans one query across every feature module's own search provider from a single results screen, instead of a separate search box per hub. A dynamic form engine drives expense and claim entry: field validation, conditional visibility and GST auto-calc, with AI field suggestions fed by an on-device document-intelligence pipeline that combines on-device AI, text recognition and heuristics for OCR field-fill, doc-type classification and duplicate detection on a scanned receipt, degrading gracefully wherever a model isn't available.",
         },
         {
           heading: "FOSS-safe distribution & quality gates",
@@ -892,12 +900,13 @@ export const projects: Project[] = [
         { value: "46", label: "Gradle modules (36 local + 10 composed)" },
         { value: "13", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
-        { value: "0", label: "backend calls" },
+        { value: "0", label: "backend calls by default, real Ktor server opt-in" },
       ],
       techStack: [
         { group: "Language & UI", items: ["Kotlin", "Compose Multiplatform", "Material 3", "SwiftUI (watchOS)"] },
         { group: "Data", items: ["Room (KMP)", "DataStore", "Coroutines + Flow", "Durable submit-outbox"] },
-        { group: "Domain", items: ["Location engine (jitter · spike · IMU fusion)", "Reimbursement-rate policy engine"] },
+        { group: "Domain", items: ["Location engine (jitter · spike · IMU fusion)", "Reimbursement-rate policy engine", "Master search (provider registry)", "Dynamic form engine (GST auto-calc, conditional visibility)", "On-device document intelligence"] },
+        { group: "Backend (opt-in, off by default)", items: ["Ktor + Exposed `:server`", "shared `:contract` DTOs", "JWT auth"] },
         { group: "DI & build", items: ["Koin", "kmp-build-logic convention plugins", "AGP", "Gradle KTS"] },
         { group: "Maps & platform", items: ["MapLibre (F-Droid)", "KrossMap (Play)", "Glance + WidgetKit widgets", "Live Activity / Dynamic Island"] },
         { group: "Quality", items: ["Roborazzi (159 JVM screenshot tests)", "detekt", "ktlint", "Kover", "CI"] },
@@ -1197,7 +1206,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "85 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      `24 merged PRs to the public career-ops project (⭐${upstreamStars}): two new ATS providers (BambooHR #1141, Breezy HR #1185), an opt-in LLM relevance re-ranker (#2579), an agent-inbox feature (#1472), and a run of correctness fixes covering silent data loss, a concurrency race that dropped queued requests (#2614), an unlocked append to shared history (#2639) and a magnitude suffix that let an inflated claim past the fact-checker (#2612). Each shipped with a reproduction and a regression test, every one publicly checkable.`,
+      `24 merged PRs to the public career-ops project (⭐${upstreamStars}): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -1257,6 +1266,14 @@ export const projects: Project[] = [
           body: "career-ops's multi-profile architecture is a profiles.yml registry mapping each candidate to a private data root while sharing one engine install. That is the same shape the native app's per-candidate routing follows: one server, N profiles, a strict User/System data contract between them.",
         },
         {
+          heading: "Bring your existing career-ops data",
+          body: "Already running the career-ops CLI? Point Candidai at the existing checkout instead of starting over: the first-run wizard's Profiles screen has a Bring your data step, a doctor gate checks it's a usable career-ops root and says exactly what's missing if not, then imports it as an active profile. Reference mode leaves the folder where it is so the CLI can keep reading and writing it, guarded by a cross-process tracker lock; copy mode clones it onto the server volume for a host with no shared filesystem. The same path is exposed over HTTP for a server deploy.",
+        },
+        {
+          heading: "The agent-interop contract, not just an OpenAPI label",
+          body: "Any mutating request may carry an Idempotency-Key header; a retry with the same key on the same method and path is acknowledged without re-executing the write, the exact contract the mobile offline outbox itself relies on. Mutating requests to the API are rate-limited per client IP, with read-only GETs left unlimited. The scan and explore endpoints stream progress over SSE (text/event-stream) rather than blocking until a scan completes, so a caller sees offers arrive live instead of waiting on one long response.",
+        },
+        {
           heading: "Genuine upstream contribution, not a personal fork",
           body: "24 merged pull requests against the public career-ops repository (⭐" + upstreamStars + ", independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
@@ -1312,11 +1329,11 @@ export const projects: Project[] = [
     // you to the live site you were already on, the other bounced you to GitHub. Neither ever
     // explained what either thing IS. One entry now, with the breakdown on the page.
     slug: "portfolio",
-    name: "cv-siddharth: this site, and its Compose Multiplatform twin",
+    name: "Portfolio Twin",
     tagline: "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
       `An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from ${(repoStats.kotlinLines / 1000).toFixed(1)}k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.`,
-    stack: ["React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
+    stack: ["cv-siddharth", "React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
     highlights: [
       "Two full implementations of one portfolio: the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
       "Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file, the same source of truth the pages render from, so the assistant cannot drift from the site.",
@@ -1327,6 +1344,7 @@ export const projects: Project[] = [
       { label: "React source", url: "https://github.com/darkpandawarrior/cv-siddharth" },
       { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
       { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+      { label: "kmp-family (this site's own case study)", url: "#project/kmp-family" },
     ],
     targets: [
       {
@@ -1444,6 +1462,7 @@ export const projects: Project[] = [
         { label: "React source", url: "https://github.com/darkpandawarrior/cv-siddharth" },
         { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
         { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+        { label: "kmp-family (this site's own case study)", url: "#project/kmp-family" },
       ],
     },
     // The gallery is this site's own route captures — docs/screenshots/site_*.png,
@@ -1607,6 +1626,88 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "sinc-p",
+    tier: 2,
+    name: "SINC-P",
+    tagline: "A statutory student-grievance redressal system, built to survive a UGC inspection rather than a demo.",
+    description:
+      "Next.js 16 over Postgres with row-level security, rewriting a 2019 MANIT Bhopal final-year project (a downloaded complaint-box template, categories still reading E-commerce and Online Shopping) into a real compliance system: a statutory SLA clock, a hash-chained append-only audit trail, and published closure-time transparency with no login required.",
+    stack: ["Next.js 16", "React 19", "TypeScript strict", "Postgres", "Drizzle ORM", "Tailwind v4", "Vitest"],
+    highlights: [
+      "A statutory SLA clock escalating officer, then admin, then the Ombudsperson tier the regulations require, plus a hash-chained audit trail a retro-edited remark cannot pass unnoticed.",
+      "Tenant isolation across four independent layers, down to Postgres row-level security, verified by a script that tries to break it rather than trusted from the application side alone.",
+    ],
+    links: [
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/SINC-P" },
+      { label: "Doori (sibling KMP app)", url: "#project/doori" },
+    ],
+    status: "Active · AGPL-3.0 · UGC 2023-compliant",
+    badges: ["Next.js 16", "Postgres RLS", "AGPL-3.0", "UGC 2023"],
+    detail: {
+      overview:
+        "SINC-P rebuilds a 2019 final-year project from scratch: a statutory grievance-redressal system an Indian institution can put in front of a UGC inspector, with a clock on every case and a record nobody can quietly edit. Nothing from 2019 survived the rewrite, not the code, the schema, or the passwords, because almost every line of the original was an ordinary mistake (string-built SQL, unsalted md5, no ownership check on a grievance read) that is still running at real institutions today.",
+      sections: [
+        {
+          heading: "A statutory clock that survives an audit",
+          body: "Every grievance carries a due date computed from the category override or the institution default, in Asia/Kolkata, in calendar or working days. The timezone handling is deliberate: IST sits at a fixed +5:30, so a due date computed off UTC calendar days lands a day early or late depending on what time somebody filed, and that is the kind of drift an inspection finds, not a test. Breaches escalate officer, then admin, then the Ombudsperson tier the UGC regulations require.",
+        },
+        {
+          heading: "An append-only trail that shows its teeth",
+          body: "The grievance event log is hash-chained: each event commits to the one before it, so a retro-edited remark or a deleted escalation breaks verification at a nameable sequence number, enforced by a database trigger and a revoked privilege rather than good intentions. The UI calls this tamper-evident, not tamper-proof, because overselling it is the one lie an auditor could catch.",
+        },
+        {
+          heading: "Tenant isolation you can attack",
+          body: "Four independent layers assume any one of them will eventually have a bug: application-level scoping, a transaction-local tenant context, Postgres row-level security enforced even against table owners, and a runtime database role that is neither owner nor superuser. A verification script stands up a throwaway Postgres and actively tries to break every layer rather than asserting isolation from the application side alone.",
+        },
+        {
+          heading: "What changed since 2019",
+          body: "The 2019 tree ran unauthenticated SQL injection (string-concatenated queries), unsalted md5 passwords, an IDOR that let any logged-in student read every other student's grievance by counting upward through the URL, and an upload path that would execute an uploaded PHP file as a shell. The 2026 rewrite replaces each with parameterised queries under RLS, scrypt with a per-password salt, an explicit authorization check on every read path, and magic-byte-sniffed uploads capped in flight and stored outside the web root.",
+        },
+        {
+          heading: "Published transparency, no login required",
+          body: "A public transparency page shows median days to resolution per category, with any figure computed from a small handful of cases suppressed at the query layer so a single-digit count in one department can never read as a name. The buyer (a Registrar or Dean of Student Welfare) gets the audit trail; students get a public scoreboard, which is what makes them actually file into the system the compliance record depends on.",
+        },
+      ],
+      techStack: [
+        { group: "Framework", items: ["Next.js 16 (App Router)", "React 19", "Server Components"] },
+        { group: "Data", items: ["Postgres", "Drizzle ORM", "Row-Level Security"] },
+        { group: "Language & validation", items: ["TypeScript strict", "noUncheckedIndexedAccess", "Zod v4"] },
+        { group: "Auth & ops", items: ["scrypt (node:crypto)", "server sessions", "Docker Compose deploy"] },
+        { group: "Quality", items: ["Vitest", "integration tests against a real Postgres"] },
+      ],
+      extraLinks: [
+        { label: "ADR-0001: product & architecture decision", url: "https://github.com/darkpandawarrior/SINC-P/blob/main/docs/decisions/0001-product-and-architecture.md" },
+        { label: "2019 → 2026 migration writeup", url: "https://github.com/darkpandawarrior/SINC-P/blob/main/docs/migration-from-2019.md" },
+      ],
+      diagrams: [
+        {
+          title: "Tenant isolation: four layers, any one assumed to fail",
+          code: `graph TD
+  req["Request"] --> app["Application-level scoping"]
+  app --> tx["Transaction-local tenant context"]
+  tx --> rls["Postgres FORCE ROW LEVEL SECURITY"]
+  rls --> role["Least-privilege runtime role"]
+  role --> db[("Tenant's own rows only")]`,
+        },
+      ],
+    },
+    screens: [
+      { file: "01-landing.png", caption: "Landing" },
+      { file: "02-transparency.png", caption: "Published closure times, with small cells suppressed" },
+      { file: "03-officer-queue.png", caption: "The officer queue, sorted by what breaches soonest" },
+      { file: "04-case-view.png", caption: "A case, with its full hash-chained trail" },
+      { file: "05-compliance.png", caption: "The compliance dashboard" },
+      { file: "06-student-portal.png", caption: "The student portal: where each grievance actually is" },
+      { file: "07-file-grievance.png", caption: "Filing: matching handbook entries surface before the form accepts anything" },
+      { file: "08-systemic-patterns.png", caption: "The officer console surfacing a systemic issue" },
+      { file: "09-disclosures.png", caption: "Statutory disclosures: SGRC composition, Ombudsperson, procedure" },
+      { file: "10-status-lookup.png", caption: "Status lookup, no login required" },
+      { file: "11-student-case.png", caption: "A student's own case detail" },
+      { file: "12-news.png", caption: "Campus news" },
+      { file: "13-handbook.png", caption: "The deflection handbook" },
+    ],
+  },
+  {
     slug: "kmp-family",
     name: "The KMP toolkit family",
     tagline: "Three decoupled repos so a new app starts at \"write the feature\".",
@@ -1614,25 +1715,29 @@ export const projects: Project[] = [
       "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
-      "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
+      "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.",
       "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Doori (10 of its 46 modules), PaymentsLab-KMP (25 of its 40) and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
+      "Consumed by Doori (10 of its 46 modules), PaymentsLab-KMP (25 of its 40), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
     ],
     links: [
       { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
       { label: "kmp-build-logic", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
       { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
+      { label: "Doori (sibling KMP app)", url: "#project/doori" },
+      { label: "PaymentsLab-KMP (sibling KMP app)", url: "#project/paymentslab-kmp" },
+      { label: "Candidai (sibling KMP app)", url: "#project/candidai" },
+      { label: "Gaddi (sibling KMP app)", url: "#project/gaddi" },
     ],
     status: "Active · MIT · vendored across 5 repos",
     badges: ["Kotlin Multiplatform", "39 modules", "22 convention plugins", "MIT"],
     detail: {
       overview:
-        "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
+        "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Candidai, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
       sections: [
         {
           heading: "kmp-toolkit: 39 modules, extracted, never designed",
-          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Doori and PaymentsLab-KMP build their reducer/store layer on.",
+          body: "The library repo, 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. In active use: the MVI ViewModel core (Candidai, PaymentsLab-KMP, Doori, Gaddi), network and on-device AI (both in Candidai), security (PaymentsLab-KMP) and Doori's own operation-log offline-outbox. Still finding a first consumer: typed Result, device-integrity, a screen-state store (ScreenState/DecisionEngine, a different module from Doori's outbox), settings, app-shell, llm-chat and a secrets vault pattern, plus bots-policy, the generic ISMCTS search shell Gaddi's own AI engine is actually built from. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base four apps build their reducer/store layer on.",
         },
         {
           heading: "kmp-build-logic: the setup written once",
@@ -1644,11 +1749,11 @@ export const projects: Project[] = [
         },
         {
           heading: "The composition is the proof",
-          body: "Doori consumes 10 of its 46 modules from the toolkit; PaymentsLab-KMP consumes 25 of its 40; Gaddi draws on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fourth independent consumer.",
+          body: "Doori consumes 10 of its 46 modules from the toolkit; PaymentsLab-KMP consumes 25 of its 40; Candidai and Gaddi draw on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fifth independent consumer.",
         },
         {
-          heading: "One MVI contract, two apps",
-          body: "Doori and PaymentsLab-KMP are not two isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale: one seam, reused, instead of the same decision made differently five times.",
+          heading: "One MVI contract, four apps",
+          body: "Doori, PaymentsLab-KMP, Candidai and Gaddi are not four isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale: one seam, reused, instead of the same decision made differently four times.",
         },
       ],
       metrics: [
@@ -1658,7 +1763,7 @@ export const projects: Project[] = [
         { value: "19", label: "gateway providers behind one abstraction" },
       ],
       techStack: [
-        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "offline-first store", "network + security", "on-device AI seam", "device-integrity", "operation-log outbox", "19-provider payment-gateway abstraction"] },
+        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "network + security", "on-device AI seam", "device-integrity", "operation-log offline-outbox (Doori)", "screen-state store (ScreenState/DecisionEngine, no consumer app yet)", "settings", "app-shell", "llm-chat", "secrets vault pattern", "bots-policy (Gaddi's ISMCTS shell)", "19-provider payment-gateway abstraction"] },
         { group: "kmp-build-logic", items: ["AGP", "Kotlin", "Compose", "test + lint", "Firebase", "Room", "Koin"] },
         { group: "kmp-app-template", items: ["Shared Compose UI", "Splash → Login → Home nav scaffold", "Android + Desktop shells", "customizer.sh"] },
         { group: "Distribution", items: ["Gradle includeBuild", "MIT license"] },
@@ -1669,9 +1774,12 @@ export const projects: Project[] = [
           code: `graph LR
   bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Doori"]
   bl -.->|"includeBuild"| p["PaymentsLab-KMP"]
+  bl -.->|"includeBuild"| c["Candidai"]
+  bl -.->|"includeBuild"| ku["Gaddi"]
   tk["kmp-toolkit<br/>39 modules"] -.->|"includeBuild"| m
   tk -.->|"includeBuild"| p
-  tk -.->|"includeBuild"| ku["Gaddi"]
+  tk -.->|"includeBuild"| c
+  tk -.->|"includeBuild"| ku
   at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
         },
       ],
@@ -1687,7 +1795,7 @@ export const projects: Project[] = [
     highlights: [
       "One lesson in, four channel-shaped posts out, each with a branded SVG card. The adaptation is the product, not the writing.",
       "A voice profile derived from the existing archive, enforced by a lint step, so the generated drafts do not read like a language model wrote them.",
-      "Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass.",
+      `Framed as an engineer stuck in a time loop filing field notes on the same lying systems each pass, with a recurring cast (${titleize(castByAppearances[0]?.id)} and more) tracked in a living bestiary.`,
       "Public/private split by construction: the engine and the published posts are tracked, drafts and personal notes are gitignored.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/the-loopdown" }],
@@ -1724,6 +1832,10 @@ export const projects: Project[] = [
         {
           heading: "Framed as a time loop",
           body: "The whole archive is framed as an engineer stuck in a time loop, filing field notes on the same lying systems each pass: the sensor that reports a position it cannot back up, the coroutine that outlives the screen that launched it. The conceit gives every lesson the same voice without flattening what each one is actually about.",
+        },
+        {
+          heading: "A recurring cast, tracked in a bestiary",
+          body: `Each recurring character personifies one failure mode rather than one lesson, so continuity builds across entries instead of resetting every post: ${titleize(castByAppearances[0]?.id)} (GPS, or any sensor that reports with total confidence and zero reliability) leads the bestiary at ${castByAppearances[0]?.appearances} tracked appearances, alongside The Archivist (provenance and the audit trail), Doze the Jailer (Android's background-execution limits) and The Messenger (CancellationException, forever mistaken for an assassin). A living bestiary indexes who's appeared and who's still waiting in the wings, the same continuity discipline a codebase gets from a changelog.`,
         },
       ],
       metrics: [
@@ -1768,19 +1880,19 @@ export const sharedFoundation: {
   libs: SharedLib[];
 } = {
   blurb:
-    "Doori and PaymentsLab-KMP aren't two isolated demos. They're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
+    "Doori, PaymentsLab-KMP, Candidai and Gaddi aren't four isolated demos. They're four KMP apps sitting on a common foundation I built and maintain separately. All four pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
   libs: [
     {
       name: "kmp-build-logic",
       url: "https://github.com/darkpandawarrior/kmp-build-logic",
       role: "Gradle convention plugins: one place that configures every KMP module's targets, Compose, lint and test wiring.",
-      usedBy: ["Doori", "PaymentsLab-KMP"],
+      usedBy: ["Doori", "PaymentsLab-KMP", "Candidai", "Gaddi"],
     },
     {
       name: "kmp-toolkit",
       url: "https://github.com/darkpandawarrior/kmp-toolkit",
       role: "A vendored KMP toolkit: the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules.",
-      usedBy: ["Doori", "PaymentsLab-KMP"],
+      usedBy: ["Doori", "PaymentsLab-KMP", "Candidai", "Gaddi"],
     },
   ],
 };
@@ -1840,7 +1952,7 @@ export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Kursi (now Gaddi) shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
   { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
   { date: "Jun 2026", title: "Mileway (now Doori): five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
-  { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, still zero backend." },
+  { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in." },
   { date: "Jul 2026", title: "PaymentsLab (now PaymentsLab-KMP): 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway: super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },

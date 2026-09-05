@@ -57,8 +57,8 @@ describe("project towers", () => {
     expect(projectTowers()).toHaveLength(projects.length);
     // Pinned as well as derived, so a project silently appearing or vanishing fails here rather
     // than quietly reshaping the city. 9 -> 8 on 2026-08-11 when cv-siddharth-kmp merged into the
-    // portfolio entry: one project, one tower.
-    expect(projectTowers()).toHaveLength(8);
+    // portfolio entry: one project, one tower. 8 -> 9 when SINC-P joined the registry.
+    expect(projectTowers()).toHaveLength(9);
   });
 
   it("never fabricates a year for an undated project", () => {
@@ -102,7 +102,7 @@ describe("the whole west flank stays off the approach apron", () => {
   });
 
   it("gives gps.ts one TallStructure per employer block, case study and tower", () => {
-    expect(westStructures()).toHaveLength(4 + 5 + 8); // 4 employer blocks + 5 case studies + 8 towers
+    expect(westStructures()).toHaveLength(4 + 5 + 9); // 4 employer blocks + 5 case studies + 9 towers
   });
 });
 
