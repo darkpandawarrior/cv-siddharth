@@ -153,7 +153,7 @@ function RootNotFoundComponent() {
       title="Signal lost"
       message="That route doesn't exist."
       extraLinks={[
-        { label: "Mileway", to: "/project/$slug", params: { slug: "mileway" } },
+        { label: "Doori", to: "/project/$slug", params: { slug: "doori" } },
         { label: "Résumé", to: "/resume" },
       ]}
     />

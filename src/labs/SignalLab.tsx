@@ -25,7 +25,7 @@ import { useSectionNav } from "../lib/navigation.ts";
 
 /**
  * The Signal Lab — the "trip distances were off by large margins" bug from
- * Dice.tech, rebuilt as Mileway's location engine, running live over the real
+ * Dice.tech, rebuilt as Doori's location engine, running live over the real
  * roads it would have run on.
  *
  * What it demonstrates is a DISTANCE claim, so distance is what it measures:
@@ -344,7 +344,7 @@ export function SignalLabPane() {
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
         At Dice.tech, field users' trip distances were off by large margins. Urban canyons, tunnels and
         OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
-        fix, rebuilt from scratch as Mileway's location engine and running over a real 17.4 km loop through
+        fix, rebuilt from scratch as Doori's location engine and running over a real 17.4 km loop through
         Pune. Raw GPS reads the drive as roughly <span className="text-warn">40 km</span>, because noise
         adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
         back. Every figure below is summed geodesic distance over the points a stage actually kept, no
@@ -508,8 +508,8 @@ export function SignalLabPane() {
               the full story → Dice.tech
             </button>
             <span className="text-muted">·</span>
-            <Link to="/project/$slug" params={{ slug: "mileway" }} className="inline-block py-1 transition hover:text-accent">
-              rebuilt again at Mileway
+            <Link to="/project/$slug" params={{ slug: "doori" }} className="inline-block py-1 transition hover:text-accent">
+              rebuilt again at Doori
             </Link>
           </span>
         </div>

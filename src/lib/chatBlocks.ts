@@ -4,7 +4,7 @@
  * The assistant can't call tools (the chat function fans out to Groq / Gemini /
  * Anthropic and each has a different tool-calling shape), so the model instead
  * emits a directive inside the markdown it's already streaming —
- * `[[rooms]]`, `[[project:mileway]]`, `[[jdfit:{…}]]` — and this parser splits
+ * `[[rooms]]`, `[[project:doori]]`, `[[jdfit:{…}]]` — and this parser splits
  * the reply into text runs and widget slots. The renderer swaps each widget
  * slot for a real component (src/ChatWidgets.tsx). Same mechanism works on
  * every provider because it's just text.
@@ -38,7 +38,7 @@ export type ChatBlock =
 const DIRECTIVE = /\[\[([a-z][a-z0-9-]*)(?:(?::([a-z0-9][a-z0-9._/-]*))?\]\]|:(?=\{))/gi;
 
 // A directive still being typed by the stream: "[[", "[[proj", "[[project:mile",
-// or "[[project:mileway]" (one closing bracket arrived, the other hasn't).
+// or "[[project:doori]" (one closing bracket arrived, the other hasn't).
 const HALF_STREAMED = /\[\[[a-z0-9:._/-]*\]?$/i;
 
 /**
@@ -195,7 +195,7 @@ export function jdFitText(r: JdFitReport): string {
  * A reply as something a speech synthesiser should say out loud.
  *
  * plainText already removes the widget directives — speaking "bracket bracket
- * project colon mileway" is the bug this starts from. Markdown is the second
+ * project colon doori" is the bug this starts from. Markdown is the second
  * half: every provider writes **bold**, `code`, [links](/lab) and "- " bullets,
  * and a synthesiser reads the punctuation. A fenced code block is dropped
  * outright rather than flattened; nobody wants a Kotlin snippet read to them.

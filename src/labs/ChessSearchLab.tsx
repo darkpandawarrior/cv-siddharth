@@ -7,7 +7,7 @@ import { chess } from "../data/chess.ts";
 import type { TreeEdge } from "../chess/search.ts";
 
 /* ── Chess alpha-beta Search Tree Lab ────────────────────────────────────
- * Sibling instrument to SearchTreeLab (Kursi's ISMCTS): same canvas loop,
+ * Sibling instrument to SearchTreeLab (Gaddi's ISMCTS): same canvas loop,
  * same bottom-up tree, so the two search families read as one idea. The
  * difference is that this one draws the REAL tree — every edge below comes
  * back from src/chess/search.ts running inside the engine worker, never a
@@ -237,7 +237,7 @@ export function ChessSearchLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        Same picture as Kursi's tree one tab over, different algorithm — and this one is not a
+        Same picture as Gaddi's tree one tab over, different algorithm — and this one is not a
         simulation. Every line below is a real edge from an alpha-beta search running in a Web
         Worker, over the lichess daily puzzle position carried in the generated corpus. The two
         presets are named after ratings he actually held; they set search depth and how often the

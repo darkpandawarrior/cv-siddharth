@@ -3,7 +3,7 @@ import type { CSSProperties, MouseEventHandler } from "react";
 import { rasterSources } from "./lib/rasterSources.ts";
 
 // AVIF → WebP → original fallback. src is the original raster path
-// (e.g. "/projects/kursi/screenshots/home.png"); siblings are produced by
+// (e.g. "/projects/gaddi/screenshots/home.png"); siblings are produced by
 // scripts/gen-images.mjs. An animated gif renders as its transcoded <video>
 // sibling instead — see LoopingClip below.
 type Props = {
@@ -25,9 +25,9 @@ type Props = {
  * A gif rendered as the .mp4 + .avif poster gen-images.mjs writes beside it.
  *
  * Two separate bugs die here. The bytes: 31 gifs were 18.4 MB, and ten of them
- * alone were 89% of /project/mileway's 9.5 MB page — the same frames as h264
+ * alone were 89% of /project/doori's 9.5 MB page — the same frames as h264
  * are a tenth of that. And the timing: loading="lazy" does NOT defer a gif
- * inside an overflow-x-auto rail, so all ten mileway clips were fetched in the
+ * inside an overflow-x-auto rail, so all ten doori clips were fetched in the
  * first 180 ms of the page, in document order, long before any of them could
  * be on screen. `preload="none"` plus an IntersectionObserver does what lazy
  * only promised — nothing but the ~5 KB poster transfers until you scroll to

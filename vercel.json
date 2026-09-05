@@ -18,6 +18,56 @@
       "permanent": true
     },
     {
+      "source": "/project/mileway",
+      "destination": "/project/doori",
+      "permanent": true
+    },
+    {
+      "source": "/project/kursi",
+      "destination": "/project/gaddi",
+      "permanent": true
+    },
+    {
+      "source": "/project/paymentslab",
+      "destination": "/project/paymentslab-kmp",
+      "permanent": true
+    },
+    {
+      "source": "/project/hiresignal",
+      "destination": "/project/candidai",
+      "permanent": true
+    },
+    {
+      "source": "/project/deadlock",
+      "destination": "/project/stutter",
+      "permanent": true
+    },
+    {
+      "source": "/p/mileway",
+      "destination": "/project/doori",
+      "permanent": true
+    },
+    {
+      "source": "/p/kursi",
+      "destination": "/project/gaddi",
+      "permanent": true
+    },
+    {
+      "source": "/p/paymentslab",
+      "destination": "/project/paymentslab-kmp",
+      "permanent": true
+    },
+    {
+      "source": "/p/hiresignal",
+      "destination": "/project/candidai",
+      "permanent": true
+    },
+    {
+      "source": "/p/deadlock",
+      "destination": "/project/stutter",
+      "permanent": true
+    },
+    {
       "source": "/p/:slug",
       "destination": "/project/:slug",
       "permanent": true

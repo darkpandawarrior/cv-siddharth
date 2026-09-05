@@ -24,7 +24,7 @@ const base = (process.argv.find((a) => a.startsWith("--base=")) ?? "--base=http:
 // renders; capturing every project would just re-photograph the same layout.
 const PARAM_ROUTES = [
   ["/project/portfolio", "project_detail"],
-  ["/project/mileway", "project_detail_with_compare"],
+  ["/project/doori", "project_detail_with_compare"],
 ];
 
 function routes() {

@@ -24,9 +24,9 @@ export type RouteKind = "home" | "project" | "room" | "page";
 export interface RouteInfo {
   /** The canonical pathname — the only shape the server will accept. */
   route: string;
-  /** Short display name, used in chips and the greeting ("Mileway"). */
+  /** Short display name, used in chips and the greeting ("Doori"). */
   label: string;
-  /** Sentence-ready phrase for the server prompt ("the Mileway case study"). */
+  /** Sentence-ready phrase for the server prompt ("the Doori case study"). */
   phrase: string;
   kind: RouteKind;
 }

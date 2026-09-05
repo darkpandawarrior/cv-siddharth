@@ -559,13 +559,13 @@ const LAB_OF: Record<string, LabKey> = {
 };
 
 function CaseStudies() {
-  // Four equal stat-led cards, one idiom. Mileway used to lead this section as
-  // a full-bleed media banner that navigated to /project/mileway, the same
+  // Four equal stat-led cards, one idiom. Doori used to lead this section as
+  // a full-bleed media banner that navigated to /project/doori, the same
   // destination as its card in #projects one section below, carrying the same
   // three field-note chips. It is an open-source build, not a Dice-era
   // employer outcome, so it belongs in the section whose own copy says so.
   const navigate = useNavigate();
-  const rest = caseStudies.filter((cs) => cs.slug !== "mileway");
+  const rest = caseStudies.filter((cs) => cs.slug !== "doori");
   return (
     <section id="work" className="section-y mx-auto max-w-5xl px-6">
       <ChapterWord>Case studies</ChapterWord>
@@ -919,18 +919,18 @@ function ExperienceSection() {
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
     { label: "~87% UI-layer Compose migration", href: "#work" },
-    { label: `Mileway · ${projectStats.mileway.modules} modules`, href: "#project/mileway" },
+    { label: `Doori · ${projectStats.mileway.modules} modules`, href: "#project/doori" },
   ],
   "Concurrency & Data": [
     { label: "-80% crashes", href: "#work" },
     { label: "The Coroutine Court", href: "#loopdown" },
   ],
   "Platform & Systems": [
-    { label: "Mileway · 5 platforms", href: "#project/mileway" },
+    { label: "Doori · 5 platforms", href: "#project/doori" },
     { label: "Shared foundation", href: "#projects" },
   ],
   "Security & Ops": [
-    { label: "PaymentsLab", href: "#project/paymentslab" },
+    { label: "PaymentsLab-KMP", href: "#project/paymentslab-kmp" },
     { label: "White-label · 80% faster", href: "#work" },
   ],
 };

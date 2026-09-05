@@ -16,14 +16,14 @@ import { surfaces } from "../src/data/surfaces.ts";
 const BODY_EXPECTATIONS: Record<string, RegExp> = {
   "/": /Senior Android Engineer/i,
   "/resume": /Experience/i,
-  "/project/mileway": /mileway/i,
+  "/project/doori": /doori/i,
   "/lab": /Lab Bench/i,
 };
 
 const routes = [
   ...surfaces.map((s) => ({ path: s.to, title: s.label, expect: BODY_EXPECTATIONS[s.to] })),
   { path: "/", title: "Siddharth Pandalai", expect: BODY_EXPECTATIONS["/"] },
-  { path: "/project/mileway", title: "Mileway", expect: BODY_EXPECTATIONS["/project/mileway"] },
+  { path: "/project/doori", title: "Doori", expect: BODY_EXPECTATIONS["/project/doori"] },
   { path: "/read/deadline", title: "Deadline", expect: undefined },
 ];
 
@@ -62,7 +62,7 @@ const EXPECTED_404 = [
   // Added when the live CI/CD panel landed (#41) and this list did not move
   // with it, which is what turned main's lighthouse leg red. Verified the way
   // the note above requires, not assumed:
-  //   curl "https://cv-siddharth.vercel.app/api/pipeline?slug=mileway" -> 200,
+  //   curl "https://cv-siddharth.vercel.app/api/pipeline?slug=doori" -> 200,
   // returning real GitHub Actions runs.
   "/api/pipeline",
   // Added with /ops. Verified the way the note above requires, as far as it

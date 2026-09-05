@@ -126,7 +126,7 @@ const CASE_STUDY_EMPLOYER: Record<string, string> = {
   "crash-reduction": "Dice.tech",
   "compose-migration": "Dice.tech",
   "white-label": "Jugnoo / Tookan / Jungleworks",
-  mileway: "Dice.tech",
+  doori: "Dice.tech",
 };
 
 export interface CaseStudyMonument {
@@ -168,12 +168,12 @@ export function caseStudyMonuments(): CaseStudyMonument[] {
 // entry it cites, so dateZ() places it exactly where that entry already
 // lives on the axis.
 const PROJECT_DATE: Record<string, string> = {
-  kursi: "Jun 2026", // recentGrowth: "Kursi shipped"
-  mileway: "Jul 2026", // recentGrowth: "Mileway — super-profile & plugin platform (V24)"
-  paymentslab: "Jul 2026", // recentGrowth: "PaymentsLab — 5 rails + 66 gateways"
-  // HireSignal's own case study cites this exact PR (#1472) as its newest
+  gaddi: "Jun 2026", // recentGrowth: "Kursi (now Gaddi) shipped"
+  doori: "Jul 2026", // recentGrowth: "Mileway (now Doori) — super-profile & plugin platform (V24)"
+  "paymentslab-kmp": "Jul 2026", // recentGrowth: "PaymentsLab (now PaymentsLab-KMP) — 5 rails + 66 gateways"
+  // Candidai's own case study cites this exact PR (#1472) as its newest
   // merged upstream contribution — the openSource entry with that URL.
-  hiresignal: "2026-07-03",
+  candidai: "2026-07-03",
 };
 
 const UNDATED_STEP = 5; // metres between undated plinths, walking north from the south edge

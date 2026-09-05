@@ -109,7 +109,7 @@ const chipName = (name: string) => name.split(/\s*[—–:]\s+/)[0].trim();
  * and the frame's own aspect chooses.
  *
  * `deviceFrame` already records which is which, so nothing new is hand-kept.
- * PaymentsLab's Web target ships `screens: []`, and portfolio has only a web
+ * PaymentsLab-KMP's Web target ships `screens: []`, and portfolio has only a web
  * capture, so each side falls back to any capture at all and finally to the
  * hero rather than rendering an empty frame.
  */
@@ -559,8 +559,8 @@ export function DeviceMorph() {
             {/* FitImage, not a plain <img>: it letterboxes rather than crops
                 once a capture is more than 20% off the frame's shape. Same
                 component DeviceWall uses for the same reason, and its comment
-                records the same bug landing there first ("PaymentsLab" cropped
-                down to "mentsLab"). */}
+                records the same bug landing there first ("PaymentsLab-KMP" cropped
+                down to "entsLab-KMP"). */}
             <FitImage
               src={poster}
               alt=""
@@ -581,7 +581,7 @@ export function DeviceMorph() {
                 // `pointer-lock` is not optional for the 3D builds. Pointer
                 // Lock is DENIED outright inside an iframe unless the embedder
                 // allows it, so without this a visitor can walk around
-                // DEADLOCK but can never look around — the mouse simply never
+                // STUTTER but can never look around — the mouse simply never
                 // gets captured, with no error anywhere.
                 allow="fullscreen; pointer-lock"
                 className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${

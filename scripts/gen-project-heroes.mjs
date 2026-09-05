@@ -21,7 +21,7 @@
  *
  * WHAT THE BANNER DOES NOT SAY. It used to render the tagline, the status
  * pills and the stack chips as well — every one of which the card prints again
- * in full within about 100px of the banner's bottom edge. A Kursi card carried
+ * in full within about 100px of the banner's bottom edge. A Gaddi card carried
  * "13 modules / 4 platforms / 10 bot personas" as pills AND as its bracketed
  * status line, and its tagline twice. The banner is the project's IDENTITY —
  * its palette, its display face, its name — and the card is where the facts
@@ -60,7 +60,7 @@ function heroHtml(p) {
   const ink = t.ink ?? "#05070a";
   const surface = t.surface ?? "#0b0f0d";
   const line = t.line ?? "#243029";
-  // Kursi identifies with a serif display face; everything else is geometric.
+  // Gaddi identifies with a serif display face; everything else is geometric.
   const serif = !!(t.displayFont && /serif|Rozha|Georgia/i.test(t.displayFont));
   const display = serif
     ? "'Iowan Old Style', 'Palatino Linotype', Georgia, serif"
@@ -68,7 +68,7 @@ function heroHtml(p) {
   // Sized against the banner's real width now that the name is the only text
   // in it: the long descriptive titles ("The KMP toolkit family",
   // "cv-siddharth: this site, and its Compose Multiplatform twin") were set at
-  // the same 62px as "Kursi" and ran straight off the edge.
+  // the same 62px as "Gaddi" and ran straight off the edge.
   const nameSize = p.name.length > 34 ? 46 : p.name.length > 22 ? 58 : p.name.length > 11 ? 68 : 84;
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -78,7 +78,7 @@ function heroHtml(p) {
   /* The banner is an EXACT ${W}x${H} box anchored at the origin, not a 100vh
      centred layout. Centring in the viewport made the crop position-dependent:
      content taller than average drifted below the cut line and lost its bottom
-     row (Kursi's chips, whose tagline wraps to two lines). A fixed box at 0,0
+     row (Gaddi's chips, whose tagline wraps to two lines). A fixed box at 0,0
      means the top-crop captures the whole banner whatever it contains. */
   .wrap{position:absolute;top:0;left:0;width:${W}px;height:${H}px;overflow:hidden;
     padding:34px 52px;display:flex;flex-direction:column;justify-content:center;

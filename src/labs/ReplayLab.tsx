@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { readToken } from "../themeColor";
 
-/* ── Deadlock Replay Lab ─────────────────────────────────────────────── */
-// Deadlock's determinism contract in one line: an InputFrame records intent
+/* ── Stutter Replay Lab ─────────────────────────────────────────────── */
+// Stutter's determinism contract in one line: an InputFrame records intent
 // — a move vector, jump, dash — never a position. Motion.step(state, frame)
 // replays through the same fixed-timestep physics tick every time, so
 // (state, InputFrame) -> state always reproduces identically. Two replays of
@@ -56,7 +56,7 @@ function withPerturbedFrame(frames: InputFrame[]): InputFrame[] {
   return copy;
 }
 
-// Deadlock's fixed-timestep physics step: state' = step(state, InputFrame).
+// Stutter's fixed-timestep physics step: state' = step(state, InputFrame).
 // Pure function of its inputs — same state + same frame always reproduces
 // the same state out.
 const DT = 1 / 60;
@@ -194,7 +194,7 @@ export function ReplayLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        Deadlock's determinism contract in one line: an InputFrame records intent — a move vector, jump,
+        Stutter's determinism contract in one line: an InputFrame records intent — a move vector, jump,
         dash — never a position. The same fixed-timestep physics step turns (state, InputFrame) into
         state every time, so a recording always replays identically. Two replays of one fixed input log
         run below. Perturb a single frame in the second log and the zero-tolerance gate — bit-exact
@@ -231,10 +231,10 @@ export function ReplayLab() {
           </span>
           <Link
             to="/project/$slug"
-            params={{ slug: "deadlock" }}
+            params={{ slug: "stutter" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → Deadlock's determinism gate
+            the full story → Stutter's determinism gate
           </Link>
         </div>
       </div>

@@ -19,7 +19,7 @@
  *
  * That breaks the image outright rather than degrading. A <picture> chooses
  * its <source> on `type`/`media` alone — it does NOT fall back to the <img>
- * when the chosen source 404s — so DEADLOCK's echo-stutter.svg rendered as
+ * when the chosen source 404s — so Stutter's echo-stutter.svg rendered as
  * four broken images on its case study. Naming what IS derivable means the
  * next vector or exotic format is handled by default instead of by luck.
  */

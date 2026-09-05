@@ -20,15 +20,15 @@ import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
-const FILM_PROJECTS = new Set(["mileway", "kursi", "paymentslab"]);
+const FILM_PROJECTS = new Set(["doori", "gaddi", "paymentslab-kmp"]);
 
 // Project → its Lab Bench experiment.
 const LAB_OF: Record<string, LabKey> = {
-  mileway: "modules",
-  paymentslab: "gateways",
-  kursi: "search",
-  hiresignal: "fanout",
-  deadlock: "replay",
+  doori: "modules",
+  "paymentslab-kmp": "gateways",
+  gaddi: "search",
+  candidai: "fanout",
+  stutter: "replay",
 };
 
 /** "Next build" pager — project pages loop into each other instead of dead-ending. */
@@ -529,7 +529,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Roster (e.g. Kursi's six roles) */}
+      {/* Roster (e.g. Gaddi's six roles) */}
       {d?.roles && d.roles.length > 0 && (
         <section className="border-t border-line bg-surface">
           <div className="section-y mx-auto max-w-5xl px-6">
@@ -637,11 +637,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   title={it.caption}
                 >
                   {/* Fixed height, natural width, capped. This used to force aspect-[9/19] + object-cover on
-                      every capture, which is a phone frame — so Kursi, whose captures are 46 desktop
+                      every capture, which is a phone frame — so Gaddi, whose captures are 46 desktop
                       1440x900 frames against 10 phone ones, had its landscape screenshots cropped to
-                      a vertical sliver. Mileway is almost all 411x891, so the bug was invisible there
+                      a vertical sliver. Doori is almost all 411x891, so the bug was invisible there
                       and shipped. A rail of equal-height, varying-width tiles keeps every project's
-                      real shape and still lines up. The width cap matters as much: PaymentsLab
+                      real shape and still lines up. The width cap matters as much: PaymentsLab-KMP
                       ships component strips as wide as 6.67:1, which at this height would render
                       1,920px across and swallow the whole rail. */}
                   <span className="panel gallery-item flex h-72 max-w-[26rem] items-center justify-center overflow-hidden">
