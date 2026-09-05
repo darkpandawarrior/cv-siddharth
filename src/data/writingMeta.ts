@@ -83,16 +83,16 @@ export const accentOf = (id?: string) => (id && (SERIES_COLOR[id] || auto.get(id
  * the failure message rather than in somebody's memory.
  */
 export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
-  "sensors-who-lie": { label: "Built in: Mileway's location engine", href: "#project/mileway" },
+  "sensors-who-lie": { label: "Built in: Doori's location engine", href: "#project/doori" },
   "the-coroutine-court": { label: "From: the -80% crashes work", href: "#work" },
   "the-night-shift": { label: "From: the 50%→95% GPS work", href: "#work" },
   "ghosts-in-the-recomposition": { label: "From: the ~87% Compose migration", href: "#work" },
-  // Upstream files this series' only lesson under PaymentsLab, not Mileway.
-  // It read "Mileway across 5 platforms" here for months because nothing
+  // Upstream files this series' only lesson under PaymentsLab-KMP, not Doori.
+  // It read "Doori across 5 platforms" here for months because nothing
   // checked the two against each other.
-  "one-brain-two-bodies": { label: "Built in: PaymentsLab's expect/actual split", href: "#project/paymentslab" },
-  "chain-of-custody": { label: "Built in: Mileway's trip data model", href: "#project/mileway" },
-  "crossing-the-schema": { label: "Built in: Mileway's Room migrations", href: "#project/mileway" },
+  "one-brain-two-bodies": { label: "Built in: PaymentsLab-KMP's expect/actual split", href: "#project/paymentslab-kmp" },
+  "chain-of-custody": { label: "Built in: Doori's trip data model", href: "#project/doori" },
+  "crossing-the-schema": { label: "Built in: Doori's Room migrations", href: "#project/doori" },
   "notes-from-the-loop": { label: "Built in: The Loopdown itself", href: "#project/the-loopdown" },
 };
 

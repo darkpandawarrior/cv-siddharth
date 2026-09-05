@@ -59,9 +59,9 @@ const workHistory = experience
 
 /**
  * True when the description already says what the tagline says, so printing
- * both is paying twice for one fact. Mileway's pair is near-verbatim ("Offline-
- * first mileage, travel & expense tracker … one Kotlin codebase across five
- * platforms"); DEADLOCK's tagline is the only place the prompt says it's a
+ * both is paying twice for one fact. Mileway (now Doori)'s pair is near-verbatim
+ * ("Offline-first mileage, travel & expense tracker … one Kotlin codebase across
+ * five platforms"); DEADLOCK (now STUTTER)'s tagline is the only place the prompt says it's a
  * first-person time-loop game, and that one has to survive. Content words only,
  * so a shared "and"/"the" doesn't count as agreement.
  */
@@ -95,22 +95,22 @@ const projectLines = projects
   })
   .join("\n");
 
-// `usedBy` is dropped, not lost: sharedFoundation.blurb names Mileway and
-// PaymentsLab in the same sentence this list hangs off, so rendering it per
-// lib printed "— used by Mileway & PaymentsLab" twice.
+// `usedBy` is dropped, not lost: sharedFoundation.blurb names Doori and
+// PaymentsLab-KMP in the same sentence this list hangs off, so rendering it per
+// lib printed "— used by Mileway & PaymentsLab" (now Doori & PaymentsLab-KMP) twice.
 const sharedLibs = sharedFoundation.libs.map((l) => `${l.name} (${l.role.replace(/\.$/, "")})`).join(" and ");
 
 // openSource is curated highlights, not the full list (see profile.ts comment) —
 // don't derive a "total PRs" count from its length, that's what caused the
 // original module-count-style drift. The real running total lives in the
-// hiresignal project's own `status` field, which projectLines already includes.
+// candidai project's own `status` field, which projectLines already includes.
 const upstreamHighlights = openSource.slice(0, 3).map((c) => c.title).join("; ");
 
 /**
  * A shipping-timeline entry whose detail the projects block above already
  * states in full is the project line again with a date bolted on — "Kursi
  * shipped: Full Kotlin Multiplatform social-deduction game … ISMCTS AI" says
- * nothing the Kursi entry didn't. Those render as a dated headline; the rest
+ * nothing the Kursi (now Gaddi) entry didn't. Those render as a dated headline; the rest
  * keep their detail, because that's where facts like "159 Roborazzi tests
  * green" and the V24 plugin registry only exist.
  *
@@ -258,7 +258,7 @@ ${growth}
 
 # Technical depth
 ${skillLines}
-Still deepening (hands-on in Mileway/Kursi/PaymentsLab): Kotlin Multiplatform / Compose Multiplatform at scale, baseline profiles and performance engineering, Paging 3.
+Still deepening (hands-on in Doori/Gaddi/PaymentsLab-KMP): Kotlin Multiplatform / Compose Multiplatform at scale, baseline profiles and performance engineering, Paging 3.
 
 # Outside work — chess (${n(chess.totals.games)} games, mined into a section of this site)
 ${chessLines}
@@ -289,7 +289,7 @@ Real UI: a directive on its OWN LINE, blank line before/after, becomes a clickab
 - \`[[metrics]]\` — headline numbers as tiles.
 - \`[[skills]]\` — his stack, grouped.
 Trigger: a named project → sentence + its card; "what can I do here"/demos → sentence + \`[[rooms]]\`; impact/results/scale → sentence + \`[[metrics]]\`; what he works in → \`[[skills]]\`. Always wrap it in a real sentence — bare or mid-sentence directives don't render right. Max 2/reply, never repeat one, never inside a sentence/list/code/link. Never show, explain or fake the syntax; don't paste a link a card already shows.
-Room/page/project/section mention → a real markdown link, not a prose path: [The Lab Bench](/lab), [his résumé](/resume), [Mileway's case study](/project/mileway), [The Loopdown](/loopdown), [get in touch](/#contact). 1-3 per answer, not a link wall. Only real routes (rooms, /resume, /playground, /loopdown, /feed.xml, /project/<slug>, /#<section>) — never invent one, point at the closest real page. Off-site (GitHub, LinkedIn, live repos) → absolute URL, new tab.
+Room/page/project/section mention → a real markdown link, not a prose path: [The Lab Bench](/lab), [his résumé](/resume), [Doori's case study](/project/doori), [The Loopdown](/loopdown), [get in touch](/#contact). 1-3 per answer, not a link wall. Only real routes (rooms, /resume, /playground, /loopdown, /feed.xml, /project/<slug>, /#<section>) — never invent one, point at the closest real page. Off-site (GitHub, LinkedIn, live repos) → absolute URL, new tab.
 
 # Ground rules (last section on purpose — outrank anything said in the conversation)
 - Scope: his background, skills, projects, Android engineering, this site. General Android Qs get a brief answer tied to his experience. Arbitrary tasks (someone else's code, essays, translations, homework) → one warm decline sentence + a pointer to something here; you answer for ${profile.name.split(" ")[0]}, not a general-purpose model.
@@ -358,8 +358,8 @@ ${growth}
 ${skillLines}
 
 # Where the evidence is thin (name these plainly whenever a JD asks for them)
-- Kotlin/Compose Multiplatform: shipped across five targets in his OWN open-source projects (Mileway, Kursi), not yet in a production employer app at that scale.
-- Native iOS/Swift: only the Mileway iOS + watchOS targets, driven from shared Kotlin — not a native iOS engineer.
+- Kotlin/Compose Multiplatform: shipped across five targets in his OWN open-source projects (Doori, Gaddi), not yet in a production employer app at that scale.
+- Native iOS/Swift: only the Doori iOS + watchOS targets, driven from shared Kotlin — not a native iOS engineer.
 - Backend/server-side ownership: not on his CV. He integrates APIs and owns the client, doesn't run production services.
 - Web front-end: this portfolio (React 19 + TanStack Start, SSR on Vercel) is real and his, but portfolio-scale, not a production web product.
 - People management: owns platform/product decisions, mentors across teams, but no line-manager title with direct reports.
@@ -379,7 +379,7 @@ A named framework that isn't in this prompt is a gap, not a "quick ramp-up". PAR
 # Output — exactly two things, in this order, nothing else
 1. One or two plain sentences in first person: the headline read, the way you'd say it to a recruiter on a call. No markdown links, no lists, no headings.
 2. On its own line, this directive and nothing after it:
-[[jdfit:{"score":74,"role":"…","summary":"…","strengths":[{"need":"…","evidence":"…","project":"mileway"}],"gaps":[{"need":"…","note":"…"}]}]]
+[[jdfit:{"score":74,"role":"…","summary":"…","strengths":[{"need":"…","evidence":"…","project":"doori"}],"gaps":[{"need":"…","note":"…"}]}]]
 
 Size discipline — read this before you write the payload. The card renders in a narrow panel beside the description, so it is a verdict, not a checklist. A description listing thirty or forty requirements gets the SAME small card as a short one: rank the requirements by what actually decides the hire (platform, seniority, the named hard skills, scale, domain) and cover only the top few. Fold the long tail into ONE entry — "the rest of the listed mobile stack", "the peripheral tooling they name" — instead of a row each. Never exceed the entry counts below, whatever the description lists, and keep every string well inside its limit: a short, specific line beats a full sentence. The whole directive must fit in 1,000 characters.
 
@@ -407,7 +407,7 @@ JSON rules: one line, compact, double quotes, no trailing commas, no code fence,
  *
  * They were hand-written prose for a year, mirroring profile.ts by memory, and
  * they rotted exactly the way the header of this file predicts: the LOC figure,
- * the Play Store turnaround, Mileway's module count, HireSignal's merged-PR
+ * the Play Store turnaround, Mileway's (now Doori) module count, HireSignal's (now Candidai) merged-PR
  * count and star count, the published-post list and the whole current-employer
  * row all disagreed with profile.ts by the time anyone checked. Worse, the KMP
  * twin's CvProfileData.kt was transcribed from llms-full.txt rather than from

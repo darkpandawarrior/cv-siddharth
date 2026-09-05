@@ -2,11 +2,11 @@
 // sync-project-media.mjs pulls these daily over raw.githubusercontent;
 // rebuild-showcase.mjs validates every storyboard frame is listed here, so a
 // film can never quietly reference a file the daily sync doesn't refresh —
-// that's how the green-vintage-Mileway class of staleness stays dead.
+// that's how the green-vintage-Doori class of staleness stays dead.
 // Format per project: [repoPathUnderDocs, destFilenameUnderScreenshots].
 export const sync = {
-  mileway: {
-    repo: "darkpandawarrior/Mileway",
+  doori: {
+    repo: "darkpandawarrior/Doori",
     files: [
       ["demo/tracking_flow.gif", "tracking_flow.gif"],
       ["demo/multiplatform.gif", "multiplatform.gif"],
@@ -43,8 +43,8 @@ export const sync = {
       ["screenshots/route_map.png", "route_map.png"],
     ],
   },
-  paymentslab: {
-    repo: "darkpandawarrior/PaymentsLab",
+  "paymentslab-kmp": {
+    repo: "darkpandawarrior/PaymentsLab-KMP",
     files: [
       // docs/demo/payment_flow.gif never existed upstream (404) — real gifs live at docs/gifs/.
       ["gifs/activity_flow.gif", "activity_flow.gif"],
@@ -64,13 +64,13 @@ export const sync = {
       ["screenshots/ios_catalog_all_native.png", "ios_catalog_all_native.png"],
     ],
   },
-  // Private repos (deadlock, HireSignal) — code stays unlinked from the site,
+  // Private repos (Stutter, Candidai) — code stays unlinked from the site,
   // but the existing GITHUB_TOKEN CI secret already needs private-repo read
   // access for gen-hiresignal-stats.mjs (santifer/career-ops fork chain), and
   // a personal PAT with `repo` scope always covers its own owner's private
   // repos too, so this daily sync "just works" the same way as the public ones.
-  deadlock: {
-    repo: "darkpandawarrior/deadlock",
+  stutter: {
+    repo: "darkpandawarrior/Stutter",
     files: [
       ["assets/readme/screenshots/title.webp", "title.webp"],
       ["assets/readme/screenshots/echo-cooperation.webp", "echo-cooperation.webp"],
@@ -81,8 +81,8 @@ export const sync = {
       ["assets/readme/echo-stutter.svg", "echo-stutter.svg"],
     ],
   },
-  hiresignal: {
-    repo: "darkpandawarrior/HireSignal",
+  candidai: {
+    repo: "darkpandawarrior/Candidai",
     // First three real Roborazzi captures (2026-07-24) — dashboard, board,
     // pipeline. More land here as the rest of the app's 13 screens get the
     // same screenshot-test treatment.
@@ -100,8 +100,8 @@ export const sync = {
       ["screenshots/pipeline_screen.png", "pipeline_screen.png"],
     ],
   },
-  kursi: {
-    repo: "darkpandawarrior/Kursi",
+  gaddi: {
+    repo: "darkpandawarrior/Gaddi",
     files: [
       ["gifs/home.gif", "home.gif"],
       ["gifs/onboarding.gif", "onboarding.gif"],

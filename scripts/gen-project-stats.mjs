@@ -33,9 +33,9 @@ async function pngCount(repo, ref, path) {
 const count = (s, re) => (s.match(re) || []).length;
 
 async function build() {
-  const mRepo = "darkpandawarrior/Mileway";
-  const pRepo = "darkpandawarrior/PaymentsLab";
-  const kRepo = "darkpandawarrior/Kursi";
+  const mRepo = "darkpandawarrior/Doori";
+  const pRepo = "darkpandawarrior/PaymentsLab-KMP";
+  const kRepo = "darkpandawarrior/Gaddi";
 
   const mSettings = await getText(raw(mRepo, "main", "settings.gradle.kts"));
   const mDb = await getText(raw(mRepo, "main", "core/data/src/commonMain/kotlin/com/mileway/core/data/database/MilewayDatabase.kt"));

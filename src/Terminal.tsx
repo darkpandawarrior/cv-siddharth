@@ -21,6 +21,7 @@ import { writing } from "./data/writing.ts";
 import { RELATED_SERIES } from "./data/connections.ts";
 import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
+import { STATS_KEY } from "./lib/projectStatLine.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { chatErrorText, streamReply } from "./lib/chatClient.ts";
@@ -29,11 +30,21 @@ import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
+// 2026-09-05 project renames — old GitHub repos redirect, so keep the old
+// slug typeable here too rather than making `open <old-name>` a dead end.
+const RENAMED_SLUG_ALIASES: Record<string, string> = {
+  mileway: "doori",
+  kursi: "gaddi",
+  paymentslab: "paymentslab-kmp",
+  hiresignal: "candidai",
+  deadlock: "stutter",
+};
+
 /**
  * `#terminal` — a faux-shell easter egg that's a real, usable interface.
  *
  * Everything the recruiter can find by scrolling, they can also *type* their
- * way to: `projects`, `open mileway`, `skills`, `cat resume.txt`, `ask <q>`
+ * way to: `projects`, `open doori`, `skills`, `cat resume.txt`, `ask <q>`
  * (which hands off to the AI), `hire`. It reads the same `profile.ts` the rest
  * of the site does, so it never drifts. Keyboard-first (history with ↑/↓, Tab
  * completion), theme-swappable, reduced-motion aware, and screen-reader
@@ -188,7 +199,7 @@ function buildCommands(jump: Go): Cmd[] {
             <Dim>tip: ↑/↓ history · Tab completes · </Dim>
             <Hi>graph</Hi>
             <Dim> maps the connections · try </Dim>
-            <Hi>open mileway</Hi>
+            <Hi>open doori</Hi>
             <Dim>, </Dim>
             <Hi>ask how did you cut crashes 80%</Hi>
             <Dim> or </Dim>
@@ -304,7 +315,7 @@ function buildCommands(jump: Go): Cmd[] {
       run: () => (
         <div className="space-y-2">
           {projects.map((p) => {
-            const st = projectStats[p.slug as keyof typeof projectStats] as { modules?: number } | undefined;
+            const st = projectStats[(STATS_KEY[p.slug] ?? p.slug) as keyof typeof projectStats] as { modules?: number } | undefined;
             return (
               <div key={p.slug}>
                 <button
@@ -319,7 +330,7 @@ function buildCommands(jump: Go): Cmd[] {
               </div>
             );
           })}
-          <Dim>→ <Hi>open &lt;slug&gt;</Hi> for the full case study, e.g. `open kursi`</Dim>
+          <Dim>→ <Hi>open &lt;slug&gt;</Hi> for the full case study, e.g. `open gaddi`</Dim>
         </div>
       ),
     },
@@ -328,10 +339,11 @@ function buildCommands(jump: Go): Cmd[] {
       usage: "open <slug>",
       help: "open a project case study",
       run: (args) => {
-        const slug = (args[0] ?? "").toLowerCase();
+        const raw = (args[0] ?? "").toLowerCase();
+        const slug = RENAMED_SLUG_ALIASES[raw] ?? raw;
         const p = projects.find((x) => x.slug === slug);
-        if (!slug) return <Dim>usage: open &lt;slug&gt; — {projects.map((x) => x.slug).join(", ")}</Dim>;
-        if (!p) return <span className="text-red-400">open: no build "{slug}". Try `projects`.</span>;
+        if (!raw) return <Dim>usage: open &lt;slug&gt; — {projects.map((x) => x.slug).join(", ")}</Dim>;
+        if (!p) return <span className="text-red-400">open: no build "{raw}". Try `projects`.</span>;
         jump(`#project/${p.slug}`);
         return (
           <span>
@@ -878,7 +890,7 @@ function buildCommands(jump: Go): Cmd[] {
 /* `ask <question>` renders this: the answer streams into the shell itself
  * instead of punting the visitor to the chat panel. Same src/lib/chatClient.ts
  * the console panel uses (one streaming implementation), and the same
- * ChatMessageBody — so a `[[project:mileway]]` card the model emits renders
+ * ChatMessageBody — so a `[[project:doori]]` card the model emits renders
  * here too rather than leaking as raw text. Bare `ask` still opens the panel. */
 function AskBlock({ question }: { question: string }) {
   const [text, setText] = useState("");

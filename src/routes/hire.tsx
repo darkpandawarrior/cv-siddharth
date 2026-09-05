@@ -106,7 +106,7 @@ function HirePage() {
           <p className="kicker">The work behind the numbers</p>
           <ul className="mt-4 divide-y divide-line">
             {featured.map((c) => {
-              // A case study is not always a project. `mileway` is both and has
+              // A case study is not always a project. `doori` is both and has
               // a full detail page; `gps-accuracy` and `crash-reduction` exist
               // only in `caseStudies`, and linking them to /project/$slug sent
               // two of the three links on this page — the page a recruiter is
@@ -123,7 +123,7 @@ function HirePage() {
                   className="group flex items-baseline justify-between gap-4 py-3.5"
                 >
                   <span>
-                    {/* CaseStudy.title is the full descriptive line ("Mileway —
+                    {/* CaseStudy.title is the full descriptive line ("Doori —
                         offline-first mileage tracker (Android · iOS · …)").
                         On a scan-in-90-seconds page that is a paragraph, so the
                         name leads and the metric carries the proof. */}

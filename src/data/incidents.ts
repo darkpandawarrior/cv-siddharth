@@ -81,8 +81,8 @@ export const incidents: Incident[] = [
   },
   {
     id: "mileway-46-36",
-    subject: "Mileway module count",
-    subjectHref: "https://cv-siddharth.vercel.app/project/mileway",
+    subject: "Mileway (now Doori) module count",
+    subjectHref: "https://cv-siddharth.vercel.app/project/doori",
     what: "the card printed 46 and 36 modules 30px apart; the audited definition was applied to PaymentsLab but not Mileway",
     days: 0,
     resolved: true,
@@ -90,12 +90,12 @@ export const incidents: Incident[] = [
   },
   {
     id: "kursi-13-14",
-    subject: "Kursi module count",
-    subjectHref: "https://cv-siddharth.vercel.app/project/kursi",
+    subject: "Kursi (now Gaddi) module count",
+    subjectHref: "https://cv-siddharth.vercel.app/project/gaddi",
     what: "a :cli module landed upstream and the hand-written status line went stale the same day",
     days: 2,
     resolved: true,
-    evidenceHref: "https://github.com/darkpandawarrior/Kursi/commits/main/settings.gradle.kts",
+    evidenceHref: "https://github.com/darkpandawarrior/Gaddi/commits/main/settings.gradle.kts",
   },
   {
     id: "blueprint-3-of-8",
@@ -108,8 +108,8 @@ export const incidents: Incident[] = [
   },
   {
     id: "deadlock-pck",
-    subject: "DEADLOCK web export",
-    subjectHref: "https://cv-siddharth.vercel.app/project/deadlock",
+    subject: "DEADLOCK (now STUTTER) web export",
+    subjectHref: "https://cv-siddharth.vercel.app/project/stutter",
     what: "310 MB export: all_resources shipped 29 unreferenced models and every texture imported lossless",
     days: 0,
     resolved: true,

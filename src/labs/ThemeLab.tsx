@@ -5,7 +5,7 @@ import { useSectionNav } from "../lib/navigation.ts";
  * The White-label Lab — the "80% faster delivery" claim, running live. Brand
  * is a token, not a codebase: these are the site's own 6 real per-project
  * theme tokens (src/data/profile.ts `theme` fields), not fictional colors.
- * Picking Kursi also swaps in its real display font (Rozha One) to prove the
+ * Picking Gaddi also swaps in its real display font (Rozha One) to prove the
  * token layer carries typography, not just color. A layout-engine toggle
  * (Card / Hero) proves it drives which UI archetype renders, not just paint.
  */
@@ -14,11 +14,11 @@ type BrandToken = { name: string; label: string; color: string; font?: string };
 
 const BRANDS: BrandToken[] = [
   { name: "portfolio", label: "Portfolio", color: "#3ddc84" },
-  { name: "kursi", label: "Kursi", color: "#E8C874", font: "'Rozha One', Georgia, serif" },
-  { name: "mileway", label: "Mileway", color: "#5ee6ff" },
-  { name: "paymentslab", label: "PaymentsLab", color: "#A78BFA" },
-  { name: "hiresignal", label: "HireSignal", color: "#3B82F6" },
-  { name: "deadlock", label: "Deadlock", color: "#FF5C7A" },
+  { name: "gaddi", label: "Gaddi", color: "#E8C874", font: "'Rozha One', Georgia, serif" },
+  { name: "doori", label: "Doori", color: "#5ee6ff" },
+  { name: "paymentslab-kmp", label: "PaymentsLab-KMP", color: "#A78BFA" },
+  { name: "candidai", label: "Candidai", color: "#3B82F6" },
+  { name: "stutter", label: "Stutter", color: "#FF5C7A" },
 ];
 
 const CLIENTS = ["FleetCo", "ZipRide", "HaulHub", "GoTrux"];
@@ -100,7 +100,7 @@ export function ThemeLab() {
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
         Twenty-plus clients used to mean twenty-plus forks. The pipeline made brand a token, not a
         codebase: change it once and every client app follows — down to the display font. These are
-        the site's own 6 real theme tokens; pick one and watch color, and for Kursi even typography,
+        the site's own 6 real theme tokens; pick one and watch color, and for Gaddi even typography,
         propagate everywhere at once.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">

@@ -22,7 +22,7 @@ export interface Elsewhere {
 }
 
 export const elsewhere: Elsewhere[] = [
-  { label: "GitHub", url: "https://github.com/darkpandawarrior", what: "Mileway, Kursi, PaymentsLab, the KMP toolkit", kind: "code" },
+  { label: "GitHub", url: "https://github.com/darkpandawarrior", what: "Doori, Gaddi, PaymentsLab-KMP, the KMP toolkit", kind: "code" },
   { label: "Stack Overflow", url: "https://stackoverflow.com/users/12678663/siddharth-pandalai", what: "answers and reputation", kind: "code" },
   { label: "LinkedIn", url: "https://linkedin.com/in/siddharth-pandalai", what: "work history", kind: "record" },
   { label: "dev.to", url: "https://dev.to/darkpandawarrior", what: "the field notes, syndicated", kind: "writing" },

@@ -38,9 +38,9 @@ export const INDEX_FINGERPRINT =
 /** Only apps that actually ship from the F-Droid repo. Adding one here without a
  *  live listing would make this panel claim something untrue. */
 const APPS: Record<string, { repo: string; pkg: string }> = {
-  kursi: { repo: "Kursi", pkg: "com.kursi.android" },
-  mileway: { repo: "Mileway", pkg: "com.mileway" },
-  paymentslab: { repo: "PaymentsLab", pkg: "com.paymentslab.app" },
+  gaddi: { repo: "Gaddi", pkg: "com.kursi.android" },
+  doori: { repo: "Doori", pkg: "com.mileway" },
+  "paymentslab-kmp": { repo: "PaymentsLab-KMP", pkg: "com.paymentslab.app" },
 };
 
 export type PipelineRun = {

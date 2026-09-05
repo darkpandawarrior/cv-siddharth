@@ -46,7 +46,7 @@ const lfs = (repo, path) => `https://media.githubusercontent.com/media/${repo}/m
  * Git LFS pointers are ~130 bytes of text beginning with this exact line.
  *
  * raw.githubusercontent serves the POINTER, never the binary, for any
- * LFS-tracked path. DEADLOCK's .gitattributes puts every binary asset through
+ * LFS-tracked path. Stutter's .gitattributes puts every binary asset through
  * LFS ("code stays plain text and diffable; binary assets go through Git
  * LFS"), so four of its screenshots came back as 130-byte text files and this
  * script wrote them straight over the real committed images — turning

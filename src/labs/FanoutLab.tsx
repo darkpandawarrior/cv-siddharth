@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 
 /**
- * The Fan-out Lab — HireSignal's provider aggregation, running live.
+ * The Fan-out Lab — Candidai's provider aggregation, running live.
  * A query fans out to a ring of ATS/job-board providers (three of them —
  * Greenhouse, Ashby, Lever — are the named structured-API integrations the
  * scan path hits directly, zero LLM cost). Listings travel back toward a
@@ -20,7 +20,7 @@ const TOTAL_PROVIDERS = 83;
 const NAMED_PROVIDERS = ["Greenhouse", "Ashby", "Lever"];
 // Spread evenly around the ring, whatever its size.
 const NAMED_INDEXES = [0, Math.round(TOTAL_PROVIDERS / 3), Math.round((2 * TOTAL_PROVIDERS) / 3)];
-const BLUE = "#3B82F6"; // HireSignal's real accent — reserved for this sim's own visuals
+const BLUE = "#3B82F6"; // Candidai's real accent — reserved for this sim's own visuals
 
 type V = { x: number; y: number };
 type Pulse = { from: V; target: V; wait: number; t: number; durationMs: number; clusterId: number };
@@ -242,7 +242,7 @@ export function FanoutLab() {
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="HireSignal provider fan-out and de-duplication simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="Candidai provider fan-out and de-duplication simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <button
@@ -265,10 +265,10 @@ export function FanoutLab() {
           <span className="font-mono text-xs text-accent">0 LLM tokens spent</span>
           <Link
             to="/project/$slug"
-            params={{ slug: "hiresignal" }}
+            params={{ slug: "candidai" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → HireSignal's {TOTAL_PROVIDERS} providers
+            the full story → Candidai's {TOTAL_PROVIDERS} providers
           </Link>
         </div>
       </div>

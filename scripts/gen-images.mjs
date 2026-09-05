@@ -32,7 +32,7 @@ for (const src of walk(publicDir)) {
    * An animated GIF is the worst delivery format the web still accepts: no
    * inter-frame compression, no hardware decode, and it starts transferring
    * the moment it is in the DOM whatever loading="lazy" says. Measured here:
-   * 31 gifs = 18.5 MB, and ten of them were 89% of /project/mileway's 9.5 MB.
+   * 31 gifs = 18.5 MB, and ten of them were 89% of /project/doori's 9.5 MB.
    * The same frames as h264 are 2.1 MB.
    *
    * So a gif gets two siblings and Picture.tsx renders those instead of it:

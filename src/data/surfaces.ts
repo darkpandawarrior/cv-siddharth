@@ -112,7 +112,7 @@ export const DEVICE: Record<DeviceFrame, { label: string }> = {
  *                its whole theme, so a writing tile is that world's colour
  *                showing through the wall rather than a second accent.
  *   CHESS_GOLD — kept, because it ENCODES rather than decorates: --lab-gold is
- *                already the board/game colour SearchTreeLab renders Kursi's
+ *                already the board/game colour SearchTreeLab renders Gaddi's
  *                search tree in, and /chess's own lab draws through that same
  *                renderer. Change it and two surfaces stop matching.
  *

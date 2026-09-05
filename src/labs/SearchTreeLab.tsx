@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectBySlug } from "../data/profile.ts";
 
-/* ── Kursi ISMCTS Search Tree Lab ────────────────────────────────────── */
-// Real numbers from src/data/profile.ts "kursi" entry: 1.5k-16k ISMCTS
+/* ── Gaddi ISMCTS Search Tree Lab ────────────────────────────────────── */
+// Real numbers from src/data/profile.ts "gaddi" entry: 1.5k-16k ISMCTS
 // search iterations depending on difficulty tier. The source data does not
 // enumerate all 10 bot personas by name, so the "who's deciding" readout
 // draws from the named roles it does carry.
@@ -19,7 +19,7 @@ const TIERS = [
 
 // Straight off the case study's own roster — the names used to be re-typed
 // here, which is a second copy of a list that only ever lives in one place.
-const ROLES = projectBySlug("kursi")?.detail?.roles?.map((r) => r.name) ?? [];
+const ROLES = projectBySlug("gaddi")?.detail?.roles?.map((r) => r.name) ?? [];
 
 const GOLD = "var(--lab-gold)";
 const HEADING_FONT = "'Rozha One', Georgia, serif";
@@ -214,7 +214,7 @@ export function SearchTreeLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        Kursi's bots never see your hand — they play with Information Set Monte Carlo Tree Search,
+        Gaddi's bots never see your hand — they play with Information Set Monte Carlo Tree Search,
         growing a tree of plausible futures over the hidden cards and picking the branch that wins
         most often. Pick a difficulty and run the search: harder tiers search deeper, from 1,500
         iterations on Easy to 16,000 on Grandmaster, still landing on one bot's actual move.
@@ -257,10 +257,10 @@ export function SearchTreeLab() {
           )}
           <Link
             to="/project/$slug"
-            params={{ slug: "kursi" }}
+            params={{ slug: "gaddi" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → Kursi's ISMCTS AI
+            the full story → Gaddi's ISMCTS AI
           </Link>
         </div>
       </div>

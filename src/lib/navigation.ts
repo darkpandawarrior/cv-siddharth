@@ -137,7 +137,7 @@ export type ChatLinkTarget = { kind: "section"; id: string } | { kind: "route"; 
  * Classifies an href the AI assistant emitted inside a markdown link, so the
  * chat can render it as real in-app navigation instead of a page-reloading
  * `<a>`. Chat hrefs arrive in three shapes: absolute site paths ("/lab",
- * "/project/mileway"), home-page sections ("/#projects", "#projects") and
+ * "/project/doori"), home-page sections ("/#projects", "#projects") and
  * absolute URLs / mailto:. Section + slug knowledge is delegated to
  * classifyHash so SECTION_IDS stays the single source of truth.
  */

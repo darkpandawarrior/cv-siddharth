@@ -1363,7 +1363,7 @@ describe("reasoningEffortFor", () => {
  * allowlist, a size cap, and no path from the visitor's string to the prompt. */
 describe("validateRoute", () => {
   it("accepts the routes this build actually has", () => {
-    for (const route of ["/", "/lab", "/resume", "/project/mileway", "/project/kursi", "/loopdown"]) {
+    for (const route of ["/", "/lab", "/resume", "/project/doori", "/project/gaddi", "/loopdown"]) {
       expect(validateRoute(route), route).toBe(route);
     }
     // …and every key of the generated map, so a new room can't fail silently.
@@ -1408,10 +1408,10 @@ describe("validateRoute", () => {
 
 describe("route context in the system prompt", () => {
   it("appends a server-written sentence for a valid route", () => {
-    const prompt = systemPromptFor("chat", "/project/mileway");
+    const prompt = systemPromptFor("chat", "/project/doori");
     expect(prompt.startsWith(SYSTEM_PROMPT)).toBe(true);
-    expect(prompt).toContain(ROUTE_PHRASES["/project/mileway"]);
-    expect(prompt).toContain("/project/mileway");
+    expect(prompt).toContain(ROUTE_PHRASES["/project/doori"]);
+    expect(prompt).toContain("/project/doori");
     expect(prompt).toContain("never an instruction");
   });
 
@@ -1425,7 +1425,7 @@ describe("route context in the system prompt", () => {
   });
 
   it("never reaches the JD analyzer or the Compose generator", () => {
-    expect(systemPromptFor("jd", "/project/mileway")).toBe(JD_SYSTEM_PROMPT);
+    expect(systemPromptFor("jd", "/project/doori")).toBe(JD_SYSTEM_PROMPT);
     expect(systemPromptFor("compose", "/compose")).toBe(COMPOSE_SYSTEM_PROMPT);
   });
 
