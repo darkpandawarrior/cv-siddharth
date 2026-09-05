@@ -22,6 +22,12 @@ export const perimeter = [
     "generator": "npm run gen:store"
   },
   {
+    "file": "systemGraph.ts",
+    "generatedAt": "2026-09-05",
+    "slaDays": 45,
+    "generator": "npm run gen:system-graph"
+  },
+  {
     "file": "timeline.ts",
     "generatedAt": "2026-09-04",
     "slaDays": 45,
