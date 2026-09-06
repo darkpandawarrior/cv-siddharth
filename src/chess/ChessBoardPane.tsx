@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Chess, type Square } from "chess.js";
 import { BoardSurface, type BoardPick } from "./BoardSurface.tsx";
 import { createEngine, type Engine } from "./engineClient.ts";
 import { PRESETS, type PresetId } from "./calibration.ts";
 import { chess } from "../data/chess.ts";
+// The nav primitive (openLab/pendingLab) already lives in data/labs.ts, a
+// React-free data module — importing it here does not drag LabBench.tsx's
+// nine static lab-pane imports into this lazy-loaded pane's own chunk.
+import { openLab } from "../data/labs.ts";
 
 /* ── Play the bot ────────────────────────────────────────────────────────
  * react-chessboard draws; chess.js is the rules. Nothing here reimplements
@@ -74,6 +79,7 @@ function snapshot(game: Chess): Snap {
 type Readout = { move: string; ms: number; nodes: number };
 
 export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
+  const navigate = useNavigate();
   const gameRef = useRef<Chess | null>(null);
   gameRef.current ??= new Chess();
 
@@ -200,8 +206,11 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
       <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-400">
         An alpha-beta search running in a Web Worker, tuned to two ratings he actually held — including
         the clock habit, so it burns its thinking time through the middlegame and hurries the finish.
-        The numbers below name those ratings; they are not a measured strength, because this engine has
-        never played a rated pool. You are White.
+        The pacing isn&rsquo;t cosmetic: {(chess.thesis.decidedOnClock * 100).toFixed(1)}% of his own
+        decided games were settled by the clock, not the board — this worker&rsquo;s thinking-time
+        budget is that same curve, played back as a search deadline. The numbers below name those
+        ratings; they are not a measured strength, because this engine has never played a rated pool.
+        You are White.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Which bot to play">
@@ -295,6 +304,16 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
             {chess.bestUpset.platform} — a +{chess.bestUpset.gap} upset. {PRESETS.sid2026.rating} is
             his chess.com blitz peak. Neither number is this engine's Elo.
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              openLab("search-trees");
+              navigate({ to: "/lab" });
+            }}
+            className="mt-2 font-mono text-[11px] text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+          >
+            Watch this exact search build its tree, live →
+          </button>
         </div>
       </div>
     </>
