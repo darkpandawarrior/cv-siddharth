@@ -49,6 +49,8 @@ export function FitCheck() {
 
   // Only the two "every provider failed" strings get a retry — a 429 or a
   // too-long rejection isn't fixed by trying again with the same text.
+  // ponytail: same substring-match heuristic as FloatingChat's canRetryJd —
+  // see its comment for the ceiling.
   const canRetry = fit.done && (fit.content.includes(CHAT_UNAVAILABLE) || fit.content.includes(CHAT_FALLBACK));
 
   return (

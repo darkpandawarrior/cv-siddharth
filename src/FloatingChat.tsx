@@ -643,6 +643,10 @@ export function FloatingChat() {
   // explicit retry rather than "paste it again" — a long turn (only a JD can
   // exceed MAX_TURN_CHARS.user, same signal canRegenerate above already reads)
   // whose settled reply is one of the two "every provider failed" strings.
+  // ponytail: detected by substring match on chatErrorText's own output
+  // rather than a threaded status enum — cheap and correct as long as those
+  // two strings stay unique to the exhausted-provider path; promote to a
+  // real status field if a third failure string ever needs the same signal.
   const lastReply = settled ? messages[messages.length - 1].content : "";
   const canRetryJd =
     settled &&
