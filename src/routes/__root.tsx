@@ -3,6 +3,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
+import { currentRoles } from "../lib/resumeMeta.ts";
 import { surfaces } from "../data/surfaces.ts";
 import { profile, experience, education } from "../data/profile.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
@@ -25,11 +26,13 @@ import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
+import { DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
 // Every role still running. Filtered over the whole array, never
 // experience[0] — index 0 is whichever role was added most recently, and an
 // index-based read silently demoted Dice.tech the day the consulting role
-// landed above it.
-const currentRoles = experience.filter((e) => e.period.trim().endsWith("Present"));
+// landed above it. Shared with resume.tsx's own Person JSON-LD via
+// resumeMeta.ts's currentRoles(), so this can never drift from that one.
+const currentRoleList = currentRoles(experience);
 
 // The title, name and links a crawler reads, in one place. Nobody looking at
 // the site would ever notice this block going stale, which is exactly why it
@@ -47,9 +50,9 @@ const PERSON_LD = {
   // scraper that just reads the first value, so a single current role stays a
   // bare object and only a genuine second one makes it a list.
   worksFor:
-    currentRoles.length === 1
-      ? { "@type": "Organization", name: currentRoles[0].company }
-      : currentRoles.map((e) => ({ "@type": "Organization", name: e.company })),
+    currentRoleList.length === 1
+      ? { "@type": "Organization", name: currentRoleList[0].company }
+      : currentRoleList.map((e) => ({ "@type": "Organization", name: e.company })),
   email: `mailto:${profile.email}`,
   alumniOf: { "@type": "CollegeOrUniversity", name: education.school },
   address: { "@type": "PostalAddress", addressLocality: "Pune", addressCountry: "IN" },
@@ -305,7 +308,14 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HashCompat />
         <RegisterServiceWorker />
         <TerminalHotkey />
-        {children}
+        {/* The room-entry pulse counter (rooms.tsx's useNextRoom) now bumps on
+            mount from every room, not only from inside /playground — so the
+            live counter it feeds needs to exist on every route, not only
+            there. Deferred (client-only, after hydration) for the same
+            reason Playground.tsx used to mount it locally: `@playhtml/react`
+            reads `document` on import, and this shell is the one thing every
+            route, including the server-rendered ones, renders through. */}
+        <DeferredLivePulse>{children}</DeferredLivePulse>
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}

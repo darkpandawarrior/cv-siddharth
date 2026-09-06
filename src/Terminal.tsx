@@ -4,6 +4,7 @@ import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
+import { didYouMean } from "./lib/didYouMean.ts";
 import { surfaces } from "./data/surfaces.ts";
 import {
   profile,
@@ -63,10 +64,15 @@ const PROMPT_HOST = "sid.android";
 const HISTORY_KEY = "sid-terminal-history-v1";
 
 /* Themeable accent — `theme <name>` rewrites these on the root terminal node. */
+// CAL-1: amber and cyan are the site's real accent pair — --color-accent
+// (#f2a13d) and --color-accent2 (#4fd6e0), the same values readColor()'s
+// fallbacks carry in src/themeColor.ts and every scene that reads them — not
+// the brighter stock values this shipped with. Green and magenta are
+// terminal-only and untouched.
 const THEMES: Record<string, { accent: string; dim: string }> = {
   green: { accent: "#3ddc84", dim: "#2bb86c" },
-  amber: { accent: "#ffb454", dim: "#d98a2b" },
-  cyan: { accent: "#5ee6ff", dim: "#2fb8d6" },
+  amber: { accent: "#f2a13d", dim: "#c47f2a" },
+  cyan: { accent: "#4fd6e0", dim: "#35a8b0" },
   magenta: { accent: "#ff6ac1", dim: "#d13d97" },
   mono: { accent: "#e8efe9", dim: "#9aa5a0" },
 };
@@ -186,7 +192,10 @@ function buildCommands(jump: Go): Cmd[] {
   const cmds: Cmd[] = [
     {
       name: "help",
-      help: "list everything you can type",
+      // Not "everything you can type" — nine commands below are `hidden:
+      // true` on purpose (easter eggs), and this list already filters them
+      // out. The hiding stays; the docstring just stops claiming otherwise.
+      help: "list the commands",
       run: () => (
         <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
           {cmds
@@ -1054,6 +1063,17 @@ export function Terminal() {
     }
     return map;
   }, [commands]);
+  // "Did you mean" candidates for an unrecognized command — visible names and
+  // aliases only. Hidden easter eggs stay out of this list too: suggesting
+  // one on a near-miss would un-hide it exactly as much as listing it in
+  // `help` would.
+  const suggestable = useMemo(
+    () => [
+      ...commands.filter((c) => !c.hidden).flatMap((c) => [c.name, ...(c.alias ?? [])]),
+      ...Object.keys(SECTION_ROUTES),
+    ],
+    [commands],
+  );
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>(() => {
@@ -1075,7 +1095,7 @@ export function Terminal() {
   }, []);
 
   const setTheme = useCallback((name: string) => {
-    const t = THEMES[name] ?? THEMES.green;
+    const t = THEMES[name] ?? THEMES.amber;
     const el = rootRef.current;
     if (el) {
       el.style.setProperty("--t-accent", t.accent);
@@ -1103,9 +1123,9 @@ export function Terminal() {
     reduce.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const savedTheme = (() => {
       try {
-        return localStorage.getItem("sid-terminal-theme") ?? "green";
+        return localStorage.getItem("sid-terminal-theme") ?? "amber";
       } catch {
-        return "green";
+        return "amber";
       }
     })();
     setTheme(savedTheme);
@@ -1203,9 +1223,15 @@ export function Terminal() {
         push("out", <span>→ {SECTION_ROUTES[lname].label}</span>);
         return;
       }
-      push("out", <span className="text-red-400">{name}: command not found. Type <Hi>help</Hi>.</span>);
+      const guess = didYouMean(lname, suggestable);
+      push(
+        "out",
+        <span className="text-red-400">
+          {name}: command not found.{guess && <> Did you mean <Hi>{guess}</Hi>?</>} Type <Hi>help</Hi>.
+        </span>,
+      );
     },
-    [cmdMap, history, push, runBanner, setTheme, jump],
+    [cmdMap, history, push, runBanner, setTheme, jump, suggestable],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1255,7 +1281,7 @@ export function Terminal() {
     <div
       ref={rootRef}
       className="term-root relative flex h-screen flex-col bg-void font-mono text-[13px] text-zinc-200 sm:text-sm"
-      style={{ ["--t-accent" as string]: "#3ddc84", ["--t-dim" as string]: "#2bb86c" }}
+      style={{ ["--t-accent" as string]: "#f2a13d", ["--t-dim" as string]: "#c47f2a" }}
       onClick={(e) => {
         // Don't steal focus from links/buttons the user is clicking.
         if ((e.target as HTMLElement).closest("a,button")) return;
@@ -1290,16 +1316,22 @@ export function Terminal() {
         tabIndex={-1}
         ref={scrollRef}
         className="relative z-10 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
-        aria-live="polite"
         aria-label="terminal output"
       >
         <h1 className="sr-only">The Terminal — a faux shell you can type in</h1>
         <div className="mx-auto max-w-4xl space-y-1.5">
-          {blocks.map((b) => (
-            <div key={b.id} className={reduce.current ? "" : "term-line"}>
-              {b.node}
-            </div>
-          ))}
+          {/* aria-live scoped to just the printed blocks. It used to sit on the
+              whole <main>, so every keystroke in the input below (and the
+              Tab-completion ghost redrawing on each one) got announced as if
+              it were new output — a screen reader read the command back
+              letter by letter while it was still being typed. */}
+          <div aria-live="polite">
+            {blocks.map((b) => (
+              <div key={b.id} className={reduce.current ? "" : "term-line"}>
+                {b.node}
+              </div>
+            ))}
+          </div>
           {/* Live input line */}
           <div className="flex items-center">
             <Caret />
@@ -1317,7 +1349,7 @@ export function Terminal() {
                 className="w-full bg-transparent text-zinc-100 caret-[var(--t-accent)] outline-none"
               />
               {ghost && (
-                <span className="pointer-events-none absolute left-0 top-0 whitespace-pre text-muted">
+                <span aria-hidden className="pointer-events-none absolute left-0 top-0 whitespace-pre text-muted">
                   <span className="invisible">{value}</span>
                   {ghost}
                 </span>

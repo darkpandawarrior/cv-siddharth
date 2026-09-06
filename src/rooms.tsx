@@ -1,9 +1,11 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
+import { usePulseUI } from "./play/pulseUI.ts";
+import type { PulseEvent } from "./play/pulse.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
 
 /**
@@ -82,9 +84,31 @@ export const ROOMS: Room[] = siteRooms.map((r) => ({ ...r, icon: SURFACE_ICON[r.
 // The room after this one, wrapping at the end. Derived from the same
 // `siteRooms` order the hub and the assistant's prompt both read, so the
 // three can never disagree about what follows what.
+//
+// Every room-chrome variant calls this hook — RoomFrame (5 rooms) plus
+// BlueprintRoom, Terminal and ComposePlayground, which each draw their own
+// header and reuse only the pager — so it is the one place a mount-time
+// `room:<slug>` pulse bump reaches every entry path: backtick, the palette,
+// the pager link, or a pasted URL. Previously that count only bumped from
+// RoomCard's onClick in RoomGrid, which is why /pulse undercounted every
+// other way into a room; usePulse's own 1s dedupe makes a click-then-mount
+// in the same second collapse to one, so there is nothing to double-count.
+//
+// `usePulseUI`, not `usePulse` — this hook runs from every room, including
+// ones a node-environment test reaches through nothing more than an icon
+// import (surfaces.test.ts imports SURFACE_ICON from here). `usePulse`
+// pulls in `@playhtml/react`, which reads `document` the moment it is
+// imported (see pulseUI.ts's own docstring for the SSR crash this caused
+// RoomGrid before); routing through the context keeps every route that
+// isn't wrapped in a live PulseContext.Provider a safe no-op instead of a
+// crash. See __root.tsx for where that provider is actually mounted.
 export function useNextRoom(): Room | null {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const here = ROOMS.findIndex((r) => r.to === pathname);
+  const { bump } = usePulseUI();
+  useEffect(() => {
+    if (here !== -1) bump(`room:${ROOMS[here].to.slice(1)}` as PulseEvent);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
   return here === -1 ? null : ROOMS[(here + 1) % ROOMS.length];
 }
 
@@ -135,7 +159,6 @@ export function RoomPagerFooter() {
 
 export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
   const { goToSection } = useSectionNav();
-  const next = useNextRoom();
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
@@ -185,12 +208,9 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
       {/* The onward path. Without this a room is a leaf: the only exits were
           "back to the hub" and "back to the portfolio", so the rooms never led
           to each other and the deepest work on the site was the hardest to
-          stumble into. */}
-      {next && (
-        <footer className="border-t border-line bg-ink/80">
-          <NextRoomLink next={next} className="mx-auto max-w-7xl px-4 py-4 sm:px-6" />
-        </footer>
-      )}
+          stumble into. Same component BlueprintRoom and Terminal render for
+          their own hand-drawn chrome — one footer, not three copies. */}
+      <RoomPagerFooter />
     </div>
   );
 }
