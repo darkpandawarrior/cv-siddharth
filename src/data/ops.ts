@@ -23,7 +23,7 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-09-05",
+    "generatedAt": "2026-09-06",
     "slaDays": 45,
     "generator": "npm run gen:system-graph"
   },

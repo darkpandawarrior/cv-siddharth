@@ -13,7 +13,7 @@ export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; ev
 export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }
 
 export const systemGraph: SystemGraph = {
-  "generatedAt": "2026-09-05",
+  "generatedAt": "2026-09-06",
   "nodes": [
     {
       "id": "gaddi",
