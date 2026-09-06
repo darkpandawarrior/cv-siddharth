@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Grid3x3, X, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid3x3, Search, X, Download } from "lucide-react";
 import { excelsiorEditions, excelsiorPage } from "./data/excelsior.ts";
+import type { ExcelsiorMark } from "./data/excelsiorMarks.ts";
+import { ExcelsiorSearch } from "./ExcelsiorSearch.tsx";
 
 /**
  * The Excelsior reader — a real page-turning magazine, hosted here.
@@ -39,11 +41,14 @@ export function Flipbook({
   page,
   onYearChange,
   onPageChange,
+  marks,
 }: {
   year: string;
   page: number;
   onYearChange: (y: string) => void;
   onPageChange: (p: number) => void;
+  /** The marks for THIS edition only — filter by year before passing down. */
+  marks: ExcelsiorMark[];
 }) {
   const edition = excelsiorEditions.find((e) => e.year === year) ?? excelsiorEditions[0];
   const total = edition.pages;
@@ -51,6 +56,7 @@ export function Flipbook({
   const [spread, setSpread] = useState(() => Math.min(Math.floor(page / 2), lastSpread(total)));
   const [flip, setFlip] = useState<{ dir: Dir; from: number } | null>(null);
   const [sheet, setSheet] = useState(false);
+  const [search, setSearch] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
   // The URL is the source of truth for "which page am I on", so a spread the
@@ -99,6 +105,19 @@ export function Flipbook({
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  // The scrubber's own mover: it sets `spread` straight, bypassing `go()`'s
+  // one-turn-at-a-time animation lock, because scrubbing fast across 60
+  // spreads must not try to animate every intermediate one — a jump is a cut,
+  // same reasoning as the URL-sync effect above.
+  const jump = useCallback(
+    (target: number) => {
+      setFlip(null);
+      clearTimeout(timer.current);
+      setSpread(Math.max(0, Math.min(target, lastSpread(total))));
+    },
+    [total],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (sheet) return;
@@ -121,6 +140,10 @@ export function Flipbook({
 
   const { left, right } = pagesOf(spread, total);
   const src = (n?: number) => (n ? excelsiorPage(edition.year, n) : undefined);
+  // The mark, if any, on the spread currently on screen — "you're standing on
+  // one of the ten pages that matter" surfaced at the moment of arrival,
+  // rather than only in the chip row above the reader.
+  const currentMark = marks.find((m) => m.page === left || m.page === right);
 
   // Prefetch the next spread so a turn never lands on a blank sheet.
   const prefetch = useMemo(() => {
@@ -158,10 +181,41 @@ export function Flipbook({
             </button>
           ))}
         </div>
-        <p className="flipbook-counter" aria-live="polite">
-          {left && right ? `${left}–${right}` : (left ?? right)} / {total}
-        </p>
+        <div className="flipbook-progress">
+          <div className="flipbook-scrubber">
+            <input
+              type="range"
+              min={0}
+              max={lastSpread(total)}
+              value={spread}
+              onChange={(e) => jump(Number(e.target.value))}
+              aria-label={`Page ${left ?? right} of ${total}`}
+              className="flipbook-scrubber-track"
+            />
+            {marks.map((m) => (
+              <span
+                key={m.page}
+                className={`flipbook-scrubber-tick flipbook-scrubber-tick-${m.kind}`}
+                style={{ left: `${(Math.floor(m.page / 2) / lastSpread(total)) * 100}%` }}
+                title={m.label}
+                aria-hidden
+              />
+            ))}
+          </div>
+          <p className="flipbook-counter" aria-live="polite">
+            {left && right ? `${left}–${right}` : (left ?? right)} / {total} ·{" "}
+            {Math.round(((left ?? right ?? 1) / total) * 100)}%
+          </p>
+          {currentMark && (
+            <p className={`flipbook-mark-badge flipbook-mark-badge-${currentMark.kind}`}>
+              You're on: {currentMark.label}
+            </p>
+          )}
+        </div>
         <div className="flipbook-tools">
+          <button type="button" onClick={() => setSearch(true)} className="flipbook-tool" aria-label="Search this issue">
+            <Search size={15} />
+          </button>
           <button type="button" onClick={() => setSheet(true)} className="flipbook-tool" aria-label="All pages">
             <Grid3x3 size={15} />
           </button>
@@ -224,11 +278,23 @@ export function Flipbook({
         <ContactSheet
           year={edition.year}
           total={total}
+          marks={marks}
           onPick={(p) => {
             setSpread(Math.min(Math.floor(p / 2), lastSpread(total)));
             setSheet(false);
           }}
           onClose={() => setSheet(false)}
+        />
+      )}
+
+      {search && (
+        <ExcelsiorSearch
+          year={edition.year}
+          onPick={(p) => {
+            jump(Math.floor(p / 2));
+            setSearch(false);
+          }}
+          onClose={() => setSearch(false)}
         />
       )}
     </div>
@@ -239,11 +305,13 @@ export function Flipbook({
 function ContactSheet({
   year,
   total,
+  marks,
   onPick,
   onClose,
 }: {
   year: string;
   total: number;
+  marks: ExcelsiorMark[];
   onPick: (p: number) => void;
   onClose: () => void;
 }) {
@@ -264,12 +332,26 @@ function ContactSheet({
         </button>
       </div>
       <div className="flipbook-sheet-grid">
-        {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
-          <button key={n} type="button" onClick={() => onPick(n)} className="flipbook-thumb">
-            <img src={excelsiorPage(year, n)} alt={`Page ${n}`} loading="lazy" />
-            <span>{n}</span>
-          </button>
-        ))}
+        {Array.from({ length: total }, (_, i) => i + 1).map((n) => {
+          const mark = marks.find((m) => m.page === n);
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onPick(n)}
+              className={`flipbook-thumb ${mark ? `flipbook-thumb-${mark.kind}` : ""}`}
+              aria-label={mark ? `Page ${n}, ${mark.label}` : undefined}
+            >
+              <img src={excelsiorPage(year, n)} alt={`Page ${n}`} loading="lazy" />
+              {mark && (
+                <span className="flipbook-thumb-mark" aria-hidden>
+                  {mark.kind === "wrote" ? "✎" : mark.kind === "about" ? "❝" : "✦"}
+                </span>
+              )}
+              <span>{n}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { roomHead } from "../lib/routeHead.ts";
 import { Flipbook } from "../Flipbook.tsx";
 import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
+import { writeProgress } from "../lib/excelsiorProgress.ts";
 import { countWord } from "../data/labs.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
@@ -43,6 +44,10 @@ function ExcelsiorRoute() {
   // the pills it actually renders. "The five I wrote" was typed in beside the
   // list that decides it, which is the arrangement that always drifts.
   const readable = excelsiorMarks.filter((m) => m.readSlug);
+  // The reader wants only the current edition's marks — a scrubber tick or a
+  // contact-sheet badge for a page number that belongs to a different year
+  // would land on the wrong spread.
+  const editionMarks = excelsiorMarks.filter((m) => Number(m.year) === year);
   // Jump-to-a-page chips, computed once and rendered into two different
   // wrappers below (a closed mobile disclosure, a plain row at sm+) so the
   // fold fix doesn't require two copies of this map.
@@ -161,6 +166,7 @@ function ExcelsiorRoute() {
           <Flipbook
             year={String(year)}
             page={page}
+            marks={editionMarks}
             // viewTransition: false, because a page turn is not a route change
             // to look at. The router runs with defaultViewTransition on for the
             // shared-element moves (nav wordmark, project titles), and here that
@@ -170,7 +176,11 @@ function ExcelsiorRoute() {
             // "Transition was skipped": an uncaught error on every page turn,
             // and the only page error the whole site was still emitting.
             onYearChange={(y) => navigate({ search: { year: Number(y), page: 1 }, replace: true, viewTransition: false })}
-            onPageChange={(p) => navigate({ search: (s) => ({ ...s, page: p }), replace: true, viewTransition: false })}
+            onPageChange={(p) => {
+              const total = excelsiorEditions.find((e) => Number(e.year) === year)?.pages ?? p;
+              writeProgress(String(year), p, total);
+              navigate({ search: (s) => ({ ...s, page: p }), replace: true, viewTransition: false });
+            }}
           />
         </div>
       </main>

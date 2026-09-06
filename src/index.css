@@ -2460,6 +2460,94 @@ html.resume-mode .palette-trigger {
   color: var(--color-accent);
 }
 
+/* The scrubber: a native range so keyboard/touch dragging are free (rung 4 —
+   no library), plus absolutely-positioned tick overlays for the marked pages,
+   the same way .flipbook-thumb already overlays its page number. */
+.flipbook-progress {
+  display: flex;
+  flex: 1 1 220px;
+  min-width: 160px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flipbook-scrubber {
+  position: relative;
+  width: 100%;
+}
+.flipbook-scrubber-track {
+  display: block;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-line);
+  cursor: pointer;
+}
+.flipbook-scrubber-track::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+.flipbook-scrubber-track::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+.flipbook-scrubber-track::-moz-range-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-line);
+}
+.flipbook-scrubber-tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  transform: translate(-1px, -50%);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.flipbook-scrubber-tick-wrote {
+  background-color: var(--color-accent);
+}
+.flipbook-scrubber-tick-about {
+  background-color: var(--color-accent2);
+}
+.flipbook-scrubber-tick-credit {
+  background-color: var(--color-muted);
+}
+
+/* "You're on: X" — the chip row's colour convention (routes/excelsior.tsx),
+   surfaced again at the moment you actually land on a marked page. */
+.flipbook-mark-badge {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.0625rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+}
+.flipbook-mark-badge-wrote {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  color: var(--color-accent);
+}
+.flipbook-mark-badge-about {
+  border-color: color-mix(in srgb, var(--color-accent2) 35%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent2) 5%, transparent);
+  color: var(--color-accent2);
+}
+.flipbook-mark-badge-credit {
+  color: var(--color-text-dim);
+}
+
 .flipbook-stage {
   position: relative;
   display: flex;
@@ -2621,12 +2709,98 @@ html.resume-mode .palette-trigger {
   font-size: 0.625rem;
   color: var(--color-muted);
 }
+/* A marked page's thumbnail: border tint using the same tokens as the chip
+   row and the scrubber ticks, plus a glyph in the corner the page number
+   span doesn't already own. */
+.flipbook-thumb-wrote {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+.flipbook-thumb-about {
+  border-color: color-mix(in srgb, var(--color-accent2) 45%, transparent);
+}
+.flipbook-thumb-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(5, 7, 10, 0.8);
+  padding: 0.0625rem 0.3125rem;
+  font-size: 0.6875rem;
+}
+
+/* Search dialog — same sheet chrome as the contact sheet, a plain input and
+   result list in place of the thumbnail grid. */
+.flipbook-search-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.flipbook-search-input {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+.flipbook-search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+.flipbook-search-note {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+.flipbook-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.flipbook-search-result {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.125rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-search-result:hover {
+  border-color: var(--color-accent);
+}
+.flipbook-search-result-page {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-accent);
+}
+.flipbook-search-result-snippet {
+  font-size: 0.8125rem;
+  color: var(--color-text-dim);
+}
+.flipbook-search-empty {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
 
 /* Single page below the fold-in-half width — a two-page spread at 400px wide
    is two unreadable columns. */
 @media (max-width: 767px) {
   .flipbook-side-left {
     display: none;
+  }
+  /* The bar now carries a third block (the scrubber). Stacking it full-width
+     below the years/tools row is what keeps the range usably wide on a phone
+     instead of squeezed to a sliver between them. */
+  .flipbook-bar {
+    flex-wrap: wrap;
+  }
+  .flipbook-progress {
+    order: 3;
+    flex-basis: 100%;
   }
   /* Width leads on a phone, height follows. Sizing by height alone is right on
      a laptop, where the window is wider than a page is tall, and wrong on a
