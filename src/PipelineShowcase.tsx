@@ -24,9 +24,15 @@ export function PipelineShowcase({ slug }: { slug: string }) {
     };
   }, [slug]);
 
-  // Say nothing rather than render an empty shell. A panel that shows zeros when
-  // the API is down misrepresents the pipeline as idle.
-  if (failed) return null;
+  // D2: say nothing wrong rather than say nothing at all. A bare `return
+  // null` here read as a section that promised live data and then vanished,
+  // leaving blank space before the unrelated stats strip below it — the same
+  // "confirmed empty" misread a zero would have given, just with no text at
+  // all instead of no text with the wrong number.
+  const unreachable = (
+    <p className="font-mono text-[11px] text-muted">Live CI/CD data isn&rsquo;t reachable right now.</p>
+  );
+  if (failed) return unreachable;
   if (!data) {
     return (
       <p className="flex items-center gap-2 font-mono text-[11px] text-muted">
@@ -34,7 +40,11 @@ export function PipelineShowcase({ slug }: { slug: string }) {
       </p>
     );
   }
-  if (!data.connected && !data.published) return null;
+  // `connected: false` here is the same fact as `failed` above, just caught
+  // one layer down: the client's own fetch succeeded but the handler's live
+  // read of GitHub/F-Droid did not (pipeline-handler.ts:69). Rendering
+  // nothing for it is the identical defect with a different trigger.
+  if (!data.connected && !data.published) return unreachable;
 
   const mb = data.published ? (data.published.sizeBytes / 1048576).toFixed(1) : null;
 
