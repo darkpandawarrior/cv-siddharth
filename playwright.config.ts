@@ -1,5 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
+// Parallel lanes each run their own preview: PLAYWRIGHT_PORT picks the port, 4173 stays the default.
+const PORT = process.env.PLAYWRIGHT_PORT ?? "4173";
+
 export default defineConfig({
   testDir: "./e2e",
   /*
@@ -44,7 +47,7 @@ export default defineConfig({
    */
   workers: 3,
   retries: process.env.CI ? 2 : 0,
-  use: { baseURL: "http://localhost:4173" },
+  use: { baseURL: `http://localhost:${PORT}` },
   webServer: {
     // Run against the production SSR server (`npm run serve` = vite preview
     // --port 4173 --strictPort), not `npm run dev` — dev doesn't full-SSR in
@@ -53,8 +56,8 @@ export default defineConfig({
     // DOM, which works either way, but prod is honest. reuseExistingServer is
     // false in CI; locally, --strictPort makes a stale 4173 error loudly
     // rather than silently serving a different app.
-    command: "npm run build && npm run serve",
-    url: "http://localhost:4173",
+    command: `npm run build && npm run serve -- --port ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     // This covers `npm run build && npm run serve`, not a page load. The build
     // runs eleven generators, several of which fetch over the network, then a
