@@ -407,12 +407,34 @@ export function Onboarding({ onTour }: { onTour: () => void }): JSX.Element | nu
             I'll drive
           </button>
         </div>
-        <p className="mt-4 font-mono text-[10px] leading-relaxed text-muted">
+        {/* playground-keyboard-only-intro-copy: this card used to list only
+            the keyboard controls, unconditionally, even on a touch phone —
+            which already has a working thumbstick (Hud.tsx's Thumbstick,
+            routed through setTouchSteer/setTouchThrottle) and tap targets
+            for the rest (the Enter/View button, the "Drive me there"
+            button), none of which this copy ever mentioned. CSS-gated like
+            Hud.tsx's `.hud-touch`, not a matchMedia() state hook: a coarse
+            pointer never renders the keyboard row and a mouse/trackpad
+            visit never renders the touch one, with no hydration mismatch
+            and no desync if a tablet is rotated after mount. */}
+        <style>{`
+          .onboarding-key-hint { display: block; }
+          .onboarding-touch-hint { display: none; }
+          @media (pointer: coarse) {
+            .onboarding-key-hint { display: none; }
+            .onboarding-touch-hint { display: block; }
+          }
+        `}</style>
+        <p className="onboarding-key-hint mt-4 font-mono text-[10px] leading-relaxed text-muted">
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">W A S D</kbd> drive ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">shift</kbd> boost ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">enter</kbd> go in ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">T</kbd> auto ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">R</kbd> unstick
+        </p>
+        <p className="onboarding-touch-hint mt-4 font-mono text-[10px] leading-relaxed text-muted">
+          drag the stick, bottom left, to steer and drive · tap <b className="text-zinc-300">Enter</b> to
+          go in · <b className="text-zinc-300">Drive me there</b>, above, for auto
         </p>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted">
           or take the plain grid — List view, bottom left
