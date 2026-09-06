@@ -14,7 +14,7 @@ name: Refresh the Compose twin
 # commit the drift, no manual poke.
 on:
   schedule:
-    - cron: '41 5 * * *'   # daily 05:41 UTC, before refresh-media at 06:17
+    - cron: '41 5 * * 1'   # weekly, Monday 05:41 UTC, before refresh-media; was daily until the 10 GB deployment cap
   workflow_dispatch:
 
 permissions:
