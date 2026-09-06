@@ -130,7 +130,12 @@ export function CommandPalette() {
         // ("K", inside "Cmd+K") but not the mobile one, so this failed on
         // phones only. Both visible strings are substrings of this.
         aria-label="Search — open the command palette (Cmd+K)"
-        className="palette-trigger flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+        // Fixed to the OPPOSITE corner from FloatingChat's launcher (bottom-6
+        // right-6): this button's own docstring above already claimed
+        // "always-visible … reachable on mobile/touch too", but it rendered
+        // in normal document flow — the literal last element in body, after
+        // every route's footer. Reachable now, and not stacked on the chat FAB.
+        className="palette-trigger fixed bottom-6 left-6 z-50 flex items-center gap-1.5 rounded-full border border-line bg-ink/90 px-3 py-2 text-xs font-semibold text-zinc-400 shadow-lg backdrop-blur transition hover:border-accent hover:text-accent print:hidden"
       >
         {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it
             rendered as "⌘ ⌘K". Icon carries the modifier, text carries the key. */}
