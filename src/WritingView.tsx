@@ -1,10 +1,11 @@
-import { ArrowLeft, ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
+import { ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
+import { WorldSwitch } from "./WorldSwitch.tsx";
 import {
   LOOPDOWN_REPO,
   PLATFORMS,
@@ -37,6 +38,12 @@ export function WritingView() {
     if ((a.status === "published") !== (b.status === "published")) return a.status === "published" ? -1 : 1;
     return (b.created || "").localeCompare(a.created || "");
   });
+  // loopdown-soon-wall: 17 lessons rendered as full cards, 14 of them SOON
+  // stubs with no read link — 82% placeholder, and roughly 14 phone screens
+  // of near-identical cards before Series and Cast. Only the published ones
+  // earn the full card; the rest collapse behind a count.
+  const live = sorted.filter((l) => l.status === "published");
+  const soon = sorted.filter((l) => l.status !== "published");
 
   return (
     <div className="min-h-screen">
@@ -45,17 +52,24 @@ export function WritingView() {
             window — a Fold's cover screen — and with html{overflow-x:hidden}
             the page does not scroll, it just loses the right-hand button. */}
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
-          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
-            <ArrowLeft size={16} /> Back to portfolio
-          </button>
+          {/* loopdown-no-worldswitch: this was a bespoke "Back to portfolio"
+              button whose copy disagreed with every other world page's own
+              back link ("The Build" on /ink, "The Ink" on /anthology). This
+              is the only navigation the docstring above calls constant
+              across both worlds, and /loopdown was the one page missing it. */}
+          <WorldSwitch current="build" />
           <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
-            <button type="button" onClick={() => goToSection("projects")} className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            {/* loopdown-no-worldswitch: these three carried `hidden sm:block`
+                with no menu replacement, so a 390px phone lost Projects,
+                Storyboard and Résumé outright — there was no way to reach
+                Résumé from this page at all. */}
+            <button type="button" onClick={() => goToSection("projects")} className="nav-link text-sm text-zinc-400 transition hover:text-accent">
               Projects
             </button>
-            <Link to="/map" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            <Link to="/map" className="nav-link text-sm text-zinc-400 transition hover:text-accent">
               Storyboard
             </Link>
-            <Link to="/resume" className="nav-link hidden text-sm text-zinc-400 transition hover:text-accent sm:block">
+            <Link to="/resume" className="nav-link text-sm text-zinc-400 transition hover:text-accent">
               Résumé
             </Link>
             <a href={LOOPDOWN_REPO} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-accent">
@@ -96,7 +110,7 @@ export function WritingView() {
         <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Lessons</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {sorted.map((l, i) => {
+            {live.map((l, i) => {
               const accent = accentOf(l.series);
               const live = l.status === "published";
               const links = PLATFORMS.filter((p) => l.links?.[p.key]);
@@ -156,6 +170,24 @@ export function WritingView() {
               );
             })}
           </div>
+          {soon.length > 0 && (
+            <details className="mt-5">
+              <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-widest text-muted transition hover:text-accent">
+                +{soon.length} more in progress
+              </summary>
+              <ul className="mt-3 flex flex-col divide-y divide-line">
+                {soon.map((l) => (
+                  <li key={l.slug} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                    <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-muted">SOON</span>
+                    <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: accentOf(l.series) }}>
+                      {titleize(l.series) || l.pillar}
+                    </span>
+                    <span className="text-sm text-zinc-300">{l.title}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </section>
 
         {/* series */}
