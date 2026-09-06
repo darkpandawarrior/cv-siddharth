@@ -1608,6 +1608,14 @@ export function OpsBoard() {
           ages computed as you loaded this page; the control tower, the published chain and the live
           surfaces all read at load. Employment-era figures are measured history, not a live feed.
         </p>
+        <p className="kicker">
+          A separate board, on{" "}
+          <a href="https://github.com/darkpandawarrior" target="_blank" rel="noreferrer">
+            his GitHub profile
+          </a>
+          , tracks eleven jobs and datasets that live outside this repo entirely: this page has no
+          row for them yet, and that board has none for this one.
+        </p>
       </main>
       <SiteFooter />
     </>
