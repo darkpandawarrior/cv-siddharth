@@ -35,31 +35,22 @@ test("/hire mounts the chat launcher", async ({ page }) => {
  * Collision check against the FAB's real footprint, on the routes the sweep
  * named.
  *
- * index.css's `--chat-fab-clearance` reserves the launcher's footprint at the
- * true end of the document, which is a real fix for content that sits there
- * (verified: the room-to-room footer link that used to be the reported
- * /map defect no longer collides). It does nothing for a collision that is
- * ABOVE the fold at scroll position zero — a stat grid, a hero paragraph, an
- * architecture bullet — because padding added after existing content cannot
- * move that content, which is already painted, out of the way. Measured
- * below: every route the sweep named still collides, and every single one is
- * a first-viewport collision, never a scrolled one.
- *
- * `test.fail()` keeps this a real, run assertion rather than a comment: it
- * documents the exact current state (still colliding) so a regression that
- * makes it WORSE is still caught, and a fix that makes it go away flips these
- * to an unexpected pass instead of vanishing silently. Closing the gap needs
- * one of: shrinking or scroll-delaying FloatingChat's launcher (touches
- * FloatingChat.tsx, a bigger UX change than "reserve clearance"), or spacing
- * fixes in each page's own layout (Shipped.tsx, ChessFindings.tsx,
- * ProjectDetail.tsx, ResumeView.tsx — outside this lane's file list). See the
- * lane report's "Deliberately not fixed" section.
+ * index.css's `--chat-fab-clearance` now reserves the launcher's footprint in
+ * both directions, not one: padding-bottom for the true end of the document
+ * (verified: /map's room-to-room footer link and /resume's closing paragraph
+ * no longer collide), plus padding-right as a permanent column down the
+ * right edge of every route. The launcher is viewport-fixed, so a
+ * bottom-only reservation left it free to sit over whatever text occupied
+ * that corner at ANY scroll position — which is what made /shipped's fourth
+ * stat and /chess's thesis sentence collide on first paint, nowhere near the
+ * document's end. A column no text ever enters removes the overlap at every
+ * scroll position at once, so this is one assertion per route now expected
+ * to genuinely pass rather than a pinned known-gap.
  */
 const ROUTES = ["/shipped", "/chess", "/project/candidai", "/project/stutter", "/map", "/resume"];
 
 for (const path of ROUTES) {
   test(`${path} — chat launcher vs. live content at ${MOBILE.width}px`, async ({ page }) => {
-    test.fail(true, "known gap: an above-the-fold collision, not fixed by this lane's document-end clearance — see file docstring");
     await page.setViewportSize(MOBILE);
     await page.goto(path, { waitUntil: "networkidle" });
     await page.waitForTimeout(1000);

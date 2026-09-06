@@ -245,15 +245,33 @@ body {
   /* Global chrome clearance. FloatingChat.tsx's collapsed launcher is a fixed
      56px circle sitting bottom-6/right-6 in every viewport, on top of
      whatever the page has scrolled underneath it, and nothing reserved that
-     corner — on /map that was the room-to-room footer's own tap target, and
-     on /resume the closing summary paragraph cleared it only by line-wrap
-     luck. One rule, sized to the launcher's own footprint (3.5rem + its
-     1.5rem offset + a margin), rather than a patch on every route that ends
-     near the bottom of the page. A custom property rather than a bare
-     number so CommandPalette's own fixed corner (bottom-6 left-6, same
-     footprint) can be sized from the same value if it ever needs to. */
+     corner. Two dimensions, both needed — a document-end bug and a
+     first-viewport bug are the same root cause seen at two scroll
+     positions:
+       - padding-bottom reserves the launcher's footprint at the true end of
+         the document, so trailing content (/map's room-to-room link,
+         /resume's closing paragraph) isn't the last thing the viewport can
+         show flush against the bottom edge.
+       - padding-right reserves the same footprint as a permanent column
+         down the right edge of every route, because the launcher is
+         viewport-fixed, not document-end-fixed — it also sits over
+         whatever text happens to occupy that corner AT ANY scroll position,
+         which is what made /shipped's fourth stat, /chess's thesis
+         sentence, and mid-paragraph text on /project/candidai and
+         /project/stutter collide on first paint, nowhere near the
+         document's end. A column no text ever enters removes the overlap
+         at every scroll position at once — this repo's containers are all
+         `mx-auto max-w-* px-6` flow children of body, so a body-level
+         padding-right shrinks their available width instead of any of them
+         needing their own clearance.
+     Sized to the launcher's own footprint (3.5rem + its 1.5rem offset + a
+     margin) in both directions, since the footprint is square. A custom
+     property rather than a bare number so CommandPalette's own fixed corner
+     (bottom-6 left-6, same footprint) can be sized from the same value if
+     it ever needs to. */
   --chat-fab-clearance: 6.5rem;
   padding-bottom: var(--chat-fab-clearance);
+  padding-right: var(--chat-fab-clearance);
 }
 
 /* The ambient gradient wash lives on a fixed, GPU-composited layer instead of
