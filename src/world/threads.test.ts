@@ -5,7 +5,7 @@ import { facetThreads, THREAD_MARKER_HEIGHT } from "./threads.ts";
 describe("facet threads", () => {
   it("has exactly one entry per facet", () => {
     expect(facetThreads()).toHaveLength(facets.length);
-    expect(facetThreads()).toHaveLength(8);
+    expect(facetThreads()).toHaveLength(9);
   });
 
   it("draws an arc for exactly the facets whose authored date differs from discovered", () => {
@@ -27,7 +27,7 @@ describe("facet threads", () => {
 
   it("the six flat facets get no gap, no arc, and the base marker height as their apex", () => {
     const flat = facetThreads().filter((t) => !t.hasArc);
-    expect(flat).toHaveLength(6);
+    expect(flat).toHaveLength(7);
     for (const t of flat) {
       expect(t.gapYears).toBe(0);
       expect(t.authoredZ).toBe(t.discoveredZ);

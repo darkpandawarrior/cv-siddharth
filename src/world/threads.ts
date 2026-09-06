@@ -5,7 +5,7 @@ import { dateZ, type PaletteToken } from "./city.ts";
  * AUTHORED vs DISCOVERED — the two overhead threads, and the six markers
  * that deliberately do NOT get one.
  *
- * facets.ts has 8 entries. Six of them have `authored === discovered`:
+ * facets.ts has 9 entries. Seven of them have `authored === discovered`:
  * nothing was recovered for those, so nothing is drawn but a single pillar
  * with a ring at its base — the same two colours the arcs use (accent for
  * the authored/past channel, probe for the discovered/now channel), just
@@ -63,7 +63,7 @@ function requireZ(dateStr: string, facetId: string, field: string): number {
   return z;
 }
 
-/** One entry per `facets.ts` row (8), in the array's own order. */
+/** One entry per `facets.ts` row (9), in the array's own order. */
 export function facetThreads(): FacetThread[] {
   return facets.map((f) => {
     const authoredZ = requireZ(f.authored, f.id, "authored");

@@ -10,15 +10,15 @@ import { worldPalette } from "./palette.ts";
 /**
  * THE AUTHORED/DISCOVERED THREADS, drawn.
  *
- * Every one of the 8 facets gets a pillar (accent, the past channel) and a
+ * Every one of the 9 facets gets a pillar (accent, the past channel) and a
  * ring (probe, the now channel) at x=0 — directly over the boulevard. For
- * the 6 with `authored === discovered` those two sit on top of each other:
+ * the 7 with `authored === discovered` those two sit on top of each other:
  * "nothing was recovered, so nothing else is drawn," per the design doc.
  * For the 2 with a real gap (`excelsior`, `board`) a lit tube arcs between
  * them, reaching an apex tall enough that `board` — the biggest gap in the
  * data — is the tallest single thing in the city.
  *
- * Draw calls: 1 InstancedMesh for all 8 pillars, 1 for all 8 rings, 1 mesh
+ * Draw calls: 1 InstancedMesh for all 9 pillars, 1 for all 9 rings, 1 mesh
  * per arc (2) = 4 total, comfortably under the design doc's "threads <= 6".
  *
  * The pillars sit ON the boulevard by the design's own explicit instruction
