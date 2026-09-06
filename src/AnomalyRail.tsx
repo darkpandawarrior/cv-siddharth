@@ -29,6 +29,16 @@ const DEVIATION_PAD = 32;
 const HOVER_TOLERANCE = 8;
 const SWEEP_MS = 1400;
 const SWEEP_SEEN_KEY = "sidos.rail.seen";
+// §3.2: "Deviations pulse on a slow offset cycle so something is always
+// breathing without anything strobing." One full breath every 2.6s, each
+// deviation offset by 15% of the cycle per index so the rail never blinks
+// in unison.
+const PULSE_PERIOD_MS = 2600;
+const PULSE_PHASE_STEP = 0.15;
+// §3.2: "magnetic lean toward the cursor within ~80px" — a deviation within
+// this radius of the pointer nudges toward it; LEAN_MAX_PX is how far.
+const LEAN_RADIUS_PX = 80;
+const LEAN_MAX_PX = 3;
 // How far right a drag has to travel, from wherever it started on the
 // 24px-wide rail, before it counts as "open the instrument view" rather
 // than an incidental wobble.
@@ -60,6 +70,10 @@ export default function AnomalyRail() {
   // A ref, not state — the rail already redraws every frame, so this doesn't
   // need to trigger a React render on top of that.
   const hoveredRef = useRef<string | null>(null);
+  // Canvas-local pointer position, for the magnetic lean — null when the
+  // pointer isn't over the rail (mouse only; touch never sets this, same as
+  // the drag-to-open gesture below).
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const [instrumentOpen, setInstrumentOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -143,6 +157,11 @@ export default function AnomalyRail() {
     // feature. Per-event pointerType (not a static `(pointer: fine)` media
     // query) so a hybrid device's mouse/pen input is unaffected.
     if (e.pointerType === "touch") return;
+    // Without this, a mouse drag from the rail also starts a native text
+    // selection (or an image drag, over a captured screenshot) alongside the
+    // open gesture — the same click that opens the instrument view was
+    // highlighting the page behind it.
+    e.preventDefault();
     const pointerId = e.pointerId;
     const startX = e.clientX;
     const onMove = (ev: PointerEvent) => {
@@ -175,8 +194,13 @@ export default function AnomalyRail() {
     let sweepT = reduced || hasSweptBefore() ? 1 : 0;
     if (sweepT === 0) markSwept();
 
+    // Elapsed time drives the pulse's sine — only tracked when it's actually
+    // going to be read below (reduced motion has no pulse), so a reduced-
+    // motion visit doesn't accumulate a number nothing uses.
+    let elapsedMs = 0;
     const step = (dtMs: number) => {
       if (sweepT < 1) sweepT = Math.min(1, sweepT + dtMs / SWEEP_MS);
+      if (!reduced) elapsedMs += dtMs;
     };
 
     // Ticks and deviations are pure geometry — they only change when the
@@ -196,19 +220,17 @@ export default function AnomalyRail() {
     let accent = "";
     let accent2 = "";
 
-    // What the last frame actually painted. Once the one-shot sweep hint
-    // finishes and the pointer stops moving, every subsequent frame is
-    // byte-identical to the one before it — measured: two snapshots 1.5s
-    // apart hash identical — yet useCanvasLoop's rAF loop never stops.
-    // Skipping the clear+restroke when nothing changed fixes that without
-    // touching the loop itself. Not applied under reduced motion: that path
-    // draws at most a couple of times total (once on mount, once per
-    // resize), so there's no perpetual loop to save here, and skipping would
-    // risk racing the resize-triggered redraw that keeps the frozen frame
-    // from going blank (see useCanvasLoop.ts).
-    let lastHovered: string | null = null;
-    let lastSweepDone = false;
-
+    // There used to be a "skip this frame, nothing changed" early return
+    // here (I3's perf fix). It no longer has a case to apply to: under
+    // normal motion the deviations pulse every frame (§3.2's "always
+    // breathing"), so every frame legitimately differs — the loop earns its
+    // frames now instead of running forever for zero visual change. Under
+    // reduced motion this ran only a handful of times total (mount, plus
+    // whatever the ResizeObserver below fires), and skipping there actively
+    // broke the C1 fix: the observer's callback resets canvas.width — wiping
+    // the bitmap — every time it fires, including the guaranteed-async
+    // initial one even when nothing actually resized, so a "same as last
+    // time, skip it" check could (and did) leave that wipe unpainted.
     const draw = () => {
       const { width, height: h } = getSize();
       if (h <= 0) {
@@ -230,10 +252,6 @@ export default function AnomalyRail() {
       }
 
       const hovered = hoveredRef.current;
-      const sweepDone = sweepT >= 1;
-      if (!reduced && !resized && sweepDone && lastSweepDone && hovered === lastHovered) return;
-      lastHovered = hovered;
-      lastSweepDone = sweepDone;
 
       const cx = width / 2;
       ctx.clearRect(0, 0, width, h);
@@ -265,18 +283,43 @@ export default function AnomalyRail() {
         ctx.globalAlpha = 1;
       }
 
+      const pointer = reduced ? null : pointerRef.current;
+
       // Deviations: the measured signal, one per facet, laid out by chronology.
-      for (const d of cachedDeviations) {
+      cachedDeviations.forEach((d, i) => {
         const isHovered = d.id === hovered;
+        let radius = isHovered ? 4.5 : 3;
+        let alpha = 1;
+        // Pulse: each deviation breathes on its own offset so the rail never
+        // blinks in unison — a phase-shifted sine over a slow, fixed period.
+        if (!reduced) {
+          const phase = (elapsedMs / PULSE_PERIOD_MS + i * PULSE_PHASE_STEP) % 1;
+          const breath = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2); // 0..1
+          radius += breath * 1.2;
+          alpha = 0.75 + breath * 0.25;
+        }
+        // Magnetic lean: within LEAN_RADIUS_PX of the pointer, nudge toward
+        // it — a full pull at 0px away, none at the radius' edge.
+        let dotX = cx;
+        if (pointer) {
+          const dist = Math.hypot(pointer.x - cx, pointer.y - d.y);
+          if (dist < LEAN_RADIUS_PX) {
+            const pull = (1 - dist / LEAN_RADIUS_PX) * LEAN_MAX_PX;
+            dotX = cx + Math.sign(pointer.x - cx || 1) * pull;
+          }
+        }
+
         ctx.beginPath();
-        ctx.arc(cx, d.y, isHovered ? 4.5 : 3, 0, Math.PI * 2);
+        ctx.arc(dotX, d.y, radius, 0, Math.PI * 2);
         ctx.fillStyle = accent;
+        ctx.globalAlpha = alpha;
         if (isHovered) {
           ctx.shadowColor = accent;
           ctx.shadowBlur = 10;
         }
         ctx.fill();
         ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
 
         if (isHovered) {
           const facet = facets.find((f) => f.id === d.id);
@@ -284,10 +327,10 @@ export default function AnomalyRail() {
             ctx.font = '11px "JetBrains Mono", ui-monospace, monospace';
             ctx.fillStyle = accent;
             ctx.textBaseline = "middle";
-            ctx.fillText(facet.label, cx + 12, d.y);
+            ctx.fillText(facet.label, dotX + 12, d.y);
           }
         }
-      }
+      });
     };
 
     return { step, draw };
@@ -296,7 +339,9 @@ export default function AnomalyRail() {
   const updateHover = (e: ReactPointerEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    hoveredRef.current = hitTest(deviations, e.clientY - rect.top, HOVER_TOLERANCE);
+    const y = e.clientY - rect.top;
+    pointerRef.current = { x: e.clientX - rect.left, y };
+    hoveredRef.current = hitTest(deviations, y, HOVER_TOLERANCE);
   };
 
   return (
@@ -309,6 +354,7 @@ export default function AnomalyRail() {
         onPointerMove={updateHover}
         onPointerLeave={() => {
           hoveredRef.current = null;
+          pointerRef.current = null;
         }}
       >
         <nav aria-label="Timeline" className="anomaly-rail-nav">

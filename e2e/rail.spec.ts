@@ -12,10 +12,10 @@ import { test, expect } from "./lib/test.ts";
 const RAIL_NAV = "Timeline"; // aria-label shared by both the rail's <nav> and the instrument view's dialog
 
 test.describe("anomaly rail — links", () => {
-  test("all eight facet links are present, have discernible names, and are keyboard-reachable", async ({ page }) => {
+  test("all nine facet links are present, have discernible names, and are keyboard-reachable", async ({ page }) => {
     await page.goto("/");
     const links = page.getByRole("navigation", { name: RAIL_NAV }).getByRole("link");
-    await expect(links).toHaveCount(8);
+    await expect(links).toHaveCount(9);
 
     for (const link of await links.all()) {
       await expect(link).toHaveAccessibleName(/.+/);
