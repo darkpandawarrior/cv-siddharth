@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { readToken } from "../themeColor";
+import { Figure } from "./Figure.tsx";
 
 /* ── Crash Triage Lab ────────────────────────────────────────────────── */
 
@@ -19,7 +20,7 @@ export function CrashLab() {
   const [triage, setTriage] = useState(false);
   const triageRef = useRef(false);
   triageRef.current = triage;
-  const [stats, setStats] = useState({ total: 0, top: 0 });
+  const [stats, setStats] = useState({ total: 0, top: 0, pile: 0 });
 
   const canvasRef = useCanvasLoop((_canvas, ctx, getSize) => {
     const events: CrashEvt[] = [];
@@ -45,7 +46,7 @@ export function CrashLab() {
     const updateStats = () => {
       const total = pile + bins.reduce((a, b) => a + b, 0);
       const t = bins.reduce((a, b) => a + b, 0) || 1;
-      setStats({ total, top: Math.round(((bins[0] + bins[1]) / t) * 100) });
+      setStats({ total, top: Math.round(((bins[0] + bins[1]) / t) * 100), pile });
     };
 
     const step = (dtMs: number) => {
@@ -134,6 +135,14 @@ export function CrashLab() {
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
           <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="Crash clustering simulation" />
+        </div>
+        {/* Both counters survive a toggle flip already — they just never
+            rendered together, so the "before" vanished the moment triage
+            switched on. Same simultaneous-Figure-row pattern Signal Lab and
+            Recompose Lab already use. */}
+        <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2">
+          <Figure label="undifferentiated pile" value={String(stats.pile)} sub="zero answers" tone="bad" />
+          <Figure label="top-2 clusters" value={`${stats.top}%`} sub="of all crashes, once triaged" tone="good" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
