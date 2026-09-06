@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Volume2, VolumeX, X } from "lucide-react";
+import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 import { projects, projectBySlug } from "./data/profile.ts";
 // ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
 // every route as a closed button. Rendering a message is the FIRST moment any
@@ -9,11 +9,30 @@ import { projects, projectBySlug } from "./data/profile.ts";
 // panel most visitors never open. Same code-split idiom as ParticleHeroScene.
 const ChatMessageBody = lazy(() => import("./ChatWidgets.tsx").then((m) => ({ default: m.ChatMessageBody })));
 import { plainText, speakableText } from "./lib/chatBlocks.ts";
-import { matchJd, toFitReport } from "./lib/skillMatch.ts";
-import { HOME_GREETING, JD_PROMPT, canonicalRoute, chipsFor, greetingFor } from "./lib/chatContext.ts";
+import { runJdFit } from "./lib/useJdFit.ts";
+import {
+  HOME_GREETING,
+  JD_PROMPT,
+  canonicalRoute,
+  chipsFor,
+  chipsForProject,
+  greetingFor,
+  lastRenderedProjectSlug,
+  shortName,
+} from "./lib/chatContext.ts";
 import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
-import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, type ChatMessage } from "./lib/chatClient.ts";
+import {
+  CHAT_FALLBACK,
+  CHAT_UNAVAILABLE,
+  JD_MAX_CHARS,
+  MAX_TURN_CHARS,
+  chatErrorText,
+  isAbortError,
+  isJdNearCap,
+  streamReply,
+  type ChatMessage,
+} from "./lib/chatClient.ts";
 
 /**
  * The console — the AI assistant, as a terminal-flavoured panel.
@@ -40,6 +59,9 @@ const GREETING: ChatMessage = { role: "assistant", content: HOME_GREETING };
 
 /** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
 const COLLAPSE_TURN_CHARS = 400;
+
+/** Shown in a bubble that was stopped before anything had streamed into it. */
+const STOPPED_NOTE = "Stopped before it finished.";
 
 // The panel is mounted per route, so without this a conversation died the
 // moment the assistant navigated you somewhere. Capped: this is a chat about a
@@ -199,6 +221,10 @@ export function FloatingChat() {
   // question must survive dictating the rest of it.
   const voicePrefixRef = useRef("");
   const spokenRef = useRef<string | null>(null);
+  // The in-flight request, if any. A new question (or a closed panel) aborts
+  // whatever's still running rather than letting it finish unread — see
+  // send()'s own abort at its top and the close effect below.
+  const abortRef = useRef<AbortController | null>(null);
 
   /* ── Voice ────────────────────────────────────────────────────────────
    * Speech-to-text FILLS the composer; it never submits on its own. A
@@ -279,6 +305,7 @@ export function FloatingChat() {
         // any caller, and the raised JD cap is the one the server enforces.
         setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
         setJd(null); // a half-typed paste box would outlive the analysis it started
+        setExpanded(true); // a scorecard deserves the wide view, not the 370px default
       }
     };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
@@ -322,11 +349,14 @@ export function FloatingChat() {
 
   // Closing the panel — by the X, by Esc, or by following a link out of a
   // reply — must silence it. A voice reading a page the visitor has left, or a
-  // mic still open behind a closed panel, is the worst failure mode here.
+  // mic still open behind a closed panel, is the worst failure mode here. It
+  // also stops any answer still streaming: a visitor who's moved on shouldn't
+  // keep spending the shared rate limit on a reply nobody will read.
   useEffect(() => {
     if (open) return;
     stopSpeech();
     cancelMic();
+    abortRef.current?.abort();
   }, [open, stopSpeech, cancelMic]);
 
   // Read a reply once it has SETTLED, not as it streams: speaking a token at a
@@ -361,25 +391,59 @@ export function FloatingChat() {
     const content = text.trim();
     if (!content || busy) return;
     stopSpeech(); // a new question cuts off the previous answer mid-sentence
+    // A new question also cuts off whatever the PREVIOUS one was still
+    // streaming — busy already gated that above, so this only ever fires for
+    // a stray in-flight request (there shouldn't be one, but abort is free).
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setBusy(true);
-    const history: ChatMessage[] =
-      mode === "jd" ? [{ role: "user", content }] : [...base.filter((m) => m !== GREETING), { role: "user", content }];
 
-    /* The offline first pass. matchJd is pure string work over a stack we ship
-     * in the bundle, so a real scorecard is on screen in the same frame as the
-     * paste — no request, no rate limit, nothing to fail. `asked` is the guard:
-     * when the text named nothing recognisable there is no honest card to draw,
-     * and a spinner beats a scorecard full of zeroes. */
-    const jdMatch = mode === "jd" ? matchJd(content) : null;
-    const hasOffline = !!jdMatch && jdMatch.asked > 0;
-    const offlineCard = (final: boolean) =>
-      hasOffline ? `[[jdfit:${JSON.stringify(toFitReport(jdMatch, final))}]]` : "";
+    // jd mode: the offline-then-model-supersedes analysis is ONE implementation
+    // (src/lib/useJdFit.ts's runJdFit), shared with the home page's inline
+    // scorecard (src/FitCheck.tsx) — so JD_RATE_WINDOWS is spent once per
+    // paste, never once per surface. Ordinary chat keeps its own path below:
+    // it streams deltas into a running transcript, which runJdFit's "replace
+    // the whole bubble each update" contract doesn't need to know about.
+    if (mode === "jd") {
+      setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
+      try {
+        await runJdFit(
+          content,
+          (update) =>
+            setMessages((prev) => {
+              const next = [...prev];
+              next[next.length - 1] = { role: "assistant", content: update.content };
+              return next;
+            }),
+          controller.signal,
+        );
+      } catch (err) {
+        if (isAbortError(err)) {
+          // Deliberate — the visitor closed the panel or asked something else.
+          // Whatever already streamed (an offline card) stays on screen; only
+          // a still-empty bubble needs an honest word at all.
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (!last.content) next[next.length - 1] = { ...last, content: STOPPED_NOTE };
+            return next;
+          });
+        } else {
+          // runJdFit already renders every non-abort failure into the bubble
+          // itself (offline card + honest note, or just the note) — this is
+          // a bug in that contract, not an expected path.
+          console.error(err);
+        }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
 
-    setMessages([...base, { role: "user", content }, { role: "assistant", content: offlineCard(false) }]);
+    const history: ChatMessage[] = [...base.filter((m) => m !== GREETING), { role: "user", content }];
+    setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
 
-    // The model's answer SUPERSEDES the offline card rather than appending to
-    // it — two scorecards stacked in one bubble is worse than either alone.
-    let superseded = false;
     try {
       await streamReply(
         history,
@@ -387,31 +451,47 @@ export function FloatingChat() {
           setMessages((prev) => {
             const next = [...prev];
             const last = next[next.length - 1];
-            const prior = superseded ? last.content : "";
-            superseded = true;
-            next[next.length - 1] = { ...last, content: prior + delta };
+            next[next.length - 1] = { ...last, content: last.content + delta };
             return next;
           });
         },
         mode,
         canonicalRoute(pathname),
+        controller.signal,
       );
     } catch (err) {
+      if (isAbortError(err)) {
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          if (!last.content) next[next.length - 1] = { ...last, content: STOPPED_NOTE };
+          return next;
+        });
+        return;
+      }
       console.error(err);
       setMessages((prev) => {
         const next = [...prev];
-        /* This is the payoff. Rate limit, 502, dead provider — the recruiter
-         * still gets a real answer instead of only an apology, because the
-         * offline pass never depended on the network. */
-        next[next.length - 1] = {
-          role: "assistant",
-          content: hasOffline && !superseded ? `${offlineCard(true)}\n\n${chatErrorText(err)}` : chatErrorText(err),
-        };
+        next[next.length - 1] = { role: "assistant", content: chatErrorText(err) };
         return next;
       });
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Re-runs the JD analysis on the last pasted description — shown only once
+   *  every provider has failed (see `canRetryJd`), so a recruiter gets a real
+   *  second attempt instead of re-pasting the same text into the box again. */
+  function retryJd() {
+    const lastUser = messages.map((m) => m.role).lastIndexOf("user");
+    if (lastUser < 0 || busy) return;
+    void send(messages[lastUser].content, messages.slice(0, lastUser), "jd");
+  }
+
+  /** The Stop control — aborts whatever `send()` currently has in flight. */
+  function stop() {
+    abortRef.current?.abort();
   }
 
   function runSlash(line: string) {
@@ -537,7 +617,19 @@ export function FloatingChat() {
   const settled = !busy && messages[messages.length - 1]?.role === "assistant";
   const chips = useMemo(() => chipsFor(pathname), [pathname]);
   const greeting = useMemo(() => greetingFor(pathname), [pathname]);
-  const suggestions = settled ? chips.filter((q) => !asked.has(q)).slice(0, messages.length === 1 ? 5 : 3) : [];
+  // Conversation-aware: if the last reply rendered a [[project:…]] card, its
+  // questions lead — the conversation just went there, even when the visitor
+  // isn't standing on that project's own page. chipsFor(pathname) still
+  // follows; a chip already offered by the project doesn't get offered twice.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m !== GREETING);
+  const projectSlug = lastAssistant ? lastRenderedProjectSlug(lastAssistant.content) : undefined;
+  const project = projectSlug ? projectBySlug(projectSlug) : undefined;
+  const projectChips = project ? chipsForProject(shortName(project.name)) : [];
+  const suggestions = settled
+    ? [...projectChips, ...chips.filter((q) => !projectChips.includes(q))]
+        .filter((q) => !asked.has(q))
+        .slice(0, messages.length === 1 ? 5 : 3)
+    : [];
   // Regenerating a local command would just re-send "/rooms" to the model, and
   // replaying a pasted JD through ordinary chat would send a truncated copy of
   // it against the wrong prompt — paste it again instead.
@@ -547,6 +639,16 @@ export function FloatingChat() {
     lastUserIndex >= 0 &&
     !messages[lastUserIndex].content.startsWith("/") &&
     messages[lastUserIndex].content.length <= MAX_TURN_CHARS.user;
+  // cv-fallback-honesty: a JD paste that exhausted every provider gets an
+  // explicit retry rather than "paste it again" — a long turn (only a JD can
+  // exceed MAX_TURN_CHARS.user, same signal canRegenerate above already reads)
+  // whose settled reply is one of the two "every provider failed" strings.
+  const lastReply = settled ? messages[messages.length - 1].content : "";
+  const canRetryJd =
+    settled &&
+    lastUserIndex >= 0 &&
+    messages[lastUserIndex].content.length > MAX_TURN_CHARS.user &&
+    (lastReply.includes(CHAT_UNAVAILABLE) || lastReply.includes(CHAT_FALLBACK));
 
   return (
     <>
@@ -671,6 +773,11 @@ export function FloatingChat() {
                           // bubble. (Every earlier message is final too.)
                           done={!streaming}
                           onNavigate={() => setOpen(false)}
+                          // A gap row's "ask about this" goes straight into
+                          // THIS conversation via send() — never openChat(),
+                          // which is a global event meant for callers outside
+                          // an already-open panel that already owns send().
+                          onAsk={(q) => void send(q)}
                         />
                         </Suspense>
                       )}
@@ -682,6 +789,11 @@ export function FloatingChat() {
                         </button>
                         {canRegenerate && i === messages.length - 1 && (
                           <button onClick={regenerate} aria-label="Regenerate reply" className={ICON_BUTTON}>
+                            <RotateCw size={13} />
+                          </button>
+                        )}
+                        {canRetryJd && i === messages.length - 1 && (
+                          <button onClick={retryJd} aria-label="Retry fit analysis" className={ICON_BUTTON}>
                             <RotateCw size={13} />
                           </button>
                         )}
@@ -927,14 +1039,28 @@ export function FloatingChat() {
             >
               {reader.enabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
             </button>
-            <button
-              type="submit"
-              disabled={busy || !input.trim()}
-              aria-label="Send"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-ink transition disabled:opacity-40"
-            >
-              <Send size={15} />
-            </button>
+            {/* Stop swaps in for Send while a reply is streaming — the panel
+                never simply disables the form and leaves the request running
+                unread; asking a new question aborts it too (see send()). */}
+            {busy ? (
+              <button
+                type="button"
+                onClick={stop}
+                aria-label="Stop generating"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent2 text-ink transition"
+              >
+                <Square size={12} fill="currentColor" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                aria-label="Send"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-ink transition disabled:opacity-40"
+              >
+                <Send size={15} />
+              </button>
+            )}
           </form>
           )}
         </div>

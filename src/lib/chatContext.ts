@@ -38,7 +38,7 @@ export interface RouteInfo {
  * everything else is unchanged, so this degrades to a no-op rather than to
  * wrong copy if a name is ever rewritten.
  */
-function shortName(name: string): string {
+export function shortName(name: string): string {
   return name.split(" + ")[0].trim();
 }
 
@@ -132,15 +132,32 @@ const PAGE_CHIPS: Record<string, string[]> = {
   "/resume": ["Walk me through your experience", "What are you strongest at?", "Are you open to new roles?"],
 };
 
+/**
+ * The three project-question chips, by name rather than by route.
+ *
+ * Split out from contextChips so a reply that just rendered a `[[project:…]]`
+ * card (FloatingChat, via lastRenderedProjectSlug) can ask about THAT project
+ * even when the visitor isn't standing on its page — the conversation just
+ * went there, the chips should follow.
+ */
+export function chipsForProject(name: string): string[] {
+  return [`How did you build ${name}?`, `What was the hardest part of ${name}?`, `What's the stack behind ${name}?`];
+}
+
+/**
+ * The project slug a `[[project:<slug>]]` directive in an assistant reply
+ * rendered, or undefined. The LAST one wins when a reply somehow rendered more
+ * than one — that's the project the conversation is now "about".
+ */
+export function lastRenderedProjectSlug(content: string): string | undefined {
+  const matches = [...content.matchAll(/\[\[project:([a-z0-9._/-]+)\]\]/gi)];
+  return matches.at(-1)?.[1]?.toLowerCase();
+}
+
 function contextChips(info: RouteInfo): string[] {
   // Templated off `label` on purpose: per-slug copy would drift the moment a
   // project is renamed or added.
-  if (info.kind === "project")
-    return [
-      `How did you build ${info.label}?`,
-      `What was the hardest part of ${info.label}?`,
-      `What's the stack behind ${info.label}?`,
-    ];
+  if (info.kind === "project") return chipsForProject(info.label);
   if (info.kind === "room")
     return [`What is ${info.label}?`, `How did you build ${info.label}?`, "What else can I do on this site?"];
   return (

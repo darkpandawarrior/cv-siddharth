@@ -1,8 +1,14 @@
-import { useState } from "react";
-import { ArrowRight, Target } from "lucide-react";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { ArrowRight, RotateCw, Target } from "lucide-react";
 import { Reveal } from "./Reveal.tsx";
 import { openJdFit } from "./FloatingChat.tsx";
-import { JD_MAX_CHARS, isJdNearCap } from "./lib/chatClient.ts";
+import { CHAT_FALLBACK, CHAT_UNAVAILABLE, JD_MAX_CHARS, isJdNearCap } from "./lib/chatClient.ts";
+import { useJdFit } from "./lib/useJdFit.ts";
+
+// ponytail: ChatWidgets pulls in react-markdown — lazy so the home page's
+// initial bundle doesn't pay for it until a JD is actually submitted, same
+// pattern src/FloatingChat.tsx already uses for the same component.
+const ChatMessageBody = lazy(() => import("./ChatWidgets.tsx").then((m) => ({ default: m.ChatMessageBody })));
 
 /**
  * Fit check — the recruiter's moment, on the page instead of behind a command.
@@ -12,10 +18,12 @@ import { JD_MAX_CHARS, isJdNearCap } from "./lib/chatClient.ts";
  * the paste box moves out here, one scroll below the numbers that make someone
  * want to check fit in the first place.
  *
- * This component owns the textarea and NOTHING else. `openJdFit()` hands the
- * text to the console (src/FloatingChat.tsx), which runs the exact same path
- * `/jd` runs — same cap, same request, same streamed scorecard. There is no
- * second copy of the analysis anywhere.
+ * This owns the textarea AND the scorecard now: `run()` calls `useJdFit()`
+ * (src/lib/useJdFit.ts) directly — the exact same offline-then-model analysis
+ * `/jd` runs, same cap, same request, same rate-limit spend, but rendered
+ * right here instead of teleporting into the console's 370px corner panel.
+ * `openJdFit()` still exists for the "ask a follow-up" hand-off below, once a
+ * result has landed — never called on submit itself, so a paste is spent once.
  */
 
 // What comes back, stated up front. It's the honest part that sells it: a fit
@@ -28,11 +36,20 @@ const CONTRACT = [
 
 export function FitCheck() {
   const [jd, setJd] = useState("");
+  const fit = useJdFit();
 
   function run() {
     const text = jd.trim();
-    if (text) openJdFit(text);
+    if (text) fit.start(text);
   }
+
+  // Stopping means stop here too: leaving this section (or the page) must not
+  // keep spending the shared rate limit on a reply nobody will read.
+  useEffect(() => fit.cancel, [fit.cancel]);
+
+  // Only the two "every provider failed" strings get a retry — a 429 or a
+  // too-long rejection isn't fixed by trying again with the same text.
+  const canRetry = fit.done && (fit.content.includes(CHAT_UNAVAILABLE) || fit.content.includes(CHAT_FALLBACK));
 
   return (
     <section id="fit" className="section-y mx-auto max-w-5xl px-6">
@@ -73,7 +90,7 @@ export function FitCheck() {
               <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent2" aria-hidden />
               paste a job description
             </label>
-            <span className="text-muted">answers in the console, streaming</span>
+            <span className="text-muted">answers below, streaming</span>
           </div>
 
           <div className="p-4 sm:p-5">
@@ -119,6 +136,40 @@ export function FitCheck() {
           </div>
         </form>
       </Reveal>
+
+      {fit.content && (
+        <Reveal delay={150}>
+          {/* Same polite-not-assertive treatment the console's own transcript
+              already ships (FloatingChat.tsx) — a screen reader hears the
+              offline card land, then the model's read replace it, without
+              every token interrupting whatever the visitor is doing. */}
+          <div role="log" aria-live="polite" className="mt-5">
+            <Suspense fallback={null}>
+              <ChatMessageBody content={fit.content} done={fit.done} />
+            </Suspense>
+            {fit.done && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => openJdFit(jd.trim())}
+                  className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+                >
+                  Ask a follow-up in the assistant →
+                </button>
+                {canRetry && (
+                  <button
+                    type="button"
+                    onClick={run}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-muted transition hover:text-accent"
+                  >
+                    <RotateCw size={11} /> Retry
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </Reveal>
+      )}
     </section>
   );
 }

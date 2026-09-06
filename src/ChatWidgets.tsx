@@ -1,10 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import Markdown, { type Components } from "react-markdown";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, Copy } from "lucide-react";
 import { projectBySlug, metrics, skills, siteRooms, cardMedia, type Project } from "./data/profile.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
-import { EMPTY_REPLY_NOTE, parseChatBlocks, type ChatBlock, type JdFitReport } from "./lib/chatBlocks.ts";
+import { EMPTY_REPLY_NOTE, jdFitText, parseChatBlocks, type ChatBlock, type JdFitReport } from "./lib/chatBlocks.ts";
 import { Picture } from "./Picture.tsx";
 
 /**
@@ -116,15 +116,22 @@ function RoomsGrid({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function MetricTiles() {
+// Every tile links to /lab — the metrics live there with the evidence behind
+// each number, so a tile someone taps isn't a dead end.
+function MetricTiles({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="my-2.5 grid grid-cols-2 gap-1.5">
       {metrics.map((m) => (
-        <div key={m.label} className="rounded-lg border border-line bg-ink px-2.5 py-2">
-          <p className="font-display text-lg font-bold leading-none text-accent">{m.value}</p>
+        <ChatLink
+          key={m.label}
+          href="/lab"
+          onNavigate={onNavigate}
+          className={`${TILE_CLASS} no-underline`}
+        >
+          <p className="font-mono text-lg font-bold leading-none tabular-nums text-accent">{m.value}</p>
           <p className="mt-1 text-[11px] leading-tight text-zinc-300">{m.label}</p>
           <p className="mt-0.5 text-[10px] leading-tight text-muted">{m.detail}</p>
-        </div>
+        </ChatLink>
       ))}
     </div>
   );
@@ -167,16 +174,61 @@ const BANDS = [
 
 const SECTION_LABEL = "font-mono text-[10px] uppercase tracking-widest";
 
-function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: () => void }) {
+// The email this site publishes everywhere else (CHAT_FALLBACK, the JD system
+// prompt) — one constant here rather than a fourth copy of the string.
+const CONTACT_EMAIL = "siddharthpandalai990@gmail.com";
+
+export function JdFitCard({
+  report,
+  onNavigate,
+  onAsk,
+}: {
+  report: JdFitReport;
+  onNavigate?: () => void;
+  /** "Ask about this" on a gap row. FloatingChat wires this straight to its
+   *  own send() (not openChat()) — the question goes into the SAME
+   *  conversation the card is already sitting in, no extra round trip. */
+  onAsk?: (question: string) => void;
+}) {
   const band = BANDS.find((b) => report.score >= b.min)!;
+  const [copied, setCopied] = useState(false);
+  const matched = report.strengths.length;
+  const gapCount = report.gaps.length;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(jdFitText(report));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked — nothing useful to say about it */
+    }
+  }
+
+  const mailBody = encodeURIComponent(jdFitText(report));
+  const mailHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Following up on my fit read")}&body=${mailBody}`;
 
   return (
     <section className="my-2.5 overflow-hidden rounded-xl border border-line bg-ink" aria-label="Job description fit analysis">
       <header className="border-b border-line bg-surface px-3 py-2.5">
-        <p className={`${SECTION_LABEL} text-accent2`}>fit analysis</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className={`${SECTION_LABEL} text-accent2`}>fit analysis</p>
+          {/* fc-provenance-badge: the instant keyword match vs. the model's
+              real read are different claims, and the card says which one this
+              is rather than leaving a recruiter to guess. */}
+          <span
+            className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+              report.source === "offline"
+                ? "border-line text-muted"
+                : "border-accent/40 text-accent"
+            }`}
+          >
+            {report.source === "offline" ? "instant match" : "AI read"}
+          </span>
+        </div>
         {report.role && <p className="mt-1 break-words text-xs text-zinc-300">{report.role}</p>}
         <div className="mt-2 flex items-baseline gap-1.5">
-          <span className={`font-display text-2xl font-bold leading-none ${band.tone}`}>{report.score}</span>
+          <span className={`font-mono text-2xl font-bold leading-none tabular-nums ${band.tone}`}>{report.score}</span>
           <span className="font-mono text-[10px] text-muted">/ 100</span>
           <span className={`ml-auto text-[11px] font-semibold ${band.tone}`}>{band.label}</span>
         </div>
@@ -184,6 +236,9 @@ function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: (
         <div aria-hidden className="mt-2 h-1 overflow-hidden rounded-full bg-line">
           <div className={`h-full rounded-full ${band.bar}`} style={{ width: `${report.score}%` }} />
         </div>
+        <p className="mt-1.5 font-mono text-[10px] tabular-nums text-muted">
+          {matched} matched · {gapCount} gap{gapCount === 1 ? "" : "s"}
+        </p>
       </header>
 
       <div className="space-y-3 p-3">
@@ -226,6 +281,15 @@ function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: (
                 <li key={i} className="border-l-2 border-amber-300/40 pl-2">
                   <p className="text-[11px] font-semibold leading-snug text-zinc-200">{g.need}</p>
                   <p className="text-[11px] leading-snug text-zinc-400">{g.note}</p>
+                  {onAsk && (
+                    <button
+                      type="button"
+                      onClick={() => onAsk(`Tell me more about ${g.need} — where does that actually stand?`)}
+                      className="mt-0.5 text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+                    >
+                      ask about this
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -234,6 +298,32 @@ function JdFitCard({ report, onNavigate }: { report: JdFitReport; onNavigate?: (
               Nothing flagged from the description — ask me directly and I&apos;ll tell you where I&apos;d need ramp-up.
             </p>
           )}
+        </div>
+
+        {/* fc-next-action-footer: the next step a recruiter actually takes,
+            without a round trip through the console. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line pt-2.5">
+          <button
+            type="button"
+            onClick={() => void copy()}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-muted transition hover:text-accent"
+          >
+            {copied ? <Check size={11} className="text-accent" /> : <Copy size={11} />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <ChatLink
+            href="/hire"
+            onNavigate={onNavigate}
+            className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 no-underline hover:decoration-accent"
+          >
+            90-second version &amp; résumé
+          </ChatLink>
+          <a
+            href={mailHref}
+            className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+          >
+            Email this to me
+          </a>
         </div>
       </div>
     </section>
@@ -253,6 +343,7 @@ function chatWidget(
   block: Extract<ChatBlock, { kind: "widget" }>,
   key: number,
   onNavigate?: () => void,
+  onAsk?: (question: string) => void,
 ): React.ReactNode {
   switch (block.name) {
     case "project": {
@@ -265,11 +356,11 @@ function chatWidget(
     case "rooms":
       return <RoomsGrid key={key} onNavigate={onNavigate} />;
     case "metrics":
-      return <MetricTiles key={key} />;
+      return <MetricTiles key={key} onNavigate={onNavigate} />;
     case "skills":
       return <SkillChips key={key} />;
     case "jdfit":
-      return block.data ? <JdFitCard key={key} report={block.data} onNavigate={onNavigate} /> : null;
+      return block.data ? <JdFitCard key={key} report={block.data} onNavigate={onNavigate} onAsk={onAsk} /> : null;
     default:
       return null;
   }
@@ -291,10 +382,13 @@ export function ChatMessageBody({
   content,
   done = false,
   onNavigate,
+  onAsk,
 }: {
   content: string;
   done?: boolean;
   onNavigate?: () => void;
+  /** Threaded straight through to JdFitCard's gap rows — see its own prop doc. */
+  onAsk?: (question: string) => void;
 }) {
   const components = useMemo<Components>(
     () => ({ a: ({ href, children }) => <ChatLink href={href} onNavigate={onNavigate}>{children}</ChatLink> }),
@@ -308,7 +402,7 @@ export function ChatMessageBody({
         {block.text}
       </Markdown>
     ) : (
-      chatWidget(block, i, onNavigate)
+      chatWidget(block, i, onNavigate, onAsk)
     ),
   );
 
