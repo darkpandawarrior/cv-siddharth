@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
 import { LauncherButton } from "./Launcher.tsx";
+import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { TOUR } from "./blueprintData.ts";
@@ -189,8 +190,12 @@ function BlueprintRoomInner() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <Compass size={13} className="text-accent" /> The Blueprint Room — {headline}
+          {/* blueprint-title-hidden-mobile: was `hidden ... lg:flex`, so a
+              phone visitor had no on-screen title. Always shown; truncates
+              instead of pushing the mode pills off their own row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <Compass size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Blueprint Room — {headline}</span>
           </span>
           {/* Wraps: the mode pills, the tour, Reset and Ask add up to ~339px,
               which does not fit a 320px window even on its own line — and
@@ -305,6 +310,10 @@ function BlueprintRoomInner() {
           )}
         </Suspense>
       </main>
+      {/* D1: this room drew its own chrome and so never got the next-room
+          pager RoomFrame gives the other five rooms — its only exits were
+          the launcher and "back to portfolio". */}
+      <RoomPagerFooter />
     </div>
   );
 }

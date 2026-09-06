@@ -5,6 +5,7 @@ import { openChat } from "./FloatingChat.tsx";
 import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
 import { projects } from "./data/profile.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { NextRoomLink, useNextRoom } from "./rooms.tsx";
 
 /**
  * The Compose Playground — write a slice of Jetpack Compose, watch it render
@@ -641,6 +642,7 @@ const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField �
 
 export default function ComposePlayground() {
   const { goToSection } = useSectionNav();
+  const nextRoom = useNextRoom();
   const [code, setCode] = useState(PRESETS[0].code);
   const [live, setLive] = useState(code);
   const gutterRef = useRef<HTMLDivElement>(null);
@@ -741,8 +743,12 @@ export default function ComposePlayground() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
+          {/* compose-no-title-below-desktop: was `hidden ... lg:flex`, so a
+              phone visitor had no on-screen title. Always shown; truncates
+              instead of pushing the header's own buttons off their row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <Smartphone size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Compose Playground — write it, watch it recompose</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -929,6 +935,12 @@ export default function ComposePlayground() {
       </main>
 
       <footer className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
+        {/* D1: this room drew its own chrome and so never got the
+            next-room pager RoomFrame gives the other five rooms — folded
+            into the footer it already has rather than adding a second one. */}
+        {nextRoom && (
+          <NextRoomLink next={nextRoom} className="mx-auto mb-2 max-w-7xl border-b border-line pb-2" />
+        )}
         <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-muted" title={SUPPORTED}>
           supported: {SUPPORTED}
         </p>
