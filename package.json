@@ -48,6 +48,7 @@
     "gen:system-graph": "node scripts/gen-system-graph.mjs",
     "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
     "check:generated": "node scripts/check-generated.mjs",
+    "check:answers": "node scripts/check-answers.mjs",
     "validate:palette": "node scripts/validate_palette.js",
     "check:budget": "node scripts/check-budget.mjs",
     "sync:twin": "node scripts/sync-twin.mjs",

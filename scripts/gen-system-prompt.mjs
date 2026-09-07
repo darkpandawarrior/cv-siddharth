@@ -34,6 +34,7 @@ import { chess } from "../src/data/chess.ts";
 import { societies, boardProfiles, boardArc, loopdownOrigin, coverStory2021 } from "../src/data/beforeTheCode.ts";
 import { excelsiorMarks } from "../src/data/excelsiorMarks.ts";
 import { PRESETS } from "../src/chess/calibration.ts";
+import { ANSWERS } from "../src/data/source/answers.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outFile = join(root, "api", "_lib", "system-prompt.ts");
@@ -422,6 +423,12 @@ JSON rules: one line, compact, double quotes, no trailing commas, no code fence,
 const SITE = profile.portfolio;
 const handle = profile.github.split("/").pop();
 
+// Same corpus as answerLines above, absolute-linked for the two static files
+// (which have no relative base the way an in-page link does), and rendered
+// in full here since a static text file is paid for once, not per chat
+// request — same cost reasoning `growthFull` below already documents.
+const faqLines = ANSWERS.map((a) => `- **${a.question}** ${a.answer} (${SITE}${a.anchor})`).join("\n");
+
 /**
  * The four headline numbers, in full.
  *
@@ -540,6 +547,12 @@ Published so far:
 
 ${publishedLines}
 
+## Frequently asked
+
+Each answer links the page that proves it, and it isn't restated anywhere else.
+
+${faqLines}
+
 ## Profiles
 
 ${elsewhereLines}
@@ -617,6 +630,12 @@ Creative archive, written before the code and originally on https://booksbeforeb
 ## Every page on this site
 
 ${surfaceMap}
+
+## Frequently asked
+
+Each answer links the page that proves it, and it isn't restated anywhere else.
+
+${faqLines}
 
 ## Profiles
 

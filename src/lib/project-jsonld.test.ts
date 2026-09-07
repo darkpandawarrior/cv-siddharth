@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildProjectJsonLd } from "./project-jsonld";
+import { buildArticleJsonLd, buildProjectJsonLd } from "./project-jsonld";
 import { projects } from "../data/profile";
 
 const doori = projects.find((p) => p.slug === "doori")!;
@@ -41,5 +41,30 @@ describe("buildProjectJsonLd", () => {
       name: "Doori",
       item: "https://cv-siddharth.vercel.app/project/doori",
     });
+  });
+});
+
+describe("buildArticleJsonLd", () => {
+  it("builds a valid Article for a project with case-study prose", () => {
+    expect(doori.detail).toBeDefined();
+    const article = buildArticleJsonLd(doori);
+    expect(article).toMatchObject({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: "Doori — case study",
+      articleBody: doori.detail!.overview,
+      url: "https://cv-siddharth.vercel.app/project/doori",
+    });
+  });
+
+  it("is included in buildProjectJsonLd's output for a project with detail", () => {
+    const built = buildProjectJsonLd(doori);
+    expect(built).toHaveProperty("article");
+  });
+
+  it("omits Article for a project with no case-study prose", () => {
+    const noDetail = { ...doori, detail: undefined };
+    expect(buildArticleJsonLd(noDetail)).toBeUndefined();
+    expect(buildProjectJsonLd(noDetail)).not.toHaveProperty("article");
   });
 });

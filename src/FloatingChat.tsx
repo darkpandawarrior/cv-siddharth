@@ -2,6 +2,9 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 import { projects, projectBySlug } from "./data/profile.ts";
+import { ANSWERS } from "./data/source/answers.ts";
+import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
+import { buildFaqJsonLd } from "./lib/faqJsonLd.ts";
 // ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
 // every route as a closed button. Rendering a message is the FIRST moment any
 // of it is needed, and it cannot happen before someone opens the panel — so
@@ -56,6 +59,12 @@ import {
 // never rebuild this per render. The content below is the home text, kept as
 // the fallback for any path that reads it directly.
 const GREETING: ChatMessage = { role: "assistant", content: HOME_GREETING };
+
+// Computed once, not per render — ANSWERS is static module data, and every
+// route that mounts FloatingChat renders the identical FAQPage block (same
+// reasoning __root.tsx's PERSON_LD uses: one Person/one FAQPage repeated per
+// page is normal schema.org practice, not duplication of the underlying fact).
+const FAQ_JSON_LD = buildFaqJsonLd(ANSWERS);
 
 /** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
 const COLLAPSE_TURN_CHARS = 400;
@@ -470,9 +479,20 @@ export function FloatingChat() {
         return;
       }
       console.error(err);
+      // The answer layer's floor (arch-L11): /api/chat is down, but a
+      // question that matches the on-page corpus (src/data/source/answers.ts)
+      // still gets a real, cited answer instead of only an apology — same
+      // "offline first, model would have superseded it" shape as
+      // src/lib/useJdFit.ts, just triggered on failure here rather than
+      // shown up front (ordinary chat has no offline-instant path worth
+      // racing the model for).
+      const offline = matchAnswer(content, ANSWERS);
       setMessages((prev) => {
         const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: chatErrorText(err) };
+        next[next.length - 1] = {
+          role: "assistant",
+          content: offline ? offlineAnswerText(offline) : chatErrorText(err),
+        };
         return next;
       });
     } finally {
@@ -656,6 +676,32 @@ export function FloatingChat() {
 
   return (
     <>
+      {/* The answer layer (arch-L11) — unconditional, NOT gated by `open`, so
+          it's part of the server-rendered document on every route that mounts
+          this component: a closed-by-default <details> per question (real,
+          crawlable, collapsed — not CSS-hidden text) plus the FAQPage JSON-LD
+          that describes the same array. Every citation link and every id it
+          points at is checked against a real build by
+          scripts/check-answers.mjs — this block is what makes that check
+          meaningful rather than decorative. */}
+      <section aria-label="Frequently asked" className="border-t border-line bg-surface px-6 py-10">
+        <div className="mx-auto max-w-2xl space-y-2">
+          <p className="kicker-accent">frequently asked</p>
+          {ANSWERS.map((a) => (
+            <details key={a.id} className="rounded-xl border border-line bg-ink px-4 py-3">
+              <summary className="cursor-pointer text-sm font-semibold text-zinc-100">{a.question}</summary>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+                {a.answer}{" "}
+                <a href={a.anchor} className="text-accent underline">
+                  See the source
+                </a>
+                .
+              </p>
+            </details>
+          ))}
+        </div>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
+      </section>
       {!open && (
         <button
           onClick={() => setOpen(true)}
