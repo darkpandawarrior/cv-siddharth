@@ -1,0 +1,101 @@
+name: Publish heavy assets
+
+# Runs scripts/publish-heavy-assets.mjs on every push to main: rsyncs heavy/
+# (the Wasm demos, screenshots, showcase films, Excelsior scans, OG cards —
+# see src/lib/assetBase.ts) into the sibling darkpandawarrior.github.io repo's
+# cv/ directory and pushes it there, so the asset origin the site links to
+# (https://darkpandawarrior.github.io/cv) actually carries what heavy/ has.
+#
+# WHY A SEPARATE WORKFLOW, NOT A STEP IN refresh-media.yml. This pushes to a
+# DIFFERENT repository, which the default GITHUB_TOKEN cannot do (it is scoped
+# to the repo the workflow runs in) — it needs a PAT with write access to
+# darkpandawarrior.github.io, stored here as PAGES_DEPLOY_TOKEN. Bundling a
+# second credential into refresh-media's already-long job would make one bad
+# secret take down both jobs; keeping this separate means a missing/expired
+# token only ever blocks asset publishing, never the daily content refresh.
+#
+# gen-images.mjs (kind: local, runs in every `npm run build`) is what actually
+# produces the .avif/.webp derivatives under heavy/ — see
+# scripts/publish-heavy-assets.mjs's own doc comment ("run npm run build...
+# first"). Building here, not just running the one generator, is what keeps
+# this workflow honest: it publishes exactly what a real deploy produced, not
+# a hand-picked subset of it.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-assets
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+
+      # Same GITHUB_TOKEN-lifts-the-rate-limit pattern refresh-media.yml uses —
+      # gen-anthology and friends fetch registry.json/story assets and 403 or
+      # get throttled unauthenticated far sooner than authenticated.
+      - name: Build (regenerates heavy/'s .avif/.webp derivatives)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build
+
+      # The deployment-size ceiling is the whole reason this lane exists —
+      # gate the publish on it never firing silently red.
+      - name: Deployment-size budget
+        run: npm run check:budget
+
+      # Loud, not a graceful skip: unlike a missing SIBLING REPO (which every
+      # other cross-repo script in this codebase treats as "nothing to do
+      # here, developer machines don't all have it checked out"), a missing
+      # CREDENTIAL on the one machine that is supposed to run this — CI — means
+      # asset publishing has silently never run since this workflow was added.
+      # A skip here would look identical to "nothing changed" in the Actions
+      # log, and checking out a PUBLIC repo with no token at all would
+      # "succeed" and only fail much later, confusingly, at push — so this
+      # runs before that checkout, not after.
+      - name: Require PAGES_DEPLOY_TOKEN
+        if: ${{ !secrets.PAGES_DEPLOY_TOKEN }}
+        run: |
+          echo "::error::PAGES_DEPLOY_TOKEN is not set. Create a PAT with contents:write" \
+            "on darkpandawarrior/darkpandawarrior.github.io and add it as a repo secret" \
+            "here — this workflow cannot publish heavy/ without it."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/darkpandawarrior.github.io
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          path: pages-checkout
+
+      # scripts/publish-heavy-assets.mjs resolves its target as
+      # join(<this repo's checkout root>, "..", "..", "Profile",
+      # "darkpandawarrior.github.io") — the same two-levels-up-then-into-Profile
+      # layout the developer's own machine uses (~/Repos/Interview/cv-siddharth
+      # -> ~/Repos/Profile/darkpandawarrior.github.io). $GITHUB_WORKSPACE IS that
+      # checkout root, so the identical relative path works unmodified on the
+      # runner; the parent directory just needs to exist first, which a fresh
+      # runner's workspace never has.
+      - name: Point the sibling checkout where the script expects it
+        run: |
+          mkdir -p ../../Profile
+          mv pages-checkout ../../Profile/darkpandawarrior.github.io
+
+      - name: Sync and commit in the Pages repo
+        run: node scripts/publish-heavy-assets.mjs
+
+      - name: Push
+        working-directory: ../../Profile/darkpandawarrior.github.io
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push
