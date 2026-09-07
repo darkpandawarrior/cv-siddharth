@@ -1,7 +1,7 @@
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { surfaces } from "../src/data/surfaces.ts";
+import { surfacePaths } from "../src/data/routes.ts";
 
 // Phase C2: axe locks in the a11y pass instead of just documenting it.
 // Four routes cover every layout shape on the site — SSR content page (/),
@@ -33,7 +33,7 @@ const ROUTES = [
   "/",
   "/read/deadline",
   "/project/doori",
-  ...surfaces.map((s) => s.to),
+  ...surfacePaths,
 ];
 
 /* The reveal animations on the card grids fade in from transparent, and axe
