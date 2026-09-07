@@ -18,7 +18,7 @@ export const perimeter = [
   {
     "file": "history.ts",
     "generatedAt": "2026-09-07",
-    "slaDays": 45,
+    "slaDays": 21,
     "generator": "npm run gen:history"
   },
   {
