@@ -44,7 +44,13 @@ function ResumePage() {
   }, []);
   return (
     <>
-      <ResumeView cut={cut ?? "full"} />
+      {/* Shared-element morph target for the hero's "View résumé" link
+          (App.tsx `viewTransitionName: "resume-hero"`) — the wrapper, not
+          ResumeView itself, carries the name: ResumeView.tsx is another
+          lane's file. */}
+      <div style={{ viewTransitionName: "resume-hero" }}>
+        <ResumeView cut={cut ?? "full"} />
+      </div>
       {/* Matching the other route files that already mount it. Two
           bits of chatContext.ts had been dead code since the day they were
           written — PAGE_CHIPS["/resume"] and its three résumé-specific

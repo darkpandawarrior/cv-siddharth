@@ -798,8 +798,34 @@ html.resume-mode .palette-trigger {
     left: 112%;
   }
 }
+/* Telemetry nodes: static dots that flash once per 8s loop when the
+   traveling pulse above passes their position — same seam, a control-room
+   "reading taken here" read rather than a second unrelated animation. */
+.circuit-node {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-line);
+  transform: translateY(-50%);
+  animation: circuit-node-pulse 8s ease-out infinite;
+}
+@keyframes circuit-node-pulse {
+  0% {
+    background: var(--color-accent);
+    box-shadow: 0 0 6px 1px var(--color-accent);
+  }
+  6%,
+  100% {
+    background: var(--color-line);
+    box-shadow: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .circuit-line::after {
+  .circuit-line::after,
+  .circuit-node {
     animation: none;
     display: none;
   }

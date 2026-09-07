@@ -56,6 +56,35 @@ const SURFACE_SYNONYMS: Record<string, string> = {
   "/shipped": "play store published apps install listing rating white label",
 };
 
+// Most-recently-used command ids, most-recent-first, capped short — a
+// palette that always opens on the same eleven section rows regardless of
+// what's actually used is dead weight for a returning visitor.
+// ponytail: recency (MRU) stands in for "recent/frequent" rather than a
+// separate frequency counter — simpler storage, and for a solo visitor's own
+// palette the two rank almost identically. Add real frequency counts if a
+// visitor's habits ever diverge from "what I last used."
+const MRU_KEY = "sidos.palette.mru";
+const MRU_MAX = 6;
+
+function readMru(): string[] {
+  try {
+    const raw = localStorage.getItem(MRU_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function pushMru(id: string): void {
+  try {
+    const next = [id, ...readMru().filter((existing) => existing !== id)].slice(0, MRU_MAX);
+    localStorage.setItem(MRU_KEY, JSON.stringify(next));
+  } catch {
+    // best-effort only — worst case the palette just doesn't remember
+  }
+}
+
 const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
   top: { label: "Top / Hero", icon: <Compass size={15} /> },
   fit: {
@@ -238,11 +267,24 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     [navigate, goToSection],
   );
 
+  // Read once per mount (a mount is one open→close cycle, same as the rest of
+  // this component's state), not per keystroke — the ranking should hold
+  // still while a visitor is looking at the list, and it only actually
+  // changes once a command has been run, which unmounts this dialog anyway.
+  const mru = useMemo(() => readMru(), []);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return commands;
-    return commands.filter((c) => `${c.label} ${c.keywords ?? ""}`.toLowerCase().includes(q));
-  }, [commands, query]);
+    const matches = q
+      ? commands.filter((c) => `${c.label} ${c.keywords ?? ""}`.toLowerCase().includes(q))
+      : commands;
+    // Recent/frequent only reorders the untyped, browse-everything view —
+    // once a visitor is actively searching, the substring match they typed
+    // should win over what they happened to open last time.
+    if (q || mru.length === 0) return matches;
+    const rank = new Map(mru.map((id, i) => [id, i]));
+    return [...matches].sort((a, b) => (rank.get(a.id) ?? mru.length) - (rank.get(b.id) ?? mru.length));
+  }, [commands, query, mru]);
 
   // The highlight is an index into `filtered`, so a new query means a new list
   // and the highlight has to go back to its top. Adjusted during render against
@@ -279,6 +321,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   function runActive() {
     const cmd = filtered[activeIndex];
     if (!cmd) return;
+    pushMru(cmd.id);
     cmd.run();
     onClose();
   }
@@ -346,6 +389,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
                 if (!suppressHoverRef.current) setActiveIndex(i);
               }}
               onClick={() => {
+                pushMru(c.id);
                 c.run();
                 onClose();
               }}
@@ -357,7 +401,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
               <span className="flex-1">{c.label}</span>
               <span className="flex items-center gap-1 text-xs text-muted">
                 {i === activeIndex && <CornerDownLeft size={12} />}
-                {c.hint}
+                {!query.trim() && mru.includes(c.id) ? "Recent" : c.hint}
               </span>
             </button>
           ))}
