@@ -25,7 +25,7 @@
 // and metrics named). Add a route to budgets.json's `routes` array when its
 // own cold-load weight is worth gating — the mechanism below is already
 // per-route, so that's a one-line addition, not a rewrite.
-import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -85,14 +85,22 @@ function dirSize(dir) {
 
 const report = [];
 const failures = [];
+// arch-L14: the same pass/fail this loop already computes, kept as data
+// instead of only as a console line, so /ops can render a real row rather
+// than re-deriving one from text. One entry per check below, in the same
+// order the console report prints them.
+const checks = [];
 
 for (const route of budgets.routes) {
   if (!(route.entry in manifest)) {
     failures.push(`route "${route.route}": no manifest entry "${route.entry}" — it was renamed or removed; update budgets.json`);
+    checks.push({ name: `route "${route.route}" raw`, actual: null, ceiling: route.rawBytes, pass: false });
     continue;
   }
   const { raw, transfer, fileCount } = eagerBytes(route.entry);
   report.push(`route "${route.route}" (${manifest[route.entry].file}, ${fileCount} forced files): raw ${raw.toLocaleString("en-US")} B (ceiling ${route.rawBytes.toLocaleString("en-US")}), transfer ${transfer.toLocaleString("en-US")} B (ceiling ${route.transferBytes.toLocaleString("en-US")})`);
+  checks.push({ name: `route "${route.route}" raw JS`, actual: raw, ceiling: route.rawBytes, pass: raw <= route.rawBytes });
+  checks.push({ name: `route "${route.route}" transfer JS`, actual: transfer, ceiling: route.transferBytes, pass: transfer <= route.transferBytes });
   if (raw > route.rawBytes) {
     failures.push(`route "${route.route}": eager JS raw ${raw.toLocaleString("en-US")} B > ceiling ${route.rawBytes.toLocaleString("en-US")} B (chunk ${manifest[route.entry].file})`);
   }
@@ -111,6 +119,7 @@ for (const key of Object.keys(manifest)) {
   if (bytes > largest.bytes) largest = { file, bytes };
 }
 report.push(`largest chunk: ${largest.file} — ${largest.bytes.toLocaleString("en-US")} B (ceiling ${budgets.largestChunkBytes.toLocaleString("en-US")})`);
+checks.push({ name: "largest chunk", actual: largest.bytes, ceiling: budgets.largestChunkBytes, pass: largest.bytes <= budgets.largestChunkBytes });
 if (largest.bytes > budgets.largestChunkBytes) {
   failures.push(`largest chunk ${largest.file} is ${largest.bytes.toLocaleString("en-US")} B > ceiling ${budgets.largestChunkBytes.toLocaleString("en-US")} B`);
 }
@@ -122,10 +131,12 @@ for (const [name, ceiling] of Object.entries(budgets.namedChunks ?? {})) {
   const file = Object.values(manifest).find((c) => c.file?.includes(name))?.file;
   if (!file) {
     report.push(`named chunk "${name}": not found in this build (dropped, or renamed)`);
+    checks.push({ name: `named chunk "${name}"`, actual: null, ceiling, pass: true });
     continue;
   }
   const bytes = sizeOf(file);
   report.push(`named chunk "${name}": ${file} — ${bytes.toLocaleString("en-US")} B (ceiling ${ceiling.toLocaleString("en-US")})`);
+  checks.push({ name: `named chunk "${name}"`, actual: bytes, ceiling, pass: bytes <= ceiling });
   if (bytes > ceiling) {
     failures.push(`named chunk "${name}" (${file}) is ${bytes.toLocaleString("en-US")} B > ceiling ${ceiling.toLocaleString("en-US")} B`);
   }
@@ -136,9 +147,26 @@ for (const [name, ceiling] of Object.entries(budgets.namedChunks ?? {})) {
 // lane's job, and this ceiling ratchets down with it rather than assuming it.
 const totalBytes = dirSize(clientDir);
 report.push(`total dist/client: ${totalBytes.toLocaleString("en-US")} B (ceiling ${budgets.totalDeploySizeBytes.toLocaleString("en-US")})`);
+checks.push({ name: "total dist/client", actual: totalBytes, ceiling: budgets.totalDeploySizeBytes, pass: totalBytes <= budgets.totalDeploySizeBytes });
 if (totalBytes > budgets.totalDeploySizeBytes) {
   failures.push(`dist/client total ${totalBytes.toLocaleString("en-US")} B > ceiling ${budgets.totalDeploySizeBytes.toLocaleString("en-US")} B`);
 }
+
+// arch-L14: written UNCONDITIONALLY, before the pass/fail decides whether to
+// exit — so a failing budget still ships its own red row. This is the ONLY
+// mechanism that gets a budget result in front of a visitor: ci.yml's own
+// `vite build` is a throwaway (see the comment at the top of this file), so
+// this file has to come from the SAME build Vercel actually deploys. That
+// build runs `npm run build` (vercel.json's buildCommand), and npm invokes
+// this script automatically as `postbuild` (package.json) — the exact
+// mechanism `prebuild`/`predev` already rely on, not a new one. Written into
+// dist/client so it ships as a same-origin static file in this deploy, never
+// a client-writable channel: nothing at request time can change what it says
+// short of a new deploy.
+writeFileSync(
+  join(clientDir, "evidence-budget.json"),
+  JSON.stringify({ generatedAt: new Date().toISOString(), checks, failing: failures.length > 0 }, null, 2),
+);
 
 console.log(report.join("\n"));
 

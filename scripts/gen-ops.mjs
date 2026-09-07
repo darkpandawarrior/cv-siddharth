@@ -1,32 +1,51 @@
 /**
- * Writes src/data/ops.ts — the two halves of `/ops` that cannot be read from
- * the browser.
+ * Writes src/data/ops.ts and src/data/generated/evidence.ts — everything
+ * `/ops` renders that cannot be read straight from the browser.
  *
- *   - THE PERIMETER: every generated file that stamps itself, with the SLA it
- *     is measured against. The stamp is written here; the AGE is computed at
- *     render time, so the board is never staler than the moment you load it
- *     even if nobody rebuilds.
- *   - THE LEVERAGE BOARD: each convention plugin in kmp-build-logic and how
- *     many modules across the consumer repos apply it. That is the number that
- *     turns "22 convention plugins" from a count into a blast radius.
+ *   - THE PERIMETER (ops.ts): every generated file that stamps itself, with
+ *     the SLA it is measured against. The stamp is written here; the AGE is
+ *     computed at render time, so the board is never staler than the moment
+ *     you load it even if nobody rebuilds.
+ *   - THE LEVERAGE BOARD (ops.ts): each convention plugin in kmp-build-logic
+ *     and how many modules across the consumer repos apply it. That is the
+ *     number that turns "22 convention plugins" from a count into a blast
+ *     radius.
+ *   - THE GENERATOR MANIFEST (evidence.ts, arch-L14): every node in
+ *     scripts/generators.mjs, straight off that array — not the stamped
+ *     subset the perimeter above can see. A node with no `stages` entry has
+ *     no automated path at all (store.ts, gen-excelsior and four others);
+ *     the manifest names it UNAUTOMATED with the command to run it by hand,
+ *     rather than leaving it invisible to the one board built to see it.
+ *     Adding a generator means one edit, to generators.mjs — this file
+ *     `.map()`s the array, so nothing here needs to change.
+ *   - WHAT THIS BOARD DOES NOT MEASURE (evidence.ts, arch-L14): named
+ *     rather than silently absent — see NOT_MEASURED_HERE below.
  *
  * The perimeter reads the SAME freshnessSla.ts that freshness.test.ts does, so
- * the board and the gate can never disagree about a deadline.
+ * the board and the gate can never disagree about a deadline. The manifest
+ * reads the SAME generators.mjs that check-generated.mjs and refresh.mjs
+ * derive their run order from, for the same reason.
  *
  * Committed output, same posture as gen-project-heroes.mjs and
  * gen-project-stats.mjs: the leverage scan needs the sibling KMP repos checked
  * out beside this one, which a build machine does not have. Without them it
  * keeps the committed rows and says so, rather than shipping an empty board.
+ * The manifest and the "not measured" list need no sibling repo and no live
+ * scan — they are pure functions of files already in THIS repo — so they are
+ * never affected by that fallback.
  */
-import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { STAMP_RE, slaFor, generatorFor } from "../src/data/freshnessSla.ts";
+import { GENERATORS } from "./generators.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = join(root, "src", "data");
 const outFile = join(dataDir, "ops.ts");
+const generatedDir = join(dataDir, "generated");
+const evidenceFile = join(generatedDir, "evidence.ts");
 
 /* ── The perimeter ─────────────────────────────────────────────────────── */
 
@@ -200,6 +219,16 @@ const banner =
   "// freshnessSla.ts; the leverage board is scanned from the sibling KMP repos.\n" +
   "// Run `npm run gen:ops` to refresh.\n";
 
+// Stamped from the newest input, never the wall clock. This file sits in
+// check-generated's DETERMINISTIC list and ci.yml runs that check, so a
+// `new Date()` here failed the gate on every day after the commit day with
+// nothing changed. A board is exactly as fresh as its freshest input.
+// evidence.ts (below) reuses this SAME value — it is just as deterministic
+// (a straight map over generators.mjs), so it needs no stamp of its own.
+const opsGeneratedAt = perimeter
+  .reduce((mx, x) => (x.generatedAt > mx ? x.generatedAt : mx), "1970-01-01")
+  .slice(0, 10);
+
 writeFileSync(
   outFile,
   banner +
@@ -210,16 +239,79 @@ writeFileSync(
     // upstream, which is a compile break caused purely by today's data.
     `export type Drift = { repo: string; upstream: string; pin: string; behind: number | null; pinnedAt: string | null };\n` +
     `export const drift: Drift[] = ${JSON.stringify(drift, null, 2)};\n\n` +
-    // Stamped from the newest input, never the wall clock. This file sits in
-    // check-generated's DETERMINISTIC list and ci.yml runs that check, so a
-    // `new Date()` here failed the gate on every day after the commit day with
-    // nothing changed. A board is exactly as fresh as its freshest input.
-    `export const opsGeneratedAt = ${JSON.stringify(
-      perimeter.reduce((mx, x) => (x.generatedAt > mx ? x.generatedAt : mx), "1970-01-01").slice(0, 10),
-    )};\n`,
+    `export const opsGeneratedAt = ${JSON.stringify(opsGeneratedAt)};\n`,
+);
+
+/* ── The generator manifest (arch-L14) ────────────────────────────────────
+ * Every node in scripts/generators.mjs, mapped straight across — never a
+ * hand-picked subset. `automated` is true the moment a node carries ANY
+ * stage; a node stuck at `stages: {}` (store.ts, gen-excelsior and four more
+ * manual/occasional scripts) has no cron, no prebuild step and no check —
+ * nothing regenerates or verifies it until a person runs the command by
+ * hand, and `invocation` is exactly that command, taken from the node's own
+ * `npmName` (falling back to the raw `node scripts/<file>` a script with no
+ * npm alias is actually run with, per generators.mjs's own doc comment on
+ * why four of these have none). */
+const nodes = GENERATORS.map((g) => ({
+  id: g.id,
+  script: g.script,
+  kind: g.kind,
+  automated: Object.keys(g.stages).length > 0,
+  stages: Object.keys(g.stages),
+  slaDays: g.slaDays ?? null,
+  invocation: g.npmName ? `npm run ${g.npmName}` : `node scripts/${g.script}`,
+}));
+
+/* ── What this board does not measure (arch-L14) ──────────────────────────
+ * /ops's whole argument is that a blind spot named is more honest than a
+ * number invented to fill the row. These five are named rather than
+ * papered over with a client-writable substitute:
+ *   - field Core Web Vitals (RUM): no RUM package is installed (package.json
+ *     ships only @vercel/speed-insights); lighthouserc.json's numbers are lab
+ *     measurements on one machine, already on the runway as the freshness
+ *     perimeter's siblings, never a real visitor's device.
+ *   - chat error rate: api/_lib/chat-handler.ts enforces an origin allowlist
+ *     and a rate limiter (see api/_lib/guard.ts) but keeps no error counter —
+ *     there is nothing here for this board to read.
+ *   - LHCI run history: lighthouserc.json gates CI, but nothing yet
+ *     summarises a run's assertions into a committed file this board can
+ *     read — that generator does not exist in scripts/generators.mjs today.
+ *   - axe accessibility results: e2e/a11y.spec.ts runs on every PR; its
+ *     pass/fail is never persisted anywhere outside the CI log.
+ *   - the external claim-audit run record: the script lives outside this
+ *     repo by design (the owner's private AgentHarness, never committed
+ *     here) and writes no record inside this repo when it last ran.
+ * Each of these becomes a real row the day its generator lands — this list
+ * is not a promise nothing will, it is naming what is true right now. */
+const NOT_MEASURED_HERE = [
+  "Field Core Web Vitals (real-user LCP/TBT/CLS) — no RUM is installed; the lab-only numbers are on the runway above.",
+  "Chat error rate — the endpoint is rate-limited and origin-checked (api/_lib/guard.ts) but keeps no error counter.",
+  "LHCI run history — lighthouserc.json gates CI; no generator yet summarises a run into a file this board can read.",
+  "axe accessibility results — e2e/a11y.spec.ts runs every PR; its result is never persisted outside the CI log.",
+  "The external claim-audit run record — the script lives outside this repo by design and writes nothing back here.",
+];
+
+const evidenceBanner =
+  "// AUTO-GENERATED by scripts/gen-ops.mjs — do not edit by hand.\n" +
+  "// The generator manifest below is a straight map over scripts/generators.mjs's\n" +
+  "// own GENERATORS array — adding a node there is the only edit a new generator\n" +
+  "// needs; nothing here changes. Run `npm run gen:ops` to refresh.\n";
+
+mkdirSync(generatedDir, { recursive: true });
+writeFileSync(
+  evidenceFile,
+  evidenceBanner +
+    `export type GeneratorNode = {\n` +
+    `  id: string; script: string; kind: string; automated: boolean;\n` +
+    `  stages: string[]; slaDays: number | null; invocation: string;\n` +
+    `};\n` +
+    `export const generatorNodes: GeneratorNode[] = ${JSON.stringify(nodes, null, 2)};\n\n` +
+    `export const notMeasuredHere: string[] = ${JSON.stringify(NOT_MEASURED_HERE, null, 2)};\n\n` +
+    `export const evidenceGeneratedAt = ${JSON.stringify(opsGeneratedAt)};\n`,
 );
 
 console.log(
-  `[gen-ops] ${perimeter.length} perimeter rows, ${leverage.length} convention plugins, ${drift.length} vendored pins` +
+  `[gen-ops] ${perimeter.length} perimeter rows, ${leverage.length} convention plugins, ${drift.length} vendored pins, ` +
+    `${nodes.length} manifest nodes (${nodes.filter((n) => !n.automated).length} unautomated)` +
     (scanned ? "" : " (kept committed leverage — sibling KMP repos not found)"),
 );
