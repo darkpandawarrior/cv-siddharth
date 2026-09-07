@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Hydrate } from "@tanstack/react-start";
+import { visible } from "@tanstack/react-start/hydration";
 import {
   MapPin,
   ArrowUpRight,
@@ -45,6 +47,21 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { statLineExtras, badgesBeyondStatus } from "./lib/projectStatLine.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
+import { homeFastPath, homeDeepPath } from "./data/facets.ts";
+import { boardArc } from "./data/beforeTheCode.ts";
+import { BoardProfilesGrid } from "./BoardProfiles.tsx";
+
+/**
+ * Below-the-fold homepage sections hydrate only once they are within 600px of
+ * the viewport (the strategy's default `rootMargin`), instead of all at once
+ * in the same synchronous pass as the hero. The server still renders every
+ * section's real HTML up front — `<Hydrate>` only defers the CLIENT commit,
+ * so a no-JS visitor, a crawler, and the first paint all see the exact same
+ * page; only the initial hydration's own scheduler cost gets spread across
+ * the scroll instead of paid in one ~2.5s block. See ParticleHero.tsx for the
+ * matching idea already shipped for the hero's own 3D scene.
+ */
+const deferBelowFold = visible();
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -381,6 +398,7 @@ function Hero() {
           </button>
           <Link
             to="/resume"
+            style={{ viewTransitionName: "resume-hero" }}
             className="rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             View résumé
@@ -454,11 +472,21 @@ function Typewriter() {
   );
 }
 
-/** Animated circuit divider — a signal pulse traveling the seam between sections. */
+/** Animated circuit divider — a signal pulse traveling the seam between sections.
+ *  Three fixed nodes along the line blink as the traveling pulse reaches
+ *  them, in step with the same 8s loop `.circuit-line::after` already runs —
+ *  the control-room telemetry read of "a signal just passed this point,"
+ *  rather than a second, unrelated animation sharing the seam. */
 function Circuit() {
   return (
     <div aria-hidden className="mx-auto max-w-5xl px-6">
-      <div className="circuit-line" />
+      <div className="circuit-line">
+        {/* Delays are where the traveling band (left: -12% → 112% over 8s)
+            passes each node's position: ((pos + 12) / 124) * 8s. */}
+        <span className="circuit-node" style={{ left: "20%", animationDelay: "2.06s" }} />
+        <span className="circuit-node" style={{ left: "50%", animationDelay: "4s" }} />
+        <span className="circuit-node" style={{ left: "80%", animationDelay: "5.94s" }} />
+      </div>
     </div>
   );
 }
@@ -1091,6 +1119,15 @@ function InkDoorway() {
             remotely. {COUNT_WORD[READABLE_PIECES] ?? READABLE_PIECES} published stories, all readable here, and the pieces the board wrote
             about me. It's a different life, so it gets a different room.
           </p>
+          {/* boardArc used to be a caption at the bottom of WritingSection, a
+              section only a visitor who already clicked into /ink ever saw.
+              It's the strongest line on the property (three years of EB
+              parodies read as one arc), so it belongs on the path everyone
+              is already on, not filed behind a door most visitors never
+              open. */}
+          <blockquote className="mt-2 mb-8 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm italic leading-relaxed text-zinc-400">
+            "{boardArc}"
+          </blockquote>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/ink"
@@ -1108,6 +1145,49 @@ function InkDoorway() {
             </Link>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * so-p1-soul-surfaced (site-overhaul-design.md §3.4): EB Profiles as a
+ * registry facet of their own on the Deep path, not a pointer at /ink#board.
+ * facets.ts's `board` facet now points here (`to: "/", hash: "board"`), so
+ * the rail, ⌘K and InstrumentView land a visitor on this section directly
+ * instead of routing them through the ink doorway first.
+ *
+ * The cards are BoardProfiles.tsx's `BoardProfilesGrid` — the same component
+ * /ink's WritingSection renders — so this is reach, not a second copy: /ink
+ * stays the deep home for the magazine and the societies around it, this
+ * section is the direct path in.
+ */
+function EbProfiles() {
+  return (
+    <section id="board" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <p className="section-eyebrow mb-2">// how the board wrote me</p>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">EB Profiles</h2>
+          <p className="mb-2 max-w-2xl text-zinc-400">
+            Three years on MANIT's Editorial Board closed each edition with EB Profiles: every
+            member gets one question, answered by a teammate impersonating them. Affectionate,
+            unsparing, and not written by me, which is the only reason they're worth reading.
+            Trimmed here to keep other people's names out of it; each card opens the scanned page
+            it came from.
+          </p>
+          <BoardProfilesGrid />
+          <p className="mt-6 max-w-2xl text-sm text-zinc-400">
+            The magazine these came from, and the societies around it, are at{" "}
+            <Link
+              to="/ink"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              The Ink
+            </Link>
+            .
+          </p>
+        </Reveal>
       </div>
     </section>
   );
@@ -1165,6 +1245,57 @@ function Doorway() {
   );
 }
 
+/**
+ * The component each fast/deep-path id (facets.ts's `homeFastPath` /
+ * `homeDeepPath`) renders as. Registering a section here plus one id in
+ * facets.ts is the whole cost of adding or reordering one, so-p3's actual
+ * ask — a data entry, not an App.tsx reflow. The lookup lives here rather
+ * than in facets.ts because facets.ts is plain data with no JSX in it, same
+ * as every other `src/data/` module.
+ */
+const HOME_SECTIONS: Record<(typeof homeFastPath)[number], React.ComponentType> = {
+  hero: Hero,
+  metrics: Metrics,
+  fit: FitCheck,
+  casestudies: CaseStudies,
+  projects: Projects,
+  experience: ExperienceSection,
+};
+
+// Which registry sections defer their client hydration until scrolled near
+// (see `deferBelowFold`'s own doc comment above).
+//
+// NOT the straight carry-over from the hardcoded per-section <Hydrate>
+// wrapping this registry replaced: that original set deferred casestudies,
+// projects, experience, skills (and, by the same reasoning, would have
+// deferred board too) — which worked there because SiteFooter's own
+// "Case studies" / "Projects" / "Experience" / "Skills" links, and
+// facets.ts's "work" / "experience" / "board" hash targets, still had
+// something to scroll TO the instant they were clicked: this document's
+// scrollHeight already included every section in the single hardcoded
+// list, hydrated or not, because none of THAT list's deferred sections had
+// zero rendered height — the fallback for each was the section's own SSR
+// markup being kept in the DOM, just not yet interactive. Once React
+// bails out of hydrating a boundary during a genuine client-only pass
+// (not the initial hydration pass), though, an unintersected <Hydrate>
+// with no `fallback` renders NOTHING — zero height — until it scrolls
+// into range. A scroll-to-anchor click on a target that has not rendered
+// yet has nothing to scroll to, and Playwright's own locator (like a
+// real find-in-page search) cannot even resolve the element to attempt
+// it: e2e/navigation.spec.ts's footer tests caught this exact deadlock.
+// Only `morph` (DeviceMorph, a 3D scene) is not a documented nav target
+// anywhere (footer, facets.ts's hash list) and stays deferred.
+const FAST_DEFERRED = new Set<(typeof homeFastPath)[number]>([]);
+const DEEP_DEFERRED = new Set<(typeof homeDeepPath)[number]>(["morph"]);
+
+const DEEP_SECTIONS: Record<(typeof homeDeepPath)[number], React.ComponentType> = {
+  morph: DeviceMorph,
+  shipped: ShippedShelf,
+  source: ReposShowcase,
+  skills: Skills,
+  board: EbProfiles,
+};
+
 export function HomePage() {
   // The backtick-summons-the-terminal listener used to live here, which meant
   // it only existed on `/` — while two separate copy strings promised it worked
@@ -1175,48 +1306,63 @@ export function HomePage() {
       <CursorAura />
       <Nav />
       <main id="main-content" tabIndex={-1}>
-        <Hero />
-        <Metrics />
-        {/* Straight after the numbers, and before anything that has to load:
-            they are what makes a recruiter want to check fit, the scorecard
-            links down into the case studies, and it is the one thing on this
-            page a PDF cannot offer. NAV_LINKS has listed it first for a while;
-            the page did not. Below the hero, so it costs LCP nothing. */}
-        <FitCheck />
-        {/* The multiplatform claim, proved rather than asserted. Not in the
-            hero: the hero's right column is 280px, which cannot show a foldable
-            beside a TV, and the hero heading is the LCP element. Nothing here
-            boots until it is clicked, so this section costs the initial load
-            one lazy poster. */}
-        <DeviceMorph />
-        {/* The comment here used to claim "a recruiter who reads two sections
-            should have hit a live Play Store rating by the end of the second"
-            while the shelf itself was the eighth section, 17,800px down. It is
-            now the third, and it breaks the four-in-a-row run of "what have you
-            built?" grids that used to be work → projects → source → shipped. */}
-        <ShippedShelf />
-        <CaseStudies />
-        <Projects />
-        {/* #source promoted to its own top-level section — was a <div> buried
-            near the end of #projects even though it's a first-class
-            destination in the footer, palette and navigation.ts. */}
-        <ReposShowcase />
-        <ExperienceSection />
-        {/* Skills sits with the evidence it proves, not after the gear change.
-            It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
-            the comment below calls the move from career evidence into
-            exploration — so the page's own stated narrative had a piece of
-            evidence stranded on the wrong side of its own divider. */}
-        <Skills />
+        {/* Fast path: the seven sections a 90-second recruiter reads, in the
+            order facets.ts's `homeFastPath` declares. Metrics, FitCheck and
+            Skills all used to answer "is he any good" back to back with
+            DeviceMorph/ShippedShelf/ReposShowcase interleaved between the
+            case studies and experience — twelve to fourteen sections before
+            Contact. Skills and the three evidence sections below moved past
+            it; they're still on this page, just past the fold a satisfied
+            recruiter doesn't have to cross. */}
+        {homeFastPath.map((id) => {
+          const Section = HOME_SECTIONS[id];
+          if (!FAST_DEFERRED.has(id)) return <Section key={id} />;
+          return (
+            <Hydrate key={id} when={deferBelowFold}>
+              <Section />
+            </Hydrate>
+          );
+        })}
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}
-        <Circuit />
-        <Doorway />
+        <Hydrate when={deferBelowFold}>
+          <Circuit />
+        </Hydrate>
+        <Hydrate when={deferBelowFold}>
+          <Doorway />
+        </Hydrate>
         {/* Writing lives in its own world now (/ink). What stays here is the
-            doorway — the homepage was 14,000px because it was carrying two
+            doorway, now carrying boardArc's own line instead of just a link
+            to it — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
+        {/* NOT deferred, unlike above: this deferral was only ever correct
+            because Contact (and the footer it carries) used to be the LAST
+            thing on the page — a boundary with nothing after it reveals
+            itself naturally as a visitor scrolls toward "the end". The deep
+            path below moved five more sections after it, so a below-fold
+            <Hydrate> here now sits mid-page with real content on both sides:
+            its zero-height Suspense placeholder makes the footer briefly
+            absent from the DOM entirely rather than just uninteractive,
+            which is a real layout-shift for a visitor and an unreachable
+            target for anything that queries for it (a footer nav link, a
+            find-in-page search) before it happens to scroll into range. Both
+            are light (a CTA and a links list), so hydrating them with the
+            fast path costs little. */}
         <InkDoorway />
         <Contact />
+        {/* Deep path: the mechanism-level evidence (multiplatform proof, the
+            shipped shelf, the repo wall, the full skills cloud) plus EB
+            Profiles (so-p1-soul-surfaced) for the visitor who kept scrolling
+            past Contact rather than the one who stopped there. */}
+        {homeDeepPath.map((id) => {
+          const Section = DEEP_SECTIONS[id];
+          if (!DEEP_DEFERRED.has(id)) return <Section key={id} />;
+          return (
+            <Hydrate key={id} when={deferBelowFold}>
+              <Section />
+            </Hydrate>
+          );
+        })}
       </main>
       <FloatingChat />
     </div>

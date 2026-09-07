@@ -11,10 +11,8 @@ import {
 } from "./signalRoute.ts";
 import {
   ALL_OFF,
-  STAGES,
-  configForStages,
+  ALL_ON,
   gainsFor,
-  ladder,
   runPipeline,
   simulate,
   truthDistance,
@@ -137,15 +135,16 @@ describe("the claim: raw GPS over-counts trip distance", () => {
   });
 
   it("lands close to truth once the whole pipeline runs", () => {
-    const full = runPipeline(samples, configForStages(STAGES.length));
+    const full = runPipeline(samples, ALL_ON);
     const errPct = Math.abs((full.distanceM - truth) / truth) * 100;
     expect(errPct).toBeLessThan(15);
   });
 
   it("improves by an order of magnitude from raw to filtered", () => {
-    const { rows } = ladder(samples);
-    const rawErr = Math.abs(rows[0].errorPct);
-    const finalErr = Math.abs(rows[rows.length - 1].errorPct);
+    const raw = runPipeline(samples, ALL_OFF);
+    const full = runPipeline(samples, ALL_ON);
+    const rawErr = Math.abs((raw.distanceM - truth) / truth) * 100;
+    const finalErr = Math.abs((full.distanceM - truth) / truth) * 100;
     expect(finalErr).toBeLessThan(rawErr / 10);
   });
 
@@ -154,7 +153,7 @@ describe("the claim: raw GPS over-counts trip distance", () => {
       const s = simulate({ seed });
       const t = truthDistance(s);
       const raw = runPipeline(s, ALL_OFF).distanceM;
-      const full = runPipeline(s, configForStages(STAGES.length)).distanceM;
+      const full = runPipeline(s, ALL_ON).distanceM;
       expect(raw / t).toBeGreaterThan(1.4);
       expect(Math.abs((full - t) / t) * 100).toBeLessThan(20);
     }
@@ -163,7 +162,7 @@ describe("the claim: raw GPS over-counts trip distance", () => {
   it("holds on a longer, multi-lap run", () => {
     const s = simulate({ distanceM: ROUTE_LENGTH_M * 3 });
     const t = truthDistance(s);
-    const full = runPipeline(s, configForStages(STAGES.length)).distanceM;
+    const full = runPipeline(s, ALL_ON).distanceM;
     expect(Math.abs((full - t) / t) * 100).toBeLessThan(20);
   });
 });
@@ -178,7 +177,7 @@ describe("regression: the filter must not diverge", () => {
    * that would have caught that.
    */
   const samples = simulate({ distanceM: ROUTE_LENGTH_M * 4 });
-  const full = runPipeline(samples, configForStages(STAGES.length));
+  const full = runPipeline(samples, ALL_ON);
 
   it("never rejects everything", () => {
     const withFix = samples.filter((s) => s.fix).length;
@@ -198,8 +197,8 @@ describe("regression: the filter must not diverge", () => {
   });
 
   it("position error does not grow without bound", () => {
-    const one = runPipeline(simulate({ distanceM: ROUTE_LENGTH_M }), configForStages(STAGES.length));
-    const four = runPipeline(samples, configForStages(STAGES.length));
+    const one = runPipeline(simulate({ distanceM: ROUTE_LENGTH_M }), ALL_ON);
+    const four = runPipeline(samples, ALL_ON);
     // Four laps must not be dramatically worse than one — that is what
     // divergence looks like in a number.
     expect(four.rmseM).toBeLessThan(one.rmseM * 2 + 50);
@@ -207,32 +206,16 @@ describe("regression: the filter must not diverge", () => {
 });
 
 describe("stages are cumulative and measured", () => {
-  it("configForStages turns them on in order", () => {
-    expect(configForStages(0)).toEqual(ALL_OFF);
-    expect(configForStages(1).accuracyGate).toBe(true);
-    expect(configForStages(1).jitter).toBe(false);
-    expect(configForStages(STAGES.length)).toEqual({
-      accuracyGate: true, jitter: true, spikeRejection: true, imuFusion: true,
-    });
-  });
-
-  it("reports a row per stage plus raw", () => {
-    const { rows, truthM } = ladder(simulate());
-    expect(rows).toHaveLength(STAGES.length + 1);
-    expect(truthM).toBeGreaterThan(0);
-    expect(rows[0].label).toBe("raw GPS");
-  });
-
   it("accumulates distance per zone that sums to the total", () => {
-    const r = runPipeline(simulate(), configForStages(STAGES.length));
+    const r = runPipeline(simulate(), ALL_ON);
     const summed = Object.values(r.perZoneM).reduce((a, b) => a + b, 0);
     expect(summed).toBeCloseTo(r.distanceM, 3);
   });
 
   it("dead reckoning is what rescues position accuracy", () => {
     const s = simulate();
-    const withoutImu = runPipeline(s, configForStages(3));
-    const withImu = runPipeline(s, configForStages(4));
+    const withoutImu = runPipeline(s, { accuracyGate: true, jitter: true, spikeRejection: true, imuFusion: false });
+    const withImu = runPipeline(s, ALL_ON);
     expect(withImu.rmseM).toBeLessThan(withoutImu.rmseM);
     expect(withImu.bridged).toBeGreaterThan(0);
   });

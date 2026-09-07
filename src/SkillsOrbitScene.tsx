@@ -13,13 +13,20 @@ import { readToken } from "./themeColor";
  * buttons below). DOM labels via drei Html — house pattern, no font loading.
  */
 
-const GROUP_COLOR: Record<string, string> = {
-  "UI & Architecture": "#3ddc84",
-  "Concurrency & Data": "#5ee6ff",
+// The two scene-token entries are resolved at call time (readToken, never a
+// frozen module-scope literal) so they follow a theme swap like every other
+// scene colour; the other three are their own categorical hues, untouched by
+// the CAL-1/scene-token sweep.
+const GROUP_COLOR_LITERAL: Record<string, string> = {
   "Platform & Systems": "#8ff0b4",
   "Security & Ops": "#f0883e",
   "Leadership & Process": "#c9a7ff",
 };
+function groupColor(group: string): string {
+  if (group === "UI & Architecture") return readToken("--color-signal", "#3ddc84");
+  if (group === "Concurrency & Data") return readToken("--color-probe", "#5ee6ff");
+  return GROUP_COLOR_LITERAL[group] ?? readToken("--color-signal", "#3ddc84");
+}
 
 const WORDS = skills.flatMap((s) => s.items.map((item) => ({ item, group: s.group })));
 
@@ -62,7 +69,7 @@ function Orbit({ active, onSelect }: { active: string | null; onSelect: (group: 
         <meshBasicMaterial color={readToken("--color-probe", "#5ee6ff")} wireframe transparent opacity={0.05} />
       </mesh>
       {POINTS.map((p) => {
-        const color = GROUP_COLOR[p.group] ?? "#3ddc84";
+        const color = groupColor(p.group);
         const dim = active !== null && active !== p.group;
         return (
           <Html key={p.item} position={p.pos} center distanceFactor={6.5} zIndexRange={[10, 0]}>

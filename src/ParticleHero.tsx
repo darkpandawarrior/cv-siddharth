@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 
 // three/@react-three/fiber only load when WebGL actually exists — own
 // chunk, same code-split pattern as AmbientScene/Phone3DScene/BlueprintRoom.
@@ -74,22 +75,29 @@ export function ParticleHero() {
 
   if (!ready) return null;
 
+  // `ready` (and everything above it) is a runtime-only gate the bundler
+  // can't see through — it still resolved ParticleHeroScene's
+  // @react-three/fiber import for SSR regardless. `<ClientOnly>` is what
+  // Start's compiler recognises to strip this subtree (and the lazy import
+  // behind it) from the SERVER compile entirely.
   return (
-    <div ref={hostRef} className={`particle-hero ${reducedMotion ? "pointer-events-none" : ""}`} aria-hidden>
-      <Suspense fallback={null}>
-        <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
-      </Suspense>
-      {/* lg:right-[8.25rem] pulls the hint back inside the viewport. At
-          ≥1024px .particle-hero deliberately bleeds `right: -7.75rem` past its
-          section (masked, decorative), and `right-2` put this label in the
-          bled-off part — so between 1024px and ~1148px the only thing telling
-          you the swarm is draggable was itself clipped away, on exactly the
-          widths where dragging is first enabled. */}
-      {dragEnabled && (
-        <span className="kicker pointer-events-none absolute bottom-2 right-2 lg:right-[8.25rem]">
-          drag to spin
-        </span>
-      )}
-    </div>
+    <ClientOnly>
+      <div ref={hostRef} className={`particle-hero ${reducedMotion ? "pointer-events-none" : ""}`} aria-hidden>
+        <Suspense fallback={null}>
+          <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
+        </Suspense>
+        {/* lg:right-[8.25rem] pulls the hint back inside the viewport. At
+            ≥1024px .particle-hero deliberately bleeds `right: -7.75rem` past its
+            section (masked, decorative), and `right-2` put this label in the
+            bled-off part — so between 1024px and ~1148px the only thing telling
+            you the swarm is draggable was itself clipped away, on exactly the
+            widths where dragging is first enabled. */}
+        {dragEnabled && (
+          <span className="kicker pointer-events-none absolute bottom-2 right-2 lg:right-[8.25rem]">
+            drag to spin
+          </span>
+        )}
+      </div>
+    </ClientOnly>
   );
 }

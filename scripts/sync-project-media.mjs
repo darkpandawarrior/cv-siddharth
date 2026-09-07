@@ -1,5 +1,5 @@
 // Pulls a curated, hand-picked set of frames + demo gifs from each app repo's
-// docs/ over raw.githubusercontent into public/projects/<slug>/screenshots/.
+// docs/ over raw.githubusercontent into heavy/projects/<slug>/screenshots/.
 // A 404 logs MISS and continues — never fails the build. Runs before
 // gen-galleries so new files land in the gallery. Local committed media is the
 // fallback: with no network the build still works off what's already on disk.
@@ -88,7 +88,7 @@ async function pull(repo, srcPath, dest) {
 }
 
 for (const [slug, { repo, files }] of Object.entries(sync)) {
-  const dir = join(root, "public", "projects", slug, "screenshots");
+  const dir = join(root, "heavy", "projects", slug, "screenshots");
   mkdirSync(dir, { recursive: true });
   for (const [srcPath, destName] of files) {
     await pull(repo, srcPath, join(dir, destName));

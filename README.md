@@ -66,7 +66,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **twenty destinations**,
+The site is not a page with a few easter eggs; it is **twenty-two destinations**,
 each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
@@ -91,13 +91,21 @@ shows what exists, and you cannot search for a room you do not know about.
 | [`/map`](https://cv-siddharth.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
 | [`/forge`](https://cv-siddharth.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
 | [`/terminal`](https://cv-siddharth.vercel.app/terminal) | text · easter egg | a faux shell you can type in: `ls`, `open doori`, `ask <q>`, `chess clock`. Backtick summons it from any route |
-| [`/playground`](https://cv-siddharth.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D, and the street is a timeline |
+| [`/playground`](https://cv-siddharth.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D; north is 2017, south is now, and a West District turns his employers and case studies into towers |
 | [`/chess`](https://cv-siddharth.vercel.app/chess) | 3d · engine | seven years across lichess and chess.com, mined: the rating arc in 3D, a shifting repertoire, a bot that plays like him |
 | [`/weeb`](https://cv-siddharth.vercel.app/weeb) | corpus · data | a hand-kept anime list read as evidence, a status column with no word for quitting |
 | [`/ink`](https://cv-siddharth.vercel.app/ink) | archive · world | the writing years, before the code |
 | [`/excelsior`](https://cv-siddharth.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
 | [`/loopdown`](https://cv-siddharth.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
 | [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
+| [`/canon`](https://cv-siddharth.vercel.app/canon) | lore · reference | the rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do |
+| [`/making`](https://cv-siddharth.vercel.app/making) | process · receipts | the craft record for the anthology: cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost |
+| [`/lanes`](https://cv-siddharth.vercel.app/lanes) | corpus · timeline | work, open source, writing and chess, month by month since 2019, on one shared axis |
+| [`/time-machine`](https://cv-siddharth.vercel.app/time-machine) | corpus · git history | this repo's own commit history, walked back month by month |
+
+`/terminal`'s own `help` isn't the whole command list by design: nine
+commands mark themselves `hidden` and skip it, so they stay things to find
+rather than things to read off a screen.
 
 Plus, on the scroll itself:
 
@@ -119,6 +127,13 @@ Plus, on the scroll itself:
   "not connected".
 - **`/read/<slug>`**. The magazine prose as selectable, searchable text rather
   than photographs of paper, each piece linked to the scanned page it ran on.
+- **The Canon and The Making**. The anthology's reference shelf: the lore
+  rules `/canon` gates behind a spoiler divider, and `/making`'s own record
+  of building it, for a reader who wants the machinery, not just the story.
+- **A cross-site play layer**. A guest wall anyone can sign, per-piece margin
+  notes on `/ink` and every `/read/<slug>`, and reaction rows, all shared
+  documents backed by `playhtml`, not a per-visitor toy. `VITE_GUEST_WALL=off`
+  removes the wall on the next deploy; nothing here calls a server of his.
 
 ## One registry
 
@@ -199,19 +214,41 @@ scripts/                     # the generators + the capture/sentinel tooling
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-one `gen:` scripts over twenty-six generator files. The ones you will
-actually reach for:
+Twenty-six `gen:` scripts over thirty-one generator files. The ones you
+will actually reach for:
 
 ```bash
 npm run refresh           # media sync + every generator (stats, galleries, og, prompt…)
 npm run gen:system-prompt # rebuild Panda's prompt after editing profile.ts
-npm run gen:surfaces      # route captures -> the wall's device-framed posters
 npm run gen:og            # branded per-project OG cards (/p/<slug>/og.png)
-npm run capture:site      # screenshot every route (feeds gen:surfaces + the sentinel)
+npm run capture:site      # screenshot every route (feeds the sentinel)
 ```
 
-`gen:og` and `gen:surfaces` rasterize at author time and commit their output,
-the Vercel build needs no browser and no image toolchain.
+`gen:og` rasterizes at author time and commits its output, so the Vercel
+build needs no browser and no image toolchain.
+
+Five more generator files exist with no `npm run` script, deliberately: each
+needs something a build machine doesn't have. `check-generated.mjs`'s header
+carries the same reasoning; this is that reasoning where a README reader can
+find it.
+
+- `gen-excelsior.mjs`. Manual and occasional: renders the source magazine
+  PDFs, which live on MANIT's CDN and are not in this repo, and needs
+  `poppler` installed locally. Output is committed; the build never touches
+  a PDF.
+- `gen-excelsior-text.mjs`. OCRs the rendered pages into a static per-edition
+  text manifest (`public/excelsior/text/<year>.json`) so the in-reader search
+  has something to search. Needs `tesseract` installed locally; best-effort
+  on scanned magazine columns, not a transcript.
+- `gen-store-archive.mjs`. Queries the Internet Archive for delisted Play
+  listings. A floor, not a count, since the Archive only has what it happened
+  to crawl. `npm run gen:store` merges its output.
+- `gen-store-flavours.mjs`. Refuses to run without `SHELF_RIDER_REPO` and
+  `SHELF_DRIVER_REPO` pointing at two private checkouts, so it cannot run on
+  a CI box at all.
+- `gen-store-siblings.mjs`. Walks each shelf client's Play developer page
+  live, looking for a merchant-side sibling app the rider/driver data misses.
+  Writes a gitignored cache; `npm run gen:store` merges it.
 
 </details>
 
@@ -222,24 +259,33 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1089 unit tests across 96 files (vitest)
-npm run test:e2e  # 115 Playwright tests across 15 files, every registry route
+npm test          # 1269 unit tests across 114 files (vitest)
+npm run test:e2e  # 253 Playwright tests across 16 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
 
 Those two counts are not typed here by hand. `scripts/gen-repo-stats.mjs`
-counts the suite with `vitest list`, writes `src/data/repoStats.ts` in prebuild
-and the homepage renders it, so the figure on the site is build output.
+counts the suite with `vitest list`, writes `src/data/repoStats.ts` in the
+daily refresh (it reads sibling repos, so it never runs in the hermetic
+build stage) and the homepage renders the committed result, so the figure on
+the site is generator output, refreshed on a schedule rather than every deploy.
 `readme.test.ts` then asserts this file agrees with it. The site once claimed
 619 tests in 46 files while the suite had grown to 812 in 73, which is the
 whole reason that generator exists.
 
-CI runs two workflows. `ci.yml` is the gate: `tsc -b`, lint and the unit tests
+CI runs five workflows. `ci.yml` is the gate: `tsc -b`, lint and the unit tests
 on every push. `lighthouse.yml` builds, runs the full Playwright suite, then
-Lighthouse CI over ten URLs three times each, asserting accessibility at 1.00
-and SEO at 0.95 as errors, and LCP, CLS, first contentful paint, total blocking
-time, byte weight and script size as warnings.
+Lighthouse CI over 23 URLs, one run each, asserting accessibility at 1.00 and
+SEO at 0.95 as errors, cumulative layout shift, total byte weight and script
+size also as errors (all three are properties of the bytes and the layout, so
+they measure the same on a CI runner as on a laptop), and LCP, first
+contentful paint and total blocking time as warnings until a runner-measured
+calibration promotes them too. Three more run on a schedule, not a push:
+`refresh-twin.yml` rebuilds the embedded Compose twin daily,
+`refresh-media.yml` pulls project media and stats from the app repos daily,
+and `screenshot-sentinel.yml` runs the capture sentinel weekly and on any PR
+that touches a capture.
 
 Run `npx tsc -b`, not `npx tsc --noEmit`. They are different programs over
 different configs, and `--noEmit` misses errors the build fails on.
@@ -258,9 +304,11 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Eighteen of the twenty-five route files server-render. Seven stay client-only, and
-each is a room that mounts WebGL at its top level: `/blueprint`, `/compose`,
-`/forge`, `/map`, `/pulse` and `/terminal`.
+Twenty of the twenty-seven route files server-render. Seven stay client-only:
+`/blueprint`, `/compose`, `/forge`, `/map`, `/ops`, `/pulse` and `/terminal`.
+Most mount WebGL at their top level; `/ops` is the exception, client-only
+because every age on its board is computed at load and a server render would
+ship a timestamp already wrong by the time it is read.
 
 `/playground` used to be the seventh. Lighthouse did not score it slow, it
 scored it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw
@@ -287,8 +335,10 @@ Four things hold the numbers up, and each is enforced rather than remembered:
 - **`content-visibility: auto` on four below-the-fold sections**, every
   `contain-intrinsic-size` measured against the deployed page rather than
   guessed, because a wrong one buys paint time by trading away layout
-  stability. Cumulative layout shift is 0.000 and `lighthouserc.json` asserts
-  it.
+  stability. Cumulative layout shift measures 0.0086 at `/ops`, the worst URL
+  in the fleet, and 0.058 or under everywhere else; `lighthouserc.json` errors
+  above 0.25, a ceiling with real headroom rather than the measured figure
+  itself.
 
 Generators refuse to make things worse. A fetch that succeeds and returns
 nothing is not treated as truth: `gen-chess-stats.mjs`, `gen-timeline.mjs` and

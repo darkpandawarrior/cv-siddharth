@@ -3,6 +3,7 @@ import { Smartphone, Watch, Monitor, Globe, ChevronLeft, ChevronRight, Play } fr
 import type { ProjectTarget } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
 import { rasterSources } from "./lib/rasterSources.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 const PLATFORM_ICON: Record<ProjectTarget["platform"], React.ComponentType<{ size?: number }>> = {
   Android: Smartphone,
@@ -34,8 +35,10 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
  *  Keying "ready" off the iframe's HTML `onLoad` was the bug — that fires the
  *  instant the ~2 KB index.html loads, long before the ~14 MB Wasm downloads,
  *  compiles and paints (and it fires even when the canvas never paints at all),
- *  leaving a dark box with no way to fall back. Instead we poll the (same-origin)
- *  child document for a real first frame; otherwise keep the screenshot.
+ *  leaving a dark box with no way to fall back. Instead we poll the child
+ *  document for a real first frame when it's same-origin (local dev); the
+ *  builds now live on GitHub Pages (see src/lib/assetBase.ts), so in
+ *  production this falls back to lib/livePaint.ts's cross-origin timer.
  *
  *  Two shapes of build ship here, and the probe has to cover both. Gaddi, Doori
  *  and PaymentsLab-KMP render through a Skiko <canvas>, which only grows past its
@@ -52,7 +55,7 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
   // than keep a second copy of the canvas-vs-#boot logic. Same behaviour:
   // starts when the frame scrolls into view, gives up after 18s and keeps the
   // screenshot floor.
-  const { painted, gaveUp } = useLivePaint(iframeRef, inView);
+  const { painted, gaveUp } = useLivePaint(iframeRef, inView, undefined, url);
 
   return (
     <div ref={ref} className="relative aspect-video w-full overflow-hidden bg-black">
@@ -159,7 +162,7 @@ export function FitImage({
  *  screen index) is owned by the parent so the shared prev/next arrows and
  *  dot-pagination can drive every frame type identically. */
 function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: string; shot: number }) {
-  const src = (file: string) => `/projects/${slug}/screenshots/${file}`;
+  const src = (file: string) => heavy(`/projects/${slug}/screenshots/${file}`);
   const shots = target.screens;
   // Previous/next changes which shot is showing, but every frame's alt text
   // read identically regardless of `shot` — a screen-reader user heard the

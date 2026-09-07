@@ -108,7 +108,8 @@ describe("surface completeness", () => {
    * assertion rather than needing one of their own.
    */
   it("has a committed preview capture for every room", () => {
-    const shots = join(root, "public", "projects", "portfolio", "screenshots");
+    // Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+    const shots = join(root, "heavy", "projects", "portfolio", "screenshots");
     const missing = siteRooms
       .map((r) => `site_${r.to.slice(1)}.png`)
       .filter((file) => !existsSync(join(shots, file)));

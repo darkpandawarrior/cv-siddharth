@@ -1,13 +1,22 @@
 import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
+import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
+import { currentRoles } from "../lib/resumeMeta.ts";
 import { surfaces } from "../data/surfaces.ts";
 import { profile, experience, education } from "../data/profile.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
-import AnomalyRail from "../AnomalyRail.tsx";
 import { Launcher } from "../Launcher.tsx";
+// Code-split (its own chunk stops competing with the SSR document + hero
+// bundle) and mounted only after an idle callback (its own React tree stops
+// competing for the main thread during hydration) — see DeferredRail below.
+// The design doc's own words: "The rail is below-the-fold work and mounts
+// after paint." It was a plain top-level import rendered unconditionally
+// with none of that until now.
+const AnomalyRail = lazy(() => import("../AnomalyRail.tsx"));
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -25,11 +34,13 @@ import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
+import { DeferredPlayRoom, DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
 // Every role still running. Filtered over the whole array, never
 // experience[0] — index 0 is whichever role was added most recently, and an
 // index-based read silently demoted Dice.tech the day the consulting role
-// landed above it.
-const currentRoles = experience.filter((e) => e.period.trim().endsWith("Present"));
+// landed above it. Shared with resume.tsx's own Person JSON-LD via
+// resumeMeta.ts's currentRoles(), so this can never drift from that one.
+const currentRoleList = currentRoles(experience);
 
 // The title, name and links a crawler reads, in one place. Nobody looking at
 // the site would ever notice this block going stale, which is exactly why it
@@ -47,9 +58,9 @@ const PERSON_LD = {
   // scraper that just reads the first value, so a single current role stays a
   // bare object and only a genuine second one makes it a list.
   worksFor:
-    currentRoles.length === 1
-      ? { "@type": "Organization", name: currentRoles[0].company }
-      : currentRoles.map((e) => ({ "@type": "Organization", name: e.company })),
+    currentRoleList.length === 1
+      ? { "@type": "Organization", name: currentRoleList[0].company }
+      : currentRoleList.map((e) => ({ "@type": "Organization", name: e.company })),
   email: `mailto:${profile.email}`,
   alumniOf: { "@type": "CollegeOrUniversity", name: education.school },
   address: { "@type": "PostalAddress", addressLocality: "Pune", addressCountry: "IN" },
@@ -285,6 +296,38 @@ function RegisterServiceWorker() {
   return null;
 }
 
+// Fires Sentry's opt-in init after hydration — same after-mount timing as
+// RegisterServiceWorker above, so a client-only, dependency-loading effect
+// never runs during SSR or blocks the first paint. No-ops with zero network
+// activity when VITE_SENTRY_DSN is unset (see src/lib/monitoring.ts).
+function InitMonitoring() {
+  useEffect(() => {
+    void initMonitoring();
+  }, []);
+  return null;
+}
+
+/** Gates AnomalyRail's mount to after the browser has painted. `requestIdleCallback`
+ *  (with a `setTimeout` fallback for Safari, which has none) fires only once the
+ *  main thread is free after the current frame, which is after paint by
+ *  construction; `false` on the server and through hydration means the SSR
+ *  document and the first client render agree there's nothing here yet. */
+function DeferredRail() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
+    const cic = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = ric(() => setReady(true));
+    return () => cic(id);
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <AnomalyRail />
+    </Suspense>
+  );
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
@@ -305,7 +348,34 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HashCompat />
         <RegisterServiceWorker />
         <TerminalHotkey />
-        {children}
+        {/* The room-entry pulse counter (rooms.tsx's useNextRoom) now bumps on
+            mount from every room, not only from inside /playground — so the
+            live counter it feeds needs to exist on every route, not only
+            there. Deferred (client-only, after hydration) for the same
+            reason Playground.tsx used to mount it locally: `@playhtml/react`
+            reads `document` on import, and this shell is the one thing every
+            route, including the server-rendered ones, renders through.
+
+            DeferredLivePulse calls `usePageData` (via pulse.ts), which is
+            `@playhtml/react`'s own hook and throws "No PlayProvider found"
+            without a `PlayProvider` ancestor — it does not degrade like our
+            own PulseContext default does. Wrapping it in DeferredPlayRoom
+            here is what supplies that ancestor on every route, not only the
+            handful (Playground, Weeb, Blueprint, /ink, /anthology,
+            /read/$slug) that already mount one locally for their own
+            presence/visitor features. Those local mounts still work exactly
+            as before — a nearer provider always wins for their own
+            descendants — this one exists only so LivePulse, sitting above
+            all of them at the shell level, has an ancestor of its own.
+            // ponytail: this opens a second websocket to the same
+            "cv-siddharth" room on the handful of routes that already mount
+            their own PlayProvider too. Collapsing to one shared provider
+            would mean touching those routes' own files, several of which
+            belong to other stacked lanes — worth doing in a pass that owns
+            all of them at once, not as a side effect of a pulse-counter fix. */}
+        <DeferredPlayRoom>
+          <DeferredLivePulse>{children}</DeferredLivePulse>
+        </DeferredPlayRoom>
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
@@ -315,7 +385,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             the skip link still jumps past it, and it renders nothing at all
             until something calls openLauncher(). */}
         <Launcher />
-        <AnomalyRail />
+        <DeferredRail />
         {/* Global, like the two above. It was mounted in three places instead
             — App.tsx, rooms.tsx and Playground.tsx — so every route that is
             not the homepage and does not use RoomFrame had no palette at all:
@@ -324,7 +394,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             called itself "Global ⌘K". One mount makes that true, and avoids
             the duplicate ⌘K listeners three mounts would have caused. */}
         <CommandPalette />
+        <InitMonitoring />
         <SpeedInsights />
+        <Analytics />
         <Scripts />
         <noscript>
           <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "var(--color-text)" }}>

@@ -29,15 +29,17 @@ The one thing that makes it not an "atmospheric night level": **the light is sig
 
 ```
 ink        #0a0d0c   ground base
-void       #060807   fog + zenith
+void       #060807   fog + zenith (see sky ruling below — zenith itself ships lifted)
 line       #262e2b   seams, unlit trim
 signal     #3ddc84   work
 probe      #5ee6ff   chess
 accent     #f2a13d   writing
 text       #e8efe9   opensource (achromatic — the fourth "hue" is no hue)
 readhead   #d8fbe6   the cursor only (signal mixed to white)
-horizon    #0d1a1c   sky band (accent2 crushed to 6% value)
+horizon    #0d1a1c   sky band (accent2 crushed to 6% value; see ruling below — ships lifted)
 ```
+
+**Ruling (shipped deviation, sky zenith/horizon only):** Sky.tsx ships `#0a0f10` (zenith) / `#16292b` (horizon), not the `void`/`horizon` stops above. Owner refinement ("blue hour, not black"): the stops above read as an unlit room with zero fixtures on screen before step 3 (the fixture families) lands. Same two hues lifted in value, same shader, same 2.6 mix exponent — a value change, not a new colour, and `fog` is set to match the shipped horizon stop so distant terrain doesn't blend toward a colour the sky disagrees with. Every other token above ships as specified.
 
 ## 3. Ground surface
 
@@ -46,6 +48,8 @@ One `MeshStandardMaterial` (`color #0a0d0c`, `roughness 0.78`, `metalness 0.04`)
 Injected, in order:
 
 1. **Baked plate texture** (`uPlate`) — one 2048×2048 canvas built once at load in an `OffscreenCanvas`: fine concrete grain, the four lane surface treatments, lane monogram glyphs at the south apron, and the two 14 m-tall SVG-baked numerals `2019` / `2026` lying flat on the aprons at each corridor end in `#1c2422` (decorative, baked to canvas — never DOM text). Tiled 4× along Z.
+
+   **Ruling (shipped deviation, the two numerals only):** the lane monograms bake into `uPlate` exactly as specified — they're a repeating identity mark, correct once per tile. The two big end numerals do NOT: `uPlate` tiles 4× along Z, so anything baked into that one canvas prints at every 42 m tile boundary, not once at each real end of the 168 m corridor. They ship instead as two separate, non-repeating decal planes (Terrain.tsx's `ApronNumerals`) positioned at the corridor's actual two ends, same canvas-bake-once discipline, same colour and lift. A texture that tiles cannot honestly carry a feature that must appear exactly twice.
 2. **Month seams** — `float m = fract((vWorldZ + 84.0) / 1.83);` a 12 mm recessed dark line (`#060807`) with an 8 mm lane-tinted bright edge at `emissive 0.12`. 92 of them, zero geometry, zero draw calls.
 3. **Year seams** — same expression at `/21.96`; brightness → `0.5`, width → 40 mm, colour `#e8efe9`. Runs the full 56 m across all four lanes as **one crossing rank**.
 4. **Lit map** (`uLit`, `DataTexture` R8, 128×384 = 0.4375 m/texel, `LinearFilter`) — the shared playhtml record. `float w = texture(uLit, vLitUv).r;` adds `pow(w, 0.6) * 0.10` emissive in the lane colour **and** drops roughness: `roughness = mix(0.78, 0.42, w)`. That second line is the whole trick — the worn track catches the raking key as a real specular glint, so history reads by material, not by glow.
@@ -66,15 +70,17 @@ Between lanes: a 4 cm brushed-aluminium angle-iron berm (`metalness 0.9`, `rough
 
 **Fog** — `THREE.Fog('#060807', 18, 130)` desktop / `(12, 70)` mobile. Linear, not Exp2: it is also the LOD cliff, and a hard number is testable.
 
-**Lights — exactly two `Light` objects in the entire scene. Nothing else is a light.**
+**Lights — exactly two scene-wide `Light` objects. Nothing else outside a room is a light.**
 
 ```js
-key  = DirectionalLight('#bfe8e0', 1.15)  // pos (-122, 28, 18) → target (0,0,0): 13° elevation,
+key  = DirectionalLight('#bfe8e0', 1.35)  // pos (-122, 28, 18) → target (0,0,0): 13° elevation,
                                           // azimuth ACROSS the corridor so relief throws long shading
-fill = HemisphereLight('#0a1416', '#0f1a14', 0.35)
+fill = HemisphereLight('#0a1416', '#0f1a14', 0.75)
 ```
 
-**Zero shadow maps.** Relief legibility comes from the 13° key's n·l falloff plus the emissive fixture rhythm. The car gets a 4×3 m radial-gradient decal plane at `y = 0.02`, multiply-blended, for contact.
+**Ruling (shipped deviations, both sanctioned):** key/fill ship at 1.35/0.75, not 1.15/0.35 — an owner refinement (World.tsx's own comment: "blue hour, not black" read as an unlit room before fixtures existed to carry the scene; same colours, same 13° angle, only the two intensities raised so terrain reads from shading alone). Separately, each of the eight rooms carries its own breathing `pointLight` (Pavilions.tsx's `BreathingLight`) — real light objects, sanctioned as an addition rather than folded into "exactly two": intensity is driven by that room's live, shared open-count (the same number the card grid and `/pulse` print), a slow ±18% pulse phase-offset per room so the eight never sync into one beacon. This is data made visible, the same principle every fixture family in §5 already carries — it's a ninth (well-trodden-rooms-glow) data channel riding on light instead of geometry, not an accidental light count. The "exactly two" rule still holds for everything that ISN'T a per-room signal: no mast lights, no car SpotLight, no shadow-casting light anywhere.
+
+**Zero shadow maps.** Relief legibility comes from the 13° key's n·l falloff plus the emissive fixture rhythm. The car gets a 4×3 m radial-gradient decal plane at `y = 0.02`, multiply-blended, for contact — off on the 4x-throttle tier (§10 drop 3).
 
 **Camera** — chase, `fov 55`, near `0.5`, far `260`, height `3.2 m`, `9 m` behind, look-at `6 m` ahead of the car, positional damping `0.12`.
 
@@ -111,15 +117,33 @@ emissive += head * lateral * READHEAD;                 // #d8fbe6
 
 A 0.26 m bright bar locked to the car's Z, spanning the full 56 m, hugging the relief exactly because it is computed from world position. It rides up the chess massif and down the far side. One uniform per frame, zero geometry, zero overdraw. Two 0.9 m emissive blade posts ride the corridor edges at `x = ±28` at the same Z — the cursor's handles, so the line has ends. This single device does more work than everything else in the document: a transverse line crossing four parallel channels at a moving position is the universal grammar of a playhead on a chart, and it lands before anyone parses what the channels are.
 
-**Layer B — the wake (seconds).** A ground-hugging additive ribbon at `y = +0.04`, 0.9 m wide, fixed-length **240-sample ring buffer** updated in place, never growing. Per-vertex alpha `exp(-age / 2.5)` — bright at the car, gone by ~45 m back. Colour is the current lane's. At the car sits a 1.4 Hz pulsing additive ring, `#d8fbe6`, always the hottest pixel on screen, so "where am I now" is never ambiguous.
+**Layer B — the wake (seconds).** **Ruling (shipped deviation):** a 0.4 m VERTICAL wall standing off the terrain, not the ground-hugging 0.9 m ribbon at `y = +0.04` this paragraph originally specified — an owner refinement made mid-build (Wake.tsx's own doc comment): from the chase camera's 3.2 m/9 m-back vantage, a flat ribbon foreshortens into a thin line and all but disappears against the plate texture, which is the same "where am I now" ambiguity Layer A exists to solve. A wall keeps real screen height from the only angle the driver ever has. Fixed-length **240-sample ring buffer** updated in place, never growing. Per-vertex alpha `exp(-age / 2.5)` — bright at the car, gone by ~45 m back (frozen to a static distance falloff under `prefers-reduced-motion` — §11). Colour is the current lane's. At the car sits a 1.4 Hz pulsing additive ring, `#d8fbe6`, always the hottest pixel on screen, so "where am I now" is never ambiguous.
 
 **Layer C — the record (permanent, shared).** Driving writes into the `uLit` `DataTexture` with a 3-texel brush, accumulating (`v = min(1, v + 0.35)`), uploaded at 10 Hz. This array *is* the playhtml shared state. It renders as §3.4: a dim emissive groove plus the roughness drop that makes the raking key glint off worn track. Heavily driven stretches look physically polished. **Your live wake decays and pulses; the shared record does neither** — so "the needle right now" and "everywhere everyone has been" are two different visual languages, not two opacities of the same ribbon.
 
+**Transport ruling (how "*is* the playhtml shared state" ships):** not a synced texture — a 49KB `Uint8Array` re-broadcast at 10Hz per active driver is not what `usePageData` is for. Each driving tab instead publishes its own sparse, throttled position stamp (`{x, z, t}`, one small key per tab) over a shared channel; every tab, including the one that made a given stamp, applies every OTHER tab's incoming stamp into ITS OWN local array through this exact `stampLitMap`. The accumulated texture itself stays a purely local render in every tab; what's shared is the stream of positions that feed it identically everywhere. See litMap.ts's `useLitMapRemoteSync`.
+
 ## 8. A live remote visitor
+
+**Landed** — Ghosts.tsx. All three bullets ship as specified, with one
+sourcing note: "baked from SVG at join" ships as the same synchronous canvas
+2D `fillText` rasterisation Fixtures.tsx's `bakeYearTexture` and
+terrainPlate.ts's lane-name stencil already use, not a literal SVG-image
+decode — both of those files' own comments give the identical reason (no
+async race before first paint). The id itself is derived from the peer's own
+playhtml presence key, not a separately issued id.
 
 - The same inspection cart mesh, `InstancedMesh`, cap 8. Matte `#0a0d0c`, **no** hazard trim, **no** wake ribbon, one dim `#5ee6ff` tail strip at `emissive 0.4`.
 - A **ghost read-line** at their Z: `uGhostZ[4]` + `uGhostCount`, same shader expression at `0.3` intensity in `#5ee6ff` instead of `#d8fbe6`. Visitors beyond the first four get the cart only.
 - A 6-character JetBrains Mono id on a 1.1 m billboard sprite above the roll bar, baked from SVG at join.
+
+**Transport ruling:** presence, not a document. `visitors.ts`'s ledger is
+deliberately position-free (no identifiers, no per-person rows); a moving
+cart needs a live (x, z, heading) from somewhere, which is playhtml's
+`usePresence` — ephemeral, per-tab, gone the instant that tab closes, never
+written to any persisted document. Nothing here is a new kind of tracking:
+it is the same signal a driving visitor's own position already is, held only
+as long as their tab is open.
 
 Two other people reading the chart at 2021 and 2026 while you sit at 2019 is the entire collective-artifact thesis, delivered as three cursors on one instrument. No copy required.
 
@@ -131,9 +155,9 @@ Site-inspection cart, ~2.4 m × 1.5 m, **~900 tris**. Boxy cab, exposed roll bar
 
 ## 10. Mobile ladder
 
-One-time device tier at load: `matchMedia('(max-width: 820px)')` + a single `renderer.getContext().getParameter(MAX_TEXTURE_SIZE)` probe. **No runtime FPS watchdog** — untestable, and it flickers quality mid-drive.
+One-time device tier at load: `matchMedia('(max-width: 820px)')` + a load-time benchmark. **Ruling (shipped deviation):** the second probe is a fixed-work CPU benchmark (`deviceTier.ts`'s `benchmarkMs`), not `renderer.getContext().getParameter(MAX_TEXTURE_SIZE)` — a GPU capability query answers "how big a texture can this device allocate", not "is this device throttled right now", which is the actual §10 question (the doc's own worked example is a 4x CPU throttle). A fixed amount of deterministic floating-point work, timed, answers that directly and needs no WebGL context to exist yet. **No runtime FPS watchdog** — untestable, and it flickers quality mid-drive.
 
-**Dropped first (tier: any phone, and desktop by default):** the `EffectComposer` entirely — bloom and vignette. Emissive materials plus ACES tone-mapping carry the glow. Also drops: ghost read-lines from 4 → 2, `pixelRatio` clamped to 2.
+**Dropped first (tier: any phone, and desktop by default):** the `EffectComposer` entirely — bloom and vignette. Emissive materials plus ACES tone-mapping carry the glow. Also drops: ghost read-lines from 4 → 2, `pixelRatio` clamped to 2. **Ruling (shipped deviation):** the clamp ships at 1.5 (phone/desktop) and 1 (throttled tier) rather than 2 — both already under the specified ceiling, and the tighter throttled-tier value trades a little sharpness for fill-rate on exactly the devices this drop step exists to protect. Raise to 2 if a real device shows headroom; nothing downstream assumes 2.
 
 **Dropped second (tier: phone):** instance counts halve — opensource speckle 480 → 140, chess bollards render only within 60 m of the car (index-window on the instanced draw, not per-frame culling), stationing posts keep all 8 years. Lit map 128×384 → 64×192, uploaded at 5 Hz. Fog pulled to `(12, 70)` so the far 100 m of corridor is void.
 
@@ -143,7 +167,9 @@ Even at tier 3 the five-second read survives, because it never depended on fixtu
 
 ## 11. Reduced motion / no WebGL
 
-**No WebGL, or `prefers-reduced-motion` with an explicit opt-out unclicked:** serve `public/p/world/corridor.png` — a top-down orthographic bake of the same terrain under the same 13° key, produced at **build time** by `scripts/gen-world-plate.mjs` from the identical generator data (no runtime cost, no drift), with the shared lit map burned in as a static overlay and the 8 year rules and lane monograms drawn as **inline SVG on top** of it in the DOM. It reads as "a surveyed corridor with a track worn into it" while completely frozen, because the landform carries the story, not the driving. Alt text names the four strands and the date range — that is description, not metaphor exposition.
+**No WebGL, or `prefers-reduced-motion` with an explicit opt-out unclicked:** serve `public/p/world/corridor.png` — a top-down orthographic bake of the same terrain under the same 13° key, produced at **build time** by `scripts/gen-world-plate.mjs` from the identical generator data (no runtime cost, no drift), with the 8 year rules and lane monograms drawn as **inline SVG on top** of it in the DOM. It reads as "a surveyed corridor with a track worn into it" while completely frozen, because the landform carries the story, not the driving. Alt text names the four strands and the date range — that is description, not metaphor exposition.
+
+**Ruling (shipped deviation, "burned in as a static overlay"):** the shared lit map cannot be burned into a build-time PNG at all — it's playhtml's shared RUNTIME state, and `gen-world-plate.mjs` runs before any browser, let alone any driver, exists. What ships instead is a genuinely LIVE client-side SVG overlay (CorridorPlate.tsx), reading the exact same shared channel litMap.ts's `useLitMapRemoteSync` writes to: a small dot per other tab's most recent driving position. Not the accumulated texture (this fallback never accumulates its own record), but real shared data, live, not a static bake pretending to be one.
 
 **`prefers-reduced-motion` with WebGL accepted:** full scene renders, but the fly-in is skipped, the chess bollard pulse is frozen at its intensity value (rate → 0), the wake ribbon's decay is frozen (it becomes a static 45 m trail), the read-line stops at 2026-08, and the car only moves on explicit input — never idle-drifts.
 

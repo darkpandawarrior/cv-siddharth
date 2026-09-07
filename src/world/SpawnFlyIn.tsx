@@ -2,18 +2,13 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { CITY } from "./city.ts";
+import { prefersReducedMotion } from "./reducedMotion.ts";
 
 const HOLD_S = 1.5;
 const EASE_S = 1.2;
 const STATIC_FOV = 45;
 const STATIC_POS = new THREE.Vector3(0, 14, CITY.z0 - 12);
 const LOOK_TARGET = new THREE.Vector3(0, 1.5, CITY.z0 + 70);
-
-function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    : false;
-}
 
 /**
  * §4 — THE SPAWN FLY-IN. A five-second read before the driver touches a key:

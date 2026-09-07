@@ -3,6 +3,8 @@ import { ArrowUpRight, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { excelsiorEditions } from "./data/excelsior.ts";
+import { readProgress } from "./lib/excelsiorProgress.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * Excelsior — MANIT Bhopal's institute magazine, and the print half of the
@@ -33,7 +35,7 @@ interface Edition {
  * which spread this site has actually captured. Everything else on a card is
  * derived — the year and page count from gen-excelsior.mjs's output, the PDF
  * from the `source` it recorded, the cover from the file convention
- * (public/excelsior/cover-<year>.jpg) that Picture then resolves to its
+ * (heavy/excelsior/cover-<year>.jpg) that Picture then resolves to its
  * avif/webp siblings.
  *
  * A hand-typed `pdf` used to sit beside the manifest's `source` saying the
@@ -45,7 +47,7 @@ const EDITION_CHROME: Record<string, Pick<Edition, "role"> & Partial<Pick<Editio
   "2021": {
     role: "Joint Chief Editor",
     spread: {
-      src: "/excelsior/spread-2021.jpg",
+      src: heavy("/excelsior/spread-2021.jpg"),
       alt: "Excelsior '21 page 5 — the editors' farewell letter, signed by Siddharth Pandalai as Joint Chief Editor.",
       caption: "Excelsior '21, p.5 — the sign-off. My last issue on the board.",
     },
@@ -59,7 +61,7 @@ const EXCELSIOR: Edition[] = excelsiorEditions.map((e) => {
   return {
     ...e,
     ...chrome,
-    cover: `/excelsior/cover-${e.year}.jpg`,
+    cover: heavy(`/excelsior/cover-${e.year}.jpg`),
     // After the spread, not before it. Written the other way round the
     // fallback is dead for any year chrome names, which is what tsc -b was
     // reporting: "specified more than once, so this usage will be overwritten".
@@ -69,6 +71,16 @@ const EXCELSIOR: Edition[] = excelsiorEditions.map((e) => {
 
 function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void }) {
   const openable = Boolean(ed.spread);
+  // Client-only, on purpose: this mounts on the SSR'd homepage, so the first
+  // paint (server and the first client render, before hydration finishes) has
+  // to render nothing extra here — reading localStorage inside a useEffect,
+  // never at render, is what keeps that first paint identical on both sides.
+  // Opt-in only: the reader's URL stays the only thing that decides which
+  // page loads (Flipbook.tsx's own comment on that), this is just an offer.
+  const [resume, setResume] = useState<number | null>(null);
+  useEffect(() => {
+    setResume(readProgress()[ed.year]?.page ?? null);
+  }, [ed.year]);
   return (
     <figure className="magazine">
       <div className="magazine-book">
@@ -89,6 +101,15 @@ function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void
       <Link to="/excelsior" search={{ year: Number(ed.year), page: 1 }} className="magazine-action">
         Read all {ed.pages} pages <ArrowUpRight size={12} />
       </Link>
+      {resume && resume > 1 && (
+        <Link
+          to="/excelsior"
+          search={{ year: Number(ed.year), page: resume }}
+          className="magazine-action magazine-action-quiet"
+        >
+          Continue, page {resume}
+        </Link>
+      )}
       {openable && (
         <button type="button" onClick={() => onOpen(ed)} className="magazine-action magazine-action-quiet">
           The masthead

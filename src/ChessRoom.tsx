@@ -1,4 +1,5 @@
 import { Suspense, lazy, useMemo, useState, useEffect } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
@@ -44,12 +45,14 @@ function squareName(i: number): string {
 
 export type ChessTab = "findings" | "arc" | "graveyard" | "repertoire" | "play" | "puzzle" | "rhythm";
 
+// Findings states the pattern; Play the Bot is the engineering that encodes
+// it, so the two sit adjacent, ahead of the three corpus data-viz tabs.
 const TABS: { key: ChessTab; label: string }[] = [
   { key: "findings", label: "The Findings" },
+  { key: "play", label: "Play the Bot" },
   { key: "arc", label: "The Arc" },
   { key: "graveyard", label: "The Graveyard" },
   { key: "repertoire", label: "Repertoire" },
-  { key: "play", label: "Play the Bot" },
   { key: "puzzle", label: "Guess the Move" },
   { key: "rhythm", label: "Rhythm" },
 ];
@@ -488,7 +491,7 @@ export function ChessRoom() {
           // a 254 KB fetch for numbers that were already in the JS chunk.
           <>
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
-            <ChessFindings />
+            <ChessFindings onPlayTheEngine={() => setTab("play")} />
           </>
         ) : error ? (
           <p className="font-mono text-sm text-zinc-300">
@@ -500,16 +503,33 @@ export function ChessRoom() {
         ) : (
           <>
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
+            {/* Arc/graveyard/repertoire pull three.js scenes and puzzle pulls
+                PlayRoom's playhtml provider — each wrapped in `<ClientOnly>`
+                so Start's compiler strips the reference (and the dynamic
+                import behind it) from the SERVER compile entirely, which is
+                what importProtection's static scan needs: the `tab === "X"`
+                check alone is a runtime-only gate the bundler can't see
+                through, so it still resolved these chunks for SSR. `play`
+                (a chessboard, no banned specifier) and the commits chart
+                below need no such wrap. */}
             {tab === "arc" ? (
-              <ArcPane corpus={corpus} />
+              <ClientOnly>
+                <ArcPane corpus={corpus} />
+              </ClientOnly>
             ) : tab === "graveyard" ? (
-              <GraveyardPane corpus={corpus} />
+              <ClientOnly>
+                <GraveyardPane corpus={corpus} />
+              </ClientOnly>
             ) : tab === "repertoire" ? (
-              <RepertoirePane corpus={corpus} />
+              <ClientOnly>
+                <RepertoirePane corpus={corpus} />
+              </ClientOnly>
             ) : tab === "play" ? (
               <PlayPane />
             ) : tab === "puzzle" ? (
-              <PuzzlePane corpus={corpus} />
+              <ClientOnly>
+                <PuzzlePane corpus={corpus} />
+              </ClientOnly>
             ) : (
               <ChessVsCommits hours={corpus.hours} />
             )}

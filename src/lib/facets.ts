@@ -1,4 +1,10 @@
-import type { Facet } from "../data/facets";
+import type { Facet, FacetPath } from "../data/facets";
+
+/** Every facet that declares membership of `path` — the design doc's three
+ *  reading depths (§3.1), not yet wired to any consumer's UI. */
+export function facetsForPath(all: Facet[], path: FacetPath): Facet[] {
+  return all.filter((f) => f.paths.includes(path));
+}
 
 /** Ordered by when the thing was MADE, which is not when it turned up. */
 export function byChronology(all: Facet[]): Facet[] {

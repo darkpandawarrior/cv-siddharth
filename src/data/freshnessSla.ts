@@ -8,6 +8,12 @@
  * could go green on 21 days while the board rendered 45.
  *
  * So the test and the board import the same constants, and neither owns them.
+ *
+ * scripts/generators.mjs folds SLA_DAYS in as a `slaDays` field on the node
+ * that owns each named file (a generator can be read alongside its own
+ * deadline instead of a reader cross-referencing two files), reading FROM
+ * this table rather than the other way round — this stays the one place the
+ * deadlines are actually set.
  */
 
 /** Anything not named below. Generous on purpose: it is not there to nag about
@@ -29,6 +35,7 @@ export const SLA_DAYS: Record<string, number> = {
   "chessDeep.ts": 21,
   "weeb.ts": 21,
   "store.ts": 45,
+  "history.ts": 21,
 };
 
 export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
@@ -41,7 +48,7 @@ export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
  * generator DROPPED its stamp as when it kept it. A file that opts out by
  * accident is exactly the failure this exists to prevent.
  */
-export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts"];
+export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts", "history.ts"];
 
 /**
  * The two stamp shapes generators actually emit.

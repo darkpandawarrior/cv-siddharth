@@ -467,6 +467,7 @@ export function toFitReport(m: SkillMatchResult, final = false): JdFitReport {
   const unmet = m.partial.length + m.missing.length;
   return {
     score: m.score,
+    source: "offline",
     role: m.role,
     summary:
       `Matched offline against ${m.matched.length} skill${m.matched.length === 1 ? "" : "s"} in his stack` +

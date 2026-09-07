@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { LauncherButton } from "./Launcher.tsx";
-import { ArrowLeft, Play, RotateCcw, Smartphone, Wand2 } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Share2, Smartphone, Square, Wand2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
+import { ComposeParseError, parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
 import { projects } from "./data/profile.ts";
+import { isAbortError } from "./lib/chatClient.ts";
 import { useSectionNav } from "./lib/navigation.ts";
+import { NextRoomLink, useNextRoom } from "./rooms.tsx";
 
 /**
  * The Compose Playground — write a slice of Jetpack Compose, watch it render
@@ -15,6 +17,24 @@ import { useSectionNav } from "./lib/navigation.ts";
  *
  * Lazy-loaded at #compose so its parser never ships in the main bundle.
  */
+
+/* ── shareable snippets via a `?c=` URL param ─────────────────────────── */
+
+/** btoa/atob + encodeURIComponent — native and sufficient (presets run
+ *  300–900 chars, well under any URL length concern). No compression
+ *  library: add one only if a real snippet regularly exceeds ~1500 chars
+ *  after encoding. */
+export function encodeShare(code: string): string {
+  return btoa(encodeURIComponent(code)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+export function decodeShare(s: string): string | null {
+  try {
+    const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+    return decodeURIComponent(atob(b64));
+  } catch {
+    return null; // malformed param — fall through to the default preset, never throw on load
+  }
+}
 
 /* ── colour + unit resolution ────────────────────────────────────────── */
 
@@ -43,7 +63,7 @@ function hexFromArgb(raw: string): string {
     return `rgba(${r},${g},${b},${a.toFixed(3)})`;
   }
   if (h.length === 6) return `#${h}`;
-  return "#3ddc84";
+  return "#f2a13d";
 }
 
 /**
@@ -72,7 +92,7 @@ function resolveColor(expr: Expr | undefined, fallback: string): string {
     if (expr.path.startsWith("ColorHex:")) return hexFromArgb(expr.path.slice("ColorHex:".length));
     if (DS_COLORS[expr.path]) return DS_COLORS[expr.path];
     if (NAMED_COLORS[expr.path]) return NAMED_COLORS[expr.path];
-    if (expr.path.includes("primary")) return "#3ddc84";
+    if (expr.path.includes("primary")) return "#f2a13d";
     if (expr.path.includes("secondary")) return "#5ee6ff";
     if (expr.path.includes("error")) return "#ff5c5c";
   }
@@ -265,7 +285,7 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
         borderRadius: 999,
         border: "none",
         cursor: "pointer",
-        background: bg ? resolveColor(bg.args[0], "#3ddc84") : "#3ddc84",
+        background: bg ? resolveColor(bg.args[0], "#f2a13d") : "#f2a13d",
         color: "#05221a",
         fontWeight: 700,
         fontSize: 14,
@@ -534,6 +554,13 @@ Column(
     }
 }`,
   },
+  {
+    label: "Break it",
+    code: `Column(modifier = Modifier.padding(24.dp)) {
+    Text("this preset is missing a closing brace on purpose")
+    Button(onClick = { count++ }) { Text("tap") }
+`,
+  },
 ];
 
 /* ── AI scenario generation ──────────────────────────────────────────── */
@@ -557,21 +584,51 @@ export function buildGenPrompt(scenario: string): string {
   return scenario.trim().slice(0, MAX_SCENARIO_CHARS);
 }
 
-/** Pull the Kotlin out of a fenced (or bare) model reply. Forgiving — the
- *  interpreter tolerates the rest, so worst case it renders a placeholder. */
+/** Pull the Kotlin out of a fenced (or bare) model reply. Forgiving — used
+ *  only for the LIVE typing preview while a stream is still open, where a
+ *  half-arrived fence is normal and something on screen beats nothing. */
 function extractCode(text: string): string {
   const fence = text.match(/```(?:kotlin|kt)?\s*([\s\S]*?)```/i);
   return (fence ? fence[1] : text).trim();
 }
 
-/** Stream the chat endpoint and return the full concatenated text. */
-async function streamChat(userContent: string, onDelta?: (full: string) => void): Promise<string> {
+/** The strict version, used only on a FINISHED reply: null when no fence
+ *  closed at all, rather than falling back to raw prose. Feeding prose
+ *  straight to the interpreter is the actual bug `generate()` retries once
+ *  to avoid — every word becomes an `{ kind: "unknown" }` node
+ *  (composeInterpreter.ts) and renders as a wall of "not supported yet". */
+export function extractFencedCode(text: string): string | null {
+  const fence = text.match(/```(?:kotlin|kt)?\s*([\s\S]*?)```/i);
+  return fence ? fence[1].trim() : null;
+}
+
+/** Runs generated code through the SAME grammar (`parseCompose`) the editor
+ *  itself parses with — one definition of "valid", not a second one invented
+ *  for the AI path. A hard parse failure (unbalanced punctuation, a construct
+ *  the tokenizer can't even start on) is a syntax error worth retrying for;
+ *  an unrecognised call is deliberately NOT one — the interpreter is "forgiving
+ *  ... so half-finished experiments still render something" by design, and one
+ *  `{ kind: "unknown" }` node in an otherwise-valid program is that, not the
+ *  "wall of placeholders" failure mode this guards against. */
+export function validateComposeCode(code: string): { ok: true } | { ok: false; error: string } {
+  try {
+    parseCompose(code);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** Stream the chat endpoint and return the full concatenated text. `signal`
+ *  cancels the request — regenerating replaces it rather than racing it. */
+async function streamChat(userContent: string, onDelta?: (full: string) => void, signal?: AbortSignal): Promise<string> {
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     // `mode` is validated server-side against a one-value allowlist; it swaps
     // the CV system prompt for the Compose generator one.
     body: JSON.stringify({ messages: [{ role: "user", content: userContent }], mode: "compose" }),
+    signal,
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
@@ -641,12 +698,25 @@ const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField �
 
 export default function ComposePlayground() {
   const { goToSection } = useSectionNav();
-  const [code, setCode] = useState(PRESETS[0].code);
+  const nextRoom = useNextRoom();
+  // The route sets ssr: false, so this only ever mounts client-side — reading
+  // window.location here needs no typeof guard beyond what the file already
+  // does elsewhere. A malformed/missing param falls back to the first preset.
+  const [code, setCode] = useState<string>(() => {
+    const c = new URLSearchParams(window.location.search).get("c");
+    const decoded = c ? decodeShare(c) : null;
+    return decoded ?? PRESETS[0].code;
+  });
   const [live, setLive] = useState(code);
+  const [view, setView] = useState<"preview" | "ast">("preview");
   const gutterRef = useRef<HTMLDivElement>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  // The in-flight generation, if any — regenerating (a new idea chip, a
+  // re-submit) aborts it rather than racing it for who writes `code` last.
+  const genAbortRef = useRef<AbortController | null>(null);
 
   // The phone mockup is a fixed ~280x640 block — plenty of room in the
   // lg:grid-cols-2 desktop layout, but grid-rows-2 on mobile only ever gives
@@ -681,24 +751,58 @@ export default function ComposePlayground() {
   const generate = async (scenario: string) => {
     const s = scenario.trim();
     if (!s || aiBusy) return;
+    genAbortRef.current?.abort(); // belt-and-braces — see FloatingChat.send()
+    const controller = new AbortController();
+    genAbortRef.current = controller;
     setAiBusy(true);
     setAiNote(null);
     try {
-      const full = await streamChat(buildGenPrompt(s), (partial) => {
-        // Live-type the code as it streams once a fence opens, so the preview
-        // materialises in real time.
-        const gen = extractCode(partial);
-        if (gen) setCode(gen);
-      });
-      const finalCode = extractCode(full);
-      if (finalCode) setCode(finalCode);
-      else setAiNote("The model didn't return usable code — try rephrasing.");
+      let prompt = buildGenPrompt(s);
+      let fenced: string | null = null;
+      let validation: { ok: true } | { ok: false; error: string } = { ok: false, error: "no reply yet" };
+      // One retry: a reply with no ```kotlin fence at all, or one that fails
+      // the interpreter's own grammar, gets ONE clean second try with a named
+      // diagnostic — instead of the raw reply going straight to the
+      // interpreter, which is what used to hand it a wall of "not supported
+      // yet" placeholders parsed out of prose.
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const full = await streamChat(
+          prompt,
+          (partial) => {
+            // Live-type the code as it streams once a fence opens, so the preview
+            // materialises in real time.
+            const gen = extractCode(partial);
+            if (gen) setCode(gen);
+          },
+          controller.signal,
+        );
+        fenced = extractFencedCode(full);
+        validation = fenced ? validateComposeCode(fenced) : { ok: false, error: "the reply had no ```kotlin fence" };
+        if (validation.ok) break;
+        if (attempt === 1) {
+          prompt = `${buildGenPrompt(s)}\n\nYour last reply didn't work: ${validation.error}. Reply again with ONLY one fenced \`\`\`kotlin snippet in the supported subset — no prose before or after the fence.`;
+        }
+      }
+      if (fenced) setCode(fenced);
+      if (!validation.ok) {
+        setAiNote(
+          fenced
+            ? "The model's code didn't fully validate after a retry — you may see a placeholder or two."
+            : "The model didn't return usable code — try rephrasing.",
+        );
+      }
     } catch (e) {
+      if (isAbortError(e)) return; // stopped on purpose — not a failure to report
       setAiNote(e instanceof Error ? e.message : "AI generation failed. You can still edit by hand.");
     } finally {
       setAiBusy(false);
     }
   };
+
+  /** The Stop control next to Generate — aborts the in-flight generation. */
+  function stopGenerate() {
+    genAbortRef.current?.abort();
+  }
 
   // Debounce parsing so every keystroke doesn't reparse mid-word.
   useEffect(() => {
@@ -706,11 +810,14 @@ export default function ComposePlayground() {
     return () => clearTimeout(id);
   }, [code]);
 
-  const { program, error } = useMemo(() => {
+  const { program, error, errorLine } = useMemo(() => {
     try {
-      return { program: parseCompose(live), error: null as string | null };
+      return { program: parseCompose(live), error: null as string | null, errorLine: null as number | null };
     } catch (e) {
-      return { program: null as Program | null, error: e instanceof Error ? e.message : String(e) };
+      if (e instanceof ComposeParseError) {
+        return { program: null as Program | null, error: `Line ${e.line}, col ${e.col}: ${e.message}`, errorLine: e.line };
+      }
+      return { program: null as Program | null, error: e instanceof Error ? e.message : String(e), errorLine: null as number | null };
     }
   }, [live]);
 
@@ -741,8 +848,12 @@ export default function ComposePlayground() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <Smartphone size={13} className="text-accent" /> The Compose Playground — write it, watch it recompose
+          {/* compose-no-title-below-desktop: was `hidden ... lg:flex`, so a
+              phone visitor had no on-screen title. Always shown; truncates
+              instead of pushing the header's own buttons off their row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <Smartphone size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Compose Playground — write it, watch it recompose</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -776,13 +887,31 @@ export default function ComposePlayground() {
               {p.label}
             </button>
           ))}
-          <button
-            onClick={() => setCode(PRESETS[0].code)}
-            title="Reset to the first example"
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
-          >
-            <RotateCcw size={12} /> Reset
-          </button>
+          <span className="ml-auto flex items-center gap-2">
+            {shareNote && (
+              <span aria-live="polite" className="font-mono text-[11px] text-accent2">
+                {shareNote}
+              </span>
+            )}
+            <button
+              onClick={async () => {
+                const url = `${location.origin}${location.pathname}?c=${encodeShare(code)}`;
+                await navigator.clipboard.writeText(url);
+                setShareNote("link copied");
+                setTimeout(() => setShareNote(null), 2000);
+              }}
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+            >
+              <Share2 size={12} /> Share
+            </button>
+            <button
+              onClick={() => setCode(PRESETS[0].code)}
+              title="Reset to the first example"
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+            >
+              <RotateCcw size={12} /> Reset
+            </button>
+          </span>
         </div>
       </div>
 
@@ -805,13 +934,23 @@ export default function ComposePlayground() {
               aria-label="Describe a screen for the AI to build in Compose"
               className="min-w-0 flex-1 rounded-full border border-line bg-ink/60 px-4 py-1.5 text-xs text-zinc-100 outline-none transition focus:border-accent2/60 disabled:opacity-50"
             />
-            <button
-              type="submit"
-              disabled={aiBusy || !aiPrompt.trim()}
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {aiBusy ? "generating…" : "Generate"}
-            </button>
+            {aiBusy ? (
+              <button
+                type="button"
+                onClick={stopGenerate}
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-accent2 ring-1 ring-inset ring-accent2/60 transition hover:bg-accent2/10"
+              >
+                <Square size={11} fill="currentColor" /> Stop
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!aiPrompt.trim()}
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Generate
+              </button>
+            )}
           </form>
           <div className="flex flex-wrap items-center gap-1.5">
             {AI_IDEAS.map((idea) => (
@@ -844,7 +983,7 @@ export default function ComposePlayground() {
               className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-[1.6] text-muted"
             >
               {Array.from({ length: lineCount }, (_, i) => (
-                <div key={i}>{i + 1}</div>
+                <div key={i} className={i + 1 === errorLine ? "text-[#ff8f8f]" : undefined}>{i + 1}</div>
               ))}
             </div>
             <textarea
@@ -881,7 +1020,7 @@ export default function ComposePlayground() {
                 }
               }}
               aria-label="Compose code editor"
-              aria-describedby="compose-editor-escape-hint"
+              aria-describedby={error ? "compose-editor-escape-hint compose-parse-error" : "compose-editor-escape-hint"}
             />
           </div>
           <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
@@ -895,43 +1034,82 @@ export default function ComposePlayground() {
         {/* Preview */}
         <div
           ref={previewPaneRef}
-          className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6"
+          className="relative flex min-h-0 flex-col items-center justify-center overflow-auto bg-void/40 p-6"
         >
-          {/* Reserves the mockup's SCALED footprint in the flex layout — a
-              transform alone shrinks the paint but not the box it's centered
-              in, which would leave this pane scrolling past empty space. */}
-          <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
-            <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
-              <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-                {/* status bar */}
-                <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
-                  <span>9:41</span>
-                  <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
-                  <span>▮▮▮ 100%</span>
-                </div>
-                <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
-                  {error ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                      <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                      <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
-                    </div>
-                  ) : program ? (
-                    <div className="flex h-full flex-col">
-                      {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
-            </div>
+          <div className="mb-3 flex items-center gap-1 rounded-full border border-line p-0.5 text-[11px] font-mono">
+            <button
+              type="button"
+              onClick={() => setView("preview")}
+              aria-pressed={view === "preview"}
+              className={view === "preview" ? "rounded-full bg-accent px-3 py-1 text-ink" : "rounded-full px-3 py-1 text-muted"}
+            >
+              preview
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("ast")}
+              aria-pressed={view === "ast"}
+              className={view === "ast" ? "rounded-full bg-accent px-3 py-1 text-ink" : "rounded-full px-3 py-1 text-muted"}
+            >
+              parse tree
+            </button>
           </div>
+
+          {view === "ast" ? (
+            <pre className="h-[520px] w-full max-w-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-line bg-[#0b0f0d] p-4 font-mono text-[11px] leading-relaxed text-accent2">
+              {program ? JSON.stringify(program, null, 2) : error}
+            </pre>
+          ) : (
+            /* Reserves the mockup's SCALED footprint in the flex layout — a
+                transform alone shrinks the paint but not the box it's centered
+                in, which would leave this pane scrolling past empty space. */
+            <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
+              <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
+                <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+                  {/* status bar */}
+                  <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
+                    <span>9:41</span>
+                    <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
+                    <span>▮▮▮ 100%</span>
+                  </div>
+                  <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
+                    {error ? (
+                      <div
+                        id="compose-parse-error"
+                        role="alert"
+                        aria-live="assertive"
+                        className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
+                      >
+                        <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
+                        <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
+                      </div>
+                    ) : program ? (
+                      <div className="flex h-full flex-col">
+                        {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
       <footer className="border-t border-line bg-ink/70 px-4 py-2 sm:px-6">
-        <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-muted" title={SUPPORTED}>
-          supported: {SUPPORTED}
-        </p>
+        {/* D1: this room drew its own chrome and so never got the
+            next-room pager RoomFrame gives the other five rooms — folded
+            into the footer it already has rather than adding a second one. */}
+        {nextRoom && (
+          <NextRoomLink next={nextRoom} className="mx-auto mb-2 max-w-7xl border-b border-line pb-2" />
+        )}
+        <details className="mx-auto max-w-7xl">
+          <summary className="cursor-pointer font-mono text-[10px] text-muted marker:text-accent">
+            supported grammar, {PRESETS.length} examples, tap to expand
+          </summary>
+          <p className="mt-1 font-mono text-[10px] leading-relaxed text-muted">{SUPPORTED}</p>
+        </details>
       </footer>
     </div>
   );

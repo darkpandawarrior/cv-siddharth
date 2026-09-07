@@ -44,6 +44,7 @@ const storyOut = join(dataDir, "storyMap.ts");
 const { projects } = await import(join(dataDir, "profile.ts"));
 const { RELATED_SERIES } = await import(join(dataDir, "connections.ts"));
 const { writing } = await import(join(dataDir, "writing.ts"));
+const { HEAVY_ASSET_BASE } = await import(join(root, "src", "lib", "assetBase.ts"));
 const { surfaces } = await import(join(dataDir, "surfaces.ts"));
 const { BOOKS_BEFORE_BROS, SERIES_PROJECT } = await import(join(dataDir, "writingMeta.ts"));
 
@@ -105,13 +106,24 @@ for (const p of projects) {
   }
 }
 
-// runs-here (measured): any targets[].liveUrl hosted on this domain (a
-// relative path), project → portfolio. Guarded against portfolio's own
-// liveUrl, which would otherwise draw an edge to itself.
+// runs-here (measured): any targets[].liveUrl this repo ships itself, project
+// → portfolio. Guarded against portfolio's own liveUrl, which would otherwise
+// draw an edge to itself. Used to be a relative-path check ("hosted on this
+// domain"), but these builds moved off Vercel onto GitHub Pages (see
+// src/lib/assetBase.ts) — liveUrl is now HEAVY_ASSET_BASE-prefixed, so a
+// relative-only check silently stopped matching any of them and this
+// generator quietly dropped every one of these edges on its next run. `detail`
+// still records the relative path, not the absolute URL, to match its
+// pre-existing shape and stay short.
 for (const p of projects) {
   if (p.slug === "portfolio") continue;
   for (const t of p.targets ?? []) {
-    if (t.liveUrl?.startsWith("/")) add(p.slug, "portfolio", "runs-here", "measured", t.liveUrl);
+    const rel = t.liveUrl?.startsWith("/")
+      ? t.liveUrl
+      : t.liveUrl?.startsWith(HEAVY_ASSET_BASE)
+        ? t.liveUrl.slice(HEAVY_ASSET_BASE.length)
+        : null;
+    if (rel) add(p.slug, "portfolio", "runs-here", "measured", rel);
   }
 }
 // Every room/corpus surface is, definitionally, a route on this same domain —

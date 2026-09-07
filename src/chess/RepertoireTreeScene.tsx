@@ -42,10 +42,18 @@ const TREE_Y = 5.2;
 const BRANCH_R = 1.55;
 const TREE_MAX_BRANCHES = 6;
 
-const PLATFORM_STYLE: Record<PlatformKey, { colour: string; label: string }> = {
-  lichess: { colour: "#5ee6ff", label: "lichess" },
-  chesscom: { colour: "#3ddc84", label: "chess.com" },
+const PLATFORM_LABEL: Record<PlatformKey, string> = {
+  lichess: "lichess",
+  chesscom: "chess.com",
 };
+// Resolved at call time (readToken), not a frozen module-scope literal, so
+// both scene-token colours follow a theme swap.
+function platformStyle(key: PlatformKey): { colour: string; label: string } {
+  return {
+    colour: key === "lichess" ? readToken("--color-probe", "#5ee6ff") : readToken("--color-signal", "#3ddc84"),
+    label: PLATFORM_LABEL[key],
+  };
+}
 
 const THIN_COLOUR = "#6b7280";
 
@@ -174,7 +182,7 @@ export default function RepertoireTreeScene({
           const siblings = years[i].platforms;
           const nudge = siblings.length > 1 ? (siblings.findIndex((s) => s.key === p.key) - 0.5) * 0.5 : 0;
           const bx = x(i) + nudge;
-          const style = PLATFORM_STYLE[p.key];
+          const style = platformStyle(p.key);
           const round = p.key === "chesscom";
           if (p.thin) {
             return (
@@ -258,7 +266,7 @@ export default function RepertoireTreeScene({
 
       {/* ---- the tree: the scrubbed year's repertoire, one hub per platform ---- */}
       {selectedYear?.platforms.map((slice, si, all) => {
-        const style = PLATFORM_STYLE[slice.key];
+        const style = platformStyle(slice.key);
         const round = slice.key === "chesscom";
         const z = laneZ(slice.key) * 1.6;
         // Two platforms in one year stand side by side as well as on separate

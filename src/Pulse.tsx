@@ -1,16 +1,10 @@
 import { useState } from "react";
 import {ArrowLeft, Activity } from "lucide-react";
+import { ClientOnly } from "@tanstack/react-router";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import {
-  PULSE_EVENTS,
-  groupPulse,
-  totalInteractions,
-  touchedCount,
-  usePulseCounts,
-  type PulseEvent,
-} from "./play/pulse.ts";
+import { PULSE_EVENTS, groupPulse, totalInteractions, touchedCount, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
 import { DayBars, useCountUp, useVisitorLedger } from "./play/Visitors.tsx";
 import { isoDay, recentDays, sumDays, topZones, totalVisitors, type ZoneTally } from "./play/visitors.ts";
 
@@ -166,6 +160,13 @@ function PulseInner() {
      number with nothing behind it. A delta the visitor's own session observed
      is theirs to check. */
   const delta = arrived > 0 ? Math.max(0, total - arrived) : 0;
+  /* pulse-1: the shared document has not synced in THIS browser yet, not "no
+   * one has ever touched anything" — the counter is global, so another tab
+   * open at this same instant can already show hundreds. `say nothing rather
+   * than say zero` (Visitors.tsx) is the rule this page's own zero-flavoured
+   * copy was breaking: "0 interactions", "nobody in yet" and the day-trace's
+   * "quiet" line all read as a confirmed answer instead of a pending one. */
+  const reading = arrived === 0;
   // One scale across the whole page, so a bar's length means the same thing in
   // every group — per-group scaling would make a room with 3 visits look as
   // busy as one with 300.
@@ -233,8 +234,12 @@ function PulseInner() {
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <Activity size={13} className="text-accent" /> The Pulse — what visitors actually touch
+          {/* weeb-1: was `hidden ... lg:flex`, so a phone visitor had no
+              on-screen title. Always shown; truncates instead of pushing the
+              presence badge/Ask button off their own row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <Activity size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Pulse — what visitors actually touch</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             {/* No longer phone-hidden. It already renders nothing below two
@@ -280,25 +285,35 @@ function PulseInner() {
               a digit COUNT change — twice, at sub-0.002 each. If a reservation
               is ever wanted back, size it off a hidden {total} sizer span and
               never off `ch`. */}
-          <span
-            key={delta}
-            className={`inline-block tabular-nums ${delta > 0 ? "pulse-flash" : ""}`}
-            aria-hidden="true"
-          >
-            {shownTotal.toLocaleString()}
-          </span>{" "}
-          <span className="text-accent" aria-hidden="true">interaction{total === 1 ? "" : "s"}</span>
-          {people > 0 && (
-            /* aria-hidden like the figures beside it. Without this the only
-               un-hidden text in the <h1> is "from 2,689 people", so a screen
-               reader announces the page's one heading as a dangling
-               prepositional phrase. The status region below reads the whole
-               sentence, numbers included. */
-            <span aria-hidden="true">
-              {" "}
-              <span className="text-muted">from</span>{" "}
-              {people.toLocaleString()} <span className="text-accent2">{people === 1 ? "person" : "people"}</span>
-            </span>
+          {reading ? (
+            // pulse-1: the doc has not synced in this browser yet. Not "0" —
+            // this is a live, global counter and another tab can already be
+            // showing hundreds at this instant, so a zero here would be a
+            // confirmed wrong answer, not a pending one.
+            <span aria-hidden="true" className="text-muted">reading the live counter…</span>
+          ) : (
+            <>
+              <span
+                key={delta}
+                className={`inline-block tabular-nums ${delta > 0 ? "pulse-flash" : ""}`}
+                aria-hidden="true"
+              >
+                {shownTotal.toLocaleString()}
+              </span>{" "}
+              <span className="text-accent" aria-hidden="true">interaction{total === 1 ? "" : "s"}</span>
+              {people > 0 && (
+                /* aria-hidden like the figures beside it. Without this the only
+                   un-hidden text in the <h1> is "from 2,689 people", so a screen
+                   reader announces the page's one heading as a dangling
+                   prepositional phrase. The status region below reads the whole
+                   sentence, numbers included. */
+                <span aria-hidden="true">
+                  {" "}
+                  <span className="text-muted">from</span>{" "}
+                  {people.toLocaleString()} <span className="text-accent2">{people === 1 ? "person" : "people"}</span>
+                </span>
+              )}
+            </>
           )}
         </h1>
         {/* The headline above is live — it moves whenever anyone, anywhere,
@@ -313,9 +328,11 @@ function PulseInner() {
             rather than a region per row — 30-odd counters each announcing
             themselves would be unusable. */}
         <p role="status" aria-live="polite" className="sr-only">
-          {total.toLocaleString()} interaction{total === 1 ? "" : "s"}
-          {people > 0 ? ` from ${people.toLocaleString()} ${people === 1 ? "person" : "people"}` : ""}.{" "}
-          {touched} of {EVENT_COUNT} things touched so far.
+          {reading
+            ? "reading the live counter…"
+            : `${total.toLocaleString()} interaction${total === 1 ? "" : "s"}${
+                people > 0 ? ` from ${people.toLocaleString()} ${people === 1 ? "person" : "people"}` : ""
+              }. ${touched} of ${EVENT_COUNT} things touched so far.`}
         </p>
         {delta > 0 && (
           <p className="mt-2 font-mono text-sm text-signal">+{delta} since you opened this page</p>
@@ -365,8 +382,13 @@ function PulseInner() {
             ) : (
               /* The empty state lives inside the reserved box rather than
                  replacing the caveat line below it, so swapping one for the
-                 other can never change any element's height. */
-              <p className="w-full font-mono text-[11px] text-muted">quiet — nothing counted in this window yet.</p>
+                 other can never change any element's height.
+
+                 pulse-1: `knowsRoom` false means this browser has not synced
+                 the shared ledger, not that the window is confirmed empty —
+                 the ledger is the same document every visitor reads, so
+                 "quiet" here was a guess dressed as a fact. */
+              <p className="w-full font-mono text-[11px] text-muted">reading the live counter…</p>
             )}
           </div>
           <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted">
@@ -536,7 +558,12 @@ function PulseInner() {
               <div key={f.label}>
                 <p className="text-sm leading-relaxed text-zinc-300">
                   {f.label} —{" "}
-                  {f.entered > 0 && f.engaged > 0 ? (
+                  {reading ? (
+                    // pulse-1: pre-arrival every funnel reads entered:0,
+                    // engaged:0 — that is the doc not having synced yet, not
+                    // this specific room being confirmed empty.
+                    <span className="text-muted">reading the live counter…</span>
+                  ) : f.entered > 0 && f.engaged > 0 ? (
                     <>
                       {f.entered.toLocaleString()} came in, {f.engaged.toLocaleString()} things done inside{" "}
                       <span className="text-muted">· {(f.engaged / f.entered).toFixed(1)}× per visit</span>
@@ -697,10 +724,27 @@ function PulseInner() {
   );
 }
 
+const pulseLoadingFallback = (
+  <div className="flex min-h-screen items-center justify-center bg-void font-mono text-sm text-muted">
+    loading the pulse…
+  </div>
+);
+
 export default function Pulse() {
+  // /pulse's whole argument is live, playhtml-backed counters — there is no
+  // crawlable-text case for server-rendering it (the route is already
+  // `ssr: false`), so the entire tree goes behind `<ClientOnly>` rather than
+  // gating just the provider. `ssr: false` alone does not keep PlayRoom.tsx
+  // and pulse.ts (both import @playhtml/react) out of the SSR bundle — every
+  // route file is still eagerly imported by routeTree.gen.ts — so
+  // importProtection's static scan reached them regardless. `<ClientOnly>` is
+  // what Start's compiler recognises to strip this subtree, and the dynamic
+  // imports behind it, from the SERVER compile entirely.
   return (
-    <PlayRoom>
-      <PulseInner />
-    </PlayRoom>
+    <ClientOnly fallback={pulseLoadingFallback}>
+      <PlayRoom>
+        <PulseInner />
+      </PlayRoom>
+    </ClientOnly>
   );
 }

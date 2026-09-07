@@ -129,7 +129,12 @@ test.describe("the world drives on a phone", () => {
     test.slow();
     await enterWorld(page);
 
-    const stick = page.getByRole("slider", { name: /steer and throttle/i });
+    // Just "steer" (not "steer and throttle"): the one-thumb auto-throttle
+    // fix (Hud.tsx's `TOUCH_AUTO_THROTTLE`) changed the accessible name to
+    // "Steer: ... Throttle is automatic ..." when it's on, and back to the
+    // old "Steer and throttle: ..." if that constant is ever flipped off —
+    // this has to match either label without knowing which one shipped.
+    const stick = page.getByRole("slider", { name: /steer/i });
     await expect(stick, "no thumbstick on a coarse-pointer device").toBeVisible();
     const box = await stick.boundingBox();
     if (!box) throw new Error("thumbstick has no box");

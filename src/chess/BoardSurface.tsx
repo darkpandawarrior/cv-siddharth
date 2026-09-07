@@ -57,7 +57,7 @@ function pieceName(piece: PieceDataType | null): string {
  *  stable ref would have its answers memoised for the life of the page. */
 export type BoardPick = { square: string; targets: string[] } | null;
 
-const HIGHLIGHT = "rgba(61,220,132,";
+const HIGHLIGHT = "rgba(242,161,61,"; // CAL-1 --color-accent
 
 export function BoardSurface({
   id,
@@ -137,8 +137,11 @@ export function BoardSurface({
           allowDrawingArrows: false,
           showAnimations: !reduced,
           animationDurationInMs: reduced ? 0 : 200,
-          darkSquareStyle: { backgroundColor: "#2a3b33" },
-          lightSquareStyle: { backgroundColor: "#c9d6cd" },
+          // Warm brown/tan, off the site's pre-CAL-1 green-tinted board —
+          // no site token is a light-mode neutral (the palette is dark-only),
+          // so these two stay literal hex rather than reaching for one.
+          darkSquareStyle: { backgroundColor: "#3a2f26" },
+          lightSquareStyle: { backgroundColor: "#d9c9ae" },
           onPieceDrop: ({ sourceSquare, targetSquare }) =>
             targetSquare && onDrop ? onDrop(sourceSquare, targetSquare) : false,
           onSquareClick: ({ square }) => onSquareClick?.(square),

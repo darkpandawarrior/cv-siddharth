@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * Narrated showcase film: autoplays muted when scrolled into view, pauses
  * when scrolled away, one tap to hear the voiceover. Captions ship as a WebVTT
  * track so the narration is readable with sound off (and by screen readers
  * that surface tracks). Files are produced by the showcase workflow under
- * public/projects/<slug>/showcase/.
+ * heavy/projects/<slug>/showcase/ (served from HEAVY_ASSET_BASE, see assetBase.ts).
  */
 export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [ended, setEnded] = useState(false);
   const [line, setLine] = useState("");
-  const base = `/projects/${slug}/showcase`;
+  const base = heavy(`/projects/${slug}/showcase`);
 
   /**
    * Reload when the project changes.

@@ -20,7 +20,23 @@
      These were hardcoded across the 3D/canvas scenes, which is why a theme swap
      never reached them: r3f props and canvas ctx take resolved strings, not
      var(). Read them through readColor() in themeColor.ts, never inline.
-     Frequencies are the pre-migration hardcoded counts, kept as a receipt. */
+     Frequencies are the pre-migration hardcoded counts, kept as a receipt.
+
+     RULING (inc4-superseded-note): this is its OWN system, not a CAL-1 alias.
+     signal/probe/warn/alt/danger are the world's four-lane identity (see
+     world/palette.ts's laneColors — work/chess/writing/opensource each need a
+     visibly distinct hue, gated for colour-vision separation by
+     scripts/validate_palette.js), which CAL-1's two-channel measured/baseline
+     model has no room for without collapsing two of those four lanes onto one
+     amber (palette.test.ts already pins the four-lanes-stay-four-lanes
+     invariant). .ink-world overrides both systems independently and gives them
+     DIFFERENT hex values (accent #d9a441 vs signal #e3a83c) — proof they are
+     two systems, not one under two names. So: the 3D/canvas scenes keep
+     reading --color-signal/--color-probe as they already do; the CAL-1 sweep
+     (accent/accent2) never touches them. What the sweep DOES fix is scenes
+     that skipped the token entirely and still hold a raw #3ddc84/#5ee6ff
+     literal — those move to read the SAME scene tokens via readToken()/
+     readColor(), never to accent/accent2. */
   --color-signal: #3ddc84; /* 71x — "lit/live/active" in every scene */
   --color-signal-dim: #8ff0b4; /* 7x — the same signal, attenuated */
   --color-probe: #5ee6ff; /* 43x — unlit/idle counterpart to signal */
@@ -242,6 +258,36 @@ body {
   background-color: var(--color-ink);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  /* Global chrome clearance. FloatingChat.tsx's collapsed launcher is a fixed
+     56px circle sitting bottom-6/right-6 in every viewport, on top of
+     whatever the page has scrolled underneath it, and nothing reserved that
+     corner. Two dimensions, both needed — a document-end bug and a
+     first-viewport bug are the same root cause seen at two scroll
+     positions:
+       - padding-bottom reserves the launcher's footprint at the true end of
+         the document, so trailing content (/map's room-to-room link,
+         /resume's closing paragraph) isn't the last thing the viewport can
+         show flush against the bottom edge.
+       - padding-right reserves the same footprint as a permanent column
+         down the right edge of every route, because the launcher is
+         viewport-fixed, not document-end-fixed — it also sits over
+         whatever text happens to occupy that corner AT ANY scroll position,
+         which is what made /shipped's fourth stat, /chess's thesis
+         sentence, and mid-paragraph text on /project/candidai and
+         /project/stutter collide on first paint, nowhere near the
+         document's end. A column no text ever enters removes the overlap
+         at every scroll position at once — this repo's containers are all
+         `mx-auto max-w-* px-6` flow children of body, so a body-level
+         padding-right shrinks their available width instead of any of them
+         needing their own clearance.
+     Sized to the launcher's own footprint (3.5rem + its 1.5rem offset + a
+     margin) in both directions, since the footprint is square. A custom
+     property rather than a bare number so CommandPalette's own fixed corner
+     (bottom-6 left-6, same footprint) can be sized from the same value if
+     it ever needs to. */
+  --chat-fab-clearance: 6.5rem;
+  padding-bottom: var(--chat-fab-clearance);
+  padding-right: var(--chat-fab-clearance);
 }
 
 /* The ambient gradient wash lives on a fixed, GPU-composited layer instead of
@@ -436,30 +482,50 @@ html.resume-mode body {
   background-color: #e4e4e7;
 }
 
-/* The command palette trigger is body level, so it sits ON the résumé's light
-   page rather than inside it and keeps the muted zinc it was given for a dark
-   one. That is 2.06:1 against #e4e4e7, which Lighthouse scores as a real
-   contrast failure, and lighthouserc.json asserts accessibility at 1.00 with
-   /resume in its URL list. The e2e axe pass did not catch it: axe computes the
-   same 2.06 but scores colour-contrast as serious only when it can resolve the
-   background, and a body-level element over a themed page is exactly the case
-   it reports differently.
-
-   zinc-600 measures 6.09:1 here, against zinc-400's 2.06. No single value
-   clears 4.5 on both surfaces (zinc-400 is 7.36 on the dark site and fails
-   light; zinc-600 is 2.50 on dark and fails there), so this is scoped to
-   résumé mode rather than changed globally. */
+/* The button keeps its own `bg-ink/90` pill in every mode, résumé included —
+   so the background behind its text was never the résumé's light body, it is
+   that pill, composited close to solid ink either way. A prior fix here read
+   Lighthouse's 2.06-against-#e4e4e7 report at face value and switched the text
+   to zinc-600 to answer a light background — which made the REAL, rendered
+   background (the dark pill) fail contrast instead (axe measured 2:1 at
+   390px, where the pill sits over exposed body rather than the white résumé
+   article and the two colours the button could plausibly be read against
+   diverge furthest). Pinning the pill to a fully opaque, alpha-free
+   background removes the ambiguity for every tool rather than chasing
+   whichever backdrop a given viewport happens to expose: the button now has
+   one real background regardless of what is behind it, so one light-on-dark
+   pairing (already 7.36:1 in the non-résumé state) is correct everywhere. */
 html.resume-mode .palette-trigger {
-  color: #52525b;
+  background-color: var(--color-ink);
+  color: var(--color-text);
 }
 
-/* Scroll-reveal */
+/* Scroll-reveal. Visible is the base state — see the /ops rule below against
+   parking an instrument at opacity 0 as its default; the same rule applies
+   here. Reveal.tsx's mount effect adds .reveal-armed only once it knows the
+   element will actually get un-hidden again, and that class carries its own
+   `transition: none` so arming an element never itself animates (only the
+   later .revealed transition does — the opposite would fade content OUT on
+   every page load, which is worse than the bug this replaces). */
 .reveal {
-  opacity: 0;
-  transform: translateY(16px);
   transition:
     opacity var(--dur-slow) var(--ease-out-quart),
     transform var(--dur-slow) var(--ease-out-quart);
+}
+
+/* :not(.revealed) is load-bearing, not decoration: Reveal.tsx never removes
+   .reveal-armed once .revealed is added (both stay on the element together),
+   and `transition: none` beats .reveal's transition declaration on
+   specificity alone regardless of which rule comes second in the file — so
+   without this guard every reveal snaps straight to visible with no fade,
+   silently undoing the "later .revealed transition" this file's own comment
+   above promises. Verified against a real Chromium cascade, not reasoned
+   about: computed transitionDuration was "0s" without the guard, "0.4s,
+   0.4s" with it. */
+.reveal.reveal-armed:not(.revealed) {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: none;
 }
 
 .reveal.revealed {
@@ -468,7 +534,8 @@ html.resume-mode .palette-trigger {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  .reveal,
+  .reveal.reveal-armed {
     opacity: 1;
     transform: none;
     transition: none;
@@ -724,6 +791,10 @@ html.resume-mode .palette-trigger {
 }
 .cell-flash-bad { animation: cell-flash-bad 0.5s ease-out both; }
 .cell-flash-good { animation: cell-flash-good 0.6s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .cell-flash-bad,
+  .cell-flash-good { animation: none; }
+}
 
 /* Circuit divider: a signal pulse traveling the seam between sections */
 .circuit-line {
@@ -747,8 +818,34 @@ html.resume-mode .palette-trigger {
     left: 112%;
   }
 }
+/* Telemetry nodes: static dots that flash once per 8s loop when the
+   traveling pulse above passes their position — same seam, a control-room
+   "reading taken here" read rather than a second unrelated animation. */
+.circuit-node {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-line);
+  transform: translateY(-50%);
+  animation: circuit-node-pulse 8s ease-out infinite;
+}
+@keyframes circuit-node-pulse {
+  0% {
+    background: var(--color-accent);
+    box-shadow: 0 0 6px 1px var(--color-accent);
+  }
+  6%,
+  100% {
+    background: var(--color-line);
+    box-shadow: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .circuit-line::after {
+  .circuit-line::after,
+  .circuit-node {
     animation: none;
     display: none;
   }
@@ -2409,6 +2506,94 @@ html.resume-mode .palette-trigger {
   color: var(--color-accent);
 }
 
+/* The scrubber: a native range so keyboard/touch dragging are free (rung 4 —
+   no library), plus absolutely-positioned tick overlays for the marked pages,
+   the same way .flipbook-thumb already overlays its page number. */
+.flipbook-progress {
+  display: flex;
+  flex: 1 1 220px;
+  min-width: 160px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flipbook-scrubber {
+  position: relative;
+  width: 100%;
+}
+.flipbook-scrubber-track {
+  display: block;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-line);
+  cursor: pointer;
+}
+.flipbook-scrubber-track::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+.flipbook-scrubber-track::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+.flipbook-scrubber-track::-moz-range-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-line);
+}
+.flipbook-scrubber-tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  transform: translate(-1px, -50%);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.flipbook-scrubber-tick-wrote {
+  background-color: var(--color-accent);
+}
+.flipbook-scrubber-tick-about {
+  background-color: var(--color-accent2);
+}
+.flipbook-scrubber-tick-credit {
+  background-color: var(--color-muted);
+}
+
+/* "You're on: X" — the chip row's colour convention (routes/excelsior.tsx),
+   surfaced again at the moment you actually land on a marked page. */
+.flipbook-mark-badge {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  padding: 0.0625rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+}
+.flipbook-mark-badge-wrote {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  color: var(--color-accent);
+}
+.flipbook-mark-badge-about {
+  border-color: color-mix(in srgb, var(--color-accent2) 35%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent2) 5%, transparent);
+  color: var(--color-accent2);
+}
+.flipbook-mark-badge-credit {
+  color: var(--color-text-dim);
+}
+
 .flipbook-stage {
   position: relative;
   display: flex;
@@ -2570,12 +2755,98 @@ html.resume-mode .palette-trigger {
   font-size: 0.625rem;
   color: var(--color-muted);
 }
+/* A marked page's thumbnail: border tint using the same tokens as the chip
+   row and the scrubber ticks, plus a glyph in the corner the page number
+   span doesn't already own. */
+.flipbook-thumb-wrote {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+.flipbook-thumb-about {
+  border-color: color-mix(in srgb, var(--color-accent2) 45%, transparent);
+}
+.flipbook-thumb-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(5, 7, 10, 0.8);
+  padding: 0.0625rem 0.3125rem;
+  font-size: 0.6875rem;
+}
+
+/* Search dialog — same sheet chrome as the contact sheet, a plain input and
+   result list in place of the thumbnail grid. */
+.flipbook-search-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.flipbook-search-input {
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-card);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+.flipbook-search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+.flipbook-search-note {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+.flipbook-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.flipbook-search-result {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.125rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out-quart);
+}
+.flipbook-search-result:hover {
+  border-color: var(--color-accent);
+}
+.flipbook-search-result-page {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-accent);
+}
+.flipbook-search-result-snippet {
+  font-size: 0.8125rem;
+  color: var(--color-text-dim);
+}
+.flipbook-search-empty {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
 
 /* Single page below the fold-in-half width — a two-page spread at 400px wide
    is two unreadable columns. */
 @media (max-width: 767px) {
   .flipbook-side-left {
     display: none;
+  }
+  /* The bar now carries a third block (the scrubber). Stacking it full-width
+     below the years/tools row is what keeps the range usably wide on a phone
+     instead of squeezed to a sliver between them. */
+  .flipbook-bar {
+    flex-wrap: wrap;
+  }
+  .flipbook-progress {
+    order: 3;
+    flex-basis: 100%;
   }
   /* Width leads on a phone, height follows. Sizing by height alone is right on
      a laptop, where the window is wider than a page is tall, and wrong on a

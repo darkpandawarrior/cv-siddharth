@@ -34,6 +34,16 @@ describe("tierBudget", () => {
     expect(b3.dprMax).toBeLessThanOrEqual(b2.dprMax);
     // Fog is pulled in (both numbers shrink), never pushed out.
     expect(b2.fogNearFar[1]).toBeLessThanOrEqual(b1.fogNearFar[1]);
+    // §10 drop 2 — the lit map halves (both dimensions) and its upload rate
+    // drops, on the phone tier, and tier 3 never re-inflates it.
+    expect(b2.litMapSize[0] * b2.litMapSize[1]).toBeLessThanOrEqual(b1.litMapSize[0] * b1.litMapSize[1]);
+    expect(b3.litMapSize[0] * b3.litMapSize[1]).toBeLessThanOrEqual(b2.litMapSize[0] * b2.litMapSize[1]);
+    expect(b2.litMapHz).toBeLessThanOrEqual(b1.litMapHz);
+    expect(b3.litMapHz).toBeLessThanOrEqual(b2.litMapHz);
+    // Phase 5 — ghost read-lines drop from 4 to 2 on the phone tier (§10),
+    // and tier 3 keeps that drop rather than re-inflating it.
+    expect(b2.ghostReadlineCap).toBeLessThanOrEqual(b1.ghostReadlineCap);
+    expect(b3.ghostReadlineCap).toBeLessThanOrEqual(b2.ghostReadlineCap);
   });
 
   it("never returns a non-positive budget", () => {
@@ -43,6 +53,9 @@ describe("tierBudget", () => {
       expect(b.dprMax).toBeGreaterThan(0);
       for (const v of b.groundSegments) expect(v).toBeGreaterThan(0);
       for (const v of b.fogNearFar) expect(v).toBeGreaterThan(0);
+      for (const v of b.litMapSize) expect(v).toBeGreaterThan(0);
+      expect(b.litMapHz).toBeGreaterThan(0);
+      expect(b.ghostReadlineCap).toBeGreaterThan(0);
     }
   });
 });

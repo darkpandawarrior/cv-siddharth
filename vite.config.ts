@@ -6,8 +6,67 @@ import tailwindcss from "@tailwindcss/vite";
 import { config as loadEnv } from "dotenv";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { gzipSync } from "node:zlib";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
 loadEnv({ path: ".env.local" });
+
+// Same extensions this repo actually ships under heavy/ — the Wasm demos,
+// screenshots/showcase films, Excelsior pages, OG cards. Not a general-purpose
+// static server; see heavyAssetsDevPlugin below.
+const MIME: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".pck": "application/octet-stream",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".mp4": "video/mp4",
+  ".m4a": "audio/mp4",
+  ".vtt": "text/vtt; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+/**
+ * Serves the top-level `heavy/` directory — the Wasm demos, project
+ * screenshots/showcase films, Excelsior page scans and OG cards moved off
+ * Vercel onto GitHub Pages (see src/lib/assetBase.ts) — under Vite dev/preview
+ * ONLY when VITE_HEAVY_ASSET_BASE resolves same-origin (unset in prod, so this
+ * middleware is a no-op there; set to "/" locally to develop without network).
+ *
+ * `heavy/` sits outside `public/` on purpose, so Vite's own static-asset
+ * copy/serve never touches it — the whole point is that these 251 MB never
+ * ride along with an ordinary build. This is the one place that deliberately
+ * reaches back into it, and only for local dev.
+ */
+function heavyAssetsDevPlugin(): Plugin {
+  const root = join(import.meta.dirname, "heavy");
+  const sameOrigin = (process.env.VITE_HEAVY_ASSET_BASE ?? "") === "/";
+  const handler = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+    if (!sameOrigin) return next();
+    const url = (req.url ?? "").split("?")[0];
+    const path = join(root, decodeURIComponent(url));
+    if (!path.startsWith(root) || !existsSync(path) || !statSync(path).isFile()) return next();
+    res.setHeader("content-type", MIME[extname(path).toLowerCase()] ?? "application/octet-stream");
+    createReadStream(path).pipe(res);
+  };
+  return {
+    name: "heavy-assets-dev",
+    configureServer(server) {
+      server.middlewares.use(handler);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(handler);
+    },
+  };
+}
 
 /**
  * Serves /api/chat during local dev with the same web-standard handler
@@ -58,15 +117,28 @@ function chatApiDevPlugin(): Plugin {
 
 /** Serves a GET-only Edge handler during local dev — same web-standard
  * handler Vercel runs in production, no vercel dev needed. Simpler than
- * chatApiDevPlugin: these endpoints take no request body. */
+ * chatApiDevPlugin: these endpoints take no request body.
+ *
+ * Forwards the real request's headers and full URL (not a bare stand-in):
+ * ops/pipeline/github-activity/spotify are now wrapped in guard.ts's origin
+ * allowlist and rate limiter (see guard.ts, D2/D3), which read `origin` and
+ * the client-IP headers — a stripped request would make dev behave nothing
+ * like production, the same reason chatApiDevPlugin forwards headers below.
+ * pipeline also reads its `?slug=` from the URL, which a bare `path` (no
+ * query string) silently dropped. */
 function edgeGetApiDevPlugin(path: string, modulePath: string, exportName: string): Plugin {
   return {
     name: `edge-get-api-dev:${path}`,
     configureServer(server) {
-      server.middlewares.use(path, async (_req: IncomingMessage, res: ServerResponse) => {
+      server.middlewares.use(path, async (req: IncomingMessage, res: ServerResponse) => {
         const mod = await server.ssrLoadModule(modulePath);
         const handler = mod[exportName] as (r: Request) => Promise<Response>;
-        const response = await handler(new Request(`http://localhost${path}`));
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(req.headers)) {
+          if (typeof value === "string") headers.set(key, value);
+          else if (Array.isArray(value)) for (const v of value) headers.append(key, v);
+        }
+        const response = await handler(new Request(`http://localhost${req.url ?? path}`, { headers }));
         res.statusCode = response.status;
         response.headers.forEach((value, key) => res.setHeader(key, value));
         res.end(await response.text());
@@ -170,6 +242,12 @@ function gzipPreviewHtmlPlugin(): Plugin {
 // ahead of viteReact()'s oxc transform regardless of array position here.
 export default defineConfig(async () => ({
   server: { port: 5173 },
+  // Emits dist/client/.vite/manifest.json — the only way to know which chunks
+  // a given route's entry actually imports, rather than guessing from
+  // filenames in dist/client/assets. scripts/check-budget.mjs reads it too:
+  // without this flag Vite never writes it, and there is no other artifact
+  // anywhere in the build that names which chunk belongs to which entry.
+  build: { manifest: true },
   plugins: [
     // tanstackStart() must come before viteReact() — this ordering is called
     // out explicitly in @tanstack/react-start's own bundled setup docs.
@@ -178,7 +256,27 @@ export default defineConfig(async () => ({
     // TanStackStartViteInputConfig) — it never bundles its own React plugin;
     // it just requires *some* React-Refresh-compatible plugin (viteReact()
     // below) to be present so `/@react-refresh` resolves in dev.
-    tanstackStart(),
+    // Native to this plugin version (TanStackStartViteInputConfig#importProtection):
+    // turns "a client-only lib slipped into the SSR bundle" from a runtime
+    // `ReferenceError: document is not defined` in production (leaflet in
+    // SignalLab, playhtml in PlayRoom) into a build-time failure naming the
+    // file and specifier. React.lazy() alone does not keep a module off the
+    // SSR server, so this has to be enforced here, not at the call site.
+    //
+    // `server`, not `client`: getImportProtectionRulesForEnvironment (Start's
+    // own adapterUtils.js) applies compiledRules.client while building the
+    // CLIENT bundle and compiledRules.server while building the SSR bundle —
+    // so `client.specifiers` here would deny these libs FROM the browser
+    // bundle, breaking every legitimate client-only 3D/map/canvas room
+    // (confirmed: with `client`, the build failed on Starmap.tsx's real,
+    // already-client-only `@react-three/postprocessing` import). `server`
+    // is what keeps them out of the SSR path these libs actually crash.
+    tanstackStart({
+      importProtection: {
+        behavior: "error",
+        server: { specifiers: ["leaflet", "tldraw", "@playhtml/react", "playhtml", "three", "@react-three/*"] },
+      },
+    }),
     viteReact(),
     await babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
@@ -189,6 +287,11 @@ export default defineConfig(async () => ({
     chatApiDevPlugin(),
     edgeGetApiDevPlugin("/api/spotify", "/api/_lib/spotify-handler.ts", "handleSpotify"),
     edgeGetApiDevPlugin("/api/github-activity", "/api/_lib/github-activity-handler.ts", "handleGithubActivity"),
+    // Was missing entirely despite smoke.spec.ts's EXPECTED_404 comment
+    // claiming it was "wired into vite.config.ts... exactly like /api/ops" —
+    // it wasn't. Added so /api/pipeline's guard (origin allowlist + rate
+    // limit) is exercised under dev the same way the other three are.
+    edgeGetApiDevPlugin("/api/pipeline", "/api/_lib/pipeline-handler.ts", "handlePipeline"),
     // /ops's control tower. Without this the board is only ever testable
     // against production, which is the wrong way round for a page whose whole
     // subject is noticing failure early.
@@ -196,5 +299,6 @@ export default defineConfig(async () => ({
     // Makes `vite preview` (what Lighthouse CI measures) send the SSR document
     // compressed, the way production does.
     gzipPreviewHtmlPlugin(),
+    heavyAssetsDevPlugin(),
   ],
 }));

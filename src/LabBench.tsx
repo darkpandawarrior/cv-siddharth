@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, ClientOnly } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
 // time — harmless client-side, fatal during SSR. Lazy-loading defers that eval
@@ -8,17 +8,16 @@ import { Reveal } from "./Reveal.tsx";
 // openLab/LabKey"; it no longer does — that signal moved to data/labs.ts — but
 // /lab is itself server-rendered, so the hazard is unchanged.
 const SignalLabPane = lazy(() => import("./labs/SignalLab.tsx").then((m) => ({ default: m.SignalLabPane })));
-// ponytail: same treatment, different cost. ChessSearchLab reaches the chess
-// engine worker; a static import would put the worker chunk's entry (and
-// chess.js behind it) on the critical path of anyone opening /lab, whichever
-// of the eleven instruments they came for.
-const ChessSearchLab = lazy(() => import("./labs/ChessSearchLab.tsx").then((m) => ({ default: m.ChessSearchLab })));
 import { CrashLab } from "./labs/CrashLab.tsx";
 import { RecomposeLab } from "./labs/RecomposeLab.tsx";
 import { ThemeLab } from "./labs/ThemeLab.tsx";
 import { ModuleGraphLab } from "./labs/ModuleGraphLab.tsx";
 import { GatewayLab } from "./labs/GatewayLab.tsx";
-import { SearchTreeLab } from "./labs/SearchTreeLab.tsx";
+// SearchTreesLab (merged Gaddi ISMCTS + real alpha-beta engine) does its own
+// nested lazy() around the chess-engine-worker half — see SearchTreeLab.tsx —
+// so importing it here statically costs nothing extra: the worker/chess.js
+// chunk only loads once a visitor flips the in-pane radiogroup to "real".
+import { SearchTreesLab } from "./labs/SearchTreeLab.tsx";
 import { FanoutLab } from "./labs/FanoutLab.tsx";
 import { ReplayLab } from "./labs/ReplayLab.tsx";
 // Static: ClockLab reads data/chess.ts and nothing else — no engine, no worker.
@@ -55,15 +54,7 @@ const TABS = LAB_TABS;
 export function LabBench() {
   const [tab, setTab] = useState<LabKey>(() => peekPendingLab() ?? "signal");
 
-  // ponytail: lazy() does NOT keep a chunk off the server — React resolves a
-  // lazy child while streaming, and SignalLab's leaflet import touches
-  // `window` at module scope, which killed the whole /lab render. One mount
-  // flag holds both browser-only panes back to the client; the fallback each
-  // already had becomes the server's markup.
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     clearPendingLab(); // consumed by the initial state above
     return onOpenLab(setTab);
   }, []);
@@ -104,6 +95,11 @@ export function LabBench() {
                   }`}
                 >
                   {t.label}
+                  {t.featured && (
+                    <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                      start here
+                    </span>
+                  )}
                   <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                 </button>
               ))}
@@ -122,29 +118,37 @@ export function LabBench() {
                   }`}
                 >
                   {t.label}
+                  {t.featured && (
+                    <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                      start here
+                    </span>
+                  )}
                   <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                 </button>
               ))}
             </div>
           </div>
           {tab === "signal" && (
-            <Suspense fallback={<PaneFallback what="signal lab" />}>
-              {mounted ? <SignalLabPane /> : <PaneFallback what="signal lab" />}
-            </Suspense>
+            // /lab server-renders and `tab === "signal"` is a runtime-only
+            // switch the bundler can't see through — it still resolved
+            // SignalLab's leaflet import for SSR regardless of the `mounted`
+            // flag above. `<ClientOnly>` is what Start's compiler recognises
+            // to strip this subtree (and the lazy import behind it) from the
+            // SERVER compile entirely.
+            <ClientOnly fallback={<PaneFallback what="signal lab" />}>
+              <Suspense fallback={<PaneFallback what="signal lab" />}>
+                <SignalLabPane />
+              </Suspense>
+            </ClientOnly>
           )}
           {tab === "crashes" && <CrashLab />}
           {tab === "recompose" && <RecomposeLab />}
           {tab === "theme" && <ThemeLab />}
           {tab === "modules" && <ModuleGraphLab />}
           {tab === "gateways" && <GatewayLab />}
-          {tab === "search" && <SearchTreeLab />}
+          {tab === "search-trees" && <SearchTreesLab />}
           {tab === "fanout" && <FanoutLab />}
           {tab === "replay" && <ReplayLab />}
-          {tab === "chess-search" && (
-            <Suspense fallback={<PaneFallback what="chess engine" />}>
-              {mounted ? <ChessSearchLab /> : <PaneFallback what="chess engine" />}
-            </Suspense>
-          )}
           {tab === "chess-clock" && <ClockLab />}
         </Reveal>
       </div>

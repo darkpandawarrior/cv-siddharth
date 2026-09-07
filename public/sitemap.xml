@@ -127,6 +127,18 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://cv-siddharth.vercel.app/lanes</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cv-siddharth.vercel.app/time-machine</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://cv-siddharth.vercel.app/project/gaddi</loc>
     <lastmod>2026-09-07</lastmod>
     <changefreq>monthly</changefreq>

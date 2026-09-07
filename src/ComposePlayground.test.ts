@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildGenPrompt, MAX_SCENARIO_CHARS } from "./ComposePlayground.tsx";
+import { MAX_SCENARIO_CHARS, buildGenPrompt, decodeShare, encodeShare, extractFencedCode, validateComposeCode } from "./ComposePlayground.tsx";
 import { parseCompose, type Node } from "./composeInterpreter.ts";
 
 /** Every construct the generator prompt (api/_lib/compose-prompt.ts) tells the
@@ -45,6 +45,57 @@ describe("the AI scenario prompt", () => {
     expect(scenario.length).toBeGreaterThan(133); // would have been rejected before
     expect(scenario.length).toBeLessThanOrEqual(MAX_SCENARIO_CHARS);
     expect(buildGenPrompt(scenario)).toBe(scenario);
+  });
+});
+
+// cv-fallback-honesty: a deviating model's reply gets caught before it ever
+// reaches the interpreter, so `generate()` (ComposePlayground.tsx) knows to
+// retry once instead of silently rendering a wall of "not supported yet".
+describe("extractFencedCode", () => {
+  it("pulls the code out of a ```kotlin fence", () => {
+    expect(extractFencedCode("Sure!\n```kotlin\nText(\"hi\")\n```\n")).toBe('Text("hi")');
+  });
+
+  it("is null when the reply never fenced anything — the actual bug this guards", () => {
+    expect(extractFencedCode("Sure, here's a login screen: it has a text field and a button.")).toBeNull();
+  });
+
+  it("is null on a fence that never closed", () => {
+    expect(extractFencedCode("```kotlin\nText(\"hi\")")).toBeNull();
+  });
+});
+
+describe("validateComposeCode", () => {
+  it("accepts a well-formed program", () => {
+    expect(validateComposeCode('Text("hi")')).toEqual({ ok: true });
+  });
+
+  it("rejects a syntax error the tokenizer/parser can't get past", () => {
+    const result = validateComposeCode("Column( { Text(");
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts an unrecognised call as a plain 'unknown' node, not a rejection — the interpreter's own forgiving-by-design behaviour, not the bug being guarded against", () => {
+    expect(validateComposeCode("SomeFutureComposable()")).toEqual({ ok: true });
+  });
+});
+
+describe("share link round-trip", () => {
+  it("decodes exactly what it encoded, including unicode and newlines", () => {
+    const code = 'Text("emoji rocket 🚀 works")\nColumn {\n  Text("second line")\n}';
+    expect(decodeShare(encodeShare(code))).toBe(code);
+  });
+
+  it("is URL-safe — no raw +, / or padding = survives", () => {
+    // Base64's own alphabet uses three characters a URL query param treats
+    // specially; the whole point of the -/_ swap and the trimmed padding is
+    // that none of them show up in the encoded output.
+    const encoded = encodeShare("a".repeat(200)); // long enough to force padding in plain base64
+    expect(encoded).not.toMatch(/[+/=]/);
+  });
+
+  it("returns null on a malformed param instead of throwing", () => {
+    expect(decodeShare("not valid base64!!!")).toBeNull();
   });
 });
 

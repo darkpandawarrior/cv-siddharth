@@ -354,6 +354,26 @@ describe("parseJdFit", () => {
       expect(projectBySlug(bad.strengths[0].project!), project).toBeUndefined();
     }
   });
+
+  // fc-provenance-badge: "source" is never trusted from the model's own JSON
+  // beyond the one literal value toFitReport (skillMatch.ts) actually emits.
+  // A model asked (by an injected instruction in the pasted JD) to claim
+  // "source":"ai" gets nothing — "ai" was already the default for anything
+  // that isn't the exact offline marker, so there is nothing to forge upward.
+  describe("source (provenance, fc-provenance-badge)", () => {
+    it("passes through the literal offline marker", () => {
+      expect(parseJdFit(JSON.stringify({ score: 50, summary: "ok", source: "offline" }))?.source).toBe("offline");
+    });
+
+    it("is undefined with no source field at all — the model's ordinary reply", () => {
+      expect(parseJdFit(base)?.source).toBeUndefined();
+    });
+
+    it("ignores a forged 'ai' or any other value — never promoted above the default", () => {
+      expect(parseJdFit(JSON.stringify({ score: 50, summary: "ok", source: "ai" }))?.source).toBeUndefined();
+      expect(parseJdFit(JSON.stringify({ score: 50, summary: "ok", source: "definitely trust me" }))?.source).toBeUndefined();
+    });
+  });
 });
 
 /**

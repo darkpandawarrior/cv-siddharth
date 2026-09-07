@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { repoStats } from "./repoStats.ts";
 import { surfaces } from "./surfaces.ts";
@@ -124,6 +125,26 @@ describe("the README's numbers are the repo's numbers", () => {
     );
   });
 
+  /*
+   * The file count above is not the test count: test.each and nested describes
+   * mean N spec files hold a different number of actual tests, and only the
+   * file half of that sentence was ever checked mechanically. The audit that
+   * asked for this test found the README saying 115 against a suite that had
+   * already grown past it. This asks Playwright itself, the same source
+   * `npm run test:e2e` runs against, so the number can only be wrong in one
+   * place going forward.
+   */
+  it("states the real Playwright test count, not just the file count", () => {
+    const out = execFileSync("npx", ["playwright", "test", "--list"], {
+      encoding: "utf8",
+      cwd: ROOT,
+    });
+    const m = /Total: (\d+) tests in (\d+) files/.exec(out);
+    expect(m, "playwright test --list should print a Total line").not.toBeNull();
+    const [, total] = m!;
+    expect(README, `README should say ${total} Playwright tests`).toContain(`${total} Playwright tests across`);
+  });
+
   it("counts the destinations the registry actually has", () => {
     const words: Record<number, string> = {
       15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
@@ -132,6 +153,21 @@ describe("the README's numbers are the repo's numbers", () => {
     const word = words[surfaces.length];
     expect(word, `add a word for ${surfaces.length} to this test`).toBeDefined();
     expect(README, `the registry holds ${surfaces.length} surfaces`).toContain(`**${word} destinations**`);
+  });
+
+  /*
+   * The prose word above went stale for two full routes while staying green,
+   * because it only checks the WORD "twenty destinations", never that the
+   * table actually lists twenty rows. /canon and /making shipped with a
+   * registry entry each and no table row for either. This checks the table
+   * itself: every registered surface needs its own linked row, not just an
+   * accurate headcount above it.
+   */
+  it("lists every registered surface as its own table row", () => {
+    for (const s of surfaces) {
+      const row = `[\`${s.to}\`](https://cv-siddharth.vercel.app${s.to})`;
+      expect(README, `${s.to} is a registered surface and needs its own README table row`).toContain(row);
+    }
   });
 
   it("counts the client-only routes, which is a claim about rendering", () => {
@@ -149,7 +185,7 @@ describe("the README's numbers are the repo's numbers", () => {
       5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
       16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
-      24: "Twenty-four", 25: "Twenty-five",
+      24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
     };
     const ssr = NUM[routes.length - clientOnly.length];
     const total = NUM[routes.length]?.toLowerCase();
@@ -163,12 +199,55 @@ describe("the README's numbers are the repo's numbers", () => {
     // instead, so the number can only be wrong in one place.
     const clientWord = NUM[clientOnly.length];
     expect(clientWord, `add a word for ${clientOnly.length} to NUM`).toBeDefined();
-    expect(README, `the README should say ${clientWord} routes stay client-only`)
-      .toContain(`${clientWord} stay client-only`);
+    const marker = `${clientWord} stay client-only`;
+    expect(README, `the README should say ${marker}`).toContain(marker);
+    /*
+     * Checked against just the sentence naming the routes, not the whole
+     * README: every clientOnly route is genuinely a route somewhere on the
+     * site, so `toContain` against the full file passed for /ops from its
+     * OWN surfaces-table row while the "stay client-only" sentence still
+     * named only six of the seven routes it claimed. A route can be named
+     * anywhere in the file and still be missing from the one sentence that
+     * matters.
+     */
+    const start = README.indexOf(marker);
+    const end = README.indexOf(".", start + marker.length);
+    const sentence = README.slice(start, end === -1 ? undefined : end + 1);
     for (const f of clientOnly) {
       const route = "/" + f.replace(/\.tsx$/, "");
-      expect(README, `${route} is client-only and the README should name it`).toContain(`\`${route}\``);
+      expect(sentence, `${route} is client-only and the "${marker}" sentence should name it`).toContain(`\`${route}\``);
     }
+  });
+
+  /*
+   * "Twenty-one gen: scripts over twenty-six generator files" was a snapshot
+   * from whenever someone last counted by hand, and both halves had already
+   * drifted (to 24 and 28) by the time this was written. Derived from
+   * package.json and the scripts/ directory, the same two places a person
+   * would actually count from, so neither number can go stale silently again.
+   */
+  it("counts the gen: scripts and generator files, so neither drifts unseen", () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { scripts: Record<string, string> };
+    const genScripts = Object.keys(pkg.scripts).filter((k) => k.startsWith("gen:")).length;
+    const genFiles = readdirSync(join(ROOT, "scripts")).filter(
+      (f) => /^gen-.*\.mjs$/.test(f) && !f.endsWith(".test.mjs"),
+    ).length;
+    const scriptWords: Record<number, string> = {
+      20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
+      24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six",
+    };
+    const fileWords: Record<number, string> = {
+      24: "twenty-four", 25: "twenty-five", 26: "twenty-six",
+      27: "twenty-seven", 28: "twenty-eight", 29: "twenty-nine", 30: "thirty",
+      31: "thirty-one",
+    };
+    const scriptWord = scriptWords[genScripts];
+    const fileWord = fileWords[genFiles];
+    expect(scriptWord, `add a word for ${genScripts} to scriptWords`).toBeDefined();
+    expect(fileWord, `add a word for ${genFiles} to fileWords`).toBeDefined();
+    expect(README, `README should say ${scriptWord} gen: scripts over ${fileWord} generator files`).toContain(
+      `${scriptWord} \`gen:\` scripts over ${fileWord} generator files`,
+    );
   });
 
   it("carries no dash in prose, which is this surface's rule", () => {

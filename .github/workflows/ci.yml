@@ -5,11 +5,21 @@ name: CI
 # Playwright suite and eslint never ran on a pull request at all, and nothing
 # stopped a red commit reaching main.
 #
-# Deliberately does NOT run `npm run build`. lighthouse.yml already builds on
-# every PR, and a second vite build here would be the same work paid twice on
-# every push forever. vitest and eslint need neither a bundle nor a server;
-# `tsc -b` type-checks without one. The e2e suite DOES need a build and a
-# server, so it lives in lighthouse.yml beside the build that already exists.
+# Deliberately does NOT run `npm run build` (the generator-refreshing,
+# network-fetching prebuild chain plus tsc plus vite). lighthouse.yml already
+# pays for that build on every PR, and a second full one here would be the
+# same work paid twice, forever. vitest and eslint need neither a bundle nor a
+# server; `tsc -b` type-checks without one; the e2e suite needs the full build
+# and a server, so it stays in lighthouse.yml beside that build.
+#
+# It DOES run a bare `npx vite build` (client + server, no prebuild) so the
+# bundle-budget gate below has a manifest to read. That's deliberately not the
+# same build as `npm run build`'s: prebuild's job is refreshing generated
+# content, and check:generated (below) already guarantees the committed
+# generated files match their generators, so a plain `vite build` reads
+# byte-identical inputs without this job also making 20+ live network calls.
+# A regression here is caught in ~seconds instead of waiting on lighthouse.yml's
+# slower playwright-install-and-e2e job.
 on:
   push: { branches: [main] }
   pull_request:
@@ -48,3 +58,12 @@ jobs:
       - name: Generated artifacts match their generators
         if: ${{ !cancelled() }}
         run: npm run check:generated
+
+      # A bare vite build, not `npm run build` — see the comment at the top
+      # of this file for why the two are deliberately different here.
+      - name: Build (client + server, no prebuild)
+        if: ${{ !cancelled() }}
+        run: npx vite build
+      - name: Bundle budgets
+        if: ${{ !cancelled() }}
+        run: npm run check:budget

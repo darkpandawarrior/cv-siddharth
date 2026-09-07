@@ -59,7 +59,8 @@ describe("rasterSources only claims derivatives that get generated", () => {
         if (!s.file) continue;
         const src = `/projects/${p.slug}/screenshots/${s.file}`;
         if (!rasterSources(src)) continue; // correctly claims nothing
-        if (!existsSync(join(root, "public", src))) dead.push(src);
+        // Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+        if (!existsSync(join(root, "heavy", src))) dead.push(src);
       }
     }
     expect(dead, `these gallery sources are not committed, so nothing can derive from them: ${dead.join(", ")}`).toEqual([]);

@@ -1,4 +1,5 @@
 import { CanvasTexture, LinearFilter, LinearMipmapLinearFilter, RepeatWrapping, SRGBColorSpace } from "three";
+import { timeline } from "../data/timeline.ts";
 
 /**
  * §3.1 — THE BAKED PLATE TEXTURE.
@@ -25,13 +26,28 @@ export const PLATE_TILES_Z = 4;
 
 type LaneKind = "terrace" | "aggregate" | "plain" | "steel";
 
+/** `timeline.lanes[].label`, not a second hand-typed name list — the same
+ *  "one source of truth" reasoning as everywhere else this generated file
+ *  gets read from, so a lane renamed at the generator is renamed here too. */
+function laneLabel(key: string): string {
+  return (timeline.lanes.find((l) => l.key === key)?.label ?? key).toUpperCase();
+}
+
+/** The lane's own 2-letter monogram — the first two letters of its real
+ *  label (not a hand-typed abbreviation list), so a lane rename at the
+ *  generator renames this too. Two letters rather than one: "work" and
+ *  "writing" both start with W. */
+function laneMonogram(key: string): string {
+  return laneLabel(key).slice(0, 2);
+}
+
 /** The four lane columns, in the timeline's own lane order (work, chess,
  *  writing, opensource), as fractions of the plate's U axis. */
-const LANES: { u0: number; u1: number; kind: LaneKind }[] = [
-  { u0: 0 / 4, u1: 1 / 4, kind: "terrace" },
-  { u0: 1 / 4, u1: 2 / 4, kind: "aggregate" },
-  { u0: 2 / 4, u1: 3 / 4, kind: "plain" },
-  { u0: 3 / 4, u1: 4 / 4, kind: "steel" },
+const LANES: { u0: number; u1: number; kind: LaneKind; name: string; monogram: string }[] = [
+  { u0: 0 / 4, u1: 1 / 4, kind: "terrace", name: laneLabel("work"), monogram: laneMonogram("work") },
+  { u0: 1 / 4, u1: 2 / 4, kind: "aggregate", name: laneLabel("chess"), monogram: laneMonogram("chess") },
+  { u0: 2 / 4, u1: 3 / 4, kind: "plain", name: laneLabel("writing"), monogram: laneMonogram("writing") },
+  { u0: 3 / 4, u1: 4 / 4, kind: "steel", name: laneLabel("opensource"), monogram: laneMonogram("opensource") },
 ];
 
 /** A tiny deterministic PRNG — a fixed seed means the grain is the same
@@ -142,6 +158,44 @@ export function buildPlateTexture(inkHex: string): CanvasTexture | null {
       }
     }
     // "plain" (writing) gets no extra mark — a memory, not a mountain.
+
+    // §5's other half — "lane identity is never colour alone" — stencilled
+    // straight into the plate rather than a fifth DOM/SVG overlay:
+    // WorldLabels.tsx's floating text already names landmarks; this names
+    // the LANE, baked into the same ground every fixture already reads
+    // from. One tile (this canvas covers 168/PLATE_TILES_Z = 42m of Z, tiled
+    // 4x by RepeatWrapping) is one repeat of the stencil, so a lane's name
+    // reads once per tile the whole 168m down, the way a runway or a
+    // parking-bay repeats its own painted lettering. Low-alpha and
+    // achromatic (white or black depending on the lane's own base value),
+    // same "cosmetic mark, never a hue" discipline every other lane
+    // treatment above already keeps — the fixture families still carry
+    // colour identity; this is texture, not a second signal.
+    ctx.save();
+    ctx.translate(x0 + w / 2, size / 2);
+    ctx.rotate(-Math.PI / 2); // runs along Z — the direction of travel
+    ctx.font = `700 ${Math.round(w * 0.34)}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = lane.kind === "steel" ? "rgba(0,0,0,0.22)" : "rgba(255,255,255,0.07)";
+    ctx.fillText(lane.name, 0, 0);
+    ctx.restore();
+
+    // §3.1's monogram — "lane monogram glyphs at the south apron": a small
+    // 2-letter mark near ONE lateral edge of the lane's own flat margin
+    // (the "apron" §3's writing-lane example names — the part of a 14m lane
+    // NOT carrying its central relief feature), distinct from the full
+    // lane-name text above, which runs centred the whole lane's width.
+    // "South" is the +v edge of this tile — the same direction Z increases
+    // in (city.ts: "south is now") — so it sits at the tile's near end.
+    ctx.save();
+    ctx.translate(x0 + w * 0.14, size * 0.94);
+    ctx.font = `700 ${Math.round(w * 0.16)}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = lane.kind === "steel" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.12)";
+    ctx.fillText(lane.monogram, 0, 0);
+    ctx.restore();
   }
 
   const tex = new CanvasTexture(canvas);

@@ -198,7 +198,7 @@ export function ModuleGraphLab() {
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={isolate} onChange={(e) => setIsolate(e.target.checked)} className="accent-signal" />
+            <input type="checkbox" checked={isolate} onChange={(e) => setIsolate(e.target.checked)} className="accent-accent" />
             isolate features
           </label>
           <span className={`font-mono text-xs ${isolate ? "text-accent" : "text-danger"}`}>

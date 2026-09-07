@@ -23,7 +23,7 @@
 // already in the repo: a dated stamp and a per-file deadline in
 // freshnessSla.ts, tuned to how fast each source actually moves.
 //
-// Two are deliberately absent despite deriving from committed inputs:
+// Four are deliberately absent despite deriving from committed inputs:
 //   gen-project-heroes.mjs re-encodes PNGs and the encoder is not byte-stable,
 //     so all eight heroes differ on a second run from identical pixels.
 //   gen-store-flavours.mjs refuses to run without SHELF_RIDER_REPO and
@@ -36,8 +36,19 @@
 //     before it can count a page. That is a LIVE SOURCE, and the rule at the
 //     top of this comment already excludes those — it was classified by running
 //     it on a laptop where the cache and poppler both happened to exist. The
-//     committed pages under public/excelsior/pages are tracked and stable; it
+//     committed pages under heavy/excelsior/pages are tracked and stable; it
 //     is the fetch, not the artifact, that cannot be reproduced.
+//   gen-ops.mjs stamps `opsGeneratedAt` with the wall-clock date at the moment
+//     it runs (gen-ops.mjs: `new Date().toISOString().slice(0, 10)`), not a
+//     value derived from any committed input. It was listed here until this
+//     lane found it as the first of the arch-L4 acceptance run's five
+//     disagreeing files: on a repo checked out and re-run one calendar day
+//     after ops.ts was last committed, ops.ts and CvOpsData.kt (which imports
+//     opsGeneratedAt verbatim, gen-kotlin-data.mjs:57,801) ALWAYS disagree,
+//     which is exactly the false positive that let refresh-twin.yml's
+//     `if: always()` commit-over-red pattern look load-bearing for six days
+//     straight rather than a bug worth fixing. Its staleness is the same
+//     dated-stamp question every other live source here answers.
 //
 // Adding a generator forces the choice: deterministic goes here, live gets an
 // SLA entry. Neither is a default, which is the point.
@@ -45,35 +56,19 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CHECK_DETERMINISTIC as DETERMINISTIC } from "./generators.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const KMP = join(root, "..", "cv-siddharth-kmp");
 
-// ORDER IS LOAD-BEARING, and this list got it wrong on its first run. These
-// generators are not independent: gen-kotlin-data reads the corpora the others
-// write, so running it first emits Kotlin from a stale source and the check then
-// fails on an artifact it just produced itself. package.json's prebuild already
-// encodes the right order and this mirrors it: corpora first, the cross-repo
-// emitter last.
-const DETERMINISTIC = [
-  "gen-galleries.mjs",
-  "gen-compare-sets.mjs",
-  "gen-ops.mjs",
-  // Added 2026-09-01 after checking each empirically rather than by reading it:
-  // run the generator three times and watch what settles. All five moved on the
-  // first run and were byte-identical on the second and third, which is the
-  // signature of a STALE artifact rather than a churning generator. Two of the
-  // five were carrying real drift at the time, which is the argument for the
-  // whole list: archiveText.ts still said `Episode 1 — "Nidra" Thama` after the
-  // source had already retired that dash, and repoStats.ts said 1036 tests
-  // against a suite of 1037.
-  "gen-archive-text.mjs",
-  "gen-repo-stats.mjs",
-  "gen-loopdown.mjs",
-  "gen-anthology.mjs",
-  // Last, always: it reads everything above and writes into the other repo.
-  "gen-kotlin-data.mjs",
-];
+// ORDER IS LOAD-BEARING: gen-kotlin-data reads the corpora the others write,
+// so running it first emits Kotlin from a stale source and the check then
+// fails on an artifact it just produced itself. This used to be a second
+// hand-kept list whose own comment claimed it "mirrors prebuild's order" —
+// nothing enforced that, and it was never checked. The order now comes from
+// scripts/generators.mjs's topological sort over the real inputs/outputs
+// declared there, so parity with the other two consumers (package.json's
+// build chain, refresh.mjs's STEPS) is structural, not a claim in a comment.
 
 /** Repos this checks. The second is the whole reason the guard exists. */
 const REPOS = [

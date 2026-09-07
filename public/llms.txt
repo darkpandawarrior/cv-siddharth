@@ -27,7 +27,7 @@ Written up in full, with problem, approach and outcome, in /llms-full.txt. They 
 
 ### Proof: the numbers, and what verifies them
 
-- [The Lab Bench](https://cv-siddharth.vercel.app/lab): Eleven experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
+- [The Lab Bench](https://cv-siddharth.vercel.app/lab): Ten experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
 - [The 3D Storyboard](https://cv-siddharth.vercel.app/map): The projects and the ideas that connect them, as a constellation you can orbit. Every edge is a real dependency.
 - [The Ops Board](https://cv-siddharth.vercel.app/ops): A control loop rendered as a page: every workflow, every generated dataset against its own SLA, the shipped fleet, and a ledger of the failures a green check did not catch.
 - [Hire](https://cv-siddharth.vercel.app/hire): Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.
@@ -42,12 +42,14 @@ Written up in full, with problem, approach and outcome, in /llms-full.txt. They 
 - [The Particle Forge](https://cv-siddharth.vercel.app/forge): A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.
 - [The Terminal](https://cv-siddharth.vercel.app/terminal): A faux shell you can actually type in: ls the site, cat a project, or hit the backtick key from anywhere.
 - [The Pulse](https://cv-siddharth.vercel.app/pulse): A live count of what visitors actually touch across this portfolio: which rooms get opened, what gets played with, and what nobody has found yet.
-- [The Playground](https://cv-siddharth.vercel.app/playground): Every interactive room on this site as a building on one street, drivable in 3D. The street is a timeline, north is 2017 and south is now.
+- [The Playground](https://cv-siddharth.vercel.app/playground): Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.
 
 ### Corpus: long records, read as evidence
 
 - [The Board](https://cv-siddharth.vercel.app/chess): Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot trained on the openings you are looking at.
 - [Weeb Central](https://cv-siddharth.vercel.app/weeb): Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.
+- [Four Lanes](https://cv-siddharth.vercel.app/lanes): Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.
+- [The Time Machine](https://cv-siddharth.vercel.app/time-machine): This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.
 
 ### Writing: before the code, and alongside it
 

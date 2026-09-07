@@ -27,14 +27,20 @@ const routes = [
   { path: "/read/deadline", title: "Deadline", expect: undefined },
 ];
 
-// Two requests are EXPECTED to 404 under local `vite preview` and only resolve
-// once deployed to Vercel — neither is a migration bug:
+// Three requests are EXPECTED to 404 under local `vite preview` and only
+// resolve once deployed to Vercel — none is a migration bug:
 //   1. /favicon.ico — Chrome auto-probes it on every navigation; this site uses
 //      a data-URI SVG icon (src/routes/__root.tsx) and never shipped a real
 //      favicon.ico.
 //   2. /_vercel/speed-insights/script.js — injected by <SpeedInsights/>
 //      (@vercel/speed-insights, added in Task 5); Vercel's edge serves this path
 //      in production, but nothing serves it locally, so it 404s under preview.
+//   3. /_vercel/insights/script.js — injected by <Analytics/>
+//      (@vercel/analytics, added alongside SpeedInsights in __root.tsx), same
+//      story: Vercel's edge serves it once Web Analytics is deployed, nothing
+//      does locally. Unlike /api/ops below this can't be curled against
+//      production yet either (this is the commit that adds it) — re-verify
+//      after the first deploy the way that entry's own note describes.
 //
 // We identify failed requests via the network `response` event (which carries
 // the URL) rather than console-error scraping: a resource-load 404 surfaces as
@@ -57,6 +63,7 @@ const routes = [
 const EXPECTED_404 = [
   "/favicon.ico",
   "/_vercel/speed-insights/",
+  "/_vercel/insights/",
   "/api/spotify",
   "/api/github-activity",
   // Added when the live CI/CD panel landed (#41) and this list did not move

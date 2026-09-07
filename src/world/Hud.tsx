@@ -20,6 +20,7 @@ import {
   subscribeAuto,
   subscribeCaptured,
   toggleAutoDriving,
+  touchThrottleFromDrag,
 } from "./input.ts";
 import { isMuted, toggleMuted } from "./audio.ts";
 import { resetProgress } from "./progressReset.ts";
@@ -48,8 +49,23 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 // they read as one family and so the drag math is identical for each.
 const STICK_RADIUS = 34;
 
+// One-thumb auto-throttle: the corner-collision fix (see Thumbstick's own
+// doc comment) is that a phone has one thumb, and it steers. Committing
+// throttle to a constant means that thumb never has to hold a vertical
+// position at all — drag left/right to steer and the cart just goes; drag
+// down is the one throttle gesture auto can't substitute for, so it still
+// commands a proportional brake/reverse.
+//
+// ponytail: no live in-HUD toggle between auto and the old proportional-Y
+// stick — this constant IS the fallback switch. Flip it to `false` if
+// auto-throttle proves worse than the manual stick once actually driven on
+// a phone; every other line below is written to make that a one-line
+// revert, not a rewrite.
+const TOUCH_AUTO_THROTTLE = true;
+const AUTO_THROTTLE_FORWARD = 0.72; // a cruise, not a floor — boost still has headroom above it
+
 /**
- * The one touch control — steer on X, throttle on Y.
+ * The one touch control — steer on X, auto-throttle by default.
  *
  * It used to be horizontal-only, with the vertical offset tracked for the
  * knob's look and deliberately not wired to anything: "giving it a second
@@ -63,17 +79,20 @@ const STICK_RADIUS = 34;
  * chat launcher — fixed bottom-6 right-6, 56px — sitting on top of both. Three
  * layers competing for one corner. Rearranging them is a smaller change and a
  * worse one: the real fix is that a phone has one thumb, so the world needs
- * one control, and one control has to carry both axes.
+ * one control, and one control has to carry both axes — but "both axes" turned
+ * out to mean steer-plus-brake, not steer-plus-throttle: a combined X/Y stick
+ * still asks the thumb to hold a vertical position just to keep moving, which
+ * is exactly the one-handed unpredictability the original horizontal-only
+ * design was trying to avoid. `TOUCH_AUTO_THROTTLE` above is that fix: drag
+ * left/right to steer and the cart cruises forward on its own; drag down
+ * still brakes and reverses, proportionally, because that's a deliberate
+ * "slow down" the auto throttle should never override.
  *
- * So: drag left/right to steer, up to drive, down to brake and reverse. The
- * pedal is gone and this moved to the bottom LEFT, where nothing else lives.
- *
- * Up is forward, which means throttle is the NEGATION of screen Y.
- *
- * Routed through `setTouchSteer` rather than writing `input.steer` directly
- * (Finding 12): input.ts composes this with whatever the keyboard is holding
- * instead of one source clobbering the other, which matters on any hybrid
- * device — a touchscreen laptop, say — where both can be live at once.
+ * Routed through `setTouchSteer`/`setTouchThrottle` rather than writing
+ * `input.steer`/`input.throttle` directly (Finding 12): input.ts composes
+ * this with whatever the keyboard is holding instead of one source
+ * clobbering the other, which matters on any hybrid device — a touchscreen
+ * laptop, say — where both can be live at once.
  */
 function Thumbstick() {
   const baseRef = useRef<HTMLDivElement>(null);
@@ -93,8 +112,7 @@ function Thumbstick() {
     }
     setKnob({ x: dx, y: dy });
     setTouchSteer(clamp(dx / STICK_RADIUS, -1, 1));
-    // Screen Y grows downward; the driver expects up to mean forward.
-    setTouchThrottle(clamp(-dy / STICK_RADIUS, -1, 1));
+    setTouchThrottle(touchThrottleFromDrag(dy, STICK_RADIUS, TOUCH_AUTO_THROTTLE, AUTO_THROTTLE_FORWARD));
   };
 
   const release = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -114,7 +132,11 @@ function Thumbstick() {
       // pass for a worse one. Throttle is the same gesture's vertical
       // component; the accessible path to this world is the keyboard (see
       // input.ts) and the List view, both of which are always present.
-      aria-label="Steer and throttle: drag left or right to steer, up to drive, down to reverse"
+      aria-label={
+        TOUCH_AUTO_THROTTLE
+          ? "Steer: drag left or right. Throttle is automatic; drag down to brake or reverse"
+          : "Steer and throttle: drag left or right to steer, up to drive, down to reverse"
+      }
       aria-valuemin={-1}
       aria-valuemax={1}
       aria-valuenow={Math.round((knob.x / STICK_RADIUS) * 100) / 100}

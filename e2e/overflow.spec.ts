@@ -24,7 +24,22 @@ import { surfaces } from "../src/data/surfaces.ts";
  * simply never mention it.
  */
 
-const MOBILE = { width: 390, height: 844 };
+/**
+ * The five breakpoints SIDOS-VISION.md claims this site is "verified at" —
+ * 375 / 768 / 1024 / 1440 / 1920. Before this, the only real e2e width was
+ * 390 (close to 375 but not it) plus whatever default Playwright happened to
+ * use elsewhere; the claim rested on manual passes nobody could re-run.
+ * Heights are realistic per width, not one fixed aspect ratio stretched five
+ * ways: phone-portrait, tablet-portrait, tablet-landscape/small-laptop, and
+ * two desktop shapes.
+ */
+const VIEWPORTS = [
+  { width: 375, height: 812 },
+  { width: 768, height: 1024 },
+  { width: 1024, height: 768 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+];
 /**
  * /blueprint is exempt, and only /blueprint.
  *
@@ -44,9 +59,10 @@ const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/doori", "/read/dead
   (p) => !CANVAS_ROUTES.has(p),
 );
 
+for (const viewport of VIEWPORTS) {
 for (const path of ROUTES) {
-  test(`${path} does not silently clip content at ${MOBILE.width}px`, async ({ page }) => {
-    await page.setViewportSize(MOBILE);
+  test(`${path} does not silently clip content at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
     await page.goto(path);
     await page.waitForLoadState("networkidle");
     // Canvas rooms need a beat to lay their HUD out over the scene.
@@ -112,8 +128,9 @@ for (const path of ROUTES) {
 
     expect(
       overflowing,
-      `clipped past ${MOBILE.width}px (silently — overflow-x is hidden):\n` +
+      `clipped past ${viewport.width}px (silently — overflow-x is hidden):\n` +
         overflowing.map((o) => `  <${o.tag} class="${o.cls}"> right=${o.right} "${o.text}"`).join("\n"),
     ).toEqual([]);
   });
+}
 }

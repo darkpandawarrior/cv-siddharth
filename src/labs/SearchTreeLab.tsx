@@ -1,7 +1,14 @@
-import { useRef, useState } from "react";
+import { Suspense, lazy, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectBySlug } from "../data/profile.ts";
+
+// ponytail: nested, not hoisted to the top of LabBench.tsx. The chess engine
+// worker + chess.js only need to load when a visitor actually flips the
+// radiogroup to "real" — mounting the merged tab (or leaving it on
+// "simulated") must not pull either in, the same laziness LabBench.tsx's own
+// SignalLabPane/ChessSearchLab imports already document.
+const ChessSearchLab = lazy(() => import("./ChessSearchLab.tsx").then((m) => ({ default: m.ChessSearchLab })));
 
 /* ── Gaddi ISMCTS Search Tree Lab ────────────────────────────────────── */
 // Real numbers from src/data/profile.ts "gaddi" entry: 1.5k-16k ISMCTS
@@ -32,7 +39,9 @@ interface TreeNode {
   parent: number;
 }
 
-export function SearchTreeLab() {
+/** The Kursi/Gaddi ISMCTS half of the merged instrument — unchanged from
+ *  before the merge, just no longer the whole tab on its own. */
+function SimulatedSearchTree() {
   const [tierIndex, setTierIndex] = useState(0);
   const [display, setDisplay] = useState({ iterations: 0, target: TIERS[0].target, tier: TIERS[0].label });
   const [result, setResult] = useState<{ role: string } | null>(null);
@@ -264,6 +273,68 @@ export function SearchTreeLab() {
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PaneFallback() {
+  return <div className="py-10 text-center font-mono text-sm text-muted">loading chess engine…</div>;
+}
+
+type SearchSource = "simulated" | "real";
+
+/**
+ * Search Trees — the merged instrument. Two search families over a tree of
+ * futures, gated by an accessible source selector rather than two separate
+ * tabs: Gaddi's ISMCTS (simulated, over hidden information) and the real
+ * alpha-beta engine from /chess (a genuine search, replayed from a worker).
+ * Same canvas rig, same bottom-up radial layout, proven twice.
+ *
+ * role="radiogroup" over a checkbox because this is a choice between two data
+ * SOURCES, not an on/off state — same reasoning `ModuleGraphLab`'s isolate
+ * toggle uses a checkbox for an actual on/off. Native <button> elements get
+ * Enter/Space activation for free, so no extra keyboard wiring is needed here.
+ */
+export function SearchTreesLab() {
+  const [source, setSource] = useState<SearchSource>("simulated");
+
+  return (
+    <div>
+      <div role="radiogroup" aria-label="search source" className="mb-5 flex flex-wrap gap-2">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={source === "simulated"}
+          onClick={() => setSource("simulated")}
+          className={`rounded-full border px-3 py-1.5 font-mono text-xs transition ${
+            source === "simulated"
+              ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-[var(--lab-gold)]"
+              : "border-line text-zinc-400 hover:border-[var(--lab-gold)]/40 hover:text-zinc-200"
+          }`}
+        >
+          simulated (Gaddi ISMCTS)
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={source === "real"}
+          onClick={() => setSource("real")}
+          className={`rounded-full border px-3 py-1.5 font-mono text-xs transition ${
+            source === "real"
+              ? "border-accent bg-accent/15 text-accent"
+              : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+          }`}
+        >
+          real (α-β engine)
+        </button>
+      </div>
+      {source === "simulated" ? (
+        <SimulatedSearchTree />
+      ) : (
+        <Suspense fallback={<PaneFallback />}>
+          <ChessSearchLab />
+        </Suspense>
+      )}
     </div>
   );
 }

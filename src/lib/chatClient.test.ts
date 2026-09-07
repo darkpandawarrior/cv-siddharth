@@ -6,6 +6,7 @@ import {
   MAX_SENT_TURNS,
   MAX_TURN_CHARS,
   chatErrorText,
+  isAbortError,
   isJdNearCap,
   streamReply,
   trimHistory,
@@ -103,6 +104,55 @@ describe("streamReply", () => {
     // Not trimmed (the server's jd cap is 12k) and not accompanied by history:
     // the raised cap can only ever be spent on the description itself.
     expect(sentBody!.messages).toEqual([{ role: "user", content: paste }]);
+  });
+});
+
+describe("streamReply cancellation", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("forwards an AbortSignal to fetch, so a visitor who moves on stops the request", async () => {
+    // Not simulating a real abort here — that's a fetch/AbortController
+    // contract the platform already guarantees. What this endpoint owns is
+    // wiring the signal through at all: without it, closing the panel or
+    // asking a new question left the old request running to completion,
+    // still burning the shared per-IP rate limit and the free-tier budget.
+    let receivedSignal: AbortSignal | undefined;
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      receivedSignal = init.signal ?? undefined;
+      return new Response(
+        new ReadableStream<Uint8Array>({ start: (c) => c.close() }),
+        { status: 200 },
+      );
+    });
+    const controller = new AbortController();
+    await streamReply([{ role: "user", content: "hi" }], () => {}, undefined, undefined, controller.signal);
+    expect(receivedSignal).toBe(controller.signal);
+  });
+
+  it("rejects with an abort error once the signal fires mid-stream", async () => {
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      const signal = init.signal as AbortSignal;
+      return new Promise<Response>((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+      });
+    });
+    const controller = new AbortController();
+    const pending = streamReply([{ role: "user", content: "hi" }], () => {}, undefined, undefined, controller.signal);
+    controller.abort();
+    await expect(pending).rejects.toSatisfy(isAbortError);
+  });
+});
+
+describe("isAbortError", () => {
+  it("recognises a DOMException named AbortError", () => {
+    expect(isAbortError(new DOMException("aborted", "AbortError"))).toBe(true);
+  });
+
+  it("is false for an ordinary error or non-error value", () => {
+    expect(isAbortError(new Error("network down"))).toBe(false);
+    expect(isAbortError(new DOMException("nope", "NotAllowedError"))).toBe(false);
+    expect(isAbortError("nope")).toBe(false);
+    expect(isAbortError(undefined)).toBe(false);
   });
 });
 

@@ -1,6 +1,8 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { TiltPhone } from "./TiltPhone.tsx";
 import type { PhoneShot } from "./Phone3DScene.tsx";
+import { heavy } from "./lib/assetBase.ts";
 
 const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 
@@ -14,9 +16,9 @@ const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 // the smaller AVIF because this scene only renders where WebGL does, and
 // Safari 15 has WebGL without AVIF — a texture that 404s is a black phone.
 const SHOTS: PhoneShot[] = [
-  { src: "/projects/doori/screenshots/track_data_preview_overview_tab.webp", label: "Doori" },
-  { src: "/projects/gaddi/screenshots/home_phone.webp", label: "Gaddi" },
-  { src: "/projects/doori/screenshots/tracking_success_screen.webp", label: "Doori" },
+  { src: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"), label: "Doori" },
+  { src: heavy("/projects/gaddi/screenshots/home_phone.webp"), label: "Gaddi" },
+  { src: heavy("/projects/doori/screenshots/tracking_success_screen.webp"), label: "Doori" },
 ];
 
 function supportsWebGL(): boolean {
@@ -45,11 +47,17 @@ export function Phone3D() {
 
   if (!enable3D) return <TiltPhone />;
 
+  // enable3D is a runtime-only flag the bundler can't see through — it still
+  // resolved Phone3DScene's @react-three/fiber import for SSR regardless.
+  // <ClientOnly> is what Start's compiler recognises to strip this subtree
+  // (and the lazy import behind it) from the SERVER compile entirely.
   return (
-    <div className="relative mt-2 h-[420px] select-none lg:mt-0" aria-hidden>
-      <Suspense fallback={<TiltPhone />}>
-        <Phone3DScene shots={SHOTS} onContextLost={() => setEnable3D(false)} />
-      </Suspense>
-    </div>
+    <ClientOnly fallback={<TiltPhone />}>
+      <div className="relative mt-2 h-[420px] select-none lg:mt-0" aria-hidden>
+        <Suspense fallback={<TiltPhone />}>
+          <Phone3DScene shots={SHOTS} onContextLost={() => setEnable3D(false)} />
+        </Suspense>
+      </div>
+    </ClientOnly>
   );
 }

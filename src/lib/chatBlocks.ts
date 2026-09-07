@@ -22,6 +22,16 @@ export interface JdFitReport {
   summary: string;
   strengths: { need: string; evidence: string; project?: string }[];
   gaps: { need: string; note: string }[];
+  /**
+   * "offline" for the instant keyword-match card (skillMatch.ts's
+   * toFitReport); undefined for the model's own real read. Set by
+   * toFitReport, and read back here through parseJdFit — but NEVER trusted
+   * from the model's own JSON beyond that one literal value: an "ai" or any
+   * other string in the payload changes nothing, because undefined already
+   * IS the "the model wrote this" case. There is nothing for an injected
+   * instruction to escalate to.
+   */
+  source?: "ai" | "offline";
 }
 
 export type ChatBlock =
@@ -161,6 +171,8 @@ export function parseJdFit(raw: string): JdFitReport | null {
       const note = field(r.note);
       return need && note ? { need, note } : null;
     }),
+    // The one literal this trusts — see the field's doc comment above.
+    source: o.source === "offline" ? "offline" : undefined,
   };
 }
 

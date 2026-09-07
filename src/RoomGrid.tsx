@@ -17,6 +17,7 @@ import {
   type PulseEvent,
 } from "./play/pulseEvents.ts";
 import { countWord } from "./data/labs.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * The card grid — extracted verbatim from Playground.tsx (see that file's
@@ -45,15 +46,16 @@ import { countWord } from "./data/labs.ts";
  * broken image rather than as no image. surfaces.test.ts asserts the file
  * exists for every room, which is the only place that can actually check it.
  */
-const shotFor = (room: Room) => `/projects/portfolio/screenshots/site_${room.to.slice(1)}.png`;
+const shotFor = (room: Room) => heavy(`/projects/portfolio/screenshots/site_${room.to.slice(1)}.png`);
 
 /**
  * The one room the hub nominates.
  *
- * NOT derived from the visit counter. That counter is bumped in exactly two
- * places — a click on a card here (below) and driving into a pavilion door in
- * the 3D world (World.tsx) — so ranking by it would be this page grading its
- * own homework with single digits of evidence from its own visitors.
+ * NOT derived from the visit counter. That counter now bumps on mount for
+ * every entry path a room has (a click here, driving into a pavilion door in
+ * the 3D world, the command palette, the backtick hotkey, the next-room
+ * pager, a pasted URL), so ranking by it would be this page grading its own
+ * homework with single digits of evidence from its own visitors.
  *
  * /compose because it is the room closest to the job the rest of the site
  * describes, and because it is the one a stranger can be *inside* in two
@@ -120,25 +122,27 @@ const WALL_NOTE: Record<string, { chip: string; why: string }> = {
  * An earlier draft of this line read "{n} of {m} went further", which asserts a
  * subset relation the two counters do not have: the in-room counters fire
  * however a visitor arrived (BlueprintRoom bumps on every mode switch, tour
- * step and reset; the chess rooms on a guess or a puzzle), while the entry
- * counter only fires when a room is picked from this page or driven into in the
- * 3D world. The right-hand number can and does exceed the left, and "63 of 41"
- * is what that phrasing renders.
+ * step and reset; the chess rooms on a guess or a puzzle) and can fire many
+ * times in one visit, while the entry counter bumps once per room-mount
+ * (deduped to at most once a second) no matter which of its entry paths a
+ * visitor used. The right-hand number can and does exceed the left, and
+ * "63 of 41" is what that phrasing renders.
  */
 /**
  * What the plain visit chip actually counts.
  *
- * "Opened, across everyone" is what shipped, and this file says sixty lines up
- * that the counter fires in exactly two places — a click on a card here and
- * driving into a pavilion door in the 3D world. LiveLine's visible copy already
- * says "counted only when someone picks a room here"; a tooltip on the same
- * page contradicting it is the drift, not the wording.
+ * "Opened, across everyone" is what shipped. The entry bump moved from
+ * RoomCard's onClick (and World.tsx's door-drive) into useNextRoom's mount
+ * effect, so it now fires for every entry path a room has, not only the two
+ * this page and the 3D world offered — a stray tooltip still claiming
+ * "picked from the Playground" would be the same drift the count itself was
+ * fixed for.
  */
 const VISIT_TITLE =
-  "How many times this room was picked from the Playground — from this list, or by driving into its door in the 3D world. Across everyone.";
+  "How many times this room was opened — from this list, the 3D world, the command palette, the backtick hotkey, the pager, or a direct link. Across everyone.";
 
 const DEPTH_TITLE =
-  "Not a rate, and not a subset: the inside counter fires however you arrived, the entry counter only when someone picks the room from this page. One visitor who switches the render and takes the tour adds two inside against one entry. Read it as 'people do more than walk in'.";
+  "Not a rate, and not a subset: the entry counter bumps once when the room opens, however you arrived; the inside counter fires on specific interactions inside it (a mode switch, a tour step, a guess) and can fire many times in one visit. Read it as 'people do more than walk in'.";
 
 /**
  * The bands, in this page's order.
@@ -224,12 +228,9 @@ function CountChip({ r }: { r: Room }) {
 
 function RoomCard({ r, i, previews }: { r: Room; i: number; previews: boolean }) {
   const Icon = r.icon;
-  const { bump } = usePulseUI();
-  const event = roomEvent(r);
   return (
     <Link
       to={r.to}
-      onClick={() => bump(event)}
       className="panel playground-card group flex h-full flex-col overflow-hidden transition hover:-translate-y-1"
       style={{ animationDelay: `${i * 60}ms` }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.tint}66`)}
@@ -428,19 +429,20 @@ function LiveLine() {
            early-return before the explanation below — so on the one state a
            visitor is most likely to see, the counter was never explained at
            all. */
-        "Nobody has picked a room from this page yet."
+        "Nobody has opened a room yet."
       ) : events.length > 1 ? (
         // countWord is capitalised by contract ("callers lowercase it where a
         // sentence needs that"); mid-sentence this shipped "the top Three".
         `Nothing has pulled ahead yet — the top ${countWord(events.length).toLowerCase()} are tied at ${count}.`
       ) : (
         <>
-          Most-opened from this page so far:{" "}
+          Most-opened so far:{" "}
           <strong className="font-semibold text-zinc-300">{PULSE_EVENTS[events[0]].label}</strong> ({count}).
         </>
       )}{" "}
-      Counted only when someone picks a room here — from this list, or by driving into a door in the 3D world — on a
-      shared tally anyone can write to. Not analytics; a sign of life. Every room on this page is in it.
+      Counted whenever a room actually opens — from this list, the 3D world, the command palette, the backtick
+      hotkey, the pager, or a direct link — on a shared tally anyone can write to. Not analytics; a sign of life.
+      Every room on this page is in it.
     </p>
   );
 }
@@ -455,17 +457,15 @@ function LiveLine() {
  * has clicked anything, which is most days.
  *
  * It is a RoomCard at a larger size, not a new kind of object — same <Link>,
- * same bump, same tint handlers, same visit chip. Two columns from `sm` up
+ * same tint handlers, same visit chip (the entry count itself now bumps on
+ * mount in useNextRoom, not here). Two columns from `sm` up
  * with the capture leading; stacked below it, where a 16:10 image at full
  * width is already the loudest thing on the screen.
  */
 function LeadCard({ r, previews }: { r: Room; previews: boolean }) {
-  const { bump } = usePulseUI();
-  const event = roomEvent(r);
   return (
     <Link
       to={r.to}
-      onClick={() => bump(event)}
       className="panel playground-card group mt-10 grid overflow-hidden transition hover:-translate-y-1 sm:grid-cols-[55%_45%]"
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.tint}66`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}

@@ -1,5 +1,5 @@
 import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, ClientOnly } from "@tanstack/react-router";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -9,7 +9,6 @@ import { ROOMS } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
 import {
   DeferredPlayRoom,
-  DeferredLivePulse,
   DeferredPresenceBadge,
   DeferredVisitorPlaque,
   DeferredSandbox,
@@ -96,12 +95,12 @@ function saveViewPref(view: "world" | "list"): void {
 
 export default function Playground() {
   // Everything shared on this page — presence, the tile counts, the sandbox and
-  // the wall — reads from this one room.
+  // the wall — reads from this one room. The pulse provider itself now
+  // mounts once in __root.tsx (every room bumps the entry counter on mount,
+  // not only this page), so this page just reads it like anywhere else.
   return (
     <DeferredPlayRoom>
-      <DeferredLivePulse>
-        <PlaygroundInner />
-      </DeferredLivePulse>
+      <PlaygroundInner />
     </DeferredPlayRoom>
   );
 }
@@ -199,8 +198,12 @@ function PlaygroundInner() {
           >
             <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
           </button>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
+          {/* weeb-1: was `hidden ... lg:flex`, so a phone visitor had no
+              on-screen title. Always shown; truncates instead of pushing the
+              palette/badge/Ask buttons off their own row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <LayoutGrid size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Playground — every interactive room, one door</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             {/* The hub keeps its own header rather than RoomFrame's — RoomFrame
@@ -237,11 +240,21 @@ function PlaygroundInner() {
               "underneath": it's rendered right here, every time the world is,
               just visually hidden. */}
           <div className="playground-canvas absolute inset-0">
-            <WorldBoundary onError={handleWorldError}>
-              <Suspense fallback={worldLoadingFallback}>
-                <World onShowList={showList} />
-              </Suspense>
-            </WorldBoundary>
+            {/* wantsWorld is only ever true after hydration (see its own
+                comment above), so this branch never actually renders during
+                SSR — but a `useState`-gated ternary is not a compile-time
+                constant, so the bundler still resolves `World` (three.js,
+                Rapier) for the server. `<ClientOnly>` is what makes that
+                reference (and the `import("./world/World.tsx")` behind it)
+                disappear from the SERVER compile itself: Start's compiler
+                strips its children there before the SSR bundle is built. */}
+            <ClientOnly fallback={worldLoadingFallback}>
+              <WorldBoundary onError={handleWorldError}>
+                <Suspense fallback={worldLoadingFallback}>
+                  <World onShowList={showList} />
+                </Suspense>
+              </WorldBoundary>
+            </ClientOnly>
           </div>
           {/* sr-only in world view (Canvas above is aria-hidden, so this is
               the entire accessible room list a screen-reader user gets —

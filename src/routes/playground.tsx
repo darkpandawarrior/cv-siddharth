@@ -1,8 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import Playground from "../Playground.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { isCaptured, isWorldActive, subscribeCaptured } from "../world/input.ts";
+
+/**
+ * The FAB floats over the same canvas a driving craft steers in. Left up
+ * unconditionally it sits on top of the HUD's own corner controls (and eats
+ * the taps meant for them) the moment the world is actually being driven.
+ * Gated on `isWorldActive() && isCaptured()` rather than `isCaptured()`
+ * alone: captured defaults to `true` before the world ever mounts (see
+ * input.ts), so reading it by itself would hide the FAB on the list view
+ * too, before anyone has touched a control.
+ */
+function PlaygroundFloatingChat() {
+  const [hide, setHide] = useState(() => isWorldActive() && isCaptured());
+  useEffect(() => subscribeCaptured((captured) => setHide(isWorldActive() && captured)), []);
+  return hide ? null : <FloatingChat />;
+}
 
 export const Route = createFileRoute("/playground")({
   head: () => roomHead("/playground"),
@@ -25,7 +42,7 @@ export const Route = createFileRoute("/playground")({
     <>
       <CursorAura />
       <Playground />
-      <FloatingChat />
+      <PlaygroundFloatingChat />
     </>
   ),
 });

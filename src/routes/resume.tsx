@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
 import { profile } from "../data/profile.ts";
+import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { heavy } from "../lib/assetBase.ts";
 
 // The full record is the default and carries no param, so `/resume` keeps
 // showing everything exactly as it always has. Anything unrecognised falls
@@ -26,10 +28,14 @@ export const Route = createFileRoute("/resume")({
         { name: "description", content: desc },
         { property: "og:url", content: "https://cv-siddharth.vercel.app/resume" },
         { property: "og:description", content: desc },
-        { property: "og:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
-        { name: "twitter:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
+        { property: "og:image", content: heavy("/p/resume/og.png") },
+        { name: "twitter:image", content: heavy("/p/resume/og.png") },
       ],
       links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
+      // Résumé-specific Person schema, derived from the same profile/experience
+      // data the page itself renders from — unlike __root.tsx's PERSON_LD this
+      // can't drift from what /resume actually says.
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(buildResumeJsonLd()) }],
     };
   },
   component: ResumePage,
@@ -44,7 +50,13 @@ function ResumePage() {
   }, []);
   return (
     <>
-      <ResumeView cut={cut ?? "full"} />
+      {/* Shared-element morph target for the hero's "View résumé" link
+          (App.tsx `viewTransitionName: "resume-hero"`) — the wrapper, not
+          ResumeView itself, carries the name: ResumeView.tsx is another
+          lane's file. */}
+      <div style={{ viewTransitionName: "resume-hero" }}>
+        <ResumeView cut={cut ?? "full"} />
+      </div>
       {/* Matching the other route files that already mount it. Two
           bits of chatContext.ts had been dead code since the day they were
           written — PAGE_CHIPS["/resume"] and its three résumé-specific

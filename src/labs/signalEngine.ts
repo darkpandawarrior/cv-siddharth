@@ -155,6 +155,14 @@ export const ALL_OFF: PipelineConfig = {
   imuFusion: false,
 };
 
+/** Every stage on — the "full pipeline" config the tests measure against. */
+export const ALL_ON: PipelineConfig = {
+  accuracyGate: true,
+  jitter: true,
+  spikeRejection: true,
+  imuFusion: true,
+};
+
 /** The stages, in the order they switch on. Each row of the UI ladder turns
  *  on one more flag and leaves the ones above it on. */
 export const STAGES: readonly { key: keyof PipelineConfig; label: string; blurb: string }[] = [
@@ -163,13 +171,6 @@ export const STAGES: readonly { key: keyof PipelineConfig; label: string; blurb:
   { key: "spikeRejection", label: "spike rejection",    blurb: "reject impossible jumps, reset if it diverges" },
   { key: "imuFusion",      label: "IMU dead reckoning", blurb: "coast through tunnels on accelerometer + heading" },
 ];
-
-/** Config with the first `n` stages enabled. n=0 is raw GPS. */
-export function configForStages(n: number): PipelineConfig {
-  const cfg = { ...ALL_OFF };
-  for (let i = 0; i < n && i < STAGES.length; i++) cfg[STAGES[i].key] = true;
-  return cfg;
-}
 
 export interface PathPoint {
   p: XY;
@@ -456,29 +457,4 @@ export function truthDistance(samples: Sample[]): number {
   let d = 0;
   for (let i = 1; i < samples.length; i++) d += distXY(samples[i - 1].truth, samples[i].truth);
   return d;
-}
-
-export interface LadderRow {
-  stages: number;
-  label: string;
-  distanceM: number;
-  errorPct: number;
-  rmseM: number;
-}
-
-/** The headline table: raw GPS, then one stage at a time, against truth. */
-export function ladder(samples: Sample[], tier: Tier = "flagship"): { truthM: number; rows: LadderRow[] } {
-  const truthM = truthDistance(samples);
-  const rows: LadderRow[] = [];
-  for (let n = 0; n <= STAGES.length; n++) {
-    const r = runPipeline(samples, configForStages(n), tier);
-    rows.push({
-      stages: n,
-      label: n === 0 ? "raw GPS" : `+ ${STAGES[n - 1].label}`,
-      distanceM: r.distanceM,
-      errorPct: truthM > 0 ? ((r.distanceM - truthM) / truthM) * 100 : 0,
-      rmseM: r.rmseM,
-    });
-  }
-  return { truthM, rows };
 }

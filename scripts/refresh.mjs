@@ -24,32 +24,13 @@
  * steps above it write; gen:system-prompt reads the profile everything else
  * has finished updating), so this is not a parallel runner and should not
  * become one.
+ *
+ * The order itself now comes from scripts/generators.mjs — one topological
+ * sort over real inputs/outputs, not a second hand-kept list next to
+ * package.json's that could quietly drift from it again.
  */
 import { spawnSync } from "node:child_process";
-
-/** In dependency order. A step that fails is skipped over, never skipped past. */
-const STEPS = [
-  "sync:media",
-  "showcase",
-  "gen:stats",
-  "gen:hiresignal",
-  "gen:galleries",
-  "gen:images",
-  "gen:loopdown",
-  "gen:anthology",
-  "gen:timeline",
-  "gen:feed",
-  "gen:sitemap",
-  "gen:heroes",
-  "gen:og",
-  "gen:weeb",
-  "gen:chess",
-  "gen:chess-deep",
-  "gen:system-prompt",
-  // Last: the perimeter should record the state every generator above it
-  // just left behind, not the state they were in before the run.
-  "gen:ops",
-];
+import { REFRESH_STEPS as STEPS } from "./generators.mjs";
 
 const failed = [];
 const started = Date.now();

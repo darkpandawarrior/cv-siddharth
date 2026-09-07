@@ -1,3 +1,5 @@
+import { guarded } from "./guard.js";
+
 declare const process: { env: Record<string, string | undefined> };
 
 const OWNER = "darkpandawarrior";
@@ -78,6 +80,12 @@ export type OpsRun = {
 
 export type Ops = {
   connected: boolean;
+  /** True when `runs`/`neverRan` (or `supplyChain`) are last-good cache, not
+   *  a live read this request — ops-1: an unauthenticated Actions call burns
+   *  its 60/hr limit fast on a shared serverless IP, and the board used to
+   *  render CONTROL TOWER and PUBLISHED AND SIGNED fully empty on every one
+   *  of those requests instead of holding the last true state. */
+  stale: boolean;
   repo: string;
   runs: OpsRun[];
   supplyChain: SupplyChain;
@@ -87,7 +95,23 @@ export type Ops = {
 };
 
 const EMPTY_CHAIN: SupplyChain = { connected: false, indexBuiltAt: null, apps: [] };
-const EMPTY: Ops = { connected: false, repo: REPO, runs: [], neverRan: [], supplyChain: EMPTY_CHAIN };
+const EMPTY: Ops = { connected: false, stale: false, repo: REPO, runs: [], neverRan: [], supplyChain: EMPTY_CHAIN };
+
+/**
+ * The last-good read of each independent source, kept per warm instance.
+ *
+ * ponytail: module-scope only — it resets on a cold start and is never
+ * shared across instances. A KV/edge-cache-backed store would survive both;
+ * add one if the board is still going empty after a cold start in practice.
+ * Injectable (default param, same shape as chat-handler.ts's rate-limit
+ * `store`) so a test can assert the fallback without depending on module
+ * state surviving between cases.
+ */
+export type OpsCacheStore = {
+  runs: { runs: OpsRun[]; neverRan: string[] } | null;
+  chain: SupplyChain | null;
+};
+const cache: OpsCacheStore = { runs: null, chain: null };
 
 /**
  * What is actually published right now, from the live F-Droid index.
@@ -148,6 +172,7 @@ async function getSupplyChain(fetchImpl: typeof fetch): Promise<SupplyChain> {
 export async function getOps(
   env: Record<string, string | undefined>,
   fetchImpl: typeof fetch = fetch,
+  cacheStore: OpsCacheStore = cache,
 ): Promise<Ops> {
   const headers: Record<string, string> = { accept: "application/vnd.github+json" };
   if (env.GITHUB_TOKEN) headers.authorization = `Bearer ${env.GITHUB_TOKEN}`;
@@ -160,12 +185,26 @@ export async function getOps(
   ]);
 
   const out: Ops = { ...EMPTY, runs: [], neverRan: [], supplyChain: EMPTY_CHAIN };
+  let stale = false;
 
   // The published chain is independent of the runs feed: a rate-limited
   // GitHub must not blank out the figures a reader can check for themselves.
-  if (chainRes.status === "fulfilled") out.supplyChain = chainRes.value;
+  // A dead F-Droid fetch falls back to this instance's last-good read rather
+  // than zeroing the section (ops-1).
+  if (chainRes.status === "fulfilled" && chainRes.value.connected) {
+    out.supplyChain = chainRes.value;
+    cacheStore.chain = chainRes.value;
+  } else if (cacheStore.chain) {
+    out.supplyChain = cacheStore.chain;
+    stale = true;
+  }
 
-  if (runsRes.status !== "fulfilled" || !runsRes.value.ok) return out;
+  if (runsRes.status !== "fulfilled" || !runsRes.value.ok) {
+    if (cacheStore.runs) {
+      return { ...out, connected: true, stale: true, runs: cacheStore.runs.runs, neverRan: cacheStore.runs.neverRan };
+    }
+    return { ...out, stale };
+  }
 
   const data = (await runsRes.value.json()) as {
     workflow_runs?: {
@@ -207,10 +246,12 @@ export async function getOps(
       .map((w) => w.name);
   }
 
+  cacheStore.runs = { runs: out.runs, neverRan: out.neverRan };
+  out.stale = stale;
   return out;
 }
 
-export async function handleOps(_request: Request): Promise<Response> {
+async function opsHandler(_request: Request): Promise<Response> {
   const ops = await getOps(process.env);
   return new Response(JSON.stringify(ops), {
     headers: {
@@ -221,3 +262,12 @@ export async function handleOps(_request: Request): Promise<Response> {
     },
   });
 }
+
+/**
+ * This board carries `env.GITHUB_TOKEN` (D2 in the architecture council):
+ * unlike /api/chat it had zero origin allowlist and zero rate limiter, so a
+ * bare curl loop could burn the owner's 5,000 req/hr GitHub budget and
+ * silently degrade every widget that reads it for real visitors. Guarded the
+ * same way chat-handler.ts already was, via the shared perimeter in guard.ts.
+ */
+export const handleOps = guarded("ops", opsHandler);

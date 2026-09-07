@@ -5,23 +5,26 @@ import {
   ROUTE,
   ROUTE_LENGTH_M,
   ZONES,
+  distXY,
   toLatLng,
   type LatLng,
   type XY,
   type ZoneId,
 } from "./signalRoute.ts";
 import {
+  ALL_OFF,
   CADENCE_S,
   STAGES,
-  configForStages,
-  ladder,
   runPipeline,
   simulate,
+  truthDistance,
+  type PipelineConfig,
   type Tier,
 } from "./signalEngine.ts";
 import { Link } from "@tanstack/react-router";
 import { readToken } from "../themeColor";
 import { useSectionNav } from "../lib/navigation.ts";
+import { Figure } from "./Figure.tsx";
 
 /**
  * The Signal Lab — the "trip distances were off by large margins" bug from
@@ -66,8 +69,43 @@ const PLAYBACK_SECONDS = 26; // how long a full run takes to draw, regardless of
 const fmtKm = (m: number) => `${(m / 1000).toFixed(2)} km`;
 const fmtPct = (p: number) => `${p > 0 ? "+" : ""}${p.toFixed(1)}%`;
 
+/** One SVG path `d` string over a per-sample error series, revealed up to
+ *  `upto` and broken (pen lifted) at every NaN — a dropout the series has no
+ *  point for, rather than a false line dragged straight across the gap. */
+function sparkPath(series: number[], upto: number, w: number, h: number, maxV: number): string {
+  const n = series.length;
+  let d = "";
+  let pen = false;
+  const last = Math.min(upto, n - 1);
+  for (let i = 0; i <= last; i++) {
+    const v = series[i];
+    if (Number.isNaN(v)) {
+      pen = false;
+      continue;
+    }
+    const x = (i / Math.max(1, n - 1)) * w;
+    const y = h - Math.min(1, v / maxV) * h;
+    d += `${pen ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)} `;
+    pen = true;
+  }
+  return d;
+}
+
+// The three checkboxes below the tier toggle. accuracyGate stays a fixed
+// baseline of "the engine" rather than a fourth switch — the spec names
+// exactly jitter/spike/IMU/device-tier as the independently toggleable
+// stages, and gating a fix the chipset itself already flags as poor isn't an
+// interesting thing to demo turning off.
+const CHECKBOX_STAGES = STAGES.filter((s) => s.key !== "accuracyGate");
+
 export function SignalLabPane() {
-  const [stages, setStages] = useState(STAGES.length);
+  // Independent switches, not a cumulative ladder: the old single `stages`
+  // integer could only turn stages on in a fixed order (0..4), so a visitor
+  // could never see "spike rejection alone" — only every combination the
+  // ladder happened to pass through on the way up.
+  const [jitter, setJitter] = useState(true);
+  const [spikeRejection, setSpikeRejection] = useState(true);
+  const [imuFusion, setImuFusion] = useState(true);
   const [tier, setTier] = useState<Tier>("flagship");
   const [laps, setLaps] = useState(1);
   const [scenario, setScenario] = useState(0);
@@ -87,15 +125,30 @@ export function SignalLabPane() {
       tier,
       distanceM: ROUTE_LENGTH_M * laps,
     });
-    const engine = runPipeline(samples, configForStages(stages), tier);
-    const rawPath = runPipeline(samples, configForStages(0), tier);
-    // `ladder` measures ground truth the same way, so take its value rather
-    // than computing a second one that could drift from the table's.
-    const { truthM, rows } = ladder(samples, tier);
-    return { samples, truthM, rows, engine, rawPath };
-  }, [scenario, tier, laps, stages]);
+    const cfg: PipelineConfig = { accuracyGate: true, jitter, spikeRejection, imuFusion };
+    const engine = runPipeline(samples, cfg, tier);
+    const rawPath = runPipeline(samples, ALL_OFF, tier);
+    const truthM = truthDistance(samples);
+    return { samples, truthM, engine, rawPath };
+  }, [scenario, tier, laps, jitter, spikeRejection, imuFusion]);
 
   const total = run.samples.length;
+
+  /* ── Position-error time series, raw vs filtered — the source for the
+   *    convergence sparkline below. One per sample index, NaN where that path
+   *    has no point at that index (a dropout the engine never bridged, or a
+   *    fix the raw path never received during a total blackout). */
+  const errorSeries = useMemo(() => {
+    const n = run.samples.length;
+    const raw = new Array<number>(n).fill(NaN);
+    for (const pp of run.rawPath.path) raw[pp.i] = distXY(pp.p, run.samples[pp.i].truth);
+    const eng = new Array<number>(n).fill(NaN);
+    for (const pp of run.engine.path) eng[pp.i] = distXY(pp.p, run.samples[pp.i].truth);
+    // Scale off this run's own worst raw excursion rather than a guessed
+    // constant, so a different seed or lap count can't clip off-chart.
+    const maxV = Math.max(20, run.rawPath.maxDriftM);
+    return { raw, eng, maxV };
+  }, [run]);
 
   /* ── Playback ─────────────────────────────────────────────────────────── */
   const reduced = useRef(false);
@@ -212,7 +265,7 @@ export function SignalLabPane() {
       const pt = projectXY(pp.p);
       if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
     }
-    ctx.strokeStyle = "rgba(240, 136, 62, 0.5)";
+    ctx.strokeStyle = "rgba(79, 214, 224, 0.5)";
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
@@ -231,9 +284,9 @@ export function SignalLabPane() {
         else pen = false;
       }
       ctx.setLineDash(bridged ? [4, 4] : []);
-      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : readToken("--color-probe", "#5ee6ff");
+      ctx.strokeStyle = bridged ? "rgba(242, 161, 61, 0.85)" : readToken("--color-accent", "#f2a13d");
       ctx.lineWidth = bridged ? 1.8 : 2.4;
-      ctx.shadowColor = "rgba(94, 230, 255, 0.5)";
+      ctx.shadowColor = "rgba(242, 161, 61, 0.5)";
       ctx.shadowBlur = 5;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -258,7 +311,7 @@ export function SignalLabPane() {
     // 5. The magnifier. At city zoom a 13 m scatter is two pixels wide, so the
     //    headline ("raw GPS reads 40 km") is true but invisible. This window
     //    follows the vehicle at ~9x and is where the claim becomes something
-    //    you can see: orange thrashing either side of the road, cyan riding
+    //    you can see: cyan thrashing either side of the road, amber riding
     //    down the middle of it.
     if (here) {
       const IW = Math.min(210, rect.width * 0.34);
@@ -299,11 +352,11 @@ export function SignalLabPane() {
       strokeThrough(
         near.filter((s) => s.fix),
         (s) => s.fix as XY,
-        "rgba(240, 136, 62, 0.9)",
+        "rgba(79, 214, 224, 0.9)",
         1.4,
       );
       const nearPath = path.filter((pp) => pp.i >= from && pp.i <= head);
-      strokeThrough(nearPath, (pp) => pp.p, "#5ee6ff", 2.2);
+      strokeThrough(nearPath, (pp) => pp.p, "#f2a13d", 2.2);
 
       const v = toInset(here.truth);
       ctx.beginPath();
@@ -347,6 +400,28 @@ export function SignalLabPane() {
     return (z.to - z.from) * ROUTE_LENGTH_M * laps;
   };
 
+  /* ── The four-bucket accumulator, live against the playhead. Named after
+   *   Doori's real one: distance the engine actually kept, split by whether
+   *   it came from an accepted fix (confirmed) or from coasting through a
+   *   gap (reckoned), against how much of the real route has gone by so far
+   *   (rejected counts fixes thrown out, not a phantom distance for them —
+   *   a discarded reading never added metres in the first place). */
+  const head = Math.floor(playhead);
+  let confirmedM = 0;
+  let reckonedM = 0;
+  for (let i = 1; i < run.engine.path.length; i++) {
+    const pp = run.engine.path[i];
+    if (pp.i > head) break;
+    const d = distXY(run.engine.path[i - 1].p, pp.p);
+    if (pp.bridged) reckonedM += d;
+    else confirmedM += d;
+  }
+  let truthSoFarM = 0;
+  for (let i = 1; i <= head && i < run.samples.length; i++) {
+    truthSoFarM += distXY(run.samples[i - 1].truth, run.samples[i].truth);
+  }
+  const accuracyPct = truthSoFarM > 0 ? Math.max(0, 100 - Math.abs(((confirmedM + reckonedM) - truthSoFarM) / truthSoFarM) * 100) : 100;
+
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
@@ -354,9 +429,11 @@ export function SignalLabPane() {
         OEM-throttled location updates each lie to the GPS chip in a different way. This is that bug and its
         fix, rebuilt from scratch as Doori's location engine and running over a real 17.4 km loop through
         Pune. Raw GPS reads the drive as roughly <span className="text-warn">40 km</span>, because noise
-        adds length to every single segment. Switch the pipeline on one stage at a time and watch it come
-        back. Every figure below is summed geodesic distance over the points a stage actually kept, no
-        fidelity factors, and the tests assert these exact headlines.
+        adds length to every single segment. Jitter suppression, spike rejection and IMU dead reckoning
+        below are independent switches, not one combined ladder, so you can flip any one on its own and
+        watch the bucket counts and the error curve move. Every figure is summed geodesic distance over
+        the points the pipeline actually kept, no fidelity factors, and the tests assert these exact
+        headlines.
       </p>
 
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
@@ -382,65 +459,80 @@ export function SignalLabPane() {
 
         {/* Headline: the three distances, side by side. */}
         <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-3">
-          <Figure label="raw GPS" value={fmtKm(run.rawPath.distanceM)} sub={fmtPct(rawErrPct)} tone="bad" />
+          <Figure label="raw GPS" value={fmtKm(run.rawPath.distanceM)} sub={fmtPct(rawErrPct)} tone="baseline" />
           <Figure label="engine" value={fmtKm(run.engine.distanceM)} sub={fmtPct(engineErrPct)} tone="good" />
           <Figure label="ground truth" value={fmtKm(run.truthM)} sub="the road actually driven" tone="neutral" />
         </div>
 
-        {/* The ladder. */}
+        {/* The four-bucket distance accumulator, live against the playhead —
+            named after Doori's real one. */}
+        <div className="grid grid-cols-2 gap-px border-t border-line bg-line sm:grid-cols-4">
+          <Figure label="confirmed" value={fmtKm(confirmedM)} sub="from an accepted fix" tone="good" />
+          <Figure label="reckoned" value={fmtKm(reckonedM)} sub="dead-reckoned through a gap" tone="neutral" />
+          <Figure label="rejected" value={String(run.engine.rejected)} sub="fixes discarded outright" tone="bad" />
+          <Figure label="ground truth so far" value={fmtKm(truthSoFarM)} sub={`${accuracyPct.toFixed(1)}% accuracy`} tone="baseline" />
+        </div>
+
+        {/* Convergence: raw vs filtered position error, as a time series
+            rather than the single end-of-run RMSE — so "optimization" reads
+            as an error curve actually being minimized, not just a number. */}
         <div className="border-t border-line px-5 py-4">
-          <p className="kicker mb-3">
-            the pipeline, one stage at a time
+          <p className="kicker mb-2">position error over the run, raw vs filtered</p>
+          <svg
+            viewBox="0 0 200 50"
+            preserveAspectRatio="none"
+            style={{ height: 64 }}
+            className="w-full rounded-lg border border-line bg-void/70"
+            aria-hidden
+          >
+            <path
+              d={sparkPath(errorSeries.raw, head, 200, 50, errorSeries.maxV)}
+              fill="none"
+              stroke="var(--color-accent2)"
+              strokeWidth="1.2"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d={sparkPath(errorSeries.eng, head, 200, 50, errorSeries.maxV)}
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth="1.6"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          <p className="mt-1.5 flex gap-4 font-mono text-[11px]">
+            <span className="text-accent2">— raw</span>
+            <span className="text-accent">— engine</span>
+            <span className="text-muted">error clamped to {errorSeries.maxV.toFixed(0)}m</span>
           </p>
-          <div className="space-y-1.5">
-            {run.rows.map((row, i) => {
-              const on = i <= stages;
-              const active = i === stages;
-              const mag = Math.min(100, Math.abs(row.errorPct));
+        </div>
+
+        {/* Independent switches — not the old cumulative ladder, which could
+            only turn stages on in a fixed order and so could never show
+            "spike rejection alone". */}
+        <div className="border-t border-line px-5 py-4">
+          <p className="kicker mb-3">independent pipeline stages</p>
+          <div className="space-y-2">
+            {CHECKBOX_STAGES.map((s) => {
+              const checked = s.key === "jitter" ? jitter : s.key === "spikeRejection" ? spikeRejection : imuFusion;
+              const setChecked = s.key === "jitter" ? setJitter : s.key === "spikeRejection" ? setSpikeRejection : setImuFusion;
               return (
-                <button
-                  key={row.label}
-                  onClick={() => setStages(i)}
-                  aria-pressed={active}
-                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition ${
-                    active ? "bg-accent/10 ring-1 ring-accent/40" : "hover:bg-surface"
-                  }`}
-                >
-                  <span className={`w-44 shrink-0 font-mono text-xs ${on ? "text-zinc-200" : "text-muted"}`}>
-                    {row.label}
-                  </span>
-                  <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-surface">
-                    <span
-                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${mag}%`,
-                        background: mag > 40 ? "#f0883e" : mag > 12 ? "#db61ff" : "#3ddc84",
-                      }}
-                    />
-                  </span>
-                  <span
-                    className={`w-16 shrink-0 text-right font-mono text-xs ${
-                      Math.abs(row.errorPct) < 12 ? "text-accent" : "text-warn"
-                    }`}
-                  >
-                    {fmtPct(row.errorPct)}
-                  </span>
-                  <span className="hidden w-24 shrink-0 text-right font-mono text-[11px] text-muted sm:block">
-                    RMSE {row.rmseM.toFixed(0)}m
-                  </span>
-                </button>
+                <label key={s.key} className="flex cursor-pointer items-center gap-3 font-mono text-xs">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => setChecked(e.target.checked)}
+                    className="accent-accent"
+                  />
+                  <span className={`w-36 shrink-0 ${checked ? "text-zinc-200" : "text-muted"}`}>{s.label}</span>
+                  <span className="text-muted">{s.blurb}</span>
+                </label>
               );
             })}
           </div>
           <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted">
-            {stages === 0
-              ? "Unfiltered. Every fix is trusted, so every jitter becomes distance."
-              : STAGES[stages - 1].blurb}
-            {" · "}
-            <span className="text-muted">
-              {run.engine.rejected} fixes rejected · {run.engine.bridged} dead-reckoned · {run.engine.resets} divergence
-              {run.engine.resets === 1 ? " reset" : " resets"} · worst drift {run.engine.maxDriftM.toFixed(0)}m
-            </span>
+            {run.engine.rejected} fixes rejected · {run.engine.bridged} dead-reckoned · {run.engine.resets} divergence
+            {run.engine.resets === 1 ? " reset" : " resets"} · worst drift {run.engine.maxDriftM.toFixed(0)}m
           </p>
         </div>
 
@@ -475,7 +567,7 @@ export function SignalLabPane() {
               type="checkbox"
               checked={tier === "budget"}
               onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")}
-              className="accent-signal"
+              className="accent-accent"
             />
             budget device
             <span className="text-muted">({CADENCE_S[tier]}s fixes)</span>
@@ -522,17 +614,6 @@ export function SignalLabPane() {
           </span>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Figure({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: "good" | "bad" | "neutral" }) {
-  const color = tone === "good" ? "text-accent" : tone === "bad" ? "text-warn" : "text-zinc-200";
-  return (
-    <div className="bg-void/70 px-5 py-3">
-      <p className="kicker">{label}</p>
-      <p className={`font-display text-xl font-bold ${color}`}>{value}</p>
-      <p className="font-mono text-[11px] text-muted">{sub}</p>
     </div>
   );
 }

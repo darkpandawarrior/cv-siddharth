@@ -20,6 +20,7 @@ import { LandmarkPanel } from "./LandmarkPanel.tsx";
 import { type Destination } from "./destinations.ts";
 import { useDwellEnter } from "./dwell.ts";
 import { Vehicle } from "./Vehicle.tsx";
+import { Ghosts } from "./Ghosts.tsx";
 import { Hud } from "./Hud.tsx";
 import { input, attachKeyboard, isAutoDriving, setAutoAxes } from "./input.ts";
 import {
@@ -84,6 +85,7 @@ const MemoCorpus = memo(Corpus);
 const MemoTrail = memo(Trail);
 const MemoResolveField = memo(ResolveField);
 const MemoThreads = memo(Threads);
+const MemoGhosts = memo(Ghosts);
 
 // How long the craft has to sit inside a pavilion's sensor before entry
 // auto-confirms — the design doc's "~1s dwell" figure.
@@ -550,6 +552,10 @@ export default function World(props: { onShowList: () => void }) {
             wrote this frame rather than last frame's. */}
         <SpawnFlyIn />
         <MemoWake />
+        {/* Phase 5 — other live visitors as moving points of light. Reads
+            telemetry (this driver's own position, to publish) the same way
+            Wake does, so it belongs in this same "after Vehicle" group. */}
+        <MemoGhosts />
         {/* Renders nothing (Night Survey §12 step 3 removed its dust) — still
             mounted unconditionally because its useFrame is what advances
             resolve.ts's ratchet every frame, which Monuments/Corpus's own
@@ -576,21 +582,30 @@ export default function World(props: { onShowList: () => void }) {
           three independent <Html> systems it replaced. Between the canvas and
           the HUD in DOM order so the HUD's own chrome always wins the z-fight
           against a label that happens to project underneath it. */}
-      <WorldLabels targetTo={tourRef.current.targetTo} />
-      <Hud
-        promptRoom={promptRoom}
-        promptLandmark={panelDestination ? null : promptLandmark}
-        onConfirm={onHudConfirm}
-        onShowList={props.onShowList}
-        waypoint={waypoint}
-        waypointTo={tourRef.current.targetTo}
-        visited={explored}
-        exploredCount={explored.size}
-        collectedCount={collected.size}
-        artifactTotal={ARTIFACTS.length}
-        toasts={toasts}
-        totalRooms={ROOMS.length}
-      />
+      {/* `inert` while the landmark panel is open — the same gap
+          InstrumentView.tsx closes for its own overlay (LandmarkPanel.tsx's
+          doc comment named this one). The full-viewport backdrop already
+          blocks pointer events and Tab already can't reach these, but a
+          screen reader's browse-mode cursor ignores both; `display: contents`
+          keeps this wrapper out of Hud/WorldLabels' own fixed/absolute
+          positioning. */}
+      <div className="contents" inert={panelDestination != null}>
+        <WorldLabels targetTo={tourRef.current.targetTo} />
+        <Hud
+          promptRoom={promptRoom}
+          promptLandmark={panelDestination ? null : promptLandmark}
+          onConfirm={onHudConfirm}
+          onShowList={props.onShowList}
+          waypoint={waypoint}
+          waypointTo={tourRef.current.targetTo}
+          visited={explored}
+          exploredCount={explored.size}
+          collectedCount={collected.size}
+          artifactTotal={ARTIFACTS.length}
+          toasts={toasts}
+          totalRooms={ROOMS.length}
+        />
+      </div>
       {/* PART 1's actual deliverable: a DOM panel over the still-running
           scene. Not rendered at all while closed (see LandmarkPanel.tsx's
           own doc comment on why that matters for a screen reader). */}

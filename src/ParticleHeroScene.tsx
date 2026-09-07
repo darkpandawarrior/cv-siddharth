@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { AdditiveBlending, Color, MathUtils } from "three";
-import { readColor } from "./themeColor";
+import { readColor } from "./themeColorThree.ts";
 import type { BufferAttribute, Group, Points as ThreePoints } from "three";
 
 /**

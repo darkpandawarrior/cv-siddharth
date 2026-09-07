@@ -23,10 +23,9 @@ export type LabKey =
   | "theme"
   | "modules"
   | "gateways"
-  | "search"
+  | "search-trees"
   | "fanout"
   | "replay"
-  | "chess-search"
   | "chess-clock";
 
 export type LabTab = {
@@ -34,22 +33,27 @@ export type LabTab = {
   label: string;
   metric: string;
   group: "production" | "personal";
+  /** Exactly one entry — the instrument worth opening first. */
+  featured?: boolean;
 };
 
 export const LAB_TABS: LabTab[] = [
-  { key: "signal", label: "Signal Lab", metric: "50% → 95%", group: "production" },
+  { key: "signal", label: "Signal Lab", metric: "50% → 95%", group: "production", featured: true },
   { key: "crashes", label: "Crash Triage", metric: "-80%", group: "production" },
   { key: "recompose", label: "Recomposition", metric: "~87% Compose", group: "production" },
   { key: "theme", label: "White-label", metric: "80% faster", group: "production" },
   { key: "modules", label: "Module Graph", metric: "46 modules", group: "personal" },
   { key: "gateways", label: "Gateway Lab", metric: "66 gateways", group: "personal" },
-  { key: "search", label: "Search Tree", metric: "10 personas", group: "personal" },
+  // Merged 2026-09: Gaddi's simulated ISMCTS and the real alpha-beta chess
+  // search used to be two separate tabs ("search" / "chess-search") over
+  // near-identical canvas rigs. One comparative instrument now, gated by an
+  // in-pane source selector — see SearchTreeLab.tsx's SearchTreesLab.
+  { key: "search-trees", label: "Search Trees", metric: "ISMCTS vs α-β", group: "personal" },
   // Interpolated, not typed. This said 62 while the case study two files over
   // said 78, because the generator that moves the case study's number had no
   // pattern for a tab label — the lab understating the work it exists to show.
   { key: "fanout", label: "Provider Fan-out", metric: `${providerCount} providers`, group: "personal" },
   { key: "replay", label: "Deterministic Replay", metric: "0-tolerance", group: "personal" },
-  { key: "chess-search", label: "Chess Search", metric: "alpha-beta", group: "personal" },
   { key: "chess-clock", label: "Clock Burn", metric: "+8.5 pts", group: "personal" },
 ];
 

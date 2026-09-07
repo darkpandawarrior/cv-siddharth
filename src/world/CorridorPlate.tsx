@@ -1,10 +1,14 @@
-import type { JSX } from "react";
+import { lazy, Suspense, type JSX } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { corridorPlateMeta } from "./corridorPlate.ts";
+import { heavy } from "../lib/assetBase.ts";
+
+const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
 
 /**
  * NIGHT SURVEY §11 — THE STATIC FALLBACK, the DOM half.
  *
- * `public/p/world/corridor.png` (`scripts/gen-world-plate.mjs`'s own doc
+ * `heavy/p/world/corridor.png` (`scripts/gen-world-plate.mjs`'s own doc
  * comment explains what it honestly is and isn't) is the terrain; this
  * component is everything §11 asks to sit ON TOP of it "in the DOM": the 8
  * year rules and the 4 lane monograms, both driven by the same committed
@@ -20,6 +24,26 @@ import { corridorPlateMeta } from "./corridorPlate.ts";
  *
  * Alt text names the four strands and the date range — description, not
  * metaphor exposition (§11's own line, and this world's project law 1).
+ *
+ * §11's other named gap, closed: the shared lit-map overlay. Its own doc
+ * comment used to end here because litMap.ts said "NOT wired to playhtml
+ * yet" — there was nothing real to show. Now that it is (litMap.ts's
+ * `useLitMapRemoteSync`), `LiveLitMapOverlay.tsx` reads the SAME shared
+ * channel (a driving tab's own live position, not the full accumulated
+ * texture — see that file's "SHARED-STATE SEAM" comment for why only
+ * sparse stamps are ever broadcast) and marks each live driver as a small
+ * dot on the static image. Not literally "burned into the plate" — a
+ * build-time PNG cannot embed a runtime value that doesn't exist yet at
+ * build time, which is exactly the honesty problem gen-world-plate.mjs's
+ * own comment named — but a genuinely live signal on the fallback, sourced
+ * from the real shared record, is what that gap was actually asking to
+ * close. Loaded with `lazy()` behind `<ClientOnly>` rather than imported
+ * directly here, because THIS component server-renders (see below) and
+ * `@playhtml/react` does not survive that — see LiveLitMapOverlay.tsx's own
+ * doc comment. `<ClientOnly>` is what Start's compiler recognises to strip
+ * this subtree (and the lazy import behind it) from the SERVER compile
+ * entirely — a runtime-only hydration flag alone does not keep the bundler
+ * from resolving the import for SSR regardless.
  *
  * It used to end "...because this browser cannot run the interactive 3D
  * version", which was true for every visitor it had while the call site was
@@ -38,7 +62,7 @@ export function CorridorPlate(): JSX.Element {
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>
-      <img src="/p/world/corridor.png" alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+      <img src={heavy("/p/world/corridor.png")} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
 
       {/* The 8 year rules — one vertical line per real year boundary,
           at the exact fraction gen-world-plate.mjs computed off the same
@@ -67,6 +91,19 @@ export function CorridorPlate(): JSX.Element {
           />
         ))}
       </svg>
+
+      {/* §11's live overlay — every other tab's most recent driving position
+          on the shared channel litMapSyncChannel.ts names, plotted as a
+          small dot. No accumulated trail here (this fallback never
+          accumulates its own record — see this file's own doc comment on
+          why only sparse live positions are ever shared). Nothing renders
+          here at all on the server, which is correct: the shared state it
+          would show does not exist there either. */}
+      <ClientOnly>
+        <Suspense fallback={null}>
+          <LiveLitMapOverlay imageAspect={meta.width / meta.height} />
+        </Suspense>
+      </ClientOnly>
 
       {/* Year numerals, one per rule — plain positioned text rather than
           SVG glyphs inside a 0..1 viewBox, so font size is a real CSS

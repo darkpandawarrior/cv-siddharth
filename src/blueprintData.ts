@@ -1,6 +1,7 @@
 import type { TLDefaultColorStyle } from "tldraw";
 import { projects, metrics } from "./data/profile.ts";
 import { writing } from "./data/writing.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 /* Shared source-of-truth for the Blueprint Room's content, consumed by both
  * the 2D tldraw sketch board (BlueprintRoom.tsx) and the 3D fly-through scene
@@ -202,9 +203,9 @@ export const FRAMES = [
 
 // Real screenshots pinned like a moodboard, slightly rotated.
 export const PINS = [
-  { key: "pin-doori", src: "/projects/doori/screenshots/track_a_trip.gif", mime: "image/gif", animated: true, x: 660, y: 1290, w: 150, h: 320, rot: -0.06 },
-  { key: "pin-gaddi", src: "/projects/gaddi/screenshots/home.gif", mime: "image/gif", animated: true, x: 1500, y: 1300, w: 150, h: 320, rot: 0.05 },
-  { key: "pin-plab", src: "/projects/paymentslab-kmp/screenshots/lab_home_screen_catalog.png", mime: "image/png", animated: false, x: 2070, y: 1270, w: 150, h: 320, rot: -0.04 },
+  { key: "pin-doori", src: heavy("/projects/doori/screenshots/track_a_trip.gif"), mime: "image/gif", animated: true, x: 660, y: 1290, w: 150, h: 320, rot: -0.06 },
+  { key: "pin-gaddi", src: heavy("/projects/gaddi/screenshots/home.gif"), mime: "image/gif", animated: true, x: 1500, y: 1300, w: 150, h: 320, rot: 0.05 },
+  { key: "pin-plab", src: heavy("/projects/paymentslab-kmp/screenshots/lab_home_screen_catalog.png"), mime: "image/png", animated: false, x: 2070, y: 1270, w: 150, h: 320, rot: -0.04 },
 ];
 
 /**

@@ -34,11 +34,11 @@ const MIN_H = 0.06;
 export type GraveyardView = "losses" | "wins";
 
 /** Colour per matrix. Never the only signal — the pane's toggle carries
- *  `aria-pressed` and a written label, and the scene writes the view out too. */
-const VIEW_COLOUR: Record<GraveyardView, string> = {
-  losses: "#f0883e",
-  wins: "#3ddc84",
-};
+ *  `aria-pressed` and a written label, and the scene writes the view out too.
+ *  Resolved at call time (readToken), not a frozen module-scope literal. */
+function viewColour(view: GraveyardView): string {
+  return view === "wins" ? readToken("--color-signal", "#3ddc84") : "#f0883e";
+}
 
 function Column({
   index,
@@ -94,7 +94,7 @@ export default function GraveyardScene({
   reduced: boolean;
 }) {
   const max = Math.max(1, ...counts);
-  const colour = VIEW_COLOUR[view];
+  const colour = viewColour(view);
 
   return (
     <Canvas

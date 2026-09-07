@@ -6,7 +6,7 @@
 //
 //   facets.ts  — moments in a chronology. Keyed by `id`, carries ISO
 //                `authored`/`discovered` dates, and includes intra-page
-//                anchors (`/#work`, `/ink#board`). Feeds the anomaly rail,
+//                anchors (`/#work`, `/#board`). Feeds the anomaly rail,
 //                railGeometry and InstrumentView.
 //   surfaces.ts — destinations. Keyed by route path, carries the presentation
 //                a tile needs (group, device, tint). Feeds the wall, the
@@ -335,9 +335,10 @@ const pageSurfaces: SurfaceInput[] = [
   {
     to: "/resume",
     label: "Résumé",
-    // Claims only what ships. An earlier draft said "one page, A4" — there is
-    // no `@page` rule anywhere in the CSS (that is programme increment 7, not
-    // yet built) and the page count isn't fixed, so both were unverified.
+    // Claims only what ships. index.css now has a real `@page` rule (A4,
+    // fixed margins) so the paper size is no longer a browser default, but
+    // the page count still isn't fixed by that rule alone, so this blurb
+    // still doesn't promise "one page".
     blurb:
       "The résumé as a page, not a download. No chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.",
     tag: "print · pdf",
@@ -380,8 +381,10 @@ const pageSurfaces: SurfaceInput[] = [
     group: "writing",
     tint: INK_OCHRE,
     device: "tablet",
-    // The rail's "board" entry is /ink#board — same destination, and it owns
-    // the 2019-authored / 2026-discovered pair.
+    // so-p1-soul-surfaced moved the rail's "board" entry to point at the
+    // homepage's own EB Profiles section instead of here — this railId only
+    // borrows its 2019-authored / 2026-discovered pair for the tile's date
+    // stamp; /ink still hosts the full write-up (BoardProfiles.tsx).
     railId: "board",
   },
   {
@@ -470,14 +473,39 @@ const pageSurfaces: SurfaceInput[] = [
     //
     // Describes the shape, never the roll-call. The list used to run past
     // routeHead's 158-char clamp and the rendered description ended at "a
-    // typable…", losing the terminal and the experiment count outright.
+    // typable…", losing the terminal and the experiment count outright. The
+    // West District (districtWest.ts) gets named rather than left as an
+    // undescribed landmark: employer towers, case-study monuments and
+    // project towers, sized from profile.ts and projectStats.ts, laid out
+    // west of the boulevard.
     blurb:
-      `Every interactive room on this site as a building on one street, drivable in 3D. The street is a timeline, ` +
-      `north is 2017 and south is now.`,
+      "Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.",
     tag: "3d world · drivable",
     group: "runs",
     tint: ACCENT,
     device: "browser",
+  },
+  {
+    // Corpus, not runs: it renders one already-committed dataset (timeline.ts)
+    // rather than computing anything live, same category as /chess and /weeb.
+    to: "/lanes",
+    label: "Four Lanes",
+    blurb:
+      "Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.",
+    tag: "corpus · timeline",
+    group: "corpus",
+    tint: ACCENT,
+    device: "desktop",
+  },
+  {
+    to: "/time-machine",
+    label: "The Time Machine",
+    blurb:
+      "This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.",
+    tag: "corpus · git history",
+    group: "corpus",
+    tint: ACCENT,
+    device: "desktop",
   },
 ];
 

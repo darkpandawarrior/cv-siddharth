@@ -1,13 +1,15 @@
 import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { LauncherButton } from "./Launcher.tsx";
+import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { TOUR } from "./blueprintData.ts";
 import { hasTldrawLicense, hasWebGL } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useSectionNav } from "./lib/navigation.ts";
-import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import { usePulse } from "./play/pulse.ts";
+import { DeferredPlayRoom, DeferredPresenceBadge } from "./play/DeferredPlayRoom.tsx";
+import { usePulseUI } from "./play/pulseUI.ts";
 
 /** Class components (RoomBoundary below) can't call hooks directly — this
  *  wraps the router-aware "back to portfolio" control so both the error
@@ -150,7 +152,7 @@ function BlueprintRoomInner() {
   // repeat the same "press a key you don't have" problem this file exists to
   // fix, for a mode that isn't even the one on screen.
   const headline = isAvailable(activeMode) ? activeMode.tagline : activeMode.unavailable;
-  const bump = usePulse();
+  const { bump } = usePulseUI();
 
   const onLicenseGate = useCallback(() => {
     setLicenseGated(true);
@@ -189,8 +191,12 @@ function BlueprintRoomInner() {
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <Compass size={13} className="text-accent" /> The Blueprint Room — {headline}
+          {/* blueprint-title-hidden-mobile: was `hidden ... lg:flex`, so a
+              phone visitor had no on-screen title. Always shown; truncates
+              instead of pushing the mode pills off their own row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <Compass size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Blueprint Room — {headline}</span>
           </span>
           {/* Wraps: the mode pills, the tour, Reset and Ask add up to ~339px,
               which does not fit a 320px window even on its own line — and
@@ -264,7 +270,7 @@ function BlueprintRoomInner() {
             >
               <RotateCcw size={13} /> <span className="label-wide">Reset</span>
             </button>
-            <PresenceBadge className="hidden md:flex" />
+            <DeferredPresenceBadge className="hidden md:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -285,9 +291,16 @@ function BlueprintRoomInner() {
               {activeMode.unavailable}.
             </div>
           ) : mode === "sketch" ? (
-            <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
+            // `mode === "sketch"` is a runtime-only switch the bundler can't
+            // see through — it still resolved SketchBoard's tldraw import for
+            // SSR regardless. `<ClientOnly>` is what Start's compiler
+            // recognises to strip this subtree (and the lazy import behind
+            // it) from the SERVER compile entirely.
+            <ClientOnly>
+              <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
+            </ClientOnly>
           ) : (
-            <>
+            <ClientOnly>
               <Blueprint3D
                 tourStop={stop}
                 resetTick={resetTick}
@@ -301,10 +314,14 @@ function BlueprintRoomInner() {
               <div className="pointer-events-none absolute bottom-4 left-4 rounded border border-line bg-ink/80 px-2 py-1 font-mono text-xs text-zinc-400 backdrop-blur">
                 {zoomPercent}%
               </div>
-            </>
+            </ClientOnly>
           )}
         </Suspense>
       </main>
+      {/* D1: this room drew its own chrome and so never got the next-room
+          pager RoomFrame gives the other five rooms — its only exits were
+          the launcher and "back to portfolio". */}
+      <RoomPagerFooter />
     </div>
   );
 }
@@ -314,9 +331,9 @@ export default function BlueprintRoom() {
     <RoomBoundary>
       {/* Its own room, so the presence count means "people in the Blueprint
           Room" rather than "people somewhere on the site". */}
-      <PlayRoom>
+      <DeferredPlayRoom>
         <BlueprintRoomInner />
-      </PlayRoom>
+      </DeferredPlayRoom>
     </RoomBoundary>
   );
 }

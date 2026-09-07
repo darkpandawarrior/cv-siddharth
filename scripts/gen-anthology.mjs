@@ -10,7 +10,7 @@
 // fetch fails and a previous file exists, that file is kept, so a flaky network can
 // never blank the writing.
 //
-// The plates are copied into public/p/anthology/plates/ as real static assets rather
+// The plates are copied into heavy/p/anthology/plates/ as real static assets rather
 // than inlined, because twenty-one base64 images in a TS module is a megabyte the
 // client would parse on every load for pictures most readers never scroll to.
 import { writeFileSync, existsSync, mkdirSync } from "node:fs";
@@ -19,9 +19,11 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
+import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "anthology.ts");
-const plateDir = join(root, "public", "p", "anthology", "plates");
+// Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+const plateDir = join(root, "heavy", "p", "anthology", "plates");
 const REPO = "https://raw.githubusercontent.com/darkpandawarrior/the-loopdown/main";
 
 const bail = (msg) => {
@@ -73,7 +75,7 @@ for (const e of src.entries) {
       if (img.ok) {
         const name = basename(e.plate);
         writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
-        plate = `/p/anthology/plates/${name}`;
+        plate = `${HEAVY_ASSET_BASE}/p/anthology/plates/${name}`;
       }
     }
 
@@ -141,7 +143,7 @@ for (const sib of src.siblings ?? []) {
       if (img.ok) {
         const name = basename(e.plate);
         writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
-        plate = `/p/anthology/plates/${name}`;
+        plate = `${HEAVY_ASSET_BASE}/p/anthology/plates/${name}`;
       }
     }
 
@@ -202,7 +204,7 @@ try {
   const r = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/web/the-fourteen.jpg`);
   if (r.ok) {
     writeFileSync(join(plateDir, "the-fourteen.jpg"), Buffer.from(await r.arrayBuffer()));
-    fourteen = "/p/anthology/plates/the-fourteen.jpg";
+    fourteen = `${HEAVY_ASSET_BASE}/p/anthology/plates/the-fourteen.jpg`;
   }
 } catch { /* optional */ }
 
@@ -211,7 +213,7 @@ try {
 // is a story at all, and a person is the one thing a hashed sigil cannot be.
 // They live under public/ like the plates: ten drawings is not payload for a
 // module every reader of the hub has to parse.
-const witnessDir = join(root, "public", "p", "anthology", "witnesses");
+const witnessDir = join(root, "heavy", "p", "anthology", "witnesses");
 mkdirSync(witnessDir, { recursive: true });
 // A teller ships whether or not there is a drawing of them.
 //
@@ -240,7 +242,7 @@ for (const w of src.witnesses ?? []) {
       .resize({ width: 1100, withoutEnlargement: true })
       .jpeg({ quality: 82 })
       .toFile(join(witnessDir, `${w.id}.jpg`));
-    art = `/p/anthology/witnesses/${w.id}.jpg`;
+    art = `${HEAVY_ASSET_BASE}/p/anthology/witnesses/${w.id}.jpg`;
   } catch { /* Undrawn, or the fetch failed. Either way the record still ships. */ }
   witnesses.push({ id: w.id, name: w.name, entry: w.entry, of: w.of, did: w.did, art });
 }
