@@ -264,7 +264,7 @@ function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element
       dummy.scale.set(t.width, SEGMENT_HEIGHT * 0.82, t.width);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
-      // An undated tower (deadlock-class — see districtWest.ts) sits on a
+      // An undated tower (stutter-class — see districtWest.ts) sits on a
       // dim, uncoloured plinth: the rendering of "the data has no date for
       // this," not a guess dressed up in the same bright tints as the rest.
       color.set(t.dated ? tints[ti % tints.length] : dim(c.textDim, 0.6));
@@ -321,8 +321,8 @@ function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element
 
 /*
  * ProjectTowerLabels lived here — one drei <Html> portal per tower, always on
- * and always the same screen size, which is how "MILEWAY · 36 MODULES" ended
- * up printed across the horizon from forty metres away. The names now come
+ * and always the same screen size, which is how "MILEWAY · 36 MODULES" (Mileway,
+ * now Doori) ended up printed across the horizon from forty metres away. The names now come
  * from the world's single label layer (labels.ts), which ranges them to the
  * district you have to drive into to read them and drops any that would
  * collide with a room name.

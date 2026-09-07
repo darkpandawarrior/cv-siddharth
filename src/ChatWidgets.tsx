@@ -9,7 +9,7 @@ import { Picture } from "./Picture.tsx";
 
 /**
  * The generative-UI half of the chat: the components the assistant can drop
- * into its own reply by emitting `[[rooms]]`, `[[project:mileway]]`,
+ * into its own reply by emitting `[[rooms]]`, `[[project:doori]]`,
  * `[[metrics]]`, `[[skills]]` or `[[jdfit:{…}]]` (see src/lib/chatBlocks.ts for
  * the parser and the streaming rule that keeps a half-typed directive off the
  * screen).

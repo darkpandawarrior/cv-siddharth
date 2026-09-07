@@ -15,7 +15,7 @@ import { useEffect, useState, type RefObject } from "react";
  *    #boot overlay on the first frame. An earlier probe looked up
  *    `#ComposeTarget` by id, which that build has no such element for, so it
  *    polled for 18s, gave up, and the "live" embed was a permanently black box.
- *  - Kursi puts its canvas INSIDE A SHADOW ROOT. `document.querySelector`
+ *  - Gaddi puts its canvas INSIDE A SHADOW ROOT. `document.querySelector`
  *    cannot pierce shadow DOM, so a build that boots and renders perfectly
  *    still read as "never painted": measured 2026-08-14, the canvas was a
  *    healthy 900×700 inside a shadow root on a plain <div> host while the

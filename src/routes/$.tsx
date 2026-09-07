@@ -68,7 +68,7 @@ function NotFoundPage() {
           >
             Home
           </Link>
-          <Link to="/project/$slug" params={{ slug: "mileway" }} className={OUTBOUND_CLASS}>
+          <Link to="/project/$slug" params={{ slug: "doori" }} className={OUTBOUND_CLASS}>
             The work
           </Link>
           <Link to="/ink" className={OUTBOUND_CLASS}>

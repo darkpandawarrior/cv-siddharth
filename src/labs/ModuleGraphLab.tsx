@@ -4,7 +4,7 @@ import { projectStats } from "../data/projectStats.ts";
 import { countWord } from "../data/labs.ts";
 
 /**
- * The Module Graph Lab — Mileway's clean architecture, drawn as a radial
+ * The Module Graph Lab — Doori's clean architecture, drawn as a radial
  * graph. Every feature module meets the others only at the :app composition
  * root; six of them are the names confirmed in the architecture diagram
  * (tracking, logging, travel, approvals, payables, agent), the rest are
@@ -12,7 +12,7 @@ import { countWord } from "../data/labs.ts";
  * Static SVG + React state: nothing here animates per-frame, so there's no
  * canvas/RAF loop to own.
  *
- * The counts come from projectStats.ts, generated off Mileway's own
+ * The counts come from projectStats.ts, generated off Doori's own
  * settings.gradle.kts. They used to be typed here in five places (the divisor,
  * the label array's length, the prose, the aria-label and the chip) and a
  * fourteenth feature module would have drawn thirteen nodes across fourteen
@@ -26,7 +26,7 @@ const OUTER_R = 142;
 const LOCAL = projectStats.mileway.modules;
 const N_FEATURES = projectStats.mileway.features;
 /**
- * The modules Mileway consumes through `includeBuild("external/kmp-toolkit")`
+ * The modules Doori consumes through `includeBuild("external/kmp-toolkit")`
  * rather than declaring itself, so they never appear as `include(` lines and
  * gen-project-stats.mjs does not count them today. Hand-kept until the
  * generator emits a `composedModules` for mileway the way it already does for
@@ -86,7 +86,7 @@ export function ModuleGraphLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        Mileway's {TOTAL}-module Gradle graph: {countWord(N_FEATURES).toLowerCase()} feature modules —
+        Doori's {TOTAL}-module Gradle graph: {countWord(N_FEATURES).toLowerCase()} feature modules —
         tracking, logging, travel, approvals, payables, agent and {countWord(N_FEATURES - NAMED.length).toLowerCase()} more
         — that never depend on each other, wired together only at the{" "}
         <span className="text-zinc-300">:app</span> composition root. Isolate features off shows the
@@ -98,7 +98,7 @@ export function ModuleGraphLab() {
             viewBox="0 0 420 380"
             className="h-full w-full"
             role="img"
-            aria-label={`Radial graph of Mileway's ${TOTAL} Gradle modules, centered on the :app composition root`}
+            aria-label={`Radial graph of Doori's ${TOTAL} Gradle modules, centered on the :app composition root`}
           >
             {!isolate &&
               crossEdges.map((e, idx) => {
@@ -209,10 +209,10 @@ export function ModuleGraphLab() {
           </span>
           <Link
             to="/project/$slug"
-            params={{ slug: "mileway" }}
+            params={{ slug: "doori" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → Mileway's {TOTAL} modules
+            the full story → Doori's {TOTAL} modules
           </Link>
         </div>
       </div>

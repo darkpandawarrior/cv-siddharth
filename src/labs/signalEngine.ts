@@ -10,7 +10,7 @@ import {
 
 /**
  * The Signal Lab engine — the location pipeline from Dice.tech, rebuilt as
- * Mileway's, as a pure function of a seed. No DOM, no time, no randomness
+ * Doori's, as a pure function of a seed. No DOM, no time, no randomness
  * that isn't seeded, so every number it produces is reproducible and can be
  * asserted in a test (see signalEngine.test.ts). The UI only draws what this
  * returns.

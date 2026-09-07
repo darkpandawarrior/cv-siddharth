@@ -83,11 +83,11 @@ export type NodeSpec = {
  * other builds stand on, not a sibling of them.
  */
 const PROJECT_SLOTS: Record<string, Omit<NodeSpec, "key" | "label">> = {
-  mileway: { x: 700, y: 1150, w: 260, h: 110, geo: "ellipse", color: "light-blue", fill: "semi" },
-  kursi: { x: 1250, y: 1260, w: 220, h: 100, geo: "ellipse", color: "light-blue" },
-  paymentslab: { x: 1800, y: 1150, w: 240, h: 100, geo: "ellipse", color: "light-blue" },
-  hiresignal: { x: 1650, y: 1420, w: 240, h: 100, geo: "ellipse", color: "light-blue" },
-  deadlock: { x: 1990, y: 1550, w: 220, h: 100, geo: "ellipse", color: "light-blue" },
+  doori: { x: 700, y: 1150, w: 260, h: 110, geo: "ellipse", color: "light-blue", fill: "semi" },
+  gaddi: { x: 1250, y: 1260, w: 220, h: 100, geo: "ellipse", color: "light-blue" },
+  "paymentslab-kmp": { x: 1800, y: 1150, w: 240, h: 100, geo: "ellipse", color: "light-blue" },
+  candidai: { x: 1650, y: 1420, w: 240, h: 100, geo: "ellipse", color: "light-blue" },
+  stutter: { x: 1990, y: 1550, w: 220, h: 100, geo: "ellipse", color: "light-blue" },
   "kmp-family": { x: 1270, y: 1560, w: 260, h: 100, geo: "hexagon", color: "green" },
   // Added when the map was found to be missing it entirely: the site you are
   // reading this on is a project in the registry like any other.
@@ -156,11 +156,11 @@ export const NODES: NodeSpec[] = [
  */
 export const ARROWS: [string, string, TLDefaultColorStyle][] = [
   ["sid", "work", "green"],
-  ["sid", "mileway", "light-blue"],
-  ["sid", "kursi", "light-blue"],
-  ["sid", "paymentslab", "light-blue"],
-  ["sid", "hiresignal", "light-blue"],
-  ["sid", "deadlock", "light-blue"],
+  ["sid", "doori", "light-blue"],
+  ["sid", "gaddi", "light-blue"],
+  ["sid", "paymentslab-kmp", "light-blue"],
+  ["sid", "candidai", "light-blue"],
+  ["sid", "stutter", "light-blue"],
   ["sid", "portfolio", "light-blue"],
   ["sid", "the-loopdown", "violet"],
   ["sid", "chat", "light-blue"],
@@ -180,13 +180,13 @@ export const ARROWS: [string, string, TLDefaultColorStyle][] = [
   ["series-one-brain-two-bodies", "the-loopdown", "violet"],
   ["series-the-night-shift", "the-loopdown", "violet"],
   ["books", "the-loopdown", "orange"],
-  ["mileway", "kmp-family", "green"],
-  ["kursi", "kmp-family", "green"],
-  ["paymentslab", "kmp-family", "green"],
+  ["doori", "kmp-family", "green"],
+  ["gaddi", "kmp-family", "green"],
+  ["paymentslab-kmp", "kmp-family", "green"],
   ["portfolio", "kmp-family", "green"],
-  ["hiresignal", "kmp-family", "green"],
-  ["mileway", "series-sensors-who-lie", "violet"],
-  ["mileway", "series-chain-of-custody", "violet"],
+  ["candidai", "kmp-family", "green"],
+  ["doori", "series-sensors-who-lie", "violet"],
+  ["doori", "series-chain-of-custody", "violet"],
 ];
 
 // Cluster frames — named zones so the map reads like chapters.
@@ -198,9 +198,9 @@ export const FRAMES = [
 
 // Real screenshots pinned like a moodboard, slightly rotated.
 export const PINS = [
-  { key: "pin-mileway", src: "/projects/mileway/screenshots/track_a_trip.gif", mime: "image/gif", animated: true, x: 660, y: 1290, w: 150, h: 320, rot: -0.06 },
-  { key: "pin-kursi", src: "/projects/kursi/screenshots/home.gif", mime: "image/gif", animated: true, x: 1500, y: 1300, w: 150, h: 320, rot: 0.05 },
-  { key: "pin-plab", src: "/projects/paymentslab/screenshots/lab_home_screen_catalog.png", mime: "image/png", animated: false, x: 2070, y: 1270, w: 150, h: 320, rot: -0.04 },
+  { key: "pin-doori", src: "/projects/doori/screenshots/track_a_trip.gif", mime: "image/gif", animated: true, x: 660, y: 1290, w: 150, h: 320, rot: -0.06 },
+  { key: "pin-gaddi", src: "/projects/gaddi/screenshots/home.gif", mime: "image/gif", animated: true, x: 1500, y: 1300, w: 150, h: 320, rot: 0.05 },
+  { key: "pin-plab", src: "/projects/paymentslab-kmp/screenshots/lab_home_screen_catalog.png", mime: "image/png", animated: false, x: 2070, y: 1270, w: 150, h: 320, rot: -0.04 },
 ];
 
 /**

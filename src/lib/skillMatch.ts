@@ -108,7 +108,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Room / SQLite",
     depth: "deep",
-    evidence: "24 schema migrations across 2 production databases; 47 sequential non-destructive migrations in Mileway (schema v48)",
+    evidence: "24 schema migrations across 2 production databases; 47 sequential non-destructive migrations in Doori (schema v48)",
     aliases: ["room", "sqlite", "sqldelight", "local database", "persistence", "orm", "datastore"],
   },
   {
@@ -138,7 +138,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Location & motion engineering",
     depth: "deep",
-    evidence: "Predictive dead reckoning over GPS/IMU with Kalman smoothing and spike rejection — accuracy 50% → 95%; MotionFusion gravity/linear-acceleration filtering in Mileway",
+    evidence: "Predictive dead reckoning over GPS/IMU with Kalman smoothing and spike rejection — accuracy 50% → 95%; MotionFusion gravity/linear-acceleration filtering in Doori",
     aliases: ["location", "gps", "geolocation", "sensor", "sensors", "maps", "google maps", "geofencing", "location tracking", "imu", "accelerometer", "kalman"],
   },
   {

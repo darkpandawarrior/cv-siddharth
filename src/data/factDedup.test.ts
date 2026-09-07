@@ -7,8 +7,8 @@ import { statLineExtras, badgesBeyondStatus, repoStatLine } from "../lib/project
  *
  * Each card renders three fact rows — the bracketed `status`, the generated
  * `◇` stat line, and the badge chips — and nothing kept them from echoing each
- * other. Before this, a Kursi card printed "14 modules · 4 platforms" in the
- * bracket AND again on the line directly beneath it, and PaymentsLab managed
+ * other. Before this, a Kursi (now Gaddi) card printed "14 modules · 4 platforms" in the
+ * bracket AND again on the line directly beneath it, and PaymentsLab (now PaymentsLab-KMP) managed
  * "40 modules · 66 gateways" three times inside 200px.
  *
  * The same complaint that started this work ("showing same thing in image that
@@ -45,14 +45,14 @@ describe("a card states each fact once", () => {
   });
 
   it("still shows the stat line where it genuinely adds something", () => {
-    // Mileway's generated line carries features and screenshot counts the
+    // Doori's generated line carries features and screenshot counts the
     // curated status does not — dropping the whole row would lose real facts.
-    expect(statLineExtras("mileway", projects.find((p) => p.slug === "mileway")!.status)).toContain("features");
+    expect(statLineExtras("doori", projects.find((p) => p.slug === "doori")!.status)).toContain("features");
   });
 
   it("drops the row entirely when every word of it was already said", () => {
-    const kursi = projects.find((p) => p.slug === "kursi")!;
-    expect(repoStatLine("kursi")).toBeTruthy();
-    expect(statLineExtras("kursi", kursi.status)).toBeNull();
+    const gaddi = projects.find((p) => p.slug === "gaddi")!;
+    expect(repoStatLine("gaddi")).toBeTruthy();
+    expect(statLineExtras("gaddi", gaddi.status)).toBeNull();
   });
 });

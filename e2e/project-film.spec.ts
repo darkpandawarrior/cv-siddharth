@@ -15,7 +15,7 @@ import { expect, test } from "./lib/test.ts";
  * calling goto() twice — the first version of this check passed against the
  * broken build.
  */
-const FILMS = ["mileway", "kursi", "paymentslab"];
+const FILMS = ["doori", "gaddi", "paymentslab-kmp"];
 
 async function currentFilm(page: import("@playwright/test").Page): Promise<string> {
   return page.evaluate(() => {

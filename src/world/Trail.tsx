@@ -20,7 +20,7 @@ import { TrackFilter, meanError, rawFix, stepDistance, type Fix } from "./gps.ts
  * `#f0883e`) was also outside §2's locked palette.
  *
  * The GPS SIMULATION ITSELF is not decoration — it is the site's headline
- * claim (GPS accuracy 50% to 95% on Mileway) made operable, and
+ * claim (GPS accuracy 50% to 95% on Doori) made operable, and
  * `fusedFix`/`telemetry.rawError`/`telemetry.fusedError`/
  * `telemetry.odometer` all still feed real consumers (ResolveField.tsx's
  * `stamp()` calls, the HUD's accuracy readout). So this file keeps computing

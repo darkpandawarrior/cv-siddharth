@@ -8,15 +8,15 @@ import { accentOf, titleize } from "./writingMeta.ts";
 /**
  * case-study slug / project slug → writing series born from that work.
  *
- * Hand-kept, and it has to be: the registry says a lesson came from "Mileway",
- * not which of the four Mileway-shaped surfaces on this site the reader should
+ * Hand-kept, and it has to be: the registry says a lesson came from "Doori",
+ * not which of the four Doori-shaped surfaces on this site the reader should
  * be sent to. What is NOT left to a person is noticing a gap. connections.test.ts
  * fails when a series in the registry appears under no key here, and names the
  * upstream project in the failure so the fix is a copy, not an investigation.
  */
 export const RELATED_SERIES: Record<string, string[]> = {
-  mileway: ["sensors-who-lie", "chain-of-custody", "crossing-the-schema"],
-  paymentslab: ["one-brain-two-bodies"],
+  doori: ["sensors-who-lie", "chain-of-custody", "crossing-the-schema"],
+  "paymentslab-kmp": ["one-brain-two-bodies"],
   "the-loopdown": ["notes-from-the-loop"],
   "gps-accuracy": ["the-night-shift", "sensors-who-lie"],
   "crash-reduction": ["the-coroutine-court"],
@@ -43,7 +43,7 @@ export function fieldNotesFor(slug: string): FieldNoteLink[] {
 /**
  * Reading order for the "next build" pager on project detail pages.
  *
- * A partial ordering, not the list. The curated half exists because mileway
+ * A partial ordering, not the list. The curated half exists because doori
  * genuinely should come first; everything else is appended from profile.ts, so
  * a new project joins the ring on arrival instead of falling out of it. The
  * filter guards the other direction too: a curated slug that gets renamed or
@@ -51,7 +51,7 @@ export function fieldNotesFor(slug: string): FieldNoteLink[] {
  * and kill the pager on the PREVIOUS project in the ring, which is a long way
  * from where the edit happened.
  */
-const CURATED = ["mileway", "kursi", "paymentslab", "hiresignal", "deadlock"];
+const CURATED = ["doori", "gaddi", "paymentslab-kmp", "candidai", "stutter"];
 
 export const PROJECT_ORDER = [
   ...CURATED.filter((s) => projects.some((p) => p.slug === s)),

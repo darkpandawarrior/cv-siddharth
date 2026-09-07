@@ -62,10 +62,10 @@ describe("project towers", () => {
   });
 
   it("never fabricates a year for an undated project", () => {
-    // deadlock has no projectStats entry and no recentGrowth/openSource date
-    // anywhere in the data — it must land on the undated plinth, not at a
-    // guessed year.
-    const deadlock = projectTowers().find((t) => t.slug === "deadlock");
+    // stutter (formerly deadlock) has no projectStats entry and no
+    // recentGrowth/openSource date anywhere in the data — it must land on the
+    // undated plinth, not at a guessed year.
+    const deadlock = projectTowers().find((t) => t.slug === "stutter");
     expect(deadlock).toBeDefined();
     expect(deadlock?.dated).toBe(false);
     // The undated plinth sits south of the current-year band, inside the
@@ -77,7 +77,7 @@ describe("project towers", () => {
 
   it("dates every projectStats-classified project inside Dice's span", () => {
     const dice = employerBlocks().find((b) => b.company === "Dice.tech")!;
-    for (const slug of ["kursi", "mileway", "paymentslab"]) {
+    for (const slug of ["gaddi", "doori", "paymentslab-kmp"]) {
       const tower = projectTowers().find((t) => t.slug === slug)!;
       expect(tower.dated, slug).toBe(true);
       expect(tower.z, slug).toBeGreaterThanOrEqual(dice.zStart - 0.01);

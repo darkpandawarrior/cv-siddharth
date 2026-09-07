@@ -16,7 +16,7 @@ import { Picture } from "./Picture.tsx";
  */
 export function ScreenMarquee({ screens, alt }: { screens: string[]; alt: string }) {
   if (screens.length === 0) return null;
-  // Hard cap. Mileway's gallery is 90 shots; duplicating that for the loop put
+  // Hard cap. Doori's gallery is 90 shots; duplicating that for the loop put
   // 128 <img> in a band nobody reads, all of them fetched. Ten is enough to
   // fill a wide viewport, and every screen is still in the gallery below.
   let row = screens.slice(0, 10);

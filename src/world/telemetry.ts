@@ -28,7 +28,7 @@ export type Telemetry = {
   boosting: boolean;
   /** Upside down and going nowhere — the HUD says so before auto-recovery. */
   stuck: boolean;
-  /** Metres driven this session — the Mileway lens (see Trail.tsx / gps.ts). */
+  /** Metres driven this session — the Doori lens (see Trail.tsx / gps.ts). */
   odometer: number;
   /** Mean positional error of the raw fix and of the fused track, metres. */
   rawError: number;

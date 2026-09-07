@@ -11,8 +11,8 @@ import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
  * tooling and the merged upstream PRs. "It's all public" is the whole point,
  * a hiring manager can click straight through to the code.
  *
- * THERE IS NO "APPS" GROUP HERE ANY MORE. It carried Mileway, PaymentsLab and
- * Kursi, which are the first three cards of the #projects grid one section up:
+ * THERE IS NO "APPS" GROUP HERE ANY MORE. It carried Doori, PaymentsLab-KMP and
+ * Gaddi, which are the first three cards of the #projects grid one section up:
  * the same three repositories, in a second card idiom, 1,800px apart. Eight of
  * this page's GitHub URLs appeared exactly twice for that reason. The split is
  * by kind now, #projects is the apps you can run, #source is the code behind
@@ -50,7 +50,7 @@ type Repo = {
  * about how a card LOOKS and have no business in profile.ts.
  */
 const FOUNDATION_CHROME: Record<string, Pick<Repo, "lang" | "kind" | "stat" | "accent">> = {
-  "kmp-build-logic": { lang: "Kotlin", kind: "Library · build", stat: "composite build · Mileway + PaymentsLab", accent: "#3ddc84" },
+  "kmp-build-logic": { lang: "Kotlin", kind: "Library · build", stat: "composite build · Doori + PaymentsLab-KMP", accent: "#3ddc84" },
   "kmp-toolkit": { lang: "Kotlin", kind: "Library · MVI", stat: "the contract the apps share", accent: "#3ddc84" },
 };
 

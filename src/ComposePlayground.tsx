@@ -49,7 +49,7 @@ function hexFromArgb(raw: string): string {
 /**
  * Design-system tokens imported straight from the real app themes in
  * profile.ts — so the playground speaks the same colour language as the
- * shipped apps. Type `Kursi.accent`, `Mileway.surface`, `PaymentsLab.card`…
+ * shipped apps. Type `Gaddi.accent`, `Doori.surface`, `PaymentsLab-KMP.card`…
  * and it resolves to the exact hex those apps use.
  */
 const DS_COLORS: Record<string, string> = {};
@@ -429,13 +429,13 @@ Column(
 }`,
   },
   {
-    label: "Kursi role",
-    code: `// theme tokens imported from the real Kursi app
+    label: "Gaddi role",
+    code: `// theme tokens imported from the real Gaddi app
 Column(
-    modifier = Modifier.fillMaxSize().background(Kursi.ink).padding(18.dp),
+    modifier = Modifier.fillMaxSize().background(Gaddi.ink).padding(18.dp),
     verticalArrangement = Arrangement.Center
 ) {
-    Card(modifier = Modifier.fillMaxWidth().background(Kursi.card)) {
+    Card(modifier = Modifier.fillMaxWidth().background(Gaddi.card)) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -445,7 +445,7 @@ Column(
                 )
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Netaji Vachan", color = Kursi.accent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Netaji Vachan", color = Gaddi.accent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text("The Politician", color = Color.LightGray, fontSize = 12.sp)
                 }
             }
@@ -457,26 +457,26 @@ Column(
 }`,
   },
   {
-    label: "Mileway",
-    code: `// theme tokens imported from the real Mileway app
+    label: "Doori",
+    code: `// theme tokens imported from the real Doori app
 Column(
-    modifier = Modifier.fillMaxSize().background(Mileway.ink).padding(20.dp),
+    modifier = Modifier.fillMaxSize().background(Doori.ink).padding(20.dp),
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    Text("Mileway", color = Mileway.accent, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+    Text("Doori", color = Doori.accent, fontSize = 28.sp, fontWeight = FontWeight.Bold)
     Text("one Kotlin codebase", color = Color.Gray, fontSize = 13.sp)
     Spacer(Modifier.height(20.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Card(modifier = Modifier.background(Mileway.card)) {
+        Card(modifier = Modifier.background(Doori.card)) {
             Column(modifier = Modifier.padding(18.dp)) {
-                Text("5", color = Mileway.accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text("5", color = Doori.accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Text("platforms", color = Color.Gray, fontSize = 11.sp)
             }
         }
-        Card(modifier = Modifier.background(Mileway.card)) {
+        Card(modifier = Modifier.background(Doori.card)) {
             Column(modifier = Modifier.padding(18.dp)) {
-                Text("35", color = Mileway.accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text("35", color = Doori.accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Text("modules", color = Color.Gray, fontSize = 11.sp)
             }
         }

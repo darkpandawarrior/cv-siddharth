@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectStats } from "../data/projectStats.ts";
 
-/* ── PaymentsLab Gateway Lab ─────────────────────────────────────────── */
-/* PaymentsLab's cataloged gateways, split by how each one is integrated and
+/* ── PaymentsLab-KMP Gateway Lab ─────────────────────────────────────────── */
+/* PaymentsLab-KMP's cataloged gateways, split by how each one is integrated and
    routed through one PaymentGateway abstraction. Every count comes from
    projectStats.ts, which gen-project-stats.mjs parses out of the repo's own
    generated README banner — the numbers used to be typed here four separate
@@ -168,7 +168,7 @@ export function GatewayLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        PaymentsLab catalogs {TOTAL_GATEWAYS} real payment gateways — {P.gatewaysNative} native-SDK
+        PaymentsLab-KMP catalogs {TOTAL_GATEWAYS} real payment gateways — {P.gatewaysNative} native-SDK
         integrations, {P.gatewaysHosted} hosted-webview providers, {P.gatewaysMobileMoney} mobile-money
         flows and {P.gatewaysStub} catalog-only/KYC-gated entries — behind one PaymentGateway interface.
         Toggle the abstraction off and every checkout call needs its own bespoke integration; switch it
@@ -177,7 +177,7 @@ export function GatewayLab() {
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
-          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab gateway routing simulation" />
+          <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab-KMP gateway routing simulation" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
@@ -193,10 +193,10 @@ export function GatewayLab() {
           )}
           <Link
             to="/project/$slug"
-            params={{ slug: "paymentslab" }}
+            params={{ slug: "paymentslab-kmp" }}
             className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
           >
-            the full story → PaymentsLab's {TOTAL_GATEWAYS} gateways
+            the full story → PaymentsLab-KMP's {TOTAL_GATEWAYS} gateways
           </Link>
         </div>
       </div>

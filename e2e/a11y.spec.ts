@@ -6,7 +6,7 @@ import { surfaces } from "../src/data/surfaces.ts";
 // Phase C2: axe locks in the a11y pass instead of just documenting it.
 // Four routes cover every layout shape on the site — SSR content page (/),
 // print-mode page (/resume), SSR project detail with a gallery/lightbox
-// (/project/mileway), and a CSR "room" with canvas + form controls (/lab).
+// (/project/doori), and a CSR "room" with canvas + form controls (/lab).
 // 2026-07-29 audit: extended to the remaining CSR "rooms" (terminal, blueprint,
 // compose, forge, map, playground, loopdown) — the original four never scanned
 // any of these, so their ARIA/keyboard wiring shipped unverified like the chat
@@ -32,7 +32,7 @@ import { surfaces } from "../src/data/surfaces.ts";
 const ROUTES = [
   "/",
   "/read/deadline",
-  "/project/mileway",
+  "/project/doori",
   ...surfaces.map((s) => s.to),
 ];
 

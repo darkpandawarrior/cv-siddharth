@@ -1,7 +1,7 @@
 /**
  * The location lens: a live, drivable demo of the thing he actually shipped.
  *
- * Mileway is the hero project and the headline number on the site is GPS
+ * Doori is the hero project and the headline number on the site is GPS
  * accuracy going from 50% to 95% via staged dead reckoning — Kalman smoothing,
  * jitter suppression and spike rejection over a raw fix that wanders. That is
  * an abstract claim on a CV and a boring chart in a lab. Here it is the ground

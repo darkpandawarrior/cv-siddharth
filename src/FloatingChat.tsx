@@ -19,7 +19,7 @@ import { JD_MAX_CHARS, MAX_TURN_CHARS, chatErrorText, isJdNearCap, streamReply, 
  * The console — the AI assistant, as a terminal-flavoured panel.
  *
  * Three things make it more than a chat bubble:
- *  1. Generative UI — the model emits `[[rooms]]` / `[[project:mileway]]` and
+ *  1. Generative UI — the model emits `[[rooms]]` / `[[project:doori]]` and
  *     the reply renders REAL components (src/ChatWidgets.tsx).
  *  2. Slash commands — `/projects`, `/open <slug>`, `/rooms`… run locally with
  *     no model call, with the same ghost-completion + ↑/↓ history the terminal
@@ -530,7 +530,7 @@ export function FloatingChat() {
   // gets a few next steps they haven't asked yet, instead of the chips
   // disappearing forever after the first question. No second model call.
   //
-  // They're also route-aware: on /project/mileway they ask about Mileway, in a
+  // They're also route-aware: on /project/doori they ask about Doori, in a
   // room they ask about that room. Derived from profile.ts (chatContext.ts),
   // never per-slug copy that drifts when a project is renamed.
   const asked = new Set(messages.flatMap((m) => (m.role === "user" ? [m.content] : [])));

@@ -32,9 +32,9 @@ const FDROID = "https://darkpandawarrior.github.io/fdroid/repo";
 
 /** The apps that actually publish through that repo. */
 const PUBLISHED: { slug: string; repo: string; pkg: string }[] = [
-  { slug: "kursi", repo: "Kursi", pkg: "com.kursi.android" },
-  { slug: "mileway", repo: "Mileway", pkg: "com.mileway" },
-  { slug: "paymentslab", repo: "PaymentsLab", pkg: "com.paymentslab.app" },
+  { slug: "gaddi", repo: "Gaddi", pkg: "com.kursi.android" },
+  { slug: "doori", repo: "Doori", pkg: "com.mileway" },
+  { slug: "paymentslab-kmp", repo: "PaymentsLab-KMP", pkg: "com.paymentslab.app" },
 ];
 
 export type PublishedApp = {

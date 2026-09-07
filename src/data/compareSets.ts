@@ -2,300 +2,300 @@
 // Add versions under public/projects/<slug>/compare/<set>/N-label.png and they appear automatically.
 export type CompareOption = { label: string; light: string; dark?: string };
 export const compareSets: Record<string, Record<string, CompareOption[]>> = {
-  "hiresignal": {
+  "candidai": {
     "theme": [
       {
         "label": "dashboard",
-        "light": "/projects/hiresignal/compare/theme/1-dashboard.png",
-        "dark": "/projects/hiresignal/compare/theme/1-dashboard-dark.png"
+        "light": "/projects/candidai/compare/theme/1-dashboard.png",
+        "dark": "/projects/candidai/compare/theme/1-dashboard-dark.png"
       },
       {
         "label": "board",
-        "light": "/projects/hiresignal/compare/theme/2-board.png",
-        "dark": "/projects/hiresignal/compare/theme/2-board-dark.png"
+        "light": "/projects/candidai/compare/theme/2-board.png",
+        "dark": "/projects/candidai/compare/theme/2-board-dark.png"
       },
       {
         "label": "pipeline",
-        "light": "/projects/hiresignal/compare/theme/3-pipeline.png",
-        "dark": "/projects/hiresignal/compare/theme/3-pipeline-dark.png"
+        "light": "/projects/candidai/compare/theme/3-pipeline.png",
+        "dark": "/projects/candidai/compare/theme/3-pipeline-dark.png"
       }
     ]
   },
-  "kursi": {
-    "density": [
-      {
-        "label": "focus",
-        "light": "/projects/kursi/compare/density/1-focus.png"
-      },
-      {
-        "label": "guided",
-        "light": "/projects/kursi/compare/density/2-guided.png"
-      },
-      {
-        "label": "analyst",
-        "light": "/projects/kursi/compare/density/3-analyst.png"
-      }
-    ]
-  },
-  "mileway": {
+  "doori": {
     "direction-approvals": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-approvals/1-ledger.png"
+        "light": "/projects/doori/compare/direction-approvals/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-approvals/2-instrument.png"
+        "light": "/projects/doori/compare/direction-approvals/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-approvals/3-signal.png"
+        "light": "/projects/doori/compare/direction-approvals/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-approvals/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-approvals/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-approvals/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-approvals/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-approvals/5-paper.png",
+        "dark": "/projects/doori/compare/direction-approvals/5-paper-dark.png"
       }
     ],
     "direction-drive-review": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-drive-review/1-ledger.png"
+        "light": "/projects/doori/compare/direction-drive-review/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-drive-review/2-instrument.png"
+        "light": "/projects/doori/compare/direction-drive-review/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-drive-review/3-signal.png"
+        "light": "/projects/doori/compare/direction-drive-review/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-drive-review/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-drive-review/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-drive-review/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-drive-review/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-drive-review/5-paper.png",
+        "dark": "/projects/doori/compare/direction-drive-review/5-paper-dark.png"
       }
     ],
     "direction-expense": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-expense/1-ledger.png"
+        "light": "/projects/doori/compare/direction-expense/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-expense/2-instrument.png"
+        "light": "/projects/doori/compare/direction-expense/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-expense/3-signal.png"
+        "light": "/projects/doori/compare/direction-expense/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-expense/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-expense/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-expense/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-expense/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-expense/5-paper.png",
+        "dark": "/projects/doori/compare/direction-expense/5-paper-dark.png"
       }
     ],
     "direction-journey-guide": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-journey-guide/1-ledger.png"
+        "light": "/projects/doori/compare/direction-journey-guide/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-journey-guide/2-instrument.png"
+        "light": "/projects/doori/compare/direction-journey-guide/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-journey-guide/3-signal.png"
+        "light": "/projects/doori/compare/direction-journey-guide/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-journey-guide/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-journey-guide/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-journey-guide/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-journey-guide/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-journey-guide/5-paper.png",
+        "dark": "/projects/doori/compare/direction-journey-guide/5-paper-dark.png"
       }
     ],
     "direction-live-drive": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-live-drive/1-ledger.png"
+        "light": "/projects/doori/compare/direction-live-drive/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-live-drive/2-instrument.png"
+        "light": "/projects/doori/compare/direction-live-drive/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-live-drive/3-signal.png"
+        "light": "/projects/doori/compare/direction-live-drive/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-live-drive/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-live-drive/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-live-drive/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-live-drive/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-live-drive/5-paper.png",
+        "dark": "/projects/doori/compare/direction-live-drive/5-paper-dark.png"
       }
     ],
     "direction-saved-tracks": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-saved-tracks/1-ledger.png"
+        "light": "/projects/doori/compare/direction-saved-tracks/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-saved-tracks/2-instrument.png"
+        "light": "/projects/doori/compare/direction-saved-tracks/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-saved-tracks/3-signal.png"
+        "light": "/projects/doori/compare/direction-saved-tracks/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-saved-tracks/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-saved-tracks/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-saved-tracks/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-saved-tracks/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-saved-tracks/5-paper.png",
+        "dark": "/projects/doori/compare/direction-saved-tracks/5-paper-dark.png"
       }
     ],
     "direction-track-detail": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-track-detail/1-ledger.png"
+        "light": "/projects/doori/compare/direction-track-detail/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-track-detail/2-instrument.png"
+        "light": "/projects/doori/compare/direction-track-detail/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-track-detail/3-signal.png"
+        "light": "/projects/doori/compare/direction-track-detail/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-track-detail/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-track-detail/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-track-detail/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-track-detail/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-track-detail/5-paper.png",
+        "dark": "/projects/doori/compare/direction-track-detail/5-paper-dark.png"
       }
     ],
     "direction-track-evidence": [
       {
         "label": "ledger",
-        "light": "/projects/mileway/compare/direction-track-evidence/1-ledger.png"
+        "light": "/projects/doori/compare/direction-track-evidence/1-ledger.png"
       },
       {
         "label": "instrument",
-        "light": "/projects/mileway/compare/direction-track-evidence/2-instrument.png"
+        "light": "/projects/doori/compare/direction-track-evidence/2-instrument.png"
       },
       {
         "label": "signal",
-        "light": "/projects/mileway/compare/direction-track-evidence/3-signal.png"
+        "light": "/projects/doori/compare/direction-track-evidence/3-signal.png"
       },
       {
         "label": "refined ember",
-        "light": "/projects/mileway/compare/direction-track-evidence/4-refined-ember.png"
+        "light": "/projects/doori/compare/direction-track-evidence/4-refined-ember.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/direction-track-evidence/5-paper.png",
-        "dark": "/projects/mileway/compare/direction-track-evidence/5-paper-dark.png"
+        "light": "/projects/doori/compare/direction-track-evidence/5-paper.png",
+        "dark": "/projects/doori/compare/direction-track-evidence/5-paper-dark.png"
       }
     ],
     "redesign-cards-home": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-cards-home/1-before.png"
+        "light": "/projects/doori/compare/redesign-cards-home/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-cards-home/2-paper.png"
+        "light": "/projects/doori/compare/redesign-cards-home/2-paper.png"
       }
     ],
     "redesign-check-in-history": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-check-in-history/1-before.png"
+        "light": "/projects/doori/compare/redesign-check-in-history/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-check-in-history/2-paper.png"
+        "light": "/projects/doori/compare/redesign-check-in-history/2-paper.png"
       }
     ],
     "redesign-create-invoice": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-create-invoice/1-before.png"
+        "light": "/projects/doori/compare/redesign-create-invoice/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-create-invoice/2-paper.png"
+        "light": "/projects/doori/compare/redesign-create-invoice/2-paper.png"
       }
     ],
     "redesign-create-trip": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-create-trip/1-before.png"
+        "light": "/projects/doori/compare/redesign-create-trip/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-create-trip/2-paper.png"
+        "light": "/projects/doori/compare/redesign-create-trip/2-paper.png"
       }
     ],
     "redesign-geo-check-in": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-geo-check-in/1-before.png"
+        "light": "/projects/doori/compare/redesign-geo-check-in/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-geo-check-in/2-paper.png"
+        "light": "/projects/doori/compare/redesign-geo-check-in/2-paper.png"
       }
     ],
     "redesign-search-masterSearch-results": [
       {
         "label": "before",
-        "light": "/projects/mileway/compare/redesign-search-masterSearch-results/1-before.png"
+        "light": "/projects/doori/compare/redesign-search-masterSearch-results/1-before.png"
       },
       {
         "label": "paper",
-        "light": "/projects/mileway/compare/redesign-search-masterSearch-results/2-paper.png"
+        "light": "/projects/doori/compare/redesign-search-masterSearch-results/2-paper.png"
       }
     ]
   },
-  "paymentslab": {
+  "gaddi": {
+    "density": [
+      {
+        "label": "focus",
+        "light": "/projects/gaddi/compare/density/1-focus.png"
+      },
+      {
+        "label": "guided",
+        "light": "/projects/gaddi/compare/density/2-guided.png"
+      },
+      {
+        "label": "analyst",
+        "light": "/projects/gaddi/compare/density/3-analyst.png"
+      }
+    ]
+  },
+  "paymentslab-kmp": {
     "checkout-lifecycle": [
       {
         "label": "order summary",
-        "light": "/projects/paymentslab/compare/checkout-lifecycle/1-order-summary.png"
+        "light": "/projects/paymentslab-kmp/compare/checkout-lifecycle/1-order-summary.png"
       },
       {
         "label": "paying",
-        "light": "/projects/paymentslab/compare/checkout-lifecycle/2-paying.png"
+        "light": "/projects/paymentslab-kmp/compare/checkout-lifecycle/2-paying.png"
       },
       {
         "label": "settled success",
-        "light": "/projects/paymentslab/compare/checkout-lifecycle/3-settled-success.png"
+        "light": "/projects/paymentslab-kmp/compare/checkout-lifecycle/3-settled-success.png"
       }
     ]
   }

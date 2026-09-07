@@ -344,10 +344,10 @@ describe("parseJdFit", () => {
 
   it("lower-cases the project slug so an invented one just misses", () => {
     const parsed = parseJdFit(
-      JSON.stringify({ score: 50, summary: "ok", strengths: [{ need: "a", evidence: "b", project: "MileWay" }] }),
+      JSON.stringify({ score: 50, summary: "ok", strengths: [{ need: "a", evidence: "b", project: "Doori" }] }),
     )!;
-    expect(parsed.strengths[0].project).toBe("mileway");
-    expect(projectBySlug(parsed.strengths[0].project!)?.slug).toBe("mileway");
+    expect(parsed.strengths[0].project).toBe("doori");
+    expect(projectBySlug(parsed.strengths[0].project!)?.slug).toBe("doori");
 
     for (const project of ["../../etc/passwd", "https://evil.com", "not-a-project"]) {
       const bad = parseJdFit(JSON.stringify({ score: 50, summary: "ok", strengths: [{ need: "a", evidence: "b", project }] }))!;
@@ -368,14 +368,14 @@ describe("parseJdFit", () => {
  */
 describe("widget-directive safety", () => {
   it("resolves a project directive only against real slugs", () => {
-    expect(projectBySlug("mileway")?.slug).toBe("mileway");
+    expect(projectBySlug("doori")?.slug).toBe("doori");
     for (const injected of [
       "evil",
-      "mileway-evil",
+      "doori-evil",
       "../../etc/passwd",
       "https://evil.com",
-      "mileway ",
-      "MILEWAY", // the parser lowercases; a raw lookup must still not match
+      "doori ",
+      "DOORI", // the parser lowercases; a raw lookup must still not match
       "",
     ]) {
       expect(projectBySlug(injected), injected).toBeUndefined();

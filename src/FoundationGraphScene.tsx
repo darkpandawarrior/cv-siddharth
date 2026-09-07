@@ -30,8 +30,8 @@ interface Node {
 const NODES: Node[] = [
   { id: "toolkit", label: "kmp-toolkit", pos: [0, 0.4, 0], r: 0.34, color: "--color-signal", fallbackHex: "#3ddc84", url: "https://github.com/darkpandawarrior/kmp-toolkit", kind: "hub" },
   { id: "buildlogic", label: "kmp-build-logic", pos: [-2.3, -0.7, -0.4], r: 0.3, color: "--color-signal", fallbackHex: "#3ddc84", url: "https://github.com/darkpandawarrior/kmp-build-logic", kind: "hub" },
-  { id: "mileway", label: "Mileway", pos: [2.4, 1.2, -0.6], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/Mileway", kind: "app" },
-  { id: "paymentslab", label: "PaymentsLab", pos: [2.2, -1.1, 0.3], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/PaymentsLab", kind: "app" },
+  { id: "doori", label: "Doori", pos: [2.4, 1.2, -0.6], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/Doori", kind: "app" },
+  { id: "paymentslab-kmp", label: "PaymentsLab-KMP", pos: [2.2, -1.1, 0.3], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP", kind: "app" },
   { id: "mvi", label: "mvi-core", pos: [-0.9, 1.7, 0.5], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
   { id: "security", label: "security", pos: [-1.4, 1.1, -1], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
   { id: "designsystem", label: "designsystem", pos: [0.2, -1.6, -0.8], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
@@ -39,10 +39,10 @@ const NODES: Node[] = [
 ];
 
 const EDGES: [string, string][] = [
-  ["mileway", "toolkit"],
-  ["mileway", "buildlogic"],
-  ["paymentslab", "toolkit"],
-  ["paymentslab", "buildlogic"],
+  ["doori", "toolkit"],
+  ["doori", "buildlogic"],
+  ["paymentslab-kmp", "toolkit"],
+  ["paymentslab-kmp", "buildlogic"],
   ["toolkit", "mvi"],
   ["toolkit", "security"],
   ["toolkit", "designsystem"],

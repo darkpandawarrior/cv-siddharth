@@ -287,8 +287,8 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
-    slug: "mileway",
-    title: "Mileway: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
+    slug: "doori",
+    title: "Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
     metric: "46 modules · 5 platforms · offline AI",
     summary:
       "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Zero backend, Room + DataStore only, so the whole thing is reproducible and reviewable by anyone.",
@@ -305,7 +305,7 @@ export const caseStudies: CaseStudy[] = [
       "Dual gms / noGms distribution (Google Play + F-Droid) with a dependency-guard that fails the build if proprietary libraries leak into the FOSS flavor; quality gated by 159 Roborazzi JVM screenshot tests (no emulator, no network), Napier logging, detekt, ktlint, Kover and CI.",
     ],
     outcome:
-      "All five targets build, run and pass every quality gate from one shared Kotlin codebase, with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Mileway.",
+      "All five targets build, run and pass every quality gate from one shared Kotlin codebase, with a real location engine, a policy/reimbursement layer, a durable submit-outbox, a persona-driven plugin-composition platform and an on-device AI assistant layered on the offline data model. Explore the app, architecture diagrams and all rendered screens at github.com/darkpandawarrior/Doori.",
     tags: ["Kotlin Multiplatform", "Compose Multiplatform", "Android · iOS · Wear OS · watchOS · Desktop", "46 modules", "Offline AI", "Open source"],
   },
   {
@@ -460,7 +460,7 @@ export interface ProjectDetailData {
   extraLinks?: { label: string; url: string }[];
   // Mermaid diagram sources, rendered (dark-themed) on the detail page.
   diagrams?: { title: string; code: string }[];
-  // Optional roster (e.g. Kursi's six roles), rendered as a colour-coded grid.
+  // Optional roster (e.g. Gaddi's six roles), rendered as a colour-coded grid.
   roles?: { name: string; power: string; color: string }[];
 }
 
@@ -503,7 +503,7 @@ export interface Project {
   // instead of the full auto-generated gallery.
   screens?: { file: string; caption: string }[];
   // Optional per-project palette — overrides the site accent on this project's
-  // detail page (e.g. Kursi's teak/brass/cream "License Raj Deco" identity).
+  // detail page (e.g. Gaddi's teak/brass/cream "License Raj Deco" identity).
   theme?: {
     accent: string;
     accentDim: string;
@@ -562,9 +562,9 @@ const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) =>
 
 export const projects: Project[] = [
   {
-    slug: "kursi",
-    name: "Kursi",
-    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances. Kursi ke liye kuch bhi karega.",
+    slug: "gaddi",
+    name: "Gaddi",
+    tagline: "A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega.",
     description:
       "Deterministic Kotlin Multiplatform social-deduction game with ISMCTS bot AI, shipped across Android, iOS, Desktop, and Web.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Desktop", "Web (Wasm)"],
@@ -572,8 +572,8 @@ export const projects: Project[] = [
       "Pure (GameState, Intent) → GameState reducer drives the AI, UI, and a future server.",
       "ISMCTS AI with 10 bot personas plus a DARBAR social layer for bluffing and alliances.",
     ],
-    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Kursi" }],
-    // 14, not 13: Kursi gained a `:cli` module on 2026-08-26 ("headless client
+    links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Gaddi" }],
+    // 14, not 13: Gaddi gained a `:cli` module on 2026-08-26 ("headless client
     // proving :engine is a real SDK"), and this hand-written line went stale
     // the moment it landed. gen-project-stats.mjs counts the repo's own
     // settings.gradle.kts, so `repoStatLine` was already printing 14 directly
@@ -589,7 +589,7 @@ export const projects: Project[] = [
       {
         channel: "GitHub Releases",
         detail: "Signed APK per tag, plus desktop and web builds.",
-        url: "https://github.com/darkpandawarrior/Kursi/releases",
+        url: "https://github.com/darkpandawarrior/Gaddi/releases",
       },
       {
         channel: "Headless CLI",
@@ -607,7 +607,7 @@ export const projects: Project[] = [
       line: "#4a3724",
       displayFont: "'Rozha One', Georgia, serif",
     },
-    icon: "/projects/kursi/brand/kursi-icon.svg",
+    icon: "/projects/gaddi/brand/kursi-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -637,7 +637,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Kursi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair, the Gaddi, and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
+        "Gaddi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair, the Gaddi, and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
       sections: [
         {
           heading: "Deterministic engine",
@@ -711,7 +711,7 @@ export const projects: Project[] = [
         { group: "Build & quality", items: ["Koin", "Fastlane", "CI"] },
       ],
       extraLinks: [
-        { label: "README (full rules)", url: "https://github.com/darkpandawarrior/Kursi#readme" },
+        { label: "README (full rules)", url: "https://github.com/darkpandawarrior/Gaddi#readme" },
       ],
       diagrams: [
         {
@@ -765,9 +765,9 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "mileway",
+    slug: "doori",
     tier: 2,
-    name: "Mileway",
+    name: "Doori",
     tagline: "Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
     description:
       "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, zero backend.",
@@ -777,9 +777,9 @@ export const projects: Project[] = [
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant.",
     ],
     links: [
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/Mileway" },
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/Doori" },
       { label: "Case study", url: "#work" },
-      { label: "PaymentsLab (sibling KMP app)", url: "#project/paymentslab" },
+      { label: "PaymentsLab-KMP (sibling KMP app)", url: "#project/paymentslab-kmp" },
     ],
     status: "46 modules · 5 platforms · 159 tests",
     deployments: [
@@ -792,13 +792,13 @@ export const projects: Project[] = [
       {
         channel: "GitHub Releases",
         detail: "Signed APK per tag, for both the Play flavour and the Google-free one.",
-        url: "https://github.com/darkpandawarrior/Mileway/releases",
+        url: "https://github.com/darkpandawarrior/Doori/releases",
       },
     ],
     badges: ["Kotlin Multiplatform", "46 modules", "5 platforms", "Open source"],
     // Telemetry-cyan — the site's own "depth" accent, reused rather than
-    // invented: fitting for a location/tracking app, distinct from Kursi's
-    // teak/brass and PaymentsLab's violet.
+    // invented: fitting for a location/tracking app, distinct from Gaddi's
+    // teak/brass and PaymentsLab-KMP's violet.
     theme: {
       accent: "#5ee6ff",
       accentDim: "#2fb8d6",
@@ -807,7 +807,7 @@ export const projects: Project[] = [
       card: "#0f1720",
       line: "#1c2733",
     },
-    icon: "/projects/mileway/brand/mileway-icon.svg",
+    icon: "/projects/doori/brand/mileway-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -853,7 +853,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Mileway is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
+        "Doori is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, with zero backend so the whole thing is reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
       sections: [
         {
           heading: "46-module clean architecture (36 local + 10 composed)",
@@ -903,12 +903,12 @@ export const projects: Project[] = [
         { group: "Quality", items: ["Roborazzi (159 JVM screenshot tests)", "detekt", "ktlint", "Kover", "CI"] },
       ],
       extraLinks: [
-        { label: "Feature modules", url: "https://github.com/darkpandawarrior/Mileway/tree/main/feature" },
+        { label: "Feature modules", url: "https://github.com/darkpandawarrior/Doori/tree/main/feature" },
         { label: "kmp-build-logic (shared)", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
-        { label: "README", url: "https://github.com/darkpandawarrior/Mileway#readme" },
+        { label: "README", url: "https://github.com/darkpandawarrior/Doori#readme" },
       ],
       videos: [
-        { src: "/projects/mileway/video/clipA_home.mp4", caption: "Home & dashboard: live capture" },
+        { src: "/projects/doori/video/clipA_home.mp4", caption: "Home & dashboard: live capture" },
       ],
       diagrams: [
         {
@@ -1009,9 +1009,9 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "paymentslab",
+    slug: "paymentslab-kmp",
     tier: 2,
-    name: "PaymentsLab",
+    name: "PaymentsLab-KMP",
     tagline: "An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
     description:
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
@@ -1021,8 +1021,8 @@ export const projects: Project[] = [
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest.",
     ],
     links: [
-      { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab" },
-      { label: "Mileway (sibling KMP app)", url: "#project/mileway" },
+      { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP" },
+      { label: "Doori (sibling KMP app)", url: "#project/doori" },
     ],
     status: "40 modules · 66 gateways · 5 rails",
     deployments: [
@@ -1035,7 +1035,7 @@ export const projects: Project[] = [
       {
         channel: "GitHub Releases",
         detail: "Signed APK per tag.",
-        url: "https://github.com/darkpandawarrior/PaymentsLab/releases",
+        url: "https://github.com/darkpandawarrior/PaymentsLab-KMP/releases",
       },
     ],
     badges: ["Kotlin Multiplatform", "40 modules", "66 gateways", "Open source"],
@@ -1047,7 +1047,7 @@ export const projects: Project[] = [
       card: "#241844",
       line: "#3F2B66",
     },
-    icon: "/projects/paymentslab/brand/paymentslab-icon.svg",
+    icon: "/projects/paymentslab-kmp/brand/paymentslab-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -1077,7 +1077,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab runs real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
+        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab-KMP runs real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
       sections: [
         {
           heading: "The one idea worth stealing",
@@ -1151,7 +1151,7 @@ export const projects: Project[] = [
       extraLinks: [
         { label: "kmp-toolkit (shared)", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
         { label: "kmp-build-logic (shared)", url: "https://github.com/darkpandawarrior/kmp-build-logic" },
-        { label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab#readme" },
+        { label: "README", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP#readme" },
       ],
     },
     screens: [
@@ -1186,9 +1186,9 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "hiresignal",
+    slug: "candidai",
     tier: 2,
-    name: "HireSignal",
+    name: "Candidai",
     tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
       "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
@@ -1219,7 +1219,7 @@ export const projects: Project[] = [
       card: "#16233A",
       line: "#28405E",
     },
-    icon: "/projects/hiresignal/brand/hiresignal-icon.svg",
+    icon: "/projects/candidai/brand/hiresignal-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -1230,7 +1230,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        `HireSignal is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
+        `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
       sections: [
         {
           heading: "One engine, five targets",
@@ -1301,7 +1301,7 @@ export const projects: Project[] = [
       ],
     },
     screens: [
-      { file: "banner.gif", caption: "HireSignal banner" },
+      { file: "banner.gif", caption: "Candidai banner" },
       { file: "dashboard_screen.png", caption: "Dashboard: today's action queue, follow-ups due, awaiting decision" },
       { file: "board_screen.png", caption: "Job board: scored roles, re-scored live against your profile" },
       { file: "pipeline_screen.png", caption: "Pipeline inbox: keep/discard triage on freshly scanned roles" },
@@ -1454,7 +1454,7 @@ export const projects: Project[] = [
       { file: "site_home.png", caption: "Home: the case studies and the experience" },
       { file: "cmp_web.png", caption: "The Compose Multiplatform twin, running in the browser" },
       { file: "site_project_detail.png", caption: "/project/portfolio: this very page" },
-      { file: "site_project_detail_with_compare.png", caption: "/project/mileway: the slide-to-compare viewer" },
+      { file: "site_project_detail_with_compare.png", caption: "/project/doori: the slide-to-compare viewer" },
       { file: "site_resume.png", caption: "/resume: the printable résumé" },
       { file: "site_shipped.png", caption: "/shipped: apps that actually reached a store" },
       { file: "site_hire.png", caption: "/hire: a job description run against the documented experience" },
@@ -1474,8 +1474,8 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "deadlock",
-    name: "DEADLOCK",
+    slug: "stutter",
+    name: "STUTTER",
     tagline: "A first-person time-loop game about a moment someone could not let end.",
     description:
       "Godot 4.7 in GDScript. A deterministic echo-replay spine powers cooperative echoes, ghosts, and boss desync from one system, with recorded input intent replayed through the same physics step. Built solo as an AI-orchestrated dev crew.",
@@ -1502,7 +1502,7 @@ export const projects: Project[] = [
       card: "#2A151A",
       line: "#4A2530",
     },
-    icon: "/projects/deadlock/brand/deadlock-icon.svg",
+    icon: "/projects/stutter/brand/deadlock-icon.svg",
     targets: [
       {
         // The repo stays private; the BUILD does not have to be.
@@ -1530,7 +1530,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "DEADLOCK is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
+        "STUTTER is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
       sections: [
         {
           heading: "Record intent, never position",
@@ -1617,7 +1617,7 @@ export const projects: Project[] = [
       "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction.",
       "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Mileway (10 of its 46 modules), PaymentsLab (25 of its 40) and Kursi. The composition is the proof the extraction was real, not a library nobody uses.",
+      "Consumed by Doori (10 of its 46 modules), PaymentsLab-KMP (25 of its 40) and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
     ],
     links: [
       { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
@@ -1628,11 +1628,11 @@ export const projects: Project[] = [
     badges: ["Kotlin Multiplatform", "39 modules", "22 convention plugins", "MIT"],
     detail: {
       overview:
-        "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Mileway, PaymentsLab, Kursi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
+        "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
       sections: [
         {
           heading: "kmp-toolkit: 39 modules, extracted, never designed",
-          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Mileway and PaymentsLab build their reducer/store layer on.",
+          body: "The library repo: typed Result, an MVI ViewModel core, an offline-first store, network, security, on-device AI behind one seam, device-integrity, an operation-log outbox, and a 19-provider payment-gateway abstraction. 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base that both Doori and PaymentsLab-KMP build their reducer/store layer on.",
         },
         {
           heading: "kmp-build-logic: the setup written once",
@@ -1644,11 +1644,11 @@ export const projects: Project[] = [
         },
         {
           heading: "The composition is the proof",
-          body: "Mileway consumes 10 of its 46 modules from the toolkit; PaymentsLab consumes 25 of its 40; Kursi draws on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fourth independent consumer.",
+          body: "Doori consumes 10 of its 46 modules from the toolkit; PaymentsLab-KMP consumes 25 of its 40; Gaddi draws on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fourth independent consumer.",
         },
         {
           heading: "One MVI contract, two apps",
-          body: "Mileway and PaymentsLab are not two isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale: one seam, reused, instead of the same decision made differently five times.",
+          body: "Doori and PaymentsLab-KMP are not two isolated demos: they share a build-wiring contract and a unidirectional-state contract, both written once in this family and pulled in as composite builds rather than re-derived per app. The discipline the toolkit exists to enforce is exactly what a platform team is supposed to bring to a codebase at scale: one seam, reused, instead of the same decision made differently five times.",
         },
       ],
       metrics: [
@@ -1667,11 +1667,11 @@ export const projects: Project[] = [
         {
           title: "Three repos, one seam each",
           code: `graph LR
-  bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Mileway"]
-  bl -.->|"includeBuild"| p["PaymentsLab"]
+  bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Doori"]
+  bl -.->|"includeBuild"| p["PaymentsLab-KMP"]
   tk["kmp-toolkit<br/>39 modules"] -.->|"includeBuild"| m
   tk -.->|"includeBuild"| p
-  tk -.->|"includeBuild"| ku["Kursi"]
+  tk -.->|"includeBuild"| ku["Gaddi"]
   at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
         },
       ],
@@ -1703,7 +1703,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Field notes tied to a real production win",
-          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Mileway's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from PaymentsLab's expect/actual split across targets. The writing has somewhere real to point back to.",
+          body: "Every series traces back to a specific piece of shipped work, not a generic topic: \"Sensors Who Lie\" is field notes from Doori's location engine, \"The Coroutine Court\" from the −80% crash-reduction work, \"The Night Shift\" from the 50%→95% GPS accuracy work, \"Ghosts in the Recomposition\" from the ~87% Compose migration, and \"One Brain, Two Bodies\" from PaymentsLab-KMP's expect/actual split across targets. The writing has somewhere real to point back to.",
         },
         {
           heading: "Series and lessons",
@@ -1753,7 +1753,7 @@ export function projectBySlug(slug: string): Project | undefined {
 }
 
 // ── Shared foundation ─────────────────────────────────────────────────────
-// Two of my own KMP libraries that both Mileway and PaymentsLab consume as
+// Two of my own KMP libraries that both Doori and PaymentsLab-KMP consume as
 // composite builds — the "systems engineering" thread that ties the apps
 // together. Verified in each app's settings.gradle.kts.
 export interface SharedLib {
@@ -1768,19 +1768,19 @@ export const sharedFoundation: {
   libs: SharedLib[];
 } = {
   blurb:
-    "Mileway and PaymentsLab aren't two isolated demos. They're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
+    "Doori and PaymentsLab-KMP aren't two isolated demos. They're two KMP apps sitting on a common foundation I built and maintain separately. Both pull in my own convention-plugin and MVI-base libraries as composite builds, so the build wiring and the unidirectional-state contract are written once and reused, exactly the platform discipline I bring to a codebase at scale.",
   libs: [
     {
       name: "kmp-build-logic",
       url: "https://github.com/darkpandawarrior/kmp-build-logic",
       role: "Gradle convention plugins: one place that configures every KMP module's targets, Compose, lint and test wiring.",
-      usedBy: ["Mileway", "PaymentsLab"],
+      usedBy: ["Doori", "PaymentsLab-KMP"],
     },
     {
       name: "kmp-toolkit",
       url: "https://github.com/darkpandawarrior/kmp-toolkit",
       role: "A vendored KMP toolkit: the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules.",
-      usedBy: ["Mileway", "PaymentsLab"],
+      usedBy: ["Doori", "PaymentsLab-KMP"],
     },
   ],
 };
@@ -1837,11 +1837,11 @@ export interface GrowthItem {
 
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
-  { date: "Jun 2026", title: "Kursi shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
+  { date: "Jun 2026", title: "Kursi (now Gaddi) shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
   { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
-  { date: "Jun 2026", title: "Mileway: five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
+  { date: "Jun 2026", title: "Mileway (now Doori): five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, still zero backend." },
-  { date: "Jul 2026", title: "PaymentsLab: 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
+  { date: "Jul 2026", title: "PaymentsLab (now PaymentsLab-KMP): 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
   { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
   { date: "Jul 2026", title: "Mileway: super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
   { date: "Aug 2026", title: "Portfolio: the fleet made checkable", detail: `New /shipped page: ${fleetStats.live} live listings plus ${fleetStats.delisted} delisted ones recovered via the Internet Archive, ${fleetStats.live + fleetStats.delisted} apps traced across ${fleetStats.branches.toLocaleString("en-US")} branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted.` },
@@ -1864,7 +1864,7 @@ export const recentGrowth: GrowthItem[] = [
  *   1. Animated GIFs made the card a player. It showed whichever frame the loop
  *      landed on — multiplatform.gif is 108 frames across phone, watch and
  *      widgets, and 3 of 4 sampled frames rendered as a near-black watch face
- *      or empty space. paymentslab's checkout GIF opened on its FLAG_SECURE
+ *      or empty space. paymentslab-kmp's checkout GIF opened on its FLAG_SECURE
  *      "screenshots blocked" screen: a great security story, a terrible
  *      thumbnail.
  *   2. Static screenshots fixed the randomness but not the shape. A tall phone

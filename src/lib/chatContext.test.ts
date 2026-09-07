@@ -20,9 +20,9 @@ describe("chipsFor", () => {
   });
 
   it("offers that project's questions on a project page", () => {
-    const chips = chipsFor("/project/mileway");
+    const chips = chipsFor("/project/doori");
     expect(chips[0]).toBe(JD_PROMPT); // the recruiter chip leads on every route
-    expect(chips).toContain("How did you build Mileway?");
+    expect(chips).toContain("How did you build Doori?");
     expect(chips.every((c) => c !== "Tell me about the Compose migration")).toBe(true);
   });
 
@@ -60,7 +60,7 @@ describe("greetingFor", () => {
   });
 
   it("acknowledges where the visitor is anywhere else", () => {
-    expect(greetingFor("/project/mileway")).toContain("**Mileway**");
+    expect(greetingFor("/project/doori")).toContain("**Doori**");
     expect(greetingFor("/lab")).toContain("**The Lab Bench**");
     // Third person: the assistant is Panda, a separate entity that answers
     // ABOUT Siddharth. "my résumé" would be it claiming to be him.
@@ -71,7 +71,7 @@ describe("greetingFor", () => {
 describe("canonicalRoute", () => {
   it("returns the canonical pathname for a route the site actually has", () => {
     expect(canonicalRoute("/")).toBe("/");
-    expect(canonicalRoute("/project/kursi")).toBe("/project/kursi");
+    expect(canonicalRoute("/project/gaddi")).toBe("/project/gaddi");
     expect(canonicalRoute("/forge/")).toBe("/forge");
   });
 

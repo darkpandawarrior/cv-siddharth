@@ -172,7 +172,7 @@ function short(str = "", max = 92) {
 
 // The 1200×630 card, from a generic spec so projects and site pages share one
 // renderer. System fonts only (headless render, no network) with a serif
-// fallback for serif-identity cards like Kursi.
+// fallback for serif-identity cards like Gaddi.
 //   spec = { accent, ink, surface, line, serif, eyebrow, name, tagline, stats[], chips[] }
 // Headless Chromium reserves ~82px of window height, so the content viewport
 // (100vh) is shorter than the 1200×630 screenshot: we paint the full frame via

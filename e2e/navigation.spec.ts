@@ -158,11 +158,11 @@ test.describe("isolated-route back-links and cross-links", () => {
     await expect(page.locator("#top")).toBeInViewport();
   });
 
-  test("a lab's project cross-link navigates to /project/mileway", async ({ page }) => {
+  test("a lab's project cross-link navigates to /project/doori", async ({ page }) => {
     await page.goto("/lab");
-    await page.getByRole("link", { name: "rebuilt again at Mileway" }).click();
+    await page.getByRole("link", { name: "rebuilt again at Doori" }).click();
 
-    await expect(page).toHaveURL(/\/project\/mileway$/);
-    await expect(page.locator("body")).toContainText(/mileway/i);
+    await expect(page).toHaveURL(/\/project\/doori$/);
+    await expect(page.locator("body")).toContainText(/doori/i);
   });
 });

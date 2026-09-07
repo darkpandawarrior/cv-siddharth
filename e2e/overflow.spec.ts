@@ -40,7 +40,7 @@ const MOBILE = { width: 390, height: 844 };
  */
 const CANVAS_ROUTES = new Set(["/blueprint"]);
 
-const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/mileway", "/read/deadline"].filter(
+const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/doori", "/read/deadline"].filter(
   (p) => !CANVAS_ROUTES.has(p),
 );
 

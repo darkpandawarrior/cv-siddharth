@@ -37,8 +37,8 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
  *  leaving a dark box with no way to fall back. Instead we poll the (same-origin)
  *  child document for a real first frame; otherwise keep the screenshot.
  *
- *  Two shapes of build ship here, and the probe has to cover both. Kursi, Mileway
- *  and PaymentsLab render through a Skiko <canvas>, which only grows past its
+ *  Two shapes of build ship here, and the probe has to cover both. Gaddi, Doori
+ *  and PaymentsLab-KMP render through a Skiko <canvas>, which only grows past its
  *  default 300×150 once it is genuinely rendering. The portfolio's CMP twin
  *  (Compose Multiplatform 1.12) ships NO canvas at all — it renders into a plain
  *  #compose div and its main() hides the #boot overlay on the first frame. The
@@ -68,7 +68,7 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
           // `pointer-lock` is not optional for the 3D builds. Pointer
           // Lock is DENIED outright inside an iframe unless the embedder
           // allows it, so without this a visitor can walk around
-          // DEADLOCK but can never look around — the mouse simply never
+          // STUTTER but can never look around — the mouse simply never
           // gets captured, with no error anywhere.
           allow="fullscreen; pointer-lock"
           className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${painted ? "opacity-100" : "opacity-0"}`}
@@ -116,9 +116,9 @@ export function FitImage({
 
   // onLoad alone was not enough and the failure was invisible: this page is server-rendered, so an
   // image already in cache is `complete` before React attaches the handler, onLoad never fires, and
-  // the state stays at its object-cover default. PaymentsLab's 320x470 screens are 43.7% off the
+  // the state stays at its object-cover default. PaymentsLab-KMP's 320x470 screens are 43.7% off the
   // phone frame — comfortably past the threshold — and were still being cropped on the live site,
-  // cutting "PaymentsLab" down to "mentsLab". Measure on mount too.
+  // cutting "PaymentsLab-KMP" down to "entsLab-KMP". Measure on mount too.
   // targetAspect is in the deps because DeviceMorph changes the frame's shape
   // under a poster whose src never changes — without it the crop/letterbox
   // decision would be frozen at whichever form factor happened to render first.
@@ -194,7 +194,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
 
   if (target.deviceFrame === "desktop") {
     // Also doubles as an honest stand-in for phone platforms that don't yet
-    // have a real portrait capture (see Kursi's Android/iOS targets) — a
+    // have a real portrait capture (see Gaddi's Android/iOS targets) — a
     // landscape capture shown at its real shape, never stuffed into a phone
     // bezel it doesn't match.
     const isNativeDesktop = target.platform === "Desktop";
