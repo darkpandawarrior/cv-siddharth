@@ -6,6 +6,8 @@ import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
 import { countWord } from "../data/labs.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { SiteFooter } from "../SiteFooter.tsx";
+import { WorldSwitch } from "../WorldSwitch.tsx";
 
 /**
  * The magazine, hosted here rather than linked away. `?year=&page=` are the
@@ -41,6 +43,32 @@ function ExcelsiorRoute() {
   // the pills it actually renders. "The five I wrote" was typed in beside the
   // list that decides it, which is the arrangement that always drifts.
   const readable = excelsiorMarks.filter((m) => m.readSlug);
+  // Jump-to-a-page chips, computed once and rendered into two different
+  // wrappers below (a closed mobile disclosure, a plain row at sm+) so the
+  // fold fix doesn't require two copies of this map.
+  const jumpChips = excelsiorMarks.map((m) => (
+    <Link
+      key={`${m.year}-${m.page}`}
+      to="/excelsior"
+      search={{ year: Number(m.year), page: m.page }}
+      replace
+      // Same reason as the Flipbook callbacks below: these jump the book to
+      // a page, they do not change what page you are on.
+      viewTransition={false}
+      title={m.note}
+      className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
+        m.kind === "wrote"
+          ? "border-accent/40 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
+          : m.kind === "about"
+            ? "border-accent2/35 bg-accent2/5 text-accent2 hover:border-accent2 hover:bg-accent2/10"
+            : "border-line text-zinc-300 hover:border-accent hover:text-accent"
+      }`}
+    >
+      <span aria-hidden>{m.kind === "wrote" ? "✎" : m.kind === "about" ? "❝" : "✦"}</span>
+      {m.label}
+      <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+    </Link>
+  ));
 
   return (
     // The print-era artefact `/ink` and `/read/$slug` exist to host — it
@@ -53,9 +81,17 @@ function ExcelsiorRoute() {
         {/* Was `to="/" hash="writing"` — which sent you to the homepage doorway,
             not the world this page belongs to. The writing moved to /ink; the
             back link did not follow it. */}
-        <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
-          <ArrowLeft size={16} /> The Ink
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+            <ArrowLeft size={16} /> The Ink
+          </Link>
+          {/* excelsior-missing-footer-and-switch: the only Ink-world leaf
+              without this — and the one most often deep-linked (board
+              cards, the loopdown cross-link, and the page-5 sign-off all
+              land here with a ?year=&page=), so its one exit used to be
+              this small back link. */}
+          <WorldSwitch current="ink" />
+        </div>
 
         {/* Deliberately smaller than a landing-page hero: this is a reader, so
             the furniture yields vertical space to the spread. */}
@@ -82,10 +118,16 @@ function ExcelsiorRoute() {
             invisible to search, and on a phone it is unusable. Read it here,
             then go look at the page it ran on. */}
         <div className="mt-5 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
-          <p className="kicker-accent">
+          {/* heading-order: this page's only heading was the h1 above, so
+              SiteFooter's own h3 columns (excelsior-missing-footer-and-switch)
+              skipped straight from 1 to 3 — an axe violation the other three
+              Ink-world leaves don't share because each already has an h2
+              between its h1 and the footer. This line already read as a
+              section label; it now IS one. */}
+          <h2 className="kicker-accent">
             {/* countWord returns "Five", capitalised, and this sits mid-sentence. */}
             Rather read it? The {countWord(readable.length).toLowerCase()} I wrote, in full
-          </p>
+          </h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {readable.map((m) => (
               <Link
@@ -100,32 +142,20 @@ function ExcelsiorRoute() {
           </div>
         </div>
 
-        {/* Jump to a page in the scan itself. */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          {excelsiorMarks.map((m) => (
-            <Link
-              key={`${m.year}-${m.page}`}
-              to="/excelsior"
-              search={{ year: Number(m.year), page: m.page }}
-              replace
-              // Same reason as the Flipbook callbacks below: these jump the
-              // book to a page, they do not change what page you are on.
-              viewTransition={false}
-              title={m.note}
-              className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
-                m.kind === "wrote"
-                  ? "border-accent/40 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
-                  : m.kind === "about"
-                    ? "border-accent2/35 bg-accent2/5 text-accent2 hover:border-accent2 hover:bg-accent2/10"
-                    : "border-line text-zinc-300 hover:border-accent hover:text-accent"
-              }`}
-            >
-              <span aria-hidden>{m.kind === "wrote" ? "✎" : m.kind === "about" ? "❝" : "✦"}</span>
-              {m.label}
-              <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
-            </Link>
-          ))}
-        </div>
+        {/* excelsior-mobile-fold-order: on a phone, the intro plus this row's
+            ~14 chips used to run out the whole first fold before the
+            flipbook appeared — on the one page whose stated reason for
+            existing is "the page scans are the artefact". Below sm it's a
+            closed disclosure so the flipbook sits near the fold; at sm and
+            up, where the fold isn't the constraint, it's the plain row it
+            always was. */}
+        <details className="mt-4 sm:hidden">
+          <summary className="cursor-pointer text-sm text-zinc-300 transition hover:text-accent">
+            Jump to a page
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-2">{jumpChips}</div>
+        </details>
+        <div className="mt-4 hidden flex-wrap gap-2 sm:flex">{jumpChips}</div>
 
         <div className="mt-5">
           <Flipbook
@@ -144,6 +174,7 @@ function ExcelsiorRoute() {
           />
         </div>
       </main>
+      <SiteFooter />
       <FloatingChat />
     </div>
   );

@@ -44,24 +44,45 @@ function sampleWordmark(width: number, height: number): { points: { x: number; y
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  ctx.font = `700 ${unit}px "Space Grotesk", system-ui, sans-serif`;
-  ctx.fillText("sid.android", width / 2, height * 0.42);
-
-  ctx.font = `600 ${unit * 0.28}px "JetBrains Mono", ui-monospace, monospace`;
-  ctx.fillText("prototype → platform", width / 2, height * 0.72);
-
   // Denser sampling on small canvases, sparser on large ones — keeps the
   // particle budget roughly constant regardless of viewport width.
   const step = width > 900 ? 6 : width > 560 ? 5 : 4;
-  const { data } = ctx.getImageData(0, 0, width, height);
-  const points: { x: number; y: number }[] = [];
-  for (let y = 0; y < height; y += step) {
-    for (let x = 0; x < width; x += step) {
-      // alpha channel of this pixel
-      if (data[(y * width + x) * 4 + 3] > 128) points.push({ x, y });
+
+  /** Draw one line alone, sample it at its own step, then clear — so a small
+   *  line can be sampled finer than a big one without either stealing the
+   *  other's pixels off one shared canvas. */
+  const sampleLine = (draw: () => void, lineStep: number) => {
+    ctx.clearRect(0, 0, width, height);
+    draw();
+    const { data } = ctx.getImageData(0, 0, width, height);
+    const points: { x: number; y: number }[] = [];
+    for (let y = 0; y < height; y += lineStep) {
+      for (let x = 0; x < width; x += lineStep) {
+        // alpha channel of this pixel
+        if (data[(y * width + x) * 4 + 3] > 128) points.push({ x, y });
+      }
     }
-  }
-  return { points, step };
+    return points;
+  };
+
+  const headline = sampleLine(() => {
+    ctx.font = `700 ${unit}px "Space Grotesk", system-ui, sans-serif`;
+    ctx.fillText("sid.android", width / 2, height * 0.42);
+  }, step);
+
+  /* forge-tagline-illegible: "prototype → platform" is the room's and the
+   * site's thesis, and it rendered as an unreadable smear of dots — glyphs
+   * drawn at unit*0.28 (roughly a third the headline's height) but sampled
+   * at the SAME 4-6px grid the much larger headline uses. A grid that coarse
+   * only resolves shapes a few times its own size; fine print through it
+   * comes out as noise. Both halves of the actual cause, fixed together:
+   * bigger glyphs (0.28 → 0.4) AND a dedicated, finer sampling pass. */
+  const tagline = sampleLine(() => {
+    ctx.font = `600 ${unit * 0.4}px "JetBrains Mono", ui-monospace, monospace`;
+    ctx.fillText("prototype → platform", width / 2, height * 0.72);
+  }, Math.max(2, Math.round(step / 2)));
+
+  return { points: [...headline, ...tagline], step };
 }
 
 export function ParticleWordmark() {

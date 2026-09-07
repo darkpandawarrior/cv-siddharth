@@ -317,7 +317,7 @@ function seed(editor: Editor) {
     editor.createShape({ id: id(p.key), type: "image", x: p.x, y: p.y, rotation: p.rot, props: { assetId, w: p.w, h: p.h } });
   }
 
-  editor.zoomToFit({ animation: { duration: 400 } });
+  fitBoardToViewport(editor, { animation: { duration: 400 } });
   editor.selectNone();
 }
 
@@ -333,6 +333,35 @@ function whenViewportReady(editor: Editor, cb: () => void, framesLeft = 30) {
     return;
   }
   requestAnimationFrame(() => whenViewportReady(editor, cb, framesLeft - 1));
+}
+
+/**
+ * blueprint-sketch-thin-band-mobile: `zoomToFit` fits the WHOLE board
+ * (much wider than tall) to whichever axis is tighter, which on a portrait
+ * phone is always width — the height then has room to spare that zoomToFit
+ * never uses, leaving roughly two thirds of the viewport black with the
+ * node text shrunk to match the width fit rather than the space actually
+ * available. On a portrait viewport, crop the WIDTH to a viewport-shaped
+ * slice and zoom to fill the full height instead: same content, the rest of
+ * the width still a pan away, but the initial view actually uses the
+ * screen.
+ */
+export function fitBoardToViewport(editor: Editor, opts?: { animation?: { duration: number } }) {
+  const screen = editor.getViewportScreenBounds();
+  const content = editor.getCurrentPageBounds();
+  if (!content || screen.width < 1 || screen.height < 1 || screen.width >= screen.height) {
+    editor.zoomToFit(opts);
+    return;
+  }
+  // Crop the WIDTH down to a viewport-shaped slice and keep the full height
+  // — there is no more height to show, and a board this much wider than
+  // tall only goes black because zoomToFit shrinks to fit the width it
+  // does not need to show all of. Fitting the full height instead fills
+  // the viewport and leaves the rest of the width a pan away, same as it
+  // always was.
+  const cropWidth = Math.min(content.width, content.height * (screen.width / screen.height));
+  const crop = new Box(content.x + content.width / 2 - cropWidth / 2, content.y, cropWidth, content.height);
+  editor.zoomToBounds(crop, opts);
 }
 
 /** Axis-aligned overlap test between two tldraw Boxes (page coordinates). */
@@ -425,7 +454,7 @@ export default function SketchBoard({
   useEffect(() => {
     const recover = () => {
       const editor = editorRef.current;
-      if (editor && boardLooksBlank(editor)) editor.zoomToFit({ animation: { duration: 200 } });
+      if (editor && boardLooksBlank(editor)) fitBoardToViewport(editor, { animation: { duration: 200 } });
     };
     // rAF defers to after tldraw has re-measured its viewport on becoming visible.
     const onVisible = () => {
@@ -481,7 +510,7 @@ export default function SketchBoard({
         whenViewportReady(editor, () => {
           try {
             if (editor.getCurrentPageShapeIds().size === 0) seed(editor);
-            else editor.zoomToFit();
+            else fitBoardToViewport(editor);
           } catch {
             // A corrupt restore can throw here; a fresh seed is the recovery.
             try {

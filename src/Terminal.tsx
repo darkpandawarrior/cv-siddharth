@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { LauncherButton } from "./Launcher.tsx";
+import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
@@ -1316,6 +1317,9 @@ export function Terminal() {
           </div>
         </div>
       </main>
+      {/* D1: this room drew its own chrome and so never got the next-room
+          pager RoomFrame gives the other five rooms. */}
+      <RoomPagerFooter />
     </div>
   );
 }

@@ -199,8 +199,12 @@ function PlaygroundInner() {
           >
             <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
           </button>
-          <span className="kicker hidden items-center gap-2 lg:flex">
-            <LayoutGrid size={13} className="text-accent" /> The Playground — every interactive room, one door
+          {/* weeb-1: was `hidden ... lg:flex`, so a phone visitor had no
+              on-screen title. Always shown; truncates instead of pushing the
+              palette/badge/Ask buttons off their own row. */}
+          <span className="kicker flex min-w-0 items-center gap-2">
+            <LayoutGrid size={13} className="shrink-0 text-accent" />
+            <span className="truncate">The Playground — every interactive room, one door</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
             {/* The hub keeps its own header rather than RoomFrame's — RoomFrame

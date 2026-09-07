@@ -466,21 +466,22 @@ html.resume-mode body {
   background-color: #e4e4e7;
 }
 
-/* The command palette trigger is body level, so it sits ON the résumé's light
-   page rather than inside it and keeps the muted zinc it was given for a dark
-   one. That is 2.06:1 against #e4e4e7, which Lighthouse scores as a real
-   contrast failure, and lighthouserc.json asserts accessibility at 1.00 with
-   /resume in its URL list. The e2e axe pass did not catch it: axe computes the
-   same 2.06 but scores colour-contrast as serious only when it can resolve the
-   background, and a body-level element over a themed page is exactly the case
-   it reports differently.
-
-   zinc-600 measures 6.09:1 here, against zinc-400's 2.06. No single value
-   clears 4.5 on both surfaces (zinc-400 is 7.36 on the dark site and fails
-   light; zinc-600 is 2.50 on dark and fails there), so this is scoped to
-   résumé mode rather than changed globally. */
+/* The button keeps its own `bg-ink/90` pill in every mode, résumé included —
+   so the background behind its text was never the résumé's light body, it is
+   that pill, composited close to solid ink either way. A prior fix here read
+   Lighthouse's 2.06-against-#e4e4e7 report at face value and switched the text
+   to zinc-600 to answer a light background — which made the REAL, rendered
+   background (the dark pill) fail contrast instead (axe measured 2:1 at
+   390px, where the pill sits over exposed body rather than the white résumé
+   article and the two colours the button could plausibly be read against
+   diverge furthest). Pinning the pill to a fully opaque, alpha-free
+   background removes the ambiguity for every tool rather than chasing
+   whichever backdrop a given viewport happens to expose: the button now has
+   one real background regardless of what is behind it, so one light-on-dark
+   pairing (already 7.36:1 in the non-résumé state) is correct everywhere. */
 html.resume-mode .palette-trigger {
-  color: #52525b;
+  background-color: var(--color-ink);
+  color: var(--color-text);
 }
 
 /* Scroll-reveal. Visible is the base state — see the /ops rule below against

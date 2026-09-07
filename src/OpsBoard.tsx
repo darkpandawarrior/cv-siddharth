@@ -174,7 +174,7 @@ function Row({ m, lane = false }: { m: RowModel; lane?: boolean }) {
 }
 
 /** A block heading is a rule line carrying its own census, not a card. */
-function Block({ title, note, rows, figure, collapse }: {
+function Block({ title, note, rows, figure, collapse, emptyLabel }: {
   title: string;
   note: React.ReactNode;
   rows: RowModel[];
@@ -185,6 +185,11 @@ function Block({ title, note, rows, figure, collapse }: {
   figure?: React.ReactNode;
   /** The <summary> label, given only to blocks long enough to fold away. */
   collapse?: string;
+  /** Overrides the default "nothing reporting" text for a block whose zero
+   *  rows mean the live source is unreachable rather than a genuine zero —
+   *  ops-1: a rate-limited Actions API and a dead F-Droid fetch used to read
+   *  identically to "nothing happened here", which is a different fact. */
+  emptyLabel?: string;
 }) {
   const id = `ops-${title.replace(/\s+/g, "-").toLowerCase()}`;
   const n = (s: OpsState) => rows.filter((r) => r.state === s).length;
@@ -198,7 +203,7 @@ function Block({ title, note, rows, figure, collapse }: {
      ops.test.ts asserts both halves of that. */
   const holdsBroken = rows.some((r) => r.state === "BROKEN");
   const list = rows.length === 0
-    ? <p className="ops-empty">— nothing reporting here yet</p>
+    ? <p className="ops-empty">— {emptyLabel ?? "nothing reporting here yet"}</p>
     : rows.map((m) => <Row key={m.key} m={m} />);
   return (
     <section className="ops-block" aria-labelledby={id}>
@@ -459,24 +464,41 @@ function LeverageFigure() {
  * changes identity every render and re-arms a figure the reader has already
  * watched arrive.
  */
-function useArrival<T extends Element>(arm: (el: T) => void, run: (el: T) => void) {
+/**
+ * ops-3: a `threshold` this high can go unmet forever for a figure taller
+ * than ~2.5x the viewport — the intersection ratio the observer computes
+ * tops out at (viewport height / element height), so Shipping Cadence's 12
+ * bars sat at scaleY(0) on every load whose scroll position never happened
+ * to put 40% of that tall a figure on screen at once. A synchronous
+ * bounding-rect check at mount covers the other half of the same defect: a
+ * figure already on screen at load (a short page, a deep link, a restored
+ * scroll position) must not wait on a callback that only fires on the NEXT
+ * intersection change.
+ */
+function useArrival<T extends Element>(arm: (el: T) => void, run: (el: T) => void, threshold = 0.4) {
   const ref = useRef<T>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     arm(el);
+    const rect = el.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    if (rect.top < viewportH && rect.bottom > 0) {
+      // One frame after arming, so the browser has a style to animate FROM.
+      requestAnimationFrame(() => run(el));
+      return;
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         io.disconnect();
-        // One frame after arming, so the browser has a style to animate FROM.
         requestAnimationFrame(() => run(el));
       },
-      { threshold: 0.4 },
+      { threshold },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [arm, run]);
+  }, [arm, run, threshold]);
   return ref;
 }
 
@@ -520,7 +542,9 @@ const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
  * it.
  */
 function CadenceFigure() {
-  const ref = useArrival<HTMLElement>(armCadence, runCadence);
+  // ops-3: 0.1, not the 0.4 default — this figure is tall enough that 40%
+  // visible is unreachable at most scroll positions on most viewports.
+  const ref = useArrival<HTMLElement>(armCadence, runCadence, 0.1);
   /* Computed, printed in the caption, and never rounded up to a nice number:
      an axis bound with no rule behind it is the thing this board refuses. */
   const top = Math.max(...lastShipped.flatMap((y) => [y.live, y.gone]));
@@ -1380,7 +1404,14 @@ export function OpsBoard() {
         </div>
         <p className="section-eyebrow mb-2">// the control loop</p>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>
-        <p className="mb-6 max-w-3xl text-sm leading-relaxed text-zinc-400">
+        {/* ops-2: no local max-width — this paragraph was the only thing on
+            the route with one, so the console and the runway table directly
+            below it broke out to the full-width container a beat later,
+            reading as the route switching its own grid partway down rather
+            than as one deliberate layout. `main` already caps the whole
+            route at 92rem; this paragraph now shares that cap like every
+            other block here. */}
+        <p className="mb-6 text-sm leading-relaxed text-zinc-400">
           Every other page here argues the work was good. This one argues it is still true, and shows
           the machinery that would notice if it stopped being. Three states:{" "}
           <b style={{ color: STATE_COLOR.OK }}>OK</b> is a check that ran and passed,{" "}
@@ -1400,7 +1431,16 @@ export function OpsBoard() {
               <span className="ops-banner__name">ops console</span>
               <a className="ops-banner__link" href={REPO} target="_blank" rel="noreferrer">darkpandawarrior/cv-siddharth</a>
               <span>aged at load {loadedAt}</span>
-              <span>actions api {failed ? "unreachable" : ops ? "connected" : "reading…"}</span>
+              <span>
+                actions api{" "}
+                {failed
+                  ? "unreachable"
+                  : ops?.stale
+                  ? "unreachable — showing last known state"
+                  : ops
+                  ? "connected"
+                  : "reading…"}
+              </span>
             </div>
 
             {/* The verdict. Largest type in the banner and the only sentence
@@ -1494,11 +1534,21 @@ export function OpsBoard() {
             note="every workflow in the repo that ships this site, read live from the Actions API"
             figure={<TowerFigure runs={ops?.runs ?? []} neverRan={ops?.neverRan?.length ?? 0} />}
             rows={towerRows}
+            emptyLabel={
+              failed || ops?.connected === false
+                ? "actions api unreachable, no cached run to fall back to"
+                : undefined
+            }
           />
           <Block
             title="Published and signed"
             note="what is on the F-Droid repo right now, and the two keys that put it there — run apksigner verify --print-certs on any download and compare"
             rows={chainRows}
+            emptyLabel={
+              failed || ops?.supplyChain?.connected === false
+                ? "F-Droid index unreachable, no cached read to fall back to"
+                : undefined
+            }
           />
           <Block
             title="Freshness perimeter"
