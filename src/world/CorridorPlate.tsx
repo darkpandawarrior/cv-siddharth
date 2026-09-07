@@ -1,6 +1,6 @@
 import { lazy, Suspense, type JSX } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { corridorPlateMeta } from "./corridorPlate.ts";
-import { useHydrated } from "../lib/useHydrated.ts";
 import { heavy } from "../lib/assetBase.ts";
 
 const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
@@ -37,10 +37,13 @@ const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
  * build time, which is exactly the honesty problem gen-world-plate.mjs's
  * own comment named — but a genuinely live signal on the fallback, sourced
  * from the real shared record, is what that gap was actually asking to
- * close. Loaded with `lazy()` behind `useHydrated()` rather than imported
+ * close. Loaded with `lazy()` behind `<ClientOnly>` rather than imported
  * directly here, because THIS component server-renders (see below) and
  * `@playhtml/react` does not survive that — see LiveLitMapOverlay.tsx's own
- * doc comment.
+ * doc comment. `<ClientOnly>` is what Start's compiler recognises to strip
+ * this subtree (and the lazy import behind it) from the SERVER compile
+ * entirely — a runtime-only hydration flag alone does not keep the bundler
+ * from resolving the import for SSR regardless.
  *
  * It used to end "...because this browser cannot run the interactive 3D
  * version", which was true for every visitor it had while the call site was
@@ -56,10 +59,6 @@ export function CorridorPlate(): JSX.Element {
   const meta = corridorPlateMeta;
   const laneNames = meta.lanes.map((l) => l.label).join(", ");
   const alt = `A terrain chart of four tracked strands of work — ${laneNames} — from ${meta.from} to ${meta.to}, baked as a static image from the same heightfield the drivable 3D version is built on.`;
-  // `false` on the server and through hydration — see LiveLitMapOverlay.tsx
-  // and useHydrated.ts's own doc comments for why this gate has to exist at
-  // all, not just why it's shaped this way.
-  const hydrated = useHydrated();
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>
@@ -97,15 +96,14 @@ export function CorridorPlate(): JSX.Element {
           on the shared channel litMapSyncChannel.ts names, plotted as a
           small dot. No accumulated trail here (this fallback never
           accumulates its own record — see this file's own doc comment on
-          why only sparse live positions are ever shared). Mounted only once
-          hydrated (see the `hydrated` doc comment above) — before that,
-          nothing renders here at all, which is correct: the shared state it
-          would show does not exist on the server either. */}
-      {hydrated && (
+          why only sparse live positions are ever shared). Nothing renders
+          here at all on the server, which is correct: the shared state it
+          would show does not exist there either. */}
+      <ClientOnly>
         <Suspense fallback={null}>
           <LiveLitMapOverlay imageAspect={meta.width / meta.height} />
         </Suspense>
-      )}
+      </ClientOnly>
 
       {/* Year numerals, one per rule — plain positioned text rather than
           SVG glyphs inside a 0..1 viewBox, so font size is a real CSS
