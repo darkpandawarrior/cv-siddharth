@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, type LucideIcon } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -54,6 +54,8 @@ export const SURFACE_ICON: Record<string, LucideIcon> = {
   "/making": Hammer,
   "/playground": LayoutGrid,
   "/ops": Gauge,
+  "/lanes": Rows3,
+  "/time-machine": History,
 };
 
 /** Every surface with its icon attached — what the wall renders. */

@@ -71,6 +71,9 @@ const DETERMINISTIC = [
   "gen-repo-stats.mjs",
   "gen-loopdown.mjs",
   "gen-anthology.mjs",
+  // Re-shapes the already-committed timeline.ts (itself excluded here because
+  // ITS OWN sources are live); this one is not, so it belongs on this list.
+  "gen-lanes.mjs",
   // Last, always: it reads everything above and writes into the other repo.
   "gen-kotlin-data.mjs",
 ];

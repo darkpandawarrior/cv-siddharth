@@ -483,6 +483,28 @@ const pageSurfaces: SurfaceInput[] = [
     tint: ACCENT,
     device: "browser",
   },
+  {
+    // Corpus, not runs: it renders one already-committed dataset (timeline.ts)
+    // rather than computing anything live, same category as /chess and /weeb.
+    to: "/lanes",
+    label: "Four Lanes",
+    blurb:
+      "Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.",
+    tag: "corpus · timeline",
+    group: "corpus",
+    tint: ACCENT,
+    device: "desktop",
+  },
+  {
+    to: "/time-machine",
+    label: "The Time Machine",
+    blurb:
+      "This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.",
+    tag: "corpus · git history",
+    group: "corpus",
+    tint: ACCENT,
+    device: "desktop",
+  },
 ];
 
 export const surfaces: Surface[] = [

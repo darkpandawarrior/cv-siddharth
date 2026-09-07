@@ -66,7 +66,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **twenty destinations**,
+The site is not a page with a few easter eggs; it is **twenty-two destinations**,
 each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
@@ -100,6 +100,8 @@ shows what exists, and you cannot search for a room you do not know about.
 | [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
 | [`/canon`](https://cv-siddharth.vercel.app/canon) | lore · reference | the rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do |
 | [`/making`](https://cv-siddharth.vercel.app/making) | process · receipts | the craft record for the anthology: cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost |
+| [`/lanes`](https://cv-siddharth.vercel.app/lanes) | corpus · timeline | work, open source, writing and chess, month by month since 2019, on one shared axis |
+| [`/time-machine`](https://cv-siddharth.vercel.app/time-machine) | corpus · git history | this repo's own commit history, walked back month by month |
 
 `/terminal`'s own `help` isn't the whole command list by design: nine
 commands mark themselves `hidden` and skip it, so they stay things to find
@@ -212,7 +214,7 @@ scripts/                     # the generators + the capture/sentinel tooling
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-four `gen:` scripts over twenty-eight generator files. The ones you
+Twenty-six `gen:` scripts over thirty generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -253,8 +255,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1145 unit tests across 100 files (vitest)
-npm run test:e2e  # 149 Playwright tests across 16 files, every registry route
+npm test          # 1156 unit tests across 102 files (vitest)
+npm run test:e2e  # 157 Playwright tests across 16 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
@@ -296,7 +298,7 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Eighteen of the twenty-five route files server-render. Seven stay client-only:
+Twenty of the twenty-seven route files server-render. Seven stay client-only:
 `/blueprint`, `/compose`, `/forge`, `/map`, `/ops`, `/pulse` and `/terminal`.
 Most mount WebGL at their top level; `/ops` is the exception, client-only
 because every age on its board is computed at load and a server render would

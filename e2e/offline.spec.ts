@@ -23,7 +23,12 @@ import { type Page } from "@playwright/test";
  * requests or none at all.
  */
 
-const ORIGIN = "http://localhost:4173";
+// Same rule as playwright.config.ts's own PORT: parallel lanes each run their
+// own preview on their own port, and this constant went stale against that —
+// hardcoded at 4173, it aborted same-origin requests too on any other port,
+// which is exactly why every request here failed net::ERR_FAILED instead of
+// only the off-origin ones this test means to cut.
+const ORIGIN = `http://localhost:${process.env.PLAYWRIGHT_PORT ?? "4173"}`;
 
 /** Aborts every off-origin request and returns the list of what was cut, so a
  *  failure names the dependency that appeared rather than just going red. */

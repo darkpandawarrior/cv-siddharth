@@ -16,6 +16,12 @@ export const perimeter = [
     "generator": "npm run gen:chess-deep"
   },
   {
+    "file": "history.ts",
+    "generatedAt": "2026-09-07",
+    "slaDays": 45,
+    "generator": "npm run gen:history"
+  },
+  {
     "file": "store.ts",
     "generatedAt": "2026-08-07",
     "slaDays": 45,
@@ -23,7 +29,7 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-09-06",
+    "generatedAt": "2026-09-07",
     "slaDays": 45,
     "generator": "npm run gen:system-graph"
   },
@@ -213,4 +219,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-09-06";
+export const opsGeneratedAt = "2026-09-07";

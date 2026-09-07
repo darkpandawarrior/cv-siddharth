@@ -13,7 +13,7 @@ export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; ev
 export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }
 
 export const systemGraph: SystemGraph = {
-  "generatedAt": "2026-09-06",
+  "generatedAt": "2026-09-07",
   "nodes": [
     {
       "id": "gaddi",
@@ -169,6 +169,16 @@ export const systemGraph: SystemGraph = {
       "id": "/weeb",
       "kind": "surface",
       "label": "Weeb Central"
+    },
+    {
+      "id": "/lanes",
+      "kind": "surface",
+      "label": "Four Lanes"
+    },
+    {
+      "id": "/time-machine",
+      "kind": "surface",
+      "label": "The Time Machine"
     },
     {
       "id": "channel:f-droid",
@@ -393,6 +403,20 @@ export const systemGraph: SystemGraph = {
     },
     {
       "from": "/weeb",
+      "to": "portfolio",
+      "kind": "runs-here",
+      "evidence": "measured",
+      "detail": "site route"
+    },
+    {
+      "from": "/lanes",
+      "to": "portfolio",
+      "kind": "runs-here",
+      "evidence": "measured",
+      "detail": "site route"
+    },
+    {
+      "from": "/time-machine",
       "to": "portfolio",
       "kind": "runs-here",
       "evidence": "measured",
