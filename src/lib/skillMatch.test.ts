@@ -174,6 +174,16 @@ Requirements
   it("says plainly that it is a keyword match, not a judgement", () => {
     expect(toFitReport(matchJd(JD)).summary).toMatch(/keyword match/i);
   });
+
+  // fc-provenance-badge: the card says where its verdict came from. Only
+  // toFitReport (and the model's own reply, implicitly, by NOT setting this)
+  // may ever produce "offline" — never a field the model's own JSON output
+  // could forge, since parseJdFit (chatBlocks.ts) only ever honours the exact
+  // literal "offline" and treats anything else, including a model claiming
+  // "ai", as the already-default case.
+  it("marks itself as the offline source", () => {
+    expect(toFitReport(matchJd(JD)).source).toBe("offline");
+  });
 });
 
 /* ── The round trip that actually ships ────────────────────────────────────

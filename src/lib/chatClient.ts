@@ -80,6 +80,16 @@ export function isJdNearCap(length: number): boolean {
   return length > JD_MAX_CHARS * 0.9;
 }
 
+/**
+ * True for the error `fetch` (or a `reader.read()` on its body) throws once an
+ * `AbortSignal` fires. Every caller that threads a signal through `streamReply`
+ * needs this: aborting is the visitor moving on, not a failure, and must never
+ * render as "the backend isn't configured" or an apology.
+ */
+export function isAbortError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === "AbortError";
+}
+
 export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
   return messages.slice(-MAX_SENT_TURNS).map((m) => {
     const max = MAX_TURN_CHARS[m.role];
@@ -101,12 +111,19 @@ export function trimHistory(messages: ChatMessage[]): ChatMessage[] {
  * appends it to the SYSTEM prompt, so it can never read as something the
  * visitor said. JD mode doesn't send it — that path is one pasted document,
  * and the page it was pasted from tells the analyzer nothing.
+ *
+ * `signal` cancels the request — a visitor who closes the panel or asks a new
+ * question stops burning the shared per-IP rate limit and the free-tier key
+ * budget instead of leaving the old request to finish unread. Every caller
+ * checks `isAbortError` on the rejection and treats it as "stopped", never as
+ * a failure worth `chatErrorText`.
  */
 export async function streamReply(
   messages: ChatMessage[],
   onDelta: (text: string) => void,
   mode?: "jd",
   route?: string,
+  signal?: AbortSignal,
 ): Promise<void> {
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
@@ -116,6 +133,7 @@ export async function streamReply(
     body: JSON.stringify(
       mode === "jd" ? { messages: messages.slice(-1), mode } : { messages: trimHistory(messages), route },
     ),
+    signal,
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);

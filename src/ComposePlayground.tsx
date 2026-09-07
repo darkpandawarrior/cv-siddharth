@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { LauncherButton } from "./Launcher.tsx";
-import { ArrowLeft, Play, RotateCcw, Smartphone, Wand2 } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Smartphone, Square, Wand2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
 import { projects } from "./data/profile.ts";
+import { isAbortError } from "./lib/chatClient.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { NextRoomLink, useNextRoom } from "./rooms.tsx";
 
@@ -558,21 +559,51 @@ export function buildGenPrompt(scenario: string): string {
   return scenario.trim().slice(0, MAX_SCENARIO_CHARS);
 }
 
-/** Pull the Kotlin out of a fenced (or bare) model reply. Forgiving — the
- *  interpreter tolerates the rest, so worst case it renders a placeholder. */
+/** Pull the Kotlin out of a fenced (or bare) model reply. Forgiving — used
+ *  only for the LIVE typing preview while a stream is still open, where a
+ *  half-arrived fence is normal and something on screen beats nothing. */
 function extractCode(text: string): string {
   const fence = text.match(/```(?:kotlin|kt)?\s*([\s\S]*?)```/i);
   return (fence ? fence[1] : text).trim();
 }
 
-/** Stream the chat endpoint and return the full concatenated text. */
-async function streamChat(userContent: string, onDelta?: (full: string) => void): Promise<string> {
+/** The strict version, used only on a FINISHED reply: null when no fence
+ *  closed at all, rather than falling back to raw prose. Feeding prose
+ *  straight to the interpreter is the actual bug `generate()` retries once
+ *  to avoid — every word becomes an `{ kind: "unknown" }` node
+ *  (composeInterpreter.ts) and renders as a wall of "not supported yet". */
+export function extractFencedCode(text: string): string | null {
+  const fence = text.match(/```(?:kotlin|kt)?\s*([\s\S]*?)```/i);
+  return fence ? fence[1].trim() : null;
+}
+
+/** Runs generated code through the SAME grammar (`parseCompose`) the editor
+ *  itself parses with — one definition of "valid", not a second one invented
+ *  for the AI path. A hard parse failure (unbalanced punctuation, a construct
+ *  the tokenizer can't even start on) is a syntax error worth retrying for;
+ *  an unrecognised call is deliberately NOT one — the interpreter is "forgiving
+ *  ... so half-finished experiments still render something" by design, and one
+ *  `{ kind: "unknown" }` node in an otherwise-valid program is that, not the
+ *  "wall of placeholders" failure mode this guards against. */
+export function validateComposeCode(code: string): { ok: true } | { ok: false; error: string } {
+  try {
+    parseCompose(code);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** Stream the chat endpoint and return the full concatenated text. `signal`
+ *  cancels the request — regenerating replaces it rather than racing it. */
+async function streamChat(userContent: string, onDelta?: (full: string) => void, signal?: AbortSignal): Promise<string> {
   const res = await fetch(CHAT_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     // `mode` is validated server-side against a one-value allowlist; it swaps
     // the CV system prompt for the Compose generator one.
     body: JSON.stringify({ messages: [{ role: "user", content: userContent }], mode: "compose" }),
+    signal,
   });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => null);
@@ -649,6 +680,9 @@ export default function ComposePlayground() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  // The in-flight generation, if any — regenerating (a new idea chip, a
+  // re-submit) aborts it rather than racing it for who writes `code` last.
+  const genAbortRef = useRef<AbortController | null>(null);
 
   // The phone mockup is a fixed ~280x640 block — plenty of room in the
   // lg:grid-cols-2 desktop layout, but grid-rows-2 on mobile only ever gives
@@ -683,24 +717,58 @@ export default function ComposePlayground() {
   const generate = async (scenario: string) => {
     const s = scenario.trim();
     if (!s || aiBusy) return;
+    genAbortRef.current?.abort(); // belt-and-braces — see FloatingChat.send()
+    const controller = new AbortController();
+    genAbortRef.current = controller;
     setAiBusy(true);
     setAiNote(null);
     try {
-      const full = await streamChat(buildGenPrompt(s), (partial) => {
-        // Live-type the code as it streams once a fence opens, so the preview
-        // materialises in real time.
-        const gen = extractCode(partial);
-        if (gen) setCode(gen);
-      });
-      const finalCode = extractCode(full);
-      if (finalCode) setCode(finalCode);
-      else setAiNote("The model didn't return usable code — try rephrasing.");
+      let prompt = buildGenPrompt(s);
+      let fenced: string | null = null;
+      let validation: { ok: true } | { ok: false; error: string } = { ok: false, error: "no reply yet" };
+      // One retry: a reply with no ```kotlin fence at all, or one that fails
+      // the interpreter's own grammar, gets ONE clean second try with a named
+      // diagnostic — instead of the raw reply going straight to the
+      // interpreter, which is what used to hand it a wall of "not supported
+      // yet" placeholders parsed out of prose.
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const full = await streamChat(
+          prompt,
+          (partial) => {
+            // Live-type the code as it streams once a fence opens, so the preview
+            // materialises in real time.
+            const gen = extractCode(partial);
+            if (gen) setCode(gen);
+          },
+          controller.signal,
+        );
+        fenced = extractFencedCode(full);
+        validation = fenced ? validateComposeCode(fenced) : { ok: false, error: "the reply had no ```kotlin fence" };
+        if (validation.ok) break;
+        if (attempt === 1) {
+          prompt = `${buildGenPrompt(s)}\n\nYour last reply didn't work: ${validation.error}. Reply again with ONLY one fenced \`\`\`kotlin snippet in the supported subset — no prose before or after the fence.`;
+        }
+      }
+      if (fenced) setCode(fenced);
+      if (!validation.ok) {
+        setAiNote(
+          fenced
+            ? "The model's code didn't fully validate after a retry — you may see a placeholder or two."
+            : "The model didn't return usable code — try rephrasing.",
+        );
+      }
     } catch (e) {
+      if (isAbortError(e)) return; // stopped on purpose — not a failure to report
       setAiNote(e instanceof Error ? e.message : "AI generation failed. You can still edit by hand.");
     } finally {
       setAiBusy(false);
     }
   };
+
+  /** The Stop control next to Generate — aborts the in-flight generation. */
+  function stopGenerate() {
+    genAbortRef.current?.abort();
+  }
 
   // Debounce parsing so every keystroke doesn't reparse mid-word.
   useEffect(() => {
@@ -811,13 +879,23 @@ export default function ComposePlayground() {
               aria-label="Describe a screen for the AI to build in Compose"
               className="min-w-0 flex-1 rounded-full border border-line bg-ink/60 px-4 py-1.5 text-xs text-zinc-100 outline-none transition focus:border-accent2/60 disabled:opacity-50"
             />
-            <button
-              type="submit"
-              disabled={aiBusy || !aiPrompt.trim()}
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {aiBusy ? "generating…" : "Generate"}
-            </button>
+            {aiBusy ? (
+              <button
+                type="button"
+                onClick={stopGenerate}
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-accent2 ring-1 ring-inset ring-accent2/60 transition hover:bg-accent2/10"
+              >
+                <Square size={11} fill="currentColor" /> Stop
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!aiPrompt.trim()}
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Generate
+              </button>
+            )}
           </form>
           <div className="flex flex-wrap items-center gap-1.5">
             {AI_IDEAS.map((idea) => (

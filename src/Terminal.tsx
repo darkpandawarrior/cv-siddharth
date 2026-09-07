@@ -25,7 +25,7 @@ import { projectStats } from "./data/projectStats.ts";
 import { STATS_KEY } from "./lib/projectStatLine.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
-import { chatErrorText, streamReply } from "./lib/chatClient.ts";
+import { chatErrorText, isAbortError, streamReply } from "./lib/chatClient.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
@@ -898,18 +898,27 @@ function AskBlock({ question }: { question: string }) {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    let live = true;
-    // Reset first: a re-run of this effect (React's dev double-invoke, HMR)
-    // must restart the answer, not append a second copy on top of the first.
+    // Reset first: a re-run of this effect (React's dev double-invoke, HMR,
+    // scrolling this block out of the transcript and back) must restart the
+    // answer, not append a second copy on top of the first — and the abort
+    // below is what stops the OLD run's request rather than leaving it to
+    // finish unread while a fresh one is already streaming.
+    const controller = new AbortController();
     setText("");
-    streamReply([{ role: "user", content: question }], (delta) => {
-      if (live) setText((t) => t + delta);
-    })
-      .catch((err) => live && setText(chatErrorText(err)))
-      .finally(() => live && setDone(true));
-    return () => {
-      live = false;
-    };
+    streamReply(
+      [{ role: "user", content: question }],
+      (delta) => setText((t) => t + delta),
+      undefined,
+      undefined,
+      controller.signal,
+    )
+      .catch((err) => {
+        if (!isAbortError(err)) setText(chatErrorText(err));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDone(true);
+      });
+    return () => controller.abort();
   }, [question]);
 
   return (

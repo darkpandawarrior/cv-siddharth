@@ -8,7 +8,9 @@ import {
   ROUTE_PHRASES,
   canonicalRoute,
   chipsFor,
+  chipsForProject,
   greetingFor,
+  lastRenderedProjectSlug,
   routeInfo,
 } from "./chatContext.ts";
 
@@ -50,6 +52,35 @@ describe("chipsFor", () => {
 
   it("ignores a trailing slash — the router hands us both shapes", () => {
     expect(chipsFor("/lab/")).toEqual(chipsFor("/lab"));
+  });
+});
+
+// Conversation-aware chips (Audit lane G): the chips follow what was just
+// SAID, not only the route the visitor is standing on.
+describe("chipsForProject", () => {
+  it("asks the same three questions chipsFor already asks on that project's page", () => {
+    // Same table, one entry point — a rename of the project-question set
+    // should never have two places to update.
+    expect(chipsForProject("Doori")).toEqual(chipsFor("/project/doori").slice(1));
+  });
+});
+
+describe("lastRenderedProjectSlug", () => {
+  it("finds the slug a [[project:<slug>]] directive rendered", () => {
+    expect(lastRenderedProjectSlug("Sure — [[project:doori]] is the mileage tracker.")).toBe("doori");
+  });
+
+  it("is case-insensitive and lower-cases the slug", () => {
+    expect(lastRenderedProjectSlug("[[project:DOORI]]")).toBe("doori");
+  });
+
+  it("finds the LAST directive when a reply rendered more than one", () => {
+    expect(lastRenderedProjectSlug("[[project:doori]] and also [[project:gaddi]]")).toBe("gaddi");
+  });
+
+  it("is undefined for a reply with no project card", () => {
+    expect(lastRenderedProjectSlug("Just an ordinary answer.")).toBeUndefined();
+    expect(lastRenderedProjectSlug("[[rooms]]")).toBeUndefined();
   });
 });
 
