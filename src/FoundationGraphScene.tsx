@@ -175,6 +175,8 @@ export default function FoundationGraphScene() {
       camera={{ position: [0, 0, 5.2], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
+      role="img"
+      aria-label="3D constellation of the shared KMP libraries and the apps built on them — hover a node to trace a dependency, click to open its repo"
     >
       <ambientLight intensity={0.5} />
       <pointLight position={[4, 4, 4]} intensity={8} color={readToken("--color-probe", "#5ee6ff")} />

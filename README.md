@@ -260,7 +260,7 @@ specific shape:
 
 ```bash
 npm test          # 1269 unit tests across 114 files (vitest)
-npm run test:e2e  # 253 Playwright tests across 16 files, every registry route
+npm run test:e2e  # 269 Playwright tests across 16 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
@@ -304,21 +304,25 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Twenty of the twenty-seven route files server-render. Seven stay client-only:
-`/blueprint`, `/compose`, `/forge`, `/map`, `/ops`, `/pulse` and `/terminal`.
-Most mount WebGL at their top level; `/ops` is the exception, client-only
-because every age on its board is computed at load and a server render would
-ship a timestamp already wrong by the time it is read.
+Twenty-five of the twenty-seven route files server-render. Two stay client-only:
+`/ops` and `/pulse`, both because every figure on the page is computed at load
+(an age, a websocket count), and a server render would ship a value already
+wrong by the time it is read.
 
-`/playground` used to be the seventh. Lighthouse did not score it slow, it
-scored it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw
-a blank screen until the client bundle and three.js had both arrived. One
-import caused it. The room grid reads the interaction counter from a module
-that loads `@playhtml/react`, which reads `document` when it is imported, and
-that killed the route's SSR in the loader before render began. The counter now
+`/playground`, `/blueprint`, `/compose`, `/forge`, `/map` and `/terminal` used
+to be client-only too. Lighthouse did not score `/playground` slow, it scored
+it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw a
+blank screen until the client bundle and three.js had both arrived. One import
+caused it. The room grid reads the interaction counter from a module that
+loads `@playhtml/react`, which reads `document` when it is imported, and that
+killed the route's SSR in the loader before render began. The counter now
 reaches components through a context whose default is a working no-op, which is
 the truth on the server anyway, and the route serves its room grid and a baked
-terrain plate as real HTML.
+terrain plate as real HTML. The other five WebGL rooms picked up the same
+pattern: each already had, or now has, a real, deterministic body to show
+before its capability check resolves (a room grid, a legend, a "needs WebGL"
+line, a boot banner), so the fix was dropping `ssr: false` and letting the
+server send that body instead of nothing.
 
 Four things hold the numbers up, and each is enforced rather than remembered:
 

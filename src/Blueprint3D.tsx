@@ -662,6 +662,11 @@ export default function Blueprint3D({
           camera={{ position: [OVERVIEW.pos.x, OVERVIEW.pos.y, OVERVIEW.pos.z], fov: 50 }}
           dpr={[1, 1.5]}
           gl={{ antialias: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false }}
+          // props land on Canvas's own wrapper <div>, which is what gives this
+          // an accessible name — the 2D labs get theirs straight on <canvas>,
+          // this one has an extra div in between (see r3f's own Canvas.tsx).
+          role="img"
+          aria-label={ascii ? "ASCII render of the Blueprint Room — drag to orbit, WASD to move" : "3D fly-through of the Blueprint Room — drag to orbit, WASD to move"}
         >
           <Scene
             tourStop={tourStop}

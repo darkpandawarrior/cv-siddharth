@@ -1,25 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
-import { Suspense, lazy } from "react";
+import ComposePlayground from "../ComposePlayground.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 
-// The Compose Playground ships its interpreter in its own chunk, loaded only
-// when a visitor opens #compose.
-const ComposePlayground = lazy(() => import("../ComposePlayground.tsx"));
-
+/**
+ * Server-rendered now, like /playground and /blueprint: the interpreter and
+ * the phone-frame preview are plain JS/DOM, not WebGL, so there was never a
+ * three.js reason for ssr:false here — only the `?c=` share-link read (see
+ * ComposePlayground.tsx), which now resolves in an effect instead of at
+ * render, so the server has a real, deterministic first paint to send.
+ */
 export const Route = createFileRoute("/compose")({
   head: () => roomHead("/compose"),
-  ssr: false,
   component: () => (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center bg-void font-mono text-sm text-muted">
-          spinning up the compose playground…
-        </div>
-      }
-    >
+    <>
       <ComposePlayground />
       <FloatingChat />
-    </Suspense>
+    </>
   ),
 });
