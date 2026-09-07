@@ -45,6 +45,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { statLineExtras, badgesBeyondStatus } from "./lib/projectStatLine.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
+import { homeFastPath, homeDeepPath } from "./data/facets.ts";
+import { boardArc } from "./data/beforeTheCode.ts";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -1091,6 +1093,15 @@ function InkDoorway() {
             remotely. {COUNT_WORD[READABLE_PIECES] ?? READABLE_PIECES} published stories, all readable here, and the pieces the board wrote
             about me. It's a different life, so it gets a different room.
           </p>
+          {/* boardArc used to be a caption at the bottom of WritingSection, a
+              section only a visitor who already clicked into /ink ever saw.
+              It's the strongest line on the property (three years of EB
+              parodies read as one arc), so it belongs on the path everyone
+              is already on, not filed behind a door most visitors never
+              open. */}
+          <blockquote className="mt-2 mb-8 max-w-2xl border-l-2 border-accent/40 pl-4 text-sm italic leading-relaxed text-zinc-400">
+            "{boardArc}"
+          </blockquote>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/ink"
@@ -1165,6 +1176,30 @@ function Doorway() {
   );
 }
 
+/**
+ * The component each fast/deep-path id (facets.ts's `homeFastPath` /
+ * `homeDeepPath`) renders as. Registering a section here plus one id in
+ * facets.ts is the whole cost of adding or reordering one, so-p3's actual
+ * ask — a data entry, not an App.tsx reflow. The lookup lives here rather
+ * than in facets.ts because facets.ts is plain data with no JSX in it, same
+ * as every other `src/data/` module.
+ */
+const HOME_SECTIONS: Record<(typeof homeFastPath)[number], React.ComponentType> = {
+  hero: Hero,
+  metrics: Metrics,
+  fit: FitCheck,
+  casestudies: CaseStudies,
+  projects: Projects,
+  experience: ExperienceSection,
+};
+
+const DEEP_SECTIONS: Record<(typeof homeDeepPath)[number], React.ComponentType> = {
+  morph: DeviceMorph,
+  shipped: ShippedShelf,
+  source: ReposShowcase,
+  skills: Skills,
+};
+
 export function HomePage() {
   // The backtick-summons-the-terminal listener used to live here, which meant
   // it only existed on `/` — while two separate copy strings promised it worked
@@ -1175,48 +1210,36 @@ export function HomePage() {
       <CursorAura />
       <Nav />
       <main id="main-content" tabIndex={-1}>
-        <Hero />
-        <Metrics />
-        {/* Straight after the numbers, and before anything that has to load:
-            they are what makes a recruiter want to check fit, the scorecard
-            links down into the case studies, and it is the one thing on this
-            page a PDF cannot offer. NAV_LINKS has listed it first for a while;
-            the page did not. Below the hero, so it costs LCP nothing. */}
-        <FitCheck />
-        {/* The multiplatform claim, proved rather than asserted. Not in the
-            hero: the hero's right column is 280px, which cannot show a foldable
-            beside a TV, and the hero heading is the LCP element. Nothing here
-            boots until it is clicked, so this section costs the initial load
-            one lazy poster. */}
-        <DeviceMorph />
-        {/* The comment here used to claim "a recruiter who reads two sections
-            should have hit a live Play Store rating by the end of the second"
-            while the shelf itself was the eighth section, 17,800px down. It is
-            now the third, and it breaks the four-in-a-row run of "what have you
-            built?" grids that used to be work → projects → source → shipped. */}
-        <ShippedShelf />
-        <CaseStudies />
-        <Projects />
-        {/* #source promoted to its own top-level section — was a <div> buried
-            near the end of #projects even though it's a first-class
-            destination in the footer, palette and navigation.ts. */}
-        <ReposShowcase />
-        <ExperienceSection />
-        {/* Skills sits with the evidence it proves, not after the gear change.
-            It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
-            the comment below calls the move from career evidence into
-            exploration — so the page's own stated narrative had a piece of
-            evidence stranded on the wrong side of its own divider. */}
-        <Skills />
+        {/* Fast path: the seven sections a 90-second recruiter reads, in the
+            order facets.ts's `homeFastPath` declares. Metrics, FitCheck and
+            Skills all used to answer "is he any good" back to back with
+            DeviceMorph/ShippedShelf/ReposShowcase interleaved between the
+            case studies and experience — twelve to fourteen sections before
+            Contact. Skills and the three evidence sections below moved past
+            it; they're still on this page, just past the fold a satisfied
+            recruiter doesn't have to cross. */}
+        {homeFastPath.map((id) => {
+          const Section = HOME_SECTIONS[id];
+          return <Section key={id} />;
+        })}
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}
         <Circuit />
         <Doorway />
         {/* Writing lives in its own world now (/ink). What stays here is the
-            doorway — the homepage was 14,000px because it was carrying two
+            doorway, now carrying boardArc's own line instead of just a link
+            to it — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
         <InkDoorway />
         <Contact />
+        {/* Deep path: the mechanism-level evidence (multiplatform proof, the
+            shipped shelf, the repo wall, the full skills cloud) for the
+            visitor who kept scrolling past Contact rather than the one who
+            stopped there. */}
+        {homeDeepPath.map((id) => {
+          const Section = DEEP_SECTIONS[id];
+          return <Section key={id} />;
+        })}
       </main>
       <FloatingChat />
     </div>

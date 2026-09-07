@@ -204,6 +204,8 @@ Creative archive, written before the code and originally on https://booksbeforeb
 
 - [The Board](https://cv-siddharth.vercel.app/chess): Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot trained on the openings you are looking at.
 - [Weeb Central](https://cv-siddharth.vercel.app/weeb): Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.
+- [Four Lanes](https://cv-siddharth.vercel.app/lanes): Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.
+- [The Time Machine](https://cv-siddharth.vercel.app/time-machine): This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.
 
 ### Writing: before the code, and alongside it
 
