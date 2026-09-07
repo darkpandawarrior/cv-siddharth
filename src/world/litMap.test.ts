@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CITY } from "./city.ts";
-import { LIT_MAP_H, LIT_MAP_W, litMapTexel, stampLitMap } from "./litMap.ts";
+import { LIT_MAP_H, LIT_MAP_W, litMapTexel, pickNewRemoteStamps, stampLitMap } from "./litMap.ts";
+import type { LitMapSyncState } from "./litMapSyncChannel.ts";
 
 describe("litMapTexel", () => {
   it("maps the corridor's corners to the texture's corners", () => {
@@ -35,5 +36,28 @@ describe("stampLitMap", () => {
     expect(touchedX).toBe(3);
     expect(data[(tz - 1) * LIT_MAP_W + tx] ?? 0).toBe(0);
     expect(data[(tz + 1) * LIT_MAP_W + tx] ?? 0).toBe(0);
+  });
+});
+
+describe("pickNewRemoteStamps — phase 5's shared-record wiring", () => {
+  it("skips this tab's own key — it already applied its own stamp locally in real time", () => {
+    const remote: LitMapSyncState = { me: { x: 1, z: 2, t: 100 }, other: { x: 3, z: 4, t: 200 } };
+    const applied = new Map<string, number>();
+    const fresh = pickNewRemoteStamps(remote, "me", applied);
+    expect(fresh).toEqual([{ x: 3, z: 4, t: 200 }]);
+  });
+
+  it("skips a peer whose value hasn't changed since the last call", () => {
+    const applied = new Map<string, number>();
+    const remote: LitMapSyncState = { other: { x: 3, z: 4, t: 200 } };
+    expect(pickNewRemoteStamps(remote, "me", applied)).toHaveLength(1);
+    expect(pickNewRemoteStamps(remote, "me", applied)).toHaveLength(0); // same t — already applied
+  });
+
+  it("re-applies once a peer's stamp actually moves (a new t)", () => {
+    const applied = new Map<string, number>();
+    pickNewRemoteStamps({ other: { x: 3, z: 4, t: 200 } }, "me", applied);
+    const fresh = pickNewRemoteStamps({ other: { x: 5, z: 6, t: 300 } }, "me", applied);
+    expect(fresh).toEqual([{ x: 5, z: 6, t: 300 }]);
   });
 });
