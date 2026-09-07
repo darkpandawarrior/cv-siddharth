@@ -38,7 +38,6 @@
  * if a script exists with no node, if a node names a script that doesn't
  * exist, or if a banner-carrying generated file isn't a declared output.
  */
-import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -100,29 +99,52 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/galleries.ts"], stages: { build: 1, refresh: 5, check: 1 } },
   { id: "compare-sets", script: "gen-compare-sets.mjs", npmName: "gen:compare", kind: "local",
     inputs: [], outputs: ["src/data/compareSets.ts"], stages: { build: 2, check: 2 } },
-  { id: "loopdown", script: "gen-loopdown.mjs", npmName: "gen:loopdown", kind: "local",
-    inputs: [], outputs: ["src/data/writing.ts"], stages: { build: 3, refresh: 7, check: 6 } },
+  // kind was "local" until this lane: it unconditionally fetches
+  // the-loopdown's registry.json off raw.githubusercontent.com (see
+  // fetchWithTimeout in gen-loopdown.mjs) — the exact live-fetch-in-prebuild
+  // shape F3 names for gen-anthology. Same fix: network kind, refresh only.
+  { id: "loopdown", script: "gen-loopdown.mjs", npmName: "gen:loopdown", kind: "network",
+    inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7, check: 6 } },
   { id: "anthology", script: "gen-anthology.mjs", npmName: "gen:anthology", kind: "network",
-    inputs: [], outputs: ["src/data/anthology.ts"], stages: { build: 4, refresh: 8, check: 7 } },
+    inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8, check: 7 } },
   { id: "timeline", script: "gen-timeline.mjs", npmName: "gen:timeline", kind: "network",
-    inputs: [], outputs: ["src/data/timeline.ts"], stages: { build: 5, refresh: 9 } },
+    inputs: [], outputs: ["src/data/timeline.ts"], stages: { refresh: 9 } },
   { id: "feed", script: "gen-feed.mjs", npmName: "gen:feed", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/feed.xml"], stages: { build: 6, refresh: 10 } },
   { id: "anthology-feed", script: "gen-anthology-feed.mjs", npmName: "gen:anthology-feed", kind: "local",
     inputs: ["src/data/anthology.ts"], outputs: ["public/anthology.xml"], stages: { build: 7 } },
+  // kind is "local" (no network, no env, no sibling) but it stamps
+  // `new Date().toISOString().slice(0,10)` into every <lastmod> on every
+  // run, content-identical or not (F7's "9 modified files" bug: the sitemap
+  // was one of them). "local" is not the same claim as "byte-deterministic"
+  // — see check-generated.mjs's own DETERMINISTIC rule, which already
+  // excludes this for the same reason. Build stage needs that same
+  // exclusion: refresh only, output committed, degrades visibly (its own
+  // <lastmod> ages) rather than lying with a fresh stamp on every deploy.
   { id: "sitemap", script: "gen-sitemap.mjs", npmName: "gen:sitemap", kind: "local",
-    inputs: [], outputs: ["public/sitemap.xml"], stages: { build: 8, refresh: 11 } },
+    inputs: [], outputs: ["public/sitemap.xml"], stages: { refresh: 11 } },
   { id: "system-prompt", script: "gen-system-prompt.mjs", npmName: "gen:system-prompt", kind: "local",
     inputs: ["src/data/writing.ts", "src/data/chess.ts"],
     outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts"], stages: { build: 9, refresh: 17 } },
+  // Same now-restamping shape as sitemap above (`generatedAt: new
+  // Date().toISOString()` unconditionally), plus a real undeclared input:
+  // it dynamically imports src/data/timeline.ts for month/lane data, so it
+  // must run after timeline in whichever stage it's in — declared here
+  // rather than left implied by list position. Refresh only.
   { id: "world-plate", script: "gen-world-plate.mjs", npmName: "gen:world-plate", kind: "local",
-    inputs: [], outputs: ["src/world/corridorPlate.ts", "public/p/world/corridor.png"], stages: { build: 10 } },
+    inputs: ["src/data/timeline.ts"],
+    outputs: ["src/world/corridorPlate.ts", "public/p/world/corridor.png"], stages: { refresh: 19 } },
   { id: "repo-stats", script: "gen-repo-stats.mjs", npmName: "gen:repo-stats", kind: "sibling",
-    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { build: 11, check: 5 } },
+    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { check: 5 } },
   { id: "ops", script: "gen-ops.mjs", npmName: "gen:ops", kind: "sibling",
-    inputs: [], outputs: ["src/data/ops.ts"], stages: { build: 12, refresh: 18, check: 3 } },
+    inputs: [], outputs: ["src/data/ops.ts"], stages: { refresh: 18, check: 3 } },
+  // Sibling kind (scans ../../Android, ../../KMP checkouts) AND a now-stamp
+  // (`generatedAt: new Date().toISOString().slice(0,10)`) — refresh only on
+  // both counts. Had no refresh entry at all before this lane (build was its
+  // only automated path), so removing build without adding refresh would
+  // have made it purely manual; it keeps its committed output current here.
   { id: "system-graph", script: "gen-system-graph.mjs", npmName: "gen:system-graph", kind: "sibling",
-    inputs: [], outputs: ["src/data/systemGraph.ts", "src/data/storyMap.ts"], stages: { build: 13 } },
+    inputs: [], outputs: ["src/data/systemGraph.ts", "src/data/storyMap.ts"], stages: { refresh: 20 } },
   { id: "kotlin-data", script: "gen-kotlin-data.mjs", npmName: "gen:kotlin", kind: "sibling",
     // The cross-repo emitter: reads the corpora every generator above it
     // writes, then translates them into the Kotlin the Compose twin reads.
@@ -133,7 +155,7 @@ export const GENERATORS = [
       "src/data/ops.ts", "src/data/archiveText.ts", "src/data/chess.ts", "src/data/storyMap.ts",
     ],
     outputs: ["../cv-siddharth-kmp/cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated/*.kt"],
-    stages: { build: 14, check: 8 } },
+    stages: { check: 8 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 
@@ -234,25 +256,29 @@ export function stageOrder(stage) {
   return order;
 }
 
-/** package.json's prebuild/predev derive from this — see the CLI runner below. */
+/** package.json's prebuild/predev derive from this via scripts/run-pipeline.mjs. */
 export const BUILD_CHAIN = stageOrder("build");
+
+// The hermetic-build gate, mechanically enforced rather than left as a
+// convention a node's placement here could quietly violate: a deploy and a
+// dev boot (prebuild/predev, both scripts/run-pipeline.mjs build) must make
+// zero outbound requests and leave zero dirty files, so no node with a
+// network fetch, a required private env var, or a sibling-repo read/write
+// may run in this stage. This throws at import time — on `npm run build`,
+// on `npm test` (generators.test.mjs imports this module), and on
+// check:generated — so a generator moved back into the build stage without
+// also being reclassified fails immediately, everywhere, not just in CI.
+for (const g of BUILD_CHAIN) {
+  if (g.kind !== "local") {
+    throw new Error(
+      `generators.mjs: "${g.id}" is kind="${g.kind}" but is declared in the build ` +
+        `stage — only kind="local" nodes may run there (prebuild/predev must make ` +
+        `zero outbound requests). Move it to refresh-only or reclassify it.`,
+    );
+  }
+}
+
 /** refresh.mjs's STEPS derives from this (npm script names, `npm run` needs one). */
 export const REFRESH_STEPS = stageOrder("refresh").map((g) => g.npmName);
 /** check-generated.mjs's DETERMINISTIC derives from this (script filenames). */
 export const CHECK_DETERMINISTIC = stageOrder("check").map((g) => g.script);
-
-// `node scripts/generators.mjs build` — replaces the 15-link `&&` chain that
-// used to be package.json's prebuild AND predev verbatim. Same fail-fast
-// semantics as `&&`: the first non-zero exit stops the rest immediately,
-// unlike refresh.mjs's "run every generator, report failures at the end".
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const stage = process.argv[2];
-  if (stage !== "build") {
-    console.error("usage: node scripts/generators.mjs build");
-    process.exit(1);
-  }
-  for (const node of BUILD_CHAIN) {
-    const res = spawnSync("node", [join(root, "scripts", node.script)], { stdio: "inherit" });
-    if (res.signal || res.status !== 0) process.exit(res.status ?? 1);
-  }
-}
