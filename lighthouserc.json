@@ -31,7 +31,21 @@
     "",
     "numberOfRuns is 1, not 3: this list went from 12 URLs to 23, and 23 single runs is fewer",
     "Lighthouse runs than the 36 it was doing before. accessibility and seo, the two gates that",
-    "have always been errors, are deterministic and gain nothing from a median of three."
+    "have always been errors, are deterministic and gain nothing from a median of three.",
+    "",
+    "W15 (2026-09-07, mobile performance lane): the below-the-fold homepage sections (case",
+    "studies, projects, experience, skills, circuit, doorways, contact, the multiplatform frame",
+    "switcher) now defer their hydration to `@tanstack/react-start`'s `<Hydrate when={visible()}>`",
+    "instead of hydrating synchronously with the hero. Measured with `npx lighthouse --preset=perf",
+    "--form-factor=mobile --throttling-method=simulate` against `vite preview` on this laptop:",
+    "  /              performance 63 -> 66, LCP 6.44s -> 5.56s, TBT 19ms -> 29ms, CLS 0 -> 0.010.",
+    "  /project/doori performance 60 -> 65, LCP 8.55s -> 6.08s, TBT 21ms -> 48ms.",
+    "That is short of the brief's aspirational 80/2.5s/300ms bar, so performance, LCP and CLS for",
+    "`/` stay exactly where the rest of the fleet already sits (warn, or whatever they were) rather",
+    "than being promoted to an error this site cannot pass — the whole point of the note at the top",
+    "of this file. total-blocking-time for `/` IS promoted to error below: 19-48ms measured against",
+    "a 300ms budget is a 6x-15x margin, the same 'roughly 20% headroom' bar the three existing",
+    "error assertions use, not a number picked to look good on arrival."
   ],
   "ci": {
     "collect": {
@@ -64,62 +78,78 @@
       "numberOfRuns": 1
     },
     "assert": {
-      "assertions": {
-        "categories:accessibility": [
-          "error",
-          {
-            "minScore": 1
+      "assertMatrix": [
+        {
+          "assertions": {
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1
+              }
+            ],
+            "categories:seo": [
+              "error",
+              {
+                "minScore": 0.95
+              }
+            ],
+            "categories:performance": [
+              "warn",
+              {
+                "minScore": 0.8
+              }
+            ],
+            "largest-contentful-paint": [
+              "warn",
+              {
+                "maxNumericValue": 3500
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.25
+              }
+            ],
+            "total-byte-weight": [
+              "error",
+              {
+                "maxNumericValue": 3500000
+              }
+            ],
+            "resource-summary:script:size": [
+              "error",
+              {
+                "maxNumericValue": 1600000
+              }
+            ],
+            "total-blocking-time": [
+              "warn",
+              {
+                "maxNumericValue": 300
+              }
+            ],
+            "first-contentful-paint": [
+              "warn",
+              {
+                "maxNumericValue": 3000
+              }
+            ]
           }
-        ],
-        "categories:seo": [
-          "error",
-          {
-            "minScore": 0.95
+        },
+        {
+          "//": "W15: `/` measured 19-48ms of TBT before and after the below-the-fold Hydrate change, a 6x-15x margin against the 300ms budget — promoted to error here rather than site-wide because no other URL has been re-measured for this specific margin.",
+          "matchingUrlPattern": "^http://localhost:4173/$",
+          "assertions": {
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 300
+              }
+            ]
           }
-        ],
-        "categories:performance": [
-          "warn",
-          {
-            "minScore": 0.8
-          }
-        ],
-        "largest-contentful-paint": [
-          "warn",
-          {
-            "maxNumericValue": 3500
-          }
-        ],
-        "cumulative-layout-shift": [
-          "error",
-          {
-            "maxNumericValue": 0.25
-          }
-        ],
-        "total-byte-weight": [
-          "error",
-          {
-            "maxNumericValue": 3500000
-          }
-        ],
-        "resource-summary:script:size": [
-          "error",
-          {
-            "maxNumericValue": 1600000
-          }
-        ],
-        "total-blocking-time": [
-          "warn",
-          {
-            "maxNumericValue": 300
-          }
-        ],
-        "first-contentful-paint": [
-          "warn",
-          {
-            "maxNumericValue": 3000
-          }
-        ]
-      }
+        }
+      ]
     },
     "upload": {
       "target": "temporary-public-storage"
