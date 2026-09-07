@@ -1,7 +1,10 @@
-import { lazy, Suspense, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { MessageSquarePlus, Trash2 } from "lucide-react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { NOTE_MAX_LENGTH, type WallNote } from "./guestWall.ts";
+import { LiveMarginNotes } from "./LiveMarginNotes.tsx";
 
 /**
  * A margin note thread against one piece — /ink (slug "ink") and every
@@ -10,15 +13,17 @@ import { NOTE_MAX_LENGTH, type WallNote } from "./guestWall.ts";
  * THIS MODULE MUST NOT IMPORT @playhtml/react, for the same reason
  * ReactionRow.tsx doesn't: it reads `document` on import, and both /ink and
  * /read/$slug server-render. The live half lives in LiveMarginNotes.tsx,
- * lazy-loaded after mount and wrapped in `<ClientOnly>` (not a hand-rolled
- * `useHydrated()` check): Start's compiler recognises that JSX and strips its
- * children — the lazy import along with them — out of the SERVER compile
- * entirely, which is what importProtection's static scan actually needs.
- * `useHydrated()` alone only stops it at runtime; React still resolves a lazy
- * child while streaming on the server, and the scan still finds the chunk
- * regardless of the runtime gate. The server renders the same empty-state
- * markup and the client swaps in the shared notes — identical shape either
- * way, so there is no layout shift on hydration.
+ * wrapped in `<ClientOnly>` (not a hand-rolled mounted-state check): Start's
+ * compiler recognises that JSX and strips its children out of the SERVER
+ * compile entirely, which is what importProtection's static scan actually
+ * needs — a runtime-only check alone only stops it at runtime; React still
+ * resolves a lazy child while streaming on the server, and the scan still
+ * finds the chunk regardless of the runtime gate. `<Hydrate when={load()}
+ * split>` inside it keeps LiveMarginNotes in its own chunk, fetched once this
+ * boundary is reached, now that the import above is static. The server
+ * renders the same empty-state markup and the client swaps in the shared
+ * notes — identical shape either way, so there is no layout shift on
+ * hydration.
  */
 export function MarginNotesView({
   notes,
@@ -104,17 +109,13 @@ export function MarginNotesView({
   );
 }
 
-const LiveMarginNotes = lazy(() =>
-  import("./LiveMarginNotes.tsx").then((m) => ({ default: m.LiveMarginNotes })),
-);
-
 export function MarginNotes({ pieceSlug, className = "" }: { pieceSlug: string; className?: string }) {
   const placeholder = <MarginNotesView notes={[]} className={className} />;
   return (
     <ClientOnly fallback={placeholder}>
-      <Suspense fallback={placeholder}>
+      <Hydrate when={load()} split fallback={placeholder}>
         <LiveMarginNotes pieceSlug={pieceSlug} className={className} />
-      </Suspense>
+      </Hydrate>
     </ClientOnly>
   );
 }

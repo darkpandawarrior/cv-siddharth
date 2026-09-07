@@ -1,9 +1,8 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-
-// three/@react-three/fiber only load when WebGL actually exists — own
-// chunk, same code-split pattern as AmbientScene/Phone3DScene/BlueprintRoom.
-const ParticleHeroScene = lazy(() => import("./ParticleHeroScene.tsx"));
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
+import ParticleHeroScene from "./ParticleHeroScene.tsx";
 
 function supportsWebGL(): boolean {
   try {
@@ -75,17 +74,23 @@ export function ParticleHero() {
 
   if (!ready) return null;
 
-  // `ready` (and everything above it) is a runtime-only gate the bundler
-  // can't see through — it still resolved ParticleHeroScene's
-  // @react-three/fiber import for SSR regardless. `<ClientOnly>` is what
-  // Start's compiler recognises to strip this subtree (and the lazy import
-  // behind it) from the SERVER compile entirely.
+  // `ready` (and everything above it, the load+idle sequencing this file's
+  // own docstring explains) is unchanged — that timing is deliberate for LCP
+  // and is not something a native Hydrate strategy reproduces exactly (idle()
+  // alone has no load-wait), so it stays a hand-rolled gate that decides IF
+  // this branch is ever reached at all (the early return above). `ready` is
+  // also a runtime-only gate the bundler can't see through — it still
+  // resolved ParticleHeroScene's @react-three/fiber import for SSR
+  // regardless. `<ClientOnly>` is what Start's compiler recognises to strip
+  // this subtree from the SERVER compile entirely; `<Hydrate when={load()}
+  // split>` inside it just keeps the scene in its own chunk now that the
+  // import above is static.
   return (
     <ClientOnly>
       <div ref={hostRef} className={`particle-hero ${reducedMotion ? "pointer-events-none" : ""}`} aria-hidden>
-        <Suspense fallback={null}>
+        <Hydrate when={load()} split fallback={null}>
           <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
-        </Suspense>
+        </Hydrate>
         {/* lg:right-[8.25rem] pulls the hint back inside the viewport. At
             ≥1024px .particle-hero deliberately bleeds `right: -7.75rem` past its
             section (masked, decorative), and `right-2` put this label in the

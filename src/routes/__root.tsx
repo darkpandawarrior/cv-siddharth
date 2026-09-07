@@ -1,6 +1,8 @@
 import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Hydrate } from "@tanstack/react-start";
+import { idle } from "@tanstack/react-start/hydration";
+import { useEffect, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import { initMonitoring } from "../lib/monitoring.ts";
@@ -10,13 +12,7 @@ import { surfaces } from "../data/surfaces.ts";
 import { profile, experience, education } from "../data/profile.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import { Launcher } from "../Launcher.tsx";
-// Code-split (its own chunk stops competing with the SSR document + hero
-// bundle) and mounted only after an idle callback (its own React tree stops
-// competing for the main thread during hydration) — see DeferredRail below.
-// The design doc's own words: "The rail is below-the-fold work and mounts
-// after paint." It was a plain top-level import rendered unconditionally
-// with none of that until now.
-const AnomalyRail = lazy(() => import("../AnomalyRail.tsx"));
+import AnomalyRail from "../AnomalyRail.tsx";
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -307,27 +303,6 @@ function InitMonitoring() {
   return null;
 }
 
-/** Gates AnomalyRail's mount to after the browser has painted. `requestIdleCallback`
- *  (with a `setTimeout` fallback for Safari, which has none) fires only once the
- *  main thread is free after the current frame, which is after paint by
- *  construction; `false` on the server and through hydration means the SSR
- *  document and the first client render agree there's nothing here yet. */
-function DeferredRail() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
-    const cic = window.cancelIdleCallback ?? window.clearTimeout;
-    const id = ric(() => setReady(true));
-    return () => cic(id);
-  }, []);
-  if (!ready) return null;
-  return (
-    <Suspense fallback={null}>
-      <AnomalyRail />
-    </Suspense>
-  );
-}
-
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
@@ -379,13 +354,34 @@ function RootDocument({ children }: { children: ReactNode }) {
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
+        {/* The launcher overlay, the anomaly rail and the command palette are
+            each a `<Hydrate when={idle()} split>` boundary now, replacing
+            three hand-rolled requestIdleCallback/dynamic-import gates (one was
+            DeferredRail, defined right here; the other two were plain eager
+            imports paying full hydration cost on every route for chrome that
+            does nothing until pressed) with the one native lever the router
+            ships. `split` gives each its own chunk; `idle()` is the same
+            "after paint, main thread free" timing DeferredRail hand-rolled,
+            so AnomalyRail's mount timing is unchanged. Global ⌘K (CommandPalette)
+            and `openLauncher()` (Launcher) both listen on `window` from an
+            effect that only runs once hydrated — interaction() would gate
+            each on a pointer/focus/click landing inside ITS OWN boundary,
+            which neither shortcut ever does (Cmd+K's target is wherever focus
+            already is; openLauncher() is a CustomEvent dispatched from a
+            button elsewhere in the tree), so it would silently disable both
+            until an unrelated click happened to land there. idle() carries
+            no such trap. */}
         {/* The launcher overlay. Global like AnomalyRail and for the same
             reason: it belongs to the shell, not to any one route. Mounted
             after the routed content and outside <main id="main-content">, so
             the skip link still jumps past it, and it renders nothing at all
             until something calls openLauncher(). */}
-        <Launcher />
-        <DeferredRail />
+        <Hydrate when={idle()} split>
+          <Launcher />
+        </Hydrate>
+        <Hydrate when={idle()} split>
+          <AnomalyRail />
+        </Hydrate>
         {/* Global, like the two above. It was mounted in three places instead
             — App.tsx, rooms.tsx and Playground.tsx — so every route that is
             not the homepage and does not use RoomFrame had no palette at all:
@@ -393,7 +389,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             /read/$slug, /hire, /resume and /project/$slug. Its own docstring
             called itself "Global ⌘K". One mount makes that true, and avoids
             the duplicate ⌘K listeners three mounts would have caused. */}
-        <CommandPalette />
+        <Hydrate when={idle()} split>
+          <CommandPalette />
+        </Hydrate>
         <InitMonitoring />
         <SpeedInsights />
         <Analytics />

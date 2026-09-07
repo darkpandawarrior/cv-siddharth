@@ -1,14 +1,17 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { ArrowRight, RotateCw, Target } from "lucide-react";
 import { Reveal } from "./Reveal.tsx";
 import { openJdFit } from "./FloatingChat.tsx";
 import { CHAT_FALLBACK, CHAT_UNAVAILABLE, JD_MAX_CHARS, isJdNearCap } from "./lib/chatClient.ts";
 import { useJdFit } from "./lib/useJdFit.ts";
+import { ChatMessageBody } from "./ChatWidgets.tsx";
 
-// ponytail: ChatWidgets pulls in react-markdown — lazy so the home page's
-// initial bundle doesn't pay for it until a JD is actually submitted, same
-// pattern src/FloatingChat.tsx already uses for the same component.
-const ChatMessageBody = lazy(() => import("./ChatWidgets.tsx").then((m) => ({ default: m.ChatMessageBody })));
+// ponytail: ChatWidgets pulls in react-markdown — `<Hydrate when={load()} split>`
+// below keeps it in its own chunk so the home page's initial bundle doesn't pay
+// for it until a JD is actually submitted, same pattern src/FloatingChat.tsx
+// already uses for the same component.
 
 /**
  * Fit check — the recruiter's moment, on the page instead of behind a command.
@@ -146,9 +149,9 @@ export function FitCheck() {
               offline card land, then the model's read replace it, without
               every token interrupting whatever the visitor is doing. */}
           <div role="log" aria-live="polite" className="mt-5">
-            <Suspense fallback={null}>
+            <Hydrate when={load()} split fallback={null}>
               <ChatMessageBody content={fit.content} done={fit.done} />
-            </Suspense>
+            </Hydrate>
             {fit.done && (
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
                 <button

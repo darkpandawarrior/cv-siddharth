@@ -48,21 +48,38 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
   // reader's browse-mode virtual cursor ignores Tab order entirely and would
   // still walk the routed content, the rail, the skip link etc. behind the
   // overlay. `inert` removes that whole subtree from the accessibility tree,
-  // not just the tab order. Every body-level sibling gets it (this dialog
-  // and __root.tsx's structure put the rail, the routed page, and this
-  // overlay all as direct children of <body>), and the cleanup — which React
-  // runs on close *and* on unmount — is what guarantees nothing is left
-  // permanently inert; a leaked inert would make the whole page unusable.
+  // not just the tab order, and the cleanup — which React runs on close
+  // *and* on unmount — is what guarantees nothing is left permanently inert;
+  // a leaked inert would make the whole page unusable.
+  //
+  // Walks from the dialog UP to (not including) <body>, collecting every
+  // sibling at every level, rather than assuming this dialog is itself a
+  // direct child of <body>. __root.tsx once put the rail (and this overlay
+  // inside it) directly under <body>, but AnomalyRail now sits inside a
+  // `<Hydrate>` boundary, which renders its own wrapping marker `<div>` —
+  // one more level between <body> and this dialog. Sweeping only
+  // `document.body.children` would then mark THAT wrapper inert too, and
+  // `inert` is inherited: an inert ancestor makes this whole dialog (and the
+  // "first focusable" `.focus()` above) silently inert right along with it.
   useEffect(() => {
     if (!open) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
-    const siblings = Array.from(document.body.children).filter(
-      (el): el is HTMLElement => el instanceof HTMLElement && el !== dialog,
-    );
-    for (const el of siblings) el.inert = true;
+    const toInert: HTMLElement[] = [];
+    let node: Element = dialog;
+    while (node.parentElement && node.parentElement !== document.body) {
+      const parent = node.parentElement;
+      for (const sibling of Array.from(parent.children)) {
+        if (sibling !== node && sibling instanceof HTMLElement) toInert.push(sibling);
+      }
+      node = parent;
+    }
+    for (const sibling of Array.from(document.body.children)) {
+      if (sibling !== node && sibling instanceof HTMLElement) toInert.push(sibling);
+    }
+    for (const el of toInert) el.inert = true;
     return () => {
-      for (const el of siblings) el.inert = false;
+      for (const el of toInert) el.inert = false;
     };
   }, [open]);
 

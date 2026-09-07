@@ -1,12 +1,13 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { EDGES, EDGE_KIND, NODES, type StoryNode } from "./data/storyMap.ts";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { readToken } from "./themeColor";
-
-const StoryMapScene = lazy(() => import("./StoryMapScene.tsx"));
+import StoryMapScene from "./StoryMapScene.tsx";
 
 /**
  * The Storyboard — an interactive constellation of everything on this site,
@@ -272,15 +273,19 @@ export function StoryMap() {
           {/* `use3D` is a runtime-only flag the bundler can't see through —
               it still resolved StoryMapScene's @react-three/fiber import for
               SSR regardless. <ClientOnly> is what Start's compiler
-              recognises to strip this subtree (and the lazy import behind
-              it) from the SERVER compile entirely. StoryMapCanvas (the 2D
-              fallback) needs no such wrap — it imports nothing r3f. */}
+              recognises to strip this subtree from the SERVER compile
+              entirely. StoryMapCanvas (the 2D fallback) needs no such wrap —
+              it imports nothing r3f. `use3D` is already known true by the
+              time this branch is reached (the IntersectionObserver above
+              only flips `mounted`/`use3D` together), so `<Hydrate
+              when={load()} split>` just keeps StoryMapScene in its own
+              chunk — there is no further defer to express here. */}
           {mounted &&
             (use3D ? (
               <ClientOnly fallback={<StoryMapCanvas onNavigate={go} />}>
-                <Suspense fallback={<StoryMapCanvas onNavigate={go} />}>
+                <Hydrate when={load()} split fallback={<StoryMapCanvas onNavigate={go} />}>
                   <StoryMapScene onNavigate={go} />
-                </Suspense>
+                </Hydrate>
               </ClientOnly>
             ) : (
               <StoryMapCanvas onNavigate={go} />

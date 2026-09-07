@@ -1,10 +1,8 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-
-// Dynamic import — three/@react-three/fiber/drei only load if a capable,
-// motion-friendly desktop viewport asks for them. Own chunk, code-split
-// exactly like the mermaid dynamic import in ProjectDetail.tsx.
-const AmbientScene = lazy(() => import("./AmbientScene.tsx"));
+import { Hydrate } from "@tanstack/react-start";
+import { condition } from "@tanstack/react-start/hydration";
+import AmbientScene from "./AmbientScene.tsx";
 
 function supportsWebGL(): boolean {
   try {
@@ -39,14 +37,15 @@ export function AmbientBackground() {
       {/* enable3D is a runtime-only flag the bundler can't see through — it
           still resolved AmbientScene's @react-three/fiber import for SSR
           regardless. <ClientOnly> is what Start's compiler recognises to
-          strip this subtree (and the lazy import behind it) from the SERVER
-          compile entirely. */}
+          strip this subtree from the SERVER compile entirely.
+          `<Hydrate when={condition(enable3D)} split>` reuses that same
+          runtime flag as the native "resolve once this is true" strategy —
+          the exact reduced-motion/767px/WebGL gate above is unchanged, only
+          the code-splitting mechanism moved off React's dynamic import. */}
       <ClientOnly>
-        {enable3D && (
-          <Suspense fallback={null}>
-            <AmbientScene />
-          </Suspense>
-        )}
+        <Hydrate when={condition(enable3D)} split fallback={null}>
+          <AmbientScene />
+        </Hydrate>
       </ClientOnly>
     </div>
   );
