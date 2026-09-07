@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
 import { profile, metrics, caseStudies, projects } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
+import { FloatingChat } from "../FloatingChat.tsx";
 
 /**
  * /hire — the ninety-second surface.
@@ -39,6 +40,7 @@ const HEADLINE = metrics.slice(0, 3);
 function HirePage() {
   const featured = caseStudies.slice(0, 3);
   return (
+    <>
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-ink">
       <div className="mx-auto max-w-4xl px-6 section-y">
         {/* The role used to hang off the name in the <h1> behind an em dash,
@@ -170,5 +172,10 @@ function HirePage() {
         </div>
       </div>
     </main>
+    {/* The one route this page's own docstring says is built for a recruiter
+        making a hiring call had no way to ask a follow-up — mounted the same
+        one-line way resume.tsx and shipped.tsx already do. */}
+    <FloatingChat />
+    </>
   );
 }

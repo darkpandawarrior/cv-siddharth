@@ -242,6 +242,36 @@ body {
   background-color: var(--color-ink);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  /* Global chrome clearance. FloatingChat.tsx's collapsed launcher is a fixed
+     56px circle sitting bottom-6/right-6 in every viewport, on top of
+     whatever the page has scrolled underneath it, and nothing reserved that
+     corner. Two dimensions, both needed — a document-end bug and a
+     first-viewport bug are the same root cause seen at two scroll
+     positions:
+       - padding-bottom reserves the launcher's footprint at the true end of
+         the document, so trailing content (/map's room-to-room link,
+         /resume's closing paragraph) isn't the last thing the viewport can
+         show flush against the bottom edge.
+       - padding-right reserves the same footprint as a permanent column
+         down the right edge of every route, because the launcher is
+         viewport-fixed, not document-end-fixed — it also sits over
+         whatever text happens to occupy that corner AT ANY scroll position,
+         which is what made /shipped's fourth stat, /chess's thesis
+         sentence, and mid-paragraph text on /project/candidai and
+         /project/stutter collide on first paint, nowhere near the
+         document's end. A column no text ever enters removes the overlap
+         at every scroll position at once — this repo's containers are all
+         `mx-auto max-w-* px-6` flow children of body, so a body-level
+         padding-right shrinks their available width instead of any of them
+         needing their own clearance.
+     Sized to the launcher's own footprint (3.5rem + its 1.5rem offset + a
+     margin) in both directions, since the footprint is square. A custom
+     property rather than a bare number so CommandPalette's own fixed corner
+     (bottom-6 left-6, same footprint) can be sized from the same value if
+     it ever needs to. */
+  --chat-fab-clearance: 6.5rem;
+  padding-bottom: var(--chat-fab-clearance);
+  padding-right: var(--chat-fab-clearance);
 }
 
 /* The ambient gradient wash lives on a fixed, GPU-composited layer instead of
@@ -453,13 +483,32 @@ html.resume-mode .palette-trigger {
   color: #52525b;
 }
 
-/* Scroll-reveal */
+/* Scroll-reveal. Visible is the base state — see the /ops rule below against
+   parking an instrument at opacity 0 as its default; the same rule applies
+   here. Reveal.tsx's mount effect adds .reveal-armed only once it knows the
+   element will actually get un-hidden again, and that class carries its own
+   `transition: none` so arming an element never itself animates (only the
+   later .revealed transition does — the opposite would fade content OUT on
+   every page load, which is worse than the bug this replaces). */
 .reveal {
-  opacity: 0;
-  transform: translateY(16px);
   transition:
     opacity var(--dur-slow) var(--ease-out-quart),
     transform var(--dur-slow) var(--ease-out-quart);
+}
+
+/* :not(.revealed) is load-bearing, not decoration: Reveal.tsx never removes
+   .reveal-armed once .revealed is added (both stay on the element together),
+   and `transition: none` beats .reveal's transition declaration on
+   specificity alone regardless of which rule comes second in the file — so
+   without this guard every reveal snaps straight to visible with no fade,
+   silently undoing the "later .revealed transition" this file's own comment
+   above promises. Verified against a real Chromium cascade, not reasoned
+   about: computed transitionDuration was "0s" without the guard, "0.4s,
+   0.4s" with it. */
+.reveal.reveal-armed:not(.revealed) {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: none;
 }
 
 .reveal.revealed {
@@ -468,7 +517,8 @@ html.resume-mode .palette-trigger {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  .reveal,
+  .reveal.reveal-armed {
     opacity: 1;
     transform: none;
     transition: none;
