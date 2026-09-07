@@ -131,8 +131,11 @@ export const GENERATORS = [
   // excludes this for the same reason. Build stage needs that same
   // exclusion: refresh only, output committed, degrades visibly (its own
   // <lastmod> ages) rather than lying with a fresh stamp on every deploy.
+  // Now reads src/data/routes.ts, which reads anthology.ts and archiveText.ts
+  // (arch-L8: the ~68 /read/$slug pages joined the sitemap) — both generator
+  // outputs, so they're real ordering edges now, not just hand-authored data.
   { id: "sitemap", script: "gen-sitemap.mjs", npmName: "gen:sitemap", kind: "local",
-    inputs: [], outputs: ["public/sitemap.xml"], stages: { refresh: 11 } },
+    inputs: ["src/data/anthology.ts", "src/data/archiveText.ts"], outputs: ["public/sitemap.xml"], stages: { refresh: 11 } },
   { id: "system-prompt", script: "gen-system-prompt.mjs", npmName: "gen:system-prompt", kind: "local",
     inputs: ["src/data/writing.ts", "src/data/chess.ts"],
     outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts"], stages: { build: 9, refresh: 17 } },

@@ -8,14 +8,18 @@
  * because a sitemap omission is invisible from inside the site. Every project
  * added from here on would have drifted the same way.
  *
- * Deriving it from `projects` and an explicit static list makes the drift
- * impossible rather than merely fixed once.
+ * Deriving it from `projects` and an explicit static list made THAT drift
+ * impossible, but left a second one standing: this file never imported
+ * anthology.ts or archiveText.ts, so all ~68 /read/$slug pages — the site's
+ * largest body of unique prose — were in no sitemap at all. It now imports
+ * src/data/routes.ts, the same derivation vite.config.ts's prerender `pages`
+ * list and e2e/a11y.spec.ts's ROUTES read, so a slug added to either reading
+ * corpus widens all three together.
  */
 import { writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { projects } from "../src/data/profile.ts";
-import { surfaces } from "../src/data/surfaces.ts";
+import { projectPaths, readPaths, surfacePaths } from "../src/data/routes.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://cv-siddharth.vercel.app";
@@ -61,8 +65,11 @@ const WEIGHT = {
 };
 
 const DEFAULT_WEIGHT = { priority: "0.5", changefreq: "monthly" };
+// Static prose that never changes once published, unlike a project writeup
+// that can pick up a new screenshot or metric.
+const READ_WEIGHT = { priority: "0.5", changefreq: "yearly" };
 
-const STATIC = ["/", ...surfaces.map((s) => s.to)].map((path) => ({
+const STATIC = ["/", ...surfacePaths].map((path) => ({
   path,
   ...(WEIGHT[path] ?? DEFAULT_WEIGHT),
 }));
@@ -73,7 +80,8 @@ const today = new Date().toISOString().slice(0, 10);
 
 const urls = [
   ...STATIC,
-  ...projects.map((p) => ({ path: `/project/${p.slug}`, priority: "0.8", changefreq: "monthly" })),
+  ...projectPaths.map((path) => ({ path, priority: "0.8", changefreq: "monthly" })),
+  ...readPaths.map((path) => ({ path, ...READ_WEIGHT })),
 ];
 
 const xml =
@@ -93,4 +101,6 @@ const xml =
   `</urlset>\n`;
 
 writeFileSync(join(root, "public", "sitemap.xml"), xml);
-console.log(`[gen-sitemap] ${urls.length} URLs (${STATIC.length} static + ${projects.length} projects)`);
+console.log(
+  `[gen-sitemap] ${urls.length} URLs (${STATIC.length} static + ${projectPaths.length} projects + ${readPaths.length} read)`,
+);
