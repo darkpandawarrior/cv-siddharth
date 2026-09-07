@@ -58,15 +58,28 @@ function chatApiDevPlugin(): Plugin {
 
 /** Serves a GET-only Edge handler during local dev — same web-standard
  * handler Vercel runs in production, no vercel dev needed. Simpler than
- * chatApiDevPlugin: these endpoints take no request body. */
+ * chatApiDevPlugin: these endpoints take no request body.
+ *
+ * Forwards the real request's headers and full URL (not a bare stand-in):
+ * ops/pipeline/github-activity/spotify are now wrapped in guard.ts's origin
+ * allowlist and rate limiter (see guard.ts, D2/D3), which read `origin` and
+ * the client-IP headers — a stripped request would make dev behave nothing
+ * like production, the same reason chatApiDevPlugin forwards headers below.
+ * pipeline also reads its `?slug=` from the URL, which a bare `path` (no
+ * query string) silently dropped. */
 function edgeGetApiDevPlugin(path: string, modulePath: string, exportName: string): Plugin {
   return {
     name: `edge-get-api-dev:${path}`,
     configureServer(server) {
-      server.middlewares.use(path, async (_req: IncomingMessage, res: ServerResponse) => {
+      server.middlewares.use(path, async (req: IncomingMessage, res: ServerResponse) => {
         const mod = await server.ssrLoadModule(modulePath);
         const handler = mod[exportName] as (r: Request) => Promise<Response>;
-        const response = await handler(new Request(`http://localhost${path}`));
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(req.headers)) {
+          if (typeof value === "string") headers.set(key, value);
+          else if (Array.isArray(value)) for (const v of value) headers.append(key, v);
+        }
+        const response = await handler(new Request(`http://localhost${req.url ?? path}`, { headers }));
         res.statusCode = response.status;
         response.headers.forEach((value, key) => res.setHeader(key, value));
         res.end(await response.text());
@@ -189,6 +202,11 @@ export default defineConfig(async () => ({
     chatApiDevPlugin(),
     edgeGetApiDevPlugin("/api/spotify", "/api/_lib/spotify-handler.ts", "handleSpotify"),
     edgeGetApiDevPlugin("/api/github-activity", "/api/_lib/github-activity-handler.ts", "handleGithubActivity"),
+    // Was missing entirely despite smoke.spec.ts's EXPECTED_404 comment
+    // claiming it was "wired into vite.config.ts... exactly like /api/ops" —
+    // it wasn't. Added so /api/pipeline's guard (origin allowlist + rate
+    // limit) is exercised under dev the same way the other three are.
+    edgeGetApiDevPlugin("/api/pipeline", "/api/_lib/pipeline-handler.ts", "handlePipeline"),
     // /ops's control tower. Without this the board is only ever testable
     // against production, which is the wrong way round for a page whose whole
     // subject is noticing failure early.

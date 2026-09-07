@@ -1,3 +1,5 @@
+import { guarded } from "./guard.js";
+
 declare const process: { env: Record<string, string | undefined> };
 
 const OWNER = "darkpandawarrior";
@@ -148,7 +150,7 @@ export async function getPipeline(
   return out;
 }
 
-export async function handlePipeline(request: Request): Promise<Response> {
+async function pipelineHandler(request: Request): Promise<Response> {
   const slug = new URL(request.url).searchParams.get("slug") ?? "";
   const pipeline = await getPipeline(slug, process.env);
   return new Response(JSON.stringify(pipeline), {
@@ -161,3 +163,6 @@ export async function handlePipeline(request: Request): Promise<Response> {
     },
   });
 }
+
+/** Carries env.GITHUB_TOKEN (D2) — same guard as ops-handler.ts, see there. */
+export const handlePipeline = guarded("pipeline", pipelineHandler);

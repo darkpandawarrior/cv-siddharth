@@ -1,3 +1,5 @@
+import { guarded } from "./guard.js";
+
 declare const process: { env: Record<string, string | undefined> };
 
 export type SpotifyTrack = { track: string; artist: string; albumArt?: string; url?: string; playedAt?: string };
@@ -31,10 +33,31 @@ function fromApiTrack(t: SpotifyApiTrack) {
   };
 }
 
+/**
+ * D3 in the architecture council: this used to run a full OAuth refresh
+ * exchange (client_id + client_secret + refresh_token) before EVERY request's
+ * two data calls, on an endpoint with no cache. A Spotify access token is
+ * good for `expires_in` seconds (documented ~3600) — memoised here in module
+ * scope, keyed on nothing but time, so a warm isolate spends one exchange per
+ * token lifetime rather than one per request.
+ *
+ * ponytail: module-scope only, resets on a cold start — same tradeoff
+ * ops-handler.ts's cache makes, and for the same reason (no KV/Upstash
+ * dependency for a portfolio site). A cold start costs one extra exchange,
+ * not a correctness bug.
+ */
+export type SpotifyTokenCache = { token: string; expiresAt: number } | null;
+export type SpotifyTokenCacheBox = { value: SpotifyTokenCache };
+const tokenCache: SpotifyTokenCacheBox = { value: null };
+
 async function getAccessToken(
   env: Record<string, string | undefined>,
   fetchImpl: typeof fetch,
+  now: number,
+  cache: SpotifyTokenCacheBox,
 ): Promise<string | null> {
+  if (cache.value && cache.value.expiresAt > now) return cache.value.token;
+
   const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = env;
   if (!id || !secret || !refresh) return null;
   const res = await fetchImpl("https://accounts.spotify.com/api/token", {
@@ -46,16 +69,22 @@ async function getAccessToken(
     body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }).toString(),
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as { access_token: string };
+  const json = (await res.json()) as { access_token: string; expires_in?: number };
+  // Refresh a little early (60s of slack) so a token that's about to expire
+  // is never handed out only to die mid-request.
+  const ttlMs = Math.max(0, ((json.expires_in ?? 3600) - 60) * 1000);
+  cache.value = { token: json.access_token, expiresAt: now + ttlMs };
   return json.access_token;
 }
 
-/** Testable core: no Request/Response, just env + an injectable fetch. */
+/** Testable core: no Request/Response, just env + an injectable fetch/clock/cache. */
 export async function getSpotifyNow(
   env: Record<string, string | undefined>,
   fetchImpl: typeof fetch = fetch,
+  now: number = Date.now(),
+  cache: SpotifyTokenCacheBox = tokenCache,
 ): Promise<SpotifyNow> {
-  const token = await getAccessToken(env, fetchImpl);
+  const token = await getAccessToken(env, fetchImpl, now, cache);
   if (!token) return EMPTY;
 
   const auth = { authorization: `Bearer ${token}` };
@@ -78,8 +107,7 @@ export async function getSpotifyNow(
   };
 }
 
-export async function handleSpotify(request: Request): Promise<Response> {
-  void request;
+async function spotifyHandler(_request: Request): Promise<Response> {
   const now = await getSpotifyNow(process.env);
   return new Response(JSON.stringify(now), {
     status: 200,
@@ -89,3 +117,10 @@ export async function handleSpotify(request: Request): Promise<Response> {
     },
   });
 }
+
+/**
+ * D3 in the architecture council: no origin allowlist and no rate limiter,
+ * on top of the unmemoised token exchange getAccessToken now fixes. Guarded
+ * the same way ops/pipeline/github-activity are, via guard.ts.
+ */
+export const handleSpotify = guarded("spotify", spotifyHandler);

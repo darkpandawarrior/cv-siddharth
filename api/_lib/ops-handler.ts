@@ -1,3 +1,5 @@
+import { guarded } from "./guard.js";
+
 declare const process: { env: Record<string, string | undefined> };
 
 const OWNER = "darkpandawarrior";
@@ -249,7 +251,7 @@ export async function getOps(
   return out;
 }
 
-export async function handleOps(_request: Request): Promise<Response> {
+async function opsHandler(_request: Request): Promise<Response> {
   const ops = await getOps(process.env);
   return new Response(JSON.stringify(ops), {
     headers: {
@@ -260,3 +262,12 @@ export async function handleOps(_request: Request): Promise<Response> {
     },
   });
 }
+
+/**
+ * This board carries `env.GITHUB_TOKEN` (D2 in the architecture council):
+ * unlike /api/chat it had zero origin allowlist and zero rate limiter, so a
+ * bare curl loop could burn the owner's 5,000 req/hr GitHub budget and
+ * silently degrade every widget that reads it for real visitors. Guarded the
+ * same way chat-handler.ts already was, via the shared perimeter in guard.ts.
+ */
+export const handleOps = guarded("ops", opsHandler);

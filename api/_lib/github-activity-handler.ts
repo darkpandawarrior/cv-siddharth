@@ -1,3 +1,5 @@
+import { guarded } from "./guard.js";
+
 declare const process: { env: Record<string, string | undefined> };
 
 const GITHUB_USER = "darkpandawarrior";
@@ -63,8 +65,7 @@ export async function getGithubActivity(
   return { connected: true, items };
 }
 
-export async function handleGithubActivity(request: Request): Promise<Response> {
-  void request;
+async function githubActivityHandler(_request: Request): Promise<Response> {
   const activity = await getGithubActivity(process.env);
   return new Response(JSON.stringify(activity), {
     status: 200,
@@ -74,3 +75,6 @@ export async function handleGithubActivity(request: Request): Promise<Response> 
     },
   });
 }
+
+/** Carries env.GITHUB_TOKEN (D2) — same guard as ops-handler.ts, see there. */
+export const handleGithubActivity = guarded("github-activity", githubActivityHandler);

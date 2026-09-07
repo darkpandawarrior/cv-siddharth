@@ -5,6 +5,18 @@ import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt.js";
 import { condenseJd } from "./jd-condense.js";
 import { applyPromptGuard } from "./prompt-guard.js";
+import {
+  isAllowedOrigin,
+  clientIp,
+  rateLimitKey,
+  checkRateLimit as slidingWindowCheck,
+} from "./guard.js";
+
+// Re-exported for back-compat: chat-handler.test.ts (and anything else that
+// imported these before the extraction) still finds them here — the origin
+// allowlist and the /64 bucketing are now owned by guard.ts, shared with
+// ops/pipeline/github-activity/spotify's guard.
+export { isAllowedOrigin, clientIp, rateLimitKey };
 
 // Vercel's builder type-checks this file WITHOUT @types/node, so bare `process`
 // errors there (TS2591) even though our own tsconfig has the node types. This
@@ -56,44 +68,9 @@ interface ChatRequest {
 // ---------------------------------------------------------------------------
 // Origin allowlist — the endpoint spends the owner's API key, so a third-party
 // page must not be able to use it as a free LLM proxy from a visitor's browser.
-// ---------------------------------------------------------------------------
-
-// Both production hosts: the project was renamed to siddharth-pandalai on
-// 2026-09-07 and cv-siddharth.vercel.app stays as a second alias while every
-// link out there still points at it.
-const SITE_ORIGINS = new Set(["https://siddharth-pandalai.vercel.app", "https://cv-siddharth.vercel.app"]);
-const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
-
-/**
- * Preview deployments are matched by the hostnames Vercel hands THIS
- * deployment (`VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`),
- * not by a `cv-siddharth-*.vercel.app` name pattern: project names on
- * vercel.app are first-come, so anyone could register `cv-siddharth-evil` and
- * a prefix match would hand them the key. A deployment's own URL can't be
- * squatted. (If previews ever 403, the project's "Automatically expose System
- * Environment Variables" setting is off — turn it on, or list the origin in
- * ALLOWED_ORIGIN.)
- *
- * `ALLOWED_ORIGIN` keeps its documented job — the site being served from a
- * different origin than this function (GitHub Pages → Vercel) — but it is now
- * an allowlist entry rather than the literal `access-control-allow-origin`
- * value. Comma-separated for more than one.
- */
-export function isAllowedOrigin(
-  origin: string,
-  env: Record<string, string | undefined> = process.env,
-): boolean {
-  if (SITE_ORIGINS.has(origin) || LOCAL_ORIGIN.test(origin)) return true;
-  for (const host of [env.VERCEL_URL, env.VERCEL_BRANCH_URL, env.VERCEL_PROJECT_PRODUCTION_URL]) {
-    if (host && origin === `https://${host}`) return true;
-  }
-  return (env.ALLOWED_ORIGIN ?? "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean)
-    .includes(origin);
-}
-
+// Moved to guard.ts (isAllowedOrigin, re-exported above) so ops/pipeline/
+// github-activity/spotify's guard shares the exact same allowlist rather than
+// a second hand-kept copy.
 // ---------------------------------------------------------------------------
 // The native-client policy — a separate door for cv-siddharth-kmp's Compose
 // Multiplatform twin (ChatClient.kt), which talks to this exact endpoint from
@@ -157,59 +134,16 @@ const JD_RATE_WINDOWS = [
   { ms: 60_000, max: envInt(process.env.CHAT_JD_RATE_PER_MIN, 3) },
   { ms: 3_600_000, max: envInt(process.env.CHAT_JD_RATE_PER_HOUR, 12) },
 ];
-const LONGEST_WINDOW_MS = 3_600_000;
-const MAX_TRACKED_IPS = 5000; // bounded: ~60 timestamps per IP worst case
-
 const hits = new Map<string, number[]>();
 
-/**
- * Most-trustworthy header first. Vercel overwrites `x-forwarded-for` today, so
- * it can't be spoofed in production — but that guarantee is one CDN away from
- * being false (and vite.config.ts's dev middleware forwards client headers
- * verbatim, which IS spoofable), so the platform's own header wins.
- * `x-vercel-forwarded-for` is set by Vercel's edge and never by the client;
- * `x-forwarded-for` is the last resort and only its first hop is read.
- */
-export function clientIp(request: Request): string {
-  const h = (name: string) => request.headers.get(name)?.trim();
-  return (
-    h("x-vercel-forwarded-for") ||
-    h("x-real-ip") ||
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown"
-  );
-}
+// clientIp and rateLimitKey moved to guard.ts (re-exported above) — same
+// header-preference and /64-bucketing rationale, now shared with
+// ops/pipeline/github-activity/spotify's guard rather than copied.
 
 /**
- * The bucket an address counts against.
- *
- * IPv4 (and "unknown") key on the whole address. IPv6 keys on the /64 prefix:
- * a residential IPv6 allocation IS a /64, so one machine can rotate through
- * 2^64 addresses it legitimately owns — keying on the full address turns
- * "10 per minute" into "unlimited". IPv4-mapped forms (`::ffff:1.2.3.4`) are
- * left alone: collapsing those to a prefix would put every IPv4 visitor in one
- * shared bucket, which is a denial of service against real people.
- */
-export function rateLimitKey(ip: string): string {
-  const bare = ip.replace(/^\[([^\]]+)\](:\d+)?$/, "$1"); // [2001:db8::1]:443
-  if (!bare.includes(":") || bare.includes(".")) return bare;
-  const [head, tail] = bare.split("::", 2);
-  const left = head ? head.split(":") : [];
-  const right = tail ? tail.split(":") : [];
-  const groups =
-    tail === undefined
-      ? bare.split(":")
-      : [...left, ...new Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
-  return `${groups
-    .slice(0, 4)
-    .map((g) => (g || "0").toLowerCase().replace(/^0+(?=.)/, ""))
-    .join(":")}::/64`;
-}
-
-/**
- * Sliding window per IP. A rejected request is NOT recorded, so a hammering
- * client is let back in once its oldest hit falls out of the window instead of
- * being locked out forever.
+ * Sliding window per IP, built on guard.ts's generic engine. A rejected
+ * request is NOT recorded, so a hammering client is let back in once its
+ * oldest hit falls out of the window instead of being locked out forever.
  *
  * `mode: "jd"` checks the tighter JD budget in its own bucket. The handler
  * runs the general check first and this one after, so a JD request spends from
@@ -230,32 +164,7 @@ export function checkRateLimit(
   const jd = mode === "jd";
   const rules = jd ? JD_RATE_WINDOWS : RATE_WINDOWS;
   const key = (native ? "native:" : "") + (jd ? "jd:" : "") + rateLimitKey(ip);
-  if (store.size > MAX_TRACKED_IPS) {
-    for (const [k, times] of store) {
-      if (times[times.length - 1] <= now - LONGEST_WINDOW_MS) store.delete(k);
-    }
-    // Still oversized (a burst of distinct addresses): evict the oldest half by
-    // last hit. NOT `store.clear()` — that let anyone rotating through 5000
-    // addresses wipe the map and hand every real visitor a fresh window, i.e.
-    // switch the limiter off on demand. Halving degrades it instead: the
-    // clients that were just here (the ones actually being limited) survive.
-    if (store.size > MAX_TRACKED_IPS) {
-      const oldestFirst = [...store].sort((a, b) => a[1][a[1].length - 1] - b[1][b[1].length - 1]);
-      for (const [k] of oldestFirst.slice(0, Math.ceil(oldestFirst.length / 2))) store.delete(k);
-    }
-  }
-
-  const times = (store.get(key) ?? []).filter((t) => t > now - LONGEST_WINDOW_MS);
-  for (const rule of rules) {
-    const inWindow = times.filter((t) => t > now - rule.ms);
-    if (inWindow.length >= rule.max) {
-      store.set(key, times);
-      return { allowed: false, retryAfter: Math.max(1, Math.ceil((inWindow[0] + rule.ms - now) / 1000)) };
-    }
-  }
-  times.push(now);
-  store.set(key, times);
-  return { allowed: true, retryAfter: 0 };
+  return slidingWindowCheck(key, now, store, rules);
 }
 
 // ---------------------------------------------------------------------------
