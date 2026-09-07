@@ -154,6 +154,10 @@ function gzipPreviewHtmlPlugin(): Plugin {
 // ahead of viteReact()'s oxc transform regardless of array position here.
 export default defineConfig(async () => ({
   server: { port: 5173 },
+  // scripts/check-budget.mjs reads dist/client/.vite/manifest.json — without
+  // this flag Vite never writes it, and there is no other artifact anywhere
+  // in the build that names which chunk belongs to which entry.
+  build: { manifest: true },
   plugins: [
     // tanstackStart() must come before viteReact() — this ordering is called
     // out explicitly in @tanstack/react-start's own bundled setup docs.
