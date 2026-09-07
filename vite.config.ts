@@ -8,6 +8,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { gzipSync } from "node:zlib";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import { allRoutes } from "./src/data/routes.ts";
 
 loadEnv({ path: ".env.local" });
 
@@ -275,6 +276,31 @@ export default defineConfig(async () => ({
       importProtection: {
         behavior: "error",
         server: { specifiers: ["leaflet", "tldraw", "@playhtml/react", "playhtml", "three", "@react-three/*"] },
+      },
+      // Every loader on every route reads only build-time src/data (no
+      // cookie, header or session anywhere under src/routes), so the one
+      // dynamic api/ssr.mjs function fronting all of them was a total-site
+      // SPOF for what is, in truth, static content. `pages` is `allRoutes`
+      // verbatim — src/data/routes.ts, the same list scripts/gen-sitemap.mjs
+      // and e2e/a11y.spec.ts's ROUTES read — so a slug added to either
+      // reading corpus is prerendered and sitemapped together, never one
+      // without the other.
+      //
+      // Both auto-discovery paths are OFF on purpose. `autoStaticPathsDiscovery`
+      // would add every param-less file route from the router's own static
+      // analysis; `crawlLinks` (on by default) would follow <a href> on each
+      // rendered page and prerender whatever it finds. Either makes the
+      // prerendered set a function of page content instead of `allRoutes`,
+      // which is exactly the drift this lane exists to close — e2e's
+      // prerender-coverage test asserts dist/client's page set equals
+      // public/sitemap.xml's <loc> set, and that equality only holds when
+      // both sides are the same array.
+      pages: allRoutes.map((path) => ({ path })),
+      prerender: {
+        enabled: true,
+        failOnError: true,
+        autoStaticPathsDiscovery: false,
+        crawlLinks: false,
       },
     }),
     viteReact(),

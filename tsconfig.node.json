@@ -2,7 +2,16 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2023",
-    "lib": ["ES2023"],
+    // DOM/DOM.Iterable and vite/client: vite.config.ts now imports
+    // src/data/routes.ts (arch-L8's shared page-list derivation) for the
+    // prerender `pages` array, which transitively reaches src/data/labs.ts
+    // (a real browser module, `window.scrollTo`/`dispatchEvent`) and
+    // src/lib/assetBase.ts (`import.meta.env`). tsc -b type-checks any file a
+    // project reaches under THAT project's own compilerOptions regardless of
+    // its `include`, so those two browser-only surfaces need their real types
+    // here too, not just under tsconfig.app.json's separate program. Compile-time
+    // only — nothing here runs in vite.config.ts's own Node code.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -14,7 +23,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
   "include": ["vite.config.ts"]
 }
