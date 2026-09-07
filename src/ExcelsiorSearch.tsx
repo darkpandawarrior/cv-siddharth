@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * "Find the page you half-remember" — a plain substring search over one
@@ -48,7 +49,7 @@ export function ExcelsiorSearch({
   useEffect(() => {
     let cancelled = false;
     setText(null);
-    fetch(`/excelsior/text/${year}.json`)
+    fetch(heavy(`/excelsior/text/${year}.json`))
       .then((r) => (r.ok ? (r.json() as Promise<TextManifest>) : Promise.reject(new Error("no manifest"))))
       .then((data) => { if (!cancelled) setText(data); })
       .catch(() => { if (!cancelled) setText("unavailable"); });

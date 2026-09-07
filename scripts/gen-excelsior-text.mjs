@@ -21,8 +21,15 @@ import { fileURLToPath } from "node:url";
 import { excelsiorEditions } from "../src/data/excelsior.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const pagesRoot = join(root, "public", "excelsior", "pages");
-const outRoot = join(root, "public", "excelsior", "text");
+// heavy/, not public/: the asset-offload lane moved every excelsior asset
+// (pages, covers) off the Vercel deploy onto GitHub Pages — see
+// src/lib/assetBase.ts. This manifest is small (per-edition JSON, not the
+// ~400 page images), but it ships alongside the pages it indexes, and
+// distSize.test.ts's "never ships one of the five moved heavy-asset classes"
+// check treats ANY public/excelsior/** survivor as a leak, not just the big
+// ones.
+const pagesRoot = join(root, "heavy", "excelsior", "pages");
+const outRoot = join(root, "heavy", "excelsior", "text");
 const force = process.argv.includes("--force");
 
 // Uniform block of text — a reasonable default for a magazine's justified
@@ -33,7 +40,7 @@ const force = process.argv.includes("--force");
 const PSM = "6";
 
 if (!existsSync(pagesRoot)) {
-  console.log("[excelsior-text] no rendered pages under public/excelsior/pages — run gen-excelsior.mjs first");
+  console.log("[excelsior-text] no rendered pages under heavy/excelsior/pages — run gen-excelsior.mjs first");
   process.exit(0);
 }
 

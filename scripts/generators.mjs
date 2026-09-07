@@ -208,6 +208,12 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
+  // Manual/occasional, same posture as gen-excelsior.mjs above (its own header
+  // says so): needs `tesseract` on PATH, a system binary no CI runner can be
+  // assumed to have. No network call of its own — OCRs the pages the sibling
+  // script above already rendered and committed.
+  { id: "excelsior-text", script: "gen-excelsior-text.mjs", npmName: null, kind: "local",
+    inputs: ["heavy/excelsior/pages/**"], outputs: ["heavy/excelsior/text/*.json"], stages: {} },
 ];
 
 // Fold freshnessSla.ts's SLA_DAYS in as a field on the node that owns each
