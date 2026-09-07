@@ -35,6 +35,7 @@ export const SLA_DAYS: Record<string, number> = {
   "chessDeep.ts": 21,
   "weeb.ts": 21,
   "store.ts": 45,
+  "history.ts": 21,
 };
 
 export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
@@ -47,7 +48,7 @@ export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
  * generator DROPPED its stamp as when it kept it. A file that opts out by
  * accident is exactly the failure this exists to prevent.
  */
-export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts"];
+export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts", "history.ts"];
 
 /**
  * The two stamp shapes generators actually emit.

@@ -174,8 +174,12 @@ describe("the voice rule the page publishes", () => {
    *   anthology.ts   in-world fiction, generated, and guarded by this file's own
    *                  RESIDUE/BANNED walk in anthology.test.ts. Widening the voice
    *                  rule to 34 story bodies is a separate argument.
+   *   history.ts     verbatim commit subjects off this repo's own `git log`
+   *                  (gen-history.mjs). A subject line is a fact about what a
+   *                  past commit was actually titled; editing one here would
+   *                  make the time machine disagree with `git log` itself.
    */
-  const EXTERNALLY_SOURCED = new Set(["anthology", "archiveText", "store", "weeb", "writing", "proseGuards"]);
+  const EXTERNALLY_SOURCED = new Set(["anthology", "archiveText", "store", "weeb", "writing", "proseGuards", "history"]);
 
   const guarded = Object.entries(modules)
     .map(([path, mod]) => [path.replace(/^\.\/|\.ts$/g, ""), mod] as const)

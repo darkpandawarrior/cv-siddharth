@@ -185,7 +185,7 @@ describe("the README's numbers are the repo's numbers", () => {
       5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
       16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
-      24: "Twenty-four", 25: "Twenty-five",
+      24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
     };
     const ssr = NUM[routes.length - clientOnly.length];
     const total = NUM[routes.length]?.toLowerCase();

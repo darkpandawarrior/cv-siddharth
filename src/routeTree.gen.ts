@@ -21,6 +21,7 @@ import { Route as ForgeRouteImport } from './routes/forge'
 import { Route as HireRouteImport } from './routes/hire'
 import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
+import { Route as LanesRouteImport } from './routes/lanes'
 import { Route as LoopdownRouteImport } from './routes/loopdown'
 import { Route as MakingRouteImport } from './routes/making'
 import { Route as MapRouteImport } from './routes/map'
@@ -30,6 +31,7 @@ import { Route as PulseRouteImport } from './routes/pulse'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ShippedRouteImport } from './routes/shipped'
 import { Route as TerminalRouteImport } from './routes/terminal'
+import { Route as TimeMachineRouteImport } from './routes/time-machine'
 import { Route as WeebRouteImport } from './routes/weeb'
 import { Route as ProjectSlugRouteImport } from './routes/project.$slug'
 import { Route as ReadSlugRouteImport } from './routes/read.$slug'
@@ -94,6 +96,11 @@ const LabRoute = LabRouteImport.update({
   path: '/lab',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LanesRoute = LanesRouteImport.update({
+  id: '/lanes',
+  path: '/lanes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoopdownRoute = LoopdownRouteImport.update({
   id: '/loopdown',
   path: '/loopdown',
@@ -139,6 +146,11 @@ const TerminalRoute = TerminalRouteImport.update({
   path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimeMachineRoute = TimeMachineRouteImport.update({
+  id: '/time-machine',
+  path: '/time-machine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WeebRoute = WeebRouteImport.update({
   id: '/weeb',
   path: '/weeb',
@@ -168,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
+  '/lanes': typeof LanesRoute
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
@@ -177,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof ResumeRoute
   '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
+  '/time-machine': typeof TimeMachineRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
   '/read/$slug': typeof ReadSlugRoute
@@ -194,6 +208,7 @@ export interface FileRoutesByTo {
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
+  '/lanes': typeof LanesRoute
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
@@ -203,6 +218,7 @@ export interface FileRoutesByTo {
   '/resume': typeof ResumeRoute
   '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
+  '/time-machine': typeof TimeMachineRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
   '/read/$slug': typeof ReadSlugRoute
@@ -221,6 +237,7 @@ export interface FileRoutesById {
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
+  '/lanes': typeof LanesRoute
   '/loopdown': typeof LoopdownRoute
   '/making': typeof MakingRoute
   '/map': typeof MapRoute
@@ -230,6 +247,7 @@ export interface FileRoutesById {
   '/resume': typeof ResumeRoute
   '/shipped': typeof ShippedRoute
   '/terminal': typeof TerminalRoute
+  '/time-machine': typeof TimeMachineRoute
   '/weeb': typeof WeebRoute
   '/project/$slug': typeof ProjectSlugRoute
   '/read/$slug': typeof ReadSlugRoute
@@ -249,6 +267,7 @@ export interface FileRouteTypes {
     | '/hire'
     | '/ink'
     | '/lab'
+    | '/lanes'
     | '/loopdown'
     | '/making'
     | '/map'
@@ -258,6 +277,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/shipped'
     | '/terminal'
+    | '/time-machine'
     | '/weeb'
     | '/project/$slug'
     | '/read/$slug'
@@ -275,6 +295,7 @@ export interface FileRouteTypes {
     | '/hire'
     | '/ink'
     | '/lab'
+    | '/lanes'
     | '/loopdown'
     | '/making'
     | '/map'
@@ -284,6 +305,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/shipped'
     | '/terminal'
+    | '/time-machine'
     | '/weeb'
     | '/project/$slug'
     | '/read/$slug'
@@ -301,6 +323,7 @@ export interface FileRouteTypes {
     | '/hire'
     | '/ink'
     | '/lab'
+    | '/lanes'
     | '/loopdown'
     | '/making'
     | '/map'
@@ -310,6 +333,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/shipped'
     | '/terminal'
+    | '/time-machine'
     | '/weeb'
     | '/project/$slug'
     | '/read/$slug'
@@ -328,6 +352,7 @@ export interface RootRouteChildren {
   HireRoute: typeof HireRoute
   InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
+  LanesRoute: typeof LanesRoute
   LoopdownRoute: typeof LoopdownRoute
   MakingRoute: typeof MakingRoute
   MapRoute: typeof MapRoute
@@ -337,6 +362,7 @@ export interface RootRouteChildren {
   ResumeRoute: typeof ResumeRoute
   ShippedRoute: typeof ShippedRoute
   TerminalRoute: typeof TerminalRoute
+  TimeMachineRoute: typeof TimeMachineRoute
   WeebRoute: typeof WeebRoute
   ProjectSlugRoute: typeof ProjectSlugRoute
   ReadSlugRoute: typeof ReadSlugRoute
@@ -428,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lanes': {
+      id: '/lanes'
+      path: '/lanes'
+      fullPath: '/lanes'
+      preLoaderRoute: typeof LanesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/loopdown': {
       id: '/loopdown'
       path: '/loopdown'
@@ -491,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/time-machine': {
+      id: '/time-machine'
+      path: '/time-machine'
+      fullPath: '/time-machine'
+      preLoaderRoute: typeof TimeMachineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/weeb': {
       id: '/weeb'
       path: '/weeb'
@@ -528,6 +568,7 @@ const rootRouteChildren: RootRouteChildren = {
   HireRoute: HireRoute,
   InkRoute: InkRoute,
   LabRoute: LabRoute,
+  LanesRoute: LanesRoute,
   LoopdownRoute: LoopdownRoute,
   MakingRoute: MakingRoute,
   MapRoute: MapRoute,
@@ -537,6 +578,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResumeRoute: ResumeRoute,
   ShippedRoute: ShippedRoute,
   TerminalRoute: TerminalRoute,
+  TimeMachineRoute: TimeMachineRoute,
   WeebRoute: WeebRoute,
   ProjectSlugRoute: ProjectSlugRoute,
   ReadSlugRoute: ReadSlugRoute,

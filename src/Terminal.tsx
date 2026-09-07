@@ -91,6 +91,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   writing: "Writing",
   skills: "Skills",
   contact: "Contact",
+  board: "EB Profiles",
 };
 
 /**

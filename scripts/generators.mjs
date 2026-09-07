@@ -109,6 +109,16 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8, check: 7 } },
   { id: "timeline", script: "gen-timeline.mjs", npmName: "gen:timeline", kind: "network",
     inputs: [], outputs: ["src/data/timeline.ts"], stages: { refresh: 9 } },
+  // Re-shapes the already-committed timeline.ts (itself excluded from check
+  // because ITS OWN sources are live); this one is not, so it belongs there.
+  { id: "lanes", script: "gen-lanes.mjs", npmName: "gen:lanes", kind: "local",
+    inputs: ["src/data/timeline.ts"], outputs: ["src/data/lanes.ts"], stages: { build: 8, refresh: 21, check: 6 } },
+  // git log against THIS repo — no network, no sibling checkout — but bytes
+  // change on every real commit, so it is NOT in the check-generated
+  // deterministic set (same rule as the "git commit counts" note elsewhere
+  // in this file); its own staleness is bounded by freshnessSla.ts instead.
+  { id: "history", script: "gen-history.mjs", npmName: "gen:history", kind: "local",
+    inputs: [], outputs: ["src/data/history.ts"], stages: { refresh: 22 } },
   { id: "feed", script: "gen-feed.mjs", npmName: "gen:feed", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/feed.xml"], stages: { build: 6, refresh: 10 } },
   { id: "anthology-feed", script: "gen-anthology-feed.mjs", npmName: "gen:anthology-feed", kind: "local",

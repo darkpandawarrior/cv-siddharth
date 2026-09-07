@@ -3,9 +3,7 @@ import { writing } from "./writing.ts";
 /**
  * The registry of navigable things. The rail's deviations and the instrument
  * view derive from this one list — adding a facet there is a data edit, not
- * an App.tsx edit. (The home page's own section order is still hardcoded in
- * App.tsx — a registry-driven home sequence was scoped out of this pass as a
- * larger refactor; see git history for the note.)
+ * an App.tsx edit.
  *
  * `authored` and `discovered` are separate because they genuinely are: a 2021
  * story found in 2026 belongs at 2021 in the trace and is still news.
@@ -55,7 +53,12 @@ export const facets: Facet[] = [
     discovered: LOOPDOWN_AUTHORED, paths: ["deep"], kind: "writing" },
   { id: "excelsior", label: "Excelsior", to: "/excelsior", authored: "2021-06-15",
     discovered: "2026-07-10", paths: ["deep", "wandering"], kind: "writing" },
-  { id: "board", label: "EB Profiles", to: "/ink", hash: "board", authored: "2019-05-09",
+  // so-p1-soul-surfaced: this used to point at /ink#board, so a visitor never
+  // reached the EB Profiles without first routing through the ink doorway.
+  // It now points at the homepage's own EB Profiles section (App.tsx's
+  // `EbProfiles`, homeDeepPath below) — a registry facet of its own, per
+  // site-overhaul-design.md §3.4. /ink still hosts the full write-up.
+  { id: "board", label: "EB Profiles", to: "/", hash: "board", authored: "2019-05-09",
     discovered: "2026-07-10", paths: ["deep"], kind: "record" },
   { id: "chess", label: "Chess corpus", to: "/chess", authored: "2026-07-30",
     discovered: "2026-07-30", paths: ["wandering"], kind: "corpus" },
@@ -76,3 +79,29 @@ export const facets: Facet[] = [
   { id: "anthology", label: "The Morkinstar Journals", to: "/anthology", authored: "2026-08-15",
     discovered: "2026-08-15", paths: ["wandering"], kind: "writing" },
 ];
+
+/**
+ * The home page's own section order, now a data entry instead of the
+ * hardcoded JSX order `HomePage` used to carry. Each id maps to a component
+ * in App.tsx's `HOME_SECTIONS`/`DEEP_SECTIONS` lookup — recovering a section
+ * (or adding a new one) is one id here plus one lookup entry, not a reflow
+ * of the render tree.
+ *
+ * Kept separate from `facets` above rather than folding in as another kind:
+ * `facets` feeds the rail and instrument view, which position every entry by
+ * `authored`/`discovered` chronology — these seven have no chronology (Hero
+ * isn't "authored" on a date), and adding them there would put fixed page
+ * furniture on the trace as if it were recovered material.
+ *
+ * `homeFastPath`: the seven the visitor sees without deciding to keep going
+ * (site-overhaul-design.md, "three paths, one page" — Fast). `homeDeepPath`:
+ * the evidence sections (device/platform proof, the shipped shelf, the repo
+ * wall, skills) that used to be interleaved with the fast path, now placed
+ * after it so a 90-second read ends at Contact instead of a 14,000px scroll,
+ * plus `board` (so-p1-soul-surfaced, §3.4) — the EB Profiles, promoted onto
+ * this path rather than left reachable only from /ink. They're still on `/`,
+ * still in the DOM, just past the fold a satisfied recruiter doesn't have
+ * to cross.
+ */
+export const homeFastPath = ["hero", "metrics", "fit", "casestudies", "projects", "experience"] as const;
+export const homeDeepPath = ["morph", "shipped", "source", "skills", "board"] as const;

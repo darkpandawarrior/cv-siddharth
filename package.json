@@ -40,6 +40,8 @@
     "sentinel": "python3 scripts/screenshot-sentinel.py --write-report",
     "gen:anthology": "node scripts/gen-anthology.mjs",
     "gen:timeline": "node scripts/gen-timeline.mjs",
+    "gen:lanes": "node scripts/gen-lanes.mjs",
+    "gen:history": "node scripts/gen-history.mjs",
     "gen:world-plate": "node scripts/gen-world-plate.mjs",
     "gen:repo-stats": "node scripts/gen-repo-stats.mjs",
     "gen:ops": "node scripts/gen-ops.mjs",

@@ -77,6 +77,13 @@ const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon:
     icon: <Compass size={15} />,
   },
   experience: { label: "Experience", icon: <Compass size={15} /> },
+  // so-p1-soul-surfaced: the EB Profiles' own facet, promoted onto the deep
+  // path. Same icon as `writing` — it's the same world.
+  board: {
+    label: "EB Profiles",
+    keywords: "editorial board magazine excelsior eb profiles parody manit",
+    icon: <PenLine size={15} />,
+  },
   // Replaces the "Chess — 18k games, mined" row, which jumped to this section
   // back when it was a chess teaser and kept jumping here after it became the
   // wall. The chess keywords move to the /chess row below, which is where they

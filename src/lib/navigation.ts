@@ -81,31 +81,33 @@ function prefersReducedMotion() {
  * had not used for some time. e2e/navigation.spec.ts now reads the ids out of
  * the rendered homepage and asserts this array matches, order included — the
  * one check that could have caught any of it.
+ *
+ * Order now mirrors facets.ts's `homeFastPath` (top through experience),
+ * then the fixed surfaces/writing/contact block, then `homeDeepPath` (morph,
+ * shipped, source, skills moved past Contact — so-p2, the fast path is seven
+ * sections again instead of the fourteen this comment used to describe —
+ * plus `board`, so-p1-soul-surfaced's EB Profiles section).
  */
 export const SECTION_ID_LIST = [
   "top",
-  // Fit check leads, ahead of the device morph: NAV_LINKS has listed it first
-  // for a while and the page had 1,329px of morph sitting between the metrics
-  // and the one tool on this site a PDF cannot offer.
+  // Fit check leads: NAV_LINKS has listed it first for a while and the page
+  // did not.
   "fit",
-  "morph",
-  // The shelf moved up from eighth. App.tsx's own comment beside it claimed a
-  // recruiter who reads two sections should have hit a live store rating by
-  // the end of the second, while it rendered 17,800px down, fourth in a run of
-  // four consecutive sections all answering "what have you built?".
-  "shipped",
   "work",
   "projects",
-  "source",
   "experience",
-  // Skills moved up beside the experience it proves, so every evidence
-  // section now completes BEFORE the Circuit divider that App.tsx's own
-  // comment calls the gear change into exploration. It used to sit after
-  // #surfaces and #writing, i.e. on the far side of that divider.
-  "skills",
   "surfaces",
   "writing",
   "contact",
+  // Everything below here is the deep path — moved past Contact so a
+  // 90-second read ends there instead of 17,800px further down. Order
+  // unchanged from when they sat inline: morph, shipped, source, skills.
+  // `board` (EB Profiles) is the newest addition, so-p1-soul-surfaced.
+  "morph",
+  "shipped",
+  "source",
+  "skills",
+  "board",
 ] as const;
 
 export type SectionId = (typeof SECTION_ID_LIST)[number];

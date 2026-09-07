@@ -171,6 +171,16 @@ export const systemGraph: SystemGraph = {
       "label": "Weeb Central"
     },
     {
+      "id": "/lanes",
+      "kind": "surface",
+      "label": "Four Lanes"
+    },
+    {
+      "id": "/time-machine",
+      "kind": "surface",
+      "label": "The Time Machine"
+    },
+    {
       "id": "channel:f-droid",
       "kind": "channel",
       "label": "F-Droid"
@@ -393,6 +403,20 @@ export const systemGraph: SystemGraph = {
     },
     {
       "from": "/weeb",
+      "to": "portfolio",
+      "kind": "runs-here",
+      "evidence": "measured",
+      "detail": "site route"
+    },
+    {
+      "from": "/lanes",
+      "to": "portfolio",
+      "kind": "runs-here",
+      "evidence": "measured",
+      "detail": "site route"
+    },
+    {
+      "from": "/time-machine",
       "to": "portfolio",
       "kind": "runs-here",
       "evidence": "measured",
