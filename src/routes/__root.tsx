@@ -26,7 +26,7 @@ import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
-import { DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
+import { DeferredPlayRoom, DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
 // Every role still running. Filtered over the whole array, never
 // experience[0] — index 0 is whichever role was added most recently, and an
 // index-based read silently demoted Dice.tech the day the consulting role
@@ -314,8 +314,28 @@ function RootDocument({ children }: { children: ReactNode }) {
             there. Deferred (client-only, after hydration) for the same
             reason Playground.tsx used to mount it locally: `@playhtml/react`
             reads `document` on import, and this shell is the one thing every
-            route, including the server-rendered ones, renders through. */}
-        <DeferredLivePulse>{children}</DeferredLivePulse>
+            route, including the server-rendered ones, renders through.
+
+            DeferredLivePulse calls `usePageData` (via pulse.ts), which is
+            `@playhtml/react`'s own hook and throws "No PlayProvider found"
+            without a `PlayProvider` ancestor — it does not degrade like our
+            own PulseContext default does. Wrapping it in DeferredPlayRoom
+            here is what supplies that ancestor on every route, not only the
+            handful (Playground, Weeb, Blueprint, /ink, /anthology,
+            /read/$slug) that already mount one locally for their own
+            presence/visitor features. Those local mounts still work exactly
+            as before — a nearer provider always wins for their own
+            descendants — this one exists only so LivePulse, sitting above
+            all of them at the shell level, has an ancestor of its own.
+            // ponytail: this opens a second websocket to the same
+            "cv-siddharth" room on the handful of routes that already mount
+            their own PlayProvider too. Collapsing to one shared provider
+            would mean touching those routes' own files, several of which
+            belong to other stacked lanes — worth doing in a pass that owns
+            all of them at once, not as a side effect of a pulse-counter fix. */}
+        <DeferredPlayRoom>
+          <DeferredLivePulse>{children}</DeferredLivePulse>
+        </DeferredPlayRoom>
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
