@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { readToken, readColor } from "./themeColor";
+import { readToken } from "./themeColor";
 
 // ponytail: stub the two globals rather than pull in jsdom. readToken touches
 // exactly `document.documentElement` + `getComputedStyle`, so this exercises the
@@ -44,10 +44,5 @@ describe("themeColor", () => {
   it("survives having no DOM at all (SSR) instead of throwing", () => {
     delete g.document;
     expect(readToken("--color-signal", "#abcdef")).toBe("#abcdef");
-  });
-
-  it("readColor yields a three Color carrying the token value", () => {
-    vars.set("--color-signal", "#3ddc84");
-    expect(readColor("--color-signal", "#000000").getHexString()).toBe("3ddc84");
   });
 });

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 
 // Dynamic import — three/@react-three/fiber/drei only load if a capable,
 // motion-friendly desktop viewport asks for them. Own chunk, code-split
@@ -35,11 +36,18 @@ export function AmbientBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-70" aria-hidden>
       <div className="starfield-static absolute inset-0" />
-      {enable3D && (
-        <Suspense fallback={null}>
-          <AmbientScene />
-        </Suspense>
-      )}
+      {/* enable3D is a runtime-only flag the bundler can't see through — it
+          still resolved AmbientScene's @react-three/fiber import for SSR
+          regardless. <ClientOnly> is what Start's compiler recognises to
+          strip this subtree (and the lazy import behind it) from the SERVER
+          compile entirely. */}
+      <ClientOnly>
+        {enable3D && (
+          <Suspense fallback={null}>
+            <AmbientScene />
+          </Suspense>
+        )}
+      </ClientOnly>
     </div>
   );
 }

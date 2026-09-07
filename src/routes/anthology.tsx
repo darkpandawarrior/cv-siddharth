@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
@@ -973,15 +973,29 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
           canvas never reflows the page around it — the one thing a lazy 3D
           chunk cannot be allowed to do to a text-heavy page. */}
       <div className="card-elevated relative mt-6 h-[520px] overflow-hidden rounded-2xl border border-line bg-void/60">
-        <Suspense
+        {/* anthology.tsx server-renders (the corpus prose is the whole point
+            of the route), and `layer === "map"` is a runtime-only switch the
+            bundler can't see through — it still resolved Starmap's
+            @react-three/postprocessing import for SSR regardless. <ClientOnly>
+            is what Start's compiler recognises to strip this subtree (and the
+            lazy import behind it) from the SERVER compile entirely. */}
+        <ClientOnly
           fallback={
             <div className="kicker flex h-full items-center justify-center">
               loading the starmap…
             </div>
           }
         >
-          <Starmap concluded={concluded} onOpen={openWorld} season={season} />
-        </Suspense>
+          <Suspense
+            fallback={
+              <div className="kicker flex h-full items-center justify-center">
+                loading the starmap…
+              </div>
+            }
+          >
+            <Starmap concluded={concluded} onOpen={openWorld} season={season} />
+          </Suspense>
+        </ClientOnly>
         <span className="kicker pointer-events-none absolute bottom-3 right-4">
           drag to orbit
         </span>

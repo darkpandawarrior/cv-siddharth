@@ -1,5 +1,5 @@
 import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, ClientOnly } from "@tanstack/react-router";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -241,11 +241,21 @@ function PlaygroundInner() {
               "underneath": it's rendered right here, every time the world is,
               just visually hidden. */}
           <div className="playground-canvas absolute inset-0">
-            <WorldBoundary onError={handleWorldError}>
-              <Suspense fallback={worldLoadingFallback}>
-                <World onShowList={showList} />
-              </Suspense>
-            </WorldBoundary>
+            {/* wantsWorld is only ever true after hydration (see its own
+                comment above), so this branch never actually renders during
+                SSR — but a `useState`-gated ternary is not a compile-time
+                constant, so the bundler still resolves `World` (three.js,
+                Rapier) for the server. `<ClientOnly>` is what makes that
+                reference (and the `import("./world/World.tsx")` behind it)
+                disappear from the SERVER compile itself: Start's compiler
+                strips its children there before the SSR bundle is built. */}
+            <ClientOnly fallback={worldLoadingFallback}>
+              <WorldBoundary onError={handleWorldError}>
+                <Suspense fallback={worldLoadingFallback}>
+                  <World onShowList={showList} />
+                </Suspense>
+              </WorldBoundary>
+            </ClientOnly>
           </div>
           {/* sr-only in world view (Canvas above is aria-hidden, so this is
               the entire accessible room list a screen-reader user gets —

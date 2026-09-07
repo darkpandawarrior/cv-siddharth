@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { TiltPhone } from "./TiltPhone.tsx";
 import type { PhoneShot } from "./Phone3DScene.tsx";
 
@@ -45,11 +46,17 @@ export function Phone3D() {
 
   if (!enable3D) return <TiltPhone />;
 
+  // enable3D is a runtime-only flag the bundler can't see through — it still
+  // resolved Phone3DScene's @react-three/fiber import for SSR regardless.
+  // <ClientOnly> is what Start's compiler recognises to strip this subtree
+  // (and the lazy import behind it) from the SERVER compile entirely.
   return (
-    <div className="relative mt-2 h-[420px] select-none lg:mt-0" aria-hidden>
-      <Suspense fallback={<TiltPhone />}>
-        <Phone3DScene shots={SHOTS} onContextLost={() => setEnable3D(false)} />
-      </Suspense>
-    </div>
+    <ClientOnly fallback={<TiltPhone />}>
+      <div className="relative mt-2 h-[420px] select-none lg:mt-0" aria-hidden>
+        <Suspense fallback={<TiltPhone />}>
+          <Phone3DScene shots={SHOTS} onContextLost={() => setEnable3D(false)} />
+        </Suspense>
+      </div>
+    </ClientOnly>
   );
 }

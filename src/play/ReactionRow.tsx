@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { useHydrated } from "../lib/useHydrated.ts";
+import { ClientOnly } from "@tanstack/react-router";
 import {
   REACTION_KEYS,
   REACTIONS,
@@ -18,9 +18,15 @@ import {
  * and /weeb and /anthology server-render: a static import threw
  * `ReferenceError: document is not defined` inside renderToReadableStream and
  * collapsed both routes to a ~470-character shell. The live half lives in
- * LiveReactionRow.tsx and is lazy-loaded after mount, so the server renders
- * the same markup with zero counts and the client swaps in the shared ones.
- * Identical shape either way, so there is no layout shift on hydration.
+ * LiveReactionRow.tsx, lazy-loaded after mount and wrapped in `<ClientOnly>`
+ * (not a hand-rolled `useHydrated()` check): Start's compiler recognises that
+ * JSX and strips its children — the lazy import along with them — out of the
+ * SERVER compile entirely, which is what importProtection's static scan
+ * actually needs. `useHydrated()` alone only stops it at runtime; React still
+ * resolves a lazy child while streaming on the server, and the scan still
+ * finds the chunk regardless of the runtime gate. The server renders the same
+ * markup with zero counts and the client swaps in the shared ones. Identical
+ * shape either way, so there is no layout shift on hydration.
  */
 export function ReactionRowView({
   counts,
@@ -68,15 +74,12 @@ export function ReactionRow({
   itemId: string;
   className?: string;
 }) {
-  // lazy() alone is not enough: React resolves a lazy child while streaming on
-  // the server, which would pull @playhtml/react back in. The mount flag is
-  // what guarantees the server never reaches it.
-  const hydrated = useHydrated();
   const placeholder = <ReactionRowView counts={{}} className={className} />;
-  if (!hydrated) return placeholder;
   return (
-    <Suspense fallback={placeholder}>
-      <LiveReactionRow surface={surface} itemId={itemId} className={className} />
-    </Suspense>
+    <ClientOnly fallback={placeholder}>
+      <Suspense fallback={placeholder}>
+        <LiveReactionRow surface={surface} itemId={itemId} className={className} />
+      </Suspense>
+    </ClientOnly>
   );
 }

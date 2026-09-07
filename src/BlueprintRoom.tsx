@@ -1,4 +1,5 @@
 import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { LauncherButton } from "./Launcher.tsx";
 import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
@@ -7,8 +8,8 @@ import { TOUR } from "./blueprintData.ts";
 import { hasTldrawLicense, hasWebGL } from "./blueprintShared.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useSectionNav } from "./lib/navigation.ts";
-import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import { usePulse } from "./play/pulse.ts";
+import { DeferredPlayRoom, DeferredPresenceBadge } from "./play/DeferredPlayRoom.tsx";
+import { usePulseUI } from "./play/pulseUI.ts";
 
 /** Class components (RoomBoundary below) can't call hooks directly — this
  *  wraps the router-aware "back to portfolio" control so both the error
@@ -151,7 +152,7 @@ function BlueprintRoomInner() {
   // repeat the same "press a key you don't have" problem this file exists to
   // fix, for a mode that isn't even the one on screen.
   const headline = isAvailable(activeMode) ? activeMode.tagline : activeMode.unavailable;
-  const bump = usePulse();
+  const { bump } = usePulseUI();
 
   const onLicenseGate = useCallback(() => {
     setLicenseGated(true);
@@ -269,7 +270,7 @@ function BlueprintRoomInner() {
             >
               <RotateCcw size={13} /> <span className="label-wide">Reset</span>
             </button>
-            <PresenceBadge className="hidden md:flex" />
+            <DeferredPresenceBadge className="hidden md:flex" />
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -290,9 +291,16 @@ function BlueprintRoomInner() {
               {activeMode.unavailable}.
             </div>
           ) : mode === "sketch" ? (
-            <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
+            // `mode === "sketch"` is a runtime-only switch the bundler can't
+            // see through — it still resolved SketchBoard's tldraw import for
+            // SSR regardless. `<ClientOnly>` is what Start's compiler
+            // recognises to strip this subtree (and the lazy import behind
+            // it) from the SERVER compile entirely.
+            <ClientOnly>
+              <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
+            </ClientOnly>
           ) : (
-            <>
+            <ClientOnly>
               <Blueprint3D
                 tourStop={stop}
                 resetTick={resetTick}
@@ -306,7 +314,7 @@ function BlueprintRoomInner() {
               <div className="pointer-events-none absolute bottom-4 left-4 rounded border border-line bg-ink/80 px-2 py-1 font-mono text-xs text-zinc-400 backdrop-blur">
                 {zoomPercent}%
               </div>
-            </>
+            </ClientOnly>
           )}
         </Suspense>
       </main>
@@ -323,9 +331,9 @@ export default function BlueprintRoom() {
     <RoomBoundary>
       {/* Its own room, so the presence count means "people in the Blueprint
           Room" rather than "people somewhere on the site". */}
-      <PlayRoom>
+      <DeferredPlayRoom>
         <BlueprintRoomInner />
-      </PlayRoom>
+      </DeferredPlayRoom>
     </RoomBoundary>
   );
 }

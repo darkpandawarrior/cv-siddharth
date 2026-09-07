@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 
 const FoundationGraphScene = lazy(() => import("./FoundationGraphScene.tsx"));
 
@@ -44,11 +45,19 @@ export function FoundationGraph() {
     // h-0 (not `hidden`) while disabled — a display:none element never
     // intersects, so the observer that enables the scene would never fire.
     <div ref={holder} className={`relative select-none ${enable3D ? "h-[340px]" : "h-0"}`} aria-hidden>
-      {enable3D && (
-        <Suspense fallback={null}>
-          <FoundationGraphScene />
-        </Suspense>
-      )}
+      {/* enable3D is a runtime-only flag the bundler can't see through — it
+          still resolved FoundationGraphScene's @react-three/fiber import for
+          SSR regardless (reached from the homepage, which server-renders).
+          <ClientOnly> is what Start's compiler recognises to strip this
+          subtree (and the lazy import behind it) from the SERVER compile
+          entirely. */}
+      <ClientOnly>
+        {enable3D && (
+          <Suspense fallback={null}>
+            <FoundationGraphScene />
+          </Suspense>
+        )}
+      </ClientOnly>
     </div>
   );
 }
