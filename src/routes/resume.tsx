@@ -4,6 +4,7 @@ import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
 import { profile } from "../data/profile.ts";
 import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { heavy } from "../lib/assetBase.ts";
 
 // The full record is the default and carries no param, so `/resume` keeps
 // showing everything exactly as it always has. Anything unrecognised falls
@@ -27,8 +28,8 @@ export const Route = createFileRoute("/resume")({
         { name: "description", content: desc },
         { property: "og:url", content: "https://cv-siddharth.vercel.app/resume" },
         { property: "og:description", content: desc },
-        { property: "og:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
-        { name: "twitter:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
+        { property: "og:image", content: heavy("/p/resume/og.png") },
+        { name: "twitter:image", content: heavy("/p/resume/og.png") },
       ],
       links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
       // Résumé-specific Person schema, derived from the same profile/experience

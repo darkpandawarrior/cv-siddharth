@@ -1048,9 +1048,14 @@ export function OpsBoard() {
       .then((d: Ops) => live && setOps(d))
       .catch(() => live && setFailed(true));
 
-    // The one check on this page a reader's own browser performs. Every live
-    // build is same-origin, so it costs no API and cannot be faked by the
-    // server: if an embed 404s, the row claiming it is playable goes red.
+    // The one check on this page a reader's own browser performs — costs no
+    // API and cannot be faked by the server: if an embed 404s, the row
+    // claiming it is playable goes red. These moved off Vercel onto GitHub
+    // Pages (see src/lib/assetBase.ts), so it is a cross-origin HEAD now, not
+    // same-origin; it still works with no CORS preflight (HEAD with no custom
+    // headers is a "simple request", and GitHub Pages answers every origin
+    // with Access-Control-Allow-Origin: *), but the fetch is genuinely
+    // network-bound now rather than same-origin-cheap.
     for (const b of LIVE_BUILDS) {
       fetch(b.url, { method: "HEAD" })
         .then((r) => live && setBuilds((s) => ({ ...s, [b.slug]: r.status })))

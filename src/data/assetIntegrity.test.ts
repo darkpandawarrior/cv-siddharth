@@ -31,6 +31,10 @@ describe("no served asset is a Git LFS pointer", () => {
     }
   };
   walk(join(root, "public"));
+  // heavy/ (screenshots, showcase films, Excelsior scans — moved off Vercel
+  // onto GitHub Pages, see src/lib/assetBase.ts) is exactly what
+  // sync-project-media.mjs writes into, so it carries the same LFS-pointer risk.
+  walk(join(root, "heavy"));
 
   it("finds the assets it is meant to be checking", () => {
     expect(files.length).toBeGreaterThan(200);

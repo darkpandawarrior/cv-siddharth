@@ -20,9 +20,12 @@ describe("service worker wasm bypass", () => {
   const root = new URL("../../", import.meta.url).pathname;
   const sw = readFileSync(join(root, "public", "sw.js"), "utf8");
 
-  const appDirs = readdirSync(join(root, "public"))
+  // The Wasm demo builds moved off Vercel onto GitHub Pages (heavy/, see
+  // src/lib/assetBase.ts) — the bypass still matters for local dev, where
+  // VITE_HEAVY_ASSET_BASE=/ serves them same-origin out of heavy/ again.
+  const appDirs = readdirSync(join(root, "heavy"))
     .filter((d) => d.endsWith("-app"))
-    .filter((d) => statSync(join(root, "public", d)).isDirectory());
+    .filter((d) => statSync(join(root, "heavy", d)).isDirectory());
 
   /** The BYPASS array as the worker will actually evaluate it. */
   // Matched to end-of-line, not with a bracket-counting pattern: the regexes

@@ -1,5 +1,5 @@
 // Re-stitches every narrated showcase film from its committed storyboard
-// (public/projects/<slug>/showcase/storyboard.json) + the daily-synced frame
+// (heavy/projects/<slug>/showcase/storyboard.json) + the daily-synced frame
 // pool. Voiceover is content-addressed: audio/shotN.m4a is reused unless the
 // narration text (or voice) changed — so CI can refresh VISUALS whenever the
 // app repos ship new screenshots, and only a narration edit needs the recording
@@ -178,15 +178,15 @@ const fmtTs = (s) => {
 };
 
 let rebuilt = 0;
-for (const dirent of readdirSync(join(root, "public", "projects"), { withFileTypes: true })) {
+for (const dirent of readdirSync(join(root, "heavy", "projects"), { withFileTypes: true })) {
   if (!dirent.isDirectory()) continue;
   const slug = dirent.name;
-  const showcaseDir = join(root, "public", "projects", slug, "showcase");
+  const showcaseDir = join(root, "heavy", "projects", slug, "showcase");
   const storyboardPath = join(showcaseDir, "storyboard.json");
   if (!existsSync(storyboardPath)) continue;
 
   const board = JSON.parse(readFileSync(storyboardPath, "utf8"));
-  const pool = join(root, "public", "projects", slug, "screenshots");
+  const pool = join(root, "heavy", "projects", slug, "screenshots");
   const manifestNames = new Set((sync[slug]?.files ?? []).map(([, dest]) => dest));
 
   // Invariant 1: every frame must exist AND be daily-synced.

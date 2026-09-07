@@ -48,7 +48,8 @@
     "check:generated": "node scripts/check-generated.mjs",
     "validate:palette": "node scripts/validate_palette.js",
     "check:budget": "node scripts/check-budget.mjs",
-    "sync:twin": "node scripts/sync-twin.mjs"
+    "sync:twin": "node scripts/sync-twin.mjs",
+    "publish:heavy-assets": "node scripts/publish-heavy-assets.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

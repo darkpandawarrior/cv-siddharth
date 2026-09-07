@@ -10,6 +10,8 @@
  * catch. Anything a test already fails on is not an incident, it is a test
  * doing its job. This ledger only records the times nothing went red.
  */
+import { heavy } from "../lib/assetBase.ts";
+
 export type Incident = {
   id: string;
   /** The row above it that this incident is about. */
@@ -113,7 +115,7 @@ export const incidents: Incident[] = [
     what: "310 MB export: all_resources shipped 29 unreferenced models and every texture imported lossless",
     days: 0,
     resolved: true,
-    evidenceHref: "https://cv-siddharth.vercel.app/deadlock-app/index.html",
+    evidenceHref: heavy("/deadlock-app/index.html"),
   },
   {
     id: "cardmedia-six-of-eight",

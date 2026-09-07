@@ -28,7 +28,8 @@ describe("every referenced screenshot exists on disk", () => {
     const missing: string[] = [];
     let checked = 0;
     for (const p of projects) {
-      const dir = join(root, "public/projects", p.slug, "screenshots");
+      // Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+      const dir = join(root, "heavy/projects", p.slug, "screenshots");
       const have = existsSync(dir) ? new Set(readdirSync(dir)) : new Set<string>();
       const refs = new Set<string>();
       for (const s of (p.screens ?? []) as { file?: string }[]) if (s.file) refs.add(s.file);

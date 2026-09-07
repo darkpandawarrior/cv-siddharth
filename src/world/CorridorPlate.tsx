@@ -1,13 +1,14 @@
 import { lazy, Suspense, type JSX } from "react";
 import { corridorPlateMeta } from "./corridorPlate.ts";
 import { useHydrated } from "../lib/useHydrated.ts";
+import { heavy } from "../lib/assetBase.ts";
 
 const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
 
 /**
  * NIGHT SURVEY §11 — THE STATIC FALLBACK, the DOM half.
  *
- * `public/p/world/corridor.png` (`scripts/gen-world-plate.mjs`'s own doc
+ * `heavy/p/world/corridor.png` (`scripts/gen-world-plate.mjs`'s own doc
  * comment explains what it honestly is and isn't) is the terrain; this
  * component is everything §11 asks to sit ON TOP of it "in the DOM": the 8
  * year rules and the 4 lane monograms, both driven by the same committed
@@ -62,7 +63,7 @@ export function CorridorPlate(): JSX.Element {
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>
-      <img src="/p/world/corridor.png" alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+      <img src={heavy("/p/world/corridor.png")} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
 
       {/* The 8 year rules — one vertical line per real year boundary,
           at the exact fraction gen-world-plate.mjs computed off the same

@@ -1,6 +1,7 @@
-// Build-time AVIF + WebP siblings for public/ rasters (190 PNG / 4 WebP, ~20MB).
-// Idempotent: regenerates only when the source is newer. Runs in prebuild,
-// same pattern as gen-galleries.mjs / gen-og.mjs. No runtime image CDN.
+// Build-time AVIF + WebP siblings for public/ AND heavy/ rasters (190 PNG / 4
+// WebP, ~20MB). Idempotent: regenerates only when the source is newer. Runs
+// in prebuild, same pattern as gen-galleries.mjs / gen-og.mjs. No runtime
+// image CDN.
 import { readdirSync, statSync, existsSync } from "node:fs";
 import { join, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +10,10 @@ import sharp from "sharp";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(root, "public");
+// heavy/ holds the screenshots, showcase posters and Excelsior covers that
+// moved off Vercel onto GitHub Pages (see src/lib/assetBase.ts) — they still
+// need their .avif/.webp siblings, generated in place exactly like public/'s.
+const heavyDir = join(root, "heavy");
 
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
@@ -16,6 +21,9 @@ function* walk(dir) {
     if (statSync(p).isDirectory()) yield* walk(p);
     else yield p;
   }
+}
+function* walkRoots(dirs) {
+  for (const dir of dirs) if (existsSync(dir)) yield* walk(dir);
 }
 const fresher = (src, out) => existsSync(out) && statSync(out).mtimeMs >= statSync(src).mtimeMs;
 
@@ -26,7 +34,7 @@ const fresher = (src, out) => existsSync(out) && statSync(out).mtimeMs >= statSy
 const hasFfmpeg = spawnSync("ffmpeg", ["-version"], { stdio: "ignore" }).status === 0;
 
 let made = 0;
-for (const src of walk(publicDir)) {
+for (const src of walkRoots([publicDir, heavyDir])) {
   const ext = extname(src).toLowerCase();
   /**
    * An animated GIF is the worst delivery format the web still accepts: no

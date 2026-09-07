@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { excelsiorEditions } from "./data/excelsior.ts";
 import { readProgress } from "./lib/excelsiorProgress.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * Excelsior — MANIT Bhopal's institute magazine, and the print half of the
@@ -34,7 +35,7 @@ interface Edition {
  * which spread this site has actually captured. Everything else on a card is
  * derived — the year and page count from gen-excelsior.mjs's output, the PDF
  * from the `source` it recorded, the cover from the file convention
- * (public/excelsior/cover-<year>.jpg) that Picture then resolves to its
+ * (heavy/excelsior/cover-<year>.jpg) that Picture then resolves to its
  * avif/webp siblings.
  *
  * A hand-typed `pdf` used to sit beside the manifest's `source` saying the
@@ -46,7 +47,7 @@ const EDITION_CHROME: Record<string, Pick<Edition, "role"> & Partial<Pick<Editio
   "2021": {
     role: "Joint Chief Editor",
     spread: {
-      src: "/excelsior/spread-2021.jpg",
+      src: heavy("/excelsior/spread-2021.jpg"),
       alt: "Excelsior '21 page 5 — the editors' farewell letter, signed by Siddharth Pandalai as Joint Chief Editor.",
       caption: "Excelsior '21, p.5 — the sign-off. My last issue on the board.",
     },
@@ -60,7 +61,7 @@ const EXCELSIOR: Edition[] = excelsiorEditions.map((e) => {
   return {
     ...e,
     ...chrome,
-    cover: `/excelsior/cover-${e.year}.jpg`,
+    cover: heavy(`/excelsior/cover-${e.year}.jpg`),
     // After the spread, not before it. Written the other way round the
     // fallback is dead for any year chrome names, which is what tsc -b was
     // reporting: "specified more than once, so this usage will be overwritten".
