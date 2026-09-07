@@ -4,6 +4,7 @@ import { projects } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { FitImage } from "./DeviceWall.tsx";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * One codebase, re-framed across form factors — running, not described.
@@ -121,8 +122,9 @@ function postersFor(p: (typeof projects)[number]) {
       (t) => t.screens.length > 0 && PORTRAIT_FRAMES.has(t.deviceFrame) === portrait,
     )?.screens[0];
   const any = p.targets?.find((t) => t.screens.length > 0)?.screens[0];
+  // Screenshots moved off Vercel onto GitHub Pages (heavy/); _heroes did not.
   const path = (shot?: string) =>
-    shot ? `/projects/${p.slug}/screenshots/${shot}` : `/projects/_heroes/${p.slug}.png`;
+    shot ? heavy(`/projects/${p.slug}/screenshots/${shot}`) : `/projects/_heroes/${p.slug}.png`;
   return { portrait: path(pick(true) ?? any), landscape: path(pick(false) ?? any) };
 }
 
@@ -156,7 +158,7 @@ export function DeviceMorph() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const { painted, gaveUp } = useLivePaint(iframeRef, booted);
+  const { painted, gaveUp } = useLivePaint(iframeRef, booted, undefined, app.url);
   const { goToSection } = useSectionNav();
 
   // How much room the frame has, so it can be SCALED into the space rather

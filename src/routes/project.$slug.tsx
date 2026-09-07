@@ -4,6 +4,7 @@ import { CursorAura } from "../CursorAura.tsx";
 import { ProjectDetail } from "../ProjectDetail.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
+import { heavy } from "../lib/assetBase.ts";
 
 /**
  * Slugs that used to be their own project and now live inside another one. They stay resolvable
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/project/$slug")({
     // Everything else (e.g. the "portfolio" entry) falls back to the
     // site-default OG image, which always exists.
     const og = p?.detail
-      ? `https://cv-siddharth.vercel.app/p/${params.slug}/og.png`
+      ? heavy(`/p/${params.slug}/og.png`)
       : "https://cv-siddharth.vercel.app/og-image.png";
     // Guard: an unknown slug (p undefined) still needs valid meta above, but
     // gets no JSON-LD at all — schema.org data must describe a real project,

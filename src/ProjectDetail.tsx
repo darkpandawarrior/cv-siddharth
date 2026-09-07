@@ -18,6 +18,7 @@ import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
+import { heavy } from "./lib/assetBase.ts";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["doori", "gaddi", "paymentslab-kmp"]);
@@ -190,7 +191,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const project = projects.find((p) => p.slug === slug);
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
   const items: { src: string; caption: string }[] = project?.screens?.length
-    ? project.screens.map((s) => ({ src: `/projects/${slug}/screenshots/${s.file}`, caption: s.caption }))
+    ? project.screens.map((s) => ({ src: heavy(`/projects/${slug}/screenshots/${s.file}`), caption: s.caption }))
     : (galleries[slug] ?? []).map((src) => ({ src, caption: "" }));
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);

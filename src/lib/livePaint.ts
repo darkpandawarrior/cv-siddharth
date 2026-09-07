@@ -42,10 +42,27 @@ function findCanvas(root: Document | ShadowRoot): HTMLCanvasElement | null {
   }
   return null;
 }
+/**
+ * True once `url` is definitely cross-origin from this page — i.e. `new
+ * URL(url, location.href).origin !== location.origin`. A relative URL (local
+ * dev, `VITE_HEAVY_ASSET_BASE=/`) always resolves same-origin here.
+ */
+function isCrossOrigin(url: string): boolean {
+  try {
+    return new URL(url, window.location.href).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 export function useLivePaint(
   iframeRef: RefObject<HTMLIFrameElement | null>,
   active: boolean,
   timeoutMs = 18000,
+  // The iframe's own src — only known here, not from the DOM, since a
+  // cross-origin frame's `.src` reflects what WE set, not what the browser
+  // navigated to (that part is safe to read either way).
+  url?: string,
 ): { painted: boolean; gaveUp: boolean } {
   const [painted, setPainted] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
@@ -53,6 +70,28 @@ export function useLivePaint(
   useEffect(() => {
     if (!active || painted || gaveUp) return;
     const started = Date.now();
+    // Cross-origin (the Wasm demos now live on GitHub Pages, not this
+    // origin — see src/lib/assetBase.ts): `contentDocument` reads back null
+    // per spec rather than throwing, so the canvas/#boot probe below can
+    // never see a real paint and would silently burn the full timeout on
+    // every visit. There is no cross-origin signal to poll for without the
+    // embedded app itself posting one back (it doesn't), so this reveals on
+    // a fixed grace period after the iframe's own `load` fires instead —
+    // approximate, not a real paint check.
+    // ponytail: time-based guess, not a real signal. Upgrade path: have each
+    // app's web target postMessage({type:"painted"}) to the parent on first
+    // frame, and listen for it here.
+    if (url && isCrossOrigin(url)) {
+      const el = iframeRef.current;
+      const reveal = () => {
+        window.setTimeout(() => setPainted(true), 2500);
+      };
+      if (el) {
+        el.addEventListener("load", reveal, { once: true });
+        return () => el.removeEventListener("load", reveal);
+      }
+      return;
+    }
     const iv = window.setInterval(() => {
       try {
         const doc = iframeRef.current?.contentDocument;
@@ -67,7 +106,7 @@ export function useLivePaint(
           return;
         }
       } catch {
-        /* cross-origin guard — first-party same-origin, so this shouldn't hit */
+        /* cross-origin guard — same-origin (local dev), so this shouldn't hit */
       }
       if (Date.now() - started > timeoutMs) {
         setGaveUp(true);
@@ -75,7 +114,7 @@ export function useLivePaint(
       }
     }, 400);
     return () => window.clearInterval(iv);
-  }, [active, painted, gaveUp, iframeRef, timeoutMs]);
+  }, [active, painted, gaveUp, iframeRef, timeoutMs, url]);
 
   return { painted, gaveUp };
 }

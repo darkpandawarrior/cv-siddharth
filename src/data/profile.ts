@@ -5,6 +5,7 @@ import { surfaces } from "./surfaces.ts";
 import { fleetStats } from "./store.ts";
 import { writing } from "./writing.ts";
 import { cast, titleize } from "./writingMeta.ts";
+import { heavy } from "../lib/assetBase.ts";
 
 export const profile = {
   name: "Siddharth Pandalai",
@@ -635,7 +636,7 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home.png"],
-        liveUrl: "/kursi-app/index.html",
+        liveUrl: heavy("/kursi-app/index.html"),
         note: "Live: the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
       },
     ],
@@ -851,7 +852,7 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home_screen_loaded.png"],
-        liveUrl: "/mileway-app/index.html",
+        liveUrl: heavy("/mileway-app/index.html"),
         note: "Live, a Compose/Wasm preview shell: dashboard, live simulated tracking and the expense log, running the real design system and location math in your browser.",
       },
     ],
@@ -1080,7 +1081,7 @@ export const projects: Project[] = [
         // browser that never painted. Its three siblings (kursi, mileway,
         // portfolio) each had a capture; this is the fourth.
         screens: ["web_home.png"],
-        liveUrl: "/paymentslab-app/index.html",
+        liveUrl: heavy("/paymentslab-app/index.html"),
         note: "Live, a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
       },
     ],
@@ -1354,13 +1355,13 @@ export const projects: Project[] = [
         deviceFrame: "browser",
         // The actual compiled Compose-Multiplatform/Wasm build of this same portfolio, running
         // beside the React one. Built from cv-siddharth-kmp's :cmp-web wasmJsBrowserDistribution —
-        // 14.7 MB on disk (du -sk public/portfolio-app), in line with the kursi/mileway/paymentslab
+        // 14.7 MB on disk (du -sk heavy/portfolio-app), in line with the kursi/mileway/paymentslab
         // embeds already here.
         //
         // This is the whole point of the project, and until now the page could only assert it. A
         // screenshot of a cross-platform build proves nothing that a screenshot of anything else
         // does not; the build actually running is the only checkable version of the claim.
-        liveUrl: "/portfolio-app/index.html",
+        liveUrl: heavy("/portfolio-app/index.html"),
         // Screenshot floor under the live embed. LiveEmbed uses screens[0] as the
         // fallback while the ~13 MB of Wasm downloads and compiles — without one the
         // frame is a dead black box for the first several seconds, and stays one on a
@@ -1542,7 +1543,7 @@ export const projects: Project[] = [
         // build, not a trimmed game.
         platform: "Web",
         deviceFrame: "browser",
-        liveUrl: "/deadlock-app/index.html",
+        liveUrl: heavy("/deadlock-app/index.html"),
         screens: ["web_home.png"],
         note: "Live: the real Godot build, compiled to WebAssembly. Pick a chapter, then click once to capture the mouse: WASD to move, R to rewind, Esc frees the cursor.",
       },

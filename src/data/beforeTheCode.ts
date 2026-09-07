@@ -78,7 +78,7 @@ export const societies: Society[] = [
  * spliced into continuous speech.
  *
  * If you edit a quote: mark the cut. The full page is in
- * `public/excelsior/pages/<year>/p<page>.webp` and each card already links
+ * `heavy/excelsior/pages/<year>/p<page>.webp` and each card already links
  * to it, so anyone can check this in one click. That is the only reason the
  * trimming is honest rather than convenient.
  */

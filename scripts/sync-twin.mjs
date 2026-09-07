@@ -1,5 +1,5 @@
 // Rebuilds the Compose twin's Wasm distribution and syncs it into
-// public/portfolio-app, which is the live demo the /project/portfolio page
+// heavy/portfolio-app, which is the live demo the /project/portfolio page
 // embeds in a device frame.
 //
 // WHY THIS EXISTS. Until 2026-09-01 there was no script. The embedded build was
@@ -23,7 +23,8 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const KMP = join(root, "..", "cv-siddharth-kmp");
-const DEST = join(root, "public", "portfolio-app");
+// Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+const DEST = join(root, "heavy", "portfolio-app");
 const DIST = join(KMP, "cmp-web", "build", "dist", "wasmJs", "productionExecutable");
 
 if (!existsSync(KMP)) {

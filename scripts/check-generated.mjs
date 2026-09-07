@@ -36,7 +36,7 @@
 //     before it can count a page. That is a LIVE SOURCE, and the rule at the
 //     top of this comment already excludes those — it was classified by running
 //     it on a laptop where the cache and poppler both happened to exist. The
-//     committed pages under public/excelsior/pages are tracked and stable; it
+//     committed pages under heavy/excelsior/pages are tracked and stable; it
 //     is the fetch, not the artifact, that cannot be reproduced.
 //
 // Adding a generator forces the choice: deterministic goes here, live gets an

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { anthology, anthologyEntries, entriesOfSeason, entryBySlug } from "./anthology.ts";
 import { BANNED, RESIDUE, walk } from "./proseGuards.ts";
+import { HEAVY_ASSET_BASE } from "../lib/assetBase.ts";
+
+// Escaped once, used everywhere below: the plates and witness art moved off
+// Vercel onto GitHub Pages (see src/lib/assetBase.ts), so an asset path is now
+// HEAVY_ASSET_BASE-prefixed rather than root-relative.
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const heavyRe = escapeRe(HEAVY_ASSET_BASE);
 
 // Every generated entry closes with exactly one "\n\n---\n\n" before its
 // Terminologies block (read.$slug.tsx names this shape too, and splits on
@@ -75,16 +82,16 @@ describe("anthology data", () => {
     expect(entryBySlug(slugs[0])?.slug).toBe(slugs[0]);
   });
 
-  it("points every asset path at public/, not at the source repo", () => {
+  it("points every asset path at this site's own heavy-asset host, not at the source repo", () => {
     for (const e of anthologyEntries) {
-      if (e.plate) expect(e.plate, e.slug).toMatch(/^\/p\/anthology\//);
+      if (e.plate) expect(e.plate, e.slug).toMatch(new RegExp(`^${heavyRe}/p/anthology/`));
     }
     // An undrawn teller carries art: "". The record still ships, because law
     // five is about who told it and a missing drawing is not a missing teller,
     // and the site renders that as a deliberate card. So the rule is: IF there
-    // is a path, it points at public/. The same shape as the plate check above,
-    // which has always allowed a plate to be missing.
-    for (const w of anthology.witnesses) if (w.art) expect(w.art, w.id).toMatch(/^\/p\/anthology\//);
+    // is a path, it points at HEAVY_ASSET_BASE. The same shape as the plate
+    // check above, which has always allowed a plate to be missing.
+    for (const w of anthology.witnesses) if (w.art) expect(w.art, w.id).toMatch(new RegExp(`^${heavyRe}/p/anthology/`));
   });
 
   it("gives every witness a name and something they did", () => {
@@ -97,7 +104,7 @@ describe("anthology data", () => {
   it("hangs each witness off an entry that exists", () => {
     const withWitness = anthologyEntries.filter((e) => e.witness);
     expect(withWitness.length).toBeGreaterThan(0);
-    for (const e of withWitness) if (e.witness?.art) expect(e.witness.art).toMatch(/^\/p\/anthology\/witnesses\//);
+    for (const e of withWitness) if (e.witness?.art) expect(e.witness.art).toMatch(new RegExp(`^${heavyRe}/p/anthology/witnesses/`));
   });
 });
 

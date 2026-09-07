@@ -6,8 +6,67 @@ import tailwindcss from "@tailwindcss/vite";
 import { config as loadEnv } from "dotenv";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { gzipSync } from "node:zlib";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
 loadEnv({ path: ".env.local" });
+
+// Same extensions this repo actually ships under heavy/ — the Wasm demos,
+// screenshots/showcase films, Excelsior pages, OG cards. Not a general-purpose
+// static server; see heavyAssetsDevPlugin below.
+const MIME: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".pck": "application/octet-stream",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".mp4": "video/mp4",
+  ".m4a": "audio/mp4",
+  ".vtt": "text/vtt; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+/**
+ * Serves the top-level `heavy/` directory — the Wasm demos, project
+ * screenshots/showcase films, Excelsior page scans and OG cards moved off
+ * Vercel onto GitHub Pages (see src/lib/assetBase.ts) — under Vite dev/preview
+ * ONLY when VITE_HEAVY_ASSET_BASE resolves same-origin (unset in prod, so this
+ * middleware is a no-op there; set to "/" locally to develop without network).
+ *
+ * `heavy/` sits outside `public/` on purpose, so Vite's own static-asset
+ * copy/serve never touches it — the whole point is that these 251 MB never
+ * ride along with an ordinary build. This is the one place that deliberately
+ * reaches back into it, and only for local dev.
+ */
+function heavyAssetsDevPlugin(): Plugin {
+  const root = join(import.meta.dirname, "heavy");
+  const sameOrigin = (process.env.VITE_HEAVY_ASSET_BASE ?? "") === "/";
+  const handler = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+    if (!sameOrigin) return next();
+    const url = (req.url ?? "").split("?")[0];
+    const path = join(root, decodeURIComponent(url));
+    if (!path.startsWith(root) || !existsSync(path) || !statSync(path).isFile()) return next();
+    res.setHeader("content-type", MIME[extname(path).toLowerCase()] ?? "application/octet-stream");
+    createReadStream(path).pipe(res);
+  };
+  return {
+    name: "heavy-assets-dev",
+    configureServer(server) {
+      server.middlewares.use(handler);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(handler);
+    },
+  };
+}
 
 /**
  * Serves /api/chat during local dev with the same web-standard handler
@@ -180,5 +239,6 @@ export default defineConfig(async () => ({
     // Makes `vite preview` (what Lighthouse CI measures) send the SSR document
     // compressed, the way production does.
     gzipPreviewHtmlPlugin(),
+    heavyAssetsDevPlugin(),
   ],
 }));

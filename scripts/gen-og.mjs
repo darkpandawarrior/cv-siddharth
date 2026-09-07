@@ -2,7 +2,7 @@
 // preview (title, blurb, art) instead of the one generic site image.
 //
 // For each project with a detail page (plus résumé + writing) it emits one
-// crawler-facing artifact under public/p/<slug>/:
+// crawler-facing artifact under heavy/p/<slug>/:
 //   • og.png — a branded 1200×630 card, rasterized from an HTML template with
 //              the pre-installed headless Chromium (no runtime dep; Vercel
 //              just serves the committed PNG).
@@ -127,7 +127,8 @@ function cropPngTop(buf, keepH) {
 }
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const outRoot = join(root, "public", "p");
+// Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
+const outRoot = join(root, "heavy", "p");
 const SITE = "https://cv-siddharth.vercel.app";
 
 // Shared with gen-project-heroes.mjs — and now includes macOS, where this list
@@ -307,7 +308,7 @@ mkdirSync(tmp, { recursive: true });
 
 let pngs = 0;
 
-// Per-project + a couple of site-level og.png cards under public/p/<slug>/.
+// Per-project + a couple of site-level og.png cards under heavy/p/<slug>/.
 for (const s of projectTargets.concat(siteSurfaces.filter((s) => s.deep))) {
   const dir = join(outRoot, s.slug);
   mkdirSync(dir, { recursive: true });

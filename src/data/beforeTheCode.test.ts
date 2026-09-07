@@ -25,7 +25,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 describe("board profiles cite a page a reader can actually open", () => {
   it("has a scanned page on disk for every profile", () => {
     const missing = boardProfiles
-      .map((p) => ({ p, file: `public/excelsior/pages/${p.year}/p${String(p.page).padStart(3, "0")}.webp` }))
+      .map((p) => ({ p, file: `heavy/excelsior/pages/${p.year}/p${String(p.page).padStart(3, "0")}.webp` }))
       .filter(({ file }) => !existsSync(join(root, file)))
       .map(({ p, file }) => `${p.year} "${p.title}" → ${file}`);
     expect(missing, `profile citing a page that is not in the scans: ${missing.join(", ")}`).toEqual([]);
@@ -85,7 +85,7 @@ describe("board profiles cite a page a reader can actually open", () => {
 describe("excelsior marks point at things that exist", () => {
   it("cites a scanned page that is on disk", () => {
     const missing = excelsiorMarks
-      .map((m) => ({ m, file: `public/excelsior/pages/${m.year}/p${String(m.page).padStart(3, "0")}.webp` }))
+      .map((m) => ({ m, file: `heavy/excelsior/pages/${m.year}/p${String(m.page).padStart(3, "0")}.webp` }))
       .filter(({ file }) => !existsSync(join(root, file)))
       .map(({ m, file }) => `${m.year} "${m.label}" → ${file}`);
     expect(missing, `mark citing a page that is not in the scans: ${missing.join(", ")}`).toEqual([]);
