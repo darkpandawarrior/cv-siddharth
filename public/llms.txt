@@ -76,6 +76,9 @@ Series: Chain Of Custody (4), Crossing The Schema (1), Ghosts In The Recompositi
 
 Published so far:
 
+- "collectAsState is quietly leaking your work": https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0
+- "expect/actual is the wrong default in KMP": https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p
+- "Your LazyColumn recomposes on every scroll": https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj
 - "The 5-second window that crashes your service": https://dev.to/darkpandawarrior/the-5-second-window-that-crashes-your-service-5cmm
 - "CancellationException is not an assassin": https://dev.to/darkpandawarrior/cancellationexception-is-not-an-assassin-2220
 - "Teaching a phone to disbelieve its own GPS": https://dev.to/darkpandawarrior/teaching-a-phone-to-disbelieve-its-own-gps-cip

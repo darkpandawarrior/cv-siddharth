@@ -97,7 +97,7 @@
   </entry>
   <entry>
     <title>collectAsState is quietly leaking your work</title>
-    <link href="https://cv-siddharth.vercel.app/loopdown#collectasstate-leak" rel="alternate"/>
+    <link href="https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0" rel="alternate"/>
     <id>https://cv-siddharth.vercel.app/loopdown#collectasstate-leak</id>
     <published>2026-07-31T00:00:00Z</published>
     <updated>2026-07-31T00:00:00Z</updated>
@@ -105,7 +105,7 @@
   </entry>
   <entry>
     <title>expect/actual is the wrong default in KMP</title>
-    <link href="https://cv-siddharth.vercel.app/loopdown#kmp-expect-actual-default" rel="alternate"/>
+    <link href="https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p" rel="alternate"/>
     <id>https://cv-siddharth.vercel.app/loopdown#kmp-expect-actual-default</id>
     <published>2026-07-29T00:00:00Z</published>
     <updated>2026-07-29T00:00:00Z</updated>
@@ -113,7 +113,7 @@
   </entry>
   <entry>
     <title>Your LazyColumn recomposes on every scroll</title>
-    <link href="https://cv-siddharth.vercel.app/loopdown#lazycolumn-recomposition" rel="alternate"/>
+    <link href="https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj" rel="alternate"/>
     <id>https://cv-siddharth.vercel.app/loopdown#lazycolumn-recomposition</id>
     <published>2026-07-24T00:00:00Z</published>
     <updated>2026-07-24T00:00:00Z</updated>
