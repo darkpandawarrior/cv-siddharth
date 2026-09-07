@@ -2,6 +2,18 @@ name: Lighthouse CI
 on:
   push: { branches: [main] }
   pull_request:
+  # Manual calibration runs (arch-L13): re-measure lighthouserc.json's
+  # thresholds against this same 2-core runner without waiting on a push.
+  # skip_e2e exists only for that lane — the e2e suite has its own, unrelated
+  # pre-existing failure (a route-tree warning, not a CWV concern) and every
+  # calibration dispatch pays its several minutes for zero extra signal about
+  # Lighthouse numbers. push/pull_request runs always run both suites.
+  workflow_dispatch:
+    inputs:
+      skip_e2e:
+        description: "Skip the e2e step (calibration-only run)"
+        type: boolean
+        default: false
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -23,11 +35,29 @@ jobs:
       # for both. Running it in its own workflow would mean a second vite build
       # on every PR for no extra signal.
       - name: End-to-end tests
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
         run: npm run test:e2e
 
       - name: Lighthouse
         if: ${{ !cancelled() }}
         run: npx @lhci/cli autorun
+
+      # Summarises whatever .lighthouseci/ this run just produced into the
+      # generated data file /ops reads (scripts/gen-lighthouse-summary.mjs).
+      # Runs even when the assertions above failed — a red run is exactly the
+      # one whose numbers most need to reach the board.
+      - name: Lighthouse summary
+        if: ${{ !cancelled() }}
+        run: node scripts/gen-lighthouse-summary.mjs
+
+      - name: Upload Lighthouse summary
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: lighthouse-summary
+          path: src/data/generated/lighthouse.ts
+          retention-days: 14
 
       - name: Upload Playwright report
         if: ${{ failure() }}

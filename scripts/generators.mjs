@@ -214,6 +214,14 @@ export const GENERATORS = [
   // script above already rendered and committed.
   { id: "excelsior-text", script: "gen-excelsior-text.mjs", npmName: null, kind: "local",
     inputs: ["heavy/excelsior/pages/**"], outputs: ["heavy/excelsior/text/*.json"], stages: {} },
+  // Manual/occasional in the same sense as the four above, but for a
+  // different reason: its one real input (.lighthouseci/, gitignored) only
+  // exists right after a Lighthouse run, so it structurally cannot run
+  // before prebuild/predev, refresh.mjs or check-generated.mjs — it runs
+  // from .github/workflows/lighthouse.yml, straight after `npx @lhci/cli
+  // autorun`, not from any of the three chains this file feeds.
+  { id: "lighthouse-summary", script: "gen-lighthouse-summary.mjs", npmName: "gen:lighthouse-summary", kind: "local",
+    inputs: [], outputs: ["src/data/generated/lighthouse.ts"], stages: {} },
 ];
 
 // Fold freshnessSla.ts's SLA_DAYS in as a field on the node that owns each
