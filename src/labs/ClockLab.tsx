@@ -92,13 +92,13 @@ export function ClockLab() {
 
             <path d={GAP_PATH} fill="rgba(94,230,255,0.10)" />
 
-            <path d={LOSS_PATH} fill="none" stroke="#5ee6ff" strokeWidth="2" strokeDasharray="6 4" />
-            <path d={WIN_PATH} fill="none" stroke="#3ddc84" strokeWidth="2" />
+            <path d={LOSS_PATH} fill="none" stroke="#4fd6e0" strokeWidth="2" strokeDasharray="6 4" />
+            <path d={WIN_PATH} fill="none" stroke="#f2a13d" strokeWidth="2" />
 
             {deciles.map((d) => (
               <g key={d.bucket}>
-                <circle cx={xAt(d.bucket)} cy={yAt(d.win)} r={d.bucket === bucket ? 4 : 2.5} fill="#3ddc84" />
-                <circle cx={xAt(d.bucket)} cy={yAt(d.loss)} r={d.bucket === bucket ? 4 : 2.5} fill="#5ee6ff" />
+                <circle cx={xAt(d.bucket)} cy={yAt(d.win)} r={d.bucket === bucket ? 4 : 2.5} fill="#f2a13d" />
+                <circle cx={xAt(d.bucket)} cy={yAt(d.loss)} r={d.bucket === bucket ? 4 : 2.5} fill="#4fd6e0" />
               </g>
             ))}
 
@@ -127,16 +127,16 @@ export function ClockLab() {
               max={deciles.length - 1}
               value={bucket}
               onChange={(e) => setBucket(Number(e.target.value))}
-              className="h-1 w-40 accent-signal"
+              className="h-1 w-40 accent-accent"
               aria-label="Game progress decile"
               aria-valuetext={summary}
             />
             <span className="text-zinc-400">{band(bucket)}</span>
           </label>
           <span className="font-mono text-xs">
-            <span className="text-signal">won — {pct(here.win)} left</span>
+            <span className="text-accent">won — {pct(here.win)} left</span>
             <span className="text-muted"> · </span>
-            <span className="text-probe">lost (dashed) — {pct(here.loss)} left</span>
+            <span className="text-accent2">lost (dashed) — {pct(here.loss)} left</span>
             <span className="text-muted"> · gap {pts(here.gap)}</span>
           </span>
           <Link to="/chess" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">

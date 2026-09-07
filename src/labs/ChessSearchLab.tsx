@@ -19,8 +19,8 @@ import type { TreeEdge } from "../chess/search.ts";
  * engine has never played a rated pool.
  */
 
-const ACCENT = "#3ddc84";
-const CHOSEN = "rgba(61, 220, 132, 0.34)";
+const ACCENT = "#f2a13d";
+const CHOSEN = "rgba(242, 161, 61, 0.34)";
 const DIM = "rgba(148, 163, 184, 0.18)";
 const CHOSEN_LINE_WIDTH = 2.2;
 
@@ -274,7 +274,7 @@ export function ChessSearchLab() {
               max={MEDIAN_GAME}
               value={moveNumber}
               onChange={(e) => setMoveNumber(Number(e.target.value))}
-              className="h-1 w-32 accent-signal"
+              className="h-1 w-32 accent-accent"
               aria-label="Move number — sets the clock budget the search is allowed"
               aria-valuetext={`move ${moveNumber} of a ${MEDIAN_GAME}-move game, ${budget} millisecond budget`}
             />

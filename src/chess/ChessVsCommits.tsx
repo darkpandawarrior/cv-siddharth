@@ -24,8 +24,8 @@ import type { Corpus } from "../lib/useCorpus.ts";
  * loop, and a static chart has nothing for prefers-reduced-motion to honour.
  */
 
-const GAMES = "#3ddc84";
-const COMMITS = "#5ee6ff";
+const GAMES = "var(--color-accent)";
+const COMMITS = "var(--color-accent2)";
 const WINRATE = "#E8C874";
 
 const W = 680;

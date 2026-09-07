@@ -20,7 +20,23 @@
      These were hardcoded across the 3D/canvas scenes, which is why a theme swap
      never reached them: r3f props and canvas ctx take resolved strings, not
      var(). Read them through readColor() in themeColor.ts, never inline.
-     Frequencies are the pre-migration hardcoded counts, kept as a receipt. */
+     Frequencies are the pre-migration hardcoded counts, kept as a receipt.
+
+     RULING (inc4-superseded-note): this is its OWN system, not a CAL-1 alias.
+     signal/probe/warn/alt/danger are the world's four-lane identity (see
+     world/palette.ts's laneColors — work/chess/writing/opensource each need a
+     visibly distinct hue, gated for colour-vision separation by
+     scripts/validate_palette.js), which CAL-1's two-channel measured/baseline
+     model has no room for without collapsing two of those four lanes onto one
+     amber (palette.test.ts already pins the four-lanes-stay-four-lanes
+     invariant). .ink-world overrides both systems independently and gives them
+     DIFFERENT hex values (accent #d9a441 vs signal #e3a83c) — proof they are
+     two systems, not one under two names. So: the 3D/canvas scenes keep
+     reading --color-signal/--color-probe as they already do; the CAL-1 sweep
+     (accent/accent2) never touches them. What the sweep DOES fix is scenes
+     that skipped the token entirely and still hold a raw #3ddc84/#5ee6ff
+     literal — those move to read the SAME scene tokens via readToken()/
+     readColor(), never to accent/accent2. */
   --color-signal: #3ddc84; /* 71x — "lit/live/active" in every scene */
   --color-signal-dim: #8ff0b4; /* 7x — the same signal, attenuated */
   --color-probe: #5ee6ff; /* 43x — unlit/idle counterpart to signal */
@@ -775,6 +791,10 @@ html.resume-mode .palette-trigger {
 }
 .cell-flash-bad { animation: cell-flash-bad 0.5s ease-out both; }
 .cell-flash-good { animation: cell-flash-good 0.6s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .cell-flash-bad,
+  .cell-flash-good { animation: none; }
+}
 
 /* Circuit divider: a signal pulse traveling the seam between sections */
 .circuit-line {

@@ -1,11 +1,9 @@
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
-import { Color, MathUtils } from "three";
+import { MathUtils } from "three";
 import type { Group, Mesh, MeshBasicMaterial } from "three";
-
-const GREEN = new Color("#3ddc84");
-const CYAN = new Color("#5ee6ff");
+import { readColor, readToken } from "./themeColor";
 
 /** 0..1 scroll progress through the whole document, read cheaply per frame. */
 function scrollProgress() {
@@ -52,14 +50,14 @@ function Shard({ pos, scale, speed, kind }: (typeof SHARDS)[number]) {
     m.rotation.y += delta * speed * 1.4;
     // Parallax: deeper shards climb slower.
     m.position.y = pos[1] + p * (2.2 / -pos[2]) * 3;
-    if (mat.current) mat.current.color.copy(GREEN).lerp(CYAN, p);
+    if (mat.current) mat.current.color.copy(readColor("--color-signal", "#3ddc84")).lerp(readColor("--color-probe", "#5ee6ff"), p);
   });
   return (
     <mesh ref={mesh} position={pos} scale={scale}>
       {kind === "ico" && <icosahedronGeometry args={[1, 0]} />}
       {kind === "torus" && <torusKnotGeometry args={[0.7, 0.18, 64, 8, 2, 3]} />}
       {kind === "octa" && <octahedronGeometry args={[1, 0]} />}
-      <meshBasicMaterial ref={mat} wireframe transparent opacity={0.1} color={GREEN} />
+      <meshBasicMaterial ref={mat} wireframe transparent opacity={0.1} color={readToken("--color-signal", "#3ddc84")} />
     </mesh>
   );
 }

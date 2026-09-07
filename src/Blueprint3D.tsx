@@ -303,7 +303,7 @@ const terminalGreen = () => readToken("--color-signal", "#3ddc84");
 function NodeCard({ node, ascii, reducedMotion }: { node: NodeSpec; ascii: boolean; reducedMotion: boolean }) {
   const c = centerOf(node);
   const pos = worldPosAt(c.x, c.y);
-  const color = ascii ? terminalGreen() : (COLOR_HEX[node.color] ?? "#3ddc84");
+  const color = ascii ? terminalGreen() : (COLOR_HEX[node.color] ?? terminalGreen());
   return (
     <Float speed={reducedMotion ? 0 : 1.4} rotationIntensity={reducedMotion ? 0 : 0.12} floatIntensity={reducedMotion ? 0 : 0.6}>
       <Html transform position={pos} distanceFactor={8} occlude="blending">
@@ -348,15 +348,15 @@ function MetricTile({ m, ascii, reducedMotion }: { m: (typeof METRICS)[number]; 
             padding: "10px 16px",
             borderRadius: ascii ? 0 : 14,
             background: "#000",
-            border: `1px solid ${ascii ? terminalGreen() : "rgba(61,220,132,0.4)"}`,
-            boxShadow: ascii ? "none" : "0 0 30px -10px rgba(61,220,132,0.5)",
+            border: `1px solid ${ascii ? terminalGreen() : "color-mix(in srgb, var(--color-signal) 40%, transparent)"}`,
+            boxShadow: ascii ? "none" : "0 0 30px -10px color-mix(in srgb, var(--color-signal) 50%, transparent)",
             fontFamily: "var(--font-mono)",
           }}
         >
           <div style={{ fontSize: 24, fontWeight: 700, color: terminalGreen(), lineHeight: 1.1 }}>
             <CountUp value={m.value} />
           </div>
-          <div style={{ fontSize: 10, color: ascii ? "rgba(61,220,132,0.6)" : "rgba(232,239,233,0.6)", marginTop: 4 }}>{m.label}</div>
+          <div style={{ fontSize: 10, color: ascii ? "color-mix(in srgb, var(--color-signal) 60%, transparent)" : "rgba(232,239,233,0.6)", marginTop: 4 }}>{m.label}</div>
         </div>
       </Html>
     </Float>
@@ -402,8 +402,8 @@ function ImagePin({ pin, ascii, reducedMotion }: { pin: (typeof PINS)[number]; a
           style={{
             width: pin.w * 0.5,
             borderRadius: ascii ? 0 : 10,
-            border: `1px solid ${ascii ? terminalGreen() : "rgba(94,230,255,0.4)"}`,
-            boxShadow: ascii ? "none" : "0 0 30px -8px rgba(94,230,255,0.5)",
+            border: `1px solid ${ascii ? terminalGreen() : "color-mix(in srgb, var(--color-probe) 40%, transparent)"}`,
+            boxShadow: ascii ? "none" : "0 0 30px -8px color-mix(in srgb, var(--color-probe) 50%, transparent)",
             display: "block",
             // Fakes a monochrome-green terminal readout for a real screenshot —
             // there's no way to run an <img> through the WebGL ascii shader.
@@ -553,7 +553,7 @@ function Scene({
             key={`${a}-${b}`}
             from={worldPosAt(ca.x, ca.y)}
             to={worldPosAt(cb.x, cb.y)}
-            color={COLOR_HEX[color] ?? "#3ddc84"}
+            color={COLOR_HEX[color] ?? terminalGreen()}
           />
         );
       })}

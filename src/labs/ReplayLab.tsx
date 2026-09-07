@@ -155,7 +155,7 @@ export function ReplayLab() {
       // leaves the path stale, and replay B always reflects the live
       // isPerturbed flag with no separate rebuild bookkeeping.
       const pathA = replay(RECORDED, width, height);
-      drawSegment(pathA, 0, pathA.length - 1, "#3ddc84");
+      drawSegment(pathA, 0, pathA.length - 1, "#f2a13d");
 
       if (isPerturbed) {
         const pathB = replay(withPerturbedFrame(RECORDED), width, height);
