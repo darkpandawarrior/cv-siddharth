@@ -47,6 +47,7 @@ import { statLineExtras, badgesBeyondStatus } from "./lib/projectStatLine.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
 import { homeFastPath, homeDeepPath } from "./data/facets.ts";
 import { boardArc } from "./data/beforeTheCode.ts";
+import { BoardProfilesGrid } from "./BoardProfiles.tsx";
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -1125,6 +1126,49 @@ function InkDoorway() {
 }
 
 /**
+ * so-p1-soul-surfaced (site-overhaul-design.md §3.4): EB Profiles as a
+ * registry facet of their own on the Deep path, not a pointer at /ink#board.
+ * facets.ts's `board` facet now points here (`to: "/", hash: "board"`), so
+ * the rail, ⌘K and InstrumentView land a visitor on this section directly
+ * instead of routing them through the ink doorway first.
+ *
+ * The cards are BoardProfiles.tsx's `BoardProfilesGrid` — the same component
+ * /ink's WritingSection renders — so this is reach, not a second copy: /ink
+ * stays the deep home for the magazine and the societies around it, this
+ * section is the direct path in.
+ */
+function EbProfiles() {
+  return (
+    <section id="board" className="border-t border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <Reveal>
+          <p className="section-eyebrow mb-2">// how the board wrote me</p>
+          <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">EB Profiles</h2>
+          <p className="mb-2 max-w-2xl text-zinc-400">
+            Three years on MANIT's Editorial Board closed each edition with EB Profiles: every
+            member gets one question, answered by a teammate impersonating them. Affectionate,
+            unsparing, and not written by me, which is the only reason they're worth reading.
+            Trimmed here to keep other people's names out of it; each card opens the scanned page
+            it came from.
+          </p>
+          <BoardProfilesGrid />
+          <p className="mt-6 max-w-2xl text-sm text-zinc-400">
+            The magazine these came from, and the societies around it, are at{" "}
+            <Link
+              to="/ink"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              The Ink
+            </Link>
+            .
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/**
  * The one "go poke at something" doorway — collapsed from the two teasers
  * (Playground, Chess) that used to sit back to back answering the same
  * impulse. No canvases and no tables here, so it still costs the main scroll
@@ -1198,6 +1242,7 @@ const DEEP_SECTIONS: Record<(typeof homeDeepPath)[number], React.ComponentType> 
   shipped: ShippedShelf,
   source: ReposShowcase,
   skills: Skills,
+  board: EbProfiles,
 };
 
 export function HomePage() {
@@ -1233,9 +1278,9 @@ export function HomePage() {
         <InkDoorway />
         <Contact />
         {/* Deep path: the mechanism-level evidence (multiplatform proof, the
-            shipped shelf, the repo wall, the full skills cloud) for the
-            visitor who kept scrolling past Contact rather than the one who
-            stopped there. */}
+            shipped shelf, the repo wall, the full skills cloud) plus EB
+            Profiles (so-p1-soul-surfaced) for the visitor who kept scrolling
+            past Contact rather than the one who stopped there. */}
         {homeDeepPath.map((id) => {
           const Section = DEEP_SECTIONS[id];
           return <Section key={id} />;

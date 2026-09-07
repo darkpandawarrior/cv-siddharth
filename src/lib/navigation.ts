@@ -85,7 +85,8 @@ function prefersReducedMotion() {
  * Order now mirrors facets.ts's `homeFastPath` (top through experience),
  * then the fixed surfaces/writing/contact block, then `homeDeepPath` (morph,
  * shipped, source, skills moved past Contact — so-p2, the fast path is seven
- * sections again instead of the fourteen this comment used to describe).
+ * sections again instead of the fourteen this comment used to describe —
+ * plus `board`, so-p1-soul-surfaced's EB Profiles section).
  */
 export const SECTION_ID_LIST = [
   "top",
@@ -101,10 +102,12 @@ export const SECTION_ID_LIST = [
   // Everything below here is the deep path — moved past Contact so a
   // 90-second read ends there instead of 17,800px further down. Order
   // unchanged from when they sat inline: morph, shipped, source, skills.
+  // `board` (EB Profiles) is the newest addition, so-p1-soul-surfaced.
   "morph",
   "shipped",
   "source",
   "skills",
+  "board",
 ] as const;
 
 export type SectionId = (typeof SECTION_ID_LIST)[number];

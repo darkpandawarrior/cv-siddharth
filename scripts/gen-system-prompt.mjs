@@ -159,6 +159,7 @@ const SECTION_LABELS = {
   source: "public repos",
   shipped: "the Play Store shelf",
   surfaces: "every route on the site, as a tile",
+  board: "EB Profiles — the Editorial Board wrote these, not him",
 };
 const sectionList = [...SECTION_IDS].map((id) => `/#${id}${SECTION_LABELS[id] ? ` (${SECTION_LABELS[id]})` : ""}`).join(", ");
 

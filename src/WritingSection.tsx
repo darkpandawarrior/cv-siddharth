@@ -3,8 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { writing } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { ExcelsiorShelf } from "./Excelsior.tsx";
-import { boardProfiles, societies, loopdownOrigin } from "./data/beforeTheCode.ts";
+import { societies, loopdownOrigin } from "./data/beforeTheCode.ts";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
+import { BoardProfilesGrid } from "./BoardProfiles.tsx";
 
 /**
  * The creative half of the writing, mounted on /ink — the archive, the
@@ -150,36 +151,12 @@ export function WritingSection() {
                 <span className="text-zinc-300">…</span> marks every cut, and each card opens the
                 scanned page it came from.
               </p>
-              <div className="mt-6 grid gap-4 md:grid-cols-3">
-                {boardProfiles.map((p) => (
-                  <Link
-                    key={p.year}
-                    to="/excelsior"
-                    search={{ year: Number(p.year), page: p.page }}
-                    className="card-elevated group flex flex-col rounded-2xl border border-line bg-surface p-5 transition hover:border-accent2/50"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
-                      <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
-                    </div>
-                    <p className="kicker mt-1">{p.role}</p>
-                    <p className="mt-3 text-xs italic text-muted">Q: {p.question}</p>
-                    <blockquote className="mt-2 grow text-sm leading-relaxed text-zinc-300">"{p.quote}"</blockquote>
-                    <p className="mt-3 font-mono text-[11px] text-muted">
-                      ~「{p.direction}」~{p.gloss ? ` · ${p.gloss}` : ""}
-                    </p>
-                    {/* The card has always linked to the scan; nothing said so,
-                        so the one thing that could verify these quotes was an
-                        invisible affordance. A trimmed quote is only honest if
-                        the untrimmed one is reachable, and reachable means
-                        someone can tell it is there. Not a nested <a> — the
-                        whole card is already the link. */}
-                    <span className="kicker mt-4 transition group-hover:text-accent2">
-                      Excelsior &rsquo;{p.year.slice(2)} · page {p.page} &rarr;
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              {/* The cards themselves live in BoardProfiles.tsx now — shared
+                  with the homepage's own EB Profiles section
+                  (so-p1-soul-surfaced, App.tsx's `EbProfiles`), so the two
+                  rooms render the identical grid rather than two copies that
+                  can drift. */}
+              <BoardProfilesGrid />
             </div>
 
             {/* The two societies, and what they published. */}

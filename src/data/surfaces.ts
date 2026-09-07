@@ -6,7 +6,7 @@
 //
 //   facets.ts  — moments in a chronology. Keyed by `id`, carries ISO
 //                `authored`/`discovered` dates, and includes intra-page
-//                anchors (`/#work`, `/ink#board`). Feeds the anomaly rail,
+//                anchors (`/#work`, `/#board`). Feeds the anomaly rail,
 //                railGeometry and InstrumentView.
 //   surfaces.ts — destinations. Keyed by route path, carries the presentation
 //                a tile needs (group, device, tint). Feeds the wall, the
@@ -381,8 +381,10 @@ const pageSurfaces: SurfaceInput[] = [
     group: "writing",
     tint: INK_OCHRE,
     device: "tablet",
-    // The rail's "board" entry is /ink#board — same destination, and it owns
-    // the 2019-authored / 2026-discovered pair.
+    // so-p1-soul-surfaced moved the rail's "board" entry to point at the
+    // homepage's own EB Profiles section instead of here — this railId only
+    // borrows its 2019-authored / 2026-discovered pair for the tile's date
+    // stamp; /ink still hosts the full write-up (BoardProfiles.tsx).
     railId: "board",
   },
   {

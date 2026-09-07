@@ -30,7 +30,12 @@ export const facets: Facet[] = [
     discovered: "2026-08-13" },
   { id: "excelsior", label: "Excelsior", to: "/excelsior", authored: "2021-06-15",
     discovered: "2026-07-10" },
-  { id: "board", label: "EB Profiles", to: "/ink", hash: "board", authored: "2019-05-09",
+  // so-p1-soul-surfaced: this used to point at /ink#board, so a visitor never
+  // reached the EB Profiles without first routing through the ink doorway.
+  // It now points at the homepage's own EB Profiles section (App.tsx's
+  // `EbProfiles`, homeDeepPath below) — a registry facet of its own, per
+  // site-overhaul-design.md §3.4. /ink still hosts the full write-up.
+  { id: "board", label: "EB Profiles", to: "/", hash: "board", authored: "2019-05-09",
     discovered: "2026-07-10" },
   { id: "chess", label: "Chess corpus", to: "/chess", authored: "2026-07-30",
     discovered: "2026-07-30" },
@@ -60,9 +65,11 @@ export const facets: Facet[] = [
  * (site-overhaul-design.md, "three paths, one page" — Fast). `homeDeepPath`:
  * the evidence sections (device/platform proof, the shipped shelf, the repo
  * wall, skills) that used to be interleaved with the fast path, now placed
- * after it so a 90-second read ends at Contact instead of a 14,000px scroll.
- * They're still on `/`, still in the DOM, just past the fold a satisfied
- * recruiter doesn't have to cross.
+ * after it so a 90-second read ends at Contact instead of a 14,000px scroll,
+ * plus `board` (so-p1-soul-surfaced, §3.4) — the EB Profiles, promoted onto
+ * this path rather than left reachable only from /ink. They're still on `/`,
+ * still in the DOM, just past the fold a satisfied recruiter doesn't have
+ * to cross.
  */
 export const homeFastPath = ["hero", "metrics", "fit", "casestudies", "projects", "experience"] as const;
-export const homeDeepPath = ["morph", "shipped", "source", "skills"] as const;
+export const homeDeepPath = ["morph", "shipped", "source", "skills", "board"] as const;
