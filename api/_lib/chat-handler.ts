@@ -57,7 +57,10 @@ interface ChatRequest {
 // page must not be able to use it as a free LLM proxy from a visitor's browser.
 // ---------------------------------------------------------------------------
 
-const SITE_ORIGIN = "https://cv-siddharth.vercel.app";
+// Both production hosts: the project was renamed to siddharth-pandalai on
+// 2026-09-07 and cv-siddharth.vercel.app stays as a second alias while every
+// link out there still points at it.
+const SITE_ORIGINS = new Set(["https://siddharth-pandalai.vercel.app", "https://cv-siddharth.vercel.app"]);
 const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 
 /**
@@ -79,7 +82,7 @@ export function isAllowedOrigin(
   origin: string,
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  if (origin === SITE_ORIGIN || LOCAL_ORIGIN.test(origin)) return true;
+  if (SITE_ORIGINS.has(origin) || LOCAL_ORIGIN.test(origin)) return true;
   for (const host of [env.VERCEL_URL, env.VERCEL_BRANCH_URL, env.VERCEL_PROJECT_PRODUCTION_URL]) {
     if (host && origin === `https://${host}`) return true;
   }
