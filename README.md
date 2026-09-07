@@ -260,7 +260,7 @@ specific shape:
 
 ```bash
 npm test          # 1183 unit tests across 103 files (vitest)
-npm run test:e2e  # 157 Playwright tests across 16 files, every registry route
+npm run test:e2e  # 237 Playwright tests across 16 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

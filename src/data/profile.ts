@@ -464,6 +464,22 @@ export interface ProjectDetailData {
   diagrams?: { title: string; code: string }[];
   // Optional roster (e.g. Gaddi's six roles), rendered as a colour-coded grid.
   roles?: { name: string; power: string; color: string }[];
+
+  /** The 30-second version. Optional — projects without it just skip the
+   *  CaseSpine section and render exactly as they do today. Mirrors the
+   *  problem/approach/outcome shape already proven on `caseStudies` (the
+   *  career-achievements data) — same pattern, not a new one. */
+  problem?: string;
+  decision?: string;
+  outcome?: string;
+  /** Which metrics[] entry is the spine's headline number (index into the
+   *  existing `metrics` array — no duplicated number to drift out of sync). */
+  outcomeMetricIndex?: number;
+  /** Evidence shot for the result beat — a filename from `screens` (or, for
+   *  projects without a curated `screens` list, any src already in the
+   *  auto-generated gallery). Excluded from ScreenMarquee's row so it isn't
+   *  shown twice, seconds apart. */
+  outcomeScreenshot?: string;
 }
 
 // One codebase, N surfaces — the multiplatform thesis, made data-driven.
@@ -643,6 +659,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         "Gaddi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair, the Gaddi, and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"सब मिले हुए हैं\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
+      problem:
+        "A hidden-information bluffing game handed every player the same expert board on turn one, suspicion odds and a live teleprinter log included, which is exactly the kind of interface that loses a first-timer before their first bluff.",
+      decision:
+        "Split the board into three density layers a player graduates through by playing, not a settings toggle: FOCUS shows only whose turn it is, one plain-language line, and your legal moves; GUIDED adds coaching; ANALYST is the full instrument panel.",
+      outcome:
+        "All three layers, the AI, and a future server read the same deterministic (GameState, Intent) → GameState engine: the density decision is a UI skin, not a fork in the rules.",
+      outcomeMetricIndex: 0,
+      outcomeScreenshot: "4p_pick_action.png",
       sections: [
         {
           heading: "Deterministic engine",
@@ -859,6 +883,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         "Doori is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, offline-first with a real Kotlin/Ktor backend built in and off by default, so the whole thing stays reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
+      problem:
+        "A reimbursement claim is only as good as the distance it's built on, and raw GPS drifts in urban canyons, tunnels and behind OEM-throttled updates: a policy engine downstream can't approve a payout against a number that noisy.",
+      decision:
+        "Treat GPS as a noisy signal rather than ground truth: jitter suppression, spike detection to reject physically impossible fixes, IMU (accelerometer) fusion and device-tier-adaptive sampling feed a four-bucket distance accumulator, with a deterministic simulated-drive source so the whole pipeline is unit-testable without hardware.",
+      outcome:
+        "That same location engine now backs a real reimbursement-rate policy engine and a durable submit-outbox, shipping across all five targets from one Kotlin codebase, with a real Kotlin/Ktor server landed on top, sharing typed DTOs with the client, off by default.",
+      outcomeMetricIndex: 2,
+      outcomeScreenshot: "tracking_success_screen.png",
       sections: [
         {
           heading: "46-module clean architecture (36 local + 10 composed)",
@@ -1088,6 +1120,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab-KMP runs real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
+      problem:
+        "Every payment gateway ships a different, mostly Activity-callback-era SDK, and the client can lie about the outcome: the logic that actually decides whether money moved (signatures, webhooks, idempotency, recovery) has to live somewhere the client can't fake it.",
+      decision:
+        "Put a Ktor server between the client and the truth: order creation, signature verification and webhook reconciliation happen there, a Room journal is written before the SDK even launches so a process death mid-payment is always recoverable, and a redaction layer keeps every secret and PII out of logs and screens.",
+      outcome:
+        "66 cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.",
+      outcomeMetricIndex: 1,
+      outcomeScreenshot: "payment_flow_diagram_verified.png",
       sections: [
         {
           heading: "The one idea worth stealing",
@@ -1241,6 +1281,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
+      problem:
+        "career-ops's scoring engine lived in a single Node.js process. Proving the same logic could run identically on a phone, in a browser tab and on a server meant more than porting the syntax: it meant the scoring could not quietly drift from the original the moment it moved.",
+      decision:
+        "Port core:engine (A-F fit scoring, ATS search, SimHash fingerprinting, funnel math) as a no-IO module, then verify it against career-ops's own test vectors rather than trust a rewrite by inspection, the same zero-token discipline the upstream project already applies to keeping LLM cost off the hot path.",
+      outcome:
+        "One verified engine now drives five targets (Android, iOS, Desktop, Web and a Spring Boot 4 server) from 25 Kotlin Multiplatform modules, and 24 of the correctness fixes the port surfaced have already merged back upstream to the public career-ops project.",
+      outcomeMetricIndex: 0,
+      outcomeScreenshot: "board_screen.png",
       sections: [
         {
           heading: "One engine, five targets",
@@ -1375,6 +1423,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. The React version renders everything from one TypeScript file of profile data, which is also what the AI assistant, the résumé, the OG images and the two /llms.txt files are generated from, so none of them can disagree with each other. The Compose twin transcribes that file by hand, which is a different contract and a weaker one.",
+      problem:
+        "Claiming Compose Multiplatform reaches the web is easy to assert and hard to check: a screenshot of a cross-platform build proves nothing that a screenshot of anything else doesn't.",
+      decision:
+        "Build the same portfolio twice on purpose: the React 19 original stays the tuned, production site, and a from-scratch Compose Multiplatform port renders the identical content from one commonMain to Kotlin/Wasm, Desktop, Android and iOS, both built on kmp-app-template, so the comparison is concrete rather than theoretical.",
+      outcome:
+        "The CMP twin actually runs, embedded live in the page you're reading, at an honest cost over the wire, bleeding-edge Kotlin and Compose Multiplatform versions included, so the trade between the two stacks is visible instead of argued.",
+      outcomeMetricIndex: 3,
+      outcomeScreenshot: "cmp_web.png",
       sections: [
         {
           heading: "The React site: how it is put together",
@@ -1551,6 +1607,14 @@ export const projects: Project[] = [
     detail: {
       overview:
         "STUTTER is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
+      problem:
+        "A time-loop mechanic touches cooperative Echoes, ghosts, a leaderboard, an enemy AI and boss desync: five separate systems that could each drift out of sync with what the player actually did, which is exactly how the fiction's own lie (a room that lies about its floor) would become an engineering bug instead of a design choice.",
+      decision:
+        "Record only intent, never position: an InputFrame stores a move vector, jump and dash, replayed through the same fixed-timestep physics step every time, so the same recorded input always reproduces the same state, whether it's a live cooperative Echo, a ghost race, a leaderboard replay or the Hunter's prediction.",
+      outcome:
+        "One deterministic step now backs all five systems unmodified, guarded by a bit-exact determinism gate with zero tolerance that a hook reruns automatically on every edit to the time or player systems, so drift surfaces before playtest, not during it.",
+      outcomeMetricIndex: 0,
+      outcomeScreenshot: "echo-cooperation.webp",
       sections: [
         {
           heading: "Record intent, never position",
@@ -1647,6 +1711,13 @@ export const projects: Project[] = [
     detail: {
       overview:
         "SINC-P rebuilds a 2019 final-year project from scratch: a statutory grievance-redressal system an Indian institution can put in front of a UGC inspector, with a clock on every case and a record nobody can quietly edit. Nothing from 2019 survived the rewrite, not the code, the schema, or the passwords, because almost every line of the original was an ordinary mistake (string-built SQL, unsalted md5, no ownership check on a grievance read) that is still running at real institutions today.",
+      problem:
+        "The 2019 final-year project it replaces ran string-built SQL, unsalted md5 passwords and an IDOR that let any student read another student's grievance by counting upward through the URL. A compliance system that has to survive a UGC inspection cannot carry forward any of that.",
+      decision:
+        "Rebuild from scratch rather than patch it: parameterised queries under Postgres row-level security, scrypt with a per-password salt, an explicit authorization check on every read path, and a hash-chained event log where a retro-edited remark breaks verification at a nameable sequence number, enforced by a database trigger and a revoked privilege, not good intentions.",
+      outcome:
+        "Four independent tenant-isolation layers, including row-level security enforced even against table owners, verified by a script that stands up a throwaway Postgres and actively tries to break every layer rather than trusting isolation from the application side alone.",
+      outcomeScreenshot: "05-compliance.png",
       sections: [
         {
           heading: "A statutory clock that survives an audit",
@@ -1735,6 +1806,13 @@ export const projects: Project[] = [
     detail: {
       overview:
         "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Candidai, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
+      problem:
+        "Four separate consumer apps each needed the same MVI core, the same AGP/Kotlin/Compose build setup and the same starting app shape: building any of that per-app again would be exactly the copy-paste a platform team exists to prevent.",
+      decision:
+        "Split into three decoupled repos instead of one \"platform\" repo (kmp-toolkit, kmp-build-logic, kmp-app-template) so using one never drags the other two along, and extract a module only the moment a second consumer actually needs it, never ahead of demand.",
+      outcome:
+        "Five independent consumers (Doori, PaymentsLab-KMP, Candidai, Gaddi and this portfolio's own Compose Multiplatform twin) now vendor the family via Gradle includeBuild, which is the actual proof the extraction paid off rather than a library nobody uses.",
+      outcomeMetricIndex: 2,
       sections: [
         {
           heading: "kmp-toolkit: 39 modules, extracted, never designed",
@@ -1805,6 +1883,13 @@ export const projects: Project[] = [
     detail: {
       overview:
         `The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. ${lessons.length} lessons across ${writing.series.length} series sit alongside a ${writing.archive.length}-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.`,
+      problem:
+        "A lesson pulled from real production work is only worth writing once if it can reach LinkedIn, dev.to, Hashnode and Medium without being rewritten by hand four times, in four different voices, from scratch.",
+      decision:
+        "Build the adaptation as the product: one lesson goes in, four channel-shaped posts come out, each with its own generated branded SVG card, checked against a voice profile derived from the existing archive by a lint step rather than trusted on read.",
+      outcome:
+        `${published.length} of the ${lessons.length} lessons are out across all four channels so far, with the rest drafted and channel-adapted (status: ready). The engine produces four-channel output every time; the publishing backlog is the honest, unfinished part.`,
+      outcomeMetricIndex: 3,
       sections: [
         {
           heading: "One lesson, four channel-shaped posts",

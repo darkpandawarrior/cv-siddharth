@@ -1,14 +1,22 @@
 import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
+import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { currentRoles } from "../lib/resumeMeta.ts";
 import { surfaces } from "../data/surfaces.ts";
 import { profile, experience, education } from "../data/profile.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
-import AnomalyRail from "../AnomalyRail.tsx";
 import { Launcher } from "../Launcher.tsx";
+// Code-split (its own chunk stops competing with the SSR document + hero
+// bundle) and mounted only after an idle callback (its own React tree stops
+// competing for the main thread during hydration) — see DeferredRail below.
+// The design doc's own words: "The rail is below-the-fold work and mounts
+// after paint." It was a plain top-level import rendered unconditionally
+// with none of that until now.
+const AnomalyRail = lazy(() => import("../AnomalyRail.tsx"));
 import "../index.css";
 // Self-hosted fonts (replaces the old Google Fonts CDN <link>).
 import "@fontsource/space-grotesk/400.css";
@@ -288,6 +296,38 @@ function RegisterServiceWorker() {
   return null;
 }
 
+// Fires Sentry's opt-in init after hydration — same after-mount timing as
+// RegisterServiceWorker above, so a client-only, dependency-loading effect
+// never runs during SSR or blocks the first paint. No-ops with zero network
+// activity when VITE_SENTRY_DSN is unset (see src/lib/monitoring.ts).
+function InitMonitoring() {
+  useEffect(() => {
+    void initMonitoring();
+  }, []);
+  return null;
+}
+
+/** Gates AnomalyRail's mount to after the browser has painted. `requestIdleCallback`
+ *  (with a `setTimeout` fallback for Safari, which has none) fires only once the
+ *  main thread is free after the current frame, which is after paint by
+ *  construction; `false` on the server and through hydration means the SSR
+ *  document and the first client render agree there's nothing here yet. */
+function DeferredRail() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
+    const cic = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = ric(() => setReady(true));
+    return () => cic(id);
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <AnomalyRail />
+    </Suspense>
+  );
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
@@ -345,7 +385,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             the skip link still jumps past it, and it renders nothing at all
             until something calls openLauncher(). */}
         <Launcher />
-        <AnomalyRail />
+        <DeferredRail />
         {/* Global, like the two above. It was mounted in three places instead
             — App.tsx, rooms.tsx and Playground.tsx — so every route that is
             not the homepage and does not use RoomFrame had no palette at all:
@@ -354,7 +394,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             called itself "Global ⌘K". One mount makes that true, and avoids
             the duplicate ⌘K listeners three mounts would have caused. */}
         <CommandPalette />
+        <InitMonitoring />
         <SpeedInsights />
+        <Analytics />
         <Scripts />
         <noscript>
           <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "var(--color-text)" }}>

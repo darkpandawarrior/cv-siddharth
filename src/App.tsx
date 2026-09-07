@@ -398,6 +398,7 @@ function Hero() {
           </button>
           <Link
             to="/resume"
+            style={{ viewTransitionName: "resume-hero" }}
             className="rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             View résumé
@@ -471,11 +472,21 @@ function Typewriter() {
   );
 }
 
-/** Animated circuit divider — a signal pulse traveling the seam between sections. */
+/** Animated circuit divider — a signal pulse traveling the seam between sections.
+ *  Three fixed nodes along the line blink as the traveling pulse reaches
+ *  them, in step with the same 8s loop `.circuit-line::after` already runs —
+ *  the control-room telemetry read of "a signal just passed this point,"
+ *  rather than a second, unrelated animation sharing the seam. */
 function Circuit() {
   return (
     <div aria-hidden className="mx-auto max-w-5xl px-6">
-      <div className="circuit-line" />
+      <div className="circuit-line">
+        {/* Delays are where the traveling band (left: -12% → 112% over 8s)
+            passes each node's position: ((pos + 12) / 124) * 8s. */}
+        <span className="circuit-node" style={{ left: "20%", animationDelay: "2.06s" }} />
+        <span className="circuit-node" style={{ left: "50%", animationDelay: "4s" }} />
+        <span className="circuit-node" style={{ left: "80%", animationDelay: "5.94s" }} />
+      </div>
     </div>
   );
 }

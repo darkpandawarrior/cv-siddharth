@@ -1,75 +1,105 @@
-# Perf budgets
+# Perf budgets: the owner-run checks
 
-New doc — the first thing in it is the one deferral this lane's brief required to be written down
-rather than silently skipped.
+Two of the perf claims in `lighthouserc.json` and `vercel.json` are properties
+of the deployed edge, not the codebase — nothing in CI can assert them, because
+CI never talks to production. This file is where their results get written
+down instead of just asserted. Re-run both after any deploy that touches
+`vercel.json`'s headers or adds a sixth bundled WASM app.
 
-## Deferred: the WebGPU renderer path (lane V3, `b7-webgpu-renderer` / `tanstack-webgpu-renderer`)
+## 1. Brotli on the five bundled WASM apps
 
-**Not built in this lane.** `docs/superpowers/specs/2026-07-24-tanstack-start-migration-design.md`
-(lines 92-97) and the 2026-07-25 spec (L43) both call for moving the site's R3F scenes to Three's
-`WebGPURenderer` with automatic WebGL2 fallback. The spec's own documented contingency — "fall back
-to the `gl` prop factory pattern on R3F v9 if v10 isn't fully stable when this is built" — is what
-shipped, and it's still what should ship, for a reason verified today rather than carried over from
-July.
+`vercel.json` gives all five embedded WASM apps (`kursi-app` = Gaddi,
+`paymentslab-app`, `mileway-app` = Doori, `portfolio-app`, `deadlock-app` =
+Stutter) `Cache-Control: public, max-age=31536000, immutable`. Immutable
+caching only pays off if the bytes it's caching are actually small — an
+immutably-cached uncompressed multi-megabyte `.wasm` file is still a
+multi-megabyte download on the first visit, just a slow one that then never
+re-checks.
 
-### What it would change
+`scripts/check-cdn-encoding.mjs` confirms `Content-Encoding: br` on a live
+request against each app's actual (content-hashed) `.wasm` file:
 
-Six scene files, all currently built on `@react-three/fiber`'s v9 `gl`-prop factory:
+```
+node scripts/check-cdn-encoding.mjs
+```
 
-- `src/ParticleHeroScene.tsx`
-- `src/FoundationGraphScene.tsx`
-- `src/Phone3DScene.tsx`
-- `src/AmbientScene.tsx`
-- `src/StoryMapScene.tsx`
-- `src/SkillsOrbitScene.tsx`
+**Result, run 2026-09-07 against `https://cv-siddharth.vercel.app`:**
 
-Plus three package bumps in `package.json`: `three` (`^0.185.1`), `@react-three/fiber`
-(`^9.6.1`), and whatever version of `@react-three/drei` / `@react-three/postprocessing` tracks
-R3F v10 — both currently pinned to versions built against v9's renderer contract.
+```
+OK                             kursi-app        status=200 content-encoding=br cache-control="public, max-age=31536000, immutable"
+OK                             paymentslab-app  status=200 content-encoding=br cache-control="public, max-age=31536000, immutable"
+OK                             mileway-app      status=200 content-encoding=br cache-control="public, max-age=31536000, immutable"
+STALE (hash not deployed yet)  portfolio-app    status=404 content-encoding=br cache-control="public, max-age=31536000, immutable"
+OK                             deadlock-app     status=200 content-encoding=br cache-control="public, max-age=0, must-revalidate, s-maxage=31536000"
+check-cdn-encoding: every reachable WASM file served Brotli-encoded.
+```
 
-### Why it's deferred, verified now rather than assumed
+Four of five resolved and came back Brotli-encoded. `portfolio-app` 404'd
+because this branch's local build hash isn't the one currently live on
+production — expected for a branch ahead of `main`, not a Brotli defect (the
+script tells the two apart and only fails the ones that are actually
+reachable and NOT `br`). Re-run after the next deploy to confirm all five,
+`portfolio-app` included.
 
-Two independent checks, both run against this actual working tree and the live npm registry
-today, not recalled from the spec:
+`deadlock-app`'s `index.wasm`/`index.pck` deliberately carry
+`s-maxage=31536000` without the literal `immutable` keyword — see
+`vercel.json`'s own entries for those two paths; that's an existing,
+intentional exception (a revalidatable long cache, not a missed immutable
+tag), not something this check treats as a failure.
 
-1. **The upstream dependency the migration needs isn't stable yet.** `npm view @react-three/fiber
-   dist-tags` returns `latest: 9.7.0` — `10.0.0-alpha.4` and canary builds exist, but there is no
-   stable v10. R3F v10 is what carries first-class WebGPU + TSL support; migrating onto an alpha
-   render pipeline for six production scenes on a portfolio site is exactly the failure mode the
-   spec's own contingency was written to avoid. This is the same finding the 2026-08-05 audit made
-   (`docs/superpowers/specs/2026-08-05-site-overhaul-design.md`'s lane V3 entry: "the repo is on
-   `@react-three/fiber` ^9.6.1 ... revisit now that r171+ is long stable") — checked again here
-   because "long stable" describes `three`'s renderer, not the React binding on top of it, and the
-   binding is the actual blocker.
+## 2. Fleet-wide monthly bandwidth vs. the Hobby 100GB/mo cap
 
-2. **The bundle cost is real, not hypothetical.** `three` ships its WebGPU renderer as a separate
-   prebuilt bundle (`node_modules/three/build/three.webgpu.min.js`), so the size delta is
-   measurable without building anything:
+The per-URL Lighthouse budgets (`total-byte-weight`, `resource-summary:script`)
+already gate a single page load. They say nothing about the aggregate: five
+WASM apps embedded live, all on one Hobby-tier Vercel project sharing one
+100GB/mo bandwidth allowance.
 
-   | Bundle | Raw | Gzip |
-   |---|---|---|
-   | `three.core-Co-9pgkG.js` — the chunk this site's own committed `dist/client` build actually ships today | 373,737 B | 98,926 B |
-   | `three.module.min.js` — current WebGL-only bundle, unbundled npm package | 365,552 B | 86,831 B |
-   | `three.webgpu.min.js` — `WebGPURenderer`, no node-material system | 667,861 B | 185,230 B |
-   | `three.webgpu.nodes.min.js` — `WebGPURenderer` + the TSL node-material system the six scenes' material setup would actually need | 665,902 B | 184,916 B |
+**Measured, 2026-09-07** (`du -sk public/<app>`, on-disk — a same-order proxy
+for wire bytes; none of these five carry the duplicate-asset bloat that made
+Stutter's own naive export 310MB before it was trimmed, so on-disk is a fair,
+slightly conservative stand-in for what actually crosses the wire):
 
-   The WebGPU renderer alone is **~1.9x the gzip size** of what ships today (185 KB vs 99 KB), on
-   six scenes that already run acceptably on WebGL2 — a real regression to the site's initial-load
-   weight for a renderer swap with no visible feature the current scenes use. That cost is worth
-   paying once the fallback path (auto-downgrade to WebGL2 on unsupported browsers, per the spec)
-   is built on a stable binding; it isn't worth paying twice, once now on an alpha API surface and
-   again when v10 stabilizes and the migration has to be redone against its final API.
+| App | Project | On-disk | Documented wire cost |
+|---|---|---:|---|
+| `mileway-app` | Doori | 12.3 MB | — |
+| `paymentslab-app` | PaymentsLab-KMP | 12.9 MB | — |
+| `kursi-app` | Gaddi | 14.8 MB | — |
+| `portfolio-app` | Portfolio Twin (CMP) | 15.8 MB | 14.7 MB (profile.ts metric) |
+| `deadlock-app` | Stutter | 64.8 MB | ~36 MB over the wire, biggest file 38 MB (profile.ts comment) |
 
-### Condition for picking it up
+Worst realistic single-visit cost (one visitor opening the heaviest app,
+Stutter) is ~36MB. At 100GB/mo (102,400 MB) that alone allows roughly **2,800
+full Stutter loads a month** before the cap binds — and a visitor loading
+Stutter is already the worst case; the other four are each under half that
+cost. `@vercel/analytics` is now wired up (`<Analytics />` in `__root.tsx`),
+but a fresh mount has zero history — there's no real per-app view count to
+multiply against this yet, only what it collects from here on. This
+portfolio's total traffic is recruiter/interview-driven, not a consumer
+product's: realistically dozens to low hundreds of visits a day fleet-wide,
+and only a fraction of those ever scroll to a project's live embed rather
+than looking at the screenshots above it.
 
-Re-run both checks above before starting:
+**Decision:** keep all five apps on the one deploy for now. The margin above
+is wide enough (thousands of full-Stutter loads before the cap binds, against
+a plausible traffic ceiling of maybe a few hundred WASM-embed opens a month)
+that splitting Stutter into its own Vercel project would be solving a problem
+that isn't measured to exist. Revisit this once `@vercel/analytics` has
+enough history to check it against: if combined WASM-embed bandwidth trends
+toward ~20GB/mo (a fifth of the cap — leaving
+headroom for the rest of the site plus growth), move `deadlock-app` (Stutter),
+the heaviest single app at roughly half the fleet's combined bytes, to its own
+Vercel project first — it's already the one deployment target vercel.json
+gives bespoke cache-control treatment to, so it's the natural first split.
 
-- `npm view @react-three/fiber dist-tags` reports a stable (non-alpha, non-canary) v10 as
-  `latest`.
-- Re-measure the gzip delta against whatever this site's `dist/client` chunk looks like at that
-  time (bundling changes; the 99 KB baseline above will have drifted) and confirm the WebGPU path
-  still ships behind the spec's WebGL2 auto-fallback, so a visitor on an unsupported browser never
-  pays the larger download for a renderer they can't use.
+## 3. LCP gate: still `warn`, on purpose, not touched here
 
-Until then this stays a documented gap, not a silent one — the PR for the lane that skipped it
-says so in its own body rather than leaving lane V3 unmentioned.
+`lighthouserc.json`'s own header already documents why
+`largest-contentful-paint` stays `warn` at 3500ms instead of `error` at 2500ms:
+every number on file came off a developer laptop (benchmarkIndex ~4000)
+against a 2-core GitHub Actions runner, where LCP will measure materially
+worse. Promoting it needs one calibration run **on the runner itself** — a
+number from this machine would just be a second developer-laptop reading, not
+the calibration the file is waiting on, and flipping the gate without it risks
+exactly the failure the header warns about: "an error there would be red on
+the first CI run." Left as `warn`; see `## Deliberately not fixed / not
+verified` in this lane's PR for the reasoning in full.

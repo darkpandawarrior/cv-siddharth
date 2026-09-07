@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight, Share2, Check } from "lucide-react";
-import { projects } from "./data/profile.ts";
+import { projects, type ProjectDetailData } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 import { ScreenMarquee } from "./ScreenMarquee.tsx";
 import { PROJECT_ORDER } from "./data/connections.ts";
@@ -17,6 +17,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./lib/caseSpine.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
 
@@ -185,6 +186,64 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   );
 }
 
+/** Problem → decision → result, the 30-second version placed directly under
+ * the marquee — the "How it works" grid below stays the full detail for a
+ * reader who wants it; this is the version that used to not exist. Same
+ * pattern as the file's other single-use local components (NextProject,
+ * AutoVideo, SectionHeader) — no new file for one component used once. */
+function CaseSpine({
+  d,
+  slug,
+  accent,
+  filmAnchor,
+}: {
+  d: ProjectDetailData;
+  slug: string;
+  accent?: string;
+  filmAnchor?: string;
+}) {
+  if (!d.problem || !d.decision || !d.outcome) return null;
+  const metric = pickOutcomeMetric(d);
+  const shot = d.outcomeScreenshot ? `/projects/${slug}/screenshots/${d.outcomeScreenshot}` : undefined;
+
+  return (
+    <section className="border-b border-line bg-surface">
+      <div className="section-y mx-auto max-w-5xl px-6">
+        <SectionHeader eyebrow="case study" title="The short version" />
+        <div className="reveal grid gap-8 lg:grid-cols-3 lg:gap-6">
+          <div>
+            <p className="brief-label">The problem</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-300">{d.problem}</p>
+          </div>
+          <div>
+            <p className="brief-label">The decision</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-300">{d.decision}</p>
+          </div>
+          <div>
+            <p className="brief-label">The result</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-300">{d.outcome}</p>
+            {metric && (
+              <p className="font-display mt-3 text-3xl font-bold" style={{ color: accent ?? "var(--color-accent)" }}>
+                {metric.value} <span className="text-sm font-normal text-muted">{metric.label}</span>
+              </p>
+            )}
+            {filmAnchor && (
+              <a href={filmAnchor} className="mt-2 inline-block text-xs text-accent hover:underline">
+                Watch the two-minute tour ↓
+              </a>
+            )}
+          </div>
+        </div>
+        {shot && (
+          <div className="reveal mt-8 overflow-hidden rounded-2xl border border-line">
+            <Picture src={shot} alt={`Evidence: ${d.outcome}`} className="max-h-96 w-full object-cover object-top" />
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function ProjectDetail({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
@@ -193,6 +252,13 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const items: { src: string; caption: string }[] = project?.screens?.length
     ? project.screens.map((s) => ({ src: heavy(`/projects/${slug}/screenshots/${s.file}`), caption: s.caption }))
     : (galleries[slug] ?? []).map((src) => ({ src, caption: "" }));
+  // CaseSpine's evidence shot is excluded from the marquee below so the same
+  // frame isn't shown twice, seconds apart — the marquee stays a poster of
+  // everything else.
+  const outcomeShot = project?.detail?.outcomeScreenshot
+    ? `/projects/${slug}/screenshots/${project.detail.outcomeScreenshot}`
+    : undefined;
+  const marqueeSrcs = excludeOutcomeScreenshot(items.map((i) => i.src), outcomeShot);
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
   const railRef = useRef<HTMLDivElement>(null);
@@ -398,12 +464,23 @@ export function ProjectDetail({ slug }: { slug: string }) {
           Without it the page opened on three columns of prose and nothing to
           look at until well past the fold. */}
       {items.length > 0 && (
-        <ScreenMarquee screens={items.map((i) => i.src)} alt={`Screens from ${project.name}`} />
+        <ScreenMarquee screens={marqueeSrcs} alt={`Screens from ${project.name}`} />
+      )}
+
+      {/* The 30-second version: problem, decision, result — before the full
+          "How it works" grid further down. */}
+      {d && (
+        <CaseSpine
+          d={d}
+          slug={slug}
+          accent={t?.accent}
+          filmAnchor={FILM_PROJECTS.has(slug) ? `#showcase-${slug}` : undefined}
+        />
       )}
 
       {/* Narrated product tour — storyboarded from real screens */}
       {FILM_PROJECTS.has(slug) && (
-        <section className="border-b border-line bg-surface">
+        <section id={`showcase-${slug}`} className="border-b border-line bg-surface">
           <div className="section-y mx-auto max-w-4xl px-6">
             <SectionHeader eyebrow="guided tour" title="Two minutes, narrated" />
             <p className="reveal -mt-4 mb-8 max-w-2xl text-sm leading-relaxed text-zinc-400">
