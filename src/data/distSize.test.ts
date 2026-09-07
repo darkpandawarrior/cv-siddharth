@@ -42,8 +42,13 @@ describe("dist/client stays under the Vercel deployment-size budget", () => {
     expect(totalMB, `dist/client is ${totalMB.toFixed(1)} MB`).toBeLessThan(60);
   });
 
-  it.skipIf(!existsSync(distClient))("never ships one of the five moved heavy-asset classes", () => {
-    const heavy = ["kursi-app", "mileway-app", "paymentslab-app", "portfolio-app", "deadlock-app", "excelsior", "p"];
+  it.skipIf(!existsSync(distClient))("never ships one of the four moved heavy-asset app builds", () => {
+    // "excelsior" dropped from this list (arch-L8): prerendering now writes a
+    // real, tiny dist/client/excelsior/index.html for the /excelsior ROUTE,
+    // which shares a name with the old heavy/excelsior/ PDF-scan payload but
+    // is not it — the oversized-file check above already guards against that
+    // payload actually leaking, wherever it would land.
+    const heavy = ["kursi-app", "mileway-app", "paymentslab-app", "portfolio-app", "deadlock-app"];
     const shipped = existsSync(distClient) ? readdirSync(distClient) : [];
     const leaked = heavy.filter((d) => shipped.includes(d));
     expect(leaked, `these were meant to move to heavy/ and be served from GitHub Pages: ${leaked.join(", ")}`).toEqual([]);
