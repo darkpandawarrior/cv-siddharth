@@ -54,15 +54,7 @@ const TABS = LAB_TABS;
 export function LabBench() {
   const [tab, setTab] = useState<LabKey>(() => peekPendingLab() ?? "signal");
 
-  // ponytail: lazy() does NOT keep a chunk off the server — React resolves a
-  // lazy child while streaming, and SignalLab's leaflet import touches
-  // `window` at module scope, which killed the whole /lab render. One mount
-  // flag holds both browser-only panes back to the client; the fallback each
-  // already had becomes the server's markup.
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     clearPendingLab(); // consumed by the initial state above
     return onOpenLab(setTab);
   }, []);
