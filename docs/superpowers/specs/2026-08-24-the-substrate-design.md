@@ -152,7 +152,18 @@ Each phase ends with the world drivable.
 2. `drive.ts` kinematic vehicle; rapier deleted; unit tests.
 3. Destinations registry + in-world panel.
 4. Mobile HUD, one-thumb control, camera.
-5. playhtml ghosts + shared lit map.
+5. playhtml ghosts + shared lit map. **Landed.** Ghosts.tsx renders every
+   other live driver on `/playground` as a small matte cart (an InstancedMesh
+   capped at 8, a dim tail strip, a 6-char id billboard), broadcast over
+   playhtml's `usePresence` (ephemeral, per-tab — never the anonymous,
+   position-free `visitors.ts` ledger). litMap.ts's record is wired the same
+   way: each driving tab publishes sparse, throttled position stamps (never
+   the whole 49KB texture — see that file's own doc comment) over a
+   `usePageData` channel, and every tab applies every other's stamps into its
+   own local record via the same `stampLitMap` a local drive already uses.
+   Each step of it — the read-only presence read, the read-line uniform, the
+   stamp sync — shipped with the world still drivable throughout, per this
+   section's own rule.
 6. The four playhtml surfaces beyond the world.
 
 ## 10. Out of scope
