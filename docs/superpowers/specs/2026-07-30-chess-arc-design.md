@@ -320,7 +320,7 @@ The room hosts the board, the three 3D scenes, guess-the-move, and the daily puz
 
 - **`src/labs/ChessSearchLab.tsx`** — the engine's search tree, rendered through
   `SearchTreeLab`'s existing renderer and `useCanvasLoop`, so chess alpha-beta and
-  Kursi's ISMCTS read as one family of instrument rather than two unrelated toys.
+  Gaddi's (formerly Kursi) ISMCTS read as one family of instrument rather than two unrelated toys.
 - **`src/labs/ClockLab.tsx`** — scrub a real game and watch both clocks burn, with
   the win/loss divergence curve behind the trace.
 

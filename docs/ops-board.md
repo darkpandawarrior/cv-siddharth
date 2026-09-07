@@ -27,7 +27,7 @@ row with the same four fields, and nothing ever gets a fifth:
 LED   SUBJECT                          STATE       VERIFIED
  *    refresh-media.yml                OK          2h ago
  *    store.ts                         DEGRADED    21d ago
- *    kmp-toolkit -> Mileway           OK          4h ago
+ *    kmp-toolkit -> Doori             OK          4h ago
 ```
 
 If a concept cannot express itself in those four fields, it does not belong

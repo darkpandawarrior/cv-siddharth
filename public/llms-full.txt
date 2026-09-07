@@ -143,13 +143,13 @@ Outcome: 858 white-label-named branches across two Android repos carry my commit
 
 ## Recently shipped
 
-- Kursi (now Gaddi) shipped (Jun 2026): Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI.
+- Gaddi (formerly Kursi) shipped (Jun 2026): Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI.
 - career-ops: public OSS contributions (Jun - Aug 2026): 24 merged PRs to the public career-ops project (⭐68k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.
-- Mileway (now Doori): five platforms (Jun 2026): Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green.
-- Mileway: offline AI + policy engine (Jul 2026): Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in.
-- PaymentsLab (now PaymentsLab-KMP): 5 rails + 66 gateways (Jul 2026): 40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest.
-- Shared KMP foundation (Jul 2026): Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds.
-- Mileway: super-profile & plugin platform (V24) (Jul 2026): A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top.
+- Doori (formerly Mileway): five platforms (Jun 2026): Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green.
+- Doori: offline AI + policy engine (Jul 2026): Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in.
+- PaymentsLab-KMP (formerly PaymentsLab): 5 rails + 66 gateways (Jul 2026): 40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest.
+- Shared KMP foundation (Jul 2026): Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Doori and PaymentsLab-KMP as composite builds.
+- Doori: super-profile & plugin platform (V24) (Jul 2026): A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top.
 - Portfolio: the fleet made checkable (Aug 2026): New /shipped page: 89 live listings plus 84 delisted ones recovered via the Internet Archive, 173 apps traced across 1,642 branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted.
 - Portfolio: the anthology and The Board, published (Aug 2026): New /ink surfaces: the Morkinstar Journals anthology across four seasons (The Directory, The Ninety-One Pages, The Kindling, The Standing Charge) plus a starmap, and The Board, seven years of forum games, mined and republished.
 

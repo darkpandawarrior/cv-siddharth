@@ -1,7 +1,7 @@
 # Backend deploy playbook (owner-run)
 
 Two projects on this site have a real backend behind the static demo: Candidai's Spring Boot
-sync server and PaymentsLab's payment gateway simulators. Neither deploys automatically from this
+sync server and PaymentsLab-KMP's payment gateway simulators. Neither deploys automatically from this
 repo or from theirs. This is the repeatable, owner-run process for standing one up, and the
 checklist ProjectDetail's live-preview wiring points at once a URL exists.
 
@@ -43,23 +43,23 @@ Once a URL exists: add it to the `hiresignal` project record in `src/data/profil
 ProjectDetail to show it. That code path is not built yet — this playbook documents the deploy side
 so it can land the moment the owner has run the steps above and has a URL to give it.
 
-## PaymentsLab gateways
+## PaymentsLab-KMP gateways
 
-`Android/PaymentsLab/backend` is JVM-only Gradle today (`build.gradle.kts`, no `Dockerfile`, no
-`fly.toml`). The playbook is the same shape as Candidai's once those exist:
+`Android/PaymentsLab/backend` (PaymentsLab-KMP) is JVM-only Gradle today (`build.gradle.kts`, no
+`Dockerfile`, no `fly.toml`). The playbook is the same shape as Candidai's once those exist:
 
 1. Add a `Dockerfile` to `backend/` following Candidai's `server/Dockerfile` pattern (`bootJar` or
-   the module's actual JAR task, a slim JRE runtime stage). PaymentsLab's backend has no Android KMP
+   the module's actual JAR task, a slim JRE runtime stage). PaymentsLab-KMP's backend has no Android KMP
    target dependency the way Candidai's `:server` does, so it should not need the Android SDK stage
    Candidai's build image carries — confirm against `backend/build.gradle.kts` before copying that
    stage over.
 2. Add a `fly.toml` (or the equivalent for whatever host the owner picks) with the gateway
    simulator's actual port and health-check path.
-3. Steps 1-5 above, substituting the PaymentsLab app name and volume (if the gateways carry state
-   that needs one; check before assuming they don't).
+3. Steps 1-5 above, substituting the PaymentsLab-KMP app name and volume (if the gateways carry
+   state that needs one; check before assuming they don't).
 
 This step is not done. The Dockerfile and fly.toml are prerequisites this playbook cannot skip
-past, and building them is a PaymentsLab-repo change, out of this lane's scope (cv-siddharth only).
+past, and building them is a PaymentsLab-KMP-repo change, out of this lane's scope (cv-siddharth only).
 
 ## Frontend WASM embeds: a separate, already-working path
 

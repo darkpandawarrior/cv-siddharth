@@ -24,7 +24,7 @@ import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const profilePath = join(root, "src", "data", "profile.ts");
 const fanoutPath = join(root, "src", "labs", "FanoutLab.tsx");
-const hiresignalPath = join(root, "src", "data", "hiresignal.ts");
+const careerOpsUpstreamPath = join(root, "src", "data", "careerOpsUpstream.ts");
 const token = process.env.GITHUB_TOKEN;
 const headers = { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
@@ -127,15 +127,15 @@ try {
   if (!fanoutRe.test(fanout)) misses.push(`${fanoutRe} (FanoutLab.tsx)`);
   writeFileSync(fanoutPath, fanout.replace(fanoutRe, `const TOTAL_PROVIDERS = ${providers};`));
 
-  /* hiresignal.ts said in its own header that this script refreshes it. It did
+  /* careerOpsUpstream.ts said in its own header that this script refreshes it. It did
    * not: the file was never opened here, so providerCount sat at 78 while the
    * same run wrote 81 into the case study and the lab. A comment claiming a
    * refresh that no code performs is the quietest version of this whole bug
    * class, and hiresignalNumbers.test.ts is what finally caught it. */
   const providerRe = /export const providerCount = \d+;/;
-  const hs = readFileSync(hiresignalPath, "utf8");
-  if (!providerRe.test(hs)) misses.push(`${providerRe} (hiresignal.ts)`);
-  writeFileSync(hiresignalPath, hs.replace(providerRe, `export const providerCount = ${providers};`));
+  const hs = readFileSync(careerOpsUpstreamPath, "utf8");
+  if (!providerRe.test(hs)) misses.push(`${providerRe} (careerOpsUpstream.ts)`);
+  writeFileSync(careerOpsUpstreamPath, hs.replace(providerRe, `export const providerCount = ${providers};`));
 
   /* The other half of the same hole: a number this script never had a pattern
    * for at all. Reading whatever WORD sits in front of the phrase, rather than
