@@ -1,14 +1,11 @@
-<svg width="512" height="512" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="g" x1="6" y1="6" x2="102" y2="102" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2196F3"/>
-      <stop offset="1" stop-color="#0B3D91"/>
-    </linearGradient>
-    <clipPath id="r"><rect x="0" y="0" width="108" height="108" rx="24" ry="24"/></clipPath>
-  </defs>
-  <g clip-path="url(#r)"><rect width="108" height="108" fill="url(#g)"/></g>
-  <path d="M54,69 C49,78 44,80 38,81" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="37" cy="81" r="4.5" fill="#fff"/>
-  <path fill="#fff" fill-rule="evenodd"
-    d="M54,24 C63.94,24 72,32.06 72,42 C72,53 64,61 54,72 C44,61 36,53 36,42 C36,32.06 44.06,24 54,24 Z M47.5,40 a6.5,6.5 0 1,0 13,0 a6.5,6.5 0 1,0 -13,0 z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <rect x="0" y="0" width="48" height="48" fill="#0A0D0C"/>
+  <g fill="none" stroke="#5EE6FF" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="10" y1="14" x2="10" y2="34" stroke-width="4"/>
+    <line x1="34" y1="14" x2="34" y2="34" stroke-width="4"/>
+    <line x1="10" y1="24" x2="21" y2="24" stroke-width="4"/>
+    <line x1="27" y1="24" x2="34" y2="24" stroke-width="4"/>
+  </g>
+  <line x1="38" y1="14" x2="38" y2="34" stroke-width="2" stroke="#38B4CC" stroke-linecap="round" fill="none"/>
+  <circle cx="10" cy="24" r="3" fill="#5EE6FF"/>
 </svg>
