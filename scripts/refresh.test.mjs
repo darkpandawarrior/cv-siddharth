@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { REFRESH_STEPS as steps } from "./generators.mjs";
 
 /**
  * The refresh chain must never be able to skip a generator again.
@@ -13,7 +14,10 @@ import { join } from "node:path";
  *
  * This guards the property, not the implementation: whatever `refresh` becomes,
  * it must not be a short-circuiting shell chain, and it must still cover every
- * generator the repo has.
+ * generator the repo has. It used to check that by regexing the `"gen:x",`
+ * lines out of refresh.mjs's source text — which stopped meaning anything the
+ * moment STEPS became an import from scripts/generators.mjs rather than a
+ * literal array, so this reads the real, derived REFRESH_STEPS value instead.
  */
 describe("the refresh chain cannot silence a generator", () => {
   const root = new URL("../", import.meta.url).pathname;
@@ -30,9 +34,6 @@ describe("the refresh chain cannot silence a generator", () => {
   it("runs every step through the runner", () => {
     expect(pkg.scripts.refresh).toContain("scripts/refresh.mjs");
   });
-
-  /** The steps the runner declares, in order. */
-  const steps = [...runner.matchAll(/^\s*"([a-z:-]+)",$/gm)].map((m) => m[1]);
 
   it("names only real npm scripts", () => {
     const unknown = steps.filter((s) => !(s in pkg.scripts));
