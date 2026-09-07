@@ -164,8 +164,33 @@ export const GENERATORS = [
       "src/data/store.ts", "src/data/weeb.ts", "src/data/writing.ts", "src/data/anthology.ts",
       "src/data/ops.ts", "src/data/archiveText.ts", "src/data/chess.ts", "src/data/storyMap.ts",
     ],
-    outputs: ["../cv-siddharth-kmp/cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated/*.kt"],
-    stages: { check: 8 } },
+    outputs: [
+      "../cv-siddharth-kmp/cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated/*.kt",
+      // Committed HERE, not beside the .kt files — this repo has no push
+      // access to cv-siddharth-kmp, so a guard living only in that ephemeral
+      // checkout would never survive between CI runs to diff against.
+      "scripts/kotlin-field-contract.json",
+    ],
+    // refresh stage added by arch-L12: this had NO automated write-back path
+    // at all (F4) — only check:generated's byte-diff ever exercised it, and
+    // only on a machine with the twin already checked out. refresh-twin.yml
+    // is the one CI job with the sibling present, so this is what actually
+    // runs it on the weekly cron; refresh-media.yml has no KMP checkout and
+    // gracefully skips it, same as every other sibling-kind node there today.
+    stages: { refresh: 23, check: 8 } },
+  // Repo/commit read from each app's own sibling checkout (`git remote
+  // get-url origin` + `rev-parse HEAD`, never hand-typed) — same graceful
+  // skip as the other sibling nodes above. NOT in the check stage: unlike
+  // kotlin-data's cross-repo byte-diff, this reads a live sibling HEAD as an
+  // input, so two runs on different days legitimately disagree exactly as
+  // gen-ops/gen-repo-stats/gen-system-graph already do.
+  { id: "app-manifests", script: "gen-app-manifests.mjs", npmName: "gen:app-manifests", kind: "sibling",
+    inputs: [], outputs: [
+      "heavy/kursi-app/build-manifest.json", "heavy/mileway-app/build-manifest.json",
+      "heavy/paymentslab-app/build-manifest.json", "heavy/portfolio-app/build-manifest.json",
+      "heavy/deadlock-app/build-manifest.json",
+    ],
+    stages: { refresh: 24 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 

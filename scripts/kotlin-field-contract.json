@@ -1,0 +1,618 @@
+{
+  "StoreApp": [
+    "id",
+    "name",
+    "rating",
+    "installs",
+    "url",
+    "role",
+    "employer",
+    "icon"
+  ],
+  "LiveClient": [
+    "key",
+    "name",
+    "developer",
+    "icon",
+    "color",
+    "setUpByHim",
+    "rating",
+    "apps"
+  ],
+  "LiveApp": [
+    "id",
+    "name",
+    "url",
+    "side",
+    "installs",
+    "rating",
+    "updated",
+    "setUpByHim"
+  ],
+  "PastClient": [
+    "key",
+    "name",
+    "icon",
+    "color",
+    "setUpByHim",
+    "lastSeen",
+    "firstSeen",
+    "apps"
+  ],
+  "PastApp": [
+    "id",
+    "name",
+    "url",
+    "side",
+    "rating",
+    "lastSeen",
+    "setUpByHim"
+  ],
+  "FleetStats": [
+    "branches",
+    "clients",
+    "live",
+    "setUpByHim",
+    "carryingHisCommits",
+    "installFloor",
+    "developers",
+    "delisted",
+    "archiveChecked",
+    "predatingHim",
+    "joined",
+    "clientsLive",
+    "clientsGone"
+  ],
+  "ShippedYear": [
+    "year",
+    "live",
+    "gone"
+  ],
+  "WeebData": [
+    "generatedAt",
+    "anime",
+    "manga",
+    "stale",
+    "divergence"
+  ],
+  "WeebAnime": [
+    "total",
+    "matched",
+    "byWatch",
+    "scoreDist",
+    "scored",
+    "seasonsOut",
+    "seasonsDone",
+    "behindCount",
+    "pairedCount",
+    "unwatchedSeasons",
+    "deepestGaps",
+    "caughtUp"
+  ],
+  "WeebGap": [
+    "name",
+    "gap"
+  ],
+  "WeebCaughtUp": [
+    "completed",
+    "paused",
+    "watching"
+  ],
+  "WeebBucket": [
+    "n",
+    "pct"
+  ],
+  "WeebManga": [
+    "total",
+    "byRead",
+    "chaptersRead"
+  ],
+  "WeebStale": [
+    "name",
+    "title",
+    "romaji",
+    "english",
+    "sequel",
+    "year",
+    "status"
+  ],
+  "WeebDivergence": [
+    "n",
+    "top",
+    "bottom"
+  ],
+  "WeebDivergenceRow": [
+    "name",
+    "mine",
+    "crowd",
+    "delta"
+  ],
+  "WritingLesson": [
+    "title",
+    "slug",
+    "pillar",
+    "series",
+    "status",
+    "created",
+    "live",
+    "tags",
+    "links"
+  ],
+  "PostLinks": [
+    "devto",
+    "linkedin",
+    "medium",
+    "hashnode"
+  ],
+  "WritingSeries": [
+    "id",
+    "title",
+    "episodes"
+  ],
+  "WritingArchivePiece": [
+    "title",
+    "slug",
+    "form",
+    "era",
+    "words",
+    "tags",
+    "blurb"
+  ],
+  "WritingCastMember": [
+    "id",
+    "appearances"
+  ],
+  "Society": [
+    "name",
+    "role",
+    "years",
+    "blurb",
+    "links"
+  ],
+  "SocietyLink": [
+    "label",
+    "url"
+  ],
+  "BoardProfile": [
+    "year",
+    "page",
+    "title",
+    "role",
+    "question",
+    "quote",
+    "direction",
+    "gloss"
+  ],
+  "LoopdownOrigin": [
+    "year",
+    "page",
+    "story"
+  ],
+  "CoverStory": [
+    "page",
+    "paths"
+  ],
+  "CoverPath": [
+    "name",
+    "page"
+  ],
+  "AnthologyMeta": [
+    "slug",
+    "title",
+    "tagline",
+    "fourteen",
+    "witnesses",
+    "seasons",
+    "starmap"
+  ],
+  "AnthologyWitness": [
+    "id",
+    "name",
+    "entries",
+    "of",
+    "did",
+    "art"
+  ],
+  "AnthologySeason": [
+    "n",
+    "title",
+    "blurb"
+  ],
+  "Starmap": [
+    "systems",
+    "worlds",
+    "fences"
+  ],
+  "StarWorld": [
+    "name",
+    "system",
+    "offset",
+    "state",
+    "keys",
+    "detail",
+    "darkAt"
+  ],
+  "AnthologyEntry": [
+    "season",
+    "idx",
+    "slug",
+    "title",
+    "entry",
+    "page",
+    "kindling",
+    "planet",
+    "system",
+    "phenomenon",
+    "blurb",
+    "words",
+    "plate",
+    "witness"
+  ],
+  "UnfiledPiece": [
+    "idx",
+    "slug",
+    "title",
+    "series",
+    "blurb",
+    "words",
+    "tags"
+  ],
+  "SiblingSeries": [
+    "slug",
+    "title",
+    "tagline",
+    "medium",
+    "entries"
+  ],
+  "SiblingEntry": [
+    "idx",
+    "slug",
+    "title",
+    "blurb",
+    "words",
+    "plate"
+  ],
+  "SeasonCanon": [
+    "laws",
+    "thesis",
+    "points",
+    "spoils"
+  ],
+  "CanonLaw": [
+    "n",
+    "name",
+    "gloss",
+    "contested",
+    "seenAt",
+    "alsoAt"
+  ],
+  "CanonRef": [
+    "slug",
+    "label"
+  ],
+  "CanonPoint": [
+    "term",
+    "gloss"
+  ],
+  "CountLedgerRow": [
+    "line",
+    "value"
+  ],
+  "RenderingDoctrine": [
+    "claim",
+    "mechanism",
+    "pull",
+    "consequences"
+  ],
+  "Rendering": [
+    "state",
+    "witnessId",
+    "slug",
+    "note"
+  ],
+  "RigConstraint": [
+    "species",
+    "world",
+    "constraint"
+  ],
+  "TetherRow": [
+    "value",
+    "label"
+  ],
+  "StandardInterval": [
+    "interval",
+    "realm",
+    "length",
+    "blank"
+  ],
+  "KillRecord": [
+    "premise",
+    "namedAs",
+    "fate"
+  ],
+  "S3Design": [
+    "premise",
+    "findings",
+    "replacement"
+  ],
+  "S3Finding": [
+    "title",
+    "note"
+  ],
+  "S4Fence": [
+    "named",
+    "finding",
+    "quote"
+  ],
+  "AuditMethod": [
+    "send",
+    "gate",
+    "whyNotSelfAssessed",
+    "summary"
+  ],
+  "PortraitIterations": [
+    "firstSet",
+    "firstFix",
+    "secondDefect",
+    "theFix",
+    "trap"
+  ],
+  "PipelineStage": [
+    "step",
+    "detail"
+  ],
+  "Spend": [
+    "totalUsd",
+    "firstBuildUsd",
+    "secondBuildUsd",
+    "auditsUsd",
+    "artUsd",
+    "note"
+  ],
+  "Receipt": [
+    "label",
+    "href"
+  ],
+  "PerimeterEntry": [
+    "file",
+    "generatedAt",
+    "slaDays",
+    "generator"
+  ],
+  "LeverageEntry": [
+    "id",
+    "modules",
+    "repos"
+  ],
+  "DriftEntry": [
+    "repo",
+    "upstream",
+    "pin",
+    "behind",
+    "pinnedAt"
+  ],
+  "PrintedPiece": [
+    "slug",
+    "title",
+    "form",
+    "era",
+    "blurb",
+    "tags",
+    "words",
+    "year",
+    "page",
+    "url",
+    "published",
+    "printWords",
+    "note",
+    "body"
+  ],
+  "ChessStats": [
+    "generatedAt",
+    "span",
+    "totals",
+    "boardTime",
+    "thesis",
+    "discipline",
+    "sessionDecay",
+    "activityByYear",
+    "repertoire",
+    "platforms"
+  ],
+  "ChessSpan": [
+    "from",
+    "to"
+  ],
+  "ChessTotals": [
+    "games",
+    "wins",
+    "losses",
+    "draws",
+    "hours"
+  ],
+  "ChessBoardTime": [
+    "lichessHours",
+    "chesscomHours",
+    "combinedHours",
+    "chesscomGames",
+    "note"
+  ],
+  "ChessThesis": [
+    "decidedOnClock",
+    "lossesOnTime",
+    "winsOnTime",
+    "sampleSize",
+    "deciles"
+  ],
+  "ChessDecile": [
+    "bucket",
+    "win",
+    "loss",
+    "gap"
+  ],
+  "ChessDiscipline": [
+    "distinctDays",
+    "spanDays",
+    "longestDayStreak",
+    "longestWin",
+    "longestLoss"
+  ],
+  "ChessSessionGame": [
+    "position",
+    "winRate",
+    "n"
+  ],
+  "ChessActivityYear": [
+    "year",
+    "lichess",
+    "chesscom"
+  ],
+  "ChessRepertoireYear": [
+    "year",
+    "openings"
+  ],
+  "ChessOpeningShare": [
+    "name",
+    "count",
+    "share"
+  ],
+  "ChessPlatform": [
+    "id",
+    "url",
+    "joined",
+    "lastActive",
+    "games",
+    "provisional",
+    "peaks",
+    "puzzles"
+  ],
+  "ChessPeak": [
+    "format",
+    "rating",
+    "at"
+  ],
+  "ChessPuzzleStats": [
+    "peak",
+    "solved"
+  ],
+  "ChessDeep": [
+    "generatedAt",
+    "lastSeenOnLichess",
+    "sampleSize",
+    "bySource",
+    "byTimeControl",
+    "byEnding",
+    "book"
+  ],
+  "ChessSourceRow": [
+    "source",
+    "n",
+    "winRate"
+  ],
+  "ChessTimeControlRow": [
+    "tc",
+    "n",
+    "winRate"
+  ],
+  "ChessEndingRow": [
+    "status",
+    "n",
+    "share"
+  ],
+  "ChessBook": [
+    "medianPly",
+    "deep",
+    "shallow"
+  ],
+  "ChessBookArm": [
+    "n",
+    "winRate"
+  ],
+  "ChessHours": [
+    "games",
+    "commits",
+    "commitSample"
+  ],
+  "ChessHourGames": [
+    "hour",
+    "n",
+    "winRate"
+  ],
+  "ChessHourCommits": [
+    "hour",
+    "n"
+  ],
+  "ChessCommitSample": [
+    "n",
+    "total",
+    "from"
+  ],
+  "ChessArcCorpus": [
+    "series",
+    "fromDay",
+    "toDay",
+    "yearTicks"
+  ],
+  "ChessArcSeries": [
+    "platform",
+    "format",
+    "points"
+  ],
+  "ChessArcPoint": [
+    "t",
+    "rating"
+  ],
+  "ChessGraveyard": [
+    "losses",
+    "wins"
+  ],
+  "ChessRepertoireYearByPlatform": [
+    "year",
+    "platforms"
+  ],
+  "ChessRepertoirePlatformSlice": [
+    "key",
+    "blackGames",
+    "thin",
+    "openings"
+  ],
+  "ChessRepertoirePlatformOpening": [
+    "name",
+    "count",
+    "share"
+  ],
+  "ChessQuizPosition": [
+    "fen",
+    "result",
+    "speed",
+    "at",
+    "myRating"
+  ],
+  "StoryMapNode": [
+    "id",
+    "label",
+    "sub",
+    "x",
+    "y",
+    "r",
+    "color",
+    "target"
+  ],
+  "StoryMapEdge": [
+    "from",
+    "to"
+  ],
+  "ExcelsiorEdition": [
+    "year",
+    "pages",
+    "source"
+  ],
+  "ExcelsiorMark": [
+    "year",
+    "page",
+    "label",
+    "note",
+    "kind",
+    "readSlug"
+  ]
+}

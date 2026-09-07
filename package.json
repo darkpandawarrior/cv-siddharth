@@ -47,6 +47,7 @@
     "gen:ops": "node scripts/gen-ops.mjs",
     "gen:system-graph": "node scripts/gen-system-graph.mjs",
     "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
+    "gen:app-manifests": "node scripts/gen-app-manifests.mjs",
     "check:generated": "node scripts/check-generated.mjs",
     "validate:palette": "node scripts/validate_palette.js",
     "check:budget": "node scripts/check-budget.mjs",
