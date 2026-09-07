@@ -1,16 +1,10 @@
 import { useState } from "react";
 import {ArrowLeft, Activity } from "lucide-react";
+import { ClientOnly } from "@tanstack/react-router";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
-import {
-  PULSE_EVENTS,
-  groupPulse,
-  totalInteractions,
-  touchedCount,
-  usePulseCounts,
-  type PulseEvent,
-} from "./play/pulse.ts";
+import { PULSE_EVENTS, groupPulse, totalInteractions, touchedCount, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
 import { DayBars, useCountUp, useVisitorLedger } from "./play/Visitors.tsx";
 import { isoDay, recentDays, sumDays, topZones, totalVisitors, type ZoneTally } from "./play/visitors.ts";
 
@@ -730,10 +724,27 @@ function PulseInner() {
   );
 }
 
+const pulseLoadingFallback = (
+  <div className="flex min-h-screen items-center justify-center bg-void font-mono text-sm text-muted">
+    loading the pulse…
+  </div>
+);
+
 export default function Pulse() {
+  // /pulse's whole argument is live, playhtml-backed counters — there is no
+  // crawlable-text case for server-rendering it (the route is already
+  // `ssr: false`), so the entire tree goes behind `<ClientOnly>` rather than
+  // gating just the provider. `ssr: false` alone does not keep PlayRoom.tsx
+  // and pulse.ts (both import @playhtml/react) out of the SSR bundle — every
+  // route file is still eagerly imported by routeTree.gen.ts — so
+  // importProtection's static scan reached them regardless. `<ClientOnly>` is
+  // what Start's compiler recognises to strip this subtree, and the dynamic
+  // imports behind it, from the SERVER compile entirely.
   return (
-    <PlayRoom>
-      <PulseInner />
-    </PlayRoom>
+    <ClientOnly fallback={pulseLoadingFallback}>
+      <PlayRoom>
+        <PulseInner />
+      </PlayRoom>
+    </ClientOnly>
   );
 }

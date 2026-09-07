@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
-import { useHydrated } from "../lib/useHydrated.ts";
+import { ClientOnly } from "@tanstack/react-router";
 
 /**
  * PlayRoom for a route that SERVER-RENDERS.
@@ -11,12 +11,18 @@ import { useHydrated } from "../lib/useHydrated.ts";
  * ~470-character shell with `ReferenceError: document is not defined` inside
  * renderToReadableStream.
  *
- * So the provider arrives on the client only. The server, and the hydration
- * render, emit `children` exactly as they would without it; the first render
- * after hydration swaps in the real provider. That swap remounts `children`
- * once, immediately after hydration and before anyone can have touched the
- * page, which is the price of a context that cannot exist on the server. It is
- * paid once and it is invisible.
+ * So the provider arrives on the client only, via `<ClientOnly>` rather than
+ * a hand-rolled `useHydrated()` check: Start's compiler recognises the JSX
+ * (config.js registers `ClientOnly` from `@tanstack/react-router` as the
+ * `ClientOnlyJSX` kind) and strips its children from the SERVER compile
+ * entirely — `<ClientOnly fallback={children}>{clientOnlyContent}</ClientOnly>`
+ * becomes `<ClientOnly fallback={children} />` before the SSR bundle is even
+ * built, so `lazy(() => import("./PlayRoom.tsx"))` and its `@playhtml/react`
+ * import are dead-code-eliminated out of that build rather than merely
+ * skipped at runtime. `lazy()` alone does not do this: React still resolves a
+ * lazy child while streaming on the server, and importProtection's static
+ * scan still finds the dynamic import target's chunk either way — confirmed
+ * by reproducing it (see PR body).
  *
  * LCP is unaffected by design: the content is server-rendered and paints
  * before any of this runs. What it costs is a little hydration time, on two
@@ -25,13 +31,12 @@ import { useHydrated } from "../lib/useHydrated.ts";
 const PlayRoom = lazy(() => import("./PlayRoom.tsx").then((m) => ({ default: m.PlayRoom })));
 
 export function DeferredPlayRoom({ children }: { children: ReactNode }) {
-  // lazy() alone would not be enough — React resolves a lazy child while
-  // streaming on the server, which would pull the module straight back in.
-  if (!useHydrated()) return <>{children}</>;
   return (
-    <Suspense fallback={children}>
-      <PlayRoom>{children}</PlayRoom>
-    </Suspense>
+    <ClientOnly fallback={children}>
+      <Suspense fallback={children}>
+        <PlayRoom>{children}</PlayRoom>
+      </Suspense>
+    </ClientOnly>
   );
 }
 
@@ -46,44 +51,80 @@ export function DeferredPlayRoom({ children }: { children: ReactNode }) {
  * `ssr: false`, and what kept it painting nothing at all until three.js
  * arrived.
  *
- * Each of these renders null on the server and for the first client render,
- * then loads. Null is the right placeholder: every one of them reports live
- * shared state, which genuinely does not exist yet at that moment. Nothing
- * that a visitor reads on arrival goes through here.
+ * Each of these renders nothing on the server (`<ClientOnly>` with no
+ * `fallback` renders null there, and is stripped to a childless, propless
+ * element for the SSR compile) then loads on the client. Null is the right
+ * placeholder: every one of them reports live shared state, which genuinely
+ * does not exist yet at that moment. Nothing that a visitor reads on arrival
+ * goes through here.
+ *
+ * Deliberately NOT one generic `deferred(load)` factory returning a component
+ * per call site (an earlier version did this): Start's compiler strips
+ * `<ClientOnly>`'s children at the JSX call site, which only frees the
+ * `lazy()` binding it references when that binding is private to the ONE
+ * function whose JSX got stripped. A shared factory's `lazy(load)` lives in
+ * the FACTORY's own scope, not the returned component's, and each
+ * `export const DeferredX = deferred(...)` is itself an exported binding —
+ * never eliminable — so the dynamic import stayed reachable regardless of
+ * what happened inside the returned closure (confirmed by reproducing it:
+ * DeferredSandbox still failed the same way after the JSX was wrapped).
+ * Each `lazy()` below is a private, unexported const whose only reference is
+ * the one exported function's `<ClientOnly>` JSX, matching DeferredPlayRoom
+ * and DeferredLivePulse above — the shape that's actually proven to work.
  */
-function deferred<P extends object>(load: () => Promise<{ default: ComponentType<P> }>) {
-  const Loaded = lazy(load);
-  return function Deferred(props: P) {
-    // Same reason as above: lazy() alone is not enough, because React resolves
-    // a lazy child while streaming on the server.
-    if (!useHydrated()) return null;
-    return (
+const PresenceBadge = lazy(() => import("./PlayRoom.tsx").then((m) => ({ default: m.PresenceBadge })));
+
+export function DeferredPresenceBadge({ className }: { className?: string }) {
+  return (
+    <ClientOnly>
       <Suspense fallback={null}>
-        <Loaded {...props} />
+        <PresenceBadge className={className} />
       </Suspense>
-    );
-  };
+    </ClientOnly>
+  );
 }
 
-export const DeferredPresenceBadge = deferred<{ className?: string }>(() =>
-  import("./PlayRoom.tsx").then((m) => ({ default: m.PresenceBadge })),
-);
+const VisitorPlaque = lazy(() => import("./Visitors.tsx").then((m) => ({ default: m.VisitorPlaque })));
 
-export const DeferredVisitorPlaque = deferred<object>(() =>
-  import("./Visitors.tsx").then((m) => ({ default: m.VisitorPlaque })),
-);
+export function DeferredVisitorPlaque() {
+  return (
+    <ClientOnly>
+      <Suspense fallback={null}>
+        <VisitorPlaque />
+      </Suspense>
+    </ClientOnly>
+  );
+}
 
-export const DeferredSandbox = deferred<object>(() =>
-  import("./Sandbox.tsx").then((m) => ({ default: m.Sandbox })),
-);
+const Sandbox = lazy(() => import("./Sandbox.tsx").then((m) => ({ default: m.Sandbox })));
+
+export function DeferredSandbox() {
+  return (
+    <ClientOnly>
+      <Suspense fallback={null}>
+        <Sandbox />
+      </Suspense>
+    </ClientOnly>
+  );
+}
 
 /** Self-gating, so the GUEST_WALL_ENABLED flag stays inside the lazy chunk
  *  rather than forcing the module back into the server build to be read. */
-export const DeferredGuestWall = deferred<object>(async () => {
+const GuestWallGate = lazy(async () => {
   const m = await import("./GuestWall.tsx");
   const Gate: ComponentType = () => (m.GUEST_WALL_ENABLED ? <m.GuestWall /> : null);
   return { default: Gate };
 });
+
+export function DeferredGuestWall() {
+  return (
+    <ClientOnly>
+      <Suspense fallback={null}>
+        <GuestWallGate />
+      </Suspense>
+    </ClientOnly>
+  );
+}
 
 /**
  * LivePulse, mounted on the client only.
@@ -96,10 +137,11 @@ export const DeferredGuestWall = deferred<object>(async () => {
 const LivePulse = lazy(() => import("./LivePulse.tsx"));
 
 export function DeferredLivePulse({ children }: { children: ReactNode }) {
-  if (!useHydrated()) return <>{children}</>;
   return (
-    <Suspense fallback={children}>
-      <LivePulse>{children}</LivePulse>
-    </Suspense>
+    <ClientOnly fallback={children}>
+      <Suspense fallback={children}>
+        <LivePulse>{children}</LivePulse>
+      </Suspense>
+    </ClientOnly>
   );
 }

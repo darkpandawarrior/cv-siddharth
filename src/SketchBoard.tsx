@@ -15,7 +15,8 @@ import {
 import "tldraw/tldraw.css";
 import { Canvas } from "@react-three/fiber";
 import { ARROWS, FRAMES, METRICS, NODES, NOTES, PINS, PERSISTENCE_KEY, TOUR, centerOf } from "./blueprintData.ts";
-import { CountUp, HoloCore, hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
+import { CountUp, hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
+import { HoloCore } from "./blueprintHologram.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";

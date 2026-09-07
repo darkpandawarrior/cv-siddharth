@@ -1,15 +1,18 @@
-import { Color } from "three";
-
 /**
  * The bridge between CSS theme tokens and everything that cannot read them.
  *
- * react-three-fiber props (`<pointLight color=`, `emissive=`) and canvas 2D
- * `ctx.fillStyle` take resolved colour strings — `var(--color-signal)` is not a
- * colour to them, it is an unparseable string. That is the whole reason the
- * scenes were hardcoded, and the whole reason a theme swap never reached them.
+ * canvas 2D `ctx.fillStyle` and anything else that wants a plain colour
+ * string take resolved values — `var(--color-signal)` is not a colour to
+ * them, it is an unparseable string.
  *
  * Resolve at call time, not module load: tokens change when a theme class is
  * applied to <html>, and a module-scope constant would freeze the boot palette.
+ *
+ * No `three` import here on purpose: this module is reached from routes that
+ * server-render (StoryMap.tsx, blueprintShared.tsx), and importProtection
+ * denies `three` from the SSR bundle. The three.js-flavoured helper
+ * (readColor, for r3f material/light props) lives in themeColorThree.ts,
+ * imported only by the WebGL scene modules that are already client-only.
  */
 
 /** Raw token value, e.g. "#3ddc84". For canvas ctx and CSS string props. */
@@ -20,9 +23,4 @@ export function readToken(varName: string, fallback: string): string {
   if (typeof document === "undefined") return fallback; // SSR / test env
   const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   return v || fallback;
-}
-
-/** Token as a three.js Color. For r3f material and light props. */
-export function readColor(varName: string, fallback: string): Color {
-  return new Color(readToken(varName, fallback));
 }

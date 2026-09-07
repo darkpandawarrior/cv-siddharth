@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 
 const SkillsOrbitScene = lazy(() => import("./SkillsOrbitScene.tsx"));
 
@@ -41,16 +42,23 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
 
   return (
     <div ref={holder} className={`relative select-none ${enabled ? "h-[360px]" : "h-0"}`} aria-hidden>
-      {enabled && (
-        <Suspense fallback={null}>
-          <SkillsOrbitScene active={active} onSelect={onSelect} />
-        </Suspense>
-      )}
-      {enabled && (
-        <span className="kicker pointer-events-none absolute bottom-1 right-2">
-          drag to spin · click a skill to filter
-        </span>
-      )}
+      {/* `enabled` is a runtime-only flag the bundler can't see through — it
+          still resolved SkillsOrbitScene's @react-three/fiber import for SSR
+          regardless. <ClientOnly> is what Start's compiler recognises to
+          strip this subtree (and the lazy import behind it) from the SERVER
+          compile entirely. */}
+      <ClientOnly>
+        {enabled && (
+          <Suspense fallback={null}>
+            <SkillsOrbitScene active={active} onSelect={onSelect} />
+          </Suspense>
+        )}
+        {enabled && (
+          <span className="kicker pointer-events-none absolute bottom-1 right-2">
+            drag to spin · click a skill to filter
+          </span>
+        )}
+      </ClientOnly>
     </div>
   );
 }

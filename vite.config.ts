@@ -254,7 +254,27 @@ export default defineConfig(async () => ({
     // TanStackStartViteInputConfig) — it never bundles its own React plugin;
     // it just requires *some* React-Refresh-compatible plugin (viteReact()
     // below) to be present so `/@react-refresh` resolves in dev.
-    tanstackStart(),
+    // Native to this plugin version (TanStackStartViteInputConfig#importProtection):
+    // turns "a client-only lib slipped into the SSR bundle" from a runtime
+    // `ReferenceError: document is not defined` in production (leaflet in
+    // SignalLab, playhtml in PlayRoom) into a build-time failure naming the
+    // file and specifier. React.lazy() alone does not keep a module off the
+    // SSR server, so this has to be enforced here, not at the call site.
+    //
+    // `server`, not `client`: getImportProtectionRulesForEnvironment (Start's
+    // own adapterUtils.js) applies compiledRules.client while building the
+    // CLIENT bundle and compiledRules.server while building the SSR bundle —
+    // so `client.specifiers` here would deny these libs FROM the browser
+    // bundle, breaking every legitimate client-only 3D/map/canvas room
+    // (confirmed: with `client`, the build failed on Starmap.tsx's real,
+    // already-client-only `@react-three/postprocessing` import). `server`
+    // is what keeps them out of the SSR path these libs actually crash.
+    tanstackStart({
+      importProtection: {
+        behavior: "error",
+        server: { specifiers: ["leaflet", "tldraw", "@playhtml/react", "playhtml", "three", "@react-three/*"] },
+      },
+    }),
     viteReact(),
     await babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),

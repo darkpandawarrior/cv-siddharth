@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { EDGES, EDGE_KIND, NODES, type StoryNode } from "./data/storyMap.ts";
@@ -269,11 +269,19 @@ export function StoryMap() {
           ref={holder}
           className="card-elevated relative h-[320px] overflow-hidden rounded-2xl border border-line bg-void/60 sm:h-[420px]"
         >
+          {/* `use3D` is a runtime-only flag the bundler can't see through —
+              it still resolved StoryMapScene's @react-three/fiber import for
+              SSR regardless. <ClientOnly> is what Start's compiler
+              recognises to strip this subtree (and the lazy import behind
+              it) from the SERVER compile entirely. StoryMapCanvas (the 2D
+              fallback) needs no such wrap — it imports nothing r3f. */}
           {mounted &&
             (use3D ? (
-              <Suspense fallback={<StoryMapCanvas onNavigate={go} />}>
-                <StoryMapScene onNavigate={go} />
-              </Suspense>
+              <ClientOnly fallback={<StoryMapCanvas onNavigate={go} />}>
+                <Suspense fallback={<StoryMapCanvas onNavigate={go} />}>
+                  <StoryMapScene onNavigate={go} />
+                </Suspense>
+              </ClientOnly>
             ) : (
               <StoryMapCanvas onNavigate={go} />
             ))}

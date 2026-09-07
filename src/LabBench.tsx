@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, ClientOnly } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
 // time — harmless client-side, fatal during SSR. Lazy-loading defers that eval
@@ -137,9 +137,17 @@ export function LabBench() {
             </div>
           </div>
           {tab === "signal" && (
-            <Suspense fallback={<PaneFallback what="signal lab" />}>
-              {mounted ? <SignalLabPane /> : <PaneFallback what="signal lab" />}
-            </Suspense>
+            // /lab server-renders and `tab === "signal"` is a runtime-only
+            // switch the bundler can't see through — it still resolved
+            // SignalLab's leaflet import for SSR regardless of the `mounted`
+            // flag above. `<ClientOnly>` is what Start's compiler recognises
+            // to strip this subtree (and the lazy import behind it) from the
+            // SERVER compile entirely.
+            <ClientOnly fallback={<PaneFallback what="signal lab" />}>
+              <Suspense fallback={<PaneFallback what="signal lab" />}>
+                <SignalLabPane />
+              </Suspense>
+            </ClientOnly>
           )}
           {tab === "crashes" && <CrashLab />}
           {tab === "recompose" && <RecomposeLab />}
