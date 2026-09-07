@@ -115,7 +115,23 @@ function gzipPreviewHtmlPlugin(): Plugin {
         // setHeader("content-encoding") from inside write() or end() throws
         // ERR_HTTP_HEADERS_SENT and the socket closes with an empty reply.
         res.writeHead = ((...args: Parameters<typeof res.writeHead>) => {
-          if (String(res.getHeader("content-type") ?? "").startsWith("text/html")) {
+          // vite preview's own built-in compression (@polka/compression) already
+          // gzips any text/html response over its 1024-byte threshold — which
+          // covers every STATIC .html file (e.g. public/portfolio-app/index.html,
+          // the Kotlin/Wasm twin's entry point), just not the streamed SSR
+          // document this plugin exists for (its first chunk lands under the
+          // threshold, so polka's own compression opts out and sets
+          // content-encoding: identity rather than leaving it unset).
+          // Compressing again here on top of polka's output nests two gzip
+          // layers under one Content-Encoding header — a real browser decodes
+          // once and renders the still-gzipped inner layer as garbage, which is
+          // why the portfolio's live embed iframe loaded a byte soup instead of
+          // the page and its Compose/Wasm build never even started (no #boot
+          // element, no canvas — e2e/project-detail.spec.ts's "reveals" test
+          // polled a page that had failed to parse). "identity" means polka
+          // looked and chose not to compress, so it counts as uncompressed here.
+          const existingEncoding = String(res.getHeader("content-encoding") ?? "identity");
+          if (existingEncoding === "identity" && String(res.getHeader("content-type") ?? "").startsWith("text/html")) {
             compress = true;
             // The gzipped length is not known yet, so this goes out chunked.
             res.removeHeader("content-length");
