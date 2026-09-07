@@ -110,8 +110,17 @@ test.describe("primary nav surfaces (footer, command palette)", () => {
     });
 
     await page.goto("/");
-    await page.locator("footer").getByRole("link", { name: "Résumé" }).click();
-    await expect(page).toHaveURL(/\/resume$/);
+    // Same hydration-race guard as the launcher/palette tests above: the
+    // footer sits inside App.tsx's `<Hydrate when={deferBelowFold}>` around
+    // Contact (see App.tsx's own doc comment on `deferBelowFold`), so its
+    // links carry no attached handler until its own IntersectionObserver
+    // fires — which a plain, unretried .click() can race past on a slower
+    // run. Retrying re-clicks until the navigation actually lands, so a
+    // genuinely broken link still fails, just later.
+    await expect(async () => {
+      await page.locator("footer").getByRole("link", { name: "Résumé" }).click();
+      await expect(page).toHaveURL(/\/resume$/, { timeout: 2000 });
+    }).toPass({ timeout: 20000 });
     await expect(page.locator("body")).toContainText(/Experience/i);
 
     expect(seenUrls.some((u) => u.includes("/#"))).toBe(false);
@@ -121,8 +130,13 @@ test.describe("primary nav surfaces (footer, command palette)", () => {
     await page.goto("/");
     const before = await page.evaluate(() => window.scrollY);
 
-    await page.locator("footer").getByRole("button", { name: "Skills" }).click();
-    await expect(page.locator("#skills")).toBeInViewport();
+    // Same hydration-race guard as above — the footer's button has no
+    // attached handler until its `<Hydrate>` boundary's own
+    // IntersectionObserver fires.
+    await expect(async () => {
+      await page.locator("footer").getByRole("button", { name: "Skills" }).click();
+      await expect(page.locator("#skills")).toBeInViewport({ timeout: 2000 });
+    }).toPass({ timeout: 20000 });
 
     const after = await page.evaluate(() => window.scrollY);
     expect(after).toBeGreaterThan(before);

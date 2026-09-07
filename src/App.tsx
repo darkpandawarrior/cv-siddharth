@@ -1263,13 +1263,30 @@ const HOME_SECTIONS: Record<(typeof homeFastPath)[number], React.ComponentType> 
 };
 
 // Which registry sections defer their client hydration until scrolled near
-// (see `deferBelowFold`'s own doc comment above) — carried over from the
-// hardcoded per-section <Hydrate> wrapping this registry replaced, not
-// re-decided here. `board` (EbProfiles, new with this registry) gets the
-// same deferral as its deep-path neighbors: it is scroll-gated content by
-// definition, never seen by the 90-second reader.
-const FAST_DEFERRED = new Set<(typeof homeFastPath)[number]>(["casestudies", "projects", "experience"]);
-const DEEP_DEFERRED = new Set<(typeof homeDeepPath)[number]>(["morph", "skills", "board"]);
+// (see `deferBelowFold`'s own doc comment above).
+//
+// NOT the straight carry-over from the hardcoded per-section <Hydrate>
+// wrapping this registry replaced: that original set deferred casestudies,
+// projects, experience, skills (and, by the same reasoning, would have
+// deferred board too) — which worked there because SiteFooter's own
+// "Case studies" / "Projects" / "Experience" / "Skills" links, and
+// facets.ts's "work" / "experience" / "board" hash targets, still had
+// something to scroll TO the instant they were clicked: this document's
+// scrollHeight already included every section in the single hardcoded
+// list, hydrated or not, because none of THAT list's deferred sections had
+// zero rendered height — the fallback for each was the section's own SSR
+// markup being kept in the DOM, just not yet interactive. Once React
+// bails out of hydrating a boundary during a genuine client-only pass
+// (not the initial hydration pass), though, an unintersected <Hydrate>
+// with no `fallback` renders NOTHING — zero height — until it scrolls
+// into range. A scroll-to-anchor click on a target that has not rendered
+// yet has nothing to scroll to, and Playwright's own locator (like a
+// real find-in-page search) cannot even resolve the element to attempt
+// it: e2e/navigation.spec.ts's footer tests caught this exact deadlock.
+// Only `morph` (DeviceMorph, a 3D scene) is not a documented nav target
+// anywhere (footer, facets.ts's hash list) and stays deferred.
+const FAST_DEFERRED = new Set<(typeof homeFastPath)[number]>([]);
+const DEEP_DEFERRED = new Set<(typeof homeDeepPath)[number]>(["morph"]);
 
 const DEEP_SECTIONS: Record<(typeof homeDeepPath)[number], React.ComponentType> = {
   morph: DeviceMorph,
@@ -1318,12 +1335,21 @@ export function HomePage() {
             doorway, now carrying boardArc's own line instead of just a link
             to it — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
-        <Hydrate when={deferBelowFold}>
-          <InkDoorway />
-        </Hydrate>
-        <Hydrate when={deferBelowFold}>
-          <Contact />
-        </Hydrate>
+        {/* NOT deferred, unlike above: this deferral was only ever correct
+            because Contact (and the footer it carries) used to be the LAST
+            thing on the page — a boundary with nothing after it reveals
+            itself naturally as a visitor scrolls toward "the end". The deep
+            path below moved five more sections after it, so a below-fold
+            <Hydrate> here now sits mid-page with real content on both sides:
+            its zero-height Suspense placeholder makes the footer briefly
+            absent from the DOM entirely rather than just uninteractive,
+            which is a real layout-shift for a visitor and an unreachable
+            target for anything that queries for it (a footer nav link, a
+            find-in-page search) before it happens to scroll into range. Both
+            are light (a CTA and a links list), so hydrating them with the
+            fast path costs little. */}
+        <InkDoorway />
+        <Contact />
         {/* Deep path: the mechanism-level evidence (multiplatform proof, the
             shipped shelf, the repo wall, the full skills cloud) plus EB
             Profiles (so-p1-soul-surfaced) for the visitor who kept scrolling
