@@ -1,3 +1,5 @@
+import { prefersReducedMotion } from "./reducedMotion.ts";
+
 /**
  * The world's input singleton.
  *
@@ -76,10 +78,14 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 let captured = true;
 const captureListeners = new Set<(captured: boolean) => void>();
 
+function notifyCaptured(): void {
+  for (const fn of captureListeners) fn(captured);
+}
+
 function setCaptured(next: boolean): void {
   if (captured === next) return;
   captured = next;
-  for (const fn of captureListeners) fn(captured);
+  notifyCaptured();
 }
 
 /** Current capture state, for anything that just needs a one-off read. */
@@ -91,6 +97,27 @@ export function isCaptured(): boolean {
 export function subscribeCaptured(fn: (captured: boolean) => void): () => void {
   captureListeners.add(fn);
   return () => captureListeners.delete(fn);
+}
+
+/**
+ * Whether the keyboard controller is attached at all — i.e. the world canvas
+ * is actually mounted. `captured` alone can't answer that: it defaults to
+ * `true` before any mount ever happens, so a consumer outside the world's
+ * lazy boundary (the playground route's chat FAB, deciding whether to hide
+ * itself over a driving craft) needs this second flag to tell "driving" from
+ * "the world was never mounted" rather than reading captured's pre-mount
+ * default as if it meant the same thing. Changing it also pokes the capture
+ * listeners (even when `captured` itself is unchanged, e.g. it was already
+ * the default `true` before this mount) — the FAB gate reads both flags
+ * together, so it needs a signal on either one changing, not just capture.
+ */
+let active = false;
+export function isWorldActive(): boolean {
+  return active;
+}
+function setWorldActive(next: boolean): void {
+  active = next;
+  notifyCaptured();
 }
 
 /**
@@ -167,6 +194,14 @@ export function subscribeAuto(fn: (on: boolean) => void): () => void {
 }
 
 export function setAutoDriving(on: boolean): void {
+  // Never idle-drift under reduced motion: auto-drive moves the car with no
+  // per-frame input from the visitor, which is exactly the class of
+  // automatic movement prefers-reduced-motion asks sites to skip — unlike
+  // steering/throttle input, which stays live because it is the visitor's
+  // own action, not the world's. Guarded here (the one place auto ever
+  // engages — the Onboarding tour button and the T-key toggle both call
+  // through this) rather than in each caller.
+  if (on && prefersReducedMotion()) return;
   if (autoEngaged === on) return;
   autoEngaged = on;
   if (!on) {
@@ -201,17 +236,36 @@ export function setAutoAxes(axes: { steer: number; throttle: number; brake: bool
   recomputeAxes();
 }
 
-/** Called by the HUD's left thumbstick. See recomputeAxes for why this
+/** Called by the HUD's one-thumb stick. See recomputeAxes for why this
  *  composes with the keyboard rather than overwriting it outright. */
 export function setTouchSteer(v: number): void {
   touchSteer = clamp(v, -1, 1);
   recomputeAxes();
 }
 
-/** Called by the HUD's right pedal. */
+/** Called by the HUD's one-thumb stick. */
 export function setTouchThrottle(v: number): void {
   touchThrottle = clamp(v, -1, 1);
   recomputeAxes();
+}
+
+/**
+ * The pure core of the touch stick's throttle read, split out of
+ * Hud.tsx's Thumbstick for the same reason computeTier is split out of
+ * deviceTier() in deviceTier.ts — a plain function of already-measured
+ * inputs is directly unit-testable without mounting a DOM pointer drag.
+ *
+ * `autoThrottle`: the mobile ladder's one-thumb fix — the thumb steers, the
+ * cart cruises at a constant forward throttle on its own, and drag-down is
+ * the one gesture that still means something (brake/reverse, proportional).
+ * `false` is the old behaviour, kept as the literal fallback Hud.tsx's
+ * `TOUCH_AUTO_THROTTLE` flag switches back to if auto-throttle proves worse
+ * once actually driven on a phone: dy maps straight to throttle both ways,
+ * up (negative dy) for forward.
+ */
+export function touchThrottleFromDrag(dy: number, radius: number, autoThrottle: boolean, cruise: number): number {
+  if (!autoThrottle) return clamp(-dy / radius, -1, 1);
+  return dy > 0 ? clamp(-dy / radius, -1, 0) : cruise;
 }
 
 /**
@@ -229,6 +283,7 @@ export function setTouchThrottle(v: number): void {
  */
 export function attachKeyboard(): () => void {
   const pressed = new Set<string>();
+  setWorldActive(true);
   setCaptured(true); // every fresh mount starts captured
   setAutoDriving(false); // ...and with a human at the wheel until asked otherwise
   keySteer = 0;
@@ -351,6 +406,7 @@ export function attachKeyboard(): () => void {
   window.addEventListener("blur", onBlur);
 
   return () => {
+    setWorldActive(false);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("pointerdown", onPointerDown);

@@ -9,6 +9,8 @@ import { heightAt, laneCenterX, LANE_WIDTH, MONTH_DEPTH } from "./heightfield.ts
 import { worldPalette, type WorldPalette } from "./palette.ts";
 import { glslVec3 } from "./Terrain.tsx";
 import { deviceTier, tierBudget } from "./deviceTier.ts";
+import { prefersReducedMotion } from "./reducedMotion.ts";
+import { telemetry } from "./telemetry.ts";
 
 /**
  * NIGHT SURVEY §5 — THE FOUR FIXTURE FAMILIES, and §6 — THE STATIONING RANK.
@@ -139,6 +141,34 @@ function Gantries({ c }: { c: WorldPalette }): JSX.Element {
 const BOLLARD_HEIGHT = 0.5;
 const BOLLARD_RADIUS = 0.07;
 
+/** §10 drop 2, the phone/throttled tier only: index-window the instanced
+ *  draw to this many metres either side of the car, rather than drawing
+ *  every month's bollard whether it's anywhere near the camera or not. */
+const CHESS_BOLLARD_WINDOW_HALF_M = 30;
+
+type BollardStatic = { x: number; z: number; period: number; intensity: number };
+
+/** §5's own formulas, verbatim — split out so the windowing useFrame below
+ *  and the unwindowed mount-time build share exactly one place that computes
+ *  them, rather than the same period/intensity math living twice. */
+function bollardStatics(): BollardStatic[] {
+  const x = laneCenterX(CHESS);
+  const lane = timeline.lanes[CHESS];
+  const peak = lane.peak.v || 1;
+  const out: BollardStatic[] = [];
+  for (let i = 0; i < MONTHS.length; i++) {
+    const g = Math.max(0, lane.months[MONTHS[i]] ?? 0);
+    out.push({
+      x,
+      z: monthZ(i),
+      // period clamp(0.25 + 2.75*(1-g/peak), 0.25, 3.0)s, intensity 0.15 + 0.85*sqrt(g/peak).
+      period: Math.min(3.0, Math.max(0.25, 0.25 + 2.75 * (1 - g / peak))),
+      intensity: 0.15 + 0.85 * Math.sqrt(g / peak),
+    });
+  }
+  return out;
+}
+
 /** One per month on the lane centreline — every month, including the zero
  *  ones: a quiet month is a slow, dim flatline (the formula below never
  *  reaches zero), not an absent bollard, which is the whole point of "a
@@ -146,6 +176,13 @@ const BOLLARD_RADIUS = 0.07;
 function Bollards({ c }: { c: WorldPalette }): JSX.Element {
   const geometry = useMemo(() => new THREE.CylinderGeometry(BOLLARD_RADIUS, BOLLARD_RADIUS * 1.15, BOLLARD_HEIGHT, 10), []);
   const uElapsed = useRef({ value: 0 });
+  // Cumulative per §10 (tier 3 gets every tier-2 drop too) — deviceTier.ts
+  // reads once at load and never re-probes, so this is safe to read once too.
+  const windowed = useMemo(() => deviceTier() >= 2, []);
+  const statics = useMemo(bollardStatics, []);
+  const periodAttrRef = useRef<THREE.InstancedBufferAttribute | null>(null);
+  const intensityAttrRef = useRef<THREE.InstancedBufferAttribute | null>(null);
+  const meshRef = useRef<THREE.InstancedMesh>(null);
   const material = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({ color: c.line, roughness: 0.45, metalness: 0.3 });
     const probeColor = glslVec3(c.probe);
@@ -165,7 +202,43 @@ function Bollards({ c }: { c: WorldPalette }): JSX.Element {
   }, [c.line, c.probe]);
 
   useFrame((state) => {
+    // Reduced motion: rate -> 0, per the art-direction doc. Simply never
+    // advancing the uniform freezes the shader's own sine at whatever phase
+    // it was last written (0 on a fresh mount) instead of animating a still
+    // scene — cheaper and simpler than a second, motion-less shader variant.
+    if (prefersReducedMotion()) return;
     uElapsed.current.value = state.clock.elapsedTime;
+  });
+
+  // §10 drop 2 — re-window every frame on the phone/throttled tier only.
+  // Cheap (at most a few dozen 4x4 writes: MONTH_DEPTH is ~1.8m, so 60m is
+  // ~33 months either side of the car), and simpler than only recomputing on
+  // a month-boundary crossing. `mesh.count` (three.js's own draw-count knob)
+  // is what actually sheds the instances outside the window — everything
+  // beyond `count` in the buffer is just never submitted to the GPU.
+  useFrame(() => {
+    if (!windowed) return;
+    const mesh = meshRef.current;
+    const periodAttr = periodAttrRef.current;
+    const intensityAttr = intensityAttrRef.current;
+    if (!mesh || !periodAttr || !intensityAttr) return;
+    let count = 0;
+    for (let i = 0; i < statics.length; i++) {
+      const b = statics[i];
+      if (Math.abs(b.z - telemetry.z) > CHESS_BOLLARD_WINDOW_HALF_M) continue;
+      dummy.position.set(b.x, heightAt(b.x, b.z), b.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(count, dummy.matrix);
+      periodAttr.array[count] = b.period;
+      intensityAttr.array[count] = b.intensity;
+      count++;
+    }
+    mesh.count = count;
+    mesh.instanceMatrix.needsUpdate = true;
+    periodAttr.needsUpdate = true;
+    intensityAttr.needsUpdate = true;
   });
 
   return (
@@ -173,28 +246,30 @@ function Bollards({ c }: { c: WorldPalette }): JSX.Element {
       args={[geometry, material, MONTHS.length]}
       frustumCulled={false}
       ref={(mesh) => {
+        meshRef.current = mesh;
         if (!mesh) return;
-        const x = laneCenterX(CHESS);
-        const lane = timeline.lanes[CHESS];
-        const peak = lane.peak.v || 1;
         const periods = new Float32Array(MONTHS.length);
         const intensities = new Float32Array(MONTHS.length);
-        for (let i = 0; i < MONTHS.length; i++) {
-          const g = Math.max(0, lane.months[MONTHS[i]] ?? 0);
-          const z = monthZ(i);
-          dummy.position.set(x, heightAt(x, z), z);
+        for (let i = 0; i < statics.length; i++) {
+          const b = statics[i];
+          dummy.position.set(b.x, heightAt(b.x, b.z), b.z);
           dummy.rotation.set(0, 0, 0);
           dummy.scale.set(1, 1, 1);
           dummy.updateMatrix();
           mesh.setMatrixAt(i, dummy.matrix);
-          // §5's own formulas, verbatim: period clamp(0.25 + 2.75*(1-g/peak), 0.25, 3.0)s,
-          // intensity 0.15 + 0.85*sqrt(g/peak).
-          periods[i] = Math.min(3.0, Math.max(0.25, 0.25 + 2.75 * (1 - g / peak)));
-          intensities[i] = 0.15 + 0.85 * Math.sqrt(g / peak);
+          periods[i] = b.period;
+          intensities[i] = b.intensity;
         }
         mesh.instanceMatrix.needsUpdate = true;
-        mesh.geometry.setAttribute("aPeriod", new THREE.InstancedBufferAttribute(periods, 1));
-        mesh.geometry.setAttribute("aIntensity", new THREE.InstancedBufferAttribute(intensities, 1));
+        const periodAttr = new THREE.InstancedBufferAttribute(periods, 1);
+        const intensityAttr = new THREE.InstancedBufferAttribute(intensities, 1);
+        mesh.geometry.setAttribute("aPeriod", periodAttr);
+        mesh.geometry.setAttribute("aIntensity", intensityAttr);
+        periodAttrRef.current = periodAttr;
+        intensityAttrRef.current = intensityAttr;
+        // Unwindowed tiers keep drawing every month, exactly as before —
+        // three.js's own default `count` (the args[2] instance total) already
+        // does that, so there's nothing else to set here.
       }}
     />
   );
@@ -499,13 +574,22 @@ function StationingRank({ c }: { c: WorldPalette }): JSX.Element {
 
 export function Fixtures(): JSX.Element {
   const c = worldPalette();
+  // §10 drop 3, the 4x-throttle tier only: strip every fixture family but
+  // the 26 gantries (timeline.lanes[work].milestones — Gantries' own doc
+  // comment), falling back to Terrain.tsx's own plate/seams/relief/read-line
+  // ground layers for everything else this tier can't afford to draw.
+  const stripped = deviceTier() === 3;
   return (
     <>
       <Gantries c={c} />
-      <Bollards c={c} />
-      <Lampposts c={c} />
-      <OpensourceSpeckle c={c} />
-      <StationingRank c={c} />
+      {!stripped && (
+        <>
+          <Bollards c={c} />
+          <Lampposts c={c} />
+          <OpensourceSpeckle c={c} />
+          <StationingRank c={c} />
+        </>
+      )}
     </>
   );
 }
