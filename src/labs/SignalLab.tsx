@@ -265,7 +265,7 @@ export function SignalLabPane() {
       const pt = projectXY(pp.p);
       if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
     }
-    ctx.strokeStyle = "rgba(240, 136, 62, 0.5)";
+    ctx.strokeStyle = "rgba(79, 214, 224, 0.5)";
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
@@ -284,9 +284,9 @@ export function SignalLabPane() {
         else pen = false;
       }
       ctx.setLineDash(bridged ? [4, 4] : []);
-      ctx.strokeStyle = bridged ? "rgba(94, 230, 255, 0.85)" : readToken("--color-probe", "#5ee6ff");
+      ctx.strokeStyle = bridged ? "rgba(242, 161, 61, 0.85)" : readToken("--color-accent", "#f2a13d");
       ctx.lineWidth = bridged ? 1.8 : 2.4;
-      ctx.shadowColor = "rgba(94, 230, 255, 0.5)";
+      ctx.shadowColor = "rgba(242, 161, 61, 0.5)";
       ctx.shadowBlur = 5;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -311,7 +311,7 @@ export function SignalLabPane() {
     // 5. The magnifier. At city zoom a 13 m scatter is two pixels wide, so the
     //    headline ("raw GPS reads 40 km") is true but invisible. This window
     //    follows the vehicle at ~9x and is where the claim becomes something
-    //    you can see: orange thrashing either side of the road, cyan riding
+    //    you can see: cyan thrashing either side of the road, amber riding
     //    down the middle of it.
     if (here) {
       const IW = Math.min(210, rect.width * 0.34);
@@ -352,11 +352,11 @@ export function SignalLabPane() {
       strokeThrough(
         near.filter((s) => s.fix),
         (s) => s.fix as XY,
-        "rgba(240, 136, 62, 0.9)",
+        "rgba(79, 214, 224, 0.9)",
         1.4,
       );
       const nearPath = path.filter((pp) => pp.i >= from && pp.i <= head);
-      strokeThrough(nearPath, (pp) => pp.p, "#5ee6ff", 2.2);
+      strokeThrough(nearPath, (pp) => pp.p, "#f2a13d", 2.2);
 
       const v = toInset(here.truth);
       ctx.beginPath();
@@ -567,7 +567,7 @@ export function SignalLabPane() {
               type="checkbox"
               checked={tier === "budget"}
               onChange={(e) => setTier(e.target.checked ? "budget" : "flagship")}
-              className="accent-signal"
+              className="accent-accent"
             />
             budget device
             <span className="text-muted">({CADENCE_S[tier]}s fixes)</span>

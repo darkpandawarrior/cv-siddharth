@@ -254,7 +254,7 @@ export function FanoutLab() {
             run scan
           </button>
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">
-            <input type="checkbox" checked={dedup} onChange={(e) => setDedup(e.target.checked)} className="accent-signal" />
+            <input type="checkbox" checked={dedup} onChange={(e) => setDedup(e.target.checked)} className="accent-accent" />
             SimHash de-dup
           </label>
           <span className="font-mono text-xs text-zinc-400">

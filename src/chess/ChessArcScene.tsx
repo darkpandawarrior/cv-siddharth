@@ -38,7 +38,14 @@ const FORMAT_GAP = 0.5; // Z distance between formats inside one platform
 // colour everywhere. Meaning never rests on the colour alone: every ribbon
 // also carries a written "<format> <min>–<max>" label, and the platforms are
 // separated in space, not by hue.
-const FORMAT_COLOUR = ["#3ddc84", "#5ee6ff", "#f0883e"];
+// Resolved at call time (readToken), not frozen at module scope, so the two
+// scene-token entries follow a theme swap like every other scene colour.
+function formatColour(i: number): string {
+  const idx = i % 3;
+  if (idx === 0) return readToken("--color-signal", "#3ddc84");
+  if (idx === 1) return readToken("--color-probe", "#5ee6ff");
+  return "#f0883e";
+}
 
 const HANDOFF_COLOUR = "#f0883e";
 
@@ -152,7 +159,7 @@ function useModel(corpus: Corpus, handoffAt: number | null) {
         ribbons: own.map((s, si) =>
           buildRibbon(
             s,
-            FORMAT_COLOUR[formatOrder.indexOf(s.format) % FORMAT_COLOUR.length],
+            formatColour(formatOrder.indexOf(s.format)),
             (si - (own.length - 1) / 2) * FORMAT_GAP,
             x,
             y,

@@ -50,4 +50,26 @@ describe("theme token coverage", () => {
       expect(line, `literal colour in .ink-world: ${line.trim()}`).toContain("var(--");
     }
   });
+
+  /**
+   * so-cal1-no-new-accent: .ink-world redefining --color-accent/--color-accent2
+   * to ochre/terracotta is a SANCTIONED scoped theme override (see the comment
+   * on that block), not a palette violation the CAL-1 sweep missed. What a
+   * violation would actually look like is a THIRD place redefining either
+   * token — the default drifting off amber/cyan, or a leak into some other
+   * selector — so that's what this pins: exactly one root default and exactly
+   * one scoped override, nothing else touches these two custom properties.
+   */
+  it("declares CAL-1 accent/accent2 in exactly two places: the @theme default and .ink-world", () => {
+    const accentDecls = [...css.matchAll(/^\s*--color-accent:\s*#[0-9a-fA-F]{6}/gm)];
+    const accent2Decls = [...css.matchAll(/^\s*--color-accent2:\s*#[0-9a-fA-F]{6}/gm)];
+    expect(accentDecls, "--color-accent should be declared exactly twice").toHaveLength(2);
+    expect(accent2Decls, "--color-accent2 should be declared exactly twice").toHaveLength(2);
+  });
+
+  it("keeps the @theme default CAL-1, not .ink-world's ochre/terracotta", () => {
+    const theme = blockFor("@theme {");
+    expect(theme).toContain("--color-accent: #f2a13d");
+    expect(theme).toContain("--color-accent2: #4fd6e0");
+  });
 });

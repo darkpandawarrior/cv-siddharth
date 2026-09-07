@@ -16,8 +16,9 @@ import { Reveal } from "./Reveal.tsx";
  * who asked for reduced motion.
  */
 
-const GREEN = { r: 61, g: 220, b: 132 };
-const CYAN = { r: 94, g: 230, b: 255 };
+// CAL-1 channels — measured/settled amber, unresolved/baseline cyan.
+const CHANNEL_A = { r: 0xf2, g: 0xa1, b: 0x3d }; // #f2a13d
+const CHANNEL_B = { r: 0x4f, g: 0xd6, b: 0xe0 }; // #4fd6e0
 
 type Particle = {
   x: number;
@@ -26,7 +27,6 @@ type Particle = {
   ty: number;
   vx: number;
   vy: number;
-  mix: number; // 0..1 green→cyan tint, fixed per particle
 };
 
 /** Rasterize the wordmark to an offscreen canvas and return its lit pixels as
@@ -117,30 +117,35 @@ export function ParticleWordmark() {
         // scatter for the assembling-into-shape reveal.
         const seedX = Math.random() * width;
         const seedY = Math.random() * height;
-        return { x: seedX, y: seedY, tx: p.x, ty: p.y, vx: 0, vy: 0, mix: p.x / width };
+        return { x: seedX, y: seedY, tx: p.x, ty: p.y, vx: 0, vy: 0 };
       });
     };
     build();
 
-    const colorOf = (mix: number, alpha: number) => {
-      const r = Math.round(GREEN.r + (CYAN.r - GREEN.r) * mix);
-      const g = Math.round(GREEN.g + (CYAN.g - GREEN.g) * mix);
-      const b = Math.round(GREEN.b + (CYAN.b - GREEN.b) * mix);
+    // settle: 0 = still scattered (baseline cyan), 1 = on target (measured
+    // amber) — driven live by distance-to-target, not a fixed spawn-time mix,
+    // so colour expresses the spring's own convergence.
+    const colorOf = (settle: number, alpha: number) => {
+      const r = Math.round(CHANNEL_B.r + (CHANNEL_A.r - CHANNEL_B.r) * settle);
+      const g = Math.round(CHANNEL_B.g + (CHANNEL_A.g - CHANNEL_B.g) * settle);
+      const b = Math.round(CHANNEL_B.b + (CHANNEL_A.b - CHANNEL_B.b) * settle);
       return `rgba(${r},${g},${b},${alpha})`;
     };
 
-    // Static render for reduced motion: particles sit on their targets.
+    // Static render for reduced motion: particles sit on their targets, so
+    // distance-to-target is 0 — settle = 1, the whole wordmark in solid
+    // resolved amber.
     if (reduced) {
       ctx.clearRect(0, 0, width, height);
       for (const p of particles) {
-        ctx.fillStyle = colorOf(p.mix, 0.9);
+        ctx.fillStyle = colorOf(1, 0.9);
         ctx.fillRect(p.tx, p.ty, 1.6, 1.6);
       }
       const ro = new ResizeObserver(() => {
         build();
         ctx.clearRect(0, 0, width, height);
         for (const p of particles) {
-          ctx.fillStyle = colorOf(p.mix, 0.9);
+          ctx.fillStyle = colorOf(1, 0.9);
           ctx.fillRect(p.tx, p.ty, 1.6, 1.6);
         }
       });
@@ -177,8 +182,12 @@ export function ParticleWordmark() {
         p.y += p.vy;
 
         // Faster particles read brighter — the motion itself is the highlight.
+        // Colour tracks convergence: on-target reads amber, still-scattered
+        // (or mid-flight after a disturbance) reads cyan.
+        const dist = Math.hypot(p.tx - p.x, p.ty - p.y);
+        const settle = Math.max(0, 1 - dist / 50);
         const speed = Math.min(Math.abs(p.vx) + Math.abs(p.vy), 6);
-        ctx.fillStyle = colorOf(p.mix, 0.55 + speed * 0.07);
+        ctx.fillStyle = colorOf(settle, 0.55 + speed * 0.07);
         ctx.fillRect(p.x, p.y, 1.7, 1.7);
       }
     };

@@ -13,7 +13,7 @@ import { useSectionNav } from "../lib/navigation.ts";
 type BrandToken = { name: string; label: string; color: string; font?: string };
 
 const BRANDS: BrandToken[] = [
-  { name: "portfolio", label: "Portfolio", color: "#3ddc84" },
+  { name: "portfolio", label: "Portfolio", color: "#f2a13d" },
   { name: "gaddi", label: "Gaddi", color: "#E8C874", font: "'Rozha One', Georgia, serif" },
   { name: "doori", label: "Doori", color: "#5ee6ff" },
   { name: "paymentslab-kmp", label: "PaymentsLab-KMP", color: "#A78BFA" },
@@ -201,7 +201,7 @@ export function ThemeLab() {
               type="checkbox"
               checked={layout === "hero"}
               onChange={(e) => setLayout(e.target.checked ? "hero" : "card")}
-              className="accent-signal"
+              className="accent-accent"
             />
             hero layout
           </label>
