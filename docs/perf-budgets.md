@@ -71,20 +71,21 @@ Worst realistic single-visit cost (one visitor opening the heaviest app,
 Stutter) is ~36MB. At 100GB/mo (102,400 MB) that alone allows roughly **2,800
 full Stutter loads a month** before the cap binds — and a visitor loading
 Stutter is already the worst case; the other four are each under half that
-cost. No @vercel/analytics is wired up yet (see the analytics lane — not
-shipped this pass), so there's no real per-app view count to multiply against
-this, but this portfolio's total traffic is recruiter/interview-driven, not a
-consumer product's: realistically dozens to low hundreds of visits a day
-fleet-wide, and only a fraction of those ever scroll to a project's live
-embed rather than looking at the screenshots above it.
+cost. `@vercel/analytics` is now wired up (`<Analytics />` in `__root.tsx`),
+but a fresh mount has zero history — there's no real per-app view count to
+multiply against this yet, only what it collects from here on. This
+portfolio's total traffic is recruiter/interview-driven, not a consumer
+product's: realistically dozens to low hundreds of visits a day fleet-wide,
+and only a fraction of those ever scroll to a project's live embed rather
+than looking at the screenshots above it.
 
 **Decision:** keep all five apps on the one deploy for now. The margin above
 is wide enough (thousands of full-Stutter loads before the cap binds, against
 a plausible traffic ceiling of maybe a few hundred WASM-embed opens a month)
 that splitting Stutter into its own Vercel project would be solving a problem
-that isn't measured to exist. Revisit this the day real numbers exist to check
-it against: once `@vercel/analytics` ships (tracked separately), if combined
-WASM-embed bandwidth trends toward ~20GB/mo (a fifth of the cap — leaving
+that isn't measured to exist. Revisit this once `@vercel/analytics` has
+enough history to check it against: if combined WASM-embed bandwidth trends
+toward ~20GB/mo (a fifth of the cap — leaving
 headroom for the rest of the site plus growth), move `deadlock-app` (Stutter),
 the heaviest single app at roughly half the fleet's combined bytes, to its own
 Vercel project first — it's already the one deployment target vercel.json

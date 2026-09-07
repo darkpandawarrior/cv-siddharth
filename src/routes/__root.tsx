@@ -2,6 +2,8 @@ import { createRootRoute, HeadContent, Scripts, useRouter } from "@tanstack/reac
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
+import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { surfaces } from "../data/surfaces.ts";
 import { profile, experience, education } from "../data/profile.ts";
@@ -291,6 +293,17 @@ function RegisterServiceWorker() {
   return null;
 }
 
+// Fires Sentry's opt-in init after hydration — same after-mount timing as
+// RegisterServiceWorker above, so a client-only, dependency-loading effect
+// never runs during SSR or blocks the first paint. No-ops with zero network
+// activity when VITE_SENTRY_DSN is unset (see src/lib/monitoring.ts).
+function InitMonitoring() {
+  useEffect(() => {
+    void initMonitoring();
+  }, []);
+  return null;
+}
+
 /** Gates AnomalyRail's mount to after the browser has painted. `requestIdleCallback`
  *  (with a `setTimeout` fallback for Safari, which has none) fires only once the
  *  main thread is free after the current frame, which is after paint by
@@ -351,7 +364,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             called itself "Global ⌘K". One mount makes that true, and avoids
             the duplicate ⌘K listeners three mounts would have caused. */}
         <CommandPalette />
+        <InitMonitoring />
         <SpeedInsights />
+        <Analytics />
         <Scripts />
         <noscript>
           <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "var(--color-text)" }}>
