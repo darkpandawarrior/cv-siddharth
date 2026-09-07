@@ -35,9 +35,12 @@ jobs:
       # for both. Running it in its own workflow would mean a second vite build
       # on every PR for no extra signal.
       - name: End-to-end tests
-        # workflow_dispatch inputs arrive as strings even when declared
-        # `type: boolean` -- inputs.skip_e2e == true silently never matches.
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != 'true' }}
+        # `inputs.*` (unlike `github.event.inputs.*`) is typed from the
+        # workflow_dispatch input declaration above, so this compares
+        # boolean to boolean -- confirmed by the round-1/round-2 arch-L13
+        # calibration dispatches: comparing against the string 'true' here
+        # instead made e2e run on every dispatch, the opposite of the point.
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
         run: npm run test:e2e
 
       - name: Lighthouse
