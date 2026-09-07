@@ -33,6 +33,23 @@ for (const slug of Object.keys(compareSets)) {
 }
 
 /**
+ * THE BUG: ProjectDetail used to snapshot document.title on mount and restore that snapshot on
+ * unmount. On a browser Back off a project page, the destination route's OWN head() had already set
+ * the correct title before this cleanup ran — so the cleanup clobbered it with a stale snapshot from
+ * back when THIS page mounted. Reproduced by going /map -> /project/doori -> back, and checking the
+ * title is /map's again, not stuck on "Doori — ...".
+ */
+test("back-navigating off a project page restores the destination's own title", async ({ page }) => {
+  await page.goto("/map");
+  const mapTitle = await page.title();
+  await page.goto("/project/doori");
+  await expect.poll(() => page.title()).toContain("Doori");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/map$/);
+  await expect.poll(() => page.title()).toBe(mapTitle);
+});
+
+/**
  * THE BUG: the live-embed reveal probe looked up `#ComposeTarget`, which the Compose Multiplatform
  * 1.12 build under /portfolio-app does not have — it renders into a plain div and has no <canvas>
  * at all. So the probe timed out, gave up, and the "live" frame stayed a black box forever. This

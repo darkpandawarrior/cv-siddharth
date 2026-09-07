@@ -4,7 +4,7 @@ import { projects } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 import { ScreenMarquee } from "./ScreenMarquee.tsx";
 import { PROJECT_ORDER } from "./data/connections.ts";
-import { FieldNotes } from "./FieldNotes.tsx";
+import { FieldNotes, SystemStrip } from "./FieldNotes.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
@@ -213,22 +213,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
     };
   }, [project]);
 
-  // Per-project tab title + description while the page is open. (Social-crawler
-  // previews come from the SSR'd /project/<slug> route's own head() meta,
-  // which doesn't run JS; this keeps the live tab and in-app history entry
-  // project-specific.)
-  useEffect(() => {
-    if (!project) return;
-    const prevTitle = document.title;
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    const prevDesc = meta?.content;
-    document.title = `${project.name} — ${project.tagline.split(/[—–·]/)[0].trim()} | Siddharth Pandalai`;
-    if (meta) meta.content = project.description;
-    return () => {
-      document.title = prevTitle;
-      if (meta && prevDesc !== undefined) meta.content = prevDesc;
-    };
-  }, [project]);
+  // Tab title + description while this page is open used to be set here
+  // imperatively (snapshot document.title on mount, restore it on unmount).
+  // On a browser Back off this page, the destination route's OWN head()
+  // (below, and every other route's) had already set the correct title before
+  // this effect's cleanup fired — restoring a STALE snapshot taken back when
+  // this page mounted, clobbering the destination's real title with this
+  // page's. /project/$slug's `head()` already sets the same title and
+  // description declaratively (see routes/project.$slug.tsx), the mechanism
+  // every other route relies on with no per-component effect at all, so this
+  // one is deleted rather than patched to fire correctly on every nav path.
 
   const close = useCallback(() => setIdx(null), []);
   const step = useCallback(
@@ -392,15 +386,10 @@ export function ProjectDetail({ slug }: { slug: string }) {
               ✦ Ask my AI about {project.name}
             </button>
             <ShareProject slug={slug} name={project.name} />
-            <Link
-              to="/loopdown"
-              className="inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent"
-            >
-              Field notes on this work <ArrowUpRight size={13} />
-            </Link>
             <span className="text-sm text-muted">{project.status}</span>
           </div>
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
+          <SystemStrip slug={slug} className="rise-in rise-in-3 mt-3" />
         </div>
       </div>
 

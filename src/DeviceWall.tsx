@@ -161,6 +161,11 @@ export function FitImage({
 function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: string; shot: number }) {
   const src = (file: string) => `/projects/${slug}/screenshots/${file}`;
   const shots = target.screens;
+  // Previous/next changes which shot is showing, but every frame's alt text
+  // read identically regardless of `shot` — a screen-reader user heard the
+  // same string on every press. Screens carry no per-shot caption, so the
+  // index is the cheapest true fact to add; silent when there's only one.
+  const shotLabel = shots.length > 1 ? ` (${shot + 1} of ${shots.length})` : "";
 
   if (target.deviceFrame === "browser") {
     return (
@@ -181,7 +186,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
         {target.liveUrl ? (
           <LiveEmbed url={target.liveUrl} fallback={shots[0] ? src(shots[0]) : undefined} />
         ) : shots.length > 0 ? (
-          <FitImage src={src(shots[shot])} alt={`${target.platform} — web`} targetAspect={16 / 9} className="aspect-video w-full" />
+          <FitImage src={src(shots[shot])} alt={`${target.platform} — web${shotLabel}`} targetAspect={16 / 9} className="aspect-video w-full" />
         ) : (
           <div className="font-mono-os flex aspect-video w-full flex-col items-center justify-center gap-2 bg-black/40 text-xs text-muted">
             <Globe size={20} className="text-muted" />
@@ -207,7 +212,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
           <span className="ml-2 text-[10px] text-muted">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
         </div>
         {shots.length > 0 && (
-          <FitImage src={src(shots[shot])} alt={`${target.platform} window`} targetAspect={16 / 9} className="aspect-video w-full" />
+          <FitImage src={src(shots[shot])} alt={`${target.platform} window${shotLabel}`} targetAspect={16 / 9} className="aspect-video w-full" />
         )}
       </div>
     );
@@ -220,7 +225,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
     return (
       <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-line bg-[#0c100e] p-3 shadow-[0_22px_60px_-22px_rgba(0,0,0,0.85)]">
         {shots.length > 0 && (
-          <FitImage src={src(shots[shot])} alt={`${target.platform} widget`} targetAspect={16 / 9} className="aspect-video w-full rounded-lg" />
+          <FitImage src={src(shots[shot])} alt={`${target.platform} widget${shotLabel}`} targetAspect={16 / 9} className="aspect-video w-full rounded-lg" />
         )}
       </div>
     );
@@ -236,7 +241,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
         {shots.length > 0 && (
           <FitImage
             src={src(shots[shot])}
-            alt={`${target.platform} watch face`}
+            alt={`${target.platform} watch face${shotLabel}`}
             targetAspect={isAppleWatch ? 4 / 5 : 1}
             className="h-full w-full"
           />
@@ -249,7 +254,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
   return (
     <div className="device glow-pulse mx-auto aspect-[9/19] w-40 sm:w-48">
       {shots.length > 0 && (
-        <FitImage src={src(shots[shot])} alt={`${target.platform} screen`} targetAspect={9 / 19} className="h-full w-full" />
+        <FitImage src={src(shots[shot])} alt={`${target.platform} screen${shotLabel}`} targetAspect={9 / 19} className="h-full w-full" />
       )}
     </div>
   );

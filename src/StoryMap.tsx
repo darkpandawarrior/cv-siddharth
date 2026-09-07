@@ -2,7 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
-import { EDGES, NODES, type StoryNode } from "./data/storyMap.ts";
+import { EDGES, EDGE_KIND, NODES, type StoryNode } from "./data/storyMap.ts";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { readToken } from "./themeColor";
 
@@ -106,7 +106,12 @@ function StoryMapCanvas({ onNavigate }: { onNavigate: (target: string) => void }
         ctx.quadraticCurveTo(mx, my, pb.x, pb.y);
         ctx.strokeStyle = hot ? `${pb.n.color}cc` : "rgba(94, 230, 255, 0.14)";
         ctx.lineWidth = hot ? 1.6 : 1;
+        // Declared wiring (editorial: this is curated, not verified) reads
+        // dashed; measured wiring (read straight off systemGraph.ts's own
+        // facts) reads solid. The legend below the canvas says which is which.
+        ctx.setLineDash(EDGE_KIND[`${a}->${b}`] === "declared" ? [5, 4] : []);
         ctx.stroke();
+        ctx.setLineDash([]);
         // signal pulse traveling the wire
         if (!reduced) {
           const k = ((t / 2400 + (a.charCodeAt(0) % 7) / 7) % 1);
@@ -262,7 +267,7 @@ export function StoryMap() {
       <Reveal>
         <div
           ref={holder}
-          className="card-elevated relative hidden h-[420px] overflow-hidden rounded-2xl border border-line bg-void/60 sm:block"
+          className="card-elevated relative h-[320px] overflow-hidden rounded-2xl border border-line bg-void/60 sm:h-[420px]"
         >
           {mounted &&
             (use3D ? (
@@ -277,6 +282,19 @@ export function StoryMap() {
               drag to orbit
             </span>
           )}
+        </div>
+        {/* text-muted, not text-zinc-500/600 — those fail WCAG AA on this dark
+            ground (index.css's own note on --color-muted), which is exactly
+            what axe caught here at first pass. */}
+        <div className="mt-2 flex items-center gap-4 text-[11px] text-muted">
+          <span className="flex items-center gap-1.5">
+            <svg width="16" height="2" aria-hidden><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" /></svg>
+            measured
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="16" height="2" aria-hidden><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3,2.5" /></svg>
+            declared
+          </span>
         </div>
         <Link
           to="/blueprint"

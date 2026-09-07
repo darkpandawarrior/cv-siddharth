@@ -44,8 +44,15 @@ import { useSectionNav } from "../lib/navigation.ts";
  * canvas and the whole track paints underneath the tiles.
  */
 
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://carto.com/attributions">CARTO</a> · route &copy; OpenStreetMap contributors';
+// CARTO's anonymous dark_all basemap now requires an account key — every
+// tile came back stamped "API KEY REQUIRED", which is what a visitor actually
+// saw under the route, on phone and desktop alike. Standard OSM raster tiles
+// need no key at all and never have.
+// ponytail: light basemap only — a genuinely free dark tile source would need
+// a paid/keyed provider (Stadia, Mapbox) wired through an env var. Swap
+// TILE_URL for one if the dark theme parity is ever worth that setup.
+const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 /** Named seeds — the same engine, different luck. */
 const SCENARIOS = [
@@ -137,7 +144,8 @@ export function SignalLabPane() {
       doubleClickZoom: true,
       keyboard: false,
     });
-    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: "abcd", maxZoom: 20 }).addTo(map);
+    // OSM's tile subdomains are a/b/c, not CARTO's four-letter "abcd".
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: "abc", maxZoom: 19 }).addTo(map);
     map.fitBounds(L.latLngBounds(ROUTE.map((p) => L.latLng(p[0], p[1]))), { padding: [24, 24] });
     mapRef.current = map;
 

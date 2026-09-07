@@ -31,7 +31,7 @@ import { SurfaceWall } from "./SurfaceWall.tsx";
 import { DeviceMorph } from "./DeviceMorph.tsx";
 import { LauncherButton, openLauncher } from "./Launcher.tsx";
 import { excelsiorMarks } from "./data/excelsiorMarks.ts";
-import { FieldNotes } from "./FieldNotes.tsx";
+import { FieldNotes, SystemStrip } from "./FieldNotes.tsx";
 import { CursorAura } from "./CursorAura.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { Expandable } from "./Expandable.tsx";
@@ -762,6 +762,7 @@ function Projects() {
                     ))}
                   </div>
                   <FieldNotes slug={p.slug} className="mt-3" />
+                  <SystemStrip slug={p.slug} className="mt-3" />
                   <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
                     {p.detail && (
                       <span className="flex items-center gap-1 text-sm font-semibold text-accent group-hover:text-accent-dim">
