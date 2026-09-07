@@ -23,7 +23,7 @@
 // already in the repo: a dated stamp and a per-file deadline in
 // freshnessSla.ts, tuned to how fast each source actually moves.
 //
-// Two are deliberately absent despite deriving from committed inputs:
+// Four are deliberately absent despite deriving from committed inputs:
 //   gen-project-heroes.mjs re-encodes PNGs and the encoder is not byte-stable,
 //     so all eight heroes differ on a second run from identical pixels.
 //   gen-store-flavours.mjs refuses to run without SHELF_RIDER_REPO and
@@ -38,6 +38,17 @@
 //     it on a laptop where the cache and poppler both happened to exist. The
 //     committed pages under public/excelsior/pages are tracked and stable; it
 //     is the fetch, not the artifact, that cannot be reproduced.
+//   gen-ops.mjs stamps `opsGeneratedAt` with the wall-clock date at the moment
+//     it runs (gen-ops.mjs: `new Date().toISOString().slice(0, 10)`), not a
+//     value derived from any committed input. It was listed here until this
+//     lane found it as the first of the arch-L4 acceptance run's five
+//     disagreeing files: on a repo checked out and re-run one calendar day
+//     after ops.ts was last committed, ops.ts and CvOpsData.kt (which imports
+//     opsGeneratedAt verbatim, gen-kotlin-data.mjs:57,801) ALWAYS disagree,
+//     which is exactly the false positive that let refresh-twin.yml's
+//     `if: always()` commit-over-red pattern look load-bearing for six days
+//     straight rather than a bug worth fixing. Its staleness is the same
+//     dated-stamp question every other live source here answers.
 //
 // Adding a generator forces the choice: deterministic goes here, live gets an
 // SLA entry. Neither is a default, which is the point.

@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: refresh-twin
@@ -55,13 +56,15 @@ jobs:
       - name: Re-derive the twin's figures
         run: npm run gen:repo-stats
 
-      # The same guard CI runs on a push. If a generator and its committed
-      # artifact disagree after all of the above, that is a defect worth failing
-      # on rather than committing over.
-      - name: Generated artifacts match their generators
-        run: npm run check:generated
-
+      # Stage + commit LOCALLY regardless of what ran above — this costs
+      # nothing even on a run that ends up pushing nothing, and it lets the
+      # four gate steps below check exactly what would be pushed. Pushing is a
+      # separate, later step gated on all four passing (see below): this used
+      # to sit right next to an `if: always()` commit+push that ran even when
+      # check:generated had just failed, which is the six-day drift this fix
+      # targets (gh run 34025245250 and five days either side of it).
       - name: Commit if changed
+        id: commit
         if: always()
         run: |
           git config user.name "github-actions[bot]"
@@ -69,7 +72,53 @@ jobs:
           git add public/portfolio-app src/data/repoStats.ts
           if git diff --cached --quiet; then
             echo "The embedded twin is already current."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore: refresh the embedded Compose twin and its figures"
-            git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Type-check
+        id: gate_tsc
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npx tsc -b
+      - name: Lint
+        id: gate_lint
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run lint
+      - name: Unit tests
+        id: gate_test
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run test
+      # The same guard CI runs on a push. If a generator and its committed
+      # artifact disagree after all of the above, that is a defect worth
+      # blocking the push on rather than pushing over.
+      - name: Generated artifacts match their generators
+        id: gate_check_generated
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run check:generated
+
+      - name: Gate result
+        id: gate
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: |
+          if [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_lint.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_test.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_check_generated.outcome }}" = "success" ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true'
+        run: git push
+
+      # A red gate pushes nothing — the local commit above is discarded with
+      # the runner. One issue per workflow (see the script), not one per run.
+      - name: Open or update gate-failure issue
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/report-gate-failure.sh refresh-twin

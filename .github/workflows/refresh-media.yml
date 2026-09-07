@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: refresh-media
@@ -67,7 +68,13 @@ jobs:
       # gen-hiresignal-stats exits 1 on a dead PATTERN by design, and because
       # this step was gated on success, eight days of otherwise-good refreshes
       # were thrown away rather than committed. The run still goes red below.
+      #
+      # This step only stages + commits LOCALLY. That costs nothing even on a
+      # run that will end up pushing nothing, and it lets the four gate steps
+      # below check exactly what would be pushed. The push itself is a
+      # separate, later step gated on all four passing.
       - name: Commit if changed
+        id: commit
         if: always()
         run: |
           git config user.name "github-actions[bot]"
@@ -82,7 +89,57 @@ jobs:
           git add public src/data src/labs/FanoutLab.tsx api/_lib/system-prompt.ts api/_lib/jd-prompt.ts
           if git diff --cached --quiet; then
             echo "Portfolio media already current."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore: refresh project media + stats from app repos"
-            git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # The same gate ci.yml runs on a PR, run here on the local commit above —
+      # nothing with no human watching a scheduled run should reach main on
+      # the strength of `npm run refresh` alone. Skipped entirely when there is
+      # nothing to push (committed=false): checking a no-op is a wasted job.
+      - name: Type-check
+        id: gate_tsc
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npx tsc -b
+      - name: Lint
+        id: gate_lint
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run lint
+      - name: Unit tests
+        id: gate_test
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run test
+      # check:generated is what actually caught the CvChessData.kt-class drift
+      # this fix targets; it belongs in the same gate as the other three, not
+      # bypassed by an `if: always()` commit step sitting right next to it.
+      - name: Generated artifacts match their generators
+        id: gate_check_generated
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: npm run check:generated
+
+      - name: Gate result
+        id: gate
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: |
+          if [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_lint.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_test.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_check_generated.outcome }}" = "success" ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true'
+        run: git push
+
+      # A red gate pushes nothing — the local commit above is discarded with
+      # the runner. One issue per workflow (see the script), not one per run.
+      - name: Open or update gate-failure issue
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/report-gate-failure.sh refresh-media
