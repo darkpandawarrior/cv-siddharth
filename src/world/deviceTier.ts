@@ -102,6 +102,13 @@ export interface TierBudget {
   /** Terrain.tsx's `PlaneGeometry` segment counts — §10 drop 3: "Ground
    *  segments drop to PlaneGeometry(56,168,14,92)". */
   groundSegments: readonly [number, number];
+  /** litMap.ts's record texture [w,h] and upload rate (Hz) — §10 drop 2:
+   *  "halve the lit map to 64x192 at 5Hz on the phone tier". */
+  litMapSize: readonly [number, number];
+  litMapHz: number;
+  /** Terrain.tsx's own `uGhostZ` array — how many other live drivers get
+   *  their own dim read-line at once. §10: "ghost read-lines from 4 → 2". */
+  ghostReadlineCap: number;
 }
 
 const DESKTOP_BUDGET: TierBudget = {
@@ -109,6 +116,9 @@ const DESKTOP_BUDGET: TierBudget = {
   dprMax: 1.5,
   speckleCount: 480,
   groundSegments: [28, 184],
+  litMapSize: [128, 384],
+  litMapHz: 10,
+  ghostReadlineCap: 4,
 };
 
 const PHONE_BUDGET: TierBudget = {
@@ -116,6 +126,9 @@ const PHONE_BUDGET: TierBudget = {
   dprMax: 1.5,
   speckleCount: 140,
   groundSegments: [28, 184],
+  litMapSize: [64, 192],
+  litMapHz: 5,
+  ghostReadlineCap: 2,
 };
 
 const THROTTLED_BUDGET: TierBudget = {
@@ -123,19 +136,13 @@ const THROTTLED_BUDGET: TierBudget = {
   dprMax: 1,
   speckleCount: 140,
   groundSegments: [14, 92],
+  // Cumulative, per this file's own rule: tier 3 keeps every tier-2 drop.
+  litMapSize: [64, 192],
+  litMapHz: 5,
+  ghostReadlineCap: 2,
 };
 
-/** §10's three drop steps, collapsed to the budget each tier renders with.
- *  ponytail: §10 also calls for chess-bollard windowing (index-window the
- *  instanced draw to 60m of the car), a halved lit-map resolution/upload
- *  rate, and — at tier 3 — stripping every fixture family but the gantries
- *  and turning the car's contact decal off. None of those three exist to
- *  gate yet (no contact decal is built at all; the lit map and the bollard
- *  family are both fixed-size today), so this budget stops at the four
- *  values every consumer in this world already has a real, safe place to
- *  read from. Add a field here — and read it from Fixtures.tsx/litMap.ts —
- *  when those land, rather than growing a second tier system next to this
- *  one. */
+/** §10's three drop steps, collapsed to the budget each tier renders with. */
 export function tierBudget(tier: DeviceTier): TierBudget {
   if (tier === 3) return THROTTLED_BUDGET;
   if (tier === 2) return PHONE_BUDGET;
