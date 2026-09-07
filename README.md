@@ -276,12 +276,19 @@ whole reason that generator exists.
 
 CI runs five workflows. `ci.yml` is the gate: `tsc -b`, lint and the unit tests
 on every push. `lighthouse.yml` builds, runs the full Playwright suite, then
-Lighthouse CI over 23 URLs, one run each, asserting accessibility at 1.00 and
-SEO at 0.95 as errors, cumulative layout shift, total byte weight and script
-size also as errors (all three are properties of the bytes and the layout, so
-they measure the same on a CI runner as on a laptop), and LCP, first
-contentful paint and total blocking time as warnings until a runner-measured
-calibration promotes them too. Three more run on a schedule, not a push:
+Lighthouse CI over 29 URLs (every top-level route plus all 8 project pages),
+one run each, asserting accessibility at 1.00 and SEO at 0.95 as errors,
+cumulative layout shift, total byte weight and script size also as errors
+(properties of the bytes and the layout, so they measure the same on a CI
+runner as on a laptop), and performance, LCP, FCP and total blocking time as
+errors too, at thresholds calibrated against a run on this workflow's own
+2-core runner rather than the developer laptop the site was first measured
+on -- `lighthouserc.json`'s own header carries the run and the numbers.
+`/playground` (the WebGL driving room) is the one route excluded from that
+last group: its continuous render loop reads as tens of seconds of blocking
+time under Lighthouse's CPU-throttled trace, a known characteristic of that
+page rather than a regression this gate is positioned to catch. Three more
+run on a schedule, not a push:
 `refresh-twin.yml` rebuilds the embedded Compose twin daily,
 `refresh-media.yml` pulls project media and stats from the app repos daily,
 and `screenshot-sentinel.yml` runs the capture sentinel weekly and on any PR

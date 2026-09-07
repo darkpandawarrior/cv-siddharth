@@ -35,7 +35,9 @@ jobs:
       # for both. Running it in its own workflow would mean a second vite build
       # on every PR for no extra signal.
       - name: End-to-end tests
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
+        # workflow_dispatch inputs arrive as strings even when declared
+        # `type: boolean` -- inputs.skip_e2e == true silently never matches.
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != 'true' }}
         run: npm run test:e2e
 
       - name: Lighthouse

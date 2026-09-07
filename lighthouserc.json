@@ -40,12 +40,45 @@
     "--form-factor=mobile --throttling-method=simulate` against `vite preview` on this laptop:",
     "  /              performance 63 -> 66, LCP 6.44s -> 5.56s, TBT 19ms -> 29ms, CLS 0 -> 0.010.",
     "  /project/doori performance 60 -> 65, LCP 8.55s -> 6.08s, TBT 21ms -> 48ms.",
-    "That is short of the brief's aspirational 80/2.5s/300ms bar, so performance, LCP and CLS for",
-    "`/` stay exactly where the rest of the fleet already sits (warn, or whatever they were) rather",
-    "than being promoted to an error this site cannot pass — the whole point of the note at the top",
-    "of this file. total-blocking-time for `/` IS promoted to error below: 19-48ms measured against",
-    "a 300ms budget is a 6x-15x margin, the same 'roughly 20% headroom' bar the three existing",
-    "error assertions use, not a number picked to look good on arrival."
+    "Laptop numbers. Read the runner section below before trusting any of the above as a budget.",
+    "",
+    "arch-L13 (2026-09-08): the calibration this file's own header has been asking for since",
+    "W15 — every number above came off a developer laptop; this one came off the runner these",
+    "assertions actually gate on. `gh workflow run lighthouse.yml -f skip_e2e=true` on this repo's",
+    "own `ubuntu-latest` (2-core) runner, ci.yml run 34157238248, ci.collect.url's full 29-URL list,",
+    "numberOfRuns 1, no throttling override (LHCI's lab default). Worst measured value per metric,",
+    "excluding /playground (see below), with the URL it came from:",
+    "  categories:performance  worst 0.34 (/blueprint)",
+    "  first-contentful-paint  worst 6848ms (/)",
+    "  largest-contentful-paint worst 10212ms (/blueprint)",
+    "  total-blocking-time     worst 1745ms (/blueprint)",
+    "These are the SAME laptop-vs-runner gap the note above already predicted, just worse than",
+    "guessed: /blueprint's TBT was 290ms on a laptop and is 1745ms on the runner, a 6x difference,",
+    "not the modest 'materially worse' the earlier warn-everything posture hedged against. The full",
+    "per-URL run is committed at src/data/generated/lighthouse.ts (gen-lighthouse-summary.mjs).",
+    "",
+    "performance, LCP, FCP and total-blocking-time are ERROR below for every URL except",
+    "/playground, at the worst measured value above plus ~20-25% headroom (0.25 / 8500 / 12500 /",
+    "2100 — the same margin the three pre-existing error assertions already use, rounded the same",
+    "way: 3,500,000 over a measured 2,834,247 max, 1,600,000 over 1,295,994, 0.25 over 0.162).",
+    "These are bad numbers for a portfolio site to gate on — 0.25 is a failing Lighthouse score by",
+    "any normal reading. They are still the honest ones: 'Severities are set to what the site",
+    "MEASURES, not to what would be nice' is the rule this whole file opens with, and a threshold",
+    "loose enough to look respectable would also be loose enough to never catch a real regression",
+    "-- the exact 'green build that proves nothing' failure mode this gate exists to avoid. Tighten",
+    "these DOWN as the rendering/hydration work in flight (prerendering, deferred hydration) lands",
+    "and lowers the worst-measured number; don't raise them to make a future regression pass.",
+    "",
+    "/playground (the WebGL driving room) is excluded via matchingUrlPattern, not folded into the",
+    "worst-case above: its continuous three.js render loop measured 165,393ms of blocking time on",
+    "the runner (not a typo — the next-worst URL is 1745ms, two orders of magnitude less). Under",
+    "Lighthouse's CPU-throttled trace a real per-frame render loop reads as one enormous blocking",
+    "task rather than the many short ones a user actually experiences; that is a known limitation",
+    "of lab TBT on canvas-heavy pages, not a regression in this codebase, and a single outlier",
+    "would otherwise force every OTHER URL's threshold out past 198,000ms -- the exact loose-gate",
+    "failure mode described above, for the other 28 URLs' benefit instead of just this one's.",
+    "/playground keeps performance/LCP/FCP/TBT at warn (the global block below still applies to",
+    "it) until it has a metric that reflects what it actually is."
   ],
   "ci": {
     "collect": {
@@ -144,13 +177,31 @@
           }
         },
         {
-          "//": "W15: `/` measured 19-48ms of TBT before and after the below-the-fold Hydrate change, a 6x-15x margin against the 300ms budget — promoted to error here rather than site-wide because no other URL has been re-measured for this specific margin.",
-          "matchingUrlPattern": "^http://localhost:4173/$",
+          "//": "arch-L13 runner calibration (see header): error, for every URL except /playground, at worst-measured-on-the-runner plus ~20-25% headroom. Additive on top of the warn block above, same mechanism the old `/`-only TBT override used — assertMatrix entries stack, they don't replace each other, so /playground still gets the warn block's numbers and nothing stricter.",
+          "matchingUrlPattern": "^http://localhost:4173/(?!playground$).*$",
           "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.25
+              }
+            ],
+            "first-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 8500
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 12500
+              }
+            ],
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 300
+                "maxNumericValue": 2100
               }
             ]
           }
