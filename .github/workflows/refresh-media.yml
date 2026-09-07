@@ -79,7 +79,7 @@ jobs:
           # gen:system-prompt (api/_lib/system-prompt.ts, api/_lib/jd-prompt.ts) — all
           # of that output was silently discarded every run until this line covered it
           # (2026-07-29 audit: only public/projects + galleries/projectStats were staged).
-          git add public src/data api/_lib/system-prompt.ts api/_lib/jd-prompt.ts
+          git add public src/data src/labs/FanoutLab.tsx api/_lib/system-prompt.ts api/_lib/jd-prompt.ts
           if git diff --cached --quiet; then
             echo "Portfolio media already current."
           else
