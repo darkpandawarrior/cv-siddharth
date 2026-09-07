@@ -212,7 +212,7 @@ scripts/                     # the generators + the capture/sentinel tooling
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-four `gen:` scripts over twenty-eight generator files. The ones you
+Twenty-four `gen:` scripts over twenty-nine generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -225,7 +225,7 @@ npm run capture:site      # screenshot every route (feeds the sentinel)
 `gen:og` rasterizes at author time and commits its output, so the Vercel
 build needs no browser and no image toolchain.
 
-Four more generator files exist with no `npm run` script, deliberately: each
+Five more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
 carries the same reasoning; this is that reasoning where a README reader can
 find it.
@@ -234,6 +234,10 @@ find it.
   PDFs, which live on MANIT's CDN and are not in this repo, and needs
   `poppler` installed locally. Output is committed; the build never touches
   a PDF.
+- `gen-excelsior-text.mjs`. OCRs the rendered pages into a static per-edition
+  text manifest (`public/excelsior/text/<year>.json`) so the in-reader search
+  has something to search. Needs `tesseract` installed locally; best-effort
+  on scanned magazine columns, not a transcript.
 - `gen-store-archive.mjs`. Queries the Internet Archive for delisted Play
   listings. A floor, not a count, since the Archive only has what it happened
   to crawl. `npm run gen:store` merges its output.
@@ -253,7 +257,7 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1145 unit tests across 100 files (vitest)
+npm test          # 1150 unit tests across 101 files (vitest)
 npm run test:e2e  # 149 Playwright tests across 16 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale

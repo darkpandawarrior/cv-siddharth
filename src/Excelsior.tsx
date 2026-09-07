@@ -3,6 +3,7 @@ import { ArrowUpRight, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { excelsiorEditions } from "./data/excelsior.ts";
+import { readProgress } from "./lib/excelsiorProgress.ts";
 
 /**
  * Excelsior — MANIT Bhopal's institute magazine, and the print half of the
@@ -69,6 +70,16 @@ const EXCELSIOR: Edition[] = excelsiorEditions.map((e) => {
 
 function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void }) {
   const openable = Boolean(ed.spread);
+  // Client-only, on purpose: this mounts on the SSR'd homepage, so the first
+  // paint (server and the first client render, before hydration finishes) has
+  // to render nothing extra here — reading localStorage inside a useEffect,
+  // never at render, is what keeps that first paint identical on both sides.
+  // Opt-in only: the reader's URL stays the only thing that decides which
+  // page loads (Flipbook.tsx's own comment on that), this is just an offer.
+  const [resume, setResume] = useState<number | null>(null);
+  useEffect(() => {
+    setResume(readProgress()[ed.year]?.page ?? null);
+  }, [ed.year]);
   return (
     <figure className="magazine">
       <div className="magazine-book">
@@ -89,6 +100,15 @@ function EditionCard({ ed, onOpen }: { ed: Edition; onOpen: (e: Edition) => void
       <Link to="/excelsior" search={{ year: Number(ed.year), page: 1 }} className="magazine-action">
         Read all {ed.pages} pages <ArrowUpRight size={12} />
       </Link>
+      {resume && resume > 1 && (
+        <Link
+          to="/excelsior"
+          search={{ year: Number(ed.year), page: resume }}
+          className="magazine-action magazine-action-quiet"
+        >
+          Continue, page {resume}
+        </Link>
+      )}
       {openable && (
         <button type="button" onClick={() => onOpen(ed)} className="magazine-action magazine-action-quiet">
           The masthead
