@@ -1,5 +1,8 @@
-import type { JSX } from "react";
+import { lazy, Suspense, type JSX } from "react";
 import { corridorPlateMeta } from "./corridorPlate.ts";
+import { useHydrated } from "../lib/useHydrated.ts";
+
+const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
 
 /**
  * NIGHT SURVEY §11 — THE STATIC FALLBACK, the DOM half.
@@ -21,6 +24,23 @@ import { corridorPlateMeta } from "./corridorPlate.ts";
  * Alt text names the four strands and the date range — description, not
  * metaphor exposition (§11's own line, and this world's project law 1).
  *
+ * §11's other named gap, closed: the shared lit-map overlay. Its own doc
+ * comment used to end here because litMap.ts said "NOT wired to playhtml
+ * yet" — there was nothing real to show. Now that it is (litMap.ts's
+ * `useLitMapRemoteSync`), `LiveLitMapOverlay.tsx` reads the SAME shared
+ * channel (a driving tab's own live position, not the full accumulated
+ * texture — see that file's "SHARED-STATE SEAM" comment for why only
+ * sparse stamps are ever broadcast) and marks each live driver as a small
+ * dot on the static image. Not literally "burned into the plate" — a
+ * build-time PNG cannot embed a runtime value that doesn't exist yet at
+ * build time, which is exactly the honesty problem gen-world-plate.mjs's
+ * own comment named — but a genuinely live signal on the fallback, sourced
+ * from the real shared record, is what that gap was actually asking to
+ * close. Loaded with `lazy()` behind `useHydrated()` rather than imported
+ * directly here, because THIS component server-renders (see below) and
+ * `@playhtml/react` does not survive that — see LiveLitMapOverlay.tsx's own
+ * doc comment.
+ *
  * It used to end "...because this browser cannot run the interactive 3D
  * version", which was true for every visitor it had while the call site was
  * gated on `!worldCapable`. It is no longer: the plate now renders for the
@@ -35,6 +55,10 @@ export function CorridorPlate(): JSX.Element {
   const meta = corridorPlateMeta;
   const laneNames = meta.lanes.map((l) => l.label).join(", ");
   const alt = `A terrain chart of four tracked strands of work — ${laneNames} — from ${meta.from} to ${meta.to}, baked as a static image from the same heightfield the drivable 3D version is built on.`;
+  // `false` on the server and through hydration — see LiveLitMapOverlay.tsx
+  // and useHydrated.ts's own doc comments for why this gate has to exist at
+  // all, not just why it's shaped this way.
+  const hydrated = useHydrated();
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>
@@ -67,6 +91,20 @@ export function CorridorPlate(): JSX.Element {
           />
         ))}
       </svg>
+
+      {/* §11's live overlay — every other tab's most recent driving position
+          on the shared channel litMapSyncChannel.ts names, plotted as a
+          small dot. No accumulated trail here (this fallback never
+          accumulates its own record — see this file's own doc comment on
+          why only sparse live positions are ever shared). Mounted only once
+          hydrated (see the `hydrated` doc comment above) — before that,
+          nothing renders here at all, which is correct: the shared state it
+          would show does not exist on the server either. */}
+      {hydrated && (
+        <Suspense fallback={null}>
+          <LiveLitMapOverlay imageAspect={meta.width / meta.height} />
+        </Suspense>
+      )}
 
       {/* Year numerals, one per rule — plain positioned text rather than
           SVG glyphs inside a 0..1 viewBox, so font size is a real CSS

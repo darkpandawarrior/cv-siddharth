@@ -10,6 +10,7 @@ import { input, isCaptured, isInteractiveTarget } from "./input.ts";
 import { telemetry } from "./telemetry.ts";
 import { worldPalette, READHEAD_HEX } from "./palette.ts";
 import { playBoost, playImpact, updateEngine } from "./audio.ts";
+import { deviceTier } from "./deviceTier.ts";
 
 /**
  * The one car, kinematic. Replaces Craft.tsx's `DynamicRayCastVehicleController`
@@ -76,6 +77,49 @@ const CAMERA_FOLLOW_SPEED = 4;
 const CAMERA_BASE_FOV = 55; // matches World.tsx's <Canvas camera={{ fov }}>
 const CAMERA_FOV_SPREAD = 14;
 
+// A portrait canvas (a phone held upright — the common driving orientation)
+// is narrow, not short: the same distance/height that frames the corridor
+// nicely on a wide desktop viewport crops it to a sliver either side of the
+// car. Raised and pulled back a bit further gives the same view its width
+// back. Read from the canvas's own aspect (`useThree`'s `size`), not a
+// `matchMedia` viewport probe — this is the thing that actually determines
+// how much corridor is in frame, and it can't drift from the real canvas
+// the way a separately-read media query could.
+const CAMERA_PORTRAIT_DISTANCE_BOOST = 2.4;
+const CAMERA_PORTRAIT_HEIGHT_BOOST = 0.9;
+
+// §4's own spec: "a 4x3m radial-gradient decal plane at y=0.02,
+// multiply-blended, for contact" — the one ground-truth shadow this
+// two-light scene gets, since there is no shadow map (§4: "Zero shadow
+// maps"). §10 drop 3 turns it off on the throttled tier.
+const DECAL_WIDTH = 4;
+const DECAL_DEPTH = 3;
+const DECAL_LIFT = 0.02;
+
+/** The decal texture: a plain canvas 2D radial gradient, same discipline as
+ *  Fixtures.tsx's own `buildPoolTexture` (a baked falloff, never a shader).
+ *  Opaque white at the rim (multiplying by white leaves the ground
+ *  unchanged) darkening toward the centre (multiplying by grey dims it) —
+ *  the standard "blob shadow" technique, built once at module scope since
+ *  every car ever mounted uses the exact same falloff. */
+function buildDecalTexture(): THREE.CanvasTexture | null {
+  if (typeof document === "undefined") return null;
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0, "rgba(30,30,30,1)");
+  g.addColorStop(1, "rgba(255,255,255,1)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
 // Boost — a tank that drains while held and refills while not, same shape as
 // Craft.tsx's. drive.ts only takes a bool; the tank bookkeeping (whether
 // there's any left to spend) still belongs to the component reading input,
@@ -95,7 +139,7 @@ export function Vehicle(props: {
   paused: boolean;
 }) {
   const c = worldPalette();
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   const env = useMemo<DriveEnv>(
     () => ({
@@ -108,6 +152,11 @@ export function Vehicle(props: {
   const stateRef = useRef<DriveState>(spawnState(SPAWN_POSITION[0], SPAWN_POSITION[2], env));
 
   const groupRef = useRef<THREE.Group>(null);
+  const decalRef = useRef<THREE.Mesh>(null);
+  // §10 drop 3 — off on the throttled tier; read once, same contract as
+  // deviceTier.ts's every other tier-gated flag in this world.
+  const decalOn = useMemo(() => deviceTier() !== 3, []);
+  const decalTexture = useMemo(() => (decalOn ? buildDecalTexture() : null), [decalOn]);
   const boostRef = useRef(1);
   const boostingRef = useRef(false);
   const boostSoundRef = useRef(false);
@@ -204,6 +253,14 @@ export function Vehicle(props: {
       group.quaternion.copy(scratch.quat);
     }
 
+    // §4's contact decal — a sibling of `group`, not a child of it: it stays
+    // flat on the ground (no bank/pitch) rather than tilting with the
+    // chassis, the same "independent of the car's own rotation" choice
+    // Wake.tsx's head ring and edge blades already make for their own
+    // ground-locked furniture. `s.y` is already ground height (drive.ts's
+    // own doc comment) — DECAL_LIFT clears z-fighting with the terrain mesh.
+    if (decalRef.current) decalRef.current.position.set(s.x, s.y + DECAL_LIFT, s.z);
+
     // Wheels: front pair yaws with steer input, all four spin with distance
     // travelled (rolling without slipping — angle += speed*dt/radius).
     wheelSpinAngleRef.current += (s.speed * delta) / WHEEL_RADIUS;
@@ -221,9 +278,11 @@ export function Vehicle(props: {
     // doc comment); CHASSIS_RESTING_HEIGHT lifts the reference point to
     // roughly where the chassis itself sits, same as it did as a rigid body.
     const chassisY = s.y + CHASSIS_RESTING_HEIGHT;
-    const distance = CAMERA_BASE_DISTANCE + Math.abs(s.speed) * CAMERA_SPEED_PULLBACK;
+    const portrait = size.height > size.width;
+    const baseDistance = CAMERA_BASE_DISTANCE + (portrait ? CAMERA_PORTRAIT_DISTANCE_BOOST : 0);
+    const distance = baseDistance + Math.abs(s.speed) * CAMERA_SPEED_PULLBACK;
     scratch.camTarget.set(s.x, chassisY, s.z).addScaledVector(scratch.forward, -distance);
-    scratch.camTarget.y += CAMERA_HEIGHT;
+    scratch.camTarget.y += CAMERA_HEIGHT + (portrait ? CAMERA_PORTRAIT_HEIGHT_BOOST : 0);
     camera.position.lerp(scratch.camTarget, Math.min(1, delta * CAMERA_FOLLOW_SPEED));
     scratch.lookTarget.set(s.x, chassisY + CAMERA_LOOK_HEIGHT, s.z);
     camera.lookAt(scratch.lookTarget);
@@ -254,6 +313,17 @@ export function Vehicle(props: {
   });
 
   return (
+    <>
+      {/* §4/§10 — the car's contact decal. A sibling of `group`, kept flat
+          on the ground (see the useFrame comment above for why it isn't a
+          child of the tilting chassis group). Off entirely on the throttled
+          tier (§10 drop 3, `decalOn`). */}
+      {decalTexture && (
+        <mesh ref={decalRef} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[DECAL_WIDTH, DECAL_DEPTH]} />
+          <meshBasicMaterial map={decalTexture} blending={THREE.MultiplyBlending} depthWrite={false} />
+        </mesh>
+      )}
     <group ref={groupRef}>
       {/* `group` sits at ground height (drive.ts's `s.y`); everything below
           is offset up from there by CHASSIS_RESTING_HEIGHT, the same number
@@ -379,5 +449,6 @@ export function Vehicle(props: {
         </group>
       ))}
     </group>
+    </>
   );
 }

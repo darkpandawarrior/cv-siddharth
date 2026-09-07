@@ -5,6 +5,7 @@ import { CITY } from "./city.ts";
 import { heightAt, laneAtX } from "./heightfield.ts";
 import { telemetry } from "./telemetry.ts";
 import { laneColors, READHEAD_HEX, worldPalette } from "./palette.ts";
+import { prefersReducedMotion } from "./reducedMotion.ts";
 
 /**
  * §7 LAYER B — THE WAKE, as a short VERTICAL light wall rather than a
@@ -32,9 +33,13 @@ import { laneColors, READHEAD_HEX, worldPalette } from "./palette.ts";
  * Sampling is DISTANCE-based (every ~0.35m of travel), not per render
  * frame: a per-frame sample would make the ring's total length depend on
  * framerate, and the doc's "gone by ~45m back" is a distance claim. Fading
- * is still TIME-based (`exp(-age / 2.5)`, exactly as specified) so a parked
- * car's wake ages out in real seconds rather than freezing forever once no
- * new samples are being recorded.
+ * is TIME-based (`exp(-age / 2.5)`, exactly as specified) so a parked car's
+ * wake ages out in real seconds rather than freezing forever once no new
+ * samples are being recorded — except under `prefers-reduced-motion`, where
+ * `wakeAlpha` swaps that clock-driven fade for a static falloff by distance
+ * behind the car: same ~45m the normal decay reads as, but the trail's shape
+ * now depends only on where the (still user-driven) car has been, never on
+ * elapsed time.
  */
 
 const RING = 240;
@@ -45,6 +50,20 @@ const DECAY_S = 2.5;
 const HEAD_Y_OFFSET = 0.04;
 const HEAD_PULSE_HZ = 1.4;
 const BLADE_HEIGHT = 0.9;
+/** Reduced motion: freeze the TIME decay into a STATIC distance falloff, so
+ *  the trail's shape depends only on how far behind the car a sample sits
+ *  (which only changes when the visitor drives, not every animation frame),
+ *  never on the clock. 45m is the doc's own number for how long the normal
+ *  time-based decay reads as visually — see this file's own block comment. */
+const STATIC_TRAIL_M = 45;
+
+/** The pure core of one ring slot's alpha — split out for the same reason
+ *  deviceTier.ts's computeTier is: a plain function of already-measured
+ *  inputs, directly unit-testable without mounting a frame loop. */
+export function wakeAlpha(age: number, distanceBehind: number, reducedMotion: boolean): number {
+  if (reducedMotion) return Math.max(0, 1 - distanceBehind / STATIC_TRAIL_M);
+  return Math.exp(-age / DECAY_S);
+}
 
 export function buildStripIndices(n: number): Uint16Array {
   const idx = new Uint16Array((n - 1) * 6);
@@ -127,6 +146,7 @@ export function Wake(): JSX.Element {
 
     scratchColor.current.set(hexes[laneAtX(telemetry.x)]);
     const col = scratchColor.current;
+    const reduced = prefersReducedMotion();
 
     for (let k = 0; k < RING; k++) {
       // Chronological order: writeIndex is the OLDEST slot (the next one to
@@ -134,7 +154,10 @@ export function Wake(): JSX.Element {
       const idx = (st.writeIndex + k) % RING;
 
       const age = st.clock - st.born[idx];
-      const alpha = st.born[idx] < -100 ? 0 : Math.exp(-age / DECAY_S);
+      // Distance behind the newest (k = RING-1) sample — slots are recorded
+      // every SAMPLE_SPACING of travel, so this is exact for a filled ring.
+      const distanceBehind = (RING - 1 - k) * SAMPLE_SPACING;
+      const alpha = st.born[idx] < -100 ? 0 : wakeAlpha(age, distanceBehind, reduced);
 
       // A vertical wall, not a lateral ribbon: both vertices sit at the same
       // (x, z) — the sample's own point on the terrain — one at its base,

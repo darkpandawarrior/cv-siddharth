@@ -26,13 +26,13 @@ import type { Destination } from "./destinations.ts";
  * car simply stops responding to WASD/arrows without this file having to
  * know anything about input.ts at all.
  *
- * ponytail: unlike InstrumentView.tsx, the World/Hud siblings behind this
- * panel are not marked `inert`. A screen reader's browse-mode cursor could
- * still reach the HUD's own buttons while this is open. The Canvas itself
- * is already `aria-hidden` (World.tsx), and a full-viewport backdrop blocks
- * every pointer event from reaching anything behind it, so the practical
- * gap is narrow — inert the Hud/WorldLabels siblings (World.tsx owns both)
- * if axe or real AT testing ever flags it.
+ * Same discipline as InstrumentView.tsx for the World/Hud siblings behind
+ * this panel too: World.tsx wraps Hud and WorldLabels in one `inert` div
+ * while `destination` is set, so a screen reader's browse-mode cursor can't
+ * reach the HUD's own buttons while this is open. The Canvas itself is
+ * already `aria-hidden` (World.tsx), and a full-viewport backdrop blocks
+ * every pointer event from reaching anything behind it — `inert` closes the
+ * one gap those two don't.
  */
 
 const FOCUSABLE_SELECTOR = "a[href], button:not([disabled])";

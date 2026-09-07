@@ -1,5 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { attachKeyboard, input, isCaptured, recapture, setTouchSteer, setTouchThrottle, subscribeCaptured } from "./input.ts";
+import {
+  attachKeyboard,
+  input,
+  isCaptured,
+  isWorldActive,
+  recapture,
+  setTouchSteer,
+  setTouchThrottle,
+  subscribeCaptured,
+  touchThrottleFromDrag,
+} from "./input.ts";
 
 /* vitest.config.ts runs this suite under environment: "node" — no real
  * `window`/`KeyboardEvent`. attachKeyboard only ever calls
@@ -138,6 +148,24 @@ describe("attachKeyboard", () => {
     expect(seen).toEqual([false, true]);
   });
 
+  it("isWorldActive is true only while the keyboard controller is attached, and pokes captureListeners on either edge", () => {
+    // attachKeyboard already ran in beforeEach, so we're mid-mount here.
+    expect(isWorldActive()).toBe(true);
+
+    const seen: boolean[] = [];
+    const unsub = subscribeCaptured((c) => seen.push(c));
+    detach();
+    expect(isWorldActive()).toBe(false);
+    // captured itself was already `true` (unchanged by detach), but the FAB
+    // gate reads isWorldActive() too, so a poke on this transition is the
+    // whole point of the fix — a bare captured-only listener would go silent.
+    expect(seen).toEqual([true]);
+    unsub();
+
+    detach = attachKeyboard(); // re-attach so afterEach's detach() is valid
+    expect(isWorldActive()).toBe(true);
+  });
+
   it("never captures a key aimed at a real interactive element (List button, etc.)", () => {
     const button = { tagName: "BUTTON" };
     win.fire("keydown", key("w", button));
@@ -210,5 +238,28 @@ describe("attachKeyboard", () => {
     expect(input.throttle).toBe(0);
     win.fire("keydown", key("w")); // detached — no handler left to react
     expect(input.throttle).toBe(0);
+  });
+});
+
+describe("touchThrottleFromDrag — the one-thumb auto-throttle stick", () => {
+  const RADIUS = 34;
+  const CRUISE = 0.72;
+
+  it("auto mode: cruises forward at any dy at or above centre, ignoring how far up", () => {
+    expect(touchThrottleFromDrag(0, RADIUS, true, CRUISE)).toBe(CRUISE);
+    expect(touchThrottleFromDrag(-1, RADIUS, true, CRUISE)).toBe(CRUISE);
+    expect(touchThrottleFromDrag(-RADIUS, RADIUS, true, CRUISE)).toBe(CRUISE);
+  });
+
+  it("auto mode: below centre still brakes/reverses proportionally", () => {
+    expect(touchThrottleFromDrag(RADIUS / 2, RADIUS, true, CRUISE)).toBeCloseTo(-0.5);
+    expect(touchThrottleFromDrag(RADIUS, RADIUS, true, CRUISE)).toBe(-1);
+    expect(touchThrottleFromDrag(RADIUS * 2, RADIUS, true, CRUISE)).toBe(-1); // clamped
+  });
+
+  it("manual fallback (autoThrottle: false): dy maps straight to throttle both ways, unchanged from the old stick", () => {
+    expect(touchThrottleFromDrag(-RADIUS, RADIUS, false, CRUISE)).toBe(1); // full up = full forward
+    expect(touchThrottleFromDrag(0, RADIUS, false, CRUISE)).toBeCloseTo(0);
+    expect(touchThrottleFromDrag(RADIUS, RADIUS, false, CRUISE)).toBe(-1); // full down = full reverse
   });
 });

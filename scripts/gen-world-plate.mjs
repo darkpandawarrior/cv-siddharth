@@ -23,10 +23,13 @@
 // fallback bar asks for ("not a blank screen").
 //
 // The shared lit-map overlay (§11's other half) is deliberately NOT baked
-// in: it is playhtml's shared runtime state (litMap.ts's own doc comment —
-// "NOT wired to playhtml" yet), so there is nothing real to bake at build
-// time. A visitor's own driving never reaches this fallback anyway (they'd
-// need WebGL to have driven anywhere first).
+// into this PNG: it is playhtml's shared RUNTIME state, and a build-time
+// script has no live document to read — that can never change no matter how
+// the runtime wiring evolves. Now that litMap.ts's `useLitMapRemoteSync` IS
+// wired (it was not, when this comment used to end here), CorridorPlate.tsx
+// reads that same shared channel client-side and plots it as a small live
+// overlay on top of this static image instead — real shared data, just never
+// something a Node script running before any browser exists could bake in.
 //
 // The year rules, lane monograms and alt text stay OUT of this PNG on
 // purpose, per §11 — drawn as inline SVG in the DOM by CorridorPlate.tsx,
