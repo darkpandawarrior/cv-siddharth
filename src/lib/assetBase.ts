@@ -20,7 +20,18 @@ export const HEAVY_ASSET_BASE: string =
   import.meta.env?.VITE_HEAVY_ASSET_BASE ||
   "https://darkpandawarrior.github.io/cv";
 
-/** Joins a root-relative path (e.g. "/kursi-app/index.html") onto the base. */
+/**
+ * Joins a root-relative path (e.g. "/kursi-app/index.html") onto the base.
+ *
+ * `HEAVY_ASSET_BASE` is "/" for local dev (see this file's own doc comment),
+ * and every caller passes a leading-slash `path` — naively concatenating the
+ * two gives "//kursi-app/…", which a BROWSER parses as protocol-relative
+ * (host "kursi-app", not a path on this origin) and fails to fetch. Node/curl
+ * would have resolved it fine, which is why this went unnoticed until an
+ * actual browser exercised `VITE_HEAVY_ASSET_BASE=/`. Collapsing the base's
+ * trailing slash before the join keeps the production case (a bare host,
+ * e.g. "https://…/cv") untouched.
+ */
 export function heavy(path: string): string {
-  return `${HEAVY_ASSET_BASE}${path}`;
+  return `${HEAVY_ASSET_BASE.replace(/\/$/, "")}${path}`;
 }
