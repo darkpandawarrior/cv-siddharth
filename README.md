@@ -264,8 +264,10 @@ npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
 
 Those two counts are not typed here by hand. `scripts/gen-repo-stats.mjs`
-counts the suite with `vitest list`, writes `src/data/repoStats.ts` in prebuild
-and the homepage renders it, so the figure on the site is build output.
+counts the suite with `vitest list`, writes `src/data/repoStats.ts` in the
+daily refresh (it reads sibling repos, so it never runs in the hermetic
+build stage) and the homepage renders the committed result, so the figure on
+the site is generator output, refreshed on a schedule rather than every deploy.
 `readme.test.ts` then asserts this file agrees with it. The site once claimed
 619 tests in 46 files while the suite had grown to 812 in 73, which is the
 whole reason that generator exists.
