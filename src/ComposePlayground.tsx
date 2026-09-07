@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { LauncherButton } from "./Launcher.tsx";
-import { ArrowLeft, Play, RotateCcw, Smartphone, Square, Wand2 } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Share2, Smartphone, Square, Wand2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
-import { parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
+import { ComposeParseError, parseCompose, type Expr, type Modifier, type Node, type Program } from "./composeInterpreter.ts";
 import { projects } from "./data/profile.ts";
 import { isAbortError } from "./lib/chatClient.ts";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -17,6 +17,24 @@ import { NextRoomLink, useNextRoom } from "./rooms.tsx";
  *
  * Lazy-loaded at #compose so its parser never ships in the main bundle.
  */
+
+/* ── shareable snippets via a `?c=` URL param ─────────────────────────── */
+
+/** btoa/atob + encodeURIComponent — native and sufficient (presets run
+ *  300–900 chars, well under any URL length concern). No compression
+ *  library: add one only if a real snippet regularly exceeds ~1500 chars
+ *  after encoding. */
+export function encodeShare(code: string): string {
+  return btoa(encodeURIComponent(code)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+export function decodeShare(s: string): string | null {
+  try {
+    const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+    return decodeURIComponent(atob(b64));
+  } catch {
+    return null; // malformed param — fall through to the default preset, never throw on load
+  }
+}
 
 /* ── colour + unit resolution ────────────────────────────────────────── */
 
@@ -45,7 +63,7 @@ function hexFromArgb(raw: string): string {
     return `rgba(${r},${g},${b},${a.toFixed(3)})`;
   }
   if (h.length === 6) return `#${h}`;
-  return "#3ddc84";
+  return "#f2a13d";
 }
 
 /**
@@ -74,7 +92,7 @@ function resolveColor(expr: Expr | undefined, fallback: string): string {
     if (expr.path.startsWith("ColorHex:")) return hexFromArgb(expr.path.slice("ColorHex:".length));
     if (DS_COLORS[expr.path]) return DS_COLORS[expr.path];
     if (NAMED_COLORS[expr.path]) return NAMED_COLORS[expr.path];
-    if (expr.path.includes("primary")) return "#3ddc84";
+    if (expr.path.includes("primary")) return "#f2a13d";
     if (expr.path.includes("secondary")) return "#5ee6ff";
     if (expr.path.includes("error")) return "#ff5c5c";
   }
@@ -267,7 +285,7 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
         borderRadius: 999,
         border: "none",
         cursor: "pointer",
-        background: bg ? resolveColor(bg.args[0], "#3ddc84") : "#3ddc84",
+        background: bg ? resolveColor(bg.args[0], "#f2a13d") : "#f2a13d",
         color: "#05221a",
         fontWeight: 700,
         fontSize: 14,
@@ -536,6 +554,13 @@ Column(
     }
 }`,
   },
+  {
+    label: "Break it",
+    code: `Column(modifier = Modifier.padding(24.dp)) {
+    Text("this preset is missing a closing brace on purpose")
+    Button(onClick = { count++ }) { Text("tap") }
+`,
+  },
 ];
 
 /* ── AI scenario generation ──────────────────────────────────────────── */
@@ -674,12 +699,21 @@ const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField �
 export default function ComposePlayground() {
   const { goToSection } = useSectionNav();
   const nextRoom = useNextRoom();
-  const [code, setCode] = useState(PRESETS[0].code);
+  // The route sets ssr: false, so this only ever mounts client-side — reading
+  // window.location here needs no typeof guard beyond what the file already
+  // does elsewhere. A malformed/missing param falls back to the first preset.
+  const [code, setCode] = useState<string>(() => {
+    const c = new URLSearchParams(window.location.search).get("c");
+    const decoded = c ? decodeShare(c) : null;
+    return decoded ?? PRESETS[0].code;
+  });
   const [live, setLive] = useState(code);
+  const [view, setView] = useState<"preview" | "ast">("preview");
   const gutterRef = useRef<HTMLDivElement>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState<string | null>(null);
   // The in-flight generation, if any — regenerating (a new idea chip, a
   // re-submit) aborts it rather than racing it for who writes `code` last.
   const genAbortRef = useRef<AbortController | null>(null);
@@ -776,11 +810,14 @@ export default function ComposePlayground() {
     return () => clearTimeout(id);
   }, [code]);
 
-  const { program, error } = useMemo(() => {
+  const { program, error, errorLine } = useMemo(() => {
     try {
-      return { program: parseCompose(live), error: null as string | null };
+      return { program: parseCompose(live), error: null as string | null, errorLine: null as number | null };
     } catch (e) {
-      return { program: null as Program | null, error: e instanceof Error ? e.message : String(e) };
+      if (e instanceof ComposeParseError) {
+        return { program: null as Program | null, error: `Line ${e.line}, col ${e.col}: ${e.message}`, errorLine: e.line };
+      }
+      return { program: null as Program | null, error: e instanceof Error ? e.message : String(e), errorLine: null as number | null };
     }
   }, [live]);
 
@@ -850,13 +887,31 @@ export default function ComposePlayground() {
               {p.label}
             </button>
           ))}
-          <button
-            onClick={() => setCode(PRESETS[0].code)}
-            title="Reset to the first example"
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
-          >
-            <RotateCcw size={12} /> Reset
-          </button>
+          <span className="ml-auto flex items-center gap-2">
+            {shareNote && (
+              <span aria-live="polite" className="font-mono text-[11px] text-accent2">
+                {shareNote}
+              </span>
+            )}
+            <button
+              onClick={async () => {
+                const url = `${location.origin}${location.pathname}?c=${encodeShare(code)}`;
+                await navigator.clipboard.writeText(url);
+                setShareNote("link copied");
+                setTimeout(() => setShareNote(null), 2000);
+              }}
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+            >
+              <Share2 size={12} /> Share
+            </button>
+            <button
+              onClick={() => setCode(PRESETS[0].code)}
+              title="Reset to the first example"
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+            >
+              <RotateCcw size={12} /> Reset
+            </button>
+          </span>
         </div>
       </div>
 
@@ -928,7 +983,7 @@ export default function ComposePlayground() {
               className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-[1.6] text-muted"
             >
               {Array.from({ length: lineCount }, (_, i) => (
-                <div key={i}>{i + 1}</div>
+                <div key={i} className={i + 1 === errorLine ? "text-[#ff8f8f]" : undefined}>{i + 1}</div>
               ))}
             </div>
             <textarea
@@ -965,7 +1020,7 @@ export default function ComposePlayground() {
                 }
               }}
               aria-label="Compose code editor"
-              aria-describedby="compose-editor-escape-hint"
+              aria-describedby={error ? "compose-editor-escape-hint compose-parse-error" : "compose-editor-escape-hint"}
             />
           </div>
           <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
@@ -979,36 +1034,66 @@ export default function ComposePlayground() {
         {/* Preview */}
         <div
           ref={previewPaneRef}
-          className="relative flex min-h-0 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_50%_0%,rgba(61,220,132,0.08),transparent_60%)] p-6"
+          className="relative flex min-h-0 flex-col items-center justify-center overflow-auto bg-void/40 p-6"
         >
-          {/* Reserves the mockup's SCALED footprint in the flex layout — a
-              transform alone shrinks the paint but not the box it's centered
-              in, which would leave this pane scrolling past empty space. */}
-          <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
-            <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
-              <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-                {/* status bar */}
-                <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
-                  <span>9:41</span>
-                  <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
-                  <span>▮▮▮ 100%</span>
-                </div>
-                <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
-                  {error ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                      <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                      <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
-                    </div>
-                  ) : program ? (
-                    <div className="flex h-full flex-col">
-                      {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
-            </div>
+          <div className="mb-3 flex items-center gap-1 rounded-full border border-line p-0.5 text-[11px] font-mono">
+            <button
+              type="button"
+              onClick={() => setView("preview")}
+              aria-pressed={view === "preview"}
+              className={view === "preview" ? "rounded-full bg-accent px-3 py-1 text-ink" : "rounded-full px-3 py-1 text-muted"}
+            >
+              preview
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("ast")}
+              aria-pressed={view === "ast"}
+              className={view === "ast" ? "rounded-full bg-accent px-3 py-1 text-ink" : "rounded-full px-3 py-1 text-muted"}
+            >
+              parse tree
+            </button>
           </div>
+
+          {view === "ast" ? (
+            <pre className="h-[520px] w-full max-w-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-line bg-[#0b0f0d] p-4 font-mono text-[11px] leading-relaxed text-accent2">
+              {program ? JSON.stringify(program, null, 2) : error}
+            </pre>
+          ) : (
+            /* Reserves the mockup's SCALED footprint in the flex layout — a
+                transform alone shrinks the paint but not the box it's centered
+                in, which would leave this pane scrolling past empty space. */
+            <div style={previewBox.w ? { width: previewBox.w, height: previewBox.h } : undefined}>
+              <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
+                <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+                  {/* status bar */}
+                  <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
+                    <span>9:41</span>
+                    <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
+                    <span>▮▮▮ 100%</span>
+                  </div>
+                  <div className="h-[520px] overflow-auto bg-[#0b0f0d] text-text">
+                    {error ? (
+                      <div
+                        id="compose-parse-error"
+                        role="alert"
+                        aria-live="assertive"
+                        className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
+                      >
+                        <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
+                        <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
+                      </div>
+                    ) : program ? (
+                      <div className="flex h-full flex-col">
+                        {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -1019,9 +1104,12 @@ export default function ComposePlayground() {
         {nextRoom && (
           <NextRoomLink next={nextRoom} className="mx-auto mb-2 max-w-7xl border-b border-line pb-2" />
         )}
-        <p className="mx-auto max-w-7xl truncate font-mono text-[10px] text-muted" title={SUPPORTED}>
-          supported: {SUPPORTED}
-        </p>
+        <details className="mx-auto max-w-7xl">
+          <summary className="cursor-pointer font-mono text-[10px] text-muted marker:text-accent">
+            supported grammar, {PRESETS.length} examples, tap to expand
+          </summary>
+          <p className="mt-1 font-mono text-[10px] leading-relaxed text-muted">{SUPPORTED}</p>
+        </details>
       </footer>
     </div>
   );

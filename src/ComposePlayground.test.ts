@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MAX_SCENARIO_CHARS, buildGenPrompt, extractFencedCode, validateComposeCode } from "./ComposePlayground.tsx";
+import { MAX_SCENARIO_CHARS, buildGenPrompt, decodeShare, encodeShare, extractFencedCode, validateComposeCode } from "./ComposePlayground.tsx";
 import { parseCompose, type Node } from "./composeInterpreter.ts";
 
 /** Every construct the generator prompt (api/_lib/compose-prompt.ts) tells the
@@ -77,6 +77,25 @@ describe("validateComposeCode", () => {
 
   it("accepts an unrecognised call as a plain 'unknown' node, not a rejection — the interpreter's own forgiving-by-design behaviour, not the bug being guarded against", () => {
     expect(validateComposeCode("SomeFutureComposable()")).toEqual({ ok: true });
+  });
+});
+
+describe("share link round-trip", () => {
+  it("decodes exactly what it encoded, including unicode and newlines", () => {
+    const code = 'Text("emoji rocket 🚀 works")\nColumn {\n  Text("second line")\n}';
+    expect(decodeShare(encodeShare(code))).toBe(code);
+  });
+
+  it("is URL-safe — no raw +, / or padding = survives", () => {
+    // Base64's own alphabet uses three characters a URL query param treats
+    // specially; the whole point of the -/_ swap and the trimmed padding is
+    // that none of them show up in the encoded output.
+    const encoded = encodeShare("a".repeat(200)); // long enough to force padding in plain base64
+    expect(encoded).not.toMatch(/[+/=]/);
+  });
+
+  it("returns null on a malformed param instead of throwing", () => {
+    expect(decodeShare("not valid base64!!!")).toBeNull();
   });
 });
 

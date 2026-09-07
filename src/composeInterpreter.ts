@@ -49,11 +49,30 @@ const CONTAINERS = new Set(["Column", "Row", "Box", "Card", "Surface"]);
 
 /* ── Tokenizer ───────────────────────────────────────────────────────── */
 
-type Tok =
+type Tok = { pos: number } & (
   | { k: "id"; v: string }
   | { k: "num"; v: string }
   | { k: "str"; v: string }
-  | { k: "punc"; v: string };
+  | { k: "punc"; v: string }
+);
+
+/** Thrown by every parse failure. Carries a human line/col (1-indexed, like
+ *  every editor) computed once at throw time — cheap here, and pointless to
+ *  precompute per-token when almost every token never throws. */
+export class ComposeParseError extends Error {
+  constructor(message: string, public line: number, public col: number) {
+    super(message);
+    this.name = "ComposeParseError";
+  }
+}
+
+function lineColAt(src: string, pos: number): { line: number; col: number } {
+  let line = 1, col = 1;
+  for (let i = 0; i < pos && i < src.length; i++) {
+    if (src[i] === "\n") { line++; col = 1; } else col++;
+  }
+  return { line, col };
+}
 
 function tokenize(src: string): Tok[] {
   const toks: Tok[] = [];
@@ -73,6 +92,7 @@ function tokenize(src: string): Tok[] {
     if (c === "/" && src[i + 1] === "*") { i += 2; while (i < n && !(src[i] === "*" && src[i + 1] === "/")) i++; i += 2; continue; }
     // string (double-quoted, with \" escapes; content kept raw for interpolation)
     if (c === '"') {
+      const start = i;
       i++;
       let s = "";
       while (i < n && src[i] !== '"') {
@@ -80,38 +100,41 @@ function tokenize(src: string): Tok[] {
         s += src[i++];
       }
       i++; // closing quote
-      toks.push({ k: "str", v: s });
+      toks.push({ k: "str", v: s, pos: start });
       continue;
     }
     // hex literal 0xAARRGGBB (for Color(0x...))
     if (c === "0" && (src[i + 1] === "x" || src[i + 1] === "X")) {
+      const start = i;
       let s = "0x";
       i += 2;
       while (i < n && /[0-9A-Fa-f]/.test(src[i])) s += src[i++];
-      toks.push({ k: "num", v: s });
+      toks.push({ k: "num", v: s, pos: start });
       continue;
     }
     // number (integer or decimal; unit .dp/.sp handled by parser)
     if (isDigit(c)) {
+      const start = i;
       let s = "";
       while (i < n && isDigit(src[i])) s += src[i++];
       if (src[i] === "." && isDigit(src[i + 1])) { s += src[i++]; while (i < n && isDigit(src[i])) s += src[i++]; }
       if (src[i] === "f" || src[i] === "F") i++; // 12f float literal
-      toks.push({ k: "num", v: s });
+      toks.push({ k: "num", v: s, pos: start });
       continue;
     }
     // identifier / keyword
     if (isIdStart(c)) {
+      const start = i;
       let s = "";
       while (i < n && isId(src[i])) s += src[i++];
-      toks.push({ k: "id", v: s });
+      toks.push({ k: "id", v: s, pos: start });
       continue;
     }
     // multi-char punctuation
     const two = src.slice(i, i + 2);
-    if (["++", "--", "+=", "-=", "==", "!=", "->", "||", "&&"].includes(two)) { toks.push({ k: "punc", v: two }); i += 2; continue; }
+    if (["++", "--", "+=", "-=", "==", "!=", "->", "||", "&&"].includes(two)) { toks.push({ k: "punc", v: two, pos: i }); i += 2; continue; }
     // single-char punctuation
-    if ("{}()[].,=!+-*/:<>".includes(c)) { toks.push({ k: "punc", v: c }); i++; continue; }
+    if ("{}()[].,=!+-*/:<>".includes(c)) { toks.push({ k: "punc", v: c, pos: i }); i++; continue; }
     // anything else — skip so a stray char never wedges the parser
     i++;
   }
@@ -122,19 +145,27 @@ function tokenize(src: string): Tok[] {
 
 class Parser {
   private p = 0;
-  constructor(private toks: Tok[]) {}
+  constructor(private toks: Tok[], private src: string) {}
 
   private peek(o = 0): Tok | undefined { return this.toks[this.p + o]; }
   private next(): Tok | undefined { return this.toks[this.p++]; }
   private atPunc(v: string, o = 0): boolean { const t = this.peek(o); return !!t && t.k === "punc" && t.v === v; }
   private atId(v: string, o = 0): boolean { const t = this.peek(o); return !!t && t.k === "id" && t.v === v; }
   private eatPunc(v: string) {
-    if (!this.atPunc(v)) throw new Error(`Expected "${v}" near ${this.describe()}`);
+    if (!this.atPunc(v)) this.fail(`Expected "${v}" near ${this.describe()}`);
     this.p++;
   }
   private describe(): string {
     const t = this.peek();
     return t ? `"${t.v}"` : "end of code";
+  }
+  /** Every throw site routes through here so a failure always carries a
+   *  resolvable position: the offending token's, or end-of-source when the
+   *  parser ran out of tokens entirely. */
+  private fail(message: string, at?: Tok): never {
+    const pos = (at ?? this.peek() ?? this.toks[this.toks.length - 1])?.pos ?? this.src.length;
+    const { line, col } = lineColAt(this.src, pos);
+    throw new ComposeParseError(message, line, col);
   }
 
   parseProgram(): Program {
@@ -153,17 +184,17 @@ class Parser {
   private parseStateDecl(): StateDecl {
     this.next(); // var / val
     const nameTok = this.next();
-    if (!nameTok || nameTok.k !== "id") throw new Error("Expected a name after var");
+    if (!nameTok || nameTok.k !== "id") this.fail("Expected a name after var");
     const name = nameTok.v;
     // `by` or `=`
     if (this.atId("by")) this.next();
     else if (this.atPunc("=")) this.next();
-    else throw new Error(`Expected "by" or "=" in the declaration of ${name}`);
+    else this.fail(`Expected "by" or "=" in the declaration of ${name}`);
     // remember { mutableStateOf( <init> ) }
-    if (!this.atId("remember")) throw new Error(`${name} needs remember { mutableStateOf(...) }`);
+    if (!this.atId("remember")) this.fail(`${name} needs remember { mutableStateOf(...) }`);
     this.next();
     this.eatPunc("{");
-    if (!this.atId("mutableStateOf")) throw new Error(`${name} needs mutableStateOf(...)`);
+    if (!this.atId("mutableStateOf")) this.fail(`${name} needs mutableStateOf(...)`);
     this.next();
     this.eatPunc("(");
     const init = this.parseExpr();
@@ -497,6 +528,6 @@ function parseInterpolation(raw: string): (string | { ref: string })[] {
 }
 
 export function parseCompose(src: string): Program {
-  const parser = new Parser(tokenize(src));
+  const parser = new Parser(tokenize(src), src);
   return parser.parseProgram();
 }
