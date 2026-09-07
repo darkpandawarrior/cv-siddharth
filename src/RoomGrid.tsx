@@ -17,6 +17,7 @@ import {
   type PulseEvent,
 } from "./play/pulseEvents.ts";
 import { countWord } from "./data/labs.ts";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * The card grid — extracted verbatim from Playground.tsx (see that file's
@@ -45,7 +46,7 @@ import { countWord } from "./data/labs.ts";
  * broken image rather than as no image. surfaces.test.ts asserts the file
  * exists for every room, which is the only place that can actually check it.
  */
-const shotFor = (room: Room) => `/projects/portfolio/screenshots/site_${room.to.slice(1)}.png`;
+const shotFor = (room: Room) => heavy(`/projects/portfolio/screenshots/site_${room.to.slice(1)}.png`);
 
 /**
  * The one room the hub nominates.
