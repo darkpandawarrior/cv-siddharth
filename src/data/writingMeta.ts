@@ -96,5 +96,13 @@ export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
   "notes-from-the-loop": { label: "Built in: The Loopdown itself", href: "#project/the-loopdown" },
 };
 
+/**
+ * The Loopdown's recurring cast, re-exported so any surface that needs
+ * per-lesson continuity (appearance counts, who's introduced vs still
+ * waiting in the wings) reads it from here rather than reaching into the
+ * generated writing.ts directly.
+ */
+export const cast = writing.cast;
+
 export const titleize = (id?: string) =>
   (id || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");

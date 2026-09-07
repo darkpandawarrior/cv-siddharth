@@ -93,6 +93,9 @@ const PROJECT_SLOTS: Record<string, Omit<NodeSpec, "key" | "label">> = {
   // reading this on is a project in the registry like any other.
   portfolio: { x: 760, y: 1450, w: 260, h: 110, geo: "ellipse", color: "light-blue" },
   "the-loopdown": { x: 2050, y: 300, w: 280, h: 120, geo: "cloud", color: "violet", fill: "semi" },
+  // Not a KMP sibling (Next.js + Postgres), so no arrow to kmp-family below —
+  // same treatment as the-loopdown, a build that stands on its own.
+  "sinc-p": { x: 1030, y: 1600, w: 220, h: 100, geo: "ellipse", color: "light-blue" },
 };
 
 const PROJECT_NODES: NodeSpec[] = projects
@@ -162,6 +165,7 @@ export const ARROWS: [string, string, TLDefaultColorStyle][] = [
   ["sid", "candidai", "light-blue"],
   ["sid", "stutter", "light-blue"],
   ["sid", "portfolio", "light-blue"],
+  ["sid", "sinc-p", "light-blue"],
   ["sid", "the-loopdown", "violet"],
   ["sid", "chat", "light-blue"],
   // These three used to hop through a duplicate tile — work→gps→sensors — and
