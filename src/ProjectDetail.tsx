@@ -26,7 +26,7 @@ const FILM_PROJECTS = new Set(["doori", "gaddi", "paymentslab-kmp"]);
 const LAB_OF: Record<string, LabKey> = {
   doori: "modules",
   "paymentslab-kmp": "gateways",
-  gaddi: "search",
+  gaddi: "search-trees",
   candidai: "fanout",
   stutter: "replay",
 };

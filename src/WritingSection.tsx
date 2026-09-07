@@ -55,7 +55,12 @@ export function WritingSection() {
             they star live in{" "}
             <Link
               to="/loopdown"
-              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+              // The click is a hard world-flip (this page's own ochre for the
+              // Build room's green/amber), so the link previews it on hover
+              // rather than styling identically to an in-page anchor — same
+              // "two colours before you click" idea WorldSwitch already uses,
+              // spent here as a one-line hover tint instead of a new component.
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)] hover:decoration-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)]"
             >
               The Loopdown
             </Link>
@@ -156,10 +161,21 @@ export function WritingSection() {
                     key={p.year}
                     to="/excelsior"
                     search={{ year: Number(p.year), page: p.page }}
+                    // The arc these three describe is repeat-then-deviation: two
+                    // years the same baseline, the last one different — read
+                    // straight off the year, not narrated. p.year === "2021" gets
+                    // the warmer signal accent and a thicker rule; 2019/2020 share
+                    // the cooler baseline tone.
+                    style={p.year === "2021" ? { borderLeft: "3px solid var(--color-accent)" } : undefined}
                     className="card-elevated group flex flex-col rounded-2xl border border-line bg-surface p-5 transition hover:border-accent2/50"
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
+                      <span
+                        className="font-display text-sm font-bold"
+                        style={{ color: p.year === "2021" ? "var(--color-accent)" : "var(--color-accent2)" }}
+                      >
+                        {p.title}
+                      </span>
                       <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
                     </div>
                     <p className="kicker mt-1">{p.role}</p>

@@ -47,6 +47,18 @@ const SCANDINAVIAN = /scandinavian/i;
 const DECILE_STEP = 100 / chess.thesis.deciles.length;
 const MAX_GAP = Math.max(...chess.thesis.deciles.map((d) => d.gap));
 
+// The at-a-glance read above the (kept, detailed) table below: two lines
+// diverging is the whole thesis, with no copy naming it. viewBox +
+// preserveAspectRatio="none" + vectorEffect="non-scaling-stroke" is the same
+// technique ChessArc already uses for a non-uniform-scale SVG line.
+const CHART_W = 400;
+const CHART_H = 60;
+const CHART_INSET = 4;
+const chartX = (i: number) => CHART_INSET + (i / (chess.thesis.deciles.length - 1)) * (CHART_W - 2 * CHART_INSET);
+const chartY = (v: number) => CHART_H - v * CHART_H;
+const chartPath = (key: "win" | "loss") =>
+  chess.thesis.deciles.map((d, i) => `${i === 0 ? "M" : "L"}${chartX(i).toFixed(1)},${chartY(d[key]).toFixed(1)}`).join(" ");
+
 /**
  * Per-year repertoire rows, joined to that year's per-platform game counts so
  * the platform handoff is visible next to the opening change it confounds.
@@ -72,7 +84,7 @@ const latest = repertoire.at(-1);
 // dates don't.
 const lichessLastFlicker = [...chess.activityByYear].reverse().find((a) => a.lichess > 0);
 
-export function ChessFindings() {
+export function ChessFindings({ onPlayTheEngine }: { onPlayTheEngine?: () => void } = {}) {
   const { thesis, totals, discipline, span } = chess;
   const daysPlayed = discipline.spanDays ? discipline.distinctDays / discipline.spanDays : 0;
 
@@ -113,6 +125,36 @@ export function ChessFindings() {
                   THE THESIS
                 </span>
               </div>
+              <svg
+                viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+                preserveAspectRatio="none"
+                style={{ height: 72 }}
+                className="mt-4 w-full rounded-lg border border-line bg-ink"
+                aria-hidden
+              >
+                <path
+                  d={chartPath("win")}
+                  fill="none"
+                  stroke="var(--color-accent2)"
+                  strokeWidth="1.75"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <path
+                  d={chartPath("loss")}
+                  fill="none"
+                  stroke="var(--color-accent)"
+                  strokeWidth="1.75"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              <div className="mt-1.5 flex gap-4 font-mono text-[11px]">
+                <span className="text-accent2">— wins</span>
+                <span className="text-accent">— losses</span>
+              </div>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full border-collapse text-left font-mono text-[11.5px] tabular-nums">
                   <caption className="mb-3 caption-bottom text-left text-xs leading-relaxed text-muted">
@@ -148,6 +190,15 @@ export function ChessFindings() {
                   </tbody>
                 </table>
               </div>
+              {onPlayTheEngine && (
+                <button
+                  type="button"
+                  onClick={onPlayTheEngine}
+                  className="mt-4 self-start font-mono text-[11px] text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+                >
+                  Play the bot tuned to repeat this habit →
+                </button>
+              )}
             </article>
           </TiltCard>
         </Reveal>

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectStats } from "../data/projectStats.ts";
+import { Figure } from "./Figure.tsx";
 
 /* ── PaymentsLab-KMP Gateway Lab ─────────────────────────────────────────── */
 /* PaymentsLab-KMP's cataloged gateways, split by how each one is integrated and
@@ -178,6 +179,13 @@ export function GatewayLab() {
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
           <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab-KMP gateway routing simulation" />
+        </div>
+        {/* `blocked` and `bins` are already two independent accumulators that
+            survive a toggle flip — this just puts both on screen at once
+            instead of losing the "before" the moment routing switches on. */}
+        <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2">
+          <Figure label="blocked calls" value={String(stats.blocked)} sub="custom integration required" tone="bad" />
+          <Figure label="routed calls" value={String(stats.routed)} sub={`across ${TOTAL_GATEWAYS} gateways`} tone="good" />
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-zinc-300">

@@ -44,12 +44,14 @@ function squareName(i: number): string {
 
 export type ChessTab = "findings" | "arc" | "graveyard" | "repertoire" | "play" | "puzzle" | "rhythm";
 
+// Findings states the pattern; Play the Bot is the engineering that encodes
+// it, so the two sit adjacent, ahead of the three corpus data-viz tabs.
 const TABS: { key: ChessTab; label: string }[] = [
   { key: "findings", label: "The Findings" },
+  { key: "play", label: "Play the Bot" },
   { key: "arc", label: "The Arc" },
   { key: "graveyard", label: "The Graveyard" },
   { key: "repertoire", label: "Repertoire" },
-  { key: "play", label: "Play the Bot" },
   { key: "puzzle", label: "Guess the Move" },
   { key: "rhythm", label: "Rhythm" },
 ];
@@ -488,7 +490,7 @@ export function ChessRoom() {
           // a 254 KB fetch for numbers that were already in the JS chunk.
           <>
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
-            <ChessFindings />
+            <ChessFindings onPlayTheEngine={() => setTab("play")} />
           </>
         ) : error ? (
           <p className="font-mono text-sm text-zinc-300">
