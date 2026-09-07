@@ -178,7 +178,7 @@ export const GENERATORS = [
   { id: "hiresignal-stats", script: "gen-hiresignal-stats.mjs", npmName: "gen:hiresignal", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
     // updated number into three otherwise hand-authored files.
-    inputs: [], outputs: ["src/data/profile.ts", "src/labs/FanoutLab.tsx", "src/data/hiresignal.ts"],
+    inputs: [], outputs: ["src/data/profile.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },

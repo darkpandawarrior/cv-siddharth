@@ -9,12 +9,12 @@
  * Plain data, no component imports: routeHead.ts runs on the SSR path, and
  * importing LabBench.tsx there would drag in SignalLab's leaflet dependency,
  * which touches `window` at module-load time. The provider count comes from
- * data/hiresignal.ts and NOT from profile.ts for a related reason: profile.ts
+ * data/careerOpsUpstream.ts and NOT from profile.ts for a related reason: profile.ts
  * re-exports siteRooms from surfaces.ts, surfaces.ts imports this file, and
  * reaching back into profile.ts from here closes that ring — LAB_TABS reads as
  * undefined in whichever module loses the race.
  */
-import { providerCount } from "./hiresignal.ts";
+import { providerCount } from "./careerOpsUpstream.ts";
 
 export type LabKey =
   | "signal"

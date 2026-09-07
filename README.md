@@ -12,7 +12,10 @@
   <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
 </p>
 
-**Live: [cv-siddharth.vercel.app](https://cv-siddharth.vercel.app/)**
+**Live: [cv-siddharth.vercel.app](https://cv-siddharth.vercel.app/)** (the Vercel project
+itself is now named **siddharth-pandalai**, reachable at
+[siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/) too; the original
+domain stays a live alias so every existing link keeps working)
 
 Interactive CV for **Siddharth Pandalai**, Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
@@ -72,6 +75,18 @@ device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
 shows what exists, and you cannot search for a room you do not know about.
 
+Some routes are **rooms**: they join a shared next-room pager (`/chess`,
+`/lab`, `/blueprint`, `/compose`, `/forge`, `/map`, `/terminal`, `/weeb`, and
+the drivable `/playground` world), so moving between them never bounces
+through the homepage. Every route also carries the **rail**, a live trace
+pinned to the left edge (`AnomalyRail`): a repeating baseline scale with each
+facet plotted on it at its real chronological position, expanding into a
+full instrument view on drag or the `\` key. `docs/route-systemisation.md` is
+the mechanically-checked table of which route is which (room or page, fast,
+deep or wandering reading path, reachable from the facet registry or the
+sitemap or both), and `routeSystemisation.test.ts` fails the build if a route
+falls through it unregistered.
+
 <p align="center">
   <img src="./public/assets/readme/wall.webp" width="100%" alt="The homepage surface wall: every route as a tile in its own device frame, grouped under Proof, Things that run, Corpus and Writing">
   <br/>
@@ -130,6 +145,10 @@ Plus, on the scroll itself:
 - **The Canon and The Making**. The anthology's reference shelf: the lore
   rules `/canon` gates behind a spoiler divider, and `/making`'s own record
   of building it, for a reader who wants the machinery, not just the story.
+- **EB Profiles**. One card per Editorial Board year, a teammate's
+  in-character answer about him, each linking through to the scanned
+  magazine page it came from. The same grid renders on the homepage and in
+  full on `/ink`, from one component (`BoardProfilesGrid`).
 - **A cross-site play layer**. A guest wall anyone can sign, per-piece margin
   notes on `/ink` and every `/read/<slug>`, and reaction rows, all shared
   documents backed by `playhtml`, not a per-visitor toy. `VITE_GUEST_WALL=off`
@@ -177,6 +196,23 @@ and sets long-lived immutable caching for the WASM lab bundles; TanStack
 Start's own router handles all page routing, so there's no rewrite rule to
 maintain.
 
+Four more endpoints carry a live credential of their own (`/api/ops`,
+`/api/pipeline`, `/api/github-activity`, `/api/spotify` spend the owner's
+`GITHUB_TOKEN` or a Spotify OAuth exchange) and share the same origin
+allowlist and a per-IP sliding-window rate limit through one extracted module,
+[api/\_lib/guard.ts](api/_lib/guard.ts): `guarded()` wraps a GET handler with
+both in one import instead of a sixth hand-rolled copy. Unlike chat's POST, a
+request with no `Origin` header is let through here: these are same-origin
+`fetch()` calls a browser doesn't reliably attach one to, and refusing them
+would 403 the site's own widgets.
+
+Real-user monitoring is opt-in and off by default: set `VITE_SENTRY_DSN` and
+[src/lib/monitoring.ts](src/lib/monitoring.ts) wires Sentry (Core Web Vitals
+plus error tracking, 20% trace sample, `sendDefaultPii: false`) once, client
+side, after hydration. Leave it unset and the module makes no network call
+and loads no dependency code at all. `@vercel/analytics` (`<Analytics />` in
+`__root.tsx`) is unconditional and needs no key.
+
 ## Structure
 
 <details>
@@ -208,6 +244,23 @@ scripts/                     # the generators + the capture/sentinel tooling
 
 </details>
 
+The five case-study projects this site embeds live and links to were renamed
+2026-09-05, published `applicationId`s and package names kept so existing
+installs are never orphaned: [Doori](https://github.com/darkpandawarrior/Doori)
+(formerly Mileway), [Gaddi](https://github.com/darkpandawarrior/Gaddi)
+(formerly Kursi), [PaymentsLab-KMP](https://github.com/darkpandawarrior/PaymentsLab-KMP)
+(formerly PaymentsLab), [Candidai](https://github.com/darkpandawarrior/Candidai)
+(formerly HireSignal) and [Stutter](https://github.com/darkpandawarrior/Stutter)
+(formerly DEADLOCK). `vercel.json`'s redirects keep every old `/project/<old-slug>`
+and `/p/<old-slug>` link resolving to the current one.
+
+This consolidation itself landed as one merge train: roughly a dozen feature
+lanes (the system graph, the rooms and rail, the labs and chess room, the
+compose playground, the corridor world, the new surfaces, mobile performance,
+the asset offload) each ran in its own git worktree and PR, stacked and
+merged bottom-up onto `integration/site-stack`, which landed on `main` as one
+PR once every lane's own gate was green.
+
 ## Generators
 
 <details>
@@ -226,6 +279,17 @@ npm run capture:site      # screenshot every route (feeds the sentinel)
 
 `gen:og` rasterizes at author time and commits its output, so the Vercel
 build needs no browser and no image toolchain.
+
+Every generator is ONE typed node in
+[scripts/generators.mjs](scripts/generators.mjs): its real inputs, its
+outputs and which pipelines include it. `package.json`'s prebuild chain,
+`refresh.mjs`'s step list and `check-generated.mjs`'s deterministic set all
+derive from this one file now, in a topological order over declared
+input/output edges, instead of three hand-kept lists that used to disagree
+(and once let a dead generator sit fifth in a 15-link `&&` chain, silencing
+the thirteen after it for eight days). `generators.test.mjs` fails the build
+if a script has no node, a node names a script that doesn't exist, or a
+generated file isn't a declared output.
 
 Five more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
@@ -274,8 +338,14 @@ the site is generator output, refreshed on a schedule rather than every deploy.
 619 tests in 46 files while the suite had grown to 812 in 73, which is the
 whole reason that generator exists.
 
-CI runs five workflows. `ci.yml` is the gate: `tsc -b`, lint and the unit tests
-on every push. `lighthouse.yml` builds, runs the full Playwright suite, then
+CI runs five workflows. `ci.yml` is the gate: `tsc -b`, lint, the unit tests
+and `npm run check:budget` on every push. The budget check
+([budgets.json](budgets.json), `scripts/check-budget.mjs`) fails when the
+homepage's eager JS graph (everything Vite's manifest marks as a static
+import from the route, not a lazy chunk) or any named chunk grows past
+today's measured byte ceiling, a ratchet rather than a target: it cannot go green
+on its own, and a deliberate increase needs a reviewed edit to `budgets.json`,
+never a silent one. `lighthouse.yml` builds, runs the full Playwright suite, then
 Lighthouse CI over 23 URLs, one run each, asserting accessibility at 1.00 and
 SEO at 0.95 as errors, cumulative layout shift, total byte weight and script
 size also as errors (all three are properties of the bytes and the layout, so
@@ -320,7 +390,7 @@ reaches components through a context whose default is a working no-op, which is
 the truth on the server anyway, and the route serves its room grid and a baked
 terrain plate as real HTML.
 
-Four things hold the numbers up, and each is enforced rather than remembered:
+Six things hold the numbers up, and each is enforced rather than remembered:
 
 - **Content-hashed assets are immutable.** Everything under `/assets` is
   `max-age=31536000, immutable`. It was `max-age=0, must-revalidate`, so every
@@ -339,6 +409,43 @@ Four things hold the numbers up, and each is enforced rather than remembered:
   in the fleet, and 0.058 or under everywhere else; `lighthouserc.json` errors
   above 0.25, a ceiling with real headroom rather than the measured figure
   itself.
+- **SSR import protection fails the build, not the browser.** TanStack
+  Start's own `importProtection` denies `leaflet`, `tldraw`,
+  `@playhtml/react`, `playhtml`, `three` and `@react-three/*` from the SSR
+  bundle at build time, naming the file and the specifier instead of shipping
+  a `ReferenceError: document is not defined` (this repo's own history: both
+  libraries have done exactly that in production before). A `lazy()` import
+  alone does not keep a module out of the SSR compile; every SSR-reachable
+  client-only render site (a WebGL scene, a tldraw board, a `playhtml` room)
+  renders through `<ClientOnly>`, which Start's compiler recognises and
+  strips from the server build.
+- **Below-the-fold homepage sections hydrate late, on purpose.** The nine
+  sections under the hero (case studies, projects, experience, skills,
+  circuit, doorways, contact, the multiplatform frame switcher) mount inside
+  `<Hydrate when={visible()}>`, so their client JS stops competing with the
+  hero for the main thread until they are near the viewport. Measured
+  (`npx lighthouse --preset=perf --form-factor=mobile`, before → after):
+  `/` performance 63 → 66, LCP 6.44s → 5.56s, TBT 19ms → 29ms; `/project/doori`
+  performance 60 → 65, LCP 8.55s → 6.08s. Short of an 80/2.5s aspirational
+  bar, said plainly rather than rounded up; `lighthouserc.json`'s own header
+  is where that's written down, and only `/`'s total-blocking-time (still a
+  6-15x margin against the 300ms budget) was promoted to an error gate on
+  the strength of it.
+
+Heavy static assets live on GitHub Pages, not Vercel: the five bundled WASM
+apps, Excelsior's 396 magazine scans, the project screenshot galleries,
+showcase films and OG cards moved out of `public/` into a top-level `heavy/`
+directory Vite never copies, served from
+`https://darkpandawarrior.github.io/cv` through one
+[`heavy()`](src/lib/assetBase.ts) helper. Vercel's free tier caps deployment
+storage at 10 GB and this site redeploys on every merge to main; moving
+~251 MB off it dropped `dist/client` to about 25 MB.
+[`distSize.test.ts`](src/data/distSize.test.ts) gates it going forward: no
+file over 2 MB outside the hashed `assets/` bundles, the whole directory
+under 60 MB. `scripts/publish-heavy-assets.mjs` rsyncs `heavy/` into the
+sibling Pages checkout (a no-op if it isn't checked out);
+`VITE_HEAVY_ASSET_BASE=/` in `.env.local` points local dev back at `heavy/`
+directly.
 
 Generators refuse to make things worse. A fetch that succeeds and returns
 nothing is not treated as truth: `gen-chess-stats.mjs`, `gen-timeline.mjs` and

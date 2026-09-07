@@ -1,11 +1,11 @@
 
-import { providerCount, upstreamStars } from "./hiresignal.ts";
+import { providerCount, upstreamStars } from "./careerOpsUpstream.ts";
 import { repoStats } from "./repoStats.ts";
 import { surfaces } from "./surfaces.ts";
 import { fleetStats } from "./store.ts";
 import { writing } from "./writing.ts";
 import { cast, titleize } from "./writingMeta.ts";
-import { heavy } from "../lib/assetBase.ts";
+import { heavy, WASM_APP_PATH } from "../lib/assetBase.ts";
 
 export const profile = {
   name: "Siddharth Pandalai",
@@ -546,7 +546,7 @@ export interface Project {
 
 /* Re-exported so the résumé and the repo showcase keep reading upstream facts
  * from profile.ts, the one import path they already use for `upstreamMergedPRs`.
- * See hiresignal.ts for why the declaration cannot live in this file. */
+ * See careerOpsUpstream.ts for why the declaration cannot live in this file. */
 export { providerCount, upstreamStars };
 
 /* ── The Loopdown, counted rather than remembered ─────────────────────────
@@ -628,7 +628,7 @@ export const projects: Project[] = [
       line: "#4a3724",
       displayFont: "'Rozha One', Georgia, serif",
     },
-    icon: "/projects/gaddi/brand/kursi-icon.svg",
+    icon: "/projects/gaddi/brand/gaddi-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -652,7 +652,7 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home.png"],
-        liveUrl: heavy("/kursi-app/index.html"),
+        liveUrl: heavy(WASM_APP_PATH.gaddi),
         note: "Live: the real Compose/Wasm build, playable right here. One codebase, running in your browser.",
       },
     ],
@@ -836,7 +836,7 @@ export const projects: Project[] = [
       card: "#0f1720",
       line: "#1c2733",
     },
-    icon: "/projects/doori/brand/mileway-icon.svg",
+    icon: "/projects/doori/brand/doori-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -876,7 +876,7 @@ export const projects: Project[] = [
         platform: "Web",
         deviceFrame: "browser",
         screens: ["home_screen_loaded.png"],
-        liveUrl: heavy("/mileway-app/index.html"),
+        liveUrl: heavy(WASM_APP_PATH.doori),
         note: "Live, a Compose/Wasm preview shell: dashboard, live simulated tracking and the expense log, running the real design system and location math in your browser.",
       },
     ],
@@ -1089,7 +1089,7 @@ export const projects: Project[] = [
       card: "#241844",
       line: "#3F2B66",
     },
-    icon: "/projects/paymentslab-kmp/brand/paymentslab-icon.svg",
+    icon: "/projects/paymentslab-kmp/brand/paymentslab-kmp-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -1110,10 +1110,10 @@ export const projects: Project[] = [
         // downloads, and this target shipped an EMPTY array — so the one
         // project whose whole subject is payment UIs showed a dead black
         // rectangle for the first several seconds, and kept showing one on any
-        // browser that never painted. Its three siblings (kursi, mileway,
+        // browser that never painted. Its three siblings (Gaddi, Doori,
         // portfolio) each had a capture; this is the fourth.
         screens: ["web_home.png"],
-        liveUrl: heavy("/paymentslab-app/index.html"),
+        liveUrl: heavy(WASM_APP_PATH.paymentsLabKmp),
         note: "Live, a Compose/Wasm preview shell running the gateway catalog and the explained-checkout demo in your browser, in MOCK_MODE: the real orchestrator FSM and hosted-webview archetype, in-memory fakes for the server.",
       },
     ],
@@ -1269,7 +1269,7 @@ export const projects: Project[] = [
       card: "#16233A",
       line: "#28405E",
     },
-    icon: "/projects/candidai/brand/hiresignal-icon.svg",
+    icon: "/projects/candidai/brand/candidai-icon.svg",
     targets: [
       {
         platform: "Android",
@@ -1300,7 +1300,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Offline-first, agent-reachable",
-          body: "Room (KMP) plus DataStore caches everything locally over a Ktor REST + NDJSON/SSE sync layer, so the dashboard stays usable offline and catches up when connectivity returns. An agent-interop surface lets other agents, and the OS itself, drive the app without going through the UI. It covers Android AppFunctions, iOS App Intents/Shortcuts, hiresignal:// deep links, and a documented OpenAPI contract.",
+          body: "Room (KMP) plus DataStore caches everything locally over a Ktor REST + NDJSON/SSE sync layer, so the dashboard stays usable offline and catches up when connectivity returns. An agent-interop surface lets other agents, and the OS itself, drive the app without going through the UI. It covers Android AppFunctions, iOS App Intents/Shortcuts, candidai:// deep links, and a documented OpenAPI contract.",
         },
         {
           heading: "On-device AI, with a fallback that always works",
@@ -1336,7 +1336,7 @@ export const projects: Project[] = [
       techStack: [
         { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
         { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
-        { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "hiresignal:// deep links", "OpenAPI contract"] },
+        { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "candidai:// deep links", "OpenAPI contract"] },
         { group: "Open-source engine (career-ops)", items: ["Node.js", "87 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
       ],
       extraLinks: [
@@ -1403,7 +1403,7 @@ export const projects: Project[] = [
         deviceFrame: "browser",
         // The actual compiled Compose-Multiplatform/Wasm build of this same portfolio, running
         // beside the React one. Built from cv-siddharth-kmp's :cmp-web wasmJsBrowserDistribution —
-        // 14.7 MB on disk (du -sk heavy/portfolio-app), in line with the kursi/mileway/paymentslab
+        // 14.7 MB on disk (du -sk heavy/portfolio-app), in line with the Gaddi/Doori/PaymentsLab-KMP
         // embeds already here.
         //
         // This is the whole point of the project, and until now the page could only assert it. A
@@ -1578,7 +1578,7 @@ export const projects: Project[] = [
       card: "#2A151A",
       line: "#4A2530",
     },
-    icon: "/projects/stutter/brand/deadlock-icon.svg",
+    icon: "/projects/stutter/brand/stutter-icon.svg",
     targets: [
       {
         // The repo stays private; the BUILD does not have to be.
@@ -1599,7 +1599,7 @@ export const projects: Project[] = [
         // build, not a trimmed game.
         platform: "Web",
         deviceFrame: "browser",
-        liveUrl: heavy("/deadlock-app/index.html"),
+        liveUrl: heavy(WASM_APP_PATH.stutter),
         screens: ["web_home.png"],
         note: "Live: the real Godot build, compiled to WebAssembly. Pick a chapter, then click once to capture the mouse: WASD to move, R to rewind, Esc frees the cursor.",
       },
@@ -2002,7 +2002,7 @@ export interface Contribution {
  * surface on the site said 18, which is the kind of one-off disagreement a
  * reader notices and an owner never does.
  *
- * Refreshed by scripts/gen-hiresignal-stats.mjs alongside the nine other
+ * Refreshed by the upstream-stats generator alongside the nine other
  * places this number appears.
  */
 export const upstreamMergedPRs = 24;
@@ -2035,13 +2035,13 @@ export interface GrowthItem {
 
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
-  { date: "Jun 2026", title: "Kursi (now Gaddi) shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
+  { date: "Jun 2026", title: "Gaddi (formerly Kursi) shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
   { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
-  { date: "Jun 2026", title: "Mileway (now Doori): five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
-  { date: "Jul 2026", title: "Mileway: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in." },
-  { date: "Jul 2026", title: "PaymentsLab (now PaymentsLab-KMP): 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
-  { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Mileway and PaymentsLab as composite builds." },
-  { date: "Jul 2026", title: "Mileway: super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
+  { date: "Jun 2026", title: "Doori (formerly Mileway): five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
+  { date: "Jul 2026", title: "Doori: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in." },
+  { date: "Jul 2026", title: "PaymentsLab-KMP (formerly PaymentsLab): 5 rails + 66 gateways", detail: "40-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
+  { date: "Jul 2026", title: "Shared KMP foundation", detail: "Extracted kmp-build-logic (convention plugins) and kmp-toolkit (MVI base) as my own libraries, consumed by Doori and PaymentsLab-KMP as composite builds." },
+  { date: "Jul 2026", title: "Doori: super-profile & plugin platform (V24)", detail: "A plugin-composition registry (TILE/CAPABILITY/VALUE, FORCED>USER>PRESET>DEFAULT layering) driving four persona presets, plus delegation, verification, growth, membership and wallet/payout depth. Shipped, with a V25→V37 series (on-device intelligence, JWT auth, closeout hardening, home cards/advances, What's New) landed on top." },
   { date: "Aug 2026", title: "Portfolio: the fleet made checkable", detail: `New /shipped page: ${fleetStats.live} live listings plus ${fleetStats.delisted} delisted ones recovered via the Internet Archive, ${fleetStats.live + fleetStats.delisted} apps traced across ${fleetStats.branches.toLocaleString("en-US")} branches of the Jugnoo white-label platform, verified one store listing at a time instead of asserted.` },
   { date: "Aug 2026", title: "Portfolio: the anthology and The Board, published", detail: "New /ink surfaces: the Morkinstar Journals anthology across four seasons (The Directory, The Ninety-One Pages, The Kindling, The Standing Charge) plus a starmap, and The Board, seven years of forum games, mined and republished." },
 ];

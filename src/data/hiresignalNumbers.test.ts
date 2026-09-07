@@ -61,7 +61,7 @@ describe("HireSignal's numbers agree with themselves", () => {
       [...labs.matchAll(/(\d+) providers/g)].map((m) => m[1]),
       "labs.ts should interpolate providerCount, not type a number",
     ).toEqual([]);
-    const shared = readFileSync(new URL("./hiresignal.ts", import.meta.url), "utf8");
+    const shared = readFileSync(new URL("./careerOpsUpstream.ts", import.meta.url), "utf8");
     expect(shared, `providerCount must track the ${providers} the generator writes into the case study`).toContain(
       `export const providerCount = ${providers};`,
     );

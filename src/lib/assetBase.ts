@@ -35,3 +35,22 @@ export const HEAVY_ASSET_BASE: string =
 export function heavy(path: string): string {
   return `${HEAVY_ASSET_BASE.replace(/\/$/, "")}${path}`;
 }
+
+/**
+ * The bundled WASM apps' real `heavy/` directory names, keyed by each
+ * project's CURRENT slug. The directories themselves keep their original
+ * names (`mileway-app`, `kursi-app`, `paymentslab-app`, `deadlock-app`) —
+ * renaming them cascades into `vercel.json`'s per-app cache-control rules,
+ * `publish-heavy-assets.mjs`'s sibling-repo sync and `docs/perf-budgets.md`'s
+ * measurements, none of which this file owns — so the old slug is an internal
+ * technical identifier here, same rationale as the published `applicationId`s
+ * that also outlive the 2026-09-05 rename. Every caller of `heavy()` reads the
+ * real path through this map instead of typing the old name inline.
+ */
+export const WASM_APP_PATH = {
+  doori: "/mileway-app/index.html",
+  gaddi: "/kursi-app/index.html",
+  paymentsLabKmp: "/paymentslab-app/index.html",
+  portfolio: "/portfolio-app/index.html",
+  stutter: "/deadlock-app/index.html",
+} as const;
