@@ -198,7 +198,7 @@ Creative archive, written before the code and originally on https://booksbeforeb
 - [The Particle Forge](https://cv-siddharth.vercel.app/forge): A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.
 - [The Terminal](https://cv-siddharth.vercel.app/terminal): A faux shell you can actually type in: ls the site, cat a project, or hit the backtick key from anywhere.
 - [The Pulse](https://cv-siddharth.vercel.app/pulse): A live count of what visitors actually touch across this portfolio: which rooms get opened, what gets played with, and what nobody has found yet.
-- [The Playground](https://cv-siddharth.vercel.app/playground): Every interactive room on this site as a building on one street, drivable in 3D. The street is a timeline, north is 2017 and south is now.
+- [The Playground](https://cv-siddharth.vercel.app/playground): Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.
 
 ### Corpus: long records, read as evidence
 

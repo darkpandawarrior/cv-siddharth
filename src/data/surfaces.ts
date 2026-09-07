@@ -335,9 +335,10 @@ const pageSurfaces: SurfaceInput[] = [
   {
     to: "/resume",
     label: "Résumé",
-    // Claims only what ships. An earlier draft said "one page, A4" — there is
-    // no `@page` rule anywhere in the CSS (that is programme increment 7, not
-    // yet built) and the page count isn't fixed, so both were unverified.
+    // Claims only what ships. index.css now has a real `@page` rule (A4,
+    // fixed margins) so the paper size is no longer a browser default, but
+    // the page count still isn't fixed by that rule alone, so this blurb
+    // still doesn't promise "one page".
     blurb:
       "The résumé as a page, not a download. No chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.",
     tag: "print · pdf",
@@ -470,10 +471,13 @@ const pageSurfaces: SurfaceInput[] = [
     //
     // Describes the shape, never the roll-call. The list used to run past
     // routeHead's 158-char clamp and the rendered description ended at "a
-    // typable…", losing the terminal and the experiment count outright.
+    // typable…", losing the terminal and the experiment count outright. The
+    // West District (districtWest.ts) gets named rather than left as an
+    // undescribed landmark: employer towers, case-study monuments and
+    // project towers, sized from profile.ts and projectStats.ts, laid out
+    // west of the boulevard.
     blurb:
-      `Every interactive room on this site as a building on one street, drivable in 3D. The street is a timeline, ` +
-      `north is 2017 and south is now.`,
+      "Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.",
     tag: "3d world · drivable",
     group: "runs",
     tint: ACCENT,
