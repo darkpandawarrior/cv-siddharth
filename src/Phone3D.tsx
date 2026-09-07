@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { TiltPhone } from "./TiltPhone.tsx";
 import type { PhoneShot } from "./Phone3DScene.tsx";
+import { heavy } from "./lib/assetBase.ts";
 
 const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 
@@ -15,9 +16,9 @@ const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 // the smaller AVIF because this scene only renders where WebGL does, and
 // Safari 15 has WebGL without AVIF — a texture that 404s is a black phone.
 const SHOTS: PhoneShot[] = [
-  { src: "/projects/doori/screenshots/track_data_preview_overview_tab.webp", label: "Doori" },
-  { src: "/projects/gaddi/screenshots/home_phone.webp", label: "Gaddi" },
-  { src: "/projects/doori/screenshots/tracking_success_screen.webp", label: "Doori" },
+  { src: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"), label: "Doori" },
+  { src: heavy("/projects/gaddi/screenshots/home_phone.webp"), label: "Gaddi" },
+  { src: heavy("/projects/doori/screenshots/tracking_success_screen.webp"), label: "Doori" },
 ];
 
 function supportsWebGL(): boolean {
