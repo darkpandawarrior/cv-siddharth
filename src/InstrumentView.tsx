@@ -86,6 +86,12 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
+        // `inert` on every sibling removes them from the a11y tree and the
+        // tab order, but a `window`-level keydown listener still fires —
+        // Flipbook, CommandPalette and every other Escape handler on the
+        // site listen there. Without this, one Escape closed this overlay
+        // AND whatever else was listening underneath it.
+        e.stopPropagation();
         onClose();
         return;
       }

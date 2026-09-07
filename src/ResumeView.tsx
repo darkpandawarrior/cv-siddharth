@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projects, openSource, upstreamMergedPRs} from "./data/profile.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { emphasise } from "./lib/resumeEmphasis.tsx";
+import { concurrentCompanies } from "./lib/resumeMeta.ts";
 
 /**
  * Print-perfect résumé rendered from the same data as the portfolio.
@@ -62,6 +63,10 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
   // the employers. Everything else stays near-black so the page still reads as
   // a document rather than a brochure — and prints legibly in greyscale.
   const h2 = "font-display text-xs font-bold uppercase tracking-widest text-teal-700";
+  // Companies still marked Present. A skimming reader sees two entries with
+  // no end date and no visual signal they overlap rather than one replacing
+  // the other — this is what makes that overlap visible.
+  const concurrent = concurrentCompanies(experience);
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
       {/* Wraps: back-link + three cut links + a pill button is wider than a
@@ -93,7 +98,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           ))}
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-700"
+            className="flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink hover:bg-accent-dim"
           >
             <Printer size={15} /> Download PDF
           </button>
@@ -201,7 +206,12 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             Key Results
           </h2>
           <p className={`${headGap} text-sm ${lead} text-zinc-800`}>
-            {resumeMetrics.map((m) => `${m.value} ${m.label}`).join(" · ")}
+            {resumeMetrics.map((m, i) => (
+              <Fragment key={m.label}>
+                {i > 0 && " · "}
+                <span className="font-mono tabular-nums font-semibold">{m.value}</span> {m.label}
+              </Fragment>
+            ))}
           </p>
         </section>
         )}
@@ -227,6 +237,11 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                 </h3>
                 <p className="shrink-0 text-xs text-zinc-500">{job.period}</p>
               </div>
+              {concurrent.length > 1 && concurrent.includes(job.company) && (
+                <p className="text-xs italic text-zinc-500">
+                  Concurrent with {concurrent.filter((c) => c !== job.company).join(", ")}
+                </p>
+              )}
               <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm leading-snug text-zinc-700">
                 {points.map((p) => (
                   <li key={p.text}>

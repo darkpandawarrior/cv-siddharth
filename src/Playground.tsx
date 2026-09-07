@@ -9,7 +9,6 @@ import { ROOMS } from "./rooms.tsx";
 import { countWord } from "./data/labs.ts";
 import {
   DeferredPlayRoom,
-  DeferredLivePulse,
   DeferredPresenceBadge,
   DeferredVisitorPlaque,
   DeferredSandbox,
@@ -96,12 +95,12 @@ function saveViewPref(view: "world" | "list"): void {
 
 export default function Playground() {
   // Everything shared on this page — presence, the tile counts, the sandbox and
-  // the wall — reads from this one room.
+  // the wall — reads from this one room. The pulse provider itself now
+  // mounts once in __root.tsx (every room bumps the entry counter on mount,
+  // not only this page), so this page just reads it like anywhere else.
   return (
     <DeferredPlayRoom>
-      <DeferredLivePulse>
-        <PlaygroundInner />
-      </DeferredLivePulse>
+      <PlaygroundInner />
     </DeferredPlayRoom>
   );
 }

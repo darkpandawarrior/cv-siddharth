@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
 import { profile } from "../data/profile.ts";
+import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 
 // The full record is the default and carries no param, so `/resume` keeps
@@ -30,6 +31,10 @@ export const Route = createFileRoute("/resume")({
         { name: "twitter:image", content: "https://cv-siddharth.vercel.app/p/resume/og.png" },
       ],
       links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
+      // Résumé-specific Person schema, derived from the same profile/experience
+      // data the page itself renders from — unlike __root.tsx's PERSON_LD this
+      // can't drift from what /resume actually says.
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(buildResumeJsonLd()) }],
     };
   },
   component: ResumePage,
