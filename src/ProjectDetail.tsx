@@ -17,6 +17,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./lib/caseSpine.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
@@ -201,7 +202,7 @@ function CaseSpine({
   filmAnchor?: string;
 }) {
   if (!d.problem || !d.decision || !d.outcome) return null;
-  const metric = d.outcomeMetricIndex !== undefined ? d.metrics?.[d.outcomeMetricIndex] : undefined;
+  const metric = pickOutcomeMetric(d);
   const shot = d.outcomeScreenshot ? `/projects/${slug}/screenshots/${d.outcomeScreenshot}` : undefined;
 
   return (
@@ -256,7 +257,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const outcomeShot = project?.detail?.outcomeScreenshot
     ? `/projects/${slug}/screenshots/${project.detail.outcomeScreenshot}`
     : undefined;
-  const marqueeSrcs = items.map((i) => i.src).filter((src) => src !== outcomeShot);
+  const marqueeSrcs = excludeOutcomeScreenshot(items.map((i) => i.src), outcomeShot);
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
   const railRef = useRef<HTMLDivElement>(null);
