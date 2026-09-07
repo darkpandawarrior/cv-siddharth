@@ -23,13 +23,13 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-09-06",
+    "generatedAt": "2026-09-07",
     "slaDays": 45,
     "generator": "npm run gen:system-graph"
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-09-04",
+    "generatedAt": "2026-09-07",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
@@ -213,4 +213,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-09-06";
+export const opsGeneratedAt = "2026-09-07";

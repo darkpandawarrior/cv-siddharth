@@ -154,6 +154,10 @@ function gzipPreviewHtmlPlugin(): Plugin {
 // ahead of viteReact()'s oxc transform regardless of array position here.
 export default defineConfig(async () => ({
   server: { port: 5173 },
+  // Emits dist/client/.vite/manifest.json — the only way to know which chunks
+  // a given route's entry actually imports, rather than guessing from
+  // filenames in dist/client/assets.
+  build: { manifest: true },
   plugins: [
     // tanstackStart() must come before viteReact() — this ordering is called
     // out explicitly in @tanstack/react-start's own bundled setup docs.

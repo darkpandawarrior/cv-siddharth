@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Hydrate } from "@tanstack/react-start";
+import { visible } from "@tanstack/react-start/hydration";
 import {
   MapPin,
   ArrowUpRight,
@@ -45,6 +47,18 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { statLineExtras, badgesBeyondStatus } from "./lib/projectStatLine.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
+
+/**
+ * Below-the-fold homepage sections hydrate only once they are within 600px of
+ * the viewport (the strategy's default `rootMargin`), instead of all at once
+ * in the same synchronous pass as the hero. The server still renders every
+ * section's real HTML up front — `<Hydrate>` only defers the CLIENT commit,
+ * so a no-JS visitor, a crawler, and the first paint all see the exact same
+ * page; only the initial hydration's own scheduler cost gets spread across
+ * the scroll instead of paid in one ~2.5s block. See ParticleHero.tsx for the
+ * matching idea already shipped for the hero's own 3D scene.
+ */
+const deferBelowFold = visible();
 
 const SKILL_ICONS: Record<string, string> = {
   "UI & Architecture": "🎨",
@@ -1188,35 +1202,53 @@ export function HomePage() {
             beside a TV, and the hero heading is the LCP element. Nothing here
             boots until it is clicked, so this section costs the initial load
             one lazy poster. */}
-        <DeviceMorph />
+        <Hydrate when={deferBelowFold}>
+          <DeviceMorph />
+        </Hydrate>
         {/* The comment here used to claim "a recruiter who reads two sections
             should have hit a live Play Store rating by the end of the second"
             while the shelf itself was the eighth section, 17,800px down. It is
             now the third, and it breaks the four-in-a-row run of "what have you
             built?" grids that used to be work → projects → source → shipped. */}
         <ShippedShelf />
-        <CaseStudies />
-        <Projects />
+        <Hydrate when={deferBelowFold}>
+          <CaseStudies />
+        </Hydrate>
+        <Hydrate when={deferBelowFold}>
+          <Projects />
+        </Hydrate>
         {/* #source promoted to its own top-level section — was a <div> buried
             near the end of #projects even though it's a first-class
             destination in the footer, palette and navigation.ts. */}
         <ReposShowcase />
-        <ExperienceSection />
+        <Hydrate when={deferBelowFold}>
+          <ExperienceSection />
+        </Hydrate>
         {/* Skills sits with the evidence it proves, not after the gear change.
             It was below Doorway and InkDoorway — i.e. AFTER the Circuit that
             the comment below calls the move from career evidence into
             exploration — so the page's own stated narrative had a piece of
             evidence stranded on the wrong side of its own divider. */}
-        <Skills />
+        <Hydrate when={deferBelowFold}>
+          <Skills />
+        </Hydrate>
         {/* The one remaining Circuit: a genuine gear change from career
             evidence into "go poke at something", not spacing. */}
-        <Circuit />
-        <Doorway />
+        <Hydrate when={deferBelowFold}>
+          <Circuit />
+        </Hydrate>
+        <Hydrate when={deferBelowFold}>
+          <Doorway />
+        </Hydrate>
         {/* Writing lives in its own world now (/ink). What stays here is the
             doorway — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
-        <InkDoorway />
-        <Contact />
+        <Hydrate when={deferBelowFold}>
+          <InkDoorway />
+        </Hydrate>
+        <Hydrate when={deferBelowFold}>
+          <Contact />
+        </Hydrate>
       </main>
       <FloatingChat />
     </div>
