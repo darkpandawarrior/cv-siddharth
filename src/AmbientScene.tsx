@@ -3,7 +3,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import { MathUtils } from "three";
 import type { Group, Mesh, MeshBasicMaterial } from "three";
-import { readColor, readToken } from "./themeColor";
+import { readToken } from "./themeColor";
+import { readColor } from "./themeColorThree.ts";
 
 /** 0..1 scroll progress through the whole document, read cheaply per frame. */
 function scrollProgress() {
