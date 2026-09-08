@@ -110,7 +110,7 @@ export const incidents: Incident[] = [
   },
   {
     id: "deadlock-pck",
-    subject: "DEADLOCK (now STUTTER) web export",
+    subject: "Stutter (formerly DEADLOCK) web export",
     subjectHref: "https://cv-siddharth.vercel.app/project/stutter",
     what: "310 MB export: all_resources shipped 29 unreferenced models and every texture imported lossless",
     days: 0,
