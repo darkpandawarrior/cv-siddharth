@@ -35,6 +35,11 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      # `secrets` is not a valid context in a step `if` (GitHub rejects the whole
+      # workflow file at parse time, which is how this lane never ran once). Same
+      # job-level indirection PaymentsLab's store-deploy workflows use.
+      HAS_PAGES_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,7 +69,7 @@ jobs:
       # "succeed" and only fail much later, confusingly, at push — so this
       # runs before that checkout, not after.
       - name: Require PAGES_DEPLOY_TOKEN
-        if: ${{ !secrets.PAGES_DEPLOY_TOKEN }}
+        if: env.HAS_PAGES_TOKEN != 'true'
         run: |
           echo "::error::PAGES_DEPLOY_TOKEN is not set. Create a PAT with contents:write" \
             "on darkpandawarrior/darkpandawarrior.github.io and add it as a repo secret" \
