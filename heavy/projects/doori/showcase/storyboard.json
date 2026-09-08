@@ -3,7 +3,7 @@
   "voice": "Samantha",
   "piperVoice": "en_US-amy-medium",
   "shots": [
-    { "src": "splash_screen.png", "caption": "One codebase. Offline-first. Zero backend.", "narration": "This is Mileway — an offline-first mileage and expense tracker, one Kotlin codebase, forty-five modules.", "seconds": 3 },
+    { "src": "splash_screen.png", "caption": "One codebase. Offline-first. Zero backend.", "narration": "This is Doori, an offline-first mileage and expense tracker, one Kotlin codebase, forty-nine modules.", "seconds": 3 },
     { "src": "login_screen.png", "caption": "Sign in, or skip it entirely", "narration": "It starts like any app — sign in, or continue as a guest, no account required to explore.", "seconds": 3 },
     { "src": "home_screen_loaded.png", "caption": "Everything at a glance", "narration": "The home screen surfaces mileage, cards and quick actions, reading straight from Room on-device — no network required.", "seconds": 4 },
     { "src": "track_miles_idle_screen.png", "caption": "Tap start to begin tracking", "narration": "Tap start, and the location engine takes over.", "seconds": 3 },
