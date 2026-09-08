@@ -389,6 +389,15 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [],
     "slaDays": null,
     "invocation": "npm run gen:lighthouse-summary"
+  },
+  {
+    "id": "csp",
+    "script": "gen-csp.mjs",
+    "kind": "local",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "node scripts/gen-csp.mjs"
   }
 ];
 
