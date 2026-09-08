@@ -696,7 +696,7 @@ export const projects: Project[] = [
       outcome:
         "66 cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.",
       outcomeMetricIndex: 1,
-      outcomeScreenshot: "payment_flow_diagram_verified.png",
+      outcomeScreenshot: "web_home.png",
       sections: [
         {
           heading: "The one idea worth stealing",
