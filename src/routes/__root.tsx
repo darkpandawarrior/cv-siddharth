@@ -5,9 +5,9 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
-import { currentRoles } from "../lib/resumeMeta.ts";
 import { surfaces } from "../data/surfaces.ts";
-import { profile, experience, education } from "../data/profile.ts";
+import { profile } from "../data/profile.ts";
+import { PAGE_TITLE, PERSON_LD, PROFILEPAGE_LD } from "../lib/structuredData.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import { Launcher } from "../Launcher.tsx";
 // Code-split (its own chunk stops competing with the SSR document + hero
@@ -35,60 +35,6 @@ import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
 import { DeferredPlayRoom, DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
-// Every role still running. Filtered over the whole array, never
-// experience[0] — index 0 is whichever role was added most recently, and an
-// index-based read silently demoted Dice.tech the day the consulting role
-// landed above it. Shared with resume.tsx's own Person JSON-LD via
-// resumeMeta.ts's currentRoles(), so this can never drift from that one.
-const currentRoleList = currentRoles(experience);
-
-// The title, name and links a crawler reads, in one place. Nobody looking at
-// the site would ever notice this block going stale, which is exactly why it
-// derives from profile.ts instead of restating it — the linkedin URL here had
-// already drifted from the one the résumé prints.
-const PAGE_TITLE = `${profile.name} | ${profile.title}`;
-
-const PERSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: profile.name,
-  url: `${profile.portfolio}/`,
-  jobTitle: profile.title,
-  // schema.org takes an array here, but a one-element array is noisier for a
-  // scraper that just reads the first value, so a single current role stays a
-  // bare object and only a genuine second one makes it a list.
-  worksFor:
-    currentRoleList.length === 1
-      ? { "@type": "Organization", name: currentRoleList[0].company }
-      : currentRoleList.map((e) => ({ "@type": "Organization", name: e.company })),
-  email: `mailto:${profile.email}`,
-  alumniOf: { "@type": "CollegeOrUniversity", name: education.school },
-  address: { "@type": "PostalAddress", addressLocality: "Pune", addressCountry: "IN" },
-  // Hand-written, and staying that way: there is no list of these in
-  // src/data/, and the writing platforms below are not in profile.ts either.
-  knowsAbout: ["Android", "Kotlin", "Kotlin Multiplatform", "Jetpack Compose", "Location Engineering", "Dead Reckoning", "Kalman Filtering", "Mobile Security", "Structured Concurrency"],
-  sameAs: [
-    profile.github,
-    profile.linkedin,
-    "https://dev.to/darkpandawarrior",
-    "https://medium.com/@siddharthpandalai990",
-    "https://darkpandawarrior.hashnode.dev",
-    "https://booksbeforebros.wordpress.com",
-  ],
-};
-
-const PROFILEPAGE_LD = {
-  "@context": "https://schema.org",
-  "@type": "ProfilePage",
-  name: PAGE_TITLE,
-  url: `${profile.portfolio}/`,
-  mainEntity: { "@type": "Person", name: profile.name },
-  isPartOf: {
-    "@type": "WebSite",
-    name: "sid.android",
-    url: `${profile.portfolio}/`,
-  },
-};
 
 export const Route = createRootRoute({
   head: () => ({
