@@ -3,13 +3,13 @@
     {
       "route": "/",
       "entry": "src/routes/index.tsx?tsr-split=component",
-      "rawBytes": 1963732,
-      "transferBytes": 565103
+      "rawBytes": 1976245,
+      "transferBytes": 572073
     }
   ],
   "namedChunks": {
     "SketchBoard": 1666666
   },
-  "largestChunkBytes": 1666666,
+  "largestChunkBytes": 1666798,
   "totalDeploySizeBytes": 62914560
 }
