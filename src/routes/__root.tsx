@@ -300,23 +300,23 @@ function RootDocument({ children }: { children: ReactNode }) {
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
-        {/* The launcher overlay, the anomaly rail and the command palette are
-            each a `<Hydrate when={idle()} split>` boundary now, replacing
-            three hand-rolled requestIdleCallback/dynamic-import gates (one was
-            DeferredRail, defined right here; the other two were plain eager
-            imports paying full hydration cost on every route for chrome that
+        {/* The launcher overlay and the anomaly rail are each a
+            `<Hydrate when={idle()} split>` boundary, replacing two
+            hand-rolled requestIdleCallback/dynamic-import gates (one was
+            DeferredRail, defined right here; the other was a plain eager
+            import paying full hydration cost on every route for chrome that
             does nothing until pressed) with the one native lever the router
             ships. `split` gives each its own chunk; `idle()` is the same
             "after paint, main thread free" timing DeferredRail hand-rolled,
-            so AnomalyRail's mount timing is unchanged. Global ⌘K (CommandPalette)
-            and `openLauncher()` (Launcher) both listen on `window` from an
-            effect that only runs once hydrated — interaction() would gate
-            each on a pointer/focus/click landing inside ITS OWN boundary,
-            which neither shortcut ever does (Cmd+K's target is wherever focus
-            already is; openLauncher() is a CustomEvent dispatched from a
-            button elsewhere in the tree), so it would silently disable both
-            until an unrelated click happened to land there. idle() carries
-            no such trap. */}
+            so AnomalyRail's mount timing is unchanged. `openLauncher()`
+            (Launcher) listens on `window` from an effect that only runs once
+            hydrated — interaction() would gate it on a pointer/focus/click
+            landing inside ITS OWN boundary, which the shortcut never does
+            (openLauncher() is a CustomEvent dispatched from a button
+            elsewhere in the tree), so it would silently disable it until an
+            unrelated click happened to land there. idle() carries no such
+            trap for Launcher — CommandPalette does NOT get the same
+            treatment, see its own comment below. */}
         {/* The launcher overlay. Global like AnomalyRail and for the same
             reason: it belongs to the shell, not to any one route. Mounted
             after the routed content and outside <main id="main-content">, so
@@ -334,10 +334,22 @@ function RootDocument({ children }: { children: ReactNode }) {
             /shipped, /pulse, /ink, /excelsior, /anthology, /loopdown,
             /read/$slug, /hire, /resume and /project/$slug. Its own docstring
             called itself "Global ⌘K". One mount makes that true, and avoids
-            the duplicate ⌘K listeners three mounts would have caused. */}
-        <Hydrate when={idle()} split>
-          <CommandPalette />
-        </Hydrate>
+            the duplicate ⌘K listeners three mounts would have caused.
+
+            NOT behind `<Hydrate when={idle()} split>` like Launcher/AnomalyRail
+            above, on purpose: unlike those two, CommandPalette server-renders
+            its OWN visible, always-clickable trigger button (the header's
+            "Search — open the command palette" control), so idle()'s up-to-
+            2000ms window is a real race a visitor can win — click the
+            button before the boundary hydrates and the click lands on
+            markup with no listener attached yet, silently swallowed forever
+            (confirmed: e2e/navigation.spec.ts's command-palette test failed
+            every run until this reverted to an eager mount). Launcher's
+            trigger lives in a DIFFERENT, always-eager part of the tree and
+            dispatches a CustomEvent Launcher's own effect picks up once
+            hydrated, so a click before that never lands on a dead handler
+            the same way. */}
+        <CommandPalette />
         <InitMonitoring />
         <SpeedInsights />
         <Analytics />
