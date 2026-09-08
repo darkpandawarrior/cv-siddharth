@@ -26,6 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gen-history reads this repo's own git log; a shallow clone parses one commit
+          # and the generator refuses to write a near-empty history (run 34191682522).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

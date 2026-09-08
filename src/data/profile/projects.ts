@@ -371,7 +371,7 @@ export const projects: Project[] = [
       "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, with a real Kotlin/Ktor backend built in, off by default.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "46-module clean architecture: 13 feature modules meeting only at the composition root.",
+      "49-module clean architecture: 13 feature modules meeting only at the composition root.",
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant.",
     ],
     links: [
@@ -379,7 +379,7 @@ export const projects: Project[] = [
       { label: "Case study", url: "#work" },
       { label: "PaymentsLab-KMP (sibling KMP app)", url: "#project/paymentslab-kmp" },
     ],
-    status: "46 modules · 5 platforms · 159 tests",
+    status: "49 modules · 5 platforms · 159 tests",
     deployments: [
       {
         channel: "F-Droid",
@@ -393,7 +393,7 @@ export const projects: Project[] = [
         url: "https://github.com/darkpandawarrior/Doori/releases",
       },
     ],
-    badges: ["Kotlin Multiplatform", "46 modules", "5 platforms", "Open source"],
+    badges: ["Kotlin Multiplatform", "49 modules", "5 platforms", "Open source"],
     // Telemetry-cyan — the site's own "depth" accent, reused rather than
     // invented: fitting for a location/tracking app, distinct from Gaddi's
     // teak/brass and PaymentsLab-KMP's violet.
@@ -462,7 +462,7 @@ export const projects: Project[] = [
       outcomeScreenshot: "tracking_success_screen.png",
       sections: [
         {
-          heading: "46-module clean architecture (36 local + 10 composed)",
+          heading: "49-module clean architecture (36 local + 13 composed)",
           body: "Thirteen feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
@@ -499,7 +499,7 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "46", label: "Gradle modules (36 local + 10 composed)" },
+        { value: "49", label: "Gradle modules (36 local + 13 composed)" },
         { value: "13", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls by default, real Ktor server opt-in" },
@@ -523,7 +523,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "46-module architecture, features meet only at :app",
+          title: "49-module architecture, features meet only at :app",
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -628,14 +628,14 @@ export const projects: Project[] = [
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
     highlights: [
-      "40-module registry (15 local + 25 composed) spans 66 cataloged payment gateways.",
+      "44-module registry (15 local + 29 composed) spans 66 cataloged payment gateways.",
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP" },
       { label: "Doori (sibling KMP app)", url: "#project/doori" },
     ],
-    status: "40 modules · 66 gateways · 5 rails",
+    status: "44 modules · 66 gateways · 5 rails",
     deployments: [
       {
         channel: "F-Droid",
@@ -649,7 +649,7 @@ export const projects: Project[] = [
         url: "https://github.com/darkpandawarrior/PaymentsLab-KMP/releases",
       },
     ],
-    badges: ["Kotlin Multiplatform", "40 modules", "66 gateways", "Open source"],
+    badges: ["Kotlin Multiplatform", "44 modules", "66 gateways", "Open source"],
     theme: {
       accent: "#A78BFA",
       accentDim: "#7C3AED",
@@ -703,7 +703,7 @@ export const projects: Project[] = [
           body: "A client-side Success is a hint, never proof. Only the server decides the true state, after signature verification and webhook reconciliation. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
-          heading: "40 modules, 66 gateways",
+          heading: "44 modules, 66 gateways",
           body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are 15 local modules plus 25 composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans 66 registered gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries, each with its own status badge and region.",
         },
         {
@@ -724,13 +724,13 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "40", label: "Gradle modules (15 local + 25 composed)" },
+        { value: "44", label: "Gradle modules (15 local + 29 composed)" },
         { value: "66", label: "gateways cataloged" },
         { value: "5", label: "money-movement rails" },
         { value: "1", label: "PaymentGateway contract" },
       ],
       techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "40 Gradle modules (15 + 25 composed)", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "44 Gradle modules (15 + 25 composed)", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
         { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
         { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
         { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
@@ -1359,7 +1359,7 @@ export const projects: Project[] = [
       "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.",
       "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Doori (10 of its 46 modules), PaymentsLab-KMP (25 of its 40), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
+      "Consumed by Doori (13 of its 49 modules), PaymentsLab-KMP (29 of its 44), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
     ],
     links: [
       { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
@@ -1397,7 +1397,7 @@ export const projects: Project[] = [
         },
         {
           heading: "The composition is the proof",
-          body: "Doori consumes 10 of its 46 modules from the toolkit; PaymentsLab-KMP consumes 25 of its 40; Candidai and Gaddi draw on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fifth independent consumer.",
+          body: "Doori consumes 13 of its 49 modules from the toolkit; PaymentsLab-KMP consumes 29 of its 44; Candidai and Gaddi draw on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fifth independent consumer.",
         },
         {
           heading: "One MVI contract, four apps",

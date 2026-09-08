@@ -31,7 +31,7 @@ import { projectCards } from "./projectCards.ts";
  *      the crop.
  *
  * A hero is correct by construction: right aspect, right palette, and it
- * carries the facts that earn attention (46 modules, 5 platforms, 66 gateways)
+ * carries the facts that earn attention (49 modules, 5 platforms, 66 gateways)
  * instead of whatever the app happened to be rendering. No focal point is
  * needed any more — the image IS the card's shape.
  *
@@ -52,7 +52,7 @@ export const cardMedia: Record<string, { src: string; alt: string }> = Object.fr
     p.slug,
     {
       src: `/projects/_heroes/${p.slug}.png`,
-      // The status line already reads "46 modules · 5 platforms · 159 tests";
+      // The status line already reads "49 modules · 5 platforms · 159 tests";
       // it is the same sentence this alt text used to hand-write per project,
       // and it cannot go stale against the card beside it.
       alt: `${p.name}: ${p.status}`,

@@ -4,7 +4,7 @@
 export const projectStats = {
   "mileway": {
     "modules": 36,
-    "composedModules": 10,
+    "composedModules": 13,
     "features": 13,
     "cores": 12,
     "dbVersion": 48,
@@ -12,14 +12,14 @@ export const projectStats = {
   },
   "paymentslab": {
     "modules": 15,
-    "composedModules": 25,
+    "composedModules": 29,
     "providers": 0,
     "features": 4,
     "cores": 7,
-    "gatewaysNative": 7,
-    "gatewaysHosted": 47,
-    "gatewaysMobileMoney": 8,
-    "gatewaysStub": 4,
+    "gatewaysNative": 15,
+    "gatewaysHosted": 44,
+    "gatewaysMobileMoney": 7,
+    "gatewaysStub": 3,
     "screenshots": 26
   },
   "kursi": {

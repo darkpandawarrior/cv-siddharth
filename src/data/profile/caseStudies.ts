@@ -15,13 +15,13 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "doori",
     title: "Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop)",
-    metric: "46 modules · 5 platforms · offline AI",
+    metric: "49 modules · 5 platforms · offline AI",
     summary:
       "An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Offline-first on Room + DataStore, with a real Kotlin/Ktor backend built and tested, off by default, so the whole thing stays reproducible and reviewable by anyone.",
     problem:
       "I wanted a clean, inspectable reference for the architecture I advocate for at scale: Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer. Built offline-first, with the real backend opt-in, so the whole thing stays reproducible and reviewable by anyone.",
     approach: [
-      "46-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
+      "49-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.",
       "Shared commonMain core: design system, Room (KMP) + DataStore, and every check-in / hardware-event screen. It drives Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.",
       "A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.",
       "A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals. The real logic a live expense platform needs, all local.",
