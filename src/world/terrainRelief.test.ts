@@ -14,13 +14,22 @@ describe("visualHeightAt — the four lane treatments", () => {
   });
 
   it("chess is smoother than the raw heightfield across a spike", () => {
-    const x = laneCenterX(1); // chess — 2020-12 (lockdown peak) is the spike
-    const z = -30; // somewhere inside the corridor
+    const x = laneCenterX(1); // chess — the lockdown peak is the spike
+    // Find the spike instead of pinning a z: the corridor gains a month on
+    // every refresh, so a hard-coded z drifts off the peak (and onto a flat
+    // pair, where the smoothed spread legitimately exceeds a raw spread of 0).
+    const spread = (f: (x: number, z: number) => number, z: number) =>
+      Math.abs(f(x, z + 1.83) - f(x, z - 1.83));
+    let z = CITY.z0 + 2;
+    let rawSpread = 0;
+    for (let zz = CITY.z0 + 2; zz < CITY.z1 - 2; zz += 0.5) {
+      const s = spread(heightAt, zz);
+      if (s > rawSpread) { rawSpread = s; z = zz; }
+    }
+    expect(rawSpread).toBeGreaterThan(0);
     // A neighbouring pair of samples on the raw field can differ by more than
     // the smoothed field ever does, once averaged over +/-2 months.
-    const rawSpread = Math.abs(heightAt(x, z + 1.83) - heightAt(x, z - 1.83));
-    const smoothedSpread = Math.abs(visualHeightAt(x, z + 1.83) - visualHeightAt(x, z - 1.83));
-    expect(smoothedSpread).toBeLessThanOrEqual(rawSpread + 1e-6);
+    expect(spread(visualHeightAt, z)).toBeLessThanOrEqual(rawSpread + 1e-6);
   });
 
   it("writing goes flat outside its 6m band", () => {

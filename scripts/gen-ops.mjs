@@ -74,15 +74,15 @@ const KMP = join(root, "..", "..", "KMP");
 const ANDROID = join(root, "..", "..", "Android");
 const BUILD_LOGIC = join(KMP, "kmp-build-logic", "convention", "build.gradle.kts");
 const CONSUMERS = [
-  ["Mileway", join(ANDROID, "Mileway")],
-  ["Kursi", join(ANDROID, "Kursi")],
-  ["PaymentsLab", join(ANDROID, "PaymentsLab")],
+  ["Doori", join(ANDROID, "Mileway")],
+  ["Gaddi", join(ANDROID, "Kursi")],
+  ["PaymentsLab-KMP", join(ANDROID, "PaymentsLab")],
   ["kmp-toolkit", join(KMP, "kmp-toolkit")],
   ["kmp-app-template", join(KMP, "kmp-app-template")],
   // A fourth consumer, and one kmp-toolkit's own notify-consumers.yml matrix
   // already dispatches to. Omitting it understated the reach of the plugins
   // while the external/ walk overstated it.
-  ["HireSignal", join(ANDROID, "HireSignal")],
+  ["Candidai", join(ANDROID, "HireSignal")],
 ];
 
 /**

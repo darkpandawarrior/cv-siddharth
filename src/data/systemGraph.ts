@@ -13,7 +13,7 @@ export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; ev
 export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }
 
 export const systemGraph: SystemGraph = {
-  "generatedAt": "2026-09-07",
+  "generatedAt": "2026-09-08",
   "nodes": [
     {
       "id": "gaddi",
@@ -526,6 +526,83 @@ export const systemGraph: SystemGraph = {
       "kind": "operates",
       "evidence": "declared",
       "detail": "AgentHarness reference_all_repos.md"
+    },
+    {
+      "from": "doori",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "doori/settings.gradle.kts"
+    },
+    {
+      "from": "doori",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "doori/settings.gradle.kts"
+    },
+    {
+      "from": "gaddi",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "gaddi/settings.gradle.kts"
+    },
+    {
+      "from": "gaddi",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "gaddi/settings.gradle.kts"
+    },
+    {
+      "from": "paymentslab-kmp",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "paymentslab-kmp/settings.gradle.kts"
+    },
+    {
+      "from": "paymentslab-kmp",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "paymentslab-kmp/settings.gradle.kts"
+    },
+    {
+      "from": "candidai",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "candidai/settings.gradle.kts"
+    },
+    {
+      "from": "candidai",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "candidai/settings.gradle.kts"
+    },
+    {
+      "from": "kmp-toolkit",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "kmp-toolkit/settings.gradle.kts"
+    },
+    {
+      "from": "kmp-app-template",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "kmp-app-template/settings.gradle.kts"
+    },
+    {
+      "from": "kmp-app-template",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "kmp-app-template/settings.gradle.kts"
     }
   ]
 };
@@ -533,4 +610,4 @@ export const systemGraph: SystemGraph = {
 // The sibling-scanned half of `includeBuild`, kept separate so a run with no
 // sibling checkouts on disk can fall back to what was last committed here
 // instead of shipping an empty scan as if it were a measured zero.
-export const includeBuildPairs = [] as const;
+export const includeBuildPairs = [["doori","kmp-build-logic"],["doori","kmp-toolkit"],["gaddi","kmp-build-logic"],["gaddi","kmp-toolkit"],["paymentslab-kmp","kmp-build-logic"],["paymentslab-kmp","kmp-toolkit"],["candidai","kmp-build-logic"],["candidai","kmp-toolkit"],["kmp-toolkit","kmp-build-logic"],["kmp-app-template","kmp-build-logic"],["kmp-app-template","kmp-toolkit"]] as const;
