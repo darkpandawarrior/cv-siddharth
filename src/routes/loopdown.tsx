@@ -19,8 +19,8 @@ export const Route = createFileRoute("/loopdown")({
           end", and it was mounted on exactly one page. Its section links
           already navigate cross-route (useSectionNav falls through to
           /#id), so it works here unchanged. */}
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
   ),
 });

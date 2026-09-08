@@ -1362,8 +1362,11 @@ export function HomePage() {
           );
         })}
       </main>
-      <SiteFooter />
+      {/* FloatingChat also renders the crawlable "frequently asked" section in
+          page flow, so it goes BEFORE the footer on every route that has one:
+          nothing sits below the footer. The launcher button itself is fixed. */}
       <FloatingChat />
+      <SiteFooter />
     </div>
   );
 }

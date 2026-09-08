@@ -280,8 +280,8 @@ function AnthologyRoute() {
             {layer === "dark" && <SiblingTab />}
           </div>
         </main>
-        <SiteFooter />
         <FloatingChat />
+        <SiteFooter />
       </div>
   </DeferredPlayRoom>
   );

@@ -718,8 +718,8 @@ function CanonRoute() {
         </div>
       </main>
 
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
   );
 }

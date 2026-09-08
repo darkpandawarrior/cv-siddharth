@@ -184,8 +184,8 @@ function ExcelsiorRoute() {
           />
         </div>
       </main>
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
   );
 }

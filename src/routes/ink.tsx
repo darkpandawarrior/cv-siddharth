@@ -82,8 +82,8 @@ function InkRoute() {
           <MarginNotes pieceSlug="ink" />
         </div>
       </main>
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
     </DeferredPlayRoom>
   );
