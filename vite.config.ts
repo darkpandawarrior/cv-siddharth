@@ -237,6 +237,85 @@ function gzipPreviewHtmlPlugin(): Plugin {
   };
 }
 
+/**
+ * Sets the report-only CSP header on the preview server, from the same
+ * src/lib/csp.ts allowlist scripts/gen-csp.mjs writes into vercel.json for
+ * production — so `npm run serve` (what e2e/csp.spec.ts drives) genuinely
+ * carries the policy instead of nothing standing in for it locally.
+ *
+ * script-src has no 'unsafe-inline', so the header can't be decided until
+ * the actual inline hydration <script> bytes for THIS response are known —
+ * which means deferring writeHead (Node flips headersSent the instant it's
+ * called) until the full body has been buffered, same technique as
+ * gzipPreviewHtmlPlugin just above. Registered AFTER that plugin in the
+ * plugins array so this one wraps outermost: it sees and hashes the raw
+ * HTML, then hands off to gzip's own (already-wrapped) writeHead/write/end
+ * to compress it — one buffering pass each, composed rather than duplicated.
+ */
+function cspPreviewPlugin(): Plugin {
+  return {
+    name: "csp-report-only-preview",
+    async configurePreviewServer(server) {
+      const { buildCspHeader } = await import("./src/lib/csp.ts");
+      const { createHash } = await import("node:crypto");
+      const { PERSON_LD, PROFILEPAGE_LD } = await import("./src/lib/structuredData.ts");
+      // __root.tsx's `scripts:` head entries never render into the
+      // server-sent HTML on any route (see csp.ts's buildCspHeader
+      // docstring) — hashed once here rather than relying on THIS
+      // response's own raw body to happen to contain them, which it never
+      // does on an ssr:false route.
+      const globalScriptHashes = [
+        createHash("sha256").update(JSON.stringify(PERSON_LD), "utf8").digest("base64"),
+        createHash("sha256").update(JSON.stringify(PROFILEPAGE_LD), "utf8").digest("base64"),
+      ];
+      server.middlewares.use((_req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const writeHead = res.writeHead.bind(res);
+        const write = res.write.bind(res);
+        const end = res.end.bind(res);
+        const chunks: Buffer[] = [];
+        let headArgs: Parameters<typeof res.writeHead> | null = null;
+        let html = false;
+
+        const collect = (chunk: unknown) => {
+          if (chunk == null || typeof chunk === "function") return;
+          chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : Buffer.from(chunk as Uint8Array));
+        };
+
+        res.writeHead = ((...args: Parameters<typeof res.writeHead>) => {
+          html = String(res.getHeader("content-type") ?? "").startsWith("text/html");
+          if (!html) return writeHead(...args);
+          // Deferred, not forwarded: the header this response needs depends
+          // on the body this call has no way to know yet.
+          headArgs = args;
+          return res;
+        }) as typeof res.writeHead;
+
+        res.write = ((chunk: Buffer, ...rest: never[]) => {
+          if (!html) return write(chunk, ...rest);
+          collect(chunk);
+          return true;
+        }) as typeof res.write;
+
+        res.end = ((chunk?: Buffer, ...rest: never[]) => {
+          if (!html) return end(chunk, ...rest);
+          collect(chunk);
+          const body = Buffer.concat(chunks).toString("utf8");
+          const hashes = new Set<string>(globalScriptHashes);
+          for (const m of body.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
+            if (m[1].trim()) hashes.add(createHash("sha256").update(m[1], "utf8").digest("base64"));
+          }
+          res.setHeader("Content-Security-Policy-Report-Only", buildCspHeader([...hashes]));
+          if (headArgs) writeHead(...headArgs);
+          write(Buffer.from(body, "utf8"));
+          return end();
+        }) as typeof res.end;
+
+        next();
+      });
+    },
+  };
+}
+
 // React Compiler 1.0 runs through the rolldown->babel bridge, since
 // @vitejs/plugin-react v6 moved its own JSX transform off Babel onto oxc.
 // @rolldown/plugin-babel declares itself `enforce: "pre"`, so it always runs
@@ -248,7 +327,38 @@ export default defineConfig(async () => ({
   // filenames in dist/client/assets. scripts/check-budget.mjs reads it too:
   // without this flag Vite never writes it, and there is no other artifact
   // anywhere in the build that names which chunk belongs to which entry.
-  build: { manifest: true },
+  build: {
+    manifest: true,
+    rollupOptions: {
+      output: {
+        // Rollup's automatic chunking merges modules reached by the exact
+        // same SET of importing routes into one physical chunk — which is
+        // why splitting src/data/profile.ts into separate files (arch-L15)
+        // wasn't sufficient on its own. src/data/profile/projects.ts (the
+        // heavy per-project case-study/screenshot/video registry) is read
+        // globally, on every route, by SiteFooter/CommandPalette/App.tsx's
+        // `project.detail` truthiness check — so without this, every OTHER
+        // profile submodule that happens to share that same "read on every
+        // route" set (core.ts, projectCards.ts, openSource.ts, cardMedia.ts)
+        // gets merged into ONE chunk WITH it, and /hire and /resume (which
+        // import only the light projectCards.ts, never projects.ts) paid for
+        // the heavy one anyway. Forcing it into its own chunk here is the
+        // narrow fix; decoupling those three files' own import from
+        // `projects` to `projectCards` (they only need slug/name/detail-
+        // exists, never the heavy fields) is the fuller one and out of this
+        // lane's file scope — see this lane's final report.
+        manualChunks(id: string) {
+          if (id.includes("/src/data/profile/projects.ts")) return "profile-projects-heavy";
+          // store.ts (141 KB, gen-store.mjs's full Play Store fleet listing)
+          // ends in a 13-line `fleetStats` summary object openSource.ts reads
+          // for one recentGrowth line — same "whole module for one small
+          // export" shape as projects.ts above, just in a file this lane
+          // does not own (see final report: out of scope to slim further).
+          if (id.includes("/src/data/store.ts")) return "store-fleet-heavy";
+        },
+      },
+    },
+  },
   plugins: [
     // tanstackStart() must come before viteReact() — this ordering is called
     // out explicitly in @tanstack/react-start's own bundled setup docs.
@@ -325,6 +435,9 @@ export default defineConfig(async () => ({
     // Makes `vite preview` (what Lighthouse CI measures) send the SSR document
     // compressed, the way production does.
     gzipPreviewHtmlPlugin(),
+    // Registered AFTER gzip on purpose — see cspPreviewPlugin's own docstring
+    // for why the ordering is load-bearing, not incidental.
+    cspPreviewPlugin(),
     heavyAssetsDevPlugin(),
   ],
 }));

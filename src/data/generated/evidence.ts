@@ -368,6 +368,15 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [],
     "slaDays": null,
     "invocation": "node scripts/gen-excelsior-text.mjs"
+  },
+  {
+    "id": "csp",
+    "script": "gen-csp.mjs",
+    "kind": "local",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "node scripts/gen-csp.mjs"
   }
 ];
 
