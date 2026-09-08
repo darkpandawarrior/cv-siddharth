@@ -24,6 +24,7 @@
     "prebuild": "node scripts/run-pipeline.mjs build",
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/check-budget.mjs || true",
     "preview": "vite preview --port 4173 --strictPort",
     "serve": "vite preview --strictPort --port 4173",
     "lint": "eslint .",

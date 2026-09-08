@@ -13,9 +13,17 @@ import { LauncherButton } from "./Launcher.tsx";
 /**
  * /pulse — what visitors actually do here, counted across everyone.
  *
- * The rooms are the claim ("this portfolio is a running program"); this is the
- * evidence. It reads the same shared document the rooms write to, so a number
- * moving on this page is somebody, somewhere, poking the thing it names.
+ * arch-L14: no longer called this page's "evidence". /ops is now the board
+ * that carries that word, and every row there is either build-time-generated
+ * or read from a source a visitor's browser cannot write to (see its own
+ * "not a client-writable channel" note). This page reads a public playhtml
+ * document instead, so the numbers ARE forgeable by anyone with a console —
+ * that was already disclosed below, and the fix here is not to disclose it
+ * harder, it is to stop reaching for the word a rigorous board also uses.
+ * What this page still is: texture. It reads the same shared document the
+ * rooms write to, so a number moving here is somebody, somewhere, poking the
+ * thing it names — a sign the rooms are a running program, not a claim about
+ * how many people run them.
  *
  * The page is candid about what the numbers are worth. They live in a public
  * playhtml room today, which means they are client-writable and anyone

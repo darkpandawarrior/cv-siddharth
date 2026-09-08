@@ -150,7 +150,12 @@ export const GENERATORS = [
   { id: "repo-stats", script: "gen-repo-stats.mjs", npmName: "gen:repo-stats", kind: "sibling",
     inputs: [], outputs: ["src/data/repoStats.ts"], stages: { check: 5 } },
   { id: "ops", script: "gen-ops.mjs", npmName: "gen:ops", kind: "sibling",
-    inputs: [], outputs: ["src/data/ops.ts"], stages: { refresh: 18, check: 3 } },
+    // evidence.ts added by the arch-L14 lane: gen-ops.mjs's second output,
+    // a straight map over THIS array (every node, automated or not) — so a
+    // generator added anywhere above appears on /ops with no edit to the
+    // writer. Deterministic (no wall-clock stamp), so it stays in check:3
+    // alongside ops.ts.
+    inputs: [], outputs: ["src/data/ops.ts", "src/data/generated/evidence.ts"], stages: { refresh: 18, check: 3 } },
   // Sibling kind (scans ../../Android, ../../KMP checkouts) AND a now-stamp
   // (`generatedAt: new Date().toISOString().slice(0,10)`) — refresh only on
   // both counts. Had no refresh entry at all before this lane (build was its

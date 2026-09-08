@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Ops, OpsRun } from "../api/_lib/ops-handler.ts";
 import { perimeter, leverage, drift, opsGeneratedAt } from "./data/ops.ts";
+import { generatorNodes, notMeasuredHere, evidenceGeneratedAt } from "./data/generated/evidence.ts";
 import { MAX_AGE_DAYS, ageDays, stateForAge, type OpsState } from "./data/freshnessSla.ts";
 import { fleet, fleetStats, lastShipped, storeGeneratedAt } from "./data/store.ts";
 import { incidents } from "./data/incidents.ts";
@@ -72,6 +73,16 @@ import { LauncherButton } from "./Launcher.tsx";
 
 const REPO = "https://github.com/darkpandawarrior/cv-siddharth";
 const ACTIONS = `${REPO}/actions`;
+
+/**
+ * arch-L14: check-budget.mjs's own report, written into dist/client so it
+ * ships as a same-origin static file in the SAME deploy the check ran
+ * against — see the comment above its `writeFileSync` call for why that is
+ * the only place a budget result can come from without becoming a
+ * client-writable channel.
+ */
+type BudgetCheck = { name: string; actual: number | null; ceiling: number; pass: boolean };
+type BudgetReport = { generatedAt: string; checks: BudgetCheck[]; failing: boolean };
 
 const STATE_COLOR: Record<OpsState, string> = {
   OK: "var(--color-signal)",
@@ -1040,6 +1051,12 @@ export function OpsBoard() {
   const [failed, setFailed] = useState(false);
   /** slug → HTTP status of its embed, checked same-origin in the browser. */
   const [builds, setBuilds] = useState<Record<string, number | "err">>({});
+  /** arch-L14: check-budget.mjs's own report — see the type above. `null`
+   *  until the fetch settles OR when it 404s (a `vite preview` build where
+   *  `npm run build`'s postbuild never ran), which the render below tells
+   *  apart from "still loading" via `budgetFailed`. */
+  const [budgetReport, setBudgetReport] = useState<BudgetReport | null>(null);
+  const [budgetFailed, setBudgetFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -1047,6 +1064,13 @@ export function OpsBoard() {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: Ops) => live && setOps(d))
       .catch(() => live && setFailed(true));
+
+    // Same-origin static file, written by the build this deploy shipped —
+    // not an API, and not anything a visitor's browser can write back to.
+    fetch("/evidence-budget.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: BudgetReport) => live && setBudgetReport(d))
+      .catch(() => live && setBudgetFailed(true));
 
     // The one check on this page a reader's own browser performs — costs no
     // API and cannot be faked by the server: if an embed 404s, the row
@@ -1067,6 +1091,61 @@ export function OpsBoard() {
   /* Stamped once at mount, to the second. It is literally true — it IS the
      instant every age on this page was computed — and it costs zero motion. */
   const loadedAt = useMemo(() => new Date().toISOString().slice(0, 19) + "Z", []);
+
+  /**
+   * THE GENERATOR MANIFEST (arch-L14) — every node in scripts/generators.mjs,
+   * straight off evidence.ts, never a hand-picked subset. This is a different
+   * question from the freshness perimeter above: that block asks "how old is
+   * this file against its deadline"; this one asks "does an automated path
+   * exist for this generator AT ALL". store.ts sits in BOTH — perimeter has
+   * its age, this has the fact that nothing regenerates it — because they are
+   * different failures with different fixes.
+   *
+   * A node with no stage is DEGRADED, not BROKEN: nothing is currently wrong
+   * with what it last produced, only that nothing would notice if it went
+   * stale. The row says UNAUTOMATED and gives the exact command a person runs
+   * instead, which is what "add a node, it just appears" means made visible —
+   * generatorNodes is a straight `.map()` over GENERATORS, so this block never
+   * needs an edit either.
+   */
+  const manifestRows = useMemo<RowModel[]>(
+    () => generatorNodes.map((n): RowModel => ({
+      key: `manifest:${n.id}`,
+      lane: "manifest",
+      state: n.automated ? "OK" : "DEGRADED",
+      subject: n.id,
+      subjectHref: `${REPO}/blob/main/scripts/${n.script}`,
+      detail: n.automated
+        ? `${n.kind} · runs in ${n.stages.join(", ")}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`
+        : `UNAUTOMATED · run by hand: ${n.invocation}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`,
+      verified: evidenceGeneratedAt,
+      verifiedHref: `${REPO}/blob/main/scripts/generators.mjs`,
+    })).sort(bySeverity),
+    [],
+  );
+
+  /**
+   * BUNDLE BUDGETS (arch-L14) — check-budget.mjs's own report, read from a
+   * static file THIS deploy shipped (see the type above and the writer's own
+   * comment). BROKEN means the ceiling was exceeded in the build that is
+   * currently live; a route or chunk absent from this build's manifest
+   * (renamed or removed) reports `actual: null` rather than a fabricated 0.
+   */
+  const budgetRows = useMemo<RowModel[]>(
+    () => (budgetReport?.checks ?? []).map((c): RowModel => ({
+      key: `budget:${c.name}`,
+      lane: "budget",
+      state: c.actual === null ? "DEGRADED" : c.pass ? "OK" : "BROKEN",
+      subject: c.name,
+      subjectHref: `${REPO}/blob/main/budgets.json`,
+      detail: c.actual === null
+        ? "not present in this build's manifest — renamed or removed; budgets.json needs updating"
+        : `${c.actual.toLocaleString("en-US")} B (ceiling ${c.ceiling.toLocaleString("en-US")} B)`,
+      verified: budgetReport?.generatedAt.slice(0, 10) ?? "—",
+      verifiedHref: `${REPO}/blob/main/scripts/check-budget.mjs`,
+    })).sort(bySeverity),
+    [budgetReport],
+  );
 
   const towerRows = useMemo<RowModel[]>(() => [
     ...(ops?.runs ?? []).map((r): RowModel => ({
@@ -1304,6 +1383,7 @@ export function OpsBoard() {
   const all = [
     ...towerRows, ...chainRows, ...perimeterRows, ...buildRows,
     ...driftRows, ...fleetRows, ...leverageRows, ...ledgerRows,
+    ...manifestRows, ...budgetRows,
   ];
   const escalated = [...all].filter((m) => m.state !== "OK").sort(bySeverity);
   const brokenCount = escalated.filter((m) => m.state === "BROKEN").length;
@@ -1601,6 +1681,22 @@ export function OpsBoard() {
             figure={<MttrFigure />}
             collapse={`See all ${ledgerRows.length} incidents`}
           />
+          <Block
+            title="Generator manifest"
+            note="every node in scripts/generators.mjs · add one there and it appears here, no edit to gen-ops.mjs"
+            rows={manifestRows}
+            collapse={`See all ${manifestRows.length} generators`}
+          />
+          <Block
+            title="Bundle budgets"
+            note="check-budget.mjs's own report, read from the file this deploy's build wrote — never a live measurement"
+            rows={budgetRows}
+            emptyLabel={
+              budgetFailed
+                ? "not measured in this deployment — evidence-budget.json ships only from a build that ran postbuild"
+                : undefined
+            }
+          />
 
           <p className="ops-empty">
             {guarded} of {closed.length} closed by a check that now sits on this board — which is the
@@ -1608,10 +1704,32 @@ export function OpsBoard() {
           </p>
         </div>
 
+        {/* THE BLIND SPOTS. Named rather than left silently absent — the same
+            rule every other block on this page follows for a row it cannot
+            draw (see emptyLabel throughout). These five have no row at all
+            because no generator or gate in this repo produces one yet;
+            evidence.ts is the one place that list is written down, so it
+            changes only when a generator actually lands, not when someone
+            edits a paragraph. */}
+        <section className="ops-block" aria-labelledby="ops-notmeasured-h">
+          <div className="ops-rule">
+            <h2 id="ops-notmeasured-h" className="ops-rule__title">Not measured here</h2>
+            <span className="ops-rule__note">
+              a blind spot named is more honest than a number invented to fill the row
+            </span>
+          </div>
+          {notMeasuredHere.map((line) => (
+            <p className="ops-empty" key={line.slice(0, 24)}>— {line}</p>
+          ))}
+        </section>
+
         <p className="kicker mt-6">
           Perimeter, leverage and drift generated {opsGeneratedAt} from repos on the build machine;
           ages computed as you loaded this page; the control tower, the published chain and the live
-          surfaces all read at load. Employment-era figures are measured history, not a live feed.
+          surfaces all read at load. Employment-era figures are measured history, not a live feed. The
+          generator manifest and bundle budgets are both generated at build time from{" "}
+          scripts/generators.mjs and check-budget.mjs — no row on this board is written by a visitor's
+          browser.
         </p>
         <p className="kicker">
           A separate board, on{" "}
