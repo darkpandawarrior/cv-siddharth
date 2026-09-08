@@ -283,6 +283,303 @@ export const compareSets: Record<string, Record<string, CompareOption[]>> = {
       }
     ]
   },
+  "hiresignal": {
+    "theme": [
+      {
+        "label": "dashboard",
+        "light": "/projects/hiresignal/compare/theme/1-dashboard.webp",
+        "dark": "/projects/hiresignal/compare/theme/1-dashboard-dark.webp"
+      },
+      {
+        "label": "board",
+        "light": "/projects/hiresignal/compare/theme/2-board.webp",
+        "dark": "/projects/hiresignal/compare/theme/2-board-dark.webp"
+      },
+      {
+        "label": "pipeline",
+        "light": "/projects/hiresignal/compare/theme/3-pipeline.webp",
+        "dark": "/projects/hiresignal/compare/theme/3-pipeline-dark.webp"
+      }
+    ]
+  },
+  "kursi": {
+    "density": [
+      {
+        "label": "focus",
+        "light": "/projects/kursi/compare/density/1-focus.webp"
+      },
+      {
+        "label": "guided",
+        "light": "/projects/kursi/compare/density/2-guided.webp"
+      },
+      {
+        "label": "analyst",
+        "light": "/projects/kursi/compare/density/3-analyst.webp"
+      }
+    ]
+  },
+  "mileway": {
+    "direction-approvals": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-approvals/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-approvals/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-approvals/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-approvals/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-approvals/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-approvals/5-paper-dark.webp"
+      }
+    ],
+    "direction-drive-review": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-drive-review/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-drive-review/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-drive-review/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-drive-review/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-drive-review/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-drive-review/5-paper-dark.webp"
+      }
+    ],
+    "direction-expense": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-expense/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-expense/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-expense/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-expense/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-expense/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-expense/5-paper-dark.webp"
+      }
+    ],
+    "direction-journey-guide": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-journey-guide/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-journey-guide/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-journey-guide/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-journey-guide/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-journey-guide/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-journey-guide/5-paper-dark.webp"
+      }
+    ],
+    "direction-live-drive": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-live-drive/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-live-drive/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-live-drive/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-live-drive/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-live-drive/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-live-drive/5-paper-dark.webp"
+      }
+    ],
+    "direction-saved-tracks": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-saved-tracks/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-saved-tracks/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-saved-tracks/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-saved-tracks/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-saved-tracks/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-saved-tracks/5-paper-dark.webp"
+      }
+    ],
+    "direction-track-detail": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-track-detail/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-track-detail/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-track-detail/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-track-detail/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-track-detail/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-track-detail/5-paper-dark.webp"
+      }
+    ],
+    "direction-track-evidence": [
+      {
+        "label": "ledger",
+        "light": "/projects/mileway/compare/direction-track-evidence/1-ledger.webp"
+      },
+      {
+        "label": "instrument",
+        "light": "/projects/mileway/compare/direction-track-evidence/2-instrument.webp"
+      },
+      {
+        "label": "signal",
+        "light": "/projects/mileway/compare/direction-track-evidence/3-signal.webp"
+      },
+      {
+        "label": "refined ember",
+        "light": "/projects/mileway/compare/direction-track-evidence/4-refined-ember.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/direction-track-evidence/5-paper.webp",
+        "dark": "/projects/mileway/compare/direction-track-evidence/5-paper-dark.webp"
+      }
+    ],
+    "redesign-cards-home": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-cards-home/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-cards-home/2-paper.webp"
+      }
+    ],
+    "redesign-check-in-history": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-check-in-history/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-check-in-history/2-paper.webp"
+      }
+    ],
+    "redesign-create-invoice": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-create-invoice/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-create-invoice/2-paper.webp"
+      }
+    ],
+    "redesign-create-trip": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-create-trip/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-create-trip/2-paper.webp"
+      }
+    ],
+    "redesign-geo-check-in": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-geo-check-in/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-geo-check-in/2-paper.webp"
+      }
+    ],
+    "redesign-search-masterSearch-results": [
+      {
+        "label": "before",
+        "light": "/projects/mileway/compare/redesign-search-masterSearch-results/1-before.webp"
+      },
+      {
+        "label": "paper",
+        "light": "/projects/mileway/compare/redesign-search-masterSearch-results/2-paper.webp"
+      }
+    ]
+  },
+  "paymentslab": {
+    "checkout-lifecycle": [
+      {
+        "label": "order summary",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/1-order-summary.webp"
+      },
+      {
+        "label": "paying",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/2-paying.webp"
+      },
+      {
+        "label": "settled success",
+        "light": "/projects/paymentslab/compare/checkout-lifecycle/3-settled-success.webp"
+      }
+    ]
+  },
   "paymentslab-kmp": {
     "checkout-lifecycle": [
       {

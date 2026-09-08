@@ -1066,7 +1066,7 @@ function Contact() {
         {/* The ask, sized like it matters, and the one control the sentence
             above it names. A five-chip row used to sit here (copy email,
             Résumé, GitHub, LinkedIn, my writing): four of the five resolve to
-            destinations the footer 40px below already carries in full, so the
+            destinations the site footer at the end of the page carries in full, so the
             page's closing frame was one giant CTA surrounded by five smaller
             competitors, immediately above forty-eight more. The chat door is
             the one thing the row did NOT have and the copy did promise. */}
@@ -1081,7 +1081,6 @@ function Contact() {
           </button>
         </div>
       </Reveal>
-      <SiteFooter />
     </section>
   );
 }
@@ -1336,18 +1335,17 @@ export function HomePage() {
             to it — the homepage was 14,000px because it was carrying two
             lives in one scroll. */}
         {/* NOT deferred, unlike above: this deferral was only ever correct
-            because Contact (and the footer it carries) used to be the LAST
-            thing on the page — a boundary with nothing after it reveals
-            itself naturally as a visitor scrolls toward "the end". The deep
-            path below moved five more sections after it, so a below-fold
-            <Hydrate> here now sits mid-page with real content on both sides:
-            its zero-height Suspense placeholder makes the footer briefly
-            absent from the DOM entirely rather than just uninteractive,
-            which is a real layout-shift for a visitor and an unreachable
-            target for anything that queries for it (a footer nav link, a
-            find-in-page search) before it happens to scroll into range. Both
-            are light (a CTA and a links list), so hydrating them with the
-            fast path costs little. */}
+            because Contact used to be the LAST thing on the page — a boundary
+            with nothing after it reveals itself naturally as a visitor scrolls
+            toward "the end". The deep path below moved five more sections
+            after it, so a below-fold <Hydrate> here would sit mid-page with
+            real content on both sides and its zero-height Suspense placeholder
+            would be a real layout shift. Light (a CTA), so hydrating it with
+            the fast path costs little. The site footer used to render INSIDE
+            Contact, which put "Elsewhere", the ticker and the "Built with"
+            line mid-page with five sections after them; it is now the last
+            thing in the document, after the deep path, like every other
+            route's footer. */}
         <InkDoorway />
         <Contact />
         {/* Deep path: the mechanism-level evidence (multiplatform proof, the
@@ -1364,6 +1362,7 @@ export function HomePage() {
           );
         })}
       </main>
+      <SiteFooter />
       <FloatingChat />
     </div>
   );
