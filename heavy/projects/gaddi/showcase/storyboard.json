@@ -3,7 +3,7 @@
   "voice": "Daniel",
   "piperVoice": "en_GB-alan-medium",
   "shots": [
-    { "src": "home.png", "caption": "Everyone at this table is lying", "narration": "This is Kursi — a bluffing game set in a satirical Indian corporate-political underworld, where everyone at the table is lying about what they hold.", "seconds": 5 },
+    { "src": "home.png", "caption": "Everyone at this table is lying", "narration": "This is Gaddi, a bluffing game set in a satirical Indian corporate-political underworld, where everyone at the table is lying about what they hold.", "seconds": 5 },
     { "src": "profile_setup.png", "caption": "Stamp your seat at the Darbar", "narration": "You start by stamping your own seat at the Darbar — a name, an avatar, a colour.", "seconds": 4 },
     { "src": "tutorial_bluff_caught.png", "caption": "Learn to catch a bluff", "narration": "The tutorial doesn't just explain the rules — it walks you through catching a live bluff, card by card.", "seconds": 4 },
     { "src": "4p_pick_action.png", "caption": "Claim a role, dare the room", "narration": "At the table, every turn is a claim — declare a role, take the action, and dare the room to call you on it.", "seconds": 5 },
