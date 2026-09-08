@@ -5,7 +5,7 @@
 // to matter was never checked against the deployed edge — only asserted.
 //
 // Reads the actual filenames out of each app's own public/ directory (they're
-// content-hashed on every build, deadlock-app aside) rather than hardcoding a
+// content-hashed on every build, stutter-app aside) rather than hardcoding a
 // hash that goes stale the next time one of these rebuilds.
 //
 // Usage: node scripts/check-cdn-encoding.mjs [base-url]
@@ -16,7 +16,7 @@ import { join } from "node:path";
 const BASE = process.argv[2] ?? "https://cv-siddharth.vercel.app";
 
 // public/<dir>-app — the five bundled WASM apps this repo embeds live.
-const APPS = ["kursi-app", "paymentslab-app", "mileway-app", "portfolio-app", "deadlock-app"];
+const APPS = ["gaddi-app", "paymentslab-app", "doori-app", "portfolio-app", "stutter-app"];
 
 function firstWasmFile(dir) {
   const full = join("public", dir);

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1A1A2E">
+    <meta name="description" content="Gaddi ke liye kuch bhi karega. Bluffing card game set in a satirical India corporate-political underworld.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gaddi">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Gaddi">
+    <meta property="og:description" content="Lie. Bribe. Survive. Repeat.">
+    <meta property="og:type" content="website">
+
+    <title>Gaddi</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #1A1A2E;
+            overflow: hidden;
+        }
+        /* ComposeViewport(document.body) injects its own full-size <canvas>. */
+        body > canvas { display: block; }
+        /* Loading screen — shown until Compose takes over */
+        #loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1A1A2E;
+            color: #F4ECD8;
+            font-family: serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+        }
+        #loader.hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="loader">Sab mile hue hain&hellip;</div>
+    <!-- type="module" is REQUIRED: the webpack bundle uses import.meta and
+         throws a parse-time SyntaxError as a classic script (app never boots). -->
+    <script type="module" src="cmp-web.js"></script>
+    <script>
+        // Main.kt uses ComposeViewport(document.body!!), which creates and appends
+        // its OWN <canvas>. Do NOT add a manual <canvas id="ComposeTarget"> here —
+        // that belongs to the older CanvasBasedWindow API, and a stray full-size
+        // canvas sits over Compose's real one and swallows all pointer input (the
+        // game renders but never responds). Hide the loader as soon as Compose's
+        // canvas is inserted; 8s hard fallback for a slow link.
+        const loader = document.getElementById('loader');
+        const hide = () => loader.classList.add('hidden');
+        const obs = new MutationObserver(() => {
+            if (document.querySelector('body > canvas')) { hide(); obs.disconnect(); }
+        });
+        obs.observe(document.body, { childList: true });
+        setTimeout(hide, 8000);
+    </script>
+</body>
+</html>

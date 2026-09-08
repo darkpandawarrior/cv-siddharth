@@ -27,7 +27,7 @@ export async function fetchAppManifest(url: string, fetchImpl: typeof fetch = fe
   return (await res.json()) as AppManifest;
 }
 
-/** `/kursi-app/index.html` -> `/kursi-app/build-manifest.json`. Named
+/** `/gaddi-app/index.html` -> `/gaddi-app/build-manifest.json`. Named
  *  differently from Kursi's own committed `manifest.json` (its PWA
  *  descriptor) so this never collides with it. */
 export const manifestUrlFor = (liveUrl: string): string => liveUrl.replace(/index\.html$/, "build-manifest.json");
