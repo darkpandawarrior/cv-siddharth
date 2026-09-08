@@ -664,8 +664,8 @@ function ReadPiece() {
           )}
         </nav>
       </main>
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
     </DeferredPlayRoom>
   );

@@ -409,8 +409,8 @@ function MakingRoute() {
         </div>
       </main>
 
-      <SiteFooter />
       <FloatingChat />
+      <SiteFooter />
     </div>
   );
 }
