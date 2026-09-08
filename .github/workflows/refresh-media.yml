@@ -30,6 +30,15 @@ jobs:
           # gen-history reads this repo's own git log; a shallow clone parses one commit
           # and the generator refuses to write a near-empty history (run 34191682522).
           fetch-depth: 0
+      # check:generated refuses to run without the Compose twin beside this
+      # checkout (arch-L12), which is why run 34195731263 failed its gate after
+      # every generator had succeeded. Same checkout ci.yml and refresh-twin use.
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/cv-siddharth-kmp
+          path: cv-siddharth-kmp-checkout
+      - name: Put the twin where the scripts expect it
+        run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -123,9 +132,16 @@ jobs:
       # check:generated is what actually caught the CvChessData.kt-class drift
       # this fix targets; it belongs in the same gate as the other three, not
       # bypassed by an `if: always()` commit step sitting right next to it.
+      # A content refresh moves the corpora gen-kotlin-data reads, so the twin
+      # drifts by construction on every run that changes anything. That drift
+      # is landed by refresh-twin, which now also runs after this workflow
+      # (workflow_run), so twin-only drift is reported and handed off here
+      # rather than failing the gate; site-side drift still fails it.
       - name: Generated artifacts match their generators
         id: gate_check_generated
         if: always() && steps.commit.outputs.committed == 'true'
+        env:
+          CHECK_GENERATED_TWIN_DRIFT: handoff
         run: npm run check:generated
 
       - name: Gate result
