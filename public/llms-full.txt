@@ -215,6 +215,27 @@ Creative archive, written before the code and originally on https://booksbeforeb
 - [The Morkinstar Journals](https://cv-siddharth.vercel.app/anthology): A galactic field reporter files forty-eight short stories on fourteen gods and fourteen monsters, until he stops filing, burns the case, and walks into a city built to the dimensions of his own paperwork.
 - [The Canon](https://cv-siddharth.vercel.app/canon): The rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do.
 
+## Frequently asked
+
+Each answer links the page that proves it, and it isn't restated anywhere else.
+
+- **What does he do at Dice.tech?** SDE-2, Android & Product Owner at Dice.tech (June 2023 - Present), platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech). (https://cv-siddharth.vercel.app/#experience)
+- **What did he do to improve GPS accuracy?** Took GPS accuracy to 95%: up from 50%, by predictive dead reckoning. (https://cv-siddharth.vercel.app/#work)
+- **How did he reduce production crashes?** 80% crash reduction: Crashlytics + structured concurrency fixes. (https://cv-siddharth.vercel.app/#work)
+- **How much of the app is Jetpack Compose?** ~87% of the UI layer: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML. (https://cv-siddharth.vercel.app/#skills)
+- **Where did he study?** B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 2021). (https://cv-siddharth.vercel.app/resume#main-content)
+- **What is the Neev Consulting role?** Consulting Engineer, Platform & AI at Neev Consulting (April 2026 - Present). Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end. (https://cv-siddharth.vercel.app/#experience)
+- **What is Doori?** Doori: Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop. (https://cv-siddharth.vercel.app/project/doori#main-content)
+- **What is Gaddi?** Gaddi: A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. (https://cv-siddharth.vercel.app/project/gaddi#main-content)
+- **What is PaymentsLab-KMP?** PaymentsLab-KMP: An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. (https://cv-siddharth.vercel.app/project/paymentslab-kmp#main-content)
+- **What is Candidai?** Candidai: A native, multiplatform AI career-intelligence engine, and the open-source project it's built on. (https://cv-siddharth.vercel.app/project/candidai#main-content)
+- **Does he write, outside of code?** Yes: The Loopdown, his field-notes writing hub, where the recurring bug characters are named after real production incidents. (https://cv-siddharth.vercel.app/#writing)
+- **What's he like to work with?** Answered by his own teammates, not by him: see the EB Profiles, one question per member, in their own words. (https://cv-siddharth.vercel.app/#board)
+- **Is he available, and how do I reach him?** Open to remote (worldwide / India) and hybrid in Pune / Bengaluru. Email siddharthpandalai990@gmail.com. (https://cv-siddharth.vercel.app/#contact)
+- **What has he contributed outside employer work?** Shared Kotlin Multiplatform libraries used across his own apps, plus merged upstream pull requests on career-ops: see the repos and the running count. (https://cv-siddharth.vercel.app/#source)
+- **Has anything he's built shipped for real?** Yes: see the Play Store shelf for the apps that are actually live and installable, not just source. (https://cv-siddharth.vercel.app/#shipped)
+- **What can I try on this site besides reading it?** Every route on the site, as a tile you can open: 3D builds, labs and canvases, not screenshots. (https://cv-siddharth.vercel.app/#surfaces)
+
 ## Profiles
 
 - GitHub: https://github.com/darkpandawarrior (Doori, Gaddi, PaymentsLab-KMP, the KMP toolkit)

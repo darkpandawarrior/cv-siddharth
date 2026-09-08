@@ -1,0 +1,12 @@
+{
+  "$comment": "The site's own public echo of the claim-audit discipline it names in profile.ts and README.md. This is NOT the private audit database (that lives outside this repo, at AgentHarness/skills/claim-audit/claims.json, and is never committed here) — it is a small, hand-reviewed ledger of the numbers src/data/source/answers.ts cites, so a visitor (or a crawler) can see that 'quotable' also means 'checked', not just take it on faith. Every entry below interpolates its number from src/data/profile.ts rather than restating it — see answers.ts's own header for why.",
+  "lastAudited": "2026-09-08",
+  "auditedWith": "node ~/Tools/DevTools/AgentHarness/skills/claim-audit/audit.mjs (private tooling; not part of this repo's CI)",
+  "claims": [
+    { "claim": "50k+ monthly active users, 22k+ daily", "source": "profile.ts metrics[0]", "status": "verified" },
+    { "claim": "GPS accuracy 50% -> 95% via predictive dead reckoning", "source": "profile.ts metrics[1]", "status": "verified" },
+    { "claim": "80% production crash reduction (Crashlytics + structured concurrency)", "source": "profile.ts metrics[2]", "status": "verified" },
+    { "claim": "~87% of the UI layer is Jetpack Compose, verified screen by screen against the legacy XML", "source": "profile.ts metrics[3]", "status": "verified", "note": "the corrected figure — a disproven '92%' phrasing is a claim-audit forbidden pattern" },
+    { "claim": "B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT), 2017 - 2021", "source": "profile.ts education", "status": "verified" }
+  ]
+}

@@ -43,5 +43,32 @@ export function buildProjectJsonLd(p: Project) {
     ],
   };
 
-  return { softwareSourceCode, breadcrumbList };
+  // Only projects with a real write-up (ProjectDetailData.overview) have case-
+  // study prose worth marking up — a project rendering only its tagline/stack
+  // has nothing an Article schema would add over the SoftwareSourceCode above.
+  const article = p.detail ? buildArticleJsonLd(p) : undefined;
+
+  return { softwareSourceCode, breadcrumbList, ...(article ? { article } : {}) };
+}
+
+/**
+ * Article JSON-LD for a project's case-study page (arch-L11, the answer
+ * layer — "quotable on-page answers" extends to the case-study prose itself,
+ * not only the FAQ block). `articleBody` is the project's own overview, never
+ * retyped: this reads `p.detail.overview` rather than restating it, so the
+ * prose can't drift from what the page actually renders.
+ */
+export function buildArticleJsonLd(p: Project) {
+  if (!p.detail) return undefined;
+  const url = `${SITE_URL}/project/${p.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: `${p.name} — case study`,
+    description: p.description,
+    articleBody: p.detail.overview,
+    author: { "@type": "Person", name: "Siddharth Pandalai" },
+    url,
+    mainEntityOfPage: url,
+  };
 }
