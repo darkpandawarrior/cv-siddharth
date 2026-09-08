@@ -62,13 +62,13 @@ export const projectCards: ProjectCard[] = [
       "Koin"
     ],
     "highlights": [
-      "46-module clean architecture: 13 feature modules meeting only at the composition root.",
+      "49-module clean architecture: 13 feature modules meeting only at the composition root.",
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant."
     ],
-    "status": "46 modules · 5 platforms · 159 tests",
+    "status": "49 modules · 5 platforms · 159 tests",
     "badges": [
       "Kotlin Multiplatform",
-      "46 modules",
+      "49 modules",
       "5 platforms",
       "Open source"
     ],
@@ -87,13 +87,13 @@ export const projectCards: ProjectCard[] = [
       "Room"
     ],
     "highlights": [
-      "40-module registry (15 local + 25 composed) spans 66 cataloged payment gateways.",
+      "44-module registry (15 local + 29 composed) spans 66 cataloged payment gateways.",
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest."
     ],
-    "status": "40 modules · 66 gateways · 5 rails",
+    "status": "44 modules · 66 gateways · 5 rails",
     "badges": [
       "Kotlin Multiplatform",
-      "40 modules",
+      "44 modules",
       "66 gateways",
       "Open source"
     ],
@@ -218,7 +218,7 @@ export const projectCards: ProjectCard[] = [
       "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.",
       "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Doori (10 of its 46 modules), PaymentsLab-KMP (25 of its 40), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses."
+      "Consumed by Doori (13 of its 49 modules), PaymentsLab-KMP (29 of its 44), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses."
     ],
     "status": "Active · MIT · vendored across 5 repos",
     "badges": [
