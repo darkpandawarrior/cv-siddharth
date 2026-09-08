@@ -17,6 +17,12 @@ on:
   schedule:
     - cron: '41 5 * * 1'   # weekly, Monday 05:41 UTC, before refresh-media; was daily until the 10 GB deployment cap
   workflow_dispatch:
+  # Also right after a media refresh lands: that run moves the corpora this
+  # one derives the twin's Kotlin data from, and refresh-media hands twin-only
+  # drift off to this workflow instead of failing on it.
+  workflow_run:
+    workflows: ["Refresh project media"]
+    types: [completed]
 
 permissions:
   contents: write

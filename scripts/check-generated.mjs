@@ -119,6 +119,18 @@ for (const r of REPOS) {
   }
 }
 
+// CHECK_GENERATED_TWIN_DRIFT=handoff (refresh-media.yml only): a content refresh
+// moves the corpora gen-kotlin-data reads, so the twin drifts by construction;
+// refresh-twin lands it right after (workflow_run). Twin-only drift is then a
+// hand-off, not a failure. Site-side drift is never tolerated.
+const twinOnly = moved.length > 0 && moved.every((m) => m.startsWith("cv-siddharth-kmp:"));
+if (twinOnly && process.env.CHECK_GENERATED_TWIN_DRIFT === "handoff") {
+  console.warn(
+    "check-generated: twin-only drift, handed off to refresh-twin:\n\n" +
+      moved.map((m) => "  " + m).join("\n") + "\n",
+  );
+  process.exit(0);
+}
 if (moved.length) {
   console.error(
     "check-generated: a committed artifact disagrees with its generator.\n\n" +
