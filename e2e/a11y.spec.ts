@@ -2,6 +2,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import { type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { surfacePaths } from "../src/data/routes.ts";
+import { siteRooms } from "../src/data/surfaces.ts";
 
 // Phase C2: axe locks in the a11y pass instead of just documenting it.
 // Four routes cover every layout shape on the site — SSR content page (/),
@@ -199,6 +200,12 @@ for (const v of VIEWPORTS) {
   for (const path of ROUTES) {
     test(`${path} has no axe violations (${v.name})`, async ({ page }) => {
       if (v.size) await page.setViewportSize(v.size);
+      // page.emulateMedia, not test.use({ reducedMotion }) — world-fallback.spec.ts
+      // already found the context option silently fails to reach matchMedia
+      // here. Every WebGL room's reduced-motion branch (the one a screen
+      // reader and a motion-sensitive visitor both land on) was otherwise
+      // never the branch this sweep actually scanned.
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(path, { waitUntil: "domcontentloaded" });
       await page.addStyleTag({ content: SETTLE_ANIMATIONS });
       // Let the route's client render land before scanning it.
@@ -334,4 +341,112 @@ test("the command palette has no axe violations when open", async ({ page }) => 
   await expect(page.getByRole("dialog")).toBeVisible();
 
   expectClean(await axeFor(page).analyze(), "command palette open");
+});
+
+/**
+ * The static floor, with JavaScript never in the loop.
+ *
+ * `siteRooms` (not a hand-picked five) is every full-screen room the site
+ * registers — /compose, /lab, /blueprint, /map, /forge, /terminal, /chess,
+ * /weeb. blueprint, compose, map, forge and terminal used to be `ssr: false`,
+ * which meant a plain fetch (no browser, no hydration) got back a shell with
+ * nothing in it — discoverable by title and canonical, but unfindable by
+ * anything that matches on a room's own words. lab/chess/weeb already
+ * server-rendered before this pass and are included on purpose: this asserts
+ * the property every room in the registry must hold, not the five that
+ * happened to need fixing.
+ *
+ * `request`, not `page`: Playwright's API request context fetches raw HTML
+ * over HTTP and runs no JS at all, which is the only way to tell a real
+ * server-rendered body from a client-side one that merely looks the same
+ * once hydrated.
+ */
+/**
+ * /ops and /pulse stay `ssr: false` (see each route's own comment for why —
+ * a request-time age or a websocket figure baked into cached HTML is worse
+ * than the shell this leaves instead), so nothing about their board content
+ * ever reaches a request that never runs JS: this is the negative half of
+ * the assertion above, not a claim that these two serve a rich floor today.
+ */
+test.describe("no live figure is ever baked into /ops or /pulse", () => {
+  for (const path of ["/ops", "/pulse"]) {
+    test(`${path} ships no ISO timestamp or live counter with no JS`, async ({ request }) => {
+      const html = await (await request.get(path)).text();
+      expect(html, `${path} baked in an ISO timestamp`).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+      expect(html, `${path} baked in a websocket/live-count marker`).not.toMatch(/data-live-count|"visitors":\s*\d/);
+    });
+  }
+});
+
+test.describe("every room's own prose survives with JavaScript off", () => {
+  for (const room of siteRooms) {
+    test(`${room.to} serves >= 400 characters of body text with no JS`, async ({ request }) => {
+      const res = await request.get(room.to);
+      expect(res.ok(), `${room.to} responded ${res.status()}`).toBeTruthy();
+      const html = await res.text();
+      const text = html
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<!--[\s\S]*?-->/g, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&[a-zA-Z#0-9]+;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      expect(text.length, `${room.to} rendered body text: ${JSON.stringify(text.slice(0, 200))}`).toBeGreaterThanOrEqual(400);
+    });
+  }
+});
+
+/**
+ * Every r3f `<Canvas>` on the site, named or hidden — never silent.
+ *
+ * `<Canvas>` (react-three-fiber) forwards unknown props to the wrapping
+ * `<div>` it renders, not the `<canvas>` element inside it (see the
+ * library's own Canvas.tsx), so `role`/`aria-label` land one level up from
+ * where the 2D labs put theirs — this walks up from each `<canvas>` to find
+ * either that div or a `[aria-hidden]` ancestor a genuinely decorative scene
+ * (the ones with a real chip-row or Hud substitute) is allowed to use
+ * instead of a name.
+ */
+async function unnamedCanvases(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const bad: string[] = [];
+    document.querySelectorAll("canvas").forEach((c) => {
+      let el: Element | null = c;
+      while (el) {
+        if (el.getAttribute("aria-hidden") === "true") return;
+        if (el.getAttribute("role") === "img" && el.getAttribute("aria-label")) return;
+        el = el.parentElement;
+      }
+      bad.push(c.outerHTML.slice(0, 120));
+    });
+    return bad;
+  });
+}
+
+const CANVAS_ROOMS = ["/blueprint", "/map", "/forge", "/", "/anthology"];
+
+test.describe("every 3D scene is named or deliberately hidden", () => {
+  for (const path of CANVAS_ROOMS) {
+    test(`${path} has no unnamed <Canvas>`, async ({ page }) => {
+      await page.goto(path, { waitUntil: "networkidle" });
+      await waitForHydration(page);
+      // Blueprint mounts its 3D view only once WebGL capability resolves in
+      // an effect (see BlueprintRoom.tsx) — give it a beat to get there.
+      await page.waitForTimeout(1000);
+      const bad = await unnamedCanvases(page);
+      expect(bad, `${path} has a <Canvas> with neither a name nor aria-hidden`).toEqual([]);
+    });
+  }
+});
+
+test("every chess pane's 3D scene is named or deliberately hidden", async ({ page }) => {
+  await page.goto("/chess", { waitUntil: "domcontentloaded" });
+  await waitForHydration(page);
+  for (const pane of ["The Arc", "Repertoire", "The Graveyard"]) {
+    await page.getByRole("button", { name: pane }).click();
+    await page.waitForTimeout(500);
+    const bad = await unnamedCanvases(page);
+    expect(bad, `${pane} has a <Canvas> with neither a name nor aria-hidden`).toEqual([]);
+  }
 });

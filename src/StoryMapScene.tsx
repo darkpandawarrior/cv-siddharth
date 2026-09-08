@@ -196,6 +196,11 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
       camera={{ position: [0, 0, 5.4], fov: 46 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
+      // Decorative, same as its 2D twin (StoryMapCanvas, aria-hidden below
+      // the fold in StoryMap.tsx): the chip row under the canvas is the real
+      // keyboard/screen-reader path to every node, so this one hides rather
+      // than duplicating a name for the same links.
+      aria-hidden
     >
       <ambientLight intensity={0.55} />
       <pointLight position={[4, 3, 4]} intensity={9} color={readToken("--color-probe", "#5ee6ff")} />

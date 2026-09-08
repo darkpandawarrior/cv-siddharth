@@ -151,6 +151,8 @@ export default function RepertoireTreeScene({
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       frameloop={reduced ? "demand" : "always"}
       style={{ position: "absolute", inset: 0 }}
+      role="img"
+      aria-label="3D chart of the opening repertoire as Black, by year and platform — drag to orbit"
     >
       <ambientLight intensity={0.6} />
       <pointLight position={[5, 8, 8]} intensity={70} color={readToken("--color-text", "#e8efe9")} />

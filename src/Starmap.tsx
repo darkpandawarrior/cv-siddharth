@@ -513,6 +513,8 @@ export function Starmap({ concluded, onOpen, season = null }: StarmapProps): JSX
         camera={{ position: [0, 140, 420], fov: 50, near: 1, far: 3000 }}
         gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
         style={{ position: "absolute", inset: 0 }}
+        role="img"
+        aria-label="3D starmap of the Morkinstar Journals — every world the fiction names, drag to orbit, click a lit world to open it"
       >
         <Scene concluded={concluded} onOpen={onOpen} season={season} />
       </Canvas>

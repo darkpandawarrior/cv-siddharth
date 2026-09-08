@@ -1039,6 +1039,41 @@ function Neofetch() {
 
 let blockId = 0;
 
+// Shared between the deterministic initial render (below) and the boot
+// effect's reduced-motion branch, so the two can never drift apart.
+const BOOT_LINES = ["booting sid.android shell…", "mounting /profile … ok", "loading builds, writing, metrics … ok", "ready."];
+
+/**
+ * The terminal's static floor: the exact banner a reduced-motion visitor
+ * already gets today, computed with no browser API at all so it is safe as
+ * BOTH the server's render and the client's first (pre-hydration-effect)
+ * render — the two renders hydration reconciles against each other. This
+ * used to be `[]`, filled in only by the boot effect below; that made the
+ * banner (and Neofetch, and the whole "type help to start" line) invisible
+ * to anything that doesn't run JS, and ssr:false meant nothing rendered
+ * server-side at all to make up for it.
+ *
+ * ponytail: a visitor with motion enabled gets this instantly, then the
+ * boot effect clears it and re-types it for the animated reveal — one
+ * extra reflow right after hydration. The alternative (typing the reveal
+ * with no flash) needs a CSS-only animation instead of blocks*that*get
+ * pushed over time; add one if the flash reads as janky.
+ */
+function staticBootBlocks(): Block[] {
+  const out: Block[] = BOOT_LINES.map((l) => ({ id: blockId++, kind: "out" as const, node: <Dim>{l}</Dim> }));
+  out.push({ id: blockId++, kind: "out", node: <Neofetch /> });
+  out.push({
+    id: blockId++,
+    kind: "out",
+    node: (
+      <Dim>
+        Type <Hi>help</Hi> to list commands · <Hi>projects</Hi> to see the builds · <Hi>exit</Hi> to leave.
+      </Dim>
+    ),
+  });
+  return out;
+}
+
 export function Terminal() {
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
@@ -1075,7 +1110,7 @@ export function Terminal() {
     ],
     [commands],
   );
-  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>(staticBootBlocks);
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>(() => {
     try {
@@ -1119,7 +1154,9 @@ export function Terminal() {
     );
   }, [push]);
 
-  /* Boot once: theme, banner, and a short typed sequence (skipped on reduced motion). */
+  /* Boot once: theme, and (motion permitting) a typed replay of the static
+   * banner staticBootBlocks() already rendered. Reduced motion does nothing
+   * here on purpose — the initial state already IS this branch's output. */
   useEffect(() => {
     reduce.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const savedTheme = (() => {
@@ -1131,17 +1168,13 @@ export function Terminal() {
     })();
     setTheme(savedTheme);
 
-    const boot = ["booting sid.android shell…", "mounting /profile … ok", "loading builds, writing, metrics … ok", "ready."];
-    if (reduce.current) {
-      boot.forEach((l) => push("out", <Dim>{l}</Dim>));
-      runBanner();
-      return;
-    }
+    if (reduce.current) return;
+    setBlocks([]);
     let i = 0;
     const timers: number[] = [];
     const step = () => {
-      if (i < boot.length) {
-        push("out", <Dim>{boot[i]}</Dim>);
+      if (i < BOOT_LINES.length) {
+        push("out", <Dim>{BOOT_LINES[i]}</Dim>);
         i++;
         timers.push(window.setTimeout(step, 260));
       } else {

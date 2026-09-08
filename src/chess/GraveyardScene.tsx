@@ -103,6 +103,8 @@ export default function GraveyardScene({
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       frameloop={reduced ? "demand" : "always"}
       style={{ position: "absolute", inset: 0 }}
+      role="img"
+      aria-label="3D chessboard of where games ended, one column per square, height by frequency — drag to orbit"
     >
       <ambientLight intensity={0.7} />
       <pointLight position={[5, 9, 6]} intensity={90} color={readToken("--color-text", "#e8efe9")} />

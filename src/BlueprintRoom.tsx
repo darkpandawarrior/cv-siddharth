@@ -1,4 +1,4 @@
-import { Component, useCallback, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -134,7 +134,23 @@ const loadingFallback = <div className="flex h-full items-center justify-center 
 function BlueprintRoomInner() {
   // Open on the first mode that can actually run here — Fly normally, Sketch on
   // a machine without WebGL, and nothing at all if neither is on offer.
-  const [mode, setMode] = useState<Mode>(() => MODES.find((m) => m.available())?.id ?? "fly");
+  //
+  // `mode` used to be seeded by calling `m.available()` in the useState
+  // initializer directly, which reads real WebGL/matchMedia capability —
+  // fine when this route was ssr:false (the initializer only ever ran in a
+  // browser), wrong now that it server-renders. That initializer function
+  // runs again on the client's first pass (the one hydration reconciles
+  // against), so it would compute the REAL capability there while the
+  // server had computed none at all (no `document`) — two different modes
+  // for the same markup, React's hydration-mismatch class of bug. `ready`
+  // stays a plain `false` on both sides until an effect (post-commit, client
+  // only) flips it, same shape as Playground.tsx's `worldCapable`.
+  const [mode, setMode] = useState<Mode>("fly");
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setMode(MODES.find((m) => m.available())?.id ?? "fly");
+    setReady(true);
+  }, []);
   const [stop, setStop] = useState(-1);
   const [resetTick, setResetTick] = useState(0);
   const [zoomInTick, setZoomInTick] = useState(0);
@@ -146,8 +162,8 @@ function BlueprintRoomInner() {
   // can't run, rather than left on screen as a blank rectangle.
   const [licenseGated, setLicenseGated] = useState(false);
   const isAvailable = useCallback(
-    (m: (typeof MODES)[number]) => m.available() && !(m.id === "sketch" && licenseGated),
-    [licenseGated],
+    (m: (typeof MODES)[number]) => ready && m.available() && !(m.id === "sketch" && licenseGated),
+    [ready, licenseGated],
   );
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0];
   // Only reachable when NOTHING is available (activeMode falls back to Fly,

@@ -699,14 +699,20 @@ const SUPPORTED = `Column · Row · Box · Card · Text · Button · TextField �
 export default function ComposePlayground() {
   const { goToSection } = useSectionNav();
   const nextRoom = useNextRoom();
-  // The route sets ssr: false, so this only ever mounts client-side — reading
-  // window.location here needs no typeof guard beyond what the file already
-  // does elsewhere. A malformed/missing param falls back to the first preset.
-  const [code, setCode] = useState<string>(() => {
+  // The route now server-renders (see compose.tsx), so `window` does not
+  // exist for the render that produces the static HTML — reading it in a
+  // useState initializer would also read it on the CLIENT's first render
+  // (the one hydration reconciles against, and `window` already exists
+  // there), diverging from what the server sent. Same fix as
+  // BlueprintRoom's `mode`: start at the one value both sides agree on,
+  // correct it in an effect once mounted. A visitor following a `?c=` share
+  // link sees the default preset for one paint, then the shared snippet.
+  const [code, setCode] = useState<string>(PRESETS[0].code);
+  useEffect(() => {
     const c = new URLSearchParams(window.location.search).get("c");
     const decoded = c ? decodeShare(c) : null;
-    return decoded ?? PRESETS[0].code;
-  });
+    if (decoded) setCode(decoded);
+  }, []);
   const [live, setLive] = useState(code);
   const [view, setView] = useState<"preview" | "ast">("preview");
   const gutterRef = useRef<HTMLDivElement>(null);
