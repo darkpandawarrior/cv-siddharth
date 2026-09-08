@@ -238,8 +238,11 @@ function CaseSpine({
           </div>
         </div>
         {shot && (
-          <div className="reveal mt-8 overflow-hidden rounded-2xl border border-line">
-            <Picture src={shot} alt={`Evidence: ${d.outcome}`} className="max-h-96 w-full object-cover object-top" />
+          // Contained, never cropped or upscaled: the outcome shots range from a 411x891
+          // phone capture to a 2560x1440 desktop one, and object-cover at w-full turned
+          // the portrait ones into a giant crop of their top third.
+          <div className="reveal mt-8 flex h-96 items-center justify-center overflow-hidden rounded-2xl border border-line bg-ink/60 [&_picture]:contents">
+            <Picture src={shot} alt={`Evidence: ${d.outcome}`} className="max-h-full max-w-full object-contain" />
           </div>
         )}
       </div>
