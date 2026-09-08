@@ -4,8 +4,8 @@
 export const repoStats = {
   "tests": 1292,
   "testFiles": 117,
-  "kotlinLines": 32899,
-  "kotlinFiles": 69,
+  "kotlinLines": 63063,
+  "kotlinFiles": 475,
   "kotlin": "2.4.20-RC",
   "compose": "1.12.0-rc01",
   "agp": "9.5.0-alpha02",
