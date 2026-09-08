@@ -111,7 +111,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":28105660,"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -199,7 +199,27 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		setStatusMode('progress');
-		engine.startGame({
+		// split-pack.mjs: the pack ships as parts under GitHub's 100 MB per-file
+		// cap and is stitched into one Blob here; the engine only ever sees mainPack.
+		const PACK_PARTS = ["index.pck.part-00","index.pck.part-01"];
+		const PACK_TOTAL = 177503504;
+		const loadPack = async () => {
+			const chunks = [];
+			let done = 0;
+			statusProgress.max = PACK_TOTAL;
+			for (const name of PACK_PARTS) {
+				const res = await fetch(name);
+				if (!res.ok) throw new Error('pack part ' + name + ' failed: HTTP ' + res.status);
+				const chunk = await res.arrayBuffer();
+				chunks.push(chunk);
+				done += chunk.byteLength;
+				statusProgress.value = done;
+			}
+			if (done !== PACK_TOTAL) throw new Error('pack parts total ' + done + ' B, expected ' + PACK_TOTAL);
+			return URL.createObjectURL(new Blob(chunks, { type: 'application/octet-stream' }));
+		};
+		loadPack().then((mainPack) => engine.startGame({
+			'mainPack': mainPack,
 			'onProgress': function (current, total) {
 				if (current > 0 && total > 0) {
 					statusProgress.value = current;
@@ -209,7 +229,7 @@ const engine = new Engine(GODOT_CONFIG);
 					statusProgress.removeAttribute('max');
 				}
 			},
-		}).then(() => {
+		})).then(() => {
 			setStatusMode('hidden');
 		}, displayFailureNotice);
 	}

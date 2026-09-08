@@ -1,0 +1,13 @@
+{
+  "total": 177503504,
+  "parts": [
+    {
+      "name": "index.pck.part-00",
+      "bytes": 90000000
+    },
+    {
+      "name": "index.pck.part-01",
+      "bytes": 87503504
+    }
+  ]
+}
