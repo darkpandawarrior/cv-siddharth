@@ -267,7 +267,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-seven `gen:` scripts over thirty-two generator files. The ones you
+Twenty-eight `gen:` scripts over thirty-three generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -323,8 +323,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1270 unit tests across 114 files (vitest)
-npm run test:e2e  # 254 Playwright tests across 17 files, every registry route
+npm test          # 1287 unit tests across 116 files (vitest)
+npm run test:e2e  # 274 Playwright tests across 17 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
@@ -374,11 +374,11 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Twenty of the twenty-seven route files server-render. Seven stay client-only:
-`/blueprint`, `/compose`, `/forge`, `/map`, `/ops`, `/pulse` and `/terminal`.
-Most mount WebGL at their top level; `/ops` is the exception, client-only
-because every age on its board is computed at load and a server render would
-ship a timestamp already wrong by the time it is read.
+Twenty-five of the twenty-seven route files server-render. Two stay client-only:
+`/ops` and `/pulse`. `/ops` is client-only because every age on its board is
+computed at load and a server render would ship a timestamp already wrong by
+the time it is read; `/pulse`'s numbers come off a websocket, so there is
+nothing meaningful to render on the server.
 
 `/playground` used to be the seventh. Lighthouse did not score it slow, it
 scored it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw
