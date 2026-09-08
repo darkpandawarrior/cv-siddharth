@@ -63,11 +63,28 @@ past, and building them is a PaymentsLab-KMP-repo change, out of this lane's sco
 
 ## Frontend WASM embeds: a separate, already-working path
 
-Doori, Gaddi, PaymentsLab-KMP and Stutter are already live in the browser via a different,
-already-built mechanism: their `wasmJsBrowserDistribution` Gradle output is copied into
-`public/<slug>-app/`, given an immutable-cache `vercel.json` header block for the `.wasm` files, and
-embedded through ProjectDetail's intersection-observer-gated live preview. That path needs no
-backend, no Fly app and no owner-run deploy step; it ships as part of a normal `cv-siddharth` PR.
+Doori, Gaddi, PaymentsLab-KMP, the portfolio's own Compose twin and Stutter are already live in the
+browser via a different, already-built mechanism, and it moved since this paragraph was first
+written: their `wasmJsBrowserDistribution` Gradle output no longer lands in `public/<slug>-app/` at
+all. It lands in the top-level `heavy/<slug>-app/` (see `src/lib/assetBase.ts`), which Vite never
+copies into `dist/client`, and every `liveUrl` resolves through `heavy()` to
+`https://darkpandawarrior.github.io/cv/<slug>-app/index.html` in production (`VITE_HEAVY_ASSET_BASE=/`
+serves it same-origin off `heavy/` for local dev instead — see `vite.config.ts`'s
+`heavyAssetsDevPlugin`). `scripts/publish-heavy-assets.mjs` rsyncs `heavy/` into the
+`darkpandawarrior.github.io` repo's `cv/` directory and commits it there; `.github/workflows/publish-assets.yml`
+runs that on every push to `main` (needs a `PAGES_DEPLOY_TOKEN` repo secret — a PAT with
+`contents:write` on `darkpandawarrior.github.io` — see that workflow's own header comment).
+
+`vercel.json` used to carry an immutable-cache header block per `<slug>-app/(.*).wasm` — removed in
+`9246c74` (`feat(assets): move 251 MB of heavy static assets off Vercel onto GitHub Pages`) because
+nothing under `dist/client` matches those paths anymore; Vercel cannot set headers for a response it
+never serves. GitHub Pages does not support custom response headers at all (no `_headers` file, unlike
+Netlify), so there is no equivalent block to add on the new origin — GH Pages' own default static-file
+caching applies instead, which this repo cannot configure further; that is a limitation of the free
+Pages tier, not a caching decision.
+
+That path needs no backend, no Fly app and no owner-run deploy step beyond the one-time
+`PAGES_DEPLOY_TOKEN` secret above; it ships as part of a normal `cv-siddharth` PR once published.
 
 Candidai (HireSignal) targets Web the same way (`webApp`, wasmJs, Compose Multiplatform) and belongs
 on this same path once its build is green. As of this writing it is not:
@@ -76,5 +93,5 @@ on this same path once its build is green. As of this writing it is not:
 actualize lock file" — a yarn-lock drift in that repo, fixed by running
 `./gradlew kotlinWasmUpgradeYarnLock` there and committing the updated lock file. That is a change
 to `Android/HireSignal`, not to this repo, so it is out of this lane's scope; once it lands, the
-`public/hiresignal-app/` copy, the `liveUrl` field and the `vercel.json` cache-header block are a
-five-minute follow-up here, copying the Doori/Gaddi/PaymentsLab-KMP pattern exactly.
+`heavy/hiresignal-app/` copy and the `liveUrl` field are a five-minute follow-up here, copying the
+Doori/Gaddi/PaymentsLab-KMP pattern exactly.

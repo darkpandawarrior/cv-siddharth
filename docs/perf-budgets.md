@@ -1,5 +1,22 @@
 # Perf budgets: the owner-run checks
 
+> **Sections 1 and 2 below describe the pre-`9246c74` deployment**, when the
+> five WASM apps shipped inside `dist/client` from `public/<slug>-app/` and
+> counted against Vercel's own bandwidth cap. They now live in the top-level
+> `heavy/` directory (never copied into `dist/client`) and are served from
+> `https://darkpandawarrior.github.io/cv` instead — see `src/lib/assetBase.ts`
+> and `docs/deploy-playbook.md`'s "Frontend WASM embeds" section for the
+> current path, and `scripts/check-budget.mjs` / `budgets.json`'s
+> `totalDeploySizeBytes` (60 MB ceiling, ~23 MB measured) for the number that
+> replaced the Vercel-bandwidth math below. `vercel.json` no longer carries a
+> per-app `Cache-Control` block for these paths — GitHub Pages has no
+> equivalent (no custom response headers on the free tier) — so section 1's
+> Brotli/immutable-cache check no longer applies to production traffic;
+> `scripts/check-cdn-encoding.mjs` is unrun on this origin and its own header
+> would need updating before anyone runs it again. Left as a historical record
+> rather than rewritten in place, since the actual bandwidth math (GitHub
+> Pages' own limits, not Vercel's) hasn't been measured yet.
+
 Two of the perf claims in `lighthouserc.json` and `vercel.json` are properties
 of the deployed edge, not the codebase — nothing in CI can assert them, because
 CI never talks to production. This file is where their results get written
