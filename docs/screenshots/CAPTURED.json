@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:4173",
-  "count": 23,
+  "count": 25,
   "routes": [
     "anthology",
     "blueprint",
@@ -13,6 +13,7 @@
     "home",
     "ink",
     "lab",
+    "lanes",
     "loopdown",
     "making",
     "map",
@@ -22,19 +23,9 @@
     "resume",
     "shipped",
     "terminal",
+    "time-machine",
     "weeb",
     "project_detail",
     "project_detail_with_compare"
-  ],
-  "surfaces": [
-    "compose@390x693",
-    "chess@1024x768",
-    "weeb@1280x720",
-    "hire@390x693",
-    "shipped@390x693",
-    "pulse@480x600",
-    "ink@1024x768",
-    "excelsior@1024x768",
-    "loopdown@390x693"
   ]
 }
