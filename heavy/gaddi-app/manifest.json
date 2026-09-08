@@ -1,7 +1,7 @@
 {
-  "name": "Kursi",
-  "short_name": "Kursi",
-  "description": "Kursi ke liye kuch bhi karega. Bluffing card game of power and lies.",
+  "name": "Gaddi",
+  "short_name": "Gaddi",
+  "description": "Gaddi ke liye kuch bhi karega. Bluffing card game of power and lies.",
   "start_url": ".",
   "display": "fullscreen",
   "orientation": "any",

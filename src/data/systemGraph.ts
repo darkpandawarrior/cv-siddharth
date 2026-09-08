@@ -329,14 +329,14 @@ export const systemGraph: SystemGraph = {
       "to": "portfolio",
       "kind": "runs-here",
       "evidence": "measured",
-      "detail": "/kursi-app/index.html"
+      "detail": "/gaddi-app/index.html"
     },
     {
       "from": "doori",
       "to": "portfolio",
       "kind": "runs-here",
       "evidence": "measured",
-      "detail": "/mileway-app/index.html"
+      "detail": "/doori-app/index.html"
     },
     {
       "from": "paymentslab-kmp",
@@ -350,7 +350,7 @@ export const systemGraph: SystemGraph = {
       "to": "portfolio",
       "kind": "runs-here",
       "evidence": "measured",
-      "detail": "/deadlock-app/index.html"
+      "detail": "/stutter-app/index.html"
     },
     {
       "from": "/compose",

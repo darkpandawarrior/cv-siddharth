@@ -115,7 +115,7 @@ export const incidents: Incident[] = [
     what: "310 MB export: all_resources shipped 29 unreferenced models and every texture imported lossless",
     days: 0,
     resolved: true,
-    evidenceHref: heavy("/deadlock-app/index.html"),
+    evidenceHref: heavy("/stutter-app/index.html"),
   },
   {
     id: "cardmedia-six-of-eight",

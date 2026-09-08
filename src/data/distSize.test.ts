@@ -48,7 +48,7 @@ describe("dist/client stays under the Vercel deployment-size budget", () => {
     // which shares a name with the old heavy/excelsior/ PDF-scan payload but
     // is not it — the oversized-file check above already guards against that
     // payload actually leaking, wherever it would land.
-    const heavy = ["kursi-app", "mileway-app", "paymentslab-app", "portfolio-app", "deadlock-app"];
+    const heavy = ["gaddi-app", "doori-app", "paymentslab-app", "portfolio-app", "stutter-app"];
     const shipped = existsSync(distClient) ? readdirSync(distClient) : [];
     const leaked = heavy.filter((d) => shipped.includes(d));
     expect(leaked, `these were meant to move to heavy/ and be served from GitHub Pages: ${leaked.join(", ")}`).toEqual([]);

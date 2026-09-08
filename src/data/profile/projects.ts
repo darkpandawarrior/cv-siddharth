@@ -679,7 +679,7 @@ export const projects: Project[] = [
         // downloads, and this target shipped an EMPTY array — so the one
         // project whose whole subject is payment UIs showed a dead black
         // rectangle for the first several seconds, and kept showing one on any
-        // browser that never painted. Its three siblings (kursi, mileway,
+        // browser that never painted. Its three siblings (gaddi, doori,
         // portfolio) each had a capture; this is the fourth.
         screens: ["web_home.png"],
         liveUrl: heavy(WASM_APP_PATH.paymentsLabKmp),

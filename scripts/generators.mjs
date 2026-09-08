@@ -194,9 +194,9 @@ export const GENERATORS = [
   // gen-ops/gen-repo-stats/gen-system-graph already do.
   { id: "app-manifests", script: "gen-app-manifests.mjs", npmName: "gen:app-manifests", kind: "sibling",
     inputs: [], outputs: [
-      "heavy/kursi-app/build-manifest.json", "heavy/mileway-app/build-manifest.json",
+      "heavy/gaddi-app/build-manifest.json", "heavy/doori-app/build-manifest.json",
       "heavy/paymentslab-app/build-manifest.json", "heavy/portfolio-app/build-manifest.json",
-      "heavy/deadlock-app/build-manifest.json",
+      "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",

@@ -16,6 +16,14 @@
 > would need updating before anyone runs it again. Left as a historical record
 > rather than rewritten in place, since the actual bandwidth math (GitHub
 > Pages' own limits, not Vercel's) hasn't been measured yet.
+>
+> **2026-09-08:** `heavy/kursi-app`, `heavy/mileway-app` and `heavy/deadlock-app`
+> were renamed to `gaddi-app`, `doori-app` and `stutter-app`
+> (`scripts/check-cdn-encoding.mjs`'s `APPS` list and `src/lib/assetBase.ts`'s
+> `WASM_APP_PATH` already reflect this). The tables and command output below
+> quote the old names because they are a record of a run against the old
+> folders — re-run `scripts/check-cdn-encoding.mjs` and `du -sk heavy/*-app`
+> after the next deploy for numbers under the new names.
 
 Two of the perf claims in `lighthouserc.json` and `vercel.json` are properties
 of the deployed edge, not the codebase — nothing in CI can assert them, because

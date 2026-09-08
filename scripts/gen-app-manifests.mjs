@@ -1,6 +1,6 @@
 // Writes heavy/<app>-app/build-manifest.json for each of the five embedded
-// app builds (Gaddi/kursi-app, Doori/mileway-app, PaymentsLab-KMP/
-// paymentslab-app, the Compose twin/portfolio-app, Stutter/deadlock-app):
+// app builds (Gaddi/gaddi-app, Doori/doori-app, PaymentsLab-KMP/
+// paymentslab-app, the Compose twin/portfolio-app, Stutter/stutter-app):
 // {repo, commit, builtAt, engine, bytes}.
 //
 // WHY. Every device panel that embeds one of these builds used to have
@@ -41,11 +41,11 @@ const today = () => new Date().toISOString().slice(0, 10);
  *  scan (`../../Android/<Repo>`); Stutter (Godot, not KMP) lives beside the
  *  Android checkouts' sibling `Games/` directory instead. */
 const APPS = [
-  { dir: "kursi-app", siblingRepo: join(root, "..", "..", "Android", "Kursi"), engine: "gradle-kmp" },
-  { dir: "mileway-app", siblingRepo: join(root, "..", "..", "Android", "Mileway"), engine: "gradle-kmp" },
+  { dir: "gaddi-app", siblingRepo: join(root, "..", "..", "Android", "Kursi"), engine: "gradle-kmp" },
+  { dir: "doori-app", siblingRepo: join(root, "..", "..", "Android", "Mileway"), engine: "gradle-kmp" },
   { dir: "paymentslab-app", siblingRepo: join(root, "..", "..", "Android", "PaymentsLab"), engine: "gradle-kmp" },
   { dir: "portfolio-app", siblingRepo: join(root, "..", "cv-siddharth-kmp"), engine: "gradle-kmp" },
-  { dir: "deadlock-app", siblingRepo: join(root, "..", "..", "Games", "deadlock"), engine: "godot" },
+  { dir: "stutter-app", siblingRepo: join(root, "..", "..", "Games", "deadlock"), engine: "godot" },
 ];
 
 /** The real bytes this repo actually ships for that build — always knowable,
