@@ -1,5 +1,7 @@
-import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -16,6 +18,7 @@ import {
 } from "./play/DeferredPlayRoom.tsx";
 
 import { CorridorPlate } from "./world/CorridorPlate.tsx";
+import World from "./world/World.tsx";
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
  * These used to be scattered down the scroll and behind hotkeys; gathering them
@@ -38,9 +41,9 @@ import { CorridorPlate } from "./world/CorridorPlate.tsx";
  * did, and that drift is why the palette was missing from this page.)
  */
 
-// Lazy so nothing outside /playground pays for three.js/Rapier — see
-// src/world/World.tsx for what actually lives in this chunk.
-const World = lazy(() => import("./world/World.tsx"));
+// Split (via the Hydrate boundary below) so nothing outside /playground pays
+// for three.js/Rapier — see src/world/World.tsx for what actually lives in
+// this chunk.
 
 /** If the world throws — a lost WebGL context, a driver quirk the raycast
  *  vehicle controller trips on — land on the same grid a visitor without
@@ -245,14 +248,17 @@ function PlaygroundInner() {
                 SSR — but a `useState`-gated ternary is not a compile-time
                 constant, so the bundler still resolves `World` (three.js,
                 Rapier) for the server. `<ClientOnly>` is what makes that
-                reference (and the `import("./world/World.tsx")` behind it)
-                disappear from the SERVER compile itself: Start's compiler
-                strips its children there before the SSR bundle is built. */}
+                reference disappear from the SERVER compile itself: Start's
+                compiler strips its children there before the SSR bundle is
+                built. `wantsWorld` is already known true by the time this
+                branch is reached, so `<Hydrate when={load()} split>` just
+                keeps World in its own chunk on the client — there is no
+                further defer to express here. */}
             <ClientOnly fallback={worldLoadingFallback}>
               <WorldBoundary onError={handleWorldError}>
-                <Suspense fallback={worldLoadingFallback}>
+                <Hydrate when={load()} split fallback={worldLoadingFallback}>
                   <World onShowList={showList} />
-                </Suspense>
+                </Hydrate>
               </WorldBoundary>
             </ClientOnly>
           </div>

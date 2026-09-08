@@ -188,10 +188,22 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "sibling",
     "automated": true,
     "stages": [
+      "refresh",
       "check"
     ],
     "slaDays": null,
     "invocation": "npm run gen:kotlin"
+  },
+  {
+    "id": "app-manifests",
+    "script": "gen-app-manifests.mjs",
+    "kind": "sibling",
+    "automated": true,
+    "stages": [
+      "refresh"
+    ],
+    "slaDays": null,
+    "invocation": "npm run gen:app-manifests"
   },
   {
     "id": "images",
@@ -368,6 +380,15 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [],
     "slaDays": null,
     "invocation": "node scripts/gen-excelsior-text.mjs"
+  },
+  {
+    "id": "lighthouse-summary",
+    "script": "gen-lighthouse-summary.mjs",
+    "kind": "local",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:lighthouse-summary"
   },
   {
     "id": "csp",

@@ -1,5 +1,6 @@
-import { lazy, Suspense } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import {
   REACTION_KEYS,
   REACTIONS,
@@ -7,6 +8,7 @@ import {
   type ReactionKey,
   type ReactionSurface,
 } from "./reactions.ts";
+import { LiveReactionRow } from "./LiveReactionRow.tsx";
 
 /**
  * A row of the three fixed reactions. One component so /chess, /weeb and
@@ -18,15 +20,17 @@ import {
  * and /weeb and /anthology server-render: a static import threw
  * `ReferenceError: document is not defined` inside renderToReadableStream and
  * collapsed both routes to a ~470-character shell. The live half lives in
- * LiveReactionRow.tsx, lazy-loaded after mount and wrapped in `<ClientOnly>`
- * (not a hand-rolled `useHydrated()` check): Start's compiler recognises that
- * JSX and strips its children — the lazy import along with them — out of the
- * SERVER compile entirely, which is what importProtection's static scan
- * actually needs. `useHydrated()` alone only stops it at runtime; React still
- * resolves a lazy child while streaming on the server, and the scan still
- * finds the chunk regardless of the runtime gate. The server renders the same
- * markup with zero counts and the client swaps in the shared ones. Identical
- * shape either way, so there is no layout shift on hydration.
+ * LiveReactionRow.tsx, wrapped in `<ClientOnly>` (not a hand-rolled
+ * mounted-state check): Start's compiler recognises that JSX and strips its
+ * children out of the SERVER compile entirely, which is what
+ * importProtection's static scan actually needs — a runtime-only check alone
+ * only stops it at runtime; React still resolves a lazy child while streaming
+ * on the server, and the scan still finds the chunk regardless of the runtime
+ * gate. `<Hydrate when={load()} split>` inside it keeps LiveReactionRow in its
+ * own chunk, fetched once this boundary is reached, now that the import above
+ * is static. The server renders the same markup with zero counts and the
+ * client swaps in the shared ones. Identical shape either way, so there is no
+ * layout shift on hydration.
  */
 export function ReactionRowView({
   counts,
@@ -61,10 +65,6 @@ export function ReactionRowView({
   );
 }
 
-const LiveReactionRow = lazy(() =>
-  import("./LiveReactionRow.tsx").then((m) => ({ default: m.LiveReactionRow })),
-);
-
 export function ReactionRow({
   surface,
   itemId,
@@ -77,9 +77,9 @@ export function ReactionRow({
   const placeholder = <ReactionRowView counts={{}} className={className} />;
   return (
     <ClientOnly fallback={placeholder}>
-      <Suspense fallback={placeholder}>
+      <Hydrate when={load()} split fallback={placeholder}>
         <LiveReactionRow surface={surface} itemId={itemId} className={className} />
-      </Suspense>
+      </Hydrate>
     </ClientOnly>
   );
 }

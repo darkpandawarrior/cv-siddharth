@@ -121,15 +121,23 @@ test("rail canvas is non-blank under prefers-reduced-motion (C1 regression)", as
   await page.goto("/");
   const canvas = page.locator(".anomaly-rail-canvas");
   await expect(canvas).toBeAttached();
-  // Let the ResizeObserver's initial (async) callback land.
-  await page.waitForTimeout(300);
 
-  const nonTransparentPixels = await canvas.evaluate((el: HTMLCanvasElement) => {
-    const ctx = el.getContext("2d")!;
-    const { data } = ctx.getImageData(0, 0, el.width, el.height);
-    let count = 0;
-    for (let i = 3; i < data.length; i += 4) if (data[i] !== 0) count++;
-    return count;
-  });
-  expect(nonTransparentPixels).toBeGreaterThan(0);
+  const countPixels = () =>
+    canvas.evaluate((el: HTMLCanvasElement) => {
+      const ctx = el.getContext("2d")!;
+      const { data } = ctx.getImageData(0, 0, el.width, el.height);
+      let count = 0;
+      for (let i = 3; i < data.length; i += 4) if (data[i] !== 0) count++;
+      return count;
+    });
+
+  // Polled, not a fixed sleep: the rail is now behind `<Hydrate when={idle()}>`
+  // (src/routes/__root.tsx), a real dynamic-import boundary — its own chunk
+  // fetch plus the idle callback can genuinely take longer than the fixed
+  // 300ms this used to wait, on a loaded machine, without the draw itself
+  // being broken. `toBeAttached()` above only proves the canvas EXISTS
+  // (present even in the server-rendered markup this boundary preserves
+  // until it hydrates) — it says nothing about whether useCanvasLoop's
+  // effect, which requires the boundary to have actually hydrated, has run.
+  await expect.poll(countPixels, { timeout: 5_000 }).toBeGreaterThan(0);
 });

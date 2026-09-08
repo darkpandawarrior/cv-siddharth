@@ -267,7 +267,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-six `gen:` scripts over thirty-two generator files. The ones you
+Twenty-eight `gen:` scripts over thirty-four generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -291,10 +291,10 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Six more generator files exist with no `npm run` script, deliberately: five
-need something a build machine doesn't have, and the sixth needs the build to
-have already happened. `check-generated.mjs`'s header carries the same
-reasoning; this is that reasoning where a README reader can find it.
+Six more generator files exist with no `npm run` script, deliberately: each
+needs something a build machine doesn't have. `check-generated.mjs`'s header
+carries the same reasoning; this is that reasoning where a README reader can
+find it.
 
 - `gen-excelsior.mjs`. Manual and occasional: renders the source magazine
   PDFs, which live on MANIT's CDN and are not in this repo, and needs
@@ -313,10 +313,10 @@ reasoning; this is that reasoning where a README reader can find it.
 - `gen-store-siblings.mjs`. Walks each shelf client's Play developer page
   live, looking for a merchant-side sibling app the rider/driver data misses.
   Writes a gitignored cache; `npm run gen:store` merges it.
-- `gen-csp.mjs`. Hashes the inline hydration scripts each route's build
-  actually renders and writes the resulting report-only CSP into
-  `vercel.json`. Reads `dist/server/server.js`, so it has to run after
-  `npm run build`, not before it: `npm run build && node scripts/gen-csp.mjs`.
+- `gen-csp.mjs`. Reads the already-built `dist/server/server.js` to hash every
+  route's inline hydration scripts, so it structurally cannot run before
+  `npm run build` and stays out of prebuild: `npm run build && node
+  scripts/gen-csp.mjs`.
 
 </details>
 
@@ -327,8 +327,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1276 unit tests across 115 files (vitest)
-npm run test:e2e  # 284 Playwright tests across 18 files, every registry route
+npm test          # 1292 unit tests across 117 files (vitest)
+npm run test:e2e  # 304 Playwright tests across 18 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
@@ -378,11 +378,11 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Twenty of the twenty-seven route files server-render. Seven stay client-only:
-`/blueprint`, `/compose`, `/forge`, `/map`, `/ops`, `/pulse` and `/terminal`.
-Most mount WebGL at their top level; `/ops` is the exception, client-only
-because every age on its board is computed at load and a server render would
-ship a timestamp already wrong by the time it is read.
+Twenty-five of the twenty-seven route files server-render. Two stay client-only:
+`/ops` and `/pulse`. `/ops` is client-only because every age on its board is
+computed at load and a server render would ship a timestamp already wrong by
+the time it is read; `/pulse`'s numbers come off a websocket, so there is
+nothing meaningful to render on the server.
 
 `/playground` used to be the seventh. Lighthouse did not score it slow, it
 scored it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw

@@ -8,7 +8,7 @@ import { FieldNotes, SystemStrip } from "./FieldNotes.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
-import { DeviceWall } from "./DeviceWall.tsx";
+import { DeviceWall, AppManifestBadge } from "./DeviceWall.tsx";
 import { ShowcaseFilm } from "./ShowcaseFilm.tsx";
 // See App.tsx: the deep-link signal lives in the plain-data registry, so a
 // project page linking into a lab does not have to ship the lab.
@@ -553,9 +553,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <section className="section-y border-b border-line">
           <div className="mx-auto max-w-4xl px-6">
             <SectionHeader eyebrow="multiplatform" title="One codebase, every surface" />
-            <p className="reveal -mt-4 mb-10 max-w-2xl text-sm leading-relaxed text-zinc-400">
+            <p className="reveal -mt-4 mb-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
               The real screens (and, where it's live, the running build) per platform — not a mockup.
             </p>
+            {/* Read from the running build's own manifest, not typed here — see
+                src/lib/appManifest.ts. Shown once at the project level because
+                DeviceWall's own copy only renders while the "browser" tab is
+                the one active. */}
+            <div className="reveal mb-8">
+              <AppManifestBadge liveUrl={project.targets.find((t2) => t2.liveUrl)?.liveUrl} />
+            </div>
             <div className="reveal">
               <DeviceWall key={slug} targets={project.targets} slug={slug} accent={t?.accent} />
             </div>

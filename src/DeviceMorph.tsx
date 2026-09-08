@@ -3,7 +3,7 @@ import { Play, GripVertical, Maximize2, Minimize2 } from "lucide-react";
 import { projects } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
 import { useSectionNav } from "./lib/navigation.ts";
-import { FitImage } from "./DeviceWall.tsx";
+import { FitImage, AppManifestBadge } from "./DeviceWall.tsx";
 import { heavy } from "./lib/assetBase.ts";
 
 /**
@@ -351,6 +351,9 @@ export function DeviceMorph() {
               </button>
             );
           })}
+        </div>
+        <div className="-mt-4 mb-6">
+          <AppManifestBadge liveUrl={app.url} />
         </div>
 
         {/* ── The width ruler ─────────────────────────────────────────────

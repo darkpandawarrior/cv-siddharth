@@ -1,5 +1,15 @@
 import { expect, test } from "./lib/test.ts";
 import { compareSets } from "../src/data/compareSets.ts";
+import { projects } from "../src/data/profile.ts";
+
+// Every project slug that ships a live Wasm/Compose embed, derived from the
+// same profile.ts targets DeviceWall itself reads — never a hand-typed list
+// that can drift when a target is added or removed. "portfolio" keeps its own
+// bespoke test above (the CMP twin's no-<canvas> quirk needs its own comment);
+// excluded here so the two suites don't register the same test title twice.
+const liveTargetSlugs = projects
+  .filter((p) => p.targets?.some((t) => t.liveUrl) && p.slug !== "portfolio")
+  .map((p) => p.slug);
 
 /**
  * A project page's two "things to look at" — the compare viewer and the gallery — are both
@@ -65,3 +75,53 @@ test("the portfolio's live CMP/Wasm embed reveals over its screenshot floor", as
   await expect(frame).toBeVisible({ timeout: 30_000 });
   await expect(frame).toHaveCSS("opacity", "1", { timeout: 90_000 });
 });
+
+/**
+ * L10 (deployment weight): all five "-app" builds now load from
+ * HEAVY_ASSET_BASE (src/lib/assetBase.ts) rather than from this origin's own
+ * public/ — a cross-origin embed in production. Generalizes the portfolio-only
+ * check above across every project that ships a live target, so a bundle that
+ * fails to resolve from the new origin (a bad path, a missing publish) shows up
+ * here as a frame that never reveals, not as a silent screenshot fallback
+ * nobody notices. Reads the slugs from profile.ts itself — new live target,
+ * new coverage, no hardcoded list to fall out of date.
+ */
+for (const slug of liveTargetSlugs) {
+  test(`${slug}'s live web build reveals over its screenshot floor`, async ({ page }) => {
+    test.slow(); // first load pulls several MB of Wasm and compiles it
+    await page.goto(`/project/${slug}`);
+    // Same trap the portfolio test above already worked around: the iframe is
+    // lazy-mounted on first intersection, so it does not exist in the DOM
+    // until then — scrolling to it directly waits forever for an element that
+    // is never there yet. Scroll to the section heading instead.
+    await page.getByRole("heading", { name: "One codebase, every surface" }).scrollIntoViewIfNeeded();
+    // index.css sets `scroll-behavior: smooth` site-wide, so the scroll above
+    // is still animating when the next line runs on a page this far down
+    // (Doori/PaymentsLab-KMP ship far more sections above this one than
+    // Portfolio/Stutter do) — a click mid-scroll lands on whatever the
+    // viewport happened to hold at that instant, not the tab. Wait for the
+    // scroll position to stop moving before clicking anything.
+    await page.waitForFunction(() => {
+      const key = "__scrollSettleY";
+      const cur = document.scrollingElement?.scrollTop ?? 0;
+      const last = (window as unknown as Record<string, number>)[key];
+      (window as unknown as Record<string, number>)[key] = cur;
+      return last === cur;
+    });
+    // DeviceWall's tab switcher defaults to its FIRST target (Android, for
+    // Gaddi/Doori/PaymentsLab-KMP) — the live embed only exists once "Web" is
+    // the active tab. Portfolio and Stutter happen to ship Web first, which is
+    // why the single hand-written test above never needed this click.
+    const webTab = page.getByRole("tab", { name: /Web/ });
+    await webTab.click();
+    await expect(webTab).toHaveAttribute("aria-selected", "true");
+    const frame = page.locator('iframe[title="Live web build"]');
+    await expect(frame).toBeVisible({ timeout: 30_000 });
+    // The src is whatever HEAVY_ASSET_BASE resolves to in this run's build —
+    // asserting it is non-empty and matches the asset-base doc's own
+    // production default confirms the iframe points at the moved origin, not
+    // a leftover same-origin public/ path this lane's whole point was to kill.
+    await expect(frame).toHaveAttribute("src", /^(https:\/\/darkpandawarrior\.github\.io\/cv|https?:\/\/localhost(:\d+)?)\/.+-app\/index\.html$/);
+    await expect(frame).toHaveCSS("opacity", "1", { timeout: 90_000 });
+  });
+}

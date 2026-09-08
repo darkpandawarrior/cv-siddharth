@@ -4,6 +4,44 @@ import type { ProjectTarget } from "./data/profile.ts";
 import { useLivePaint } from "./lib/livePaint.ts";
 import { rasterSources } from "./lib/rasterSources.ts";
 import { heavy } from "./lib/assetBase.ts";
+import { useAppManifest } from "./lib/appManifest.ts";
+
+/** Same three-state palette /ops already uses for OK/DEGRADED/BROKEN
+ *  (src/OpsBoard.tsx's STATE_COLOR) — not re-exported from there since it's
+ *  a private const, but the mapping itself is the house convention, not an
+ *  invention of this component. */
+const APP_STATE_COLOR = { OK: "var(--color-signal)", DEGRADED: "var(--color-accent)", BROKEN: "var(--color-danger)" } as const;
+
+/** "Which commit is actually running", read from the build's own manifest at
+ *  runtime — never baked in at this repo's build time, so it's never a
+ *  hand-written string that can go stale silently. Renders nothing while
+ *  loading (the caption above already says something), a quiet unreachable
+ *  note on a failed fetch, and a DEGRADED/BROKEN chip once the build has
+ *  aged past freshnessSla.ts's APP_MANIFEST_SLA_DAYS. */
+export function AppManifestBadge({ liveUrl }: { liveUrl?: string }) {
+  const { manifest, age, state, error } = useAppManifest(liveUrl);
+  if (!liveUrl) return null;
+  if (error) return <p className="font-mono text-[10px] text-muted">build info unavailable</p>;
+  if (!manifest || !state) return null;
+  return (
+    <p
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-muted"
+      title={`${manifest.repo} · ${manifest.engine} · ${(manifest.bytes / 1e6).toFixed(1)} MB`}
+    >
+      <span>
+        {manifest.commit.slice(0, 7)} · built {manifest.builtAt}
+      </span>
+      {state !== "OK" && (
+        <span
+          className="rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+          style={{ color: APP_STATE_COLOR[state], borderColor: APP_STATE_COLOR[state] }}
+        >
+          {state} · {age}d
+        </span>
+      )}
+    </p>
+  );
+}
 
 const PLATFORM_ICON: Record<ProjectTarget["platform"], React.ComponentType<{ size?: number }>> = {
   Android: Smartphone,
@@ -186,6 +224,11 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
             </span>
           )}
         </div>
+        {target.liveUrl && (
+          <div className="border-b border-line/60 bg-card/60 px-3 py-1.5">
+            <AppManifestBadge liveUrl={target.liveUrl} />
+          </div>
+        )}
         {target.liveUrl ? (
           <LiveEmbed url={target.liveUrl} fallback={shots[0] ? src(shots[0]) : undefined} />
         ) : shots.length > 0 ? (

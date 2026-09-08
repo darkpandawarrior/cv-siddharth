@@ -182,7 +182,7 @@ describe("the README's numbers are the repo's numbers", () => {
     const NUM: Record<number, string> = {
       // Small numbers too, now that the client-only count is derived from this
       // same table rather than hardcoded.
-      5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
+      2: "Two", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine",
       16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
@@ -234,12 +234,13 @@ describe("the README's numbers are the repo's numbers", () => {
     ).length;
     const scriptWords: Record<number, string> = {
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
-      24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six",
+      24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
+      28: "Twenty-eight",
     };
     const fileWords: Record<number, string> = {
       24: "twenty-four", 25: "twenty-five", 26: "twenty-six",
       27: "twenty-seven", 28: "twenty-eight", 29: "twenty-nine", 30: "thirty",
-      31: "thirty-one", 32: "thirty-two",
+      31: "thirty-one", 32: "thirty-two", 33: "thirty-three", 34: "thirty-four",
     };
     const scriptWord = scriptWords[genScripts];
     const fileWord = fileWords[genFiles];

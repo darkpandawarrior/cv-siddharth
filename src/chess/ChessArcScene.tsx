@@ -199,6 +199,8 @@ export default function ChessArcScene({
       camera={{ position: [0, 4.4, 12.5], fov: 42 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
+      role="img"
+      aria-label="3D rating arc across lichess and chess.com over seven years — drag to orbit"
     >
       <ambientLight intensity={0.6} />
       <pointLight position={[6, 6, 8]} intensity={40} color={readToken("--color-probe", "#5ee6ff")} />

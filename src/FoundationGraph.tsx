@@ -1,7 +1,8 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-
-const FoundationGraphScene = lazy(() => import("./FoundationGraphScene.tsx"));
+import { Hydrate } from "@tanstack/react-start";
+import { condition, visible } from "@tanstack/react-start/hydration";
+import FoundationGraphScene from "./FoundationGraphScene.tsx";
 
 function supportsWebGL(): boolean {
   try {
@@ -19,44 +20,41 @@ function supportsWebGL(): boolean {
  * section's text/cards carry the story alone.
  */
 export function FoundationGraph() {
-  const holder = useRef<HTMLDivElement>(null);
+  const [capable, setCapable] = useState(false);
   const [enable3D, setEnable3D] = useState(false);
 
   useEffect(() => {
-    const el = holder.current;
-    if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
-    if (reduced || isSmallScreen || !supportsWebGL()) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setEnable3D(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    // ponytail: same inline saveData check as AmbientBackground — no DOM lib
+    // type for navigator.connection, so no shared hook for one flag.
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (!reduced && !isSmallScreen && !saveData && supportsWebGL()) setCapable(true);
   }, []);
 
   return (
-    // h-0 (not `hidden`) while disabled — a display:none element never
-    // intersects, so the observer that enables the scene would never fire.
-    <div ref={holder} className={`relative select-none ${enable3D ? "h-[340px]" : "h-0"}`} aria-hidden>
-      {/* enable3D is a runtime-only flag the bundler can't see through — it
+    // h-0 (not `hidden`) while disabled — a display:none element is never
+    // observed as visible, so the scene behind it would never mount.
+    <div className={`relative select-none ${enable3D ? "h-[340px]" : "h-0"}`} aria-hidden>
+      {/* `capable` is a runtime-only flag the bundler can't see through — it
           still resolved FoundationGraphScene's @react-three/fiber import for
           SSR regardless (reached from the homepage, which server-renders).
           <ClientOnly> is what Start's compiler recognises to strip this
-          subtree (and the lazy import behind it) from the SERVER compile
-          entirely. */}
+          subtree from the SERVER compile entirely. `<Hydrate
+          when={condition(capable)}>` reuses that flag as the native
+          "resolve once true" strategy, nested with `visible({rootMargin:
+          "200px"})` — native visible() replaces the hand-rolled
+          IntersectionObserver this file used to set up itself, same 200px
+          margin. `onHydrated` fires once, the moment the scene actually
+          mounts — what used to be `observer.disconnect(); setEnable3D(true)`
+          — so the wrapper's height only grows once there is something inside
+          it to reserve room for. */}
       <ClientOnly>
-        {enable3D && (
-          <Suspense fallback={null}>
+        <Hydrate when={condition(capable)} split fallback={null}>
+          <Hydrate when={visible({ rootMargin: "200px" })} split fallback={null} onHydrated={() => setEnable3D(true)}>
             <FoundationGraphScene />
-          </Suspense>
-        )}
+          </Hydrate>
+        </Hydrate>
       </ClientOnly>
     </div>
   );

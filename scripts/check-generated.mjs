@@ -82,9 +82,28 @@ const dirty = (dir) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+// arch-L12: this used to `continue` past a missing repo, which is how the
+// cross-repo half of this check silently passed on EVERY PR — ci.yml never
+// checked cv-siddharth-kmp out, so `before.has("cv-siddharth-kmp")` was
+// always false and the diff loop below had nothing to compare, forever. A
+// gate whose real check never ran is a gate that reports green by
+// construction, not because gen-kotlin-data.mjs's output was ever verified.
+// The fix on the other side is ci.yml now checking the sibling out (see
+// that workflow) — this side stops tolerating its absence.
 const before = new Map();
 for (const r of REPOS) {
-  if (!existsSync(r.dir)) continue;
+  if (!existsSync(r.dir)) {
+    console.error(
+      `check-generated: ${r.label} is not checked out at ${r.dir}.\n\n` +
+        (r.label === "cv-siddharth-kmp"
+          ? "gen-kotlin-data.mjs's cross-repo byte-diff — the whole reason this script exists, see\n" +
+            "the header comment above — cannot run without it, and that gap is exactly how a stale\n" +
+            "CvChessData.kt reached main past two green CIs. Check the sibling out first (ci.yml and\n" +
+            "refresh-twin.yml both do) rather than silently skipping this half of the check.\n"
+          : ""),
+    );
+    process.exit(1);
+  }
   before.set(r.label, new Set(dirty(r.dir)));
 }
 

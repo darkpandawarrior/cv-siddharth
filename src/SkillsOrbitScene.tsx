@@ -105,6 +105,8 @@ export default function SkillsOrbitScene({ active, onSelect }: { active: string 
       camera={{ position: [0, 0, 5.6], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
+      role="img"
+      aria-label="3D orbit of every skill, grouped by category — drag to rotate, click a skill to filter"
     >
       <Orbit active={active} onSelect={onSelect} />
     </Canvas>
