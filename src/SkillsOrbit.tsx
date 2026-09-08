@@ -25,7 +25,10 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
-    if (!reduced && !isSmallScreen && supportsWebGL()) setCapable(true);
+    // ponytail: same inline saveData check as AmbientBackground — no DOM lib
+    // type for navigator.connection, so no shared hook for one flag.
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (!reduced && !isSmallScreen && !saveData && supportsWebGL()) setCapable(true);
   }, []);
 
   return (

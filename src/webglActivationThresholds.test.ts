@@ -55,4 +55,10 @@ describe("WebGL scene activation thresholds, unchanged by the Hydrate migration"
       'window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 1024px)").matches',
     );
   });
+
+  it("every WebGL decoration also gates on navigator.connection.saveData", () => {
+    for (const file of ["AmbientBackground", "ParticleHero", "Phone3D", "SkillsOrbit", "FoundationGraph", "StoryMap"]) {
+      expect(readSrc(`./${file}.tsx`), file).toContain("connection?.saveData === true");
+    }
+  });
 });

@@ -37,7 +37,10 @@ export function ParticleHero() {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!supportsWebGL() || location.search.includes("noambient")) return;
+    // ponytail: same inline saveData check as AmbientBackground/Phone3D/etc —
+    // no DOM lib type for navigator.connection, so no shared hook for one flag.
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (!supportsWebGL() || saveData || location.search.includes("noambient")) return;
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCount(window.matchMedia("(max-width: 767px)").matches ? 2000 : 6000);
     setDragEnabled(window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 1024px)").matches);
