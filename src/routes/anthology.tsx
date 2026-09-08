@@ -1,5 +1,7 @@
-import { Suspense, lazy, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { createFileRoute, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
@@ -25,10 +27,7 @@ import type { ThemeVars } from "../lib/seasonTheme.ts";
 import { ReactionRow } from "../play/ReactionRow.tsx";
 
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
-// Starmap.tsx is a named export, not a default one — the plain object shape
-// React.lazy() requires is built here rather than by changing that file's
-// export style for the convenience of one caller.
-const Starmap = lazy(() => import("../Starmap.tsx").then((m) => ({ default: m.Starmap })));
+import { Starmap } from "../Starmap.tsx";
 
 /**
  * The five layers, and the whole URL vocabulary for them.
@@ -969,16 +968,18 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
         </span>
       </div>
 
-      {/* Fixed height so mounting the Suspense fallback and then the real
-          canvas never reflows the page around it — the one thing a lazy 3D
-          chunk cannot be allowed to do to a text-heavy page. */}
+      {/* Fixed height so mounting the Hydrate fallback and then the real
+          canvas never reflows the page around it — the one thing a deferred
+          3D chunk cannot be allowed to do to a text-heavy page. */}
       <div className="card-elevated relative mt-6 h-[520px] overflow-hidden rounded-2xl border border-line bg-void/60">
         {/* anthology.tsx server-renders (the corpus prose is the whole point
             of the route), and `layer === "map"` is a runtime-only switch the
             bundler can't see through — it still resolved Starmap's
             @react-three/postprocessing import for SSR regardless. <ClientOnly>
-            is what Start's compiler recognises to strip this subtree (and the
-            lazy import behind it) from the SERVER compile entirely. */}
+            is what Start's compiler recognises to strip this subtree from the
+            SERVER compile entirely; `<Hydrate when={load()} split>` inside it
+            keeps Starmap in its own chunk on the client, now that the import
+            above is static. */}
         <ClientOnly
           fallback={
             <div className="kicker flex h-full items-center justify-center">
@@ -986,7 +987,9 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
             </div>
           }
         >
-          <Suspense
+          <Hydrate
+            when={load()}
+            split
             fallback={
               <div className="kicker flex h-full items-center justify-center">
                 loading the starmap…
@@ -994,7 +997,7 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
             }
           >
             <Starmap concluded={concluded} onOpen={openWorld} season={season} />
-          </Suspense>
+          </Hydrate>
         </ClientOnly>
         <span className="kicker pointer-events-none absolute bottom-3 right-4">
           drag to orbit

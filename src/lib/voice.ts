@@ -48,9 +48,10 @@ function recognitionCtor(): SpeechRecognitionCtor | null {
  * `useState(false)` + effect pair did. Both snapshots return a boolean, so
  * React's Object.is check on them is stable and never re-renders in a loop.
  *
- * Deliberately NOT useHydrated: these read a real browser capability rather
- * than asking whether we are on the client yet, and useHydrated's own doc
- * comment rules that use out. */
+ * Deliberately not a plain "am I on the client yet" hook: these read a real
+ * browser capability (does this browser HAVE speech recognition/synthesis)
+ * rather than asking whether we are on the client, and a capability whose
+ * value matters needs its own snapshot function, not a hard-coded constant. */
 const neverChanges = () => () => {};
 const unsupportedOnServer = () => false;
 const hasRecognition = () => recognitionCtor() !== null;

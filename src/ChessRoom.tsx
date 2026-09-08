@@ -1,5 +1,7 @@
-import { Suspense, lazy, useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
@@ -7,23 +9,22 @@ import { ChessVsCommits } from "./chess/ChessVsCommits.tsx";
 import { ChessFindings } from "./chess/ChessFindings.tsx";
 
 import { focusLines, pct, repertoireYears, shareSeries } from "./chess/repertoireModel.ts";
+import ChessArcScene from "./chess/ChessArcScene.tsx";
+import GraveyardScene from "./chess/GraveyardScene.tsx";
 import type { GraveyardView } from "./chess/GraveyardScene.tsx";
-
-const ChessArcScene = lazy(() => import("./chess/ChessArcScene.tsx"));
-const GraveyardScene = lazy(() => import("./chess/GraveyardScene.tsx"));
-const RepertoireTreeScene = lazy(() => import("./chess/RepertoireTreeScene.tsx"));
-/* Lazy for the same reason as the scenes: this one pulls react-chessboard,
- * chess.js and the engine worker, and five of the six panes have no use for
- * any of them. */
-const ChessBoardPane = lazy(() => import("./chess/ChessBoardPane.tsx"));
-const GuessTheMove = lazy(() => import("./chess/GuessTheMove.tsx"));
-const DailyPuzzle = lazy(() => import("./chess/DailyPuzzle.tsx"));
-/* The pulse counter writes through playhtml, which needs its provider in the
- * tree — without one `usePageData`'s setter silently no-ops and the counts
- * never leave the tab. Lazy like the panes it wraps, so the ~75 kB of Yjs +
- * partysocket only loads for a visitor who opens this one tab, and the room's
- * own chunk stays clear of it. */
-const PlayRoom = lazy(() => import("./play/PlayRoom.tsx").then((m) => ({ default: m.PlayRoom })));
+import RepertoireTreeScene from "./chess/RepertoireTreeScene.tsx";
+// Split via the `<Hydrate split>` boundaries below, for the same reason as
+// the scenes: this one pulls react-chessboard, chess.js and the engine
+// worker, and five of the six panes have no use for any of them.
+import ChessBoardPane from "./chess/ChessBoardPane.tsx";
+import GuessTheMove from "./chess/GuessTheMove.tsx";
+import DailyPuzzle from "./chess/DailyPuzzle.tsx";
+// The pulse counter writes through playhtml, which needs its provider in the
+// tree — without one `usePageData`'s setter silently no-ops and the counts
+// never leave the tab. Split like the panes it wraps, so the ~75 kB of Yjs +
+// partysocket only loads for a visitor who opens this one tab, and the room's
+// own chunk stays clear of it.
+import { PlayRoom } from "./play/PlayRoom.tsx";
 
 /** Square index to algebraic name — index 0 is a1, 63 is h8, the convention the
  *  generator's `squareMatrix` fixed. Lives here rather than in the scene so the
@@ -189,9 +190,9 @@ function ArcPane({ corpus }: { corpus: Corpus }) {
 
   return (
     <ScenePane height="h-[460px]" alt={alt}>
-      <Suspense fallback={sceneFallback}>
+      <Hydrate when={load()} split fallback={sceneFallback}>
         <ChessArcScene corpus={corpus} handoffAt={handoff?.at ?? null} handoffLabel={handoff?.label ?? ""} />
-      </Suspense>
+      </Hydrate>
     </ScenePane>
   );
 }
@@ -270,9 +271,9 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
       </div>
       {webgl ? (
         <ScenePane height="h-[460px]" alt={alt}>
-          <Suspense fallback={sceneFallback}>
+          <Hydrate when={load()} split fallback={sceneFallback}>
             <GraveyardScene counts={counts} view={view} reduced={reduced} />
-          </Suspense>
+          </Hydrate>
         </ScenePane>
       ) : (
         alt
@@ -397,7 +398,7 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
 
       {webgl ? (
         <ScenePane height="h-[520px]" alt={alt}>
-          <Suspense fallback={sceneFallback}>
+          <Hydrate when={load()} split fallback={sceneFallback}>
             <RepertoireTreeScene
               years={years}
               focus={focus}
@@ -405,7 +406,7 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
               handoffYear={handoff?.year ?? null}
               reduced={reduced}
             />
-          </Suspense>
+          </Hydrate>
         </ScenePane>
       ) : (
         alt
@@ -418,25 +419,25 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
 function PlayPane() {
   const { reduced } = useEnv();
   return (
-    <Suspense fallback={<p className="mt-4 font-mono text-sm text-muted">loading the board…</p>}>
+    <Hydrate when={load()} split fallback={<p className="mt-4 font-mono text-sm text-muted">loading the board…</p>}>
       <ChessBoardPane reduced={reduced} />
-    </Suspense>
+    </Hydrate>
   );
 }
 
 /** Guess the Move — the corpus quiz, and the captured lichess daily puzzle
- *  underneath it. Both need react-chessboard, so both are lazy. */
+ *  underneath it. Both need react-chessboard, so both are split together. */
 function PuzzlePane({ corpus }: { corpus: Corpus }) {
   const { reduced } = useEnv();
   return (
-    <Suspense fallback={<p className="mt-4 font-mono text-sm text-muted">loading the boards…</p>}>
+    <Hydrate when={load()} split fallback={<p className="mt-4 font-mono text-sm text-muted">loading the boards…</p>}>
       <PlayRoom>
         <div className="mt-4">
           <GuessTheMove positions={corpus.positions} reduced={reduced} />
           <DailyPuzzle builtAt={corpus.generatedAt.slice(0, 10)} reduced={reduced} />
         </div>
       </PlayRoom>
-    </Suspense>
+    </Hydrate>
   );
 }
 

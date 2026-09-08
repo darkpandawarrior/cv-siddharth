@@ -1,5 +1,7 @@
-import { Component, Suspense, lazy, useCallback, useState, type ReactNode } from "react";
+import { Component, useCallback, useState, type ReactNode } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { LauncherButton } from "./Launcher.tsx";
 import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, Compass, Orbit, Pencil, Play, RotateCcw, Terminal, ZoomIn, ZoomOut } from "lucide-react";
@@ -10,6 +12,8 @@ import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { DeferredPlayRoom, DeferredPresenceBadge } from "./play/DeferredPlayRoom.tsx";
 import { usePulseUI } from "./play/pulseUI.ts";
+import Blueprint3D from "./Blueprint3D.tsx";
+import SketchBoard from "./SketchBoard.tsx";
 
 /** Class components (RoomBoundary below) can't call hooks directly — this
  *  wraps the router-aware "back to portfolio" control so both the error
@@ -28,11 +32,10 @@ function BackToPortfolio({ className, children }: { className: string; children:
  * views over the same data (see blueprintData.ts). "Fly" and "ASCII" are a
  * three.js scene (Blueprint3D.tsx) you can orbit; "Sketch" is the original
  * tldraw whiteboard (SketchBoard.tsx) — draw, drag shapes, leave a note, and
- * it all persists locally. Both are lazy-loaded per mode: picking Fly never
- * downloads tldraw, picking Sketch never downloads three.js/postprocessing.
+ * it all persists locally. Both are split per mode (the `<Hydrate split>`
+ * boundaries below): picking Fly never downloads tldraw, picking Sketch
+ * never downloads three.js/postprocessing.
  */
-const Blueprint3D = lazy(() => import("./Blueprint3D.tsx"));
-const SketchBoard = lazy(() => import("./SketchBoard.tsx"));
 
 /** Top-level recovery: if anything in the room throws, offer a way out
  *  instead of a dead blank screen. */
@@ -282,25 +285,30 @@ function BlueprintRoomInner() {
       </header>
       <main id="main-content" tabIndex={-1} className="relative min-h-0 flex-1">
         <h1 className="sr-only">The Blueprint Room — {headline}</h1>
-        <Suspense fallback={loadingFallback}>
-          {!isAvailable(activeMode) ? (
-            // Only reachable when nothing can run here (no WebGL *and* no
-            // tldraw licence). Say so plainly rather than mounting a view that
-            // will blank out on its own.
-            <div className="flex h-full items-center justify-center px-6 text-center font-mono text-sm text-muted">
-              {activeMode.unavailable}.
-            </div>
-          ) : mode === "sketch" ? (
-            // `mode === "sketch"` is a runtime-only switch the bundler can't
-            // see through — it still resolved SketchBoard's tldraw import for
-            // SSR regardless. `<ClientOnly>` is what Start's compiler
-            // recognises to strip this subtree (and the lazy import behind
-            // it) from the SERVER compile entirely.
-            <ClientOnly>
+        {!isAvailable(activeMode) ? (
+          // Only reachable when nothing can run here (no WebGL *and* no
+          // tldraw licence). Say so plainly rather than mounting a view that
+          // will blank out on its own.
+          <div className="flex h-full items-center justify-center px-6 text-center font-mono text-sm text-muted">
+            {activeMode.unavailable}.
+          </div>
+        ) : mode === "sketch" ? (
+          // `mode === "sketch"` is a runtime-only switch the bundler can't
+          // see through — it still resolved SketchBoard's tldraw import for
+          // SSR regardless. `<ClientOnly>` is what Start's compiler
+          // recognises to strip this subtree from the SERVER compile
+          // entirely; `<Hydrate when={load()} split>` inside it keeps
+          // SketchBoard in its own chunk on the client, fetched once this
+          // boundary is reached (the mode switch above already decided this
+          // branch is reached at all).
+          <ClientOnly fallback={loadingFallback}>
+            <Hydrate when={load()} split fallback={loadingFallback}>
               <SketchBoard tourStop={stop} resetTick={resetTick} onLicenseGate={onLicenseGate} />
-            </ClientOnly>
-          ) : (
-            <ClientOnly>
+            </Hydrate>
+          </ClientOnly>
+        ) : (
+          <ClientOnly fallback={loadingFallback}>
+            <Hydrate when={load()} split fallback={loadingFallback}>
               <Blueprint3D
                 tourStop={stop}
                 resetTick={resetTick}
@@ -314,9 +322,9 @@ function BlueprintRoomInner() {
               <div className="pointer-events-none absolute bottom-4 left-4 rounded border border-line bg-ink/80 px-2 py-1 font-mono text-xs text-zinc-400 backdrop-blur">
                 {zoomPercent}%
               </div>
-            </ClientOnly>
-          )}
-        </Suspense>
+            </Hydrate>
+          </ClientOnly>
+        )}
       </main>
       {/* D1: this room drew its own chrome and so never got the next-room
           pager RoomFrame gives the other five rooms — its only exits were

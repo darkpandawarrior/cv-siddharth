@@ -1,9 +1,10 @@
-import { lazy, Suspense, type JSX } from "react";
+import type { JSX } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { corridorPlateMeta } from "./corridorPlate.ts";
 import { heavy } from "../lib/assetBase.ts";
-
-const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
+import LiveLitMapOverlay from "./LiveLitMapOverlay.tsx";
 
 /**
  * NIGHT SURVEY §11 — THE STATIC FALLBACK, the DOM half.
@@ -37,13 +38,15 @@ const LiveLitMapOverlay = lazy(() => import("./LiveLitMapOverlay.tsx"));
  * build time, which is exactly the honesty problem gen-world-plate.mjs's
  * own comment named — but a genuinely live signal on the fallback, sourced
  * from the real shared record, is what that gap was actually asking to
- * close. Loaded with `lazy()` behind `<ClientOnly>` rather than imported
- * directly here, because THIS component server-renders (see below) and
- * `@playhtml/react` does not survive that — see LiveLitMapOverlay.tsx's own
- * doc comment. `<ClientOnly>` is what Start's compiler recognises to strip
- * this subtree (and the lazy import behind it) from the SERVER compile
- * entirely — a runtime-only hydration flag alone does not keep the bundler
- * from resolving the import for SSR regardless.
+ * close. Wrapped in `<ClientOnly>` rather than rendered directly here,
+ * because THIS component server-renders (see below) and `@playhtml/react`
+ * does not survive that — see LiveLitMapOverlay.tsx's own doc comment.
+ * `<ClientOnly>` is what Start's compiler recognises to strip this subtree
+ * from the SERVER compile entirely — a runtime-only hydration flag alone
+ * does not keep the bundler from resolving the import for SSR regardless.
+ * The `<Hydrate when={load()} split>` inside it is what keeps the import
+ * itself lazy (its own chunk, fetched once this boundary is reached) now
+ * that the static import above replaces the old dynamic-import call.
  *
  * It used to end "...because this browser cannot run the interactive 3D
  * version", which was true for every visitor it had while the call site was
@@ -100,9 +103,9 @@ export function CorridorPlate(): JSX.Element {
           here at all on the server, which is correct: the shared state it
           would show does not exist there either. */}
       <ClientOnly>
-        <Suspense fallback={null}>
+        <Hydrate when={load()} split fallback={null}>
           <LiveLitMapOverlay imageAspect={meta.width / meta.height} />
-        </Suspense>
+        </Hydrate>
       </ClientOnly>
 
       {/* Year numerals, one per rule — plain positioned text rather than

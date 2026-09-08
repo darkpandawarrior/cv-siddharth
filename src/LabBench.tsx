@@ -1,22 +1,26 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
-// time — harmless client-side, fatal during SSR. Lazy-loading defers that eval
-// to the client, same pattern as BlueprintRoom/ComposePlayground in App.tsx.
-// The reason recorded here used to be "the home route imports LabBench for
-// openLab/LabKey"; it no longer does — that signal moved to data/labs.ts — but
-// /lab is itself server-rendered, so the hazard is unchanged.
-const SignalLabPane = lazy(() => import("./labs/SignalLab.tsx").then((m) => ({ default: m.SignalLabPane })));
+// time — harmless client-side, fatal during SSR. `<ClientOnly>` below defers
+// that eval to the client, same pattern as BlueprintRoom/ComposePlayground in
+// App.tsx. The reason recorded here used to be "the home route imports
+// LabBench for openLab/LabKey"; it no longer does — that signal moved to
+// data/labs.ts — but /lab is itself server-rendered, so the hazard is
+// unchanged.
+import { SignalLabPane } from "./labs/SignalLab.tsx";
 import { CrashLab } from "./labs/CrashLab.tsx";
 import { RecomposeLab } from "./labs/RecomposeLab.tsx";
 import { ThemeLab } from "./labs/ThemeLab.tsx";
 import { ModuleGraphLab } from "./labs/ModuleGraphLab.tsx";
 import { GatewayLab } from "./labs/GatewayLab.tsx";
 // SearchTreesLab (merged Gaddi ISMCTS + real alpha-beta engine) does its own
-// nested lazy() around the chess-engine-worker half — see SearchTreeLab.tsx —
-// so importing it here statically costs nothing extra: the worker/chess.js
-// chunk only loads once a visitor flips the in-pane radiogroup to "real".
+// nested deferred boundary around the chess-engine-worker half — see
+// SearchTreeLab.tsx — so importing it here statically costs nothing extra:
+// the worker/chess.js chunk only loads once a visitor flips the in-pane
+// radiogroup to "real".
 import { SearchTreesLab } from "./labs/SearchTreeLab.tsx";
 import { FanoutLab } from "./labs/FanoutLab.tsx";
 import { ReplayLab } from "./labs/ReplayLab.tsx";
@@ -131,14 +135,15 @@ export function LabBench() {
           {tab === "signal" && (
             // /lab server-renders and `tab === "signal"` is a runtime-only
             // switch the bundler can't see through — it still resolved
-            // SignalLab's leaflet import for SSR regardless of the `mounted`
-            // flag above. `<ClientOnly>` is what Start's compiler recognises
-            // to strip this subtree (and the lazy import behind it) from the
-            // SERVER compile entirely.
+            // SignalLab's leaflet import for SSR regardless. `<ClientOnly>`
+            // is what Start's compiler recognises to strip this subtree from
+            // the SERVER compile entirely; `<Hydrate when={load()} split>`
+            // inside it keeps SignalLabPane in its own chunk, fetched once
+            // this boundary is reached, now that the import above is static.
             <ClientOnly fallback={<PaneFallback what="signal lab" />}>
-              <Suspense fallback={<PaneFallback what="signal lab" />}>
+              <Hydrate when={load()} split fallback={<PaneFallback what="signal lab" />}>
                 <SignalLabPane />
-              </Suspense>
+              </Hydrate>
             </ClientOnly>
           )}
           {tab === "crashes" && <CrashLab />}

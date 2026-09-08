@@ -1,14 +1,17 @@
-import { Suspense, lazy, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectBySlug } from "../data/profile.ts";
+import { ChessSearchLab } from "./ChessSearchLab.tsx";
 
-// ponytail: nested, not hoisted to the top of LabBench.tsx. The chess engine
-// worker + chess.js only need to load when a visitor actually flips the
-// radiogroup to "real" — mounting the merged tab (or leaving it on
-// "simulated") must not pull either in, the same laziness LabBench.tsx's own
-// SignalLabPane/ChessSearchLab imports already document.
-const ChessSearchLab = lazy(() => import("./ChessSearchLab.tsx").then((m) => ({ default: m.ChessSearchLab })));
+// ponytail: split via the `<Hydrate split>` boundary below, not hoisted to
+// the top of LabBench.tsx. The chess engine worker + chess.js only need to
+// load when a visitor actually flips the radiogroup to "real" — mounting the
+// merged tab (or leaving it on "simulated") must not pull either in, the same
+// laziness LabBench.tsx's own SignalLabPane/ChessSearchLab imports already
+// document.
 
 /* ── Gaddi ISMCTS Search Tree Lab ────────────────────────────────────── */
 // Real numbers from src/data/profile.ts "gaddi" entry: 1.5k-16k ISMCTS
@@ -331,9 +334,9 @@ export function SearchTreesLab() {
       {source === "simulated" ? (
         <SimulatedSearchTree />
       ) : (
-        <Suspense fallback={<PaneFallback />}>
+        <Hydrate when={load()} split fallback={<PaneFallback />}>
           <ChessSearchLab />
-        </Suspense>
+        </Hydrate>
       )}
     </div>
   );

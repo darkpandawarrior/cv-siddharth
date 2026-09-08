@@ -1,10 +1,11 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { TiltPhone } from "./TiltPhone.tsx";
+import Phone3DScene from "./Phone3DScene.tsx";
 import type { PhoneShot } from "./Phone3DScene.tsx";
 import { heavy } from "./lib/assetBase.ts";
-
-const Phone3DScene = lazy(() => import("./Phone3DScene.tsx"));
 
 // Real shipped UI cycled on the 3D screen. Phone-aspect portraits only —
 // PaymentsLab-KMP's frames are 320x470 card crops, so it sits this one out.
@@ -42,7 +43,10 @@ export function Phone3D() {
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
-    if (!reduced && !isSmallScreen && supportsWebGL()) setEnable3D(true);
+    // ponytail: same inline saveData check as AmbientBackground — no DOM lib
+    // type for navigator.connection, so no shared hook for one flag.
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (!reduced && !isSmallScreen && !saveData && supportsWebGL()) setEnable3D(true);
   }, []);
 
   if (!enable3D) return <TiltPhone />;
@@ -50,13 +54,16 @@ export function Phone3D() {
   // enable3D is a runtime-only flag the bundler can't see through — it still
   // resolved Phone3DScene's @react-three/fiber import for SSR regardless.
   // <ClientOnly> is what Start's compiler recognises to strip this subtree
-  // (and the lazy import behind it) from the SERVER compile entirely.
+  // from the SERVER compile entirely. The 1023px/reduced-motion/WebGL gate
+  // above already decides IF this branch is reached at all (the early return),
+  // so `<Hydrate when={load()} split>` just keeps Phone3DScene in its own
+  // chunk — there is no further defer to express here.
   return (
     <ClientOnly fallback={<TiltPhone />}>
       <div className="relative mt-2 h-[420px] select-none lg:mt-0" aria-hidden>
-        <Suspense fallback={<TiltPhone />}>
+        <Hydrate when={load()} split fallback={<TiltPhone />}>
           <Phone3DScene shots={SHOTS} onContextLost={() => setEnable3D(false)} />
-        </Suspense>
+        </Hydrate>
       </div>
     </ClientOnly>
   );

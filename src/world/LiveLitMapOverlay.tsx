@@ -11,10 +11,10 @@ import { LIT_MAP_SYNC_CHANNEL, type LitMapSyncState } from "./litMapSyncChannel.
  * of it"). A static import here crashed every SSR of that route with
  * `ReferenceError: document is not defined` inside `renderToReadableStream`
  * — DeferredPlayRoom.tsx's own comment names the identical failure on
- * /weeb and /anthology. CorridorPlate.tsx loads this with `lazy()` behind
- * `useHydrated()`, the same client-only-after-hydration gate every other
- * playhtml-touching widget in this codebase uses (DeferredPlayRoom.tsx's
- * `deferred()` helper), so the server and the hydration pass never see it.
+ * /weeb and /anthology. CorridorPlate.tsx mounts this behind `<ClientOnly>`,
+ * the same client-only-after-hydration gate every other playhtml-touching
+ * widget in this codebase uses (DeferredPlayRoom.tsx's `deferred()` helper),
+ * so the server and the hydration pass never see it.
  */
 
 /** Same 0..1 normalisation litMap.ts's own `litMapTexel` uses (world x/z
