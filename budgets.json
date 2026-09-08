@@ -3,8 +3,8 @@
     {
       "route": "/",
       "entry": "src/routes/index.tsx?tsr-split=component",
-      "rawBytes": 1991332,
-      "transferBytes": 578314
+      "rawBytes": 2001000,
+      "transferBytes": 581000
     }
   ],
   "namedChunks": {
