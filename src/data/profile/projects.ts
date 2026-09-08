@@ -301,7 +301,7 @@ export const projects: Project[] = [
         { value: "7", label: "toggle rule variants" },
       ],
       techStack: [
-        { group: "Language & UI", items: ["Kotlin 2.4.20-Beta1", "Compose Multiplatform 1.12", "Canvas + AGSL/Skia runtime shaders"] },
+        { group: "Language & UI", items: ["Kotlin 2.4.20-RC", "Compose Multiplatform 1.12.0-rc01", "Canvas + AGSL/Skia runtime shaders"] },
         { group: "Engine", items: ["Deterministic (GameState, Intent) → GameState", "RNG-in-state", "replay from (seed, intentLog)"] },
         { group: "AI", items: ["ISMCTS (offline)", "Anthropic / OpenAI / Gemini", "on-device Gemini Nano · Apple FoundationModels", "BYOK (encrypted)"] },
         { group: "Online", items: ["Ktor / Netty server", "server-authoritative", "Bonjour/mDNS LAN"] },
