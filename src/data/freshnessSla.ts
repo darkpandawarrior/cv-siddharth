@@ -41,6 +41,19 @@ export const SLA_DAYS: Record<string, number> = {
 export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
 
 /**
+ * How stale a running `*-app` build's manifest.json may get before its panel
+ * (DeviceWall, DeviceMorph, the project pages) renders DEGRADED.
+ *
+ * Ties to gen-app-manifests.mjs's own cadence: the twin's half runs inside
+ * refresh-twin.yml's weekly cron (Monday), the other four are refreshed by
+ * hand when their sibling repo is checked out. Three weekly cycles of slack,
+ * not the blanket 45-day default — a build panel claiming to show "the commit
+ * running in front of you" has less business being a month stale than a
+ * hand-curated prose section does.
+ */
+export const APP_MANIFEST_SLA_DAYS = 21;
+
+/**
  * Datasets whose source is live and external, so a stale file is a broken
  * generator rather than a quiet week.
  *

@@ -1131,6 +1131,66 @@ const files = [
   },
 ];
 
+// ── Field contract ───────────────────────────────────────────────────────────
+// A guard independent of check-generated.mjs's byte-diff, and it has to be:
+// once refresh-twin.yml runs this generator itself (arch-L12 wires that in),
+// a broken run's own output gets committed BEFORE check-generated re-runs it,
+// so byte-diff is comparing this generator's output to itself — always
+// agrees, however wrong the class now is. That is exactly how CvChessData.kt
+// went stale for two green CIs before this file's own header comment.
+//
+// Committed in THIS repo, not beside the .kt files: this repo has no push
+// access to cv-siddharth-kmp, so a file living only in that ephemeral
+// checkout would never survive between CI runs to diff against — every run
+// would "bootstrap" against nothing and the check would never actually fire.
+// scripts/kotlin-field-contract.json is part of cv-siddharth's own git
+// history, checked out fresh and complete on every job, same as any other
+// committed file check-generated.mjs already diffs.
+//
+// Only removal fails: a class gaining fields is normal growth, so the
+// contract is a floor (every previously-seen field must survive), not an
+// exact-match snapshot the schema would have to update on every addition.
+// Computed from this repo's own corpora alone (no read of kmpRoot), so it
+// runs — and can fail — even on a machine with the twin not checked out.
+const CONTRACT_FILE = join(root, "scripts", "kotlin-field-contract.json");
+
+function fieldContract() {
+  const classes = new Map();
+  for (const spec of files) for (const v of spec.vals) collectClasses(v.type, classes);
+  return Object.fromEntries([...classes].map(([name, { sig }]) => [name, sig.map((s) => s.split(":")[0].trim())]));
+}
+
+function checkFieldContract() {
+  const fresh = fieldContract();
+  if (!existsSync(CONTRACT_FILE)) return fresh; // first run: nothing to regress against yet
+  const prev = JSON.parse(readFileSync(CONTRACT_FILE, "utf8"));
+  const missing = [];
+  for (const [cls, fields] of Object.entries(prev)) {
+    const now = fresh[cls];
+    if (!now) {
+      missing.push(`${cls} — the whole data class is gone`);
+      continue;
+    }
+    for (const f of fields) if (!now.includes(f)) missing.push(`${cls}.${f}`);
+  }
+  if (missing.length) {
+    console.error(
+      "gen-kotlin-data: this run would REMOVE a field a previous run committed:\n\n" +
+        missing.map((m) => `  ${m}`).join("\n") +
+        "\n\nThat is the exact class of bug that broke the Compose build with 159 errors past two\n" +
+        `green CIs (see this file's header comment). Refusing to write any .kt file. If the removal\n` +
+        `is deliberate, delete the entry from scripts/kotlin-field-contract.json and rerun.\n`,
+    );
+    process.exit(1);
+  }
+  return fresh;
+}
+
+// The contract check runs (and can fail) unconditionally, before the twin's
+// own presence is even checked — it needs nothing from kmpRoot.
+const fresh = checkFieldContract();
+writeFileSync(CONTRACT_FILE, JSON.stringify(fresh, null, 2) + "\n");
+
 // ── Run ─────────────────────────────────────────────────────────────────────
 if (!existsSync(kmpRoot)) {
   console.log(`gen-kotlin-data: ${kmpRoot} is not checked out, skipping the Compose twin.`);

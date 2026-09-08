@@ -1,8 +1,9 @@
 name: Refresh the Compose twin
 
 # Rebuilds cv-siddharth-kmp's Wasm distribution, syncs it into
-# public/portfolio-app (the live demo /project/portfolio embeds), re-derives the
-# twin's figures into repoStats.ts, and commits any drift.
+# heavy/portfolio-app (the live demo /project/portfolio embeds), re-derives the
+# twin's figures into repoStats.ts, regenerates the twin's build-manifest.json
+# and its Kotlin data layer, and commits any drift.
 #
 # WHY THIS EXISTS. The embedded demo was a hand copy with no script behind it.
 # On 2026-09-01 its .wasm files were dated 13 August: nineteen days and thirteen
@@ -56,6 +57,24 @@ jobs:
       - name: Re-derive the twin's figures
         run: npm run gen:repo-stats
 
+      # Real repo/commit for the twin's own build-manifest.json (the other
+      # four apps' manifests need their OWN sibling checked out beside this
+      # repo, which only the maintainer's machine has — see gen-app-manifests.mjs).
+      - name: Refresh app build manifests
+        run: npm run gen:app-manifests
+
+      # arch-L12: gen-kotlin-data.mjs had NO automated write-back path at all
+      # (F4) — this is what actually runs it on the weekly cron. `if: always()`
+      # and its own id, unconditional on anything committed above, because its
+      # field-contract self-check (scripts/kotlin-field-contract.json) is a
+      # correctness guard on THIS repo's own data, not a consequence of the
+      # twin's build having changed — see "Gate result" below, which fails the
+      # whole job on this step alone, committed or not.
+      - name: Regenerate the twin's Kotlin data
+        id: gate_kotlin
+        if: always()
+        run: npm run gen:kotlin
+
       # Stage + commit LOCALLY regardless of what ran above — this costs
       # nothing even on a run that ends up pushing nothing, and it lets the
       # four gate steps below check exactly what would be pushed. Pushing is a
@@ -69,7 +88,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/portfolio-app src/data/repoStats.ts
+          # public/portfolio-app -> heavy/portfolio-app: the asset-offload lane
+          # moved every embedded build's assets off Vercel into heavy/ (see
+          # src/lib/assetBase.ts), and this line was never updated to match —
+          # this job has been committing to a path sync-twin.mjs stopped
+          # writing to. heavy/*-app/build-manifest.json is this lane's own
+          # new output (gen-app-manifests.mjs); kotlin-field-contract.json is
+          # gen-kotlin-data.mjs's, grown here whenever a field is added.
+          git add heavy/portfolio-app src/data/repoStats.ts heavy/*-app/build-manifest.json scripts/kotlin-field-contract.json
           if git diff --cached --quiet; then
             echo "The embedded twin is already current."
             echo "committed=false" >> "$GITHUB_OUTPUT"
@@ -98,11 +124,21 @@ jobs:
         if: always() && steps.commit.outputs.committed == 'true'
         run: npm run check:generated
 
+      # Unconditional (not gated on `committed`): gate_kotlin ran regardless of
+      # whether anything else changed this week, and a field-contract
+      # regression has to fail this job on its own rather than needing the
+      # wasm rebuild to have also produced a diff. When nothing was committed
+      # AND gate_kotlin passed, there is nothing to gate — passed=true is
+      # "no push blocked", not "everything verified".
       - name: Gate result
         id: gate
-        if: always() && steps.commit.outputs.committed == 'true'
+        if: always()
         run: |
-          if [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
+          if [ "${{ steps.gate_kotlin.outcome }}" != "success" ]; then
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.commit.outputs.committed }}" != "true" ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
              [ "${{ steps.gate_lint.outcome }}" = "success" ] && \
              [ "${{ steps.gate_test.outcome }}" = "success" ] && \
              [ "${{ steps.gate_check_generated.outcome }}" = "success" ]; then
@@ -117,8 +153,10 @@ jobs:
 
       # A red gate pushes nothing — the local commit above is discarded with
       # the runner. One issue per workflow (see the script), not one per run.
+      # Fires on gate_kotlin's own failure too, even on a run with nothing
+      # else to commit — see "Gate result" above.
       - name: Open or update gate-failure issue
-        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false'
+        if: steps.gate.outputs.passed == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/report-gate-failure.sh refresh-twin

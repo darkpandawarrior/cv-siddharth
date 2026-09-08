@@ -33,6 +33,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # check:generated's cross-repo half (the whole reason it exists — a stale
+      # CvChessData.kt broke the Compose twin with 159 errors past two green
+      # CIs) used to silently no-op here: this repo was the only one checked
+      # out, so check-generated.mjs's own existsSync guard skipped the diff
+      # every single PR. No Java/Gradle needed — gen-kotlin-data.mjs only
+      # reads and writes files, it never builds the twin (sync-twin.mjs does
+      # that, in refresh-twin.yml, which is where the wasm actually gets
+      # rebuilt).
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/cv-siddharth-kmp
+          path: cv-siddharth-kmp-checkout
+      - name: Put the twin where the scripts expect it
+        run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
