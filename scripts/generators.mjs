@@ -210,8 +210,11 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/projectStats.ts"], stages: { refresh: 3 } },
   { id: "hiresignal-stats", script: "gen-hiresignal-stats.mjs", npmName: "gen:hiresignal", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
-    // updated number into three otherwise hand-authored files.
-    inputs: [], outputs: ["src/data/profile.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
+    // updated number into four otherwise hand-authored files. profile.ts
+    // itself is a re-export barrel post-arch-L15 — the prose these numbers
+    // actually live in moved to profile/projects.ts and profile/openSource.ts.
+    inputs: [],
+    outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },
@@ -255,6 +258,16 @@ export const GENERATORS = [
   // autorun`, not from any of the three chains this file feeds.
   { id: "lighthouse-summary", script: "gen-lighthouse-summary.mjs", npmName: "gen:lighthouse-summary", kind: "local",
     inputs: [], outputs: ["src/data/generated/lighthouse.ts"], stages: {} },
+  // Manual/occasional, run after `npm run build` rather than before it (see
+  // its own docstring): every other node here produces a SOURCE file the
+  // vite build then consumes, and this one consumes the vite build's OWN
+  // output (dist/server/server.js) to hash each route's actual rendered
+  // inline scripts, so it structurally cannot join prebuild/predev. Partial
+  // rewrite of an otherwise hand-authored file, same posture as
+  // hiresignal-stats above: it splices one header's value into vercel.json,
+  // not a fresh banner-carrying file.
+  { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
+    inputs: [], outputs: ["vercel.json"], stages: {} },
 ];
 
 // Fold freshnessSla.ts's SLA_DAYS in as a field on the node that owns each

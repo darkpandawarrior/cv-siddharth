@@ -15,9 +15,20 @@ import { openSource } from "./profile.ts";
  *
  * The generator now covers all nine. This fails if a tenth appears, which is
  * the only way the split can come back.
+ *
+ * profile.ts was one file when this test was written; arch-L15 split it
+ * along its export seams into src/data/profile/*.ts (profile.ts is now a
+ * re-export barrel with no prose of its own). The numbers this test scans
+ * for now live in three of those files — projects.ts (the ATS/PR mentions
+ * inside the candidai project), openSource.ts (upstreamMergedPRs + the
+ * recentGrowth entry) and caseStudies.ts (the "150+ client codebases" figure)
+ * — concatenating all three keeps this test's coverage exactly what it was,
+ * rather than silently watching some while the rest drift.
  */
 describe("HireSignal's numbers agree with themselves", () => {
-  const src = readFileSync(new URL("./profile.ts", import.meta.url), "utf8");
+  const src = ["./profile/projects.ts", "./profile/openSource.ts", "./profile/caseStudies.ts"]
+    .map((f) => readFileSync(new URL(f, import.meta.url), "utf8"))
+    .join("\n");
 
   it("states exactly one provider count", () => {
     const counts = [...new Set([...src.matchAll(/(\d+) ATS/g)].map((m) => m[1]))];

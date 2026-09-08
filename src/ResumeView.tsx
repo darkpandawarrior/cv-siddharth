@@ -1,7 +1,7 @@
 import { ArrowLeft, Github, Globe, Linkedin, Printer } from "lucide-react";
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
-import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projects, openSource, upstreamMergedPRs} from "./data/profile.ts";
+import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projectCards, openSource, upstreamMergedPRs} from "./data/profile.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { emphasise } from "./lib/resumeEmphasis.tsx";
 import { concurrentCompanies } from "./lib/resumeMeta.ts";
@@ -44,8 +44,8 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
   // Projects below the bar still get named and linked — the memory of losing
   // them entirely is why this line exists. On the one-pager that is all of
   // them: nine taglines do not survive a single page, but nine names do.
-  const shown = projects.filter((p) => fits(p.tier));
-  const linked = projects.filter((p) => !fits(p.tier));
+  const shown = projectCards.filter((p) => fits(p.tier));
+  const linked = projectCards.filter((p) => !fits(p.tier));
   // Seven ATS groups on the full record, four on the shorter cuts. Grouped and
   // labelled on every cut: a single comma-run of forty tokens was tried here to
   // win keyword coverage and it read as keyword stuffing on the page.

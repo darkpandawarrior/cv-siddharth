@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
-import { profile, metrics, caseStudies, projects } from "../data/profile.ts";
+import { profile, metrics, caseStudies, projectCards } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 
@@ -114,7 +114,7 @@ function HirePage() {
               // two of the three links on this page — the page a recruiter is
               // handed — to a 404. The homepage renders every case study with
               // its slug as an anchor, so this fallback can never miss.
-              const detail = projects.some((p) => p.slug === c.slug);
+              const detail = projectCards.some((p) => p.slug === c.slug);
               const linkProps = detail
                 ? ({ to: "/project/$slug", params: { slug: c.slug } } as const)
                 : ({ to: "/", hash: c.slug } as const);

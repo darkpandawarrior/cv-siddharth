@@ -22,7 +22,10 @@ import { fileURLToPath } from "node:url";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const profilePath = join(root, "src", "data", "profile.ts");
+// profile.ts is a re-export barrel post-arch-L15 — the ATS/PR prose this
+// script splices numbers into actually lives in these two split files now.
+const projectsPath = join(root, "src", "data", "profile", "projects.ts");
+const openSourcePath = join(root, "src", "data", "profile", "openSource.ts");
 const fanoutPath = join(root, "src", "labs", "FanoutLab.tsx");
 const careerOpsUpstreamPath = join(root, "src", "data", "careerOpsUpstream.ts");
 const token = process.env.GITHUB_TOKEN;
@@ -64,10 +67,18 @@ try {
    * sacrifice the ten good replacements to the one dead one — freezing every
    * number over a single reworded sentence. */
   const misses = [];
-  let src = readFileSync(profilePath, "utf8");
+  // arch-L15 split what used to be one profile.ts into profile/projects.ts
+  // (the ATS/PR mentions inside the candidai project) and profile/openSource.ts
+  // (upstreamMergedPRs + the recentGrowth entry) — a pattern below can land in
+  // either, or both (the "N merged PRs to the public career-ops project" line
+  // appears once in each), so every sub() now tries both buffers rather than one.
+  const files = [
+    { path: projectsPath, src: readFileSync(projectsPath, "utf8") },
+    { path: openSourcePath, src: readFileSync(openSourcePath, "utf8") },
+  ];
   const sub = (re, to) => {
-    if (!(src.match(re) || []).length) misses.push(`${re} (profile.ts)`);
-    src = src.replace(re, to);
+    if (!files.some((f) => (f.src.match(re) || []).length)) misses.push(`${re} (profile/projects.ts + profile/openSource.ts)`);
+    for (const f of files) f.src = f.src.replace(re, to);
   };
 
   sub(/"\d+ ATS\/board providers"/, `"${providers} ATS/board providers"`);
@@ -116,7 +127,7 @@ try {
   // The single source the résumé prints, so it stops disagreeing with the rest
   // of the site by using the curated array's length instead.
   sub(/export const upstreamMergedPRs = \d+;/, `export const upstreamMergedPRs = ${prs};`);
-  writeFileSync(profilePath, src);
+  for (const f of files) writeFileSync(f.path, f.src);
 
   // The Fan-out Lab's ring size lives in its own file, so it needs its own
   // write — chaining it onto profile.ts's contents would never have matched.
@@ -146,8 +157,9 @@ try {
    * network blip the catch below exists to swallow, and setting it after the
    * writes means a partial refresh still lands while `npm run refresh` fails
    * loudly enough that somebody fixes the prose. */
-  for (const [, n] of src.matchAll(/(\w+) merged (?:PRs|pull requests)/g))
-    if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile.ts`);
+  const joined = files.map((f) => f.src).join("\n");
+  for (const [, n] of joined.matchAll(/(\w+) merged (?:PRs|pull requests)/g))
+    if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile/{projects,openSource}.ts`);
   if (misses.length) {
     console.error(`[gen-hiresignal-stats] dead patterns / stale counts:\n  ${misses.join("\n  ")}`);
     process.exitCode = 1;
