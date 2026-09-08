@@ -204,7 +204,10 @@ function CaseSpine({
 }) {
   if (!d.problem || !d.decision || !d.outcome) return null;
   const metric = pickOutcomeMetric(d);
-  const shot = d.outcomeScreenshot ? `/projects/${slug}/screenshots/${d.outcomeScreenshot}` : undefined;
+  // Through the asset base like every other screenshot on the page: these live on the
+  // Pages origin, so a bare /projects/... path 404s on Vercel (every project page had
+  // its evidence picture broken this way after the asset offload).
+  const shot = d.outcomeScreenshot ? heavy(`/projects/${slug}/screenshots/${d.outcomeScreenshot}`) : undefined;
 
   return (
     <section className="border-b border-line bg-surface">
@@ -255,8 +258,10 @@ export function ProjectDetail({ slug }: { slug: string }) {
   // CaseSpine's evidence shot is excluded from the marquee below so the same
   // frame isn't shown twice, seconds apart — the marquee stays a poster of
   // everything else.
+  // Same base as `items` above, or the exact-string exclusion never matches and
+  // the evidence frame shows twice (it compared a bare path against based ones).
   const outcomeShot = project?.detail?.outcomeScreenshot
-    ? `/projects/${slug}/screenshots/${project.detail.outcomeScreenshot}`
+    ? heavy(`/projects/${slug}/screenshots/${project.detail.outcomeScreenshot}`)
     : undefined;
   const marqueeSrcs = excludeOutcomeScreenshot(items.map((i) => i.src), outcomeShot);
   const [idx, setIdx] = useState<number | null>(null);
