@@ -1,6 +1,6 @@
 name: Refresh project media
 
-# Pulls curated screenshots + demo gifs from the app repos (Mileway, PaymentsLab) and
+# Pulls curated screenshots + demo gifs from the app repos (Doori, PaymentsLab-KMP) and
 # regenerates projectStats.ts + galleries.ts from their settings.gradle.kts / Room DB, then
 # commits any drift. Runs daily so the portfolio tracks the app repos without a manual poke.
 # Local `npm run build` stays hermetic — prebuild (scripts/run-pipeline.mjs) only runs the

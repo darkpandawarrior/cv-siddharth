@@ -38,7 +38,7 @@ jobs:
     env:
       # `secrets` is not a valid context in a step `if` (GitHub rejects the whole
       # workflow file at parse time, which is how this lane never ran once). Same
-      # job-level indirection PaymentsLab's store-deploy workflows use.
+      # job-level indirection PaymentsLab-KMP's store-deploy workflows use.
       HAS_PAGES_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
