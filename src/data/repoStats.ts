@@ -4,7 +4,7 @@
 export const repoStats = {
   "tests": 1292,
   "testFiles": 117,
-  "kotlinLines": 63063,
+  "kotlinLines": 63077,
   "kotlinFiles": 475,
   "kotlin": "2.4.20-RC",
   "compose": "1.12.0-rc01",
