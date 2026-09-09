@@ -47,6 +47,12 @@ const run = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit"
 
 mkdirSync(DEST, { recursive: true });
 
+// The .avif/.webp derivatives under heavy/ are untracked build outputs that gen-images.mjs
+// writes only when the source is newer. A publish straight after a `git pull` (which stamps
+// the pulled PNGs but leaves old derivatives in place) shipped 1x derivatives beside 3x
+// PNGs on 2026-09-08, so the browsers, which pick the derivative, still saw the old size.
+// Regenerate before syncing, whatever ran or did not run before this script.
+execFileSync("node", [join(root, "scripts", "gen-images.mjs")], { stdio: "inherit" });
 console.log(`publish-heavy-assets: rsync ${HEAVY}/ -> ${DEST}/ ${dryRun ? "(dry run)" : ""}`);
 run("rsync", [
   "-a",
