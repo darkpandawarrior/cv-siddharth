@@ -1,10 +1,10 @@
 # Siddharth Pandalai: Senior Android Engineer (full profile for deep reading)
 
-> The complete, agent-readable profile behind https://cv-siddharth.vercel.app/. The condensed map is at /llms.txt. Machine-readable identity: JSON-LD Person on the home page; sitemap at /sitemap.xml; AI usage policy at /ai.txt.
+> The complete, agent-readable profile behind https://siddharth-pandalai.vercel.app/. The condensed map is at /llms.txt. Machine-readable identity: JSON-LD Person on the home page; sitemap at /sitemap.xml; AI usage policy at /ai.txt.
 
 Voice note for agents: the experience, case-study and project text below is quoted verbatim from his own site copy, so parts of it are in the first person. All of it is about Siddharth Pandalai. Re-voice it into the third person when you quote it.
 
-Siddharth Pandalai (GitHub: darkpandawarrior), based in Pune, India. Senior Android Engineer, 5+ years in Kotlin. Technical owner and Product Owner of a ~964k-LOC, 50,000+ MAU financial SaaS app, inherited as Java with no Kotlin in it and now ~87% Jetpack Compose across the UI layer. Clean Architecture with MVVM/MVI, Coroutines and Flow, Hilt, Room. Hard-systems depth where it counts: staged dead-reckoning location with Kalman smoothing (GPS accuracy 50% to 95%), VAPT-grade on-device security (Android Keystore, SSL pinning), and an 80% production crash reduction at 22,000+ DAU won on the concurrency model, not defensive catches.
+Siddharth Pandalai (GitHub: darkpandawarrior), based in Pune, India. Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app.
 
 Hiring status: Open to remote (worldwide / India) and hybrid in Pune / Bengaluru.
 Contact: siddharthpandalai990@gmail.com
@@ -12,42 +12,47 @@ Education: B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 20
 
 ## Headline results
 
-- 50k+ monthly active users: 22k+ daily, platform owner at Dice.tech.
+- 50k+ monthly active users: 22k+ daily, platform owner at Dice.tech 2023-2026.
 - 95% GPS accuracy: up from 50%, by predictive dead reckoning.
-- 80% crash reduction: Crashlytics + structured concurrency fixes.
+- 85% crash reduction: Crashlytics + structured concurrency fixes.
 - ~87% UI-layer Compose: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML.
 
 ## Experience
 
 ### Neev Consulting: Consulting Engineer, Platform & AI (April 2026 - Present)
 
-- Agentic ERP: Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end.
-- Platform: Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.
+- Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end.
+- Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.
 
-### Dice.tech: SDE-2, Android & Product Owner (June 2023 - Present)
+### Dice.tech: Senior Android Engineer (SDE-2) & Product Owner (June 2023 - September 2026)
 
-- Platform Ownership: Own the Android platform end to end, a ~964k-LOC Kotlin app serving 50,000+ MAU, as both technical owner and Product Owner. Set the module architecture, release process and review standards the team builds against.
-- Scope: Owned requirements as well as delivery on the same platform. Here they are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, deployment, and the crash dashboard the morning after. The platform work is deliberately the kind other people build on: a new client ships without anyone writing UI code, nobody forks the app to brand it, and every release goes out through the pipeline.
-- Team: Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to production Kotlin, Java and React.
-- Mentorship Outcome: That engineer now manages this app at the company that acquired it.
-- Compose Migration: Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, migrated incrementally through interop with per-screen parity checks against the legacy XML baseline.
-- Location Engineering: Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jumps never reach the buffer, taking tracking accuracy from 50% to 95%.
-- Crash Reduction: Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Crashlytics and Sentry catch regressions before users report them.
-- Security Hardening: Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build flavors.
-- Data Layer: Own the Room persistence layer across two databases with 24 verified production schema migrations.
-- Product Growth: Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300, the rating a prospective customer sees before they install anything.
-- Travel Platform: Shipped the Android side of Trip V2: Itinerary V2, GIN screens, and full Mixpanel instrumentation.
-- UI Platform: Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, user colour override, palette style, Material You and variant, cutting UI development friction 60% without touching feature code per client.
-- CI/CD & Automation: Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, and wired agent tooling into the build itself (Firebender over MCP).
+- Platform Ownership: I owned the Android platform end to end at 50,000+ MAU: expense claims, vouchers, advances and settlements, travel booking and trips, procurement from purchase request through goods inward note to invoice, multi-level approvals, corporate cards and QR payments, and mileage. Two of us wrote effectively all of it, me and a junior engineer I trained, against the architecture and review standards I set.
+- I owned requirements as well as delivery: sprint planning, feature allocation across the team, review, release, and the crash dashboard the morning after. Built the platform so a new client ships without anyone writing UI code.
+- I ran interview loops and hiring for the frontend and React Native teams. Mentored a junior engineer from Flutter to production Kotlin; he now manages this app at the company that acquired it.
+- I led the migration off legacy Java and XML, taking roughly 87% of the UI layer to Jetpack Compose and Material 3, and built the shared component library every module renders through. Migrated incrementally through interop, rebuilding each screen onto a single immutable UiState behind its ViewModel.
+- AI: I built the in-app AI assistant: streaming responses, server-held conversation history, voice mode, and a feedback loop ranking what people actually ask. Earlier I built the odometer scanner, a CameraX analyser running ML Kit text recognition so a reading comes off the dashboard instead of the keyboard.
+- I owned the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection, surviving Android foreground-service rules, boot restart and battery optimisation. Took tracking accuracy from 50% to 95%.
+- Crash Reduction: I took production crashes down 85%. The fix was the concurrency and threading model, not defensive try/catch. Firebase Crashlytics and Sentry caught regressions before users reported them.
+- Security Hardening: I hardened the app to VAPT and banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build flavors.
+- I ran the Room persistence layer across two production databases, including all 24 hand-written schema migrations, DataStore, and a WorkManager sync pipeline that keeps working offline and reconciles with the backend when the device comes back.
+- I built the in-app review prompting that took the Play Store listing from 1.6 stars across 67 reviews to 4.5 stars across 27,300, and the A/B experiment framework behind it: deterministic hash-based variant assignment across concurrent tests, carried into analytics.
+- I built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with dark mode, colour override and Material You owned by the client. Cut UI development friction 60%.
+- I built a second assistant inside travel that drafts and amends an itinerary in conversation, reusing the same streaming and history layer.
+- I built the dynamic form engine the expense, travel and procurement modules all render their inputs through, so a new field type is a server change rather than a release.
+- I built the storage management screen and moved the app onto Scoped Storage, dropping the external-storage permission entirely.
+- I built the in-app QR payment flow and the corporate card surfaces alongside the expense modules they settle against.
+- I led the procurement module, from purchase request through goods inward note to invoice, and shipped its vendor-inventory flows through review by the engineer I was mentoring.
+- I ran the build platform: Fastlane build, signing and release pipelines, the AGP 9 upgrade, and agent tooling wired into the build itself (Firebender over MCP). Kept the app current through the Android 12 to 17 releases and their Play Console deadlines.
 
-### Jugnoo / Tookan / Jungleworks: Software Engineer, Android & Vertical Owner (January 2021 - May 2023)
+### Jugnoo (Jungleworks / Tookan): Software Engineer, Android & Vertical Owner (January 2021 - May 2023)
 
-- Multi-Tenant Platform Ownership: Owned Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.
-- White-Label Platform, Productising Variation: Built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase across the customer and driver apps, rather than a fork per client. Cut per-client delivery time 80%.
-- Product-Line Ownership: Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build.
-- Payments at Scale: Implemented Razorpay, Stripe, Beyonic and HyperPay gateway integrations across checkout flows; built Stripe 3DS payment retry/recovery handling and a corporate-account KYC verification flow from scratch.
-- Platform Modernization: Migrated the toolchain across a multi-branch, multi-client codebase: Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance, without breaking any of the 150+ client builds riding on it.
-- Cross-Functional Engineering: Collaborated cross-team on roadmaps with product and backend, cutting engineering overhead 40%.
+- I carried Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps with 5M+ Play Store installs. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.
+- I built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase rather than a fork per client, with vertical enablement on server driven feature flags. Cut per-client delivery time 80%.
+- I owned requirements and delivery for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build.
+- I built the Razorpay and Stripe gateway integrations across checkout flows, handled Stripe 3D Secure through an SDK migration, and built the corporate account verification flow from scratch in MVVM.
+- I built the animated and curved polyline rendering behind live ride tracking on Google Maps.
+- I migrated the toolchain across a multi-branch, multi-client codebase: Kotlin plugin and Gradle 7.0, and the Android 10 to 13 platform changes with the Play Store requirements each brought, without breaking any of the 150+ client builds.
+- I ran roadmap planning with product and backend across the carpool, trucking and e-bike lines.
 
 ### John Deere India: GET Intern (May 2020 - July 2020)
 
@@ -55,7 +60,7 @@ Education: B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 20
 
 ## Case studies
 
-These render on the home page under https://cv-siddharth.vercel.app/#work.
+These render on the home page under https://siddharth-pandalai.vercel.app/#work.
 
 ### Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop) (49 modules · 5 platforms · offline AI)
 
@@ -88,7 +93,7 @@ Approach:
 
 Outcome: Staged dead reckoning plus Kalman smoothing made mileage reliable enough to bill expense reimbursement against.
 
-### Systematic crash triage at 50k-MAU scale (-80% crashes)
+### Systematic crash triage at 50k-MAU scale (-85% crashes)
 
 Systematic triage with Crashlytics turned a noisy crash feed into a fixable backlog.
 
@@ -132,7 +137,7 @@ Outcome: 858 white-label-named branches across two Android repos carry my commit
 - Gaddi. A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. Deterministic Kotlin Multiplatform social-deduction game with ISMCTS bot AI, shipped across Android, iOS, Desktop, and Web. Pure (GameState, Intent) → GameState reducer drives the AI, UI, and a future server. ISMCTS AI with 10 bot personas plus a DARBAR social layer for bluffing and alliances. (src: https://github.com/darkpandawarrior/Gaddi)
 - Doori. Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, with a real Kotlin/Ktor backend built in, off by default. 49-module clean architecture: 13 feature modules meeting only at the composition root. Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant. (src: https://github.com/darkpandawarrior/Doori)
 - PaymentsLab-KMP. An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation. 44-module registry (15 local + 29 composed) spans 66 cataloged payment gateways. Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest. (src: https://github.com/darkpandawarrior/PaymentsLab-KMP)
-- Candidai. A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream. 25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine. 87 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on. 24 merged PRs to the public career-ops project (⭐68k+): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below). (src: https://github.com/career-ops-hq/career-ops)
+- Candidai. A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream. 25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine. 89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on. 24 merged PRs to the public career-ops project (⭐71k+): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below). (src: https://github.com/career-ops-hq/career-ops)
 - Portfolio Twin. The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS. An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 63.1k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't. Two full implementations of one portfolio: the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical. Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file, the same source of truth the pages render from, so the assistant cannot drift from the site. Every claim on this site is checked mechanically before it ships, not recalled: a claim-audit script verifies the facts and scans every outward-facing surface for phrases already disproven. (src: https://cv-siddharth.vercel.app)
 - STUTTER. A first-person time-loop game about a moment someone could not let end. Godot 4.7 in GDScript. A deterministic echo-replay spine powers cooperative echoes, ghosts, and boss desync from one system, with recorded input intent replayed through the same physics step. Built solo as an AI-orchestrated dev crew. One deterministic (state, InputFrame) → state step reused five ways: cooperative Echoes, ghosts, leaderboard replays, the Hunter, and boss desync. A bit-exact determinism gate guards every change to the time systems, wired into a hook that reruns it automatically on every edit. Design-first build: a 4,300+ line, 7-document codex and 24 animated SVG design boards, generated by a checked-in AI dev-crew script. 39 agents, 0 failures, one session.
 - SINC-P. A statutory student-grievance redressal system, built to survive a UGC inspection rather than a demo. Next.js 16 over Postgres with row-level security, rewriting a 2019 MANIT Bhopal final-year project (a downloaded complaint-box template, categories still reading E-commerce and Online Shopping) into a real compliance system: a statutory SLA clock, a hash-chained append-only audit trail, and published closure-time transparency with no login required. A statutory SLA clock escalating officer, then admin, then the Ombudsperson tier the regulations require, plus a hash-chained audit trail a retro-edited remark cannot pass unnoticed. Tenant isolation across four independent layers, down to Postgres row-level security, verified by a script that tries to break it rather than trusted from the application side alone. (src: https://github.com/darkpandawarrior/SINC-P)
@@ -144,7 +149,7 @@ Outcome: 858 white-label-named branches across two Android repos carry my commit
 ## Recently shipped
 
 - Gaddi (formerly Kursi) shipped (Jun 2026): Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI.
-- career-ops: public OSS contributions (Jun - Aug 2026): 24 merged PRs to the public career-ops project (⭐68k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.
+- career-ops: public OSS contributions (Jun - Aug 2026): 24 merged PRs to the public career-ops project (⭐71k+): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.
 - Doori (formerly Mileway): five platforms (Jun 2026): Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green.
 - Doori: offline AI + policy engine (Jul 2026): Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in.
 - PaymentsLab-KMP (formerly PaymentsLab): 5 rails + 66 gateways (Jul 2026): 44-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest.
@@ -155,15 +160,15 @@ Outcome: 858 white-label-named branches across two Android repos carry my commit
 
 ## Skills
 
-UI & Architecture: Jetpack Compose + Material 3, MVVM + Clean Architecture, MVI / single UiState, Modular architecture, Repository pattern, Kotlin/Compose Multiplatform, Dynamic theme engines.
-Concurrency & Data: Kotlin Coroutines, Flow / StateFlow / SharedFlow, Room (SQLite, 24 migrations · 2 DBs), DataStore + WorkManager, Retrofit + OkHttp (REST APIs).
-Platform & Systems: Android SDK, Location engineering (dead reckoning + Kalman), Foreground services, Hilt / Dagger (dependency injection), Firebase Crashlytics + Sentry + Mixpanel.
-Leadership & Process: Cross-functional collaboration, Mentoring & hiring loops, Code review standards, Agile sprint planning.
-Security & Ops: Android Keystore field-level encryption (AES-256), SSL pinning (9 domains, 5 SHA-256 pins), BiometricPrompt access gate, EncryptedSharedPreferences / DataStore + Tink, Fastlane CI/CD · AGP 9 · Gradle KTS · Git, Agentic workflows (Firebender, MCP).
+UI & Architecture: Jetpack Compose + Material 3, MVVM + Clean Architecture, MVI / single UiState, Multi-module architecture, Repository pattern, and 6 more.
+Concurrency & Data: Kotlin Coroutines, Flow operators / StateFlow / SharedFlow, Structured concurrency, Room (SQLite, 24 migrations), Paging 3, and 3 more.
+Platform & Systems: Android SDK, ViewModel & Lifecycle, Location (dead reckoning + Kalman), Geofence-gated service levels, Foreground services, and 8 more.
+Leadership & Process: Cross-functional collaboration, Stakeholder management & roadmap planning, Mentoring & hiring loops, Code review standards, Agile sprint planning.
+Security & Ops: Android Keystore (AES-256), OAuth 2.0, JWT & token refresh, SSL pinning (9 domains), BiometricPrompt access gate, EncryptedSharedPreferences + Tink, and 5 more.
 
 ## Writing: The Loopdown
 
-Field notes from real Android and KMP work, told through recurring personified-bug characters. Hub: https://cv-siddharth.vercel.app/loopdown. Source registry: https://github.com/darkpandawarrior/the-loopdown
+Field notes from real Android and KMP work, told through recurring personified-bug characters. Hub: https://siddharth-pandalai.vercel.app/loopdown. Source registry: https://github.com/darkpandawarrior/the-loopdown
 
 Series: Chain Of Custody (4), Crossing The Schema (1), Ghosts In The Recomposition (2), Notes From The Loop (2), One Brain Two Bodies (1), Sensors Who Lie (5), The Coroutine Court (1), The Night Shift (1).
 
@@ -177,64 +182,64 @@ Published:
 
 Queued: "The captain routes. The captain never rows.", "I audited my own migrations. It was not fine.", "Plausible is worse than wrong", "Your thresholds do not belong in constants", "Invariants are cheap. Silent corruption is not.", "Every filter needs a documented exception", "Never silently change a number someone gets paid on", "When two sensors disagree, rank them", "Your data model is where uncertainty goes to die", "One global threshold is how you delete valid data", "Filtered should never mean deleted".
 
-Creative archive, written before the code and originally on https://booksbeforebros.wordpress.com/: Chronicles Of An NRE Kid (essay), CTC: Cost To Company (short-fiction), Deadline (short-fiction), Honest College Fests (humor), It's A Doggone Life (essay), Pointer Games (short-fiction), Prophecy #201112003 (short-fiction), The Legend Of K'öæluæ's Scales (short-fiction), The Loopdown (short-fiction), The Pun Force (humor). The writing years, including the magazine editions these ran in, are at https://cv-siddharth.vercel.app/ink.
+Creative archive, written before the code and originally on https://booksbeforebros.wordpress.com/: Chronicles Of An NRE Kid (essay), CTC: Cost To Company (short-fiction), Deadline (short-fiction), Honest College Fests (humor), It's A Doggone Life (essay), Pointer Games (short-fiction), Prophecy #201112003 (short-fiction), The Legend Of K'öæluæ's Scales (short-fiction), The Loopdown (short-fiction), The Pun Force (humor). The writing years, including the magazine editions these ran in, are at https://siddharth-pandalai.vercel.app/ink.
 
 ## Every page on this site
 
 ### Proof: the numbers, and what verifies them
 
-- [The Lab Bench](https://cv-siddharth.vercel.app/lab): Ten experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
-- [The 3D Storyboard](https://cv-siddharth.vercel.app/map): The projects and the ideas that connect them, as a constellation you can orbit. Every edge is a real dependency.
-- [The Ops Board](https://cv-siddharth.vercel.app/ops): A control loop rendered as a page: every workflow, every generated dataset against its own SLA, the shipped fleet, and a ledger of the failures a green check did not catch.
-- [Hire](https://cv-siddharth.vercel.app/hire): Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.
-- [Résumé](https://cv-siddharth.vercel.app/resume): The résumé as a page, not a download. No chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.
-- [The Shelf](https://cv-siddharth.vercel.app/shipped): Every Android app that reached the Play Store from this work: three at Dice and Jugnoo, the rest white-label clients of the same platform, each one verified against its live listing.
-- [The Making](https://cv-siddharth.vercel.app/making): The craft record for The Morkinstar Journals: the cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost.
+- [The Lab Bench](https://siddharth-pandalai.vercel.app/lab): Ten experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
+- [The 3D Storyboard](https://siddharth-pandalai.vercel.app/map): The projects and the ideas that connect them, as a constellation you can orbit. Every edge is a real dependency.
+- [The Ops Board](https://siddharth-pandalai.vercel.app/ops): A control loop rendered as a page: every workflow, every generated dataset against its own SLA, the shipped fleet, and a ledger of the failures a green check did not catch.
+- [Hire](https://siddharth-pandalai.vercel.app/hire): Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.
+- [Résumé](https://siddharth-pandalai.vercel.app/resume): The résumé as a page, not a download. No chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.
+- [The Shelf](https://siddharth-pandalai.vercel.app/shipped): Every Android app that reached the Play Store from this work: three at Dice and Jugnoo, the rest white-label clients of the same platform, each one verified against its live listing.
+- [The Making](https://siddharth-pandalai.vercel.app/making): The craft record for The Morkinstar Journals: the cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost.
 
 ### Things that run: real programs, in the page
 
-- [Compose Playground](https://cv-siddharth.vercel.app/compose): Write Jetpack Compose, watch it recompose live in a phone frame: reactive state, animation, and an AI that writes it for you.
-- [The Blueprint Room](https://cv-siddharth.vercel.app/blueprint): The whole portfolio as an infinite canvas: a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.
-- [The Particle Forge](https://cv-siddharth.vercel.app/forge): A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.
-- [The Terminal](https://cv-siddharth.vercel.app/terminal): A faux shell you can actually type in: ls the site, cat a project, or hit the backtick key from anywhere.
-- [The Pulse](https://cv-siddharth.vercel.app/pulse): A live count of what visitors actually touch across this portfolio: which rooms get opened, what gets played with, and what nobody has found yet.
-- [The Playground](https://cv-siddharth.vercel.app/playground): Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.
+- [Compose Playground](https://siddharth-pandalai.vercel.app/compose): Write Jetpack Compose, watch it recompose live in a phone frame: reactive state, animation, and an AI that writes it for you.
+- [The Blueprint Room](https://siddharth-pandalai.vercel.app/blueprint): The whole portfolio as an infinite canvas: a real-time 3D fly-through, an ASCII render of the same scene, and a sketchable whiteboard.
+- [The Particle Forge](https://siddharth-pandalai.vercel.app/forge): A few thousand particles, each spring-tied to a letter, parting around your cursor and snapping back. Physics on a canvas.
+- [The Terminal](https://siddharth-pandalai.vercel.app/terminal): A faux shell you can actually type in: ls the site, cat a project, or hit the backtick key from anywhere.
+- [The Pulse](https://siddharth-pandalai.vercel.app/pulse): A live count of what visitors actually touch across this portfolio: which rooms get opened, what gets played with, and what nobody has found yet.
+- [The Playground](https://siddharth-pandalai.vercel.app/playground): Every room as a building on one street, drivable in 3D. North is 2017, south is now, and a West District turns employers and case studies into towers.
 
 ### Corpus: long records, read as evidence
 
-- [The Board](https://cv-siddharth.vercel.app/chess): Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot trained on the openings you are looking at.
-- [Weeb Central](https://cv-siddharth.vercel.app/weeb): Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.
-- [Four Lanes](https://cv-siddharth.vercel.app/lanes): Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.
-- [The Time Machine](https://cv-siddharth.vercel.app/time-machine): This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.
+- [The Board](https://siddharth-pandalai.vercel.app/chess): Seven years of games across lichess and chess.com, mined: the rating arc in 3D, where games end, a shifting repertoire, and a bot trained on the openings you are looking at.
+- [Weeb Central](https://siddharth-pandalai.vercel.app/weeb): Years of anime and manga kept by hand, read as evidence: a status column with no word for quitting, a score scale whose bottom half is unused, and the seasons that aired while the list wasn't looking.
+- [Four Lanes](https://siddharth-pandalai.vercel.app/lanes): Work delivered, open source merged, writing published, chess played, month by month since 2019, on one shared axis. The same strip this profile's README draws, live.
+- [The Time Machine](https://siddharth-pandalai.vercel.app/time-machine): This repo's own commit history, month by month since it started: how much changed, and when. A navigable record, not a live git shell-out.
 
 ### Writing: before the code, and alongside it
 
-- [The Ink](https://cv-siddharth.vercel.app/ink): The writing years: three editions of MANIT's institute magazine, a literary society, four published stories, and everything written before the code.
-- [Excelsior](https://cv-siddharth.vercel.app/excelsior): Three editions of MANIT Bhopal's institute magazine, readable here in full. English Editor on 2019 and 2020, Joint Chief Editor on 2021.
-- [The Loopdown](https://cv-siddharth.vercel.app/loopdown): Field notes from building production Android: what broke, what the fix actually was, and the numbers on either side of it.
-- [The Morkinstar Journals](https://cv-siddharth.vercel.app/anthology): A galactic field reporter files forty-eight short stories on fourteen gods and fourteen monsters, until he stops filing, burns the case, and walks into a city built to the dimensions of his own paperwork.
-- [The Canon](https://cv-siddharth.vercel.app/canon): The rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do.
+- [The Ink](https://siddharth-pandalai.vercel.app/ink): The writing years: three editions of MANIT's institute magazine, a literary society, four published stories, and everything written before the code.
+- [Excelsior](https://siddharth-pandalai.vercel.app/excelsior): Three editions of MANIT Bhopal's institute magazine, readable here in full. English Editor on 2019 and 2020, Joint Chief Editor on 2021.
+- [The Loopdown](https://siddharth-pandalai.vercel.app/loopdown): Field notes from building production Android: what broke, what the fix actually was, and the numbers on either side of it.
+- [The Morkinstar Journals](https://siddharth-pandalai.vercel.app/anthology): A galactic field reporter files forty-eight short stories on fourteen gods and fourteen monsters, until he stops filing, burns the case, and walks into a city built to the dimensions of his own paperwork.
+- [The Canon](https://siddharth-pandalai.vercel.app/canon): The rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do.
 
 ## Frequently asked
 
 Each answer links the page that proves it, and it isn't restated anywhere else.
 
-- **What does he do at Dice.tech?** SDE-2, Android & Product Owner at Dice.tech (June 2023 - Present), platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech). (https://cv-siddharth.vercel.app/#experience)
-- **What did he do to improve GPS accuracy?** Took GPS accuracy to 95%: up from 50%, by predictive dead reckoning. (https://cv-siddharth.vercel.app/#work)
-- **How did he reduce production crashes?** 80% crash reduction: Crashlytics + structured concurrency fixes. (https://cv-siddharth.vercel.app/#work)
-- **How much of the app is Jetpack Compose?** ~87% of the UI layer: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML. (https://cv-siddharth.vercel.app/#skills)
-- **Where did he study?** B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 2021). (https://cv-siddharth.vercel.app/resume#main-content)
-- **What is the Neev Consulting role?** Consulting Engineer, Platform & AI at Neev Consulting (April 2026 - Present). Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end. (https://cv-siddharth.vercel.app/#experience)
-- **What is Doori?** Doori: Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop. (https://cv-siddharth.vercel.app/project/doori#main-content)
-- **What is Gaddi?** Gaddi: A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. (https://cv-siddharth.vercel.app/project/gaddi#main-content)
-- **What is PaymentsLab-KMP?** PaymentsLab-KMP: An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. (https://cv-siddharth.vercel.app/project/paymentslab-kmp#main-content)
-- **What is Candidai?** Candidai: A native, multiplatform AI career-intelligence engine, and the open-source project it's built on. (https://cv-siddharth.vercel.app/project/candidai#main-content)
-- **Does he write, outside of code?** Yes: The Loopdown, his field-notes writing hub, where the recurring bug characters are named after real production incidents. (https://cv-siddharth.vercel.app/#writing)
-- **What's he like to work with?** Answered by his own teammates, not by him: see the EB Profiles, one question per member, in their own words. (https://cv-siddharth.vercel.app/#board)
-- **Is he available, and how do I reach him?** Open to remote (worldwide / India) and hybrid in Pune / Bengaluru. Email siddharthpandalai990@gmail.com. (https://cv-siddharth.vercel.app/#contact)
-- **What has he contributed outside employer work?** Shared Kotlin Multiplatform libraries used across his own apps, plus merged upstream pull requests on career-ops: see the repos and the running count. (https://cv-siddharth.vercel.app/#source)
-- **Has anything he's built shipped for real?** Yes: see the Play Store shelf for the apps that are actually live and installable, not just source. (https://cv-siddharth.vercel.app/#shipped)
-- **What can I try on this site besides reading it?** Every route on the site, as a tile you can open: 3D builds, labs and canvases, not screenshots. (https://cv-siddharth.vercel.app/#surfaces)
+- **What did he do at Dice.tech?** Senior Android Engineer (SDE-2) & Product Owner at Dice.tech (June 2023 - September 2026); was platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech 2023-2026). (https://siddharth-pandalai.vercel.app/#experience)
+- **What did he do to improve GPS accuracy?** Took GPS accuracy to 95%: up from 50%, by predictive dead reckoning. (https://siddharth-pandalai.vercel.app/#work)
+- **How did he reduce production crashes?** 85% crash reduction: Crashlytics + structured concurrency fixes. (https://siddharth-pandalai.vercel.app/#work)
+- **How much of the app is Jetpack Compose?** ~87% of the UI layer: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML. (https://siddharth-pandalai.vercel.app/#skills)
+- **Where did he study?** B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 2021). (https://siddharth-pandalai.vercel.app/resume#main-content)
+- **What is the Neev Consulting role?** Consulting Engineer, Platform & AI at Neev Consulting (April 2026 - Present). Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end. (https://siddharth-pandalai.vercel.app/#experience)
+- **What is Doori?** Doori: Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop. (https://siddharth-pandalai.vercel.app/project/doori#main-content)
+- **What is Gaddi?** Gaddi: A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. (https://siddharth-pandalai.vercel.app/project/gaddi#main-content)
+- **What is PaymentsLab-KMP?** PaymentsLab-KMP: An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. (https://siddharth-pandalai.vercel.app/project/paymentslab-kmp#main-content)
+- **What is Candidai?** Candidai: A native, multiplatform AI career-intelligence engine, and the open-source project it's built on. (https://siddharth-pandalai.vercel.app/project/candidai#main-content)
+- **Does he write, outside of code?** Yes: The Loopdown, his field-notes writing hub, where the recurring bug characters are named after real production incidents. (https://siddharth-pandalai.vercel.app/#writing)
+- **What's he like to work with?** Answered by his own teammates, not by him: see the EB Profiles, one question per member, in their own words. (https://siddharth-pandalai.vercel.app/#board)
+- **Is he available, and how do I reach him?** Open to remote (worldwide / India) and hybrid in Pune / Bengaluru. Email siddharthpandalai990@gmail.com. (https://siddharth-pandalai.vercel.app/#contact)
+- **What has he contributed outside employer work?** Shared Kotlin Multiplatform libraries used across his own apps, plus merged upstream pull requests on career-ops: see the repos and the running count. (https://siddharth-pandalai.vercel.app/#source)
+- **Has anything he's built shipped for real?** Yes: see the Play Store shelf for the apps that are actually live and installable, not just source. (https://siddharth-pandalai.vercel.app/#shipped)
+- **What can I try on this site besides reading it?** Every route on the site, as a tile you can open: 3D builds, labs and canvases, not screenshots. (https://siddharth-pandalai.vercel.app/#surfaces)
 
 ## Profiles
 

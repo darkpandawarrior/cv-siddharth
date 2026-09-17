@@ -32,7 +32,21 @@ describe("SYSTEM_PROMPT stays inside the Groq budget", () => {
   // number is still a real result: 29,885 → well under 27,500, a ~12,000-ish
   // token drop that meaningfully narrows (but does not close) the gap to
   // GROQ_TPM_HEADROOM (7,000).
-  const CHAT_PROMPT_BUDGET_CHARS = 27_500;
+  // Raised 27,500 -> 28,000 -> 28,500 across 2026-09-17, in two steps:
+  //  1. Closing Dice out at September 2026. Every ownership bullet went from
+  //     "Own the ..." to "Owned the ...", the period grew from "Present" to
+  //     "September 2026". Honest past tense, +53 chars.
+  //  2. The ATS keyword pass. The summaries and four Dice bullets gained
+  //     evidenced terms the resume was being filtered out for missing
+  //     (Material 3, ViewModel-driven UiState, Compose/View interop, ANRs,
+  //     REST API, sprint planning). That took it to 27,989.
+  //
+  // THIS IS THE THIRD RAISE. A tripwire that only ever moves up has stopped
+  // being a tripwire, so read this as a debt marker: the next person to touch
+  // this should shrink the generator rather than raise the ceiling a fourth
+  // time. 28,500 is deliberately ~500 clear of 27,989, because landing 11
+  // chars under a limit is how the next honest edit turns into a red build.
+  const CHAT_PROMPT_BUDGET_CHARS = 28_500;
 
   it("SYSTEM_PROMPT is under budget", () => {
     expect(SYSTEM_PROMPT.length).toBeLessThan(CHAT_PROMPT_BUDGET_CHARS);
@@ -50,7 +64,29 @@ describe("SYSTEM_PROMPT stays inside the Groq budget", () => {
     // bug to fix for JD. This just pins that the same profile.ts-driven
     // shrink (shorter growth list, deduped highlights, tighter ground rules)
     // carried over rather than living only in the chat prompt.
-    expect(JD_SYSTEM_PROMPT.length).toBeLessThan(26_000);
+    // Raised 26,000 -> 26,500 on 2026-09-17 (same day as the chat budget's own
+    // 27,500 -> 28,000 raise, same reasoning): the ATS keyword-gap pass closed
+    // real, evidenced terms an adversarial ATS judge scored the resume down
+    // for missing (Android 12+ FGS rules/boot-restart/gap recovery, Room
+    // schema v17/v9 + WorkManager sync pipeline, Compose file/composable
+    // counts, Dice's position line resolving to "Senior Android Engineer").
+    // workHistory carries those bullets verbatim into both prompts, so this
+    // pin moves with the honest content that earned it, not with drift — the
+    // costliest, least-evidenced candidates (a new ML Kit bullet, a ProGuard
+    // clause, a Jugnoo commit/branch aside, a Play Store gap-percentage
+    // aside) were cut first and did NOT make the budget.
+    // Raised again 2026-09-17, 26,500 -> 27,000, for the On-Device ML bullet
+    // (CameraX + ML Kit text recognition + ML Kit GenAI). That bullet exists
+    // because an ATS pass scored him as never having touched CameraX and the
+    // guess was wrong: the Dice repo has the scanner, and git says he wrote it.
+    // Paying ~240 chars to stop under-claiming verified work is the right trade.
+    //
+    // Unlike CHAT_PROMPT_BUDGET_CHARS above, this pin guards nothing real. The
+    // comment directly above says it: mode "jd" always routes ROOMY_FIRST, so
+    // there is no fast-tier to fall out of. It is a drift detector, and drift
+    // detectors are allowed to move when the content that moved them is honest
+    // and named. The chat budget is the one that must not creep.
+    expect(JD_SYSTEM_PROMPT.length).toBeLessThan(27_000);
   });
 });
 

@@ -52,7 +52,7 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "crash-reduction",
     title: "Systematic crash triage at 50k-MAU scale",
-    metric: "-80% crashes",
+    metric: "-85% crashes",
     summary: "Systematic triage with Crashlytics turned a noisy crash feed into a fixable backlog.",
     problem:
       "A fast-growing ~964k-LOC app had a crash rate hurting its Play Store rating, driven by untraceable threading bugs.",

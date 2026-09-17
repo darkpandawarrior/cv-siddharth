@@ -45,6 +45,24 @@ async function prCount() {
   return (await res.json()).total_count;
 }
 
+/* careerOpsUpstream.ts's header has claimed since it was split out that this
+ * script refreshes THREE facts: merged PRs, providers and stars. It refreshed
+ * two. The star count was hand-typed, drifted to "68k+" while the repo passed
+ * 71,900, and nothing caught it because no pattern here ever looked at it.
+ *
+ * This is the same bug the providerCount comment below documents, in the same
+ * file, found the same way: a comment promising a refresh that no code performs.
+ * Fixing it properly rather than hand-typing 71k+, because a hand-typed number
+ * is exactly what goes stale next. Rounded DOWN to a thousand and suffixed "+",
+ * which is the form every surface already carries and cannot overstate. */
+async function starCount() {
+  const res = await fetchWithTimeout("https://api.github.com/repos/career-ops-hq/career-ops", { headers });
+  if (!res.ok) throw new Error(`${res.status} repo stars`);
+  const n = (await res.json()).stargazers_count;
+  if (!Number.isFinite(n) || n < 1000) throw new Error(`implausible star count ${n}`);
+  return `${Math.floor(n / 1000)}k+`;
+}
+
 async function providerCount() {
   const res = await fetchWithTimeout("https://api.github.com/repos/career-ops-hq/career-ops/contents/providers", { headers });
   if (!res.ok) throw new Error(`${res.status} providers dir`);
@@ -54,7 +72,7 @@ async function providerCount() {
 }
 
 try {
-  const [prs, providers] = await Promise.all([prCount(), providerCount()]);
+  const [prs, providers, stars] = await Promise.all([prCount(), providerCount(), starCount()]);
   if (!prs || !providers) throw new Error(`suspicious counts prs=${prs} providers=${providers} — refusing to write`);
   /* A regex that stops matching is the failure mode this script was built to
    * have. Eleven chained .replace() calls silently no-op when the prose beside
@@ -144,9 +162,26 @@ try {
    * refresh that no code performs is the quietest version of this whole bug
    * class, and hiresignalNumbers.test.ts is what finally caught it. */
   const providerRe = /export const providerCount = \d+;/;
+  const starRe = /export const upstreamStars = "[^"]*";/;
   const hs = readFileSync(careerOpsUpstreamPath, "utf8");
   if (!providerRe.test(hs)) misses.push(`${providerRe} (careerOpsUpstream.ts)`);
-  writeFileSync(careerOpsUpstreamPath, hs.replace(providerRe, `export const providerCount = ${providers};`));
+  if (!starRe.test(hs)) misses.push(`${starRe} (careerOpsUpstream.ts)`);
+  /* projectCards.ts hand-copies projects.ts (projectCards.test.ts enforces it),
+   * but projects.ts interpolates ${upstreamStars} while the card hardcodes the
+   * rendered string. So every star refresh silently desynced the two until the
+   * test failed and somebody re-typed it. Rewriting the literal here closes it. */
+  const cardsPath = join(root, "src", "data", "profile", "projectCards.ts");
+  const cardStarRe = /\(⭐[^)]*\)/g;
+  const cards = readFileSync(cardsPath, "utf8");
+  if (!cardStarRe.test(cards)) misses.push(`${cardStarRe} (projectCards.ts)`);
+  writeFileSync(cardsPath, cards.replace(cardStarRe, `(⭐${stars})`));
+
+  writeFileSync(
+    careerOpsUpstreamPath,
+    hs
+      .replace(providerRe, `export const providerCount = ${providers};`)
+      .replace(starRe, `export const upstreamStars = "${stars}";`),
+  );
 
   /* The other half of the same hole: a number this script never had a pattern
    * for at all. Reading whatever WORD sits in front of the phrase, rather than

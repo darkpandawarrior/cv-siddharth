@@ -3,15 +3,15 @@
 export const skills: { group: string; items: string[] }[] = [
   {
     group: "UI & Architecture",
-    items: ["Jetpack Compose + Material 3", "MVVM + Clean Architecture", "MVI / single UiState", "Modular architecture", "Repository pattern", "Kotlin/Compose Multiplatform", "Dynamic theme engines"],
+    items: ["Jetpack Compose + Material 3", "MVVM + Clean Architecture", "MVI / single UiState", "Multi-module architecture", "Repository pattern", "SOLID & design patterns", "Navigation", "Custom views", "Accessibility", "Kotlin/Compose Multiplatform (iOS, Wear OS)", "Dynamic theme engines"],
   },
   {
     group: "Concurrency & Data",
-    items: ["Kotlin Coroutines", "Flow / StateFlow / SharedFlow", "Room (SQLite, 24 migrations · 2 DBs)", "DataStore + WorkManager", "Retrofit + OkHttp (REST APIs)"],
+    items: ["Kotlin Coroutines", "Flow operators / StateFlow / SharedFlow", "Structured concurrency", "Room (SQLite, 24 migrations)", "Paging 3", "DataStore + WorkManager", "Retrofit + OkHttp + Ktor (REST, WebSockets)", "caching"],
   },
   {
     group: "Platform & Systems",
-    items: ["Android SDK", "Location engineering (dead reckoning + Kalman)", "Foreground services", "Hilt / Dagger (dependency injection)", "Firebase Crashlytics + Sentry + Mixpanel"],
+    items: ["Android SDK", "ViewModel & Lifecycle", "Location (dead reckoning + Kalman)", "Geofence-gated service levels", "Foreground services", "CameraX + ML Kit", "Deep linking", "Localization", "Hilt / Dagger / Koin (dependency injection)", "Crashlytics + Sentry + Mixpanel", "Performance monitoring & memory profiling", "A/B testing & feature flags", "Push notifications (FCM)"],
   },
   {
     // Every item here is evidenced in the experience bullets and verified by
@@ -21,47 +21,50 @@ export const skills: { group: string; items: string[] }[] = [
     // live on the full record only, and a recruiter searching "mentoring" or
     // "code review" should still find him on the shorter cuts.
     group: "Leadership & Process",
-    items: ["Cross-functional collaboration", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
+    items: ["Cross-functional collaboration", "Stakeholder management & roadmap planning", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
   },
   {
     group: "Security & Ops",
-    items: ["Android Keystore field-level encryption (AES-256)", "SSL pinning (9 domains, 5 SHA-256 pins)", "BiometricPrompt access gate", "EncryptedSharedPreferences / DataStore + Tink", "Fastlane CI/CD · AGP 9 · Gradle KTS · Git", "Agentic workflows (Firebender, MCP)"],
+    items: ["Android Keystore (AES-256)", "OAuth 2.0, JWT & token refresh", "SSL pinning (9 domains)", "BiometricPrompt access gate", "EncryptedSharedPreferences + Tink", "Fastlane · GitLab CI · AGP 9 · Gradle Kotlin DSL · Git · Android Studio", "ProGuard / R8 · AAB", "Google Play Console", "Unit testing and instrumented testing", "Agentic workflows (MCP)"],
   },
 ];
 
-// Granular 7-group layout for the résumé view — matches PDF structure for ATS coverage
+// Granular 8-group layout for the résumé view — matches PDF structure for ATS coverage
 export const resumeSkills: { group: string; items: string[] }[] = [
   {
     group: "UI",
-    items: ["Jetpack Compose (~87% of UI-layer code)", "Material 3", "Compose-View interop", "Compose Multiplatform"],
+    items: ["Jetpack Compose", "Material 3", "Custom views", "Accessibility (contentDescription, TalkBack)", "Compose-View interop", "Compose Multiplatform"],
   },
   {
     group: "Architecture",
-    items: ["Clean Architecture", "MVVM", "MVI", "Modular architecture", "Repository pattern", "Kotlin Multiplatform (KMP, building depth)"],
+    items: ["Clean Architecture", "MVVM", "MVI", "Multi-module architecture", "Repository pattern", "SOLID & design patterns", "Kotlin Multiplatform (KMP, building depth)"],
   },
   {
     group: "Concurrency & DI",
-    items: ["Kotlin Coroutines", "Flow", "StateFlow / SharedFlow", "Structured concurrency", "Hilt", "Dagger"],
+    items: ["Kotlin Coroutines", "Flow operators & reactive streams", "StateFlow / SharedFlow", "RxJava (legacy interop)", "Structured concurrency", "Hilt", "Dagger", "Koin", "Dependency injection", "LiveData", "LiveData"],
   },
   {
     group: "Data & Networking",
-    items: ["Room (SQLite, 24 schema migrations across 2 databases)", "DataStore", "Retrofit", "OkHttp", "Ktor", "REST APIs"],
+    items: ["Room (SQLite, 24 schema migrations across 2 databases)", "Paging 3", "HTTP & image caching", "JSON serialization", "DataStore", "Retrofit", "OkHttp", "Ktor", "REST APIs", "WebSockets"],
   },
   {
     group: "Platform",
-    items: ["Android SDK", "WorkManager", "Foreground Services", "Location / dead reckoning + Kalman filtering", "Firebase Crashlytics + Sentry", "Mixpanel"],
+    items: ["Android SDK", "ViewModel & Lifecycle", "Navigation", "WorkManager", "Foreground Services", "CameraX + ML Kit (on-device OCR)", "Deep linking", "Geofence-gated service levels", "Localization (18 locales)", "Performance monitoring", "Memory & lifecycle leak fixes", "Location / dead reckoning + Kalman filtering", "Firebase Crashlytics + Sentry", "Analytics instrumentation (Mixpanel)", "Push notifications (FCM)", "A/B testing & feature flags", "Battery optimisation"],
   },
   {
     group: "Security",
-    items: ["Android Keystore (AES-256)", "SSL pinning", "BiometricPrompt", "EncryptedSharedPreferences", "VAPT compliance"],
+    items: ["Android Keystore (AES-256)", "OAuth 2.0, JWT & token refresh", "SSL pinning", "BiometricPrompt", "EncryptedSharedPreferences", "VAPT compliance"],
   },
   {
     group: "Leadership & Process",
-    items: ["Cross-functional collaboration", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
+    items: ["Cross-functional collaboration", "Stakeholder management & roadmap planning", "Mentoring & hiring loops", "Code review standards", "Agile sprint planning"],
   },
   {
     group: "Build, CI/CD & Tools",
-    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "Git", "Play Store release management", "Android Studio", "Jira", "Figma", "Postman", "Firebender + MCP agentic workflows"],
+    // Honest ceiling: claims.json verifies 31 unit-test files and 4 androidTest
+    // files at Dice — no framework name, coverage figure or outcome, since none
+    // of those is verified and the guard regex forbids the outcome phrasing.
+    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "GitLab CI", "ProGuard / R8", "Git", "Android Studio", "Figma", "Unit testing and instrumented testing", "Macrobenchmark & Baseline Profiles", "Google Play Console & release management", "Android Studio", "Firebender + MCP agentic workflows", "LLM provider integration (Groq, Gemini, Claude)"],
   },
 ];
 

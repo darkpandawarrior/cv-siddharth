@@ -109,13 +109,13 @@ export const projectCards: ProjectCard[] = [
       "Spring Boot 4",
       "Room (KMP)",
       "Ktor",
-      "87 ATS/board providers"
+      "89 ATS/board providers"
     ],
     "highlights": [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "87 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "24 merged PRs to the public career-ops project (⭐68k+): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
+      "89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "24 merged PRs to the public career-ops project (⭐71k+): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
     ],
     "status": "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
     "badges": [

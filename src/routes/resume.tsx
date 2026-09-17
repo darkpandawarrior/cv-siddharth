@@ -63,8 +63,8 @@ function ResumePage() {
           prompts — because the console they belong to was never on this
           route. It also puts the JD fit check one click from the page a
           recruiter who has already decided to read the résumé is standing on.
-          Both the launcher and the panel carry print:hidden, so the printed
-          PDF is byte-for-byte unchanged. */}
+          The launcher, the panel and the crawlable FAQ section all carry
+          print:hidden, so the printed PDF is unchanged by mounting this. */}
       <FloatingChat />
     </>
   );

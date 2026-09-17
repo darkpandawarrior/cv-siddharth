@@ -84,7 +84,7 @@ export const accentOf = (id?: string) => (id && (SERIES_COLOR[id] || auto.get(id
  */
 export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
   "sensors-who-lie": { label: "Built in: Doori's location engine", href: "#project/doori" },
-  "the-coroutine-court": { label: "From: the -80% crashes work", href: "#work" },
+  "the-coroutine-court": { label: "From: the -85% crashes work", href: "#work" },
   "the-night-shift": { label: "From: the 50%→95% GPS work", href: "#work" },
   "ghosts-in-the-recomposition": { label: "From: the ~87% Compose migration", href: "#work" },
   // Upstream files this series' only lesson under PaymentsLab-KMP, not Doori.

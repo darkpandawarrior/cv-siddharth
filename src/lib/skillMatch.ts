@@ -186,7 +186,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Team leadership & ownership",
     depth: "working",
-    evidence: "Android platform owner at Dice.tech and product owner for the mobile surface",
+    evidence: "Android platform owner at Dice.tech (2023-2026) and product owner for the mobile surface",
     aliases: ["mentor", "mentoring", "mentorship", "lead", "leadership", "tech lead", "code review", "code reviews", "ownership", "stakeholder", "cross-functional", "agile", "scrum"],
   },
   {

@@ -83,6 +83,27 @@ for (const cut of CUTS) {
     console.error(`  !! ${cut.name}: ${pages} pages (${source}), budget is ${cut.maxPages}`);
     failed = true;
   }
+  /* The budget above only ever asserted the OVERFLOW direction. A design audit on
+   * 2026-09-18 pointed out the obvious gap: page one of the two-pager was a solid
+   * block with no whitespace while page two stopped around 45% and the rest was
+   * blank, and nothing here complained. A résumé whose last page is mostly empty
+   * reads as padded to reach a page count, which is a worse signal than a tight
+   * single page, and it is exactly as mechanical to catch as an overflow.
+   *
+   * Measured as fill of the FINAL page: total laid-out height modulo the A4
+   * content box. Warn rather than fail, because unlike an overflow this is a
+   * judgement call (the full record legitimately ends where the content ends),
+   * and because failing the build on it would block a legitimate send. */
+  if (pages > 1) {
+    const h = await page.evaluate(() => document.querySelector("article.resume").scrollHeight);
+    const lastPageFill = ((h % PAGE_PX) / PAGE_PX) * 100;
+    if (lastPageFill > 0 && lastPageFill < 55) {
+      console.warn(
+        `  ~~ ${cut.name}: last page is only ${lastPageFill.toFixed(0)}% full. ` +
+        `Redistribute from the crowded page rather than adding to the empty one.`,
+      );
+    }
+  }
   console.log(`${cut.name}: ${bullets} bullets, ${pages}p ${source} -> ${file}`);
 }
 

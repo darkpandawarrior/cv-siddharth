@@ -41,7 +41,7 @@ export const Route = createRootRoute({
       // The title leads, then the numbers as prose. The figures stay written
       // out on purpose: this line is a ~155-character sentence under an SEO
       // budget, not a list of metrics joined with commas.
-      { name: "description", content: `${profile.title}. Platform owner at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
+      { name: "description", content: `${profile.title}. Owned the platform at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
       { name: "author", content: profile.name },
       { name: "theme-color", content: "#0b0f0d" },
       { name: "color-scheme", content: "dark" },

@@ -12,7 +12,7 @@
   <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
 </p>
 
-**Live: [cv-siddharth.vercel.app](https://cv-siddharth.vercel.app/)** (the Vercel project
+**Live: [cv-siddharth.vercel.app](https://siddharth-pandalai.vercel.app/)** (the Vercel project
 itself is now named **siddharth-pandalai**, reachable at
 [siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/) too; the original
 domain stays a live alias so every existing link keeps working)
@@ -20,7 +20,7 @@ domain stays a live alias so every existing link keeps working)
 Interactive CV for **Siddharth Pandalai**, Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
 production metrics, four Kotlin Multiplatform builds running as WebAssembly in
-the page, a print-perfect [résumé view](https://cv-siddharth.vercel.app/resume)
+the page, a print-perfect [résumé view](https://siddharth-pandalai.vercel.app/resume)
 (A4, PDF via the print dialog), and an AI assistant ("Panda") that answers
 questions about his experience in the third person.
 
@@ -95,28 +95,28 @@ falls through it unregistered.
 
 | | | |
 |---|---|---|
-| [`/hire`](https://cv-siddharth.vercel.app/hire) | the 90-second version | numbers, résumé, contact. For someone who will not explore |
-| [`/resume`](https://cv-siddharth.vercel.app/resume) | print · pdf | A4 `@page`, no chrome, straight to PDF from the browser |
-| [`/shipped`](https://cv-siddharth.vercel.app/shipped) | store · verified | every Android app that reached Play from work he touched, each checked against its live listing |
-| [`/lab`](https://cv-siddharth.vercel.app/lab) | canvas · physics | **11 experiments** that prove the numbers: GPS filtering, crash triage, recomposition and module graphs, running in your browser |
-| [`/pulse`](https://cv-siddharth.vercel.app/pulse) | telemetry · live | a live count of what visitors actually touch across the site |
-| [`/compose`](https://cv-siddharth.vercel.app/compose) | live editor · AI | write Jetpack Compose, watch it recompose in a phone frame |
-| [`/ops`](https://cv-siddharth.vercel.app/ops) | control loop · live | every workflow, every generated dataset against its own SLA, what is published and signed, and a ledger of the failures a green check did not catch |
-| [`/blueprint`](https://cv-siddharth.vercel.app/blueprint) | 3D · WebGL | the portfolio as an infinite canvas: a three.js fly-through, an ASCII render of the same scene, and a sketchable tldraw whiteboard |
-| [`/map`](https://cv-siddharth.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
-| [`/forge`](https://cv-siddharth.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
-| [`/terminal`](https://cv-siddharth.vercel.app/terminal) | text · easter egg | a faux shell you can type in: `ls`, `open doori`, `ask <q>`, `chess clock`. Backtick summons it from any route |
-| [`/playground`](https://cv-siddharth.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D; north is 2017, south is now, and a West District turns his employers and case studies into towers |
-| [`/chess`](https://cv-siddharth.vercel.app/chess) | 3d · engine | seven years across lichess and chess.com, mined: the rating arc in 3D, a shifting repertoire, a bot that plays like him |
-| [`/weeb`](https://cv-siddharth.vercel.app/weeb) | corpus · data | a hand-kept anime list read as evidence, a status column with no word for quitting |
-| [`/ink`](https://cv-siddharth.vercel.app/ink) | archive · world | the writing years, before the code |
-| [`/excelsior`](https://cv-siddharth.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
-| [`/loopdown`](https://cv-siddharth.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
-| [`/anthology`](https://cv-siddharth.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
-| [`/canon`](https://cv-siddharth.vercel.app/canon) | lore · reference | the rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do |
-| [`/making`](https://cv-siddharth.vercel.app/making) | process · receipts | the craft record for the anthology: cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost |
-| [`/lanes`](https://cv-siddharth.vercel.app/lanes) | corpus · timeline | work, open source, writing and chess, month by month since 2019, on one shared axis |
-| [`/time-machine`](https://cv-siddharth.vercel.app/time-machine) | corpus · git history | this repo's own commit history, walked back month by month |
+| [`/hire`](https://siddharth-pandalai.vercel.app/hire) | the 90-second version | numbers, résumé, contact. For someone who will not explore |
+| [`/resume`](https://siddharth-pandalai.vercel.app/resume) | print · pdf | A4 `@page`, no chrome, straight to PDF from the browser |
+| [`/shipped`](https://siddharth-pandalai.vercel.app/shipped) | store · verified | every Android app that reached Play from work he touched, each checked against its live listing |
+| [`/lab`](https://siddharth-pandalai.vercel.app/lab) | canvas · physics | **11 experiments** that prove the numbers: GPS filtering, crash triage, recomposition and module graphs, running in your browser |
+| [`/pulse`](https://siddharth-pandalai.vercel.app/pulse) | telemetry · live | a live count of what visitors actually touch across the site |
+| [`/compose`](https://siddharth-pandalai.vercel.app/compose) | live editor · AI | write Jetpack Compose, watch it recompose in a phone frame |
+| [`/ops`](https://siddharth-pandalai.vercel.app/ops) | control loop · live | every workflow, every generated dataset against its own SLA, what is published and signed, and a ledger of the failures a green check did not catch |
+| [`/blueprint`](https://siddharth-pandalai.vercel.app/blueprint) | 3D · WebGL | the portfolio as an infinite canvas: a three.js fly-through, an ASCII render of the same scene, and a sketchable tldraw whiteboard |
+| [`/map`](https://siddharth-pandalai.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
+| [`/forge`](https://siddharth-pandalai.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
+| [`/terminal`](https://siddharth-pandalai.vercel.app/terminal) | text · easter egg | a faux shell you can type in: `ls`, `open doori`, `ask <q>`, `chess clock`. Backtick summons it from any route |
+| [`/playground`](https://siddharth-pandalai.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D; north is 2017, south is now, and a West District turns his employers and case studies into towers |
+| [`/chess`](https://siddharth-pandalai.vercel.app/chess) | 3d · engine | seven years across lichess and chess.com, mined: the rating arc in 3D, a shifting repertoire, a bot that plays like him |
+| [`/weeb`](https://siddharth-pandalai.vercel.app/weeb) | corpus · data | a hand-kept anime list read as evidence, a status column with no word for quitting |
+| [`/ink`](https://siddharth-pandalai.vercel.app/ink) | archive · world | the writing years, before the code |
+| [`/excelsior`](https://siddharth-pandalai.vercel.app/excelsior) | 396 pages | three editions of MANIT's institute magazine, page-turnable in full |
+| [`/loopdown`](https://siddharth-pandalai.vercel.app/loopdown) | field notes | what broke in production, what the fix was, and the numbers on either side |
+| [`/anthology`](https://siddharth-pandalai.vercel.app/anthology) | fiction · starmap | The Morkinstar Journals, forty-eight short stories across four seasons, a navigable starmap and a lore page |
+| [`/canon`](https://siddharth-pandalai.vercel.app/canon) | lore · reference | the rules the Morkinstar Journals are written against: seven laws, the count, the fourteen, and what the rendering can and cannot do |
+| [`/making`](https://siddharth-pandalai.vercel.app/making) | process · receipts | the craft record for the anthology: cross-lab ownership audits, what they killed, two portrait passes, and what the whole thing cost |
+| [`/lanes`](https://siddharth-pandalai.vercel.app/lanes) | corpus · timeline | work, open source, writing and chess, month by month since 2019, on one shared axis |
+| [`/time-machine`](https://siddharth-pandalai.vercel.app/time-machine) | corpus · git history | this repo's own commit history, walked back month by month |
 
 `/terminal`'s own `help` isn't the whole command list by design: nine
 commands mark themselves `hidden` and skip it, so they stay things to find
