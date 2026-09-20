@@ -146,7 +146,7 @@ export const GENERATORS = [
   // rather than left implied by list position. Refresh only.
   { id: "world-plate", script: "gen-world-plate.mjs", npmName: "gen:world-plate", kind: "local",
     inputs: ["src/data/timeline.ts"],
-    outputs: ["src/world/corridorPlate.ts", "public/p/world/corridor.png"], stages: { refresh: 19 } },
+    outputs: ["src/world/corridorPlate.ts", "heavy/p/world/corridor.png"], stages: { refresh: 19 } },
   { id: "repo-stats", script: "gen-repo-stats.mjs", npmName: "gen:repo-stats", kind: "sibling",
     inputs: [], outputs: ["src/data/repoStats.ts"], stages: { check: 5 } },
   { id: "ops", script: "gen-ops.mjs", npmName: "gen:ops", kind: "sibling",
