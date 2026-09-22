@@ -61,9 +61,9 @@ const [mau, gps, crash, compose] = metrics;
 export const ANSWERS: Answer[] = [
   {
     id: "current-role",
-    question: "What does he do at Dice.tech?",
+    question: "What did he do at Dice.tech?",
     keywords: ["job", "current", "platform owner", "product owner"],
-    answer: `${dice.role} at ${dice.company} (${dice.period}), platform owner of the app behind ${mau.value} monthly active users (${mau.detail}).`,
+    answer: `${dice.role} at ${dice.company} (${dice.period}); was platform owner of the app behind ${mau.value} monthly active users (${mau.detail}).`,
     anchor: "/#experience",
   },
   {

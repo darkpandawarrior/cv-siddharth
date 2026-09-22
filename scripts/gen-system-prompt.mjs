@@ -51,9 +51,20 @@ const llmsFullOutFile = join(root, "public", "llms-full.txt");
  * immediately follows it ("Crash Reduction: Cut production crashes 80%…"), so
  * it costs ~375 characters to say each bullet's topic twice.
  */
+/* Tiered points only (tier 1 and 2), not the full record. Same split as the skills
+ * cap below and for the same reason: `experience` serves two consumers with
+ * different needs. The full record is the SITE's job, where there is no budget and
+ * depth is the point. This prompt is the ASSISTANT's, it is paid for on every chat
+ * request, and it does not get better from the untiered long tail.
+ *
+ * Added 2026-09-18 after three verified full-record bullets (the dynamic form
+ * engine, storage management, QR payments) busted both prompt budgets on the same
+ * run. The alternative was raising those ceilings a fourth time, which the comment
+ * in system-prompt.test.ts explicitly says not to do. Decoupling is the fix; a
+ * ceiling that only ever moves up has stopped being a tripwire. */
 const workHistory = experience
   .map((job, i) => {
-    const points = job.points.map((p) => p.text).join(" ");
+    const points = job.points.filter((p) => p.tier !== undefined).map((p) => p.text).join(" ");
     return `${i + 1}. ${job.company} — ${job.role} (${job.period}). ${points}`;
   })
   .join("\n");
@@ -138,7 +149,22 @@ const growth = recentGrowth
   .map((g) => `- ${g.title} (${g.date}): ${g.detail}`)
   .join("\n");
 
-const skillLines = skills.map((s) => `${s.group}: ${s.items.join(", ")}.`).join("\n");
+// Capped at five items per group, deliberately. `skills` is ALSO the one-pager's
+// résumé surface, and on 2026-09-17 an ATS pass grew it from 27 items to 40 to win
+// keyword coverage. That is the right call for the résumé and the wrong one here:
+// every token added for a parser was inflating an LLM prompt that gains nothing
+// from the long tail, and it busted both prompt budgets twice in one session.
+// Those two consumers want different things from the same data, so this is where
+// they part company. The assistant gets the headline stack; the résumé keeps the
+// full list; neither drags the other around any more.
+const PROMPT_SKILLS_PER_GROUP = 5;
+const skillLines = skills
+  .map((s) => {
+    const shown = s.items.slice(0, PROMPT_SKILLS_PER_GROUP);
+    const rest = s.items.length - shown.length;
+    return `${s.group}: ${shown.join(", ")}${rest > 0 ? `, and ${rest} more` : ""}.`;
+  })
+  .join("\n");
 
 // The site's own interactive surfaces. Without these the assistant denied that
 // the Playground/Lab Bench/etc. existed ("not something I've worked on"),

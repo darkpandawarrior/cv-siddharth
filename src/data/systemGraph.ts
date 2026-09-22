@@ -258,7 +258,7 @@ export const systemGraph: SystemGraph = {
       "to": "the-coroutine-court",
       "kind": "born-from",
       "evidence": "declared",
-      "detail": "From: the -80% crashes work",
+      "detail": "From: the -85% crashes work",
       "url": "/loopdown#series-the-coroutine-court"
     },
     {

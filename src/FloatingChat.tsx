@@ -690,7 +690,7 @@ export function FloatingChat() {
           points at is checked against a real build by
           scripts/check-answers.mjs — this block is what makes that check
           meaningful rather than decorative. */}
-      <section aria-label="Frequently asked" className="border-t border-line bg-surface px-6 py-10">
+      <section aria-label="Frequently asked" className="border-t border-line bg-surface px-6 py-10 print:hidden">
         <div className="mx-auto max-w-2xl space-y-2">
           <p className="kicker-accent">frequently asked</p>
           {ANSWERS.map((a) => (

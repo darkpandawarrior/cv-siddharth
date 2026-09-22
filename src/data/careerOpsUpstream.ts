@@ -16,9 +16,9 @@
  */
 
 /** ATS and job-board provider modules in the upstream `providers/` directory. */
-export const providerCount = 87;
+export const providerCount = 89;
 
 /** Rounded down, because the exact figure is wrong within the hour and "68k+"
  *  is not. Stars only climb on a live repo, so the generator reads a SMALLER
  *  value as a rate-limited response rather than as news. */
-export const upstreamStars = "68k+";
+export const upstreamStars = "71k+";

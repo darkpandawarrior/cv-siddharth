@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { repoStats } from "./repoStats.ts";
+import { profile } from "./profile.ts";
 import { surfaces } from "./surfaces.ts";
 
 /**
@@ -67,7 +68,7 @@ describe("the public llms files are generated, not hand-mirrored", () => {
   it("links every registered surface, so the site map cannot go short", () => {
     for (const s of surfaces) {
       expect(LLMS, `${s.to} is a registered surface and llms.txt should link it`).toContain(
-        `(https://cv-siddharth.vercel.app${s.to})`,
+        `(${profile.portfolio}${s.to})`,
       );
     }
   });
@@ -165,7 +166,7 @@ describe("the README's numbers are the repo's numbers", () => {
    */
   it("lists every registered surface as its own table row", () => {
     for (const s of surfaces) {
-      const row = `[\`${s.to}\`](https://cv-siddharth.vercel.app${s.to})`;
+      const row = `[\`${s.to}\`](${profile.portfolio}${s.to})`;
       expect(README, `${s.to} is a registered surface and needs its own README table row`).toContain(row);
     }
   });

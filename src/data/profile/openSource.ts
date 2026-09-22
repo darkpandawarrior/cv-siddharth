@@ -49,7 +49,7 @@ export interface Contribution {
  * Merged PRs upstream, as the live GitHub search reports it.
  *
  * NOT openSource.length. That array is a CURATED subset — 17 entries against
- * 18 merged — and hiresignalNumbers.test.ts documents shorter as expected.
+ * 24 merged — and hiresignalNumbers.test.ts documents shorter as expected.
  * ResumeView used the array length and so printed 17 while every other
  * surface on the site said 18, which is the kind of one-off disagreement a
  * reader notices and an owner never does.
