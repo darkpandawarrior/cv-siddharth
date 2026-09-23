@@ -11,7 +11,7 @@ export const Route = createFileRoute("/ops")({
           "A control loop rendered as a page: every workflow, every generated dataset against its SLA, the shipped fleet, and the incidents a green check did not catch.",
       },
     ],
-    links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/ops" }],
+    links: [{ rel: "canonical", href: "https://siddharth-pandalai.vercel.app/ops" }],
   }),
   // Client-only, for the same reason /pulse is: every age on this board is
   // computed at load and the control tower is read live, so a server render

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -207,6 +208,10 @@ const MIC_DISCLOSURE =
   "Voice input is transcribed by your browser's speech service — in Chrome that means the audio is sent to Google.";
 
 export function FloatingChat() {
+  // The launcher belongs to the document chrome, outside positioned route
+  // wrappers (including the writing world's themed container).
+  const [launcherRoot, setLauncherRoot] = useState<HTMLElement | null>(null);
+  useEffect(() => setLauncherRoot(document.body), []);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -708,14 +713,15 @@ export function FloatingChat() {
         </div>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
       </section>
-      {!open && (
+      {!open && launcherRoot && createPortal(
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
+          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
         >
           <MessageCircle size={24} />
-        </button>
+        </button>,
+        launcherRoot,
       )}
 
       {open && (

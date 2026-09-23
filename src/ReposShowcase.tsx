@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { GitBranch, Star, ArrowUpRight, GitPullRequestArrow } from "lucide-react";
 import { Reveal } from "./Reveal.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
-import { openSource, sharedFoundation } from "./data/profile.ts";
+import { openSource, sharedFoundation, upstreamStars } from "./data/profile.ts";
 import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
+const ResourceDirectory = lazy(() => import("./ResourceDirectory.tsx").then(module => ({ default: module.ResourceDirectory })));
 
 /**
  * The Source: the code under the apps, in one place. The project grid above
@@ -187,10 +188,16 @@ export function ReposShowcase() {
           />
           <RepoGroup label="Tooling & writing" hint="the surrounding surface" repos={TOOLING} />
 
+          <div id="resources" className="mt-12 scroll-mt-24">
+            <Suspense fallback={<p className="mt-8 text-sm text-muted">Loading the project directory…</p>}>
+              <ResourceDirectory />
+            </Suspense>
+          </div>
+
           <div className="mt-8">
             <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h4 className="kicker-accent font-semibold">Merged upstream</h4>
-              <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐68k+)</span>
+              <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐{upstreamStars})</span>
             </div>
             {/* Six, not all of them. The full list rendered 847px of individual
                 PR titles on the homepage — more vertical space than the entire
@@ -224,7 +231,7 @@ export function ReposShowcase() {
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
             >
-              <Star size={11} /> all {openSource.length} of my PRs on career-ops <ArrowUpRight size={11} />
+              <Star size={11} /> View my pull requests on career-ops <ArrowUpRight size={11} />
             </a>
           </div>
         </Reveal>

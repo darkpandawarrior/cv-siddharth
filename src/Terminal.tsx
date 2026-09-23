@@ -1053,11 +1053,8 @@ const BOOT_LINES = ["booting sid.android shell…", "mounting /profile … ok", 
  * to anything that doesn't run JS, and ssr:false meant nothing rendered
  * server-side at all to make up for it.
  *
- * ponytail: a visitor with motion enabled gets this instantly, then the
- * boot effect clears it and re-types it for the animated reveal — one
- * extra reflow right after hydration. The alternative (typing the reveal
- * with no flash) needs a CSS-only animation instead of blocks*that*get
- * pushed over time; add one if the flash reads as janky.
+ * Preserve this banner through hydration. Each line already has a CSS entrance
+ * animation; clearing and rebuilding the log shifts the input and page layout.
  */
 function staticBootBlocks(): Block[] {
   const out: Block[] = BOOT_LINES.map((l) => ({ id: blockId++, kind: "out" as const, node: <Dim>{l}</Dim> }));
@@ -1154,9 +1151,7 @@ export function Terminal() {
     );
   }, [push]);
 
-  /* Boot once: theme, and (motion permitting) a typed replay of the static
-   * banner staticBootBlocks() already rendered. Reduced motion does nothing
-   * here on purpose — the initial state already IS this branch's output. */
+  /* Restore preferences without deleting the server-rendered output. */
   useEffect(() => {
     reduce.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const savedTheme = (() => {
@@ -1167,24 +1162,7 @@ export function Terminal() {
       }
     })();
     setTheme(savedTheme);
-
-    if (reduce.current) return;
-    setBlocks([]);
-    let i = 0;
-    const timers: number[] = [];
-    const step = () => {
-      if (i < BOOT_LINES.length) {
-        push("out", <Dim>{BOOT_LINES[i]}</Dim>);
-        i++;
-        timers.push(window.setTimeout(step, 260));
-      } else {
-        runBanner();
-      }
-    };
-    timers.push(window.setTimeout(step, 200));
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTheme]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });

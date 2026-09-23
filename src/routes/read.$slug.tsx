@@ -1,3 +1,4 @@
+import { profile } from "../data/profile/core.ts";
 import { Children, cloneElement, isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
@@ -107,6 +108,9 @@ const describesView = (v: ReadView): string | null =>
 // reintroduced defect. See that file's header.
 
 export const Route = createFileRoute("/read/$slug")({
+  // Reading data belongs to this route. An eager loader puts the entire prose
+  // corpus in the shared router entry, even for visitors opening the homepage.
+  codeSplitGroupings: [["loader"], ["component"], ["errorComponent"], ["notFoundComponent"]],
   loader: ({ params }): ReadView => {
     // archiveText is the older, printed set, so it resolves first — a slug
     // that somehow existed in both would always mean "this ran on paper."
@@ -125,6 +129,7 @@ export const Route = createFileRoute("/read/$slug")({
     // One call, two tags, so description and og:description cannot drift into
     // disagreeing about what this page is willing to say it ends with.
     const description = describesView(loaderData);
+    const url = `${profile.portfolio}/read/${encodeURIComponent(loaderData.slug)}`;
     return {
       meta: [
         { title: `${loaderData.title} — Siddharth Pandalai` },
@@ -136,7 +141,9 @@ export const Route = createFileRoute("/read/$slug")({
           : []),
         { property: "og:title", content: loaderData.title },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: ReadPiece,

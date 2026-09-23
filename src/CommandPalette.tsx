@@ -99,7 +99,7 @@ const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon:
   },
   work: { label: "Case studies", icon: <Compass size={15} /> },
   projects: { label: "Projects", icon: <Compass size={15} /> },
-  source: { label: "The Source — every public repo", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} /> },
+  source: { label: "Resources — projects, docs and demos", keywords: "github repos code open source kdocs api docs live builds showcase fdroid project directory", icon: <TerminalSquare size={15} /> },
   shipped: {
     label: "Apps you can install",
     keywords: "play store shipped published apps install listing rating white label",

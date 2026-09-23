@@ -1,6 +1,6 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { usePulse, usePulseCounts } from "./pulse.ts";
-import { PulseContext } from "./pulseUI.ts";
+import { PulseContext, type PulseUI } from "./pulseUI.ts";
 
 /**
  * Fills PulseContext with the real shared counter.
@@ -15,4 +15,12 @@ export default function LivePulse({ children }: { children: ReactNode }) {
   const bump = usePulse();
   const value = useMemo(() => ({ counts, bump }), [counts, bump]);
   return <PulseContext.Provider value={value}>{children}</PulseContext.Provider>;
+}
+
+/** Publishes shared state without replacing the route subtree with a provider. */
+export function PulseBridge({ publish }: { publish: (value: PulseUI) => void }) {
+  const counts = usePulseCounts();
+  const bump = usePulse();
+  useEffect(() => { publish({ counts, bump }); }, [counts, bump, publish]);
+  return null;
 }

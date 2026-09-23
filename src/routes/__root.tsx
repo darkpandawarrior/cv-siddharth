@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { surfaces } from "../data/surfaces.ts";
-import { profile } from "../data/profile.ts";
+import { profile, metrics } from "../data/profile.ts";
 import { PAGE_TITLE, PERSON_LD, PROFILEPAGE_LD } from "../lib/structuredData.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import { Launcher } from "../Launcher.tsx";
@@ -30,7 +30,7 @@ import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
-import { DeferredPlayRoom, DeferredLivePulse } from "../play/DeferredPlayRoom.tsx";
+import { DeferredGlobalPulse } from "../play/DeferredPlayRoom.tsx";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -41,22 +41,22 @@ export const Route = createRootRoute({
       // The title leads, then the numbers as prose. The figures stay written
       // out on purpose: this line is a ~155-character sentence under an SEO
       // budget, not a list of metrics joined with commas.
-      { name: "description", content: `${profile.title}. Owned the platform at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
+      { name: "description", content: `${profile.title}. Owned the platform at 50k MAU scale. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
       { name: "author", content: profile.name },
       { name: "theme-color", content: "#0b0f0d" },
       { name: "color-scheme", content: "dark" },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://cv-siddharth.vercel.app/" },
+      { property: "og:url", content: "https://siddharth-pandalai.vercel.app/" },
       { property: "og:site_name", content: "sid.android" },
       { property: "og:title", content: PAGE_TITLE },
-      { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 80% crash reduction, ~87% of UI-layer code in Compose at ~964k LOC." },
-      { property: "og:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
+      { property: "og:description", content: `Interactive CV with an AI assistant. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose at ~964k LOC.` },
+      { property: "og:image", content: "https://siddharth-pandalai.vercel.app/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: PAGE_TITLE },
       { name: "twitter:description", content: "Interactive CV with an AI assistant, 3D storyboard and an infinite blueprint canvas. Android · Kotlin · KMP." },
-      { name: "twitter:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
+      { name: "twitter:image", content: "https://siddharth-pandalai.vercel.app/og-image.png" },
     ],
     links: [
       // No hardcoded canonical here — see src/routes/index.tsx for why:
@@ -269,34 +269,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HashCompat />
         <RegisterServiceWorker />
         <TerminalHotkey />
-        {/* The room-entry pulse counter (rooms.tsx's useNextRoom) now bumps on
-            mount from every room, not only from inside /playground — so the
-            live counter it feeds needs to exist on every route, not only
-            there. Deferred (client-only, after hydration) for the same
-            reason Playground.tsx used to mount it locally: `@playhtml/react`
-            reads `document` on import, and this shell is the one thing every
-            route, including the server-rendered ones, renders through.
-
-            DeferredLivePulse calls `usePageData` (via pulse.ts), which is
-            `@playhtml/react`'s own hook and throws "No PlayProvider found"
-            without a `PlayProvider` ancestor — it does not degrade like our
-            own PulseContext default does. Wrapping it in DeferredPlayRoom
-            here is what supplies that ancestor on every route, not only the
-            handful (Playground, Weeb, Blueprint, /ink, /anthology,
-            /read/$slug) that already mount one locally for their own
-            presence/visitor features. Those local mounts still work exactly
-            as before — a nearer provider always wins for their own
-            descendants — this one exists only so LivePulse, sitting above
-            all of them at the shell level, has an ancestor of its own.
-            // ponytail: this opens a second websocket to the same
-            "cv-siddharth" room on the handful of routes that already mount
-            their own PlayProvider too. Collapsing to one shared provider
-            would mean touching those routes' own files, several of which
-            belong to other stacked lanes — worth doing in a pass that owns
-            all of them at once, not as a side effect of a pulse-counter fix. */}
-        <DeferredPlayRoom>
-          <DeferredLivePulse>{children}</DeferredLivePulse>
-        </DeferredPlayRoom>
+        {/* The client-only shared connection publishes into a stable context.
+            Loading the optional provider must never remount route content or
+            reset a selected project, platform tab, or in-progress form. */}
+        <DeferredGlobalPulse>{children}</DeferredGlobalPulse>
         {/* Mounted after the routed content (never blocks first paint) and
             outside <main id="main-content">, so the skip link still jumps
             straight past it to the page's own content. */}
@@ -362,7 +338,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             <h1>
               {profile.name} — {profile.title}
             </h1>
-            <p>Platform owner of a ~964k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
+            <p>Platform owner of a ~964k-LOC, ~87%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, {metrics[2].value} crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
             <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
             <ul>
               <li><a href="/llms.txt" style={{ color: "var(--color-signal)" }}>Profile summary (llms.txt)</a></li>

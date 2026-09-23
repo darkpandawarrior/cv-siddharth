@@ -1,3 +1,4 @@
+import { createArrivalStore } from "./arrivalStore.ts";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { usePageData, usePlayContext } from "@playhtml/react";
 import { Link } from "@tanstack/react-router";
@@ -89,8 +90,7 @@ const VisitContext = createContext<VisitState>({ visit: null, settled: false });
  * re-read localStorage would find the freshly written record and quietly
  * demote a brand-new visitor to a returning one, which is how the ceremony
  * went missing the first time this was wired up. A real page load resets it. */
-let arrival: MyVisit | null = null;
-let arrivalSettled = false;
+const arrivals = createArrivalStore<MyVisit>();
 
 /** This browser's own place in the count, and whether the answer is final. */
 export function useMyVisit(): VisitState {
@@ -111,7 +111,7 @@ export function useVisitorLedger(): VisitorLedger {
  */
 export function VisitorProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<VisitState>(() => {
-    if (arrivalSettled) return { visit: arrival, settled: true };
+    if (arrivals.snapshot.settled) return arrivals.snapshot;
     // A returning visitor's own record is here before the socket is, so their
     // number is on screen immediately and never has to appear to change.
     const record = typeof localStorage === "undefined" ? null : readVisitor(localStorage);
@@ -119,6 +119,7 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
   });
   // Stable so the counter's effect doesn't re-run on every parent render.
   const settle = useCallback((visit: MyVisit | null) => setState({ visit, settled: true }), []);
+  useEffect(() => arrivals.subscribe(settle), [settle]);
   return (
     <VisitContext.Provider value={state}>
       {/* Isolated on purpose: this is the only thing subscribed to the ledger
@@ -145,18 +146,19 @@ function VisitCounter({ onSettled }: { onSettled: (visit: MyVisit | null) => voi
   useEffect(() => {
     // Before sync the setter is a no-op, so acting early would spend this
     // browser's one arrival on a write that goes nowhere.
-    if (isLoading || arrivalSettled) return;
+    if (isLoading) return;
     // Either the room has arrived, or it has had long enough to. This effect
     // re-runs on every ledger change, so the moment it lands we proceed.
     if (totalVisitors(ledger) === 0 && !grace) return;
-    arrivalSettled = true;
+    if (!arrivals.claim()) return;
 
     const today = isoDay(new Date());
     const plan = planVisit(readVisitor(localStorage), today);
 
     if (!plan.countPerson && !plan.countDay) {
-      arrival = { record: plan.record, fresh: false };
-      onSettled(arrival);
+      const visit = { record: plan.record, fresh: false };
+      arrivals.settle(visit);
+      onSettled(visit);
       return;
     }
     // Claim first. A browser that cannot remember being counted must not be
@@ -167,6 +169,7 @@ function VisitCounter({ onSettled }: { onSettled: (visit: MyVisit | null) => voi
     if (!writeVisitor(localStorage, plan.record)) {
       // Counted nobody. Still settled: the plaque can stop waiting and talk
       // about the room instead of about you.
+      arrivals.settle(null);
       onSettled(null);
       return;
     }
@@ -197,8 +200,9 @@ function VisitCounter({ onSettled }: { onSettled: (visit: MyVisit | null) => voi
 
     const record = plan.countPerson ? withOrdinal(plan.record, counted) : plan.record;
     if (plan.countPerson) writeVisitor(localStorage, record);
-    arrival = { record, fresh: plan.countPerson };
-    onSettled(arrival);
+    const visit = { record, fresh: plan.countPerson };
+    arrivals.settle(visit);
+    onSettled(visit);
   }, [isLoading, grace, ledger, setLedger, onSettled]);
 
   return null;

@@ -39,7 +39,7 @@ export const Route = createFileRoute("/project/$slug")({
     // site-default OG image, which always exists.
     const og = p?.detail
       ? heavy(`/p/${params.slug}/og.png`)
-      : "https://cv-siddharth.vercel.app/og-image.png";
+      : "https://siddharth-pandalai.vercel.app/og-image.png";
     // Guard: an unknown slug (p undefined) still needs valid meta above, but
     // gets no JSON-LD at all — schema.org data must describe a real project,
     // not a placeholder.
@@ -53,10 +53,10 @@ export const Route = createFileRoute("/project/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
         { property: "og:image", content: og },
-        { property: "og:url", content: `https://cv-siddharth.vercel.app/project/${params.slug}` },
+        { property: "og:url", content: `https://siddharth-pandalai.vercel.app/project/${params.slug}` },
         { name: "twitter:image", content: og },
       ],
-      links: [{ rel: "canonical", href: `https://cv-siddharth.vercel.app/project/${params.slug}` }],
+      links: [{ rel: "canonical", href: `https://siddharth-pandalai.vercel.app/project/${params.slug}` }],
       scripts,
     };
   },

@@ -136,7 +136,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               phone, the number a recruiter most wants to tap was the one thing
               they could not. Spaces are stripped from the href (a `tel:` URI
               takes no whitespace) while the displayed text keeps them. */}
-          <address className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm not-italic text-zinc-600">
+          <address className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm not-italic text-zinc-600 [&_a]:min-h-6 [&_a]:inline-flex [&_a]:items-center print:gap-y-0.5 print:[&_a]:min-h-0">
             <a href={`tel:${profile.phone.replace(/\s+/g, "")}`} className="text-zinc-600">
               {profile.phone}
             </a>
@@ -241,13 +241,13 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             .filter(({ points }) => points.length > 0)
             .map(({ job, points }) => (
             <div key={job.company} className={jobGap}>
-              <div className="flex items-baseline justify-between gap-4 break-after-avoid">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 print:flex-row print:items-baseline print:justify-between break-after-avoid">
                 <h3 className="text-sm font-bold text-zinc-900">
                   <span className="font-display text-violet-700">{job.company}</span>
                   <span className="font-normal text-zinc-400"> | </span>
                   {job.role}
                 </h3>
-                <p className="shrink-0 text-xs text-zinc-500">
+                <p className="text-xs text-zinc-500 sm:shrink-0">
                   {job.period} | {job.location}
                 </p>
               </div>
@@ -422,7 +422,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                   {s.items.map((item, i) => (
                     <Fragment key={item}>
                       {i > 0 && ", "}
-                      <span className="whitespace-nowrap">{item}</span>
+                      <span className="sm:whitespace-nowrap print:whitespace-nowrap">{item}</span>
                     </Fragment>
                   ))}
                 </p>

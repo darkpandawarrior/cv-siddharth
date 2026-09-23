@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowUpRight, X, ChevronLeft, ChevronRight, Share2, Check } from "lucide-react";
-import { projects, type ProjectDetailData } from "./data/profile.ts";
+import { projects, sharedFoundation, type ProjectDetailData } from "./data/profile.ts";
 import { galleries } from "./data/galleries.ts";
 import { ScreenMarquee } from "./ScreenMarquee.tsx";
 import { PROJECT_ORDER } from "./data/connections.ts";
@@ -20,6 +20,8 @@ import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./lib/caseSpine.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
+import "./hero-studio.css";
+import { resourceRows } from "./data/resourceDirectory.ts";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 const FILM_PROJECTS = new Set(["doori", "gaddi", "paymentslab-kmp"]);
@@ -267,6 +269,8 @@ export function ProjectDetail({ slug }: { slug: string }) {
     ? heavy(`/projects/${slug}/screenshots/${project.detail.outcomeScreenshot}`)
     : undefined;
   const marqueeSrcs = excludeOutcomeScreenshot(items.map((i) => i.src), outcomeShot);
+  const previewIndex = Math.max(0, items.findIndex(item => item.src === outcomeShot));
+  const preview = items[previewIndex];
   const [idx, setIdx] = useState<number | null>(null);
   const root = useScrollReveal(slug);
   const railRef = useRef<HTMLDivElement>(null);
@@ -274,7 +278,6 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
   const scrollRail = (dir: number) =>
     railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
-  useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
   // Swap the browser-tab favicon to this project's brand icon while its page is
   // open; restore the site default on unmount (e.g. navigating back to #work).
@@ -341,6 +344,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
     );
   }
   const d = project.detail;
+  const resources = resourceRows().find(row => row.project.slug === slug)?.resources.filter(resource => resource.kind !== "case study" && resource.kind !== "showcase") ?? [];
+  const foundations = sharedFoundation.libs.filter(lib => lib.usedBy.includes(project.name));
+  const connected = projects.filter(other => other.slug !== slug && other.detail && foundations.some(lib => lib.usedBy.includes(other.name)));
+  const chapters = [
+    { id: `showcase-${slug}`, label: "Watch the story", visible: FILM_PROJECTS.has(slug) },
+    { id: "project-surfaces", label: "Explore the app", visible: Boolean(project.targets?.length) },
+    { id: "architecture", label: "Understand the system", visible: Boolean(d?.diagrams?.length) },
+    { id: "screens", label: "Inspect the screens", visible: items.length > 0 },
+    { id: "connections", label: "Follow the connections", visible: true },
+  ].filter(chapter => chapter.visible);
   const t = project.theme;
   const themeVars: Record<string, string> = {};
   if (t) {
@@ -368,7 +381,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
               actually shipped — three columns you can read in any order. It
               replaced a single stacked run of paragraphs, which made every
               project read like the same block of text at a glance. */}
-          <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.75fr)] lg:gap-12">
+          <div className="project-studio-heading mt-8 grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
             <div>
               <p className="rise-in text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
               {/* Shared-element morph target: the home projects-grid card title of
@@ -384,6 +397,15 @@ export function ProjectDetail({ slug }: { slug: string }) {
               <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
               <p className="rise-in rise-in-2 mt-4 text-lg text-accent">{project.tagline}</p>
             </div>
+            {preview ? (
+              <button type="button" className="project-studio-preview" onClick={() => setIdx(previewIndex)} aria-label={`Enlarge preview of ${project.name}`}>
+                <span className="project-studio-orbit" aria-hidden="true" />
+                <img src={preview.src} alt={preview.caption || `${project.name} application`} decoding="async" />
+                <span className="project-studio-preview-label">Enlarge preview</span>
+              </button>
+            ) : <div className="project-studio-monogram" aria-hidden="true">{project.name.slice(0, 2).toUpperCase()}</div>}
+          </div>
+          <div className="project-studio-brief mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
             <div className="rise-in rise-in-2">
               <p className="brief-label">The brief</p>
               <p className="mt-3 leading-relaxed text-zinc-300">{d?.overview ?? project.description}</p>
@@ -475,6 +497,12 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <ScreenMarquee screens={marqueeSrcs} alt={`Screens from ${project.name}`} />
       )}
 
+      <nav className="project-chapters" aria-label="Explore this project">
+        <div>{chapters.map((chapter, index) => <a key={chapter.id} href={`#${chapter.id}`}>
+          <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>{chapter.label}
+        </a>)}</div>
+      </nav>
+
       {/* The 30-second version: problem, decision, result — before the full
           "How it works" grid further down. */}
       {d && (
@@ -490,9 +518,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {FILM_PROJECTS.has(slug) && (
         <section id={`showcase-${slug}`} className="border-b border-line bg-surface">
           <div className="section-y mx-auto max-w-4xl px-6">
-            <SectionHeader eyebrow="guided tour" title="Two minutes, narrated" />
+            <SectionHeader eyebrow="guided tour" title="The product, narrated" />
             <p className="reveal -mt-4 mb-8 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              A storyboarded walkthrough of the real app — tap the speaker for the voiceover, or read along with the captions.
+              A recorded walkthrough of the app with sample content. Tap the speaker for the voiceover, or read the captions. In-app figures describe the recorded demo, not live production activity.
             </p>
             <div className="reveal">
               <ShowcaseFilm slug={slug} title={project.name} />
@@ -558,11 +586,11 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Multiplatform device-wall — "one codebase, N surfaces", the thesis */}
       {project.targets && project.targets.length > 0 && (
-        <section className="section-y border-b border-line">
+        <section id="project-surfaces" className="section-y border-b border-line">
           <div className="mx-auto max-w-4xl px-6">
             <SectionHeader eyebrow="multiplatform" title="One codebase, every surface" />
             <p className="reveal -mt-4 mb-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              The real screens (and, where it's live, the running build) per platform — not a mockup.
+              Recorded app screens and, where available, the running build. Sample content inside a screen is separate from the source-linked project metrics.
             </p>
             {/* Read from the running build's own manifest, not typed here — see
                 src/lib/appManifest.ts. Shown once at the project level because
@@ -640,7 +668,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Architecture diagrams (Mermaid) */}
       {d?.diagrams && d.diagrams.length > 0 && (
-        <section className="border-t border-line">
+        <section id="architecture" className="border-t border-line">
           <div className="section-y mx-auto max-w-5xl px-6">
             <SectionHeader eyebrow="architecture" title="How it's built" />
             <div className="grid gap-6 lg:grid-cols-2">
@@ -684,7 +712,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
 
       {/* Gallery — horizontal carousel (space-saving), hover glow, navigable lightbox */}
       {items.length > 0 && (
-        <section className="border-t border-line">
+        <section id="screens" className="border-t border-line">
           <div className="section-y mx-auto max-w-6xl px-6">
             <div className="mb-8 flex items-center justify-between gap-4">
               <div>
@@ -776,6 +804,26 @@ export function ProjectDetail({ slug }: { slug: string }) {
           </div>
         </section>
       )}
+
+      <section id="connections" className="project-connections border-t border-line">
+        <div className="section-y mx-auto max-w-5xl px-6">
+          <p className="kicker-accent">Follow the connections</p>
+          <h2 className="font-display mt-2 text-h2 font-bold">From this build, go deeper.</h2>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {resources.map(resource => <a key={resource.url} href={resource.url} target={resource.url.startsWith("https://") ? "_blank" : undefined} rel={resource.url.startsWith("https://") ? "noreferrer" : undefined} className="project-resource-link">
+              <span className="block text-xs text-muted">{resource.kind}</span><span>{resource.label} ↗</span>
+            </a>)}
+            <Link to="/map" className="project-resource-link"><span className="block text-xs text-muted">Spatial overview</span><span>Explore the connected map ↗</span></Link>
+          </div>
+          {foundations.length > 0 && <div className="mt-8 border-t border-line pt-6">
+            <h3 className="font-display text-lg font-semibold">Shared foundations</h3>
+            <p className="mt-2 text-sm text-zinc-400">This project uses {foundations.map(lib => lib.name).join(" and ")}. Follow the same foundations into another build.</p>
+            <div className="mt-4 flex flex-wrap gap-3">{connected.map(other => <Link key={other.slug} to="/project/$slug" params={{ slug: other.slug }} className="project-resource-link"><span className="block text-xs text-muted">Shared Kotlin foundation</span><span>{other.name} →</span></Link>)}
+              <Link to="/project/$slug" params={{ slug: "kmp-family" }} className="project-resource-link"><span className="block text-xs text-muted">Platform libraries</span><span>Explore the foundation →</span></Link>
+            </div>
+          </div>}
+        </div>
+      </section>
 
       {/* Keep the journey moving: next build in the loop + ways back. */}
       <NextProject slug={slug} />

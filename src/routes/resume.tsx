@@ -26,12 +26,12 @@ export const Route = createFileRoute("/resume")({
       meta: [
         { title: `Résumé — ${profile.name} | ${profile.title}` },
         { name: "description", content: desc },
-        { property: "og:url", content: "https://cv-siddharth.vercel.app/resume" },
+        { property: "og:url", content: "https://siddharth-pandalai.vercel.app/resume" },
         { property: "og:description", content: desc },
         { property: "og:image", content: heavy("/p/resume/og.png") },
         { name: "twitter:image", content: heavy("/p/resume/og.png") },
       ],
-      links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
+      links: [{ rel: "canonical", href: "https://siddharth-pandalai.vercel.app/resume" }],
       // Résumé-specific Person schema, derived from the same profile/experience
       // data the page itself renders from — unlike __root.tsx's PERSON_LD this
       // can't drift from what /resume actually says.
