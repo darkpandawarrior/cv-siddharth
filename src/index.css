@@ -97,6 +97,19 @@
      themeable, and counted. If a second component ever wants it, that is the
      moment it earns a real token name. */
   --lab-gold: #e8c874;
+
+  /* Evidence Atlas state tokens — aliases onto the existing three-colour
+     system, not a fourth tint. OpsBoard's STATE_COLOR and EvidenceChip both
+     read these, so a state's colour is set in exactly one place. */
+  --state-ok: var(--color-signal);
+  --state-degraded: var(--color-accent);
+  --state-broken: var(--color-danger);
+
+  /* The two stroke weights the brand system allows. 1px for a hairline
+     divider or an idle border, 1.5px for a rule that carries meaning
+     (a legend key, an active outline). No third weight. */
+  --stroke-hair: 1px;
+  --stroke-rule: 1.5px;
 }
 
 html {
@@ -4258,4 +4271,43 @@ a.ops-verified:hover { color: var(--color-accent); }
      is what makes that a guarantee rather than a promise. */
   .ops-cadence[data-arrive] .ops-cadence__bar { transform: none; }
   .ops-cadence[data-arrive="run"] .ops-cadence__bar { animation: none; transform: none; }
+}
+
+/* ── EvidenceChip + tagline utilities (design-system lane) ────────────────
+   .chip-evidence: the one badge shape every "as of <date>" claim on the site
+   uses, from the homepage metrics row to a data room's header. Muted and
+   near-invisible when the source is fresh; the state dot is the only thing
+   that changes, and it is painted by EvidenceChip via an inline custom
+   property so this class stays state-agnostic. */
+.chip-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.chip-evidence:hover,
+.chip-evidence:focus-visible {
+  color: var(--color-text);
+}
+.chip-evidence__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--chip-dot-color, transparent);
+}
+
+/* .tagline-wrap: RoomFrame's tagline used to truncate with an ellipsis at
+   390px, which hid the second clause of a two-clause sentence entirely. Two
+   full lines, wrapped, beats one line cut off. */
+.tagline-wrap {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
