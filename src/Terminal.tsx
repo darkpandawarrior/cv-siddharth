@@ -23,7 +23,6 @@ import { writing } from "./data/writing.ts";
 import { RELATED_SERIES } from "./data/connections.ts";
 import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
-import { STATS_KEY } from "./lib/projectStatLine.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { chatErrorText, isAbortError, streamReply } from "./lib/chatClient.ts";
@@ -326,7 +325,7 @@ function buildCommands(jump: Go): Cmd[] {
       run: () => (
         <div className="space-y-2">
           {projects.map((p) => {
-            const st = projectStats[(STATS_KEY[p.slug] ?? p.slug) as keyof typeof projectStats] as { modules?: number } | undefined;
+            const st = projectStats[p.slug as keyof typeof projectStats] as { modules?: number } | undefined;
             return (
               <div key={p.slug}>
                 <button

@@ -7,7 +7,7 @@ export const projectStats = {
     "providerModules": 20,
     "conventionPlugins": 18
   },
-  "mileway": {
+  "doori": {
     "modules": 36,
     "composedModules": 13,
     "features": 13,
@@ -15,7 +15,7 @@ export const projectStats = {
     "dbVersion": 48,
     "screenshots": 372
   },
-  "paymentslab": {
+  "paymentslab-kmp": {
     "modules": 17,
     "composedModules": 29,
     "providers": 0,
@@ -28,8 +28,9 @@ export const projectStats = {
     "gatewaysStub": 3,
     "screenshots": 26
   },
-  "kursi": {
+  "gaddi": {
     "modules": 15,
     "screenshots": 61
   }
 } as const;
+export const projectStatsGeneratedAt = "2026-09-23";
