@@ -18,6 +18,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Compare sets moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts. They are
 // full-page before/after screenshots, the single heaviest thing the site shipped same-origin.
 const projectsDir = join(root, "heavy", "projects");
+if (!existsSync(projectsDir)) {
+  if (!existsSync(join(root, "src", "data", "compareSets.ts"))) {
+    throw new Error("[gen-compare-sets] Missing source media and committed registry");
+  }
+  console.log("[gen-compare-sets] Source media absent; retaining committed registry for hosted assets.");
+  process.exit(0);
+}
 
 // Mirrors gen-galleries.mjs: a .webp/.avif beside a same-basename raster is a gen-images.mjs
 // derivative, not a version to compare against.

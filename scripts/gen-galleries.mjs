@@ -10,6 +10,13 @@ import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Screenshots moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts.
 const projectsDir = join(root, "heavy", "projects");
+if (!existsSync(projectsDir)) {
+  if (!existsSync(join(root, "src", "data", "galleries.ts"))) {
+    throw new Error("[gen-galleries] Missing source media and committed registry");
+  }
+  console.log("[gen-galleries] Source media absent; retaining committed registry for hosted assets.");
+  process.exit(0);
+}
 const out = {};
 
 // A .webp/.avif next to a same-basename .png/.jpg/.jpeg is a derivative made
