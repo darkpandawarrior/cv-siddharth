@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { projects } from "./profile.ts";
 import { projectStats } from "./projectStats.ts";
-import { repoStatLine, STATS_KEY } from "../lib/projectStatLine.ts";
+import { repoStatLine } from "../lib/projectStatLine.ts";
 
 /**
  * A project card prints TWO module counts: the hand-written `status` string
@@ -26,7 +26,7 @@ describe("hand-written status agrees with the generated repo stats", () => {
     return m ? Number(m[1]) : null;
   };
 
-  const covered = projects.filter((p) => (STATS_KEY[p.slug] ?? p.slug) in projectStats);
+  const covered = projects.filter((p) => p.slug in projectStats);
 
   it("finds the projects the stats generator covers", () => {
     expect(covered.length).toBeGreaterThanOrEqual(3);

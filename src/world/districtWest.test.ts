@@ -85,6 +85,18 @@ describe("project towers", () => {
     }
   });
 
+  it("reads the current-slug projectStats: doori 36, gaddi 15, paymentslab-kmp 17 modules", () => {
+    // Pinned to gen-project-stats.mjs's real output, not re-derived here —
+    // a silent fallback to the 8-module default (stats[p.slug] missing) is
+    // exactly the regression this guards, since districtWest.ts reads
+    // projectStats directly by the project's own slug with no translation.
+    const expected: Record<string, number> = { doori: 36, gaddi: 15, "paymentslab-kmp": 17 };
+    for (const [slug, modules] of Object.entries(expected)) {
+      const tower = projectTowers().find((t) => t.slug === slug)!;
+      expect(tower.modules, slug).toBe(modules);
+    }
+  });
+
   it("heights are modules * 0.55, widths are 1.1 + min(1.6, screenshots/60)", () => {
     for (const t of projectTowers()) {
       expect(t.height).toBeCloseTo(t.modules * 0.55, 5);

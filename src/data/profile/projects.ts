@@ -113,6 +113,15 @@ export interface Project {
    * is every project; the full record writes up all of them.
    */
   tier?: 1 | 2;
+  /** Marks the hero device switcher's shortlist on the homepage — the
+   *  registry is the one place this is decided, so HERO_PROJECTS in App.tsx
+   *  and SHOWCASE in resourceDirectory.ts both derive from it instead of
+   *  carrying their own hand-picked slug lists. */
+  showcase?: boolean;
+  /** The screenshot the hero device switcher shows for this project (a
+   *  `heavy()`-resolved URL — see App.tsx's HERO_SHOTS). Required whenever
+   *  `showcase` is true. */
+  heroShot?: string;
 }
 
 /* Re-exported so the résumé and the repo showcase keep reading upstream facts
@@ -196,6 +205,8 @@ export const projects: Project[] = [
       displayFont: "'Rozha One', Georgia, serif",
     },
     icon: "/projects/gaddi/brand/gaddi-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/gaddi/screenshots/home_phone.webp"),
     targets: [
       {
         platform: "Android",
@@ -404,6 +415,8 @@ export const projects: Project[] = [
       line: "#1c2733",
     },
     icon: "/projects/doori/brand/doori-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"),
     targets: [
       {
         platform: "Android",
@@ -657,6 +670,8 @@ export const projects: Project[] = [
       line: "#3F2B66",
     },
     icon: "/projects/paymentslab-kmp/brand/paymentslab-kmp-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/paymentslab-kmp/screenshots/ios_catalog.png"),
     targets: [
       {
         platform: "Android",
@@ -814,7 +829,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      `24 merged PRs to the public career-ops project (⭐${upstreamStars}): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
+      `24 merged PRs to the public career-ops project (${upstreamStars} stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -824,7 +839,7 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/career-ops-hq/career-ops" },
+      { label: `Upstream (career-ops, ${upstreamStars} stars)`, url: "https://github.com/career-ops-hq/career-ops" },
     ],
     status: "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
@@ -847,7 +862,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
+        `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (${upstreamStars} stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
       problem:
         "career-ops's scoring engine lived in a single Node.js process. Proving the same logic could run identically on a phone, in a browser tab and on a server meant more than porting the syntax: it meant the scoring could not quietly drift from the original the moment it moved.",
       decision:
@@ -891,7 +906,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "24 merged pull requests against the public career-ops repository (⭐" + upstreamStars + ", independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "24 merged pull requests against the public career-ops repository (" + upstreamStars + " stars, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [

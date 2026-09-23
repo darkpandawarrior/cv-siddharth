@@ -61,21 +61,25 @@ async function build() {
       providerModules: count(toolkitSettings, /^include\(":provider:/gm),
       conventionPlugins: count(conventionBuild, /^\s*id\s*=\s*"shared\./gm),
     },
-    mileway: {
+    // Keyed by the site's own current slugs (renamed 2026-09-05) — see
+    // projectStatLine.ts for the one thing left keyed by the old app names
+    // (this file's own repo URLs, which are real GitHub repo names, not
+    // site slugs).
+    doori: {
       modules: count(mSettings, /^include\(/gm),
-      // The kmp-toolkit modules Mileway composes in through `includeBuild` +
+      // The kmp-toolkit modules Doori composes in through `includeBuild` +
       // `dependencySubstitution`. They are part of the built app but are NOT
       // `include(` lines, so counting only local includes reported 36 against
       // an audited claim of 46 (claims.json: "36 local includes + 10 composed
-      // from kmp-toolkit") — and the Mileway card printed both numbers, 30px
-      // apart. Same measurable definition paymentslab already used.
+      // from kmp-toolkit") — and the Doori card printed both numbers, 30px
+      // apart. Same measurable definition paymentslab-kmp already used.
       composedModules: count(mSettings, /substitute\(module\(/gm),
       features: count(mSettings, /^include\(":feature:/gm),
       cores: count(mSettings, /^include\(":core:/gm),
       dbVersion: Number(dbMatch[1]),
       screenshots: await pngCount(mRepo, "main", "docs/screenshots"),
     },
-    paymentslab: {
+    "paymentslab-kmp": {
       modules: count(pSettings, /^include\(/gm),
       composedModules: Number(pReadme.match(/(\d+)\s*composed/i)?.[1] ?? 0),
       providers: count(pSettings, /^include\(":provider:/gm),
@@ -90,7 +94,7 @@ async function build() {
       gatewaysStub: Number(pReadme.match(/(\d+) catalog-only\/KYC-gated entries/i)?.[1] ?? 0),
       screenshots: await pngCount(pRepo, "main", "docs/screenshots"),
     },
-    kursi: {
+    gaddi: {
       modules: count(kSettings, /^include\(/gm),
       screenshots: await pngCount(kRepo, "main", "docs/screenshots"),
     },
@@ -105,8 +109,14 @@ const banner =
 try {
   const stats = await build();
   // Sanity guard: a parse that silently returns 0 modules is a bad fetch, not real.
-  if (!stats.mileway.modules || !stats.paymentslab.modules || !stats.kursi.modules || !stats.foundation.modules || !stats.foundation.conventionPlugins) throw new Error("parsed 0 modules — refusing to overwrite");
-  writeFileSync(outFile, banner + `export const projectStats = ${JSON.stringify(stats, null, 2)} as const;\n`);
+  if (!stats.doori.modules || !stats["paymentslab-kmp"].modules || !stats.gaddi.modules || !stats.foundation.modules || !stats.foundation.conventionPlugins) throw new Error("parsed 0 modules — refusing to overwrite");
+  const generatedAt = new Date().toISOString().slice(0, 10);
+  writeFileSync(
+    outFile,
+    banner +
+      `export const projectStats = ${JSON.stringify(stats, null, 2)} as const;\n` +
+      `export const projectStatsGeneratedAt = "${generatedAt}";\n`,
+  );
   console.log("[gen-project-stats]", JSON.stringify(stats));
 } catch (err) {
   if (existsSync(outFile)) {

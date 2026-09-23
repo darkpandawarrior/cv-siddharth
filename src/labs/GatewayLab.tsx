@@ -12,7 +12,7 @@ import { Figure } from "./Figure.tsx";
    times, and the copy below drifted away from the chart above it. Only the
    colours are local: those are presentation, not a claim. */
 
-const P = projectStats.paymentslab;
+const P = projectStats["paymentslab-kmp"];
 const CATEGORIES = [
   { id: "native-SDK", count: P.gatewaysNative, color: "#C4B5FD" },
   { id: "hosted-webview", count: P.gatewaysHosted, color: "#A78BFA" },

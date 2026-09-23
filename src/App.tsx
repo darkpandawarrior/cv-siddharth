@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 import {profile, metrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
-import { projectStats } from "./data/projectStats.ts";
+import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
 import { Phone3D } from "./Phone3D.tsx";
-import { heavy } from "./lib/assetBase.ts";
 import "./hero-studio.css";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
@@ -350,18 +350,17 @@ function Nav() {
   );
 }
 
-const HERO_SHOTS = {
-  doori: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"),
-  gaddi: heavy("/projects/gaddi/screenshots/home_phone.webp"),
-  "paymentslab-kmp": heavy("/projects/paymentslab-kmp/screenshots/ios_catalog.png"),
-} as const;
-
-const HERO_PROJECTS = (Object.keys(HERO_SHOTS) as (keyof typeof HERO_SHOTS)[])
-  .map((slug) => projects.find((project) => project.slug === slug)!);
+// The hero device switcher's shortlist — read from the registry's own
+// `showcase` flag (projects.ts) rather than a second, hand-picked slug list
+// here. A project earns a slot in the registry, not in App.tsx.
+const HERO_PROJECTS = projects.filter((p) => p.showcase && p.heroShot);
+const HERO_SHOTS: Record<string, string> = Object.fromEntries(
+  HERO_PROJECTS.map((p) => [p.slug, p.heroShot!]),
+);
 
 function Hero() {
   const { goToSection } = useSectionNav();
-  const [selectedSlug, setSelectedSlug] = useState<keyof typeof HERO_SHOTS>("doori");
+  const [selectedSlug, setSelectedSlug] = useState<string>(HERO_PROJECTS[0]?.slug ?? "doori");
   const selectedProject = HERO_PROJECTS.find((project) => project.slug === selectedSlug)!;
   return (
     <section id="top" className="hero-studio section-y relative mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(390px,0.88fr)]">
@@ -421,7 +420,7 @@ function Hero() {
         <LiveTicker />
       </div>
       <div className="hero-studio-stage">
-        <div className="hero-studio-meta" aria-hidden="true"><span>SID / MOBILE ENGINEERING</span><span>0{HERO_PROJECTS.indexOf(selectedProject) + 1} / 03</span></div>
+        <div className="hero-studio-meta" aria-hidden="true"><span>SID / MOBILE ENGINEERING</span><span>0{HERO_PROJECTS.indexOf(selectedProject) + 1} / 0{HERO_PROJECTS.length}</span></div>
         <div className="hero-studio-object"><span className="hero-studio-watermark" aria-hidden="true">BUILD.</span><Phone3D key={selectedSlug} shot={{ src: HERO_SHOTS[selectedSlug], label: selectedProject.name }} /><span className="hero-studio-caption" aria-hidden="true">REAL PRODUCTS · SHARED FOUNDATIONS</span></div>
         <div className="hero-studio-dossier" aria-live="polite">
           <div>
@@ -436,7 +435,7 @@ function Hero() {
         <div className="hero-studio-selector" role="group" aria-label="Choose a project to preview">
           {HERO_PROJECTS.map((project, index) => (
             <button key={project.slug} type="button" aria-pressed={project.slug === selectedSlug}
-              onClick={() => setSelectedSlug(project.slug as keyof typeof HERO_SHOTS)}>
+              onClick={() => setSelectedSlug(project.slug)}>
               <span className="hero-studio-index">0{index + 1}</span><span>{project.name}</span>
             </button>
           ))}
@@ -773,8 +772,17 @@ function Projects() {
                   </div>
                   <p className="mt-3 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
-                    <p className="mt-2 font-mono text-[11px] text-muted">
-                      <span className="text-accent2">◇</span> {statLine}
+                    <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-muted">
+                      <span><span className="text-accent2">◇</span> {statLine}</span>
+                      {p.slug in projectStats && (
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <EvidenceChip
+                            file="projectStats.ts"
+                            stamp={projectStatsGeneratedAt}
+                            source="repo settings.gradle.kts + README"
+                          />
+                        </span>
+                      )}
                     </p>
                   )}
                   {platforms.length > 0 && (
@@ -975,7 +983,7 @@ function ExperienceSection() {
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
     { label: "~87% UI-layer Compose migration", href: "#work" },
-    { label: `Doori · ${projectStats.mileway.modules} modules`, href: "#project/doori" },
+    { label: `Doori · ${projectStats.doori.modules} modules`, href: "#project/doori" },
   ],
   "Concurrency & Data": [
     { label: "-80% crashes", href: "#work" },

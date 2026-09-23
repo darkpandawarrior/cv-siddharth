@@ -17,6 +17,16 @@ describe("artifacts are built from real data", () => {
   it("has unique ids", () => {
     expect(new Set(ARTIFACTS.map((a) => a.id)).size).toBe(ARTIFACTS.length);
   });
+
+  it("never labels a pickup with a pre-rename project name", () => {
+    // stat-mileway / stat-paymentslab / stat-kursi died the moment
+    // projectStats.ts's keys moved to the site's current slugs — this pins
+    // that the pickup toast can never regress to showing them again.
+    const oldName = /mileway|kursi|paymentslab(?!-kmp)/i;
+    for (const a of ARTIFACTS) {
+      expect(a.label, a.id).not.toMatch(oldName);
+    }
+  });
 });
 
 describe("every artifact is somewhere the craft can legally be", () => {
