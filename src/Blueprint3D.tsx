@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { Mesh } from "three";
 import type { Line2, LineSegments2, OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { ARROWS, COLOR_HEX, FRAMES, METRICS, NODES, NOTES, PINS, TOUR, centerOf, type NodeSpec } from "./blueprintData.ts";
-import { CountUp, ShapeBoundary, hasWebGL } from "./blueprintShared.tsx";
+import { ShapeBoundary, hasWebGL } from "./blueprintShared.tsx";
 import { HoloCore } from "./blueprintHologram.tsx";
 import { AsciiEffect } from "./asciiEffect.ts";
 import { readToken } from "./themeColor";
@@ -355,7 +355,7 @@ function MetricTile({ m, ascii, reducedMotion }: { m: (typeof METRICS)[number]; 
           }}
         >
           <div style={{ fontSize: 24, fontWeight: 700, color: terminalGreen(), lineHeight: 1.1 }}>
-            <CountUp value={m.value} />
+            {m.value}
           </div>
           <div style={{ fontSize: 10, color: ascii ? "color-mix(in srgb, var(--color-signal) 60%, transparent)" : "rgba(232,239,233,0.6)", marginTop: 4 }}>{m.label}</div>
         </div>
@@ -487,13 +487,12 @@ function Scene({
   // re-render — see the note on the hoisted constants above.
   const asciiGlitchDelay = useMemo(() => (legend ? new THREE.Vector2(0.6, 1.5) : new THREE.Vector2(4, 10)), [legend]);
   const asciiGlitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.3, 0.5) : new THREE.Vector2(0.1, 0.25)), [legend]);
-  const glitchDelay = useMemo(() => (legend ? new THREE.Vector2(0.6, 1.5) : new THREE.Vector2(6, 14)), [legend]);
   const glitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.15, 0.3) : new THREE.Vector2(0.05, 0.15)), [legend]);
   return (
     <>
       <color attach="background" args={[readToken("--color-void", "#060807")]} />
       <fog attach="fog" args={[readToken("--color-void", "#060807"), 22, 58]} />
-      <ambientLight intensity={0.5} />
+      <hemisphereLight args={["#e4f3ea", "#17251f", 1.25]} />
       <pointLight position={[8, 8, 12]} intensity={22} color={readToken("--color-signal", "#3ddc84")} />
       <pointLight position={[-8, -4, 8]} intensity={16} color={readToken("--color-probe", "#5ee6ff")} />
       {/* Procedural env (not a fetched HDRI — a portfolio shouldn't depend on a
@@ -606,28 +605,23 @@ function Scene({
             blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
           />
         </EffectComposer>
-      ) : (
-        // Bloom does the heavy lifting for the glow look. The rest are kept
-        // deliberately subtle — ChromaticAberration/Scanline read as "blueprint
-        // schematic on an old CRT" texture rather than a filter slapped on top,
-        // and Glitch fires rarely (SPORADIC mode, long random delay) so it reads
-        // as an occasional signal hiccup, not a constant distraction.
+      ) : legend ? (
+        // Keep the default tour readable. The optional legend mode owns CRT effects.
         <EffectComposer multisampling={0}>
-          <RipplePass />
           <Bloom mipmapBlur luminanceThreshold={0.5} luminanceSmoothing={0.2} intensity={legend ? 0.6 : 0.4} radius={0.15} />
           <ChromaticAberration offset={CHROMATIC_OFFSET} radialModulation={true} modulationOffset={0.4} />
           <Scanline blendFunction={BlendFunction.OVERLAY} density={1.3} />
           <Glitch
             mode={GlitchMode.SPORADIC}
-            delay={glitchDelay}
+            delay={asciiGlitchDelay}
             duration={GLITCH_DURATION}
             strength={glitchStrength}
             chromaticAberrationOffset={GLITCH_CHROMATIC_OFFSET}
             blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
           />
-          <Vignette eskil={false} offset={0.2} darkness={0.6} />
+          <Vignette eskil={false} offset={0.2} darkness={0.25} />
         </EffectComposer>
-      )}
+      ) : null}
     </>
   );
 }

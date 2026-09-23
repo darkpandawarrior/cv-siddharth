@@ -1,3 +1,4 @@
+import { SceneActivity } from "../SceneActivity.tsx";
 import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Billboard, Line, OrbitControls, Text } from "@react-three/drei";
@@ -192,6 +193,7 @@ export default function ChessArcScene({
   handoffLabel: string;
 }) {
   const { planes, years, zSpan, handoffX } = useModel(corpus, handoffAt);
+  const reduced = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
 
   return (
     <Canvas
@@ -202,10 +204,12 @@ export default function ChessArcScene({
       role="img"
       aria-label="3D rating arc across lichess and chess.com over seven years — drag to orbit"
     >
+      <SceneActivity />
       <ambientLight intensity={0.6} />
       <pointLight position={[6, 6, 8]} intensity={40} color={readToken("--color-probe", "#5ee6ff")} />
       <OrbitControls
-        autoRotate
+        autoRotate={!reduced}
+        enableDamping={!reduced}
         autoRotateSpeed={0.3}
         enablePan={false}
         minDistance={7}

@@ -1,8 +1,9 @@
+import { SceneActivity } from "./SceneActivity.tsx";
 import { useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Line, Html } from "@react-three/drei";
+import { Line, Html, OrbitControls } from "@react-three/drei";
 import { MathUtils, Vector3 } from "three";
-import type { Group, Mesh } from "three";
+import type { Mesh } from "three";
 import { EDGES, NODES, type StoryNode } from "./StoryMap.tsx";
 import { readToken } from "./themeColor";
 
@@ -32,8 +33,8 @@ const DEPTH: Record<string, number> = {
 };
 
 const pos3 = (n: StoryNode): [number, number, number] => [
-  (n.x - 0.5) * 7.2,
-  (0.5 - n.y) * 3.6,
+  (n.x - 0.5) * 11,
+  (0.5 - n.y) * 5.8,
   DEPTH[n.id] ?? 0,
 ];
 
@@ -55,7 +56,7 @@ function Star({
   const mesh = useRef<Mesh>(null);
   const base = useMemo(() => pos3(node), [node]);
   const seed = useMemo(() => node.x * 11 + node.y * 5, [node]);
-  const r = node.r / 55; // 2D pixel radius → world units
+  const r = node.r / 150; // 2D pixel radius → world units
 
   useFrame(({ clock }, delta) => {
     const m = mesh.current;
@@ -72,15 +73,17 @@ function Star({
       onPointerOut={() => { onHover(null); document.body.style.cursor = "default"; }}
       onClick={(e) => { e.stopPropagation(); document.body.style.cursor = "default"; onNavigate(node.target); }}
     >
-      <sphereGeometry args={[Math.max(r, 0.16), 24, 24]} />
+      <sphereGeometry args={[Math.max(r, 0.08), 24, 24]} />
       <meshStandardMaterial
         color={node.color}
         emissive={node.color}
-        emissiveIntensity={active ? 2.4 : 1}
+        emissiveIntensity={active ? .75 : .12}
+        metalness={.4}
+        roughness={.28}
         transparent
         opacity={dim ? 0.22 : 1}
       />
-      <Html center distanceFactor={7.5} position={[0, -(Math.max(r, 0.16) + 0.26), 0]} style={{ pointerEvents: "none" }}>
+      <Html center position={[0, -(Math.max(r, 0.08) + 0.26), 0]} style={{ pointerEvents: "none" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -95,7 +98,7 @@ function Star({
           }}
         >
           {node.label}
-          {node.sub && (active || node.id === "sid") && (
+          {node.sub && active && (
             <span style={{ color: `${node.color}cc`, marginLeft: 6, fontSize: "9.5px" }}>{node.sub}</span>
           )}
         </span>
@@ -126,9 +129,7 @@ function Pulse({ a, b, offset, lit }: { a: [number, number, number]; b: [number,
 }
 
 function Constellation({ onNavigate }: { onNavigate: (target: string) => void }) {
-  const group = useRef<Group>(null);
   const [hover, setHover] = useState<string | null>(null);
-  const drag = useRef({ on: false, x: 0, vel: 0 });
 
   const neighbourhood = useMemo(() => {
     if (!hover) return null;
@@ -140,26 +141,8 @@ function Constellation({ onNavigate }: { onNavigate: (target: string) => void })
     return set;
   }, [hover]);
 
-  useFrame((_, delta) => {
-    const g = group.current;
-    if (!g) return;
-    drag.current.vel = MathUtils.damp(drag.current.vel, 0, 2, delta);
-    g.rotation.y += delta * (hover ? 0.015 : 0.07) + drag.current.vel;
-    g.rotation.y = MathUtils.clamp(g.rotation.y, -0.55, 0.55);
-  });
-
   return (
-    <group
-      ref={group}
-      onPointerDown={(e) => { drag.current.on = true; drag.current.x = e.clientX; }}
-      onPointerUp={() => { drag.current.on = false; }}
-      onPointerLeave={() => { drag.current.on = false; }}
-      onPointerMove={(e) => {
-        if (!drag.current.on) return;
-        drag.current.vel = (e.clientX - drag.current.x) * 0.0004;
-        drag.current.x = e.clientX;
-      }}
-    >
+    <group>
       {EDGES.map(([a, b], i) => {
         const lit = !!(neighbourhood?.has(a) && neighbourhood?.has(b));
         return (
@@ -193,7 +176,7 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
   return (
     <Canvas
       dpr={[1, 1.5]}
-      camera={{ position: [0, 0, 5.4], fov: 46 }}
+      camera={{ position: [0, 0, 6.8], fov: 46 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
       style={{ position: "absolute", inset: 0 }}
       // Decorative, same as its 2D twin (StoryMapCanvas, aria-hidden below
@@ -202,7 +185,10 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
       // than duplicating a name for the same links.
       aria-hidden
     >
-      <ambientLight intensity={0.55} />
+      <SceneActivity />
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
+      <hemisphereLight args={["#e2f4ed", "#18251f", 1.5]} />
+      <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 3, 4]} intensity={9} color={readToken("--color-probe", "#5ee6ff")} />
       <pointLight position={[-4, -2, 3]} intensity={9} color={readToken("--color-signal", "#3ddc84")} />
       <Constellation onNavigate={onNavigate} />

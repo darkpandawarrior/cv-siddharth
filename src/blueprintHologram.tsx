@@ -58,10 +58,10 @@ export function HoloCore() {
   const fresnelMaterial = useFresnelShellMaterial("#5ee6ff");
   useFrame((_, delta) => {
     if (knot.current) {
-      knot.current.rotation.x += delta * 0.5;
-      knot.current.rotation.y += delta * 0.7;
+      knot.current.rotation.x += delta * 0.15;
+      knot.current.rotation.y += delta * 0.2;
     }
-    if (shell.current) shell.current.rotation.y -= delta * 0.25;
+    if (shell.current) shell.current.rotation.y -= delta * 0.08;
     fresnelMaterial.uniforms.uTime.value += delta;
   });
   return (
@@ -74,7 +74,7 @@ export function HoloCore() {
         <meshStandardMaterial color="#0b0f0d" emissive={readToken("--color-signal", "#3ddc84")} emissiveIntensity={0.32} metalness={0.8} roughness={0.25} />
       </mesh>
       <mesh ref={shell} material={fresnelMaterial}>
-        <icosahedronGeometry args={[1.7, 1]} />
+        <sphereGeometry args={[1.7, 48, 32]} />
       </mesh>
     </>
   );

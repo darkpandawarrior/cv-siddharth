@@ -1,8 +1,7 @@
-import { Component, useEffect, useState, type ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 
 /* Bits shared between the 2D tldraw sketch board (BlueprintRoom.tsx) and the
- * 3D fly-through scene (Blueprint3D.tsx): the WebGL probe, the count-up
- * number animation, and a small crash boundary. Kept in their own module so
+ * 3D fly-through scene (Blueprint3D.tsx): the WebGL probe, and a small crash boundary. Kept in their own module so
  * neither view has to import from the other.
  *
  * No `three`/`@react-three/fiber` import here on purpose: BlueprintRoom.tsx
@@ -90,28 +89,4 @@ export class ShapeBoundary extends Component<{ children: ReactNode; fallback: Re
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;
   }
-}
-
-export function CountUp({ value }: { value: string }) {
-  const [text, setText] = useState("0");
-  useEffect(() => {
-    const m = /^(-?)(\d+)(.*)$/.exec(value);
-    if (!m) {
-      setText(value);
-      return;
-    }
-    const [, sign, digits, suffix] = m;
-    const target = parseInt(digits, 10);
-    const start = performance.now();
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / 1200, 1);
-      const eased = 1 - (1 - t) ** 3;
-      setText(`${sign}${Math.round(target * eased)}${suffix}`);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-  return <>{text}</>;
 }

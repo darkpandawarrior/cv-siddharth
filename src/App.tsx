@@ -21,8 +21,9 @@ import { FloatingChat, openChat } from "./FloatingChat.tsx";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
-import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
+import { heavy } from "./lib/assetBase.ts";
+import "./hero-studio.css";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { Reveal } from "./Reveal.tsx";
@@ -349,12 +350,22 @@ function Nav() {
   );
 }
 
+const HERO_SHOTS = {
+  doori: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"),
+  gaddi: heavy("/projects/gaddi/screenshots/home_phone.webp"),
+  "paymentslab-kmp": heavy("/projects/paymentslab-kmp/screenshots/ios_catalog.png"),
+} as const;
+
+const HERO_PROJECTS = (Object.keys(HERO_SHOTS) as (keyof typeof HERO_SHOTS)[])
+  .map((slug) => projects.find((project) => project.slug === slug)!);
+
 function Hero() {
   const { goToSection } = useSectionNav();
+  const [selectedSlug, setSelectedSlug] = useState<keyof typeof HERO_SHOTS>("doori");
+  const selectedProject = HERO_PROJECTS.find((project) => project.slug === selectedSlug)!;
   return (
-    <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
-      <ParticleHero />
-      <div>
+    <section id="top" className="hero-studio section-y relative mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(390px,0.88fr)]">
+      <div className="hero-studio-copy">
         {/* rise-in-lcp on every block of hero text, not just one element. The
             eyebrow carries no animation-delay, so it is the FIRST thing the
             page would paint — and while it is fading it counts as nothing
@@ -385,14 +396,11 @@ function Hero() {
           {profile.intro}
         </p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
-          {/* The recruiter CTA, and now the hero's primary. It used to sit in
-              accent2 beside a filled "Chat with my AI assistant" button, which
-              opened the same panel as the FAB pinned to the corner of the
-              viewport. Pasting a JD is the one thing here a PDF cannot do. */}
+          <Link to="/project/$slug" params={{ slug: selectedSlug }} className="hero-studio-primary">Explore my work <ArrowUpRight size={17} aria-hidden="true" /></Link>
           <button
             type="button"
             onClick={() => goToSection("fit")}
-            className="btn-primary flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             <Target size={15} /> Paste a job description
           </button>
@@ -403,18 +411,37 @@ function Hero() {
           >
             View résumé
           </Link>
-          <button
-            type="button"
-            onClick={() => goToSection("work")}
-            className="flex items-center gap-1.5 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
-          >
-            See my work ↓
-          </button>
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-muted">{profile.availability}</p>
+        <nav className="hero-studio-paths" aria-label="Explore the portfolio">
+          <Link to="/map"><span>01</span> Connected work <ArrowUpRight size={14} /></Link>
+          <Link to="/blueprint"><span>02</span> Architecture <ArrowUpRight size={14} /></Link>
+          <Link to="/playground"><span>03</span> Enter the world <ArrowUpRight size={14} /></Link>
+        </nav>
         <LiveTicker />
       </div>
-      <Phone3D />
+      <div className="hero-studio-stage">
+        <div className="hero-studio-meta" aria-hidden="true"><span>SID / MOBILE ENGINEERING</span><span>0{HERO_PROJECTS.indexOf(selectedProject) + 1} / 03</span></div>
+        <div className="hero-studio-object"><span className="hero-studio-watermark" aria-hidden="true">BUILD.</span><Phone3D key={selectedSlug} shot={{ src: HERO_SHOTS[selectedSlug], label: selectedProject.name }} /><span className="hero-studio-caption" aria-hidden="true">REAL PRODUCTS · SHARED FOUNDATIONS</span></div>
+        <div className="hero-studio-dossier" aria-live="polite">
+          <div>
+            <p className="hero-studio-kicker">Selected build / {selectedSlug.replace("-", " ")}</p>
+            <h2 className="font-display text-2xl font-bold text-zinc-100">{selectedProject.name}</h2>
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-zinc-300">{selectedProject.tagline}</p>
+          </div>
+          <Link to="/project/$slug" params={{ slug: selectedSlug }} className="hero-studio-open">
+            Explore case study <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="hero-studio-selector" role="group" aria-label="Choose a project to preview">
+          {HERO_PROJECTS.map((project, index) => (
+            <button key={project.slug} type="button" aria-pressed={project.slug === selectedSlug}
+              onClick={() => setSelectedSlug(project.slug as keyof typeof HERO_SHOTS)}>
+              <span className="hero-studio-index">0{index + 1}</span><span>{project.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

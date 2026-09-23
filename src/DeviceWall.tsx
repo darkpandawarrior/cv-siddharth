@@ -385,15 +385,18 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
           )}
         </div>
         {target.screens.length > 1 && target.deviceFrame !== "browser" && (
-          <div className="mt-4 flex items-center justify-center gap-1.5 sm:hidden">
+          <div className="mt-4 flex flex-wrap items-center justify-center sm:hidden">
             {target.screens.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Screen ${i + 1}`}
                 onClick={() => setShot(i)}
-                className="h-1.5 rounded-full transition-all"
-                style={{ width: i === shot ? 18 : 6, backgroundColor: i === shot ? (accent ?? "var(--color-accent)") : "var(--color-line)" }}
-              />
+                aria-pressed={i === shot}
+                className="flex h-8 w-8 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                <span aria-hidden className="h-1.5 rounded-full transition-all"
+                  style={{ width: i === shot ? 18 : 6, backgroundColor: i === shot ? (accent ?? "var(--color-accent)") : "var(--color-line)" }} />
+              </button>
             ))}
           </div>
         )}

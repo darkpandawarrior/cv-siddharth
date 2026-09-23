@@ -506,7 +506,7 @@ export default function World(props: { onShowList: () => void }) {
           // Emissive materials plus this tone curve carry the glow instead.
           toneMapping: ACES_FILMIC,
         }}
-        className="absolute inset-0"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"
       >
         <color attach="background" args={[palette.void]} />
@@ -531,8 +531,8 @@ export default function World(props: { onShowList: () => void }) {
             same 13° raking angle (unchanged — that's what makes relief
             legible); only the two intensities are raised so the terrain
             reads from shading and silhouette alone. */}
-        <directionalLight color="#bfe8e0" intensity={1.35} position={[-122, 28, 18]} />
-        <hemisphereLight args={["#0a1416", "#0f1a14", 0.75]} />
+        <directionalLight color="#bfe8e0" intensity={1.8} position={[-122, 28, 18]} />
+        <hemisphereLight args={["#9dbbb3", "#26362b", 1.2]} />
         <MemoTerrain />
         <MemoFixtures />
         <MemoProps />

@@ -48,7 +48,7 @@ class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean 
     if (!this.state.failed) return this.props.children;
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-void px-6 text-center">
-        <p className="font-mono text-sm text-zinc-400">The Blueprint Room hit a snag loading your saved canvas.</p>
+        <p className="font-mono text-sm text-zinc-400">Could not load the saved canvas.</p>
         <button
           onClick={async () => {
             await clearBlueprintPersistence();
@@ -56,10 +56,10 @@ class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean 
           }}
           className="flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
         >
-          <RotateCcw size={15} /> Reset the canvas & reload
+          <RotateCcw size={15} /> Reset canvas
         </button>
         <BackToPortfolio className="text-sm text-muted transition hover:text-accent">
-          ← Back to the portfolio
+          ← Portfolio
         </BackToPortfolio>
       </div>
     );

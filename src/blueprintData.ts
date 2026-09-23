@@ -232,7 +232,7 @@ export const METRICS = METRIC_SLOTS.map((slot, i) => ({
 export const NOTES: { x: number; y: number; color: TLDefaultColorStyle; text: string }[] = [
   { x: 620, y: 60, color: "yellow", text: "Every arrow is real: the writing grew out of the work, the apps share one foundation." },
   { x: 2100, y: 1400, color: "yellow", text: "This canvas is yours too — drag things, sketch, leave a note. It stays in your browser." },
-  { x: 1500, y: 820, color: "yellow", text: "The tiles with counting numbers and the spinning hologram are live React + three.js — custom tldraw shapes." },
+  { x: 1500, y: 820, color: "yellow", text: "The tiles with source-backed numbers and the spinning hologram are live React + three.js — custom tldraw shapes." },
 ];
 
 // Guided tour stops: bounds the 2D camera flies between (also mapped to 3D fly-cam targets).

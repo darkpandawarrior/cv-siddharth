@@ -15,7 +15,7 @@ import {
 import "tldraw/tldraw.css";
 import { Canvas } from "@react-three/fiber";
 import { ARROWS, FRAMES, METRICS, NODES, NOTES, PINS, PERSISTENCE_KEY, TOUR, centerOf } from "./blueprintData.ts";
-import { CountUp, hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
+import { hasWebGL, ShapeBoundary } from "./blueprintShared.tsx";
 import { HoloCore } from "./blueprintHologram.tsx";
 import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
@@ -41,7 +41,7 @@ class MetricShapeUtil extends ShapeUtil<MetricShape> {
   static override type = "sid-metric" as const;
 
   getDefaultProps(): MetricShape["props"] {
-    return { w: 200, h: 112, value: "95%", label: "metric" };
+    return { w: 200, h: 112, value: "—", label: "metric" };
   }
 
   getGeometry(shape: MetricShape) {
@@ -66,7 +66,7 @@ class MetricShapeUtil extends ShapeUtil<MetricShape> {
         }}
       >
         <span style={{ fontSize: 30, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1.1 }}>
-          <CountUp value={shape.props.value} />
+          {shape.props.value}
         </span>
         <span style={{ fontSize: 11, color: "rgba(232, 239, 233, 0.6)", marginTop: 4 }}>{shape.props.label}</span>
       </HTMLContainer>
@@ -153,14 +153,13 @@ class HoloShapeUtil extends ShapeUtil<HoloShape> {
             left: 0,
             right: 0,
             textAlign: "center",
-            fontFamily: "var(--font-mono)",
             fontSize: 9,
             letterSpacing: 2,
             textTransform: "uppercase",
             color: "rgba(94, 230, 255, 0.7)",
           }}
         >
-          live three.js — on the whiteboard
+          Live 3D
         </span>
       </HTMLContainer>
     );

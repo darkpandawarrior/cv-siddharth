@@ -58,7 +58,7 @@ export function WeebRoom() {
       <div className="section-y mx-auto max-w-4xl px-6">
         <Reveal>
           <p className="max-w-2xl text-base leading-relaxed text-zinc-300">
-            {num(anime.total)} anime and {num(manga.total)} manga, kept by hand in Notion for years
+            {num(anime.total)} anime entries and {num(manga.total)} manga entries, kept by hand in Notion for years
             before anyone asked to see them. The interesting part isn't the titles — it's that the
             table admits three things its rows never say out loud.
           </p>
@@ -76,8 +76,7 @@ export function WeebRoom() {
                 ? "A “dropped” status exists in this export, so the schema does let him admit it."
                 : `The status column has ${STATUSES.length} values and not one of them is “dropped”. ` +
                   `${num(paused)} titles sit in “Paused” instead.`}{" "}
-              Paused is supposed to mean <em>later</em>. Set against how many are actually caught up, it
-              mostly means <em>no</em>.
+              These are recorded statuses. A paused entry does not tell us whether I intend to resume it.
             </p>
 
             <ul className="mt-6 space-y-2">
@@ -133,7 +132,7 @@ export function WeebRoom() {
               The bottom of the scale has never been used
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              {num(anime.scored)} of {num(anime.total)} titles carry a score, and every one of them is
+              {num(anime.scored)} of {num(anime.total)} entries carry a score, and every one of them is
               a {lowestUsed} or higher out of five. The lower {lowestUsed - 1} points of his own scale
               have never once been spent — the shows that would have earned them are the ones sitting
               in “Paused”, unscored.
@@ -240,7 +239,7 @@ export function WeebRoom() {
 
             <p className="mt-6 flex items-center gap-2 text-sm text-muted">
               <CalendarClock size={15} className="text-accent" />
-              {anime.matched} of {anime.total} titles matched a public record. Corpus last read{" "}
+              {anime.matched} of {anime.total} entries matched a public record. Corpus last read{" "}
               {weeb.generatedAt}.
             </p>
           </section>

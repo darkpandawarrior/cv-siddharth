@@ -1,9 +1,10 @@
+import { SceneActivity } from "./SceneActivity.tsx";
 import { useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Line, Html } from "@react-three/drei";
+import { Line, Html, OrbitControls } from "@react-three/drei";
 import { MathUtils } from "three";
 import { readToken } from "./themeColor";
-import type { Group, Mesh } from "three";
+import type { Mesh } from "three";
 
 /**
  * "Platform constellation" — the two shared KMP libraries as hub stars with
@@ -80,12 +81,14 @@ function Star({ node, active, dim, onHover }: { node: Node; active: boolean; dim
       <meshStandardMaterial
         color={hex}
         emissive={hex}
-        emissiveIntensity={active ? 2.2 : 0.9}
+        emissiveIntensity={active ? .8 : .15}
+        metalness={.4}
+        roughness={.28}
         transparent
         opacity={dim ? 0.25 : 1}
       />
       {(node.kind !== "module" || active) && (
-        <Html center distanceFactor={7} position={[0, -(node.r + 0.28), 0]} style={{ pointerEvents: "none" }}>
+        <Html center position={[0, -(node.r + 0.28), 0]} style={{ pointerEvents: "none" }}>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -109,9 +112,7 @@ function Star({ node, active, dim, onHover }: { node: Node; active: boolean; dim
 }
 
 function Graph() {
-  const group = useRef<Group>(null);
   const [hover, setHover] = useState<string | null>(null);
-  const drag = useRef({ on: false, x: 0, vel: 0 });
 
   const neighbourhood = useMemo(() => {
     if (!hover) return null;
@@ -123,25 +124,8 @@ function Graph() {
     return set;
   }, [hover]);
 
-  useFrame((_, delta) => {
-    const g = group.current;
-    if (!g) return;
-    // Idle spin, pausable-feeling: drag velocity decays into the base drift.
-    drag.current.vel = MathUtils.damp(drag.current.vel, 0, 2, delta);
-    g.rotation.y += delta * (hover ? 0.02 : 0.12) + drag.current.vel;
-  });
-
   return (
-    <group
-      ref={group}
-      onPointerDown={(e) => { drag.current.on = true; drag.current.x = e.clientX; }}
-      onPointerUp={() => { drag.current.on = false; }}
-      onPointerMove={(e) => {
-        if (!drag.current.on) return;
-        drag.current.vel = (e.clientX - drag.current.x) * 0.0004;
-        drag.current.x = e.clientX;
-      }}
-    >
+    <group>
       {EDGES.map(([a, b]) => {
         const lit = neighbourhood?.has(a) && neighbourhood?.has(b);
         return (
@@ -178,7 +162,10 @@ export default function FoundationGraphScene() {
       role="img"
       aria-label="3D constellation of the shared KMP libraries and the apps built on them — hover a node to trace a dependency, click to open its repo"
     >
-      <ambientLight intensity={0.5} />
+      <SceneActivity />
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
+      <hemisphereLight args={["#e2f4ed", "#18251f", 1.5]} />
+      <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 4, 4]} intensity={8} color={readToken("--color-probe", "#5ee6ff")} />
       <pointLight position={[-4, -2, 3]} intensity={8} color={readToken("--color-signal", "#3ddc84")} />
       <Graph />

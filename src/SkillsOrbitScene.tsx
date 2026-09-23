@@ -1,8 +1,6 @@
-import { useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { MathUtils } from "three";
-import type { Group } from "three";
+import { SceneActivity } from "./SceneActivity.tsx";
+import { Canvas } from "@react-three/fiber";
+import { Html, OrbitControls } from "@react-three/drei";
 import { skills } from "./data/profile.ts";
 import { readToken } from "./themeColor";
 
@@ -41,28 +39,8 @@ const POINTS = WORDS.map((w, i) => {
 });
 
 function Orbit({ active, onSelect }: { active: string | null; onSelect: (group: string) => void }) {
-  const group = useRef<Group>(null);
-  const drag = useRef({ on: false, x: 0, vel: 0 });
-
-  useFrame((_, delta) => {
-    const g = group.current;
-    if (!g) return;
-    drag.current.vel = MathUtils.damp(drag.current.vel, 0, 2, delta);
-    g.rotation.y += delta * 0.12 + drag.current.vel;
-  });
-
   return (
-    <group
-      ref={group}
-      onPointerDown={(e) => { drag.current.on = true; drag.current.x = e.clientX; }}
-      onPointerUp={() => { drag.current.on = false; }}
-      onPointerLeave={() => { drag.current.on = false; }}
-      onPointerMove={(e) => {
-        if (!drag.current.on) return;
-        drag.current.vel = (e.clientX - drag.current.x) * 0.0004;
-        drag.current.x = e.clientX;
-      }}
-    >
+    <group>
       {/* faint wire sphere anchoring the cloud */}
       <mesh>
         <sphereGeometry args={[2.35, 18, 12]} />
@@ -108,6 +86,8 @@ export default function SkillsOrbitScene({ active, onSelect }: { active: string 
       role="img"
       aria-label="3D orbit of every skill, grouped by category — drag to rotate, click a skill to filter"
     >
+      <SceneActivity />
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} />
       <Orbit active={active} onSelect={onSelect} />
     </Canvas>
   );
