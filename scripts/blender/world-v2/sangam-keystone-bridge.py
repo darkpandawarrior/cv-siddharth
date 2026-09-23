@@ -33,8 +33,13 @@ sh.clear_scene()
 
 sandstone = sh.pbr('mat.sandstone')
 palestone = sh.pbr('mat.paleStone')
-silver = sh.material('Brushed titanium', (.31, .38, .36), .82, .28)
-amber_mat = sh.material('Anodized amber', (.8, .35, .085), .72, .26)
+# Art-direction fix: 'Brushed titanium' / 'Anodized amber' were unrenamed
+# materials-library defaults, off the spec §9/§5 approved mat.* list, so the
+# runtime's by-name texture bind would silently fall back to a flat PBR
+# value at load (critic finding #3). Both the medallion and the inlay are
+# small brass fittings on a stone keystone, so mat.brass — already shared,
+# already approved — is the correct rename, not a new name to add.
+brass = sh.pbr('mat.brass')
 
 
 def drafted_block(w_bottom, w_top, depth, height, mat, inset=0.035, bevel=0.012):
@@ -59,6 +64,14 @@ def drafted_block(w_bottom, w_top, depth, height, mat, inset=0.035, bevel=0.012)
     res = bmesh.ops.inset_region(bm, faces=[front, back], thickness=inset, depth=0)
     bmesh.ops.inset_region(bm, faces=res['faces'], thickness=0, depth=-0.018)
     bmesh.ops.bevel(bm, geom=list(bm.edges), offset=bevel, segments=2, affect='EDGES')
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    # Art-direction fix: the inset+bevel combo on a tapered wedge collapses a
+    # handful of near-zero-area corner triangles and zero-length edges where
+    # the drafted margin meets the bevel ring (critic finding #3, 60
+    # degenerate faces / 32 zero-length edges, almost certainly from this op
+    # on Keystone/Voussoir). dissolve_degenerate removes exactly those
+    # without touching the real topology.
+    bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=list(bm.edges))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     out = sh.canonical_order(bm)
     return out
@@ -113,7 +126,7 @@ bevel.segments = 2
 bpy.context.view_layer.objects.active = medallion
 bpy.ops.object.modifier_apply(modifier=bevel.name)
 sh.canonicalize_object(medallion)
-medallion.data.materials.append(silver)
+medallion.data.materials.append(brass)
 medallion.parent = keystone
 for poly in medallion.data.polygons:
     poly.use_smooth = False
@@ -124,7 +137,7 @@ inlay = bpy.context.object
 inlay.name = 'KeystoneInlay'
 inlay.data.name = 'KeystoneInlay'
 inlay.scale = (1, .5, 1)
-inlay.data.materials.append(amber_mat)
+inlay.data.materials.append(brass)
 inlay.parent = keystone
 for poly in inlay.data.polygons:
     poly.use_smooth = False
@@ -149,7 +162,16 @@ deck_bm.faces.new((dv[3], dv[7], dv[4], dv[0]))
 bmesh.ops.recalc_face_normals(deck_bm, faces=deck_bm.faces)
 cuts = bmesh.ops.subdivide_edges(deck_bm, edges=[e for e in top.edges if abs(e.verts[0].co.y - e.verts[1].co.y) > 1e-4],
                                   cuts=2, use_grid_fill=True)
+# Art-direction fix: the deck read as "a blank white rectangle" (critic
+# finding #3) — the arch got voussoir joints but the deck had none of its
+# own coursing. Recess each paving cell slightly so the joint lines actually
+# read as grooves, the same paving-seam vocabulary the voussoirs already use.
+top_cells = [f for f in deck_bm.faces if all(abs(v.co.z - hh) < 1e-4 for v in f.verts)]
+if top_cells:
+    paving = bmesh.ops.inset_individual(deck_bm, faces=top_cells, thickness=0.03, depth=-0.008)
 bmesh.ops.bevel(deck_bm, geom=[e for e in deck_bm.edges if e.is_boundary], offset=0.02, segments=2, affect='EDGES')
+bmesh.ops.recalc_face_normals(deck_bm, faces=deck_bm.faces)
+bmesh.ops.dissolve_degenerate(deck_bm, dist=1e-5, edges=list(deck_bm.edges))
 bmesh.ops.recalc_face_normals(deck_bm, faces=deck_bm.faces)
 deck_bm = sh.canonical_order(deck_bm)
 deck_segment = sh.new_mesh_object('DeckSegment', deck_bm, palestone)
