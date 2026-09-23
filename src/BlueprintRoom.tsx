@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -14,6 +14,32 @@ import { DeferredPlayRoom, DeferredPresenceBadge } from "./play/DeferredPlayRoom
 import { usePulseUI } from "./play/pulseUI.ts";
 import Blueprint3D from "./Blueprint3D.tsx";
 import SketchBoard from "./SketchBoard.tsx";
+
+// React.lazy, not a static import: EvidenceChip and systemGraph.ts are new to
+// this room, and this bundle had exactly 63 bytes of budget headroom before
+// any of this — inlining them here blew that (measured, not a guess). Its
+// own chunk keeps the legend/chip/nudge weight out of the room's main bundle.
+const BlueprintAtlasPanel = lazy(() => import("./BlueprintAtlasPanel.tsx"));
+
+/** First-visit-only nudge toward the guided tour — dismissed for good the
+ *  moment a visitor starts it themselves, or explicitly closes the nudge.
+ *  localStorage is wrapped: a visitor who blocks storage just gets the nudge
+ *  every visit instead of a crash. */
+const TOUR_NUDGE_KEY = "cv:blueprint-tour-seen";
+function hasSeenTourNudge(): boolean {
+  try {
+    return localStorage.getItem(TOUR_NUDGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function markTourNudgeSeen(): void {
+  try {
+    localStorage.setItem(TOUR_NUDGE_KEY, "1");
+  } catch {
+    /* storage blocked — the nudge just reappears next visit, not a crash */
+  }
+}
 
 /** Class components (RoomBoundary below) can't call hooks directly — this
  *  wraps the router-aware "back to portfolio" control so both the error
@@ -161,6 +187,18 @@ function BlueprintRoomInner() {
   // can't see. From then on Sketch is treated exactly like a mode this browser
   // can't run, rather than left on screen as a blank rectangle.
   const [licenseGated, setLicenseGated] = useState(false);
+  // Server and the client's first paint both render `false` (SSR has no
+  // localStorage), so there is nothing to hydration-mismatch on; an effect
+  // flips it to the real remembered value right after mount, same shape as
+  // `ready` above.
+  const [showTourNudge, setShowTourNudge] = useState(false);
+  useEffect(() => {
+    setShowTourNudge(!hasSeenTourNudge());
+  }, []);
+  const dismissTourNudge = useCallback(() => {
+    markTourNudgeSeen();
+    setShowTourNudge(false);
+  }, []);
   const isAvailable = useCallback(
     (m: (typeof MODES)[number]) => ready && m.available() && !(m.id === "sketch" && licenseGated),
     [ready, licenseGated],
@@ -183,11 +221,13 @@ function BlueprintRoomInner() {
     setMode(m);
     setStop(-1);
     bump(`blueprint:${m}`);
+    dismissTourNudge();
   };
 
   const tourNext = () => {
     setStop((s) => (s + 1) % TOUR.length);
     bump("blueprint:tour");
+    dismissTourNudge();
   };
   const resetView = () => {
     setStop(-1);
@@ -336,10 +376,19 @@ function BlueprintRoomInner() {
               {/* Mirrors tldraw's own bottom-left zoom badge (visible in Sketch
                * mode) so the two views feel like one control system, not two. */}
               <div className="pointer-events-none absolute bottom-4 left-4 rounded border border-line bg-ink/80 px-2 py-1 font-mono text-xs text-zinc-400 backdrop-blur">
-                {zoomPercent}%
+                zoom {zoomPercent}%
               </div>
             </Hydrate>
           </ClientOnly>
+        )}
+        {/* DESK altitude of the same atlas as ORBIT (/map) and STREET
+            (/playground), plus the first-visit tour nudge — lazy (see the
+            import above), and rendered once ready so it never contends with
+            the header's own hydration-timed content. */}
+        {ready && (
+          <Suspense fallback={null}>
+            <BlueprintAtlasPanel showTourNudge={showTourNudge && stop === -1} />
+          </Suspense>
         )}
       </main>
       {/* D1: this room drew its own chrome and so never got the next-room
