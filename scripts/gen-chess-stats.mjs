@@ -25,7 +25,7 @@ import {
   boardTime, gameLength, lengthBuckets, clutchRate, firstMoveAsWhite,
   materialAtEnd, checkmates, repertoireByPlatform,
 } from "./lib/chess-derive.mjs";
-import { getJson, getNdjson, walkArchives, readCache, writeCache } from "./lib/chess-fetch.mjs";
+import { getJson, fetchLichessMonthly, fetchChessComMonthly, readCache, writeCache } from "./lib/chess-fetch.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const U = "darkpandawarrior";
@@ -33,15 +33,26 @@ const IST = 5.5 * 3600 * 1000;
 const iso = (ts) => new Date(ts).toISOString().slice(0, 10);
 const r3 = (n) => (Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null);
 
-async function fetchLichessCorpus(seenAt) {
+/**
+ * The lichess corpus, fetched in per-month slices (chess-fetch.mjs) instead
+ * of one 15-minute whole-account NDJSON stream. A single stalled month used
+ * to fail the entire 14k-game export; now a closed month is cached forever
+ * and only the current month is ever refetched, so one bad request costs at
+ * most that month.
+ *
+ * `unresolved` months (a fetch failure with no cache to fall back to — a
+ * genuine gap, not a quiet one) abort `build()` below rather than shipping a
+ * corpus silently missing part of the account.
+ *
+ * Still writes the flat `.chess-cache/lichess-games.json` whole-corpus cache
+ * gen-chess-deep.mjs reads, so that second pass needs no changes here.
+ */
+async function fetchLichessCorpus(seenAt, joinedAt) {
   const cached = readCache("lichess-games");
-  if (cached && cached.seenAt === seenAt) return cached.games;
-  // ~9 minutes for 14k games. Light payload: no moves, no clocks, no evals.
-  const games = await getNdjson(
-    `https://lichess.org/api/games/user/${U}?max=20000&opening=true&moves=false&clocks=false&evals=false`,
-  );
-  writeCache("lichess-games", { seenAt, games });
-  return games;
+  if (cached && cached.seenAt === seenAt) return { games: cached.games, unresolved: [] };
+  const { games, unresolved } = await fetchLichessMonthly(U, { sinceMs: joinedAt });
+  if (!unresolved.length) writeCache("lichess-games", { seenAt, games });
+  return { games, unresolved };
 }
 
 /**
@@ -99,16 +110,27 @@ async function build() {
   // The /user endpoint already carries every perf's rating, game count and
   // `prov` flag, so the per-perf endpoints the first draft of this script hit
   // were three redundant requests.
-  const liRaw = await fetchLichessCorpus(liUser.seenAt);
+  const { games: liRaw, unresolved: liUnresolved } = await fetchLichessCorpus(liUser.seenAt, liUser.createdAt);
 
   // ---- chess.com ----
   // /stats is deliberately not fetched: its `best.rating` per format is the
   // same figure peaksOf() already derives from the archive walk (blitz 1425
   // both ways), so it would be a request whose answer we already have.
   const ccProfile = await getJson(`https://api.chess.com/pub/player/${U}`);
-  const ccRaw = await walkArchives(U, (i, n) => {
-    if (i % 10 === 0 || i === n) console.log(`  chess.com archives ${i}/${n}`);
-  });
+  const { games: ccRaw, unresolved: ccUnresolved } = await fetchChessComMonthly(U);
+
+  // A month with no fresh data AND no cached slice is a real gap in the
+  // corpus, not a quiet week — refuse to derive a claim from an incomplete
+  // account rather than ship one silently missing games. Every fetch and
+  // derivation below still has to succeed too (build().catch keeps the
+  // previous committed file on any of it).
+  const unresolved = [...liUnresolved, ...ccUnresolved];
+  if (unresolved.length) {
+    throw new Error(
+      `chess: ${unresolved.length} month(s) unresolved (no fresh fetch and no cached slice): ` +
+        unresolved.map((u) => `${u.month} (${u.error})`).join(", "),
+    );
+  }
 
   // ---- puzzle + commits ----
   const puzzleRaw = await getJson("https://lichess.org/api/puzzle/daily");
