@@ -1,0 +1,345 @@
+{
+  "generatedAt": "2026-09-23T22:07:37.360Z",
+  "totalBytes": 10250188,
+  "assets": [
+    {
+      "id": "brown_mud_dry",
+      "use": "terrain splat R: red soil",
+      "sourceUrl": "https://polyhaven.com/a/brown_mud_dry",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/brown_mud_dry_c_1024.webp",
+          "width": 1024,
+          "bytes": 397382
+        },
+        {
+          "path": "heavy/world/textures/brown_mud_dry_c_512.webp",
+          "width": 512,
+          "bytes": 97048
+        },
+        {
+          "path": "heavy/world/textures/brown_mud_dry_n_1024.webp",
+          "width": 1024,
+          "bytes": 627406
+        },
+        {
+          "path": "heavy/world/textures/brown_mud_dry_n_512.webp",
+          "width": 512,
+          "bytes": 156892
+        }
+      ]
+    },
+    {
+      "id": "withered_grass",
+      "use": "terrain splat G: grass banks at the end of the monsoon",
+      "sourceUrl": "https://polyhaven.com/a/withered_grass",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/withered_grass_c_1024.webp",
+          "width": 1024,
+          "bytes": 349942
+        },
+        {
+          "path": "heavy/world/textures/withered_grass_c_512.webp",
+          "width": 512,
+          "bytes": 78360
+        },
+        {
+          "path": "heavy/world/textures/withered_grass_n_1024.webp",
+          "width": 1024,
+          "bytes": 605890
+        },
+        {
+          "path": "heavy/world/textures/withered_grass_n_512.webp",
+          "width": 512,
+          "bytes": 135506
+        }
+      ]
+    },
+    {
+      "id": "rock_pitted_mossy",
+      "use": "terrain splat B: laterite cliffs where slope > 32 degrees",
+      "sourceUrl": "https://polyhaven.com/a/rock_pitted_mossy",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/rock_pitted_mossy_c_1024.webp",
+          "width": 1024,
+          "bytes": 272678
+        },
+        {
+          "path": "heavy/world/textures/rock_pitted_mossy_c_512.webp",
+          "width": 512,
+          "bytes": 70480
+        },
+        {
+          "path": "heavy/world/textures/rock_pitted_mossy_n_1024.webp",
+          "width": 1024,
+          "bytes": 408360
+        },
+        {
+          "path": "heavy/world/textures/rock_pitted_mossy_n_512.webp",
+          "width": 512,
+          "bytes": 119588
+        }
+      ]
+    },
+    {
+      "id": "ganges_river_pebbles",
+      "use": "terrain splat A: riverbed and shoreline below water+0.4 m",
+      "sourceUrl": "https://polyhaven.com/a/ganges_river_pebbles",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/ganges_river_pebbles_c_1024.webp",
+          "width": 1024,
+          "bytes": 183136
+        },
+        {
+          "path": "heavy/world/textures/ganges_river_pebbles_c_512.webp",
+          "width": 512,
+          "bytes": 55460
+        },
+        {
+          "path": "heavy/world/textures/ganges_river_pebbles_n_1024.webp",
+          "width": 1024,
+          "bytes": 443704
+        },
+        {
+          "path": "heavy/world/textures/ganges_river_pebbles_n_512.webp",
+          "width": 512,
+          "bytes": 128530
+        }
+      ]
+    },
+    {
+      "id": "forest_leaves_02",
+      "use": "ground under the canopy (aAux.x mask under banyans)",
+      "sourceUrl": "https://polyhaven.com/a/forest_leaves_02",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/forest_leaves_02_c_1024.webp",
+          "width": 1024,
+          "bytes": 364534
+        },
+        {
+          "path": "heavy/world/textures/forest_leaves_02_c_512.webp",
+          "width": 512,
+          "bytes": 93686
+        },
+        {
+          "path": "heavy/world/textures/forest_leaves_02_n_1024.webp",
+          "width": 1024,
+          "bytes": 633568
+        },
+        {
+          "path": "heavy/world/textures/forest_leaves_02_n_512.webp",
+          "width": 512,
+          "bytes": 152494
+        }
+      ]
+    },
+    {
+      "id": "large_sandstone_blocks_01",
+      "use": "mat.sandstone: ghat steps, bridge voussoirs, hero stones",
+      "sourceUrl": "https://polyhaven.com/a/large_sandstone_blocks_01",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/large_sandstone_blocks_01_c_1024.webp",
+          "width": 1024,
+          "bytes": 222706
+        },
+        {
+          "path": "heavy/world/textures/large_sandstone_blocks_01_c_512.webp",
+          "width": 512,
+          "bytes": 65842
+        },
+        {
+          "path": "heavy/world/textures/large_sandstone_blocks_01_n_1024.webp",
+          "width": 1024,
+          "bytes": 392650
+        },
+        {
+          "path": "heavy/world/textures/large_sandstone_blocks_01_n_512.webp",
+          "width": 512,
+          "bytes": 108058
+        }
+      ]
+    },
+    {
+      "id": "white_sandstone_blocks_02",
+      "use": "mat.paleStone: deepmal, baori, yantra, bridge piers",
+      "sourceUrl": "https://polyhaven.com/a/white_sandstone_blocks_02",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/white_sandstone_blocks_02_c_1024.webp",
+          "width": 1024,
+          "bytes": 244504
+        },
+        {
+          "path": "heavy/world/textures/white_sandstone_blocks_02_c_512.webp",
+          "width": 512,
+          "bytes": 58250
+        },
+        {
+          "path": "heavy/world/textures/white_sandstone_blocks_02_n_1024.webp",
+          "width": 1024,
+          "bytes": 221230
+        },
+        {
+          "path": "heavy/world/textures/white_sandstone_blocks_02_n_512.webp",
+          "width": 512,
+          "bytes": 66358
+        }
+      ]
+    },
+    {
+      "id": "white_plaster_02",
+      "use": "mat.plaster: whitewashed chhatris, shrine walls, houses",
+      "sourceUrl": "https://polyhaven.com/a/white_plaster_02",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/white_plaster_02_c_1024.webp",
+          "width": 1024,
+          "bytes": 211202
+        },
+        {
+          "path": "heavy/world/textures/white_plaster_02_c_512.webp",
+          "width": 512,
+          "bytes": 37016
+        },
+        {
+          "path": "heavy/world/textures/white_plaster_02_n_1024.webp",
+          "width": 1024,
+          "bytes": 258624
+        },
+        {
+          "path": "heavy/world/textures/white_plaster_02_n_512.webp",
+          "width": 512,
+          "bytes": 39554
+        }
+      ]
+    },
+    {
+      "id": "roof_09",
+      "use": "mat.roofTile: riverside and old-town house roofs",
+      "sourceUrl": "https://polyhaven.com/a/roof_09",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/roof_09_c_1024.webp",
+          "width": 1024,
+          "bytes": 160520
+        },
+        {
+          "path": "heavy/world/textures/roof_09_c_512.webp",
+          "width": 512,
+          "bytes": 50620
+        },
+        {
+          "path": "heavy/world/textures/roof_09_n_1024.webp",
+          "width": 1024,
+          "bytes": 81828
+        },
+        {
+          "path": "heavy/world/textures/roof_09_n_512.webp",
+          "width": 512,
+          "bytes": 29236
+        }
+      ]
+    },
+    {
+      "id": "weathered_brown_planks",
+      "use": "mat.planks: hodi hull, jetties, mooring posts, rahat wheel",
+      "sourceUrl": "https://polyhaven.com/a/weathered_brown_planks",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/weathered_brown_planks_c_1024.webp",
+          "width": 1024,
+          "bytes": 147312
+        },
+        {
+          "path": "heavy/world/textures/weathered_brown_planks_c_512.webp",
+          "width": 512,
+          "bytes": 37452
+        },
+        {
+          "path": "heavy/world/textures/weathered_brown_planks_n_1024.webp",
+          "width": 1024,
+          "bytes": 225242
+        },
+        {
+          "path": "heavy/world/textures/weathered_brown_planks_n_512.webp",
+          "width": 512,
+          "bytes": 43194
+        }
+      ]
+    },
+    {
+      "id": "bark_brown_02",
+      "use": "mat.bark: banyan, neem, aerial roots",
+      "sourceUrl": "https://polyhaven.com/a/bark_brown_02",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/bark_brown_02_c_1024.webp",
+          "width": 1024,
+          "bytes": 256964
+        },
+        {
+          "path": "heavy/world/textures/bark_brown_02_c_512.webp",
+          "width": 512,
+          "bytes": 76998
+        },
+        {
+          "path": "heavy/world/textures/bark_brown_02_n_1024.webp",
+          "width": 1024,
+          "bytes": 425648
+        },
+        {
+          "path": "heavy/world/textures/bark_brown_02_n_512.webp",
+          "width": 512,
+          "bytes": 127896
+        }
+      ]
+    },
+    {
+      "id": "palm_tree_bark",
+      "use": "mat.palmBark: palm trunks (mid-distance)",
+      "sourceUrl": "https://polyhaven.com/a/palm_tree_bark",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/palm_tree_bark_c_512.webp",
+          "width": 512,
+          "bytes": 77440
+        },
+        {
+          "path": "heavy/world/textures/palm_tree_bark_n_512.webp",
+          "width": 512,
+          "bytes": 36046
+        }
+      ]
+    },
+    {
+      "id": "kloppenheim_06_puresky",
+      "use": "offline only: Blender lighting for the foliage atlas bake and lookdev renders (no runtime HDRI; the sky dome is PMREM'd)",
+      "sourceUrl": "https://polyhaven.com/a/kloppenheim_06_puresky",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/textures/kloppenheim_06_puresky_1k.hdr",
+          "width": 1024,
+          "bytes": 1173154
+        }
+      ]
+    }
+  ]
+}
