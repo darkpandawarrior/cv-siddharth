@@ -408,4 +408,4 @@ export const notMeasuredHere: string[] = [
   "The external claim-audit run record — the script lives outside this repo by design and writes nothing back here."
 ];
 
-export const evidenceGeneratedAt = "2026-09-23";
+export const evidenceGeneratedAt = "2026-09-24";
