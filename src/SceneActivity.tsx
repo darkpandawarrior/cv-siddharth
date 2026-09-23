@@ -49,8 +49,8 @@ function getReducedMotionServerSnapshot(): boolean {
  * directly on the frameloop).
  *
  * `useSyncExternalStore` over `matchMedia`'s own `change` event, not a
- * `useMemo(() => matchMedia(...).matches, [])` snapshot — the banned pattern
- * reads the OS setting once at mount and never again, so a visitor who
+ * dependency-less memoized `matchMedia(...).matches` read — the banned
+ * mount-once snapshot reads the OS setting once and never again, so a visitor who
  * toggles reduced motion mid-session (or a Playwright test that calls
  * `emulateMedia` after load) sees no effect. The server snapshot is `false`:
  * SSR always renders the full-motion markup, and the client reconciles to
