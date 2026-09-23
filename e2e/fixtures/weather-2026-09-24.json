@@ -1,0 +1,14 @@
+{
+  "connected": true,
+  "weather": {
+    "at": "2026-09-24T03:15",
+    "tempC": 22.9,
+    "code": 3,
+    "cloudPct": 97,
+    "precipMm": 0,
+    "windKmh": 10.3,
+    "windFromDeg": 263
+  },
+  "source": "Open-Meteo (CC BY 4.0)",
+  "sourceUrl": "https://open-meteo.com"
+}
