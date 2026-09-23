@@ -1,6 +1,13 @@
 // Scans heavy/projects/<slug>/screenshots and emits src/data/galleries.ts.
 // Runs as a prebuild step, so adding/removing a screenshot auto-updates the
 // project detail galleries — no manual list to maintain.
+//
+// No generatedAt stamp: it is in check-generated.mjs's byte-deterministic
+// DETERMINISTIC set, heavy/ is gitignored so there is no committed input to
+// derive a real date from, and a wall-clock one would disagree with the
+// committed file on every single calendar day regardless of whether a
+// screenshot actually changed — the exact false-positive check-generated.mjs's
+// own header comment documents for gen-ops.mjs's old opsGeneratedAt.
 import { readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";

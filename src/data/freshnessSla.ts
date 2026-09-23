@@ -36,6 +36,21 @@ export const SLA_DAYS: Record<string, number> = {
   "weeb.ts": 21,
   "store.ts": 45,
   "history.ts": 21,
+  // Live and external, refreshed by refresh-media.yml's weekly cron.
+  "writing.ts": 21,
+  "anthology.ts": 21,
+  // Sibling-kind: only as fresh as refresh-media's Android/KMP checkouts,
+  // which is a slower, more failure-prone path than a plain HTTP fetch.
+  "systemGraph.ts": 30,
+  "repoStats.ts": 30,
+  // network but not wired into refresh.mjs's automatic cadence yet — see
+  // generators.mjs's note on archive-text having no refresh stage. Generous
+  // until it is.
+  "archiveText.ts": 45,
+  "projectStats.ts": 21,
+  // Derived from timeline.ts's own commit date (see gen-lanes.mjs), not a
+  // network cadence, so generous.
+  "lanes.ts": 45,
 };
 
 export const slaFor = (file: string): number => SLA_DAYS[file] ?? MAX_AGE_DAYS;
@@ -61,7 +76,22 @@ export const APP_MANIFEST_SLA_DAYS = 21;
  * generator DROPPED its stamp as when it kept it. A file that opts out by
  * accident is exactly the failure this exists to prevent.
  */
-export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts", "history.ts"];
+// timeline.ts is deliberately absent, same rule as freshness.test.ts documents
+// on its own MUST_BE_STAMPED list: its generator recomputes lanes from files
+// this list already watches separately (chess.ts, history.ts, writing.ts), so
+// its own stamp would say "a build happened", not "data moved" — a member
+// that can never go red on its own is padding, not cover.
+// galleries.ts and compareSets.ts are deliberately also absent, alongside
+// timeline.ts above: both sit in check-generated.mjs's byte-deterministic set
+// and scan heavy/, which is gitignored — there is no committed input to date
+// them against, and a wall-clock stamp there would fail that check every day
+// regardless of whether a screenshot changed. See gen-galleries.mjs's and
+// gen-compare-sets.mjs's own comments on the same point.
+export const MUST_BE_STAMPED = [
+  "chess.ts", "chessDeep.ts", "store.ts", "weeb.ts", "history.ts",
+  "systemGraph.ts", "writing.ts", "anthology.ts", "archiveText.ts",
+  "projectStats.ts", "repoStats.ts", "lanes.ts",
+];
 
 /**
  * The two stamp shapes generators actually emit.
@@ -72,10 +102,24 @@ export const MUST_BE_STAMPED = ["chess.ts", "chessDeep.ts", "store.ts", "weeb.ts
  */
 export const STAMP_RE = /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4}-\d{2}-\d{2})/;
 
+/**
+ * The rare files whose package.json alias does not follow the kebab-case
+ * convention generatorFor derives below — package.json is not owned by this
+ * file, so the exception lives here rather than as a rename this lane has no
+ * business making. Checked mechanically by ops.test.ts's "names a generator
+ * that is a real npm script" against the CURRENT package.json, so a script
+ * rename shows up here as a failing test, not a silently dead link.
+ */
+const GENERATOR_ALIAS: Record<string, string> = {
+  "compareSets.ts": "compare",
+  "projectStats.ts": "stats",
+  "writing.ts": "loopdown",
+};
+
 /** Which generator to run when one of these goes red. Derived from the file
  *  name rather than hand-mapped, so a new generated file is covered on arrival. */
 export const generatorFor = (file: string): string =>
-  `npm run gen:${file.replace(/\.ts$/, "").replace(/([A-Z])/g, (m) => "-" + m.toLowerCase())}`;
+  `npm run gen:${GENERATOR_ALIAS[file] ?? file.replace(/\.ts$/, "").replace(/([A-Z])/g, (m) => "-" + m.toLowerCase())}`;
 
 /** Whole days between a `YYYY-MM-DD` stamp and now. */
 export function ageDays(stamp: string, now: Date = new Date()): number {

@@ -1,6 +1,11 @@
 // Scans heavy/projects/<slug>/compare/<set>/ and emits src/data/compareSets.ts.
 // Same shape of contract as gen-galleries.mjs: drop files in, they appear — no list to maintain.
 //
+// No generatedAt stamp, same reason as gen-galleries.mjs: it is in
+// check-generated.mjs's byte-deterministic set and heavy/ is gitignored, so a
+// wall-clock stamp would disagree with the committed file every day with no
+// content actually changing.
+//
 // Layout:
 //   heavy/projects/doori/compare/expenses/1-ledger.png
 //   heavy/projects/doori/compare/expenses/2-signal.png

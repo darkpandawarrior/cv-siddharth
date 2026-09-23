@@ -17,12 +17,34 @@
  * truth; this only re-shapes it. Listed in check-generated.mjs.
  */
 import { writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { timeline } from "../src/data/timeline.ts";
+import { gitEnv } from "./lib/git-env.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(root, "src/data/lanes.ts");
+
+/**
+ * lanesGeneratedAt: the COMMIT date of timeline.ts, the only file this
+ * generator reads — never `new Date()`. This node sits in check-generated.mjs's
+ * byte-deterministic set (see the DETERMINISTIC note above), so a wall-clock
+ * stamp would disagree with the committed file every single day even when
+ * timeline.ts has not moved. Git's own history of the one real input is the
+ * deterministic answer to "as of when": it changes exactly when a commit
+ * changes timeline.ts, and never otherwise.
+ */
+function timelineCommitDate() {
+  try {
+    const date = execFileSync("git", ["log", "-1", "--format=%cs", "--", "src/data/timeline.ts"], {
+      cwd: root, env: gitEnv(), encoding: "utf8",
+    }).trim();
+    return date || new Date().toISOString().slice(0, 10);
+  } catch {
+    return new Date().toISOString().slice(0, 10); // uncommitted checkout (e.g. a fresh clone mid-rebase)
+  }
+}
 
 // One CSS custom property per lane, not a hex literal: readToken-free here
 // because this file is emitted, read at render time as `var(--x)` inside an
@@ -66,7 +88,8 @@ if (lanes.length < 3) {
     `// \`npm run gen:lanes\` to refresh after timeline.ts changes.\n` +
     `export interface Lane {\n  key: string;\n  label: string;\n  unit: string;\n  hueVar: string;\n  months: Record<string, number>;\n  total: number;\n  peak: { ym: string; v: number };\n}\n` +
     `export const laneMonths: string[] = ${JSON.stringify(timeline.months)};\n` +
-    `export const lanes: Lane[] = ${JSON.stringify(lanes, null, 2)} as const;\n`;
+    `export const lanes: Lane[] = ${JSON.stringify(lanes, null, 2)} as const;\n` +
+    `export const lanesGeneratedAt = "${timelineCommitDate()}";\n`;
   writeFileSync(OUT, body);
   console.log(`[gen-lanes] ${lanes.length} lanes x ${timeline.months.length} months (${timeline.months[0]} to ${timeline.months.at(-1)})`);
 }

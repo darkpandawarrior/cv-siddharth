@@ -259,6 +259,7 @@ for (const e of entries) {
 }
 
 const meta = {
+  generatedAt: new Date().toISOString().slice(0, 10),
   slug: src.slug,
   mark,
   fourteen,
@@ -311,7 +312,7 @@ writeFileSync(
     `}\n\n` +
     `export interface AnthologySeason { n: number; title: string; blurb: string }\n\n` +
     `export const anthology = ${JSON.stringify(meta, null, 2)} as {\n` +
-    `  slug: string; title: string; tagline: string;\n` +
+    `  generatedAt: string; slug: string; title: string; tagline: string;\n` +
     `  mark: string; fourteen: string; witnesses: AnthologyWitness[];\n  seasons: AnthologySeason[]; starmap: Starmap;\n};\n\n` +
     `export const anthologyEntries: AnthologyEntry[] = ${JSON.stringify(entries, null, 2)};\n\n` +
     `export const entryBySlug = (slug: string) => anthologyEntries.find((e) => e.slug === slug);\n` +

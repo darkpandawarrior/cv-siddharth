@@ -103,10 +103,23 @@ export const GENERATORS = [
   // the-loopdown's registry.json off raw.githubusercontent.com (see
   // fetchWithTimeout in gen-loopdown.mjs) — the exact live-fetch-in-prebuild
   // shape F3 names for gen-anthology. Same fix: network kind, refresh only.
+  // check REMOVED by the freshness-pipelines lane: writing.ts now carries a
+  // wall-clock writingGeneratedAt (MUST_BE_STAMPED needs a real date, not a
+  // value derived from committed bytes), and check-generated.mjs re-runs
+  // every DETERMINISTIC node against LIVE data on every PR with no prior
+  // `npm run refresh` — a wall-clock stamp there would disagree with the
+  // committed file on every single day after the commit, on content that
+  // never changed. Exactly the failure class check-generated.mjs's own
+  // header comment documents for gen-ops.mjs's opsGeneratedAt. This node was
+  // "network" kind and in DETERMINISTIC at the same time even before this
+  // lane, which check-generated.mjs's own docstring says should not happen;
+  // this fixes that inconsistency rather than adding a second instance of it.
   { id: "loopdown", script: "gen-loopdown.mjs", npmName: "gen:loopdown", kind: "network",
-    inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7, check: 6 } },
+    inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7 } },
+  // check REMOVED for the same reason as loopdown just above: anthology.ts now
+  // carries a wall-clock generatedAt.
   { id: "anthology", script: "gen-anthology.mjs", npmName: "gen:anthology", kind: "network",
-    inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8, check: 7 } },
+    inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8 } },
   { id: "timeline", script: "gen-timeline.mjs", npmName: "gen:timeline", kind: "network",
     inputs: [], outputs: ["src/data/timeline.ts"], stages: { refresh: 9 } },
   // Re-shapes the already-committed timeline.ts (itself excluded from check
@@ -147,8 +160,12 @@ export const GENERATORS = [
   { id: "world-plate", script: "gen-world-plate.mjs", npmName: "gen:world-plate", kind: "local",
     inputs: ["src/data/timeline.ts"],
     outputs: ["src/world/corridorPlate.ts", "heavy/p/world/corridor.png"], stages: { refresh: 19 } },
+  // refresh added by the freshness-pipelines lane: repo-stats only reads the
+  // Compose twin (../cv-siddharth-kmp), which refresh-media.yml already
+  // checks out for check:generated — it had no refresh entry purely because
+  // nobody had wired it, not because the sibling it needs was ever missing.
   { id: "repo-stats", script: "gen-repo-stats.mjs", npmName: "gen:repo-stats", kind: "sibling",
-    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { check: 5 } },
+    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { refresh: 25, check: 5 } },
   { id: "ops", script: "gen-ops.mjs", npmName: "gen:ops", kind: "sibling",
     // evidence.ts added by the arch-L14 lane: gen-ops.mjs's second output,
     // a straight map over THIS array (every node, automated or not) — so a
@@ -231,8 +248,13 @@ export const GENERATORS = [
     // committed file — a real dependency its own header comment names.
     inputs: [".chess-cache/lichess-games.json"], outputs: ["src/data/chessDeep.ts"], stages: { refresh: 16 } },
 
+  // check REMOVED, refresh ADDED by the freshness-pipelines lane, same reason
+  // as loopdown/anthology above: archiveText.ts now carries a wall-clock
+  // generatedAt, and it had no refresh entry at all before this — check was
+  // its only automated path, so removing check with nothing added would have
+  // made it purely manual, same trap system-graph's own comment names.
   { id: "archive-text", script: "gen-archive-text.mjs", npmName: "gen:archive-text", kind: "network",
-    inputs: [], outputs: ["src/data/archiveText.ts"], stages: { check: 4 } },
+    inputs: [], outputs: ["src/data/archiveText.ts"], stages: { refresh: 26 } },
 
   // Manual/occasional: no npm alias, no stage. README documents each by name.
   { id: "store", script: "gen-store.mjs", npmName: "gen:store", kind: "network",
