@@ -1,6 +1,6 @@
 /**
  * The one Content-Security-Policy allowlist — read by scripts/gen-csp.mjs
- * (the build-time header generator), the preview-server plugin in
+ * (the build-time middleware manifest generator), the preview-server plugin in
  * vite.config.ts (so a local `npm run serve` genuinely exercises the same
  * policy as production instead of nothing), and vercelHeaders.test.ts (so
  * adding a new external origin without registering it here fails a test).
@@ -17,22 +17,11 @@
  * hydration <script> with no nonce hook in this plugin version, so instead
  * of allowing all inline scripts, the caller hashes the ACTUAL inline script
  * bytes of the document being served (per-request in preview, per-document
- * once prerendering lands) and passes them in.
+ * at build time for prerendered routes) and passes them in.
  *
- * KNOWN GAP until prerendering (a separate lane) ships: that inline script
- * embeds a per-render timestamp (TanStack Router's route-match `u` field),
- * so the SAME route hashes differently on every request. The preview-server
- * plugin below computes it live per response, so it is always correct; the
- * production path (api/ssr.mjs) still serves the one value scripts/gen-csp.mjs
- * bakes into vercel.json at build time, which will not match a live request's
- * actual hash. Not fixed here: api/ssr.mjs deliberately avoids importing any
- * .ts source (see its own docstring) because it runs on Vercel's serverless
- * Node runtime, whose exact version — and therefore whether it natively
- * strips this file's type annotations — is not something this lane could
- * verify without risking a broken production SSR path over an unverified
- * assumption. Once routes are prerendered to static HTML (this lane's stated
- * dependency), each document's bytes stop changing per-request and a
- * build-time hash becomes authoritative — see gen-csp.mjs's own docstring.
+ * Static production hashes are bundled with middleware from the same build;
+ * fallback SSR hashes each response. inlineScriptBodies applies the
+ * HTML parser's text normalization before either caller computes a hash.
  */
 import { HEAVY_ASSET_BASE } from "./assetBase.ts";
 
@@ -100,26 +89,23 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
  * Builds the header value, splicing script hashes (each a bare base64 sha256
  * digest, e.g. "abc123...=") into script-src as 'sha256-...'.
  *
- * The caller must include hashes for __root.tsx's two `scripts:` head
- * entries (Person + ProfilePage JSON-LD) — see scripts/gen-csp.mjs and
- * vite.config.ts's cspPreviewPlugin, which both compute them the same way.
- * TanStack Start never renders a `scripts:` head entry into the server-sent
- * HTML at all; the browser inserts both client-side on EVERY route,
- * including the ssr:false rooms whose own SSR body has nothing else in it
- * either — so a hash set built only from THIS document's raw response body
- * misses them on those routes. Not computed here: hashing needs node:crypto,
- * and this module is also imported (for CSP_DIRECTIVES) by
- * vercelHeaders.test.ts, which lives under tsconfig.app.json's project —
- * pulling a node:crypto type in there broke that project's DOM lib for
- * every OTHER file in it (confirmed: `tsc -b` failed on src/data/labs.ts's
- * unrelated `window` reference). Keeping this module hash-agnostic avoids
- * the cross-project type leak entirely.
+ * Callers also include the root's JSON-LD for client-side head updates.
+ * Hashing stays in Node callers; this shared module only normalizes text and
+ * builds the policy, so browser consumers never import node:crypto.
  */
 export function buildCspHeader(scriptHashes: readonly string[]): string {
   const directives = { ...CSP_DIRECTIVES, "script-src": [...CSP_DIRECTIVES["script-src"], ...[...new Set(scriptHashes)].map((h) => `'sha256-${h}'`)] };
   return Object.entries(directives)
     .map(([k, v]) => `${k} ${v.join(" ")}`)
     .join("; ");
+}
+
+/** Script text as the HTML parser presents it to CSP, not raw response bytes. */
+export function inlineScriptBodies(html: string): string[] {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+    .filter((match) => !/(?:^|\s)src\s*=/i.test(match[1]))
+    .map((match) => match[2].replace(/\r\n?/g, "\n").replace(/\0/g, "\uFFFD"))
+    .filter((body) => body.trim().length > 0);
 }
 
 /** Every external (non-'self', non-scheme-keyword) origin this policy allows,

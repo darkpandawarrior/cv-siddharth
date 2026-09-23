@@ -236,7 +236,7 @@ export function validateRoute(value: unknown): string | undefined {
 export function validateRequest(body: unknown): ChatRequest | null {
   const raw = (body as { mode?: unknown } | null)?.mode;
   if (raw !== undefined && raw !== "compose" && raw !== "jd") return null;
-  const mode: ChatMode = raw === undefined ? "chat" : raw;
+  const mode: ChatMode = raw === "compose" ? "compose" : raw === "jd" ? "jd" : "chat";
 
   const messages = validateMessages(body, mode === "jd" ? MAX_JD_CHARS : MAX_MESSAGE_CHARS);
   if (!messages) return null;

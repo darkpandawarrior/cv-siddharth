@@ -256,14 +256,10 @@ function cspPreviewPlugin(): Plugin {
   return {
     name: "csp-report-only-preview",
     async configurePreviewServer(server) {
-      const { buildCspHeader } = await import("./src/lib/csp.ts");
+      const { buildCspHeader, inlineScriptBodies } = await import("./src/lib/csp.ts");
       const { createHash } = await import("node:crypto");
       const { PERSON_LD, PROFILEPAGE_LD } = await import("./src/lib/structuredData.ts");
-      // __root.tsx's `scripts:` head entries never render into the
-      // server-sent HTML on any route (see csp.ts's buildCspHeader
-      // docstring) — hashed once here rather than relying on THIS
-      // response's own raw body to happen to contain them, which it never
-      // does on an ssr:false route.
+      // Also allow the root JSON-LD when a client-side head update inserts it.
       const globalScriptHashes = [
         createHash("sha256").update(JSON.stringify(PERSON_LD), "utf8").digest("base64"),
         createHash("sha256").update(JSON.stringify(PROFILEPAGE_LD), "utf8").digest("base64"),
@@ -301,8 +297,8 @@ function cspPreviewPlugin(): Plugin {
           collect(chunk);
           const body = Buffer.concat(chunks).toString("utf8");
           const hashes = new Set<string>(globalScriptHashes);
-          for (const m of body.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
-            if (m[1].trim()) hashes.add(createHash("sha256").update(m[1], "utf8").digest("base64"));
+          for (const script of inlineScriptBodies(body)) {
+            hashes.add(createHash("sha256").update(script, "utf8").digest("base64"));
           }
           res.setHeader("Content-Security-Policy-Report-Only", buildCspHeader([...hashes]));
           if (headArgs) writeHead(...headArgs);
@@ -383,6 +379,7 @@ export default defineConfig(async () => ({
     // already-client-only `@react-three/postprocessing` import). `server`
     // is what keeps them out of the SSR path these libs actually crash.
     tanstackStart({
+      router: { routeFileIgnorePattern: "\\.test\\.tsx?$" },
       importProtection: {
         behavior: "error",
         server: { specifiers: ["leaflet", "tldraw", "@playhtml/react", "playhtml", "three", "@react-three/*"] },

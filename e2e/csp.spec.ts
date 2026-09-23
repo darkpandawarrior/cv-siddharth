@@ -1,4 +1,4 @@
-import { test, expect } from "./lib/test.ts";
+import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 import { surfaces } from "../src/data/surfaces.ts";
 import { projects } from "../src/data/profile/projects.ts";
@@ -70,7 +70,13 @@ test.describe("the Wasm rooms' live embed never trips the policy", () => {
       test.slow();
       const getViolations = await collectViolations(page);
       await page.goto(`/project/${slug}`);
-      await page.getByRole("heading", { name: "One codebase, every surface" }).scrollIntoViewIfNeeded();
+      await waitForHydration(page);
+      await page.getByRole("heading", { name: "One codebase, every surface" }).evaluate(el => el.scrollIntoView());
+      const webTab = page.getByRole("tab", { name: "Web", exact: true });
+      await webTab.click();
+      await expect(webTab).toHaveAttribute("aria-selected", "true");
+      const liveUrl = projects.find((project) => project.slug === slug)!.targets!.find((target) => target.platform === "Web")!.liveUrl!;
+      await page.getByText(liveUrl, { exact: true }).scrollIntoViewIfNeeded();
       const frame = page.locator('iframe[title="Live web build"]');
       await expect(frame).toBeVisible({ timeout: 30_000 });
       // The runtime instantiating is the point, not just the iframe mounting

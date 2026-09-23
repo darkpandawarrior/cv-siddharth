@@ -16,10 +16,11 @@
 // compat alias.
 import { NodeRequest, sendNodeResponse } from "srvx/node";
 import serverEntry from "../dist/server/server.js";
+import { withHtmlCsp } from "../dist/csp/response.mjs";
 
 export default async function handler(req, res) {
   const webReq = new NodeRequest({ req, res });
-  const webRes = await serverEntry.fetch(webReq);
+  const webRes = await withHtmlCsp(await serverEntry.fetch(webReq));
   // NB: no forced `content-encoding: identity` (that's a preview-only quirk) —
   // let Vercel compress, so production LCP isn't inflated.
   res.setHeaders(webRes.headers);
