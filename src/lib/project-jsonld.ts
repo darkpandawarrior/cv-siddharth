@@ -1,6 +1,7 @@
+import { profile } from "../data/profile/core.ts";
 import type { Project } from "../data/profile.ts";
 
-const SITE_URL = "https://cv-siddharth.vercel.app";
+const SITE_URL = profile.portfolio;
 
 // Stack entries are a mix of languages, frameworks and platforms (e.g.
 // "Kotlin Multiplatform", "Ktor", "Android"). Only surface entries that

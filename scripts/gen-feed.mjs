@@ -11,7 +11,7 @@ import { writing } from "../src/data/writing.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "public", "feed.xml");
 
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = "https://siddharth-pandalai.vercel.app";
 const HUB = `${SITE}/loopdown`;
 const SELF = `${SITE}/feed.xml`;
 const FEED_TITLE = "The Loopdown — Siddharth Pandalai";

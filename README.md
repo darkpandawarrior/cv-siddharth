@@ -12,10 +12,7 @@
   <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
 </p>
 
-**Live: [cv-siddharth.vercel.app](https://siddharth-pandalai.vercel.app/)** (the Vercel project
-itself is now named **siddharth-pandalai**, reachable at
-[siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/) too; the original
-domain stays a live alias so every existing link keeps working)
+**Live: [siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/)**. The original `cv-siddharth.vercel.app` domain remains an alias.
 
 Interactive CV for **Siddharth Pandalai**, Senior Android Engineer. A portfolio
 that demonstrates the work instead of listing it: case studies with real
@@ -327,8 +324,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1292 unit tests across 117 files (vitest)
-npm run test:e2e  # 304 Playwright tests across 18 files, every registry route
+npm test          # 1314 unit tests across 128 files (vitest)
+npm run test:e2e  # 315 Playwright tests across 22 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

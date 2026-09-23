@@ -49,7 +49,7 @@ const ymOf = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStar
 
 /* ── chess: BOTH platforms, because one of them is the whole story ───────── */
 
-const CHESSCOM_UA = "cv-siddharth/1.0 (portfolio build; +https://cv-siddharth.vercel.app)";
+const CHESSCOM_UA = "cv-siddharth/1.0 (portfolio build; +https://siddharth-pandalai.vercel.app)";
 const chesscomCachePath = join(root, ".chess-cache/chesscom-months.json");
 
 /**

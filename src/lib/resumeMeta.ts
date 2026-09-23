@@ -1,7 +1,7 @@
 import type { Experience } from "../data/profile.ts";
 import { profile, experience } from "../data/profile.ts";
 
-const SITE_URL = "https://cv-siddharth.vercel.app";
+const SITE_URL = profile.portfolio;
 
 /**
  * Every entry whose period is still running. Shared by __root.tsx's Person

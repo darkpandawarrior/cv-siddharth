@@ -114,9 +114,9 @@ export const writing: Writing = {
       "slug": "never-silently-change-a-number",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-18",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/never-silently-change-a-number-someone-gets-paid-on-h4n",
       "tags": [
         "product-engineering",
         "trust",
@@ -124,16 +124,18 @@ export const writing: Writing = {
         "data-integrity",
         "android"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/never-silently-change-a-number-someone-gets-paid-on-h4n"
+      }
     },
     {
       "title": "When two sensors disagree, rank them",
       "slug": "accelerometer-outranks-gps",
       "pillar": "data-integrity",
       "series": "sensors-who-lie",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-13",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/when-two-sensors-disagree-rank-them-12ki",
       "tags": [
         "android",
         "sensors",
@@ -141,16 +143,18 @@ export const writing: Writing = {
         "imu",
         "location"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/when-two-sensors-disagree-rank-them-12ki"
+      }
     },
     {
       "title": "Your data model is where uncertainty goes to die",
       "slug": "uncertainty-dies-in-data-model",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-11",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/your-data-model-is-where-uncertainty-goes-to-die-g6j",
       "tags": [
         "data-modelling",
         "architecture",
@@ -158,16 +162,18 @@ export const writing: Writing = {
         "sensors",
         "api-design"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/your-data-model-is-where-uncertainty-goes-to-die-g6j"
+      }
     },
     {
       "title": "One global threshold is how you delete valid data",
       "slug": "one-global-threshold",
       "pillar": "data-integrity",
       "series": "sensors-who-lie",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-06",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/one-global-threshold-is-how-you-delete-valid-data-303h",
       "tags": [
         "android",
         "location",
@@ -175,16 +181,18 @@ export const writing: Writing = {
         "heuristics",
         "sensor-fusion"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/one-global-threshold-is-how-you-delete-valid-data-303h"
+      }
     },
     {
       "title": "Filtered should never mean deleted",
       "slug": "filtered-never-deleted",
       "pillar": "data-integrity",
       "series": "sensors-who-lie",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-04",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/filtered-should-never-mean-deleted-5081",
       "tags": [
         "android",
         "data-modelling",
@@ -192,7 +200,9 @@ export const writing: Writing = {
         "observability",
         "architecture"
       ],
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/filtered-should-never-mean-deleted-5081"
+      }
     },
     {
       "title": "collectAsState is quietly leaking your work",

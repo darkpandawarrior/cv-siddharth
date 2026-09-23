@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { previous, shrinkage } from "./gen-loopdown.mjs";
+import { previous, shrinkage, uniqueRecords } from "./gen-loopdown.mjs";
 
 /**
  * The guard that stops a successful-but-empty registry fetch from blanking the
@@ -31,4 +31,12 @@ describe("gen-loopdown regression guard", () => {
   it("has nothing to compare against on a fresh clone, so it writes", () => {
     expect(shrinkage({ lessons: [], series: [], archive: [], cast: [] }, null)).toEqual([]);
   });
+});
+
+
+it("collapses identical source records but rejects conflicting or missing identities", () => {
+  const lesson = { slug: "android-flow", title: "Android flow" };
+  expect(uniqueRecords([lesson, { ...lesson }], "slug")).toEqual([lesson]);
+  expect(() => uniqueRecords([lesson, { ...lesson, title: "Conflicting title" }], "slug")).toThrow(/Conflicting/);
+  expect(() => uniqueRecords([{ title: "No identity" }], "slug")).toThrow(/Missing/);
 });

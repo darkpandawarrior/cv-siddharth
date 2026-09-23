@@ -107,3 +107,13 @@ describe("the three derived consumers stay in sync with the manifest", () => {
     }
   });
 });
+
+it("refreshes the ops perimeter after history and system graph, before Kotlin", async () => {
+  const { stageOrder } = await import("./generators.mjs");
+  const ids = stageOrder("refresh").map((g) => g.id);
+  for (const source of ["history", "system-graph", "chess-stats", "chess-deep", "lanes"]) {
+    expect(ids.indexOf(source), source).toBeGreaterThanOrEqual(0);
+    expect(ids.indexOf(source), source).toBeLessThan(ids.indexOf("ops"));
+  }
+  expect(ids.indexOf("ops")).toBeLessThan(ids.indexOf("kotlin-data"));
+});

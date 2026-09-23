@@ -13,7 +13,9 @@
  * collection step.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+
+import { readTwinStats } from "./lib/twin-stats.mjs";
 
 const OUT = new URL("../src/data/repoStats.ts", import.meta.url);
 
@@ -42,32 +44,6 @@ const OUT = new URL("../src/data/repoStats.ts", import.meta.url);
  * number is wrong.
  */
 const KMP = new URL("../../cv-siddharth-kmp/", import.meta.url);
-
-const twinStats = () => {
-  if (!existsSync(KMP)) return null;
-  const kt = execFileSync(
-    "find",
-    [".", "-name", "*.kt", "-not", "-path", "*/build/*", "-not", "-path", "*/data/generated/*"],
-    { cwd: KMP, encoding: "utf8" },
-  )
-    .split("\n")
-    .filter(Boolean);
-  const lines = kt.reduce((n, f) => n + readFileSync(new URL(f.replace(/^\.\//, ""), KMP), "utf8").split("\n").length, 0);
-
-  const toml = readFileSync(new URL("gradle/libs.versions.toml", KMP), "utf8");
-  const v = (k) => toml.match(new RegExp(`^${k}\\s*=\\s*"([^"]+)"`, "m"))?.[1] ?? null;
-  const gradle = readFileSync(new URL("gradle/wrapper/gradle-wrapper.properties", KMP), "utf8")
-    .match(/gradle-([0-9][^-]*?)-bin/)?.[1] ?? null;
-
-  return {
-    kotlinLines: lines,
-    kotlinFiles: kt.length,
-    kotlin: v("kotlin"),
-    compose: v("compose-multiplatform"),
-    agp: v("agp"),
-    gradle,
-  };
-};
 
 /** What the file says today, so a bad run can decline to make things worse. */
 const previous = (() => {
@@ -115,7 +91,7 @@ if (tests < previous.tests || testFiles < previous.testFiles) {
   process.exit(0);
 }
 
-const twin = twinStats();
+const twin = readTwinStats(KMP);
 
 /*
  * A twin that is not checked out keeps whatever the committed file already says,

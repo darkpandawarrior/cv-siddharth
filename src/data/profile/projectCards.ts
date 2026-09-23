@@ -1,3 +1,5 @@
+import { projectStats } from "../projectStats.ts";
+import { projectModuleCounts, paymentGatewayCount, dooriStats, paymentStats } from "../../lib/projectStatLine.ts";
 // GENERATED ONCE from projects.ts at split time (arch-L15), then hand-kept
 // in sync — a companion test (projectCards.test.ts) fails if a future edit
 // to projects.ts moves these fields out from under it. Deliberately not a
@@ -39,7 +41,7 @@ export const projectCards: ProjectCard[] = [
       "Pure (GameState, Intent) → GameState reducer drives the AI, UI, and a future server.",
       "ISMCTS AI with 10 bot personas plus a DARBAR social layer for bluffing and alliances."
     ],
-    "status": "14 modules · 4 platforms · 10 bot personas",
+    "status": `${projectModuleCounts.gaddi} modules · 4 platforms · 10 bot personas`,
     "badges": [
       "Kotlin Multiplatform",
       "Game engine",
@@ -62,13 +64,13 @@ export const projectCards: ProjectCard[] = [
       "Koin"
     ],
     "highlights": [
-      "49-module clean architecture: 13 feature modules meeting only at the composition root.",
+      `${projectModuleCounts.doori}-module clean architecture: ${dooriStats.features} feature modules meeting only at the composition root.`,
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant."
     ],
-    "status": "49 modules · 5 platforms · 159 tests",
+    "status": `${projectModuleCounts.doori} modules · 5 platforms · 159 tests`,
     "badges": [
       "Kotlin Multiplatform",
-      "49 modules",
+      `${projectModuleCounts.doori} modules`,
       "5 platforms",
       "Open source"
     ],
@@ -87,14 +89,14 @@ export const projectCards: ProjectCard[] = [
       "Room"
     ],
     "highlights": [
-      "44-module registry (15 local + 29 composed) spans 66 cataloged payment gateways.",
+      `${projectModuleCounts["paymentslab-kmp"]}-module registry (${paymentStats.modules} local + ${paymentStats.composedModules} composed) spans ${paymentGatewayCount} cataloged payment gateways.`,
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest."
     ],
-    "status": "44 modules · 66 gateways · 5 rails",
+    "status": `${projectModuleCounts["paymentslab-kmp"]} modules · ${paymentGatewayCount} gateways · 5 rails`,
     "badges": [
       "Kotlin Multiplatform",
-      "44 modules",
-      "66 gateways",
+      `${projectModuleCounts["paymentslab-kmp"]} modules`,
+      `${paymentGatewayCount} gateways`,
       "Open source"
     ],
     "tier": 2
@@ -132,7 +134,7 @@ export const projectCards: ProjectCard[] = [
     "stack": [
       "cv-siddharth",
       "React 19",
-      "Vite 7",
+      "Vite 8",
       "Tailwind v4",
       "Vercel Edge",
       "Multi-provider LLM",
@@ -215,16 +217,16 @@ export const projectCards: ProjectCard[] = [
       "MIT"
     ],
     "highlights": [
-      "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.",
-      "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
+      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.`,
+      `kmp-build-logic: ${projectStats.foundation.conventionPlugins} convention plugins. The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.`,
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Doori (13 of its 49 modules), PaymentsLab-KMP (29 of its 44), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses."
+      `Consumed by Doori (${dooriStats.composedModules} of its ${projectModuleCounts.doori} modules), PaymentsLab-KMP (${paymentStats.composedModules} of its ${projectModuleCounts["paymentslab-kmp"]}), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.`
     ],
     "status": "Active · MIT · vendored across 5 repos",
     "badges": [
       "Kotlin Multiplatform",
-      "39 modules",
-      "22 convention plugins",
+      `${projectStats.foundation.modules} modules`,
+      `${projectStats.foundation.conventionPlugins} convention plugins`,
       "MIT"
     ]
   },

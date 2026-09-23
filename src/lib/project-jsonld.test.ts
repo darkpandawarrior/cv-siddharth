@@ -12,7 +12,7 @@ describe("buildProjectJsonLd", () => {
       "@context": "https://schema.org",
       "@type": "SoftwareSourceCode",
       name: "Doori",
-      url: "https://cv-siddharth.vercel.app/project/doori",
+      url: "https://siddharth-pandalai.vercel.app/project/doori",
       programmingLanguage: ["Kotlin"],
       codeRepository: "https://github.com/darkpandawarrior/Doori",
       author: { "@type": "Person", name: "Siddharth Pandalai" },
@@ -39,7 +39,7 @@ describe("buildProjectJsonLd", () => {
       "@type": "ListItem",
       position: 3,
       name: "Doori",
-      item: "https://cv-siddharth.vercel.app/project/doori",
+      item: "https://siddharth-pandalai.vercel.app/project/doori",
     });
   });
 });
@@ -53,7 +53,7 @@ describe("buildArticleJsonLd", () => {
       "@type": "Article",
       headline: "Doori — case study",
       articleBody: doori.detail!.overview,
-      url: "https://cv-siddharth.vercel.app/project/doori",
+      url: "https://siddharth-pandalai.vercel.app/project/doori",
     });
   });
 

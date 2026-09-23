@@ -21,6 +21,10 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 
+import { galleries } from "../src/data/galleries.ts";
+import { projectStats } from "../src/data/projectStats.ts";
+import { projectModuleCounts, paymentGatewayCount } from "../src/lib/projectStatLine.ts";
+import { providerCount } from "../src/data/careerOpsUpstream.ts";
 import { storeApps, fleet, liveClients, pastClients, delisted, fleetStats, lastShipped, storeGeneratedAt } from "../src/data/store.ts";
 import { weeb } from "../src/data/weeb.ts";
 import { writing } from "../src/data/writing.ts";
@@ -364,6 +368,51 @@ const Witness = obj(
 );
 
 const files = [
+  {
+    out: "CvGalleryFacts.kt",
+    source: "src/data/galleries.ts",
+    vals: [{
+      name: "projectGalleries",
+      doc: "Canonical screenshot URLs; slugs follow the web media registry.",
+      type: list(obj("ProjectGallery", { slug: S, urls: list(S) })),
+      value: Object.entries(galleries).map(([slug, urls]) => ({ slug, urls })),
+    }],
+  },
+  {
+    out: "CvProjectFacts.kt",
+    source: "src/data/projectStats.ts, src/data/careerOpsUpstream.ts",
+    vals: [{
+      name: "projectFacts",
+      doc: "Current public project counts, shared with the web portfolio.",
+      type: obj("ProjectFacts", {
+        dooriLocalModules: I, dooriComposedModules: I, dooriModules: I, dooriFeatures: I,
+        paymentsLocalModules: I, paymentsComposedModules: I, paymentsModules: I,
+        gatewaysNative: I, gatewaysInternal: I, gatewaysHosted: I, gatewaysMobileMoney: I, gatewaysStub: I,
+        paymentGateways: I, gaddiModules: I, careerOpsProviders: I,
+        toolkitModules: I, toolkitProviderModules: I, conventionPlugins: I,
+      }),
+      value: {
+        dooriLocalModules: projectStats.mileway.modules,
+        dooriComposedModules: projectStats.mileway.composedModules,
+        dooriModules: projectModuleCounts.doori,
+        dooriFeatures: projectStats.mileway.features,
+        paymentsLocalModules: projectStats.paymentslab.modules,
+        paymentsComposedModules: projectStats.paymentslab.composedModules,
+        paymentsModules: projectModuleCounts["paymentslab-kmp"],
+        gatewaysNative: projectStats.paymentslab.gatewaysNative,
+        gatewaysInternal: projectStats.paymentslab.gatewaysInternal,
+        gatewaysHosted: projectStats.paymentslab.gatewaysHosted,
+        gatewaysMobileMoney: projectStats.paymentslab.gatewaysMobileMoney,
+        gatewaysStub: projectStats.paymentslab.gatewaysStub,
+        paymentGateways: paymentGatewayCount,
+        gaddiModules: projectModuleCounts.gaddi,
+        careerOpsProviders: providerCount,
+        toolkitModules: projectStats.foundation.modules,
+        toolkitProviderModules: projectStats.foundation.providerModules,
+        conventionPlugins: projectStats.foundation.conventionPlugins,
+      },
+    }],
+  },
   {
     out: "CvStoreData.kt",
     source: "src/data/store.ts",

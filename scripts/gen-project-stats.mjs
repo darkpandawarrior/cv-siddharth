@@ -41,6 +41,8 @@ async function build() {
   const mDb = await getText(raw(mRepo, "main", "core/data/src/commonMain/kotlin/com/mileway/core/data/database/MilewayDatabase.kt"));
   const pSettings = await getText(raw(pRepo, "main", "settings.gradle.kts"));
   const kSettings = await getText(raw(kRepo, "main", "settings.gradle.kts"));
+  const toolkitSettings = await getText(raw("darkpandawarrior/kmp-toolkit", "main", "settings.gradle.kts"));
+  const conventionBuild = await getText(raw("darkpandawarrior/kmp-build-logic", "main", "convention/build.gradle.kts"));
   // Gateway breakdown used to be re-derived from raw source (Application.kt
   // import counting) — that broke silently when providers got reorganized
   // into their own config files (2026-07-24: was reporting 71 gateways,
@@ -54,6 +56,11 @@ async function build() {
   if (!dbMatch) throw new Error("could not parse Mileway DB version");
 
   return {
+    foundation: {
+      modules: count(toolkitSettings, /^include\(/gm),
+      providerModules: count(toolkitSettings, /^include\(":provider:/gm),
+      conventionPlugins: count(conventionBuild, /^\s*id\s*=\s*"shared\./gm),
+    },
     mileway: {
       modules: count(mSettings, /^include\(/gm),
       // The kmp-toolkit modules Mileway composes in through `includeBuild` +
@@ -77,6 +84,7 @@ async function build() {
       // Pulled from the README's own "Modular KMP architecture, N gateways
       // behind it" highlight bullet — see the note above on why.
       gatewaysNative: Number(pReadme.match(/catalog spans (\d+) native-SDK integrations/i)?.[1] ?? 0),
+      gatewaysInternal: Number(pReadme.match(/(\d+) internal wallet ledger/i)?.[1] ?? 0),
       gatewaysHosted: Number(pReadme.match(/(\d+) hosted-webview gateways/i)?.[1] ?? 0),
       gatewaysMobileMoney: Number(pReadme.match(/(\d+) mobile-money flows/i)?.[1] ?? 0),
       gatewaysStub: Number(pReadme.match(/(\d+) catalog-only\/KYC-gated entries/i)?.[1] ?? 0),
@@ -97,7 +105,7 @@ const banner =
 try {
   const stats = await build();
   // Sanity guard: a parse that silently returns 0 modules is a bad fetch, not real.
-  if (!stats.mileway.modules || !stats.paymentslab.modules || !stats.kursi.modules) throw new Error("parsed 0 modules — refusing to overwrite");
+  if (!stats.mileway.modules || !stats.paymentslab.modules || !stats.kursi.modules || !stats.foundation.modules || !stats.foundation.conventionPlugins) throw new Error("parsed 0 modules — refusing to overwrite");
   writeFileSync(outFile, banner + `export const projectStats = ${JSON.stringify(stats, null, 2)} as const;\n`);
   console.log("[gen-project-stats]", JSON.stringify(stats));
 } catch (err) {

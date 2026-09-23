@@ -23,7 +23,7 @@ import { describes } from "../src/lib/describes.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "public", "anthology.xml");
 
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = "https://siddharth-pandalai.vercel.app";
 const HUB = `${SITE}/anthology`;
 const SELF = `${SITE}/anthology.xml`;
 const AUTHOR = "Siddharth Pandalai";

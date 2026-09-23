@@ -29,10 +29,10 @@ const REPO = "https://raw.githubusercontent.com/darkpandawarrior/the-loopdown/ma
 const bail = (msg) => {
   if (existsSync(outPath)) {
     console.warn(`[gen-anthology] ${msg} — keeping the existing file rather than shipping a gap`);
-    process.exit(0);
+    process.exit(1);
   }
   console.warn(`[gen-anthology] ${msg} — and no previous file to fall back to`);
-  process.exit(0); // never fail the build over the fiction
+  process.exit(1); // Refresh failed; builds still use the committed snapshot.
 };
 
 let registry;

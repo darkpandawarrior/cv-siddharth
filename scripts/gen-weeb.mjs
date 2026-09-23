@@ -33,7 +33,7 @@ const API = "https://graphql.anilist.co";
 // AniList 403s the default Node/urllib agent. Identify properly.
 const HEADERS = {
   "Content-Type": "application/json",
-  "User-Agent": "cv-siddharth/1.0 (+https://cv-siddharth.vercel.app)",
+  "User-Agent": "cv-siddharth/1.0 (+https://siddharth-pandalai.vercel.app)",
 };
 
 /** Titles his Notion spells differently to every database on earth. */
@@ -115,7 +115,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** One AniList lookup, cached by `${type}:${title}`. Retries once on 429. */
 async function lookup(title, type) {
   const key = `${type}:${title}`;
-  if (key in cache) return cache[key];
+  const age = Date.now() - (cache[key]?._fetchedAt ?? 0);
+  if (!process.argv.includes("--refresh") && age >= 0 && age < 7 * 24 * 60 * 60 * 1000) return cache[key];
   // Straighten curly quotes and collapse stray whitespace before searching.
   // AniList indexes ASCII apostrophes, so "Komi San Can’t Communicate" and
   // "The World’s Finest Assassin" missed on a character the CSV export chose,
@@ -143,7 +144,7 @@ async function lookup(title, type) {
       // short-circuits on last run's null and nothing changes. Caching only
       // hits means an alias takes effect on the next run, which is the whole
       // point of having the alias map.
-      if (m) cache[key] = m;
+      if (m) cache[key] = { ...m, _fetchedAt: Date.now() };
       fetched++;
       await sleep(700);
       return m;
@@ -152,6 +153,7 @@ async function lookup(title, type) {
       await sleep(2000);
     }
   }
+  failed++; // Both rate-limited attempts were exhausted.
   return null;
 }
 
@@ -248,9 +250,9 @@ for (const r of manga) {
 mkdirSync(cacheDir, { recursive: true });
 writeFileSync(cachePath, JSON.stringify(cache));
 
-if (failed && existsSync(outPath)) {
+if (failed) {
   console.warn(`[gen-weeb] ${failed} lookup(s) failed — keeping the existing file rather than shipping a gap`);
-  process.exit(0);
+  process.exit(1);
 }
 
 const count = (arr, fn) => arr.reduce((m, x) => { const k = fn(x); m[k] = (m[k] ?? 0) + 1; return m; }, {});

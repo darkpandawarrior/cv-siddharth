@@ -56,6 +56,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { dirtyState } from "./lib/generated-state.mjs";
 import { CHECK_DETERMINISTIC as DETERMINISTIC } from "./generators.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -75,12 +76,6 @@ const REPOS = [
   { label: "cv-siddharth", dir: root },
   { label: "cv-siddharth-kmp", dir: KMP },
 ];
-
-const dirty = (dir) =>
-  execFileSync("git", ["-C", dir, "status", "--porcelain"], { encoding: "utf8" })
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
 
 // arch-L12: this used to `continue` past a missing repo, which is how the
 // cross-repo half of this check silently passed on EVERY PR — ci.yml never
@@ -104,7 +99,7 @@ for (const r of REPOS) {
     );
     process.exit(1);
   }
-  before.set(r.label, new Set(dirty(r.dir)));
+  before.set(r.label, dirtyState(r.dir));
 }
 
 for (const g of DETERMINISTIC) {
@@ -114,8 +109,10 @@ for (const g of DETERMINISTIC) {
 const moved = [];
 for (const r of REPOS) {
   if (!before.has(r.label)) continue;
-  for (const line of dirty(r.dir)) {
-    if (!before.get(r.label).has(line)) moved.push(`${r.label}: ${line}`);
+  const after = dirtyState(r.dir);
+  const prior = before.get(r.label);
+  for (const path of new Set([...prior.keys(), ...after.keys()])) {
+    if (prior.get(path) !== after.get(path)) moved.push(`${r.label}: ${path}`);
   }
 }
 

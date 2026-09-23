@@ -26,6 +26,21 @@ export const STATS_KEY: Record<string, keyof typeof projectStats> = {
   gaddi: "kursi",
 };
 
+export const dooriStats = projectStats.mileway;
+export const paymentStats = projectStats.paymentslab;
+
+/** Local and substituted modules use the same definition on every surface. */
+export const projectModuleCounts = {
+  doori: projectStats.mileway.modules + projectStats.mileway.composedModules,
+  "paymentslab-kmp": projectStats.paymentslab.modules + projectStats.paymentslab.composedModules,
+  gaddi: projectStats.kursi.modules,
+} as const;
+
+export const paymentGatewayCount = projectStats.paymentslab.gatewaysNative
+  + projectStats.paymentslab.gatewaysHosted + projectStats.paymentslab.gatewaysMobileMoney
+  + projectStats.paymentslab.gatewaysStub
+  + Number("gatewaysInternal" in projectStats.paymentslab ? projectStats.paymentslab.gatewaysInternal : 0);
+
 export function repoStatLine(slug: string): string | null {
   const key = STATS_KEY[slug] ?? slug;
   const s = projectStats[key as keyof typeof projectStats];
@@ -44,7 +59,7 @@ export function repoStatLine(slug: string): string | null {
     return `${s.modules + s.composedModules} modules · ${s.features} features · ${s.screenshots} screenshots`;
   }
   if (slug === "paymentslab-kmp" && "gatewaysNative" in s) {
-    const gateways = s.gatewaysNative + s.gatewaysHosted + s.gatewaysMobileMoney + s.gatewaysStub;
+    const gateways = paymentGatewayCount;
     return `${s.modules + s.composedModules} modules · ${gateways} gateways`;
   }
   if (slug === "gaddi") return `${s.modules} modules · 4 platforms`;

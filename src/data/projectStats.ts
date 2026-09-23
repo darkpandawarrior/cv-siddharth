@@ -2,28 +2,34 @@
 // Numbers are derived from each app repo's settings.gradle.kts + Room DB over
 // raw.githubusercontent. Run `npm run gen:stats` to refresh.
 export const projectStats = {
+  "foundation": {
+    "modules": 43,
+    "providerModules": 20,
+    "conventionPlugins": 18
+  },
   "mileway": {
     "modules": 36,
     "composedModules": 13,
     "features": 13,
     "cores": 12,
     "dbVersion": 48,
-    "screenshots": 368
+    "screenshots": 372
   },
   "paymentslab": {
-    "modules": 15,
+    "modules": 17,
     "composedModules": 29,
     "providers": 0,
     "features": 4,
-    "cores": 7,
+    "cores": 9,
     "gatewaysNative": 15,
+    "gatewaysInternal": 1,
     "gatewaysHosted": 44,
     "gatewaysMobileMoney": 7,
     "gatewaysStub": 3,
     "screenshots": 26
   },
   "kursi": {
-    "modules": 14,
+    "modules": 15,
     "screenshots": 61
   }
 } as const;

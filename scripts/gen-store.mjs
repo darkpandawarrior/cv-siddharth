@@ -36,6 +36,8 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
+import { needsStoreProbe } from "./lib/store-cache.mjs";
+import { readPublishedStore, assertPublishedListings } from "./lib/store-published.mjs";
 const CACHE = resolve(process.cwd(), ".store-cache.json");
 /** Written by scripts/gen-store-archive.mjs. Optional — the fleet works without it. */
 const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
@@ -48,6 +50,8 @@ const SINCE_CACHE = resolve(process.cwd(), ".store-since-cache.json");
 const SIBLINGS_CACHE = resolve(process.cwd(), ".store-siblings.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
+const publishedOnly = process.argv.includes("--published-only");
+const published = publishedOnly ? readPublishedStore(OUT) : null;
 
 /**
  * The two source checkouts this generator reads, supplied by the operator.
@@ -229,13 +233,14 @@ async function probe(id) {
     try {
       const res = await fetchWithTimeout(url, { headers: { "user-agent": UA } });
       if (res.status === 404) return { v: PROBE_V, live: false };
-      if (res.status === 429 || res.status >= 500) {
+      if (!res.ok) {
         await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
         continue;
       }
       const html = await res.text();
       const name = html.match(/itemprop="name"[^>]*>([^<]{1,80})/)?.[1]?.trim();
-      if (!name) return { v: PROBE_V, live: false };
+      // A consent/challenge page or changed markup is not a delisting.
+      if (!name) continue;
       return {
         v: PROBE_V,
         live: true,
@@ -279,7 +284,7 @@ async function probe(id) {
     }
   }
   // Out of attempts, which is NOT the same answer as "not on the store". Only a
-  // 404, or a 200 whose HTML carries no itemprop="name", is evidence of absence;
+  // 404 is evidence of absence;
   // a 429 storm or three timeouts are evidence of nothing at all, and this line
   // used to launder them into `live: false` — which is how a throttled probe
   // could quietly delist a working app. Null means unknown, and every caller
@@ -317,7 +322,7 @@ async function verifyAll(ids) {
   const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {};
   // Re-probe anything live that predates the current schema, so the icon and
   // developer fields land. A dead id stays dead — no point spending a request.
-  const queue = ids.filter((id) => !(id in cache) || (cache[id].live && cache[id].v !== PROBE_V));
+  const queue = [...new Set(ids)].filter((id) => needsStoreProbe(cache[id], PROBE_V));
   /** Ids Play never gave an answer for, and that no earlier run has either. */
   const unresolved = [];
   console.log(`[gen-store] probing ${queue.length} listing(s), ${ids.length - queue.length} cached`);
@@ -333,8 +338,8 @@ async function verifyAll(ids) {
         // that has never resolved stays OUT of the cache, so the next run
         // retries it instead of writing it off forever, and lands in
         // `unresolved` so this run knows its own answer is incomplete.
-        if (r) cache[id] = r;
-        else if (!(id in cache)) unresolved.push(id);
+        if (r) cache[id] = { ...r, checkedAt: new Date().toISOString() };
+        else unresolved.push(id);
         if (++done % 100 === 0) writeFileSync(CACHE, JSON.stringify(cache));
       }
     }),
@@ -352,14 +357,19 @@ function installFloor(s) {
   return m ? parseFloat(m[1].replace(/,/g, "")) * ({ K: 1e3, M: 1e6, B: 1e9 }[m[2]] ?? 1) : 0;
 }
 
-const { clients, branchCount } = mine();
+const { clients, branchCount } = publishedOnly
+  ? {
+      clients: published.fleet.map(({ id, side, setUpByHim }) => ({ id, side, setUpByHim, commits: 0 })),
+      branchCount: published.fleetStats.branches,
+    }
+  : mine();
 console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount} branches`);
 
 /* Apps a client shipped under a package id this data never carried — a rebrand,
  * or a third app in the set. Found on the client's own Play developer page and
  * kept only where the id matches the client's stem (gen-store-siblings.mjs), so
  * "same company" alone never gets anything onto the shelf. */
-{
+if (!publishedOnly) {
   const siblings = existsSync(SIBLINGS_CACHE)
     ? JSON.parse(readFileSync(SIBLINGS_CACHE, "utf8"))
     : {};
@@ -381,8 +391,10 @@ console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount
 }
 
 const { store, unresolved } = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
+if (publishedOnly) assertPublishedListings(published, store, unresolved);
 
-const flagships = FLAGSHIPS.map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
+const flagships = (publishedOnly ? published.storeApps : FLAGSHIPS)
+  .map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
 for (const f of FLAGSHIPS) if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
 if (flagships.length === 0) throw new Error("[gen-store] no flagship resolved — refusing to write");
 
@@ -398,17 +410,19 @@ const fleet = clients
 /* The ones that used to be on the store. See scripts/gen-store-archive.mjs:
  * an archived 200 for the listing URL is proof it was published, and absence of
  * a snapshot is proof of nothing at all — so this is a floor, never a count. */
-const archive = existsSync(ARCHIVE_CACHE) ? JSON.parse(readFileSync(ARCHIVE_CACHE, "utf8")) : {};
-const delisted = clients
+const archive = !publishedOnly && existsSync(ARCHIVE_CACHE) ? JSON.parse(readFileSync(ARCHIVE_CACHE, "utf8")) : {};
+const delisted = publishedOnly ? published.delisted : clients
   .filter((c) => !store[c.id]?.live && archive[c.id]?.wasLive)
   .map((c) => ({ ...c, ...archive[c.id] }))
   .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
-const archiveChecked = Object.keys(archive).length;
+const archiveChecked = publishedOnly ? published.fleetStats.archiveChecked : Object.keys(archive).length;
 
 /* First-seen dates for the live listings, also from the Archive. Play never
  * says when an app appeared, only when it was last updated; the earliest crawl
  * of a listing is the closest anyone outside Google gets. */
-const since = existsSync(SINCE_CACHE) ? JSON.parse(readFileSync(SINCE_CACHE, "utf8")) : {};
+const since = publishedOnly
+  ? Object.fromEntries(published.fleet.map(({ id, firstSeen }) => [id, { firstSeen }]))
+  : existsSync(SINCE_CACHE) ? JSON.parse(readFileSync(SINCE_CACHE, "utf8")) : {};
 for (const app of fleet) app.firstSeen = since[app.id]?.firstSeen ?? null;
 
 /* Apply the tenure rule. See JOINED. */
@@ -427,6 +441,9 @@ const withinTenure = (app) => {
 const predating = [...fleet, ...delisted].filter((a) => !withinTenure(a));
 const liveKept = fleet.filter(withinTenure);
 const pastKept = delisted.filter(withinTenure);
+if (publishedOnly && (liveKept.length !== published.fleet.length || pastKept.length !== published.delisted.length)) {
+  throw new Error("[gen-store] published-only tenure changed; public files unchanged; full refresh required");
+}
 console.log(
   `[gen-store] tenure rule removed ${predating.length} app(s) last shipped before ${JOINED}`,
 );
@@ -459,7 +476,7 @@ if (unresolved.length || liveKept.length < prevLive - SHRINK_TOLERANCE) {
   const why = `${liveKept.length} live vs ${prevLive} committed, ${unresolved.length} unresolved`;
   // The one legitimate day a client pulls five apps at once should not require
   // editing this script: STORE_ALLOW_SHRINK=1 npm run gen:store.
-  if (!process.env.STORE_ALLOW_SHRINK)
+  if (publishedOnly || !process.env.STORE_ALLOW_SHRINK)
     throw new Error(
       `[gen-store] ${why} — refusing to write; Play probably throttled the probe. ` +
         `Re-run it, or set STORE_ALLOW_SHRINK=1 if the drop is real.`,
@@ -479,7 +496,9 @@ console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/
  * A delisted app has no Play listing left to take an icon from, and the Archive
  * does not keep one. Resolving them separately is what lets these apps be shown
  * as themselves rather than as ninety identical grey rectangles. */
-const flavours = existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
+const flavours = publishedOnly
+  ? Object.fromEntries([...published.fleet, ...published.delisted].map(({ id, color }) => [id, { color }]))
+  : existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
 const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
 
 /**
@@ -639,7 +658,14 @@ function sharedName(names) {
   return trimmed.length >= 3 ? trimmed : null;
 }
 
-const stats = {
+const stats = publishedOnly ? {
+  ...published.fleetStats,
+  // These are current listing facts. Provenance counts are unchanged because
+  // public mode refuses any disappearance that would make them ambiguous.
+  installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
+  developers: new Set(liveKept.map((a) => a.developer).filter(Boolean)).size,
+  clientsLive: groupByClient(liveKept).length,
+} : {
   branches: branchCount,
   clients: clients.length,
   live: liveKept.length,
@@ -683,10 +709,10 @@ writeFileSync(
   OUT,
   `// AUTO-GENERATED by scripts/gen-store.mjs — do not edit by hand.
 //
-// Every entry was verified against its live Play Store listing at generation
-// time; anything that does not resolve is dropped rather than shipped as a dead
-// link. Internal names are deliberately not exported.
-// Run \`npm run gen:store\` to refresh.
+// Live entries were verified against Play at generation time. Historical
+// archive and attribution data retain their original evidence and are not
+// re-mined by the published-only refresh. Internal names are not exported.
+// Run \`npm run gen:store\` for a full provenance-aware refresh.
 
 /** The three apps that get their own card. */
 export const storeApps = ${JSON.stringify(
@@ -769,7 +795,7 @@ export const delisted = ${JSON.stringify(
 
 /** The pulled apps, grouped the same way. */
 export const pastClients = ${JSON.stringify(
-    groupByClient(
+    publishedOnly ? published.pastClients : groupByClient(
       pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
         id,
         name,

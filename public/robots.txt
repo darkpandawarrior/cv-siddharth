@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cv-siddharth.vercel.app/sitemap.xml
+Sitemap: https://siddharth-pandalai.vercel.app/sitemap.xml
 
 # Agent-readable profile: /llms.txt (summary) · /llms-full.txt (complete)
 # AI usage policy: /ai.txt

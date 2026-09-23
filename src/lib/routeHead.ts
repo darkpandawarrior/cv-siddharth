@@ -1,3 +1,4 @@
+import { profile } from "../data/profile/core.ts";
 import { surfaceBy } from "../data/surfaces.ts";
 
 /**
@@ -29,7 +30,7 @@ import { surfaceBy } from "../data/surfaces.ts";
  * array, and `surfaces.test.ts` fails the build if a route is missing from it.
  */
 
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = profile.portfolio;
 
 /** Title, description, canonical and share tags for one client-rendered route. */
 export function roomHead(path: string) {

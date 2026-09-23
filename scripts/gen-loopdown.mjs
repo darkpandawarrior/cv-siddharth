@@ -1,7 +1,6 @@
-// Pulls The Loopdown registry (published lessons, series, archive) from the public
-// repo and emits src/data/writing.ts. Runs as a prebuild step so the /#writing hub
-// stays in sync with what's actually published. Network-optional: if the fetch
-// fails and a previous writing.ts exists, it is kept.
+// Refresh the writing snapshot from the public registry. A failed fetch or
+// conflicting identity preserves the previous snapshot and fails the refresh.
+// Normal builds consume that snapshot without requiring the source network.
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -49,13 +48,27 @@ export function shrinkage(data, prev) {
   return prev ? COLLECTIONS.filter((k) => data[k].length < (prev[k]?.length ?? 0)) : [];
 }
 
+/** Exact duplicate source records collapse; conflicting identities fail before writing. */
+export function uniqueRecords(records, key) {
+  const seen = new Map();
+  for (const record of records) {
+    const id = record?.[key];
+    if (typeof id !== "string" || !id.trim()) throw new Error(`Missing ${key} in source record`);
+    if (seen.has(id) && JSON.stringify(seen.get(id)) !== JSON.stringify(record)) {
+      throw new Error(`Conflicting source records for ${key}=${id}`);
+    }
+    seen.set(id, record);
+  }
+  return [...seen.values()];
+}
+
 function emit(reg) {
   const pick = (o, keys) => Object.fromEntries(keys.filter((k) => o?.[k] !== undefined).map((k) => [k, o[k]]));
   const data = {
-    lessons: (reg.lessons || []).map((l) => ({ ...pick(l, ["title", "slug", "pillar", "series", "status", "created", "live", "tags"]), links: l.links || {} })),
-    series: (reg.series || []).map((s) => pick(s, ["id", "title", "episodes"])),
-    archive: (reg.archive || []).map((a) => pick(a, ["title", "slug", "form", "era", "words", "tags", "blurb"])),
-    cast: (reg.cast || []).map((c) => pick(c, ["id", "appearances"])),
+    lessons: uniqueRecords(reg.lessons || [], "slug").map((l) => ({ ...pick(l, ["title", "slug", "pillar", "series", "status", "created", "live", "tags"]), links: l.links || {} })),
+    series: uniqueRecords(reg.series || [], "id").map((s) => pick(s, ["id", "title", "episodes"])),
+    archive: uniqueRecords(reg.archive || [], "slug").map((a) => pick(a, ["title", "slug", "form", "era", "words", "tags", "blurb"])),
+    cast: uniqueRecords(reg.cast || [], "id").map((c) => pick(c, ["id", "appearances"])),
   };
 
   // The rule is regression, not emptiness. HTTP status is the only failure this
@@ -67,13 +80,12 @@ function emit(reg) {
   // four is a failure in effect even when it is not one in code.
   const shrunk = shrinkage(data, previous());
   if (shrunk.length) {
-    // Exit 0, like gen-timeline: a degraded upstream should leave yesterday's
-    // good data standing and say so loudly, not fail somebody's deploy.
+    // Preserve the last good snapshot, but make the refresh failure observable.
     console.warn(
       `gen-loopdown: registry returned fewer ${shrunk.join("/")} than the committed file — ` +
       `keeping src/data/writing.ts`,
     );
-    process.exit(0);
+    process.exit(1);
   }
 
   writeFileSync(outPath, banner + TYPES + `export const writing: Writing = ${JSON.stringify(data, null, 2)};\n`);
@@ -88,11 +100,11 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     emit(await res.json());
   } catch (e) {
+    process.exitCode = 1;
     if (existsSync(outPath)) {
       console.warn(`gen-loopdown: fetch failed (${e.message}); keeping existing src/data/writing.ts`);
     } else {
-      console.warn(`gen-loopdown: fetch failed (${e.message}); emitting empty writing.ts`);
-      emit({ lessons: [], series: [], archive: [], cast: [] });
+      console.error(`gen-loopdown: fetch failed (${e.message}); no snapshot available`);
     }
   }
 }

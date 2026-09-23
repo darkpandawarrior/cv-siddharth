@@ -171,6 +171,7 @@ export const GENERATORS = [
     inputs: [
       "src/data/store.ts", "src/data/weeb.ts", "src/data/writing.ts", "src/data/anthology.ts",
       "src/data/ops.ts", "src/data/archiveText.ts", "src/data/chess.ts", "src/data/storyMap.ts",
+      "src/data/projectStats.ts", "src/data/careerOpsUpstream.ts", "src/data/galleries.ts",
     ],
     outputs: [
       "../cv-siddharth-kmp/cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated/*.kt",
@@ -258,17 +259,18 @@ export const GENERATORS = [
   // autorun`, not from any of the three chains this file feeds.
   { id: "lighthouse-summary", script: "gen-lighthouse-summary.mjs", npmName: "gen:lighthouse-summary", kind: "local",
     inputs: [], outputs: ["src/data/generated/lighthouse.ts"], stages: {} },
-  // Manual/occasional, run after `npm run build` rather than before it (see
-  // its own docstring): every other node here produces a SOURCE file the
-  // vite build then consumes, and this one consumes the vite build's OWN
-  // output (dist/server/server.js) to hash each route's actual rendered
-  // inline scripts, so it structurally cannot join prebuild/predev. Partial
-  // rewrite of an otherwise hand-authored file, same posture as
-  // hiresignal-stats above: it splices one header's value into vercel.json,
-  // not a fresh banner-carrying file.
+  // postbuild hashes the exact prerendered HTML deployed with its middleware.
+  // The policy manifest and SSR response helper must come from this same build.
   { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
-    inputs: [], outputs: ["vercel.json"], stages: {} },
+    inputs: [], outputs: ["dist/csp-policy.json", "dist/csp/response.mjs"], stages: {} },
 ];
+
+// gen-ops scans every top-level data file. Run it after their producers so
+// refreshing history or the system graph cannot invalidate the perimeter.
+GENERATORS.find((g) => g.id === "ops").inputs = GENERATORS
+  .filter((g) => g.id !== "ops")
+  .flatMap((g) => g.outputs)
+  .filter((out) => /^src\/data\/[^/]+\.ts$/.test(out));
 
 // Fold freshnessSla.ts's SLA_DAYS in as a field on the node that owns each
 // named file, rather than a second table a reader has to cross-reference by
