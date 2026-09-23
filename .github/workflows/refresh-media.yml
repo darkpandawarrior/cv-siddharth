@@ -7,7 +7,9 @@ name: Refresh project media
 # manifest's kind="local" build-stage nodes (6 generators: galleries, compare-sets, feed,
 # anthology-feed, system-prompt, images); everything network, private-env or sibling —
 # including the now-restamping ones (sitemap, world-plate, ops, system-graph) — runs here,
-# in refresh, instead.
+# in refresh, instead. The freshness-pipelines lane added repo-stats and the six
+# Android/KMP sibling checkouts below it needs, so ops's leverage board and
+# system-graph's edges are no longer silently skipped on every run here.
 on:
   schedule:
     - cron: '17 6 * * 1'   # weekly, Monday 06:17 UTC; was daily until the 10 GB deployment cap
@@ -39,6 +41,51 @@ jobs:
           path: cv-siddharth-kmp-checkout
       - name: Put the twin where the scripts expect it
         run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
+      # gen-ops.mjs (leverage + vendored drift), gen-system-graph.mjs and
+      # gen-repo-stats.mjs's Android/KMP path all resolve siblings at
+      # ../../Android/<Repo> and ../../KMP/<repo> — the exact layout the
+      # maintainer's own laptop checkouts already use (verified with `gh repo
+      # view` below; the LOCAL directory names below are the pre-rename ones
+      # on purpose, matching what gen-ops.mjs's CONSUMERS array and
+      # gen-app-manifests.mjs's SIBLING map still resolve — a filesystem path,
+      # not readable text, so it is outside check-old-names.mjs's scope).
+      # Without this, every sibling-kind node above gracefully skipped and
+      # kept its committed rows forever — the exact "stale ops.ts" failure
+      # this step fixes; Candidai is deliberately absent, it is private and
+      # this workflow has no token that can read it.
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/Doori
+          path: android-doori-checkout
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/Gaddi
+          path: android-gaddi-checkout
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/PaymentsLab-KMP
+          path: android-paymentslab-checkout
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/kmp-toolkit
+          path: kmp-toolkit-checkout
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/kmp-build-logic
+          path: kmp-build-logic-checkout
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/kmp-app-template
+          path: kmp-app-template-checkout
+      - name: Put the Android + KMP siblings where the scripts expect them
+        run: |
+          mkdir -p ../../Android ../../KMP
+          mv android-doori-checkout ../../Android/Mileway
+          mv android-gaddi-checkout ../../Android/Kursi
+          mv android-paymentslab-checkout ../../Android/PaymentsLab
+          mv kmp-toolkit-checkout ../../KMP/kmp-toolkit
+          mv kmp-build-logic-checkout ../../KMP/kmp-build-logic
+          mv kmp-app-template-checkout ../../KMP/kmp-app-template
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
