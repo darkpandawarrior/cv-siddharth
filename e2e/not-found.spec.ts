@@ -25,7 +25,7 @@ test.describe("404 — catch-all splat route", () => {
   });
 
   // home-scenes-and-chrome: "You're off the map" is the atlas framing (design
-  // spec §7/§9) — the 404's primary CTA is the way back into it, not just home.
+  // spec §7/§9) - the 404's primary CTA is the way back into it, not just home.
   test("/nope links to /map", async ({ page }) => {
     await page.goto("/nope");
     await expect(page.locator("body")).toContainText(/off the map/i);

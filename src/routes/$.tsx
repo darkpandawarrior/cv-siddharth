@@ -4,13 +4,13 @@ import { SiteFooter } from "../SiteFooter.tsx";
 // Catch-all splat route (file name "$" is TanStack Router's file-based
 // convention for a route matching any otherwise-unmatched path). It must
 // `throw notFound()` from beforeLoad rather than just rendering a plain
-// `component` — a route that resolves normally is a 200, and this repo's
+// `component` - a route that resolves normally is a 200, and this repo's
 // `vite preview` server falls through to the SSR router for ANY unresolved
 // static asset (verified: /favicon.ico and /_vercel/speed-insights/script.js
 // both hit this route locally, since neither exists on disk and there's no
 // Vercel edge in front of `vite preview` to intercept them first). A plain
 // 200 HTML response breaks the SpeedInsights <script> tag ("Unexpected
-// token '<'" — the browser tries to execute the HTML body as JS). Throwing
+// token '<'" - the browser tries to execute the HTML body as JS). Throwing
 // notFound() keeps the framework's real 404 status code (confirmed against
 // the router's own pre-existing unmatched-route behavior) while still
 // rendering our on-brand notFoundComponent instead of the generic default.
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/$")({
   },
   head: () => ({
     meta: [
-      { title: "404 — You're off the map | Siddharth Pandalai" },
-      { name: "description", content: "This route doesn't exist. The atlas — /map — is the way back in." },
+      { title: "404 · You're off the map | Siddharth Pandalai" },
+      { name: "description", content: "This route doesn't exist. The atlas at /map is the way back in." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -32,11 +32,11 @@ const OUTBOUND_CLASS =
   "flex items-center gap-2 rounded-full border border-line px-6 py-3 font-semibold text-zinc-100 transition hover:border-accent hover:text-accent";
 
 /**
- * Torn-map glyph — CSS/SVG only, no asset fetch. A rectangle with a jagged
+ * Torn-map glyph - CSS/SVG only, no asset fetch. A rectangle with a jagged
  * bite out of its bottom-right corner (two ragged polylines standing in for
  * a tear), a dashed route running off the torn edge, and a pin with no dot
  * at the end of it: the "you are here" marker a real map would draw, except
- * there is nothing here to mark. Decorative — the words carry the meaning.
+ * there is nothing here to mark. Decorative - the words carry the meaning.
  */
 function TornMapGlyph() {
   return (
@@ -70,7 +70,7 @@ function TornMapGlyph() {
 /**
  * A real page, not a modal bolted onto the void. Wears the same nav/footer
  * furniture as every other route (see hire.tsx / ink.tsx for the pattern) and
- * the site's own type scale — no separate "error page" visual language.
+ * the site's own type scale - no separate "error page" visual language.
  * `ErrorPanel` stays reserved for the root error boundary (__root.tsx), whose
  * job is to survive an actual render crash and so deliberately doesn't reach
  * for this much chrome.
@@ -94,8 +94,8 @@ function NotFoundPage() {
           <div className="min-w-0">
             <h1 className="font-display text-hero font-bold tracking-tight text-balance">You're off the map.</h1>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-300">
-              {_splat ? `/${_splat}` : "That address"} doesn't resolve to anything on this site. The atlas —
-              every project, every room, one measured graph — is the way back in.
+              {_splat ? `/${_splat}` : "That address"} doesn't resolve to anything on this site. The atlas
+              (every project, every room, one measured graph) is the way back in.
             </p>
           </div>
         </div>
