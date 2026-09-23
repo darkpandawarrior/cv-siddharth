@@ -38,10 +38,9 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "refresh",
-      "check"
+      "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 21,
     "invocation": "npm run gen:loopdown"
   },
   {
@@ -50,10 +49,9 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "refresh",
-      "check"
+      "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 21,
     "invocation": "npm run gen:anthology"
   },
   {
@@ -77,7 +75,7 @@ export const generatorNodes: GeneratorNode[] = [
       "refresh",
       "check"
     ],
-    "slaDays": null,
+    "slaDays": 45,
     "invocation": "npm run gen:lanes"
   },
   {
@@ -154,9 +152,10 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "sibling",
     "automated": true,
     "stages": [
+      "refresh",
       "check"
     ],
-    "slaDays": null,
+    "slaDays": 30,
     "invocation": "npm run gen:repo-stats"
   },
   {
@@ -179,7 +178,7 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [
       "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 30,
     "invocation": "npm run gen:system-graph"
   },
   {
@@ -247,7 +246,7 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [
       "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 21,
     "invocation": "npm run gen:stats"
   },
   {
@@ -322,9 +321,9 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "check"
+      "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 45,
     "invocation": "npm run gen:archive-text"
   },
   {

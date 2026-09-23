@@ -2,8 +2,9 @@
 // Collected with `vitest list`, which enumerates the suite without running it.
 // Run `npm run gen:repo-stats` to refresh.
 export const repoStats = {
-  "tests": 1344,
-  "testFiles": 132,
+  "generatedAt": "2026-09-23",
+  "tests": 1370,
+  "testFiles": 133,
   "kotlinLines": 35670,
   "kotlinFiles": 72,
   "kotlin": "2.4.20",
