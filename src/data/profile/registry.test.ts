@@ -23,7 +23,7 @@ describe("projectStats keys", () => {
     expect(keys).toContain("doori");
     expect(keys).toContain("gaddi");
     expect(keys).toContain("paymentslab-kmp");
-    for (const old of ["mileway", "kursi", "paymentslab"]) {
+    for (const old of ["mileway", "kursi", "paymentslab"]) { // claim-audit:allow: lists the old names to ban them
       expect(keys, old).not.toContain(old);
     }
   });
