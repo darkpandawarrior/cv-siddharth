@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-23T22:12:27.787Z",
+  "grid": 385,
+  "metresPerTexel": 2,
+  "extent": 768,
+  "center": {
+    "x": 0,
+    "z": 40
+  },
+  "bounds": {
+    "xMin": -384,
+    "xMax": 384,
+    "zMin": -344,
+    "zMax": 424
+  },
+  "min": -3.240000009536743,
+  "max": 111.6675033569336,
+  "note": "real height = min + (pixel/255) * (max-min); 8-bit fallback, see gen-terrain.mjs's honesty note"
+}
