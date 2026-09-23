@@ -1,4 +1,18 @@
 import { test, expect, waitForHydration } from "./lib/test.ts";
+import sharp from "sharp";
+
+/** A blank/solid canvas (context lost, nothing drawn) screenshots as a flat
+ * colour; the studio sculpture's amber/titanium/mint palette against the
+ * dark ground never does. Real luminance variance is the cheapest honest
+ * proof that Blender geometry, not just a DOM node, is on screen. */
+async function assertRendered(buffer: Buffer) {
+  const { data, info } = await sharp(buffer).resize(64, 64, { fit: "fill" }).grayscale().raw().toBuffer({ resolveWithObject: true });
+  const pixels = Array.from(data as Buffer);
+  const mean = pixels.reduce((a, b) => a + b, 0) / pixels.length;
+  const variance = pixels.reduce((a, b) => a + (b - mean) ** 2, 0) / pixels.length;
+  expect(info.width * info.height, "screenshot decoded").toBeGreaterThan(0);
+  expect(Math.sqrt(variance), "screenshot reads as flat, nothing rendered").toBeGreaterThan(8);
+}
 
 test("the 3D world fills its viewport and the list remains reachable", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -84,4 +98,29 @@ test("loading the shared connection preserves the selected product", async ({ pa
   } finally {
     release();
   }
+});
+
+test("the hero plinth renders at 1440 and the studio hex plinth is visible in the screenshot", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await waitForHydration(page);
+  const canvas = page.locator(".hero-studio-object canvas");
+  await expect(canvas).toBeVisible({ timeout: 30000 });
+  await expect.poll(async () => (await canvas.boundingBox())?.height ?? 0).toBeGreaterThan(200);
+  // Let the sculpture's slow auto-rotate settle a frame before capturing.
+  await page.waitForTimeout(300);
+  const shot = await canvas.screenshot({ path: testInfo.outputPath("hero-plinth-1440.png") });
+  await assertRendered(shot);
+});
+
+test("at 390 the hero falls back to the static device (no WebGL small-screen budget), and it still fits the viewport", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await waitForHydration(page);
+  // Phone3D gates 3D behind a desktop-width check; below it TiltPhone (the
+  // documented static fallback for studio-orbit.glb) renders instead, and no
+  // WebGL canvas should be requested at all at this width.
+  await expect(page.locator(".hero-device-screen")).toBeVisible();
+  await expect(page.locator(".hero-studio-object canvas")).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath("hero-fallback-390.png"), fullPage: false });
 });
