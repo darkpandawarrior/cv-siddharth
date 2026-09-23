@@ -1,5 +1,5 @@
-import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
-import { ClientOnly } from "@tanstack/react-router";
+import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { LauncherButton } from "./Launcher.tsx";
@@ -12,14 +12,10 @@ import { clearBlueprintPersistence } from "./blueprintPersistence.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { DeferredPlayRoom, DeferredPresenceBadge } from "./play/DeferredPlayRoom.tsx";
 import { usePulseUI } from "./play/pulseUI.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
+import { systemGraph } from "./data/systemGraph.ts";
 import Blueprint3D from "./Blueprint3D.tsx";
 import SketchBoard from "./SketchBoard.tsx";
-
-// React.lazy, not a static import: EvidenceChip and systemGraph.ts are new to
-// this room, and this bundle had exactly 63 bytes of budget headroom before
-// any of this — inlining them here blew that (measured, not a guess). Its
-// own chunk keeps the legend/chip/nudge weight out of the room's main bundle.
-const BlueprintAtlasPanel = lazy(() => import("./BlueprintAtlasPanel.tsx"));
 
 /** First-visit-only nudge toward the guided tour — dismissed for good the
  *  moment a visitor starts it themselves, or explicitly closes the nudge.
@@ -382,13 +378,41 @@ function BlueprintRoomInner() {
           </ClientOnly>
         )}
         {/* DESK altitude of the same atlas as ORBIT (/map) and STREET
-            (/playground), plus the first-visit tour nudge — lazy (see the
-            import above), and rendered once ready so it never contends with
-            the header's own hydration-timed content. */}
+            (/playground), plus the first-visit tour nudge — rendered once
+            ready so it never contends with the header's own hydration-timed
+            content. `<ClientOnly>` strips this subtree from the SERVER
+            compile entirely, the same mechanism Blueprint3D/SketchBoard rely
+            on above; `<Hydrate split>` then code-splits it into its OWN
+            client chunk, separate from theirs. EvidenceChip and
+            systemGraph.ts are new to this room, and this bundle had exactly
+            63 bytes of budget headroom before any of this — a static import
+            here blew that (measured, not a guess). */}
         {ready && (
-          <Suspense fallback={null}>
-            <BlueprintAtlasPanel showTourNudge={showTourNudge && stop === -1} />
-          </Suspense>
+          <ClientOnly>
+            <Hydrate when={load()} split>
+              {showTourNudge && stop === -1 && (
+                <span
+                  role="status"
+                  className="pointer-events-none absolute left-1/2 top-[52px] z-20 w-max max-w-[220px] -translate-x-1/2 rounded-lg border border-accent2/40 bg-ink px-3 py-2 text-center font-mono text-[11px] text-accent2 shadow-lg animate-pulse"
+                >
+                  new here? start the tour ↑
+                </span>
+              )}
+              <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-1.5 text-[11px]">
+                <div className="pointer-events-auto rounded-lg border border-line bg-ink/80 px-2.5 py-1.5 backdrop-blur">
+                  <EvidenceChip file="systemGraph.ts" stamp={systemGraph.generatedAt} source="registry + includeBuild scan" />
+                </div>
+                <div className="pointer-events-auto flex gap-1.5 font-mono">
+                  <Link to="/map" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent">
+                    orbit
+                  </Link>
+                  <Link to="/playground" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent">
+                    streets
+                  </Link>
+                </div>
+              </div>
+            </Hydrate>
+          </ClientOnly>
         )}
       </main>
       {/* D1: this room drew its own chrome and so never got the next-room
