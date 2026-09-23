@@ -305,14 +305,27 @@ async function renderPreview(heights, hMin, hMax, splat, spline, districts, basi
     })
     .join("\n  ");
 
-  // Alternate label offsets (above/below the anchor) so the five district
-  // dots on the tight amphitheatre arc don't overlap each other's text.
+  // Art-direction fix: alternating "above i even / below i odd" pushed each
+  // label toward whichever neighbour was closest on the amphitheatre arc,
+  // because the arc is symmetric about its midpoint (sin(200deg)==sin(340deg),
+  // sin(235deg)==sin(305deg)) — pairs of districts land on the SAME row, and
+  // the old scheme then offset them in opposite directions *into* each
+  // other ("doori"+"gaddi" and "candidai"+"kmp-app-template" fused). Instead,
+  // push each label radially outward from the basin along its own bearing —
+  // districts are already angularly separated on the arc, so radiating
+  // outward preserves that separation instead of fighting it — and anchor
+  // the text away from the basin on whichever side it lands.
+  const basinPxForLabels = toPx(basin.x, basin.z);
   const labels = districts
-    .map((d, i) => {
+    .map((d) => {
       const p = toPx(d.x, d.z);
-      const above = i % 2 === 0;
-      const ty = above ? p.py - 8 : p.py + 14;
-      return `<circle cx="${p.px.toFixed(1)}" cy="${p.py.toFixed(1)}" r="3.5" fill="#f2a13d"/><text x="${(p.px + 6).toFixed(1)}" y="${ty.toFixed(1)}" font-family="monospace" font-size="11" fill="#e8efe9">${d.id}</text>`;
+      const dx = p.px - basinPxForLabels.px;
+      const dy = p.py - basinPxForLabels.py;
+      const len = Math.hypot(dx, dy) || 1;
+      const lx = p.px + (dx / len) * 16;
+      const ly = p.py + (dy / len) * 16;
+      const anchor = dx < 0 ? "end" : "start";
+      return `<circle cx="${p.px.toFixed(1)}" cy="${p.py.toFixed(1)}" r="3.5" fill="#f2a13d"/><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-family="monospace" font-size="11" fill="#e8efe9">${d.id}</text>`;
     })
     .join("\n  ");
 
@@ -326,8 +339,9 @@ async function renderPreview(heights, hMin, hMax, splat, spline, districts, basi
   ${labels}
   <text x="8" y="30" font-family="monospace" font-size="11" fill="#e8efe9">N — 2017</text>
   <text x="8" y="${GRID - 10}" font-family="monospace" font-size="11" fill="#e8efe9">S — now</text>
-  <rect x="0" y="0" width="${GRID}" height="20" fill="#060807" opacity="0.55"/>
-  <text x="8" y="14" font-family="monospace" font-size="11" fill="#e8efe9">World v2 terrain — river=time, cyan=measured tributary, grey dashed=declared</text>
+  <rect x="0" y="0" width="${GRID}" height="30" fill="#060807" opacity="0.55"/>
+  <text x="8" y="13" font-family="monospace" font-size="10" fill="#f2a13d">LAYOUT DEBUG — not a craft/terrain render (no lighting, no 3D). See heavy/world/terrain/*.png for the real heightmap+splat.</text>
+  <text x="8" y="26" font-family="monospace" font-size="10" fill="#e8efe9">river=time, cyan=measured tributary, grey dashed=declared</text>
 </svg>`;
 
   const base = sharp(Buffer.from(rgba), { raw: { width: GRID, height: GRID, channels: 4 } }).png();
