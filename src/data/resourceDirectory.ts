@@ -9,7 +9,7 @@ const DOCS: Record<string, string> = {
   "kmp-toolkit": "https://darkpandawarrior.github.io/kmp-toolkit/",
   "kmp-build-logic": "https://darkpandawarrior.github.io/kmp-build-logic/",
 };
-const SHOWCASE = new Set(["doori", "gaddi", "paymentslab-kmp"]);
+const SHOWCASE = new Set(projects.filter((p) => p.showcase).map((p) => p.slug));
 const PAGES: Record<string, string> = {
   doori: "https://darkpandawarrior.github.io/Doori/",
   gaddi: "https://darkpandawarrior.github.io/Gaddi/",
