@@ -197,7 +197,13 @@ export function ReposShowcase() {
           <div className="mt-8">
             <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h4 className="kicker-accent font-semibold">Merged upstream</h4>
-              <span className="font-mono text-[11px] text-muted">career-ops · a public OSS project (⭐{upstreamStars})</span>
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted">
+                career-ops · a public OSS project
+                <span className="inline-flex items-center gap-1 rounded-full border border-line px-1.5 py-0.5 text-accent/90">
+                  <Star size={10} aria-hidden="true" />
+                  {upstreamStars}
+                </span>
+              </span>
             </div>
             {/* Six, not all of them. The full list rendered 847px of individual
                 PR titles on the homepage — more vertical space than the entire
