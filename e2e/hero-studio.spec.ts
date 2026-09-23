@@ -8,7 +8,12 @@ test("the mobile studio previews the selected real project with keyboard access"
 
   const studio = page.locator(".hero-studio-stage");
   const selector = studio.getByRole("group", { name: "Choose a project to preview" });
-  await expect(studio.locator(".hero-device-screen")).toHaveAttribute("src", /doori\/screenshots\/track_data_preview_overview_tab\.webp/);
+  // HERO_PROJECTS[0] (App.tsx) is the first `showcase && heroShot` entry in
+  // the registry (src/data/profile/projects.ts) — Gaddi, not Doori, since
+  // registry-spine's rename/reorder pass. The default preview follows the
+  // registry rather than a hand-picked slug, so this asserts what the
+  // registry actually orders first instead of a stale expectation.
+  await expect(studio.locator(".hero-device-screen")).toHaveAttribute("src", /gaddi\/screenshots\/home_phone\.webp/);
 
   const gaddi = selector.getByRole("button", { name: "Gaddi" });
   await gaddi.focus();
