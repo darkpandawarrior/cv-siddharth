@@ -30,7 +30,7 @@ permissions:
 
 concurrency:
   group: publish-assets
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -41,6 +41,23 @@ jobs:
       # job-level indirection PaymentsLab-KMP's store-deploy workflows use.
       HAS_PAGES_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN != '' }}
     steps:
+      # Loud, not a graceful skip: unlike a missing SIBLING REPO (which every
+      # other cross-repo script in this codebase treats as "nothing to do
+      # here, developer machines don't all have it checked out"), a missing
+      # CREDENTIAL on the one machine that is supposed to run this — CI — means
+      # asset publishing has silently never run since this workflow was added.
+      # A skip here would look identical to "nothing changed" in the Actions
+      # log, and checking out a PUBLIC repo with no token at all would
+      # "succeed" and only fail much later, confusingly, at push — so this
+      # runs before that checkout, not after.
+      - name: Require PAGES_DEPLOY_TOKEN
+        if: env.HAS_PAGES_TOKEN != 'true'
+        run: |
+          echo "::error::PAGES_DEPLOY_TOKEN is not set. Create a PAT with contents:write" \
+            "on darkpandawarrior/darkpandawarrior.github.io and add it as a repo secret" \
+            "here — this workflow cannot publish heavy/ without it."
+          exit 1
+
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22', cache: npm }
@@ -58,23 +75,6 @@ jobs:
       # gate the publish on it never firing silently red.
       - name: Deployment-size budget
         run: npm run check:budget
-
-      # Loud, not a graceful skip: unlike a missing SIBLING REPO (which every
-      # other cross-repo script in this codebase treats as "nothing to do
-      # here, developer machines don't all have it checked out"), a missing
-      # CREDENTIAL on the one machine that is supposed to run this — CI — means
-      # asset publishing has silently never run since this workflow was added.
-      # A skip here would look identical to "nothing changed" in the Actions
-      # log, and checking out a PUBLIC repo with no token at all would
-      # "succeed" and only fail much later, confusingly, at push — so this
-      # runs before that checkout, not after.
-      - name: Require PAGES_DEPLOY_TOKEN
-        if: env.HAS_PAGES_TOKEN != 'true'
-        run: |
-          echo "::error::PAGES_DEPLOY_TOKEN is not set. Create a PAT with contents:write" \
-            "on darkpandawarrior/darkpandawarrior.github.io and add it as a repo secret" \
-            "here — this workflow cannot publish heavy/ without it."
-          exit 1
 
       - uses: actions/checkout@v4
         with:

@@ -41,6 +41,8 @@ jobs:
         # calibration dispatches: comparing against the string 'true' here
         # instead made e2e run on every dispatch, the opposite of the point.
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
+        env:
+          PLAYWRIGHT_PREBUILT: "1"
         run: npm run test:e2e
 
       - name: Lighthouse

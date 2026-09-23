@@ -76,6 +76,20 @@ jobs:
           # new key, which is also right — the export was re-pulled.
           key: chess-cache-${{ steps.chess-key.outputs.seen }}
           restore-keys: chess-cache-
+      # Live Play probes expire after 30 days in store-cache.mjs. Carry the
+      # ignored cache between weekly runs; a fresh runner still probes safely.
+      - uses: actions/cache@v4
+        with:
+          path: .store-cache.json
+          key: store-cache-${{ github.run_id }}
+          restore-keys: store-cache-
+      # The full Store generator needs private source checkouts. This narrow
+      # mode refreshes only the already published live listings and fails on
+      # unknown responses or 404, leaving attribution/history untouched.
+      - name: Refresh published Play listings
+        id: store_refresh
+        if: always()
+        run: node scripts/gen-store.mjs --published-only
       - name: Sync media + regenerate stats & galleries
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
@@ -148,7 +162,8 @@ jobs:
         id: gate
         if: always() && steps.commit.outputs.committed == 'true'
         run: |
-          if [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
+          if [ "${{ steps.store_refresh.outcome }}" = "success" ] && \
+             [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
              [ "${{ steps.gate_lint.outcome }}" = "success" ] && \
              [ "${{ steps.gate_test.outcome }}" = "success" ] && \
              [ "${{ steps.gate_check_generated.outcome }}" = "success" ]; then
@@ -164,7 +179,7 @@ jobs:
       # A red gate pushes nothing — the local commit above is discarded with
       # the runner. One issue per workflow (see the script), not one per run.
       - name: Open or update gate-failure issue
-        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false'
+        if: steps.store_refresh.outcome == 'failure' || (steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/report-gate-failure.sh refresh-media

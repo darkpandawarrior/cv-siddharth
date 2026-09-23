@@ -1,3 +1,4 @@
+import { profile } from "../src/data/profile/core.ts";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -5,7 +6,7 @@ import { test, expect } from "@playwright/test";
 import { allRoutes } from "../src/data/routes.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = profile.portfolio;
 
 /** Every `.../index.html` under `dir`, as the URL path it prerenders — "" for
  *  the root index, "project/doori" for a nested one — never descending into

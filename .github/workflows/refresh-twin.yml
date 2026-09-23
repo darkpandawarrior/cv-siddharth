@@ -44,6 +44,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: darkpandawarrior/cv-siddharth-kmp
+          submodules: recursive
           path: cv-siddharth-kmp-checkout
       - name: Put the twin where the scripts expect it
         run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp

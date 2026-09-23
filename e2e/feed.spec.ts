@@ -1,4 +1,5 @@
 import { test, expect } from "./lib/test.ts";
+import { profile } from "../src/data/profile/core.ts";
 import { writing } from "../src/data/writing.ts";
 import { anthologyEntries, unfiledPieces } from "../src/data/anthology.ts";
 import { storyOf } from "../src/lib/describes.ts";
@@ -9,7 +10,7 @@ test("feed.xml is served as valid Atom, one entry per lesson", async ({ request 
   const body = await res.text();
   expect(body).toContain('<feed xmlns="http://www.w3.org/2005/Atom">');
   expect(body).toContain("The Loopdown — Siddharth Pandalai");
-  expect(body).toContain('<link href="https://cv-siddharth.vercel.app/feed.xml" rel="self"');
+  expect(body).toContain(`<link href="${profile.portfolio}/feed.xml" rel="self"`);
   expect((body.match(/<entry>/g) || []).length).toBe(writing.lessons.length);
 });
 
@@ -19,7 +20,7 @@ test("anthology.xml is served, carries every readable piece, and finishes no sen
   const body = await res.text();
   expect(body).toContain('<feed xmlns="http://www.w3.org/2005/Atom">');
   expect(body).toContain("The Morkinstar Journals");
-  expect(body).toContain('<link href="https://cv-siddharth.vercel.app/anthology.xml" rel="self"');
+  expect(body).toContain(`<link href="${profile.portfolio}/anthology.xml" rel="self"`);
   // Every entry plus the unfiled work. anthologyFeed.test.ts checks the file on
   // disk; this checks the one the server actually hands out, which is a
   // different question and the one a subscriber experiences.

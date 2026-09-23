@@ -56,7 +56,7 @@ export default defineConfig({
     // DOM, which works either way, but prod is honest. reuseExistingServer is
     // false in CI; locally, --strictPort makes a stale 4173 error loudly
     // rather than silently serving a different app.
-    command: `npm run build && npm run serve -- --port ${PORT}`,
+    command: `${process.env.PLAYWRIGHT_PREBUILT === "1" ? "" : "npm run build && "}npm run serve -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     // This covers `npm run build && npm run serve`, not a page load. The build

@@ -24,7 +24,7 @@ for (const slug of Object.keys(compareSets)) {
     await expect(compare).toBeVisible();
     // Scroll to it: the screenshots are loading="lazy", so they never decode while the section
     // sits thousands of px below the viewport and naturalWidth stays 0 forever.
-    await compare.scrollIntoViewIfNeeded();
+    await compare.evaluate(el => el.scrollIntoView({ behavior: "instant" }));
     // Non-empty: a real, decoded image, not an empty frame. Polled — these are loading="lazy",
     // so naturalWidth is 0 for a beat after the element becomes visible.
     const shot = compare.locator("img").first();
@@ -70,7 +70,7 @@ test("the portfolio's live CMP/Wasm embed reveals over its screenshot floor", as
   await page.goto("/project/portfolio");
   // The iframe is lazy-mounted on first intersection, so it does not exist until the device wall
   // is scrolled to — waiting on the iframe itself would wait forever.
-  await page.getByRole("heading", { name: "One codebase, every surface" }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: "One codebase, every surface" }).evaluate(el => el.scrollIntoView({ behavior: "instant" }));
   const frame = page.locator('iframe[title="Live web build"]');
   await expect(frame).toBeVisible({ timeout: 30_000 });
   await expect(frame).toHaveCSS("opacity", "1", { timeout: 90_000 });
@@ -94,7 +94,7 @@ for (const slug of liveTargetSlugs) {
     // lazy-mounted on first intersection, so it does not exist in the DOM
     // until then — scrolling to it directly waits forever for an element that
     // is never there yet. Scroll to the section heading instead.
-    await page.getByRole("heading", { name: "One codebase, every surface" }).scrollIntoViewIfNeeded();
+    await page.getByRole("heading", { name: "One codebase, every surface" }).evaluate(el => el.scrollIntoView({ behavior: "instant" }));
     // index.css sets `scroll-behavior: smooth` site-wide, so the scroll above
     // is still animating when the next line runs on a page this far down
     // (Doori/PaymentsLab-KMP ship far more sections above this one than
@@ -113,6 +113,7 @@ for (const slug of liveTargetSlugs) {
     // the active tab. Portfolio and Stutter happen to ship Web first, which is
     // why the single hand-written test above never needed this click.
     const webTab = page.getByRole("tab", { name: /Web/ });
+    await expect.poll(() => webTab.evaluate(el => Object.keys(el).some(key => key.startsWith("__react")))).toBe(true);
     await webTab.click();
     await expect(webTab).toHaveAttribute("aria-selected", "true");
     const frame = page.locator('iframe[title="Live web build"]');
