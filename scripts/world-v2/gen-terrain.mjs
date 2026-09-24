@@ -38,7 +38,7 @@
 // supposed to read as here. Swap in a real rating series if one is ever
 // generated.
 
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -56,6 +56,18 @@ const GRID = 385; // 768m / 384 ~= 2 m/texel — dense enough to read the carved
 
 const DISTRICT_IDS = ["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template"];
 
+// Deterministic stamp (house rule, never Date.now()): the max mtime across
+// this generator's real data inputs plus its own pure-math dependency, so
+// two runs against the same committed sources produce byte-identical JSON.
+const INPUT_FILES = [
+  join(root, "src/data/systemGraph.ts"),
+  join(root, "src/data/projectStats.ts"),
+  join(root, "src/data/timeline.ts"),
+  join(root, "src/world/city.ts"),
+  join(root, "scripts/world-v2/valley-math.mjs"),
+  fileURLToPath(import.meta.url),
+];
+
 async function main() {
   let systemGraphMod, projectStatsMod, timelineMod, cityMod;
   try {
@@ -69,6 +81,8 @@ async function main() {
     console.warn("[gen-terrain] source modules unavailable, leaving previous output untouched:", err.message);
     return;
   }
+
+  const generatedAt = new Date(Math.max(...INPUT_FILES.map((f) => statSync(f).mtimeMs))).toISOString();
 
   const { systemGraph } = systemGraphMod;
   const { projectStats } = projectStatsMod;
@@ -220,7 +234,7 @@ async function main() {
     join(OUT_DIR, "heightmap.json"),
     JSON.stringify(
       {
-        generatedAt: new Date().toISOString(),
+        generatedAt,
         grid: GRID,
         metresPerTexel: step,
         extent: V.EXTENT,
@@ -244,12 +258,12 @@ async function main() {
     JSON.stringify({ r: "soil (brown_mud_dry)", g: "grass (withered_grass)", b: "laterite rock (rock_pitted_mossy)", a: "pebble (ganges_river_pebbles)" }, null, 2),
   );
 
-  writeFileSync(join(OUT_DIR, "river-spline.json"), JSON.stringify({ generatedAt: new Date().toISOString(), points: spline }, null, 2));
+  writeFileSync(join(OUT_DIR, "river-spline.json"), JSON.stringify({ generatedAt, points: spline }, null, 2));
   writeFileSync(
     join(OUT_DIR, "tributaries.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), basin, streams: trib }, null, 2),
+    JSON.stringify({ generatedAt, basin, streams: trib }, null, 2),
   );
-  writeFileSync(join(OUT_DIR, "districts.json"), JSON.stringify({ generatedAt: new Date().toISOString(), basin, districts }, null, 2));
+  writeFileSync(join(OUT_DIR, "districts.json"), JSON.stringify({ generatedAt, basin, districts }, null, 2));
 
   console.log(
     `[gen-terrain] ${GRID}x${GRID} (${step.toFixed(2)} m/texel), height ${hMin.toFixed(1)}..${hMax.toFixed(1)} m, ${trib.length} tributaries (${trib.filter((t) => t.hasWater).length} with water), ${districts.length} districts -> heavy/world/terrain/`,
