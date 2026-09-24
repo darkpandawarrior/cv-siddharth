@@ -5124,4 +5124,4 @@ export const lastShipped = [
  }
 ] as const;
 
-export const storeGeneratedAt = "2026-09-23";
+export const storeGeneratedAt = "2026-09-24";

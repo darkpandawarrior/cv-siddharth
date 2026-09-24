@@ -566,4 +566,4 @@ export const writing: Writing = {
   ]
 };
 
-export const writingGeneratedAt = "2026-09-23";
+export const writingGeneratedAt = "2026-09-24";

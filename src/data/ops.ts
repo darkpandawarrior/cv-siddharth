@@ -5,25 +5,25 @@
 export const perimeter = [
   {
     "file": "anthology.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 21,
     "generator": "npm run gen:anthology"
   },
   {
     "file": "archiveText.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 45,
     "generator": "npm run gen:archive-text"
   },
   {
     "file": "chess.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 21,
     "generator": "npm run gen:chess"
   },
   {
     "file": "chessDeep.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 21,
     "generator": "npm run gen:chess-deep"
   },
@@ -53,13 +53,13 @@ export const perimeter = [
   },
   {
     "file": "store.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 45,
     "generator": "npm run gen:store"
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-09-08",
+    "generatedAt": "2026-09-24",
     "slaDays": 30,
     "generator": "npm run gen:system-graph"
   },
@@ -71,13 +71,13 @@ export const perimeter = [
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   },
   {
     "file": "writing.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-09-24",
     "slaDays": 21,
     "generator": "npm run gen:loopdown"
   }

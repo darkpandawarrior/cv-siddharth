@@ -85,9 +85,9 @@ type BudgetCheck = { name: string; actual: number | null; ceiling: number; pass:
 type BudgetReport = { generatedAt: string; checks: BudgetCheck[]; failing: boolean };
 
 const STATE_COLOR: Record<OpsState, string> = {
-  OK: "var(--color-signal)",
-  DEGRADED: "var(--color-accent)",
-  BROKEN: "var(--color-danger)",
+  OK: "var(--state-ok)",
+  DEGRADED: "var(--state-degraded)",
+  BROKEN: "var(--state-broken)",
 };
 
 const RANK: Record<OpsState, number> = { BROKEN: 0, DEGRADED: 1, OK: 2 };
@@ -1500,7 +1500,6 @@ export function OpsBoard() {
           <Link to="/" className="kicker-accent transition hover:opacity-80">← Back to portfolio</Link>
           <LauncherButton />
         </div>
-        <p className="section-eyebrow mb-2">// the control loop</p>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>
         {/* ops-2: no local max-width — this paragraph was the only thing on
             the route with one, so the console and the runway table directly
@@ -1525,6 +1524,13 @@ export function OpsBoard() {
         <div className="ops-console font-mono-os">
           <div className="ops-banner" data-worst={worstState}>
             <div className="ops-banner__line">
+              {/* The eyebrow used to sit above the h1, in the scrollable
+                  intro, so it read "the control loop" once and then scrolled
+                  away with everything else this page argues against. It
+                  lives in the sticky banner now, so the page's own name for
+                  itself is on screen at every scroll position, not just the
+                  first. */}
+              <span className="ops-banner__mark">// the control loop</span>
               <span className="ops-banner__mark">SID//OS</span>
               <span className="ops-banner__name">ops console</span>
               <a className="ops-banner__link" href={REPO} target="_blank" rel="noreferrer">darkpandawarrior/cv-siddharth</a>

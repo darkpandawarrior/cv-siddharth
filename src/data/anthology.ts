@@ -65,7 +65,7 @@ export interface Starmap {
 export interface AnthologySeason { n: number; title: string; blurb: string }
 
 export const anthology = {
-  "generatedAt": "2026-09-23",
+  "generatedAt": "2026-09-24",
   "slug": "the-morkinstar-journals",
   "mark": "<svg viewBox=\"0 0 24 96\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"the mark\">\n  <line x1=\"12\" y1=\"6\" x2=\"12\" y2=\"90\" stroke=\"currentColor\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n</svg>",
   "fourteen": "https://darkpandawarrior.github.io/cv/p/anthology/plates/the-fourteen.jpg",

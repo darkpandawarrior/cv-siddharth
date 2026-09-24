@@ -74,10 +74,10 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-09",
-    "commits": 269,
-    "insertions": 34409,
-    "deletions": 11867,
-    "filesChanged": 3189,
+    "commits": 277,
+    "insertions": 35308,
+    "deletions": 12091,
+    "filesChanged": 3219,
     "subjects": [
       "feat(ci): fail when a committed artifact disagrees with its generator (#58)",
       "fix(gen): widen the drift guard to nine, and catch up two stale artifacts (#59)",
@@ -87,13 +87,13 @@ export const historyMonths: HistoryMonth[] = [
       "feat(ops): the board arrives, and only the alarm keeps moving"
     ],
     "cumulative": {
-      "commits": 732,
-      "insertions": 187510,
-      "deletions": 41266
+      "commits": 740,
+      "insertions": 188409,
+      "deletions": 41490
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-09-23T21:42:07.484Z";
+export const historyGeneratedAt = "2026-09-23T22:37:09.506Z";
 export const historyFrom = "2026-06";
 export const historyTo = "2026-09";
-export const totalCommits = 732;
+export const totalCommits = 740;

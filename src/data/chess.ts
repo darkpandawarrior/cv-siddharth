@@ -6,28 +6,28 @@
 export type ChessData = typeof chess;
 
 export const chess = {
-  "generatedAt": "2026-09-23T21:38:54.303Z",
+  "generatedAt": "2026-09-24T08:29:13.939Z",
   "username": "darkpandawarrior",
   "totals": {
-    "games": 19106,
-    "wins": 9299,
-    "losses": 9327,
-    "draws": 480,
+    "games": 19111,
+    "wins": 9301,
+    "losses": 9329,
+    "draws": 481,
     "hours": 763
   },
   "boardTime": {
     "scope": "both platforms, two measurements",
     "lichessHours": 763,
-    "chesscomHours": 298,
+    "chesscomHours": 299,
     "combinedHours": 1062,
     "note": "lichess self-reports playTime.total; the chess.com half is derived from live-game PGN wall clock (UTCDate/StartTime to EndDate/EndTime). Two measurement methods, not one uniform metric.",
     "chesscom": {
-      "games": 4682,
+      "games": 4687,
       "skipped": 0,
       "excludedDaily": 305,
       "byClass": {
         "bullet": 28.7,
-        "blitz": 254.9,
+        "blitz": 255.3,
         "rapid": 14.8
       },
       "meanMinutes": 3.8
@@ -35,9 +35,9 @@ export const chess = {
   },
   "length": {
     "scope": "chess.com",
-    "games": 4682,
+    "games": 4687,
     "median": 32,
-    "mean": 33.972,
+    "mean": 33.979,
     "max": 90,
     "winMedian": 29,
     "lossMedian": 33,
@@ -45,8 +45,8 @@ export const chess = {
       {
         "lo": 0,
         "hi": 20,
-        "n": 702,
-        "winRate": 0.585,
+        "n": 703,
+        "winRate": 0.586,
         "flagShareOfLosses": 0.134
       },
       {
@@ -59,16 +59,16 @@ export const chess = {
       {
         "lo": 30,
         "hi": 40,
-        "n": 1225,
-        "winRate": 0.487,
+        "n": 1226,
+        "winRate": 0.486,
         "flagShareOfLosses": 0.359
       },
       {
         "lo": 40,
         "hi": 50,
-        "n": 605,
+        "n": 607,
         "winRate": 0.471,
-        "flagShareOfLosses": 0.331
+        "flagShareOfLosses": 0.33
       },
       {
         "lo": 50,
@@ -85,7 +85,7 @@ export const chess = {
         "flagShareOfLosses": 0.309
       }
     ],
-    "decided": 4502
+    "decided": 4506
   },
   "material": {
     "scope": "chess.com",
@@ -98,7 +98,7 @@ export const chess = {
     "moves": [
       {
         "move": "d4",
-        "n": 1747
+        "n": 1750
       },
       {
         "move": "g3",
@@ -124,18 +124,18 @@ export const chess = {
   },
   "clutch": {
     "scope": "chess.com",
-    "n": 565,
-    "wins": 170,
-    "rate": 0.301
+    "n": 566,
+    "wins": 171,
+    "rate": 0.302
   },
   "checkmate": {
     "scope": "chess.com",
     "delivered": 707,
-    "received": 1063
+    "received": 1065
   },
   "span": {
     "from": "2019-02-09",
-    "to": "2026-09-23"
+    "to": "2026-09-24"
   },
   "activityByYear": [
     {
@@ -176,7 +176,7 @@ export const chess = {
     {
       "year": "2026",
       "lichess": 0,
-      "chesscom": 1318
+      "chesscom": 1323
     }
   ],
   "platforms": [
@@ -214,8 +214,8 @@ export const chess = {
       "id": "chess.com",
       "url": "https://www.chess.com/member/darkpandawarrior",
       "joined": "2021-01-22",
-      "lastActive": "2026-09-23",
-      "games": 4987,
+      "lastActive": "2026-09-24",
+      "games": 4992,
       "peaks": [
         {
           "format": "blitz",
@@ -240,11 +240,11 @@ export const chess = {
   "thesis": {
     "decidedOnClock": 0.413,
     "lossesOnTime": 0.497,
-    "winsOnTime": 0.329,
+    "winsOnTime": 0.328,
     "deciles": [
       {
         "bucket": 0,
-        "win": 0.99,
+        "win": 0.991,
         "loss": 0.987,
         "gap": 0.003
       },
@@ -292,7 +292,7 @@ export const chess = {
       },
       {
         "bucket": 8,
-        "win": 0.438,
+        "win": 0.437,
         "loss": 0.356,
         "gap": 0.081
       },
@@ -303,11 +303,11 @@ export const chess = {
         "gap": 0.081
       }
     ],
-    "sampleSize": 3419
+    "sampleSize": 3423
   },
   "discipline": {
-    "distinctDays": 2317,
-    "spanDays": 2784,
+    "distinctDays": 2318,
+    "spanDays": 2785,
     "longestDayStreak": 298,
     "longestWin": 12,
     "longestLoss": 14
@@ -315,23 +315,23 @@ export const chess = {
   "tilt": {
     "afterWin": 0.503,
     "afterLoss": 0.47,
-    "n": 8416
+    "n": 8417
   },
   "sessionDecay": [
     {
       "position": 1,
       "winRate": 0.485,
-      "n": 10450
+      "n": 10453
     },
     {
       "position": 2,
-      "winRate": 0.486,
-      "n": 4247
+      "winRate": 0.485,
+      "n": 4248
     },
     {
       "position": 3,
       "winRate": 0.489,
-      "n": 2030
+      "n": 2031
     },
     {
       "position": 4,
@@ -595,7 +595,7 @@ export const chess = {
       "openings": [
         {
           "name": "Scandinavian Defense Mieses Kotrc Variation",
-          "count": 186,
+          "count": 187,
           "share": 0.281
         },
         {
@@ -604,14 +604,14 @@ export const chess = {
           "share": 0.077
         },
         {
-          "name": "Queens Pawn Opening",
+          "name": "French Defense Advance Variation",
           "count": 21,
           "share": 0.032
         },
         {
-          "name": "French Defense Advance Variation",
-          "count": 20,
-          "share": 0.03
+          "name": "Queens Pawn Opening",
+          "count": 21,
+          "share": 0.032
         },
         {
           "name": "Queens Pawn Opening Accelerated London System",
@@ -623,20 +623,20 @@ export const chess = {
   ],
   "colour": {
     "white": {
-      "games": 9554,
+      "games": 9557,
       "winRate": 0.49
     },
     "black": {
-      "games": 9552,
+      "games": 9554,
       "winRate": 0.483
     }
   },
   "accuracy": {
-    "mean": 70.54,
-    "inWins": 74.107,
-    "inLosses": 63.924,
-    "covered": 441,
-    "total": 4987
+    "mean": 70.515,
+    "inWins": 74.061,
+    "inLosses": 63.877,
+    "covered": 445,
+    "total": 4992
   },
   "bestUpset": {
     "opRating": 1867,
@@ -656,7 +656,7 @@ export const chess = {
       "c2c3",
       "a3e7"
     ],
-    "rating": 1962,
+    "rating": 1761,
     "themes": [
       "exposedKing",
       "endgame",
@@ -1222,8 +1222,8 @@ export const chess = {
           "r": 1270
         },
         {
-          "t": 1790163320000,
-          "r": 1255
+          "t": 1790236853000,
+          "r": 1254
         }
       ]
     },
