@@ -7,8 +7,8 @@ import { findHits, trackedFiles, scan } from "./check-old-names.mjs";
 
 const root = new URL("../", import.meta.url).pathname;
 
-// This file's job is to contain the fixtures the acceptance bar names —
-// "exits 0 on the merged tree, exits 1 on a fixture containing 'Mileway'" —
+// This file's job is to contain the fixtures the acceptance bar names:
+// "exits 0 on the merged tree, exits 1 on a fixture containing 'Mileway'",
 // so it is one of the two files check-old-names.mjs itself exempts from the
 // scan (the other is the scanner's own source, for the same reason).
 
@@ -32,7 +32,7 @@ describe("check-old-names", () => {
       expect(findHits("src/x.ts", "a deadlock between two locks")).toHaveLength(0);
     });
 
-    it("does not flag title-case Deadlock — only the all-caps product name is in scope", () => {
+    it("does not flag title-case Deadlock, only the all-caps product name is in scope", () => {
       // A human swept every title-case PRODUCT mention by hand before this
       // landed; the scanner's five patterns only cover all-caps DEADLOCK, so
       // it cannot regress on the CS term either way.
@@ -69,7 +69,7 @@ describe("check-old-names", () => {
       // Chosen so the old name is NOT also quote/slash-bounded, isolating the
       // vercel.json + "source": rule from the general local-path boundary
       // check below (real redirect sources are always quoted anyway, so in
-      // practice both rules agree — this just proves the dedicated rule
+      // practice both rules agree; this just proves the dedicated rule
       // fires on its own).
       expect(findHits("vercel.json", '  "source": "/x", // kept for Mileway compatibility')).toHaveLength(0);
     });
@@ -97,7 +97,7 @@ describe("check-old-names", () => {
   describe("whole-file exemptions", () => {
     it("exempts src/data/history.ts, which quotes real commit subjects verbatim", () => {
       // history.ts genuinely still contains "Mileway" in a committed subject
-      // line — that is the point of the exemption, not a fixture standing in
+      // line, and that is the point of the exemption, not a fixture standing in
       // for it.
       expect(scan(["src/data/history.ts"])).toEqual([]);
     });

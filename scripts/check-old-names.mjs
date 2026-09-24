@@ -4,12 +4,12 @@
 // PaymentsLab -> PaymentsLab-KMP, HireSignal -> Candidai, DEADLOCK -> Stutter)
 // touched hundreds of lines across docs, scripts, tests and UI copy in one
 // pass. A rename that size regresses the moment anyone edits an old-name
-// neighbour without noticing it — a mechanical gate is the only thing that
+// neighbour without noticing it; a mechanical gate is the only thing that
 // catches that reliably, because nobody re-reads 90 files on every PR.
 //
 // WHAT COUNTS AS A HIT. Case-sensitive, word-bounded: `Mileway`, `Kursi`,
 // `HireSignal`, `DEADLOCK`, and `PaymentsLab` not already followed by
-// `-KMP`. Case-sensitive on purpose — lowercase forms (`mileway`, the DB
+// `-KMP`. Case-sensitive on purpose: lowercase forms (`mileway`, the DB
 // class `MilewayDatabase`, the applicationId `com.kursi.android`) are real,
 // live, immutable identifiers, not a stray mention of the product, and stay
 // out of scope entirely. `DEADLOCK` (all-caps, the product) is deliberately
@@ -18,16 +18,16 @@
 // lowercase CS term is never in scope.
 //
 // WHAT IS EXCLUDED FROM THE SCAN. Compiled/binary artifacts (see EXTENSION
-// allowlist below) and the compiled Wasm bundles under heavy/*-app/*.js(.map)
-// — internal minified identifiers, never prose. Paths are not scanned, only
+// allowlist below) and the compiled Wasm bundles under heavy/*-app/*.js(.map),
+// internal minified identifiers, never prose. Paths are not scanned, only
 // file CONTENTS: a directory or filename is a one-time human rename, not
 // something this gate polices on every run.
 //
-// THE FIVE KEEP CLASSES (allowlisted, not renamed — see the rename policy
+// THE FIVE KEEP CLASSES (allowlisted, not renamed; see the rename policy
 // this codified): applicationIds/package paths and DB filenames (out of
 // scope already, lowercase); local on-disk checkout paths like
 // `~/Repos/Android/Mileway` (still named that way on the maintainer's own
-// disk — renaming the STRING would point at a directory that does not
+// disk: renaming the STRING would point at a directory that does not
 // exist); vercel.json redirect SOURCE entries (the old slug is the thing
 // being redirected FROM, by definition); sentences that record the rename
 // itself, `"X (formerly Y)"` / `"Y (now X)"`; and src/data/history.ts, whose
@@ -54,8 +54,8 @@ const TEXT_EXT = new Set([
   ".py", ".sh", ".yml", ".yaml", ".txt", ".xml", ".svg",
 ]);
 
-// Files whose entire job is to CONTAIN the old names — the scanner's own
-// pattern source and its test fixtures — never the codebase's prose about
+// Files whose entire job is to CONTAIN the old names: the scanner's own
+// pattern source and its test fixtures, never the codebase's prose about
 // the products. Scanning these would just be the script failing on itself.
 const SELF_EXEMPT_FILES = new Set([
   "scripts/check-old-names.mjs",
@@ -77,16 +77,16 @@ const isCompiledHeavyBundle = (file) => /^heavy\/[^/]+\/.*\.js(\.map)?$/.test(fi
 // A rename-record sentence: "Doori (formerly Mileway)" / "Mileway (now
 // Doori)" / "DEADLOCK (now STUTTER)" / "(Mileway, now Doori)". `formerly`/
 // `now` immediately followed by a capitalized word is specific enough on its
-// own — the parenthetical isn't required, since the old and new name can sit
+// own; the parenthetical isn't required, since the old and new name can sit
 // on either side of the keyword. A line carrying this marker is documenting
 // the rename, not failing to have made it.
 const RENAME_RECORD_RE = /\b(?:formerly|now)\s+[A-Z]/;
 
 // A local on-disk checkout path or bare path segment: the old name sits
 // immediately against a double quote, backtick or slash on at least one
-// side — `"Mileway"`, `` `Android/HireSignal` ``, `Mileway/docs/RELEASE.md`,
+// side: `"Mileway"`, `` `Android/HireSignal` ``, `Mileway/docs/RELEASE.md`,
 // `../../Android/PaymentsLab`. Prose never quotes a bare product name like
-// this; a path always does. NOT a single quote: "Kursi's", "Mileway's" — the
+// this; a path always does. NOT a single quote: "Kursi's", "Mileway's"; the
 // possessive apostrophe is the single most common character actually
 // touching these names in real prose, and treating it as a path boundary
 // would exempt exactly the sentences this scanner exists to catch.

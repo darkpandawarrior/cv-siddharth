@@ -6,7 +6,7 @@ import { projects } from "../src/data/profile/projects.ts";
  * The production proof, not the local one.
  *
  * Every other spec in this suite runs against a local `vite preview` server
- * (playwright.config.ts's webServer) — a fair test of the code, but not of
+ * (playwright.config.ts's webServer), a fair test of the code, but not of
  * what is actually live. This spec is the one that visits the deployed site
  * itself: `BASE_URL=https://siddharth-pandalai.vercel.app npx playwright
  * test e2e/live-crawl.spec.ts`. Without BASE_URL set it falls back to the
@@ -15,7 +15,7 @@ import { projects } from "../src/data/profile/projects.ts";
  *
  * ROUTE LIST. Derived from the same two registries the site itself renders
  * its wall and its project pages from (src/data/surfaces.ts, projects.ts),
- * the way smoke.spec.ts derives its own list — not a hand-copied count that
+ * the way smoke.spec.ts derives its own list, not a hand-copied count that
  * goes stale the next time a surface or a project joins the registry. `/` and
  * one representative `/read/$slug` are added because neither registry lists
  * them.
@@ -44,7 +44,7 @@ const isNoisyDependencyError = (text: string) =>
 
 for (const path of routes) {
   for (const viewport of VIEWPORTS) {
-    test(`${path} at ${viewport.name} — no console errors`, async ({ page }, testInfo) => {
+    test(`${path} at ${viewport.name}: no console errors`, async ({ page }, testInfo) => {
       const errors: string[] = [];
       page.on("console", (m) => {
         if (m.type() !== "error") return;

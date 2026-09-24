@@ -116,7 +116,7 @@ export const ANSWERS: Answer[] = [
     anchor: "/project/gaddi#main-content",
   },
   {
-    id: "paymentslab",
+    id: "paymentslab-kmp",
     question: "What is PaymentsLab-KMP?",
     keywords: ["payments", "ktor", "backend"],
     answer: `PaymentsLab-KMP: ${paymentsLab.tagline}`,
