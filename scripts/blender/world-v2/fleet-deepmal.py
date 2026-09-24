@@ -39,9 +39,12 @@ ID = 'fleet-deepmal'
 sh.clear_scene()
 
 palestone = sh.pbr('mat.paleStone')
-clay = sh.pbr('mat.clay')
 flame_mat = sh.material('mat.deepmalFlame', sh.AMBER, metal=0.0, rough=0.4,
-                         emission=sh.AMBER, emission_strength=5.5)
+                         emission=sh.AMBER, emission_strength=16.0)
+# Art-direction fix: 5.5 read as a dim grey dot at landmark viewing distance —
+# bumped well past "visible" so the compositor's Glare bloom (lookdev-spawn.py
+# section 12) has something to actually catch, which is what turns a lit
+# niche into a legible amber glow instead of a slightly-brighter grey fleck.
 
 # --- tower ring: a unit straight drum, N=12-sided to match the niche pitch.
 # The runtime (and this file's own preview) scales X/Y for the per-tier
@@ -133,7 +136,12 @@ FINIAL_PROFILE = [(0.0, 0), (0.28, 0), (0.30, 0.10), (0.16, 0.22), (0.30, 0.34),
                    (0.10, 0.52), (0.10, 0.62), (0.0, 0.70)]
 finial_bm = sh.lathe(FINIAL_PROFILE, steps=TIER_SIDES)
 finial_bm = sh.canonical_order(finial_bm)
-finial = sh.new_mesh_object('Finial', finial_bm, clay)
+finial = sh.new_mesh_object('Finial', finial_bm, palestone)
+# Art-direction fix: mat.clay (a warm brown-orange) on the crowning kalash-pot
+# spire read as a small "red pyramid cap" at golden-hour exposure — next to a
+# generic pagoda's usual red-lacquer finial, that misread the whole tower as
+# a pagoda rather than a stone lamp tower. palestone matches the tower body
+# (the finial is the tower's own crown, not a separate accent material).
 
 # --- named sockets the runtime samples for data counts ---
 # ring_pitch: (dRadius_per_tier, dRadius_per_tier, tier_height) as the
@@ -152,10 +160,14 @@ sh.export_kit(ID, kit_objects)
 N_TIERS = 8
 NICHES_PER_RING = 12
 LIT_RATIO = 0.51
-R0, TIER_H, D_R, COLLAR_H = 1.35, 0.58, 0.115, 0.07  # base radius, tier height,
+R0, TIER_H, D_R, COLLAR_H = 1.35, 0.58, 0.16, 0.07  # base radius, tier height,
                                                        # per-tier radius STEP
                                                        # (straight drums, not a
                                                        # smooth cone taper)
+# Art-direction fix: D_R was 0.115 (8 tiers -> top radius 0.545, a 60% taper)
+# — real, but subtle enough at render distance/fog to read as "boxy stacked
+# tiers" rather than an obviously tapering tower. 0.16 (8 tiers -> top radius
+# 0.23, an 83% taper) makes the cone silhouette unmistakable at a glance.
 preview_objs = []
 
 
@@ -205,7 +217,10 @@ for t in range(N_TIERS):
             # lamp colour via Blender's own blackbody temperature (~2000-
             # 2200K, spec's exact range), not a hand-guessed RGB tint.
             niche_light = bpy.data.lights.new(f'NicheLight_{t}_{n}', 'POINT')
-            niche_light.energy = 12
+            niche_light.energy = 70  # art-direction fix: 12 was invisible next
+            # to the sun (energy 14-18) and volumetric haze at landmark
+            # distance — bumped so each niche actually reads as "lit" and
+            # feeds the compositor's Glare bloom, not just a bright pixel.
             niche_light.color = (1.0, 1.0, 1.0)
             niche_light.use_temperature = True
             niche_light.temperature = 2100
