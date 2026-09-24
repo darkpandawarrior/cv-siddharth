@@ -5,6 +5,8 @@
 // `skyState()` — there is no second clock and no second weather anywhere in
 // the site (design doc §2/§3).
 
+import { NIGHT_SURVEY } from "./nightSurvey.ts";
+
 export const PUNE = { lat: 18.5204, lon: 73.8567, tz: "Asia/Kolkata" } as const;
 
 export type Daypart = "night" | "dawn" | "golden" | "day" | "dusk";
@@ -20,14 +22,49 @@ export interface SunTimes {
   sunset: Date;
 }
 
+export interface SubsolarPoint {
+  lat: number;
+  lon: number;
+}
+
+// Widened by P1-00 (M7): three Open-Meteo upstreams instead of one, each
+// independently nullable in the /api/weather response. precipMmH replaces
+// precipMm — see applyWeather's comment on the unit conversion.
 export interface Weather {
   at: string;
+  intervalSec: number;
   tempC: number;
   code: number;
   cloudPct: number;
-  precipMm: number;
+  precipMmH: number;
   windKmh: number;
   windFromDeg: number;
+  humidityPct: number;
+  visibilityM: number;
+}
+
+export interface Air {
+  at: string;
+  pm25: number;
+  pm10: number;
+  usAqi: number;
+  euAqi: number;
+  aod: number;
+}
+
+/** `next` is today's remaining forecast days ahead (2, from `forecast_days=3`
+ *  including today); `range7d` is the [min, max] of the trailing 7 days. */
+export interface River {
+  date: string;
+  dischargeM3s: number;
+  next: number[];
+  range7d: [number, number];
+}
+
+/** Trailing 30 days of daily rainfall, from `past_days=30`. */
+export interface Season {
+  days: 30;
+  sumMm: number;
 }
 
 export interface Keyframe {
@@ -139,6 +176,20 @@ export function sunTimes(d: Date, lat: number = PUNE.lat, lon: number = PUNE.lon
   };
 }
 
+/**
+ * The point on Earth directly under the sun right now — GLOBE's marker
+ * (M41: moon itself stays out of this file, in src/lib/moon.ts). Solar noon
+ * at longitude L happens when the true-solar-time formula sunPosition already
+ * uses (`utcMin + eot + 4*lon`) equals 720 (12:00); solving that for `lon`
+ * gives the subsolar meridian. Latitude is the sun's declination.
+ */
+export function subsolarPoint(d: Date): SubsolarPoint {
+  const { dec, eot } = solarFrame(d);
+  const utcMin = (d.getTime() / 60_000) % 1440;
+  const lon = (((720 - utcMin - eot) / 4 + 180) % 360 + 360) % 360 - 180;
+  return { lat: dec, lon };
+}
+
 /** Civil twilight at -6deg splits night from the below-horizon dawn/dusk
  *  glow; golden hour is the low-but-risen band up to +6deg (`morning`
  *  disambiguates the two below-horizon twilights, which look different —
@@ -154,13 +205,9 @@ export function daypartFor(altDeg: number, morning: boolean): Daypart {
 // ---------------------------------------------------------------------------
 // Keyframes — his reference scene's technique (a table keyed by one scalar),
 // fed by real sun altitude instead of a slider (design-brief §2, spec §5).
-// The night row is Night Survey byte for byte (World.tsx:534, Sky.tsx) — this
-// file does not import those two modules (R1 has zero deps on R4's files);
-// the literals below are copied and pinned by the test below instead.
+// The night row IS src/lib/nightSurvey.ts's NIGHT_SURVEY (M48): Sky.tsx and
+// World.tsx import the same constants, so the three can never drift apart.
 // ---------------------------------------------------------------------------
-
-/** Night Survey's own fog range, desktop tier (World.tsx §4 comment). */
-const NIGHT_FOG: [number, number] = [18, 130];
 
 function hexToRgb01(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
@@ -172,21 +219,8 @@ function hexToRgb01(hex: string): [number, number, number] {
 const ALT_BREAKS = [-18, -6, 6, 45] as const;
 
 export const KEYFRAMES: readonly Keyframe[] = [
-  // night — Night Survey, byte for byte (World.tsx:534, Sky.tsx ZENITH_HEX/HORIZON_HEX).
-  {
-    u: 0,
-    sun: hexToRgb01("#bfe8e0"),
-    sunI: 1.8,
-    hemiSky: "#9dbbb3",
-    hemiGround: "#26362b",
-    hemiI: 1.2,
-    zenith: "#0a0f10",
-    horizon: "#16292b",
-    fogNear: NIGHT_FOG[0],
-    fogFar: NIGHT_FOG[1],
-    lamp: 1,
-    ghost: 1,
-  },
+  // night — imported from nightSurvey.ts (M48), not a local literal.
+  NIGHT_SURVEY,
   // dawn/dusk — same cool hue family, value lifted toward the horizon glow.
   {
     u: 1 / 3,
@@ -302,7 +336,7 @@ export function applyWeather(k: Keyframe, w: Weather | null): Keyframe {
   const cloudT = Math.max(0, Math.min(100, w.cloudPct)) / 100;
   const sunI = k.sunI * (1 - 0.6 * cloudT);
   const zenith = lerpHex(k.zenith, grey(k.zenith), cloudT * 0.5);
-  const raining = w.precipMm > 0;
+  const raining = w.precipMmH > 0;
   const fogFar = raining ? k.fogFar * 0.7 : k.fogFar;
   return { ...k, sunI, zenith, fogFar };
 }

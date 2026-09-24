@@ -5,11 +5,13 @@ import {
   keyframeAt,
   KEYFRAMES,
   skyState,
+  subsolarPoint,
   sunPosition,
   sunTimes,
   WMO_LABEL,
   type Weather,
 } from "./sky";
+import { NIGHT_SURVEY } from "./nightSurvey";
 
 // Fixed reference day, verified live against Open-Meteo on 2026-09-24
 // (design-brief §2): sunrise 06:23, sunset 18:29 IST, per the direct read;
@@ -61,6 +63,9 @@ describe("keyframeAt", () => {
   it("deep-equals the Night Survey constants at and below the night breakpoint", () => {
     expect(keyframeAt(-30)).toStrictEqual(KEYFRAMES[0]);
     expect(keyframeAt(-18)).toStrictEqual(KEYFRAMES[0]);
+    // The night row IS src/lib/nightSurvey.ts's NIGHT_SURVEY (M48) — Sky.tsx
+    // and World.tsx import the same constants, so this can never drift.
+    expect(keyframeAt(-30)).toStrictEqual(NIGHT_SURVEY);
     expect(KEYFRAMES[0].zenith).toBe("#0a0f10");
     expect(KEYFRAMES[0].horizon).toBe("#16292b");
     expect(KEYFRAMES[0].hemiSky).toBe("#9dbbb3");
@@ -80,6 +85,19 @@ describe("keyframeAt", () => {
   });
 });
 
+const BASE_WEATHER: Weather = {
+  at: "now",
+  intervalSec: 900,
+  tempC: 22.9,
+  code: 3,
+  cloudPct: 0,
+  precipMmH: 0,
+  windKmh: 0,
+  windFromDeg: 0,
+  humidityPct: 60,
+  visibilityM: 20000,
+};
+
 describe("applyWeather", () => {
   const k = keyframeAt(45);
 
@@ -88,17 +106,17 @@ describe("applyWeather", () => {
   });
 
   it("dims sunI by up to 60% under full cloud", () => {
-    const overcast: Weather = { at: "now", tempC: 22.9, code: 3, cloudPct: 100, precipMm: 0, windKmh: 0, windFromDeg: 0 };
+    const overcast: Weather = { ...BASE_WEATHER, cloudPct: 100 };
     expect(applyWeather(k, overcast).sunI).toBeCloseTo(k.sunI * 0.4, 5);
   });
 
   it("leaves sunI untouched under clear sky", () => {
-    const clear: Weather = { at: "now", tempC: 25, code: 0, cloudPct: 0, precipMm: 0, windKmh: 5, windFromDeg: 180 };
+    const clear: Weather = { ...BASE_WEATHER, cloudPct: 0, tempC: 25, code: 0, windKmh: 5, windFromDeg: 180 };
     expect(applyWeather(k, clear).sunI).toBeCloseTo(k.sunI, 5);
   });
 
   it("tightens fogFar by 30% when it is raining", () => {
-    const wet: Weather = { at: "now", tempC: 22, code: 61, cloudPct: 90, precipMm: 2.4, windKmh: 10, windFromDeg: 200 };
+    const wet: Weather = { ...BASE_WEATHER, code: 61, cloudPct: 90, precipMmH: 2.4, windKmh: 10, windFromDeg: 200 };
     expect(applyWeather(k, wet).fogFar).toBeCloseTo(k.fogFar * 0.7, 5);
   });
 });
@@ -126,5 +144,17 @@ describe("skyState", () => {
 
   it("carries the preview flag through unchanged", () => {
     expect(skyState(IST("12:27:00"), null, true).preview).toBe(true);
+  });
+});
+
+describe("subsolarPoint", () => {
+  it("puts the subsolar longitude within 0.5deg of Pune's at Pune's own solar noon", () => {
+    const { lon } = subsolarPoint(IST("12:27:00"));
+    expect(Math.abs(lon - 73.86)).toBeLessThanOrEqual(0.5);
+  });
+
+  it("puts the subsolar latitude near the equator close to the equinox", () => {
+    const { lat } = subsolarPoint(IST("12:27:00"));
+    expect(Math.abs(lat)).toBeLessThan(2);
   });
 });

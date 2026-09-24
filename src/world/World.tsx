@@ -12,6 +12,13 @@ import { disposeAudio, initAudio, playPickup, playResolveChime } from "./audio.t
 import { useNavigate } from "@tanstack/react-router";
 import { Terrain } from "./Terrain.tsx";
 import { HORIZON_HEX, Sky } from "./Sky.tsx";
+import {
+  NIGHT_HEMI_GROUND_HEX,
+  NIGHT_HEMI_INTENSITY,
+  NIGHT_HEMI_SKY_HEX,
+  NIGHT_SUN_HEX,
+  NIGHT_SUN_INTENSITY,
+} from "../lib/nightSurvey.ts";
 import { SpawnFlyIn } from "./SpawnFlyIn.tsx";
 import { Wake } from "./Wake.tsx";
 import { Fixtures } from "./Fixtures.tsx";
@@ -535,8 +542,8 @@ export default function World(props: { onShowList: () => void }) {
             same 13° raking angle (unchanged — that's what makes relief
             legible); only the two intensities are raised so the terrain
             reads from shading and silhouette alone. */}
-        <directionalLight color="#bfe8e0" intensity={1.8} position={[-122, 28, 18]} />
-        <hemisphereLight args={["#9dbbb3", "#26362b", 1.2]} />
+        <directionalLight color={NIGHT_SUN_HEX} intensity={NIGHT_SUN_INTENSITY} position={[-122, 28, 18]} />
+        <hemisphereLight args={[NIGHT_HEMI_SKY_HEX, NIGHT_HEMI_GROUND_HEX, NIGHT_HEMI_INTENSITY]} />
         <MemoTerrain />
         <MemoFixtures />
         <MemoProps />
