@@ -397,7 +397,7 @@ export default function AnomalyRail() {
           pointerRef.current = null;
         }}
       >
-        <nav aria-label="Timeline" className="anomaly-rail-nav">
+        <nav aria-label="Timeline" className="anomaly-rail-nav" data-spine="anomaly-rail">
           {orderedFacets.map((facet) => (
             <Link
               key={facet.id}
@@ -432,7 +432,7 @@ export default function AnomalyRail() {
             gaps between ticks fall through to the Timeline nav underneath;
             each button opts back in. */}
         {isHome && (
-          <nav aria-label="Sections" className="anomaly-rail-nav" style={{ pointerEvents: "none" }}>
+          <nav aria-label="Sections" className="anomaly-rail-nav" data-spine="anomaly-rail" style={{ pointerEvents: "none" }}>
             {SECTION_ID_LIST.map((id) => {
               const isActive = activeSection === id;
               return (
