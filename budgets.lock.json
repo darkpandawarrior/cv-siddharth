@@ -1,0 +1,15 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "entry": "src/routes/index.tsx?tsr-split=component",
+      "rawBytes": 2001000,
+      "transferBytes": 581000
+    }
+  ],
+  "namedChunks": {
+    "SketchBoard": 1666666
+  },
+  "largestChunkBytes": 1666798,
+  "totalDeploySizeBytes": 28311552
+}
