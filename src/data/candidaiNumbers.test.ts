@@ -5,9 +5,9 @@ import { openSource } from "./profile.ts";
 /**
  * ONE FACT, ONE NUMBER.
  *
- * The HireSignal case study stated its provider count as both 76 and 62, and
+ * The Candidai case study stated its provider count as both 76 and 62, and
  * its merged-PR count as both 17 and 4, on the same page. Neither was a typo:
- * scripts/gen-hiresignal-stats.mjs refreshes these from the live GitHub API,
+ * scripts/gen-candidai-stats.mjs refreshes these from the live GitHub API,
  * but its regexes only reached four of the nine places the numbers appear, so
  * the four it could see kept moving and the rest froze wherever they were.
  * The live values on 2026-08-24 were 78 and 18 — so even the higher of each
@@ -25,7 +25,7 @@ import { openSource } from "./profile.ts";
  * — concatenating all three keeps this test's coverage exactly what it was,
  * rather than silently watching some while the rest drift.
  */
-describe("HireSignal's numbers agree with themselves", () => {
+describe("Candidai's numbers agree with themselves", () => {
   const src = ["./profile/projects.ts", "./profile/openSource.ts", "./profile/caseStudies.ts"]
     .map((f) => readFileSync(new URL(f, import.meta.url), "utf8"))
     .join("\n");

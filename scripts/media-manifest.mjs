@@ -66,7 +66,7 @@ export const sync = {
   },
   // Private repos (Stutter, Candidai) — code stays unlinked from the site,
   // but the existing GITHUB_TOKEN CI secret already needs private-repo read
-  // access for gen-hiresignal-stats.mjs (santifer/career-ops fork chain), and
+  // access for gen-candidai-stats.mjs (santifer/career-ops fork chain), and
   // a personal PAT with `repo` scope always covers its own owner's private
   // repos too, so this daily sync "just works" the same way as the public ones.
   stutter: {

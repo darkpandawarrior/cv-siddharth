@@ -250,15 +250,15 @@ export const generatorNodes: GeneratorNode[] = [
     "invocation": "npm run gen:stats"
   },
   {
-    "id": "hiresignal-stats",
-    "script": "gen-hiresignal-stats.mjs",
+    "id": "candidai-stats",
+    "script": "gen-candidai-stats.mjs",
     "kind": "network",
     "automated": true,
     "stages": [
       "refresh"
     ],
     "slaDays": null,
-    "invocation": "npm run gen:hiresignal"
+    "invocation": "npm run gen:candidai"
   },
   {
     "id": "project-heroes",
