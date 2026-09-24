@@ -30,6 +30,13 @@
  * re-probe, or bump PROBE_V to re-read the live listings.
  *
  * Usage: SHELF_RIDER_REPO=... SHELF_DRIVER_REPO=... npm run gen:store
+ *
+ * --published-only re-verifies the already-committed listings against live
+ * Play (so store.ts can be refreshed from CI, which never has the two private
+ * checkouts) and stamps storeVerifiedAt with today. It never re-mines
+ * attribution or history: those numbers come only from the committed file,
+ * and a listing that no longer resolves stops the run rather than silently
+ * dropping provenance a private checkout would be needed to redo properly.
  */
 import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -48,6 +55,69 @@ const SINCE_CACHE = resolve(process.cwd(), ".store-since-cache.json");
 const SIBLINGS_CACHE = resolve(process.cwd(), ".store-siblings.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
+
+const publishedOnly = process.argv.includes("--published-only");
+
+/**
+ * The committed store.ts IS the allowlist in published-only mode, never a
+ * source of new attribution. Reads the exported consts back out of the file
+ * gen-store.mjs itself last wrote.
+ */
+function readPublishedStore(path) {
+  const source = readFileSync(path, "utf8");
+  const readArr = (name) => {
+    const m = new RegExp(`export const ${name} = ([\\s\\S]*?) as const;`).exec(source);
+    if (!m) throw new Error(`[gen-store] published ${name} missing; full refresh required`);
+    return JSON.parse(m[1]);
+  };
+  const published = Object.fromEntries(
+    ["storeApps", "fleet", "delisted", "pastClients", "fleetStats"].map((name) => [name, readArr(name)]),
+  );
+  // Not wrapped `as const` (a plain date literal), so a separate read.
+  published.storeGeneratedAt = /export const storeGeneratedAt = "([^"]+)";/.exec(source)?.[1] ?? null;
+  const ids = [...published.storeApps, ...published.fleet].map((app) => app.id);
+  if (ids.length !== new Set(ids).size || ids.length !== published.fleetStats.live + published.storeApps.length) {
+    throw new Error("[gen-store] published IDs/count disagree; full refresh required");
+  }
+  return published;
+}
+
+/** The calibration knob for both the published-only tolerance below and the
+ *  full-refresh bulk-drop backstop further down: wide enough to absorb a
+ *  genuine small round of delistings, narrow enough to catch a throttled probe
+ *  or a real outage rather than write either off as normal turnover. */
+const SHRINK_TOLERANCE = 3;
+
+/**
+ * A 404 on a listing that used to resolve IS delisting evidence — gen-store's
+ * whole reason to exist is to never ship a dead link — so a HANDFUL of them
+ * (the same tolerance the full refresh already accepts without a human, see
+ * SHRINK_TOLERANCE below) moves those ids to `delisted` automatically rather
+ * than refusing the run. What published-only still cannot do without the
+ * private checkouts is re-mine ATTRIBUTION, so a moved app keeps every field
+ * it already had (setUpByHim, commits, developer, ...) and only gains a
+ * `lastSeen` of today — the one thing this run just witnessed directly.
+ * Anything larger, or any id Play never answered for at all, still refuses:
+ * that shape is Play throttling or an outage, not an ordinary delisting.
+ */
+function goneFromPublished(published, store, unresolved) {
+  // Flagships have no "delisted" tier and already fail loudly on their own
+  // (see the no-flagship-resolved guard below) — only the fleet moves here.
+  const ids = published.fleet.map((app) => app.id);
+  const missing = ids.filter((id) => !store[id]?.live || !store[id]?.name);
+  if (unresolved.length || missing.length > SHRINK_TOLERANCE) {
+    throw new Error(
+      `[gen-store] published-only stopped: ${unresolved.length} unknown, ` +
+        `${missing.length} missing/delisted (${missing.join(", ")}). ` +
+        "Public files unchanged; run a full provenance-aware refresh locally.",
+    );
+  }
+  if (missing.length)
+    console.warn(`[gen-store] published-only: confirmed gone, moving to delisted: ${missing.join(", ")}`);
+  return new Set(missing);
+}
+
+const published = publishedOnly ? readPublishedStore(OUT) : null;
 
 /**
  * The two source checkouts this generator reads, supplied by the operator.
@@ -352,14 +422,23 @@ function installFloor(s) {
   return m ? parseFloat(m[1].replace(/,/g, "")) * ({ K: 1e3, M: 1e6, B: 1e9 }[m[2]] ?? 1) : 0;
 }
 
-const { clients, branchCount } = mine();
-console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount} branches`);
+// published-only skips mining entirely: the client list is the committed
+// fleet, with attribution (setUpByHim, commits) preserved rather than re-read
+// from the two private checkouts CI does not have.
+const { clients, branchCount } = publishedOnly
+  ? {
+      clients: published.fleet.map(({ id, side, setUpByHim }) => ({ id, side, setUpByHim, commits: 0 })),
+      branchCount: published.fleetStats.branches,
+    }
+  : mine();
+console.log(`[gen-store] ${publishedOnly ? "read" : "mined"} ${clients.length} client ids across ${branchCount} branches`);
 
 /* Apps a client shipped under a package id this data never carried — a rebrand,
  * or a third app in the set. Found on the client's own Play developer page and
  * kept only where the id matches the client's stem (gen-store-siblings.mjs), so
- * "same company" alone never gets anything onto the shelf. */
-{
+ * "same company" alone never gets anything onto the shelf. Skipped in
+ * published-only mode: any real sibling is already in the committed fleet. */
+if (!publishedOnly) {
   const siblings = existsSync(SIBLINGS_CACHE)
     ? JSON.parse(readFileSync(SIBLINGS_CACHE, "utf8"))
     : {};
@@ -380,10 +459,17 @@ console.log(`[gen-store] mined ${clients.length} client ids across ${branchCount
     console.log(`[gen-store] +${Object.keys(siblings).length} sibling app(s) from developer pages`);
 }
 
-const { store, unresolved } = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
+const idsToVerify = publishedOnly
+  ? [...published.storeApps, ...published.fleet].map((f) => f.id)
+  : [...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)];
+const { store, unresolved } = await verifyAll(idsToVerify);
+const goneIds = publishedOnly ? goneFromPublished(published, store, unresolved) : new Set();
 
-const flagships = FLAGSHIPS.map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
-for (const f of FLAGSHIPS) if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
+const flagships = (publishedOnly ? published.storeApps : FLAGSHIPS)
+  .map((f) => ({ ...f, ...store[f.id] }))
+  .filter((f) => f.live);
+for (const f of publishedOnly ? published.storeApps : FLAGSHIPS)
+  if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
 if (flagships.length === 0) throw new Error("[gen-store] no flagship resolved — refusing to write");
 
 const fleet = clients
@@ -398,17 +484,32 @@ const fleet = clients
 /* The ones that used to be on the store. See scripts/gen-store-archive.mjs:
  * an archived 200 for the listing URL is proof it was published, and absence of
  * a snapshot is proof of nothing at all — so this is a floor, never a count. */
-const archive = existsSync(ARCHIVE_CACHE) ? JSON.parse(readFileSync(ARCHIVE_CACHE, "utf8")) : {};
-const delisted = clients
-  .filter((c) => !store[c.id]?.live && archive[c.id]?.wasLive)
-  .map((c) => ({ ...c, ...archive[c.id] }))
-  .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
-const archiveChecked = Object.keys(archive).length;
+const archive = !publishedOnly && existsSync(ARCHIVE_CACHE) ? JSON.parse(readFileSync(ARCHIVE_CACHE, "utf8")) : {};
+// published-only: the delisted list is preserved verbatim, plus any fleet id
+// this run just confirmed gone (see goneFromPublished) carried over with its
+// existing attribution and a lastSeen of today — the one fact this run adds.
+const today8 = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+const delisted = publishedOnly
+  ? [
+      ...published.delisted,
+      ...published.fleet
+        .filter((f) => goneIds.has(f.id))
+        .map((f) => ({ ...f, lastSeen: today8, ratings: null })),
+    ]
+  : clients
+      .filter((c) => !store[c.id]?.live && archive[c.id]?.wasLive)
+      .map((c) => ({ ...c, ...archive[c.id] }))
+      .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
+const archiveChecked = publishedOnly ? published.fleetStats.archiveChecked : Object.keys(archive).length;
 
 /* First-seen dates for the live listings, also from the Archive. Play never
  * says when an app appeared, only when it was last updated; the earliest crawl
  * of a listing is the closest anyone outside Google gets. */
-const since = existsSync(SINCE_CACHE) ? JSON.parse(readFileSync(SINCE_CACHE, "utf8")) : {};
+const since = publishedOnly
+  ? Object.fromEntries(published.fleet.map(({ id, firstSeen }) => [id, { firstSeen }]))
+  : existsSync(SINCE_CACHE)
+    ? JSON.parse(readFileSync(SINCE_CACHE, "utf8"))
+    : {};
 for (const app of fleet) app.firstSeen = since[app.id]?.firstSeen ?? null;
 
 /* Apply the tenure rule. See JOINED. */
@@ -430,6 +531,13 @@ const pastKept = delisted.filter(withinTenure);
 console.log(
   `[gen-store] tenure rule removed ${predating.length} app(s) last shipped before ${JOINED}`,
 );
+if (
+  publishedOnly &&
+  (liveKept.length !== published.fleet.length - goneIds.size ||
+    pastKept.length !== published.delisted.length + goneIds.size)
+) {
+  throw new Error("[gen-store] published-only tenure changed; public files unchanged; full refresh required");
+}
 
 /* THE BULK-DROP BACKSTOP.
  *
@@ -447,9 +555,7 @@ console.log(
  */
 const prevSrc = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
 const prevLive = +(/export const fleetStats = \{[\s\S]*?"live": (\d+)/.exec(prevSrc)?.[1] ?? 0);
-/** The calibration knob: wide enough to absorb a genuine round of delistings,
- *  narrow enough to catch the cliff. */
-const SHRINK_TOLERANCE = 3;
+// SHRINK_TOLERANCE is declared near the top (goneFromPublished uses it too).
 const fleetIdsIn = (src) => {
   const i = src.indexOf("export const fleet = [");
   return i < 0 ? [] : [...src.slice(i, src.indexOf("] as const;", i)).matchAll(/"id": "([^"]+)"/g)].map((m) => m[1]);
@@ -459,7 +565,7 @@ if (unresolved.length || liveKept.length < prevLive - SHRINK_TOLERANCE) {
   const why = `${liveKept.length} live vs ${prevLive} committed, ${unresolved.length} unresolved`;
   // The one legitimate day a client pulls five apps at once should not require
   // editing this script: STORE_ALLOW_SHRINK=1 npm run gen:store.
-  if (!process.env.STORE_ALLOW_SHRINK)
+  if (publishedOnly || !process.env.STORE_ALLOW_SHRINK)
     throw new Error(
       `[gen-store] ${why} — refusing to write; Play probably throttled the probe. ` +
         `Re-run it, or set STORE_ALLOW_SHRINK=1 if the drop is real.`,
@@ -479,7 +585,11 @@ console.log(`[gen-store] ${iconsWritten} new icon(s) downloaded to public/store/
  * A delisted app has no Play listing left to take an icon from, and the Archive
  * does not keep one. Resolving them separately is what lets these apps be shown
  * as themselves rather than as ninety identical grey rectangles. */
-const flavours = existsSync(FLAVOUR_CACHE) ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8")) : {};
+const flavours = publishedOnly
+  ? Object.fromEntries([...published.fleet, ...published.delisted].map(({ id, color }) => [id, { color }]))
+  : existsSync(FLAVOUR_CACHE)
+    ? JSON.parse(readFileSync(FLAVOUR_CACHE, "utf8"))
+    : {};
 const iconOnDisk = (id) => existsSync(resolve(ICON_DIR, `${id}.webp`));
 
 /**
@@ -639,23 +749,40 @@ function sharedName(names) {
   return trimmed.length >= 3 ? trimmed : null;
 }
 
-const stats = {
-  branches: branchCount,
-  clients: clients.length,
-  live: liveKept.length,
-  setUpByHim: liveKept.filter((a) => a.setUpByHim).length,
-  carryingHisCommits: liveKept.filter((a) => a.commits > 0).length,
-  installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
-  developers: new Set(liveKept.map((a) => a.developer).filter(Boolean)).size,
-  delisted: pastKept.length,
-  archiveChecked,
-  /** Verified published, but last shipped before he joined. Not counted above. */
-  predatingHim: predating.length,
-  joined: JOINED,
-  /** Companies, not apps — most shipped a rider app and a driver app. */
-  clientsLive: groupByClient(liveKept).length,
-  clientsGone: groupByClient(pastKept).length,
-};
+// published-only refreshes only current-listing facts (installFloor,
+// developers, clientsLive — all read straight off today's probe); every
+// provenance count (setUpByHim, carryingHisCommits, archiveChecked,
+// predatingHim, branches) is preserved from the committed file, never
+// re-derived from data this mode does not have.
+const stats = publishedOnly
+  ? {
+      ...published.fleetStats,
+      // live/delisted move with any id goneFromPublished confirmed this run;
+      // everything else in fleetStats is a provenance count, untouched.
+      live: liveKept.length,
+      delisted: pastKept.length,
+      installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
+      developers: new Set(liveKept.map((a) => a.developer).filter(Boolean)).size,
+      clientsLive: groupByClient(liveKept).length,
+      clientsGone: groupByClient(pastKept).length,
+    }
+  : {
+      branches: branchCount,
+      clients: clients.length,
+      live: liveKept.length,
+      setUpByHim: liveKept.filter((a) => a.setUpByHim).length,
+      carryingHisCommits: liveKept.filter((a) => a.commits > 0).length,
+      installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
+      developers: new Set(liveKept.map((a) => a.developer).filter(Boolean)).size,
+      delisted: pastKept.length,
+      archiveChecked,
+      /** Verified published, but last shipped before he joined. Not counted above. */
+      predatingHim: predating.length,
+      joined: JOINED,
+      /** Companies, not apps — most shipped a rider app and a driver app. */
+      clientsLive: groupByClient(liveKept).length,
+      clientsGone: groupByClient(pastKept).length,
+    };
 console.log("[gen-store]", stats);
 
 const pick = ({ id, name, rating, installs, url, side, setUpByHim, developer, icon, color, updated, firstSeen }) => ({
@@ -683,10 +810,10 @@ writeFileSync(
   OUT,
   `// AUTO-GENERATED by scripts/gen-store.mjs — do not edit by hand.
 //
-// Every entry was verified against its live Play Store listing at generation
-// time; anything that does not resolve is dropped rather than shipped as a dead
-// link. Internal names are deliberately not exported.
-// Run \`npm run gen:store\` to refresh.
+// Live entries were verified against Play at generation time. Historical
+// archive and attribution data keep their original evidence and are not
+// re-mined by a --published-only refresh. Internal names are not exported.
+// Run \`npm run gen:store\` for a full provenance-aware refresh.
 
 /** The three apps that get their own card. */
 export const storeApps = ${JSON.stringify(
@@ -767,40 +894,47 @@ export const delisted = ${JSON.stringify(
     1,
   )} as const;
 
-/** The pulled apps, grouped the same way. */
+/** The pulled apps, grouped the same way. Preserved verbatim in published-only
+ *  mode: a fresh probe cannot re-prove anything about a listing that is gone.
+ *  // ponytail: a fleet id goneFromPublished newly moved to delisted this run
+ *  // is not yet grouped into a company here (it groups on the next full
+ *  // mine); it is still fully present, correctly, in the flat delisted
+ *  // export above. */
 export const pastClients = ${JSON.stringify(
-    groupByClient(
-      pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
-        id,
-        name,
-        side,
-        setUpByHim,
-        firstSeen,
-        lastSeen,
-        url,
-        icon: icon ? `/store/${id}.webp` : null,
-        color,
-        rating,
-        installs: null,
-        developer: null,
-      })),
-    ).map(({ key, name, icon, color, setUpByHim, apps }) => ({
-      key,
-      name,
-      icon,
-      color,
-      setUpByHim,
-      lastSeen: apps.map((a) => a.lastSeen).sort().at(-1) ?? null,
-      firstSeen: apps.map((a) => a.firstSeen).filter(Boolean).sort()[0] ?? null,
-      apps: apps.map(({ id, name, url, side, rating, lastSeen }) => ({
-        id,
-        name,
-        url,
-        side,
-        rating,
-        lastSeen,
-      })),
-    })),
+    publishedOnly
+      ? published.pastClients
+      : groupByClient(
+          pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
+            id,
+            name,
+            side,
+            setUpByHim,
+            firstSeen,
+            lastSeen,
+            url,
+            icon: icon ? `/store/${id}.webp` : null,
+            color,
+            rating,
+            installs: null,
+            developer: null,
+          })),
+        ).map(({ key, name, icon, color, setUpByHim, apps }) => ({
+          key,
+          name,
+          icon,
+          color,
+          setUpByHim,
+          lastSeen: apps.map((a) => a.lastSeen).sort().at(-1) ?? null,
+          firstSeen: apps.map((a) => a.firstSeen).filter(Boolean).sort()[0] ?? null,
+          apps: apps.map(({ id, name, url, side, rating, lastSeen }) => ({
+            id,
+            name,
+            url,
+            side,
+            rating,
+            lastSeen,
+          })),
+        })),
     null,
     1,
   )} as const;
@@ -815,7 +949,12 @@ export const fleetStats = ${JSON.stringify(stats, null, 2)} as const;
  */
 export const lastShipped = ${JSON.stringify(lastShippedByYear(liveKept, pastKept), null, 1)} as const;
 
-export const storeGeneratedAt = ${JSON.stringify(new Date().toISOString().slice(0, 10))};
+export const storeGeneratedAt = ${JSON.stringify(publishedOnly ? published.storeGeneratedAt : new Date().toISOString().slice(0, 10))};
+
+/** When a --published-only run last re-verified every listing above against
+ *  live Play. check-freshness.mjs reads max(storeGeneratedAt, storeVerifiedAt),
+ *  the one stamp that is the run time by definition (G13's one exception). */
+export const storeVerifiedAt = ${JSON.stringify(new Date().toISOString().slice(0, 10))};
 `,
 );
 console.log(`[gen-store] wrote ${flagships.length} flagship(s) and ${fleet.length} fleet app(s)`);
