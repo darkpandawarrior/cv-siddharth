@@ -9,7 +9,8 @@
 // script that runs unattended. Run it by hand after a chat-handler.ts change
 // or a deploy, against a preview or production URL.
 //
-//   node scripts/probe-chat.mjs --base https://<preview>.vercel.app [--n=10]
+//   node scripts/probe-chat.mjs --base <url> [--n <count>]
+//   node scripts/probe-chat.mjs --base=<url> [--n=<count>]   # = form also works
 //   node scripts/probe-chat.mjs --self-test   # no network, checks the logic
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -81,16 +82,25 @@ async function askOnce(base, question) {
   return text;
 }
 
+// Accepts both `--flag value` and `--flag=value` — the acceptance criteria
+// and this file's own usage comment used to disagree on which one worked.
+export function getFlag(argv, name) {
+  const eq = argv.find((a) => a.startsWith(`--${name}=`));
+  if (eq) return eq.slice(name.length + 3);
+  const idx = argv.indexOf(`--${name}`);
+  return idx !== -1 && idx + 1 < argv.length ? argv[idx + 1] : undefined;
+}
+
 function parseArgs(argv) {
-  const base = (argv.find((a) => a.startsWith("--base=")) ?? "").split("=")[1];
-  const n = Number((argv.find((a) => a.startsWith("--n=")) ?? "--n=10").split("=")[1]);
+  const base = getFlag(argv, "base") ?? "";
+  const n = Number(getFlag(argv, "n") ?? 10);
   return { base, n: Number.isFinite(n) && n > 0 ? Math.min(n, QUESTIONS.length) : QUESTIONS.length };
 }
 
 async function main() {
   const { base, n } = parseArgs(process.argv.slice(2));
   if (!base) {
-    console.error("usage: node scripts/probe-chat.mjs --base <url> [--n=<count>]");
+    console.error("usage: node scripts/probe-chat.mjs --base <url> [--n <count>]");
     process.exit(2);
   }
 
@@ -130,6 +140,11 @@ function selfTest() {
   assert.equal(looksComplete("Check out [[rooms]]"), true);
   assert.equal(looksComplete("Here's the breakdown:"), false); // promises a list that never arrived
   assert.equal(looksComplete("Yes, he built that."), true);
+
+  // both invocation forms from the usage comment must parse the same way
+  assert.deepEqual(parseArgs(["--base", "https://x.test", "--n", "3"]), { base: "https://x.test", n: 3 });
+  assert.deepEqual(parseArgs(["--base=https://x.test", "--n=3"]), { base: "https://x.test", n: 3 });
+
   console.log("probe-chat: self-test OK");
 }
 
