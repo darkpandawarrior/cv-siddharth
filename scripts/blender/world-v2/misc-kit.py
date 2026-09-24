@@ -3,7 +3,7 @@ socket.mooring.NN empties were built for but had nothing to mount (art-
 direction critic finding #2 — "no mooring posts, no lamps despite 3
 socket.mooring.NN empties being present"). Spec §6 also assigns kite and
 bell to this file's budget; those aren't built here because no landmark in
-this review needs them yet (paymentslab-bell-toran and loopdown-kite-masts
+this review needs them yet (the bell/toran and kite/masts pieces
 aren't part of this pass) — adding them now would be exactly the unrequested
 scaffolding the ladder says to skip. Add them in the same file when their
 landmark is actually built.
