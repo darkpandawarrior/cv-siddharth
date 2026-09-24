@@ -104,5 +104,53 @@ export const SERIES_PROJECT: Record<string, { label: string; href: string }> = {
  */
 export const cast = writing.cast;
 
+/**
+ * writing.lessons[].project name -> the registry project slug it names.
+ *
+ * Hand-kept rather than derived from profile/projects.ts: that file already
+ * imports THIS one (for cast/titleize), so importing `projects` back here
+ * would be a cycle. Keyed by the exact `name` each Project carries, since
+ * that is what the-loopdown registry's `project` field actually publishes,
+ * not a slug. connections.test.ts checks this map against the registry
+ * project names, so a rename or a missed entry fails loudly instead of a
+ * project's lessons quietly not showing up on its own page.
+ *
+ * Not every lesson.project value belongs here — "Dice" (the employer, not a
+ * portfolio project) and "AgentHarness" (private infra with no public page)
+ * are real, current values with no registry slug, and that is correct: a
+ * lesson can document work with nowhere on this site to link back to.
+ */
+export const PROJECT_SLUG_BY_NAME: Record<string, string> = {
+  Doori: "doori",
+  Gaddi: "gaddi",
+  "PaymentsLab-KMP": "paymentslab-kmp",
+  Candidai: "candidai",
+  "Portfolio Twin": "portfolio",
+  STUTTER: "stutter",
+  "SINC-P": "sinc-p",
+  "The KMP toolkit family": "kmp-family",
+  "The Loopdown": "the-loopdown",
+};
+
+export type LessonNote = { slug: string; title: string; href: string; live: boolean };
+
+/**
+ * The individual lessons that document a build, keyed by the project's own
+ * slug — a finer grain than fieldNotesFor's series-level chips above. A
+ * series groups several lessons under one accent; this is the per-lesson row
+ * ProjectDetail renders underneath that chip, so "field notes from this
+ * build" resolves to the actual posts, not just the series they belong to.
+ */
+export function lessonsFor(slug: string): LessonNote[] {
+  return writing.lessons
+    .filter((l) => l.project && PROJECT_SLUG_BY_NAME[l.project] === slug)
+    .map((l) => ({
+      slug: l.slug,
+      title: l.title,
+      href: l.links?.devto || l.links?.hashnode || l.links?.medium || l.links?.linkedin || "",
+      live: Boolean(l.links?.devto || l.links?.hashnode || l.links?.medium || l.links?.linkedin),
+    }));
+}
+
 export const titleize = (id?: string) =>
   (id || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");

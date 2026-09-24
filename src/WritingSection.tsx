@@ -1,11 +1,12 @@
 import { ArrowUpRight, PenLine } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { writing } from "./data/writing.ts";
+import { writing, writingGeneratedAt } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { ExcelsiorShelf } from "./Excelsior.tsx";
 import { societies, loopdownOrigin } from "./data/beforeTheCode.ts";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { BoardProfilesGrid } from "./BoardProfiles.tsx";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 /**
  * The creative half of the writing, mounted on /ink — the archive, the
@@ -26,7 +27,14 @@ export function WritingSection() {
     <section id="writing" className="border-t border-line bg-surface">
       <div className="section-y mx-auto max-w-5xl px-6">
         <Reveal>
-          <p className="section-eyebrow mb-2">// the archive</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <p className="section-eyebrow mb-0">// the archive</p>
+            <EvidenceChip
+              file="writing.ts"
+              stamp={writingGeneratedAt}
+              source="github.com/darkpandawarrior/the-loopdown"
+            />
+          </div>
           <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Writing</h2>
           {/* Derived, never typed. This count was a teaser card pointing at a
               grid on another page; the grid is below it now, so the number and

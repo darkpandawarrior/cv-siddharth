@@ -60,6 +60,33 @@ test("back-navigating off a project page restores the destination's own title", 
 });
 
 /**
+ * writingMeta.ts's lessonsFor(slug) is the lesson-level counterpart to
+ * fieldNotesFor's series chips — an individual link per post, not just the
+ * series it belongs to. Doori is the project with the most lessons naming it,
+ * so its page is the one to assert the row actually renders a real link
+ * (dev.to and friends), not just an empty container.
+ */
+test("/project/doori shows at least one lesson link under field notes", async ({ page }) => {
+  await page.goto("/project/doori");
+  const fieldNotes = page.locator("text=field notes").locator("..");
+  await expect(fieldNotes).toBeVisible();
+  const lessonLink = page.locator('a[href*="dev.to"]');
+  await expect(lessonLink.first()).toBeVisible();
+});
+
+/**
+ * Candidai's star-count prose dropped its emoji for plain "N stars" wording
+ * (no emoji as data) — this checks the rendered page, not just the source
+ * string, so a future component that re-introduces "⭐" (e.g. ReposShowcase's
+ * own upstreamStars render) is caught wherever it renders, not just here.
+ */
+test("/project/candidai contains no star emoji", async ({ page }) => {
+  await page.goto("/project/candidai");
+  const text = await page.locator("body").innerText();
+  expect(text).not.toMatch(/[⭐★🌟]/u);
+});
+
+/**
  * THE BUG: the live-embed reveal probe looked up `#ComposeTarget`, which the Compose Multiplatform
  * 1.12 build under /portfolio-app does not have — it renders into a plain div and has no <canvas>
  * at all. So the probe timed out, gave up, and the "live" frame stayed a black box forever. This
@@ -116,6 +143,19 @@ for (const slug of liveTargetSlugs) {
     await expect.poll(() => webTab.evaluate(el => Object.keys(el).some(key => key.startsWith("__react")))).toBe(true);
     await webTab.click();
     await expect(webTab).toHaveAttribute("aria-selected", "true");
+    // THE BUG: scrolling to the SECTION HEADING above puts the frame itself
+    // in the viewport only on a short page. Doori's project page carries far
+    // more prose and screenshots above this section than Gaddi/PaymentsLab-KMP
+    // do (the 49-module writeup, the super-profile wave, master search) — long
+    // enough that the actual DeviceFrame, one heading, one badge paragraph and
+    // the tablist further down, sits below the fold once the heading itself
+    // reaches the top. useInView's IntersectionObserver (threshold 0.15) then
+    // never fires, the iframe never mounts, and the wait below times out on an
+    // element that was never going to appear — not a slow paint, a scroll
+    // target that was never going to bring the frame on screen for THIS page.
+    // Center the tab itself: it sits directly above the frame regardless of
+    // how much the project page carries above it.
+    await webTab.evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "center" }));
     const frame = page.locator('iframe[title="Live web build"]');
     await expect(frame).toBeVisible({ timeout: 30_000 });
     // The src is whatever HEAVY_ASSET_BASE resolves to in this run's build —

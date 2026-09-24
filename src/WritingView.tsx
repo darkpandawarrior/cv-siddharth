@@ -1,11 +1,12 @@
 import { ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { writing } from "./data/writing.ts";
+import { writing, writingGeneratedAt } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { WorldSwitch } from "./WorldSwitch.tsx";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 import {
   LOOPDOWN_REPO,
   PLATFORMS,
@@ -91,9 +92,16 @@ export function WritingView() {
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6">
         {/* hero */}
         <section className="section-y">
-          <span className="flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300">
-            <PenLine size={13} className="text-accent" /> The Loopdown
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex w-fit items-center gap-2 rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-zinc-300">
+              <PenLine size={13} className="text-accent" /> The Loopdown
+            </span>
+            <EvidenceChip
+              file="writing.ts"
+              stamp={writingGeneratedAt}
+              source="github.com/darkpandawarrior/the-loopdown"
+            />
+          </div>
           {/* Deliberately smaller than a landing-page hero, same demotion excelsior
               documents: this is a writing hub, not a doorway page. */}
           <h1 className="font-display mt-5 text-h2 font-bold tracking-tight">
