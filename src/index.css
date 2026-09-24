@@ -812,7 +812,7 @@ html.resume-mode .palette-trigger {
     display: none !important;
   }
   body:not(:has(.project-detail)):not(:has(.resume))::after {
-    content: "This page is an interactive app and prints poorly. Visit siddharth-pandalai.vercel.app to view it online, or print /resume or a /project/<slug> case study — both are built for paper.";
+    content: "This page is an interactive app and prints poorly. Visit siddharth-pandalai.vercel.app to view it online, or print /resume or a /project/<slug> case study. Both are built for paper.";
     display: block;
     padding: 24mm 12mm;
     font-family: var(--font-body), sans-serif;
