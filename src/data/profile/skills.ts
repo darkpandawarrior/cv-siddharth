@@ -83,7 +83,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   },
   {
     group: "Concurrency & DI",
-    items: ["Kotlin Coroutines", "Flow operators & reactive streams", "StateFlow / SharedFlow", "RxJava (legacy interop)", "Structured concurrency", "Hilt", "Dagger", "Koin", "Dependency injection", "LiveData", "LiveData"],
+    items: ["Kotlin Coroutines", "Flow operators & reactive streams", "StateFlow / SharedFlow", "RxJava (legacy interop)", "Structured concurrency", "Hilt", "Dagger", "Koin", "Dependency injection", "LiveData"],
   },
   {
     group: "Data & Networking",
@@ -106,7 +106,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
     // Honest ceiling: claims.json verifies 31 unit-test files and 4 androidTest
     // files at Dice — no framework name, coverage figure or outcome, since none
     // of those is verified and the guard regex forbids the outcome phrasing.
-    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "GitLab CI", "ProGuard / R8", "Git", "Android Studio", "Figma", "Unit testing and instrumented testing", "Macrobenchmark & Baseline Profiles", "Google Play Console & release management", "Android Studio", "Firebender + MCP agentic workflows", "LLM provider integration (Groq, Gemini, Claude)"],
+    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "GitLab CI", "ProGuard / R8", "Git", "Android Studio", "Figma", "Unit testing and instrumented testing", "Macrobenchmark & Baseline Profiles", "Google Play Console & release management", "Firebender + MCP agentic workflows", "LLM provider integration (Groq, Gemini, Claude)"],
   },
 ];
 
