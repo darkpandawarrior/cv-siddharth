@@ -19,3 +19,21 @@ Fetched from Poly Haven (CC0) by `scripts/world-v2/fetch-polyhaven.mjs`. Re-run 
 | kloppenheim_06_puresky | offline only: Blender lighting for the foliage atlas bake and lookdev renders (no runtime HDRI; the sky dome is PMREM'd) | [https://polyhaven.com/a/kloppenheim_06_puresky](https://polyhaven.com/a/kloppenheim_06_puresky) | CC0 | kloppenheim_06_puresky_1k.hdr (1,173,154 B) | 1,173,154 |
 
 **Total: 10,250,188 bytes (9.78 MB)**
+
+## Models (lookdev scatter kit + props)
+
+Fetched from Poly Haven (CC0) by `scripts/blender/world-v2/fetch-polyhaven-models.py` into
+`heavy/world/models/polyhaven/<id>/` (gitignored — regenerable source, same policy as the
+texture webps above; rerun the script to refetch). Used by `lookdev-spawn.py`'s geometry-nodes
+scatter and the boat/bridge lantern props. Full "geometry nodes" tree assets (jacaranda_tree
+etc.) were evaluated and rejected: their shared `.bin` geometry is 75-205 MB regardless of
+requested texture resolution, wrong for this 16 GB machine and for a git commit. Background
+tree silhouettes are built procedurally instead, same discipline as the spec's own
+banyan-neem.py/palm.py.
+
+| id | use | source | licence |
+|---|---|---|---|
+| fern_02 | near-field fern clumps, T1 scatter (spec §6) | [https://polyhaven.com/a/fern_02](https://polyhaven.com/a/fern_02) | CC0 |
+| rock_moss_set_01 | riverbank boulders, geo-nodes scatter (spec §6) | [https://polyhaven.com/a/rock_moss_set_01](https://polyhaven.com/a/rock_moss_set_01) | CC0 |
+| shrub_01 | undergrowth shrub, geo-nodes scatter | [https://polyhaven.com/a/shrub_01](https://polyhaven.com/a/shrub_01) | CC0 |
+| brass_diya_lantern | boat-bow + keystone lantern prop (spec §6) | [https://polyhaven.com/a/brass_diya_lantern](https://polyhaven.com/a/brass_diya_lantern) | CC0 |

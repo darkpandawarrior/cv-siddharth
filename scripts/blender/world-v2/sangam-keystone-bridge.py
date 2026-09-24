@@ -2,6 +2,21 @@
 is the keystone arch on kmp-toolkit piers, spanning the confluence where every
 includeBuild stream meets (world-v2-spec.md landmark #1).
 
+Rebuild (world-v2 lookdev pass): a true semicircular arch alone read as a
+stone hoop floating over the river — nothing carried the load down into the
+water or filled the haunches, which is what actually reads as "bridge" at
+a distance. Two pieces close that gap, both one-off whole-bridge geometry
+(not data-count prototypes — there is exactly one of each per bridge, same
+footing as arch_curve/deck_curve below, not the repeat-N-times footing that
+voussoir/pier_course/lamp_post use):
+  - SpandrelWall: the masonry infill between the arch's extrados and the
+    deck line, built directly from ARCH_R/PIER_TOP/DECK_Z so it always
+    matches this file's own arch, not a guessed curve.
+  - CutwaterPier: a pointed prow on a pier face that splits river flow. One
+    prototype, instanced at both piers x both faces (4x) in the preview —
+    symmetric because the bridge's final rotation in the world scene isn't
+    known here, so there's no honest single "upstream" face to pick.
+
 This is a KIT, not a baked assembly (spec §0.3 rule 2: "no GLB bakes a data
 count"). The exported GLB carries one prototype each of voussoir, pier
 course, keystone, deck segment, railing run and lamp socket, plus named
@@ -98,6 +113,9 @@ _half_ang = math.pi / (2 * N_ARCH_DEMO)
 _JOINT = 0.96  # shrink slightly for a visible mortar line between stones
 VOUS_W_TOP = 2 * _r_out * math.sin(_half_ang) * _JOINT
 VOUS_W_BOT = 2 * _r_in * math.sin(_half_ang) * _JOINT
+DECK_Z = PIER_TOP + _r_out + 0.14  # deck sits on the extrados at apex height;
+                                    # defined here (not just at the sockets
+                                    # below) because SpandrelWall needs it too
 
 # --- voussoir: the tapered arch stone, instanced along socket.arch_curve ---
 vous_bm = drafted_block(w_bottom=VOUS_W_BOT, w_top=VOUS_W_TOP, depth=ARCH_DEPTH,
@@ -146,6 +164,59 @@ for poly in inlay.data.polygons:
 course_bm = drafted_block(w_bottom=1.7, w_top=1.7, depth=1.0, height=0.5, mat=palestone,
                            inset=0.05, bevel=0.014)
 pier_course = sh.new_mesh_object('PierCourse', course_bm, palestone)
+
+# --- spandrel wall: the masonry infill between the arch's extrados and the
+# deck line (world-v2-spec.md landmark #1 rebuild). One whole-bridge piece,
+# not a repeat-N prototype — built directly from this file's own arch
+# geometry (_r_out/PIER_TOP/DECK_Z), so the fill can never drift out of sync
+# with the arch it packs around. ---
+def spandrel_wall_bm(r_out, pier_top, deck_z, depth, n=8):
+    """Closed profile: the extrados hump (angle 0..pi, n+1 points) capped by
+    the flat deck line, extruded solid along Y (the bridge's depth axis)."""
+    pts = [(r_out * math.cos(math.pi * i / n), pier_top + r_out * math.sin(math.pi * i / n))
+           for i in range(n + 1)]
+    pts += [(-r_out, deck_z), (r_out, deck_z)]
+    bm = bmesh.new()
+    hd = depth / 2
+    front = [bm.verts.new((x, -hd, z)) for x, z in pts]
+    back = [bm.verts.new((x, hd, z)) for x, z in pts]
+    npts = len(pts)
+    for i in range(npts):
+        j = (i + 1) % npts
+        bm.faces.new((front[i], front[j], back[j], back[i]))
+    bm.faces.new(front[::-1])
+    bm.faces.new(back)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=list(bm.edges))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return sh.canonical_order(bm)
+
+
+spandrel_wall = sh.new_mesh_object('SpandrelWall', spandrel_wall_bm(_r_out, PIER_TOP, DECK_Z, ARCH_DEPTH), sandstone)
+
+# --- cutwater: a pointed prow that splits river flow, one prototype instanced
+# at both piers x both faces in the preview. ---
+def cutwater_bm(width, depth_out, height):
+    bm = bmesh.new()
+    hw = width / 2
+    v = [
+        bm.verts.new((-hw, 0, 0)), bm.verts.new((hw, 0, 0)), bm.verts.new((0, -depth_out, 0)),
+        bm.verts.new((-hw, 0, height)), bm.verts.new((hw, 0, height)), bm.verts.new((0, -depth_out, height)),
+    ]
+    bm.faces.new((v[0], v[1], v[4], v[3]))  # back, flush with the pier face
+    bm.faces.new((v[1], v[2], v[5], v[4]))  # right slope
+    bm.faces.new((v[2], v[0], v[3], v[5]))  # left slope
+    bm.faces.new((v[3], v[4], v[5]))        # top cap
+    bm.faces.new((v[2], v[1], v[0]))        # bottom cap
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.02, segments=2, affect='EDGES')
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=list(bm.edges))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return sh.canonical_order(bm)
+
+
+cutwater = sh.new_mesh_object('CutwaterPier', cutwater_bm(width=1.5, depth_out=0.55, height=PIER_TOP), palestone)
 
 # --- deck segment: flagstone slab with two joint grooves ---
 deck_bm = bmesh.new()
@@ -216,7 +287,7 @@ lamp_post = sh.new_mesh_object('LampSocketPost', lamp_bm, palestone)
 sh.socket('socket.lamp', (0, 0, 0.30), parent=lamp_post, size=0.05)
 
 # --- named sockets the runtime samples for data counts ---
-DECK_Z = PIER_TOP + _r_out + 0.14  # deck sits on the extrados at apex height
+# (DECK_Z is defined earlier, alongside _r_out — SpandrelWall needs it too)
 arch_curve_data = bpy.data.curves.new('socket.arch_curve', 'CURVE')
 arch_curve_data.dimensions = '3D'
 spline = arch_curve_data.splines.new('BEZIER')
@@ -244,7 +315,7 @@ lantern_socket.parent = keystone
 inflow_sockets = [sh.socket(f'socket.inflow.{i:02d}', (-2 + i * 1.0, -1.4, 0.05), size=0.1)
                   for i in range(5)]
 
-kit_objects = [voussoir, keystone, pier_course, deck_segment, railing, lamp_post,
+kit_objects = [voussoir, keystone, pier_course, spandrel_wall, cutwater, deck_segment, railing, lamp_post,
                arch_curve, deck_curve, pier_a, pier_b, *inflow_sockets]
 sh.export_kit(ID, kit_objects)
 
@@ -291,6 +362,20 @@ for side, base_x in (('a', -ARCH_R), ('b', ARCH_R)):
         cdup.location = (base_x, 0, c * COURSE_H)
         bpy.context.collection.objects.link(cdup)
         preview_objs.append(cdup)
+    for face, rot in ((0.5, math.pi), (-0.5, 0)):  # both Y faces, apex pointing out
+        cdup = cutwater.copy()
+        cdup.data = cutwater.data.copy()
+        cdup.name = f'Cutwater_preview_{side}_{face}'
+        cdup.location = (base_x, face, 0)
+        cdup.rotation_euler = (0, 0, rot)
+        bpy.context.collection.objects.link(cdup)
+        preview_objs.append(cdup)
+
+dup = spandrel_wall.copy()
+dup.data = spandrel_wall.data.copy()
+dup.name = 'SpandrelWall_preview'
+bpy.context.collection.objects.link(dup)
+preview_objs.append(dup)
 
 DECK_SPAN = ARCH_R + 1.0
 for i, dx in enumerate((-3 * DECK_SPAN / 4, -DECK_SPAN / 4, DECK_SPAN / 4, 3 * DECK_SPAN / 4)):
