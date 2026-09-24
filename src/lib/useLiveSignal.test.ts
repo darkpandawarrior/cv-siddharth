@@ -74,7 +74,7 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
     const url3 = "/api/github-activity-test-bus-3";
     const unsub = subscribeLiveSignal(url3, 1000, vi.fn(), fetchImpl as unknown as typeof fetch);
     await vi.advanceTimersByTimeAsync(0);
-    expect(getLiveSignalSnapshot<{ n: number }>(url3)).toEqual({ data: { n: 42 }, error: false });
+    expect(getLiveSignalSnapshot<{ n: number }>(url3)).toMatchObject({ data: { n: 42 }, error: false });
     unsub();
   });
 
@@ -87,5 +87,36 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
     fetchImpl.mockClear();
     await vi.advanceTimersByTimeAsync(5000);
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("exposes nextPollAt in the future once the first fetch has settled", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: 1 }), { status: 200 }));
+    const url5 = "/api/github-activity-test-bus-5";
+    const unsub = subscribeLiveSignal(url5, 1000, vi.fn(), fetchImpl as unknown as typeof fetch);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(getLiveSignalSnapshot(url5).nextPollAt).toBeGreaterThan(Date.now());
+    unsub();
+  });
+
+  it("pauses polling while document.hidden is true", async () => {
+    // vitest.config.ts runs this suite in the "node" environment (no real
+    // `document`) — same reason isHidden()/ensureVisibilityHandling treat a
+    // missing `document` as "visible": a minimal stand-in is enough to
+    // exercise the branch that reads document.hidden.
+    const fakeDocument = { hidden: true, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    vi.stubGlobal("document", fakeDocument);
+    try {
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: 1 }), { status: 200 }));
+      const url6 = "/api/github-activity-test-bus-6";
+      const unsub = subscribeLiveSignal(url6, 1000, vi.fn(), fetchImpl as unknown as typeof fetch);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(getLiveSignalSnapshot(url6).nextPollAt).toBeNull();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchImpl).not.toHaveBeenCalled();
+      unsub();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

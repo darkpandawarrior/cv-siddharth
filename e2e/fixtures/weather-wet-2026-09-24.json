@@ -3,31 +3,31 @@
   "weather": {
     "at": "2026-09-24T03:30",
     "intervalSec": 900,
-    "tempC": 22.9,
-    "code": 3,
-    "cloudPct": 97,
-    "precipMmH": 0,
-    "windKmh": 10.3,
-    "windFromDeg": 263,
-    "humidityPct": 94,
-    "visibilityM": 11420
+    "tempC": 21.4,
+    "code": 61,
+    "cloudPct": 100,
+    "precipMmH": 2.4,
+    "windKmh": 14,
+    "windFromDeg": 220,
+    "humidityPct": 98,
+    "visibilityM": 6000
   },
   "air": {
     "at": "2026-09-24T03:30",
-    "pm25": 29.2,
-    "pm10": 40,
-    "usAqi": 77,
-    "euAqi": 50,
-    "aod": 0.7
+    "pm25": 12.1,
+    "pm10": 18,
+    "usAqi": 41,
+    "euAqi": 20,
+    "aod": 0.32
   },
   "river": {
     "date": "2026-09-24",
-    "dischargeM3s": 73.64,
-    "next": [78.98, 54.46],
+    "dischargeM3s": 91.2,
+    "next": [104.5, 118.9],
     "range7d": [32.27, 99.46]
   },
-  "season": { "days": 30, "sumMm": 140 },
-  "rain6hMm": 0,
+  "season": { "days": 30, "sumMm": 210 },
+  "rain6hMm": 14.6,
   "attribution": [
     "Weather data by Open-Meteo.com (CC BY 4.0)",
     "Air quality: CAMS model via Open-Meteo.com (CC BY 4.0)",

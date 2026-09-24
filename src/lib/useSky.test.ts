@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { classifyWeather, computeSkyState, type WeatherEnvelope } from "./useSky";
+import { subscribeLiveSignal } from "./useLiveSignal";
 import type { Weather } from "./sky";
 
 // ponytail: @testing-library/react isn't a devDependency (same note as
@@ -8,28 +9,54 @@ import type { Weather } from "./sky";
 // renderHook. Both hooks are thin wrappers over these with no branching of
 // their own.
 
+const SAMPLE: Weather = {
+  at: "2026-09-24T03:15",
+  intervalSec: 900,
+  tempC: 22.9,
+  code: 3,
+  cloudPct: 97,
+  precipMmH: 0,
+  windKmh: 10.3,
+  windFromDeg: 263,
+  humidityPct: 94,
+  visibilityM: 11420,
+};
+
 describe("classifyWeather", () => {
-  const sample: Weather = { at: "2026-09-24T03:15", tempC: 22.9, code: 3, cloudPct: 97, precipMm: 0, windKmh: 10.3, windFromDeg: 263 };
+  const connected: WeatherEnvelope = { connected: true, weather: SAMPLE, air: null, river: null, season: null, rain6hMm: null };
 
   it("is pending before the first fetch resolves", () => {
-    expect(classifyWeather(null, false)).toEqual({ weather: null, state: "pending" });
+    expect(classifyWeather(null, false)).toEqual({
+      weather: null, air: null, river: null, season: null, rain6hMm: null, state: "pending",
+    });
   });
 
   it("is live with the reading once connected", () => {
-    const data: WeatherEnvelope = { connected: true, weather: sample };
-    expect(classifyWeather(data, false)).toEqual({ weather: sample, state: "live" });
+    expect(classifyWeather(connected, false)).toEqual({
+      weather: SAMPLE, air: null, river: null, season: null, rain6hMm: null, state: "live",
+    });
   });
 
   it("is unavailable, with no stale reading, on a fetch error", () => {
     // Even if a stale reading were still cached from a prior successful
     // fetch, `error: true` must win — no weatherFallback.ts, ever.
-    const stale: WeatherEnvelope = { connected: true, weather: sample };
-    expect(classifyWeather(stale, true)).toEqual({ weather: null, state: "unavailable" });
+    expect(classifyWeather(connected, true)).toEqual({
+      weather: null, air: null, river: null, season: null, rain6hMm: null, state: "unavailable",
+    });
   });
 
   it("is unavailable when the upstream itself reported disconnected", () => {
-    const data: WeatherEnvelope = { connected: false, weather: null };
-    expect(classifyWeather(data, false)).toEqual({ weather: null, state: "unavailable" });
+    const data: WeatherEnvelope = { connected: false, weather: null, air: null, river: null, season: null, rain6hMm: null };
+    expect(classifyWeather(data, false)).toEqual({
+      weather: null, air: null, river: null, season: null, rain6hMm: null, state: "unavailable",
+    });
+  });
+
+  it("on weather-noair: air is null while weather stays non-null", () => {
+    const noAir: WeatherEnvelope = { connected: true, weather: SAMPLE, air: null, river: null, season: null, rain6hMm: null };
+    const result = classifyWeather(noAir, false);
+    expect(result.air).toBeNull();
+    expect(result.weather).not.toBeNull();
   });
 });
 
@@ -57,10 +84,38 @@ describe("computeSkyState", () => {
   });
 
   it("keeps live weather during preview — only the clock is simulated", () => {
-    const weather: Weather = { at: "now", tempC: 20, code: 1, cloudPct: 10, precipMm: 0, windKmh: 5, windFromDeg: 90 };
     const previewAt = new Date("2026-09-24T18:30:00+05:30");
-    const s = computeSkyState(now, weather, previewAt);
-    expect(s?.weather).toEqual(weather);
+    const s = computeSkyState(now, SAMPLE, previewAt);
+    expect(s?.weather).toEqual(SAMPLE);
     expect(s?.preview).toBe(true);
+  });
+});
+
+// useWeather() is `useLiveSignal("/api/weather", WEATHER_INTERVAL_MS)` plus a
+// pure classifier with no branching of its own — the "one fetch per URL no
+// matter how many mounted callers" contract it inherits is exercised here at
+// the same non-React primitive level useLiveSignal.test.ts already covers,
+// standing in for the footer + two other consumers all calling useWeather().
+describe("useWeather's shared poll", () => {
+  it("costs exactly one fetch of /api/weather per interval across three consumers", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ connected: true }), { status: 200 }));
+      const footer = subscribeLiveSignal("/api/weather-usesky-test", 900_000, vi.fn(), fetchImpl as unknown as typeof fetch);
+      const pulse = subscribeLiveSignal("/api/weather-usesky-test", 900_000, vi.fn(), fetchImpl as unknown as typeof fetch);
+      const studioRig = subscribeLiveSignal("/api/weather-usesky-test", 900_000, vi.fn(), fetchImpl as unknown as typeof fetch);
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(900_000);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+      footer();
+      pulse();
+      studioRig();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -12,14 +12,7 @@
     "humidityPct": 94,
     "visibilityM": 11420
   },
-  "air": {
-    "at": "2026-09-24T03:30",
-    "pm25": 29.2,
-    "pm10": 40,
-    "usAqi": 77,
-    "euAqi": 50,
-    "aod": 0.7
-  },
+  "air": null,
   "river": {
     "date": "2026-09-24",
     "dischargeM3s": 73.64,

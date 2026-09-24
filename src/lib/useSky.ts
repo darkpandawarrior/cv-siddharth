@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { skyState, type SkyState, type Weather } from "./sky";
+import { skyState, type Air, type River, type Season, type SkyState, type Weather } from "./sky";
 import { useLiveSignal } from "./useLiveSignal";
 
 /** Minute-boundary tick, lifted verbatim from NavClock (App.tsx:251) — R2
@@ -26,32 +26,53 @@ export function useNow(): Date | null {
 }
 
 export type WeatherHookState = "live" | "unavailable" | "pending";
-export type WeatherEnvelope = { connected: boolean; weather: Weather | null };
+/** The full /api/weather response (M7): weather, air and river are each
+ *  independently nullable even while `connected` is true. */
+export type WeatherEnvelope = {
+  connected: boolean;
+  weather: Weather | null;
+  air: Air | null;
+  river: River | null;
+  season: Season | null;
+  rain6hMm: number | null;
+};
+export type WeatherReading = {
+  weather: Weather | null;
+  air: Air | null;
+  river: River | null;
+  season: Season | null;
+  rain6hMm: number | null;
+  state: WeatherHookState;
+};
+
+const EMPTY_READING: Omit<WeatherReading, "state"> = { weather: null, air: null, river: null, season: null, rain6hMm: null };
 
 /**
  * Pure classifier behind `useWeather`, extracted so the null-vs-stale
  * distinction is testable without `renderHook` (no `@testing-library/react`
  * dependency, same pattern as `fetchLiveSignal`/`subscribeLiveSignal`).
  *
- * On `error`, this returns `weather: null` even if `data` still holds a
+ * On `error`, this returns every field null even if `data` still holds a
  * last-good reading — P2's "no weather fallback file" rule. The shared
  * `useLiveSignal` bus keeps stale data around for callers that want it
  * (github-activity, ops); the weather chip is not one of them, because a
  * week-old temperature dressed as live was exactly the defect this spec
  * dropped (design-brief §0(c)).
  */
-export function classifyWeather(data: WeatherEnvelope | null, error: boolean): { weather: Weather | null; state: WeatherHookState } {
-  if (error) return { weather: null, state: "unavailable" };
-  if (!data) return { weather: null, state: "pending" };
-  if (!data.connected) return { weather: null, state: "unavailable" };
-  return { weather: data.weather, state: "live" };
+export function classifyWeather(data: WeatherEnvelope | null, error: boolean): WeatherReading {
+  if (error) return { ...EMPTY_READING, state: "unavailable" };
+  if (!data) return { ...EMPTY_READING, state: "pending" };
+  if (!data.connected) return { ...EMPTY_READING, state: "unavailable" };
+  return { weather: data.weather, air: data.air, river: data.river, season: data.season, rain6hMm: data.rain6hMm, state: "live" };
 }
 
 /** Open-Meteo's own refresh interval is 900s (P3) — polling faster would
- *  just re-serve the edge cache. */
+ *  just re-serve the edge cache. The one /api/weather poll shared by
+ *  SiteFooter, /pulse, StudioRig, the v1 ledger and the v2 useNowModel — no
+ *  lane adds a second weather hook (M53). */
 const WEATHER_INTERVAL_MS = 900_000;
 
-export function useWeather(): { weather: Weather | null; state: WeatherHookState } {
+export function useWeather(): WeatherReading {
   const { data, error } = useLiveSignal<WeatherEnvelope>("/api/weather", WEATHER_INTERVAL_MS);
   return classifyWeather(data, error);
 }

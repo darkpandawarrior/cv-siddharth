@@ -11,9 +11,12 @@ export async function fetchLiveSignal<T>(url: string, fetchImpl: typeof fetch = 
   return (await res.json()) as T;
 }
 
-export type LiveSignalSnapshot<T> = { data: T | null; error: boolean };
+/** `nextPollAt` is the store's next scheduled tick, `null` while no timer is
+ *  running (no subscriber, or the tab is hidden) — EvidenceChip's retry
+ *  reading uses it to say "next try at HH:MM" instead of a bare spinner. */
+export type LiveSignalSnapshot<T> = { data: T | null; error: boolean; nextPollAt: number | null };
 
-const EMPTY_SNAPSHOT: LiveSignalSnapshot<unknown> = { data: null, error: false };
+const EMPTY_SNAPSHOT: LiveSignalSnapshot<unknown> = { data: null, error: false, nextPollAt: null };
 
 /**
  * P4 — the live-event bus. One store per URL (not per caller): the footer,
@@ -42,7 +45,7 @@ function getOrCreateStore<T>(url: string, fetchImpl: typeof fetch): StoreEntry<T
   let store = stores.get(url) as StoreEntry<T> | undefined;
   if (!store) {
     store = {
-      snapshot: { data: null, error: false },
+      snapshot: { data: null, error: false, nextPollAt: null },
       intervals: new Map(),
       timer: null,
       timerIntervalMs: null,
@@ -62,11 +65,15 @@ function isHidden(): boolean {
 
 async function tick<T>(url: string, store: StoreEntry<T>): Promise<void> {
   if (isHidden()) return;
+  // The interval this fetch is being made at, captured before the await —
+  // a subscriber's own interval, or the store's current running interval if
+  // one is already set (both agree once restartTimer has run).
+  const intervalMs = store.timerIntervalMs ?? Math.min(...store.intervals.values());
   try {
     const data = await fetchLiveSignal<T>(url, store.fetchImpl);
-    store.snapshot = { data, error: false };
+    store.snapshot = { data, error: false, nextPollAt: Date.now() + intervalMs };
   } catch {
-    store.snapshot = { data: store.snapshot.data, error: true };
+    store.snapshot = { data: store.snapshot.data, error: true, nextPollAt: Date.now() + intervalMs };
   }
   for (const onChange of store.intervals.keys()) onChange();
 }
@@ -75,6 +82,7 @@ function stopTimer<T>(store: StoreEntry<T>): void {
   if (store.timer) clearInterval(store.timer);
   store.timer = null;
   store.timerIntervalMs = null;
+  store.snapshot = { ...store.snapshot, nextPollAt: null };
 }
 
 function restartTimer<T>(url: string, store: StoreEntry<T>): void {
@@ -84,6 +92,7 @@ function restartTimer<T>(url: string, store: StoreEntry<T>): void {
   stopTimer(store);
   store.timerIntervalMs = minInterval;
   store.timer = setInterval(() => void tick(url, store), minInterval);
+  store.snapshot = { ...store.snapshot, nextPollAt: Date.now() + minInterval };
 }
 
 function ensureVisibilityHandling<T>(url: string, store: StoreEntry<T>): void {
