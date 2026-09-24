@@ -49,7 +49,7 @@ export interface Contribution {
  * Merged PRs upstream, as the live GitHub search reports it.
  *
  * NOT openSource.length. That array is a CURATED subset — 17 entries against
- * 24 merged — and hiresignalNumbers.test.ts documents shorter as expected.
+ * 24 merged — and candidaiNumbers.test.ts documents shorter as expected.
  * ResumeView used the array length and so printed 17 while every other
  * surface on the site said 18, which is the kind of one-off disagreement a
  * reader notices and an owner never does.
@@ -88,7 +88,7 @@ export interface GrowthItem {
 // Recent shipping timeline — "what I've built in the last few weeks".
 export const recentGrowth: GrowthItem[] = [
   { date: "Jun 2026", title: "Gaddi (formerly Kursi) shipped", detail: "Full Kotlin Multiplatform social-deduction game across Android, iOS, desktop and web. Deterministic engine + ISMCTS AI." },
-  { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (⭐${upstreamStars}): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
+  { date: "Jun - Aug 2026", title: "career-ops: public OSS contributions", detail: `24 merged PRs to the public career-ops project (${upstreamStars} stars): ATS providers (BambooHR, Breezy HR), an opt-in LLM relevance re-ranker, an agent-inbox feature, and a run of correctness fixes covering silent data loss on non-Latin company names, a $-pattern splicing the template into a generated CV, a date filter ignored in its =value form, a concurrency race that dropped queued requests, and an unlocked append to shared scan history.` },
   { date: "Jun 2026", title: "Doori (formerly Mileway): five platforms", detail: "Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, plus Glance/WidgetKit widgets and an iOS Live Activity. 159 Roborazzi tests green." },
   { date: "Jul 2026", title: "Doori: offline AI + policy engine", detail: "Retrieval-grounded chat over local data with voice I/O, a reimbursement-rate policy engine and a durable submit-outbox, offline-first with a real backend opt-in." },
   { date: "Jul 2026", title: "PaymentsLab-KMP (formerly PaymentsLab): 5 rails + 66 gateways", detail: "44-module KMP payments lab: payouts, mandates, card vault, marketplace Connect and a double-entry wallet ledger beyond one-shot pay-in, all MOCK_MODE-honest." },
