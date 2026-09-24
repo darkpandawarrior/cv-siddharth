@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Float, Grid, Html, Lightformer, Line, OrbitControls, Sparkles, Stars, Trail } from "@react-three/drei";
 import { Bloom, ChromaticAberration, EffectComposer, Glitch, Scanline, Vignette } from "@react-three/postprocessing";
@@ -12,6 +12,16 @@ import { HoloCore } from "./blueprintHologram.tsx";
 import { AsciiEffect } from "./asciiEffect.ts";
 import { readToken } from "./themeColor";
 import { RippleEffect } from "./rippleEffect.ts";
+import { SceneActivity, useReducedMotion } from "./SceneActivity.tsx";
+
+// The lathe-turned Blender instrument, alongside the existing hologram —
+// its own chunk (public/models/blueprint-instrument.glb plus the
+// GLTFLoader weight), so it doesn't spend this already-63-byte-headroom
+// bundle's budget. HoloCore stays exactly as it was: removing its import
+// here measurably cost MORE bytes in this merged chunk than keeping it
+// (Rollup's chunk graph is not linear in module count — verified, not
+// assumed, by isolating the change).
+const BlueprintInstrument = lazy(() => import("./BlueprintInstrument.tsx"));
 
 /* Custom Effect instances (anything not shipped by @react-three/postprocessing)
  * plug into <EffectComposer> as a <primitive>, per the library's documented
@@ -479,9 +489,11 @@ function Scene({
   ascii: boolean;
 }) {
   const byKey = useMemo(() => Object.fromEntries(NODES.map((n) => [n.key, n])), []);
-  // Computed once — matches the inline window.matchMedia pattern already used
-  // elsewhere on the site (labs/useCanvasLoop.ts) rather than a new shared hook.
-  const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  // Live read (useSyncExternalStore over matchMedia's own change event), not
+  // a mount-once snapshot — a visitor who toggles reduced motion mid-session,
+  // or a Playwright test calling emulateMedia after load, is honoured either
+  // way. The banned pattern this replaced never saw a change after mount.
+  const reducedMotion = useReducedMotion();
   const { legend, trigger } = useLegendMode();
   // Only recomputed when legend actually flips, not on every tour/reset/zoom
   // re-render — see the note on the hoisted constants above.
@@ -490,6 +502,12 @@ function Scene({
   const glitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.15, 0.3) : new THREE.Vector2(0.05, 0.15)), [legend]);
   return (
     <>
+      {/* The proven live-reduced-motion mechanism (matchMedia's own change
+          event, not a mount-once read) — sets the Canvas frameloop to
+          'demand' itself via useThree, which is what actually stops every
+          useFrame in this scene from firing, not just the ones that check
+          reducedMotion individually. */}
+      <SceneActivity />
       <color attach="background" args={[readToken("--color-void", "#060807")]} />
       <fog attach="fog" args={[readToken("--color-void", "#060807"), 22, 58]} />
       <hemisphereLight args={["#e4f3ea", "#17251f", 1.25]} />
@@ -559,6 +577,14 @@ function Scene({
       })}
       <group scale={1.9}>
         <HoloCore />
+      </group>
+      {/* The lathe-turned instrument sits on its own low pedestal beneath the
+          hologram — still loaded when reduced motion is on, it has no idle
+          animation to gate either way. */}
+      <group position={[0, -2.3, 0]}>
+        <Suspense fallback={null}>
+          <BlueprintInstrument />
+        </Suspense>
       </group>
       {/* Mesh raycasting for onClick here fights OrbitControls' own pointer
        * handling on the same canvas and never reliably fires — a plain Html

@@ -5,8 +5,10 @@ import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { EDGES, EDGE_KIND, NODES, type StoryNode } from "./data/storyMap.ts";
+import { systemGraph } from "./data/systemGraph.ts";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { readToken } from "./themeColor";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 import StoryMapScene from "./StoryMapScene.tsx";
 
 /**
@@ -302,7 +304,7 @@ export function StoryMap() {
         {/* text-muted, not text-zinc-500/600 — those fail WCAG AA on this dark
             ground (index.css's own note on --color-muted), which is exactly
             what axe caught here at first pass. */}
-        <div className="mt-2 flex items-center gap-4 text-[11px] text-muted">
+        <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
             <svg width="16" height="2" aria-hidden><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" /></svg>
             measured
@@ -311,14 +313,26 @@ export function StoryMap() {
             <svg width="16" height="2" aria-hidden><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3,2.5" /></svg>
             declared
           </span>
+          <EvidenceChip file="systemGraph.ts" stamp={systemGraph.generatedAt} source="registry + includeBuild scan" />
         </div>
-        <Link
-          to="/blueprint"
-          className="group mt-4 flex items-center justify-between rounded-xl border border-accent2/30 bg-accent2/5 px-4 py-3 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
-        >
-          <span>Enter the Blueprint Room — the same map as an infinite, editable canvas</span>
-          <span className="transition group-hover:translate-x-1">→</span>
-        </Link>
+        {/* The other two altitudes of the same atlas — ORBIT (here), STREET
+            (drive it) and DESK (the annotated working copy). */}
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <Link
+            to="/playground"
+            className="group flex items-center justify-between rounded-xl border border-line bg-card px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
+          >
+            <span>Walk the streets · the same system, drivable</span>
+            <span className="transition group-hover:translate-x-1">→</span>
+          </Link>
+          <Link
+            to="/blueprint"
+            className="group flex items-center justify-between rounded-xl border border-accent2/30 bg-accent2/5 px-4 py-3 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
+          >
+            <span>Enter the Blueprint Room · the annotated working copy</span>
+            <span className="transition group-hover:translate-x-1">→</span>
+          </Link>
+        </div>
         {/* Same destinations as real links — keyboard, touch and small screens. */}
         <div className="mt-4 flex flex-wrap gap-2">
           {NODES.filter((n) => n.id !== "sid").map((n) => {

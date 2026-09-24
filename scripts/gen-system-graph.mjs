@@ -246,23 +246,35 @@ const STORY_MANIFEST = [
   { id: "candidai", label: "Candidai", sub: "25-module KMP", r: 12, color: GREEN, target: "#project/candidai" },
   { id: "stutter", label: "STUTTER", sub: "time-loop game", r: 12, color: GREEN, target: "#project/stutter" },
   { id: "portfolio", label: "Portfolio", sub: "this build, twice", r: 12, color: GREEN, target: "#project/portfolio" },
+  // sinc-p and kmp-family: the two registry projects the constellation was
+  // missing (storyMap.test.ts pins coverage to every projects[].slug).
+  // sinc-p wires only to the hub — it is a Next.js + Postgres campus
+  // platform, not a KMP sibling, mirroring blueprintData.ts's own "no
+  // foundation edge" choice for the same project.
+  { id: "sinc-p", label: "SINC-P", sub: "campus platform", r: 12, color: GREEN, target: "#project/sinc-p" },
+  { id: "kmp-family", label: "KMP toolkit family", sub: "shared build logic", r: 13, color: GREEN, target: "#project/kmp-family" },
   { id: "experience", label: "Experience", r: 11, color: CYAN, target: "#experience" },
   { id: "skills", label: "Skills", r: 11, color: CYAN, target: "#skills" },
-  { id: "writing", label: "The Loopdown", sub: "field notes", r: 15, color: PURPLE, target: "#loopdown" },
+  { id: "the-loopdown", label: "The Loopdown", sub: "field notes", r: 15, color: PURPLE, target: "#loopdown" },
   { id: "books", label: "Books Before Bros", sub: "the origin blog", r: 13, color: ORANGE, target: BOOKS_BEFORE_BROS.url },
   { id: "chat", label: "Ask my AI", sub: "knows all of this", r: 13, color: CYAN, target: "chat" },
   { id: "blueprint", label: "Blueprint Room", sub: "infinite canvas", r: 12, color: ORANGE, target: "#blueprint" },
 ];
 
 // Declared wiring: hub feeds everything; the work feeds the writing; the
-// writing descends from the blog; the AI has read the lot.
+// writing descends from the blog; the AI has read the lot; the KMP family
+// feeds every app built on it (same set blueprintData.ts's ARROWS already
+// draws); sinc-p wires only to the hub (see the STORY_MANIFEST note above).
 const DECLARED_WIRES = [
   ["sid", "work"], ["sid", "doori"], ["sid", "gaddi"], ["sid", "paymentslab-kmp"],
   ["sid", "candidai"], ["sid", "stutter"], ["sid", "portfolio"],
-  ["sid", "experience"], ["sid", "skills"], ["sid", "writing"], ["sid", "chat"],
-  ["doori", "writing"], ["work", "writing"], ["books", "writing"],
+  ["sid", "sinc-p"], ["sid", "kmp-family"],
+  ["sid", "experience"], ["sid", "skills"], ["sid", "the-loopdown"], ["sid", "chat"],
+  ["doori", "the-loopdown"], ["work", "the-loopdown"], ["books", "the-loopdown"],
   ["doori", "gaddi"], ["gaddi", "paymentslab-kmp"], ["paymentslab-kmp", "candidai"], ["candidai", "stutter"],
-  ["chat", "writing"], ["chat", "work"],
+  ["kmp-family", "doori"], ["kmp-family", "gaddi"], ["kmp-family", "paymentslab-kmp"],
+  ["kmp-family", "candidai"], ["kmp-family", "portfolio"],
+  ["chat", "the-loopdown"], ["chat", "work"],
   ["sid", "blueprint"],
 ];
 
