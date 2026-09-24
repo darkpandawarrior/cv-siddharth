@@ -163,7 +163,15 @@ jobs:
         id: store_refresh
         if: always()
         run: node scripts/gen-store.mjs --published-only
+      # always(): the same "one dead generator must not discard the work of
+      # the other 26" reasoning the commit/gate steps below already carry
+      # (run 34191682522 class of bug) applies to this step's OWN dependency
+      # on store_refresh — a single delisted Play listing (live external
+      # data) must not block every other generator, classify-diff and the PR
+      # flow from ever running. store_refresh's own outcome still gates
+      # Gate result below, so a dead listing still leaves the PR needs-human.
       - name: Sync media + regenerate stats & galleries
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
         run: npm run refresh
@@ -172,7 +180,7 @@ jobs:
       # with no genuine drift. Never touches a declared output, so it never
       # masks a real classifier bug.
       - name: 'Fixture: code-change (force a non-generator diff)'
-        if: inputs.fixture == 'code-change'
+        if: always() && inputs.fixture == 'code-change'
         run: |
           mkdir -p src/world/v2
           echo "// classify-diff dry-run fixture $(date -u +%FT%TZ)" >> src/world/v2/Water.tsx
