@@ -5,6 +5,7 @@ import { load } from "@tanstack/react-start/hydration";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ChessVsCommits } from "./chess/ChessVsCommits.tsx";
 import { ChessFindings } from "./chess/ChessFindings.tsx";
 
@@ -448,12 +449,17 @@ export function ChessRoom() {
 
   return (
     <div className="section-y mx-auto w-full max-w-6xl px-6">
-      <h2 className="font-display text-h2 font-bold tracking-tight">Seven years of games, mined</h2>
-      <p className="mt-2 max-w-2xl text-zinc-400">
-        Every rated game played on lichess and chess.com, pulled at build time and taken apart — the
-        rating arc, where the games actually end, what the repertoire drifted into, and a bot tuned to
-        play like its owner.
-      </p>
+      <header>
+        <h2 className="font-display text-h2 font-bold tracking-tight">Seven years of games, mined</h2>
+        <p className="mt-2 max-w-2xl text-zinc-400">
+          Every rated game played on lichess and chess.com, pulled at build time and taken apart:
+          the rating arc, where the games actually end, what the repertoire drifted into, and a bot
+          tuned to play like its owner.
+        </p>
+        <p className="mt-3">
+          <EvidenceChip file="chess.ts" stamp={chess.generatedAt.slice(0, 10)} source="lichess + chess.com" />
+        </p>
+      </header>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {TABS.map((t) => (
@@ -492,7 +498,7 @@ export function ChessRoom() {
           // a 254 KB fetch for numbers that were already in the JS chunk.
           <>
             <h3 className="font-display text-lg font-semibold">{active?.label}</h3>
-            <ChessFindings onPlayTheEngine={() => setTab("play")} />
+            <ChessFindings onPlayTheEngine={() => setTab("play")} onNavigate={setTab} />
           </>
         ) : error ? (
           <p className="font-mono text-sm text-zinc-300">
