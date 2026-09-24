@@ -5,7 +5,18 @@ import { join } from "node:path";
 // freshnessSla.ts so /ops draws this exact perimeter from the same numbers.
 // A dashboard about silent drift keeping a private copy of the thresholds
 // would be the defect it exists to report.
-import { MAX_AGE_DAYS, slaFor, MUST_BE_STAMPED, STAMP_RE, generatorFor } from "./freshnessSla.ts";
+//
+// The per-file SLA-breach assertion itself moved OUT of this file and out of
+// `npm test` entirely, into scripts/check-freshness.mjs,
+// run only by the doctor (self-healing-spec.md#2.2). It used to fail the whole
+// suite, and therefore the refresh gate and the PR gate, the moment ANY one
+// file breached its SLA — which is how one stale store.ts withheld every
+// other file's fresh data for weeks. What stays here is structural: does the
+// stamp still parse, is every MUST_BE_STAMPED file still covered. Those are a
+// generator regressing at commit time, which a green CI is the right place
+// to catch; staleness is an operational question with an operational answer
+// now, not a reason to block a build.
+import { MAX_AGE_DAYS, MUST_BE_STAMPED, STAMP_RE } from "./freshnessSla.ts";
 
 /**
  * ROT HAS TO BE LOUD.
@@ -35,9 +46,9 @@ describe("generated data has not quietly aged out", () => {
     // is what most generators emit; store.ts emits a TypeScript const,
     // `export const storeGeneratedAt = "..."`. The original pattern only knew
     // the first, so store.ts (5,150 lines) never entered `stamped` and the
-    // alarm below could not see it at all. It sat 21 days old, unwatched, while
-    // this suite stayed green. A file that opts out by accident is exactly what
-    // this test exists to prevent, so match both shapes.
+    // freshness alarm could not see it at all. It sat 21 days old, unwatched,
+    // while this suite stayed green. A file that opts out by accident is
+    // exactly what this test exists to prevent, so match both shapes.
     .map((f) => ({
       file: f,
       at: STAMP_RE.exec(readFileSync(join(dir, f), "utf8"))?.[1],
@@ -50,8 +61,9 @@ describe("generated data has not quietly aged out", () => {
    *
    * Named, not counted. `stamped.length >= 3` passed just as happily when a
    * generator DROPPED its stamp as when it kept it: the file falls out of the
-   * scan, the set shrinks by one, and the 45-day alarm above simply stops
-   * being able to see it. Removing the alarm is the failure this catches.
+   * scan, the set shrinks by one, and scripts/check-freshness.mjs's SLA alarm
+   * simply stops being able to see it. Removing the alarm is the failure this
+   * catches.
    *
    * timeline.ts is deliberately absent. Its generator recomputes lanes from
    * local files on every prebuild, so its stamp says a build happened, not
@@ -61,7 +73,7 @@ describe("generated data has not quietly aged out", () => {
   it.each(MUST_BE_STAMPED)("%s still carries a generatedAt stamp", (file) => {
     expect(
       stamped.map((s) => s.file),
-      `${file} lost its generatedAt — the ${MAX_AGE_DAYS}-day alarm below cannot see it any more. ` +
+      `${file} lost its generatedAt — scripts/check-freshness.mjs's SLA alarm cannot see it any more. ` +
         `Restore the stamp in its generator rather than deleting this line.`,
     ).toContain(file);
   });
@@ -105,17 +117,4 @@ describe("the curated 'recent' list is actually recent", () => {
     ).toBeLessThanOrEqual(MAX_AGE_DAYS + 30);
   });
 });
-
-  it.each(stamped)(`$file was regenerated inside its SLA`, ({ file, at }) => {
-    const ageDays = Math.floor((Date.now() - Date.parse(at)) / 86_400_000);
-    const sla = slaFor(file);
-    expect(
-      ageDays,
-      `${file} was last generated ${at} (${ageDays} days ago), against a ${sla}-day SLA. Either its ` +
-        `generator is failing silently, they all keep the previous file on a fetch error, which is ` +
-        `right but makes a broken source look identical to a quiet one, or the job never reached it ` +
-        `because something earlier in the chain exited non-zero. Check the refresh run first, then ` +
-        `run ${generatorFor(file)} and read what it prints.`,
-    ).toBeLessThanOrEqual(sla);
-  });
 });

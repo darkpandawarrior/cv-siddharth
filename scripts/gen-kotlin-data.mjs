@@ -67,7 +67,7 @@ import { excelsiorMarks } from "../src/data/excelsiorMarks.ts";
 import { NODES, EDGES } from "../src/data/storyMap.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const kmpRoot = join(root, "..", "cv-siddharth-kmp");
+const kmpRoot = process.env.CV_SIDDHARTH_KMP_ROOT ?? join(root, "..", "cv-siddharth-kmp");
 const outDir = join(kmpRoot, "cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated");
 const PKG = "com.siddharth.cv.shared.data.generated";
 

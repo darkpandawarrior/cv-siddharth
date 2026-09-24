@@ -13,6 +13,10 @@ export function readPublishedStore(path) {
     ["storeApps", "fleet", "liveClients", "delisted", "pastClients", "fleetStats", "lastShipped"]
       .map((name) => [name, readConst(source, name)]),
   );
+  // Not wrapped `as const` (a plain date literal), so a separate read: a
+  // published-only run keeps this as the last FULL mine's date and stamps
+  // storeVerifiedAt instead, rather than overwriting it with today.
+  published.storeGeneratedAt = /export const storeGeneratedAt = "([^"]+)";/.exec(source)?.[1] ?? null;
   const ids = [...published.storeApps, ...published.fleet].map((app) => app.id);
   if (ids.length !== new Set(ids).size || ids.length !== published.fleetStats.live + published.storeApps.length) {
     throw new Error("[gen-store] published IDs/count disagree; full refresh required");
