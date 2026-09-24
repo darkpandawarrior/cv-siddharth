@@ -7,6 +7,8 @@ import { byChronology, dualStamp } from "./lib/facets";
 import { baselineTicks, deviationsFor, hitTest } from "./lib/railGeometry";
 import { useCanvasLoop } from "./labs/useCanvasLoop";
 import InstrumentView from "./InstrumentView";
+import { SECTION_ID_LIST, type SectionId, useSectionNav } from "./lib/navigation.ts";
+import { SECTION_JUMPS } from "./CommandPalette.tsx";
 
 /**
  * The site's secondary nav: a live trace pinned to the left edge on every
@@ -76,6 +78,8 @@ export default function AnomalyRail() {
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const [instrumentOpen, setInstrumentOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
+  const { goToSection } = useSectionNav();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -84,6 +88,32 @@ export default function AnomalyRail() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Section wayfinding, home only ("Unchanged elsewhere" — every other route
+  // keeps the plain facet trace above, this is additive). HomePage isn't
+  // code-split (src/routes/index.tsx imports it directly), so every section
+  // id is already real DOM by the time this rail hydrates — no poll needed,
+  // unlike scrollToSectionWhenReady's bounded retry for a lazy target.
+  const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  useEffect(() => {
+    if (!isHome) {
+      setActiveSection(null);
+      return;
+    }
+    const targets = SECTION_ID_LIST.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+    if (targets.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // "You are here": nearest the top among sections currently crossing
+        // the reading line — the usual scrollspy convention.
+        const crossing = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (crossing.length > 0) setActiveSection(crossing[0].target.id as SectionId);
+      },
+      { rootMargin: "-15% 0px -70% 0px", threshold: 0 },
+    );
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [isHome]);
 
   // A route change while the overlay is open (the terminal's ` hotkey,
   // browser back/forward, a link inside the overlay itself) has to close it
@@ -183,6 +213,16 @@ export default function AnomalyRail() {
 
   const deviations = deviationsFor(facets, height, DEVIATION_PAD);
   const yById = new Map(deviations.map((d) => [d.id, d.y]));
+  // Section ticks: evenly spaced by index across the same padded band the
+  // facet deviations use, not chronology-derived (sections have no authored
+  // date to place them by) — same DEVIATION_PAD top/bottom margin so they
+  // never crowd the rail's rounded ends.
+  const sectionYById = new Map<SectionId, number>(
+    SECTION_ID_LIST.map((id, i) => [
+      id,
+      DEVIATION_PAD + (i / Math.max(1, SECTION_ID_LIST.length - 1)) * Math.max(0, height - DEVIATION_PAD * 2),
+    ]),
+  );
 
   const canvasRef = useCanvasLoop((_canvas, ctx, getSize) => {
     // useCanvasLoop already fast-forwards+freezes this step/draw pair under
@@ -376,6 +416,78 @@ export default function AnomalyRail() {
           ))}
         </nav>
         <canvas ref={canvasRef} aria-hidden="true" className="anomaly-rail-canvas" />
+        {/* Section wayfinding — home only, additive alongside the Timeline
+            nav above (which keeps every facet, on every route, unchanged).
+            One real tick per SECTION_ID_LIST entry, with the
+            currently-visible section (tracked by the IntersectionObserver
+            above) marked aria-current so both sighted "you are here"
+            styling and assistive tech agree on which one that is.
+            <button>+goToSection, not <Link to="/" hash={id}> — every one of
+            these targets the SAME route ("/"), and TanStack's <Link> marks
+            ANY link to the current pathname "active" (its own aria-current
+            + data-status, independent of hash), which stamped all thirteen
+            aria-current="page" regardless of scroll position and — being
+            stacked over the Timeline nav in the same 24px column — ate its
+            pointer events too. The nav itself is pointer-events:none so the
+            gaps between ticks fall through to the Timeline nav underneath;
+            each button opts back in. */}
+        {isHome && (
+          <nav aria-label="Sections" className="anomaly-rail-nav" style={{ pointerEvents: "none" }}>
+            {SECTION_ID_LIST.map((id) => {
+              const isActive = activeSection === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => goToSection(id)}
+                  className="anomaly-rail-link anomaly-rail-section-link"
+                  style={{
+                    top: `${sectionYById.get(id) ?? 0}px`,
+                    // .anomaly-rail-link's own width:100% is the Timeline
+                    // nav's facet band, centred under the canvas's dots
+                    // (cx = width/2). SECTION_ID_LIST's even index spacing
+                    // and the facets' chronological placement land on the
+                    // same y often enough that a full-width band here ate
+                    // the facet underneath it (Playwright's "a rail link
+                    // navigates to its route" caught this: the Labs facet at
+                    // the same y as the Writing section tick). Right-aligned
+                    // and narrow, this no longer covers a facet band's own
+                    // (centred) click point even when the two y's tie.
+                    left: "auto",
+                    right: 0,
+                    width: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    paddingRight: 3,
+                    pointerEvents: "auto",
+                  }}
+                  aria-label={SECTION_JUMPS[id].label}
+                  aria-current={isActive ? "true" : undefined}
+                  data-active={isActive ? "true" : undefined}
+                >
+                  {/* Inline styling only, not a new index.css rule (owned by
+                      the design-system lane) — the visible "you are here"
+                      dot the canvas draws for facet deviations, mirrored here
+                      as a real DOM mark so it survives without a second
+                      canvas draw pass keyed to this nav's own state. */}
+                  <span
+                    aria-hidden
+                    style={{
+                      width: isActive ? 6 : 3,
+                      height: isActive ? 6 : 3,
+                      borderRadius: "50%",
+                      background: isActive ? "var(--color-accent)" : "var(--color-accent2)",
+                      opacity: isActive ? 1 : 0.45,
+                      boxShadow: isActive ? "0 0 6px var(--color-accent)" : "none",
+                      transition: "width 0.2s, height 0.2s, opacity 0.2s",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </nav>
+        )}
       </div>
       <InstrumentView open={instrumentOpen} onClose={closeInstrument} />
     </>

@@ -1,10 +1,13 @@
 import { SceneActivity } from "./SceneActivity.tsx";
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Line, Html, OrbitControls } from "@react-three/drei";
 import { MathUtils } from "three";
 import { readToken } from "./themeColor";
 import type { Mesh } from "three";
+import { useStudioModel } from "./three/models.ts";
+import { projects } from "./data/profile/projects.ts";
+import { FOUNDATION_APP_SLUGS, FOUNDATION_APP_EDGES } from "./data/foundationGraph.ts";
 
 /**
  * "Platform constellation" — the two shared KMP libraries as hub stars with
@@ -28,22 +31,53 @@ interface Node {
   kind: "hub" | "app" | "module";
 }
 
-const NODES: Node[] = [
+// signal-marker.glb's own longest half-extent (its capsule length, off the
+// GLB's accessor bounds) — every node scales the shared mesh by node.r /
+// this constant instead of baking node.r straight into a primitive.
+const MARKER_UNIT_RADIUS = 0.17;
+
+const HUB_NODES: Node[] = [
   { id: "toolkit", label: "kmp-toolkit", pos: [0, 0.4, 0], r: 0.34, color: "--color-signal", fallbackHex: "#3ddc84", url: "https://github.com/darkpandawarrior/kmp-toolkit", kind: "hub" },
   { id: "buildlogic", label: "kmp-build-logic", pos: [-2.3, -0.7, -0.4], r: 0.3, color: "--color-signal", fallbackHex: "#3ddc84", url: "https://github.com/darkpandawarrior/kmp-build-logic", kind: "hub" },
-  { id: "doori", label: "Doori", pos: [2.4, 1.2, -0.6], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/Doori", kind: "app" },
-  { id: "paymentslab-kmp", label: "PaymentsLab-KMP", pos: [2.2, -1.1, 0.3], r: 0.26, color: "--color-probe", fallbackHex: "#5ee6ff", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP", kind: "app" },
+];
+
+// Hand-placed stubs for the toolkit's own internal modules — these aren't
+// registry projects, so they can't be derived the way the app nodes below are.
+const MODULE_NODES: Node[] = [
   { id: "mvi", label: "mvi-core", pos: [-0.9, 1.7, 0.5], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
   { id: "security", label: "security", pos: [-1.4, 1.1, -1], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
   { id: "designsystem", label: "designsystem", pos: [0.2, -1.6, -0.8], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
   { id: "feedback", label: "feedback", pos: [-0.6, -1.3, 0.9], r: 0.14, color: "--color-signal-dim", fallbackHex: "#8ff0b4", kind: "module" },
 ];
 
+// Node placement layer only — which apps and edges exist comes from
+// src/data/foundationGraph.ts (a pure module, no @react-three/* import), so
+// this scene and the flat twin (FoundationGraph.tsx) read the exact same set
+// without either dragging the other's dependency across the SSR boundary.
+function appPosition(i: number, total: number): [number, number, number] {
+  const angle = (i / total) * Math.PI * 2;
+  return [Math.cos(angle) * 2.3, Math.sin(angle) * 1.15 + 0.15, Math.sin(angle * 1.7) * 0.55];
+}
+
+const APP_NODES: Node[] = FOUNDATION_APP_SLUGS.map((slug, i) => {
+  const project = projects.find((p) => p.slug === slug)!;
+  const url = project.links.find((l) => l.label === "GitHub")?.url ?? project.links[0]?.url;
+  return {
+    id: slug,
+    label: project.name,
+    pos: appPosition(i, FOUNDATION_APP_SLUGS.length),
+    r: 0.26,
+    color: "--color-probe",
+    fallbackHex: "#5ee6ff",
+    url,
+    kind: "app",
+  };
+});
+
+const NODES: Node[] = [...HUB_NODES, ...APP_NODES, ...MODULE_NODES];
+
 const EDGES: [string, string][] = [
-  ["doori", "toolkit"],
-  ["doori", "buildlogic"],
-  ["paymentslab-kmp", "toolkit"],
-  ["paymentslab-kmp", "buildlogic"],
+  ...FOUNDATION_APP_EDGES,
   ["toolkit", "mvi"],
   ["toolkit", "security"],
   ["toolkit", "designsystem"],
@@ -58,35 +92,52 @@ function Star({ node, active, dim, onHover }: { node: Node; active: boolean; dim
   // Resolve once per render, before the `${...}44` alpha concat below — a raw
   // token name there would produce "--color-signal44" and kill the border.
   const hex = readToken(node.color, node.fallbackHex);
+  // The shared faceted hex-capsule marker (scripts/blender/signal-marker.py) —
+  // one GLTFLoader fetch/parse cached across this scene, StoryMapScene and
+  // SkillsOrbitScene (useLoader caches by URL). Geometry only: the tinting,
+  // hover-swell and dim/active material logic below is unchanged — the GLB
+  // ships one neutral mesh, this scene's own meshStandardMaterial still does
+  // the per-node colouring.
+  const marker = useStudioModel("signal-marker");
+  const geometry = (marker.scene.children[0] as Mesh)?.geometry;
+  // The marker's own longest half-extent (measured off the exported GLB,
+  // scripts/blender/signal-marker.py) — nodes used to size a bare
+  // sphereGeometry directly by `node.r`; the shared GLB is a fixed authored
+  // size, so it scales up/down by this ratio to land at the same `node.r`
+  // instead.
+  const restScale = node.r / MARKER_UNIT_RADIUS;
 
   useFrame(({ clock }, delta) => {
     const m = mesh.current;
     if (!m) return;
     const t = clock.elapsedTime;
-    // Each star breathes on its own phase; hovered stars swell.
-    m.position.y = node.pos[1] + Math.sin(t * 0.7 + seed) * 0.08;
-    const target = active ? 1.5 : 1;
+    // Each star breathes on its own phase; hovered stars swell. Bobbing and
+    // scale live on the mesh alone now (group below carries node.pos), so
+    // neither multiplies into the label's Html sibling.
+    m.position.y = Math.sin(t * 0.7 + seed) * 0.08;
+    const target = (active ? 1.5 : 1) * restScale;
     m.scale.setScalar(MathUtils.damp(m.scale.x, target, 6, delta));
   });
 
   return (
-    <mesh
-      ref={mesh}
+    <group
       position={node.pos}
       onPointerOver={(e) => { e.stopPropagation(); onHover(node.id); document.body.style.cursor = node.url ? "pointer" : "default"; }}
       onPointerOut={() => { onHover(null); document.body.style.cursor = "default"; }}
       onClick={(e) => { e.stopPropagation(); if (node.url) window.open(node.url, "_blank", "noreferrer"); }}
     >
-      <sphereGeometry args={[node.r, 24, 24]} />
-      <meshStandardMaterial
-        color={hex}
-        emissive={hex}
-        emissiveIntensity={active ? .8 : .15}
-        metalness={.4}
-        roughness={.28}
-        transparent
-        opacity={dim ? 0.25 : 1}
-      />
+      <mesh ref={mesh} scale={restScale}>
+        {geometry ? <primitive object={geometry} attach="geometry" /> : <sphereGeometry args={[MARKER_UNIT_RADIUS, 24, 24]} />}
+        <meshStandardMaterial
+          color={hex}
+          emissive={hex}
+          emissiveIntensity={active ? .8 : .15}
+          metalness={.4}
+          roughness={.28}
+          transparent
+          opacity={dim ? 0.25 : 1}
+        />
+      </mesh>
       {(node.kind !== "module" || active) && (
         <Html center position={[0, -(node.r + 0.28), 0]} style={{ pointerEvents: "none" }}>
           <span
@@ -107,7 +158,7 @@ function Star({ node, active, dim, onHover }: { node: Node; active: boolean; dim
           </span>
         </Html>
       )}
-    </mesh>
+    </group>
   );
 }
 
@@ -168,7 +219,9 @@ export default function FoundationGraphScene() {
       <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 4, 4]} intensity={8} color={readToken("--color-probe", "#5ee6ff")} />
       <pointLight position={[-4, -2, 3]} intensity={8} color={readToken("--color-signal", "#3ddc84")} />
-      <Graph />
+      <Suspense fallback={null}>
+        <Graph />
+      </Suspense>
     </Canvas>
   );
 }

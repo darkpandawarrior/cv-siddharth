@@ -85,7 +85,7 @@ function pushMru(id: string): void {
   }
 }
 
-const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
+export const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
   top: { label: "Top / Hero", icon: <Compass size={15} /> },
   fit: {
     label: "Fit check — paste a job description",

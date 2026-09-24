@@ -23,4 +23,15 @@ test.describe("404 — catch-all splat route", () => {
     await expect(page).toHaveURL(/\/ink$/);
     await expect(page.locator("body")).toContainText(/The Ink/i);
   });
+
+  // home-scenes-and-chrome: "You're off the map" is the atlas framing (design
+  // spec §7/§9) - the 404's primary CTA is the way back into it, not just home.
+  test("/nope links to /map", async ({ page }) => {
+    await page.goto("/nope");
+    await expect(page.locator("body")).toContainText(/off the map/i);
+    const mapLink = page.getByRole("link", { name: "Explore the map" });
+    await expect(mapLink).toHaveAttribute("href", "/map");
+    await mapLink.click();
+    await expect(page).toHaveURL(/\/map$/);
+  });
 });

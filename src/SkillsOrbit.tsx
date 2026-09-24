@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
-import { ClientOnly } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { condition, visible } from "@tanstack/react-start/hydration";
 import SkillsOrbitScene from "./SkillsOrbitScene.tsx";
+import { provenIn } from "./data/profile/skills.ts";
+import { projects } from "./data/profile/projects.ts";
 
 function supportsWebGL(): boolean {
   try {
@@ -21,6 +23,18 @@ function supportsWebGL(): boolean {
 export function SkillsOrbit({ active, onSelect }: { active: string | null; onSelect: (group: string) => void }) {
   const [capable, setCapable] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  // Filtering a skill (clicking a word in the orbit) surfaces 1-3 provenIn
+  // project links here, in the flat layer below the canvas — real, SSR-able
+  // DOM the 3D click can't itself carry (drei's Html labels are pointer
+  // targets, not a place to grow a link list).
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const provenProjects = useMemo(() => {
+    if (!selectedItem) return [];
+    return provenIn(selectedItem)
+      .slice(0, 3)
+      .map((slug) => projects.find((p) => p.slug === slug))
+      .filter((p): p is NonNullable<typeof p> => p != null);
+  }, [selectedItem]);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -32,6 +46,7 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
   }, []);
 
   return (
+    <>
     <div className={`relative select-none ${enabled ? "h-[360px]" : "h-0"}`} aria-hidden>
       {/* `capable` is a runtime-only flag the bundler can't see through — it
           still resolved SkillsOrbitScene's @react-three/fiber import for SSR
@@ -50,7 +65,7 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
       <ClientOnly>
         <Hydrate when={condition(capable)} split fallback={null}>
           <Hydrate when={visible({ rootMargin: "200px" })} split fallback={null} onHydrated={() => setEnabled(true)}>
-            <SkillsOrbitScene active={active} onSelect={onSelect} />
+            <SkillsOrbitScene active={active} onSelect={onSelect} onSelectItem={setSelectedItem} />
             <span className="kicker pointer-events-none absolute bottom-1 right-2">
               drag to spin · click a skill to filter
             </span>
@@ -58,5 +73,25 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
         </Hydrate>
       </ClientOnly>
     </div>
+    {/* The flat layer — outside the 3D wrapper's aria-hidden entirely (a
+        focusable link inside an aria-hidden subtree is unreachable by
+        assistive tech no matter what it sets its own aria-hidden to), so
+        these stay real, tabbable links the moment a skill is filtered. */}
+    {provenProjects.length > 0 && (
+      <div className="fade-in mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="kicker">proven in</span>
+        {provenProjects.map((p) => (
+          <Link
+            key={p.slug}
+            to="/project/$slug"
+            params={{ slug: p.slug }}
+            className="rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-mono text-[10px] text-accent/90 transition hover:border-accent hover:text-accent"
+          >
+            {p.name}
+          </Link>
+        ))}
+      </div>
+    )}
+    </>
   );
 }
