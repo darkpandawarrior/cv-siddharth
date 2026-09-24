@@ -79,6 +79,12 @@ Series: Chain Of Custody (4), Crossing The Schema (1), Ghosts In The Recompositi
 
 Published so far:
 
+- "Every filter needs a documented exception": https://dev.to/darkpandawarrior/every-filter-needs-a-documented-exception-2j3k
+- "Never silently change a number someone gets paid on": https://dev.to/darkpandawarrior/never-silently-change-a-number-someone-gets-paid-on-h4n
+- "When two sensors disagree, rank them": https://dev.to/darkpandawarrior/when-two-sensors-disagree-rank-them-12ki
+- "Your data model is where uncertainty goes to die": https://dev.to/darkpandawarrior/your-data-model-is-where-uncertainty-goes-to-die-g6j
+- "One global threshold is how you delete valid data": https://dev.to/darkpandawarrior/one-global-threshold-is-how-you-delete-valid-data-303h
+- "Filtered should never mean deleted": https://dev.to/darkpandawarrior/filtered-should-never-mean-deleted-5081
 - "collectAsState is quietly leaking your work": https://dev.to/darkpandawarrior/collectasstate-is-quietly-leaking-your-work-4ak0
 - "expect/actual is the wrong default in KMP": https://dev.to/darkpandawarrior/expectactual-is-the-wrong-default-in-kmp-5g7p
 - "Your LazyColumn recomposes on every scroll": https://dev.to/darkpandawarrior/your-lazycolumn-recomposes-on-every-scroll-3amj
