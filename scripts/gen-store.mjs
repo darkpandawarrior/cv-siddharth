@@ -894,38 +894,46 @@ export const delisted = ${JSON.stringify(
     1,
   )} as const;
 
-/** The pulled apps, grouped the same way. Preserved verbatim in published-only
- *  mode: a fresh probe cannot re-prove anything about a listing that is gone.
- *  // ponytail: a fleet id goneFromPublished newly moved to delisted this run
- *  // is not yet grouped into a company here (it groups on the next full
- *  // mine); it is still fully present, correctly, in the flat delisted
- *  // export above. */
+/** The pulled apps, grouped the same way. Regrouped from \`pastKept\` in every
+ *  mode, published-only included: grouping is a pure function of fields
+ *  \`delisted\` already carries (id/name/side/...), so it needs no fresh probe
+ *  and there is no reason to lag behind a client this run just confirmed gone.
+ *  (Previously reused \`published.pastClients\` verbatim in published-only
+ *  mode, which left a fleet id \`goneFromPublished\` moved to \`delisted\`
+ *  ungrouped until the next full mine — the flat \`delisted\` export was
+ *  correct while the grouped \`pastClients\` the page renders from was one app
+ *  short, e.g. \`production.pickupbarbodas.driver\`.) */
 export const pastClients = ${JSON.stringify(
-    publishedOnly
-      ? published.pastClients
-      : groupByClient(
-          pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
-            id,
-            name,
-            side,
-            setUpByHim,
-            firstSeen,
-            lastSeen,
-            url,
-            icon: icon ? `/store/${id}.webp` : null,
-            color,
-            rating,
-            installs: null,
-            developer: null,
-          })),
-        ).map(({ key, name, icon, color, setUpByHim, apps }) => ({
+    groupByClient(
+      pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({
+        id,
+        name,
+        side,
+        setUpByHim,
+        firstSeen,
+        lastSeen,
+        url,
+        icon: icon ? `/store/${id}.webp` : null,
+        color,
+        rating,
+        installs: null,
+        developer: null,
+      })),
+    ).map(({ key, name, icon, color, setUpByHim, apps }) => ({
           key,
           name,
           icon,
           color,
           setUpByHim,
           lastSeen: apps.map((a) => a.lastSeen).sort().at(-1) ?? null,
-          firstSeen: apps.map((a) => a.firstSeen).filter(Boolean).sort()[0] ?? null,
+          // Falls back to lastSeen when no app in the client has its own firstSeen —
+          // the same floor a client with exactly one archived snapshot already used
+          // ("Inter Taksi": firstSeen === lastSeen), applied here to a client with no
+          // snapshot at all yet (confirmed gone this run, not yet mined).
+          firstSeen:
+            apps.map((a) => a.firstSeen).filter(Boolean).sort()[0] ??
+            apps.map((a) => a.lastSeen).sort().at(-1) ??
+            null,
           apps: apps.map(({ id, name, url, side, rating, lastSeen }) => ({
             id,
             name,
