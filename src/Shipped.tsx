@@ -12,6 +12,7 @@ import { AppIcon } from "./ShippedTile.tsx";
 import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
 import { compact } from "./shippedFormat.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 import { SiteFooter } from "./SiteFooter.tsx";
 /**
@@ -54,6 +55,9 @@ export function Shipped() {
             together and then checked one store listing at a time — including {delisted.length} that
             have since been taken down, and can only be shown at all because the Internet Archive
             kept a copy of the page.
+          </p>
+          <p className="mt-3">
+            <EvidenceChip file="store.ts" stamp={storeGeneratedAt} source="Google Play + Internet Archive" cadence="manual" />
           </p>
         </header>
 

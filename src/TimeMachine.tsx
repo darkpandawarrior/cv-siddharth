@@ -4,6 +4,7 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { historyMonths, historyGeneratedAt, totalCommits } from "./data/history.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 /**
  * /time-machine — this repo's own commit history, navigable by month.
@@ -50,17 +51,22 @@ export default function TimeMachine() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-5xl flex-1 px-6">
-        <p className="section-eyebrow mb-2">// git history</p>
-        <h1 className="font-display text-hero font-bold tracking-tight">This repo, one month at a time</h1>
-        <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
-          {totalCommits.toLocaleString("en-US")} commits since this repo started, walked back month by
-          month. Pick one below to see what actually shipped that month, not a changelog written after
-          the fact.
-        </p>
-        <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
-          Read from a static snapshot of `git log`, taken {new Date(historyGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}.
-          Nothing here shells out to git at request time; a deployed static site has no git binary to call.
-        </p>
+        <header>
+          <p className="section-eyebrow mb-2">// git history</p>
+          <h1 className="font-display text-hero font-bold tracking-tight">This repo, one month at a time</h1>
+          <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
+            {totalCommits.toLocaleString("en-US")} commits since this repo started, walked back month
+            by month. Pick one below to see what actually shipped that month, not a changelog written
+            after the fact.
+          </p>
+          <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+            Read from a static snapshot of `git log`. Nothing here shells out to git at request time;
+            a deployed static site has no git binary to call.
+          </p>
+          <p className="mt-3">
+            <EvidenceChip file="history.ts" stamp={historyGeneratedAt.slice(0, 10)} source="git log" />
+          </p>
+        </header>
 
         <div className="mt-10 flex items-end gap-1 overflow-x-auto pb-2" tabIndex={0} role="group" aria-label="Pick a month, scrollable horizontally once the history grows past one screen">
           {historyMonths.map((m, idx) => (

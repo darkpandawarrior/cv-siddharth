@@ -3,6 +3,7 @@ import { weeb } from "./data/weeb.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { ReactionRow } from "./play/ReactionRow.tsx";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 import { DeferredPlayRoom } from "./play/DeferredPlayRoom.tsx";
 import { Expandable } from "./Expandable.tsx";
@@ -56,13 +57,18 @@ export function WeebRoom() {
   return (
     <DeferredPlayRoom>
       <div className="section-y mx-auto max-w-4xl px-6">
-        <Reveal>
-          <p className="max-w-2xl text-base leading-relaxed text-zinc-300">
-            {num(anime.total)} anime entries and {num(manga.total)} manga entries, kept by hand in Notion for years
-            before anyone asked to see them. The interesting part isn't the titles — it's that the
-            table admits three things its rows never say out loud.
+        <header>
+          <Reveal>
+            <p className="max-w-2xl text-base leading-relaxed text-zinc-300">
+              {num(anime.total)} anime entries and {num(manga.total)} manga entries, kept by hand in
+              Notion for years before anyone asked to see them. The interesting part isn't the
+              titles, it's that the table admits three things its rows never say out loud.
+            </p>
+          </Reveal>
+          <p className="mt-3">
+            <EvidenceChip file="weeb.ts" stamp={weeb.generatedAt} source="Notion export + AniList" />
           </p>
-        </Reveal>
+        </header>
 
         {/* ---------------------------------------------------------------- 1 */}
         <Reveal>
@@ -237,10 +243,10 @@ export function WeebRoom() {
               />
             </ul>
 
-            <p className="mt-6 flex items-center gap-2 text-sm text-muted">
+            <p className="mt-6 flex flex-wrap items-center gap-2 text-sm text-muted">
               <CalendarClock size={15} className="text-accent" />
-              {anime.matched} of {anime.total} entries matched a public record. Corpus last read{" "}
-              {weeb.generatedAt}.
+              <span>{anime.matched} of {anime.total} entries matched a public record.</span>
+              <EvidenceChip file="weeb.ts" stamp={weeb.generatedAt} source="Notion export + AniList" />
             </p>
           </section>
         </Reveal>
