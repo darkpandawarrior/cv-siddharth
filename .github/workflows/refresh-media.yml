@@ -12,12 +12,28 @@ name: Refresh project media
 # system-graph's edges are no longer silently skipped on every run here.
 on:
   schedule:
-    - cron: '17 6 * * 1'   # weekly, Monday 06:17 UTC; was daily until the 10 GB deployment cap
+    # daily 06:17 UTC; safe again (was weekly-only under the 10 GB deployment
+    # cap): a stamp-only day commits nothing (2.3), the rolling bot/data-refresh
+    # PR merges at most once a day (2.4A), and vercel-ignore.sh skips any build
+    # whose diff touches no build input (M72) — so a quiet day deploys nothing.
+    - cron: '17 6 * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Do everything except open, merge or dispatch; print the classifier verdict.
+        type: boolean
+        default: false
+      fixture:
+        description: Force a scenario for testing.
+        type: choice
+        options: [none, code-change, heartbeat]
+        default: none
 
 permissions:
   contents: write
   issues: write
+  pull-requests: write
+  actions: write
 
 concurrency:
   group: refresh-media
@@ -41,6 +57,16 @@ jobs:
           path: cv-siddharth-kmp-checkout
       - name: Put the twin where the scripts expect it
         run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
+      # gen-system-graph.mjs's E3 edge scans this repo's scripts/*.mjs for
+      # `cv-siddharth/main/src/data/(\w+)\.ts` references (trove T1), the same
+      # sibling layout the maintainer's own laptop checkout uses, so CI
+      # measures what the laptop measures (moved here from P1-wire).
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/darkpandawarrior
+          path: darkpandawarrior-checkout
+      - name: Put the profile README repo where the scripts expect it
+        run: mkdir -p ../../Profile && mv darkpandawarrior-checkout ../../Profile/darkpandawarrior
       # gen-ops.mjs (leverage + vendored drift), gen-system-graph.mjs and
       # gen-repo-stats.mjs's Android/KMP path all resolve siblings at
       # ../../Android/<Repo> and ../../KMP/<repo> — the exact layout the
@@ -141,6 +167,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
         run: npm run refresh
+      # H2 fixture: forces a diff outside every declared generator output, so
+      # classify-diff.mjs below has something real to reject even on a day
+      # with no genuine drift. Never touches a declared output, so it never
+      # masks a real classifier bug.
+      - name: 'Fixture: code-change (force a non-generator diff)'
+        if: inputs.fixture == 'code-change'
+        run: |
+          mkdir -p src/world/v2
+          echo "// classify-diff dry-run fixture $(date -u +%FT%TZ)" >> src/world/v2/Water.tsx
       # always(): one dead generator must not discard the work of the other 26.
       # gen-candidai-stats exits 1 on a dead PATTERN by design, and because
       # this step was gated on success, eight days of otherwise-good refreshes
@@ -169,10 +204,30 @@ jobs:
           if git diff --cached --quiet; then
             echo "Portfolio media already current."
             echo "committed=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "chore: refresh project media + stats from app repos"
-            echo "committed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          # Stamp-only diffs are not a change, except on the weekly heartbeat
+          # (real Monday, or a forced fixture=heartbeat dispatch for testing):
+          # self-healing-spec.md#2.3. Every SLA is >=21 days, so six silent
+          # days between heartbeats still proves each file alive weekly.
+          STAMPS='(generatedAt|verifiedAt|refreshedAt|asOf|lastChecked)'
+          DOW="$(date -u +%u)"
+          if [ "${{ inputs.fixture }}" = "heartbeat" ]; then DOW=1; fi
+          if git diff --cached --quiet -I"$STAMPS" && [ "$DOW" != "1" ]; then
+            echo "stamp-only drift; not committing (heartbeat is Monday)"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --cached --quiet -I"$STAMPS"; then
+            echo "heartbeat: committing stamp-only drift (weekly proof of life)"
+          fi
+          git commit -m "chore: refresh project media + stats from app repos"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo 'diffstat<<DIFFSTAT_EOF'
+            git diff --stat HEAD~1 HEAD
+            echo DIFFSTAT_EOF
+          } >> "$GITHUB_OUTPUT"
 
       # The same gate ci.yml runs on a PR, run here on the local commit above —
       # nothing with no human watching a scheduled run should reach main on
@@ -195,15 +250,38 @@ jobs:
       # bypassed by an `if: always()` commit step sitting right next to it.
       # A content refresh moves the corpora gen-kotlin-data reads, so the twin
       # drifts by construction on every run that changes anything. That drift
-      # is landed by refresh-twin, which now also runs after this workflow
-      # (workflow_run), so twin-only drift is reported and handed off here
-      # rather than failing the gate; site-side drift still fails it.
+      # is landed by the doctor (doctor.yml, SH-4), which heals twin drift
+      # daily now instead of refresh-twin triggering off this workflow, so
+      # twin-only drift is reported and handed off there (CHECK_GENERATED_TWIN_DRIFT:
+      # handoff below) rather than failing this gate; site-side drift still fails it.
       - name: Generated artifacts match their generators
         id: gate_check_generated
         if: always() && steps.commit.outputs.committed == 'true'
         env:
           CHECK_GENERATED_TWIN_DRIFT: handoff
         run: npm run check:generated
+
+      # The data-loss tripwire behind every generator's own refusal to write
+      # bad data (self-healing-spec.md#3, point 4): nothing merges unattended
+      # unless every changed path is a declared generator output and no
+      # output collapsed. Diffed against origin/main, so a scheduled run on
+      # main sees exactly the one local commit above; a lane-branch dispatch
+      # (dry_run) also sees the lane's own diff, which is fine — dry_run
+      # never opens or merges anything on it either way.
+      - name: Classify the diff
+        id: classify
+        if: always() && steps.commit.outputs.committed == 'true'
+        run: |
+          set +e
+          node scripts/classify-diff.mjs origin/main
+          CLASSIFY_EXIT=$?
+          set -e
+          echo "classify-diff: exit ${CLASSIFY_EXIT}"
+          if [ "$CLASSIFY_EXIT" -eq 0 ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Gate result
         id: gate
@@ -213,20 +291,90 @@ jobs:
              [ "${{ steps.gate_tsc.outcome }}" = "success" ] && \
              [ "${{ steps.gate_lint.outcome }}" = "success" ] && \
              [ "${{ steps.gate_test.outcome }}" = "success" ] && \
-             [ "${{ steps.gate_check_generated.outcome }}" = "success" ]; then
+             [ "${{ steps.gate_check_generated.outcome }}" = "success" ] && \
+             [ "${{ steps.classify.outputs.passed }}" = "true" ]; then
             echo "passed=true" >> "$GITHUB_OUTPUT"
           else
             echo "passed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push
-        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true'
-        run: git push
+      # H2 (self-healing-spec.md#3): replaces the old direct `git push`. The
+      # commit above already exists on this checkout; un-commit it back to a
+      # staged diff so create-pull-request can adopt it onto its own branch
+      # rather than pushing this checkout's own ref.
+      - name: Restage the local commit for the PR
+        if: steps.commit.outputs.committed == 'true' && inputs.dry_run != 'true'
+        run: git reset --soft HEAD~1
 
-      # A red gate pushes nothing — the local commit above is discarded with
-      # the runner. One issue per workflow (see the script), not one per run.
+      - name: Open or update the rolling data PR
+        id: cpr
+        if: steps.commit.outputs.committed == 'true' && inputs.dry_run != 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: bot/data-refresh
+          delete-branch: false
+          commit-message: "chore: refresh project media + stats from app repos"
+          title: "chore: rolling data refresh"
+          labels: data-refresh
+          body: |
+            Automated daily refresh (self-healing-spec.md#2 and #3).
+
+            Generators run: `npm run refresh` (see the run log for the full
+            per-generator list). Refresh published Play listings (`gen-store
+            --published-only`): ${{ steps.store_refresh.outcome }}.
+
+            Classifier verdict: classify-diff exit ${{ steps.classify.outcome == 'success' && (steps.classify.outputs.passed == 'true' && '0' || '1 (non-generator or collapsed output)') || 'n/a' }}
+
+            Diff stat:
+            ```
+            ${{ steps.commit.outputs.diffstat }}
+            ```
+
+      # Merges only what a registered generator wrote, that passed the same
+      # four checks as a human PR, and did not collapse. Code never merges
+      # unattended: code is by definition not a declared generator output, so
+      # classify-diff (folded into `gate` above) would have already failed it.
+      - name: Merge on green
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true' && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --squash --delete-branch
+          # A GITHUB_TOKEN push triggers no workflow; a dispatch does (M66).
+          gh workflow run publish-assets.yml --ref main
+          gh workflow run ci.yml --ref main
+
+      # Nothing refreshed is lost: the PR above already holds the full
+      # refreshed data. Leave it open, labelled for a human, instead of
+      # discarding the local commit with the runner the way the old Push
+      # step did.
+      - name: Label needs-human
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false' && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr edit "${{ steps.cpr.outputs.pull-request-number }}" --add-label needs-human
+
+      - name: 'Dry run: report what would have happened'
+        if: inputs.dry_run == 'true'
+        run: |
+          if [ "${{ steps.commit.outputs.committed }}" != "true" ]; then
+            echo "dry run: nothing to commit."
+            exit 0
+          fi
+          echo "dry run: committed locally, opened/merged/dispatched nothing."
+          if [ "${{ steps.gate.outputs.passed }}" = "true" ]; then
+            echo "planned: gh pr merge --squash --delete-branch (bot/data-refresh), then re-dispatch publish-assets.yml + ci.yml"
+          else
+            echo "planned: label needs-human; planned: report-gate-failure.sh refresh-media"
+          fi
+
+      # A red gate leaves the PR open with needs-human instead of pushing —
+      # the failure itself still needs a human alert. One issue per check
+      # (see the script), not one per run. Skipped on a dry run: "does
+      # everything except open, merge or dispatch" covers filing an issue too.
       - name: Open or update gate-failure issue
-        if: steps.store_refresh.outcome == 'failure' || (steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false')
+        if: (steps.store_refresh.outcome == 'failure' || (steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'false')) && inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/report-gate-failure.sh refresh-media
