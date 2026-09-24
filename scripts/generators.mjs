@@ -234,6 +234,12 @@ export const GENERATORS = [
     inputs: [],
     outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
+  { id: "oss-stats", script: "gen-oss-stats.mjs", npmName: "gen:oss-stats", kind: "network",
+    // Measures merged/open/closed PR counts via `gh pr list`, not the search
+    // API (career-ops rename trap). Never fails the build on missing gh/auth.
+    inputs: [],
+    outputs: ["src/data/careerOpsUpstream.ts", "src/data/profile/openSource.ts"],
+    stages: { refresh: 4 } },
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",

@@ -8,6 +8,7 @@
     "sync:media": "node scripts/sync-project-media.mjs",
     "gen:stats": "node scripts/gen-project-stats.mjs",
     "gen:candidai": "node scripts/gen-candidai-stats.mjs",
+    "gen:oss-stats": "node scripts/gen-oss-stats.mjs",
     "gen:system-prompt": "node scripts/gen-system-prompt.mjs",
     "gen:loopdown": "node scripts/gen-loopdown.mjs",
     "gen:chess": "node scripts/gen-chess-stats.mjs",
