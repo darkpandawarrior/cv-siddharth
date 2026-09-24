@@ -116,6 +116,19 @@ for (const slug of liveTargetSlugs) {
     await expect.poll(() => webTab.evaluate(el => Object.keys(el).some(key => key.startsWith("__react")))).toBe(true);
     await webTab.click();
     await expect(webTab).toHaveAttribute("aria-selected", "true");
+    // THE BUG: scrolling to the SECTION HEADING above puts the frame itself
+    // in the viewport only on a short page. Doori's project page carries far
+    // more prose and screenshots above this section than Gaddi/PaymentsLab-KMP
+    // do (the 49-module writeup, the super-profile wave, master search) — long
+    // enough that the actual DeviceFrame, one heading, one badge paragraph and
+    // the tablist further down, sits below the fold once the heading itself
+    // reaches the top. useInView's IntersectionObserver (threshold 0.15) then
+    // never fires, the iframe never mounts, and the wait below times out on an
+    // element that was never going to appear — not a slow paint, a scroll
+    // target that was never going to bring the frame on screen for THIS page.
+    // Center the tab itself: it sits directly above the frame regardless of
+    // how much the project page carries above it.
+    await webTab.evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "center" }));
     const frame = page.locator('iframe[title="Live web build"]');
     await expect(frame).toBeVisible({ timeout: 30_000 });
     // The src is whatever HEAVY_ASSET_BASE resolves to in this run's build —
