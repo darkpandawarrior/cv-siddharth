@@ -93,3 +93,6 @@ graphify-out/
 # that IS carried lives in heavy/world/ASSETS.md, and the baked lookdev
 # render + exported landmark GLBs are committed separately.
 heavy/world/models/polyhaven/
+
+# Blender's bytecode cache for the world-v2 kit scripts (scripts/blender/world-v2/*.py).
+__pycache__/

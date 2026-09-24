@@ -23,7 +23,7 @@ Fetched from Poly Haven (CC0) by `scripts/world-v2/fetch-polyhaven.mjs`. Re-run 
 ## Models (lookdev scatter kit + props)
 
 Fetched from Poly Haven (CC0) by `scripts/blender/world-v2/fetch-polyhaven-models.py` into
-`heavy/world/models/polyhaven/<id>/` (gitignored — regenerable source, same policy as the
+`heavy/world/models/polyhaven/<id>/` (gitignored, regenerable source, same policy as the
 texture webps above; rerun the script to refetch). Used by `lookdev-spawn.py`'s geometry-nodes
 scatter and the boat/bridge lantern props. Full "geometry nodes" tree assets (jacaranda_tree
 etc.) were evaluated and rejected: their shared `.bin` geometry is 75-205 MB regardless of
