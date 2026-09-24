@@ -36,6 +36,27 @@ diffuse; vegetation scatter density is up substantially; the banyan's
 canopy/aerial-root counts are up; and the boat gets a woven-bump canopy, a
 lit lantern flame, and a rope coil.
 
+Art-direction pass 4 (spawn-v4.png): the bridge's actual root-cause fix — its
+arch vault (ARCH_DEPTH) was 0.95 m deep under a 6.2 m-deep deck, an unrelated
+sliver under a wide flat overhang, which is why it read as "a dock, not a
+bridge" no matter how the camera framed it; the vault now spans the same
+depth as the deck it carries (sangam-keystone-bridge.py). The deepmal's
+finial changed from mat.clay to mat.paleStone (the reddish cap read as a
+pagoda spire) and its niche lights/flames are bright enough to actually
+bloom. The ghat is now placed and Z-scaled from the real heightmap (not a
+hardcoded guess), scaled up, moss-tinted at the waterline, and 3 ridge
+chhatris are added from the same kit part. The terrain shader adds a real
+height-driven rock blend for the background hillside; the water shader adds
+a second ripple layer and a camera-distance-driven reflection roughness
+(sharp near, soft far — the fix for both "uniform muddy" and the hard
+reflection seam); the sun uses a calibrated ~3100K temperature and the
+volume's anisotropy/density/range are retuned for an actual visible shaft;
+a Compositor Glare (Bloom + Sun Beams) pass gives every bright point real
+punch; the banyan canopy is finally smooth-shaded (the un-smoothed icosphere
+blobs were the literal cause of "crystalline tree"); petals are larger;
+grass now reaches the wider bank instead of a 14 m waterline fringe; and the
+boat canopy/rope get real surface break-up (a photo texture, a noise bump).
+
 Run with: blender --background --factory-startup --disable-autoexec
 --python-exit-code 1 --python lookdev-spawn.py
 """
@@ -57,8 +78,8 @@ ROOT = sh.ROOT
 TERRAIN = ROOT / 'heavy/world/terrain'
 TEX = ROOT / 'heavy/world/textures'
 PH_MODELS = ROOT / 'heavy/world/models/polyhaven'
-OUT_PNG = ROOT / '.showcase-work/lookdev/spawn-v3.png'
-OUT_BLEND = ROOT / '.showcase-work/lookdev/spawn-v3.blend'
+OUT_PNG = ROOT / '.showcase-work/lookdev/spawn-v4.png'
+OUT_BLEND = ROOT / '.showcase-work/lookdev/spawn-v4.blend'
 random.seed(42)
 
 sh.clear_scene()
@@ -184,6 +205,74 @@ BRIDGE_X = river_x(BRIDGE_Z)
 DEEPMAL_X = river_x(DEEPMAL_Z) + river_width_at(DEEPMAL_Z) / 2 + DEEPMAL_BANK_OFFSET
 CAMERA_X = river_x(Z_CAM) - 2.5
 
+# Ghat: same +X bank as the deepmal, just upstream of it. ghat-kit.py's own
+# preview constants (mirrored here, not imported — that script executes its
+# whole build at import time, so importing it would duplicate the kit):
+# RISE/RUN/LAND_DEPTH/N_PREVIEW/MID_LANDING_AFTER.
+GHAT_RISE, GHAT_RUN, GHAT_LAND_DEPTH = 0.27, 0.40, 0.7
+GHAT_XY_SCALE = 2.0  # up from a prior 1.6 — the art-direction fix asks for a
+# ghat prominent enough to "read", not a grey smudge at ~90 m.
+GHAT_Z = DEEPMAL_Z - 12
+GHAT_TOP_OFFSET = 25.0
+GHAT_X = river_x(GHAT_Z) + river_width_at(GHAT_Z) / 2 + GHAT_TOP_OFFSET
+GHAT_GROUND_Z = height_at(GHAT_X, GHAT_Z)
+
+# Art-direction fix root cause, 2nd pass: an earlier version of this block
+# derived GHAT_Z_SCALE from (ground - water) / (7 risers), i.e. assumed the
+# entire real bank relief happens within 7 steps' horizontal run — checked
+# directly (a one-off probe against the real heightmap, not eyeballed) and
+# that assumption was wrong: the real bank falls more GRADUALLY than that
+# ratio implies, so the resulting steps outran the actual slope and sank up
+# to 1.7 m under the terrain surface by the lower risers — "zero steps exist
+# anywhere in frame" again, just from a burial bug instead of a placement
+# bug. Fixing a mismatch between two INDEPENDENTLY computed height functions
+# (the terrain mesh's own height_at(), and a guessed step-drop rate) by
+# tuning one guess is fragile — the actual fix is to stop guessing and make
+# the terrain mesh itself follow the SAME formula the steps use, so they
+# agree by construction. GHAT_Z_SCALE is now a fixed, natural proportion
+# (near GHAT_XY_SCALE, a plausible real riser:tread ratio at this scale);
+# terrain_height() below carves the visible run down to match it exactly.
+GHAT_Z_SCALE = 1.0
+GHAT_VISIBLE_STEPS = 10.0  # spec's "6-8 visible tiers", plus a couple extra
+# so the carved ramp's lower edge blends into water rather than dry ground.
+GHAT_RAMP_LEN = GHAT_VISIBLE_STEPS * GHAT_RUN * GHAT_XY_SCALE    # world -X run
+GHAT_RAMP_DROP = GHAT_VISIBLE_STEPS * GHAT_RISE * GHAT_Z_SCALE   # world Z drop
+GHAT_BAND_HALF = 0.9 * GHAT_XY_SCALE  # half the flight's real world width
+# (ghat-kit.py's WIDTH=1.8, halved, times this file's own XY scale)
+print(f'GHAT_X={GHAT_X:.1f} ground_z={GHAT_GROUND_Z:.2f} water_y={WATER_Y:.2f} '
+      f'ramp_len={GHAT_RAMP_LEN:.1f} ramp_drop={GHAT_RAMP_DROP:.2f}')
+
+
+def terrain_height(x, z):
+    """height_at(), but inside the ghat's own footprint the terrain is
+    carved to the EXACT same linear ramp the step placement (section 7)
+    uses, so the visual terrain and the stair geometry can never disagree —
+    the class of bug the comment above just describes. A short 1.2 m blend
+    at the corridor's side edges (not a hard rectangle) avoids a seam; NOT
+    using the real smoothstep() helper here since that's defined later in
+    section 2, after this function's callers already need it."""
+    base_h = height_at(x, z)
+    dz = abs(z - GHAT_Z)
+    dx = GHAT_X - x
+    if dz > GHAT_BAND_HALF + 1.2 or dx < 0 or dx > GHAT_RAMP_LEN:
+        return base_h
+    t = dx / GHAT_RAMP_LEN
+    # ponytail: matching the ramp to the staircase's own LINEAR AVERAGE (no
+    # margin) cuts straight through the step volume — the terrain grid is
+    # 1.6 m/vertex (SPACING above) while individual treads are 0.8 m
+    # (GHAT_RUN*GHAT_XY_SCALE), so the mesh can't resolve actual risers
+    # anyway; the first render of this carve buried parts of every tread in
+    # the gaps between grid samples. A fixed safety margin (2.5 risers) pins
+    # the smooth "bank" comfortably BELOW the lowest point of the staircase
+    # instead, so the whole stone flight sits cleanly above it — the small
+    # gap under the front of each tread reads as a real ghat's packed-earth
+    # undercut, not a bug.
+    ramp_h = GHAT_GROUND_Z - t * GHAT_RAMP_DROP - 2.5 * GHAT_RISE * GHAT_Z_SCALE
+    side = min(max((GHAT_BAND_HALF + 1.2 - dz) / 1.2, 0.0), 1.0)  # 1 at the
+    # flight's centreline, 0 past its edge + the 1.2 m blend margin
+    side = side * side * (3 - 2 * side)  # smoothstep, inlined (see docstring)
+    return base_h * (1 - side) + ramp_h * side
+
 # Camera view basis, computed early (duplicates the section-12 look_target
 # math — cheap, and needed here before the camera object exists) so the
 # boat/tree — both metres from the lens — can be placed by offset from the
@@ -233,6 +322,9 @@ CLEAR_ZONES = [
     (BOAT_X, BOAT_Z, 6.0),
     (TREE_X, TREE_Z, 3.0),
     (CAMERA_X, Z_CAM, 5.0),
+    (GHAT_X, GHAT_Z, 9.0),  # the now much more prominent (2x scale) ghat
+    # flight — stray fern/shrub scattered across real stone steps would bury
+    # the "weathered stone... 6-8 visible tiers" read this pass adds.
 ]
 
 # =============================================================================
@@ -253,7 +345,8 @@ for j in range(nz):
     z = CROP_Z[0] + j * (CROP_Z[1] - CROP_Z[0]) / (nz - 1)
     for i in range(nx):
         x = CROP_X[0] + i * (CROP_X[1] - CROP_X[0]) / (nx - 1)
-        y = height_at(x, z)
+        y = terrain_height(x, z)  # ghat-carved (section 1) inside its own
+        # footprint, plain height_at() everywhere else.
         v = bm.verts.new((x, z, y))  # Blender (X, Y=data-z, Z=height)
         grid_verts[j][i] = v
 bm.verts.ensure_lookup_table()
@@ -303,7 +396,16 @@ def compute_face_masks():
         cx, cy, cz = poly.center
         z = cy
         dist_river = abs(cx - river_x(z)) - river_width_at(z) / 2
-        near = 1 - smoothstep(3, 14, dist_river)
+        # Art-direction fix: "add grass/scrub clumps along both banks
+        # (currently bare sand)" — near_water used to fall off to ~0 by 14 m
+        # from the channel, but fern_coll (the only dense groundcover branch
+        # below) is masked BY this attribute, so everything past 14 m —
+        # most of the visible dune, including the whole deepmal/ghat area —
+        # got no groundcover at all regardless of scatter_density. Widened
+        # to a 45 m falloff (still tapering to bare ground far from water,
+        # just not slamming shut at 14 m) so fern actually covers the banks
+        # the fix is asking about, not just a slim waterline fringe.
+        near = 1 - smoothstep(3, 45, dist_river)
         base = smoothstep(1.5, 6, dist_river) * (1 - smoothstep(30, 46, dist_river))
         for (lx, lz, r) in CLEAR_ZONES:
             base *= smoothstep(r * 0.6, r, math.hypot(cx - lx, cy - lz))
@@ -436,7 +538,36 @@ weathered_mix.location = (750, 150)
 nt.links.new(dirt_clamp.outputs['Value'], weathered_mix.inputs['Fac'])
 nt.links.new(blended_color, weathered_mix.inputs['Color1'])
 nt.links.new(dirt_color.outputs[0], weathered_mix.inputs['Color2'])
-nt.links.new(weathered_mix.outputs['Color'], bsdf.inputs['Base Color'])
+
+# Art-direction fix: "replace the bare sand-dune silhouette with a rockier
+# cliff face" — splat.png already reserves laterite (rock_pitted_mossy) for
+# slope > 32 deg, baked upstream by the terrain generator (out of scope
+# here), so a shallow-sloped high ridge stays pure sand/grass under that
+# bake alone. This adds a second, purely-in-shader blend keyed on real world
+# HEIGHT (not slope) toward the same laterite texture the splat already uses
+# (rung 2 — reuse, no new asset), so the distant background hillside reads
+# rockier without touching the upstream heightmap/splat pipeline.
+rock_high = img_node(nt, TEX / 'rock_pitted_mossy_c_1024.webp')
+rock_high.location = (-850, -1300)
+nt.links.new(detail_map.outputs['Vector'], rock_high.inputs['Vector'])
+world_pos = nt.nodes.new('ShaderNodeNewGeometry')
+world_pos.location = (150, -650)
+sep_height = nt.nodes.new('ShaderNodeSeparateXYZ')
+sep_height.location = (350, -650)
+nt.links.new(world_pos.outputs['Position'], sep_height.inputs['Vector'])
+height_fac = nt.nodes.new('ShaderNodeMapRange')
+height_fac.location = (550, -650)
+height_fac.inputs['From Min'].default_value = 6.0   # near-water banks stay as-is
+height_fac.inputs['From Max'].default_value = 20.0  # the ridge/hillside reads as rock
+height_fac.inputs['To Min'].default_value = 0.0
+height_fac.inputs['To Max'].default_value = 0.72
+nt.links.new(sep_height.outputs['Z'], height_fac.inputs['Value'])
+rock_mix = nt.nodes.new('ShaderNodeMixRGB')
+rock_mix.location = (950, 150)
+nt.links.new(height_fac.outputs['Result'], rock_mix.inputs['Fac'])
+nt.links.new(weathered_mix.outputs['Color'], rock_mix.inputs['Color1'])
+nt.links.new(rock_high.outputs['Color'], rock_mix.inputs['Color2'])
+nt.links.new(rock_mix.outputs['Color'], bsdf.inputs['Base Color'])
 bsdf.inputs['Roughness'].default_value = 0.88
 
 terrain_mesh.materials.append(mat)
@@ -502,6 +633,23 @@ bump.inputs['Strength'].default_value = 0.08  # a touch stronger than before
 # enough to break the reflection up, not just perturb a diffuse base.
 nt_link(noise1.outputs['Fac'], bump.inputs['Height'])
 
+# Art-direction fix: "add subtle ripple/normal detail" — a second, finer-
+# scale noise layer chained onto the first Bump's output (spec §7's own
+# water design: "2 scrolling fbm layers", one coarse swell + one fine
+# ripple), rather than just re-tuning the single existing layer's strength.
+noise2 = wnt.nodes.new('ShaderNodeTexNoise')
+noise2.location = (-650, -420)
+noise2.inputs['Scale'].default_value = 34.0
+noise2.inputs['Detail'].default_value = 2.0
+nt_link(wuv.outputs['UV'], noise2.inputs['Vector'])
+bump2 = wnt.nodes.new('ShaderNodeBump')
+bump2.location = (-150, -200)
+bump2.inputs['Strength'].default_value = 0.035  # fine ripple, subtler than
+# the coarse swell above — additive detail, not a second competing pattern.
+nt_link(noise2.outputs['Fac'], bump2.inputs['Height'])
+nt_link(bump.outputs['Normal'], bump2.inputs['Normal'])
+bump = bump2  # downstream nodes (base_bsdf/refl_bsdf) read the combined normal
+
 # depth colour: darker, COOLER tone throughout (art-direction fix — the flat
 # tan diffuse plane read warm everywhere; real river water at golden hour
 # still reads blue-grey in the body, with the gold coming from the sky/
@@ -536,8 +684,29 @@ nt_link(bump.outputs['Normal'], base_bsdf.inputs['Normal'])
 # curve, so it's a fixed MixShader factor rather than Fresnel-driven.
 refl_bsdf = wnt.nodes.new('ShaderNodeBsdfGlossy')
 refl_bsdf.location = (0, 0)
-refl_bsdf.inputs['Roughness'].default_value = 0.05
 nt_link(bump.outputs['Normal'], refl_bsdf.inputs['Normal'])
+
+# Art-direction fix: "reflections should sharpen near-camera and soften with
+# distance instead of the current uniform flat muddy tone" — a fixed
+# Roughness=0.05 mirrors everything equally sharply, which also happens to be
+# exactly what makes the near/far EEVEE raytrace-hit boundary (where a long
+# reflection ray stops resolving real geometry and falls back to a flat
+# world-colour miss) read as a hard seam: both sides were rendered at
+# identical sharpness, so the miss's flat colour reads as a discontinuity
+# instead of a natural blur-off. Driving Roughness from real camera distance
+# (ShaderNodeCameraData's View Z Depth, not a guessed proxy) makes the far
+# water progressively softer, which both matches the requested look and
+# smooths straight through that boundary instead of stopping hard at it.
+water_cam = wnt.nodes.new('ShaderNodeCameraData')
+water_cam.location = (-650, 0)
+water_dist_range = wnt.nodes.new('ShaderNodeMapRange')
+water_dist_range.location = (-350, 0)
+water_dist_range.inputs['From Min'].default_value = 8.0
+water_dist_range.inputs['From Max'].default_value = 140.0
+water_dist_range.inputs['To Min'].default_value = 0.025
+water_dist_range.inputs['To Max'].default_value = 0.30
+nt_link(water_cam.outputs['View Z Depth'], water_dist_range.inputs['Value'])
+nt_link(water_dist_range.outputs['Result'], refl_bsdf.inputs['Roughness'])
 
 water_mix = wnt.nodes.new('ShaderNodeMixShader')
 water_mix.location = (350, 100)
@@ -684,9 +853,15 @@ if hasattr(sky_tex, 'aerosol_density'):
     # only a faint tint next to the volume-fog test render, bumped further.
 sky_damp = wtree.nodes.new('ShaderNodeVectorMath')
 sky_damp.operation = 'SCALE'
-sky_damp.inputs['Scale'].default_value = 0.55  # physically-based sun-disc
+sky_damp.inputs['Scale'].default_value = 0.30  # physically-based sun-disc
 # radiance is huge; damp before adding so it reads as bright-but-detailed
-# rather than a single fully clipped white disc.
+# rather than a single fully clipped white disc. Art-direction fix: at 0.55
+# the disc's water-glossy reflection clipped to one flat, edgeless white
+# column ("a soft light-blob reflection" — no shaft, no detail); the
+# Compositor Glare pass below (section 12) is now what supplies the actual
+# radiant/god-ray look, so the raw disc only needs to stay bright, not
+# unclamped — a lower damp gives Glare real highlight detail to bloom from
+# instead of one saturated blob.
 wtree.links.new(sky_tex.outputs['Color'], sky_damp.inputs[0])
 sky_add = wtree.nodes.new('ShaderNodeMixRGB')
 sky_add.blend_type = 'ADD'
@@ -716,10 +891,17 @@ vnt = vol_mat.node_tree
 vnt.nodes.clear()
 vout = vnt.nodes.new('ShaderNodeOutputMaterial')
 pvol = vnt.nodes.new('ShaderNodeVolumePrincipled')
-pvol.inputs['Density'].default_value = 0.012
+pvol.inputs['Density'].default_value = 0.013  # up a little from 0.012 (art-
+# direction fix — "visible volumetric god-rays"). ponytail: an earlier pass
+# at 0.016 density / 0.78 anisotropy, stacked with the Compositor Glare pass
+# below, blew the whole sun side of frame into one solid white dome instead
+# of a shaft — this shot looks almost straight into the sun, so strong
+# forward scattering floods the entire view cone, not just a beam. Kept
+# density nearly unchanged and pulled anisotropy back; the Glare pass is now
+# what supplies the directional "ray" read, not the volume's own bulk glow.
 pvol.inputs['Color'].default_value = (0.90, 0.80, 0.68, 1)  # warm dust, not grey
-pvol.inputs['Anisotropy'].default_value = 0.55  # forward-scattering, so the
-# sun shafts through the bridge arch actually read as shafts, not flat haze.
+pvol.inputs['Anisotropy'].default_value = 0.6  # a modest bump from 0.55, not
+# the 0.78 that overwhelmed the shot — see the ponytail note above.
 vnt.links.new(pvol.outputs['Volume'], vout.inputs['Volume'])
 bpy.ops.mesh.primitive_cube_add(size=2, location=(0, (CROP_Z[0] + CROP_Z[1]) / 2, 60))
 atmo_vol = bpy.context.object
@@ -731,24 +913,40 @@ scene_eevee = bpy.context.scene.eevee
 try:
     scene_eevee.use_volume_custom_range = True
     scene_eevee.volumetric_start = 0.5
-    scene_eevee.volumetric_end = 260.0
+    scene_eevee.volumetric_end = 180.0  # art-direction fix: tightened from
+    # 260 (well past this crop's own CROP_Z max of 155) down to roughly the
+    # real camera-to-bridge-and-beyond depth — the same ray-march SAMPLE
+    # COUNT spread over a shorter range resolves the arch-opening occlusion
+    # boundary more sharply, which is what turns a diffuse haze gradient
+    # into a legible shaft instead of a blur too coarse to read as one.
     scene_eevee.volumetric_tile_size = '2'
-    scene_eevee.volumetric_samples = 32
+    scene_eevee.volumetric_samples = 56  # up from 32 for the same reason.
     scene_eevee.use_volumetric_shadows = True  # the bridge occludes the sun
     # through the volume everywhere except the arch openings — that occlusion
     # difference IS the god-ray/sun-shaft beat.
-    scene_eevee.volumetric_shadow_samples = 8
+    scene_eevee.volumetric_shadow_samples = 12
 except AttributeError:
     pass
 print('ATMOSPHERE_VOLUME_BUILT')
 
 sun_data = bpy.data.lights.new('SunKey', 'SUN')
-sun_data.energy = 14.0  # up from 4.2 — at the old value the flat HDRI fill
-# dominated the shading, so nothing read as backlit/golden-hour; this is
-# roughly the level that actually casts a visible shadow/specular pattern
-# under the AgX view transform below.
+sun_data.energy = 11.0  # up from an original 4.2, but pulled back from an
+# intermediate 14 (art-direction pass 4, ponytail note): looking almost
+# straight down the sun's own direction (spec's backlit composition) means
+# the disc, its water reflection AND the volume's in-scattering all scale
+# together off this one number — 14 plus the volume/Glare tuning below
+# combined into one dome-sized blown-out core; 11 is the level that keeps a
+# visible shadow/specular pattern under AgX without doing that.
 sun_data.angle = math.radians(1.2)
 sun_data.color = (1.0, 0.74, 0.46)
+if hasattr(sun_data, 'use_temperature'):  # art-direction fix: "a warm
+    # ~2800-3400K golden-hour key" as an actual calibrated Blender light
+    # temperature (same use_temperature/temperature pair fleet-deepmal.py's
+    # niche lights already use), not the by-eye RGB above — 3100K sits
+    # mid-range in the requested band. The RGB stays set as the fallback
+    # colour if a future Blender build drops this property.
+    sun_data.use_temperature = True
+    sun_data.temperature = 3100
 sun_obj = bpy.data.objects.new('SunKey', sun_data)
 sun_obj.rotation_euler = to_sun.to_track_quat('Z', 'Y').to_euler()
 bpy.context.scene.collection.objects.link(sun_obj)
@@ -860,31 +1058,56 @@ deepmal_root.location = (DEEPMAL_X, DEEPMAL_Z, height_at(DEEPMAL_X, DEEPMAL_Z))
 
 # ghat: face the water (rotate so the flight descends toward the bank edge,
 # into the river). Same bank as the deepmal now (+X — see the DEEPMAL_X note
-# above for why +X is the side that renders screen-right).
-#
-# Root-cause fix (art-direction pass — "replacing the bare sand-dune slope
-# that's there now"): the old GHAT_X sat only ~1 m past the river's own
-# half-width, i.e. still on the submerged channel bed, not the dry bank —
-# checked directly against height_at() (a 1-off probe script, not eyeballed):
-# every offset out to +10 m stayed BELOW WATER_Y at this z, which is exactly
-# why nothing here ever rendered. The bank only clears the water by a few
-# metres even 20+ m back from the channel (a genuinely low stretch, not a
-# dune the ghat can be carved into at full kit scale), so two things move
-# together: GHAT_TOP_OFFSET goes from 1 m to 20 m (onto ground that actually
-# clears WATER_Y), and the flight's HEIGHT axis alone (not its width/tread)
-# is compressed to fit what relief is actually there.
-# ponytail: a non-uniform (1.1, 1.1, 0.4) scale tilts the stair prototype's
-# rise:run ratio shallower than a real 27 cm riser; acceptable for a
-# background prop read from ~90 m, revisit with a taller carved bank if this
-# ghat ever needs a close-up shot.
-GHAT_TOP_OFFSET = 25.0
-GHAT_X = river_x(DEEPMAL_Z - 12) + river_width_at(DEEPMAL_Z - 12) / 2 + GHAT_TOP_OFFSET
+# above for why +X is the side that renders screen-right). GHAT_X/GHAT_Z/
+# GHAT_Z_SCALE are all computed in section 1 now, against the real heightmap
+# (art-direction fix root cause — see that block's comment: the previous
+# GHAT_Z_SCALE=0.55 was a hardcoded guess, never checked against height_at(),
+# which is exactly the class of bug this file's own history keeps warning
+# about (the docstring's +X/-X story, the tree's 76.5-degree-off placement).
 ghat_root.rotation_euler = (0, 0, math.radians(-90))
-ghat_root.scale = (1.6, 1.6, 0.55)  # wider than 1:1 too — at ~90 m out a
-# real-scale flight/chhatri reads as a grey smudge next to the deepmal/
-# bridge; a bit of extra footprint is what actually makes the chhatri's
-# domed silhouette break the dune's skyline instead of blending into it.
-ghat_root.location = (GHAT_X, DEEPMAL_Z - 12, height_at(GHAT_X, DEEPMAL_Z - 12) + 0.3)
+ghat_root.scale = (GHAT_XY_SCALE, GHAT_XY_SCALE, GHAT_Z_SCALE)
+ghat_root.location = (GHAT_X, GHAT_Z, GHAT_GROUND_Z + 0.15)
+
+# Art-direction fix: "weathered stone" — tint the lowest (closest-to-water)
+# steps with the same waterline-moss treatment the bridge's piers/cutwaters
+# already use, done here as a post-import colour swap (not a ghat-kit.py
+# change) so the kit's own spec-compliant asset-validation preview stays
+# untouched — this is a lookdev-only weathering pass, the same pattern
+# retexture_stone() above already applies to mat.sandstone/mat.paleStone.
+ghat_moss = sh.material('mat.ghatMoss', (0.16, 0.19, 0.11), rough=0.86)
+_ghat_steps = sorted((o for o in ghat_objs if o.name.startswith('Step_preview_')),
+                      key=lambda o: int(o.name.rsplit('_', 1)[1]))
+for o in _ghat_steps[-6:]:  # the last-built = deepest = closest to the water
+    o.data.materials[0] = ghat_moss
+
+# Art-direction fix: "2-3 distant chhatris/domed pavilions on the ridgeline"
+# — reuse ghat-kit's own ChhatriPavilion mesh (rung 2 on the ladder: it
+# already exists, same lathe-profile silhouette the spec wants) rather than
+# modelling a new prop, scaled down and set on the visible high ground on
+# both sides of the valley to sell the sacred-site skyline.
+# the ORIGINAL 'ChhatriPavilion' prototype has hide_render=True (ghat-kit.py
+# hides every kit_objects entry so only the preview duplicates render) and is
+# parented to ghat_root — using it directly would both render invisible and
+# inherit ghat_root's own transform. 'ChhatriPavilion_preview' has neither
+# problem, but is STILL parented to ghat_root, so the parent is cleared below
+# before giving each duplicate its own absolute ridge position.
+_chhatri_src = next(o for o in ghat_objs if o.name == 'ChhatriPavilion_preview')
+# Positions probed directly against the real heightmap (a standalone numpy
+# read of heightmap.png, same bilinear as height_at() above) rather than
+# guessed: the +X (screen-right — deepmal's own side, matching the concept
+# frame's chhatris sitting top-right) hillside climbs to ~15-23 m out past
+# x=45 as z increases toward the Sangam amphitheatre benches (world-v2-spec
+# §2/§3), the tallest, most ridge-like ground in this crop.
+for i, (cx, cz, cscale) in enumerate((
+        (48.0, 100.0, 2.2), (50.0, 120.0, 2.6), (55.0, 140.0, 3.0))):
+    cdup = _chhatri_src.copy()
+    cdup.data = _chhatri_src.data.copy()
+    cdup.name = f'RidgeChhatri_{i}'
+    cdup.parent = None
+    cdup.hide_render = False
+    cdup.scale = (cscale,) * 3
+    cdup.location = (cx, cz, height_at(cx, cz) + 0.1)
+    bpy.context.scene.collection.objects.link(cdup)
 print('LANDMARKS_PLACED')
 
 # =============================================================================
@@ -970,6 +1193,17 @@ _cbump.inputs['Strength'].default_value = 0.35
 _cnt.links.new(_weave_mul.outputs['Value'], _cbump.inputs['Height'])
 _cnt.links.new(_cbump.outputs['Normal'], _cbsdf.inputs['Normal'])
 
+# Art-direction fix: "aged wood + woven cane/thatch on the boat canopy" — the
+# weave bump above already sells the cane structure, but Base Color was still
+# a single flat RGB with no PBR image break-up. Layers the real, already-
+# fetched weathered-plank photo (rung 2: reuse, the hull already binds this
+# exact file) UNDER the weave, so the canopy gets genuine aged-wood colour
+# variation and the weave stays purely a normal-space bump on top of it.
+_cwood = img_node(_cnt, TEX / 'weathered_brown_planks_c_1024.webp')
+_cwood.location = (-850, 300)
+_cnt.links.new(_cmap.outputs['Vector'], _cwood.inputs['Vector'])
+_cnt.links.new(_cwood.outputs['Color'], _cbsdf.inputs['Base Color'])
+
 canopy = sh.new_mesh_object('HodiCanopy', arch_tube(0.72, HULL_LEN * 0.30, z_off=0.42), canopy_mat)
 canopy.location = (0, -HULL_LEN * 0.06, 0)
 boat_col.objects.link(canopy)
@@ -989,6 +1223,21 @@ bpy.context.collection.objects.unlink(oar)
 # Art-direction fix: a coiled rope prop at the bow — a few concentric,
 # slightly offset tori (native primitive, no new asset) read as coiled line.
 rope_mat = sh.material('mat.rope', (0.42, 0.33, 0.20), rough=0.8)
+# Art-direction fix: "rope ... currently flat-shaded with no surface break-
+# up" — no Poly Haven rope texture exists in the asset list (spec §9), so
+# (ladder rung 5, no new asset) a fine procedural Noise bump gives the
+# twisted-fibre break-up a flat PBR colour can't, the same technique the
+# terrain/water shaders already use for their own break-up.
+rope_mat.use_nodes = True
+_rnt = rope_mat.node_tree
+_rbsdf = next(n for n in _rnt.nodes if n.type == 'BSDF_PRINCIPLED')
+_rnoise = _rnt.nodes.new('ShaderNodeTexNoise')
+_rnoise.inputs['Scale'].default_value = 60.0
+_rnoise.inputs['Detail'].default_value = 4.0
+_rbump = _rnt.nodes.new('ShaderNodeBump')
+_rbump.inputs['Strength'].default_value = 0.25
+_rnt.links.new(_rnoise.outputs['Fac'], _rbump.inputs['Height'])
+_rnt.links.new(_rbump.outputs['Normal'], _rbsdf.inputs['Normal'])
 rope_parts = []
 for i in range(4):
     rr = 0.11 - i * 0.018
@@ -1092,7 +1341,7 @@ for i in range(14):
     cx = TREE_X + r * math.cos(ang)
     cz_ = TREE_Z + r * math.sin(ang)
     cy = TREE_BASE_Z + rand.uniform(3.6, 6.4)
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=rand.uniform(1.3, 2.2),
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=rand.uniform(1.3, 2.2),
                                            location=(cx, cz_, cy))
     blob = bpy.context.object
     blob.scale = (1, 1, rand.uniform(0.55, 0.8))
@@ -1105,6 +1354,14 @@ bpy.context.view_layer.objects.active = canopy_blobs[0]
 bpy.ops.object.join()
 canopy_obj = bpy.context.object
 canopy_obj.name = 'BanyanCanopy'
+# Art-direction fix, root cause of "the single low-poly crystalline tree":
+# these blobs were never smooth-shaded (bpy.ops.mesh.primitive_ico_sphere_add
+# leaves flat shading by default), so every one of the ~9-14 icospheres
+# rendered as its own visible facet cluster — exactly a "crystalline" read.
+# subdivisions bumped 2->3 (rounder silhouette) and smooth shading applied
+# to every polygon fixes the actual cause, not just a symptom.
+for poly in canopy_obj.data.polygons:
+    poly.use_smooth = True
 sh.canonicalize_object(canopy_obj)
 tree_col.objects.link(canopy_obj)
 bpy.context.collection.objects.unlink(canopy_obj)
@@ -1119,7 +1376,10 @@ for i in range(18):
     rz = TREE_Z + r * math.sin(ang)
     ry_top = TREE_BASE_Z + rand.uniform(3.5, 6.0)
     length = rand.uniform(2.0, 4.6)
-    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.05, radius2=0.015, depth=length,
+    # Art-direction fix: thickened (0.05->0.07) — "visible hanging aerial
+    # roots" needs the strands to actually read against the now-smooth-
+    # shaded canopy at landmark viewing distance, not just exist in geometry.
+    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.07, radius2=0.02, depth=length,
                                      location=(rx, rz, ry_top - length / 2))
     root_parts.append(bpy.context.object)
 bpy.ops.object.select_all(action='DESELECT')
@@ -1268,14 +1528,15 @@ def scatter_branch(coll, density_max, seed, min_scale, max_scale, y_off, use_wat
 # object, so it gets sparse hero-accent placement, not groundcover.
 # Art-direction fix: vegetation coverage read as near 0% — at the old
 # densities (0.006/0.05 pts/m^2) the whole crop area held only a handful of
-# points. fern is the main groundcover lever here (bumped 6x); shrub stays
-# closer to its original sparse "hero-accent" density — it's the 156k-tri
-# single object the comment above already flags, so a big density jump
-# there risks the same class of runaway-instance-count render hang this
-# file's own history warns about, not just a slower render. Rock stays
-# sparse too (ambient debris, not groundcover).
-scatter_branch(shrub_coll, density_max=0.012, seed=1, min_scale=0.6, max_scale=1.1, y_off=300, use_water_mask=False)
-scatter_branch(fern_coll, density_max=0.3, seed=2, min_scale=0.5, max_scale=0.9, y_off=0, use_water_mask=True)
+# points. fern is the main groundcover lever here (bumped further, now that
+# near_water's own falloff above also reaches the whole visible bank, not
+# just a 14 m fringe); shrub gets a modest bump too, still well short of a
+# uniform field — it's the 156k-tri single object the comment above already
+# flags, so a big density jump there risks the same class of runaway-
+# instance-count render hang this file's own history warns about, not just
+# a slower render. Rock stays sparse too (ambient debris, not groundcover).
+scatter_branch(shrub_coll, density_max=0.02, seed=1, min_scale=0.6, max_scale=1.1, y_off=300, use_water_mask=False)
+scatter_branch(fern_coll, density_max=0.45, seed=2, min_scale=0.5, max_scale=0.9, y_off=0, use_water_mask=True)
 scatter_branch(rock_coll, density_max=0.015, seed=3, min_scale=0.4, max_scale=0.9, y_off=-300, use_water_mask=True)
 
 glinks.new(join.outputs['Geometry'], go.inputs['Geometry'])
@@ -1307,7 +1568,11 @@ sh.canonicalize_object(flame_proto)
 fx_col.objects.link(flame_proto)
 bpy.context.collection.objects.unlink(flame_proto)
 
-bpy.ops.mesh.primitive_plane_add(size=0.09)
+# Art-direction fix: "30-50 floating marigold petals ... missing in v3" —
+# the petals were already being scattered (129 instances across the water/
+# boat/air groups below), just at 0.09 m across, a few pixels at best from
+# ~40+ m out; 0.16 m keeps them petal-scaled while actually resolving.
+bpy.ops.mesh.primitive_plane_add(size=0.16)
 petal_proto = bpy.context.object
 petal_proto.name = '_Petal'
 petal_proto.data.materials.append(petal_mat)
@@ -1457,6 +1722,47 @@ try:
     scene.eevee.use_shadows = True
 except AttributeError:
     pass
+
+# Art-direction fix: "warm rim light on the bridge/tower silhouettes" and
+# "visible volumetric god-rays" — the world volume (section 6) already casts
+# a real 3D shaft through the bridge's arch openings, but at this render's
+# exposure/fog it read as a diffuse blur, not a legible ray, and nothing
+# made a lit niche/lantern/diya actually GLOW. A 2-node Compositor Glare
+# chain (Blender 5.2's compositor is now a node GROUP — CompositorNodeTree
+# assigned via scene.compositing_node_group, with a NodeGroupOutput instead
+# of the old CompositorNodeComposite node, verified against this exact
+# Blender build since that API moved) adds a Bloom pass (blooms every bright
+# point — niches, lanterns, diyas, the sun disc) feeding a Sun Beams pass
+# (radiating streaks from the sun's own screen position, reinforcing the
+# volumetric shaft with a 2D one) — both additive on top of the base render,
+# never replacing or dimming it.
+comp_ng = bpy.data.node_groups.new('SpawnCompositor', 'CompositorNodeTree')
+comp_ng.interface.new_socket(name='Image', in_out='OUTPUT', socket_type='NodeSocketColor')
+scene.compositing_node_group = comp_ng
+comp_rl = comp_ng.nodes.new('CompositorNodeRLayers')
+comp_bloom = comp_ng.nodes.new('CompositorNodeGlare')
+comp_bloom.inputs['Type'].default_value = 'Bloom'
+comp_bloom.inputs['Highlights Threshold'].default_value = 1.15  # ponytail:
+# 0.85 caught nearly everything near the already-bright sun/sky and, chained
+# with the volume above, produced one giant blown-out dome instead of a
+# handful of legible glows (niches, lanterns, diyas) — 1.15 only catches
+# genuinely bright points, not the ambient sky.
+comp_bloom.inputs['Size'].default_value = 0.42
+comp_bloom.inputs['Strength'].default_value = 0.24
+comp_sunbeams = comp_ng.nodes.new('CompositorNodeGlare')
+comp_sunbeams.inputs['Type'].default_value = 'Sun Beams'
+comp_sunbeams.inputs['Highlights Threshold'].default_value = 1.15
+comp_sunbeams.inputs['Sun Position'].default_value = (0.5, 0.62)  # the sun
+# disc/bridge sit roughly frame-center, a touch above the horizon, in this
+# spawn composition (section 12's camera pose) — UV convention, (0,0) bottom-
+# left, not pixel-exact but close enough for a soft radiating pass.
+comp_sunbeams.inputs['Strength'].default_value = 0.10
+comp_sunbeams.inputs['Fade'].default_value = 0.85
+comp_go = comp_ng.nodes.new('NodeGroupOutput')
+comp_ng.links.new(comp_rl.outputs['Image'], comp_bloom.inputs[0])
+comp_ng.links.new(comp_bloom.outputs['Image'], comp_sunbeams.inputs[0])
+comp_ng.links.new(comp_sunbeams.outputs['Image'], comp_go.inputs[0])
+print('COMPOSITOR_GLARE_BUILT')
 
 OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
 scene.render.filepath = str(OUT_PNG)

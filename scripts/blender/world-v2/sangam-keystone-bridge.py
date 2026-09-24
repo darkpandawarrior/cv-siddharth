@@ -117,7 +117,16 @@ COURSE_H = 0.5
 PIER_TOP = PIER_COURSES * COURSE_H       # springing height the arch sits on
 ARCH_R = 3.0                             # mean ring radius
 VOUSSOIR_H = 0.6                         # radial (per-stone) thickness
-ARCH_DEPTH = 0.95                        # bridge thickness along Y
+ARCH_DEPTH = 6.0                         # bridge thickness along Y — art-
+# direction fix (root cause of "reads as a dock/aqueduct, not a bridge"):
+# this used to be 0.95 while the deck it carries is 6.2 m deep (two 3.4 m
+# deck-segment rows overlapping at ry=+-1.4, see the deck_bm block below) —
+# a thin central arch ring under a much wider flat deck, so from most angles
+# the camera saw the deck's unsupported flat underside overhang with only a
+# sliver of visible vault in the middle. The vault now spans the same depth
+# as the deck it holds up (6.0, a hair inside the deck's 6.2 so the coping
+# reads as a slight overhang, not floating past the stone). PIER_DEPTH below
+# mirrors this for the pier/cutwater bodies, same reasoning.
 N_ARCH_DEMO = 9                          # representative stone count for the
                                           # preview render (live count is the
                                           # data-driven conventionPlugins=18;
@@ -200,8 +209,11 @@ side_key_bm = drafted_block(w_bottom=SIDE_KEY_W_BOT, w_top=SIDE_KEY_W_TOP, depth
                              height=SIDE_KEY_H, mat=sandstone)
 side_keystone = sh.new_mesh_object('KeystoneSide', side_key_bm, sandstone)
 
-# --- pier course: stacks to build both piers on socket.pier_a / _b ---
-course_bm = drafted_block(w_bottom=1.7, w_top=1.7, depth=1.0, height=0.5, mat=palestone,
+# --- pier course: stacks to build both piers on socket.pier_a / _b. Depth
+# matches ARCH_DEPTH (art-direction fix, see that constant's comment) — a
+# pier no deeper than the vault it carries read as a stilt, not a pier. ---
+PIER_DEPTH = ARCH_DEPTH
+course_bm = drafted_block(w_bottom=1.7, w_top=1.7, depth=PIER_DEPTH, height=0.5, mat=palestone,
                            inset=0.05, bevel=0.014)
 pier_course = sh.new_mesh_object('PierCourse', course_bm, palestone)
 
@@ -427,7 +439,8 @@ def build_arch_group(cx, arch_r, n_demo, vous_proto, key_proto, spandrel_proto, 
                 cdup.data.materials[0] = moss_stone
             bpy.context.collection.objects.link(cdup)
             preview_objs.append(cdup)
-        for face, rot in ((0.5, math.pi), (-0.5, 0)):  # both Y faces, apex pointing out
+        for face, rot in ((PIER_DEPTH / 2, math.pi), (-PIER_DEPTH / 2, 0)):  # both Y faces (now
+            # the pier's real, deck-matching depth — see PIER_DEPTH), apex pointing out
             cdup = cutwater.copy()
             cdup.data = cutwater.data.copy()
             cdup.data.materials[0] = moss_stone  # cutwaters sit at the waterline
