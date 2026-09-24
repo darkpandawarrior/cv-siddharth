@@ -94,6 +94,61 @@ describe("check-old-names", () => {
     });
   });
 
+  describe("the lowercase-slug hardening (case-insensitive pass 2)", () => {
+    it("flags a lowercase URL route the case-sensitive pass could never see", () => {
+      expect(findHits("docs/x.md", "See `/project/mileway` for the live demo.")).toHaveLength(1);
+    });
+
+    it("flags a route mention in a curl command, even though the route prefix is quote/slash-shaped", () => {
+      expect(findHits("src/x.ts", "`curl -s http://localhost:5173/project/mileway | grep og:image`")).toHaveLength(1);
+    });
+
+    it("flags a bare-web-host route mention with no /project/ prefix at all", () => {
+      expect(findHits("docs/x.md", "live at `darkpandawarrior.github.io/mileway`")).toHaveLength(1);
+    });
+
+    it("flags deadlock as a product only when it sits directly against a slash", () => {
+      expect(findHits("docs/x.md", "See `/project/deadlock` for the demo.")).toHaveLength(1);
+    });
+
+    it("allows the applicationId/package form com.mileway, com.kursi.android and com.paymentslab.app", () => {
+      expect(findHits("src/x.ts", 'pkg: "com.mileway",')).toHaveLength(0);
+      expect(findHits("src/x.ts", 'pkg: "com.kursi.android",')).toHaveLength(0);
+      expect(findHits("src/x.ts", 'pkg: "com.paymentslab.app",')).toHaveLength(0);
+      expect(findHits("src/x.ts", 'pkg: "com.hiresignal.android",')).toHaveLength(0);
+    });
+
+    it("allows a quoted data identifier that starts with the slug but isn't a route", () => {
+      expect(findHits("src/data/incidents.ts", '    id: "mileway-46-36",')).toHaveLength(0);
+    });
+
+    it("skips a camelCase JS identifier (paymentsLab / paymentsLabKmp) — never how a real mention is cased", () => {
+      expect(findHits("src/x.ts", 'const paymentsLab = projects.find((p) => p.slug === "x");')).toHaveLength(0);
+      expect(findHits("src/x.ts", '  paymentsLabKmp: "/paymentslab-app/index.html",')).toHaveLength(0);
+    });
+
+    it("allows the real, unrenamed heavy/paymentslab-app build path, even bare in a comment", () => {
+      expect(findHits("scripts/x.mjs", "// paymentslab-app, the Compose twin/portfolio-app")).toHaveLength(0);
+    });
+
+    it("allows the Terminal.tsx RENAMED_SLUG_ALIASES table lines", () => {
+      expect(findHits("src/Terminal.tsx", '  mileway: "doori",')).toHaveLength(0);
+      expect(findHits("src/Terminal.tsx", '  hiresignal: "candidai",')).toHaveLength(0);
+    });
+
+    it("allows refresh-media.yml's own staging-checkout label", () => {
+      expect(
+        findHits(".github/workflows/refresh-media.yml", "          path: android-paymentslab-checkout"),
+      ).toHaveLength(0);
+    });
+
+    it("allows a historical measurement record", () => {
+      expect(
+        findHits("lighthouserc.json", '  "  total-byte-weight max 2,834,247. /project/mileway was 9,621,514 before",'),
+      ).toHaveLength(0);
+    });
+  });
+
   describe("whole-file exemptions", () => {
     it("exempts src/data/history.ts, which quotes real commit subjects verbatim", () => {
       // history.ts genuinely still contains "Mileway" in a committed subject
@@ -136,6 +191,28 @@ describe("check-old-names", () => {
       writeFileSync(fixture, "export const x = 'Mileway';\n");
       try {
         expect(() => run([fixture])).toThrow();
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it("hardening break-it: exits 1 on a lowercase '/project/mileway' route in a markdown fixture", () => {
+      const dir = mkdtempSync(join(tmpdir(), "check-old-names-"));
+      const fixture = join(dir, "fixture.md");
+      writeFileSync(fixture, "See `/project/mileway` for the live demo.\n");
+      try {
+        expect(() => run([fixture])).toThrow();
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it("hardening break-it: exits 0 on an allowlisted 'com.mileway' applicationId fixture", () => {
+      const dir = mkdtempSync(join(tmpdir(), "check-old-names-"));
+      const fixture = join(dir, "fixture.ts");
+      writeFileSync(fixture, 'export const applicationId = "com.mileway";\n');
+      try {
+        expect(() => run([fixture])).not.toThrow();
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }
