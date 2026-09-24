@@ -75,3 +75,10 @@ graphify-out/
 # piper voice models — ~61MB of weights, re-fetchable from the same URL the
 # script derives. Same rule as the avif/webp block above: regenerable, not carried.
 .piper-voices/
+
+# Raw Poly Haven model downloads (scripts/blender/world-v2/fetch-polyhaven-models.py)
+# — source jpg/gltf/bin for the lookdev scatter kit (fern/shrub/rock/lantern).
+# Same regenerable-input rule as heavy/**/*.webp above; the CC0 attribution
+# that IS carried lives in heavy/world/ASSETS.md, and the baked lookdev
+# render + exported landmark GLBs are committed separately.
+heavy/world/models/polyhaven/
