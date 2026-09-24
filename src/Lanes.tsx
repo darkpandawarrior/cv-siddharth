@@ -4,7 +4,8 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { Reveal } from "./Reveal.tsx";
-import { lanes, laneMonths } from "./data/lanes.ts";
+import { lanes, laneMonths, lanesGeneratedAt } from "./data/lanes.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 /**
  * /lanes — the four-lane activity view the Profile README already draws
@@ -83,17 +84,22 @@ export default function Lanes() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-5xl flex-1 px-6">
-        <p className="section-eyebrow mb-2">// four lanes</p>
-        <h1 className="font-display text-hero font-bold tracking-tight">Four things at once</h1>
-        <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
-          Work delivered, open source merged, writing published, chess played, every month since 2019.
-          Listed separately they read as four interests. Run in parallel they read as what they were:
-          the same seven years, moving on every lane at once.
-        </p>
-        <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
-          Same grid this profile's README already draws (github.com/darkpandawarrior), rendered live
-          here instead of as a fetched image. Hover a cell for its month and count.
-        </p>
+        <header>
+          <p className="section-eyebrow mb-2">// four lanes</p>
+          <h1 className="font-display text-hero font-bold tracking-tight">Four things at once</h1>
+          <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
+            Work delivered, open source merged, writing published, chess played, every month since
+            2019. Listed separately they read as four interests. Run in parallel they read as what
+            they were: the same seven years, moving on every lane at once.
+          </p>
+          <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+            Same grid this profile's README already draws (github.com/darkpandawarrior), rendered
+            live here instead of as a fetched image. Hover a cell for its month and count.
+          </p>
+          <p className="mt-3">
+            <EvidenceChip file="lanes.ts" stamp={lanesGeneratedAt} source="timeline.ts + chess.ts + writing.ts" />
+          </p>
+        </header>
 
         <h2 className="sr-only">The four lanes</h2>
         <Reveal>

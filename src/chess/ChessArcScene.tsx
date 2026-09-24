@@ -1,8 +1,9 @@
-import { SceneActivity } from "../SceneActivity.tsx";
-import { useMemo } from "react";
+import { SceneActivity, useReducedMotion } from "../SceneActivity.tsx";
+import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Billboard, Line, OrbitControls, Text } from "@react-three/drei";
 import { DoubleSide } from "three";
+import { useStudioModel } from "../three/models.ts";
 // drei's <Text> is troika, which resolves any glyph its font can't draw by
 // fetching a fallback font from jsDelivr at runtime. So the font ships with the
 // bundle (the .woff, not the .woff2 — troika refuses woff2) and every in-canvas
@@ -26,8 +27,12 @@ import { readToken } from "../themeColor";
  * Composed around the handoff, not around an overlap — only five months in
  * 7.5 years ever saw ≥10 games on both platforms.
  *
- * Reduced motion never reaches here: `ChessRoom` renders the flat `ChessArc`
- * instead, so this chunk (and three.js with it) is not even fetched.
+ * `ChessRoom` still gates the INITIAL mount on a reduced-motion snapshot
+ * (rendering the flat `ChessArc` instead, so this chunk never fetches for a
+ * visitor who already prefers less motion). But an already-mounted scene
+ * reads `useReducedMotion()` live, so a visitor who flips the OS setting
+ * mid-visit gets the camera settling immediately rather than needing a
+ * reload to notice.
  */
 
 const W = 12; // world width of the shared time axis
@@ -182,6 +187,15 @@ function useModel(corpus: Corpus, handoffAt: number | null) {
   }, [corpus, handoffAt]);
 }
 
+/** The handoff, made physical: two overlapping lathe-turned pawns (a baton
+ *  pass) sitting at the seam's baseline. The one sculptural object in this
+ *  scene, because it anchors the one real data point here — the January
+ *  2023 month a majority of the games moved from lichess to chess.com. */
+function HandoffMarker({ x }: { x: number }) {
+  const { scene } = useStudioModel("chess-handoff-marker");
+  return <primitive object={scene} position={[x, 0, 0]} scale={2.2} />;
+}
+
 export default function ChessArcScene({
   corpus,
   handoffAt,
@@ -193,7 +207,7 @@ export default function ChessArcScene({
   handoffLabel: string;
 }) {
   const { planes, years, zSpan, handoffX } = useModel(corpus, handoffAt);
-  const reduced = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  const reduced = useReducedMotion();
 
   return (
     <Canvas
@@ -260,6 +274,11 @@ export default function ChessArcScene({
               {handoffLabel}
             </Text>
           </Billboard>
+          {/* Suspense scoped to the marker fetch alone — the ribbons and the
+              seam plane above render immediately, only the GLB waits. */}
+          <Suspense fallback={null}>
+            <HandoffMarker x={handoffX} />
+          </Suspense>
         </group>
       )}
 

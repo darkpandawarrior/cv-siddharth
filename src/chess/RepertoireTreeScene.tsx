@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Billboard, Line, OrbitControls, Text } from "@react-three/drei";
 import { DoubleSide, MathUtils } from "three";
 import type { Group } from "three";
+import { useReducedMotion } from "../SceneActivity.tsx";
 // As in the other two scenes: troika would otherwise fetch a fallback font
 // from a CDN, so the font is bundled and every in-canvas string is ASCII.
 import fontUrl from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff?url";
@@ -120,15 +121,15 @@ export default function RepertoireTreeScene({
   focus,
   selected,
   handoffYear,
-  reduced,
 }: {
   years: RepYear[];
   /** The two lines the rail tracks, derived from the data, not chosen by hand. */
   focus: string[];
   selected: string;
   handoffYear: string | null;
-  reduced: boolean;
 }) {
+  // Live, not a mount-once snapshot — same reasoning as GraveyardScene.
+  const reduced = useReducedMotion();
   const x = useMemo(() => {
     const n = years.length;
     return (i: number) => (i - (n - 1) / 2) * YEAR_GAP;
