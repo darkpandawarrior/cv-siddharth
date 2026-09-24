@@ -162,14 +162,21 @@ jobs:
       - name: Refresh published Play listings
         id: store_refresh
         if: always()
+        continue-on-error: true
         run: node scripts/gen-store.mjs --published-only
-      # always(): the same "one dead generator must not discard the work of
-      # the other 26" reasoning the commit/gate steps below already carry
-      # (run 34191682522 class of bug) applies to this step's OWN dependency
-      # on store_refresh — a single delisted Play listing (live external
-      # data) must not block every other generator, classify-diff and the PR
-      # flow from ever running. store_refresh's own outcome still gates
-      # Gate result below, so a dead listing still leaves the PR needs-human.
+      # always() + continue-on-error: the same "one dead generator must not
+      # discard the work of the other 26" reasoning the commit/gate steps
+      # below already carry (run 34191682522 class of bug) applies to this
+      # step's OWN dependency on store_refresh — a single delisted Play
+      # listing (live external data) must not block every other generator,
+      # classify-diff and the PR flow from ever running, AND must not turn
+      # the whole run red on its own: without continue-on-error, a step
+      # failure fails the job conclusion regardless of every later `if:
+      # always()`, so a permanently-delisted listing left every dispatch
+      # failed forever (runs 36069368587, 36069892594, 36071465403).
+      # steps.store_refresh.outcome still reports the real result (failure),
+      # so Gate result below still leaves a dead listing at needs-human —
+      # only the job's own conclusion changes.
       - name: Sync media + regenerate stats & galleries
         if: always()
         env:
