@@ -1,10 +1,11 @@
-import { Suspense } from "react";
+import { Suspense, useRef, useState } from "react";
 import { SceneActivity } from "./SceneActivity.tsx";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
 import { skills } from "./data/profile.ts";
 import { readToken } from "./themeColor";
 import { useStudioModel } from "./three/models.ts";
+import { StudioRig } from "./three/StudioRig.tsx";
 import type { Mesh } from "three";
 
 /**
@@ -69,7 +70,49 @@ function SkillsCore() {
   return <primitive object={scene} />;
 }
 
+// Re-checked on an interval, not every frame — same 150ms cadence the atlas
+// lane's label-collision check uses for the same reason (O(n) at 30 points is
+// fine, a per-frame React state churn isn't).
+const FACING_CHECK_INTERVAL = 0.15;
+
+/**
+ * Word-sphere labels overlap into an illegible pile without this: 30 DOM
+ * labels rendered flat over the canvas, front and back hemisphere alike,
+ * have no notion of "behind the sphere". `<Html occlude>` depth-tests against
+ * rendered geometry, but the gem-cut core's inset facets aren't a clean
+ * convex shell, so it doesn't reliably hide the far side. This does the same
+ * job directly: a point only shows its text label when it faces the camera
+ * (dot product of its direction from centre with the camera's direction is
+ * positive), the same "only the near half talks" rule a word globe needs.
+ * The coloured marker dot stays put either way — spinning the orbit still
+ * shows where every skill lives, just not its text until it turns to face you.
+ */
 function Orbit({ active, onSelect, onSelectItem }: { active: string | null; onSelect: (group: string) => void; onSelectItem?: (item: string) => void }) {
+  const [facing, setFacing] = useState<Set<string>>(() => new Set(POINTS.map((p) => p.item)));
+  const lastCheck = useRef(0);
+
+  useFrame(({ clock, camera }) => {
+    if (clock.elapsedTime - lastCheck.current < FACING_CHECK_INTERVAL) return;
+    lastCheck.current = clock.elapsedTime;
+    const camLen = Math.hypot(camera.position.x, camera.position.y, camera.position.z) || 1;
+    const next = new Set<string>();
+    for (const p of POINTS) {
+      const [x, y, z] = p.pos;
+      const len = Math.hypot(x, y, z) || 1;
+      const dot = (x * camera.position.x + y * camera.position.y + z * camera.position.z) / (len * camLen);
+      // A wide margin past the true silhouette (dot > 0): 30 labels at
+      // equator-hemisphere density (dot > -0.08, ~17 shown) still piled into
+      // an unreadable cluster near the sphere's screen-space centre. Capping
+      // to the near cap keeps only the dozen or so facing the viewer head-on
+      // legible; the rest reveal themselves as the sphere is dragged around.
+      // ponytail: threshold is a tuned constant, not a real 2D collision
+      // check — if labels still touch at some camera angle, replace with the
+      // atlas lane's screen-space AABB pass (design-spec.md section "atlas").
+      if (dot > 0.35) next.add(p.item);
+    }
+    setFacing((prev) => (prev.size === next.size && [...prev].every((k) => next.has(k)) ? prev : next));
+  });
+
   return (
     <group>
       <Suspense fallback={null}>
@@ -83,26 +126,28 @@ function Orbit({ active, onSelect, onSelectItem }: { active: string | null; onSe
             <Suspense fallback={null}>
               <SkillMarker pos={p.pos} color={color} />
             </Suspense>
-            <Html position={p.pos} center distanceFactor={6.5} zIndexRange={[10, 0]}>
-              <button
-                onClick={() => { onSelect(p.group); onSelectItem?.(p.item); }}
-                title={p.group}
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "12px",
-                  whiteSpace: "nowrap",
-                  cursor: "pointer",
-                  color: dim ? "rgba(232,239,233,0.22)" : "#e8efe9",
-                  background: dim ? "rgba(5,7,10,0.35)" : "rgba(5,7,10,0.6)",
-                  padding: "3px 9px",
-                  borderRadius: "999px",
-                  border: `1px solid ${dim ? "rgba(36,48,41,0.4)" : `${color}66`}`,
-                  transition: "color 0.25s, border-color 0.25s, background 0.25s",
-                }}
-              >
-                {p.item}
-              </button>
-            </Html>
+            {facing.has(p.item) && (
+              <Html position={p.pos} center distanceFactor={6.5} zIndexRange={[10, 0]}>
+                <button
+                  onClick={() => { onSelect(p.group); onSelectItem?.(p.item); }}
+                  title={p.group}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12px",
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                    color: dim ? "rgba(232,239,233,0.22)" : "#e8efe9",
+                    background: dim ? "rgba(5,7,10,0.35)" : "rgba(5,7,10,0.6)",
+                    padding: "3px 9px",
+                    borderRadius: "999px",
+                    border: `1px solid ${dim ? "rgba(36,48,41,0.4)" : `${color}66`}`,
+                    transition: "color 0.25s, border-color 0.25s, background 0.25s",
+                  }}
+                >
+                  {p.item}
+                </button>
+              </Html>
+            )}
           </group>
         );
       })}
@@ -121,6 +166,7 @@ export default function SkillsOrbitScene({ active, onSelect, onSelectItem }: { a
       aria-label="3D orbit of every skill, grouped by category — drag to rotate, click a skill to filter"
     >
       <SceneActivity />
+      <StudioRig />
       <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} />
       <Orbit active={active} onSelect={onSelect} onSelectItem={onSelectItem} />
     </Canvas>
