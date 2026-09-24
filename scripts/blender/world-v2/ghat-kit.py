@@ -19,10 +19,19 @@ A separate, non-exported preview .blend stacks a representative descending
 run of steps so the render can be judged at landmark scale, same pattern as
 sangam-keystone-bridge.py's arch preview.
 
+Art-direction pass 2: the preview flight was 8 risers at 16 cm each (1.3 m of
+total drop) sitting on a bare procedural dune slope — nowhere near reaching
+the waterline, so it silently read as "no ghat at all" next to the concept's
+long stone stair. The preview now runs ~18 risers at ~27 cm each (spec's
+15-20-riser, 25-30 cm brief) and adds a one-off ChhatriPavilion (4 pillars,
+a domed roof, same lathe-profile vocabulary the bridge/deepmal kits already
+use for their finials) at the top landing.
+
 Run with: blender --background --factory-startup --disable-autoexec
 --python-exit-code 1 --python ghat-kit.py
 """
 from pathlib import Path
+import math
 import sys
 import bmesh
 import bpy
@@ -34,8 +43,9 @@ ID = 'ghat-kit'
 sh.clear_scene()
 
 sandstone = sh.pbr('mat.sandstone')
+palestone = sh.pbr('mat.paleStone')
 
-RISE, RUN, WIDTH = 0.16, 0.32, 1.8
+RISE, RUN, WIDTH = 0.27, 0.40, 1.8
 
 
 def step_block():
@@ -95,29 +105,83 @@ landing = sh.new_mesh_object('Landing', land_bm, sandstone)
 # can drift out of sync with the geometry.
 pitch = sh.socket('socket.step_pitch', (0, -RUN, -RISE), size=0.05)
 
-kit_objects = [step, landing, pitch]
+# --- chhatri pavilion: a small domed pavilion topping the flight (art-
+# direction fix — "a small domed chhatri/pavilion" at the head of the
+# stairs). One-off whole-piece, same lathe-profile vocabulary the bridge's
+# lamp post / deepmal's finial already use for a turned stone silhouette. ---
+PILLAR_PROFILE = [(.05, 0), (.06, .04), (.04, .5), (.055, .56), (.05, .60)]
+DOME_PROFILE = [(0.0, 0), (.62, 0), (.64, .06), (.55, .30), (.30, .48), (.10, .58), (0.0, .62)]
+PILLAR_R = 0.5
+chhatri_parts = []
+for i in range(4):
+    ang = i * math.pi / 2 + math.pi / 4
+    px, py = PILLAR_R * math.cos(ang), PILLAR_R * math.sin(ang)
+    p_bm = sh.canonical_order(sh.lathe(PILLAR_PROFILE, steps=8))
+    p_obj = sh.new_mesh_object(f'_chhatri_pillar_{i}', p_bm, palestone)
+    p_obj.location = (px, py, 0)
+    chhatri_parts.append(p_obj)
+
+dome_obj = sh.new_mesh_object('_chhatri_dome', sh.canonical_order(sh.lathe(DOME_PROFILE, steps=12)), palestone)
+dome_obj.location = (0, 0, 0.60)
+chhatri_parts.append(dome_obj)
+
+bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.68, depth=0.06, location=(0, 0, 0.03))
+chhatri_deck = bpy.context.object
+chhatri_deck.data.materials.append(sandstone)
+chhatri_parts.append(chhatri_deck)
+
+bpy.context.view_layer.objects.active = chhatri_parts[0]
+for p in chhatri_parts:
+    p.select_set(True)
+bpy.ops.object.join()
+chhatri = bpy.context.object
+chhatri.name = 'ChhatriPavilion'
+chhatri.data.name = 'ChhatriPavilion'
+sh.canonicalize_object(chhatri)
+bpy.ops.object.select_all(action='DESELECT')
+
+kit_objects = [step, landing, pitch, chhatri]
 sh.export_kit(ID, kit_objects)
 
 # ---------------------------------------------------------------------------
-# Preview-only assembly: a representative 8-step descending flight with one
-# landing, so the render can be judged at landmark scale (not exported).
+# Preview-only assembly: a representative descending flight (~18 risers,
+# spec's 15-20-riser brief) with a mid landing and the chhatri at the top,
+# so the render can be judged at landmark scale (not exported).
 # ---------------------------------------------------------------------------
 preview_objs = []
-N_PREVIEW = 8
+N_PREVIEW = 18
+MID_LANDING_AFTER = 9
+z_off = 0.0
 for i in range(N_PREVIEW):
     dup = step.copy()
     dup.data = step.data.copy()
     dup.name = f'Step_preview_{i}'
-    dup.location = (0, -i * RUN, -i * RISE)
+    y = -i * RUN - (LAND_DEPTH - RUN if i >= MID_LANDING_AFTER else 0)
+    dup.location = (0, y, -i * RISE)
     bpy.context.collection.objects.link(dup)
     preview_objs.append(dup)
+    if i == MID_LANDING_AFTER - 1:
+        mid = landing.copy()
+        mid.data = landing.data.copy()
+        mid.name = 'Landing_preview_mid'
+        mid.location = (0, y - LAND_DEPTH / 2 - RUN / 2, -i * RISE)
+        bpy.context.collection.objects.link(mid)
+        preview_objs.append(mid)
 
 dup = landing.copy()
 dup.data = landing.data.copy()
+last_y = -(N_PREVIEW - 1) * RUN - (LAND_DEPTH - RUN)
+dup.location = (0, last_y - LAND_DEPTH / 2 - RUN / 2, -(N_PREVIEW - 1) * RISE)
 dup.name = 'Landing_preview'
-dup.location = (0, -N_PREVIEW * RUN - LAND_DEPTH / 2 + RUN / 2, -N_PREVIEW * RISE)
 bpy.context.collection.objects.link(dup)
 preview_objs.append(dup)
+
+chhatri_dup = chhatri.copy()
+chhatri_dup.data = chhatri.data.copy()
+chhatri_dup.name = 'ChhatriPavilion_preview'
+chhatri_dup.location = (0, 0.55, 0)
+bpy.context.collection.objects.link(chhatri_dup)
+preview_objs.append(chhatri_dup)
 
 for o in kit_objects:
     if o.type == 'MESH':

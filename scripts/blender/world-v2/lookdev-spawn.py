@@ -23,6 +23,19 @@ correct screen side — this is a standalone lookdev composition (module
 docstring above), not the runtime export, so there's no requirement that
 +X/-X here match the runtime's literal west/east bank assignment.
 
+Art-direction pass 3 (spawn-v3.png): the sun/water/atmosphere/vegetation/
+boat fixes from this pass live here; the bridge/deepmal/ghat structural
+fixes live in their own kit scripts (sangam-keystone-bridge.py,
+fleet-deepmal.py, ghat-kit.py) since this file only imports their preview
+.blend output. Specifically: the SunDisc mesh sphere is gone, replaced by a
+native Sky Texture sun disc synced to the same to_sun direction as the
+SunKey light; a uniform-density world volume gives depth fog and lets the
+bridge occlude real god-rays through its arches; the water shader is a flat
+~40%-reflection MixShader (Glossy + Diffuse) instead of a Fresnel-tinted
+diffuse; vegetation scatter density is up substantially; the banyan's
+canopy/aerial-root counts are up; and the boat gets a woven-bump canopy, a
+lit lantern flame, and a rope coil.
+
 Run with: blender --background --factory-startup --disable-autoexec
 --python-exit-code 1 --python lookdev-spawn.py
 """
@@ -44,8 +57,8 @@ ROOT = sh.ROOT
 TERRAIN = ROOT / 'heavy/world/terrain'
 TEX = ROOT / 'heavy/world/textures'
 PH_MODELS = ROOT / 'heavy/world/models/polyhaven'
-OUT_PNG = ROOT / '.showcase-work/lookdev/spawn-v2.png'
-OUT_BLEND = ROOT / '.showcase-work/lookdev/spawn-v2.blend'
+OUT_PNG = ROOT / '.showcase-work/lookdev/spawn-v3.png'
+OUT_BLEND = ROOT / '.showcase-work/lookdev/spawn-v3.blend'
 random.seed(42)
 
 sh.clear_scene()
@@ -131,7 +144,13 @@ Z_CAM = -25.0
 CROP_X = (-55, 55)
 CROP_Z = (-45, 155)
 BRIDGE_Z = 95.0
-BRIDGE_SCALE = 5.0        # X/Y (span) only — matches the ~34 m river width.
+BRIDGE_SCALE = 2.5        # X/Y (span) only — matches the ~34 m river width.
+# Art-direction pass 2 (multi-arch): sangam-keystone-bridge.py's preview span
+# roughly doubled in local width (DECK_HALF_SPAN 4.0 -> 8.0 m, adding the two
+# flanking arches), so BRIDGE_SCALE halved from 5.0 to keep the SAME real-
+# world ~34-40 m total bridge width the old single-arch version already
+# matched — not a re-tune, just holding total width constant while the local
+# geometry that fills it changed.
 BRIDGE_HEIGHT_SCALE = 2.2  # Z scale, kept separate from the span scale: the
 # unscaled model is 6.6 x 3.4 x 5.44 m (span x depth x height, measured off
 # metrics-glb.json's mesh world_bounds). A uniform BRIDGE_SCALE=5.0 on all
@@ -466,11 +485,7 @@ wnt = water_mat.node_tree
 wnt.nodes.clear()
 wout = wnt.nodes.new('ShaderNodeOutputMaterial')
 wout.location = (700, 0)
-wbsdf = wnt.nodes.new('ShaderNodeBsdfPrincipled')
-wbsdf.location = (400, 0)
-wbsdf.inputs['Roughness'].default_value = 0.06
-wbsdf.inputs['IOR'].default_value = 1.33
-wnt.links.new(wbsdf.outputs['BSDF'], wout.inputs['Surface'])
+nt_link = wnt.links.new
 
 wuv = wnt.nodes.new('ShaderNodeUVMap')
 wuv.uv_map = 'UVFlow'
@@ -479,16 +494,18 @@ noise1 = wnt.nodes.new('ShaderNodeTexNoise')
 noise1.location = (-650, -200)
 noise1.inputs['Scale'].default_value = 9.0
 noise1.inputs['Detail'].default_value = 3.0
-nt_link = wnt.links.new
 nt_link(wuv.outputs['UV'], noise1.inputs['Vector'])
 bump = wnt.nodes.new('ShaderNodeBump')
 bump.location = (-350, -200)
-bump.inputs['Strength'].default_value = 0.06
+bump.inputs['Strength'].default_value = 0.08  # a touch stronger than before
+# (art-direction fix's "subtle ripple/normal map") — needs to be visible
+# enough to break the reflection up, not just perturb a diffuse base.
 nt_link(noise1.outputs['Fac'], bump.inputs['Height'])
-nt_link(bump.outputs['Normal'], wbsdf.inputs['Normal'])
 
-# depth colour: darker silty tone toward the centreline (deeper), a lighter
-# amber-green toward the shallow banks
+# depth colour: darker, COOLER tone throughout (art-direction fix — the flat
+# tan diffuse plane read warm everywhere; real river water at golden hour
+# still reads blue-grey in the body, with the gold coming from the sky/
+# bridge/tower reflection below, not the water's own pigment).
 center_dist = wnt.nodes.new('ShaderNodeTexCoord')
 center_dist.location = (-900, 200)
 sep_g = wnt.nodes.new('ShaderNodeSeparateXYZ')
@@ -497,9 +514,9 @@ nt_link(center_dist.outputs['Generated'], sep_g.inputs['Vector'])
 depth_ramp = wnt.nodes.new('ShaderNodeValToRGB')
 depth_ramp.location = (-350, 200)
 depth_ramp.color_ramp.elements[0].position = 0.35
-depth_ramp.color_ramp.elements[0].color = (0.03, 0.05, 0.05, 1)   # deep silt
+depth_ramp.color_ramp.elements[0].color = (0.014, 0.028, 0.038, 1)  # deep, cool silt
 depth_ramp.color_ramp.elements[1].position = 0.85
-depth_ramp.color_ramp.elements[1].color = (0.16, 0.20, 0.12, 1)   # shallow/pebble tint
+depth_ramp.color_ramp.elements[1].color = (0.07, 0.10, 0.11, 1)     # shallow, still cool
 gen_x = sep_g.outputs['X']
 absx = wnt.nodes.new('ShaderNodeMath')
 absx.operation = 'ABSOLUTE'
@@ -507,19 +524,27 @@ absx.location = (-500, 200)
 nt_link(gen_x, absx.inputs[0])
 nt_link(absx.outputs['Value'], depth_ramp.inputs['Fac'])
 
-fresnel = wnt.nodes.new('ShaderNodeFresnel')
-fresnel.location = (-350, 400)
-fresnel.inputs['IOR'].default_value = 1.33
-sky_tint = wnt.nodes.new('ShaderNodeRGB')
-sky_tint.outputs[0].default_value = (0.98, 0.72, 0.42, 1)  # golden reflection tint
-sky_tint.location = (-350, 550)
-refl_mix = wnt.nodes.new('ShaderNodeMixRGB')
-refl_mix.location = (-100, 350)
-nt_link(fresnel.outputs['Fac'], refl_mix.inputs['Fac'])
-nt_link(depth_ramp.outputs['Color'], refl_mix.inputs['Color1'])
-nt_link(sky_tint.outputs[0], refl_mix.inputs['Color2'])
-nt_link(refl_mix.outputs['Color'], wbsdf.inputs['Base Color'])
-wbsdf.inputs['Specular IOR Level'].default_value = 0.75
+base_bsdf = wnt.nodes.new('ShaderNodeBsdfDiffuse')
+base_bsdf.location = (0, 200)
+nt_link(depth_ramp.outputs['Color'], base_bsdf.inputs['Color'])
+nt_link(bump.outputs['Normal'], base_bsdf.inputs['Normal'])
+
+# reflection: a REAL raytraced mirror of the bridge/tower/sky (use_raytracing
+# is already on, section 12), not the old flat golden-tint hack — art-
+# direction fix: "bridge and tower should mirror legibly, ~40% reflection
+# strength per concept" reads as a flat art-directed mix, not a Fresnel
+# curve, so it's a fixed MixShader factor rather than Fresnel-driven.
+refl_bsdf = wnt.nodes.new('ShaderNodeBsdfGlossy')
+refl_bsdf.location = (0, 0)
+refl_bsdf.inputs['Roughness'].default_value = 0.05
+nt_link(bump.outputs['Normal'], refl_bsdf.inputs['Normal'])
+
+water_mix = wnt.nodes.new('ShaderNodeMixShader')
+water_mix.location = (350, 100)
+water_mix.inputs['Fac'].default_value = 0.4  # ~40% reflection strength
+nt_link(base_bsdf.outputs['BSDF'], water_mix.inputs[1])
+nt_link(refl_bsdf.outputs['BSDF'], water_mix.inputs[2])
+nt_link(water_mix.outputs['Shader'], wout.inputs['Surface'])
 
 river_mesh.materials.append(water_mat)
 print('RIVER_BUILT polys=', len(river_mesh.polygons))
@@ -627,9 +652,95 @@ warm_mix.blend_type = 'MULTIPLY'
 warm_mix.inputs['Fac'].default_value = 0.65
 wtree.links.new(wenv.outputs['Color'], warm_mix.inputs['Color1'])
 wtree.links.new(warm_tint.outputs[0], warm_mix.inputs['Color2'])
-wtree.links.new(warm_mix.outputs['Color'], wbg.inputs['Color'])
+
+to_sun = Vector((0.18, 0.97, 0.14)).normalized()  # their (x,y,z)->our (x,z,y)
+
+# Art-direction fix: the two unshaded white sphere primitives sitting on/
+# above the water (SunDisc + its own bump-warped water reflection) were "the
+# single biggest thing breaking the shot" — a mesh standing in for the sun
+# reads as a stage prop, not a sun. Blender's own Sky Texture (native "sky/
+# HDRI system", not a mesh) has a real sun_disc — physically sized, matched
+# to sun_elevation/sun_rotation from the SAME to_sun vector the SunKey light
+# below uses, so the visible disc and the directional light/shadows agree.
+# Screened over the tinted HDRI (not a straight replace) so kloppenheim's sky
+# colour/cloud detail survives; the disc and its horizon warmth are additive
+# on top, which is also what makes the horizon read gold (art-direction
+# fix — atmosphere: "warm the sky gradient toward orange/gold at the
+# horizon" comes largely free from Sky Texture's own physical scattering
+# model at an 8 deg elevation, on top of the existing warm_tint multiply).
+sky_tex = wtree.nodes.new('ShaderNodeTexSky')
+sky_types = [e.identifier for e in bpy.types.ShaderNodeTexSky.bl_rna.properties['sky_type'].enum_items]
+sky_tex.sky_type = 'MULTIPLE_SCATTERING' if 'MULTIPLE_SCATTERING' in sky_types else 'HOSEK_WILKIE'
+sky_tex.sun_elevation = math.asin(to_sun.z)
+sky_tex.sun_rotation = math.atan2(to_sun.y, to_sun.x)
+if hasattr(sky_tex, 'sun_disc'):
+    sky_tex.sun_disc = True
+    sky_tex.sun_size = math.radians(1.4)   # enlarged from the real ~0.5 deg —
+    # visible at this render's exposure/resolution without a mesh stand-in.
+    sky_tex.sun_intensity = 1.0
+if hasattr(sky_tex, 'aerosol_density'):
+    sky_tex.aerosol_density = 3.4  # extra dust haze toward the horizon (spec
+    # §7 uHaze — "a dust term, stronger than the reference's"); 2.2 read as
+    # only a faint tint next to the volume-fog test render, bumped further.
+sky_damp = wtree.nodes.new('ShaderNodeVectorMath')
+sky_damp.operation = 'SCALE'
+sky_damp.inputs['Scale'].default_value = 0.55  # physically-based sun-disc
+# radiance is huge; damp before adding so it reads as bright-but-detailed
+# rather than a single fully clipped white disc.
+wtree.links.new(sky_tex.outputs['Color'], sky_damp.inputs[0])
+sky_add = wtree.nodes.new('ShaderNodeMixRGB')
+sky_add.blend_type = 'ADD'
+sky_add.inputs['Fac'].default_value = 1.0
+wtree.links.new(warm_mix.outputs['Color'], sky_add.inputs['Color1'])
+wtree.links.new(sky_damp.outputs['Vector'], sky_add.inputs['Color2'])
+wtree.links.new(sky_add.outputs['Color'], wbg.inputs['Color'])
 wbg.inputs['Strength'].default_value = 0.3
 wtree.links.new(wbg.outputs['Background'], wout2.inputs['Surface'])
+
+# --- atmosphere: a uniform-density world volume (art-direction fix — height
+# fog + god rays through the bridge arch). ponytail: uniform density, not a
+# true exponential-height falloff (a height-varying Gradient-Texture density
+# would need Geometry>Position wired into the volume, more graph for a
+# single establishing shot from near water level); upgrade path is that
+# Gradient-Texture-driven Density input if a future shot needs a visible fog
+# floor from higher up. Sized so a ~120-150 m sightline (about the camera-
+# to-bridge distance) reads visibly softened: transmittance = exp(-density *
+# distance). density=0.006 (the physically-derived first guess) turned out
+# imperceptible at render scale/exposure — checked by cranking it to 0.02 in
+# a throwaway render and confirming the haze DOES respond (so the volume was
+# wired correctly, just under-dosed); 0.012 is the middle ground that still
+# reads as haze rather than flattening the whole shot to grey. ---
+vol_mat = bpy.data.materials.new('AtmosphereVolume')
+vol_mat.use_nodes = True
+vnt = vol_mat.node_tree
+vnt.nodes.clear()
+vout = vnt.nodes.new('ShaderNodeOutputMaterial')
+pvol = vnt.nodes.new('ShaderNodeVolumePrincipled')
+pvol.inputs['Density'].default_value = 0.012
+pvol.inputs['Color'].default_value = (0.90, 0.80, 0.68, 1)  # warm dust, not grey
+pvol.inputs['Anisotropy'].default_value = 0.55  # forward-scattering, so the
+# sun shafts through the bridge arch actually read as shafts, not flat haze.
+vnt.links.new(pvol.outputs['Volume'], vout.inputs['Volume'])
+bpy.ops.mesh.primitive_cube_add(size=2, location=(0, (CROP_Z[0] + CROP_Z[1]) / 2, 60))
+atmo_vol = bpy.context.object
+atmo_vol.name = 'AtmosphereVolume'
+atmo_vol.data.name = 'AtmosphereVolume'
+atmo_vol.scale = ((CROP_X[1] - CROP_X[0]) / 2, (CROP_Z[1] - CROP_Z[0]) / 2, 120)
+atmo_vol.data.materials.append(vol_mat)
+scene_eevee = bpy.context.scene.eevee
+try:
+    scene_eevee.use_volume_custom_range = True
+    scene_eevee.volumetric_start = 0.5
+    scene_eevee.volumetric_end = 260.0
+    scene_eevee.volumetric_tile_size = '2'
+    scene_eevee.volumetric_samples = 32
+    scene_eevee.use_volumetric_shadows = True  # the bridge occludes the sun
+    # through the volume everywhere except the arch openings — that occlusion
+    # difference IS the god-ray/sun-shaft beat.
+    scene_eevee.volumetric_shadow_samples = 8
+except AttributeError:
+    pass
+print('ATMOSPHERE_VOLUME_BUILT')
 
 sun_data = bpy.data.lights.new('SunKey', 'SUN')
 sun_data.energy = 14.0  # up from 4.2 — at the old value the flat HDRI fill
@@ -639,27 +750,8 @@ sun_data.energy = 14.0  # up from 4.2 — at the old value the flat HDRI fill
 sun_data.angle = math.radians(1.2)
 sun_data.color = (1.0, 0.74, 0.46)
 sun_obj = bpy.data.objects.new('SunKey', sun_data)
-to_sun = Vector((0.18, 0.97, 0.14)).normalized()  # their (x,y,z)->our (x,z,y)
 sun_obj.rotation_euler = to_sun.to_track_quat('Z', 'Y').to_euler()
 bpy.context.scene.collection.objects.link(sun_obj)
-
-# A visible sun disc: SUN light objects never render as a disc to camera
-# rays in EEVEE (that's a World > Sky Texture feature, and this world uses
-# an Environment Texture instead) — so the spec beat "sun just right of the
-# bridge... god rays through the arches toward the camera" needs a stand-in.
-# A small bright emissive sphere placed along the sun direction, just beyond
-# the bridge at roughly the arch-opening height, does that; to_sun is nearly
-# parallel to the camera's own look direction by design (spec §1: "the
-# viewer always looks into the light"), so it lands close to the bridge
-# without hand-tuning a screen-space position.
-sun_disc_mat = sh.material('mat.sunDisc', (1.0, 1.0, 1.0), emission=(1.0, 0.78, 0.42), emission_strength=32.0)
-bpy.ops.mesh.primitive_uv_sphere_add(radius=4.0, segments=16, ring_count=8,
-                                      location=(BRIDGE_X + 2, BRIDGE_Z + 12, WATER_Y + 3.2))
-sun_disc = bpy.context.object
-sun_disc.name = 'SunDisc'
-sun_disc.data.name = 'SunDisc'
-sun_disc.data.materials.append(sun_disc_mat)
-sh.canonicalize_object(sun_disc)
 print('WORLD_SUN_BUILT')
 
 # =============================================================================
@@ -760,33 +852,38 @@ bridge_root.location = (BRIDGE_X, BRIDGE_Z, WATER_Y - 1.6)
 
 deepmal_root.scale = (DEEPMAL_SCALE,) * 3
 deepmal_root.location = (DEEPMAL_X, DEEPMAL_Z, height_at(DEEPMAL_X, DEEPMAL_Z))
-
-# fleet-deepmal.py's own preview bakes 96 niches (~55% lit) into the mesh,
-# but a plain PBR alcove with no light in it doesn't read as "lit" from ~94 m
-# out — the spec beat is "88 lit amber diyas... catching the backlight"
-# (§13/§4). A handful of small warm point lights up the tower's spine (its
-# 8 tiers span roughly local z 1.1..14.7 after DEEPMAL_SCALE) stands in for
-# that without hand-placing 96 individual niche lights for a background prop.
-_deepmal_base_z = height_at(DEEPMAL_X, DEEPMAL_Z)
-for _t in range(7):
-    _tier_r = (1.35 - _t * 0.115) * DEEPMAL_SCALE * 0.85
-    _ang = _t * 2.4
-    _lz = _deepmal_base_z + (1.1 + _t * 1.95)
-    _glow = bpy.data.lights.new(f'DeepmalGlow_{_t}', 'POINT')
-    _glow.energy = 45
-    _glow.color = (1.0, 0.62, 0.28)
-    _glow.shadow_soft_size = 0.15
-    _glow.use_shadow = False
-    _glow_obj = bpy.data.objects.new(f'DeepmalGlow_{_t}', _glow)
-    _glow_obj.location = (DEEPMAL_X + _tier_r * math.cos(_ang), DEEPMAL_Z + _tier_r * math.sin(_ang), _lz)
-    bpy.context.scene.collection.objects.link(_glow_obj)
+# fleet-deepmal.py's own preview now places a real warm point light in every
+# lit niche (art-direction pass 2) and those import along with the mesh via
+# import_preview() above (it links every object in the library, not just
+# meshes) — so the hand-placed 7-light tower-spine stand-in this block used
+# to carry is gone; it would only double up on the kit's own lights now.
 
 # ghat: face the water (rotate so the flight descends toward the bank edge,
-# into the river) and set 2 flights. Same bank as the deepmal now (+X — see
-# the DEEPMAL_X note above for why +X is the side that renders screen-right).
-GHAT_X = river_x(DEEPMAL_Z - 12) + river_width_at(DEEPMAL_Z - 12) / 2 + 1.0
+# into the river). Same bank as the deepmal now (+X — see the DEEPMAL_X note
+# above for why +X is the side that renders screen-right).
+#
+# Root-cause fix (art-direction pass — "replacing the bare sand-dune slope
+# that's there now"): the old GHAT_X sat only ~1 m past the river's own
+# half-width, i.e. still on the submerged channel bed, not the dry bank —
+# checked directly against height_at() (a 1-off probe script, not eyeballed):
+# every offset out to +10 m stayed BELOW WATER_Y at this z, which is exactly
+# why nothing here ever rendered. The bank only clears the water by a few
+# metres even 20+ m back from the channel (a genuinely low stretch, not a
+# dune the ghat can be carved into at full kit scale), so two things move
+# together: GHAT_TOP_OFFSET goes from 1 m to 20 m (onto ground that actually
+# clears WATER_Y), and the flight's HEIGHT axis alone (not its width/tread)
+# is compressed to fit what relief is actually there.
+# ponytail: a non-uniform (1.1, 1.1, 0.4) scale tilts the stair prototype's
+# rise:run ratio shallower than a real 27 cm riser; acceptable for a
+# background prop read from ~90 m, revisit with a taller carved bank if this
+# ghat ever needs a close-up shot.
+GHAT_TOP_OFFSET = 25.0
+GHAT_X = river_x(DEEPMAL_Z - 12) + river_width_at(DEEPMAL_Z - 12) / 2 + GHAT_TOP_OFFSET
 ghat_root.rotation_euler = (0, 0, math.radians(-90))
-ghat_root.scale = (2.4, 2.4, 2.4)
+ghat_root.scale = (1.6, 1.6, 0.55)  # wider than 1:1 too — at ~90 m out a
+# real-scale flight/chhatri reads as a grey smudge next to the deepmal/
+# bridge; a bit of extra footprint is what actually makes the chhatri's
+# domed silhouette break the dune's skyline instead of blending into it.
 ghat_root.location = (GHAT_X, DEEPMAL_Z - 12, height_at(GHAT_X, DEEPMAL_Z - 12) + 0.3)
 print('LANDMARKS_PLACED')
 
@@ -845,7 +942,34 @@ def arch_tube(radius, half_len, n_arc=10, z_off=0.0):
     return sh.canonical_order(bm2)
 
 
-canopy_mat = sh.material('mat.canopyWeave', (0.30, 0.20, 0.10), rough=0.9)
+canopy_mat = sh.material('mat.canopyWeave', (0.32, 0.22, 0.11), rough=0.85)
+# Art-direction fix: a woven bamboo/cane texture (visible weave bump), not a
+# flat untextured dome — two crossed Wave Textures (native procedural nodes,
+# no image asset needed) fake a basket weave's over-under ridge pattern.
+canopy_mat.use_nodes = True
+_cnt = canopy_mat.node_tree
+_cbsdf = next(n for n in _cnt.nodes if n.type == 'BSDF_PRINCIPLED')
+_ccoord = _cnt.nodes.new('ShaderNodeTexCoord')
+_cmap = _cnt.nodes.new('ShaderNodeMapping')
+_cmap.inputs['Scale'].default_value = (14, 14, 14)
+_cnt.links.new(_ccoord.outputs['Object'], _cmap.inputs['Vector'])
+_wave_u = _cnt.nodes.new('ShaderNodeTexWave')
+_wave_u.bands_direction = 'X'
+_wave_u.inputs['Scale'].default_value = 6.0
+_cnt.links.new(_cmap.outputs['Vector'], _wave_u.inputs['Vector'])
+_wave_v = _cnt.nodes.new('ShaderNodeTexWave')
+_wave_v.bands_direction = 'Y'
+_wave_v.inputs['Scale'].default_value = 6.0
+_cnt.links.new(_cmap.outputs['Vector'], _wave_v.inputs['Vector'])
+_weave_mul = _cnt.nodes.new('ShaderNodeMath')
+_weave_mul.operation = 'MULTIPLY'
+_cnt.links.new(_wave_u.outputs['Fac'], _weave_mul.inputs[0])
+_cnt.links.new(_wave_v.outputs['Fac'], _weave_mul.inputs[1])
+_cbump = _cnt.nodes.new('ShaderNodeBump')
+_cbump.inputs['Strength'].default_value = 0.35
+_cnt.links.new(_weave_mul.outputs['Value'], _cbump.inputs['Height'])
+_cnt.links.new(_cbump.outputs['Normal'], _cbsdf.inputs['Normal'])
+
 canopy = sh.new_mesh_object('HodiCanopy', arch_tube(0.72, HULL_LEN * 0.30, z_off=0.42), canopy_mat)
 canopy.location = (0, -HULL_LEN * 0.06, 0)
 boat_col.objects.link(canopy)
@@ -861,6 +985,29 @@ oar.data.materials.append(planks)
 sh.canonicalize_object(oar)
 boat_col.objects.link(oar)
 bpy.context.collection.objects.unlink(oar)
+
+# Art-direction fix: a coiled rope prop at the bow — a few concentric,
+# slightly offset tori (native primitive, no new asset) read as coiled line.
+rope_mat = sh.material('mat.rope', (0.42, 0.33, 0.20), rough=0.8)
+rope_parts = []
+for i in range(4):
+    rr = 0.11 - i * 0.018
+    bpy.ops.mesh.primitive_torus_add(major_radius=rr, minor_radius=0.014,
+                                      location=(0.5, -HULL_LEN * 0.42, 0.58 + i * 0.016),
+                                      major_segments=14, minor_segments=6)
+    rope_parts.append(bpy.context.object)
+bpy.context.view_layer.objects.active = rope_parts[0]
+for p in rope_parts:
+    p.select_set(True)
+bpy.ops.object.join()
+rope = bpy.context.object
+rope.name = 'RopeCoil'
+rope.data.name = 'RopeCoil'
+rope.data.materials.append(rope_mat)
+sh.canonicalize_object(rope)
+boat_col.objects.link(rope)
+bpy.context.collection.objects.unlink(rope)
+bpy.ops.object.select_all(action='DESELECT')
 
 lantern_gltf = PH_MODELS / 'brass_diya_lantern/brass_diya_lantern_1k.gltf'
 lantern_obj = None
@@ -886,13 +1033,26 @@ if lantern_gltf.exists():
     glow_obj.location = lantern_root.location + Vector((0, 0, 0.12))
     bpy.context.scene.collection.objects.link(glow_obj)
 
+    # Art-direction fix: a real emissive flame mesh, not just an invisible
+    # point light — the diya-flame prototype (section 11) doesn't exist yet
+    # at this point in the script, so this is its own small standalone cone.
+    lantern_flame_mat = sh.material('mat.lanternFlame', sh.AMBER, emission=sh.AMBER, emission_strength=7.0)
+    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.02, radius2=0.002, depth=0.06,
+                                     location=glow_obj.location)
+    lantern_flame = bpy.context.object
+    lantern_flame.name = 'LanternFlame'
+    lantern_flame.data.name = 'LanternFlame'
+    lantern_flame.data.materials.append(lantern_flame_mat)
+    sh.canonicalize_object(lantern_flame)
+
 BOAT_YAW = math.radians(-14)
 boat_root = bpy.data.objects.new('BoatRoot', None)
 bpy.context.scene.collection.objects.link(boat_root)
-for o in (hull, canopy, oar):
+for o in (hull, canopy, oar, rope):
     o.parent = boat_root
 if lantern_obj is not None:
     lantern_obj.parent = boat_root
+    lantern_flame.parent = boat_root
 boat_root.rotation_euler = (0, 0, BOAT_YAW)
 boat_root.location = (BOAT_X, BOAT_Z, WATER_Y + 0.12)
 print('BOAT_BUILT')
@@ -920,15 +1080,19 @@ sh.canonicalize_object(trunk)
 tree_col.objects.link(trunk)
 bpy.context.collection.objects.unlink(trunk)
 
+# Art-direction fix: broad canopy (~3x trunk height in diameter). Trunk
+# height is 4.2 m, so the canopy blobs now reach out to r+radius ~= 6.3 m
+# (~12.6 m diameter, ~3x), up from the old ~9 m spread — and more blobs (14,
+# up from 9) so the wider spread doesn't read as sparser.
 rand = random.Random(7)
 canopy_blobs = []
-for i in range(9):
+for i in range(14):
     ang = rand.uniform(0, math.tau)
-    r = rand.uniform(0.6, 2.6)
+    r = rand.uniform(0.8, 4.2)
     cx = TREE_X + r * math.cos(ang)
     cz_ = TREE_Z + r * math.sin(ang)
-    cy = TREE_BASE_Z + rand.uniform(4.0, 6.2)
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=rand.uniform(1.1, 1.9),
+    cy = TREE_BASE_Z + rand.uniform(3.6, 6.4)
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=rand.uniform(1.3, 2.2),
                                            location=(cx, cz_, cy))
     blob = bpy.context.object
     blob.scale = (1, 1, rand.uniform(0.55, 0.8))
@@ -945,14 +1109,16 @@ sh.canonicalize_object(canopy_obj)
 tree_col.objects.link(canopy_obj)
 bpy.context.collection.objects.unlink(canopy_obj)
 
+# Art-direction fix: 15-20 hanging aerial root strands (up from 7), spread
+# out to match the now-wider canopy.
 root_parts = []
-for i in range(7):
+for i in range(18):
     ang = rand.uniform(0, math.tau)
-    r = rand.uniform(0.3, 2.2)
+    r = rand.uniform(0.4, 3.8)
     rx = TREE_X + r * math.cos(ang)
     rz = TREE_Z + r * math.sin(ang)
-    ry_top = TREE_BASE_Z + rand.uniform(3.5, 5.5)
-    length = rand.uniform(2.0, 4.2)
+    ry_top = TREE_BASE_Z + rand.uniform(3.5, 6.0)
+    length = rand.uniform(2.0, 4.6)
     bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.05, radius2=0.015, depth=length,
                                      location=(rx, rz, ry_top - length / 2))
     root_parts.append(bpy.context.object)
@@ -1100,9 +1266,17 @@ def scatter_branch(coll, density_max, seed, min_scale, max_scale, y_off, use_wat
 # Densities are tuned against each asset's real (measured) triangle cost, not
 # a uniform "vegetation field" — shrub_01 imported at ~156k tris for a single
 # object, so it gets sparse hero-accent placement, not groundcover.
-scatter_branch(shrub_coll, density_max=0.006, seed=1, min_scale=0.6, max_scale=1.1, y_off=300, use_water_mask=False)
-scatter_branch(fern_coll, density_max=0.05, seed=2, min_scale=0.5, max_scale=0.9, y_off=0, use_water_mask=True)
-scatter_branch(rock_coll, density_max=0.01, seed=3, min_scale=0.4, max_scale=0.9, y_off=-300, use_water_mask=True)
+# Art-direction fix: vegetation coverage read as near 0% — at the old
+# densities (0.006/0.05 pts/m^2) the whole crop area held only a handful of
+# points. fern is the main groundcover lever here (bumped 6x); shrub stays
+# closer to its original sparse "hero-accent" density — it's the 156k-tri
+# single object the comment above already flags, so a big density jump
+# there risks the same class of runaway-instance-count render hang this
+# file's own history warns about, not just a slower render. Rock stays
+# sparse too (ambient debris, not groundcover).
+scatter_branch(shrub_coll, density_max=0.012, seed=1, min_scale=0.6, max_scale=1.1, y_off=300, use_water_mask=False)
+scatter_branch(fern_coll, density_max=0.3, seed=2, min_scale=0.5, max_scale=0.9, y_off=0, use_water_mask=True)
+scatter_branch(rock_coll, density_max=0.015, seed=3, min_scale=0.4, max_scale=0.9, y_off=-300, use_water_mask=True)
 
 glinks.new(join.outputs['Geometry'], go.inputs['Geometry'])
 scatter_mod = terrain_obj.modifiers.new('TerrainScatter', 'NODES')
@@ -1191,6 +1365,12 @@ scatter_instance(petal_proto, 45, ((BOAT_X + BRIDGE_X) / 2, (BOAT_Z + BRIDGE_Z) 
 for _ in range(3):
     scatter_instance(petal_proto, 15, ((BOAT_X + BRIDGE_X) / 2, (BOAT_Z + BRIDGE_Z) / 2), 42, WATER_Y + 0.015, 0.0,
                       mat=rand2.choice([petal_mat, petal_mat2]))
+# Art-direction fix: a scatter of floating marigold-orange petals NEAR THE
+# BOAT specifically (concept shows them clustered right around the hull,
+# parted by it) — the mid-river scatter above centers on the boat-bridge
+# midpoint, 20+ m from the boat itself.
+scatter_instance(petal_proto, 25, (BOAT_X, BOAT_Z), 3.2, WATER_Y + 0.015, 0.0,
+                  mat=rand2.choice([petal_mat, petal_mat2]))
 # a handful adrift near the boat/tree, mid-air (falling)
 scatter_instance(petal_proto, 14, (TREE_X - 1.5, TREE_Z + 3), 3.5,
                   lambda x, y: WATER_Y + rand2.uniform(1.0, 4.5), 0.3, mat=petal_mat)

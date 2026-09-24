@@ -13,6 +13,16 @@ Kit, not a baked assembly (spec §0.3 rule 2 — no GLB bakes a data count):
   - BasePlinth / Finial: the one-off top and bottom caps (whole-tower
     pieces, same footing as the bridge kit's SpandrelWall — not repeat-N).
 
+Art-direction pass 2: the niche was a flat-lintel recess with a poked pyramid
+pediment, and the preview's "lit" niches were geometry-only (an emissive
+FlameCard mesh with no real light) — at landmark viewing distance that read
+as a plain blocky stack with no niches or emissives at all. niche_bm() now
+carves a genuine arched opening (a jamb-then-semicircle outline, the same
+front/back-ring extrusion vocabulary the bridge's SpandrelWall uses), and
+the preview places an actual warm (~2000-2200K, real Blender light
+temperature, not a flat RGB guess) POINT light in every lit niche instead of
+only a handful of tier-spine stand-ins.
+
 Run with: blender --background --factory-startup --disable-autoexec
 --python-exit-code 1 --python fleet-deepmal.py
 """
@@ -59,37 +69,48 @@ tier_collar.data.materials.append(palestone)
 sh.canonicalize_object(tier_collar)
 bpy.ops.object.select_all(action='DESELECT')
 
-# --- niche unit: a recessed alcove with a low pyramid pediment, sized for a
-# unit-radius ring (the runtime/preview positions it on the ring surface at
-# instance scale). Built flush against a wall at x=0, alcove opening -Y. ---
-def niche_bm():
+# --- niche unit: a recessed ALCOVE WITH A TRUE ARCHED OPENING (art-direction
+# fix — the previous flat lintel + poked pyramid read as a doorway, not the
+# concept's arched lamp-niche), sized for a unit-radius ring (the runtime/
+# preview positions it on the ring surface at instance scale). Built flush
+# against a wall at x=0, alcove opening toward -Y. The opening's outline is
+# jamb-up / semicircle-over / jamb-down (n_arc+3 points); a front ring at
+# y=0 (the wall surface) and a recessed ring at y=-depth (the alcove floor,
+# where the flame/light sits) are connected by "return" side faces around
+# that whole outline — the same front-ring/back-ring extrusion vocabulary
+# SpandrelWall already uses for the bridge's arch profile. ---
+def niche_bm(n_arc=5):
+    hw, depth = 0.075, 0.045
+    spring_h = 0.055   # jambs rise this high before the arch springs
+    r = hw
+    apex_h = spring_h + r
+
+    outline = [(-hw, 0.0)]
+    for i in range(n_arc + 1):
+        a = math.pi * i / n_arc
+        outline.append((-r * math.cos(a), spring_h + r * math.sin(a)))
+    outline.append((hw, 0.0))
+    n = len(outline)
+
     bm = bmesh.new()
-    hw, hh, depth = 0.075, 0.11, 0.045
-    v = [
-        bm.verts.new((-hw, 0, 0)), bm.verts.new((hw, 0, 0)),
-        bm.verts.new((hw, -depth, 0)), bm.verts.new((-hw, -depth, 0)),
-        bm.verts.new((-hw, 0, hh)), bm.verts.new((hw, 0, hh)),
-        bm.verts.new((hw, -depth, hh)), bm.verts.new((-hw, -depth, hh)),
-    ]
-    bm.faces.new((v[0], v[1], v[2], v[3]))          # sill
-    top = bm.faces.new((v[7], v[6], v[5], v[4]))     # flat lintel (pediment base)
-    bm.faces.new((v[0], v[4], v[5], v[1]))           # back (against the wall)
-    bm.faces.new((v[1], v[5], v[6], v[2]))           # right jamb
-    bm.faces.new((v[3], v[7], v[4], v[0]))           # left jamb
-    front = bm.faces.new((v[2], v[6], v[7], v[3]))   # recessed alcove floor
+    front = [bm.verts.new((x, 0, z)) for x, z in outline]        # flush against the wall
+    back = [bm.verts.new((x, -depth, z)) for x, z in outline]    # the alcove's own back face
+    bm.faces.new(front)
+    floor = bm.faces.new(back[::-1])   # will be inset into the visible recessed panel below
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((front[i], front[j], back[j], back[i]))     # jambs + arch soffit + sill
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bmesh.ops.inset_individual(bm, faces=[front], thickness=0.012, depth=-0.02)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    # pediment: a shallow pyramid cap on the lintel
-    res = bmesh.ops.poke(bm, faces=[top], offset=0.04)
+    bmesh.ops.inset_individual(bm, faces=[floor], thickness=0.008, depth=-0.015)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=list(bm.edges))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    return sh.canonical_order(bm)
+    return sh.canonical_order(bm), apex_h
 
 
-niche = sh.new_mesh_object('NicheUnit', niche_bm(), palestone)
-flame_socket = sh.socket('socket.flame', (0, -0.05, 0.05), parent=niche, size=0.02)
+niche_geo, NICHE_APEX_H = niche_bm()
+niche = sh.new_mesh_object('NicheUnit', niche_geo, palestone)
+flame_socket = sh.socket('socket.flame', (0, -0.045, NICHE_APEX_H * 0.45), parent=niche, size=0.02)
 
 # --- flame: a small emissive teardrop, instanced once per lit (live) niche ---
 bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.018, radius2=0.001, depth=0.05,
@@ -169,13 +190,31 @@ for t in range(N_TIERS):
         if n < lit_here:
             lx, ly, lz = flame_socket.location
             wx, wy = rot_z(theta, lx, ly)
+            wz = ndup.location.z + lz
             fdup = flame.copy()
             fdup.data = flame.data.copy()
             fdup.name = f'Flame_preview_{t}_{n}'
-            fdup.location = (ndup.location.x + wx, ndup.location.y + wy, ndup.location.z + lz)
+            fdup.location = (ndup.location.x + wx, ndup.location.y + wy, wz)
             fdup.rotation_euler = ndup.rotation_euler
             bpy.context.collection.objects.link(fdup)
             preview_objs.append(fdup)
+
+            # art-direction fix: a real light per lit niche, not just a
+            # handful of tier-spine stand-ins — at landmark distance an
+            # emissive-only mesh this small doesn't read as "lit". Warm oil-
+            # lamp colour via Blender's own blackbody temperature (~2000-
+            # 2200K, spec's exact range), not a hand-guessed RGB tint.
+            niche_light = bpy.data.lights.new(f'NicheLight_{t}_{n}', 'POINT')
+            niche_light.energy = 12
+            niche_light.color = (1.0, 1.0, 1.0)
+            niche_light.use_temperature = True
+            niche_light.temperature = 2100
+            niche_light.shadow_soft_size = 0.03
+            niche_light.use_shadow = False
+            light_obj = bpy.data.objects.new(f'NicheLight_{t}_{n}', niche_light)
+            light_obj.location = (ndup.location.x + wx, ndup.location.y + wy, wz)
+            bpy.context.collection.objects.link(light_obj)
+            preview_objs.append(light_obj)
 
     cdup = tier_collar.copy()
     cdup.data = tier_collar.data.copy()
