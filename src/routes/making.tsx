@@ -7,6 +7,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { anthology } from "../data/anthology.ts";
 import { RENDERINGS, SEASON_CANON } from "../data/canonLore.ts";
 import {
@@ -126,6 +127,17 @@ function MakingRoute() {
           <Reveal>
             <p className="kicker-accent">// the craft record, not the fiction</p>
             <h1 className="font-display mt-3 text-hero">The Making</h1>
+            {/* The portraits below (RENDERINGS) resolve against
+                anthology.witnesses — the only generator-sourced figures on
+                this page, the audit/voice-rule prose above is hand-authored
+                from canonLore.ts and carries no cadence to chip. */}
+            <div className="mt-2">
+              <EvidenceChip
+                file="anthology.ts"
+                stamp={anthology.generatedAt}
+                source="the-loopdown/fiction/morkinstar-journals"
+              />
+            </div>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
               The Morkinstar Journals reads as a correspondent with no author. This page is where the
               author is. Everything below used to be scattered across the fiction itself, a line here, a

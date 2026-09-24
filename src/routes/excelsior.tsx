@@ -9,6 +9,7 @@ import { countWord } from "../data/labs.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 
 /**
  * The magazine, hosted here rather than linked away. `?year=&page=` are the
@@ -103,6 +104,9 @@ function ExcelsiorRoute() {
         <div className="mt-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent/70">// print, 2019–21</p>
           <h1 className="font-display mt-1.5 text-h2 font-bold tracking-tight">Excelsior</h1>
+          <div className="mt-1.5">
+            <EvidenceChip file="excelsior.ts" source="MANIT Bhopal's own PDF archive" cadence="manual" />
+          </div>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-400">
             MANIT Bhopal's institute magazine, running since 1963. I was an English Editor on the 2019
             and 2020 editions and Joint Chief Editor on 2021. The sign-off is on{" "}
