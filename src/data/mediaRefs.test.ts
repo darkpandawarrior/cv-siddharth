@@ -10,7 +10,7 @@ import { projects } from "./profile.ts";
  * gallery, which OVERRIDES the auto-generated one) and each target's
  * `screens` (the DeviceWall tabs) — and both name files by string. A name
  * that never landed on disk renders as a broken image, and one of the two
- * found on 2026-08-24 was in Mileway's iOS widget tab: the DeviceWall is the
+ * found on 2026-08-24 was in Mileway's (now Doori) iOS widget tab: the DeviceWall is the
  * site's flagship "one codebase, every surface" proof, so the hole was in the
  * most load-bearing place it could have been.
  *

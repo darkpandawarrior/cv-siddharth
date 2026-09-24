@@ -22,8 +22,8 @@ gate. Every part of the existing site is elevated (not replaced by an empty desk
    captures), never break, never overflow. Verified at 375 / 768 / 1024 / 1440 / 1920+.
 4. **Multiplatform made visual, per project.** The "one codebase, N surfaces" thesis shown, not told:
    a device-wall / morph showcase per project (Android · iOS · Wear · watch · Desktop · Web) with the
-   right device frames; the **live web build embedded inline** inside the case study (Kursi playable;
-   Mileway live from `darkpandawarrior.github.io/mileway`; PaymentsLab rich now, live when a web target
+   right device frames; the **live web build embedded inline** inside the case study (Gaddi playable;
+   Doori live from `darkpandawarrior.github.io/mileway`; PaymentsLab-KMP rich now, live when a web target
    lands). Interactive target-switch / responsive-morph.
 5. **Wild ideas folded IN as enhancements** (see the brainstorm — fold the approved ones): tool-use AI
    copilot (⌘K, can navigate/surface/pull-metrics), live telemetry layer (career-as-htop, self-updating

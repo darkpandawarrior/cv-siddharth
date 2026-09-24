@@ -20,7 +20,7 @@ const ROOT = new URL("../../", import.meta.url).pathname;
  * public/llms.txt and public/llms-full.txt are what an AI crawler reads at
  * cv-siddharth.vercel.app/llms.txt. They were hand-written mirrors of
  * profile.ts for a year and drifted the LOC figure, the Play Store turnaround,
- * Mileway's module count, HireSignal's merged-PR count, the published-post
+ * Mileway's (now Doori) module count, HireSignal's (now Candidai) merged-PR count, the published-post
  * list and the whole current-employer row — and the Compose twin's
  * CvProfileData.kt was transcribed from the stale copy, so the drift crossed
  * into a second repo. scripts/gen-system-prompt.mjs emits them now; this

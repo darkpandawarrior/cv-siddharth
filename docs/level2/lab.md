@@ -15,7 +15,7 @@ The Lab Bench is the most structurally mature feature on the site, and it
 doesn't need rescuing — it needs finishing. Every one of the eleven instruments
 already follows the same three-beat pattern: a claim paragraph, a live
 canvas/SVG demonstration driven by real project numbers (17.6 km of actual
-Pune roads for Signal Lab, Mileway's real 46-module count, PaymentsLab's real
+Pune roads for Signal Lab, Doori's real 46-module count, PaymentsLab-KMP's real
 66-gateway catalog, 18k chess games' real per-move clock data for Clock Burn),
 and a footer stat bar with a toggle plus a `the full story →` link back to the
 project. `signalEngine.test.ts` even asserts the headline numbers so they can't
@@ -49,7 +49,7 @@ Three real gaps, though:
    toggle back and rely on memory to compare. The stronger pattern already
    exists in the codebase, it just isn't reused.
 
-One structural observation, not a bug: `SearchTreeLab.tsx` (Kursi's simulated
+One structural observation, not a bug: `SearchTreeLab.tsx` (Gaddi's simulated
 ISMCTS) and `ChessSearchLab.tsx` (a real alpha-beta search running in a Web
 Worker) are explicitly commented in the code as siblings — *"Same canvas loop,
 same bottom-up tree, so the two search families read as one idea"* — yet they
@@ -241,7 +241,7 @@ simulation logic, no new state — the numbers already exist in each closure,
 they're just not both on screen at once the way Signal Lab and Recompose Lab
 already prove is the stronger pattern.
 
-### 6. Merge Search Tree Lab (Kursi, simulated) and Chess Search Lab (real alpha-beta) into one comparative instrument
+### 6. Merge Search Tree Lab (Gaddi, simulated) and Chess Search Lab (real alpha-beta) into one comparative instrument
 
 Higher effort, still a bounded blast radius — three files touch the wiring,
 plus the two lab components:
@@ -256,7 +256,7 @@ plus the two lab components:
   `SearchTreesLab`, replacing the two existing `tab === "search"` /
   `tab === "chess-search"` branches. Keep the `ChessSearchLab` import lazy
   (it still needs the Web Worker + `chess.js`); the merged component's
-  "simulated" mode (Kursi ISMCTS) should render without pulling that import —
+  "simulated" mode (Gaddi ISMCTS) should render without pulling that import —
   nest the lazy import so switching *into* real-engine mode is what triggers
   the worker/chess.js chunk load, not mounting the tab itself. This preserves
   the exact hazard `LabBench.tsx`'s own top-of-file comments already document
@@ -271,10 +271,10 @@ Inside the merged component: keep both canvas rigs (they already share
 identical draw code — `SearchTreeLab.tsx:44-90` vs `ChessSearchLab.tsx:48-90`
 are already structurally the same function with different node-generation
 sources), gate which one is live behind a two-option accessible toggle (a
-`role="radiogroup"` pair, "simulated (Kursi ISMCTS)" / "real (α-β engine)"
+`role="radiogroup"` pair, "simulated (Gaddi ISMCTS)" / "real (α-β engine)"
 — not a bare checkbox, since this isn't an on/off state, it's a choice
 between two data sources). Keep both instruments' existing controls
-(difficulty tier buttons for Kursi; depth-preset + move-number slider for the
+(difficulty tier buttons for Gaddi; depth-preset + move-number slider for the
 real engine) visible only for the currently selected mode. Keep both
 `the full story →` links (`/project/kursi` and `/chess`) — the merge
 consolidates the *tab*, not either project's narrative.
@@ -324,9 +324,9 @@ pattern) in an otherwise mechanical list.
 ## What NOT to do
 
 - Don't retheme every canvas in every lab to amber/cyan indiscriminately.
-  Kursi's gold (`SearchTreeLab.tsx`), HireSignal's blue (`FanoutLab.tsx`,
-  explicitly commented "reserved for this sim's own visuals"), PaymentsLab's
-  purple (`GatewayLab.tsx`), and Mileway's cyan (`ModuleGraphLab.tsx`) are
+  Gaddi's gold (`SearchTreeLab.tsx`), Candidai's blue (`FanoutLab.tsx`,
+  explicitly commented "reserved for this sim's own visuals"), PaymentsLab-KMP's
+  purple (`GatewayLab.tsx`), and Doori's cyan (`ModuleGraphLab.tsx`) are
   each a project's own real brand identity, not a stray hex to sweep. CAL-1's
   amber/cyan pairing applies specifically where an instrument is genuinely
   comparing a claimed number against its baseline (Signal Lab, Clock Lab) —

@@ -46,14 +46,14 @@ async function build() {
   // Gateway breakdown used to be re-derived from raw source (Application.kt
   // import counting) — that broke silently when providers got reorganized
   // into their own config files (2026-07-24: was reporting 71 gateways,
-  // repo's own README already said 66). PaymentsLab's own gen-readme.sh
+  // repo's own README already said 66). PaymentsLab-KMP's own gen-readme.sh
   // keeps its README banner honest against settings.gradle.kts on every
   // commit, so trust that instead of re-deriving from files whose shape we
   // don't control.
   const pReadme = await getText(raw(pRepo, "main", "README.md"));
 
   const dbMatch = mDb.match(/version\s*=\s*(\d+)/);
-  if (!dbMatch) throw new Error("could not parse Mileway DB version");
+  if (!dbMatch) throw new Error("could not parse Doori DB version");
 
   return {
     foundation: {

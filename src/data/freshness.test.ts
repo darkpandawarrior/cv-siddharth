@@ -69,7 +69,7 @@ describe("generated data has not quietly aged out", () => {
 /**
  * The hand-kept half of the same problem.
  *
- * profile.ts's `recentGrowth` is a curated narrative — "Mileway — offline AI +
+ * profile.ts's `recentGrowth` is a curated narrative — "Doori — offline AI +
  * policy engine" is a sentence no API produces — so it cannot be generated.
  * But it is dated, it is labelled RECENT, and on 2026-08-24 its newest entry
  * said Jul 2026 while the live GitHub feed showed pushes from yesterday. A

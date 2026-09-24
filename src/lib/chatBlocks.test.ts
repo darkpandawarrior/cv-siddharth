@@ -20,9 +20,9 @@ describe("parseChatBlocks", () => {
   });
 
   it("splits a directive on its own line out of the surrounding text", () => {
-    expect(parseChatBlocks("Here it is:\n\n[[project:mileway]]\n\nWant the architecture?")).toEqual([
+    expect(parseChatBlocks("Here it is:\n\n[[project:doori]]\n\nWant the architecture?")).toEqual([
       { kind: "text", text: "Here it is:" },
-      { kind: "widget", name: "project", arg: "mileway" },
+      { kind: "widget", name: "project", arg: "doori" },
       { kind: "text", text: "Want the architecture?" },
     ]);
   });
@@ -40,14 +40,14 @@ describe("parseChatBlocks", () => {
   });
 
   it("handles back-to-back directives with no prose between them", () => {
-    expect(parseChatBlocks("[[project:kursi]]\n[[project:mileway]]")).toEqual([
-      { kind: "widget", name: "project", arg: "kursi" },
-      { kind: "widget", name: "project", arg: "mileway" },
+    expect(parseChatBlocks("[[project:gaddi]]\n[[project:doori]]")).toEqual([
+      { kind: "widget", name: "project", arg: "gaddi" },
+      { kind: "widget", name: "project", arg: "doori" },
     ]);
   });
 
   it("lower-cases the name and arg so casing from the model can't break lookups", () => {
-    expect(parseChatBlocks("[[Project:MileWay]]")).toEqual([{ kind: "widget", name: "project", arg: "mileway" }]);
+    expect(parseChatBlocks("[[Project:DoorI]]")).toEqual([{ kind: "widget", name: "project", arg: "doori" }]);
   });
 
   it("passes unknown names through — validation belongs to the renderer", () => {
@@ -55,16 +55,16 @@ describe("parseChatBlocks", () => {
   });
 
   it("parses a directive inline inside a sentence", () => {
-    expect(parseChatBlocks("See [[project:kursi]] for the engine.")).toEqual([
+    expect(parseChatBlocks("See [[project:gaddi]] for the engine.")).toEqual([
       { kind: "text", text: "See" },
-      { kind: "widget", name: "project", arg: "kursi" },
+      { kind: "widget", name: "project", arg: "gaddi" },
       { kind: "text", text: "for the engine." },
     ]);
   });
 
   // ── The streaming rule: a half-arrived directive must never be shown ──────
   describe("partial streams", () => {
-    for (const tail of ["[[", "[[p", "[[proj", "[[project", "[[project:", "[[project:mile", "[[project:mileway", "[[project:mileway]"]) {
+    for (const tail of ["[[", "[[p", "[[proj", "[[project", "[[project:", "[[project:mile", "[[project:doori", "[[project:doori]"]) {
       it(`hides the unterminated tail ${JSON.stringify(tail)} while keeping the text before it`, () => {
         expect(parseChatBlocks(`Here it is:\n\n${tail}`)).toEqual([{ kind: "text", text: "Here it is:" }]);
       });
@@ -78,9 +78,9 @@ describe("parseChatBlocks", () => {
     });
 
     it("renders the widget as soon as the closing brackets arrive", () => {
-      expect(parseChatBlocks("Here it is:\n\n[[project:mileway]]")).toEqual([
+      expect(parseChatBlocks("Here it is:\n\n[[project:doori]]")).toEqual([
         { kind: "text", text: "Here it is:" },
-        { kind: "widget", name: "project", arg: "mileway" },
+        { kind: "widget", name: "project", arg: "doori" },
       ]);
     });
 
@@ -99,7 +99,7 @@ describe("parseChatBlocks", () => {
     });
 
     it("never leaks a bracket at any point of a character-by-character stream", () => {
-      const full = "Mileway is the one:\n\n[[project:mileway]]\n\nAnd the rooms:\n\n[[rooms]]\n\nAsk away.";
+      const full = "Doori is the one:\n\n[[project:doori]]\n\nAnd the rooms:\n\n[[rooms]]\n\nAsk away.";
       for (let i = 0; i <= full.length; i++) {
         const blocks = parseChatBlocks(full.slice(0, i));
         for (const b of blocks) {
@@ -118,7 +118,7 @@ const REPORT = {
   score: 78,
   role: "Senior Android Engineer",
   summary: "Strong on Compose and platform ownership; no production KMP.",
-  strengths: [{ need: "Compose at scale", evidence: "92% of a 738k-LOC app", project: "mileway" }],
+  strengths: [{ need: "Compose at scale", evidence: "92% of a 738k-LOC app", project: "doori" }],
   gaps: [{ need: "10+ years", note: "5+ years of Android, not 10." }],
 };
 const directive = (payload: unknown) => `[[jdfit:${JSON.stringify(payload)}]]`;
@@ -132,7 +132,7 @@ describe("parseChatBlocks — jdfit payloads", () => {
   });
 
   it("keeps parsing the reply after a payload closes", () => {
-    const blocks = parseChatBlocks(`${directive(REPORT)}\n\nWant the case study?\n\n[[project:mileway]]`);
+    const blocks = parseChatBlocks(`${directive(REPORT)}\n\nWant the case study?\n\n[[project:doori]]`);
     expect(blocks.map((b) => (b.kind === "widget" ? b.name : b.text))).toEqual([
       "jdfit",
       "Want the case study?",
@@ -258,7 +258,7 @@ describe("a finished stream with a directive that never completed", () => {
   });
 
   it("leaves a complete reply alone", () => {
-    for (const content of [`Here's the read:\n\n${directive(REPORT)}`, "Mileway is offline-first.\n\n[[rooms]]"]) {
+    for (const content of [`Here's the read:\n\n${directive(REPORT)}`, "Doori is offline-first.\n\n[[rooms]]"]) {
       expect(parseChatBlocks(content, true), content).toEqual(parseChatBlocks(content));
     }
   });
@@ -418,12 +418,12 @@ describe("widget-directive safety", () => {
 });
 
 // What the reader actually says out loud. Two bugs live here: speaking the
-// widget directives ("bracket bracket project colon mileway"), and speaking
+// widget directives ("bracket bracket project colon doori"), and speaking
 // markdown punctuation ("star star ninety-two percent star star").
 describe("speakableText", () => {
   it("drops the widget directives entirely", () => {
-    expect(speakableText("Mileway is offline-first.\n\n[[project:mileway]]\n\nWant the case study?")).toBe(
-      "Mileway is offline-first. Want the case study?",
+    expect(speakableText("Doori is offline-first.\n\n[[project:doori]]\n\nWant the case study?")).toBe(
+      "Doori is offline-first. Want the case study?",
     );
     expect(speakableText("Every room on this site:\n\n[[rooms]]")).toBe("Every room on this site:");
   });
@@ -465,8 +465,8 @@ describe("speakableText", () => {
   });
 
   it("is the copy text, minus the markdown — one source, two outputs", () => {
-    const reply = "**Mileway** is offline-first.\n\n[[project:mileway]]";
-    expect(plainText(reply)).toBe("**Mileway** is offline-first.");
-    expect(speakableText(reply)).toBe("Mileway is offline-first.");
+    const reply = "**Doori** is offline-first.\n\n[[project:doori]]";
+    expect(plainText(reply)).toBe("**Doori** is offline-first.");
+    expect(speakableText(reply)).toBe("Doori is offline-first.");
   });
 });

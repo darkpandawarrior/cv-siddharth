@@ -42,7 +42,7 @@ interface TreeNode {
   parent: number;
 }
 
-/** The Kursi/Gaddi ISMCTS half of the merged instrument — unchanged from
+/** The Kursi (now Gaddi) ISMCTS half of the merged instrument — unchanged from
  *  before the merge, just no longer the whole tab on its own. */
 function SimulatedSearchTree() {
   const [tierIndex, setTierIndex] = useState(0);

@@ -660,7 +660,7 @@ const WEB = { w: 460, h: 360, left: 14, right: 300, label: 318, top: 34, rowGap:
  * EVERY EDGE IS THE SAME THICKNESS, and the caption says why: `repos` is a bare
  * string array. There is one `modules` integer per PLUGIN and no per-repo
  * count anywhere in the data, so mapping modules to edge width would assert
- * "31 modules land on HireSignal" and "31 on Mileway" and "31 on PaymentsLab"
+ * "31 modules land on Candidai" and "31 on Doori" and "31 on PaymentsLab-KMP"
  * simultaneously — three fabricated magnitudes out of one real number.
  *
  * REPO RADIUS IS AREA-PROPORTIONAL, sqrt not linear, and with NO floor added

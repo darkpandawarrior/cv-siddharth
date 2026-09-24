@@ -45,8 +45,8 @@ What it does *not* yet do, concretely:
   one sentence that says this wasn't the AI talking.
 - **Suggestions are route-aware, not conversation-aware.** `chipsFor(pathname)` only
   looks at where the visitor is standing, never at what the assistant just showed them.
-  Ask about Mileway from the home page and the next chip row is still the generic
-  home set, not "what was the hardest part of Mileway."
+  Ask about Doori from the home page and the next chip row is still the generic
+  home set, not "what was the hardest part of Doori."
 - **A JD-fit card's gaps are a dead end.** They're the most useful part of the card and
   the only part with no next action — no way to ask "how would he close this" without
   typing it yourself.

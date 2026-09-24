@@ -9,7 +9,7 @@ import { projects } from "../data/profile.ts";
  * back to the <img> when the chosen source 404s — so pointing a source at a
  * derivative that no generator writes does not degrade, it breaks the image.
  *
- * rasterSources excluded `gif` and let everything else through, so DEADLOCK's
+ * rasterSources excluded `gif` and let everything else through, so Stutter's
  * echo-stutter.svg was handed an `.avif` sibling that has never existed and
  * rendered as four broken images on its case study. The allow-list now
  * mirrors gen-images.mjs exactly.
@@ -44,7 +44,7 @@ describe("rasterSources only claims derivatives that get generated", () => {
    * The protection is not lost, because it never lived here: a `<source>`
    * pointing at a derivative no generator writes is caught by the two tests
    * above, which pin rasterSources' allow-list against gen-images.mjs's own
-   * list exhaustively. That is what actually caught DEADLOCK's .svg.
+   * list exhaustively. That is what actually caught Stutter's .svg.
    *
    * What is left is the half that is real and was never covered: a screen
    * naming a file nobody committed. gen-images walks all of public/ and emits

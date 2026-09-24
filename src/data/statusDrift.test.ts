@@ -12,7 +12,7 @@ import { repoStatLine } from "../lib/projectStatLine.ts";
  *   - Mileway (now Doori) said 46 and 36 on the same card. 46 is the audited
  *     claim (claims.json `mileway-modules`: "36 local includes + 10 composed
  *     from kmp-toolkit"); repoStatLine was using the raw local count for
- *     Mileway while already summing local + composed for PaymentsLab.
+ *     Mileway (now Doori) while already summing local + composed for PaymentsLab (now PaymentsLab-KMP).
  *   - Kursi (now Gaddi) said 13 while its settings.gradle.kts had 14 — a
  *     `:cli` module landed on 2026-08-26 and the hand-written line was never
  *     updated.

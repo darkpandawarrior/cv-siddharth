@@ -5,14 +5,14 @@ Date: 2026-07-20 · Repo: cv-siddharth · Deploys: Vercel (push to main) → cv-
 ## Diagnosis (from live-site + source audit)
 
 1. **Text walls.** Below the hero, the home page is 100% text. Project cards carry 5–6 dense
-   multi-line bullets each; the Mileway case study and Mileway project card repeat the same
+   multi-line bullets each; the Doori case study and Doori project card repeat the same
    ~200-word content twice on one page; Dice experience has 10 dense bullets.
 2. **Media never surfaces.** `public/projects/` holds 45MB of screenshots/gifs, refreshed daily
    by automation — zero of it renders on the home page. Galleries only exist on detail pages.
 3. **3D is token.** AmbientScene is a faint 1400-star field; the hero phone is a CSS div.
    `three` + `@react-three/fiber` + `drei` are already installed and chunk-split.
 4. **Prose drift risk.** Automation syncs media but not prose; facts in `profile.ts` may lag
-   the source repos (Mileway V24, PaymentsLab rails, Kursi, career-ops PR list).
+   the source repos (Doori V24, PaymentsLab-KMP rails, Gaddi, career-ops PR list).
 
 ## Goals
 
@@ -29,7 +29,7 @@ Keep: dark identity, Android-green accent, sid.android brand, chat assistant, ex
   (e.g. `35 modules · 5 platforms · 149 tests`). All depth moves to the existing
   `ProjectDetail` pages. Card body copy budget: ≤ 40 words visible.
 - **Case studies**: stat-led compact cards — big metric, one-line problem, one-line outcome,
-  approach bullets collapsed behind an inline expander ("How → 3 bullets"). The Mileway
+  approach bullets collapsed behind an inline expander ("How → 3 bullets"). The Doori
   "featured case study" slot is replaced by a media banner card linking to `#project/mileway`
   (removes the duplication); Dice work (GPS, crashes, Compose, white-label) stays as the four
   case-study cards.
@@ -52,7 +52,7 @@ Keep: dark identity, Android-green accent, sid.android brand, chat assistant, ex
 ### 3. Content refresh (verified, not guessed)
 
 - Audit agent compares every factual claim in `src/data/profile.ts` against the local source
-  repos (`~/Repos/Android/…/Mileway`, PaymentsLab, Kursi, career-ops checkout) + their READMEs;
+  repos (`~/Repos/Android/…/Mileway`, PaymentsLab-KMP, Gaddi, career-ops checkout) + their READMEs;
   outputs a correction list. Copy rewrite applies corrections + the word budgets above.
 - Tone: metric-first, verbs, zero filler. The chatbot remains the "depth" escape hatch and
   cards say so once, not per-card.
