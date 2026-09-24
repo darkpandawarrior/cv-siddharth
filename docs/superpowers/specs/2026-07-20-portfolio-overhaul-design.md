@@ -30,7 +30,7 @@ Keep: dark identity, Android-green accent, sid.android brand, chat assistant, ex
   `ProjectDetail` pages. Card body copy budget: ≤ 40 words visible.
 - **Case studies**: stat-led compact cards — big metric, one-line problem, one-line outcome,
   approach bullets collapsed behind an inline expander ("How → 3 bullets"). The Doori
-  "featured case study" slot is replaced by a media banner card linking to `#project/mileway`
+  "featured case study" slot is replaced by a media banner card linking to `#project/doori`
   (removes the duplication); Dice work (GPS, crashes, Compose, white-label) stays as the four
   case-study cards.
 - **Experience**: first 4 headline bullets visible, rest behind "+ N more" expander. Each

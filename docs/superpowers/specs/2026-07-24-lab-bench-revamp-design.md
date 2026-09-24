@@ -105,7 +105,7 @@ justify one.
 
    Toggling stages should visibly move both readouts the way spike
    rejection actually moved GPS accuracy 50%→95% in production. Footer
-   links to both the Dice.tech case study and `/#project/mileway`, credited
+   links to both the Dice.tech case study and `/#project/doori`, credited
    to both.
 
    **Addendum (post-approval revisions):** the first implementation pass
@@ -145,11 +145,11 @@ justify one.
 
 | Lab | Metaphor | Live stat | Links to |
 |---|---|---|---|
-| **Doori** | Radial module graph; toggle "isolate features" between a tangled all-to-all blob and the real 13-feature-module star meeting only at `:app` | "cross-feature dependencies: N → 0" | `/#project/mileway` |
-| **PaymentsLab-KMP** | Particles from "checkout" bounce off with a red ✕ (no shared contract) or funnel through one `PaymentGateway` hub into 4 category bins (native/hosted/mobile-money/stub) — bin motif reused from Crash Triage, inverted | "66 gateways reachable · 0 gateway-specific code" | `/#project/paymentslab` |
-| **Gaddi** | Difficulty slider (Easy→Grandmaster) drives a live-growing Monte Carlo search tree, iteration count climbing 1.5k→16k, ending in a bot's bluff/fold call | "iterations: N · persona: X" | `/#project/kursi` |
-| **Candidai** | One query fans out to a ring of 62 provider dots; toggle SimHash de-dup on/off, watch duplicate listings collapse or pile up | "62 providers · N duplicates collapsed · 0 tokens spent" | `/#project/hiresignal` |
-| **Stutter** | Two replays of the same recorded input path overlap exactly (drift 0.000000); a "perturb" button edits one frame, paths visibly diverge, gate flips to BLOCKED | "drift: 0.000000 · gate: PASS" → "BLOCKED" | `/#project/deadlock` |
+| **Doori** | Radial module graph; toggle "isolate features" between a tangled all-to-all blob and the real 13-feature-module star meeting only at `:app` | "cross-feature dependencies: N → 0" | `/#project/doori` |
+| **PaymentsLab-KMP** | Particles from "checkout" bounce off with a red ✕ (no shared contract) or funnel through one `PaymentGateway` hub into 4 category bins (native/hosted/mobile-money/stub) — bin motif reused from Crash Triage, inverted | "66 gateways reachable · 0 gateway-specific code" | `/#project/paymentslab-kmp` |
+| **Gaddi** | Difficulty slider (Easy→Grandmaster) drives a live-growing Monte Carlo search tree, iteration count climbing 1.5k→16k, ending in a bot's bluff/fold call | "iterations: N · persona: X" | `/#project/gaddi` |
+| **Candidai** | One query fans out to a ring of 62 provider dots; toggle SimHash de-dup on/off, watch duplicate listings collapse or pile up | "62 providers · N duplicates collapsed · 0 tokens spent" | `/#project/candidai` |
+| **Stutter** | Two replays of the same recorded input path overlap exactly (drift 0.000000); a "perturb" button edits one frame, paths visibly diverge, gate flips to BLOCKED | "drift: 0.000000 · gate: PASS" → "BLOCKED" | `/#project/stutter` |
 
 No new content/data files — every number above already exists in
 `profile.ts` / `projectStats.ts`.

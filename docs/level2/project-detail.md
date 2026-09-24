@@ -143,7 +143,7 @@ const marqueeSrcs = items.map((i) => i.src).filter((src) => src !== outcomeShot)
 The highest-effort item, but it's compression of copy that already exists, not new research — and it's the one that actually makes the feature real rather than a code path nothing calls. Worked example, sourced entirely from existing `profile.ts` text (nothing new asserted):
 
 ```ts
-// kursi — sourced from the existing "Same game, three depths" section body
+// gaddi — sourced from the existing "Same game, three depths" section body
 problem:
   "A hidden-information bluffing game handed every player the same expert " +
   "board on turn one — suspicion odds, a live teleprinter log — which is " +
