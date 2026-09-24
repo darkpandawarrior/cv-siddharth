@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-09-23T22:37:21.157Z",
+  "generatedAt": "2026-09-24T23:06:04.155Z",
   "from": "2019-01",
   "to": "2026-09",
   "months": [
@@ -427,65 +427,65 @@ export const timeline: Timeline = {
       "source": "lichess game archive plus chess.com monthly archives, one row per game, from BOTH platforms, because he moved from one to the other in 2023 and a lane built on either alone reads as though he stopped",
       "months": {
         "2019-01": 0,
-        "2019-02": 81,
-        "2019-03": 220,
-        "2019-04": 317,
-        "2019-05": 195,
-        "2019-06": 264,
-        "2019-07": 266,
-        "2019-08": 184,
-        "2019-09": 184,
-        "2019-10": 266,
-        "2019-11": 301,
-        "2019-12": 203,
-        "2020-01": 136,
-        "2020-02": 236,
-        "2020-03": 173,
-        "2020-04": 220,
-        "2020-05": 239,
-        "2020-06": 292,
-        "2020-07": 274,
-        "2020-08": 271,
-        "2020-09": 177,
-        "2020-10": 135,
-        "2020-11": 495,
-        "2020-12": 619,
-        "2021-01": 606,
-        "2021-02": 370,
-        "2021-03": 390,
-        "2021-04": 377,
-        "2021-05": 361,
-        "2021-06": 431,
-        "2021-07": 514,
-        "2021-08": 505,
-        "2021-09": 325,
-        "2021-10": 152,
-        "2021-11": 315,
-        "2021-12": 339,
-        "2022-01": 296,
-        "2022-02": 393,
-        "2022-03": 442,
-        "2022-04": 466,
-        "2022-05": 221,
-        "2022-06": 358,
-        "2022-07": 287,
-        "2022-08": 209,
-        "2022-09": 126,
-        "2022-10": 51,
-        "2022-11": 162,
-        "2022-12": 355,
-        "2023-01": 268,
-        "2023-02": 168,
-        "2023-03": 83,
-        "2023-04": 158,
-        "2023-05": 246,
-        "2023-06": 202,
-        "2023-07": 329,
-        "2023-08": 253,
-        "2023-09": 205,
+        "2019-02": 0,
+        "2019-03": 0,
+        "2019-04": 0,
+        "2019-05": 0,
+        "2019-06": 0,
+        "2019-07": 0,
+        "2019-08": 0,
+        "2019-09": 0,
+        "2019-10": 0,
+        "2019-11": 0,
+        "2019-12": 0,
+        "2020-01": 0,
+        "2020-02": 0,
+        "2020-03": 0,
+        "2020-04": 0,
+        "2020-05": 0,
+        "2020-06": 0,
+        "2020-07": 0,
+        "2020-08": 0,
+        "2020-09": 0,
+        "2020-10": 0,
+        "2020-11": 0,
+        "2020-12": 0,
+        "2021-01": 17,
+        "2021-02": 2,
+        "2021-03": 0,
+        "2021-04": 0,
+        "2021-05": 0,
+        "2021-06": 0,
+        "2021-07": 0,
+        "2021-08": 0,
+        "2021-09": 0,
+        "2021-10": 0,
+        "2021-11": 0,
+        "2021-12": 0,
+        "2022-01": 0,
+        "2022-02": 0,
+        "2022-03": 0,
+        "2022-04": 0,
+        "2022-05": 0,
+        "2022-06": 0,
+        "2022-07": 0,
+        "2022-08": 0,
+        "2022-09": 0,
+        "2022-10": 0,
+        "2022-11": 0,
+        "2022-12": 0,
+        "2023-01": 71,
+        "2023-02": 98,
+        "2023-03": 47,
+        "2023-04": 141,
+        "2023-05": 245,
+        "2023-06": 200,
+        "2023-07": 328,
+        "2023-08": 251,
+        "2023-09": 204,
         "2023-10": 99,
         "2023-11": 238,
-        "2023-12": 104,
+        "2023-12": 95,
         "2024-01": 49,
         "2024-02": 95,
         "2024-03": 98,
@@ -498,7 +498,7 @@ export const timeline: Timeline = {
         "2024-10": 83,
         "2024-11": 34,
         "2024-12": 47,
-        "2025-01": 31,
+        "2025-01": 28,
         "2025-02": 19,
         "2025-03": 9,
         "2025-04": 20,
@@ -518,12 +518,12 @@ export const timeline: Timeline = {
         "2026-06": 296,
         "2026-07": 272,
         "2026-08": 205,
-        "2026-09": 145
+        "2026-09": 167
       },
-      "total": 19107,
+      "total": 5010,
       "peak": {
-        "ym": "2020-12",
-        "v": 619
+        "ym": "2023-07",
+        "v": 328
       }
     },
     {
@@ -752,9 +752,125 @@ export const timeline: Timeline = {
         "2026-06": 1391,
         "2026-07": 2906,
         "2026-08": 1479,
-        "2026-09": 1856
+        "2026-09": 1879
       },
-      "total": 8160,
+      "total": 8183,
+      "milestones": [
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(deps): make js-yaml imports work on both 4.x and 5.x"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(scan): take the shared lock for scan-history.tsv appends"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(agent-inbox): concurrent adds silently dropped queued requests"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(liveness): a rate-limited posting was classified expired, not uncertain"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(rank): opt-in LLM relevance re-ranker for pipeline.md"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv): Korean and Traditional Chinese CVs had no font rule"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(states): aliases the engine accepts were missing from states.yml"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(web): states.yml cached for the process lifetime, so core updates go unseen"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(scan): --company/--posted-after/--posted-before ignored in =value form"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv): $-patterns in candidate text splice the template into the CV"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(dedup): distinct non-Latin companies merged into one, deleting a row"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter"
+        },
+        {
+          "ym": "2026-07",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(agent-inbox): queue requests for the next session"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(dashboard): rewrite only the Status cell on status update"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(providers): add Breezy HR provider"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(providers): add BambooHR provider"
+        },
+        {
+          "ym": "2026-09",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "openMF/kmp-project-template fix(core-base/common): un-swap default and io in the Android dispatchers"
+        },
+        {
+          "ym": "2026-09",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "openMF/kmp-project-template fix(ci): guard the empty successful_tasks expansion in ci-prepush.sh"
+        }
+      ],
       "peak": {
         "ym": "2026-07",
         "v": 2906
