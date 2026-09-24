@@ -1,4 +1,4 @@
-// Refreshes the two fastest-drifting HireSignal numbers (merged PR count,
+// Refreshes the two fastest-drifting Candidai numbers (merged PR count,
 // provider count) in profile.ts via targeted regex — career-ops-hq/career-ops
 // merges provider PRs regularly, so these go stale faster than anything else
 // on the site. The rest of the project card stays hand-curated prose. A fetch
@@ -112,7 +112,7 @@ try {
   sub(/\{ value: "\d+", label: "PRs merged upstream" \}/, `{ value: "${prs}", label: "PRs merged upstream" }`);
   /* REMOVED, not repaired: `cardMedia`'s hand-written alt text.
    *
-   * This pattern maintained the "HireSignal — active, 24 PRs merged upstream"
+   * This pattern maintained the "Candidai — active, 24 PRs merged upstream"
    * string in profile.ts's cardMedia map. It had already gone dead once when
    * the house dash sweep turned that em dash into a colon, and the daily
    * refresh exited 1 for eight straight days (2026-08-20 to 08-27) — and
@@ -160,7 +160,7 @@ try {
    * not: the file was never opened here, so providerCount sat at 78 while the
    * same run wrote 81 into the case study and the lab. A comment claiming a
    * refresh that no code performs is the quietest version of this whole bug
-   * class, and hiresignalNumbers.test.ts is what finally caught it. */
+   * class, and candidaiNumbers.test.ts is what finally caught it. */
   const providerRe = /export const providerCount = \d+;/;
   const starRe = /export const upstreamStars = "[^"]*";/;
   const hs = readFileSync(careerOpsUpstreamPath, "utf8");
@@ -196,11 +196,11 @@ try {
   for (const [, n] of joined.matchAll(/(\w+) merged (?:PRs|pull requests)/g))
     if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile/{projects,openSource}.ts`);
   if (misses.length) {
-    console.error(`[gen-hiresignal-stats] dead patterns / stale counts:\n  ${misses.join("\n  ")}`);
+    console.error(`[gen-candidai-stats] dead patterns / stale counts:\n  ${misses.join("\n  ")}`);
     process.exitCode = 1;
   }
 
-  console.log(`[gen-hiresignal-stats] prs=${prs} providers=${providers}`);
+  console.log(`[gen-candidai-stats] prs=${prs} providers=${providers}`);
 } catch (err) {
-  console.warn("[gen-hiresignal-stats] fetch failed, leaving profile.ts untouched —", err.message);
+  console.warn("[gen-candidai-stats] fetch failed, leaving profile.ts untouched —", err.message);
 }

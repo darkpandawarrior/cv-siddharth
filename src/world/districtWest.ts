@@ -117,7 +117,7 @@ export function employerBlocks(): EmployerBlock[] {
 //   - gps-accuracy / crash-reduction / compose-migration are Dice case
 //     studies verbatim (each mirrors one of Dice's own tier:1 bullets).
 //   - white-label mirrors Jugnoo's "White-Label Platform" bullet.
-//   - mileway is a personal open-source project with no employer bullet
+//   - doori is a personal open-source project with no employer bullet
 //     behind it, but its slug IS a projectStats key — it inherits Dice's
 //     span under the same "projectStats slug -> Dice work" rule the project
 //     towers below use, rather than getting an invented employer link.

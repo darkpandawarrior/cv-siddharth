@@ -312,7 +312,7 @@ The **repeatable procedure** (apply to every branch in `App.tsx`'s route switch,
     return <ResumeView />;
   }
   ```
-- [ ] `src/routes/project.$slug.tsx` (SSR, per-project OG — verified `/p/<slug>/og.png` cards exist for mileway/kursi/paymentslab/hiresignal/deadlock):
+- [ ] `src/routes/project.$slug.tsx` (SSR, per-project OG — verified `/p/<slug>/og.png` cards exist for doori/gaddi/paymentslab-kmp/candidai/stutter):
   ```tsx
   import { createFileRoute } from "@tanstack/react-router";
   import { projects } from "../data/profile";
@@ -354,7 +354,7 @@ The **repeatable procedure** (apply to every branch in `App.tsx`'s route switch,
   (Confirm the exact field names `title`/`blurb` against `src/data/profile.ts`'s project record at execution time; adjust `p?.blurb` to the actual short-description field if named differently.)
 - [ ] Verify: `npm run dev`, then in another shell:
   `curl -s http://localhost:5173/resume | grep -q "Résumé — Siddharth" && echo SSR-RESUME-OK`
-  `curl -s http://localhost:5173/project/mileway | grep -q 'og:image' && echo SSR-PROJECT-OK`
+  `curl -s http://localhost:5173/project/doori | grep -q 'og:image' && echo SSR-PROJECT-OK`
   `curl -s http://localhost:5173/ | grep -qi "Senior Android Engineer" && echo SSR-HOME-OK`
 - [ ] Expected: all three print `*-OK` (server-rendered HTML present in the raw response, proving SSR).
 - [ ] Commit: `feat(routes): SSR routes for home, resume, project detail`
@@ -438,7 +438,7 @@ Verify against the **production server**, not `npm run dev` (see the dev-vs-prod
   # SSR: server HTML contains route content in the RAW response (no JS executed)
   curl -s http://localhost:4173/         | grep -aqi "Senior Android Engineer" && echo HOME-SSR
   curl -s http://localhost:4173/resume   | grep -aqi "Experience" && echo RESUME-SSR
-  curl -s http://localhost:4173/project/mileway | grep -aqi "mileway" && echo PROJECT-SSR
+  curl -s http://localhost:4173/project/doori | grep -aqi "doori" && echo PROJECT-SSR
   # CSR: raw server HTML is the shell only; the route's interactive content is NOT
   # pre-rendered (arrives via the client bundle). Assert the shell is present AND
   # the route's signature body content is ABSENT from the raw response.
@@ -517,7 +517,7 @@ The handler and `api/chat.ts` (`export const config = { runtime: "edge" }`) are 
 - [ ] Create `src/Picture.tsx`:
   ```tsx
   // AVIF → WebP → original fallback. src is the original raster path
-  // (e.g. "/projects/kursi/screenshots/home.png"); siblings are produced by
+  // (e.g. "/projects/gaddi/screenshots/home.png"); siblings are produced by
   // scripts/gen-images.mjs. Animated gifs render as a plain <img>.
   type Props = { src: string; alt: string; className?: string; loading?: "lazy" | "eager" };
   export function Picture({ src, alt, className, loading = "lazy" }: Props) {
@@ -542,7 +542,7 @@ Only three data-driven surfaces render project rasters (galleries/cards are arra
 - [ ] `src/ProjectDetail.tsx:508` gallery thumb — replace `<img src={it.src} alt={it.caption} loading="lazy" className="aspect-[9/19] h-full w-full object-cover" />` with `<Picture src={it.src} alt={it.caption} className="aspect-[9/19] h-full w-full object-cover" />`.
 - [ ] `src/ProjectDetail.tsx:569` lightbox — replace the `<img key=… src={items[idx].src} …/>` with `<Picture src={items[idx].src} alt={items[idx].caption} loading="eager" className="lb-in max-h-[85vh] max-w-full rounded-xl shadow-2xl" />` (keep the outer `onClick` stopPropagation by wrapping if needed — the enlarge-on-click handler is on the `<img>`; move it to the `<picture>` wrapper or keep a plain `<img>` here if the click handler is load-bearing). Add `import { Picture } from "./Picture";`.
 - [ ] `src/App.tsx` `CARD_MEDIA` render site (the card-top media in the `projects.map` around line 622) — swap its `<img>` for `<Picture>` (handles the `.gif` entries via the gif passthrough).
-- [ ] Verify: `npm run dev`, open `/project/mileway` → gallery + lightbox render (AVIF served where the browser supports it, PNG/GIF otherwise); DevTools Network shows `.avif` requests.
+- [ ] Verify: `npm run dev`, open `/project/doori` → gallery + lightbox render (AVIF served where the browser supports it, PNG/GIF otherwise); DevTools Network shows `.avif` requests.
 - [ ] Commit: `perf(images): render project media via Picture (AVIF/WebP)`
 
 #### Task 17 — Self-host fonts via @fontsource, drop the Google Fonts CDN
@@ -715,7 +715,7 @@ The Google Fonts `<link>` (old `index.html:40-45`) is already gone (index.html d
   const routes = [
     { path: "/", expect: /Senior Android Engineer/i },
     { path: "/resume", expect: /Experience/i },
-    { path: "/project/mileway", expect: /mileway/i },
+    { path: "/project/doori", expect: /doori/i },
     { path: "/lab", expect: /Lab Bench/i },
   ];
 
@@ -744,7 +744,7 @@ The Google Fonts `<link>` (old `index.html:40-45`) is already gone (index.html d
     "ci": {
       "collect": {
         "startServerCommand": "npm run serve",
-        "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/mileway"],
+        "url": ["http://localhost:4173/", "http://localhost:4173/resume", "http://localhost:4173/project/doori"],
         "numberOfRuns": 3
       },
       "assert": {
@@ -795,14 +795,14 @@ The Google Fonts `<link>` (old `index.html:40-45`) is already gone (index.html d
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "regions": ["bom1"],
     "headers": [
-      { "source": "/kursi-app/(.*)\\.wasm", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+      { "source": "/gaddi-app/(.*)\\.wasm", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
       { "source": "/paymentslab-app/(.*)\\.wasm", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
-      { "source": "/mileway-app/(.*)\\.wasm", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+      { "source": "/doori-app/(.*)\\.wasm", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
     ]
   }
   ```
   Region: verify current Hobby-plan region options and any restriction with the authenticated CLI before committing the value — `vercel` is installed and linked (`.vercel/project.json` → project `cv-siddharth`). The chat stays on Edge (globally distributed; region-independent), so `regions` only affects the Node SSR function.
-- [ ] Verify Brotli + WASM headers on a preview deploy (do not assume): `vercel deploy` (preview), then `curl -sI -H 'accept-encoding: br' https://<preview-url>/kursi-app/<file>.wasm | grep -iE 'content-encoding|cache-control'` → expect `content-encoding: br` and the immutable cache header.
+- [ ] Verify Brotli + WASM headers on a preview deploy (do not assume): `vercel deploy` (preview), then `curl -sI -H 'accept-encoding: br' https://<preview-url>/gaddi-app/<file>.wasm | grep -iE 'content-encoding|cache-control'` → expect `content-encoding: br` and the immutable cache header.
 - [ ] Commit: `chore(vercel): Start-aware vercel.json, WASM headers, region`
 
 #### Task 26 — Update README (Live link + deploy section)

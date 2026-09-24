@@ -73,6 +73,13 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run check:generated
 
+      # The 2026-09-05 rename touched hundreds of lines in one pass; this is
+      # the mechanical gate that keeps a stray old name from creeping back in
+      # on some later, unrelated PR that nobody thinks to re-check by eye.
+      - name: No old product names in readable text
+        if: ${{ !cancelled() }}
+        run: npm run check:old-names
+
       # A bare vite build, not `npm run build` — see the comment at the top
       # of this file for why the two are deliberately different here.
       - name: Build (client + server, no prebuild)

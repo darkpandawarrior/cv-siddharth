@@ -12,9 +12,9 @@ import { useCanvasLoop } from "./useCanvasLoop.ts";
  * they just pile up.
  */
 
-// Kept in step with profile.ts by scripts/gen-hiresignal-stats.mjs, which
+// Kept in step with profile.ts by scripts/gen-candidai-stats.mjs, which
 // already refreshes this figure from the live GitHub API in nine other places.
-// It was a bare 62 while HireSignal's own data said 78 — the lab was
+// It was a bare 62 while Candidai's own data said 78 — the lab was
 // understating the work it exists to demonstrate.
 const TOTAL_PROVIDERS = 89;
 const NAMED_PROVIDERS = ["Greenhouse", "Ashby", "Lever"];

@@ -226,7 +226,7 @@ export const GENERATORS = [
     inputs: [], outputs: ["public/projects/*/showcase/**"], stages: { refresh: 2 } },
   { id: "project-stats", script: "gen-project-stats.mjs", npmName: "gen:stats", kind: "network",
     inputs: [], outputs: ["src/data/projectStats.ts"], stages: { refresh: 3 } },
-  { id: "hiresignal-stats", script: "gen-hiresignal-stats.mjs", npmName: "gen:hiresignal", kind: "network",
+  { id: "candidai-stats", script: "gen-candidai-stats.mjs", npmName: "gen:candidai", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
     // updated number into four otherwise hand-authored files. profile.ts
     // itself is a re-export barrel post-arch-L15 — the prose these numbers

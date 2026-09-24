@@ -196,7 +196,13 @@
 }
 
 
-.project-studio-heading h1 { font-size: clamp(3.5rem, 6vw, 6rem); letter-spacing: -.06em; }
+/* ponytail: matches the design-system h1 scale (clamp(2.5rem, 6vw, 3.5rem)) instead
+   of the old clamp(3.5rem, 6vw, 6rem)/-.06em pair. That larger size overflowed its
+   two-col grid cell for any name close to "PaymentsLab-KMP" length: the only valid
+   break (the hyphen) still didn't fit, so the line overflowed behind the neighbouring
+   preview panel and the hyphen rendered hidden. Smaller scale, add a size ceiling if a
+   future name is even longer. */
+.project-studio-heading h1 { font-size: clamp(2.5rem, 6vw, 3.5rem); }
 .project-studio-preview {
   position: relative; display: grid; place-items: center; min-height: 370px;
   width: 100%; padding: 2rem; overflow: hidden; isolation: isolate;

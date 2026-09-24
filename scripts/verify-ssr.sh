@@ -24,7 +24,7 @@ fail=0
 # SSR: server HTML contains route content in the RAW response (no JS executed).
 curl -s "$BASE/" | grep -aqi "Senior Android Engineer" && echo HOME-SSR || { echo "FAIL: HOME-SSR"; fail=1; }
 curl -s "$BASE/resume" | grep -aqi "Experience" && echo RESUME-SSR || { echo "FAIL: RESUME-SSR"; fail=1; }
-curl -s "$BASE/project/mileway" | grep -aqi "mileway" && echo PROJECT-SSR || { echo "FAIL: PROJECT-SSR"; fail=1; }
+curl -s "$BASE/project/doori" | grep -aqi "doori" && echo PROJECT-SSR || { echo "FAIL: PROJECT-SSR"; fail=1; }
 
 # CSR: raw server HTML is the shell only; the route's interactive content is
 # NOT pre-rendered (arrives via the client bundle). Assert the shell is

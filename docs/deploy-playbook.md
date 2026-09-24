@@ -18,7 +18,7 @@ anyone visits the site. Vercel's own deploys are metered on the Hobby plan the s
 here means an agent or a merged PR can spend the owner's money without him in the loop. Every step
 below is a command he runs himself.
 
-## Candidai (HireSignal) server
+## Candidai (formerly HireSignal) server
 
 The repo (`Android/HireSignal`) already carries the deploy target:
 
@@ -29,8 +29,8 @@ The repo (`Android/HireSignal`) already carries the deploy target:
 
 Steps, from `Android/HireSignal`:
 
-1. `fly apps create hiresignal-server` (one time; skip if the app already exists).
-2. `fly volumes create hiresignal_data --region bom --size 1` (one time).
+1. `fly apps create candidai-server` (one time; skip if the app already exists).
+2. `fly volumes create candidai_data --region bom --size 1` (one time).
 3. `fly secrets set <whatever the server's Spring profile needs>` — check
    `server/src/main/resources/application.yml` for which env vars are read before assuming none
    are; do not commit a secret to `fly.toml` itself.
@@ -38,7 +38,7 @@ Steps, from `Android/HireSignal`:
 5. `fly status` and hit `/actuator/health` on the returned URL to confirm the SQLite-backed index
    came up before pointing anything at it.
 
-Once a URL exists: add it to the `hiresignal` project record in `src/data/profile.ts` (a
+Once a URL exists: add it to the `candidai` project record in `src/data/profile.ts` (a
 `liveBackendUrl`-shaped field, matching how `liveUrl` already works for the bundled apps) and wire
 ProjectDetail to show it. That code path is not built yet — this playbook documents the deploy side
 so it can land the moment the owner has run the steps above and has a URL to give it.
@@ -86,12 +86,12 @@ Pages tier, not a caching decision.
 That path needs no backend, no Fly app and no owner-run deploy step beyond the one-time
 `PAGES_DEPLOY_TOKEN` secret above; it ships as part of a normal `cv-siddharth` PR once published.
 
-Candidai (HireSignal) targets Web the same way (`webApp`, wasmJs, Compose Multiplatform) and belongs
+Candidai (formerly HireSignal) targets Web the same way (`webApp`, wasmJs, Compose Multiplatform) and belongs
 on this same path once its build is green. As of this writing it is not:
 `./gradlew :webApp:wasmJsBrowserDistribution` in `Android/HireSignal` fails at
 `kotlinWasmStoreYarnLock` with "Lock file was changed. Run the `kotlinWasmUpgradeYarnLock` task to
 actualize lock file" — a yarn-lock drift in that repo, fixed by running
 `./gradlew kotlinWasmUpgradeYarnLock` there and committing the updated lock file. That is a change
 to `Android/HireSignal`, not to this repo, so it is out of this lane's scope; once it lands, the
-`heavy/hiresignal-app/` copy and the `liveUrl` field are a five-minute follow-up here, copying the
+`heavy/candidai-app/` copy and the `liveUrl` field are a five-minute follow-up here, copying the
 Doori/Gaddi/PaymentsLab-KMP pattern exactly.

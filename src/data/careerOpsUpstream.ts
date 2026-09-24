@@ -9,7 +9,7 @@
  * reads LAB_TABS as undefined at import time — a blank page, not a type error.
  * This file imports nothing, so it cannot be part of any cycle.
  *
- * Both are refreshed by scripts/gen-hiresignal-stats.mjs, which anchors on the
+ * Both are refreshed by scripts/gen-candidai-stats.mjs, which anchors on the
  * whole declaration line. Three facts now, not two: merged PRs, providers,
  * stars. The PR count stays in profile.ts because the résumé already imports
  * it from there.

@@ -2939,10 +2939,10 @@ html.resume-mode .palette-trigger {
   height: clamp(11rem, 22vw, 17rem);
   /* No forced aspect-ratio. `aspect-ratio: 9/19.5` is a phone, and object-cover
      inside it cropped every landscape capture to an unreadable vertical sliver —
-     this site's own route captures are all 1440x900, and Kursi's are mostly
+     this site's own route captures are all 1440x900, and Gaddi's are mostly
      1440x900 desktop frames. Exactly the bug the gallery rail below already
      fixed for itself: fixed height, natural width, capped. The cap lives on the
-     img (with object-contain) so a genuinely extreme strip — PaymentsLab ships
+     img (with object-contain) so a genuinely extreme strip — PaymentsLab-KMP ships
      component captures as wide as 6.67:1 — letterboxes instead of running
      1,900px across the band. */
   flex-shrink: 0;

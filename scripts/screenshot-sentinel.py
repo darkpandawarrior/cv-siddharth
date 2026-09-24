@@ -148,7 +148,7 @@ def main() -> int:
                 continue
             if not any(key in c or c in key for c in cap_keys):
                 findings["uncaptured"].append(screen)
-        # Opt-in: it assumes captures are NAMED after screens. Kursi names its by flow state
+        # Opt-in: it assumes captures are NAMED after screens. Gaddi names its by flow state
         # (4p_pick_action), so every capture reads as orphaned and 40 false positives bury the two
         # findings that matter. A check nobody can trust is a check nobody reads.
         screen_keys = {normalise(s) for s in screens}
