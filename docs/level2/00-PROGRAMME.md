@@ -31,7 +31,7 @@ Where an increment is genuinely blocked, the blocker is named.
 ### Wave 0 — Foundations (build once, five specs consume them)
 
 **0 · Widen the a11y gate before widening the surface.** `e2e/a11y.spec.ts`'s `ROUTES` is
-`/, /hire, /resume, /project/mileway, /lab, /terminal, /blueprint, /compose, /forge, /map,
+`/, /hire, /resume, /project/doori, /lab, /terminal, /blueprint, /compose, /forge, /map,
 /playground, /pulse, /loopdown, /chess`. **`/excelsior`, `/ink` and `/read/$slug` are not in it.**
 Increments 13, 14, 18 and 20 all add interactive controls (a range input, two dialogs, a reordered
 `/ink` body) to routes nothing scans today. Add the three routes now, while they still pass, so

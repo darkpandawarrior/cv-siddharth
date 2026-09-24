@@ -262,7 +262,7 @@ plus the two lab components:
   the exact hazard `LabBench.tsx`'s own top-of-file comments already document
   (SSR + bundle-weight reasons both `SignalLabPane` and `ChessSearchLab` are
   lazy today).
-- `ProjectDetail.tsx:22-27`: `kursi: "search"` → `kursi: "search-trees"`.
+- `ProjectDetail.tsx:22-27`: `gaddi: "search"` → `gaddi: "search-trees"`.
   `App.tsx` doesn't reference either key directly (only `LAB_OF` in those two
   files does), so that's the full call-site surface.
 
@@ -276,7 +276,7 @@ sources), gate which one is live behind a two-option accessible toggle (a
 between two data sources). Keep both instruments' existing controls
 (difficulty tier buttons for Gaddi; depth-preset + move-number slider for the
 real engine) visible only for the currently selected mode. Keep both
-`the full story →` links (`/project/kursi` and `/chess`) — the merge
+`the full story →` links (`/project/gaddi` and `/chess`) — the merge
 consolidates the *tab*, not either project's narrative.
 
 This is the one "merge, never delete" opportunity in the bench: nothing said
