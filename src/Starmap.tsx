@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Html, Instance, Instances, Line, OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import type { Mesh } from "three";
+import { useReducedMotion } from "./SceneActivity.tsx";
 import { anthology } from "./data/anthology.ts";
 import { isRevisited, worldKeys, worldSeasons } from "./data/crossnav.ts";
 import type { StarWorld } from "./data/anthology.ts";
@@ -462,10 +463,11 @@ function Fences(): JSX.Element {
 function Scene({ concluded, onOpen, season = null }: StarmapProps): JSX.Element {
   const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [quality, setQuality] = useState(true);
-  // Read once at mount, same as every other 3D scene in this codebase — a
-  // setting change mid-session getting a stale answer here is an acceptable
-  // trade against re-checking matchMedia every render.
-  const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  // Live read (useSyncExternalStore over matchMedia's own change event, see
+  // SceneActivity.tsx) — the design system's live-reduced-motion contract
+  // rules out a mount-once snapshot: a setting change mid-session, or a
+  // Playwright test calling emulateMedia after load, has to reach this scene.
+  const reducedMotion = useReducedMotion();
 
   return (
     <>

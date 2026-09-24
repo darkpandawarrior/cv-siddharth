@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 import * as THREE from "three";
 import { Color } from "three";
 import { useFrame } from "@react-three/fiber";
@@ -13,6 +13,10 @@ import {
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
 import { worldPalette, dim , laneColors} from "./palette.ts";
+import { useStudioModel } from "../three/models.ts";
+import { deviceTier } from "./deviceTier.ts";
+import { PLACEMENTS } from "./worldData.ts";
+import { LABEL_HEIGHT } from "./pavilionGeometry.ts";
 
 /**
  * WEST DISTRICT'S GEOMETRY — "what he was paid for," built.
@@ -328,6 +332,94 @@ function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element
  * collide with a room name.
  */
 
+// ── fiction-world monuments ─────────────────────────────────────────────
+
+/**
+ * The four Morkinstar districts (`/canon`, `/anthology`, `/ink`,
+ * `/excelsior`) already have a pavilion each (Pavilions.tsx's generic
+ * desk-scale shapes) — this adds the one thing those shapes don't carry: a
+ * silhouette specific to what that room actually is, the way West District's
+ * case-study obelisks and project towers sit alongside its own pavilions.
+ * `world-monuments.glb` (scripts/blender/world-monuments.py) ships all four
+ * as separate named nodes in one file — an obelisk for the founding lore, a
+ * stepped ziggurat for the anthology's year bands, a gate for the threshold
+ * into the written world, and a lectern for the print archive.
+ *
+ * Floated above each pavilion's own floating name label (`LABEL_HEIGHT`,
+ * pavilionGeometry.ts) rather than offset to the side: every other family in
+ * this file derives its footprint straight off `districtWest.ts` and feeds
+ * `obstacles.ts`'s collider list, but a fiction monument has no data-derived
+ * width to footprint, and stacking it in Y is the one placement that cannot
+ * collide with a neighbouring pavilion's approach box (worldGeometry.test.ts's
+ * 8m spacing bound is a footprint check, not a headroom one).
+ */
+const FICTION_MONUMENT_NODES: Record<string, string> = {
+  "/canon": "monument-canon",
+  "/anthology": "monument-anthology",
+  "/ink": "monument-ink",
+  "/excelsior": "monument-excelsior",
+};
+
+const MONUMENT_TARGET_HEIGHT = 1.6; // comparable to a case-study obelisk, scaled down for a rooftop spire
+const MONUMENT_CLEARANCE = 1.2; // metres above the room's own floating label, so the two never overlap
+
+function monumentY(to: string): number | null {
+  const placement = PLACEMENTS.find((p) => p.to === to);
+  if (!placement) return null; // never happens once worldData.test.ts's registry invariant is green
+  return placement.position[1] + LABEL_HEIGHT[placement.shape] + MONUMENT_CLEARANCE;
+}
+
+/** Scaled off its own measured bounding box, same pattern as
+ *  FoundationHub.tsx's `GlbKeystone` — the asset's authored scale is
+ *  Blender-script-internal and not a number this file should assume. */
+function GlbMonument({ to, node }: { to: string; node: string }): JSX.Element | null {
+  const { scene } = useStudioModel("world-monuments");
+  const placement = PLACEMENTS.find((p) => p.to === to);
+  const object = useMemo(() => scene.getObjectByName(node), [scene, node]);
+  const scale = useMemo(() => {
+    if (!object) return 1;
+    const size = new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3());
+    return MONUMENT_TARGET_HEIGHT / (size.y || 1);
+  }, [object]);
+  if (!placement || !object) return null;
+  const [x, , z] = placement.position;
+  return <primitive object={object} position={[x, monumentY(to)!, z]} scale={scale} />;
+}
+
+/** deviceTier 3 (throttled) fallback — the same low-poly primitive family
+ *  Monuments.tsx's own case-study obelisks use, so a district the GLB budget
+ *  can't afford still reads as "a monument," not as a missing object. */
+function PrimitiveMonument({ to }: { to: string }): JSX.Element | null {
+  const c = worldPalette();
+  const y = monumentY(to);
+  const placement = PLACEMENTS.find((p) => p.to === to);
+  if (!placement || y === null) return null;
+  const [x, , z] = placement.position;
+  return (
+    <mesh position={[x, y, z]} castShadow receiveShadow>
+      <cylinderGeometry args={[0.25, 0.45, MONUMENT_TARGET_HEIGHT, 4]} />
+      <meshStandardMaterial color={c.surface} emissive={c.accent} emissiveIntensity={0.5} roughness={0.4} metalness={0.25} flatShading />
+    </mesh>
+  );
+}
+
+function FictionMonuments(): JSX.Element {
+  const tier = deviceTier();
+  return (
+    <>
+      {Object.entries(FICTION_MONUMENT_NODES).map(([to, node]) =>
+        tier === 3 ? (
+          <PrimitiveMonument key={to} to={to} />
+        ) : (
+          <Suspense key={to} fallback={<PrimitiveMonument to={to} />}>
+            <GlbMonument to={to} node={node} />
+          </Suspense>
+        ),
+      )}
+    </>
+  );
+}
+
 export function Monuments(): JSX.Element {
   const blocks = useMemo(() => employerBlocks(), []);
   const monuments = useMemo(() => caseStudyMonuments(), []);
@@ -339,6 +431,7 @@ export function Monuments(): JSX.Element {
       <CaseStudyObelisks monuments={monuments} />
       <ProjectTowerShafts towers={towers} />
       <ProjectTowerCrowns towers={towers} />
+      <FictionMonuments />
     </>
   );
 }

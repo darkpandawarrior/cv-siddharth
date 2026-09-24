@@ -10,6 +10,7 @@ import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { anthology, anthologyEntries, entriesOfSeason, unfiledPieces, siblingSeries } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
 // The register's targets and this route's validateSearch have to agree about
@@ -163,6 +164,13 @@ function AnthologyRoute() {
               {TOTAL_WORDS.toLocaleString()} words
             </p>
             <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
+            <div className="mt-2">
+              <EvidenceChip
+                file="anthology.ts"
+                stamp={anthology.generatedAt}
+                source="the-loopdown/fiction/morkinstar-journals"
+              />
+            </div>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
               {anthology.tagline}
             </p>

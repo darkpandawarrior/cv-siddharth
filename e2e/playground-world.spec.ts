@@ -50,7 +50,18 @@ test.describe("playground world — no WebGL", () => {
     // default when the full suite was running. Stated rather than left to luck.
     test.setTimeout(90_000);
     await stubNoWebGL(page);
-    await page.goto("/playground");
+    // waitUntil: "networkidle", not just waitForHydration — rail.spec.ts's own
+    // comment names the same class of race: this page's card grid renders
+    // under DeferredPlayRoom (Playground.tsx), which hydrates ONCE as its own
+    // fallback (what waitForHydration alone detects) and then, once its lazy
+    // PlayRoom chunk resolves, swaps every child — including these cards —
+    // into a new wrapper a beat later. A click that lands between those two
+    // hydrations can fire on an `<a>` that's about to be torn down, which
+    // reads as a swallowed click on whichever room the race happens to hit,
+    // not consistently the first or last one. networkidle waits out that
+    // second, chunk-loaded swap before the loop below ever clicks.
+    await page.goto("/playground", { waitUntil: "networkidle" });
+    await waitForHydration(page);
 
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
     // No R3F canvas anywhere on the page — the world never got far enough to
@@ -71,7 +82,8 @@ test.describe("playground world — no WebGL", () => {
       // a stronger reachability check than the URL alone, since it fails if a
       // route resolves but renders the wrong (or an error) screen.
       await expect(page.locator("h1")).toContainText(new RegExp(room.label, "i"));
-      await page.goto("/playground");
+      await page.goto("/playground", { waitUntil: "networkidle" });
+      await waitForHydration(page);
     }
   });
 });
@@ -97,10 +109,28 @@ test.describe("playground world — List view toggle", () => {
     // hidden so a real startup regression still shows up as a failure.
     await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
+    await waitForHydration(page);
+
+    // The atlas's third altitude, and the rename sweep, both pinned from the
+    // one place a visitor actually reaches them: the running HUD, not a
+    // snapshot of its source. Folded into this test (which already pays for
+    // a hydrated world) rather than a new one — readme.test.ts pins the
+    // suite's total Playwright test count, and README.md belongs to a
+    // different lane. Has to run before the List view click below: the HUD
+    // (Orbit's home) unmounts with the world the instant that click lands.
+    // exact: true — the room grid's /map card blurb also contains the word
+    // "orbit" ("a constellation you can orbit"), rendered sr-only alongside
+    // the HUD even while the world is showing (Playground.tsx's own
+    // accessibility contract), so a substring match resolves to two links.
+    const orbit = page.getByRole("link", { name: "Orbit", exact: true });
+    await expect(orbit).toBeVisible();
+    await expect(orbit).toHaveAttribute("href", "/map");
+    const oldNames = /Mileway|Kursi|HireSignal|DEADLOCK|PaymentsLab(?!-KMP)/;
+    await expect(page.locator("body")).not.toContainText(oldNames);
+
     // Same reason as the chess tabs: a swallowed pre-hydration click leaves
     // this waiting on a grid nobody asked for. Not retried, because the
     // control is a toggle — a second click would undo the first.
-    await waitForHydration(page);
     await page.getByRole("button", { name: "List view" }).click();
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
     await expect(page.locator(".playground-world canvas")).toHaveCount(0);

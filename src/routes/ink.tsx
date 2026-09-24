@@ -7,6 +7,7 @@ import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 
 import { anthology, anthologyEntries } from "../data/anthology.ts";
 import { boardArc } from "../data/beforeTheCode.ts";
@@ -42,6 +43,13 @@ function InkRoute() {
         <div className="section-y mx-auto max-w-5xl px-6">
           <p className="kicker-accent">// before the code</p>
           <h1 className="font-display mt-3 text-hero">The Ink</h1>
+          <div className="mt-2">
+            <EvidenceChip
+              file="anthology.ts"
+              stamp={anthology.generatedAt}
+              source="the-loopdown/fiction/morkinstar-journals"
+            />
+          </div>
           {/* The epigraph. This sentence spent its life as a caption under the
               EB Profiles grid, three screens down, summarising the three cards
               above it. It is not a caption: it is the throughline from a
