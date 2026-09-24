@@ -203,7 +203,9 @@ function ArcPane({ corpus }: { corpus: Corpus }) {
  * the caption that keeps its sample honest.
  */
 function GraveyardPane({ corpus }: { corpus: Corpus }) {
-  const { reduced, webgl } = useEnv();
+  // GraveyardScene reads reduced motion live itself (useReducedMotion), so
+  // this pane only needs the mount-time WebGL probe.
+  const { webgl } = useEnv();
   const [view, setView] = useState<GraveyardView>("losses");
   const counts = corpus.graveyard[view];
 
@@ -273,7 +275,7 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
       {webgl ? (
         <ScenePane height="h-[460px]" alt={alt}>
           <Hydrate when={load()} split fallback={sceneFallback}>
-            <GraveyardScene counts={counts} view={view} reduced={reduced} />
+            <GraveyardScene counts={counts} view={view} />
           </Hydrate>
         </ScenePane>
       ) : (
@@ -288,7 +290,9 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
  * that is the whole arc for anyone who can't see the canvas.
  */
 function RepertoirePane({ corpus }: { corpus: Corpus }) {
-  const { reduced, webgl } = useEnv();
+  // RepertoireTreeScene reads reduced motion live itself (useReducedMotion),
+  // so this pane only needs the mount-time WebGL probe.
+  const { webgl } = useEnv();
   const years = useMemo(() => repertoireYears(corpus.repertoireByPlatform), [corpus]);
   const focus = useMemo(() => focusLines(years), [years]);
   const [idx, setIdx] = useState(0);
@@ -405,7 +409,6 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
               focus={focus}
               selected={selected}
               handoffYear={handoff?.year ?? null}
-              reduced={reduced}
             />
           </Hydrate>
         </ScenePane>
