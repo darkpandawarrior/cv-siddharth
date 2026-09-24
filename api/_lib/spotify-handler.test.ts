@@ -85,6 +85,31 @@ describe("getSpotifyNow", () => {
     const result = await getSpotifyNow(env, fetchImpl as unknown as typeof fetch, Date.now(), freshCache());
     expect(result.connected).toBe(false);
   });
+
+  it("reports disconnected, not an empty connected chip, when Spotify refuses the account", async () => {
+    const env = { SPOTIFY_CLIENT_ID: "id", SPOTIFY_CLIENT_SECRET: "secret", SPOTIFY_REFRESH_TOKEN: "refresh" };
+    // No recently-played entry: fakeFetch throws if the refusal path still asks for it.
+    const fetchImpl = fakeFetch({
+      "accounts.spotify.com/api/token": { status: 200, body: { access_token: "tok", expires_in: 3600 } },
+      "currently-playing": { status: 403, body: { error: { status: 403, message: "Active premium subscription required for the owner of the app." } } },
+    });
+    const cache = freshCache();
+    const result = await getSpotifyNow(env, fetchImpl as unknown as typeof fetch, Date.now(), cache);
+    expect(result).toEqual({ connected: false, isPlaying: false, recent: [], refusedStatus: 403 });
+    expect(cache.value).not.toBeNull(); // a 403 is about the account, the token is still good
+  });
+
+  it("drops the cached token on a 401 so the next request re-exchanges", async () => {
+    const env = { SPOTIFY_CLIENT_ID: "id", SPOTIFY_CLIENT_SECRET: "secret", SPOTIFY_REFRESH_TOKEN: "refresh" };
+    const fetchImpl = fakeFetch({
+      "accounts.spotify.com/api/token": { status: 200, body: { access_token: "tok", expires_in: 3600 } },
+      "currently-playing": { status: 401 },
+    });
+    const cache = freshCache();
+    const result = await getSpotifyNow(env, fetchImpl as unknown as typeof fetch, Date.now(), cache);
+    expect(result.refusedStatus).toBe(401);
+    expect(cache.value).toBeNull();
+  });
 });
 
 describe("getSpotifyNow — D3: the access token is memoised for its lifetime", () => {
