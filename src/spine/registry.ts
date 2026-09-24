@@ -48,7 +48,14 @@ export const SPINE: SpineEntry[] = [
   { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4)" },
   { id: "room-pager", file: "src/rooms.tsx", kind: "block", selector: '[data-spine="room-pager"]', routes: "any", maxHeight: { "1440": 96, "390": 96 }, last: true, debt: "SP-10", why: "next-room pager; the FAQ rendered below it on 8 rooms (F2)" },
   { id: "project-chapters", file: "src/ProjectDetail.tsx", kind: "chrome", selector: ".project-chapters", routes: { only: ["/project/*"] }, maxHeight: { "1440": 61, "390": 61 }, debt: "P1-01a", why: "sticky project sub-nav, 9 routes; within budget (section 1a: OK) but the <nav> lacks data-spine and SP-00 does not own src/ProjectDetail.tsx" },
-  { id: "ops-banner", file: "src/OpsBoard.tsx", kind: "chrome", selector: ".ops-banner", routes: { only: ["/ops"] }, maxHeight: { "1440": 398, "390": 688 }, debt: "P2-14", why: "sticky, pins inside its own section; route-local, over budget until P2-14" },
+  // ponytail: `kind: "chrome"` is deliberate (it is route chrome, not a floating widget), but that
+  // means it is NOT covered by e2e/spine.spec.ts's `floatDebt` short-circuit (floating|route-header
+  // only). Its own `debt` below silences the maxHeight check; it does NOT silence the pinned-area
+  // check, which has no per-entry exemption and runs unconditionally under SPINE_STRICT=1. So
+  // SPINE_STRICT=1 fails here on BOTH "ops-banner: 402px > 398px budget" (1440 only) AND
+  // "pinned div.ops-banner holds 39.9%/25.9% of the viewport" (both viewports, max 10%/12%) until
+  // P2-14 shrinks it. Both are real and expected; list all of them in the handoff, not just the first.
+  { id: "ops-banner", file: "src/OpsBoard.tsx", kind: "chrome", selector: ".ops-banner", routes: { only: ["/ops"] }, maxHeight: { "1440": 398, "390": 688 }, debt: "P2-14", why: "sticky, pins inside its own section; route-local, over budget until P2-14 (maxHeight AND pinned-area both fail under SPINE_STRICT=1, see comment above)" },
   { id: "term-scanlines", file: "src/Terminal.tsx", kind: "decor", selector: ".term-scanlines", routes: { only: ["/terminal"] }, debt: "P1-01a", why: "terminal room CRT scanline overlay, already pointer-events:none; the <div> lacks data-spine and SP-00 does not own src/Terminal.tsx" },
   { id: "playground-wipe", file: "src/Playground.tsx", kind: "decor", selector: ".playground-wipe", routes: { only: ["/playground"] }, debt: "P1-01a", why: "view-switch transition cover, already pointer-events:none, resolving F20(b)'s hit-testability check; the <div> lacks data-spine and SP-00 does not own src/Playground.tsx" },
   { id: "overlays", file: "src/Launcher.tsx", kind: "overlay", selector: '[role="dialog"][aria-modal="true"]', routes: "closed", internal: true, why: "Launcher, CommandPalette, InstrumentView, chat panel: never in the DOM until opened" },
