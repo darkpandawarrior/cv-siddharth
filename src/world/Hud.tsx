@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Eraser, LayoutGrid, Play, Volume2, VolumeX, Hand } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Eraser, LayoutGrid, Orbit as OrbitIcon, Play, Volume2, VolumeX, Hand } from "lucide-react";
 import {
   Gauges,
   Minimap,
@@ -467,6 +468,16 @@ export function Hud(props: {
           >
             <LayoutGrid size={14} /> List view
           </button>
+          {/* STREET's own exit to ORBIT — the atlas's other altitude, the same
+              registry and includeBuild edges seen from space rather than
+              driven. /map's own "Walk the streets" link is this button's
+              mirror image. */}
+          <Link
+            to="/map"
+            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-line bg-card/80 px-3 py-1.5 text-sm text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent"
+          >
+            <OrbitIcon size={14} /> Orbit
+          </Link>
           </div>
         </div>
 
@@ -476,8 +487,21 @@ export function Hud(props: {
           {/* Hidden on the narrowest screens, where the touch sticks and the
               gauge panel already own this column — the waypoint above carries
               the navigation on a phone. */}
-          <div className="hidden sm:block">
+          <div className="hidden sm:flex sm:flex-col sm:items-end sm:gap-1.5">
             <Minimap visited={visited} targetTo={waypointTo} />
+            {/* The atlas legend, same markup as /map's own (StoryMap.tsx) so
+                "solid = measured, dashed = declared" reads as one convention
+                across all three altitudes rather than three different keys. */}
+            <div className="flex items-center gap-3 rounded-full border border-line bg-card/80 px-3 py-1 text-[10px] text-muted backdrop-blur">
+              <span className="flex items-center gap-1">
+                <svg width="12" height="2" aria-hidden><line x1="0" y1="1" x2="12" y2="1" stroke="currentColor" strokeWidth="1.5" /></svg>
+                measured
+              </span>
+              <span className="flex items-center gap-1">
+                <svg width="12" height="2" aria-hidden><line x1="0" y1="1" x2="12" y2="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3,2.5" /></svg>
+                declared
+              </span>
+            </div>
           </div>
           <Gauges collected={collectedCount} artifactTotal={artifactTotal} rooms={exploredCount} totalRooms={totalRooms} />
         </div>
