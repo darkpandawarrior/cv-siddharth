@@ -60,6 +60,33 @@ test("back-navigating off a project page restores the destination's own title", 
 });
 
 /**
+ * writingMeta.ts's lessonsFor(slug) is the lesson-level counterpart to
+ * fieldNotesFor's series chips — an individual link per post, not just the
+ * series it belongs to. Doori is the project with the most lessons naming it,
+ * so its page is the one to assert the row actually renders a real link
+ * (dev.to and friends), not just an empty container.
+ */
+test("/project/doori shows at least one lesson link under field notes", async ({ page }) => {
+  await page.goto("/project/doori");
+  const fieldNotes = page.locator("text=field notes").locator("..");
+  await expect(fieldNotes).toBeVisible();
+  const lessonLink = page.locator('a[href*="dev.to"]');
+  await expect(lessonLink.first()).toBeVisible();
+});
+
+/**
+ * Candidai's star-count prose dropped its emoji for plain "N stars" wording
+ * (no emoji as data) — this checks the rendered page, not just the source
+ * string, so a future component that re-introduces "⭐" (e.g. ReposShowcase's
+ * own upstreamStars render) is caught wherever it renders, not just here.
+ */
+test("/project/candidai contains no star emoji", async ({ page }) => {
+  await page.goto("/project/candidai");
+  const text = await page.locator("body").innerText();
+  expect(text).not.toMatch(/[⭐★🌟]/u);
+});
+
+/**
  * THE BUG: the live-embed reveal probe looked up `#ComposeTarget`, which the Compose Multiplatform
  * 1.12 build under /portfolio-app does not have — it renders into a plain div and has no <canvas>
  * at all. So the probe timed out, gave up, and the "live" frame stayed a black box forever. This
