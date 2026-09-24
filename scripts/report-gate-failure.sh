@@ -22,7 +22,7 @@ set -euo pipefail
 WORKFLOW="${1:?usage: report-gate-failure.sh <workflow-label> [title]}"
 TITLE="${2:-ci: ${WORKFLOW} pre-push gate is red}"
 RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-}"
-BODY="Run ${RUN_URL} failed tsc -b, lint, test or check:generated before the push step. Nothing was pushed to main — the local commit for this run was discarded with the runner. Whatever generators succeeded still ran and were committed locally; only the push was gated. Fix the failing check (see the run log) or, if a generator legitimately needs to skip a check, say so in that check's own script rather than here."
+BODY="Run ${RUN_URL} failed tsc -b, lint, test, check:generated or classify-diff before the push/merge step. Nothing reached main. refresh-twin discards the local commit with the runner; refresh-media instead leaves its rolling PR open, labelled needs-human, with the full refreshed data on it. Whatever generators succeeded still ran. Fix the failing check (see the run log) or, if a generator legitimately needs to skip a check, say so in that check's own script rather than here."
 
 EXISTING="$(gh issue list --state open --search "in:title \"${TITLE}\"" --json number --jq '.[0].number // empty')"
 
