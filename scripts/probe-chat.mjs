@@ -82,7 +82,7 @@ async function askOnce(base, question) {
   return text;
 }
 
-// Accepts both `--flag value` and `--flag=value` — the acceptance criteria
+// Accepts both `--flag value` and `--flag=value`: the acceptance criteria
 // and this file's own usage comment used to disagree on which one worked.
 export function getFlag(argv, name) {
   const eq = argv.find((a) => a.startsWith(`--${name}=`));
