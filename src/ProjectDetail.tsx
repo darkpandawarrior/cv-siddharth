@@ -4,7 +4,7 @@ import { projects, sharedFoundation, type ProjectDetailData } from "./data/profi
 import { galleries } from "./data/galleries.ts";
 import { ScreenMarquee } from "./ScreenMarquee.tsx";
 import { PROJECT_ORDER } from "./data/connections.ts";
-import { FieldNotes, SystemStrip } from "./FieldNotes.tsx";
+import { FieldNotes, LessonNotes, SystemStrip } from "./FieldNotes.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { TiltCard } from "./TiltCard.tsx";
@@ -22,9 +22,21 @@ import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
 import "./hero-studio.css";
 import { resourceRows } from "./data/resourceDirectory.ts";
+import { projectStatsGeneratedAt } from "./data/projectStats.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
-const FILM_PROJECTS = new Set(["doori", "gaddi", "paymentslab-kmp"]);
+// Derived from the registry's own showcase flag, not a hand-typed list that
+// can drift when a project's showcase status changes.
+const FILM_PROJECTS = new Set(projects.filter((p) => p.showcase).map((p) => p.slug));
+
+// Projects whose metrics band actually reads a value out of projectStats.ts
+// (doori/paymentslab-kmp via lib/projectStatLine.ts, kmp-family straight off
+// projectStats.foundation — see projects.ts's own metrics arrays). Gaddi is a
+// projectStats.ts key too, but its metrics band is hand-typed prose that
+// touches no projectStats value, so it stays out: the chip would otherwise
+// cite a source none of the numbers on screen actually came from.
+const PROJECT_STATS_METRICS = new Set(["doori", "paymentslab-kmp", "kmp-family"]);
 
 // Project → its Lab Bench experiment.
 const LAB_OF: Record<string, LabKey> = {
@@ -486,6 +498,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <span className="text-sm text-muted">{project.status}</span>
           </div>
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
+          <LessonNotes slug={slug} className="rise-in rise-in-3 mt-2" />
           <SystemStrip slug={slug} className="rise-in rise-in-3 mt-3" />
         </div>
       </div>
@@ -576,6 +589,15 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {/* Metrics band — same animated count-up/gauge as the homepage */}
       {d?.metrics && d.metrics.length > 0 && (
         <section className="border-b border-line bg-surface">
+          {PROJECT_STATS_METRICS.has(slug) && (
+            <div className="mx-auto flex max-w-5xl justify-end px-6 pt-4">
+              <EvidenceChip
+                file="projectStats.ts"
+                stamp={projectStatsGeneratedAt}
+                source="repo settings.gradle.kts + README"
+              />
+            </div>
+          )}
           <div className="mx-auto grid max-w-5xl grid-cols-1 divide-y divide-line px-6 py-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:py-8 lg:grid-cols-4">
             {d.metrics.map((m) => (
               <AnimatedMetric key={m.label} metric={m} />

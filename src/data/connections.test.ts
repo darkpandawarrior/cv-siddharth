@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RELATED_SERIES } from "./connections.ts";
-import { SERIES_COLOR, SERIES_PROJECT, accentOf } from "./writingMeta.ts";
+import { SERIES_COLOR, SERIES_PROJECT, PROJECT_SLUG_BY_NAME, accentOf, lessonsFor } from "./writingMeta.ts";
 import { writing } from "./writing.ts";
 import { caseStudies, projects } from "./profile.ts";
 
@@ -65,5 +65,48 @@ describe("the hand-kept maps still describe the generated registry", () => {
   // that no two series share one.
   it("gives every series an accent without a pinned entry", () => {
     for (const id of seriesIds) expect(accentOf(id)).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+});
+
+/**
+ * lessonsFor(slug) is the lesson-level counterpart to fieldNotesFor above:
+ * per-lesson links instead of per-series chips. Same rot risk, same fix —
+ * check the hand-kept PROJECT_SLUG_BY_NAME map against what writing.ts and
+ * profile.ts actually say, rather than trust it stays in sync on its own.
+ */
+describe("lessonsFor's project map stays honest", () => {
+  const registryNames = new Set(projects.map((p) => p.name));
+  const lessonProjectNames = new Set(
+    writing.lessons.map((l) => l.project).filter((p): p is string => Boolean(p)),
+  );
+
+  it("maps every registry project a lesson actually names", () => {
+    const unmapped = [...lessonProjectNames].filter(
+      (name) => registryNames.has(name) && !(name in PROJECT_SLUG_BY_NAME),
+    );
+    expect(
+      unmapped,
+      `writing.ts names ${unmapped.join(", ")} as a lesson's project, and profile.ts has a ` +
+        `project by that exact name, but PROJECT_SLUG_BY_NAME in writingMeta.ts has no entry for ` +
+        `it — its lessons will not show up on that project's page.`,
+    ).toEqual([]);
+  });
+
+  it("names only a real registry slug, or a name the registry does not carry", () => {
+    const slugs = new Set(projects.map((p) => p.slug));
+    const badSlugs = Object.values(PROJECT_SLUG_BY_NAME).filter((s) => !slugs.has(s));
+    expect(badSlugs, `PROJECT_SLUG_BY_NAME points at ${badSlugs.join(", ")}, which is not a slug in profile.ts.`).toEqual([]);
+  });
+
+  it("gives every project-slug key in RELATED_SERIES at least one lesson via lessonsFor", () => {
+    const projectSlugs = new Set(projects.map((p) => p.slug));
+    const keyedProjects = Object.keys(RELATED_SERIES).filter((k) => projectSlugs.has(k));
+    for (const slug of keyedProjects) {
+      expect(
+        lessonsFor(slug).length,
+        `${slug} is keyed in RELATED_SERIES but lessonsFor(${slug}) found no lesson naming it as ` +
+          `project — check writing.ts's project field and writingMeta.ts's PROJECT_SLUG_BY_NAME.`,
+      ).toBeGreaterThan(0);
+    }
   });
 });
