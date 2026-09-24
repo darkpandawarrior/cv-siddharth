@@ -2,7 +2,8 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { GitBranch, Star, ArrowUpRight, GitPullRequestArrow } from "lucide-react";
 import { Reveal } from "./Reveal.tsx";
 import { FoundationGraph } from "./FoundationGraph.tsx";
-import { openSource, sharedFoundation, upstreamStars } from "./data/profile.ts";
+import { openSource, sharedFoundation, upstreamStars, type Contribution } from "./data/profile.ts";
+import { mifosMergedPRs } from "./data/careerOpsUpstream.ts";
 import { LOOPDOWN_REPO } from "./data/writingMeta.ts";
 const ResourceDirectory = lazy(() => import("./ResourceDirectory.tsx").then(module => ({ default: module.ResourceDirectory })));
 
@@ -124,6 +125,35 @@ function RepoCard({ r }: { r: Repo }) {
   );
 }
 
+/** Shared by both org groups below the fold — extracted rather than
+ *  duplicated so the two PR lists can never drift in markup (and so the
+ *  arbitrary-value classes inside it are counted once, not twice, against
+ *  this file's design-system baseline). */
+function ContributionList({ items }: { items: Contribution[] }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((c) => (
+        <li key={c.url}>
+          <a
+            href={c.url}
+            target="_blank"
+            rel="noreferrer"
+            className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
+          >
+            <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
+            <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
+            <span className="font-mono text-xs text-muted">{c.repo}</span>
+            <span className="ml-auto flex items-center gap-2">
+              <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
+              <span className="font-mono text-[11px] text-muted">{c.date}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function RepoGroup({ label, hint, repos, intro }: { label: string; hint: string; repos: Repo[]; intro?: ReactNode }) {
   return (
     <div className="mt-8 first:mt-0">
@@ -194,11 +224,16 @@ export function ReposShowcase() {
             </Suspense>
           </div>
 
-          <div className="mt-8">
+          {/* id="open-source": the anchor /map's constellation ("oss" node)
+              and /#open-source links on the site target — a second id on the
+              same section as #source's "Merged upstream" heading used to
+              carry, kept alongside it rather than replacing it so nothing
+              already linking #source breaks. */}
+          <div id="open-source" className="mt-8 scroll-mt-24">
             <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h4 className="kicker-accent font-semibold">Merged upstream</h4>
+              <h4 className="kicker-accent font-semibold">career-ops</h4>
               <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted">
-                career-ops · a public OSS project
+                a public OSS project
                 <span className="inline-flex items-center gap-1 rounded-full border border-line px-1.5 py-0.5 text-accent/90">
                   <Star size={10} aria-hidden="true" />
                   {upstreamStars}
@@ -211,26 +246,7 @@ export function ReposShowcase() {
                 project") that the first few make just as well. The rest are one
                 click away on GitHub, where they are checkable anyway, which is
                 the only place the claim actually settles. */}
-            <ul className="space-y-2">
-              {openSource.slice(0, 6).map((c) => (
-                <li key={c.url}>
-                  <a
-                    href={c.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
-                  >
-                    <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
-                    <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
-                    <span className="font-mono text-xs text-muted">{c.repo}</span>
-                    <span className="ml-auto flex items-center gap-2">
-                      <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
-                      <span className="font-mono text-[11px] text-muted">{c.date}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <ContributionList items={openSource.filter((c) => c.org === "career-ops-hq").slice(0, 6)} />
             <a
               href="https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior"
               target="_blank"
@@ -239,6 +255,22 @@ export function ReposShowcase() {
             >
               <Star size={11} /> View my pull requests on career-ops <ArrowUpRight size={11} />
             </a>
+
+            {/* Second, unrelated upstream: openMF/Mifos. A separate heading so
+                this list can never read as more career-ops PRs — the whole
+                point of carrying `org` on every row (see openSource.ts). */}
+            <div className="mb-3 mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h4 className="kicker-accent font-semibold">openMF</h4>
+              {/* Theme scale, not an arbitrary bracket value like its
+                  neighbours — this file is already at its design-system-
+                  ratchet baseline (ds-baseline.json, not owned by this lane),
+                  so a new span reaches for the nearest real scale step
+                  instead of growing the count. */}
+              <span className="font-mono text-xs text-muted">
+                Mifos · {mifosMergedPRs} merged, the rest open
+              </span>
+            </div>
+            <ContributionList items={openSource.filter((c) => c.org === "openMF")} />
           </div>
         </Reveal>
       </div>

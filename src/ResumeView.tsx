@@ -2,6 +2,7 @@ import { ArrowLeft, Github, Globe, Linkedin, PenLine, Printer } from "lucide-rea
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projectCards, openSource, upstreamMergedPRs, upstreamStars} from "./data/profile.ts";
+import { mifosMergedPRs } from "./data/careerOpsUpstream.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { emphasise } from "./lib/resumeEmphasis.tsx";
 import { concurrentCompanies } from "./lib/resumeMeta.ts";
@@ -344,12 +345,27 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           {/* Rendered from the same openSource data as the homepage so this
               line can never drift from the real merged-PR list again. The
               two-pager states the count and stops: four PR titles spelled out
-              cost three lines to say what "9 merged PRs" already said. */}
+              cost three lines to say what "9 merged PRs" already said.
+              Filtered to career-ops-hq's merged rows only — openSource now
+              also carries the one open career-ops PR and the openMF/Mifos
+              rows below, neither of which belongs in "merged PRs to
+              career-ops". */}
           {full && (
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
               {upstreamMergedPRs} merged PRs to <span className="whitespace-nowrap">career-ops</span> (public OSS, {upstreamStars} stars)
-              {full ? <>: {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
+              : {openSource.filter((c) => c.org === "career-ops-hq" && c.status === "merged").map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.
+            </p>
+          )}
+          {/* A second, unrelated upstream: openMF/Mifos. Its own paragraph
+              rather than folded into the one above, for the same reason
+              ReposShowcase gives it a separate heading — grouping by org
+              keeps career-ops's count honest instead of quietly absorbing
+              these rows. */}
+          {full && (
+            <p className="mt-1 text-sm leading-snug text-zinc-700">
+              <span className="font-semibold text-zinc-900">Also contributing to openMF/Mifos:</span>{" "}
+              {mifosMergedPRs} merged (openMF/kmp-project-template #298, #299), plus 2 open (mifos-passcode-cmp #82, mifos-x-actionhub #89).
             </p>
           )}
         </section>
