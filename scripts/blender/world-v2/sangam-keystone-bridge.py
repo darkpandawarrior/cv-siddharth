@@ -17,6 +17,16 @@ voussoir/pier_course/lamp_post use):
     symmetric because the bridge's final rotation in the world scene isn't
     known here, so there's no honest single "upstream" face to pick.
 
+Art-direction pass 2 (multi-arch): the single center span read as an
+isolated stone hoop rather than "a bridge" in the golden-hour establishing
+shot, next to the concept's 3-arch masonry crossing. The data-bound arch
+(socket.arch_curve, conventionPlugins voussoirs) stays exactly one span —
+that's kmp-build-logic's own identity, singular — but two smaller flanking
+arches (VoussoirSide/KeystoneSide/SpandrelWallSide, same vocabulary at a
+smaller ring radius, same PIER_TOP/DECK_Z so the deck stays flat) now frame
+it, plus a coursed-stone parapet replacing the previous turned-baluster
+railing and a mossy weathered tint on the waterline pier courses/cutwaters.
+
 This is a KIT, not a baked assembly (spec §0.3 rule 2: "no GLB bakes a data
 count"). The exported GLB carries one prototype each of voussoir, pier
 course, keystone, deck segment, railing run and lamp socket, plus named
@@ -55,6 +65,11 @@ palestone = sh.pbr('mat.paleStone')
 # small brass fittings on a stone keystone, so mat.brass — already shared,
 # already approved — is the correct rename, not a new name to add.
 brass = sh.pbr('mat.brass')
+# Weathering/moss on the waterline pier courses and cutwaters (art-direction
+# fix) — a dull, desaturated olive, deliberately NOT spec §0.3's semantic
+# GREEN accent (that colour is reserved for "live/shipped"; this is plain
+# algae staining on stone, not a status signal).
+moss_stone = sh.material('mat.pierMoss', (0.15, 0.18, 0.10), rough=0.88)
 
 
 def drafted_block(w_bottom, w_top, depth, height, mat, inset=0.035, bevel=0.012):
@@ -160,6 +175,31 @@ inlay.parent = keystone
 for poly in inlay.data.polygons:
     poly.use_smooth = False
 
+# --- side arches: two smaller flanking spans (art-direction fix — a single
+# arch read as "a stone hoop", not the concept's 3-arch masonry bridge). Same
+# voussoir/keystone vocabulary as the center arch, scaled to a smaller ring
+# radius and springing from the SAME PIER_TOP/DECK_Z so the deck stays flat
+# — spandrel_wall_bm below (already generic in r_out) fills the extra height
+# over the shorter arch, the same job it does for the center arch. No
+# medallion: that worked-wedge is kmp-build-logic's own center-arch identity,
+# not shared with a plain flanking span. ---
+SIDE_ARCH_R = 1.8
+N_SIDE_DEMO = 6
+_side_r_out, _side_r_in = SIDE_ARCH_R + VOUSSOIR_H / 2, SIDE_ARCH_R - VOUSSOIR_H / 2
+_side_half_ang = math.pi / (2 * N_SIDE_DEMO)
+SIDE_VOUS_W_TOP = 2 * _side_r_out * math.sin(_side_half_ang) * _JOINT
+SIDE_VOUS_W_BOT = 2 * _side_r_in * math.sin(_side_half_ang) * _JOINT
+
+side_vous_bm = drafted_block(w_bottom=SIDE_VOUS_W_BOT, w_top=SIDE_VOUS_W_TOP, depth=ARCH_DEPTH,
+                              height=VOUSSOIR_H, mat=sandstone)
+side_voussoir = sh.new_mesh_object('VoussoirSide', side_vous_bm, sandstone)
+
+SIDE_KEY_W_BOT, SIDE_KEY_W_TOP = SIDE_VOUS_W_BOT * 1.25, SIDE_VOUS_W_TOP * 1.35
+SIDE_KEY_H, SIDE_KEY_DEPTH = VOUSSOIR_H * 1.15, ARCH_DEPTH + 0.08
+side_key_bm = drafted_block(w_bottom=SIDE_KEY_W_BOT, w_top=SIDE_KEY_W_TOP, depth=SIDE_KEY_DEPTH,
+                             height=SIDE_KEY_H, mat=sandstone)
+side_keystone = sh.new_mesh_object('KeystoneSide', side_key_bm, sandstone)
+
 # --- pier course: stacks to build both piers on socket.pier_a / _b ---
 course_bm = drafted_block(w_bottom=1.7, w_top=1.7, depth=1.0, height=0.5, mat=palestone,
                            inset=0.05, bevel=0.014)
@@ -193,6 +233,8 @@ def spandrel_wall_bm(r_out, pier_top, deck_z, depth, n=8):
 
 
 spandrel_wall = sh.new_mesh_object('SpandrelWall', spandrel_wall_bm(_r_out, PIER_TOP, DECK_Z, ARCH_DEPTH), sandstone)
+side_spandrel_wall = sh.new_mesh_object(
+    'SpandrelWallSide', spandrel_wall_bm(_side_r_out, PIER_TOP, DECK_Z, ARCH_DEPTH), sandstone)
 
 # --- cutwater: a pointed prow that splits river flow, one prototype instanced
 # at both piers x both faces in the preview. ---
@@ -247,36 +289,49 @@ bmesh.ops.recalc_face_normals(deck_bm, faces=deck_bm.faces)
 deck_bm = sh.canonical_order(deck_bm)
 deck_segment = sh.new_mesh_object('DeckSegment', deck_bm, palestone)
 
-# --- railing: turned balusters + cap rail + base plinth, one repeatable run.
-# Each part is built as its own temp object then joined (world-monuments.py's
-# join_as pattern), which is far more robust than merging raw bmeshes. ---
-BALUSTER_PROFILE = [(.05, 0), (.08, .03), (.045, .09), (.075, .16), (.05, .24), (.05, .30)]
-rail_parts = []
-for x in (-0.55, 0.0, 0.55):
-    b = sh.canonical_order(sh.lathe(BALUSTER_PROFILE, steps=8))
-    obj = sh.new_mesh_object(f'_railpart_baluster_{x}', b, palestone)
-    obj.location = (x, 0, 0.06)
-    rail_parts.append(obj)
+# --- parapet: a solid coursed-stone wall with a coping cap (art-direction
+# fix: turned balusters read as a garden railing, not the concept's "coursed-
+# stone parapet wall" — the same subdivide+inset paving-groove vocabulary
+# the deck already uses below, applied here to the wall's two long faces
+# instead of its top). ---
+PARAPET_LEN, PARAPET_H, PARAPET_T = 1.72, 0.42, 0.16
+rail_bm = bmesh.new()
+_rhw, _rhd = PARAPET_LEN / 2, PARAPET_T / 2
+rv = [rail_bm.verts.new(p) for p in (
+    (-_rhw, -_rhd, 0.02), (_rhw, -_rhd, 0.02), (_rhw, _rhd, 0.02), (-_rhw, _rhd, 0.02),
+    (-_rhw, -_rhd, PARAPET_H), (_rhw, -_rhd, PARAPET_H), (_rhw, _rhd, PARAPET_H), (-_rhw, _rhd, PARAPET_H))]
+rail_bm.faces.new((rv[0], rv[1], rv[2], rv[3]))
+rail_bm.faces.new((rv[7], rv[6], rv[5], rv[4]))
+rfront = rail_bm.faces.new((rv[0], rv[4], rv[5], rv[1]))
+rail_bm.faces.new((rv[1], rv[5], rv[6], rv[2]))
+rback = rail_bm.faces.new((rv[2], rv[6], rv[7], rv[3]))
+rail_bm.faces.new((rv[3], rv[7], rv[4], rv[0]))
+bmesh.ops.recalc_face_normals(rail_bm, faces=rail_bm.faces)
+for f in (rfront, rback):
+    bmesh.ops.subdivide_edges(
+        rail_bm, edges=[e for e in f.edges if abs(e.verts[0].co.z - e.verts[1].co.z) > 1e-4],
+        cuts=3, use_grid_fill=True)
+courses = [f for f in rail_bm.faces if abs(f.normal.y) > 0.9]
+bmesh.ops.inset_individual(rail_bm, faces=courses, thickness=0.012, depth=-0.006)
+bmesh.ops.bevel(rail_bm, geom=[e for e in rail_bm.edges if e.is_boundary], offset=0.012, segments=2, affect='EDGES')
+bmesh.ops.recalc_face_normals(rail_bm, faces=rail_bm.faces)
+bmesh.ops.dissolve_degenerate(rail_bm, dist=1e-5, edges=list(rail_bm.edges))
+bmesh.ops.recalc_face_normals(rail_bm, faces=rail_bm.faces)
+railing = sh.new_mesh_object('RailingRun', sh.canonical_order(rail_bm), palestone)
 
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, .035))
-plinth = bpy.context.object
-plinth.scale = (1.72, .18, .07)
-rail_parts.append(plinth)
-
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, .375))
-cap = bpy.context.object
-cap.scale = (1.72, .1, .05)
-rail_parts.append(cap)
-
-bpy.context.view_layer.objects.active = rail_parts[0]
-for p in rail_parts:
-    p.select_set(True)
-bpy.ops.object.join()
-railing = bpy.context.object
-railing.name = 'RailingRun'
-sh.canonicalize_object(railing)
-railing.data.materials.clear()
-railing.data.materials.append(palestone)
+bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, PARAPET_H + 0.03))
+rail_cap = bpy.context.object
+rail_cap.name = 'RailingCap'
+rail_cap.data.name = 'RailingCap'
+rail_cap.scale = (_rhw + 0.05, _rhd + 0.04, 0.035)
+cap_bevel = rail_cap.modifiers.new('CapBevel', 'BEVEL')
+cap_bevel.width = 0.01
+cap_bevel.segments = 2
+bpy.context.view_layer.objects.active = rail_cap
+bpy.ops.object.modifier_apply(modifier=cap_bevel.name)
+sh.canonicalize_object(rail_cap)
+rail_cap.data.materials.append(palestone)
+rail_cap.parent = railing
 bpy.ops.object.select_all(action='DESELECT')
 
 # --- lamp socket: a turned stone post that mounts a data-instanced light ---
@@ -315,7 +370,8 @@ lantern_socket.parent = keystone
 inflow_sockets = [sh.socket(f'socket.inflow.{i:02d}', (-2 + i * 1.0, -1.4, 0.05), size=0.1)
                   for i in range(5)]
 
-kit_objects = [voussoir, keystone, pier_course, spandrel_wall, cutwater, deck_segment, railing, lamp_post,
+kit_objects = [voussoir, keystone, side_voussoir, side_keystone, pier_course, spandrel_wall,
+               side_spandrel_wall, cutwater, deck_segment, railing, lamp_post,
                arch_curve, deck_curve, pier_a, pier_b, *inflow_sockets]
 sh.export_kit(ID, kit_objects)
 
@@ -324,61 +380,87 @@ sh.export_kit(ID, kit_objects)
 # span so the render can be judged at landmark scale. NOT exported to the
 # runtime GLB (spec §0.3 rule 2 — the shipped kit stays prototype + sockets).
 # ---------------------------------------------------------------------------
-MID = N_ARCH_DEMO // 2
 preview_objs = []
-for i in range(N_ARCH_DEMO):
-    if i == MID:
-        continue  # the keystone takes the apex slot
-    t = i / (N_ARCH_DEMO - 1)
-    ang = math.pi * (1 - t)
-    x, z = ARCH_R * math.cos(ang), PIER_TOP + ARCH_R * math.sin(ang)
-    dup = voussoir.copy()
-    dup.data = voussoir.data.copy()
-    dup.name = f'Voussoir_preview_{i}'
-    dup.rotation_euler = (0, math.pi / 2 - ang, 0)
-    dup.location = (x, 0, z)
+
+
+def build_arch_group(cx, arch_r, n_demo, vous_proto, key_proto, spandrel_proto, tag):
+    """One arch span: voussoir ring + keystone + 2 piers (with waterline
+    moss) + 4 cutwaters + spandrel fill, all at world-x offset cx. Reused for
+    the center span and both flanking spans (art-direction fix: multi-arch,
+    not one stone hoop) — same assembly logic at a different (cx, arch_r)."""
+    mid = n_demo // 2
+    for i in range(n_demo):
+        if i == mid:
+            continue  # the keystone takes the apex slot
+        t = i / (n_demo - 1)
+        ang = math.pi * (1 - t)
+        x, z = arch_r * math.cos(ang), PIER_TOP + arch_r * math.sin(ang)
+        dup = vous_proto.copy()
+        dup.data = vous_proto.data.copy()
+        dup.name = f'Voussoir_preview_{tag}_{i}'
+        dup.rotation_euler = (0, math.pi / 2 - ang, 0)
+        dup.location = (cx + x, 0, z)
+        bpy.context.collection.objects.link(dup)
+        preview_objs.append(dup)
+
+    dup = key_proto.copy()
+    dup.data = key_proto.data.copy()
+    dup.name = f'Keystone_preview_{tag}'
+    dup.location = (cx, 0, PIER_TOP + arch_r)
+    bpy.context.collection.objects.link(dup)
+    preview_objs.append(dup)
+    for child in list(key_proto.children):
+        cdup = child.copy()
+        cdup.data = child.data.copy() if child.data else None
+        cdup.name = f'{child.name}_preview_{tag}'
+        cdup.parent = dup
+        bpy.context.collection.objects.link(cdup)
+        preview_objs.append(cdup)
+
+    for side, base_x in (('a', cx - arch_r), ('b', cx + arch_r)):
+        for c in range(PIER_COURSES):
+            cdup = pier_course.copy()
+            cdup.data = pier_course.data.copy()
+            cdup.name = f'PierCourse_preview_{tag}_{side}_{c}'
+            cdup.location = (base_x, 0, c * COURSE_H)
+            if c < 2:  # weathering/moss on the waterline courses (art-direction fix)
+                cdup.data.materials[0] = moss_stone
+            bpy.context.collection.objects.link(cdup)
+            preview_objs.append(cdup)
+        for face, rot in ((0.5, math.pi), (-0.5, 0)):  # both Y faces, apex pointing out
+            cdup = cutwater.copy()
+            cdup.data = cutwater.data.copy()
+            cdup.data.materials[0] = moss_stone  # cutwaters sit at the waterline
+            cdup.name = f'Cutwater_preview_{tag}_{side}_{face}'
+            cdup.location = (base_x, face, 0)
+            cdup.rotation_euler = (0, 0, rot)
+            bpy.context.collection.objects.link(cdup)
+            preview_objs.append(cdup)
+
+    dup = spandrel_proto.copy()
+    dup.data = spandrel_proto.data.copy()
+    dup.name = f'SpandrelWall_preview_{tag}'
+    dup.location = (cx, 0, 0)
     bpy.context.collection.objects.link(dup)
     preview_objs.append(dup)
 
-dup = keystone.copy()
-dup.data = keystone.data.copy()
-dup.name = 'Keystone_preview'
-dup.location = (0, 0, PIER_TOP + ARCH_R)
-bpy.context.collection.objects.link(dup)
-preview_objs.append(dup)
-for child in list(keystone.children):
-    cdup = child.copy()
-    cdup.data = child.data.copy() if child.data else None
-    cdup.name = child.name + '_preview'
-    cdup.parent = dup
-    bpy.context.collection.objects.link(cdup)
-    preview_objs.append(cdup)
 
-for side, base_x in (('a', -ARCH_R), ('b', ARCH_R)):
-    for c in range(PIER_COURSES):
-        cdup = pier_course.copy()
-        cdup.data = pier_course.data.copy()
-        cdup.name = f'PierCourse_preview_{side}_{c}'
-        cdup.location = (base_x, 0, c * COURSE_H)
-        bpy.context.collection.objects.link(cdup)
-        preview_objs.append(cdup)
-    for face, rot in ((0.5, math.pi), (-0.5, 0)):  # both Y faces, apex pointing out
-        cdup = cutwater.copy()
-        cdup.data = cutwater.data.copy()
-        cdup.name = f'Cutwater_preview_{side}_{face}'
-        cdup.location = (base_x, face, 0)
-        cdup.rotation_euler = (0, 0, rot)
-        bpy.context.collection.objects.link(cdup)
-        preview_objs.append(cdup)
+# Side-span centers chosen so the flanking arch's outer pier sits right where
+# the center arch's own pier does (ARCH_GAP is the solid masonry between the
+# two abutting pier faces) — a continuous run of piers, not 3 isolated hoops.
+ARCH_GAP = 0.6
+SIDE_CX = ARCH_R + ARCH_GAP + SIDE_ARCH_R
+build_arch_group(0.0, ARCH_R, N_ARCH_DEMO, voussoir, keystone, spandrel_wall, 'center')
+build_arch_group(-SIDE_CX, SIDE_ARCH_R, N_SIDE_DEMO, side_voussoir, side_keystone, side_spandrel_wall, 'left')
+build_arch_group(SIDE_CX, SIDE_ARCH_R, N_SIDE_DEMO, side_voussoir, side_keystone, side_spandrel_wall, 'right')
 
-dup = spandrel_wall.copy()
-dup.data = spandrel_wall.data.copy()
-dup.name = 'SpandrelWall_preview'
-bpy.context.collection.objects.link(dup)
-preview_objs.append(dup)
-
-DECK_SPAN = ARCH_R + 1.0
-for i, dx in enumerate((-3 * DECK_SPAN / 4, -DECK_SPAN / 4, DECK_SPAN / 4, 3 * DECK_SPAN / 4)):
+# Deck + parapet + lamps run continuously across all 3 spans (real bridges
+# don't have an expansion joint at every pier), so these are sized off the
+# whole bridge's half-width rather than one arch's own DECK_SPAN.
+DECK_HALF_SPAN = SIDE_CX + SIDE_ARCH_R + 0.8
+N_DECK_COLS = max(4, round(2 * DECK_HALF_SPAN / 2.3) + 1)
+for i in range(N_DECK_COLS):
+    dx = -DECK_HALF_SPAN + i * (2 * DECK_HALF_SPAN) / (N_DECK_COLS - 1)
     for row, ry in enumerate((-1.4, 1.4)):
         cdup = deck_segment.copy()
         cdup.data = deck_segment.data.copy()
@@ -387,7 +469,9 @@ for i, dx in enumerate((-3 * DECK_SPAN / 4, -DECK_SPAN / 4, DECK_SPAN / 4, 3 * D
         bpy.context.collection.objects.link(cdup)
         preview_objs.append(cdup)
 
-for dx in (-DECK_SPAN, -DECK_SPAN / 3, DECK_SPAN / 3, DECK_SPAN):
+N_PARAPET = max(4, round(2 * DECK_HALF_SPAN / PARAPET_LEN) + 1)
+for i in range(N_PARAPET):
+    dx = -DECK_HALF_SPAN + i * (2 * DECK_HALF_SPAN) / (N_PARAPET - 1)
     for ry in (-2.3, 2.3):
         cdup = railing.copy()
         cdup.data = railing.data.copy()
@@ -395,13 +479,21 @@ for dx in (-DECK_SPAN, -DECK_SPAN / 3, DECK_SPAN / 3, DECK_SPAN):
         cdup.location = (dx, ry, DECK_Z + 0.14)
         bpy.context.collection.objects.link(cdup)
         preview_objs.append(cdup)
-    for ry in (-2.3, 2.3):
-        cdup = lamp_post.copy()
-        cdup.data = lamp_post.data.copy()
-        cdup.name = f'Lamp_preview_{dx}_{ry}'
-        cdup.location = (dx, ry, DECK_Z + 0.14)
-        bpy.context.collection.objects.link(cdup)
-        preview_objs.append(cdup)
+        for child in list(railing.children):
+            ccdup = child.copy()
+            ccdup.data = child.data.copy() if child.data else None
+            ccdup.name = f'{child.name}_preview_{dx}_{ry}'
+            ccdup.parent = cdup
+            bpy.context.collection.objects.link(ccdup)
+            preview_objs.append(ccdup)
+    if i % 2 == 0:
+        for ry in (-2.3, 2.3):
+            cdup = lamp_post.copy()
+            cdup.data = lamp_post.data.copy()
+            cdup.name = f'Lamp_preview_{dx}_{ry}'
+            cdup.location = (dx, ry, DECK_Z + 0.14)
+            bpy.context.collection.objects.link(cdup)
+            preview_objs.append(cdup)
 
 # The original kit prototypes (still sitting at the world origin, overlapping
 # each other by design — see the module docstring) would otherwise sit inside
