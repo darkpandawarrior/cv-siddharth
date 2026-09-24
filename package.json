@@ -7,7 +7,7 @@
     "gen:galleries": "node scripts/gen-galleries.mjs",
     "sync:media": "node scripts/sync-project-media.mjs",
     "gen:stats": "node scripts/gen-project-stats.mjs",
-    "gen:hiresignal": "node scripts/gen-hiresignal-stats.mjs",
+    "gen:candidai": "node scripts/gen-candidai-stats.mjs",
     "gen:system-prompt": "node scripts/gen-system-prompt.mjs",
     "gen:loopdown": "node scripts/gen-loopdown.mjs",
     "gen:chess": "node scripts/gen-chess-stats.mjs",
