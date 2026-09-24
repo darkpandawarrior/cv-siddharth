@@ -46,11 +46,12 @@ import * as V from "./valley-math.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUT_DIR = join(root, "heavy", "world", "terrain");
-// The QA preview goes to the MAIN checkout (not this worktree) — the spec
-// task's own instruction, and `.showcase-work/` is gitignored there, so it
-// is a scratch inspection artefact, never a committed file.
-const MAIN_ROOT = "/Users/darkpandawarrior/Repos/Interview/cv-siddharth";
-const PREVIEW_PNG = join(MAIN_ROOT, ".showcase-work", "world-v2", "terrain-preview.png");
+// QA preview: a scratch inspection artefact, gitignored, never a committed
+// file. Written relative to THIS script's own worktree root (never a
+// hardcoded absolute path — that would cross-write into whichever checkout
+// happens to sit at that path on this machine, corrupting it, and would
+// crash with no such directory on any other machine or in CI).
+const PREVIEW_PNG = join(root, ".showcase-work", "world-v2", "terrain-preview.png");
 
 const GRID = 385; // 768m / 384 ~= 2 m/texel — dense enough to read the carved features, light enough to compute in JS in a few seconds
 
@@ -365,9 +366,16 @@ async function renderPreview(heights, hMin, hMax, splat, spline, districts, basi
     .png()
     .toBuffer();
 
-  mkdirSync(dirname(PREVIEW_PNG), { recursive: true });
-  writeFileSync(PREVIEW_PNG, composed);
-  console.log(`[gen-terrain] preview -> ${PREVIEW_PNG}`);
+  // Best-effort: the preview is a QA convenience, never a build artefact, so
+  // a write failure here (e.g. a read-only or missing parent on some
+  // machine) must not crash the deterministic terrain generation above it.
+  try {
+    mkdirSync(dirname(PREVIEW_PNG), { recursive: true });
+    writeFileSync(PREVIEW_PNG, composed);
+    console.log(`[gen-terrain] preview -> ${PREVIEW_PNG}`);
+  } catch (err) {
+    console.warn(`[gen-terrain] preview write skipped: ${err.message}`);
+  }
 }
 
 main().catch((err) => {
