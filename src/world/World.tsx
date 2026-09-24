@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ACESFilmicToneMapping as ACES_FILMIC } from "three";
 import { Monuments } from "./Monuments.tsx";
+import { FoundationHub } from "./FoundationHub.tsx";
+import { FleetSkyline } from "./FleetSkyline.tsx";
 import { Corpus } from "./Corpus.tsx";
 import { Threads } from "./Threads.tsx";
 import { ResolveField } from "./ResolveField.tsx";
@@ -81,6 +83,8 @@ const MemoPavilions = memo(Pavilions);
 const MemoLandmarks = memo(Landmarks);
 const MemoVehicle = memo(Vehicle);
 const MemoMonuments = memo(Monuments);
+const MemoFoundationHub = memo(FoundationHub);
+const MemoFleetSkyline = memo(FleetSkyline);
 const MemoCorpus = memo(Corpus);
 const MemoTrail = memo(Trail);
 const MemoResolveField = memo(ResolveField);
@@ -537,6 +541,8 @@ export default function World(props: { onShowList: () => void }) {
         <MemoFixtures />
         <MemoProps />
         <MemoMonuments />
+        <MemoFoundationHub />
+        <MemoFleetSkyline />
         <MemoCorpus />
         <MemoPavilions onPrompt={roomDwell.setPrompt} />
         {/* PART 1 — the project/case-study equivalent of the line above.
