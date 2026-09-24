@@ -1,6 +1,6 @@
 // The design-system ratchet (M71, G-DS): the ONE design system is what
-// already exists — the @theme block in src/index.css (--text-*, --space-*,
-// --ease-*, --dur-*) plus Tailwind's default type/spacing scales — never a
+// already exists: the @theme block in src/index.css (--text-*, --space-*,
+// --ease-*, --dur-*) plus Tailwind's default type/spacing scales, never a
 // new list maintained here. This test counts drift AWAY from that system per
 // file and fails a file that grows past its committed baseline.
 //
@@ -13,7 +13,7 @@
 //  - default: every file's count must be <= its ds-baseline.json count.
 //    A file absent from the baseline starts at 0.
 //  - DS_WRITE_BASELINE=1: (re)writes ds-baseline.json from today's counts.
-//    Run this, review the diff, commit it — the orchestrator reconciles it
+//    Run this, review the diff, commit it; the orchestrator reconciles it
 //    across lanes the same way it reconciles src/data/repoStats.ts (M30).
 //  - DS_STRICT=1: any non-zero count anywhere fails, printing the per-file
 //    counts as the phase-5 (Phase U) worklist.
@@ -29,7 +29,7 @@ const SELF = fileURLToPath(import.meta.url);
 
 const ARBITRARY_RE = /\b(?:text|p|px|py|m|gap|leading|tracking|duration|ease|delay)-\[/g;
 // Property start (after ^, whitespace, `;` or `{`) through the first
-// literal ms/s duration in its value — skips `transition: none` and
+// literal ms/s duration in its value, skips `transition: none` and
 // anything already reading a var(--dur-*)/var(--text-*) token.
 const RAW_CSS_RE =
   /(?:^|[\s;{])(?:font-size|transition(?:-duration)?|animation(?:-duration)?)\s*:\s*[^;{}]*?\b\d+(?:\.\d+)?(?:ms|s)\b/g;
@@ -97,7 +97,6 @@ describe("design system ratchet (G-DS)", () => {
     it("has zero design-system drift (DS_STRICT=1, phase-5 close)", () => {
       const offenders = Object.entries(counts).sort((a, b) => b[1] - a[1]);
       if (offenders.length > 0) {
-        // eslint-disable-next-line no-console -- intentional worklist dump
         console.error(
           "Design-system drift (phase-5 worklist):\n" +
             offenders.map(([file, n]) => `  ${n}\t${file}`).join("\n"),
