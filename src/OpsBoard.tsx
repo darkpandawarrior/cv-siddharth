@@ -85,9 +85,9 @@ type BudgetCheck = { name: string; actual: number | null; ceiling: number; pass:
 type BudgetReport = { generatedAt: string; checks: BudgetCheck[]; failing: boolean };
 
 const STATE_COLOR: Record<OpsState, string> = {
-  OK: "var(--color-signal)",
-  DEGRADED: "var(--color-accent)",
-  BROKEN: "var(--color-danger)",
+  OK: "var(--state-ok)",
+  DEGRADED: "var(--state-degraded)",
+  BROKEN: "var(--state-broken)",
 };
 
 const RANK: Record<OpsState, number> = { BROKEN: 0, DEGRADED: 1, OK: 2 };
@@ -522,9 +522,13 @@ const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
  *
  * `lastShipped` is six years of one fact: the year each listing's last build
  * went out, split by whether Play still shows the listing. It belongs in the
- * fleet block rather than anywhere else because it is the same 173 listings the
- * block already counts — 89 live and 84 delisted, and both halves sum to
- * fleetStats exactly.
+ * fleet block rather than anywhere else because it is the same listings the
+ * block already counts — split live vs delisted, and both halves sum to
+ * fleetStats.live + fleetStats.delisted exactly. Deliberately not a hardcoded
+ * count here or in the caption below: `store.ts` is a live-refreshed corpus,
+ * so a number typed into this comment would be wrong the next time a listing
+ * changed — read the split off fleetStats itself, which is what CadenceFigure
+ * actually renders.
  *
  * ONE SHARED SCALE, both directions, topping out at the real maximum rather
  * than a rounded one. Unlike ChessArc's two rating pools these are the same
@@ -536,8 +540,8 @@ const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
  * token means "lit/live/active", which is exactly what the live half is; but
  * /ops binds it to STATE_COLOR.OK, so it paints every OK LED, every .ops-state
  * reading OK, and the "ok" digit in all eight block censuses — including the
- * one 40px above this chart. In that neighbourhood a green bar reads "89 OK",
- * a verdict on the one block whose own note is that there is no SLA on
+ * one 40px above this chart. In that neighbourhood a green bar would read as a
+ * verdict — "OK" — on the one block whose own note is that there is no SLA on
  * anything in it. So: live is --color-probe ("unlit/idle counterpart", already
  * the counting-into colour for the web's discs and edges) and gone is
  * --color-muted. Two tokens this page has not bound to a state, which is what
@@ -1109,18 +1113,27 @@ export function OpsBoard() {
    * needs an edit either.
    */
   const manifestRows = useMemo<RowModel[]>(
-    () => generatorNodes.map((n): RowModel => ({
-      key: `manifest:${n.id}`,
-      lane: "manifest",
-      state: n.automated ? "OK" : "DEGRADED",
-      subject: n.id,
-      subjectHref: `${REPO}/blob/main/scripts/${n.script}`,
-      detail: n.automated
-        ? `${n.kind} · runs in ${n.stages.join(", ")}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`
-        : `UNAUTOMATED · run by hand: ${n.invocation}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`,
-      verified: evidenceGeneratedAt,
-      verifiedHref: `${REPO}/blob/main/scripts/generators.mjs`,
-    })).sort(bySeverity),
+    () => generatorNodes.map((n): RowModel => {
+      // private-env is the one kind a hosted CI runner can NEVER be handed —
+      // it names a secret pointing at a private source checkout that only
+      // exists on the maintainer's own machine, unlike a "sibling" node,
+      // which refresh-media.yml's own Android/KMP checkouts now genuinely
+      // satisfy. Said once, plainly, rather than left to be inferred from
+      // the raw "private-env" kind string.
+      const laptopOnly = n.kind === "private-env" ? " · maintainer-laptop only" : "";
+      return {
+        key: `manifest:${n.id}`,
+        lane: "manifest",
+        state: n.automated ? "OK" : "DEGRADED",
+        subject: n.id,
+        subjectHref: `${REPO}/blob/main/scripts/${n.script}`,
+        detail: n.automated
+          ? `${n.kind} · runs in ${n.stages.join(", ")}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}${laptopOnly}`
+          : `UNAUTOMATED · run by hand: ${n.invocation}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}${laptopOnly}`,
+        verified: evidenceGeneratedAt,
+        verifiedHref: `${REPO}/blob/main/scripts/generators.mjs`,
+      };
+    }).sort(bySeverity),
     [],
   );
 
@@ -1487,7 +1500,6 @@ export function OpsBoard() {
           <Link to="/" className="kicker-accent transition hover:opacity-80">← Back to portfolio</Link>
           <LauncherButton />
         </div>
-        <p className="section-eyebrow mb-2">// the control loop</p>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>
         {/* ops-2: no local max-width — this paragraph was the only thing on
             the route with one, so the console and the runway table directly
@@ -1512,6 +1524,13 @@ export function OpsBoard() {
         <div className="ops-console font-mono-os">
           <div className="ops-banner" data-worst={worstState}>
             <div className="ops-banner__line">
+              {/* The eyebrow used to sit above the h1, in the scrollable
+                  intro, so it read "the control loop" once and then scrolled
+                  away with everything else this page argues against. It
+                  lives in the sticky banner now, so the page's own name for
+                  itself is on screen at every scroll position, not just the
+                  first. */}
+              <span className="ops-banner__mark">// the control loop</span>
               <span className="ops-banner__mark">SID//OS</span>
               <span className="ops-banner__name">ops console</span>
               <a className="ops-banner__link" href={REPO} target="_blank" rel="noreferrer">darkpandawarrior/cv-siddharth</a>
