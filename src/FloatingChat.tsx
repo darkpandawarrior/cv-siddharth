@@ -8,7 +8,6 @@ import { projects, projectBySlug } from "./data/profile.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { ANSWERS } from "./data/source/answers.ts";
 import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
-import { buildFaqJsonLd } from "./lib/faqJsonLd.ts";
 // ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
 // every route as a closed button. Rendering a message is the FIRST moment any
 // of it is needed, and it cannot happen before someone opens the panel — so
@@ -32,6 +31,7 @@ import {
 } from "./lib/chatContext.ts";
 import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
+import { OPEN_CHAT_EVENT, openChat, openJdFit, type OpenChatDetail } from "./lib/chatBus.ts";
 import {
   CHAT_FALLBACK,
   CHAT_UNAVAILABLE,
@@ -67,12 +67,6 @@ import {
 // the fallback for any path that reads it directly.
 const GREETING: ChatMessage = { role: "assistant", content: HOME_GREETING };
 
-// Computed once, not per render — ANSWERS is static module data, and every
-// route that mounts FloatingChat renders the identical FAQPage block (same
-// reasoning __root.tsx's PERSON_LD uses: one Person/one FAQPage repeated per
-// page is normal schema.org practice, not duplication of the underlying fact).
-const FAQ_JSON_LD = buildFaqJsonLd(ANSWERS);
-
 /** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
 const COLLAPSE_TURN_CHARS = 400;
 
@@ -91,29 +85,11 @@ const STOPPED_NOTE = "Stopped before it finished.";
 const STORE_KEY = "sid-chat-v1";
 const MAX_STORED = 24;
 
-/* ── Opening the console from anywhere ───────────────────────────────────
- * One custom event, two shapes of payload, so no caller needs prop drilling:
- *  - a string  → ask that question (every card deep-links into a conversation
- *    about itself). This is `openChat(question?)`, unchanged.
- *  - `{ mode: "jd", text }` → run the fit analyzer on a pasted job description.
- *    This is what the home page's Fit check section (src/FitCheck.tsx) sends,
- *    so the section owns the textarea and NOTHING else: the request, the
- *    streaming and the scorecard stay in the one JD path below. */
-const OPEN_CHAT_EVENT = "open-chat";
-type OpenChatDetail = string | { mode: "jd"; text: string };
-
-function dispatchOpen(detail?: OpenChatDetail) {
-  window.dispatchEvent(new CustomEvent<OpenChatDetail | undefined>(OPEN_CHAT_EVENT, { detail }));
-}
-
-export function openChat(question?: string) {
-  dispatchOpen(question);
-}
-
-/** Open the console straight into a fit analysis of `text`. */
-export function openJdFit(text: string) {
-  dispatchOpen({ mode: "jd", text });
-}
+// openChat/openJdFit (and the event they dispatch) now live in
+// src/lib/chatBus.ts — re-exported here so the 15 existing `import {
+// openChat } from "./FloatingChat.tsx"` call sites across the codebase need
+// no change (SP-10 repoints them at chatBus directly; H8).
+export { openChat, openJdFit };
 
 /* ── Slash commands ──────────────────────────────────────────────────────
  * These run entirely client-side — no model call, no latency, no API key
@@ -316,16 +292,32 @@ export function FloatingChat() {
     const onOpen = (e: Event) => {
       setOpen(true);
       const detail = (e as CustomEvent<OpenChatDetail | undefined>).detail;
+      if (detail === undefined) return; // openChat() with no argument — just opens
       if (typeof detail === "string") {
         if (detail.trim()) setPendingAsk({ text: detail });
         return;
       }
-      if (detail?.mode === "jd" && detail.text.trim()) {
+      if ("mode" in detail && detail.mode === "jd" && detail.text.trim()) {
         // Clamped here as well as at the textarea: this event is reachable by
         // any caller, and the raised JD cap is the one the server enforces.
         setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
         setJd(null); // a half-typed paste box would outlive the analysis it started
         setExpanded(true); // a scorecard deserves the wide view, not the 370px default
+        return;
+      }
+      // The FaqDock follow-up shape ({ prompt?, context? }): `context` is a
+      // Q&A the visitor already read, seeded into the transcript as history
+      // rather than re-asked — the point is a REAL follow-up, not a repeat
+      // of the canned answer. `prompt`, when given, is then auto-sent the
+      // same way the plain-string shape above is; omitted, the panel opens
+      // with that context showing and the composer focused for whatever the
+      // visitor types next (see the focus-management effect below).
+      if (!("mode" in detail)) {
+        if (detail.context) {
+          const { question, answer } = detail.context;
+          setMessages((prev) => [...prev, { role: "user", content: question }, { role: "assistant", content: answer }]);
+        }
+        if (detail.prompt?.trim()) setPendingAsk({ text: detail.prompt.trim() });
       }
     };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
@@ -687,32 +679,10 @@ export function FloatingChat() {
 
   return (
     <>
-      {/* The answer layer (arch-L11) — unconditional, NOT gated by `open`, so
-          it's part of the server-rendered document on every route that mounts
-          this component: a closed-by-default <details> per question (real,
-          crawlable, collapsed — not CSS-hidden text) plus the FAQPage JSON-LD
-          that describes the same array. Every citation link and every id it
-          points at is checked against a real build by
-          scripts/check-answers.mjs — this block is what makes that check
-          meaningful rather than decorative. */}
-      <section aria-label="Frequently asked" className="border-t border-line bg-surface px-6 py-10 print:hidden">
-        <div className="mx-auto max-w-2xl space-y-2">
-          <p className="kicker-accent">frequently asked</p>
-          {ANSWERS.map((a) => (
-            <details key={a.id} className="rounded-xl border border-line bg-ink px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold text-zinc-100">{a.question}</summary>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                {a.answer}{" "}
-                <a href={a.anchor} className="text-accent underline">
-                  See the source
-                </a>
-                .
-              </p>
-            </details>
-          ))}
-        </div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      </section>
+      {/* The answer layer (arch-L11) moved to src/FaqDock.tsx, docked as
+          SiteFooter's first band (spine F1, F2, F14) — this component no
+          longer renders it. FloatingChat keeps only the launcher and the
+          panel below. */}
       {!open && launcherRoot && createPortal(
         <button
           onClick={() => setOpen(true)}
