@@ -1,0 +1,629 @@
+{
+  "generatedAt": "2026-09-25",
+  "counts": {
+    "year-strata": 8,
+    "weir": 4,
+    "footbridge": 0,
+    "pr-stone": 26,
+    "lesson-kite": 17,
+    "archive-kite": 10,
+    "chess-paddy": 8,
+    "firefly": 208,
+    "deepmal-niche": 173,
+    "benchmark": 53,
+    "site-courses": 14,
+    "employer-marker": 2
+  },
+  "peaks": {
+    "river-width:2019-01": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-02": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-03": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-04": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-05": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-06": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-07": {
+      "current": 12.809647779391435,
+      "peak": 12.809647779391435,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-08": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-09": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-10": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-11": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2019-12": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-01": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-02": {
+      "current": 10.7806,
+      "peak": 10.7806,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-03": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-04": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-05": {
+      "current": 9.3903,
+      "peak": 9.3903,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-06": {
+      "current": 9.3903,
+      "peak": 9.3903,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-07": {
+      "current": 9.3903,
+      "peak": 9.3903,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-08": {
+      "current": 15.013221144144058,
+      "peak": 15.013221144144058,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-09": {
+      "current": 14.0087766303219,
+      "peak": 14.0087766303219,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-10": {
+      "current": 11.903065548136688,
+      "peak": 11.903065548136688,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-11": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2020-12": {
+      "current": 8,
+      "peak": 8,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-01": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-02": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-03": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-04": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-05": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-06": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-07": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-08": {
+      "current": 13.5612,
+      "peak": 13.5612,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-09": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-10": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-11": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2021-12": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-01": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-02": {
+      "current": 13.5612,
+      "peak": 13.5612,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-03": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-04": {
+      "current": 14.374473364752623,
+      "peak": 14.374473364752623,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-05": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-06": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-07": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-08": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-09": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-10": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-11": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2022-12": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-01": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-02": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-03": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-04": {
+      "current": 12.1709,
+      "peak": 12.1709,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-05": {
+      "current": 14.374473364752623,
+      "peak": 14.374473364752623,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-06": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-07": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-08": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-09": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-10": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-11": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2023-12": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-01": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-02": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-03": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-04": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-05": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-06": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-07": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-08": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-09": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-10": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-11": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2024-12": {
+      "current": 13.797446729505246,
+      "peak": 13.797446729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-01": {
+      "current": 16.001020094257868,
+      "peak": 16.001020094257868,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-02": {
+      "current": 16.578046729505246,
+      "peak": 16.578046729505246,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-03": {
+      "current": 17.025623359827147,
+      "peak": 17.025623359827147,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-04": {
+      "current": 17.39132009425787,
+      "peak": 17.39132009425787,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-05": {
+      "current": 17.39132009425787,
+      "peak": 17.39132009425787,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-06": {
+      "current": 18.60709450889668,
+      "peak": 18.60709450889668,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-07": {
+      "current": 19.594893459010493,
+      "peak": 19.594893459010493,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-08": {
+      "current": 20.086554917011313,
+      "peak": 20.086554917011313,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-09": {
+      "current": 20.332468069636807,
+      "peak": 20.332468069636807,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-10": {
+      "current": 20.408166823763118,
+      "peak": 20.408166823763118,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-11": {
+      "current": 20.253799990149048,
+      "peak": 20.253799990149048,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2025-12": {
+      "current": 20.408166823763118,
+      "peak": 20.408166823763118,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-01": {
+      "current": 20.810667873649304,
+      "peak": 20.810667873649304,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-02": {
+      "current": 21.29438564239456,
+      "peak": 21.29438564239456,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-03": {
+      "current": 21.976085361033014,
+      "peak": 21.976085361033014,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-04": {
+      "current": 23.32439797045346,
+      "peak": 23.32439797045346,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-05": {
+      "current": 21.855429890965702,
+      "peak": 21.855429890965702,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-06": {
+      "current": 28.52760097260039,
+      "peak": 28.52760097260039,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-07": {
+      "current": 30.00461656995811,
+      "peak": 30.00461656995811,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-08": {
+      "current": 28.65055627487773,
+      "peak": 28.65055627487773,
+      "peakAt": "2026-09-25"
+    },
+    "river-width:2026-09": {
+      "current": 29.13039814113122,
+      "peak": 29.13039814113122,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:foundation": {
+      "current": 43,
+      "peak": 43,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:doori": {
+      "current": 36,
+      "peak": 36,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:paymentslab-kmp": {
+      "current": 17,
+      "peak": 17,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:gaddi": {
+      "current": 15,
+      "peak": 15,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:candidai": {
+      "current": 0,
+      "peak": 0,
+      "peakAt": "2026-09-25"
+    },
+    "district-bench:portfolio": {
+      "current": 0,
+      "peak": 0,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:lichess-bullet": {
+      "current": 1662,
+      "peak": 1662,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:lichess-blitz": {
+      "current": 1686,
+      "peak": 1686,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:lichess-rapid": {
+      "current": 1552,
+      "peak": 1552,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:chess.com-blitz": {
+      "current": 1425,
+      "peak": 1425,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:chess.com-bullet": {
+      "current": 1225,
+      "peak": 1225,
+      "peakAt": "2026-09-25"
+    },
+    "chess-ridge:chess.com-rapid": {
+      "current": 1307,
+      "peak": 1307,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:bridge:voussoirs": {
+      "current": 18,
+      "peak": 18,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:bridge:piers": {
+      "current": 20,
+      "peak": 20,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:bridge:deckLamps": {
+      "current": 43,
+      "peak": 43,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:doori:steps": {
+      "current": 13,
+      "peak": 13,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:doori:pillarBands": {
+      "current": 12,
+      "peak": 12,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:gaddi:steps": {
+      "current": 15,
+      "peak": 15,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:paymentslab-kmp:bellsNative": {
+      "current": 15,
+      "peak": 15,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:paymentslab-kmp:bellsHosted": {
+      "current": 44,
+      "peak": 44,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:paymentslab-kmp:bellsMobileMoney": {
+      "current": 7,
+      "peak": 7,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:paymentslab-kmp:bellsInternal": {
+      "current": 1,
+      "peak": 1,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:paymentslab-kmp:bellsStub": {
+      "current": 3,
+      "peak": 3,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:employer:Neev Consulting:flights": {
+      "current": 2,
+      "peak": 2,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:employer:Dice.tech:flights": {
+      "current": 17,
+      "peak": 17,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:employer:Jugnoo (Jungleworks / Tookan):flights": {
+      "current": 7,
+      "peak": 7,
+      "peakAt": "2026-09-25"
+    },
+    "landmark-facet:employer:John Deere India:flights": {
+      "current": 1,
+      "peak": 1,
+      "peakAt": "2026-09-25"
+    },
+    "reach-installs:reach-installs": {
+      "current": 2917170,
+      "peak": 2917170,
+      "peakAt": "2026-09-25"
+    },
+    "reach-upstream:reach-upstream": {
+      "current": 24,
+      "peak": 24,
+      "peakAt": "2026-09-25"
+    }
+  }
+}
