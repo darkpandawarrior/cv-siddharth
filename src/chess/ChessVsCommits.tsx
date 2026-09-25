@@ -61,7 +61,7 @@ function istHour(d: Date): number {
 export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
   const { chess: games, commits, commitSample } = hours;
   const [hour, setHour] = useState(() => games.reduce((a, b) => (b.n > a.n ? b : a), games[0]).hour);
-  // reality-spec §6 /chess row: "you caught me at this hour" — the live IST
+  // reality-spec §6 /chess row: "you caught me at this hour", the live IST
   // hour, distinct from `hour` above (the slider's SELECTED hour). `null`
   // until mount (useNow, same reasoning as EvidenceChip/useSky): the room is
   // server-rendered, so a clock read on the server would disagree with the
@@ -203,7 +203,7 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
 
             {/* "you caught me at this hour" (reality-spec §6). A solid line in
                 a third colour, so it never reads as the same thing as the
-                slider's dashed selection above — the two can land on the same
+                slider's dashed selection above: the two can land on the same
                 hour and still need to look different. */}
             {nowHour !== null && (
               <line

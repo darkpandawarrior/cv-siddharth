@@ -24,7 +24,7 @@ function monthLabel(ym: string) {
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
-/** REC-6 (idea-atlas): `filesChanged` is generated and read by nothing —
+/** REC-6 (idea-atlas): `filesChanged` is generated and read by nothing;
  *  months like 2026-08 (221 commits, 2,884 files) read as "this month
  *  rewired the codebase" once breadth sits beside commit count. A second,
  *  small sparkline rather than a third bar in the main chart: the two
@@ -55,7 +55,7 @@ export default function TimeMachine() {
   const maxCommits = Math.max(...historyMonths.map((m) => m.commits), 1);
 
   // reality-spec §6 /time-machine row: "history continues past the
-  // snapshot" — the committed history.ts is frozen at historyGeneratedAt;
+  // snapshot", the committed history.ts is frozen at historyGeneratedAt;
   // this counts real pushes GitHub's public events feed has seen since.
   const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
   const pushesSince = activity?.connected

@@ -24,7 +24,7 @@ import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 const CELL = 9; // px, square
 
 /** reality-spec §6 /lanes row: the newest public push after `lanes.ts`'s own
- *  last generated month, drawn as that lane's tip — a live dot past the
+ *  last generated month, drawn as that lane's tip, a live dot past the
  *  grid's right edge, past the frozen data it extends. */
 function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: string; message: string } }) {
   const max = Math.max(...laneMonths.map((m) => lane.months[m] ?? 0), 1);
@@ -62,7 +62,7 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
         <span
           data-lane-tip
           data-tip-repo={tip.repo}
-          title={`live: ${tip.repo} — ${tip.message}`}
+          title={`live: ${tip.repo}, ${tip.message}`}
           className="ml-1 h-2 w-2 shrink-0 animate-pulse rounded-full"
           style={{ background: `var(${lane.hueVar})` }}
         />
@@ -76,10 +76,10 @@ export default function Lanes() {
   const years = [...new Set(laneMonths.map((m) => m.slice(0, 4)))];
 
   // reality-spec §6 /lanes row: the newest PUBLIC PUSH that lands after
-  // lanes.ts's own last generated month — i.e. real activity the frozen grid
-  // hasn't caught up to yet — drawn as that lane's live tip. `upstream`
+  // lanes.ts's own last generated month, i.e. real activity the frozen grid
+  // hasn't caught up to yet, drawn as that lane's live tip. `upstream`
   // decides which lane it belongs to: a push to his own repo is `work`, a
-  // push landing in someone else's is `opensource` — the same distinction
+  // push landing in someone else's is `opensource`, the same distinction
   // the footer's NowChip already draws on this data.
   const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
   const lastMonth = laneMonths[laneMonths.length - 1];

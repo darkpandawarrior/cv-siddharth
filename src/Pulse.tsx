@@ -233,7 +233,7 @@ function PulseInner() {
   // three axes at once" (presence, weather, clock), plus a closing line
   // built only from byproducts this session already collected (touched
   // projects, weather, 24h pushes). `useSky` is the one shared clock/weather
-  // combinator (design doc §4) — no second fetch or second clock here.
+  // combinator (design doc §4): no second fetch or second clock here.
   // Every clause is independently nullable (weather can fail; sky is null
   // until mount), so both lines are built from parts and filtered rather
   // than interpolated, per "any null clause is omitted, never undefined".

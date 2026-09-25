@@ -61,7 +61,7 @@ const TABS = LAB_TABS;
  * reality-spec §6 /lab row: every instrument card carries the EvidenceChip
  * of the data it runs on, so the lab's own claims are as auditable as /ops.
  * Signal Lab, Crash Triage, Recomposition, Fan-out and Replay are self-
- * contained canvas simulations with no generated file behind them — idea-
+ * contained canvas simulations with no generated file behind them; idea-
  * atlas C3 is explicit that Signal Lab in particular gets no invented
  * cadence, so it stays "cadence not tracked" rather than borrowing
  * useSky()'s daypart or any other room's timestamp to look more live than
@@ -70,7 +70,7 @@ const TABS = LAB_TABS;
 function LabEvidence({ tab }: { tab: LabKey }) {
   switch (tab) {
     case "modules":
-      // projectStats.ts is AUTO-GENERATED but carries no generatedAt field —
+      // projectStats.ts is AUTO-GENERATED but carries no generatedAt field:
       // an undated stamp reads as "cadence not tracked" on its own, same as
       // every other no-stamp file (EvidenceChip.tsx's `no-stamp` state).
       return <EvidenceChip file="projectStats.ts" source="repo scan (settings.gradle.kts + Room)" />;

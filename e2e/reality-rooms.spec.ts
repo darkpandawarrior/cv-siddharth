@@ -15,7 +15,7 @@ import { historyGeneratedAt } from "../src/data/history.ts";
  * instrument card the EvidenceChip of the data it runs on.
  *
  * Every route here also mounts SiteFooter (weather, github-activity,
- * spotify) and OpsBoard-adjacent chips (ops) — all four are mocked on
+ * spotify) and OpsBoard-adjacent chips (ops); all four are mocked on
  * every test so nothing here depends on live network state (G10).
  */
 
@@ -27,7 +27,7 @@ const ACTIVITY = fixture("activity.json") as {
 const OPS = fixture("ops.json");
 const WEATHER_OK = fixture("weather-2026-09-24.json");
 // Not a test fixture: the same corpus the room itself fetches from
-// public/chess/corpus.json — read directly (repo-root relative), per the
+// public/chess/corpus.json, read directly (repo-root relative), per the
 // acceptance criterion's own wording ("read from public/chess/corpus.json
 // inside the test").
 const CORPUS = JSON.parse(readFileSync(new URL("../public/chess/corpus.json", import.meta.url), "utf8")) as {
@@ -46,18 +46,18 @@ async function mockLiveRoutes(page: Page, opts: { weatherAbort?: boolean } = {})
 }
 
 // The fixed instant every other reality spec (spine.spec.ts, reality-footer.spec.ts)
-// pins its "night" case to — 03:15 IST, hour 3, the same hour the fixtures were
+// pins its "night" case to: 03:15 IST, hour 3, the same hour the fixtures were
 // sampled at.
 const NIGHT = "2026-09-24T03:15:00+05:30";
 
-test.describe("/chess — the live IST hour marker and back-links (T6)", () => {
+test.describe("/chess: the live IST hour marker and back-links (T6)", () => {
   test("marks hour 3, and the label's N equals corpus.hours.chess[3].n", async ({ page }) => {
     await mockLiveRoutes(page);
     await page.clock.setFixedTime(new Date(NIGHT));
     await page.goto("/chess");
     await waitForHydration(page);
     // ChessVsCommits (the hour-of-day chart) mounts on the room's last tab,
-    // "Rhythm" — findings is the default landing tab.
+    // "Rhythm"; findings is the default landing tab.
     await page.getByRole("button", { name: "Rhythm" }).click();
 
     const marker = page.locator("[data-now-hour-marker]");
@@ -119,7 +119,7 @@ test("/time-machine: push count since historyGeneratedAt, and the files sparklin
   expect(Number(points)).toBeGreaterThan(0);
 });
 
-test.describe("/pulse — the reality line (PATH-5)", () => {
+test.describe("/pulse: the reality line (PATH-5)", () => {
   test("contains '22.9' and 'IST'", async ({ page }) => {
     await mockLiveRoutes(page);
     await page.clock.setFixedTime(new Date(NIGHT));
@@ -162,8 +162,8 @@ test("/lab: every instrument card carries its EvidenceChip or 'cadence not track
   }
 });
 
-// break-it (G15): the pre-mount SSR failure this suite guards against — a
-// data-lab-card rendering neither a chip nor the fallback text — would be a
+// break-it (G15): the pre-mount SSR failure this suite guards against, a
+// data-lab-card rendering neither a chip nor the fallback text, would be a
 // missing LabEvidence branch for a new LabKey. Asserted indirectly above
 // since LAB_TABS is the single source of the card list; a card added there
 // without a LabEvidence case falls into the `default` branch and still
