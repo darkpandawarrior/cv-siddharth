@@ -5,6 +5,24 @@ from pathlib import Path
 import math
 import bmesh
 import bpy
+import subprocess
+
+def compress_with_meshopt(path):
+    """Compress the exported GLB with meshopt via a dev-only npx binary
+    (gltfpack is never added to package.json). -cc is the higher
+    compression ratio; -kn keeps named nodes (e.g. blueprint-instrument's
+    'needle') attached and lookup-able by name. gltfpack is deterministic
+    given identical input, so this does not break the two-runs-identical
+    gate; write to a sibling temp file first since gltfpack cannot read and
+    write the same path."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / '.showcase-work/blender-20260923/chess-handoff-marker'
@@ -71,10 +89,13 @@ def lathe(profile_rz, steps=12):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return canonical_order(bm)
 
-# Abstracted pawn silhouette: base, neck, rounded head.
+# Abstracted pawn silhouette (silhouette pass): base bevel, neck, a distinct
+# collar ring with a groove under it, then the rounded head, so it reads as
+# a pawn's proportions rather than a plain spinning-top blob.
 PAWN_PROFILE = [
-    (0, 0), (.22, 0), (.19, .05), (.08, .16),
-    (.07, .3), (.14, .34), (.16, .42), (.1, .5), (0, .56),
+    (0, 0), (.22, 0), (.2, .03), (.08, .16),
+    (.07, .26), (.15, .3), (.11, .325), (.155, .355),
+    (.16, .42), (.1, .5), (0, .56),
 ]
 
 def make_pawn(name, x, mat):
@@ -105,4 +126,5 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'chess-handoff-marker.blend'))
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.export_scene.gltf(filepath=str(ROOT / 'public/models/chess-handoff-marker.glb'),
     export_format='GLB', export_yup=True, use_selection=True)
+compress_with_meshopt(ROOT / 'public/models/chess-handoff-marker.glb')
 print('CHESS_HANDOFF_MARKER_EXPORTED')
