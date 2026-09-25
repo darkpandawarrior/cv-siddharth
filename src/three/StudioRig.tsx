@@ -1,32 +1,59 @@
+import { useEffect, useState } from "react";
 import { Environment, Lightformer } from "@react-three/drei";
 import { Color } from "three";
 import { readToken } from "../themeColor";
-import { useSky } from "../lib/useSky.ts";
+import { keyframeAt, sunPosition } from "../lib/sky.ts";
 
 /**
- * Known, verified budget conflict (design-spec.md#4, master-plan.md G4):
- * this file's `useSky()` call is the sole cause of the BlueprintRoom chunk
- * landing at 1,666,776 B, 41 B over this lane's own 1,666,735 B target
- * (the generic largestChunkBytes gate, 1,666,798, still passes). Root
- * cause, isolated by swapping each of this lane's two owned files in and
- * out of a clean rebuild independently: `useSky` calls `useWeather`, which
- * calls `useLiveSignal` (src/lib/useLiveSignal.ts, not owned here); that
- * module gains a third independent leaf consumer the moment StudioRig or
- * BlueprintInstrument reach it, since SkillsOrbitScene/Phone3DScene's
- * chunk-group joins the pre-existing OpsBoard and spotifyPreview.tsx ones,
- * and Rollup's automatic chunker (vite.config.ts, not owned here) switches
- * that module from duplicated-inline to a dedicated shared chunk. That
- * switch is what costs 41 B in BlueprintRoom (an import statement replacing
- * an inlined re-export via spotifyPreview.tsx's tldraw "sid-live" shape),
- * not the size of any code this lane wrote: reverting either owned file
- * alone, or both, reproduces the identical 1,666,776 B, and the function
- * bodies below are confirmed absent from that chunk either way. There is no
- * version of "StudioRig calls useSky()" that avoids this from inside
- * StudioRig.tsx/BlueprintInstrument.tsx alone. The fix is either a
- * `manualChunks`/`experimentalMinChunkSize` pin for useLiveSignal.ts in
- * vite.config.ts, or a reviewed re-baseline of this lane's target number,
- * both outside this lane's ownership.
+ * Root-caused budget fix (design-spec.md#4, master-plan.md G4: "a lane over
+ * budget cuts scope, never the budget"). `useSky()` chains through
+ * `useWeather` into `useLiveSignal` (src/lib/useLiveSignal.ts, not owned
+ * here); reaching that module from here, or from BlueprintInstrument.tsx's
+ * own direct call, is what tips Rollup's automatic chunker (vite.config.ts,
+ * not owned here) from duplicating it inline into its two existing
+ * consumers (OpsBoard, spotifyPreview.tsx) to extracting it as its own
+ * chunk, which costs 41 B in the BlueprintRoom chunk via the added import
+ * statement. Verified empirically: EITHER owned file reaching
+ * useLiveSignal.ts alone reproduces the identical 1,666,776 B, so no
+ * partial cut fixes it: both owned files have to stop reaching it. And it
+ * has to be a *module* reaching it, not just a binding: importing only
+ * `useNow` from `useSky.ts` still pulls the whole file in as one graph node
+ * (Rollup chunks per module, not per export), and `useSky.ts` still reaches
+ * `useLiveSignal.ts` unconditionally at its own top for `useWeather` (used
+ * elsewhere, e.g. SiteFooter.tsx, so not dead code globally). So this file
+ * imports nothing from `useSky.ts` at all.
+ *
+ * The scope cut: this rig now computes the sun's real position and today's
+ * keyframe directly (`sunPosition` + `keyframeAt`, sky.ts's own pure math,
+ * no network, no React) instead of calling `useSky()`, with its own minute-
+ * boundary clock below (`useMinuteClock`, `useNow` from useSky.ts verbatim
+ * minus the import edge, ticking the same schedule, so no drift against
+ * NavClock's). `applyWeather(k, null)` is sky.ts's own documented identity
+ * ("null weather is the identity, same object back"), so this renders
+ * exactly what `useSky()` already renders whenever weather is unavailable:
+ * still driven by the real Pune sun every minute, it just never dims for
+ * cloud cover. BlueprintInstrument.tsx carries the matching cut for the CI
+ * needle's own live-data path.
  */
+
+/** `useSky.ts`'s own `useNow`, copied rather than imported (see the budget
+ *  note above). SSR/first-render: `null`, same as before. */
+function useMinuteClock(): Date | null {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        setNow(new Date());
+        schedule();
+      }, 60_000 - (Date.now() % 60_000));
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, []);
+  return now;
+}
 
 /**
  * The shared studio lighting rig, extracted verbatim from Phone3DScene.tsx
@@ -41,16 +68,18 @@ import { useSky } from "../lib/useSky.ts";
  * with inline Lightformers is a LOCAL environment — no HDR fetch, so CSP is
  * unaffected and there is no network request to budget for.
  *
- * P8 (reality-spec.md#P8): the rig now calls `useSky()` itself. The key
- * directional's colour and intensity follow the real Pune sun (`k.sun`,
- * `k.sunI`), its position follows the sun's altitude/azimuth, the hemisphere
- * fill's intensity follows `k.hemiI` (sky.ts's own "ambient sky" field,
- * carried by every Keyframe row for exactly this purpose), and the amber
- * Lightformer's intensity follows `k.lamp` (his lamps are
- * brightest at night, off in daylight). `useSky()` recomputes at most once a
- * minute (NavClock's own tick), so this is a prop change, never a per-frame
- * write. When `useSky()` is null (SSR, or before the first client tick), the
- * rig renders exactly today's hand-tuned values, unchanged.
+ * P8 (reality-spec.md#P8): the rig follows the real Pune sun via
+ * `sunPosition`/`keyframeAt` (see the budget note above for why not
+ * `useSky()`). The key directional's colour and intensity follow the real
+ * Pune sun (`k.sun`, `k.sunI`), its position follows the sun's
+ * altitude/azimuth, the hemisphere fill's intensity follows `k.hemiI`
+ * (sky.ts's own "ambient sky" field, carried by every Keyframe row for
+ * exactly this purpose), and the amber Lightformer's intensity follows
+ * `k.lamp` (his lamps are brightest at night, off in daylight). `useNow()`
+ * recomputes at most once a minute (NavClock's own tick), so this is a prop
+ * change, never a per-frame write. When it is null (SSR, or before the
+ * first client tick), the rig renders exactly today's hand-tuned values,
+ * unchanged.
  *
  * Does not include `<SceneActivity/>`: that is the frameloop/idle contract,
  * orthogonal to lighting, and every scene already mounts it separately.
@@ -125,9 +154,10 @@ function sunToKeyPosition(altitudeDeg: number, azimuthDeg: number): [number, num
 }
 
 export function StudioRig() {
-  const sky = useSky();
-  const k = sky?.k;
-  const keyPosition = sky ? sunToKeyPosition(sky.sun.altitudeDeg, sky.sun.azimuthDeg) : DEFAULT_KEY_POSITION;
+  const now = useMinuteClock();
+  const sun = now ? sunPosition(now) : null;
+  const k = sun ? keyframeAt(sun.altitudeDeg) : null;
+  const keyPosition = sun ? sunToKeyPosition(sun.altitudeDeg, sun.azimuthDeg) : DEFAULT_KEY_POSITION;
   const keyColor = k ? new Color(k.sun[0], k.sun[1], k.sun[2]) : DEFAULT_KEY_COLOR;
   const keyIntensity = k ? remap(k.sunI, SUN_I_NIGHT, SUN_I_DAY, KEY_INTENSITY_NIGHT, KEY_INTENSITY_DAY) : DEFAULT_KEY_INTENSITY;
   const hemiIntensity = k ? remap(k.hemiI, HEMI_I_NIGHT, HEMI_I_DAY, HEMI_INTENSITY_NIGHT, HEMI_INTENSITY_DAY) : DEFAULT_HEMI_INTENSITY;
