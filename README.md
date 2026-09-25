@@ -153,6 +153,24 @@ Plus, on the scroll itself:
   notes on `/ink` and every `/read/<slug>`, and reaction rows, all shared
   documents backed by `playhtml`, not a per-visitor toy. `VITE_GUEST_WALL=off`
   removes the wall on the next deploy; nothing here calls a server of his.
+- **The reality layer**. The footer's weather chip, `/pulse` and the world
+  scene all read one shared `/api/weather` poll (`useWeather()`): real Pune
+  temperature, condition and AQI from Open-Meteo, refused rather than shown
+  once a reading fails a plausibility check. `/api/signals`, `/api/aircraft`
+  and `/api/tle` feed the same "measured, not decorative" contract to the 3D
+  world and the Blueprint canvas. Every one of these surfaces says so when a
+  reading is unavailable, instead of freezing on the last good value.
+
+## Open source
+
+`scripts/gen-oss-stats.mjs` measures every upstream he has actually opened a
+PR against with `gh pr list`, not the search API (career-ops's own rename
+returns 0 rows there). Two orgs, both rows in `src/data/careerOpsUpstream.ts`:
+**career-ops-hq/career-ops** (24 merged, 1 open, 2 closed unmerged) and three
+**openMF** (Mifos) repos: `kmp-project-template` (#298, #299 merged),
+`mifos-passcode-cmp` (#82 open) and `mifos-x-actionhub` (#89 open). Both
+groups render on the homepage under `#open-source` and on `/resume`; neither
+is a hand-kept count.
 
 ## One registry
 
@@ -267,7 +285,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Thirty-two `gen:` scripts over forty-four generator files. The ones you
+Thirty-three `gen:` scripts over forty-four generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -291,7 +309,7 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Twelve more generator files exist with no `npm run` script, deliberately: each
+Eleven more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
 carries the same reasoning; this is that reasoning where a README reader can
 find it.
@@ -333,11 +351,12 @@ find it.
 - `gen-globe-geo.mjs`. Manual and occasional: bakes country centroids from
   Natural Earth's admin-0 GeoJSON mirror into `src/world/globe/centroids.ts`.
   Same posture as `gen-globe-earth.mjs` above.
-- `gen-loopdown-art.mjs`. Manual and occasional: pulls the Loopdown's 13 cast
-  portraits and 8 series covers (3.39 MB) from the-loopdown's own
-  `lore/assets/manifest.json` over `raw.githubusercontent.com`, never the
-  local checkout. A failed fetch exits 0 and keeps whatever `heavy/loopdown/`
-  and `loopdownArt.ts` already committed.
+
+`gen-loopdown-art.mjs` (`gen:loopdown-art`) runs in the refresh stage now: it
+pulls the Loopdown's 13 cast portraits and 8 series covers (3.39 MB) from
+the-loopdown's own `lore/assets/manifest.json` over `raw.githubusercontent.com`,
+never the local checkout. A failed fetch exits 0 and keeps whatever
+`heavy/loopdown/` and `loopdownArt.ts` already committed.
 
 </details>
 

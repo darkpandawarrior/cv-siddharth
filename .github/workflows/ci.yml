@@ -23,6 +23,10 @@ name: CI
 on:
   push: { branches: [main] }
   pull_request:
+  # SH-12 re-dispatches this workflow after refresh-media.yml merges its
+  # rolling data PR (a GITHUB_TOKEN push triggers no workflow, M66): the
+  # only way that merge ever gets a CI run at all.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
