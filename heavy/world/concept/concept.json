@@ -1,0 +1,145 @@
+[
+  {
+    "file": "01-golden-spawn.webp",
+    "bytes": 234516,
+    "sha256": "995783f9a4fae032ee507276ce21d3eb27d5b673200123cafa832f7b8480daed",
+    "sourceSha256": "053d57c7d16a2a6eaca42f4d176124b6c5fcaeace0e897112c755a7b183d1cec",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:05:56.058Z",
+    "realityState": "default",
+    "caption": "Concept painting: the Sangam valley at golden hour, seen from the spawn point."
+  },
+  {
+    "file": "01-golden-spawn-960.webp",
+    "bytes": 100528,
+    "sha256": "13c952402f87f2e5c93b63e70a2fd48f40d37bc199bafbb340cbe22ab84720f3",
+    "sourceSha256": "053d57c7d16a2a6eaca42f4d176124b6c5fcaeace0e897112c755a7b183d1cec",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:05:56.058Z",
+    "realityState": "default",
+    "caption": "Concept painting: the Sangam valley at golden hour, seen from the spawn point."
+  },
+  {
+    "file": "01-golden-spawn-og.jpg",
+    "bytes": 130903,
+    "sha256": "f9b7fc48533d73649d46f4788da90e265ee883704e1ad483246f84e6bcbf16d0",
+    "sourceSha256": "053d57c7d16a2a6eaca42f4d176124b6c5fcaeace0e897112c755a7b183d1cec",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:05:56.058Z",
+    "realityState": "default",
+    "caption": "Share-preview crop of the golden-spawn concept painting."
+  },
+  {
+    "file": "02-night-survey.webp",
+    "bytes": 107838,
+    "sha256": "036962663c7b6e805091bb88a8d7e7f9d164d9a05c4aac2c087202b06f749997",
+    "sourceSha256": "b83ddd0c795ee1e9c2a50064c0faf17c760d5ebe43bec76939af31c6057833a8",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:06:29.088Z",
+    "realityState": "night",
+    "caption": "Concept painting: the valley by night, lanterns lit along the ghats."
+  },
+  {
+    "file": "02-night-survey-960.webp",
+    "bytes": 58884,
+    "sha256": "42ee13f5880f0f809a30589b7579b1fe1b3e6e6076c874e00ceefc7432fdf915",
+    "sourceSha256": "b83ddd0c795ee1e9c2a50064c0faf17c760d5ebe43bec76939af31c6057833a8",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:06:29.088Z",
+    "realityState": "night",
+    "caption": "Concept painting: the valley by night, lanterns lit along the ghats."
+  },
+  {
+    "file": "03-monsoon.webp",
+    "bytes": 267532,
+    "sha256": "c5f8635c1e3a93b0e76fc05cdf4f2a9db9399d38a46570a5c5c234e3bc0b077a",
+    "sourceSha256": "a516a91cc4fdf5a79c6d2feb85fb172c428ff16820c64244b9a301018fa45312",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:06:53.394Z",
+    "realityState": "rain",
+    "caption": "Concept painting: the valley under monsoon cloud and rain."
+  },
+  {
+    "file": "03-monsoon-960.webp",
+    "bytes": 127448,
+    "sha256": "adf567921a53473de44d514d45c16dfe112306b96c9c512996c55109fc440d77",
+    "sourceSha256": "a516a91cc4fdf5a79c6d2feb85fb172c428ff16820c64244b9a301018fa45312",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:06:53.394Z",
+    "realityState": "rain",
+    "caption": "Concept painting: the valley under monsoon cloud and rain."
+  },
+  {
+    "file": "04-diwali.webp",
+    "bytes": 194670,
+    "sha256": "ad74440609a12c9742e14010e45291ccf5b53fd0f6b198743571a1265377057e",
+    "sourceSha256": "b138a913a1cee9e02d6a6ce70b40805adeb6f31db143c90efe90e0976aae82d2",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:07:16.176Z",
+    "realityState": "diwali",
+    "caption": "Concept painting: the valley at Diwali, the ghats lit for the festival."
+  },
+  {
+    "file": "04-diwali-960.webp",
+    "bytes": 87586,
+    "sha256": "5625e4cf71b5714e0f0a8f711a46824d1d08cfd7e0e7536215cdc575f7b37062",
+    "sourceSha256": "b138a913a1cee9e02d6a6ce70b40805adeb6f31db143c90efe90e0976aae82d2",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:07:16.176Z",
+    "realityState": "diwali",
+    "caption": "Concept painting: the valley at Diwali, the ghats lit for the festival."
+  },
+  {
+    "file": "05-bridge-closeup.webp",
+    "bytes": 249978,
+    "sha256": "acfd2b2e4686aa31310fff1d290bf115f5f6e76e383cd3dd2837efeb57318472",
+    "sourceSha256": "d9e3465de76d1d7708546767a0d679044c22b94881bdb7b381d341a1768727d6",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:07:39.331Z",
+    "realityState": null,
+    "caption": "Concept painting: the Sangam keystone bridge, close up."
+  },
+  {
+    "file": "05-bridge-closeup-960.webp",
+    "bytes": 104114,
+    "sha256": "234a9880e233b5adeb8b69f95d19af26de667532b3281c9d84225c6e443182e2",
+    "sourceSha256": "d9e3465de76d1d7708546767a0d679044c22b94881bdb7b381d341a1768727d6",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:07:39.331Z",
+    "realityState": null,
+    "caption": "Concept painting: the Sangam keystone bridge, close up."
+  },
+  {
+    "file": "06-amphitheatre-districts.webp",
+    "bytes": 229750,
+    "sha256": "89e9b1795837783532cc81e1c1afe17316b3f02b768902f86204856110ca73a3",
+    "sourceSha256": "79a925ef336edf8419e9d33cade8e745ac470ad72cbe62fb811aabd02c1eb809",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:08:03.468Z",
+    "realityState": null,
+    "caption": "Concept painting: the amphitheatre and its district benches."
+  },
+  {
+    "file": "06-amphitheatre-districts-960.webp",
+    "bytes": 94812,
+    "sha256": "34c792b41f60e743cc30806c523ca6ba6863f0997de4717b3991038829f45d46",
+    "sourceSha256": "79a925ef336edf8419e9d33cade8e745ac470ad72cbe62fb811aabd02c1eb809",
+    "model": "gemini-3-pro-image",
+    "costUsdSet": 0.839,
+    "createdAt": "2026-09-24T08:08:03.468Z",
+    "realityState": null,
+    "caption": "Concept painting: the amphitheatre and its district benches."
+  }
+]

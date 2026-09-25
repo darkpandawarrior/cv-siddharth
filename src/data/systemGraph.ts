@@ -6,14 +6,14 @@
 export type SystemNodeKind = "repo" | "employer" | "series" | "surface" | "channel";
 export interface SystemNode { id: string; kind: SystemNodeKind; label: string }
 
-export type SystemEdgeKind = "includeBuild" | "born-from" | "ships" | "runs-here" | "extracted-from" | "operates";
+export type SystemEdgeKind = "includeBuild" | "born-from" | "ships" | "runs-here" | "extracted-from" | "operates" | "rebuilds" | "feeds-data";
 export type SystemEdgeEvidence = "measured" | "declared";
 export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; evidence: SystemEdgeEvidence; detail?: string; url?: string }
 
 export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }
 
 export const systemGraph: SystemGraph = {
-  "generatedAt": "2026-09-23",
+  "generatedAt": "2026-09-25",
   "nodes": [
     {
       "id": "gaddi",
@@ -84,6 +84,11 @@ export const systemGraph: SystemGraph = {
       "id": "agent-harness",
       "kind": "repo",
       "label": "agent-harness"
+    },
+    {
+      "id": "darkpandawarrior",
+      "kind": "repo",
+      "label": "GitHub profile README"
     },
     {
       "id": "dice",
@@ -427,105 +432,128 @@ export const systemGraph: SystemGraph = {
       "to": "doori",
       "kind": "extracted-from",
       "evidence": "declared",
-      "detail": "AgentHarness/plans/portfolio-extraction/CAPABILITY-GAP-ROADMAP.md"
+      "detail": "extraction lineage (documented in the private harness)"
     },
     {
       "from": "doori",
       "to": "kmp-toolkit",
       "kind": "extracted-from",
       "evidence": "declared",
-      "detail": "AgentHarness/plans/portfolio-extraction/CAPABILITY-GAP-ROADMAP.md"
+      "detail": "extraction lineage (documented in the private harness)"
     },
     {
       "from": "agent-harness",
       "to": "gaddi",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "doori",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "paymentslab-kmp",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "candidai",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "portfolio",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "stutter",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "sinc-p",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "kmp-family",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "the-loopdown",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "kmp-build-logic",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "kmp-toolkit",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "kmp-app-template",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
     },
     {
       "from": "agent-harness",
       "to": "career-ops",
       "kind": "operates",
       "evidence": "declared",
-      "detail": "AgentHarness reference_all_repos.md"
+      "detail": "operated by the private agent harness"
+    },
+    {
+      "from": "agent-harness",
+      "to": "darkpandawarrior",
+      "kind": "operates",
+      "evidence": "declared",
+      "detail": "operated by the private agent harness"
+    },
+    {
+      "from": "candidai",
+      "to": "career-ops",
+      "kind": "rebuilds",
+      "evidence": "declared",
+      "detail": "Candidai README: a native rebuild of career-ops",
+      "url": "https://github.com/career-ops-hq/career-ops"
+    },
+    {
+      "from": "portfolio",
+      "to": "darkpandawarrior",
+      "kind": "feeds-data",
+      "evidence": "measured",
+      "detail": "store.ts, timeline.ts",
+      "url": "https://github.com/darkpandawarrior/darkpandawarrior"
     },
     {
       "from": "doori",
@@ -603,6 +631,20 @@ export const systemGraph: SystemGraph = {
       "kind": "includeBuild",
       "evidence": "measured",
       "detail": "kmp-app-template/settings.gradle.kts"
+    },
+    {
+      "from": "portfolio",
+      "to": "kmp-build-logic",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "portfolio/settings.gradle.kts"
+    },
+    {
+      "from": "portfolio",
+      "to": "kmp-toolkit",
+      "kind": "includeBuild",
+      "evidence": "measured",
+      "detail": "portfolio/settings.gradle.kts"
     }
   ]
 };
@@ -610,4 +652,8 @@ export const systemGraph: SystemGraph = {
 // The sibling-scanned half of `includeBuild`, kept separate so a run with no
 // sibling checkouts on disk can fall back to what was last committed here
 // instead of shipping an empty scan as if it were a measured zero.
-export const includeBuildPairs = [["doori","kmp-build-logic"],["doori","kmp-toolkit"],["gaddi","kmp-build-logic"],["gaddi","kmp-toolkit"],["paymentslab-kmp","kmp-build-logic"],["paymentslab-kmp","kmp-toolkit"],["candidai","kmp-build-logic"],["candidai","kmp-toolkit"],["kmp-toolkit","kmp-build-logic"],["kmp-app-template","kmp-build-logic"],["kmp-app-template","kmp-toolkit"]] as const;
+export const includeBuildPairs = [["doori","kmp-build-logic"],["doori","kmp-toolkit"],["gaddi","kmp-build-logic"],["gaddi","kmp-toolkit"],["paymentslab-kmp","kmp-build-logic"],["paymentslab-kmp","kmp-toolkit"],["candidai","kmp-build-logic"],["candidai","kmp-toolkit"],["kmp-toolkit","kmp-build-logic"],["kmp-app-template","kmp-build-logic"],["kmp-app-template","kmp-toolkit"],["portfolio","kmp-build-logic"],["portfolio","kmp-toolkit"]] as const;
+
+// The sibling-scanned half of `feeds-data` (E3) — same missing-sibling
+// fallback contract as includeBuildPairs above.
+export const feedsDataFiles = ["store.ts","timeline.ts"] as const;

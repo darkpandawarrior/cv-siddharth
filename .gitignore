@@ -27,6 +27,17 @@ heavy/**/*.webp
 # pages in it. gen-images.mjs skips this directory for the same reason.
 !public/excelsior/pages/**/*.webp
 !heavy/excelsior/pages/**/*.webp
+# ...and except the world-v2 concept-art frames. Same reasoning again: they are
+# not derivatives of anything in this repo, they are the source paintings
+# (gemini-3-pro-image, packed by scripts/world-v2/pack-concept.mjs from the
+# gitignored .showcase-work/concept/ PNGs, which are never committed).
+# Ignoring them ships a playground fallback and share preview with no image.
+# NOTE: 01-golden-spawn-og.jpg is real source too (the share-preview crop),
+# but gen-images.mjs walks heavy/ and bakes it its own .webp/.avif sibling
+# derivative at build time — that one IS regenerable, so it stays re-ignored
+# below (order matters: a later negated pattern wins).
+!heavy/world/concept/**/*.webp
+heavy/world/concept/*-og.webp
 # ...and except the Play Store icons. Same reasoning: not derivatives of
 # anything in this repo. scripts/gen-store.mjs downloads them from the live
 # listings, and it needs the private Jugnoo repos to run, which a build machine
@@ -75,3 +86,13 @@ graphify-out/
 # piper voice models — ~61MB of weights, re-fetchable from the same URL the
 # script derives. Same rule as the avif/webp block above: regenerable, not carried.
 .piper-voices/
+
+# Raw Poly Haven model downloads (scripts/blender/world-v2/fetch-polyhaven-models.py)
+# — source jpg/gltf/bin for the lookdev scatter kit (fern/shrub/rock/lantern).
+# Same regenerable-input rule as heavy/**/*.webp above; the CC0 attribution
+# that IS carried lives in heavy/world/ASSETS.md, and the baked lookdev
+# render + exported landmark GLBs are committed separately.
+heavy/world/models/polyhaven/
+
+# Blender's bytecode cache for the world-v2 kit scripts (scripts/blender/world-v2/*.py).
+__pycache__/

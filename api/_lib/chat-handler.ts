@@ -317,6 +317,41 @@ interface Provider {
    */
   request: (key: string, messages: ChatMessage[], system: string, maxTokens: number) => Promise<Response>;
   extractDelta: (event: unknown) => string | undefined;
+  /**
+   * Did THIS event carry the provider's own "I stopped because I ran out of
+   * output tokens" signal? `"length"` is the only value that matters — it is
+   * what normalizeStream uses to tell an honestly-finished reply from one cut
+   * off mid-sentence by the token ceiling (see FinishSignal below).
+   */
+  extractFinishReason: (event: unknown) => FinishSignal;
+}
+
+/** `"length"` = the provider stopped because it hit its output-token ceiling,
+ *  not because the answer was actually done. Anything else (a normal end, a
+ *  content filter, or a field this event doesn't carry) is `undefined` —
+ *  normalizeStream treats those as "the answer ended where it meant to". */
+type FinishSignal = "length" | undefined;
+
+/** groq and cerebras both speak OpenAI's streaming shape: the terminal chunk
+ *  carries `choices[0].finish_reason`, `"length"` when the token cap — not
+ *  a natural stop — ended the response. */
+function openAiFinishReason(event: unknown): FinishSignal {
+  const choices = (event as { choices?: { finish_reason?: string | null }[] }).choices;
+  return choices?.[0]?.finish_reason === "length" ? "length" : undefined;
+}
+
+/** Gemini's streamGenerateContent marks the same condition as
+ *  `candidates[0].finishReason === "MAX_TOKENS"`. */
+function geminiFinishReason(event: unknown): FinishSignal {
+  const candidates = (event as { candidates?: { finishReason?: string }[] }).candidates;
+  return candidates?.[0]?.finishReason === "MAX_TOKENS" ? "length" : undefined;
+}
+
+/** Anthropic's Messages API emits a `message_delta` event near stream end
+ *  whose `delta.stop_reason` is `"max_tokens"` for the same condition. */
+function anthropicFinishReason(event: unknown): FinishSignal {
+  const e = event as { type?: string; delta?: { stop_reason?: string } };
+  return e.type === "message_delta" && e.delta?.stop_reason === "max_tokens" ? "length" : undefined;
 }
 
 // A console reply is a few sentences, and a Compose snippet is a screen of
@@ -437,6 +472,7 @@ export const PROVIDERS: Provider[] = [
       });
     },
     extractDelta: (e) => (e as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content,
+    extractFinishReason: openAiFinishReason,
   },
   {
     name: "gemini",
@@ -494,6 +530,7 @@ export const PROVIDERS: Provider[] = [
       const text = parts.filter((p) => !p.thought).map((p) => p.text ?? "").join("");
       return text || undefined;
     },
+    extractFinishReason: geminiFinishReason,
   },
   {
     /**
@@ -522,6 +559,7 @@ export const PROVIDERS: Provider[] = [
         }),
       }),
     extractDelta: (e) => (e as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content,
+    extractFinishReason: openAiFinishReason,
   },
   {
     name: "anthropic",
@@ -548,6 +586,7 @@ export const PROVIDERS: Provider[] = [
         ? event.delta.text
         : undefined;
     },
+    extractFinishReason: anthropicFinishReason,
   },
 ];
 
@@ -794,22 +833,73 @@ export function exhaustedResponse(
 }
 
 /**
+ * Where in `text` it is safe to cut a reply without leaving a dangling
+ * half-sentence: right after `.`/`!`/`?` (optionally followed by a closing
+ * quote/paren/bracket), a paragraph break, or the closing fence of a code
+ * block. Returns the LAST such boundary, exclusive, or -1 when `text`
+ * contains none yet.
+ *
+ * ponytail: a regex heuristic, not a real sentence tokenizer — "e.g. " or a
+ * markdown list's "1. " can false-positive as a boundary. Acceptable because
+ * it only ever widens what may be flushed early during a length-stopped
+ * reply, never what a normally-finished reply shows (that path ignores this
+ * function entirely — see normalizeStream). Upgrade to a real tokenizer if a
+ * probe run ever shows this heuristic itself producing a bad cut.
+ */
+export function lastSentenceEnd(text: string): number {
+  const boundary = /[.!?][)"'\]]*(?=\s|$)|\n\s*\n|```(?=\s|$)/g;
+  let last = -1;
+  let m: RegExpExecArray | null;
+  while ((m = boundary.exec(text))) last = m.index + m[0].length;
+  return last;
+}
+
+/**
  * Re-emits an upstream SSE body as a provider-independent stream the widget
  * understands: `data: {"text":"…"}` events terminated by `data: [DONE]`.
  *
- * GUARANTEE: this never terminates a stream having emitted zero text. A model
- * that spends its entire budget reasoning (see reasoningEffortFor), a content
- * filter that drops every token, an upstream that closes early — all of them
- * used to surface identically as a blank bubble, which reads as a broken site
- * rather than a failed request. `reasoning_effort` fixes the cause we know
- * about; this covers the ones we don't, at the single point every provider's
- * stream funnels through.
+ * GUARANTEE 1 (pre-existing): this never terminates a stream having emitted
+ * zero text. A model that spends its entire budget reasoning (see
+ * reasoningEffortFor), a content filter that drops every token, an upstream
+ * that closes early — all of them used to surface identically as a blank
+ * bubble, which reads as a broken site rather than a failed request.
+ * `reasoning_effort` fixes the cause we know about; this covers the ones we
+ * don't, at the single point every provider's stream funnels through.
+ *
+ * GUARANTEE 2: this never terminates a stream having emitted a dangling
+ * fragment either. Production truncation ("…It features a 44-module
+ * registry" then [DONE]) was gpt-oss-120b's reasoning eating most of the
+ * 1,024-token ceiling before Groq's own `finish_reason: "length"` cut the
+ * answer off mid-word — the SAME root cause as the empty-bubble bug
+ * (reasoningEffortFor's comment above), just with a little budget left over
+ * for a partial sentence instead of none. Text is buffered and flushed up to
+ * the last safe sentence boundary (lastSentenceEnd) as it arrives; only once
+ * the stream ends normally is any unterminated remainder flushed too — a
+ * length-stopped remainder is dropped instead of shown. Once an SSE frame has
+ * reached the client it cannot be un-sent, which is why this holds text back
+ * rather than trying to correct it after the fact.
  */
-export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDelta: Provider["extractDelta"]): ReadableStream<Uint8Array> {
+export function normalizeStream(
+  upstream: ReadableStream<Uint8Array>,
+  extractDelta: Provider["extractDelta"],
+  extractFinishReason: Provider["extractFinishReason"] = () => undefined,
+): ReadableStream<Uint8Array> {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let buffer = "";
-  let sawText = false;
+  let full = ""; // everything extracted from upstream so far
+  let flushed = 0; // how much of `full` has already been sent to the client
+  let emitted = false; // did we ever actually send a text frame?
+  let stoppedForLength = false;
+
+  function flush(controller: TransformStreamDefaultController<Uint8Array>, final: boolean) {
+    const end = final && !stoppedForLength ? full.length : lastSentenceEnd(full);
+    if (end > flushed) {
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: full.slice(flushed, end) })}\n\n`));
+      flushed = end;
+      emitted = true;
+    }
+  }
 
   return upstream.pipeThrough(
     new TransformStream<Uint8Array, Uint8Array>({
@@ -820,18 +910,19 @@ export function normalizeStream(upstream: ReadableStream<Uint8Array>, extractDel
         for (const line of lines) {
           if (!line.startsWith("data: ") || line.includes("[DONE]")) continue;
           try {
-            const delta = extractDelta(JSON.parse(line.slice(6)));
-            if (delta) {
-              sawText = true;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`));
-            }
+            const event = JSON.parse(line.slice(6));
+            const delta = extractDelta(event);
+            if (delta) full += delta;
+            if (extractFinishReason(event) === "length") stoppedForLength = true;
           } catch {
             // partial or non-JSON event — skip
           }
         }
+        flush(controller, false);
       },
       flush(controller) {
-        if (!sawText) {
+        flush(controller, true);
+        if (!emitted) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: EMPTY_STREAM_FALLBACK })}\n\n`));
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -989,7 +1080,7 @@ export async function handleChat(request: Request): Promise<Response> {
     return exhaustedResponse(failures, allowedOrigin);
   }
 
-  return new Response(normalizeStream(upstream.body!, served.extractDelta), {
+  return new Response(normalizeStream(upstream.body!, served.extractDelta, served.extractFinishReason), {
     headers: {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",

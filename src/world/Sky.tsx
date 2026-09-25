@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import * as THREE from "three";
+import { NIGHT_HORIZON_HEX, NIGHT_ZENITH_HEX } from "../lib/nightSurvey.ts";
 
 /**
  * §4 — SKY. An inverted icosphere, radius 300, a 2-stop gradient (no
@@ -16,12 +17,13 @@ import * as THREE from "three";
 
 const RADIUS = 300;
 const MIX_EXPONENT = 2.6;
-const ZENITH_HEX = "#0a0f10";
 /** Exported so World.tsx's fog can match it — fog is what distant terrain
  *  actually blends toward, so a fog colour that disagreed with the sky's
  *  own horizon stop would silently pull the far ridges back toward black
- *  regardless of how bright the sky itself reads. */
-export const HORIZON_HEX = "#16292b";
+ *  regardless of how bright the sky itself reads. Both values live in
+ *  nightSurvey.ts (M48) so this dome and sky.ts's night keyframe can never
+ *  drift apart. */
+export const HORIZON_HEX = NIGHT_HORIZON_HEX;
 
 const VERTEX = /* glsl */ `
 varying vec3 vPos;
@@ -52,7 +54,7 @@ export function Sky() {
   const uniformsRef = useRef<{ uZenith: { value: THREE.Color }; uHorizon: { value: THREE.Color } } | null>(null);
   if (uniformsRef.current === null) {
     uniformsRef.current = {
-      uZenith: { value: new THREE.Color(ZENITH_HEX) },
+      uZenith: { value: new THREE.Color(NIGHT_ZENITH_HEX) },
       uHorizon: { value: new THREE.Color(HORIZON_HEX) },
     };
   }

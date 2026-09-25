@@ -4,6 +4,14 @@ import math
 import bmesh
 import bpy
 
+# Not run through gltfpack (unlike the other 6 wow-pass assets): the hero
+# plinth's only consumer, Phone3DScene.tsx (design-spec.md#5: "zero code
+# change"), loads this GLB through its own bare useLoader(GLTFLoader, ...)
+# rather than useStudioModel, so it never registers three's MeshoptDecoder.
+# A meshopt-compressed file would make that loader throw at runtime
+# ("setMeshoptDecoder must be called before loading compressed files") and
+# take out the hero plinth. This asset carries the biggest KB row (337) for
+# exactly this reason, so raw export is not a budget problem.
 def canonical_order(bm):
     """A modifier's evaluation order is keyed to internal heap pointers, so
     two runs of the same construction can emit identical geometry in a
@@ -131,7 +139,13 @@ for i, (radius, rotation, mat) in enumerate([
 # instrument rather than a floating diagram. A 6-step spin gives the hex
 # cross-section directly (no modifier stack, so the export stays
 # deterministic); the profile itself carries the bevelled barrel edge.
-PLINTH_PROFILE = [(1.6, 0), (1.9, .12), (1.9, .38), (1.6, .5)]
+# Silhouette pass: a two-tier base (a wide foot, a waisted riser, a flared
+# cap with a fillet lip) instead of one plain flare, so the plinth reads as a
+# worked mounting block rather than a hex puck.
+PLINTH_PROFILE = [
+    (1.45, 0), (1.78, 0), (1.8, .05), (1.6, .11),
+    (1.6, .28), (1.88, .34), (1.92, .4), (1.75, .48), (1.58, .52),
+]
 bm = bmesh.new()
 verts = [bm.verts.new((r, 0, z)) for r, z in PLINTH_PROFILE]
 edges = [bm.edges.new((verts[i], verts[i + 1])) for i in range(len(verts) - 1)]

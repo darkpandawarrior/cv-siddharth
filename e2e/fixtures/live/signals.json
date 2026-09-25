@@ -1,0 +1,19 @@
+{
+  "at": "2026-09-24T03:28:00Z",
+  "lichess": { "online": false, "playing": false },
+  "devto": [
+    { "url": "https://dev.to/darkpandawarrior/kotlin-flows-1", "reactions": 1, "comments": 0, "publishedAt": "2026-08-10T09:00:00Z" }
+  ],
+  "ci": {
+    "doori": { "state": "pass", "newestAt": "2026-09-24T03:28:00Z", "failing": [] },
+    "gaddi": { "state": "pass", "newestAt": "2026-09-24T03:20:00Z", "failing": [] },
+    "paymentslab-kmp": { "state": "fail", "newestAt": "2026-09-24T02:55:00Z", "failing": ["Quality Gate"] },
+    "kmp-toolkit": { "state": "pass", "newestAt": "2026-09-23T21:10:00Z", "failing": [] },
+    "kmp-build-logic": { "state": "pass", "newestAt": "2026-09-23T18:40:00Z", "failing": [] }
+  },
+  "downloads": {
+    "doori": { "tag": "v1.4.0", "apk": 22 },
+    "gaddi": { "tag": "v2.1.0", "apk": 21 },
+    "paymentslab-kmp": { "tag": "v0.9.0", "apk": 22 }
+  }
+}

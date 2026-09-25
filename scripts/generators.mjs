@@ -217,6 +217,8 @@ export const GENERATORS = [
       "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
+  { id: "providers", script: "gen-providers.mjs", npmName: "gen:providers", kind: "sibling",
+    inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 
@@ -225,7 +227,7 @@ export const GENERATORS = [
   { id: "showcase", script: "rebuild-showcase.mjs", npmName: "showcase", kind: "network",
     inputs: [], outputs: ["public/projects/*/showcase/**"], stages: { refresh: 2 } },
   { id: "project-stats", script: "gen-project-stats.mjs", npmName: "gen:stats", kind: "network",
-    inputs: [], outputs: ["src/data/projectStats.ts"], stages: { refresh: 3 } },
+    inputs: [], outputs: ["src/data/projectStats.ts", "src/data/kmpGraph.ts"], stages: { refresh: 3 } },
   { id: "candidai-stats", script: "gen-candidai-stats.mjs", npmName: "gen:candidai", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
     // updated number into four otherwise hand-authored files. profile.ts
@@ -234,12 +236,18 @@ export const GENERATORS = [
     inputs: [],
     outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
+  { id: "oss-stats", script: "gen-oss-stats.mjs", npmName: "gen:oss-stats", kind: "network",
+    // Measures merged/open/closed PR counts via `gh pr list`, not the search
+    // API (career-ops rename trap). Never fails the build on missing gh/auth.
+    inputs: [],
+    outputs: ["src/data/careerOpsUpstream.ts", "src/data/profile/openSource.ts"],
+    stages: { refresh: 4 } },
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png"], stages: { refresh: 13 } },
   { id: "weeb", script: "gen-weeb.mjs", npmName: "gen:weeb", kind: "network",
-    inputs: [], outputs: ["src/data/weeb.ts"], stages: { refresh: 14 } },
+    inputs: [], outputs: ["src/data/weeb.ts", "src/data/weebTitles.ts"], stages: { refresh: 14 } },
   { id: "chess-stats", script: "gen-chess-stats.mjs", npmName: "gen:chess", kind: "network",
     inputs: [], outputs: ["src/data/chess.ts", "public/chess/corpus.json", ".chess-cache/lichess-games.json"],
     stages: { refresh: 15 } },
@@ -267,6 +275,16 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
+  // Manual annual refresh, deliberately NOT wired into any build/refresh/check
+  // chain (its own header says so, live-data-spec.md#1.3, #4 R6): the mean
+  // barely moves year to year.
+  { id: "pune-normals", script: "gen-pune-normals.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["src/data/generated/puneNormals.ts"], stages: {} },
+  // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
+  // header says so, live-data-spec.md#1.3, #4 R6): a 34 MB CSV fetch, run by
+  // hand when the star catalogue needs a refresh.
+  { id: "starfield", script: "gen-starfield.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["public/sky/stars-hyg41-m5.bin"], stages: {} },
   // Manual/occasional, same posture as gen-excelsior.mjs above (its own header
   // says so): needs `tesseract` on PATH, a system binary no CI runner can be
   // assumed to have. No network call of its own — OCRs the pages the sibling

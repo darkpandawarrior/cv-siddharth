@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-09-24T22:35:00.265Z",
+  "basin": {
+    "x": 0,
+    "z": 261.6666666666697,
+    "r": 48
+  },
+  "streams": [
+    {
+      "id": "doori",
+      "from": {
+        "x": -89.2707989746613,
+        "z": 229.17475305073117
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 3.6,
+      "unmeasuredWidth": false,
+      "evidence": "measured",
+      "hasWater": true
+    },
+    {
+      "id": "gaddi",
+      "from": {
+        "x": -54.48976145334941,
+        "z": 183.84722245921552
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 1.5,
+      "unmeasuredWidth": false,
+      "evidence": "measured",
+      "hasWater": true
+    },
+    {
+      "id": "paymentslab-kmp",
+      "from": {
+        "x": -1.745121688784978e-14,
+        "z": 166.6666666666697
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 1.7000000000000002,
+      "unmeasuredWidth": false,
+      "evidence": "measured",
+      "hasWater": true
+    },
+    {
+      "id": "candidai",
+      "from": {
+        "x": 54.489761453349374,
+        "z": 183.84722245921546
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 1.2,
+      "unmeasuredWidth": true,
+      "evidence": "measured",
+      "hasWater": true
+    },
+    {
+      "id": "kmp-toolkit",
+      "from": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 1.2,
+      "unmeasuredWidth": true,
+      "evidence": "measured",
+      "hasWater": true
+    },
+    {
+      "id": "kmp-app-template",
+      "from": {
+        "x": 89.2707989746613,
+        "z": 229.17475305073117
+      },
+      "to": {
+        "x": 0,
+        "z": 261.6666666666697
+      },
+      "width": 1.2,
+      "unmeasuredWidth": true,
+      "evidence": "measured",
+      "hasWater": true
+    }
+  ]
+}

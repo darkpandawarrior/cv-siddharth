@@ -1,0 +1,45 @@
+{
+  "connected": true,
+  "stale": false,
+  "repo": "cv-siddharth",
+  "runs": [
+    {
+      "workflow": "ci.yml",
+      "conclusion": "success",
+      "at": "2026-09-23T20:40:00Z",
+      "url": "https://github.com/darkpandawarrior/cv-siddharth/actions/runs/900001",
+      "event": "push",
+      "recentFailures": 0,
+      "recentTotal": 8
+    },
+    {
+      "workflow": "refresh-media.yml",
+      "conclusion": "success",
+      "at": "2026-09-23T20:40:00Z",
+      "url": "https://github.com/darkpandawarrior/cv-siddharth/actions/runs/900002",
+      "event": "schedule",
+      "recentFailures": 0,
+      "recentTotal": 8
+    }
+  ],
+  "neverRan": [],
+  "supplyChain": {
+    "connected": true,
+    "indexBuiltAt": "2026-09-23T19:00:00Z",
+    "apps": [
+      {
+        "slug": "gaddi",
+        "repo": "Gaddi",
+        "pkg": "com.kursi.android",
+        "versionName": "4.2.0",
+        "versionCode": 42,
+        "sizeBytes": 18874368,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85",
+        "antiFeatures": [],
+        "signerMatches": true,
+        "fdroidUrl": "https://darkpandawarrior.github.io/fdroid/repo/com.kursi.android",
+        "releaseUrl": "https://github.com/darkpandawarrior/Gaddi/releases/tag/v4.2.0"
+      }
+    ]
+  }
+}
