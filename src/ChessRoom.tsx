@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { ClientOnly } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
@@ -461,6 +461,18 @@ export function ChessRoom() {
         </p>
         <p className="mt-3">
           <EvidenceChip file="chess.ts" stamp={chess.generatedAt.slice(0, 10)} source="lichess + chess.com" />
+        </p>
+        {/* T6 (trove-map.md): same search code, two different games. */}
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
+          The bot on the Play tab runs the{" "}
+          <Link to="/lab" hash="search-trees" className="underline decoration-dotted hover:text-accent">
+            same search code
+          </Link>
+          , and{" "}
+          <Link to="/project/$slug" params={{ slug: "gaddi" }} className="underline decoration-dotted hover:text-accent">
+            Gaddi&apos;s ISMCTS
+          </Link>{" "}
+          runs right beside it.
         </p>
       </header>
 
