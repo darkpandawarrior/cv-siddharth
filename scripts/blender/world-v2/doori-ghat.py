@@ -5,16 +5,22 @@ Kit pieces: GhatTop (sandstone landing + whitewashed plaster parapet) and
 SurveyPillar (a GSI-style triangulation pillar, 12 painted bands = the
 projectStats.doori.cores count, baked here as a build-time snapshot rather
 than instanced — unlike steps/bells/diyas/voussoirs/kites, a survey pillar's
-bands are not in spec §0.3 rule 2's instanced list). The 13-flight descent
-itself is NOT modelled here: it is instanced from ghat-kit.py's flight
-prototype at runtime, mounted at socket.flights_top. socket.hero_stone marks
-where the gps-accuracy case-study stone (hero-stone-kit.py) sits.
+bands are not in spec §0.3 rule 2's instanced list). SchemaPillarBase +
+SchemaBand (P2-07e audit, idea-atlas REC-8): a second, distinct pillar for
+Doori's schemaVersion (48, and growing with every Room migration) — this
+one DOES follow rule 2, one SchemaBand prototype instanced along
+socket.schema_pitch from socket.schema_bands_start, never a baked band
+count. The 13-flight descent itself is NOT modelled here: it is instanced
+from ghat-kit.py's flight prototype at runtime, mounted at
+socket.flights_top. socket.hero_stone marks where the gps-accuracy
+case-study stone (hero-stone-kit.py) sits.
 
 Run with: blender --background --factory-startup --disable-autoexec
 --python-exit-code 1 --python doori-ghat.py
 """
 from pathlib import Path
 import math
+import subprocess
 import sys
 import bmesh
 import bpy
@@ -135,15 +141,63 @@ survey_pillar = sh.new_mesh_object('SurveyPillar', pillar_bm, sandstone)
 # would float them 0.13 m above the actual surface there.
 survey_pillar.location = (1.35, -0.55, H_LOWER)
 
+# --- schema pillar: a SECOND, distinct pillar (idea-atlas.md#REC-8 "Doori's
+# schema rings") - "a carved pillar with one band per schema version up to
+# 48, distinct from the survey pillar's cores bands". schemaVersion is a
+# live, growing count (it climbs with every Room migration), unlike the
+# survey pillar's cores(12) which this file's own house pattern already
+# treats as a fixed build-time snapshot (see the module docstring) - so this
+# one follows spec §0.3 rule 2 properly: one SchemaBand prototype plus a
+# pitch socket, never a baked band count. Mirrored on the landing's other
+# side from SurveyPillar, same lower-course resting height. ---
+SCHEMA_BASE_PROFILE = [(0.14, 0.0), (0.14, 0.05), (0.095, 0.07)]
+schema_base_bm = sh.lathe(SCHEMA_BASE_PROFILE, steps=12)
+schema_pillar_base = sh.new_mesh_object('SchemaPillarBase', sh.canonical_order(schema_base_bm), sandstone)
+schema_pillar_base.location = (-1.35, -0.55, H_LOWER)
+
+SCHEMA_BAND_H = 0.075
+BAND_PROFILE = [(0.095, 0.0), (0.095, SCHEMA_BAND_H * 0.6), (0.11, SCHEMA_BAND_H * 0.75),
+                (0.095, SCHEMA_BAND_H * 0.9)]
+schema_band_bm = sh.lathe(BAND_PROFILE, steps=12)
+schema_band = sh.new_mesh_object('SchemaBand', sh.canonical_order(schema_band_bm), sandstone)
+
+schema_bands_start = sh.socket(
+    'socket.schema_bands_start',
+    (schema_pillar_base.location.x, schema_pillar_base.location.y,
+     schema_pillar_base.location.z + 0.07),
+    size=0.06)
+# Pure delta vector (0, 0, one-band-step), the same standalone convention as
+# ghat-kit.py's socket.step_pitch - not parented, so it stays a vector.
+schema_pitch = sh.socket('socket.schema_pitch', (0, 0, SCHEMA_BAND_H), size=0.04)
+
 sh.socket('socket.flights_top', (0, -d / 2 - 0.05, H_LOWER), rotation=(0, 0, 0), size=0.18)
 sh.socket('socket.hero_stone', (-1.4, -d / 2 - 0.05, 0), size=0.15)
 sh.socket('socket.stream_edge_l', (-STREAM_W / 2, -d / 2 - 1.2, -0.4), size=0.12)
 sh.socket('socket.stream_edge_r', (STREAM_W / 2, -d / 2 - 1.2, -0.4), size=0.12)
 
-kit_objects = [ghat_top, parapet, survey_pillar]
+kit_objects = [ghat_top, parapet, survey_pillar, schema_pillar_base, schema_band]
 sockets = [bpy.data.objects['socket.flights_top'], bpy.data.objects['socket.hero_stone'],
-           bpy.data.objects['socket.stream_edge_l'], bpy.data.objects['socket.stream_edge_r']]
+           bpy.data.objects['socket.stream_edge_l'], bpy.data.objects['socket.stream_edge_r'],
+           schema_bands_start, schema_pitch]
 sh.export_kit(ID, kit_objects + sockets)
+
+
+def pack_glb(path):
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house
+    pattern, M68: the exact pin, never added to package.json; mirrors
+    fleet-deepmal.py's pack_glb, since _shared.py is frozen per M42). This
+    lane's task 3: pack every GLB."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
+
+pack_glb(sh.MODELS_OUT / f'{ID}.glb')
+print(f'{ID.upper().replace("-", "_")}_PACKED')
 
 # ---------------------------------------------------------------------------
 # Preview-only: mount a representative run of ghat-kit's Step prototype at
@@ -163,15 +217,33 @@ if GHAT_KIT_GLB.exists():
     step_proto = next((o for o in imported if o.name == 'Step'), None)
     flights_top = bpy.data.objects['socket.flights_top']
     STEP_RUN, STEP_RISE, N_STEPS_PREVIEW = 0.32, 0.16, 12
+
+    def _dup_proto(proto, name):
+        """A packed GLB (this lane's task 3) quantizes a named node's mesh
+        onto an unnamed child (KHR_mesh_quantization) rather than keeping it
+        on the node itself - proto.data is then None and the geometry lives
+        on proto.children. Duplicate proto AND its children so a preview
+        copy keeps its geometry either way, and position the returned
+        (parent) object as before - a child's own local transform is
+        relative to its parent, so it comes along for free."""
+        dup = proto.copy()
+        dup.data = proto.data.copy() if proto.data else None
+        dup.name = name
+        bpy.context.collection.objects.link(dup)
+        for child in proto.children:
+            cdup = child.copy()
+            cdup.data = child.data.copy() if child.data else None
+            cdup.name = f'{name}_{child.name}'
+            cdup.parent = dup
+            bpy.context.collection.objects.link(cdup)
+        return dup
+
     if step_proto is not None:
         for i in range(N_STEPS_PREVIEW):
-            dup = step_proto.copy()
-            dup.data = step_proto.data.copy()
-            dup.name = f'Step_preview_{i}'
+            dup = _dup_proto(step_proto, f'Step_preview_{i}')
             dup.location = (flights_top.location.x,
                              flights_top.location.y - i * STEP_RUN,
                              flights_top.location.z - i * STEP_RISE)
-            bpy.context.collection.objects.link(dup)
     for o in imported:
         o.hide_render = True
         o.hide_viewport = True
