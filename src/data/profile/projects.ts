@@ -2,6 +2,16 @@ import { projectStats } from "../projectStats.ts";
 import { kmpGraph } from "../kmpGraph.ts";
 import { mermaidFromGraph } from "../../lib/mermaidFromGraph.ts";
 import { projectModuleCounts, paymentGatewayCount, dooriStats, paymentStats } from "../../lib/projectStatLine.ts";
+// kmpGraph.modules preserves kmp-toolkit's own settings.gradle.kts include()
+// order (gen-project-stats.mjs's scanToolkitModules): core modules first,
+// then every `:provider:x` gateway module as one contiguous trailing block,
+// foundation.providerModules long. Slicing that many entries off the end is
+// how the generator itself tells providers apart from core modules (it never
+// keeps the ":provider:" prefix on the flattened id), so this is the same
+// definition, not a second one. Intersecting it with an app's
+// substitutedModules replaces a hand-counted literal with a real count.
+const kmpProviderModuleIds = new Set(kmpGraph.modules.slice(-projectStats.foundation.providerModules).map((m) => m.id));
+const paymentsLabProviderModulesUsed = paymentStats.substitutedModules.filter((m) => kmpProviderModuleIds.has(m)).length;
 // Split from profile.ts along its export seams (arch-L15) — the heavy
 // project registry (screenshots, case-study prose, per-target device
 // chrome). See projectCards.ts for the light card-list projection that
@@ -733,7 +743,7 @@ export const projects: Project[] = [
         },
         {
           heading: `${projectModuleCounts["paymentslab-kmp"]} modules, ${paymentGatewayCount} gateways`,
-          body: `One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are ${paymentStats.modules} local modules plus ${paymentStats.composedModules} composed from kmp-toolkit (19 of kmp-toolkit's ${projectStats.foundation.providerModules} standalone provider gateway modules). The in-app catalog spans ${paymentGatewayCount} registered gateways: ${paymentStats.gatewaysNative} native-SDK integrations, an internal wallet ledger, ${paymentStats.gatewaysHosted} hosted-webview gateways behind one archetype, ${paymentStats.gatewaysMobileMoney} mobile-money flows and ${paymentStats.gatewaysStub} catalog-only / KYC-gated entries, each with its own status badge and region.`,
+          body: `One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are ${paymentStats.modules} local modules plus ${paymentStats.composedModules} composed from kmp-toolkit (${paymentsLabProviderModulesUsed} of kmp-toolkit's ${projectStats.foundation.providerModules} standalone provider gateway modules). The in-app catalog spans ${paymentGatewayCount} registered gateways: ${paymentStats.gatewaysNative} native-SDK integrations, an internal wallet ledger, ${paymentStats.gatewaysHosted} hosted-webview gateways behind one archetype, ${paymentStats.gatewaysMobileMoney} mobile-money flows and ${paymentStats.gatewaysStub} catalog-only / KYC-gated entries, each with its own status badge and region.`,
         },
         {
           heading: "Five money-movement rails + split payments",

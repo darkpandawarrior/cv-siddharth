@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { projects, kmpFamilyModuleClaims } from "./projects.ts";
 import { provenIn, skills, resumeSkills } from "./skills.ts";
 import { projectStats, projectStatsGeneratedAt, kmpAdoption } from "../projectStats.ts";
+import { kmpGraph } from "../kmpGraph.ts";
+import { paymentStats } from "../../lib/projectStatLine.ts";
 
 /** The measured substitutedModules list for an app named in the kmp-family
  *  prose. doori/gaddi/paymentslab-kmp live on projectStats; candidai and
@@ -80,6 +82,26 @@ describe("kmp-family prose module claims", () => {
       const stillFinding = new RegExp(`[Ss]till finding a first consumer:[^.]*\\b${module}\\b`);
       expect(stillFinding.test(proseText), module).toBe(false);
     }
+  });
+});
+
+describe("paymentslab-kmp's provider gateway count", () => {
+  // Same definition projects.ts uses (kmpGraph.modules' trailing
+  // foundation.providerModules entries are kmp-toolkit's provider catalog),
+  // rederived here independently so a hand-typed literal creeping back into
+  // projects.ts fails this test instead of only being caught by eye.
+  const providerIds = new Set(kmpGraph.modules.slice(-projectStats.foundation.providerModules).map((m) => m.id));
+  const counted = paymentStats.substitutedModules.filter((m) => providerIds.has(m)).length;
+
+  it("is a real subset of kmp-toolkit's provider catalog, not zero and not all of it", () => {
+    expect(counted).toBeGreaterThan(0);
+    expect(counted).toBeLessThanOrEqual(projectStats.foundation.providerModules);
+  });
+
+  it("equals what the paymentslab-kmp prose states (test computes it)", () => {
+    const kmp = projects.find((p) => p.slug === "paymentslab-kmp");
+    const body = kmp?.detail?.sections.map((s) => s.body).join("\n") ?? "";
+    expect(body).toContain(`(${counted} of kmp-toolkit's ${projectStats.foundation.providerModules} standalone provider gateway modules)`);
   });
 });
 
