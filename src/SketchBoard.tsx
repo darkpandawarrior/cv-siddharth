@@ -19,7 +19,7 @@ import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
  * runtime exports is behind its own `lazy(() => import("tldraw"))`, so
  * tldraw's own bundle (and @tiptap/core + @tiptap/pm, its rich-text
  * dependency) lands in a chunk separate from this file's own authored code.
- * Only `Box` (a plain geometry value) and types stay a static import here —
+ * Only `Box` (a plain geometry value) and types stay a static import here:
  * `fitBoardToViewport` uses `Box` directly and SketchBoard.test.ts calls it
  * synchronously, so it can't sit behind an awaited dynamic import. */
 
