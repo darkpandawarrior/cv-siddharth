@@ -22,9 +22,15 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Do everything except push.
-        type: boolean
-        default: false
+        # A string, not `type: boolean` — see refresh-media.yml's dry_run for
+        # why: every `if:` below compares this against the string 'true', and
+        # a real boolean compared to a string in a GitHub Actions expression
+        # is coerced numerically (true -> 1, 'true' -> NaN), so both
+        # == 'true' and != 'true' were silently wrong here too (run
+        # 36087134762's "Dry run: report what would have happened" never ran
+        # despite dry_run=true).
+        description: "Do everything except push. (true/false)"
+        default: 'false'
       fixture:
         description: Force a scenario for testing.
         type: choice

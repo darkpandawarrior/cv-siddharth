@@ -20,9 +20,20 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Do everything except open, merge or dispatch; print the classifier verdict.
-        type: boolean
-        default: false
+        # A string, not `type: boolean`: every `if:` below compares this
+        # against the string 'true' (inputs.dry_run == 'true' / != 'true').
+        # GitHub Actions expressions compare a real boolean to a string by
+        # coercing both to numbers (true -> 1, 'true' -> NaN), so with
+        # type: boolean every one of those comparisons was silently wrong in
+        # BOTH directions — == 'true' always false, != 'true' always true —
+        # and dry_run never once suppressed a push in any dispatch, including
+        # this lane's own dry_run=true test (run 36087128966: it pushed a
+        # real bot/data-refresh branch and attempted a real PR). A plain
+        # string input (still 'true'/'false' via -f dry_run=true) makes the
+        # existing string comparisons actually correct instead of adding
+        # `true`/`false` literals at six call sites.
+        description: "Do everything except open, merge or dispatch; print the classifier verdict. (true/false)"
+        default: 'false'
       fixture:
         description: Force a scenario for testing.
         type: choice
