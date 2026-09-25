@@ -1,5 +1,7 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { SiteFooter } from "../SiteFooter.tsx";
+import { useTouched } from "../lib/sessionRipple.ts";
+import { projectBySlug } from "../data/profile.ts";
 
 // Catch-all splat route (file name "$" is TanStack Router's file-based
 // convention for a route matching any otherwise-unmatched path). It must
@@ -77,6 +79,13 @@ function TornMapGlyph() {
  */
 function NotFoundPage() {
   const { _splat } = Route.useParams();
+  // In-memory by design (sessionRipple.ts) — a fresh full page load (this
+  // page's own beforeLoad always runs through SSR first) starts empty, so
+  // this only ever resolves after client-side navigation touched a project
+  // first. Read backward: the most recent touched entry that IS a project
+  // slug, skipping past any StoryMap node id that isn't one.
+  const touched = useTouched();
+  const lastProject = [...touched].reverse().map(projectBySlug).find((p) => p != null) ?? null;
   return (
     <div className="min-h-screen bg-ink">
       <header className="border-b border-line">
@@ -94,8 +103,22 @@ function NotFoundPage() {
           <div className="min-w-0">
             <h1 className="font-display text-hero font-bold tracking-tight text-balance">You're off the map.</h1>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-300">
-              {_splat ? `/${_splat}` : "That address"} doesn't resolve to anything on this site. The atlas
-              (every project, every room, one measured graph) is the way back in.
+              {_splat ? `/${_splat}` : "That address"} doesn't resolve to anything on this site.{" "}
+              {lastProject ? (
+                <>
+                  You were last near{" "}
+                  <Link
+                    to="/project/$slug"
+                    params={{ slug: lastProject.slug }}
+                    className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+                  >
+                    {lastProject.name}
+                  </Link>
+                  .
+                </>
+              ) : (
+                <>The atlas (every project, every room, one measured graph) is the way back in.</>
+              )}
             </p>
           </div>
         </div>
