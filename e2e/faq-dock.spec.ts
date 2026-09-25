@@ -158,6 +158,8 @@ test("'Ask Panda a follow-up' opens the chat panel carrying the question text", 
 });
 
 // ── Accessibility ─────────────────────────────────────────────────────────
+// Same tag set and experimental rule e2e/a11y.spec.ts scans every route
+// with (AXE_TAGS/AXE_EXPERIMENTAL there), scoped to just the dock.
 for (const path of ["/", "/project/doori"]) {
   for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
     test(`axe: ${path} @${vp.width} has no serious or critical violation in the FAQ dock`, async ({ page }) => {
@@ -165,7 +167,8 @@ for (const path of ["/", "/project/doori"]) {
       await openFaqDock(page, path);
       const results = await new AxeBuilder({ page })
         .include("[data-spine=faq]")
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+        .options({ rules: { "label-content-name-mismatch": { enabled: true } } })
         .analyze();
       const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
       expect(bad, JSON.stringify(bad, null, 2)).toEqual([]);
