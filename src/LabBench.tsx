@@ -3,6 +3,8 @@ import { Link, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
+import { EvidenceChip } from "./EvidenceChip.tsx";
+import { chess } from "./data/chess.ts";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
 // time — harmless client-side, fatal during SSR. `<ClientOnly>` below defers
 // that eval to the client, same pattern as BlueprintRoom/ComposePlayground in
@@ -55,6 +57,33 @@ function PaneFallback({ what }: { what: string }) {
 
 const TABS = LAB_TABS;
 
+/**
+ * reality-spec §6 /lab row: every instrument card carries the EvidenceChip
+ * of the data it runs on, so the lab's own claims are as auditable as /ops.
+ * Signal Lab, Crash Triage, Recomposition, Fan-out and Replay are self-
+ * contained canvas simulations with no generated file behind them; idea-
+ * atlas C3 is explicit that Signal Lab in particular gets no invented
+ * cadence, so it stays "cadence not tracked" rather than borrowing
+ * useSky()'s daypart or any other room's timestamp to look more live than
+ * it is.
+ */
+function LabEvidence({ tab }: { tab: LabKey }) {
+  switch (tab) {
+    case "modules":
+      // projectStats.ts is AUTO-GENERATED but carries no generatedAt field:
+      // an undated stamp reads as "cadence not tracked" on its own, same as
+      // every other no-stamp file (EvidenceChip.tsx's `no-stamp` state).
+      return <EvidenceChip file="projectStats.ts" source="repo scan (settings.gradle.kts + Room)" />;
+    case "gateways":
+      return <EvidenceChip file="providers.ts" source="PaymentsLab-KMP docs/providers" />;
+    case "search-trees":
+    case "chess-clock":
+      return <EvidenceChip file="chess.ts" stamp={chess.generatedAt.slice(0, 10)} source="lichess + chess.com" />;
+    default:
+      return <span className="font-mono text-xs text-muted">cadence not tracked</span>;
+  }
+}
+
 export function LabBench() {
   const [tab, setTab] = useState<LabKey>(() => peekPendingLab() ?? "signal");
 
@@ -88,47 +117,51 @@ export function LabBench() {
             <p className="kicker mb-2 font-semibold">Dice.tech — production</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "production").map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  aria-pressed={tab === t.key}
-                  className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-                    tab === t.key
-                      ? "border-accent bg-accent/15 text-accent"
-                      : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-                  }`}
-                >
-                  {t.label}
-                  {t.featured && (
-                    <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
-                      start here
-                    </span>
-                  )}
-                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
-                </button>
+                <div key={t.key} data-lab-card className="flex flex-col items-start gap-1">
+                  <button
+                    onClick={() => setTab(t.key)}
+                    aria-pressed={tab === t.key}
+                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                      tab === t.key
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                    }`}
+                  >
+                    {t.label}
+                    {t.featured && (
+                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                        start here
+                      </span>
+                    )}
+                    <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
+                  </button>
+                  <LabEvidence tab={t.key} />
+                </div>
               ))}
             </div>
             <p className="kicker mb-2 font-semibold">Personal builds</p>
             <div className="mb-6 flex flex-wrap gap-2">
               {TABS.filter((t) => t.group === "personal").map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  aria-pressed={tab === t.key}
-                  className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-                    tab === t.key
-                      ? "border-accent bg-accent/15 text-accent"
-                      : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
-                  }`}
-                >
-                  {t.label}
-                  {t.featured && (
-                    <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
-                      start here
-                    </span>
-                  )}
-                  <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
-                </button>
+                <div key={t.key} data-lab-card className="flex flex-col items-start gap-1">
+                  <button
+                    onClick={() => setTab(t.key)}
+                    aria-pressed={tab === t.key}
+                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                      tab === t.key
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
+                    }`}
+                  >
+                    {t.label}
+                    {t.featured && (
+                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                        start here
+                      </span>
+                    )}
+                    <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
+                  </button>
+                  <LabEvidence tab={t.key} />
+                </div>
               ))}
             </div>
           </div>
