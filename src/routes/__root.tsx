@@ -11,6 +11,7 @@ import { surfaces } from "../data/surfaces.ts";
 import { profile, metrics } from "../data/profile.ts";
 import { PAGE_TITLE, PERSON_LD, PROFILEPAGE_LD } from "../lib/structuredData.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
+import { SkyLine } from "../SkyLine.tsx";
 import { Launcher } from "../Launcher.tsx";
 import AnomalyRail from "../AnomalyRail.tsx";
 import "../index.css";
@@ -187,6 +188,26 @@ function TerminalHotkey() {
   return null;
 }
 
+/**
+ * Exposes the router instance to Playwright, and only to Playwright:
+ * `navigator.webdriver` is `true` in every automation-controlled browser
+ * (Chromium/Firefox/WebKit under `--enable-automation`) and effectively
+ * never true for a real visitor, so this never ships a capability to
+ * production traffic. It exists because reaching the 404's client-side
+ * branch (sessionRipple.ts's "in-memory, does not survive a reload") from a
+ * test needs a genuine SPA navigation to a route nothing in the UI links
+ * to — e2e/reality-chrome.spec.ts's own acceptance line names "router
+ * navigate" as one of the two sanctioned ways in.
+ */
+function E2ERouterHandle() {
+  const router = useRouter();
+  useEffect(() => {
+    if (!navigator.webdriver) return;
+    (window as unknown as { __e2eRouter: typeof router }).__e2eRouter = router;
+  }, [router]);
+  return null;
+}
+
 function HashCompat() {
   const router = useRouter();
   useEffect(() => {
@@ -266,6 +287,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         >
           Skip to content
         </a>
+        {/* The one sky signal on every page (P7, spine F15) — mounted once,
+            here, so it is true on every route rather than something each
+            route file has to remember. Fixed and pointer-events:none, so it
+            never competes with the skip link or anything else for focus. */}
+        <SkyLine />
+        <E2ERouterHandle />
         <HashCompat />
         <RegisterServiceWorker />
         <TerminalHotkey />

@@ -3,6 +3,8 @@ import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
 import { profile, metrics, caseStudies, projectCards } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
 import { FloatingChat } from "../FloatingChat.tsx";
+import { useNow } from "../lib/useSky.ts";
+import { skyState } from "../lib/sky.ts";
 
 /**
  * /hire — the ninety-second surface.
@@ -37,6 +39,31 @@ export const Route = createFileRoute("/hire")({
 // asks them: scale, then a hard technical win, then reliability.
 const HEADLINE = metrics.slice(0, 3);
 
+function clockTime(d: Date, timeZone: string): string {
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone });
+}
+
+/**
+ * Two clocks, one line (reality-spec §6 `/hire` row): Pune's real daypart
+ * beside the visitor's own local time, computed from `Intl` — never sent
+ * anywhere, matching this route's "nothing invented, nothing sent" rule.
+ * `null` until mount (SSR renders the static floor: "Pune, IST (UTC+05:30)"),
+ * same hydration-safety pattern as `useNow` itself. No overlap-hours line —
+ * there is no declared working-hours constant anywhere in this repo to
+ * compute one from (owner decision D2, reality-spec.md#2).
+ */
+function PuneClocks() {
+  const now = useNow();
+  if (!now) return <p className="mt-3 font-mono text-xs text-muted">Pune, IST (UTC+05:30)</p>;
+  const daypart = skyState(now, null).daypart;
+  const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return (
+    <p className="mt-3 font-mono text-xs text-muted">
+      {clockTime(now, "Asia/Kolkata")} in Pune ({daypart}) · {clockTime(now, visitorTz)} where you are
+    </p>
+  );
+}
+
 function HirePage() {
   const featured = caseStudies.slice(0, 3);
   return (
@@ -55,6 +82,7 @@ function HirePage() {
         <h1 className="font-display mt-3 text-hero font-bold tracking-tight text-balance">
           {profile.name}
         </h1>
+        <PuneClocks />
         {/* "Five years" read as an exact figure and was the only surface
             spelling it out, so it could not be found by the same grep that
             finds the other ten. The hedge every other surface uses is a lower

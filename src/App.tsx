@@ -51,6 +51,8 @@ import { shippedNewestFirst } from "./lib/shipped.ts";
 import { homeFastPath, homeDeepPath } from "./data/facets.ts";
 import { boardArc } from "./data/beforeTheCode.ts";
 import { BoardProfilesGrid } from "./BoardProfiles.tsx";
+import { useNow, useSky } from "./lib/useSky.ts";
+import { WMO_LABEL } from "./lib/sky.ts";
 
 /**
  * Below-the-fold homepage sections hydrate only once they are within 600px of
@@ -247,27 +249,14 @@ function MobileMenu() {
  * that shows a live local clock reads as a place someone actually is, not a
  * document that was uploaded once. Mono, muted, IST-pinned (the clock is *my*
  * time, not the viewer's — that's the whole point of showing it).
+ *
+ * R2: consumes the shared `useNow()` (lib/useSky.ts) instead of its own
+ * minute-boundary timer, so the whole site ticks off one clock rather than
+ * two that can drift (reality-spec.md#P2). Still `null` until mounted — same
+ * hydration-safety reasoning, now centralised in the one hook.
  */
 function NavClock({ className = "" }: { className?: string }) {
-  // `null` until mounted, deliberately: this renders under SSR, and a clock
-  // read on the server is milliseconds off the one read on the client, which
-  // React reports as a hydration mismatch. Server and first client render both
-  // emit nothing, then the effect fills it in.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    // Tick on the minute boundary, not every second: nothing here shows
-    // seconds, so a 1s interval would be 60x the wakeups for zero pixels.
-    let timer: number;
-    const schedule = () => {
-      timer = window.setTimeout(() => {
-        setNow(new Date());
-        schedule();
-      }, 60_000 - (Date.now() % 60_000));
-    };
-    schedule();
-    return () => clearTimeout(timer);
-  }, []);
+  const now = useNow();
   if (!now) return null;
   const time = now.toLocaleTimeString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -280,6 +269,27 @@ function NavClock({ className = "" }: { className?: string }) {
       <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" />
       <time dateTime={now.toISOString()}>{time} IST</time>
     </span>
+  );
+}
+
+/**
+ * "Lit by the sky over Pune" — the hero device's real caption (reality-spec
+ * §6 `/` row), read off the same `useSky()` every other live surface reads.
+ * `null` until mount (SSR renders the static floor: nothing here, same
+ * NavClock reasoning above), so a clock/weather reading taken on the server
+ * never has to agree with one taken moments later on the client.
+ */
+function HeroSkyCaption() {
+  const sky = useSky();
+  if (!sky) return null;
+  const time = sky.now.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false });
+  const altDeg = Math.round(Math.abs(sky.sun.altitudeDeg));
+  const side = sky.sun.altitudeDeg >= 0 ? "above" : "below";
+  const weatherLabel = sky.weather ? WMO_LABEL[sky.weather.code] : null;
+  return (
+    <p className="mt-2 text-center font-mono text-xs tracking-wide text-muted">
+      Lit by the sky over Pune, {time} IST, sun {altDeg}° {side} the horizon{weatherLabel ? `, ${weatherLabel}` : ""}.
+    </p>
   );
 }
 
@@ -422,6 +432,7 @@ function Hero() {
       <div className="hero-studio-stage">
         <div className="hero-studio-meta" aria-hidden="true"><span>SID / MOBILE ENGINEERING</span><span>0{HERO_PROJECTS.indexOf(selectedProject) + 1} / 0{HERO_PROJECTS.length}</span></div>
         <div className="hero-studio-object"><span className="hero-studio-watermark" aria-hidden="true">BUILD.</span><Phone3D key={selectedSlug} shot={{ src: HERO_SHOTS[selectedSlug], label: selectedProject.name }} /><span className="hero-studio-caption" aria-hidden="true">REAL PRODUCTS · SHARED FOUNDATIONS</span></div>
+        <HeroSkyCaption />
         <div className="hero-studio-dossier" aria-live="polite">
           <div>
             <p className="hero-studio-kicker">Selected build / {selectedSlug.replace("-", " ")}</p>
