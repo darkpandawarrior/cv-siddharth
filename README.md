@@ -153,6 +153,24 @@ Plus, on the scroll itself:
   notes on `/ink` and every `/read/<slug>`, and reaction rows, all shared
   documents backed by `playhtml`, not a per-visitor toy. `VITE_GUEST_WALL=off`
   removes the wall on the next deploy; nothing here calls a server of his.
+- **The reality layer**. The footer's weather chip, `/pulse` and the world
+  scene all read one shared `/api/weather` poll (`useWeather()`): real Pune
+  temperature, condition and AQI from Open-Meteo, refused rather than shown
+  once a reading fails a plausibility check. `/api/signals`, `/api/aircraft`
+  and `/api/tle` feed the same "measured, not decorative" contract to the 3D
+  world and the Blueprint canvas. Every one of these surfaces says so when a
+  reading is unavailable, instead of freezing on the last good value.
+
+## Open source
+
+`scripts/gen-oss-stats.mjs` measures every upstream he has actually opened a
+PR against with `gh pr list`, not the search API (career-ops's own rename
+returns 0 rows there). Two orgs, both rows in `src/data/careerOpsUpstream.ts`:
+**career-ops-hq/career-ops** (24 merged, 1 open, 2 closed unmerged) and three
+**openMF** (Mifos) repos: `kmp-project-template` (#298, #299 merged),
+`mifos-passcode-cmp` (#82 open) and `mifos-x-actionhub` (#89 open). Both
+groups render on the homepage under `#open-source` and on `/resume`; neither
+is a hand-kept count.
 
 ## One registry
 
