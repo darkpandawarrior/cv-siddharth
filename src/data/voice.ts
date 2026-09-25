@@ -1,6 +1,6 @@
 // Hand-maintained (OD5: "Chip cadence: manual"). Transcribed from the-loopdown's
 // voice/voice-profile.md "Measured 2026-09-02" block (raw.githubusercontent.com,
-// main branch — the local checkout has uncommitted edits and is never read, M38).
+// main branch (the local checkout has uncommitted edits and is never read, M38).
 // Re-measure with the-loopdown's scripts/voice-measure.py; update by hand, same as
 // every other manual-cadence chip on this site.
 export type VoiceMetric = {
