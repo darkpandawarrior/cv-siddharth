@@ -273,6 +273,16 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
+  // Manual annual refresh, deliberately NOT wired into any build/refresh/check
+  // chain (its own header says so, live-data-spec.md#1.3, #4 R6): the mean
+  // barely moves year to year.
+  { id: "pune-normals", script: "gen-pune-normals.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["src/data/generated/puneNormals.ts"], stages: {} },
+  // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
+  // header says so, live-data-spec.md#1.3, #4 R6): a 34 MB CSV fetch, run by
+  // hand when the star catalogue needs a refresh.
+  { id: "starfield", script: "gen-starfield.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["public/sky/stars-hyg41-m5.bin"], stages: {} },
   // Manual/occasional, same posture as gen-excelsior.mjs above (its own header
   // says so): needs `tesseract` on PATH, a system binary no CI runner can be
   // assumed to have. No network call of its own — OCRs the pages the sibling
