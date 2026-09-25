@@ -1,17 +1,5 @@
-import { useEffect, useRef } from "react";
-import {
-  AssetRecordType,
-  Box,
-  HTMLContainer,
-  Rectangle2d,
-  ShapeUtil,
-  Tldraw,
-  createShapeId,
-  toRichText,
-  type Editor,
-  type TLShape,
-  type TLShapePartial,
-} from "tldraw";
+import { Suspense, lazy, useEffect, useRef } from "react";
+import { Box, type Editor, type TLShape, type TLShapePartial } from "tldraw";
 import "tldraw/tldraw.css";
 import { Canvas } from "@react-three/fiber";
 import { ARROWS, FRAMES, METRICS, NODES, NOTES, PINS, PERSISTENCE_KEY, TOUR, centerOf } from "./blueprintData.ts";
@@ -24,7 +12,16 @@ import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
 
 /* Everything that pulls in the tldraw SDK lives in this file, isolated from
  * BlueprintRoom.tsx and lazy-loaded only when a visitor actually picks
- * Sketch mode — Fly/ASCII (the default) never downloads tldraw's weight. */
+ * Sketch mode — Fly/ASCII (the default) never downloads tldraw's weight.
+ *
+ * A second, nested split below (SketchBoardEditor): the actual `Tldraw`
+ * component, the custom shape utils and everything else that needs tldraw's
+ * runtime exports is behind its own `lazy(() => import("tldraw"))`, so
+ * tldraw's own bundle (and @tiptap/core + @tiptap/pm, its rich-text
+ * dependency) lands in a chunk separate from this file's own authored code.
+ * Only `Box` (a plain geometry value) and types stay a static import here —
+ * `fitBoardToViewport` uses `Box` directly and SketchBoard.test.ts calls it
+ * synchronously, so it can't sit behind an awaited dynamic import. */
 
 declare module "tldraw" {
   interface TLGlobalShapePropsMap {
@@ -36,290 +33,6 @@ declare module "tldraw" {
 type MetricShape = TLShape<"sid-metric">;
 type HoloShape = TLShape<"sid-holo">;
 type LiveShape = TLShape<"sid-live">;
-
-class MetricShapeUtil extends ShapeUtil<MetricShape> {
-  static override type = "sid-metric" as const;
-
-  getDefaultProps(): MetricShape["props"] {
-    return { w: 200, h: 112, value: "—", label: "metric" };
-  }
-
-  getGeometry(shape: MetricShape) {
-    return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
-  }
-
-  component(shape: MetricShape) {
-    return (
-      <HTMLContainer
-        style={{
-          width: shape.props.w,
-          height: shape.props.h,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "0 18px",
-          borderRadius: 14,
-          background: "rgba(11, 15, 13, 0.92)",
-          border: "1px solid rgba(61, 220, 132, 0.4)",
-          boxShadow: "0 0 30px -10px rgba(61, 220, 132, 0.5)",
-          fontFamily: "var(--font-mono)",
-        }}
-      >
-        <span style={{ fontSize: 30, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1.1 }}>
-          {shape.props.value}
-        </span>
-        <span style={{ fontSize: 11, color: "rgba(232, 239, 233, 0.6)", marginTop: 4 }}>{shape.props.label}</span>
-      </HTMLContainer>
-    );
-  }
-
-  getIndicatorPath(shape: MetricShape) {
-    const path = new Path2D();
-    path.rect(0, 0, shape.props.w, shape.props.h);
-    return path;
-  }
-}
-
-class HoloShapeUtil extends ShapeUtil<HoloShape> {
-  static override type = "sid-holo" as const;
-
-  getDefaultProps(): HoloShape["props"] {
-    return { w: 300, h: 230 };
-  }
-
-  getGeometry(shape: HoloShape) {
-    return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
-  }
-
-  component(shape: HoloShape) {
-    const holoFallback = (
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "grid",
-          placeItems: "center",
-          background: "radial-gradient(circle at 50% 40%, rgba(94,230,255,0.18), transparent 70%)",
-          color: "rgba(94, 230, 255, 0.7)",
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          letterSpacing: 2,
-          textTransform: "uppercase",
-        }}
-      >
-        3D preview
-      </div>
-    );
-    return (
-      <HTMLContainer
-        style={{
-          width: shape.props.w,
-          height: shape.props.h,
-          borderRadius: 16,
-          overflow: "hidden",
-          background: "rgba(5, 7, 10, 0.9)",
-          border: "1px solid rgba(94, 230, 255, 0.35)",
-          boxShadow: "0 0 40px -12px rgba(94, 230, 255, 0.5)",
-        }}
-      >
-        {hasWebGL() ? (
-          <ShapeBoundary fallback={holoFallback}>
-            <Canvas
-              dpr={1}
-              camera={{ position: [0, 0, 4.4], fov: 45 }}
-              gl={{ antialias: true, alpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: false }}
-              onCreated={({ gl, invalidate }) => {
-                // A live WebGL canvas embedded in the whiteboard can have its
-                // context reclaimed by the GPU after a while (throttling, GPU
-                // switch, or too many contexts across the site). Calling
-                // preventDefault() tells the browser we intend to recover, so
-                // it fires `webglcontextrestored` instead of leaving a dead,
-                // blank canvas — the classic "it disappeared after a while".
-                const el = gl.domElement;
-                el.addEventListener("webglcontextlost", (e) => e.preventDefault(), false);
-                el.addEventListener("webglcontextrestored", () => invalidate(), false);
-              }}
-            >
-              <HoloCore />
-            </Canvas>
-          </ShapeBoundary>
-        ) : (
-          holoFallback
-        )}
-        <span
-          style={{
-            position: "absolute",
-            bottom: 8,
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            fontSize: 9,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            color: "rgba(94, 230, 255, 0.7)",
-          }}
-        >
-          Live 3D
-        </span>
-      </HTMLContainer>
-    );
-  }
-
-  getIndicatorPath(shape: HoloShape) {
-    const path = new Path2D();
-    path.rect(0, 0, shape.props.w, shape.props.h);
-    return path;
-  }
-}
-
-function LiveSignalCard() {
-  const { data } = useLiveSignal<SpotifyNow>("/api/spotify");
-  const playing = data?.connected && data.isPlaying;
-  const art = data?.connected ? (data.isPlaying ? data.albumArt : data.recent[0]?.albumArt) : undefined;
-  const label = data?.connected
-    ? data.isPlaying
-      ? `${data.track} — ${data.artist}`
-      : data.recent[0]
-        ? `last: ${data.recent[0].track}`
-        : "quiet"
-    : data
-      ? `${SPOTIFY_PREVIEW.track} — ${SPOTIFY_PREVIEW.artist} (preview)`
-      : "reading…";
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        borderRadius: 14,
-        background: "rgba(11, 15, 13, 0.92)",
-        border: "1px solid rgba(61, 220, 132, 0.4)",
-        fontFamily: "var(--font-mono)",
-        padding: 12,
-      }}
-    >
-      {art ? (
-        <img
-          src={art}
-          alt=""
-          width={64}
-          height={64}
-          className={playing ? "sid-live-spin" : undefined}
-          style={{ borderRadius: "50%", opacity: playing ? 1 : 0.5 }}
-        />
-      ) : (
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(61,220,132,0.15)" }} />
-      )}
-      <span style={{ fontSize: 10, color: "rgba(232, 239, 233, 0.75)", textAlign: "center" }}>{label}</span>
-    </div>
-  );
-}
-
-class LiveSignalShapeUtil extends ShapeUtil<LiveShape> {
-  static override type = "sid-live" as const;
-
-  getDefaultProps(): LiveShape["props"] {
-    return { w: 160, h: 140 };
-  }
-
-  getGeometry(shape: LiveShape) {
-    return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
-  }
-
-  component(shape: LiveShape) {
-    return (
-      <HTMLContainer style={{ width: shape.props.w, height: shape.props.h }}>
-        <LiveSignalCard />
-      </HTMLContainer>
-    );
-  }
-
-  getIndicatorPath(shape: LiveShape) {
-    const path = new Path2D();
-    path.rect(0, 0, shape.props.w, shape.props.h);
-    return path;
-  }
-}
-
-/* NODES/ARROWS/FRAMES/PINS/METRICS/NOTES/TOUR live in ./blueprintData.ts —
- * shared with the 3D fly-through view so both stay in sync. */
-
-const id = (s: string) => createShapeId(s);
-
-function seed(editor: Editor) {
-  const byKey = Object.fromEntries(NODES.map((n) => [n.key, n]));
-  const shapes: TLShapePartial[] = [];
-
-  for (const f of FRAMES) {
-    shapes.push({ id: id(f.key), type: "frame", x: f.x, y: f.y, props: { w: f.w, h: f.h, name: f.name } });
-  }
-
-  for (const [a, b, color] of ARROWS) {
-    const pa = centerOf(byKey[a]);
-    const pb = centerOf(byKey[b]);
-    shapes.push({
-      id: id(`arrow-${a}-${b}`),
-      type: "arrow",
-      props: { start: { x: pa.x, y: pa.y }, end: { x: pb.x, y: pb.y }, color, dash: "dotted", size: "s" },
-    });
-  }
-
-  for (const n of NODES) {
-    shapes.push({
-      id: id(n.key),
-      type: "geo",
-      x: n.x,
-      y: n.y,
-      props: {
-        geo: n.geo ?? "rectangle",
-        w: n.w ?? 220,
-        h: n.h ?? 90,
-        color: n.color,
-        fill: n.fill ?? "none",
-        dash: "draw",
-        size: "s",
-        font: "mono",
-        richText: toRichText(n.label),
-      },
-    });
-  }
-
-  for (const m of METRICS) {
-    shapes.push({ id: id(m.key), type: "sid-metric", x: m.x, y: m.y, props: { w: 200, h: 112, value: m.value, label: m.label } });
-  }
-  shapes.push({ id: id("holo"), type: "sid-holo", x: 1620, y: 560, props: { w: 300, h: 230 } });
-  // Singleton, so it's inlined like "holo" above rather than data-driven via
-  // blueprintData.ts (that file only holds plain-geo NODES/METRICS, not custom
-  // shape instances). Placed just under "chat" — both are live surfaces.
-  shapes.push({ id: id("live-signal"), type: "sid-live", x: 1180, y: 240, props: { w: 160, h: 140 } });
-
-  for (const [i, note] of NOTES.entries()) {
-    shapes.push({ id: id(`note-${i}`), type: "note", x: note.x, y: note.y, props: { color: note.color, size: "s", font: "mono", richText: toRichText(note.text) } });
-  }
-
-  editor.createShapes(shapes);
-
-  // Screenshot pins need assets first.
-  for (const p of PINS) {
-    const assetId = AssetRecordType.createId();
-    editor.createAssets([
-      AssetRecordType.create({
-        id: assetId,
-        type: "image",
-        props: { src: p.src, w: p.w * 3, h: p.h * 3, mimeType: p.mime, name: p.key, isAnimated: p.animated },
-      }),
-    ]);
-    editor.createShape({ id: id(p.key), type: "image", x: p.x, y: p.y, rotation: p.rot, props: { assetId, w: p.w, h: p.h } });
-  }
-
-  fitBoardToViewport(editor, { animation: { duration: 400 } });
-  editor.selectNone();
-}
 
 /* zoomToFit/zoomToBounds divide by the viewport's screen size. Called too early
  * (before the flex layout has given the Tldraw container its final size), that
@@ -395,132 +108,437 @@ function boardLooksBlank(editor: Editor): boolean {
   return !boxesOverlap(content, editor.getViewportPageBounds());
 }
 
-const shapeUtils = [MetricShapeUtil, HoloShapeUtil, LiveSignalShapeUtil];
+type SketchBoardProps = {
+  tourStop: number;
+  resetTick: number;
+  onLicenseGate?: () => void;
+};
 
 /* The marker tldraw's LicenseProvider leaves behind when it gives up on a
  * deployment: an expired or missing licence renders the editor for five
  * seconds, then replaces the whole subtree with this hidden div. */
 const LICENSE_GATE = '[data-testid="tl-license-expired"]';
 
-/** The tldraw whiteboard view — draw, drag, leave a note, all persisted locally.
- *  Reacts to `tourStop`/`resetTick` from the shared header instead of owning
- *  its own tour/reset controls, so both views can be driven by one toolbar.
- *
- *  `onLicenseGate` fires if tldraw shuts itself down mid-session. The pre-flight
- *  check in BlueprintRoom only knows whether a key is *configured* — it can't
- *  see an expiry date or a domain mismatch, and this project is currently on an
- *  evaluation key with a known end date. Without this, the day that key lapses
- *  the room silently goes back to handing visitors a canvas that dies after
- *  five seconds, with nothing anywhere saying why. */
-export default function SketchBoard({
-  tourStop,
-  resetTick,
-  onLicenseGate,
-}: {
-  tourStop: number;
-  resetTick: number;
-  onLicenseGate?: () => void;
-}) {
-  const editorRef = useRef<Editor | null>(null);
-  const lastResetTick = useRef(resetTick);
-
-  useEffect(() => {
-    if (!onLicenseGate) return;
-    if (document.querySelector(LICENSE_GATE)) {
-      onLicenseGate();
-      return;
-    }
-    // The gate appears on a timer well after mount, so watch rather than poll.
-    const observer = new MutationObserver(() => {
-      if (!document.querySelector(LICENSE_GATE)) return;
-      observer.disconnect();
-      onLicenseGate();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [onLicenseGate]);
-
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor || tourStop === -1) return;
-    const [x, y, w, h] = TOUR[tourStop].bounds;
-    editor.zoomToBounds(new Box(x, y, w, h), { animation: { duration: 900 }, targetZoom: 1 });
-  }, [tourStop]);
-
-  // Watchdog: whenever the tab/route comes back into view — and on a slow
-  // idle poll — re-fit the board if it has silently drifted blank. This is the
-  // fix for "the sketch canvas disappears after a while": recover in place
-  // instead of leaving a page of shapes stranded off-screen.
-  useEffect(() => {
-    const recover = () => {
-      const editor = editorRef.current;
-      if (editor && boardLooksBlank(editor)) fitBoardToViewport(editor, { animation: { duration: 200 } });
-    };
-    // rAF defers to after tldraw has re-measured its viewport on becoming visible.
-    const onVisible = () => {
-      if (document.visibilityState === "visible") requestAnimationFrame(recover);
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onVisible);
-    window.addEventListener("pageshow", onVisible);
-    const poll = window.setInterval(recover, 5000);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onVisible);
-      window.removeEventListener("pageshow", onVisible);
-      clearInterval(poll);
-    };
-  }, []);
-
-  // Re-seed in place: clear the current page, drop the persisted DB, reseed.
-  // Recovers a blanked/half-loaded canvas without a full reload where possible.
-  useEffect(() => {
-    if (resetTick === lastResetTick.current) return;
-    lastResetTick.current = resetTick;
-    (async () => {
-      const editor = editorRef.current;
-      if (editor) {
-        try {
-          const ids = [...editor.getCurrentPageShapeIds()];
-          if (ids.length) editor.deleteShapes(ids);
-          seed(editor);
-          return;
-        } catch {
-          /* fall through to the hard reset */
-        }
-      }
-      await clearBlueprintPersistence();
-      window.location.reload();
-    })();
-  }, [resetTick]);
+function LiveSignalCard() {
+  const { data } = useLiveSignal<SpotifyNow>("/api/spotify");
+  const playing = data?.connected && data.isPlaying;
+  const art = data?.connected ? (data.isPlaying ? data.albumArt : data.recent[0]?.albumArt) : undefined;
+  const label = data?.connected
+    ? data.isPlaying
+      ? `${data.track} — ${data.artist}`
+      : data.recent[0]
+        ? `last: ${data.recent[0].track}`
+        : "quiet"
+    : data
+      ? `${SPOTIFY_PREVIEW.track} — ${SPOTIFY_PREVIEW.artist} (preview)`
+      : "reading…";
 
   return (
-    <Tldraw
-      persistenceKey={PERSISTENCE_KEY}
-      shapeUtils={shapeUtils}
-      // The "Get a license for production" badge is tldraw's licensing
-      // watermark. Their terms only let you remove it with a business license
-      // key — hiding it any other way violates the SDK license. Drop a key in
-      // VITE_TLDRAW_LICENSE_KEY and it's passed here to remove it compliantly;
-      // without one, the free-tier watermark stays (as it must).
-      licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY || undefined}
-      onMount={(editor) => {
-        editorRef.current = editor;
-        editor.user.updateUserPreferences({ colorScheme: "dark" });
-        whenViewportReady(editor, () => {
-          try {
-            if (editor.getCurrentPageShapeIds().size === 0) seed(editor);
-            else fitBoardToViewport(editor);
-          } catch {
-            // A corrupt restore can throw here; a fresh seed is the recovery.
-            try {
-              seed(editor);
-            } catch {
-              /* the RoomBoundary / Reset button is the last resort */
-            }
-          }
-        });
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderRadius: 14,
+        background: "rgba(11, 15, 13, 0.92)",
+        border: "1px solid rgba(61, 220, 132, 0.4)",
+        fontFamily: "var(--font-mono)",
+        padding: 12,
       }}
-    />
+    >
+      {art ? (
+        <img
+          src={art}
+          alt=""
+          width={64}
+          height={64}
+          className={playing ? "sid-live-spin" : undefined}
+          style={{ borderRadius: "50%", opacity: playing ? 1 : 0.5 }}
+        />
+      ) : (
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(61,220,132,0.15)" }} />
+      )}
+      <span style={{ fontSize: 10, color: "rgba(232, 239, 233, 0.75)", textAlign: "center" }}>{label}</span>
+    </div>
+  );
+}
+
+const loadingFallback = <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading…</div>;
+
+/**
+ * The actual tldraw editor: the `<Tldraw>` component itself, the custom
+ * shape utils and the board seeding, all behind `lazy(() => import("tldraw"))`
+ * so tldraw's runtime (and @tiptap/core + @tiptap/pm, pulled in by its
+ * rich-text shapes) lands in a chunk of its own rather than inflating the
+ * outer Sketch-mode split past the largest-chunk budget.
+ */
+const SketchBoardEditor = lazy(async () => {
+  const { AssetRecordType, HTMLContainer, Rectangle2d, ShapeUtil, Tldraw, createShapeId, toRichText } = await import("tldraw");
+
+  class MetricShapeUtil extends ShapeUtil<MetricShape> {
+    static override type = "sid-metric" as const;
+
+    getDefaultProps(): MetricShape["props"] {
+      return { w: 200, h: 112, value: "—", label: "metric" };
+    }
+
+    getGeometry(shape: MetricShape) {
+      return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
+    }
+
+    component(shape: MetricShape) {
+      return (
+        <HTMLContainer
+          style={{
+            width: shape.props.w,
+            height: shape.props.h,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "0 18px",
+            borderRadius: 14,
+            background: "rgba(11, 15, 13, 0.92)",
+            border: "1px solid rgba(61, 220, 132, 0.4)",
+            boxShadow: "0 0 30px -10px rgba(61, 220, 132, 0.5)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          <span style={{ fontSize: 30, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1.1 }}>
+            {shape.props.value}
+          </span>
+          <span style={{ fontSize: 11, color: "rgba(232, 239, 233, 0.6)", marginTop: 4 }}>{shape.props.label}</span>
+        </HTMLContainer>
+      );
+    }
+
+    getIndicatorPath(shape: MetricShape) {
+      const path = new Path2D();
+      path.rect(0, 0, shape.props.w, shape.props.h);
+      return path;
+    }
+  }
+
+  class HoloShapeUtil extends ShapeUtil<HoloShape> {
+    static override type = "sid-holo" as const;
+
+    getDefaultProps(): HoloShape["props"] {
+      return { w: 300, h: 230 };
+    }
+
+    getGeometry(shape: HoloShape) {
+      return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
+    }
+
+    component(shape: HoloShape) {
+      const holoFallback = (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            background: "radial-gradient(circle at 50% 40%, rgba(94,230,255,0.18), transparent 70%)",
+            color: "rgba(94, 230, 255, 0.7)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+          }}
+        >
+          3D preview
+        </div>
+      );
+      return (
+        <HTMLContainer
+          style={{
+            width: shape.props.w,
+            height: shape.props.h,
+            borderRadius: 16,
+            overflow: "hidden",
+            background: "rgba(5, 7, 10, 0.9)",
+            border: "1px solid rgba(94, 230, 255, 0.35)",
+            boxShadow: "0 0 40px -12px rgba(94, 230, 255, 0.5)",
+          }}
+        >
+          {hasWebGL() ? (
+            <ShapeBoundary fallback={holoFallback}>
+              <Canvas
+                dpr={1}
+                camera={{ position: [0, 0, 4.4], fov: 45 }}
+                gl={{ antialias: true, alpha: true, powerPreference: "low-power", failIfMajorPerformanceCaveat: false }}
+                onCreated={({ gl, invalidate }) => {
+                  // A live WebGL canvas embedded in the whiteboard can have its
+                  // context reclaimed by the GPU after a while (throttling, GPU
+                  // switch, or too many contexts across the site). Calling
+                  // preventDefault() tells the browser we intend to recover, so
+                  // it fires `webglcontextrestored` instead of leaving a dead,
+                  // blank canvas — the classic "it disappeared after a while".
+                  const el = gl.domElement;
+                  el.addEventListener("webglcontextlost", (e) => e.preventDefault(), false);
+                  el.addEventListener("webglcontextrestored", () => invalidate(), false);
+                }}
+              >
+                <HoloCore />
+              </Canvas>
+            </ShapeBoundary>
+          ) : (
+            holoFallback
+          )}
+          <span
+            style={{
+              position: "absolute",
+              bottom: 8,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 9,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              color: "rgba(94, 230, 255, 0.7)",
+            }}
+          >
+            Live 3D
+          </span>
+        </HTMLContainer>
+      );
+    }
+
+    getIndicatorPath(shape: HoloShape) {
+      const path = new Path2D();
+      path.rect(0, 0, shape.props.w, shape.props.h);
+      return path;
+    }
+  }
+
+  class LiveSignalShapeUtil extends ShapeUtil<LiveShape> {
+    static override type = "sid-live" as const;
+
+    getDefaultProps(): LiveShape["props"] {
+      return { w: 160, h: 140 };
+    }
+
+    getGeometry(shape: LiveShape) {
+      return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true });
+    }
+
+    component(shape: LiveShape) {
+      return (
+        <HTMLContainer style={{ width: shape.props.w, height: shape.props.h }}>
+          <LiveSignalCard />
+        </HTMLContainer>
+      );
+    }
+
+    getIndicatorPath(shape: LiveShape) {
+      const path = new Path2D();
+      path.rect(0, 0, shape.props.w, shape.props.h);
+      return path;
+    }
+  }
+
+  /* NODES/ARROWS/FRAMES/PINS/METRICS/NOTES/TOUR live in ./blueprintData.ts —
+   * shared with the 3D fly-through view so both stay in sync. */
+
+  const id = (s: string) => createShapeId(s);
+
+  function seed(editor: Editor) {
+    const byKey = Object.fromEntries(NODES.map((n) => [n.key, n]));
+    const shapes: TLShapePartial[] = [];
+
+    for (const f of FRAMES) {
+      shapes.push({ id: id(f.key), type: "frame", x: f.x, y: f.y, props: { w: f.w, h: f.h, name: f.name } });
+    }
+
+    for (const [a, b, color] of ARROWS) {
+      const pa = centerOf(byKey[a]);
+      const pb = centerOf(byKey[b]);
+      shapes.push({
+        id: id(`arrow-${a}-${b}`),
+        type: "arrow",
+        props: { start: { x: pa.x, y: pa.y }, end: { x: pb.x, y: pb.y }, color, dash: "dotted", size: "s" },
+      });
+    }
+
+    for (const n of NODES) {
+      shapes.push({
+        id: id(n.key),
+        type: "geo",
+        x: n.x,
+        y: n.y,
+        props: {
+          geo: n.geo ?? "rectangle",
+          w: n.w ?? 220,
+          h: n.h ?? 90,
+          color: n.color,
+          fill: n.fill ?? "none",
+          dash: "draw",
+          size: "s",
+          font: "mono",
+          richText: toRichText(n.label),
+        },
+      });
+    }
+
+    for (const m of METRICS) {
+      shapes.push({ id: id(m.key), type: "sid-metric", x: m.x, y: m.y, props: { w: 200, h: 112, value: m.value, label: m.label } });
+    }
+    shapes.push({ id: id("holo"), type: "sid-holo", x: 1620, y: 560, props: { w: 300, h: 230 } });
+    // Singleton, so it's inlined like "holo" above rather than data-driven via
+    // blueprintData.ts (that file only holds plain-geo NODES/METRICS, not custom
+    // shape instances). Placed just under "chat" — both are live surfaces.
+    shapes.push({ id: id("live-signal"), type: "sid-live", x: 1180, y: 240, props: { w: 160, h: 140 } });
+
+    for (const [i, note] of NOTES.entries()) {
+      shapes.push({ id: id(`note-${i}`), type: "note", x: note.x, y: note.y, props: { color: note.color, size: "s", font: "mono", richText: toRichText(note.text) } });
+    }
+
+    editor.createShapes(shapes);
+
+    // Screenshot pins need assets first.
+    for (const p of PINS) {
+      const assetId = AssetRecordType.createId();
+      editor.createAssets([
+        AssetRecordType.create({
+          id: assetId,
+          type: "image",
+          props: { src: p.src, w: p.w * 3, h: p.h * 3, mimeType: p.mime, name: p.key, isAnimated: p.animated },
+        }),
+      ]);
+      editor.createShape({ id: id(p.key), type: "image", x: p.x, y: p.y, rotation: p.rot, props: { assetId, w: p.w, h: p.h } });
+    }
+
+    fitBoardToViewport(editor, { animation: { duration: 400 } });
+    editor.selectNone();
+  }
+
+  const shapeUtils = [MetricShapeUtil, HoloShapeUtil, LiveSignalShapeUtil];
+
+  /** The tldraw whiteboard view — draw, drag, leave a note, all persisted locally.
+   *  Reacts to `tourStop`/`resetTick` from the shared header instead of owning
+   *  its own tour/reset controls, so both views can be driven by one toolbar.
+   *
+   *  `onLicenseGate` fires if tldraw shuts itself down mid-session. The pre-flight
+   *  check in BlueprintRoom only knows whether a key is *configured* — it can't
+   *  see an expiry date or a domain mismatch, and this project is currently on an
+   *  evaluation key with a known end date. Without this, the day that key lapses
+   *  the room silently goes back to handing visitors a canvas that dies after
+   *  five seconds, with nothing anywhere saying why. */
+  function SketchBoardEditorInner({ tourStop, resetTick, onLicenseGate }: SketchBoardProps) {
+    const editorRef = useRef<Editor | null>(null);
+    const lastResetTick = useRef(resetTick);
+
+    useEffect(() => {
+      if (!onLicenseGate) return;
+      if (document.querySelector(LICENSE_GATE)) {
+        onLicenseGate();
+        return;
+      }
+      // The gate appears on a timer well after mount, so watch rather than poll.
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector(LICENSE_GATE)) return;
+        observer.disconnect();
+        onLicenseGate();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      return () => observer.disconnect();
+    }, [onLicenseGate]);
+
+    useEffect(() => {
+      const editor = editorRef.current;
+      if (!editor || tourStop === -1) return;
+      const [x, y, w, h] = TOUR[tourStop].bounds;
+      editor.zoomToBounds(new Box(x, y, w, h), { animation: { duration: 900 }, targetZoom: 1 });
+    }, [tourStop]);
+
+    // Watchdog: whenever the tab/route comes back into view — and on a slow
+    // idle poll — re-fit the board if it has silently drifted blank. This is the
+    // fix for "the sketch canvas disappears after a while": recover in place
+    // instead of leaving a page of shapes stranded off-screen.
+    useEffect(() => {
+      const recover = () => {
+        const editor = editorRef.current;
+        if (editor && boardLooksBlank(editor)) fitBoardToViewport(editor, { animation: { duration: 200 } });
+      };
+      // rAF defers to after tldraw has re-measured its viewport on becoming visible.
+      const onVisible = () => {
+        if (document.visibilityState === "visible") requestAnimationFrame(recover);
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      window.addEventListener("focus", onVisible);
+      window.addEventListener("pageshow", onVisible);
+      const poll = window.setInterval(recover, 5000);
+      return () => {
+        document.removeEventListener("visibilitychange", onVisible);
+        window.removeEventListener("focus", onVisible);
+        window.removeEventListener("pageshow", onVisible);
+        clearInterval(poll);
+      };
+    }, []);
+
+    // Re-seed in place: clear the current page, drop the persisted DB, reseed.
+    // Recovers a blanked/half-loaded canvas without a full reload where possible.
+    useEffect(() => {
+      if (resetTick === lastResetTick.current) return;
+      lastResetTick.current = resetTick;
+      (async () => {
+        const editor = editorRef.current;
+        if (editor) {
+          try {
+            const ids = [...editor.getCurrentPageShapeIds()];
+            if (ids.length) editor.deleteShapes(ids);
+            seed(editor);
+            return;
+          } catch {
+            /* fall through to the hard reset */
+          }
+        }
+        await clearBlueprintPersistence();
+        window.location.reload();
+      })();
+    }, [resetTick]);
+
+    return (
+      <Tldraw
+        persistenceKey={PERSISTENCE_KEY}
+        shapeUtils={shapeUtils}
+        // The "Get a license for production" badge is tldraw's licensing
+        // watermark. Their terms only let you remove it with a business license
+        // key — hiding it any other way violates the SDK license. Drop a key in
+        // VITE_TLDRAW_LICENSE_KEY and it's passed here to remove it compliantly;
+        // without one, the free-tier watermark stays (as it must).
+        licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY || undefined}
+        onMount={(editor) => {
+          editorRef.current = editor;
+          editor.user.updateUserPreferences({ colorScheme: "dark" });
+          whenViewportReady(editor, () => {
+            try {
+              if (editor.getCurrentPageShapeIds().size === 0) seed(editor);
+              else fitBoardToViewport(editor);
+            } catch {
+              // A corrupt restore can throw here; a fresh seed is the recovery.
+              try {
+                seed(editor);
+              } catch {
+                /* the RoomBoundary / Reset button is the last resort */
+              }
+            }
+          });
+        }}
+      />
+    );
+  }
+
+  return { default: SketchBoardEditorInner };
+});
+
+export default function SketchBoard(props: SketchBoardProps) {
+  return (
+    <Suspense fallback={loadingFallback}>
+      <SketchBoardEditor {...props} />
+    </Suspense>
   );
 }
