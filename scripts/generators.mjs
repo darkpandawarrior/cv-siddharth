@@ -217,6 +217,16 @@ export const GENERATORS = [
       "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
+  // Sibling kind (scans ../../Android/PaymentsLab/docs/providers, the OLD
+  // pre-rename Android checkout — see idea-atlas.md#REC-2/#I3: the docs
+  // corpus this reads has never moved to PaymentsLab-KMP). No npmName/stage
+  // yet — added by the I3 lane that builds it; wiring it into
+  // refresh.mjs's STEPS and package.json's prebuild chain is a separate
+  // lane's job (same "build now, wire later" split as I1-I3 vs I4 in
+  // idea-atlas.md's own lane breakdown), same as gen-store-archive/
+  // siblings/flavours and gen-excelsior stay manual-only above.
+  { id: "providers", script: "gen-providers.mjs", npmName: null, kind: "sibling",
+    inputs: [], outputs: ["src/data/providers.ts"], stages: {} },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 
