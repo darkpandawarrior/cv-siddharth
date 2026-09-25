@@ -167,35 +167,48 @@ function assembleOrNull<S extends string, V>(
 /**
  * Same shape as weather-handler.ts / github-activity-handler.ts: never
  * throws, an upstream that is down, slow or 403s degrades its own part to
- * `null` rather than ever failing the request. Exactly 10 fetches per call
- * (1 lichess + 1 dev.to + 5 Actions + 3 Releases), always — no retry, so a
- * 403 costs the same one call as a 200.
+ * `null` rather than ever failing the request. No retry, so a 403 costs the
+ * same one call as a 200.
+ *
+ * No GITHUB_TOKEN, no GitHub parts (live-data-spec.md §1.1): without a
+ * token, the unauthenticated 60/hr bucket belongs to the shared edge egress
+ * IP, so the 8 GitHub Actions/Releases calls are skipped entirely, not just
+ * unauthenticated, and `ci`/`downloads` come back `null`. That's 10 fetches
+ * per call with a token, 2 without.
  */
 export async function getSignals(
   env: Record<string, string | undefined>,
   fetchImpl: typeof fetch = fetch,
 ): Promise<SignalsResponse> {
+  const hasGithubToken = !!env.GITHUB_TOKEN;
   const ghHeaders: Record<string, string> = { accept: "application/vnd.github+json" };
-  if (env.GITHUB_TOKEN) ghHeaders.authorization = `Bearer ${env.GITHUB_TOKEN}`;
+  if (hasGithubToken) ghHeaders.authorization = `Bearer ${env.GITHUB_TOKEN}`;
 
   const results = await Promise.allSettled([
     getLichess(fetchImpl),
     getDevto(fetchImpl),
-    ...CI_REPOS.map((r) => getRepoCi(r.repo, ghHeaders, fetchImpl)),
-    ...DOWNLOAD_REPOS.map((r) => getRepoDownloads(r.repo, ghHeaders, fetchImpl)),
+    ...(hasGithubToken ? CI_REPOS.map((r) => getRepoCi(r.repo, ghHeaders, fetchImpl)) : []),
+    ...(hasGithubToken ? DOWNLOAD_REPOS.map((r) => getRepoDownloads(r.repo, ghHeaders, fetchImpl)) : []),
   ]);
 
   const lichess = results[0].status === "fulfilled" ? results[0].value : null;
   const devto = results[1].status === "fulfilled" ? results[1].value : null;
-  const ciResults = results.slice(2, 2 + CI_REPOS.length) as PromiseSettledResult<CiEntry | null>[];
-  const downloadResults = results.slice(2 + CI_REPOS.length) as PromiseSettledResult<DownloadEntry | null>[];
+
+  let ci: Record<CiRepoSlug, CiEntry> | null = null;
+  let downloads: Record<DownloadRepoSlug, DownloadEntry> | null = null;
+  if (hasGithubToken) {
+    const ciResults = results.slice(2, 2 + CI_REPOS.length) as PromiseSettledResult<CiEntry | null>[];
+    const downloadResults = results.slice(2 + CI_REPOS.length) as PromiseSettledResult<DownloadEntry | null>[];
+    ci = assembleOrNull(CI_REPOS, ciResults);
+    downloads = assembleOrNull(DOWNLOAD_REPOS, downloadResults);
+  }
 
   return {
     at: new Date().toISOString(),
     lichess,
     devto,
-    ci: assembleOrNull(CI_REPOS, ciResults),
-    downloads: assembleOrNull(DOWNLOAD_REPOS, downloadResults),
+    ci,
+    downloads,
   };
 }
 

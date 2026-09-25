@@ -62,7 +62,7 @@ function routedFetch(opts: {
 
 describe("getSignals", () => {
   it("returns the exact SignalsResponse shape from a fully live fixture set", async () => {
-    const result = await getSignals({}, routedFetch({}) as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, routedFetch({}) as unknown as typeof fetch);
     expect(result.lichess).toEqual({ online: true, playing: false });
     expect(result.devto).toEqual([{ url: DEVTO_SAMPLE[0].url, reactions: 1, comments: 0, publishedAt: "2026-09-01T00:00:00Z" }]);
     expect(result.ci).toEqual({
@@ -83,26 +83,26 @@ describe("getSignals", () => {
   it("a newer failing chore/* run alongside a green main run gives pass (proves the branch filter)", async () => {
     const chore = { name: "CI", conclusion: "failure", run_started_at: "2026-09-24T05:00:00Z", head_branch: "chore/bump" };
     const fetchImpl = routedFetch({ ci: { Doori: { workflow_runs: [chore, GREEN_RUN] } } });
-    const result = await getSignals({}, fetchImpl as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, fetchImpl as unknown as typeof fetch);
     expect(result.ci?.doori).toEqual({ state: "pass", newestAt: GREEN_RUN.run_started_at, failing: [] });
   });
 
   it("the newest 'Quality Gate: failure' on main gives fail with failing:['Quality Gate']", async () => {
     const qualityGate = { name: "Quality Gate", conclusion: "failure", run_started_at: "2026-09-24T03:29:00Z", head_branch: "main" };
     const fetchImpl = routedFetch({ ci: { "PaymentsLab-KMP": { workflow_runs: [GREEN_RUN, qualityGate] } } });
-    const result = await getSignals({}, fetchImpl as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, fetchImpl as unknown as typeof fetch);
     expect(result.ci?.["paymentslab-kmp"]).toEqual({ state: "fail", newestAt: qualityGate.run_started_at, failing: ["Quality Gate"] });
   });
 
   it("0 completed runs gives none", async () => {
     const fetchImpl = routedFetch({ ci: { "kmp-toolkit": { workflow_runs: [] } } });
-    const result = await getSignals({}, fetchImpl as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, fetchImpl as unknown as typeof fetch);
     expect(result.ci?.["kmp-toolkit"]).toEqual({ state: "none", newestAt: null, failing: [] });
   });
 
   it("a GitHub 403 gives ci:null and downloads:null while lichess and devto stay present, with no retry (exactly 10 fetches)", async () => {
     const fetchImpl = routedFetch({ ci: { Doori: "fail" }, downloads: { Gaddi: "fail" } });
-    const result = await getSignals({}, fetchImpl as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, fetchImpl as unknown as typeof fetch);
     expect(result.ci).toBeNull();
     expect(result.downloads).toBeNull();
     expect(result.lichess).toEqual({ online: true, playing: false });
@@ -110,8 +110,21 @@ describe("getSignals", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(10);
   });
 
+  it("without GITHUB_TOKEN, the 8 GitHub fetches never happen and ci/downloads are null (live-data-spec §1.1)", async () => {
+    const fetchImpl = routedFetch({});
+    const result = await getSignals({}, fetchImpl as unknown as typeof fetch);
+    expect(result.ci).toBeNull();
+    expect(result.downloads).toBeNull();
+    expect(result.lichess).toEqual({ online: true, playing: false });
+    expect(result.devto).not.toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    for (const [url] of fetchImpl.mock.calls as unknown as [string][]) {
+      expect(url).not.toContain("api.github.com");
+    }
+  });
+
   it("release assets [app.apk 21, app.apk.sha256 5, demo.gif 9] give apk:21 (sha256/gif excluded)", async () => {
-    const result = await getSignals({}, routedFetch({}) as unknown as typeof fetch);
+    const result = await getSignals({ GITHUB_TOKEN: "tok" }, routedFetch({}) as unknown as typeof fetch);
     expect(result.downloads?.doori.apk).toBe(21);
   });
 
