@@ -38,6 +38,12 @@ heavy/**/*.webp
 # below (order matters: a later negated pattern wins).
 !heavy/world/concept/**/*.webp
 heavy/world/concept/*-og.webp
+# ...and except this lane's own flow-map bake (scripts/world-v2/gen-terrain.mjs,
+# P2-05): it is the canonical output of a generator reading real committed
+# data (river/tributary tangents, the confluence collar), not a derivative
+# gen-images.mjs would ever create from a PNG sibling — there is no
+# valley-flow-1024.png. Ignoring it ships terrain with no real flow map.
+!heavy/world/terrain/valley-flow-1024.webp
 # ...and except the Play Store icons. Same reasoning: not derivatives of
 # anything in this repo. scripts/gen-store.mjs downloads them from the live
 # listings, and it needs the private Jugnoo repos to run, which a build machine

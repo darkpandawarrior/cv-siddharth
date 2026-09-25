@@ -1,0 +1,15 @@
+{
+  "tile": "13/5775/3666",
+  "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/13/5775/3666.png",
+  "fetchedAt": "2026-09-25T18:16:44.591Z",
+  "anchor": "Vetal Tekdi, OSM node, ele 703",
+  "blurRadiusPx": 9,
+  "stdM": 8.35,
+  "rangeM": [
+    -37.6,
+    44.2
+  ],
+  "encodeMin": -6,
+  "encodeMax": 6,
+  "licence": "SRTM/GMTED2010, USGS, public domain"
+}

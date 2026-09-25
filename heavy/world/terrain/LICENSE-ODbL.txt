@@ -1,0 +1,12 @@
+heavy/world/terrain — ODbL 1.0
+================================
+
+The heightmaps and flow map in this directory are derived from OpenStreetMap
+data (the Mutha river course, src/data/osm/mutha.json, fetched by
+scripts/gen-river-osm.mjs) through scripts/world-v2/gen-terrain.mjs, and are
+offered under the Open Database Licence 1.0 (ODbL), with attribution to
+OpenStreetMap contributors: (c) OpenStreetMap contributors,
+https://www.openstreetmap.org/copyright.
+
+Relief: SRTM/GMTED2010 via AWS Terrain Tiles (USGS, public domain), sampled
+near Vetal Tekdi.
