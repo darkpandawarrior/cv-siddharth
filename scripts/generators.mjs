@@ -217,6 +217,8 @@ export const GENERATORS = [
       "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
+  { id: "providers", script: "gen-providers.mjs", npmName: "gen:providers", kind: "sibling",
+    inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 
@@ -245,7 +247,7 @@ export const GENERATORS = [
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png"], stages: { refresh: 13 } },
   { id: "weeb", script: "gen-weeb.mjs", npmName: "gen:weeb", kind: "network",
-    inputs: [], outputs: ["src/data/weeb.ts"], stages: { refresh: 14 } },
+    inputs: [], outputs: ["src/data/weeb.ts", "src/data/weebTitles.ts"], stages: { refresh: 14 } },
   { id: "chess-stats", script: "gen-chess-stats.mjs", npmName: "gen:chess", kind: "network",
     inputs: [], outputs: ["src/data/chess.ts", "public/chess/corpus.json", ".chess-cache/lichess-games.json"],
     stages: { refresh: 15 } },
@@ -301,6 +303,11 @@ export const GENERATORS = [
   // The policy manifest and SSR response helper must come from this same build.
   { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
     inputs: [], outputs: ["dist/csp-policy.json", "dist/csp/response.mjs"], stages: {} },
+  // Manual/occasional (its own header says so, G13): `npm run gen:river`.
+  // Fetches the Overpass mirrors on demand; keeps the committed snapshot on
+  // total mirror failure rather than failing the build.
+  { id: "river-osm", script: "gen-river-osm.mjs", npmName: "gen:river", kind: "network",
+    inputs: [], outputs: ["src/data/osm/mutha.json"], stages: {} },
 ];
 
 // gen-ops scans every top-level data file. Run it after their producers so
