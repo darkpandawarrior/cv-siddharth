@@ -1,24 +1,29 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
-import { projectStats } from "../data/projectStats.ts";
+import { providers } from "../data/providers.ts";
 import { Figure } from "./Figure.tsx";
 
 /* ── PaymentsLab-KMP Gateway Lab ─────────────────────────────────────────── */
 /* PaymentsLab-KMP's cataloged gateways, split by how each one is integrated and
-   routed through one PaymentGateway abstraction. Every count comes from
-   projectStats.ts, which gen-project-stats.mjs parses out of the repo's own
-   generated README banner — the numbers used to be typed here four separate
-   times, and the copy below drifted away from the chart above it. Only the
-   colours are local: those are presentation, not a claim. */
+   routed through one PaymentGateway abstraction. Every count comes straight
+   off providers.ts (scripts/gen-providers.mjs, parsed from the sibling
+   `../../Android/PaymentsLab` checkout's own docs/providers/*.md) — no
+   hand-typed provider list or count here, see
+   idea-atlas.md#REC-2/#I3. Only the colours and the four visible buckets
+   are local presentation choices; "internal" (the wallet ledger) and
+   "other" (UPI's raw intent, which the catalog's own doc says doesn't fit
+   the lettered taxonomy) are one-or-two-provider archetypes too thin to
+   read as their own falling-ball column, same call GatewayLab already made
+   about the internal rail before this lane. */
 
-const P = projectStats["paymentslab-kmp"];
-const CATEGORIES = [
-  { id: "native-SDK", count: P.gatewaysNative, color: "#C4B5FD" },
-  { id: "hosted-webview", count: P.gatewaysHosted, color: "#A78BFA" },
-  { id: "mobile-money", count: P.gatewaysMobileMoney, color: "#8B5CF6" },
-  { id: "stub / KYC-gated", count: P.gatewaysStub, color: "#6D28D9" },
+const VISIBLE_ARCHETYPES: { id: string; label: string; color: string }[] = [
+  { id: "native-sdk", label: "native SDK", color: "#C4B5FD" },
+  { id: "hosted-webview", label: "hosted webview", color: "#A78BFA" },
+  { id: "mobile-money", label: "mobile money", color: "#8B5CF6" },
+  { id: "stub", label: "stub / KYC-gated", color: "#6D28D9" },
 ];
+const CATEGORIES = VISIBLE_ARCHETYPES.map((a) => ({ ...a, count: providers.filter((p) => p.archetype === a.id).length }));
 const TOTAL_GATEWAYS = CATEGORIES.reduce((a, c) => a + c.count, 0);
 
 type Call = { x: number; y: number; vx: number; vy: number; bin: number };
@@ -156,7 +161,7 @@ export function GatewayLab() {
           ctx.textAlign = "center";
           ctx.fillText(`${Math.round((bins[i] / total) * 100)}%`, x, height - 46 - h);
           ctx.fillStyle = "rgba(232,239,233,0.6)";
-          ctx.fillText(cat.id, x, height - 22);
+          ctx.fillText(cat.label, x, height - 22);
           ctx.fillText(`(${cat.count})`, x, height - 10);
           ctx.textAlign = "left";
         });
@@ -169,12 +174,12 @@ export function GatewayLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        PaymentsLab-KMP catalogs {TOTAL_GATEWAYS} real payment gateways — {P.gatewaysNative} native-SDK
-        integrations, {P.gatewaysHosted} hosted-webview providers, {P.gatewaysMobileMoney} mobile-money
-        flows and {P.gatewaysStub} catalog-only/KYC-gated entries — behind one PaymentGateway interface.
-        Toggle the abstraction off and every checkout call needs its own bespoke integration; switch it
-        on and the same call routes through a single contract into whichever of the {TOTAL_GATEWAYS}
-        gateways is on the other end.
+        PaymentsLab-KMP catalogs {providers.length} real payment providers — {CATEGORIES[0].count} native-SDK
+        integrations, {CATEGORIES[1].count} hosted-webview providers, {CATEGORIES[2].count} mobile-money
+        flows and {CATEGORIES[3].count} catalog-only/KYC-gated entries, plus a handful of internal and
+        uncategorized rails — behind one PaymentGateway interface. Toggle the abstraction off and every
+        checkout call needs its own bespoke integration; switch it on and the same call routes through a
+        single contract into whichever of the {TOTAL_GATEWAYS} gateways is on the other end.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">
