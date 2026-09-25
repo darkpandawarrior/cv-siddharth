@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { PauseCircle, Star, CalendarClock, ArrowUpRight } from "lucide-react";
 import { weeb } from "./data/weeb.ts";
 import { Reveal } from "./Reveal.tsx";
@@ -7,6 +8,8 @@ import { EvidenceChip } from "./EvidenceChip.tsx";
 
 import { DeferredPlayRoom } from "./play/DeferredPlayRoom.tsx";
 import { Expandable } from "./Expandable.tsx";
+
+const WeebGenres = lazy(() => import("./WeebGenres.tsx").then((m) => ({ default: m.WeebGenres })));
 /**
  * Weeb Central — a hand-kept anime list, read as evidence rather than displayed
  * as a collection.
@@ -249,6 +252,13 @@ export function WeebRoom() {
               <EvidenceChip file="weeb.ts" stamp={weeb.generatedAt} source="Notion export + AniList" />
             </p>
           </section>
+        </Reveal>
+
+        {/* ---------------------------------------------------------------- 4 */}
+        <Reveal>
+          <Suspense fallback={<p className="mt-16 text-sm text-muted">Loading the genre scatter…</p>}>
+            <WeebGenres />
+          </Suspense>
         </Reveal>
 
         {/* Manga is a much smaller corpus — one honest paragraph, not a fake

@@ -267,7 +267,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Twenty-nine `gen:` scripts over thirty-five generator files. The ones you
+Thirty `gen:` scripts over thirty-eight generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -291,7 +291,7 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Six more generator files exist with no `npm run` script, deliberately: each
+Eight more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
 carries the same reasoning; this is that reasoning where a README reader can
 find it.
@@ -317,6 +317,12 @@ find it.
   route's inline hydration scripts, so it structurally cannot run before
   `npm run build` and stays out of prebuild: `npm run build && node
   scripts/gen-csp.mjs`.
+- `gen-pune-normals.mjs`. Manual annual refresh of the 2015-2025 mean rainfall
+  per calendar day from Open-Meteo's ERA5 archive; the mean barely moves year
+  to year, so it stays out of every build/refresh/check chain.
+- `gen-starfield.mjs`. Manual and occasional: fetches the 34 MB HYG v41 star
+  catalogue and filters it to `public/sky/stars-hyg41-m5.bin`. Run by hand
+  when the catalogue needs a refresh.
 
 </details>
 
@@ -327,8 +333,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1642 unit tests across 155 files (vitest)
-npm run test:e2e  # 480 Playwright tests across 29 files, every registry route
+npm test          # 1785 unit tests across 174 files (vitest)
+npm run test:e2e  # 488 Playwright tests across 31 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
