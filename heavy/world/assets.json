@@ -1,6 +1,5 @@
 {
-  "generatedAt": "2026-09-23T22:07:37.360Z",
-  "totalBytes": 10250188,
+  "totalBytes": 10967032,
   "assets": [
     {
       "id": "brown_mud_dry",
@@ -338,6 +337,42 @@
           "path": "heavy/world/textures/kloppenheim_06_puresky_1k.hdr",
           "width": 1024,
           "bytes": 1173154
+        }
+      ]
+    },
+    {
+      "id": "fern_02",
+      "use": "fern clumps, T1 near-field scatter (world-v2-spec.md §6)",
+      "sourceUrl": "https://polyhaven.com/a/fern_02",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/models/fern_02.glb",
+          "bytes": 95284
+        }
+      ]
+    },
+    {
+      "id": "rock_moss_set_01",
+      "use": "riverbank boulders (world-v2-spec.md §6)",
+      "sourceUrl": "https://polyhaven.com/a/rock_moss_set_01",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/models/rock_moss_set_01.glb",
+          "bytes": 426824
+        }
+      ]
+    },
+    {
+      "id": "brass_diya_lantern",
+      "use": "boat-bow + keystone lantern prop (world-v2-spec.md §6)",
+      "sourceUrl": "https://polyhaven.com/a/brass_diya_lantern",
+      "licence": "CC0",
+      "files": [
+        {
+          "path": "heavy/world/models/brass_diya_lantern.glb",
+          "bytes": 194736
         }
       ]
     }
