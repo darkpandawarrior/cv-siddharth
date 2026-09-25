@@ -5,6 +5,24 @@ from pathlib import Path
 import math
 import bmesh
 import bpy
+import subprocess
+
+def compress_with_meshopt(path):
+    """Compress the exported GLB with meshopt via a dev-only npx binary
+    (gltfpack is never added to package.json). -cc is the higher
+    compression ratio; -kn keeps named nodes (e.g. blueprint-instrument's
+    'needle') attached and lookup-able by name. gltfpack is deterministic
+    given identical input, so this does not break the two-runs-identical
+    gate; write to a sibling temp file first since gltfpack cannot read and
+    write the same path."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / '.showcase-work/blender-20260923/blueprint-instrument'
@@ -84,11 +102,16 @@ def canonicalize_object(obj):
     out.free()
     obj.data.update()
 
-# Dial body profile: foot, neck, dial disc, beveled rim lip, finial. Built
-# in the durable source so the "bevel" is shape language, not a modifier.
+# Dial body profile: foot, neck, a FLAT dial disc, beveled rim lip. Kept
+# flat across its whole face (rather than the old design's dome rising to
+# z=.92 at the centre) because the needle (below) is a flat blade spanning
+# from the pivot out toward the tick ring at one constant height; a domed
+# centre would bury the pivot end of the needle inside the body's own solid
+# geometry. Built in the durable source so the "bevel" is shape language,
+# not a modifier.
 PROFILE = [
-    (0, 0), (.35, 0), (.32, .08), (.14, .22), (.11, .55),
-    (.62, .62), (.66, .68), (.6, .72), (.5, .78), (.15, .86), (0, .92),
+    (0, 0), (.35, 0), (.32, .08), (.14, .22), (.11, .6),
+    (.62, .62), (.66, .665), (.58, .7), (.3, .665), (0, .665),
 ]
 bm = lathe(PROFILE, steps=56)
 mesh = bpy.data.meshes.new('InstrumentBody')
@@ -107,8 +130,31 @@ ring.name = 'CalibrationRing'
 ring.data.materials.append(amber)
 for poly in ring.data.polygons: poly.use_smooth = True
 
+# Engraved tick channel: a shallow silver groove recessed just under the tick
+# ring, so the twelve ticks below sit inside a cut channel rather than
+# floating on the bare dial face (wow-pass: "lathe dial with an engraved
+# tick ring").
+bpy.ops.mesh.primitive_torus_add(major_segments=48, minor_segments=6,
+    location=(0, 0, .700), major_radius=.6, minor_radius=.016)
+channel = bpy.context.object
+channel.name = 'TickChannel'
+channel.data.materials.append(silver)
+for poly in channel.data.polygons: poly.use_smooth = True
+
+# Beveled bezel: a distinct chamfered ring proud of the rim lip, turned as
+# its own lathe profile so the bevel is a separate shape rather than the
+# body's own taper (wow-pass: "beveled bezel").
+bezel_bm = lathe([(.58, .715), (.655, .715), (.685, .735), (.615, .755), (.58, .715)], steps=48)
+bezel_mesh = bpy.data.meshes.new('BezelRing')
+bezel_bm.to_mesh(bezel_mesh)
+bezel_bm.free()
+for poly in bezel_mesh.polygons: poly.use_smooth = True
+bezel_mesh.materials.append(silver)
+bezel = bpy.data.objects.new('BezelRing', bezel_mesh)
+bpy.context.collection.objects.link(bezel)
+
 # Twelve mint tick marks around the dial disc, evenly spaced calibration
-# readout points.
+# readout points, sitting inside the engraved channel.
 for i in range(12):
     a = math.tau * i / 12
     bpy.ops.mesh.primitive_cube_add(size=.032, location=(.6 * math.cos(a), .6 * math.sin(a), .705))
@@ -116,6 +162,31 @@ for i in range(12):
     tick.name = f'Tick_{i}'
     tick.scale = (1, 1, .55)
     tick.data.materials.append(mint)
+
+# The needle: a separate node pivoting at its own local origin (the dial
+# centre), so BlueprintInstrument.tsx can rotate it about Z without any
+# recentring math (contract for P1-02 / M50). A long pointer toward the tick
+# ring plus a short tail counterweight behind the pivot, in the Signal
+# ceramic material (the live/verified accent) with a thin vertical rib so it
+# reads as a raised needle rather than a flat decal.
+needle_bm = bmesh.new()
+kite_xy = [(0, -.12), (-.022, 0), (0, .52), (.022, 0)]  # tail, left, tip, right
+top = [needle_bm.verts.new((x, y, .006)) for x, y in kite_xy]
+bottom = [needle_bm.verts.new((x, y, -.006)) for x, y in kite_xy]
+needle_bm.faces.new(top)
+needle_bm.faces.new(tuple(reversed(bottom)))
+for i in range(4):
+    j = (i + 1) % 4
+    needle_bm.faces.new((top[i], bottom[i], bottom[j], top[j]))
+bmesh.ops.recalc_face_normals(needle_bm, faces=needle_bm.faces)
+needle_mesh = bpy.data.meshes.new('NeedleMesh')
+needle_bm.to_mesh(needle_mesh)
+needle_bm.free()
+for poly in needle_mesh.polygons: poly.use_smooth = False
+needle_mesh.materials.append(mint)
+needle = bpy.data.objects.new('needle', needle_mesh)
+needle.location = (0, 0, .71)
+bpy.context.collection.objects.link(needle)
 
 # Screw-threaded grip collar on the neck: a small profile edge revolved and
 # advanced per turn by the Screw modifier, giving a knurled calibration grip.
@@ -147,4 +218,5 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'blueprint-instrument.blend'))
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.export_scene.gltf(filepath=str(ROOT / 'public/models/blueprint-instrument.glb'),
     export_format='GLB', export_yup=True, use_selection=True)
+compress_with_meshopt(ROOT / 'public/models/blueprint-instrument.glb')
 print('BLUEPRINT_INSTRUMENT_EXPORTED')
