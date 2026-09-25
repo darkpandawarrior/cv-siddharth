@@ -16,13 +16,26 @@ name: Refresh the Compose twin
 on:
   schedule:
     - cron: '41 5 * * 1'   # weekly, Monday 05:41 UTC, before refresh-media; was daily until the 10 GB deployment cap
+  # No longer triggered by refresh-media's completion (workflow_run): the
+  # doctor (doctor.yml, SH-4) heals twin drift daily now, so this workflow
+  # goes back to being purely its own weekly schedule.
   workflow_dispatch:
-  # Also right after a media refresh lands: that run moves the corpora this
-  # one derives the twin's Kotlin data from, and refresh-media hands twin-only
-  # drift off to this workflow instead of failing on it.
-  workflow_run:
-    workflows: ["Refresh project media"]
-    types: [completed]
+    inputs:
+      dry_run:
+        # A string, not `type: boolean` — see refresh-media.yml's dry_run for
+        # why: every `if:` below compares this against the string 'true', and
+        # a real boolean compared to a string in a GitHub Actions expression
+        # is coerced numerically (true -> 1, 'true' -> NaN), so both
+        # == 'true' and != 'true' were silently wrong here too (run
+        # 36087134762's "Dry run: report what would have happened" never ran
+        # despite dry_run=true).
+        description: "Do everything except push. (true/false)"
+        default: 'false'
+      fixture:
+        description: Force a scenario for testing.
+        type: choice
+        options: [none, code-change, heartbeat]
+        default: none
 
 permissions:
   contents: write
@@ -75,12 +88,27 @@ jobs:
       # and its own id, unconditional on anything committed above, because its
       # field-contract self-check (scripts/kotlin-field-contract.json) is a
       # correctness guard on THIS repo's own data, not a consequence of the
-      # twin's build having changed — see "Gate result" below, which fails the
-      # whole job on this step alone, committed or not.
+      # twin's build having changed — see "Gate result" below, which reads
+      # this step's .outcome on its own, committed or not, and routes a
+      # regression to "Open or update gate-failure issue" rather than pushing.
+      # continue-on-error keeps that routing from also reddening the scheduled
+      # job's own conclusion (the same fix as gate_tsc/gate_lint/gate_test/
+      # gate_check_generated below).
       - name: Regenerate the twin's Kotlin data
         id: gate_kotlin
         if: always()
+        continue-on-error: true
         run: npm run gen:kotlin
+
+      # Same fixture contract as refresh-media.yml, for a consistent
+      # workflow_dispatch surface; this workflow's own "Commit if changed"
+      # below never stages src/world, so code-change is a no-op here on
+      # purpose (there is nothing here for it to be a non-generator diff IN).
+      - name: 'Fixture: code-change (force a non-generator diff)'
+        if: inputs.fixture == 'code-change'
+        run: |
+          mkdir -p src/world/v2
+          echo "// classify-diff dry-run fixture $(date -u +%FT%TZ)" >> src/world/v2/Water.tsx
 
       # Stage + commit LOCALLY regardless of what ran above — this costs
       # nothing even on a run that ends up pushing nothing, and it lets the
@@ -106,22 +134,46 @@ jobs:
           if git diff --cached --quiet; then
             echo "The embedded twin is already current."
             echo "committed=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "chore: refresh the embedded Compose twin and its figures"
-            echo "committed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          # Same change-only rule as refresh-media.yml: self-healing-spec.md#2.3.
+          STAMPS='(generatedAt|verifiedAt|refreshedAt|asOf|lastChecked)'
+          DOW="$(date -u +%u)"
+          if [ "${{ inputs.fixture }}" = "heartbeat" ]; then DOW=1; fi
+          if git diff --cached --quiet -I"$STAMPS" && [ "$DOW" != "1" ]; then
+            echo "stamp-only drift; not committing (heartbeat is Monday)"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --cached --quiet -I"$STAMPS"; then
+            echo "heartbeat: committing stamp-only drift (weekly proof of life)"
+          fi
+          git commit -m "chore: refresh the embedded Compose twin and its figures"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
 
+      # continue-on-error on all four below, same as gate_kotlin above: "Gate
+      # result" reads each step's .outcome as DATA to decide passed=true/false
+      # and route a failure to "Open or update gate-failure issue" instead of
+      # pushing — without continue-on-error, a single failing check (e.g. the
+      # repoStats.ts self-consistency count, orchestrator-reconciled and
+      # expected to disagree on an unmerged lane branch) still failed the
+      # job's own conclusion regardless of `if: always()`, so dry_run could
+      # never finish green (run 36073585237: Unit tests / Generated artifacts
+      # failing here alone).
       - name: Type-check
         id: gate_tsc
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npx tsc -b
       - name: Lint
         id: gate_lint
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run lint
       - name: Unit tests
         id: gate_test
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run test
       # The same guard CI runs on a push. If a generator and its committed
       # artifact disagree after all of the above, that is a defect worth
@@ -129,6 +181,7 @@ jobs:
       - name: Generated artifacts match their generators
         id: gate_check_generated
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run check:generated
 
       # Unconditional (not gated on `committed`): gate_kotlin ran regardless of
@@ -155,15 +208,26 @@ jobs:
           fi
 
       - name: Push
-        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true'
+        if: steps.commit.outputs.committed == 'true' && steps.gate.outputs.passed == 'true' && inputs.dry_run != 'true'
         run: git push
+
+      - name: 'Dry run: report what would have happened'
+        if: always() && inputs.dry_run == 'true'
+        run: |
+          if [ "${{ steps.gate.outputs.passed }}" != "true" ]; then
+            echo "dry run: gate is red (committed=${{ steps.commit.outputs.committed }}), planned: report-gate-failure.sh refresh-twin; nothing would push"
+          elif [ "${{ steps.commit.outputs.committed }}" = "true" ]; then
+            echo "dry run: committed locally, planned: git push"
+          else
+            echo "dry run: nothing to commit."
+          fi
 
       # A red gate pushes nothing — the local commit above is discarded with
       # the runner. One issue per workflow (see the script), not one per run.
       # Fires on gate_kotlin's own failure too, even on a run with nothing
-      # else to commit — see "Gate result" above.
+      # else to commit — see "Gate result" above. Skipped on a dry run.
       - name: Open or update gate-failure issue
-        if: steps.gate.outputs.passed == 'false'
+        if: steps.gate.outputs.passed == 'false' && inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/report-gate-failure.sh refresh-twin
