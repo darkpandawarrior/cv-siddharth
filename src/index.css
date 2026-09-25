@@ -813,11 +813,20 @@ html.resume-mode .palette-trigger {
      no #main-content at all (a couple of listing pages that delegate to a
      shared component with none) still gets the notice, just not the content
      hide, which is the smaller half of this fix and already covered by the
-     dark-on-white rules above being scoped to .resume/.project-detail only. */
-  #main-content:not(.project-detail):not(:has(.resume)) {
+     dark-on-white rules above being scoped to .resume/.project-detail only.
+
+     A third exemption, same shape: .playground-world (the world-view <main>,
+     Playground.tsx) is ALSO prepared for print, just not by staying on
+     screen as-is like .resume/.project-detail — .playground-canvas inside it
+     is hidden and its sr-only RoomGrid is unhidden by the rules above this
+     block. Blanket-hiding #main-content here would hide that grid along with
+     the canvas, since the grid is #main-content's own descendant, and print
+     a blank page under a notice that's wrong besides (the room grid isn't a
+     visit-online apology, it's the thing that actually prints). */
+  #main-content:not(.project-detail):not(:has(.resume)):not(.playground-world) {
     display: none !important;
   }
-  body:not(:has(.project-detail)):not(:has(.resume))::after {
+  body:not(:has(.project-detail)):not(:has(.resume)):not(:has(.playground-world))::after {
     content: "This page is an interactive app and prints poorly. Visit siddharth-pandalai.vercel.app to view it online, or print /resume or a /project/<slug> case study. Both are built for paper.";
     display: block;
     padding: 24mm 12mm;
