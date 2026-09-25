@@ -81,6 +81,12 @@ const EXPECTED_404 = [
   //   curl "https://cv-siddharth.vercel.app/api/ops"
   // after the first deploy and remove this entry if it is not 200.
   "/api/ops",
+  // /api/signals (live-data-spec.md §1.1): same story as /api/ops above — it
+  // has no production URL to curl yet, this is the wave that wires its first
+  // consumer (CiStrip, /project/$slug). Re-run
+  //   curl "https://cv-siddharth.vercel.app/api/signals"
+  // after the first deploy and remove this entry if it is not 200.
+  "/api/signals",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 
