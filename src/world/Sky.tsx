@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import * as THREE from "three";
 import { NIGHT_HORIZON_HEX, NIGHT_ZENITH_HEX } from "../lib/nightSurvey.ts";
 
@@ -46,20 +45,29 @@ void main() {
 }
 `;
 
-export function Sky() {
-  // Lazy ref, not useMemo: the theme is resolved once at mount, matching
-  // resolve.ts's own materials — a fixed backdrop that doesn't repaint
-  // itself mid-drive — without an empty deps array fighting the linter over
-  // a value (`worldPalette()`) that is a fresh object every render anyway.
-  const uniformsRef = useRef<{ uZenith: { value: THREE.Color }; uHorizon: { value: THREE.Color } } | null>(null);
-  if (uniformsRef.current === null) {
-    uniformsRef.current = {
-      uZenith: { value: new THREE.Color(NIGHT_ZENITH_HEX) },
-      uHorizon: { value: new THREE.Color(HORIZON_HEX) },
-    };
-  }
-  const uniforms = uniformsRef.current;
+// Module-scope, not a per-instance ref: there is only ever one Sky dome in
+// this world, and R4 (skyBinding.ts) needs a plain function it can call
+// from outside React to push the real sky's two stops in — an imperative
+// handle would work too, but a named export is the simpler seam and
+// matches every other "one thing, one owner" singleton in this world
+// (telemetry.ts, input.ts). Values start at today's exact Night Survey
+// literals, same as before this file exported anything, so a page that
+// mounts the dome before skyBinding.ts's first tick still renders the
+// art-directed baseline.
+const uniforms = {
+  uZenith: { value: new THREE.Color(NIGHT_ZENITH_HEX) },
+  uHorizon: { value: new THREE.Color(HORIZON_HEX) },
+};
 
+/** R4's own write path (reality-spec §4.1) — sets the dome's two stops
+ *  in place. Takes hex strings (Keyframe.zenith/horizon's own unit), so a
+ *  caller never has to construct a THREE.Color itself. */
+export function setSkyStops(zenithHex: string, horizonHex: string): void {
+  uniforms.uZenith.value.set(zenithHex);
+  uniforms.uHorizon.value.set(horizonHex);
+}
+
+export function Sky() {
   return (
     <mesh renderOrder={-1}>
       <icosahedronGeometry args={[RADIUS, 4]} />
