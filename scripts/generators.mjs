@@ -245,7 +245,7 @@ export const GENERATORS = [
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png"], stages: { refresh: 13 } },
   { id: "weeb", script: "gen-weeb.mjs", npmName: "gen:weeb", kind: "network",
-    inputs: [], outputs: ["src/data/weeb.ts", "src/data/weebTitles.ts"], stages: { refresh: 14 } },
+    inputs: [], outputs: ["src/data/weeb.ts"], stages: { refresh: 14 } },
   { id: "chess-stats", script: "gen-chess-stats.mjs", npmName: "gen:chess", kind: "network",
     inputs: [], outputs: ["src/data/chess.ts", "public/chess/corpus.json", ".chess-cache/lichess-games.json"],
     stages: { refresh: 15 } },
