@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WritingSection } from "../WritingSection.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { MarginNotes } from "../play/MarginNotes.tsx";
@@ -90,7 +89,6 @@ function InkRoute() {
           <MarginNotes pieceSlug="ink" />
         </div>
       </main>
-      <FloatingChat />
       <SiteFooter />
     </div>
     </DeferredPlayRoom>

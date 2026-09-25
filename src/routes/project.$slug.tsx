@@ -4,7 +4,6 @@ import { projects } from "../data/profile.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { ProjectDetail } from "../ProjectDetail.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
 import { heavy } from "../lib/assetBase.ts";
 import { touch } from "../lib/sessionRipple.ts";
@@ -79,7 +78,6 @@ function ProjectPage() {
       <ProjectDetail slug={slug} />
       {/* Every other route closes with the site footer; project pages ended on
           the chat's FAQ block with no way onward except "Back to all projects". */}
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

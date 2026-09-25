@@ -3,7 +3,6 @@ import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { RoomFrame } from "../rooms.tsx";
 import { StoryMap } from "../StoryMap.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { NODES } from "../data/storyMap.ts";
 
 type MapSearch = { focus?: string };
@@ -33,7 +32,6 @@ function MapRoute() {
       <RoomFrame title="The 3D Storyboard" tagline="the projects as a constellation">
         <StoryMap focus={focus} />
       </RoomFrame>
-      <FloatingChat />
     </>
   );
 }

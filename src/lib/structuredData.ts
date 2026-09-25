@@ -10,7 +10,8 @@
 // hash is a fixed constant every response's script-src must always carry
 // — not something a per-response body scan can discover on those routes.
 import { currentRoles } from "./resumeMeta.ts";
-import { profile, education, experience } from "../data/profile.ts";
+import { profile, education } from "../data/profile/core.ts";
+import { experience } from "../data/profile/experience.ts";
 
 // experience[0] — index 0 is whichever role was added most recently, and an
 // index-based read silently demoted Dice.tech the day the consulting role

@@ -13,7 +13,6 @@ import type { AnthologyEntry } from "../data/anthology.ts";
 import { registerLines, tellersOf } from "../data/crossnav.ts";
 import type { AnthologySearch, RegisterLine } from "../data/crossnav.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { splitDocket } from "../lib/docket.ts";
 import { Rendering } from "../Rendering.tsx";
 import { describes, endsMidSentence, storyOf } from "../lib/describes.ts";
@@ -719,7 +718,6 @@ function ReadPiece() {
           )}
         </nav>
       </main>
-      <FloatingChat />
       <SiteFooter />
     </div>
     </DeferredPlayRoom>
@@ -914,7 +912,6 @@ function LessonRead({ piece }: { piece: Extract<ReadView, { kind: "lesson" }> })
           </p>
         )}
       </main>
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

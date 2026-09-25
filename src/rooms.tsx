@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, type LucideIcon } from "lucide-react";
-import { openChat } from "./FloatingChat.tsx";
+import { openChat } from "./lib/chatBus.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { usePulseUI } from "./play/pulseUI.ts";
@@ -153,7 +153,7 @@ export function RoomPagerFooter() {
   const next = useNextRoom();
   if (!next) return null;
   return (
-    <footer className="border-t border-line bg-ink/80">
+    <footer data-spine="room-pager" className="border-t border-line bg-ink/80">
       <NextRoomLink next={next} className="mx-auto max-w-7xl px-4 py-4 sm:px-6" />
     </footer>
   );
@@ -163,7 +163,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
   const { goToSection } = useSectionNav();
   return (
     <div className="flex min-h-screen flex-col bg-void">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <header data-spine="route-header" className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Was a link to /playground - the hub that lists the rooms. The

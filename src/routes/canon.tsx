@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
@@ -726,7 +725,6 @@ function CanonRoute() {
         </div>
       </main>
 
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

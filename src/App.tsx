@@ -18,7 +18,7 @@ import { countWord } from "./data/labs.ts";
 import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ReposShowcase } from "./ReposShowcase.tsx";
-import { FloatingChat, openChat } from "./FloatingChat.tsx";
+import { openChat } from "./FloatingChat.tsx";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
@@ -1408,10 +1408,6 @@ export function HomePage() {
           );
         })}
       </main>
-      {/* FloatingChat also renders the crawlable "frequently asked" section in
-          page flow, so it goes BEFORE the footer on every route that has one:
-          nothing sits below the footer. The launcher button itself is fixed. */}
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

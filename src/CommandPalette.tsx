@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Command, CornerDownLeft, MessageCircle, Compass, PenLine, Target, TerminalSquare } from "lucide-react";
-import { projects } from "./data/profile.ts";
+import { projectCards } from "./data/profile/projectCards.ts";
 import { SURFACES } from "./rooms.tsx";
-import { openChat } from "./FloatingChat.tsx";
+import { openChat } from "./lib/chatBus.ts";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { useSectionNav, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
@@ -260,16 +260,14 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         icon: <MessageCircle size={15} />,
         run: () => openChat(),
       },
-      ...projects
-        .filter((p) => p.detail)
-        .map((p) => ({
-          id: `project-${p.slug}`,
-          label: `Open project: ${p.name}`,
-          hint: "Case study",
-          keywords: `${p.tagline} ${p.stack.join(" ")}`,
-          icon: <Compass size={15} />,
-          run: () => navigate({ to: "/project/$slug", params: { slug: p.slug } }),
-        })),
+      ...projectCards.map((p) => ({
+        id: `project-${p.slug}`,
+        label: `Open project: ${p.name}`,
+        hint: "Case study",
+        keywords: `${p.tagline} ${p.stack.join(" ")}`,
+        icon: <Compass size={15} />,
+        run: () => navigate({ to: "/project/$slug", params: { slug: p.slug } }),
+      })),
     ],
     [navigate, goToSection],
   );

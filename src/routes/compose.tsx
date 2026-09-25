@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import ComposePlayground from "../ComposePlayground.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 
 /**
  * Server-rendered now, like /playground and /blueprint: the interpreter and
@@ -15,7 +14,6 @@ export const Route = createFileRoute("/compose")({
   component: () => (
     <>
       <ComposePlayground />
-      <FloatingChat />
     </>
   ),
 });

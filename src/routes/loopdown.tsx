@@ -3,7 +3,6 @@ import { roomHead } from "../lib/routeHead.ts";
 import { AmbientBackground } from "../AmbientBackground.tsx";
 import { CursorAura } from "../CursorAura.tsx";
 import { WritingView } from "../WritingView.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 
 export const Route = createFileRoute("/loopdown")({
@@ -19,7 +18,6 @@ export const Route = createFileRoute("/loopdown")({
           end", and it was mounted on exactly one page. Its section links
           already navigate cross-route (useSectionNav falls through to
           /#id), so it works here unchanged. */}
-      <FloatingChat />
       <SiteFooter />
     </div>
   ),

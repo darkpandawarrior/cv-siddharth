@@ -4,7 +4,12 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
-import { projects, projectBySlug } from "./data/profile.ts";
+// The light projection (F12), not the full projects.ts: slash commands and
+// the suggestion chips below only ever read .slug and .name, never the
+// screenshots/videos/case-study prose that make the full Project heavy —
+// and this module is now lazy-loaded on its own (src/ChatLauncher.tsx), so
+// pulling in the heavy one here would drag it into every first chat open.
+import { projectCards, type ProjectCard } from "./data/profile/projectCards.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { ANSWERS } from "./data/source/answers.ts";
 import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
@@ -106,7 +111,8 @@ interface SlashApi {
   jd: (prefill: string) => void;
 }
 
-const SLUGS = projects.map((p) => p.slug);
+const SLUGS = projectCards.map((p) => p.slug);
+const projectCardBySlug = (slug: string): ProjectCard | undefined => projectCards.find((p) => p.slug === slug);
 
 const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: string, api: SlashApi) => void }[] = [
   {
@@ -128,7 +134,7 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
     help: "jump to a case study",
     run: (arg, api) => {
       const slug = arg.toLowerCase();
-      const project = projectBySlug(slug); // typed by a visitor — never routed to unvalidated
+      const project = projectCardBySlug(slug); // typed by a visitor — never routed to unvalidated
       if (project) return api.go(`/project/${project.slug}`);
       api.say(
         slug
@@ -183,12 +189,18 @@ const COMPOSER_BUTTON =
 const MIC_DISCLOSURE =
   "Voice input is transcribed by your browser's speech service — in Chrome that means the audio is sent to Google.";
 
-export function FloatingChat() {
+export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail } = {}) {
   // The launcher belongs to the document chrome, outside positioned route
   // wrappers (including the writing world's themed container).
   const [launcherRoot, setLauncherRoot] = useState<HTMLElement | null>(null);
   useEffect(() => setLauncherRoot(document.body), []);
-  const [open, setOpen] = useState(false);
+  // src/ChatLauncher.tsx (F12, F13) never mounts this component until chat is
+  // wanted — a launcher click, or an openChat()/openJdFit() call that beat it
+  // there — so it always starts open. `initialDetail` carries that earlier
+  // call's payload (its own CustomEvent already fired and found nobody
+  // listening); see the mount effect below, which applies it the same way
+  // the window-event handler applies every later one.
+  const [open, setOpen] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   useInertBackdrop(open && expanded, panelRef);
@@ -288,41 +300,52 @@ export function FloatingChat() {
     }
   }, [messages, expanded, busy]);
 
+  const applyOpenDetail = useCallback((detail: OpenChatDetail | undefined) => {
+    setOpen(true);
+    if (detail === undefined) return; // openChat() with no argument — just opens
+    if (typeof detail === "string") {
+      if (detail.trim()) setPendingAsk({ text: detail });
+      return;
+    }
+    if ("mode" in detail && detail.mode === "jd" && detail.text.trim()) {
+      // Clamped here as well as at the textarea: this event is reachable by
+      // any caller, and the raised JD cap is the one the server enforces.
+      setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
+      setJd(null); // a half-typed paste box would outlive the analysis it started
+      setExpanded(true); // a scorecard deserves the wide view, not the 370px default
+      return;
+    }
+    // The FaqDock follow-up shape ({ prompt?, context? }): `context` is a
+    // Q&A the visitor already read, seeded into the transcript as history
+    // rather than re-asked — the point is a REAL follow-up, not a repeat
+    // of the canned answer. `prompt`, when given, is then auto-sent the
+    // same way the plain-string shape above is; omitted, the panel opens
+    // with that context showing and the composer focused for whatever the
+    // visitor types next (see the focus-management effect below).
+    if (!("mode" in detail)) {
+      if (detail.context) {
+        const { question, answer } = detail.context;
+        setMessages((prev) => [...prev, { role: "user", content: question }, { role: "assistant", content: answer }]);
+      }
+      if (detail.prompt?.trim()) setPendingAsk({ text: detail.prompt.trim() });
+    }
+  }, []);
+
+  // Applies ChatLauncher's `initialDetail` exactly once, on mount — the
+  // deferred counterpart to the window-event listener below, for the one
+  // detail whose own event already fired before this component existed.
+  const appliedInitialRef = useRef(false);
   useEffect(() => {
-    const onOpen = (e: Event) => {
-      setOpen(true);
-      const detail = (e as CustomEvent<OpenChatDetail | undefined>).detail;
-      if (detail === undefined) return; // openChat() with no argument — just opens
-      if (typeof detail === "string") {
-        if (detail.trim()) setPendingAsk({ text: detail });
-        return;
-      }
-      if ("mode" in detail && detail.mode === "jd" && detail.text.trim()) {
-        // Clamped here as well as at the textarea: this event is reachable by
-        // any caller, and the raised JD cap is the one the server enforces.
-        setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
-        setJd(null); // a half-typed paste box would outlive the analysis it started
-        setExpanded(true); // a scorecard deserves the wide view, not the 370px default
-        return;
-      }
-      // The FaqDock follow-up shape ({ prompt?, context? }): `context` is a
-      // Q&A the visitor already read, seeded into the transcript as history
-      // rather than re-asked — the point is a REAL follow-up, not a repeat
-      // of the canned answer. `prompt`, when given, is then auto-sent the
-      // same way the plain-string shape above is; omitted, the panel opens
-      // with that context showing and the composer focused for whatever the
-      // visitor types next (see the focus-management effect below).
-      if (!("mode" in detail)) {
-        if (detail.context) {
-          const { question, answer } = detail.context;
-          setMessages((prev) => [...prev, { role: "user", content: question }, { role: "assistant", content: answer }]);
-        }
-        if (detail.prompt?.trim()) setPendingAsk({ text: detail.prompt.trim() });
-      }
-    };
+    if (appliedInitialRef.current) return;
+    appliedInitialRef.current = true;
+    if (initialDetail !== undefined) applyOpenDetail(initialDetail);
+  }, [applyOpenDetail, initialDetail]);
+
+  useEffect(() => {
+    const onOpen = (e: Event) => applyOpenDetail((e as CustomEvent<OpenChatDetail | undefined>).detail);
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
-  }, []);
+  }, [applyOpenDetail]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -646,7 +669,7 @@ export function FloatingChat() {
   // follows; a chip already offered by the project doesn't get offered twice.
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m !== GREETING);
   const projectSlug = lastAssistant ? lastRenderedProjectSlug(lastAssistant.content) : undefined;
-  const project = projectSlug ? projectBySlug(projectSlug) : undefined;
+  const project = projectSlug ? projectCardBySlug(projectSlug) : undefined;
   const projectChips = project ? chipsForProject(shortName(project.name)) : [];
   const suggestions = settled
     ? [...projectChips, ...chips.filter((q) => !projectChips.includes(q))]
