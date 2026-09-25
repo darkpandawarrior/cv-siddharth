@@ -303,6 +303,11 @@ export const GENERATORS = [
   // The policy manifest and SSR response helper must come from this same build.
   { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
     inputs: [], outputs: ["dist/csp-policy.json", "dist/csp/response.mjs"], stages: {} },
+  // Manual/occasional (its own header says so, G13): `npm run gen:river`.
+  // Fetches the Overpass mirrors on demand; keeps the committed snapshot on
+  // total mirror failure rather than failing the build.
+  { id: "river-osm", script: "gen-river-osm.mjs", npmName: "gen:river", kind: "network",
+    inputs: [], outputs: ["src/data/osm/mutha.json"], stages: {} },
 ];
 
 // gen-ops scans every top-level data file. Run it after their producers so
