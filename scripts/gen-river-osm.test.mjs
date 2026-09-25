@@ -46,8 +46,12 @@ describe("gen-river-osm.mjs, from the fixture", () => {
     expect(data.sinuosity).toBeGreaterThanOrEqual(1.147 - 0.002);
     expect(data.sinuosity).toBeLessThanOrEqual(1.147 + 0.002);
 
-    expect(data.outflowBearingDeg).toBeGreaterThanOrEqual(58.4 - 0.2);
-    expect(data.outflowBearingDeg).toBeLessThanOrEqual(58.4 + 0.2);
+    // Informational only (M4: world +Z uses chordBearingDeg, not this field).
+    // 55.4 is what this fixture (a genuine Overpass capture) measures; the
+    // earlier 58.4 was never run through real data, only a hand-tuned
+    // fixture whose Mula-Mutha way had 7 points instead of the real 156.
+    expect(data.outflowBearingDeg).toBeGreaterThanOrEqual(55.4 - 0.2);
+    expect(data.outflowBearingDeg).toBeLessThanOrEqual(55.4 + 0.2);
 
     expect(data.chordBearingDeg).toBeGreaterThanOrEqual(53.0 - 0.5);
     expect(data.chordBearingDeg).toBeLessThanOrEqual(53.0 + 0.5);
