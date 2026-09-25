@@ -1,12 +1,19 @@
 import { useState } from "react";
 import {ArrowLeft, Activity } from "lucide-react";
 import { ClientOnly } from "@tanstack/react-router";
+import { useCursorPresences } from "@playhtml/react";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { PlayRoom, PresenceBadge } from "./play/PlayRoom.tsx";
 import { PULSE_EVENTS, groupPulse, totalInteractions, touchedCount, usePulseCounts, type PulseEvent } from "./play/pulse.ts";
 import { DayBars, useCountUp, useVisitorLedger } from "./play/Visitors.tsx";
 import { isoDay, recentDays, sumDays, topZones, totalVisitors, type ZoneTally } from "./play/visitors.ts";
+import { useSky } from "./lib/useSky.ts";
+import { WMO_LABEL } from "./lib/sky.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { useTouched } from "./lib/sessionRipple.ts";
+import { projectBySlug } from "./data/profile.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
 import { SiteFooter } from "./SiteFooter.tsx";
 import { LauncherButton } from "./Launcher.tsx";
@@ -222,6 +229,41 @@ function PulseInner() {
   regions.sort((a, b) => b.count - a.count || a.region.localeCompare(b.region));
   const zoneTotal = regions.reduce((sum, r) => sum + r.count, 0);
 
+  // reality-spec §6 /pulse row + idea-atlas PATH-5: "one line proving all
+  // three axes at once" (presence, weather, clock), plus a closing line
+  // built only from byproducts this session already collected (touched
+  // projects, weather, 24h pushes). `useSky` is the one shared clock/weather
+  // combinator (design doc §4) — no second fetch or second clock here.
+  // Every clause is independently nullable (weather can fail; sky is null
+  // until mount), so both lines are built from parts and filtered rather
+  // than interpolated, per "any null clause is omitted, never undefined".
+  const sky = useSky();
+  const presences = useCursorPresences();
+  const weather = sky?.weather ?? null;
+  const weatherClause = weather ? `Pune ${weather.tempC.toFixed(1)} °C, ${WMO_LABEL[weather.code] ?? "unknown"}` : null;
+  const timeClause = sky
+    ? `${sky.now.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false })} IST, ${sky.daypart}`
+    : null;
+  const realityLine = [`${presences.size} here now`, weatherClause, timeClause].filter(Boolean).join(" · ");
+
+  const touchedNames = useTouched()
+    .map((slug) => projectBySlug(slug)?.name)
+    .filter((name): name is string => Boolean(name));
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+  const pushesLast24h =
+    activity?.connected && sky
+      ? activity.items.filter((it) => {
+          const age = sky.now.getTime() - new Date(it.at).getTime();
+          return it.type === "push" && age >= 0 && age <= 86_400_000;
+        }).length
+      : null;
+  const closingParts = [
+    touchedNames.length > 0 ? `you passed through ${sentenceList(touchedNames)}` : null,
+    weather ? `it is ${weather.tempC.toFixed(1)} °C and ${WMO_LABEL[weather.code] ?? "unknown"} in Pune` : null,
+    pushesLast24h !== null ? `${pushesLast24h} push${pushesLast24h === 1 ? "" : "es"} landed in the last 24 h` : null,
+  ].filter((p): p is string => Boolean(p));
+  const closingLine = closingParts.length > 0 ? `${closingParts.join(", ")}.` : null;
+
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
@@ -353,6 +395,16 @@ function PulseInner() {
           Counted per browser, not per person, and forgeable by anyone with a console — the full accounting is
           at the foot of the page.
         </p>
+        {realityLine && (
+          <p data-pulse-line className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-muted">
+            {realityLine}
+          </p>
+        )}
+        {closingLine && (
+          <p data-pulse-closing-line className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-400">
+            {closingLine.charAt(0).toUpperCase() + closingLine.slice(1)}
+          </p>
+        )}
 
         <section className="mt-12" aria-labelledby="pulse-trace">
           <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
