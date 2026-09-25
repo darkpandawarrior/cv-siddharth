@@ -146,9 +146,11 @@ describe("graphUsedBy", () => {
 /**
  * End-to-end (spawned, sandboxed the way gen-oss-stats.test.mjs's "gh
  * unavailable" case is): the acceptance line in full — fixture settings
- * files yield the composed counts and substitution lists, and a run with
- * every sibling AND the network absent leaves both output files
- * byte-identical, exit 0.
+ * files yield the composed counts and substitution lists, a run with every
+ * sibling AND the network absent leaves both output files byte-identical
+ * exit 0, and two generator runs over unchanged inputs produce byte-identical
+ * kmpGraph.ts (mirrored by the "no change" branch's own generatedAt-excluding
+ * diff in gen-project-stats.mjs).
  */
 function scratchRepo() {
   const root = tmp("gen-project-stats-e2e-");
@@ -173,11 +175,25 @@ const STATS_FIXTURE =
   `  "portfolio": { "composedModules": 3, "substitutedModules": ["network", "result", "llm-chat"] }\n` +
   `} as const;\n`;
 
+// Minimal but valid kmpGraph.ts body, just enough for readPreviousGraph's regex +
+// JSON.parse round trip. No banner/interface text: exactly like STATS_FIXTURE
+// above, the "sibling absent" path never rewrites the file at all, so the
+// only thing that has to survive byte-for-byte is whatever this constant is.
+const KMPGRAPH_DATA = {
+  generatedAt: "2026-09-20",
+  modules: [{ id: "common", usedBy: [{ app: "gaddi", firstMonth: "2026-01" }] }],
+  consumers: [{ id: "gaddi", label: "Gaddi" }],
+  dependencySpine: [],
+};
+const KMPGRAPH_FIXTURE = `export const kmpGraph: KmpGraph = ${JSON.stringify(KMPGRAPH_DATA, null, 2)};\n`;
+
 describe("gen-project-stats.mjs (spawned, sandboxed)", () => {
-  it("network and every local sibling absent: leaves projectStats.ts byte-identical, exit 0", () => {
+  it("network and every local sibling absent: leaves both output files byte-identical, exit 0", () => {
     const root = scratchRepo();
     const statsPath = join(root, "src/data/projectStats.ts");
+    const graphPath = join(root, "src/data/kmpGraph.ts");
     writeFileSync(statsPath, STATS_FIXTURE);
+    writeFileSync(graphPath, KMPGRAPH_FIXTURE);
 
     const result = spawnSync(process.execPath, [join(root, "scripts/gen-project-stats.mjs")], {
       env: {
@@ -193,6 +209,7 @@ describe("gen-project-stats.mjs (spawned, sandboxed)", () => {
 
     expect(result.status).toBe(0);
     expect(readFileSync(statsPath, "utf8")).toBe(STATS_FIXTURE);
+    expect(readFileSync(graphPath, "utf8")).toBe(KMPGRAPH_FIXTURE);
   }, 20000);
 
   it("fixture settings files (network absent): yields composed counts and substitution lists", () => {
@@ -241,5 +258,41 @@ describe("gen-project-stats.mjs (spawned, sandboxed)", () => {
     // because every projectStats member has that field today.
     expect(written).not.toHaveProperty("candidai");
     expect(written).not.toHaveProperty("portfolio");
+  }, 20000);
+
+  it("kmpGraph.ts: two generator runs over unchanged inputs produce byte-identical output", () => {
+    const root = scratchRepo();
+    writeFileSync(join(root, "src/data/projectStats.ts"), STATS_FIXTURE);
+
+    const toolkit = join(root, "toolkit");
+    mkdirSync(toolkit, { recursive: true });
+    writeFileSync(join(toolkit, "settings.gradle.kts"), `include(":common")\ninclude(":network")\n`);
+
+    const android = join(root, "repos-root", "Android");
+    mkdirSync(join(android, "Gaddi"), { recursive: true });
+    writeFileSync(join(android, "Gaddi", "settings.gradle.kts"), SETTINGS_GADDI);
+
+    const env = {
+      ...process.env,
+      GEN_PROJECT_STATS_FAIL: "1",
+      CV_REPOS_ROOT: join(root, "repos-root"),
+      CV_SIDDHARTH_KMP_ROOT: join(root, "no-such-twin"),
+      CV_KMP_TOOLKIT_ROOT: toolkit,
+    };
+    const graphPath = join(root, "src/data/kmpGraph.ts");
+    const scriptPath = join(root, "scripts/gen-project-stats.mjs");
+
+    const first = spawnSync(process.execPath, [scriptPath], { env, encoding: "utf8", timeout: 15000 });
+    expect(first.status).toBe(0);
+    const firstOutput = readFileSync(graphPath, "utf8");
+
+    // Second run sees the first run's committed kmpGraph.ts as `previousGraph`
+    // and recomputes the same body from the same, unchanged toolkit/consumer
+    // fixtures, and gen-project-stats.mjs's own generatedAt-excluding diff then
+    // skips the rewrite, so the file (including its first generatedAt stamp)
+    // must come out byte-identical to the first run's.
+    const second = spawnSync(process.execPath, [scriptPath], { env, encoding: "utf8", timeout: 15000 });
+    expect(second.status).toBe(0);
+    expect(readFileSync(graphPath, "utf8")).toBe(firstOutput);
   }, 20000);
 });
