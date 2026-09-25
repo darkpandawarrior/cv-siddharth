@@ -84,7 +84,7 @@ export function FaqDock({ jsonLd = false }: FaqDockProps) {
           row, so whichever <details> the browser's native `name="faq"`
           grouping keeps open is the only one ever visible there — no JS
           drives either the layout switch or the single-open-answer rule. */}
-      <div className="relative mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-1.5 max-md:flex max-md:snap-x max-md:snap-mandatory max-md:gap-2 max-md:overflow-x-auto max-md:pb-2">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-[repeat(auto-fit,minmax(260px,1fr))] items-start gap-1.5 max-md:flex max-md:snap-x max-md:snap-mandatory max-md:gap-2 max-md:overflow-x-auto max-md:pb-2">
         {visible.map((a) => {
           const source = parseAnchor(a.anchor).path;
           return (
