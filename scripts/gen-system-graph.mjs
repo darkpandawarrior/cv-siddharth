@@ -32,7 +32,7 @@
  * relative `../../Android` / `../../KMP` guess doesn't resolve) keep whatever
  * was last committed and the run still exits 0, same as gen-timeline.mjs.
  */
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,6 +47,8 @@ const { writing } = await import(join(dataDir, "writing.ts"));
 const { HEAVY_ASSET_BASE } = await import(join(root, "src", "lib", "assetBase.ts"));
 const { surfaces } = await import(join(dataDir, "surfaces.ts"));
 const { BOOKS_BEFORE_BROS, SERIES_PROJECT } = await import(join(dataDir, "writingMeta.ts"));
+const { upstreamMergedPRs } = await import(join(dataDir, "profile", "openSource.ts"));
+const { mifosMergedPRs } = await import(join(dataDir, "careerOpsUpstream.ts"));
 
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -57,11 +59,14 @@ const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-
 // already treats as real repos: the two convention/library repos every KMP
 // app vendors, the template a new one starts from, and the two repos that
 // build and run this whole multi-repo setup rather than shipping a product.
-const INFRA_REPOS = ["kmp-build-logic", "kmp-toolkit", "kmp-app-template", "career-ops", "agent-harness"];
+const INFRA_REPOS = ["kmp-build-logic", "kmp-toolkit", "kmp-app-template", "career-ops", "agent-harness", "darkpandawarrior"];
+// Most infra repo nodes are labelled by their own id; a couple read better as
+// what they actually are on this site (E3: the profile README pipeline).
+const INFRA_LABELS = { darkpandawarrior: "GitHub profile README" };
 
 const repoNodes = [
   ...projects.map((p) => ({ id: p.slug, kind: "repo", label: p.name ?? p.slug })),
-  ...INFRA_REPOS.map((id) => ({ id, kind: "repo", label: id })),
+  ...INFRA_REPOS.map((id) => ({ id, kind: "repo", label: INFRA_LABELS[id] ?? id })),
 ];
 const repoIds = new Set(repoNodes.map((n) => n.id));
 
@@ -132,14 +137,50 @@ for (const p of projects) {
 for (const s of surfaceNodes) add(s.id, "portfolio", "runs-here", "measured", "site route");
 
 // extracted-from (declared): the roadmap this site does not re-derive, only
-// cites — AgentHarness/plans/portfolio-extraction/CAPABILITY-GAP-ROADMAP.md.
-const ROADMAP = "AgentHarness/plans/portfolio-extraction/CAPABILITY-GAP-ROADMAP.md";
+// cites. Scrubbed to a description rather than the private harness's own
+// internal path — the graph ships in the client bundle, so its `detail`
+// strings are public even though nothing renders them as text (trove-map#0).
+const ROADMAP = "extraction lineage (documented in the private harness)";
 add("dice", "doori", "extracted-from", "declared", ROADMAP);
 add("doori", "kmp-toolkit", "extracted-from", "declared", ROADMAP);
 
 // operates (declared): agent-harness runs every repo here, including itself
-// excluded, per AgentHarness's own reference_all_repos memory.
-for (const id of repoIds) if (id !== "agent-harness") add("agent-harness", id, "operates", "declared", "AgentHarness reference_all_repos.md");
+// excluded. Scrubbed the same way as ROADMAP above — no internal memory path.
+for (const id of repoIds) if (id !== "agent-harness") add("agent-harness", id, "operates", "declared", "operated by the private agent harness");
+
+// rebuilds (declared, E2): Candidai's own README calls itself "a native
+// rebuild of the career-ops job-search engine" — an editorial claim, not
+// something this generator re-verifies against either codebase.
+add("candidai", "career-ops", "rebuilds", "declared", "Candidai README: a native rebuild of career-ops", "https://github.com/career-ops-hq/career-ops");
+
+// feeds-data (measured, E3): scan the profile README repo's own generator
+// scripts for a literal reference to this site's src/data/*.ts — the real
+// direction of the join is site -> profile, not the other way round
+// (trove-map#0). Same last-committed-on-missing-sibling contract as
+// includeBuildPairs below: a fresh clone or CI without the sibling checked
+// out keeps whatever was last measured rather than shipping a false empty.
+const PROFILE_SCRIPTS = join(root, "..", "..", "Profile", "darkpandawarrior", "scripts");
+function scanProfileFeeds(dir) {
+  if (!existsSync(dir)) return null;
+  const files = new Set();
+  for (const entry of readdirSync(dir)) {
+    if (!entry.endsWith(".mjs")) continue;
+    const text = readFileSync(join(dir, entry), "utf8");
+    for (const m of text.matchAll(/cv-siddharth\/main\/src\/data\/(\w+)\.ts/g)) files.add(`${m[1]}.ts`);
+  }
+  return [...files].sort();
+}
+
+let feedsDataFiles = scanProfileFeeds(PROFILE_SCRIPTS);
+if (!feedsDataFiles && existsSync(graphOut)) {
+  const prev = readFileSync(graphOut, "utf8");
+  const m = /export const feedsDataFiles = (\[[\s\S]*?\]) as const;/.exec(prev);
+  if (m) feedsDataFiles = JSON.parse(m[1]);
+}
+if (!feedsDataFiles) feedsDataFiles = [];
+if (feedsDataFiles.length) {
+  add("portfolio", "darkpandawarrior", "feeds-data", "measured", feedsDataFiles.join(", "), "https://github.com/darkpandawarrior/darkpandawarrior");
+}
 
 // includeBuild (measured): parsed from each sibling repo's settings.gradle.kts,
 // same local-sibling pattern gen-ops.mjs uses for the leverage board. Absent
@@ -153,6 +194,9 @@ const CANDIDATE_DIRS = {
   candidai: [join(ANDROID, "Candidai"), join(ANDROID, "HireSignal")],
   "kmp-toolkit": [join(KMP, "kmp-toolkit")],
   "kmp-app-template": [join(KMP, "kmp-app-template")],
+  // E1: the Compose twin's includeBuild of kmp-toolkit/kmp-build-logic — the
+  // one basename match the existing scan already resolves (REPO_BASENAMES).
+  portfolio: [join(root, "..", "cv-siddharth-kmp")],
 };
 // The only basenames an includeBuild(...) argument can resolve to that this
 // graph also has a node for — "build-logic" (a repo's OWN convention plugins)
@@ -206,7 +250,7 @@ writeFileSync(
   graphBanner +
     `export type SystemNodeKind = "repo" | "employer" | "series" | "surface" | "channel";\n` +
     `export interface SystemNode { id: string; kind: SystemNodeKind; label: string }\n\n` +
-    `export type SystemEdgeKind = "includeBuild" | "born-from" | "ships" | "runs-here" | "extracted-from" | "operates";\n` +
+    `export type SystemEdgeKind = "includeBuild" | "born-from" | "ships" | "runs-here" | "extracted-from" | "operates" | "rebuilds" | "feeds-data";\n` +
     `export type SystemEdgeEvidence = "measured" | "declared";\n` +
     `export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; evidence: SystemEdgeEvidence; detail?: string; url?: string }\n\n` +
     `export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }\n\n` +
@@ -214,7 +258,10 @@ writeFileSync(
     `// The sibling-scanned half of \`includeBuild\`, kept separate so a run with no\n` +
     `// sibling checkouts on disk can fall back to what was last committed here\n` +
     `// instead of shipping an empty scan as if it were a measured zero.\n` +
-    `export const includeBuildPairs = ${JSON.stringify(includeBuildPairs)} as const;\n`,
+    `export const includeBuildPairs = ${JSON.stringify(includeBuildPairs)} as const;\n\n` +
+    `// The sibling-scanned half of \`feeds-data\` (E3) — same missing-sibling\n` +
+    `// fallback contract as includeBuildPairs above.\n` +
+    `export const feedsDataFiles = ${JSON.stringify(feedsDataFiles)} as const;\n`,
 );
 
 /* ── Reader: the "In the system" strip ───────────────────────────────────
@@ -259,6 +306,11 @@ const STORY_MANIFEST = [
   { id: "books", label: "Books Before Bros", sub: "the origin blog", r: 13, color: ORANGE, target: BOOKS_BEFORE_BROS.url },
   { id: "chat", label: "Ask my AI", sub: "knows all of this", r: 13, color: CYAN, target: "chat" },
   { id: "blueprint", label: "Blueprint Room", sub: "infinite canvas", r: 12, color: ORANGE, target: "#blueprint" },
+  // T7: the two nodes trove-map.md adds — real public proof (merged upstream
+  // PRs) and the systems that keep the rest of this honest, both previously
+  // missing from the constellation entirely.
+  { id: "oss", label: "Open source", sub: `${upstreamMergedPRs + mifosMergedPRs} merged upstream`, r: 12, color: CYAN, target: "#source" },
+  { id: "ops", label: "Systems I run", r: 11, color: CYAN, target: "#ops" },
 ];
 
 // Declared wiring: hub feeds everything; the work feeds the writing; the
@@ -276,6 +328,9 @@ const DECLARED_WIRES = [
   ["kmp-family", "candidai"], ["kmp-family", "portfolio"],
   ["chat", "the-loopdown"], ["chat", "work"],
   ["sid", "blueprint"],
+  // T7 wires (declared): the hub reaches both new nodes directly, and
+  // Candidai's public open-source rows are its own separate thread off oss.
+  ["sid", "oss"], ["sid", "ops"], ["candidai", "oss"],
 ];
 
 // Measured wiring: pulled straight from the graph's own `runs-here` edges,
