@@ -97,6 +97,10 @@ describe("the spine registry is complete (src/spine/registry.ts)", () => {
   // G15 break-it, built in: dropping the FloatingChat entry must be caught.
   it("break-it: an unregistered FloatingChat is reported", () => {
     expect(unregistered(SPINE.filter((e) => e.file !== "src/FloatingChat.tsx"))).toContain("src/FloatingChat.tsx");
-    expect(untaggedBlocks("src/FloatingChat.tsx").some((b) => b.includes("<section>")) || STRICT).toBe(true); // true until SP-01 moves the FAQ out
+  });
+
+  // G15 break-it: dropping the FaqDock entry must be caught (SP-01 docked the FAQ there).
+  it("break-it: an unregistered FaqDock is reported", () => {
+    expect(unregistered(SPINE.filter((e) => e.file !== "src/FaqDock.tsx"))).toContain("src/FaqDock.tsx");
   });
 });
