@@ -1,6 +1,8 @@
 import { experience, caseStudies, projects, type ExperiencePoint } from "../data/profile.ts";
 import { projectStats } from "../data/projectStats.ts";
 import { CITY, yearZ, dateZ, type TallStructure, type ResolveSource, type PaletteToken } from "./city.ts";
+export { hashNoise, stringSeed } from "./v2/hash.ts";
+import { hashNoise, stringSeed } from "./v2/hash.ts";
 
 /**
  * WEST DISTRICT — "what he was paid for."
@@ -235,23 +237,12 @@ export function westStructures(): TallStructure[] {
   ];
 }
 
-/** Deterministic value noise, seeded per-structure so its dust cloud is
- *  stable across renders (and reproducible in a test) rather than
- *  reshuffling on every mount. Reimplemented rather than imported from
- *  resolve.ts, which keeps districtWest.ts free of any @react-three-adjacent
- *  import — it stays a plain data module, same discipline as city.ts. */
-function hashNoise(seed: number): number {
-  const s = Math.sin(seed * 12.9898) * 43758.5453;
-  return (s - Math.floor(s)) * 2 - 1;
-}
-
 /** ~350 points scattered across a box's six outer faces — the surface a
  *  district's largest structures resolve dust onto. Seeded by the
  *  structure's own id, not `Math.random`, for the same reproducibility
- *  reason as `hashNoise` above. */
+ *  reason `hashNoise` (v2/hash.ts) is built for. */
 function sampleBoxSurface(id: string, cx: number, cy: number, cz: number, w: number, h: number, d: number, count: number): Float32Array {
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) % 100000;
+  const seed = stringSeed(id);
   const out = new Float32Array(count * 3);
   const hw = w / 2;
   const hh = h / 2;

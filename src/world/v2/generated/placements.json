@@ -1,0 +1,3127 @@
+{
+  "archive-kite:chronicles-of-an-nre-kid": [
+    -3.670925850761705,
+    0,
+    0
+  ],
+  "archive-kite:ctc-cost-to-company": [
+    1.1725764606380835,
+    0,
+    0
+  ],
+  "archive-kite:deadline": [
+    -1.4093074357369915,
+    0,
+    -56
+  ],
+  "archive-kite:honest-college-fests": [
+    -1.3878672780119814,
+    0,
+    0
+  ],
+  "archive-kite:its-a-doggone-life": [
+    1.539685231167823,
+    0,
+    0
+  ],
+  "archive-kite:legend-of-koaeluae-scales": [
+    -0.7443082262761891,
+    0,
+    -8
+  ],
+  "archive-kite:pointer-games": [
+    -0.3648000378161669,
+    0,
+    0
+  ],
+  "archive-kite:prophecy-201112003": [
+    -0.22895306471036747,
+    0,
+    0
+  ],
+  "archive-kite:the-loopdown-story": [
+    0.7259926683618687,
+    0,
+    -24
+  ],
+  "archive-kite:the-pun-force": [
+    2.078765862068394,
+    0,
+    0
+  ],
+  "benchmark:opensource:2026-06:oss": [
+    -0.6543941166601144,
+    0,
+    0
+  ],
+  "benchmark:opensource:2026-07:oss": [
+    -1.477685579098761,
+    0,
+    0
+  ],
+  "benchmark:opensource:2026-08:oss": [
+    2.421407099784119,
+    0,
+    0
+  ],
+  "benchmark:opensource:2026-09:oss": [
+    -1.4454566219210392,
+    0,
+    0
+  ],
+  "benchmark:work:2020-05:role": [
+    0.28336473532544915,
+    0,
+    0
+  ],
+  "benchmark:work:2020-06:delivered": [
+    -0.6685366861347575,
+    0,
+    0
+  ],
+  "benchmark:work:2021-01:role": [
+    -0.627346211229451,
+    0,
+    0
+  ],
+  "benchmark:work:2021-03:delivered": [
+    -1.0477193706319667,
+    0,
+    0
+  ],
+  "benchmark:work:2021-07:delivered": [
+    0.12655540628475137,
+    0,
+    0
+  ],
+  "benchmark:work:2021-11:delivered": [
+    1.1797852592571871,
+    0,
+    0
+  ],
+  "benchmark:work:2022-03:delivered": [
+    2.636067505023675,
+    0,
+    0
+  ],
+  "benchmark:work:2022-07:delivered": [
+    3.5659212564933114,
+    0,
+    0
+  ],
+  "benchmark:work:2022-11:delivered": [
+    0.3993654727237299,
+    0,
+    0
+  ],
+  "benchmark:work:2023-03:delivered": [
+    0.3824362846207805,
+    0,
+    0
+  ],
+  "benchmark:work:2023-06:role": [
+    -0.9219625470286701,
+    0,
+    0
+  ],
+  "benchmark:work:2023-07:delivered": [
+    -3.1599246097612195,
+    0,
+    0
+  ],
+  "benchmark:work:2023-09:delivered": [
+    -0.09697751328349113,
+    0,
+    0
+  ],
+  "benchmark:work:2023-11:delivered": [
+    2.486333393622772,
+    0,
+    0
+  ],
+  "benchmark:work:2024-02:delivered": [
+    3.3265184401534498,
+    0,
+    0
+  ],
+  "benchmark:work:2024-04:delivered": [
+    3.0589285748719703,
+    0,
+    0
+  ],
+  "benchmark:work:2024-06:delivered": [
+    1.2433797025005333,
+    0,
+    0
+  ],
+  "benchmark:work:2024-09:delivered": [
+    0.6894579253421398,
+    0,
+    0
+  ],
+  "benchmark:work:2024-11:delivered": [
+    1.9558430553006474,
+    0,
+    0
+  ],
+  "benchmark:work:2025-02:delivered": [
+    -1.0950209993170574,
+    0,
+    0
+  ],
+  "benchmark:work:2025-04:delivered": [
+    -3.3929894316243008,
+    0,
+    0
+  ],
+  "benchmark:work:2025-06:delivered": [
+    -2.059218827926088,
+    0,
+    0
+  ],
+  "benchmark:work:2025-09:delivered": [
+    3.860349768132437,
+    0,
+    0
+  ],
+  "benchmark:work:2025-11:delivered": [
+    -1.985790412814822,
+    0,
+    0
+  ],
+  "benchmark:work:2026-01:delivered": [
+    -2.8829687446923344,
+    0,
+    0
+  ],
+  "benchmark:work:2026-04:delivered": [
+    1.2183736999832036,
+    0,
+    0
+  ],
+  "benchmark:work:2026-04:role": [
+    -2.5792509939929005,
+    0,
+    0
+  ],
+  "benchmark:work:2026-05:delivered": [
+    1.7177247669314966,
+    0,
+    0
+  ],
+  "benchmark:work:2026-06:delivered": [
+    1.991252924373839,
+    0,
+    0
+  ],
+  "benchmark:work:2026-08:delivered": [
+    1.532507559924852,
+    0,
+    0
+  ],
+  "benchmark:writing:2019-06:edition": [
+    -0.5995358288055286,
+    0,
+    0
+  ],
+  "benchmark:writing:2020-06:edition": [
+    0.4942891898099333,
+    0,
+    0
+  ],
+  "benchmark:writing:2021-06:edition": [
+    0.6826931630785111,
+    0,
+    0
+  ],
+  "chess-paddy:2019": [
+    3.1310553698567674,
+    0,
+    0
+  ],
+  "chess-paddy:2020": [
+    -3.7590182706189808,
+    0,
+    0
+  ],
+  "chess-paddy:2021": [
+    1.7708989085804205,
+    0,
+    0
+  ],
+  "chess-paddy:2022": [
+    3.866911518620327,
+    0,
+    0
+  ],
+  "chess-paddy:2023": [
+    -0.9942084969952703,
+    0,
+    0
+  ],
+  "chess-paddy:2024": [
+    -2.0476168984896503,
+    0,
+    0
+  ],
+  "chess-paddy:2025": [
+    -1.0575372356106527,
+    0,
+    0
+  ],
+  "chess-paddy:2026": [
+    -0.06421384574787226,
+    0,
+    0
+  ],
+  "chess-ridge:chess.com-blitz": [
+    2.8428671074070735,
+    0,
+    68.83287671232756
+  ],
+  "chess-ridge:chess.com-bullet": [
+    -2.288866721035447,
+    0,
+    25.09589041095751
+  ],
+  "chess-ridge:chess.com-rapid": [
+    -3.15675847811508,
+    0,
+    68.61369863013533
+  ],
+  "chess-ridge:lichess-blitz": [
+    -3.321400993387215,
+    0,
+    -14.578995433792443
+  ],
+  "chess-ridge:lichess-bullet": [
+    -0.867432052618824,
+    0,
+    -38.315981735162495
+  ],
+  "chess-ridge:lichess-rapid": [
+    -0.1202130297315307,
+    0,
+    -25.658447488585807
+  ],
+  "deepmal-niche:app.production.delivermett": [
+    -3.7267079311641282,
+    0,
+    0
+  ],
+  "deepmal-niche:btaxi.rides.driver": [
+    -2.4968618746788707,
+    0,
+    0
+  ],
+  "deepmal-niche:btaxi.rides.passenger": [
+    0.0199420404896955,
+    0,
+    0
+  ],
+  "deepmal-niche:com.asap.courier": [
+    0.2548334649327444,
+    0,
+    0
+  ],
+  "deepmal-niche:com.cabby.customer": [
+    -8.484187982976437,
+    0,
+    0
+  ],
+  "deepmal-niche:com.cabcalltaxis.islamabad": [
+    -4.515539975836873,
+    0,
+    1.139726027398865
+  ],
+  "deepmal-niche:com.casbahtech.acquisition": [
+    8.157704771510907,
+    0,
+    27.806392694066744
+  ],
+  "deepmal-niche:com.droverrideshare.customer": [
+    -3.547649996326072,
+    0,
+    3.762557077625388
+  ],
+  "deepmal-niche:com.giffi.courier": [
+    0.6664444061607355,
+    0,
+    -0.36894977168776677
+  ],
+  "deepmal-niche:com.giffi.customer": [
+    -0.3336288339778548,
+    0,
+    -14.052968036532548
+  ],
+  "deepmal-niche:com.habesharide.passenger": [
+    -7.803478975984035,
+    0,
+    -0.5881278538799961
+  ],
+  "deepmal-niche:com.hitch": [
+    1.3000272364297416,
+    0,
+    -81.43926940639358
+  ],
+  "deepmal-niche:com.hitch.driver": [
+    -3.387966651462193,
+    0,
+    -76.71963470319679
+  ],
+  "deepmal-niche:com.hurryup": [
+    -5.026111289917026,
+    0,
+    0
+  ],
+  "deepmal-niche:com.hurryup.driver": [
+    -3.439307335356716,
+    0,
+    0
+  ],
+  "deepmal-niche:com.kadere.customer": [
+    -8.665005993607338,
+    0,
+    -4.018264840182383
+  ],
+  "deepmal-niche:com.kadere.driver": [
+    7.8027172741713,
+    0,
+    -3.9123287671245635
+  ],
+  "deepmal-niche:com.leiwand.driver": [
+    -4.29691646793799,
+    0,
+    0
+  ],
+  "deepmal-niche:com.leiwand.user": [
+    2.8481344363535754,
+    0,
+    0
+  ],
+  "deepmal-niche:com.liftethiopia.customer": [
+    6.802156822668621,
+    0,
+    18.754337899543316
+  ],
+  "deepmal-niche:com.liftethiopia.driver": [
+    4.838570075953612,
+    0,
+    18.754337899543316
+  ],
+  "deepmal-niche:com.limoz.driver": [
+    -6.475330852044863,
+    0,
+    0
+  ],
+  "deepmal-niche:com.matattu.rider": [
+    0.9963601315394044,
+    0,
+    12
+  ],
+  "deepmal-niche:com.mpitsa.customer": [
+    -6.6502116691845,
+    0,
+    -2.096803652970266
+  ],
+  "deepmal-niche:com.mpitsadrive.driver": [
+    6.607014507571876,
+    0,
+    15.236529680365493
+  ],
+  "deepmal-niche:com.nextnowbaba.customer": [
+    7.79743190825684,
+    0,
+    -1.9214611872157548
+  ],
+  "deepmal-niche:com.petcloud.customer": [
+    0.4820577391728875,
+    0,
+    -6.860273972601135
+  ],
+  "deepmal-niche:com.snape": [
+    -9.720377612666198,
+    0,
+    0
+  ],
+  "deepmal-niche:com.taxiye": [
+    8.34869359692675,
+    0,
+    0
+  ],
+  "deepmal-niche:com.taxiye.driver": [
+    3.8492130779195577,
+    0,
+    0
+  ],
+  "deepmal-niche:com.tryapptivities.pamdrive": [
+    9.954981069313362,
+    0,
+    -33.526940639269014
+  ],
+  "deepmal-niche:com.tryapptivities.pamdriver": [
+    -2.5790080885053612,
+    0,
+    0
+  ],
+  "deepmal-niche:com.VivaDriver.driver": [
+    -2.798978127539158,
+    0,
+    0
+  ],
+  "deepmal-niche:com.VivaTaxi": [
+    8.221474042511545,
+    0,
+    0
+  ],
+  "deepmal-niche:driver.production.delivermett": [
+    -1.2299264284956735,
+    0,
+    0
+  ],
+  "deepmal-niche:product.cabcall.driver": [
+    3.4787753332057036,
+    0,
+    3.937899543379899
+  ],
+  "deepmal-niche:product.cafeev.customer": [
+    -5.225335553841433,
+    0,
+    6.473059360730986
+  ],
+  "deepmal-niche:product.clicklabs.ttcab.driver": [
+    8.103919383866014,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.adonisOville": [
+    -1.0227087562088855,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.angel": [
+    -7.256864296796266,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.apilit": [
+    8.522659850859782,
+    0,
+    7.280365296803211
+  ],
+  "deepmal-niche:product.customer.bena": [
+    -4.701398254255764,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.btaxi": [
+    1.785784251842415,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.choffer.shuttle": [
+    2.4900494661414996,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.dailyecuador": [
+    0.45804644061718136,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.dida": [
+    0.6202335553825833,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.digitaxiseguro": [
+    -0.5207084854191635,
+    0,
+    19.324200913244567
+  ],
+  "deepmal-niche:product.customer.drivein": [
+    -6.419677665544441,
+    0,
+    49.903196347029734
+  ],
+  "deepmal-niche:product.customer.driveme": [
+    -3.4798107357346453,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.drivern": [
+    8.845222007803386,
+    0,
+    16.657534246576688
+  ],
+  "deepmal-niche:product.customer.etaxi": [
+    8.31597090986179,
+    0,
+    27.587214611874515
+  ],
+  "deepmal-niche:product.customer.hola": [
+    8.663768205224187,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.jett": [
+    7.449277317646192,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.one": [
+    -4.56203270383412,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.onux": [
+    -1.795203038782347,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.riderentals": [
+    8.476994179873145,
+    0,
+    21.947031963467452
+  ],
+  "deepmal-niche:product.customer.rio": [
+    -2.6143993211735506,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.roda": [
+    -9.920199078769656,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.salamtaxi": [
+    -8.397998730069958,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.sender": [
+    -7.428980675613275,
+    0,
+    18.88584474886011
+  ],
+  "deepmal-niche:product.customer.superapp": [
+    -2.268779033474857,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.superfix": [
+    -9.157393821451478,
+    0,
+    60.13150684931679
+  ],
+  "deepmal-niche:product.customer.tama": [
+    -4.081225775589701,
+    0,
+    32.964383561644354
+  ],
+  "deepmal-niche:product.customer.tapp": [
+    -4.807815892600047,
+    0,
+    9.27123287671202
+  ],
+  "deepmal-niche:product.customer.toairportpassenger": [
+    9.787564166763332,
+    0,
+    54.7105022831056
+  ],
+  "deepmal-niche:product.customer.ttcab": [
+    6.84323034787667,
+    0,
+    0
+  ],
+  "deepmal-niche:product.customer.yuber": [
+    -3.6778255252284,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.adonisOville": [
+    8.492413116618991,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.angel": [
+    -6.9548296649736585,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.apilit": [
+    -1.8987186552840285,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.bena": [
+    -1.0354811628349125,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.btaxi": [
+    -7.17763026477769,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.choffer": [
+    8.306064297503326,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.community": [
+    -4.350017803080846,
+    0,
+    29.09589041095751
+  ],
+  "deepmal-niche:product.driver.dailyecuador": [
+    -2.265188024903182,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.dida": [
+    -9.987909910978487,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.drivein": [
+    7.058096364635276,
+    0,
+    48.350684931505384
+  ],
+  "deepmal-niche:product.driver.driveme": [
+    5.382611702370923,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.drivern": [
+    0.7154990093113156,
+    0,
+    30.297716894976475
+  ],
+  "deepmal-niche:product.driver.etaxi": [
+    2.0294945409114007,
+    0,
+    49.684018264837505
+  ],
+  "deepmal-niche:product.driver.hola": [
+    -9.219758898107102,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.jett": [
+    -1.5685872082758578,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.one": [
+    -1.3245177848693857,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.onedg": [
+    -7.80600456186221,
+    0,
+    28.17534246575451
+  ],
+  "deepmal-niche:product.driver.onux": [
+    -4.892323897802271,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.rio": [
+    3.0413756826965255,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.roda": [
+    6.732016957830638,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.salamtaxi": [
+    -9.647805904678535,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.snapecabs": [
+    5.992298165947432,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.superfix": [
+    7.388343256025109,
+    0,
+    60.26301369862995
+  ],
+  "deepmal-niche:product.driver.tama": [
+    -7.218969476962229,
+    0,
+    33.05205479451979
+  ],
+  "deepmal-niche:product.driver.tapp": [
+    -4.9444455752382055,
+    0,
+    0
+  ],
+  "deepmal-niche:product.driver.tiliko": [
+    4.407268084178213,
+    0,
+    11.280365296803211
+  ],
+  "deepmal-niche:product.driver.toairportdriver": [
+    7.765369404660305,
+    0,
+    49.903196347029734
+  ],
+  "deepmal-niche:product.driver.yuber": [
+    6.089055750235275,
+    0,
+    0
+  ],
+  "deepmal-niche:product.limoz.customer": [
+    -3.3965087041724473,
+    0,
+    0
+  ],
+  "deepmal-niche:product.nextnowbaba.driver": [
+    4.022934977838304,
+    0,
+    6.560730593606422
+  ],
+  "deepmal-niche:product.peindia.customer": [
+    -1.6598557731049368,
+    0,
+    2.0785388127842452
+  ],
+  "deepmal-niche:product.superapp.driver": [
+    2.3861858673626557,
+    0,
+    0
+  ],
+  "deepmal-niche:production.abay.driver": [
+    3.370758128585294,
+    0,
+    26.973515981735545
+  ],
+  "deepmal-niche:production.alempay.driver": [
+    6.391110227705212,
+    0,
+    28.61369863013533
+  ],
+  "deepmal-niche:production.amigo.customer": [
+    -7.578935177880339,
+    0,
+    27.850228310504463
+  ],
+  "deepmal-niche:production.aqwaaba.customer": [
+    -6.522877764655277,
+    0,
+    16.83287671232756
+  ],
+  "deepmal-niche:production.azerpoct.customer": [
+    -5.716399717348395,
+    0,
+    10.710502283105598
+  ],
+  "deepmal-niche:production.bookfast.customer": [
+    -7.382773434655974,
+    0,
+    14.078538812784245
+  ],
+  "deepmal-niche:production.citycabnamibia.customer": [
+    -6.955002502400021,
+    0,
+    -10.860273972601135
+  ],
+  "deepmal-niche:production.curbcab.customer": [
+    -1.350950575870229,
+    0,
+    2.929680365297827
+  ],
+  "deepmal-niche:production.dash.customer": [
+    9.843364696280332,
+    0,
+    -5.614611872148089
+  ],
+  "deepmal-niche:production.dropride.customer": [
+    -2.0541169166972395,
+    0,
+    25.183561643836583
+  ],
+  "deepmal-niche:production.easy.customer": [
+    -7.005467979943205,
+    0,
+    18.929680365297827
+  ],
+  "deepmal-niche:production.easy.driver": [
+    -4.142930856833118,
+    0,
+    18.929680365297827
+  ],
+  "deepmal-niche:production.ebit.customer": [
+    -1.3196642574621364,
+    0,
+    8.613698630135332
+  ],
+  "deepmal-niche:production.ebit.driver": [
+    -6.505147644347744,
+    0,
+    8.657534246576688
+  ],
+  "deepmal-niche:production.hovr.customer": [
+    1.3650811357365455,
+    0,
+    0
+  ],
+  "deepmal-niche:production.hovr.driver": [
+    0.7764380167645868,
+    0,
+    0
+  ],
+  "deepmal-niche:production.hum.customer": [
+    3.083607078588102,
+    0,
+    0
+  ],
+  "deepmal-niche:production.hum.driver": [
+    -9.407031760347309,
+    0,
+    0
+  ],
+  "deepmal-niche:production.idealdigital.customer": [
+    -5.734649598234682,
+    0,
+    -5.289497716894402
+  ],
+  "deepmal-niche:production.ify.customer": [
+    0.4392139879746537,
+    0,
+    8.569863013697613
+  ],
+  "deepmal-niche:production.intertaksi.customer": [
+    7.481154777779011,
+    0,
+    -6.860273972601135
+  ],
+  "deepmal-niche:production.jumprydz.customer": [
+    -1.2446811831614468,
+    0,
+    -3.342465753423312
+  ],
+  "deepmal-niche:production.limocameroun.customer": [
+    -1.8907199633395066,
+    0,
+    5.947031963467452
+  ],
+  "deepmal-niche:production.limocameroun.driver": [
+    0.03746491318452172,
+    0,
+    5.727853881278861
+  ],
+  "deepmal-niche:production.luckyu.customer": [
+    -9.2825776898826,
+    0,
+    -15.956164383562282
+  ],
+  "deepmal-niche:production.luckyu.driver": [
+    -0.982145082380157,
+    0,
+    -15.956164383562282
+  ],
+  "deepmal-niche:production.nairaxi.customer": [
+    7.33643122970534,
+    0,
+    0
+  ],
+  "deepmal-niche:production.nairaxi.driver": [
+    1.0538876672944752,
+    0,
+    0
+  ],
+  "deepmal-niche:production.nawi.customer": [
+    5.349237776172231,
+    0,
+    0
+  ],
+  "deepmal-niche:production.nawi.driver": [
+    -1.7316146273515187,
+    0,
+    0
+  ],
+  "deepmal-niche:production.pickupbarbodas.customer": [
+    7.583993010775885,
+    0,
+    0
+  ],
+  "deepmal-niche:production.pickupbarbodas.driver": [
+    -4.242590514695621,
+    0,
+    0
+  ],
+  "deepmal-niche:production.pikmi.customer": [
+    -2.1764460210397374,
+    0,
+    0
+  ],
+  "deepmal-niche:production.pikmi.driver": [
+    -4.431922201038105,
+    0,
+    0
+  ],
+  "deepmal-niche:production.ping.customer": [
+    -4.3635606282623485,
+    0,
+    -6.991780821917928
+  ],
+  "deepmal-niche:production.ping.driver": [
+    6.956014634779422,
+    0,
+    -32.851141552509944
+  ],
+  "deepmal-niche:production.qooxy.customer": [
+    -1.2042153038055403,
+    0,
+    0
+  ],
+  "deepmal-niche:production.qooxy.driver": [
+    3.794684515087283,
+    0,
+    0
+  ],
+  "deepmal-niche:production.redplate.customer.new": [
+    3.7948928367404733,
+    0,
+    0
+  ],
+  "deepmal-niche:production.redplate.driver": [
+    0.7610675492833252,
+    0,
+    0
+  ],
+  "deepmal-niche:production.rideloca.customer": [
+    -4.165373887808528,
+    0,
+    -5.201826484015328
+  ],
+  "deepmal-niche:production.roady.customer": [
+    9.327520093065687,
+    0,
+    13.227397260274302
+  ],
+  "deepmal-niche:production.romi.customer": [
+    7.511929939209949,
+    0,
+    0
+  ],
+  "deepmal-niche:production.romi.driver": [
+    8.057767564532696,
+    0,
+    0
+  ],
+  "deepmal-niche:production.rydecust.customer": [
+    -5.805734798341291,
+    0,
+    0
+  ],
+  "deepmal-niche:production.rydedrive.driver": [
+    -5.709241788717918,
+    0,
+    0
+  ],
+  "deepmal-niche:production.rydekolkata.customer": [
+    -5.434328706105589,
+    0,
+    13.27123287671202
+  ],
+  "deepmal-niche:production.rydekolkata.driver": [
+    -7.78411030274583,
+    0,
+    11.105022831052338
+  ],
+  "deepmal-niche:production.rydemalta.customer": [
+    7.713159165941761,
+    0,
+    4.657534246576688
+  ],
+  "deepmal-niche:production.smartbikemobility.customer": [
+    -6.402607697527856,
+    0,
+    0
+  ],
+  "deepmal-niche:production.snap.customer": [
+    -9.668077636220005,
+    0,
+    8.306849315067666
+  ],
+  "deepmal-niche:production.snap.driver": [
+    -0.7624575108638965,
+    0,
+    7.71872146118767
+  ],
+  "deepmal-niche:production.spark.customer": [
+    7.462307887180941,
+    0,
+    6.516894977168704
+  ],
+  "deepmal-niche:production.spark.driver": [
+    1.3425196187381516,
+    0,
+    5.27123287671202
+  ],
+  "deepmal-niche:production.takigo.customer": [
+    8.077756927668815,
+    0,
+    28.131506849316793
+  ],
+  "deepmal-niche:production.tiliko.customer": [
+    3.778880879690405,
+    0,
+    11.806392694066744
+  ],
+  "deepmal-niche:production.tleva.customer": [
+    6.687674576387508,
+    0,
+    -27.16712328767244
+  ],
+  "deepmal-niche:production.toda.customer": [
+    -5.096735378465382,
+    0,
+    -0.5004566210045596
+  ],
+  "deepmal-niche:production.togopool.carpool": [
+    8.451927301794058,
+    0,
+    0
+  ],
+  "deepmal-niche:production.towncarsnow.driver": [
+    8.185124426963739,
+    0,
+    -25.965296803653473
+  ],
+  "deepmal-niche:production.ttrides.customer": [
+    -8.981553248449927,
+    0,
+    0
+  ],
+  "deepmal-niche:production.ttrides.driver": [
+    4.942663318288396,
+    0,
+    0
+  ],
+  "deepmal-niche:production.urban.customer": [
+    -5.578232122352347,
+    0,
+    0
+  ],
+  "deepmal-niche:production.urban.driver": [
+    0.26687250050599687,
+    0,
+    0
+  ],
+  "deepmal-niche:production.uva.customer": [
+    3.1918057886650786,
+    0,
+    -8.807305936072225
+  ],
+  "deepmal-niche:production.uva.driver": [
+    5.277695027325535,
+    0,
+    -7.167123287672439
+  ],
+  "deepmal-niche:production.woulib.customer": [
+    5.305746502417605,
+    0,
+    0
+  ],
+  "deepmal-niche:production.woulib.driver": [
+    -6.327789332863176,
+    0,
+    0
+  ],
+  "deepmal-niche:production.wystle.customer": [
+    7.458856040175306,
+    0,
+    -3.0794520547933644
+  ],
+  "deepmal-niche:production.wystle.driver": [
+    1.0969018297328148,
+    0,
+    -10.44748858447565
+  ],
+  "deepmal-niche:production.zofeur.customer": [
+    -7.5508686508692335,
+    0,
+    0
+  ],
+  "deepmal-niche:production.zofeur.driver": [
+    1.9178175052365987,
+    0,
+    0
+  ],
+  "deepmal-niche:producton.takigo.driver": [
+    -3.5814485914306715,
+    0,
+    -5.201826484015328
+  ],
+  "deepmal-niche:products.peindia.customer": [
+    -5.576828123594169,
+    0,
+    12.526027397259895
+  ],
+  "district-bench:candidai": [
+    -1.0292058538761921,
+    0,
+    0
+  ],
+  "district-bench:doori": [
+    2.9632747072027996,
+    0,
+    0
+  ],
+  "district-bench:foundation": [
+    -1.1829607484396547,
+    0,
+    0
+  ],
+  "district-bench:gaddi": [
+    -3.516871140280273,
+    0,
+    0
+  ],
+  "district-bench:paymentslab-kmp": [
+    3.7330561242997646,
+    0,
+    0
+  ],
+  "district-bench:portfolio": [
+    3.416271848254837,
+    0,
+    0
+  ],
+  "employer-marker:Dice.tech": [
+    73.8567,
+    0,
+    18.5204
+  ],
+  "employer-marker:John Deere India": [
+    73.8567,
+    0,
+    18.5204
+  ],
+  "employer-marker:Jugnoo (Jungleworks / Tookan)": [
+    1.7278962702257559,
+    0,
+    -8
+  ],
+  "employer-marker:Neev Consulting": [
+    1.1445773462764919,
+    0,
+    76
+  ],
+  "firefly:anime:Completed#0": [
+    -10.010194227739703,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#1": [
+    3.1462679684045725,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#10": [
+    4.776533994998317,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#100": [
+    0.7083855535238399,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#101": [
+    11.129250790632796,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#102": [
+    -11.08885806571925,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#103": [
+    4.2367726803640835,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#104": [
+    11.965568497194909,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#105": [
+    5.198275081347674,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#106": [
+    3.4390413960500155,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#107": [
+    -10.052432121898164,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#108": [
+    -1.0035665117029566,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#109": [
+    -6.92847115569748,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#11": [
+    10.554912938503549,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#110": [
+    -10.921413336123805,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#111": [
+    7.503442395245656,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#112": [
+    9.076812395418528,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#113": [
+    4.391493770002853,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#114": [
+    -8.831244450761005,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#12": [
+    1.0693920092016924,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#13": [
+    -8.463387681520544,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#14": [
+    -4.5605572288041,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#15": [
+    -2.1979076450807042,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#16": [
+    -5.68504538317211,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#17": [
+    11.135539846436586,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#18": [
+    -5.5439956370009895,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#19": [
+    9.019587685761508,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#2": [
+    -5.486342054035049,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#20": [
+    -3.0239756814407883,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#21": [
+    2.9110134710208513,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#22": [
+    -11.31989396730205,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#23": [
+    10.830214460729621,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#24": [
+    -1.745552598265931,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#25": [
+    1.897472270502476,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#26": [
+    -9.516011104467907,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#27": [
+    0.134265364271414,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#28": [
+    1.733097030868521,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#29": [
+    5.918348213948775,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#3": [
+    1.9148974496056326,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#30": [
+    8.17698012694018,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#31": [
+    -1.1084837762173265,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#32": [
+    2.8781415475532413,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#33": [
+    -7.798492049623746,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#34": [
+    -10.131854085397208,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#35": [
+    0.5886398946022382,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#36": [
+    8.53208222729154,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#37": [
+    -11.266244945756625,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#38": [
+    -8.342264183680527,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#39": [
+    5.679048229241744,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#4": [
+    5.713909974787384,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#40": [
+    -9.857347221113741,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#41": [
+    10.23117619450204,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#42": [
+    -8.185105288750492,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#43": [
+    -10.033792876725784,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#44": [
+    4.193320139591378,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#45": [
+    9.322377492586384,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#46": [
+    -5.487831683683908,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#47": [
+    11.276168587210122,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#48": [
+    -8.822016414022073,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#49": [
+    -2.5732542987680063,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#5": [
+    1.4568248465584475,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#50": [
+    -1.5612279429333284,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#51": [
+    9.467239871359197,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#52": [
+    -5.493939568143105,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#53": [
+    -6.374349044832343,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#54": [
+    6.505030139844166,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#55": [
+    3.377960969984997,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#56": [
+    -4.227394335321151,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#57": [
+    4.228971719741821,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#58": [
+    -2.355484401632566,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#59": [
+    6.050229515880346,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#6": [
+    6.482432230070117,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#60": [
+    -9.917814207117772,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#61": [
+    -1.0589594639022835,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#62": [
+    -7.937602654725197,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#63": [
+    -6.3349047288356815,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#64": [
+    -3.629842371388804,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#65": [
+    1.9647837950033136,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#66": [
+    -4.716124528495129,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#67": [
+    -5.8478540407377295,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#68": [
+    -7.6902600081812125,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#69": [
+    7.575383309642348,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#7": [
+    7.689414985128678,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#70": [
+    -0.5021943543142697,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#71": [
+    7.110096282907762,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#72": [
+    -1.2509333041962236,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#73": [
+    7.313901633198839,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#74": [
+    10.168641946802381,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#75": [
+    6.212616475182585,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#76": [
+    8.043507538066478,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#77": [
+    -5.966892710726825,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#78": [
+    -2.637269510603801,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#79": [
+    -2.7551524724112824,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#8": [
+    11.523471612192225,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#80": [
+    7.785896223736927,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#81": [
+    5.519143482903019,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#82": [
+    5.431777866790071,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#83": [
+    3.262570095481351,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#84": [
+    -11.426415898895357,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#85": [
+    8.87575273719267,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#86": [
+    8.066998799004068,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#87": [
+    0.804709911433747,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#88": [
+    7.304081278009107,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#89": [
+    -2.0783748082467355,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#9": [
+    -1.1761939565185457,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#90": [
+    -9.079525866138283,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#91": [
+    -11.98950984282419,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#92": [
+    -8.994008269510232,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#93": [
+    -0.47219332214444876,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#94": [
+    -2.27591154637048,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#95": [
+    -2.785776131993771,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#96": [
+    6.459134042845108,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#97": [
+    -11.16657027223846,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#98": [
+    -4.582158635370433,
+    0,
+    -60
+  ],
+  "firefly:anime:Completed#99": [
+    -0.5570456045097671,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#0": [
+    -4.18762163358042,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#1": [
+    -9.42122176187695,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#10": [
+    11.17797206664909,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#11": [
+    6.975626352766994,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#2": [
+    -3.4428835297148908,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#3": [
+    9.445032434246968,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#4": [
+    -2.268867146456614,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#5": [
+    -7.34862194058951,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#6": [
+    -0.6057224285323173,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#7": [
+    7.227539578510914,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#8": [
+    -2.1039254475035705,
+    0,
+    -60
+  ],
+  "firefly:anime:Ongoing#9": [
+    -1.8414121799287386,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#0": [
+    -8.511028980690753,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#1": [
+    0.6331129793543369,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#10": [
+    -9.553369335088064,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#11": [
+    -6.468102638900746,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#12": [
+    5.501047151978128,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#13": [
+    10.00585729588056,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#14": [
+    -6.486485129746143,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#15": [
+    3.419013503822498,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#16": [
+    -4.196457397338236,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#17": [
+    0.8599090223215171,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#18": [
+    -7.186213366891025,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#19": [
+    2.3481347449414898,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#2": [
+    -4.860394366609398,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#20": [
+    1.5222367784881499,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#21": [
+    -7.7446670334320515,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#22": [
+    8.256134197872598,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#23": [
+    -10.338636662461795,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#24": [
+    -9.776987091667252,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#25": [
+    1.6303683616424678,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#26": [
+    -10.100959753348434,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#27": [
+    7.753071272018133,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#28": [
+    1.3337960068602115,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#29": [
+    3.8887687653768808,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#3": [
+    3.880970958271064,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#30": [
+    -0.5459138844162226,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#31": [
+    -6.745426193810999,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#32": [
+    -1.1947521322290413,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#33": [
+    -0.22654388556838967,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#34": [
+    -10.030083036559517,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#35": [
+    6.485802854964277,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#36": [
+    5.886292583949398,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#37": [
+    0.033703285502269864,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#38": [
+    11.735852116893511,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#39": [
+    -8.435535517986864,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#4": [
+    -10.528216681850608,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#40": [
+    5.2423573499545455,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#41": [
+    -1.3144911074778065,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#42": [
+    -1.9983832783182152,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#43": [
+    4.568726814690308,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#44": [
+    -1.7208980653085746,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#45": [
+    -6.146243968221825,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#46": [
+    9.611873107322026,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#47": [
+    5.678303734457586,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#48": [
+    -11.575989368604496,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#49": [
+    1.698470135073876,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#5": [
+    -10.175189904883155,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#6": [
+    -1.00272636525915,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#7": [
+    3.647562654077774,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#8": [
+    -7.237723073631059,
+    0,
+    -60
+  ],
+  "firefly:anime:Paused#9": [
+    -3.815847774327267,
+    0,
+    -60
+  ],
+  "firefly:anime:Watching#0": [
+    -7.914501869483502,
+    0,
+    -60
+  ],
+  "firefly:anime:Watching#1": [
+    -5.0795851854927605,
+    0,
+    -60
+  ],
+  "firefly:anime:Watching#2": [
+    -7.386817334394436,
+    0,
+    -60
+  ],
+  "firefly:anime:Watching#3": [
+    8.430721728480421,
+    0,
+    -60
+  ],
+  "firefly:anime:Watching#4": [
+    7.125634463969618,
+    0,
+    -60
+  ],
+  "firefly:manga:Completed#0": [
+    10.682625841407571,
+    0,
+    -60
+  ],
+  "firefly:manga:Completed#1": [
+    -5.866429393849103,
+    0,
+    -60
+  ],
+  "firefly:manga:Completed#2": [
+    11.727054202536237,
+    0,
+    -60
+  ],
+  "firefly:manga:Completed#3": [
+    -5.57688974836492,
+    0,
+    -60
+  ],
+  "firefly:manga:Completed#4": [
+    -0.4795468213269487,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#0": [
+    -6.546380248924834,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#1": [
+    3.8106952913221903,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#10": [
+    5.920625870057847,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#11": [
+    6.887111416726839,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#12": [
+    3.374166902649449,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#13": [
+    -8.00948870557113,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#14": [
+    -2.2682994841597974,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#15": [
+    -4.588128489354858,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#16": [
+    2.1554554713657126,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#17": [
+    -3.5730868576210923,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#18": [
+    5.802957483334467,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#19": [
+    7.47924698505085,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#2": [
+    4.579124651761958,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#20": [
+    6.400322531349957,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#3": [
+    -0.25004457420436665,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#4": [
+    -3.169070987671148,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#5": [
+    11.81442912487546,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#6": [
+    1.339527745381929,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#7": [
+    -10.191266375259147,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#8": [
+    1.3176316401804797,
+    0,
+    -60
+  ],
+  "firefly:manga:Reading#9": [
+    4.597967993526254,
+    0,
+    -60
+  ],
+  "landmark-facet:bridge:deckLamps": [
+    -2.4181745076784864,
+    0,
+    0
+  ],
+  "landmark-facet:bridge:piers": [
+    -1.5825969451689161,
+    0,
+    0
+  ],
+  "landmark-facet:bridge:voussoirs": [
+    1.8232318935333751,
+    0,
+    0
+  ],
+  "landmark-facet:doori:pillarBands": [
+    2.3973873593495227,
+    0,
+    0
+  ],
+  "landmark-facet:doori:steps": [
+    1.979390957247233,
+    0,
+    0
+  ],
+  "landmark-facet:employer:Dice.tech:flights": [
+    0.3727448676363565,
+    0,
+    0
+  ],
+  "landmark-facet:employer:John Deere India:flights": [
+    0.09847197708950262,
+    0,
+    0
+  ],
+  "landmark-facet:employer:Jugnoo (Jungleworks / Tookan):flights": [
+    0.7663436637230916,
+    0,
+    0
+  ],
+  "landmark-facet:employer:Neev Consulting:flights": [
+    1.6226022449845914,
+    0,
+    0
+  ],
+  "landmark-facet:gaddi:steps": [
+    2.7739315486251144,
+    0,
+    0
+  ],
+  "landmark-facet:paymentslab-kmp:bellsHosted": [
+    -1.4714489204343408,
+    0,
+    0
+  ],
+  "landmark-facet:paymentslab-kmp:bellsInternal": [
+    -2.192945511720609,
+    0,
+    0
+  ],
+  "landmark-facet:paymentslab-kmp:bellsMobileMoney": [
+    -0.586551160144154,
+    0,
+    0
+  ],
+  "landmark-facet:paymentslab-kmp:bellsNative": [
+    1.2867840575927403,
+    0,
+    0
+  ],
+  "landmark-facet:paymentslab-kmp:bellsStub": [
+    2.1578663919935934,
+    0,
+    0
+  ],
+  "lesson-kite:/accelerometer-outranks-gps": [
+    2.411344944674056,
+    0,
+    81.85936073059202
+  ],
+  "lesson-kite:/collectasstate-leak": [
+    -0.7795039295451716,
+    0,
+    81.31506849314974
+  ],
+  "lesson-kite:/coroutine-cancellation-messenger": [
+    -3.573405966919381,
+    0,
+    80.83287671232756
+  ],
+  "lesson-kite:/documented-exception": [
+    0.28072858561063185,
+    0,
+    82.16621004565968
+  ],
+  "lesson-kite:/filtered-never-deleted": [
+    0.20265432592714205,
+    0,
+    81.46484018264891
+  ],
+  "lesson-kite:/foreground-service-five-seconds": [
+    -1.655011976195965,
+    0,
+    80.92054794520664
+  ],
+  "lesson-kite:/invariants-are-cheap": [
+    -3.304547503532376,
+    0,
+    82.38538812785191
+  ],
+  "lesson-kite:/kmp-expect-actual-default": [
+    -2.646141870471183,
+    0,
+    81.2273972602743
+  ],
+  "lesson-kite:/lazycolumn-recomposition": [
+    3.456969812828902,
+    0,
+    81.00821917808207
+  ],
+  "lesson-kite:/mileway-dead-reckoning": [
+    -1.8081658798364515,
+    0,
+    80.78904109588984
+  ],
+  "lesson-kite:/never-silently-change-a-number": [
+    -2.7381491890118923,
+    0,
+    82.07853881278425
+  ],
+  "lesson-kite:/one-global-threshold": [
+    1.9215571486056433,
+    0,
+    81.55251141552435
+  ],
+  "lesson-kite:/the-borrowed-hand": [
+    -3.3587219913315494,
+    0,
+    82.56073059360642
+  ],
+  "lesson-kite:/the-captain-never-rows": [
+    -2.4088349995872704,
+    0,
+    82.7105022831056
+  ],
+  "lesson-kite:/the-ferryman-rows-one-way": [
+    -2.2922482175345067,
+    0,
+    82.64840182648186
+  ],
+  "lesson-kite:/thresholds-in-config": [
+    -1.055900806793943,
+    0,
+    82.47305936073099
+  ],
+  "lesson-kite:/uncertainty-dies-in-data-model": [
+    1.7950076115666889,
+    0,
+    81.77168949771658
+  ],
+  "pr-stone:career-ops-hq:cairn": [
+    1.7820141270785825,
+    0,
+    0
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/1141": [
+    0.6844296634662896,
+    0,
+    79.49954337899544
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/1185": [
+    0.19781590183265507,
+    0,
+    79.63105022831223
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/1186": [
+    -1.6933472582604736,
+    0,
+    79.63105022831223
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/1472": [
+    -0.7553595766075887,
+    0,
+    80.08767123287544
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2579": [
+    0.8457764938357286,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2586": [
+    -1.4221356133857626,
+    0,
+    81.59634703196207
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2587": [
+    3.020007263548905,
+    0,
+    81.59634703196207
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2588": [
+    3.3347367279347964,
+    0,
+    81.59634703196207
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2589": [
+    3.1426572814234532,
+    0,
+    81.59634703196207
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2590": [
+    1.8128627855912782,
+    0,
+    81.59634703196207
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2612": [
+    -2.5908613409555983,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2613": [
+    -1.8947791430546204,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2614": [
+    1.8609398252738174,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2615": [
+    3.170963170559844,
+    0,
+    81.77168949771658
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2616": [
+    0.059945073269773275,
+    0,
+    81.77168949771658
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2639": [
+    1.8077646672463743,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/career-ops-hq/career-ops/pull/2656": [
+    -1.5030599226811319,
+    0,
+    81.8155251141543
+  ],
+  "pr-stone:https://github.com/openMF/kmp-project-template/pull/298": [
+    -2.9464772877981886,
+    0,
+    83.41187214612
+  ],
+  "pr-stone:https://github.com/openMF/kmp-project-template/pull/299": [
+    -3.0427641787100583,
+    0,
+    83.41187214612
+  ],
+  "reach-installs:reach-installs": [
+    2.603270584368147,
+    0,
+    0
+  ],
+  "reach-upstream:reach-upstream": [
+    2.395367804550915,
+    0,
+    0
+  ],
+  "river-width:2019-01": [
+    -0.6218566641546204,
+    0,
+    0
+  ],
+  "river-width:2019-02": [
+    0.6416880310571287,
+    0,
+    0
+  ],
+  "river-width:2019-03": [
+    -0.19242829818722385,
+    0,
+    0
+  ],
+  "river-width:2019-04": [
+    0.5137460038604331,
+    0,
+    0
+  ],
+  "river-width:2019-05": [
+    -0.2955659610888688,
+    0,
+    0
+  ],
+  "river-width:2019-06": [
+    -0.20002825117262546,
+    0,
+    0
+  ],
+  "river-width:2019-07": [
+    -0.44427720067324117,
+    0,
+    0
+  ],
+  "river-width:2019-08": [
+    -0.29778956666996237,
+    0,
+    0
+  ],
+  "river-width:2019-09": [
+    0.9025986940905568,
+    0,
+    0
+  ],
+  "river-width:2019-10": [
+    -0.06225693413580302,
+    0,
+    0
+  ],
+  "river-width:2019-11": [
+    -0.5301708226597839,
+    0,
+    0
+  ],
+  "river-width:2019-12": [
+    0.3893443865708832,
+    0,
+    0
+  ],
+  "river-width:2020-01": [
+    0.2787543656959315,
+    0,
+    0
+  ],
+  "river-width:2020-02": [
+    0.6933181236126984,
+    0,
+    0
+  ],
+  "river-width:2020-03": [
+    -0.21977509364114667,
+    0,
+    0
+  ],
+  "river-width:2020-04": [
+    -0.2626922292620293,
+    0,
+    0
+  ],
+  "river-width:2020-05": [
+    -0.47517829613934737,
+    0,
+    0
+  ],
+  "river-width:2020-06": [
+    0.47334295994369313,
+    0,
+    0
+  ],
+  "river-width:2020-07": [
+    -0.6560979446221609,
+    0,
+    0
+  ],
+  "river-width:2020-08": [
+    0.17547980099334382,
+    0,
+    0
+  ],
+  "river-width:2020-09": [
+    -0.759411041639396,
+    0,
+    0
+  ],
+  "river-width:2020-10": [
+    -0.7797757455191459,
+    0,
+    0
+  ],
+  "river-width:2020-11": [
+    0.3462814336271549,
+    0,
+    0
+  ],
+  "river-width:2020-12": [
+    -0.9579825384971627,
+    0,
+    0
+  ],
+  "river-width:2021-01": [
+    -0.5538506846460223,
+    0,
+    0
+  ],
+  "river-width:2021-02": [
+    0.9770339419555967,
+    0,
+    0
+  ],
+  "river-width:2021-03": [
+    0.5704449805052718,
+    0,
+    0
+  ],
+  "river-width:2021-04": [
+    0.8159432991524227,
+    0,
+    0
+  ],
+  "river-width:2021-05": [
+    -0.08863543020561337,
+    0,
+    0
+  ],
+  "river-width:2021-06": [
+    -0.6640410186446388,
+    0,
+    0
+  ],
+  "river-width:2021-07": [
+    0.4361613234723336,
+    0,
+    0
+  ],
+  "river-width:2021-08": [
+    0.2663998408797852,
+    0,
+    0
+  ],
+  "river-width:2021-09": [
+    0.9689071067186887,
+    0,
+    0
+  ],
+  "river-width:2021-10": [
+    -0.32635910787575995,
+    0,
+    0
+  ],
+  "river-width:2021-11": [
+    -0.6230080765017192,
+    0,
+    0
+  ],
+  "river-width:2021-12": [
+    0.03199954514275305,
+    0,
+    0
+  ],
+  "river-width:2022-01": [
+    0.12378749065101147,
+    0,
+    0
+  ],
+  "river-width:2022-02": [
+    -0.9520886099344352,
+    0,
+    0
+  ],
+  "river-width:2022-03": [
+    -0.5330165869672783,
+    0,
+    0
+  ],
+  "river-width:2022-04": [
+    0.709011872735573,
+    0,
+    0
+  ],
+  "river-width:2022-05": [
+    -0.713084846494894,
+    0,
+    0
+  ],
+  "river-width:2022-06": [
+    -0.6019372227419808,
+    0,
+    0
+  ],
+  "river-width:2022-07": [
+    0.8288832514954265,
+    0,
+    0
+  ],
+  "river-width:2022-08": [
+    -0.2683224865468219,
+    0,
+    0
+  ],
+  "river-width:2022-09": [
+    -0.5056104632967617,
+    0,
+    0
+  ],
+  "river-width:2022-10": [
+    0.4749964680959238,
+    0,
+    0
+  ],
+  "river-width:2022-11": [
+    0.7499029386381153,
+    0,
+    0
+  ],
+  "river-width:2022-12": [
+    0.289414776081685,
+    0,
+    0
+  ],
+  "river-width:2023-01": [
+    0.7862489752587862,
+    0,
+    0
+  ],
+  "river-width:2023-02": [
+    0.16270390240242705,
+    0,
+    0
+  ],
+  "river-width:2023-03": [
+    0.7196624933130806,
+    0,
+    0
+  ],
+  "river-width:2023-04": [
+    0.287204235966783,
+    0,
+    0
+  ],
+  "river-width:2023-05": [
+    -0.6091979458253718,
+    0,
+    0
+  ],
+  "river-width:2023-06": [
+    0.8171015988045838,
+    0,
+    0
+  ],
+  "river-width:2023-07": [
+    0.8391392422199715,
+    0,
+    0
+  ],
+  "river-width:2023-08": [
+    -0.2937481068947818,
+    0,
+    0
+  ],
+  "river-width:2023-09": [
+    -0.5130889963911613,
+    0,
+    0
+  ],
+  "river-width:2023-10": [
+    0.14389007228601258,
+    0,
+    0
+  ],
+  "river-width:2023-11": [
+    0.3688422733685002,
+    0,
+    0
+  ],
+  "river-width:2023-12": [
+    0.5731029409216717,
+    0,
+    0
+  ],
+  "river-width:2024-01": [
+    0.8643346524841036,
+    0,
+    0
+  ],
+  "river-width:2024-02": [
+    0.501640189311729,
+    0,
+    0
+  ],
+  "river-width:2024-03": [
+    0.4334177478631318,
+    0,
+    0
+  ],
+  "river-width:2024-04": [
+    -0.38075982881127857,
+    0,
+    0
+  ],
+  "river-width:2024-05": [
+    0.9119582057901425,
+    0,
+    0
+  ],
+  "river-width:2024-06": [
+    0.3797597641678294,
+    0,
+    0
+  ],
+  "river-width:2024-07": [
+    0.14077940171409864,
+    0,
+    0
+  ],
+  "river-width:2024-08": [
+    -0.23682670686685015,
+    0,
+    0
+  ],
+  "river-width:2024-09": [
+    0.7709430097747827,
+    0,
+    0
+  ],
+  "river-width:2024-10": [
+    0.9009831557923462,
+    0,
+    0
+  ],
+  "river-width:2024-11": [
+    -0.5767659961020399,
+    0,
+    0
+  ],
+  "river-width:2024-12": [
+    0.8283899961152201,
+    0,
+    0
+  ],
+  "river-width:2025-01": [
+    -0.37713790488578525,
+    0,
+    0
+  ],
+  "river-width:2025-02": [
+    0.7000837000232423,
+    0,
+    0
+  ],
+  "river-width:2025-03": [
+    0.25814254324359354,
+    0,
+    0
+  ],
+  "river-width:2025-04": [
+    -0.5799160376627697,
+    0,
+    0
+  ],
+  "river-width:2025-05": [
+    -0.6370586419070605,
+    0,
+    0
+  ],
+  "river-width:2025-06": [
+    0.8249502781545743,
+    0,
+    0
+  ],
+  "river-width:2025-07": [
+    -0.2639564669880201,
+    0,
+    0
+  ],
+  "river-width:2025-08": [
+    -0.25656649665870646,
+    0,
+    0
+  ],
+  "river-width:2025-09": [
+    -0.3850878332159482,
+    0,
+    0
+  ],
+  "river-width:2025-10": [
+    -0.7214958307158668,
+    0,
+    0
+  ],
+  "river-width:2025-11": [
+    0.0637347708325251,
+    0,
+    0
+  ],
+  "river-width:2025-12": [
+    0.5647812027164036,
+    0,
+    0
+  ],
+  "river-width:2026-01": [
+    0.08166120501846308,
+    0,
+    0
+  ],
+  "river-width:2026-02": [
+    -0.9570560095162364,
+    0,
+    0
+  ],
+  "river-width:2026-03": [
+    -0.22224609278782737,
+    0,
+    0
+  ],
+  "river-width:2026-04": [
+    0.2825278482050635,
+    0,
+    0
+  ],
+  "river-width:2026-05": [
+    -0.817055741281365,
+    0,
+    0
+  ],
+  "river-width:2026-06": [
+    -0.3435244159481954,
+    0,
+    0
+  ],
+  "river-width:2026-07": [
+    -0.4296094370401988,
+    0,
+    0
+  ],
+  "river-width:2026-08": [
+    -0.014914241248334292,
+    0,
+    0
+  ],
+  "river-width:2026-09": [
+    -0.31004502873838646,
+    0,
+    0
+  ],
+  "site-courses:course-1": [
+    2.5742293732764665,
+    0,
+    0
+  ],
+  "site-courses:course-10": [
+    1.6363995593274012,
+    0,
+    0
+  ],
+  "site-courses:course-11": [
+    2.3789811780443415,
+    0,
+    0
+  ],
+  "site-courses:course-12": [
+    3.2911543538211845,
+    0,
+    0
+  ],
+  "site-courses:course-13": [
+    2.94929666275857,
+    0,
+    0
+  ],
+  "site-courses:course-14": [
+    2.1465831133245956,
+    0,
+    0
+  ],
+  "site-courses:course-2": [
+    -0.3462285553687252,
+    0,
+    0
+  ],
+  "site-courses:course-3": [
+    3.8897759217070416,
+    0,
+    0
+  ],
+  "site-courses:course-4": [
+    1.3908294484717771,
+    0,
+    0
+  ],
+  "site-courses:course-5": [
+    -2.4872417313745245,
+    0,
+    0
+  ],
+  "site-courses:course-6": [
+    -3.805009741714457,
+    0,
+    0
+  ],
+  "site-courses:course-7": [
+    0.9039729521464324,
+    0,
+    0
+  ],
+  "site-courses:course-8": [
+    2.015459569855011,
+    0,
+    0
+  ],
+  "site-courses:course-9": [
+    -0.008014072780497372,
+    0,
+    0
+  ],
+  "weir:Dice.tech": [
+    -3.27168029078166,
+    0,
+    30.66666666666788
+  ],
+  "weir:John Deere India": [
+    2.198114721570164,
+    0,
+    -18.66666666666788
+  ],
+  "weir:Jugnoo (Jungleworks / Tookan)": [
+    1.7278962702257559,
+    0,
+    -8
+  ],
+  "weir:Neev Consulting": [
+    1.1445773462764919,
+    0,
+    76
+  ],
+  "year-strata:2019": [
+    1.5655276849283837,
+    0,
+    0
+  ],
+  "year-strata:2020": [
+    -1.8795091353094904,
+    0,
+    0
+  ],
+  "year-strata:2021": [
+    0.8854494542902103,
+    0,
+    0
+  ],
+  "year-strata:2022": [
+    1.9334557593101636,
+    0,
+    0
+  ],
+  "year-strata:2023": [
+    -0.4971042484976351,
+    0,
+    0
+  ],
+  "year-strata:2024": [
+    -1.0238084492448252,
+    0,
+    0
+  ],
+  "year-strata:2025": [
+    -0.5287686178053264,
+    0,
+    0
+  ],
+  "year-strata:2026": [
+    -0.03210692287393613,
+    0,
+    0
+  ]
+}

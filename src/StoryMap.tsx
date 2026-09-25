@@ -9,6 +9,7 @@ import { systemGraph } from "./data/systemGraph.ts";
 import { useSectionNav, classifyHash } from "./lib/navigation.ts";
 import { readToken } from "./themeColor";
 import { EvidenceChip } from "./EvidenceChip.tsx";
+import { useTouched } from "./lib/sessionRipple.ts";
 import StoryMapScene from "./StoryMapScene.tsx";
 
 /**
@@ -204,6 +205,70 @@ function StoryMapCanvas({ onNavigate }: { onNavigate: (target: string) => void }
   return <canvas ref={canvasRef} className="h-full w-full" aria-hidden />;
 }
 
+/**
+ * "Your path" (reality-spec §6, `/map` row): a plain SVG layer over the
+ * constellation, independent of whether the 2D canvas or the 3D scene is
+ * underneath it: sessionRipple's touched list is the same on both. Lit
+ * nodes use the 2D layout's own x/y (0..1), which both renderers already
+ * share, so the dots land close to their marker either way without this
+ * lane touching StoryMapScene.tsx (out of P1-04's owns).
+ */
+function PathOverlay({ focus }: { focus?: string }) {
+  const touched = useTouched();
+  const touchedNodes = touched.filter((id) => NODES.some((n) => n.id === id));
+  const lastTwo = touchedNodes.slice(-2);
+  const focusNode = focus ? NODES.find((n) => n.id === focus) : undefined;
+
+  if (touchedNodes.length === 0 && !focusNode) return null;
+
+  const byId = (id: string) => NODES.find((n) => n.id === id)!;
+
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+      aria-hidden
+    >
+      {lastTwo.length === 2 && (
+        <line
+          data-solid
+          data-edge={`${lastTwo[0]}-${lastTwo[1]}`}
+          x1={`${byId(lastTwo[0]).x * 100}%`}
+          y1={`${byId(lastTwo[0]).y * 100}%`}
+          x2={`${byId(lastTwo[1]).x * 100}%`}
+          y2={`${byId(lastTwo[1]).y * 100}%`}
+          stroke="var(--color-signal, #3ddc84)"
+          strokeWidth={2}
+        />
+      )}
+      {touchedNodes.map((id) => {
+        const n = byId(id);
+        return (
+          <circle
+            key={id}
+            data-touched={id}
+            cx={`${n.x * 100}%`}
+            cy={`${n.y * 100}%`}
+            r={Math.max(n.r / 2, 6)}
+            fill="var(--color-signal, #3ddc84)"
+            fillOpacity={0.85}
+          />
+        );
+      })}
+      {focusNode && (
+        <circle
+          data-focused={focusNode.id}
+          cx={`${focusNode.x * 100}%`}
+          cy={`${focusNode.y * 100}%`}
+          r={focusNode.r * 1.4}
+          fill="none"
+          stroke="var(--color-signal, #3ddc84)"
+          strokeWidth={2}
+        />
+      )}
+    </svg>
+  );
+}
+
 function supportsWebGL(): boolean {
   try {
     const canvas = document.createElement("canvas");
@@ -213,7 +278,7 @@ function supportsWebGL(): boolean {
   }
 }
 
-export function StoryMap() {
+export function StoryMap({ focus }: { focus?: string } = {}) {
   const holder = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   // Capable, motion-friendly desktops get the full 3D constellation;
@@ -300,6 +365,7 @@ export function StoryMap() {
               drag to orbit
             </span>
           )}
+          <PathOverlay focus={focus} />
         </div>
         {/* text-muted, not text-zinc-500/600 — those fail WCAG AA on this dark
             ground (index.css's own note on --color-muted), which is exactly

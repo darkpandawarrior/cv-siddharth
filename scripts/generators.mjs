@@ -221,6 +221,13 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
+  // Deterministic local node (content-hash stamp, not wall-clock — see its
+  // own header comment): every input is a committed file (profile/core.ts,
+  // routes.ts, projectStats.ts, store.ts), so it belongs in build+check like
+  // the other byte-deterministic local nodes (e.g. compare-sets).
+  { id: "agent-context", script: "gen-agent-context.mjs", npmName: "gen:agent-context", kind: "local",
+    inputs: ["src/data/profile/core.ts", "src/data/routes.ts", "src/data/projectStats.ts", "src/data/store.ts"],
+    outputs: ["public/agent-context.json"], stages: { build: 16, refresh: 28, check: 9 } },
 
   { id: "sync-media", script: "sync-project-media.mjs", npmName: "sync:media", kind: "network",
     inputs: [], outputs: ["public/projects/**"], stages: { refresh: 1 } },
@@ -303,6 +310,26 @@ export const GENERATORS = [
   // The policy manifest and SSR response helper must come from this same build.
   { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
     inputs: [], outputs: ["dist/csp-policy.json", "dist/csp/response.mjs"], stages: {} },
+  // Manual/occasional (its own header says so, G13): `npm run gen:river`.
+  // Fetches the Overpass mirrors on demand; keeps the committed snapshot on
+  // total mirror failure rather than failing the build.
+  { id: "river-osm", script: "gen-river-osm.mjs", npmName: "gen:river", kind: "network",
+    inputs: [], outputs: ["src/data/osm/mutha.json"], stages: {} },
+  // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
+  // header says so, G13): bakes the Black Marble night-radiance land mask by
+  // hand; the build must never block on NASA's server.
+  { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["heavy/globe/earth-720x360.bin"], stages: {} },
+  // Manual/occasional, same posture as gen-globe-earth.mjs above (its own
+  // header says so, G13): bakes country centroids from Natural Earth's
+  // admin-0 GeoJSON mirror by hand.
+  { id: "globe-geo", script: "gen-globe-geo.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["src/world/globe/centroids.ts"], stages: {} },
+  // Manual/occasional (its own header says so): emits growthCounts.json and
+  // placements.json from GRAMMAR + the committed Ledger. Not yet wired into
+  // the build/refresh/check chains — run by hand: node scripts/gen-world-grammar.mjs
+  { id: "world-grammar", script: "gen-world-grammar.mjs", npmName: null, kind: "local",
+    inputs: [], outputs: ["src/world/v2/generated/growthCounts.json", "src/world/v2/generated/placements.json"], stages: {} },
 ];
 
 // gen-ops scans every top-level data file. Run it after their producers so

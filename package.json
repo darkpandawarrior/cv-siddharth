@@ -52,6 +52,8 @@
     "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
     "gen:app-manifests": "node scripts/gen-app-manifests.mjs",
     "gen:providers": "node scripts/gen-providers.mjs",
+    "gen:agent-context": "node scripts/gen-agent-context.mjs",
+    "gen:river": "node scripts/gen-river-osm.mjs",
     "check:generated": "node scripts/check-generated.mjs",
     "check:freshness": "node scripts/check-freshness.mjs",
     "check:answers": "node scripts/check-answers.mjs",
@@ -119,6 +121,8 @@
   },
   "overrides": {
     "tmp": ">=0.2.6",
-    "uuid": ">=11.1.1"
+    "uuid": ">=11.1.1",
+    "@tiptap/core": "3.30.5",
+    "@tiptap/pm": "3.30.5"
   }
 }

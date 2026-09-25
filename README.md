@@ -267,7 +267,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Thirty `gen:` scripts over thirty-eight generator files. The ones you
+Thirty-two `gen:` scripts over forty-three generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -291,7 +291,7 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Eight more generator files exist with no `npm run` script, deliberately: each
+Eleven more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
 carries the same reasoning; this is that reasoning where a README reader can
 find it.
@@ -323,6 +323,16 @@ find it.
 - `gen-starfield.mjs`. Manual and occasional: fetches the 34 MB HYG v41 star
   catalogue and filters it to `public/sky/stars-hyg41-m5.bin`. Run by hand
   when the catalogue needs a refresh.
+- `gen-globe-earth.mjs`. Manual and occasional: bakes NASA's public-domain
+  Black Marble night-radiance composite into a 360x180 land mask, `heavy/globe/earth-720x360.bin`.
+  The build must never block on NASA's server, so it stays out of every
+  build/refresh/check chain.
+- `gen-world-grammar.mjs`. Manual and occasional: emits `growthCounts.json`
+  and `placements.json` from GRAMMAR plus the committed Ledger. Not yet wired
+  into build/refresh/check; run by hand: `node scripts/gen-world-grammar.mjs`.
+- `gen-globe-geo.mjs`. Manual and occasional: bakes country centroids from
+  Natural Earth's admin-0 GeoJSON mirror into `src/world/globe/centroids.ts`.
+  Same posture as `gen-globe-earth.mjs` above.
 
 </details>
 
@@ -333,8 +343,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1785 unit tests across 174 files (vitest)
-npm run test:e2e  # 504 Playwright tests across 32 files, every registry route
+npm test          # 2007 unit tests across 204 files (vitest)
+npm run test:e2e  # 498 Playwright tests across 33 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
