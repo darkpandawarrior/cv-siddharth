@@ -16,7 +16,7 @@
 // plus a QA preview (gitignored, never a build artefact) at
 //   .showcase-work/world-v2/terrain-preview.png
 //
-// `scripts/world-v2/valley-math.mjs` is deleted by this lane (M5/M68): every
+// This lane deletes the old per-generator pure-math module (M5/M68): every
 // number this generator places on the ground now traces through valley.ts
 // or ledger.ts, never a second, drifting copy of the same math.
 //
@@ -97,7 +97,7 @@ function nearestYm(z, months) {
 }
 
 /** Distance from (x,z) to the straight segment a->b, xz plane — the one
- *  piece of valley-math.mjs's pure geometry this generator still needs and
+ *  piece of geometry the old per-generator math module carried that
  *  valley.ts does not itself expose (it only needs the segment endpoints,
  *  not this scan, to build `Tributary` rows). */
 function distToSegment(x, z, a, b) {

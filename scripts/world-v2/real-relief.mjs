@@ -6,9 +6,9 @@
 // `sangam-relief.json`, written by hand by `fetch-real-relief.mjs`) and
 // exposes a bilinear, mirror-tiled sampler over it: `realRelief(x, z)`.
 //
-// Lives here, not in `valley-math.mjs` (deleted by this lane) and not in
-// `valley.ts` (runtime code that must not decode PNGs — M68). Only
-// `gen-terrain.mjs` (a build-time Node script) ever calls this.
+// Lives here, not in the old per-generator math module this lane deletes,
+// and not in `valley.ts` (runtime code that must not decode PNGs — M68).
+// Only `gen-terrain.mjs` (a build-time Node script) ever calls this.
 //
 // NO SILENT FALLBACK: a missing or unreadable residual throws, both at
 // `loadRelief()` (the PNG/JSON read) and at `realRelief()` if called before
