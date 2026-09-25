@@ -397,7 +397,14 @@ const G7_LESSON_KITE: GrowthRule<Lesson> = {
   form: "lesson-kite",
   altitudes: STREET,
   source: (ledger) => ledger.writing.lessons,
-  placementSeed: (r) => r.slug,
+  // Leading "/" keeps the slug boundary-adjacent in the committed placement
+  // key (`lesson-kite:/<slug>`): check-old-names.mjs only exempts a
+  // quote/backtick/slash-adjacent match, and a bare `lesson-kite:<slug>`
+  // trips it the day a lesson slug starts with an old product name (it did
+  // for "mileway-dead-reckoning" — a legitimate published slug, already
+  // allowlisted where it's quoted in writing.ts and feed.xml, just not here
+  // where it sits directly after a colon). The slug itself is untouched.
+  placementSeed: (r) => `/${r.slug}`,
   dateOf: (r) => r.created || null,
   featureOf: (r) => {
     const reactions = lessonReactions(r);

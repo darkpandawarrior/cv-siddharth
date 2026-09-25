@@ -2334,88 +2334,88 @@
     0,
     0
   ],
-  "lesson-kite:accelerometer-outranks-gps": [
-    -1.4489493572618812,
+  "lesson-kite:/accelerometer-outranks-gps": [
+    2.411344944674056,
     0,
     81.85936073059202
   ],
-  "lesson-kite:collectasstate-leak": [
-    -3.1065587315242738,
+  "lesson-kite:/collectasstate-leak": [
+    -0.7795039295451716,
     0,
     81.31506849314974
   ],
-  "lesson-kite:coroutine-cancellation-messenger": [
-    2.0572053737123497,
+  "lesson-kite:/coroutine-cancellation-messenger": [
+    -3.573405966919381,
     0,
     80.83287671232756
   ],
-  "lesson-kite:documented-exception": [
-    3.1724801468662918,
+  "lesson-kite:/documented-exception": [
+    0.28072858561063185,
     0,
     82.16621004565968
   ],
-  "lesson-kite:filtered-never-deleted": [
-    0.07972619307111017,
+  "lesson-kite:/filtered-never-deleted": [
+    0.20265432592714205,
     0,
     81.46484018264891
   ],
-  "lesson-kite:foreground-service-five-seconds": [
-    3.7038197432120796,
+  "lesson-kite:/foreground-service-five-seconds": [
+    -1.655011976195965,
     0,
     80.92054794520664
   ],
-  "lesson-kite:invariants-are-cheap": [
-    -3.4227876186050707,
+  "lesson-kite:/invariants-are-cheap": [
+    -3.304547503532376,
     0,
     82.38538812785191
   ],
-  "lesson-kite:kmp-expect-actual-default": [
-    0.0743977788661141,
+  "lesson-kite:/kmp-expect-actual-default": [
+    -2.646141870471183,
     0,
     81.2273972602743
   ],
-  "lesson-kite:lazycolumn-recomposition": [
-    -3.624735994875664,
+  "lesson-kite:/lazycolumn-recomposition": [
+    3.456969812828902,
     0,
     81.00821917808207
   ],
-  "lesson-kite:mileway-dead-reckoning": [
-    0.5575717042665929,
+  "lesson-kite:/mileway-dead-reckoning": [
+    -1.8081658798364515,
     0,
     80.78904109588984
   ],
-  "lesson-kite:never-silently-change-a-number": [
-    3.9934283842449076,
+  "lesson-kite:/never-silently-change-a-number": [
+    -2.7381491890118923,
     0,
     82.07853881278425
   ],
-  "lesson-kite:one-global-threshold": [
-    -3.0437432230100967,
+  "lesson-kite:/one-global-threshold": [
+    1.9215571486056433,
     0,
     81.55251141552435
   ],
-  "lesson-kite:the-borrowed-hand": [
-    0.35123759804992005,
+  "lesson-kite:/the-borrowed-hand": [
+    -3.3587219913315494,
     0,
     82.56073059360642
   ],
-  "lesson-kite:the-captain-never-rows": [
-    0.304023903911002,
+  "lesson-kite:/the-captain-never-rows": [
+    -2.4088349995872704,
     0,
     82.7105022831056
   ],
-  "lesson-kite:the-ferryman-rows-one-way": [
-    -3.0596327771199867,
+  "lesson-kite:/the-ferryman-rows-one-way": [
+    -2.2922482175345067,
     0,
     82.64840182648186
   ],
-  "lesson-kite:thresholds-in-config": [
-    0.3533206607680768,
+  "lesson-kite:/thresholds-in-config": [
+    -1.055900806793943,
     0,
     82.47305936073099
   ],
-  "lesson-kite:uncertainty-dies-in-data-model": [
-    -3.81467410211917,
+  "lesson-kite:/uncertainty-dies-in-data-model": [
+    1.7950076115666889,
     0,
     81.77168949771658
   ],
