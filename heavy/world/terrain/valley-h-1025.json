@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-25T18:23:37.346Z",
+  "grid": 1025,
+  "metresPerTexel": 0.75,
+  "extent": 768,
+  "center": {
+    "x": 0,
+    "z": 40
+  },
+  "bounds": {
+    "xMin": -384,
+    "xMax": 384,
+    "zMin": -344,
+    "zMax": 424
+  },
+  "min": -3.0002769941974865,
+  "max": 102.32156721750894,
+  "note": "real height = min + (pixel/255) * (max-min); 8-bit fallback, see this file's honesty note"
+}

@@ -1,383 +1,401 @@
 // scripts/world-v2/gen-terrain.mjs
 //
 // Deterministic terrain generator for World v2 ("Sangam") — world-v2-spec.md
-// §3. Reads real committed data (systemGraph.ts, projectStats.ts, timeline.ts,
-// city.ts) and this lane's own pure math (valley-math.mjs), and writes:
-//   heavy/world/terrain/heightmap.png   — grayscale height field
-//   heavy/world/terrain/heightmap.json  — {min,max} in metres (see note)
-//   heavy/world/terrain/splat.png       — RGBA soil/grass/laterite/pebble weights
-//   heavy/world/terrain/river-spline.json
-//   heavy/world/terrain/tributaries.json
-//   heavy/world/terrain/districts.json
-// plus a QA preview (not a build artefact, gitignored) at
+// §3, amended by living-ledger-spec.md §3.3/§3.5 and online-tools-spec.md §A1
+// (master-plan.md#M5/M33/M55/M67/M68). Reads real committed data through
+// `src/world/v2/valley.ts` (the single layout source — P2-03b) and
+// `src/world/v2/ledger.ts` (the single real-data source for everything
+// valley.ts does not itself expose: the chess ridge's peaks, the west
+// terraces' work-lane level, the east meadow's writing-lane year totals),
+// plus this lane's own `real-relief.mjs` for the real micro-relief beyond
+// 60m of any water. Writes:
+//   heavy/world/terrain/valley-h-513.png(+.json)   — 1.5 m/texel, first view + mobile
+//   heavy/world/terrain/valley-h-1025.png(+.json)  — 0.75 m/texel, desktop upgrade
+//   heavy/world/terrain/valley-flow-1024.webp      — RG flow dir, B foam, A channel id
+//   heavy/world/terrain/LICENSE-ODbL.txt
+// plus a QA preview (gitignored, never a build artefact) at
 //   .showcase-work/world-v2/terrain-preview.png
 //
-// HONESTY NOTE (same discipline as gen-world-plate.mjs's own note): the spec
-// asks for a 16-bit heightmap "if possible, else 8-bit + scale in JSON".
-// sharp 0.35.4's raw-input `depth: 'ushort'` path does not round-trip
-// correctly in this environment (verified: it silently mis-reads the
-// channel count instead of preserving 16-bit greyscale), and hand-rolling a
-// 16-bit PNG encoder is exactly the kind of unrequested complexity this
-// house's own ladder says to skip. So this generator takes the sanctioned
-// fallback: an 8-bit PNG plus heightmap.json's {min,max}, from which the
-// real-world height is `min + (pixel/255)*(max-min)`. Upgrade to 16-bit
-// when a sharp/libvips version here actually honours raw ushort input.
+// `scripts/world-v2/valley-math.mjs` is deleted by this lane (M5/M68): every
+// number this generator places on the ground now traces through valley.ts
+// or ledger.ts, never a second, drifting copy of the same math.
 //
-// Every number placed on the ground traces to committed data or to this
-// file's own math — no invented values (house rule §0.1). Where a source
-// (an includeBuild edge's project) has no `projectStats` row, its stream is
-// flagged `unmeasuredWidth` and drawn at the 1.2 m floor, never guessed.
+// HONESTY NOTE (same discipline as the old generator's own, and
+// real-relief.mjs's): sharp 0.35.4's raw-input `depth: 'ushort'` path does
+// not round-trip correctly in this environment, so both heightmaps take the
+// sanctioned fallback — an 8-bit PNG plus {min,max} JSON, from which the
+// real height is `min + (pixel/255)*(max-min)`.
 //
-// Chess ridge (spec §3 step 8) asks for "max rating across the 6 series" —
-// there is no per-month, per-format rating time series committed anywhere
-// in src/data/ (chess.ts holds only lifetime peaks; chessDeep.ts has none
-// either). Rather than fabricate one, this generator drives the ridge from
-// `timeline.ts`'s real `chess` lane (monthly games played, Gaussian-smoothed
-// exactly as the spec's step 8 describes) — the closest real, measured,
-// monthly signal to "how much chess that month", which is what a skyline is
-// supposed to read as here. Swap in a real rating series if one is ever
-// generated.
+// Splat (aSplat/aAux) is NOT baked here — world-v2-spec §3 bakes it per
+// vertex, at load, in a web worker (`splat.worker.ts`, this lane) from the
+// heightmap's own neighbourhood plus REC-6's real filesChanged lookup. This
+// generator's job ends at real geometry and real flow; the worker's job is
+// real surface.
 
-import { writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import * as V from "./valley-math.mjs";
+import * as V from "../../src/world/v2/valley.ts";
+import { ledger } from "../../src/world/v2/ledger.ts";
+import { zToYear } from "../../src/world/city.ts";
+import { loadRelief, realRelief, RESIDUAL_JSON } from "./real-relief.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUT_DIR = join(root, "heavy", "world", "terrain");
-// QA preview: a scratch inspection artefact, gitignored, never a committed
-// file. Written relative to THIS script's own worktree root (never a
-// hardcoded absolute path — that would cross-write into whichever checkout
-// happens to sit at that path on this machine, corrupting it, and would
-// crash with no such directory on any other machine or in CI).
 const PREVIEW_PNG = join(root, ".showcase-work", "world-v2", "terrain-preview.png");
 
-const GRID = 385; // 768m / 384 ~= 2 m/texel — dense enough to read the carved features, light enough to compute in JS in a few seconds
-
-const DISTRICT_IDS = ["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template"];
-
-// Deterministic stamp (house rule, never Date.now()): the max mtime across
-// this generator's real data inputs plus its own pure-math dependency, so
-// two runs against the same committed sources produce byte-identical JSON.
-const INPUT_FILES = [
-  join(root, "src/data/systemGraph.ts"),
-  join(root, "src/data/projectStats.ts"),
-  join(root, "src/data/timeline.ts"),
-  join(root, "src/world/city.ts"),
-  join(root, "scripts/world-v2/valley-math.mjs"),
-  fileURLToPath(import.meta.url),
+// Files superseded by this lane's rewrite (the old, single-resolution
+// baked-splat scheme) — cleaned up so heavy/world/terrain/** holds only
+// what the current generator actually produces (this lane owns the whole
+// directory; a stale asset nothing writes any more is dead weight, not an
+// API).
+const OBSOLETE_FILES = [
+  "heightmap.png",
+  "heightmap.json",
+  "splat.png",
+  "splat-legend.json",
+  "river-spline.json",
+  "tributaries.json",
+  "districts.json",
 ];
 
+const INPUT_FILES = [
+  join(root, "src/world/v2/valley.ts"),
+  join(root, "src/world/v2/ledger.ts"),
+  join(root, "src/world/v2/grammar.ts"),
+  join(root, "src/world/city.ts"),
+  join(root, "src/data/osm/mutha.json"),
+  join(root, "src/data/timeline.ts"),
+  join(root, "src/data/chess.ts"),
+  join(root, "src/data/history.ts"),
+  join(root, "src/data/systemGraph.ts"),
+  join(root, "src/data/projectStats.ts"),
+  join(root, "scripts/world-v2/real-relief.mjs"),
+  RESIDUAL_JSON,
+  fileURLToPath(import.meta.url),
+].filter(existsSync);
+
+function smooth01(t) {
+  const c = Math.min(1, Math.max(0, t));
+  return c * c * (3 - 2 * c);
+}
+
+// ── z <-> ym, replicated from valley.ts's own private nearestYm (not
+// exported; that module's own ownership lane, not this one's, and this is
+// ~8 lines of pure arithmetic, not worth an ownership edit for) ───────────
+function yearFracToYm(yearFrac) {
+  const y = Math.floor(yearFrac);
+  const m = Math.min(12, Math.max(1, Math.round((yearFrac - y) * 12) + 1));
+  return `${y}-${String(m).padStart(2, "0")}`;
+}
+function nearestYm(z, months) {
+  const ym = yearFracToYm(zToYear(z / V.VALLEY_SCALE));
+  if (ym < months[0]) return months[0];
+  if (ym > months[months.length - 1]) return months[months.length - 1];
+  return ym;
+}
+
+/** Distance from (x,z) to the straight segment a->b, xz plane — the one
+ *  piece of valley-math.mjs's pure geometry this generator still needs and
+ *  valley.ts does not itself expose (it only needs the segment endpoints,
+ *  not this scan, to build `Tributary` rows). */
+function distToSegment(x, z, a, b) {
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  const len2 = dx * dx + dz * dz;
+  if (len2 === 0) return Math.hypot(x - a.x, z - a.z);
+  let t = ((x - a.x) * dx + (z - a.z) * dz) / len2;
+  t = Math.min(1, Math.max(0, t));
+  return Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz));
+}
+
+// ── G9 chess ridge (amended): a pure step function of `ym`, never
+// interpolated — living-ledger §3.3 G9, idea-atlas REC-4/REC-6. ───────────
+const RIDGE_RATING_MIN = 800;
+const RIDGE_RATING_MAX = 3200;
+const RIDGE_H_MIN = 30;
+const RIDGE_H_MAX = 140;
+/** The Jan-2023 lichess -> chess.com handoff (idea-atlas REC-4): the L2 GLB
+ *  marker's twin in the world, a notch cut into the ridge at that month.
+ *  2023-01 is already one of the six recorded peak months (chess.com
+ *  bullet, 2023-01-26), so this never introduces a height change outside a
+ *  recorded peak month — it deepens the one already there. */
+const NOTCH_YM = "2023-01";
+const NOTCH_DEPTH = 14;
+
+const RIDGE_PEAKS = ledger.chess.platforms
+  .flatMap((p) => p.peaks.map((peak) => ({ rating: peak.rating, ym: peak.at.slice(0, 7) })))
+  .sort((a, b) => a.ym.localeCompare(b.ym));
+
+function ratingToRidgeHeight(rating) {
+  const t = Math.min(1, Math.max(0, (rating - RIDGE_RATING_MIN) / (RIDGE_RATING_MAX - RIDGE_RATING_MIN)));
+  return RIDGE_H_MIN + t * (RIDGE_H_MAX - RIDGE_H_MIN);
+}
+
+/** Ridge crest height at a recorded month: the running max rating across
+ *  every peak recorded by that month (holds flat between, per G9), with the
+ *  REC-4 notch subtracted exactly at the handoff month. Pure function of
+ *  `ym` — the reason the acceptance test can assert it changes only at
+ *  recorded peak months. */
+export function ridgeCrestHeightAtYm(ym) {
+  let maxRating = 0;
+  for (const p of RIDGE_PEAKS) if (p.ym <= ym) maxRating = Math.max(maxRating, p.rating);
+  let h = ratingToRidgeHeight(maxRating);
+  if (ym === NOTCH_YM) h -= NOTCH_DEPTH;
+  return h;
+}
+
 async function main() {
-  let systemGraphMod, projectStatsMod, timelineMod, cityMod;
-  try {
-    [systemGraphMod, projectStatsMod, timelineMod, cityMod] = await Promise.all([
-      import(join(root, "src/data/systemGraph.ts")),
-      import(join(root, "src/data/projectStats.ts")),
-      import(join(root, "src/data/timeline.ts")),
-      import(join(root, "src/world/city.ts")),
-    ]);
-  } catch (err) {
-    console.warn("[gen-terrain] source modules unavailable, leaving previous output untouched:", err.message);
-    return;
-  }
+  await loadRelief(); // hard dependency — no silent fallback to fbm (online-tools-spec §A1)
 
   const generatedAt = new Date(Math.max(...INPUT_FILES.map((f) => statSync(f).mtimeMs))).toISOString();
 
-  const { systemGraph } = systemGraphMod;
-  const { projectStats } = projectStatsMod;
-  const { timeline } = timelineMod;
-  const { CITY } = cityMod;
+  const basin = V.sangamBasin();
+  const trib = V.tributaries(); // real includeBuild sources — also this lane's district anchors (x,z)
+  const districts = V.districtAnchors(
+    trib.map((t) => t.id),
+    basin,
+  ); // same ids, same order as tributaries() used internally -> same x,z, plus y
 
-  const basin = V.sangamBasin(timeline, CITY);
-  const districts = V.districtAnchors(DISTRICT_IDS, timeline, CITY);
-  const districtsById = new Map(districts.map((d) => [d.id, d]));
-  const trib = V.tributaries(systemGraph.edges, projectStats, districtsById, basin);
-  const spline = V.riverSpline(timeline, CITY);
+  const workLane = ledger.timeline.lanes.find((l) => l.key === "work");
+  const writingLane = ledger.timeline.lanes.find((l) => l.key === "writing");
+  // East meadow amendment (living-ledger §3.5): the writing lane reads at
+  // YEAR resolution, never month-to-month — one total per year, applied
+  // uniformly across that year's z-span.
+  const writingYearTotal = new Map();
+  for (const ym of ledger.timeline.months) {
+    const year = ym.slice(0, 4);
+    writingYearTotal.set(year, (writingYearTotal.get(year) ?? 0) + (writingLane.months[ym] ?? 0));
+  }
 
-  // --- height field ---------------------------------------------------
-  const heights = new Float32Array(GRID * GRID);
-  const splat = new Float32Array(GRID * GRID * 4); // soil, grass, laterite, pebble
-
-  const step = V.EXTENT / (GRID - 1);
-
-  for (let gz = 0; gz < GRID; gz++) {
-    const z = V.BOUNDS.zMin + gz * step;
-    const riverWidth = V.riverWidthAtZ(z, timeline, CITY);
+  /** The amended height function — world-v2-spec §3, steps 1-8. */
+  function heightAt(x, z) {
+    const ym = nearestYm(z, ledger.timeline.months);
+    const riverWidth = V.riverWidthAtZ(z);
     const riverDepth = V.riverDepth(riverWidth);
-    const workLevel = V.laneValueAtZ(z, timeline, CITY, "work");
-    const writingLevel = V.laneValueAtZ(z, timeline, CITY, "writing");
 
-    for (let gx = 0; gx < GRID; gx++) {
-      const x = V.BOUNDS.xMin + gx * step;
-      const idx = gz * GRID + gx;
+    // step 1: base valley, capped at 60 — V.distanceToRiver is the real
+    // Mutha shape (valley.ts, amended off the old sinusoid).
+    const dRiver = V.distanceToRiver(x, z);
+    let h = Math.min(60, 3 + 0.004 * dRiver * dRiver);
 
-      // step 1: base valley, capped at 60
-      const dRiver = V.distanceToRiver(x, z);
-      let h = Math.min(60, 3 + 0.004 * dRiver * dRiver);
-
-      // step 2: carve the river channel, 4m smoothstep bank
-      {
-        const half = riverWidth / 2;
-        if (dRiver <= half) {
-          h = -riverDepth;
-        } else if (dRiver < half + 4) {
-          const t = (dRiver - half) / 4;
-          const s = t * t * (3 - 2 * t);
-          h = -riverDepth + (h - -riverDepth) * s;
-        }
+    // step 2: carve the channel to -depth inside width/2, 4m smoothstep bank
+    {
+      const half = riverWidth / 2;
+      if (dRiver <= half) {
+        h = -riverDepth;
+      } else if (dRiver < half + 4) {
+        const t = (dRiver - half) / 4;
+        h = -riverDepth + (h - -riverDepth) * smooth01(t);
       }
-
-      // step 3: west terraces (work lane, stepped 0.6m risers), only west
-      // of the river bank
-      if (x < 0 && dRiver > riverWidth / 2 + 4) {
-        const riser = 0.6;
-        h += Math.round((workLevel / 40) * riser * 4) * riser * 0.25; // gentle, bounded stepped relief from real monthly work volume
-      }
-
-      // step 4: east meadow (writing lane, banded), only east of the bank
-      if (x > 0 && dRiver > riverWidth / 2 + 4) {
-        h += Math.min(6, writingLevel * 0.15);
-      }
-
-      // step 5: Sangam amphitheatre bowl + district benches
-      const dBasin = Math.hypot(x - basin.x, z - basin.z);
-      if (dBasin < basin.r) {
-        const t = dBasin / basin.r;
-        h = h * t + 2 * (1 - t); // bowl floor ~2m near centre, blends out to base valley at the rim
-      }
-      for (const d of districts) {
-        const dd = Math.hypot(x - d.x, z - d.z);
-        if (dd < 14) {
-          const t = dd / 14;
-          h = h * t + d.y * (1 - t); // bench at the district's own anchor height
-        }
-      }
-
-      // step 6: tributary channels, straight-ish polyline from each
-      // district bench down to the basin
-      let dTrib = Infinity;
-      let tribWidth = 0;
-      for (const t of trib) {
-        const dd = V.distToSegment(x, z, t.from, t.to);
-        if (dd < dTrib) {
-          dTrib = dd;
-          tribWidth = t.width;
-        }
-      }
-      if (dTrib <= tribWidth / 2) {
-        h = Math.min(h, 1); // shallow dry-or-wet channel bed
-      } else if (dTrib < tribWidth / 2 + 2) {
-        const t = (dTrib - tribWidth / 2) / 2;
-        const s = t * t * (3 - 2 * t);
-        h = Math.min(h, 1 + (h - 1) * s);
-      }
-
-      // step 7: fbm, only beyond 60m from any water (main river or a
-      // tributary channel)
-      const distWater = Math.min(dRiver - riverWidth / 2, dTrib - tribWidth / 2);
-      if (distWater > 60) {
-        h += V.fbm(x * 0.012, z * 0.012) * 8;
-      }
-
-      // step 8: chess ridge, x in [300,384], continued to the extent edge
-      if (x >= 300) {
-        const games = V.laneValueSmoothed(z, timeline, CITY, "chess", 2);
-        const ridgeH = 30 + Math.min(1, games / 620) * 110; // 620 = timeline's real peak month (2020-12)
-        const blend = smooth01((x - 300) / 30);
-        h = h * (1 - blend) + ridgeH * blend;
-      }
-
-      heights[idx] = h;
-
-      // splat weights (spec §3: soil/grass/laterite by slope/pebble near water)
-      const nearWater = distWater < 0.5;
-      const laterite = h > 45 ? 1 : 0;
-      const pebble = nearWater ? 1 : Math.max(0, 1 - distWater / 3);
-      const soil = Math.max(0, 1 - Math.abs(h - 10) / 25);
-      const grass = 1;
-      const sum = soil + grass + laterite + pebble || 1;
-      splat[idx * 4 + 0] = soil / sum;
-      splat[idx * 4 + 1] = grass / sum;
-      splat[idx * 4 + 2] = laterite / sum;
-      splat[idx * 4 + 3] = pebble / sum;
     }
-  }
 
-  function smooth01(t) {
-    const c = Math.min(1, Math.max(0, t));
-    return c * c * (3 - 2 * c);
-  }
+    // step 3: west terraces (work lane, stepped 0.6m risers) — unchanged
+    if (x < 0 && dRiver > riverWidth / 2 + 4) {
+      const workLevel = workLane.months[ym] ?? 0;
+      const riser = 0.6;
+      h += Math.round((workLevel / 40) * riser * 4) * riser * 0.25;
+    }
 
-  let hMin = Infinity;
-  let hMax = -Infinity;
-  for (const h of heights) {
-    if (h < hMin) hMin = h;
-    if (h > hMax) hMax = h;
-  }
+    // step 4: east meadow, banded — amended to the writing lane's YEAR total
+    if (x > 0 && dRiver > riverWidth / 2 + 4) {
+      const yearTotal = writingYearTotal.get(ym.slice(0, 4)) ?? 0;
+      h += Math.min(6, yearTotal * 0.05);
+    }
 
-  const heightPixels = new Uint8Array(GRID * GRID);
-  for (let i = 0; i < heights.length; i++) {
-    heightPixels[i] = Math.round(((heights[i] - hMin) / (hMax - hMin || 1)) * 255);
-  }
+    // step 5: Sangam amphitheatre bowl + district benches
+    const dBasin = Math.hypot(x - basin.x, z - basin.z);
+    if (dBasin < basin.r) {
+      const t = dBasin / basin.r;
+      h = h * t + 2 * (1 - t);
+    }
+    for (const d of districts) {
+      const dd = Math.hypot(x - d.x, z - d.z);
+      if (dd < 14) {
+        const t = dd / 14;
+        h = h * t + d.y * (1 - t);
+      }
+    }
 
-  const splatPixels = new Uint8Array(GRID * GRID * 4);
-  for (let i = 0; i < splat.length; i++) splatPixels[i] = Math.round(Math.min(1, Math.max(0, splat[i])) * 255);
+    // step 6: tributary channels, straight from district bench to basin
+    let dTrib = Infinity;
+    let tribWidth = 0;
+    for (const t of trib) {
+      const dd = distToSegment(x, z, t.from, t.to);
+      if (dd < dTrib) {
+        dTrib = dd;
+        tribWidth = t.width;
+      }
+    }
+    if (dTrib <= tribWidth / 2) {
+      h = Math.min(h, 1);
+    } else if (dTrib < tribWidth / 2 + 2) {
+      const t = (dTrib - tribWidth / 2) / 2;
+      h = Math.min(h, 1 + (h - 1) * smooth01(t));
+    }
+
+    // step 7: real relief only, beyond 60m from any water — never fbm
+    // (online-tools-spec §A1; the data-bearing relief above is never noised)
+    const distWater = Math.min(dRiver - riverWidth / 2, dTrib - tribWidth / 2);
+    if (distWater > 60) {
+      h += realRelief(x, z) * 8;
+    }
+
+    // step 8: chess ridge (G9, amended) — a pure step function of `ym`,
+    // continued into the far ring at the same z.
+    if (x >= 300) {
+      const ridgeH = ridgeCrestHeightAtYm(ym);
+      const blend = smooth01((x - 300) / 30);
+      h = h * (1 - blend) + ridgeH * blend;
+    }
+
+    return { h, dRiver, riverWidth, dTrib, tribWidth, distWater };
+  }
 
   mkdirSync(OUT_DIR, { recursive: true });
+  for (const name of OBSOLETE_FILES) {
+    const p = join(OUT_DIR, name);
+    if (existsSync(p)) rmSync(p);
+  }
 
-  const heightPng = await sharp(Buffer.from(heightPixels), { raw: { width: GRID, height: GRID, channels: 1 } })
+  await writeHeightmap(513, heightAt, generatedAt);
+  await writeHeightmap(1025, heightAt, generatedAt);
+  await writeFlowMap(1024, heightAt, trib, basin);
+  writeFileSync(join(OUT_DIR, "LICENSE-ODbL.txt"), LICENSE_TEXT);
+
+  console.log(`[gen-terrain] ${trib.length} tributaries, ${districts.length} districts -> ${OUT_DIR}`);
+}
+
+async function writeHeightmap(grid, heightAt, generatedAt) {
+  const step = V.EXTENT / (grid - 1);
+  const heights = new Float32Array(grid * grid);
+  let hMin = Infinity;
+  let hMax = -Infinity;
+  for (let gz = 0; gz < grid; gz++) {
+    const z = V.BOUNDS.zMin + gz * step;
+    for (let gx = 0; gx < grid; gx++) {
+      const x = V.BOUNDS.xMin + gx * step;
+      const { h } = heightAt(x, z);
+      heights[gz * grid + gx] = h;
+      if (h < hMin) hMin = h;
+      if (h > hMax) hMax = h;
+    }
+  }
+  const pixels = new Uint8Array(grid * grid);
+  const range = hMax - hMin || 1;
+  for (let i = 0; i < heights.length; i++) pixels[i] = Math.round(((heights[i] - hMin) / range) * 255);
+
+  const name = `valley-h-${grid}`;
+  const png = await sharp(Buffer.from(pixels), { raw: { width: grid, height: grid, channels: 1 } })
+    .greyscale()
     .png({ compressionLevel: 9 })
     .toBuffer();
-  writeFileSync(join(OUT_DIR, "heightmap.png"), heightPng);
+  writeFileSync(join(OUT_DIR, `${name}.png`), png);
   writeFileSync(
-    join(OUT_DIR, "heightmap.json"),
+    join(OUT_DIR, `${name}.json`),
     JSON.stringify(
       {
         generatedAt,
-        grid: GRID,
+        grid,
         metresPerTexel: step,
         extent: V.EXTENT,
         center: V.CENTER,
         bounds: V.BOUNDS,
         min: hMin,
         max: hMax,
-        note: "real height = min + (pixel/255) * (max-min); 8-bit fallback, see gen-terrain.mjs's honesty note",
+        note: "real height = min + (pixel/255) * (max-min); 8-bit fallback, see this file's honesty note",
       },
       null,
       2,
     ),
   );
-
-  const splatPng = await sharp(Buffer.from(splatPixels), { raw: { width: GRID, height: GRID, channels: 4 } })
-    .png({ compressionLevel: 9 })
-    .toBuffer();
-  writeFileSync(join(OUT_DIR, "splat.png"), splatPng);
-  writeFileSync(
-    join(OUT_DIR, "splat-legend.json"),
-    JSON.stringify({ r: "soil (brown_mud_dry)", g: "grass (withered_grass)", b: "laterite rock (rock_pitted_mossy)", a: "pebble (ganges_river_pebbles)" }, null, 2),
-  );
-
-  writeFileSync(join(OUT_DIR, "river-spline.json"), JSON.stringify({ generatedAt, points: spline }, null, 2));
-  writeFileSync(
-    join(OUT_DIR, "tributaries.json"),
-    JSON.stringify({ generatedAt, basin, streams: trib }, null, 2),
-  );
-  writeFileSync(join(OUT_DIR, "districts.json"), JSON.stringify({ generatedAt, basin, districts }, null, 2));
-
-  console.log(
-    `[gen-terrain] ${GRID}x${GRID} (${step.toFixed(2)} m/texel), height ${hMin.toFixed(1)}..${hMax.toFixed(1)} m, ${trib.length} tributaries (${trib.filter((t) => t.hasWater).length} with water), ${districts.length} districts -> heavy/world/terrain/`,
-  );
-
-  await renderPreview(heights, hMin, hMax, splat, spline, districts, basin, trib);
 }
 
-/** Top-down QA render: hypsometric tint from the real height field, river
- *  spline traced in cyan (measured water only), district anchors labelled
- *  via an SVG overlay composited on top — never text baked into the
- *  heightmap itself. */
-async function renderPreview(heights, hMin, hMax, splat, spline, districts, basin, trib) {
-  const rgba = new Uint8Array(GRID * GRID * 4);
-  for (let i = 0; i < GRID * GRID; i++) {
-    const t = (heights[i] - hMin) / (hMax - hMin || 1);
-    const soil = splat[i * 4 + 0];
-    const grass = splat[i * 4 + 1];
-    const laterite = splat[i * 4 + 2];
-    const pebble = splat[i * 4 + 3];
-    // base hypsometric ramp: low = river ink, mid = grass green, high = laterite red-brown
-    let r = 20 + t * 140;
-    let g = 40 + t * 90;
-    let b = 30 + (1 - t) * 60;
-    // tint by dominant splat channel
-    r = r * 0.6 + (laterite * 180 + soil * 120) * 0.4;
-    g = g * 0.6 + grass * 150 * 0.4;
-    b = b * 0.6 + pebble * 140 * 0.4;
-    if (heights[i] < 0) {
-      r = 10;
-      g = 40 + Math.min(1, -heights[i] / 4) * 60;
-      b = 90 + Math.min(1, -heights[i] / 4) * 100; // river channel, cyan-leaning
+/** valley-flow-1024.webp — R/G flow direction (along the river tangent or a
+ *  tributary's own straight bearing), B foam (shoreline + confluence
+ *  collars), A channel id (0 main, 1..6 tributary — world-v2-spec §3). */
+async function writeFlowMap(grid, heightAt, trib, basin) {
+  const step = V.EXTENT / (grid - 1);
+  const rgba = new Uint8Array(grid * grid * 4);
+  const eps = step;
+  for (let gz = 0; gz < grid; gz++) {
+    const z = V.BOUNDS.zMin + gz * step;
+    for (let gx = 0; gx < grid; gx++) {
+      const x = V.BOUNDS.xMin + gx * step;
+      const idx = gz * grid + gx;
+      const { dRiver, riverWidth, dTrib, tribWidth, distWater } = heightAt(x, z);
+
+      let dirX;
+      let dirZ;
+      let channelId;
+      if (dRiver <= dTrib) {
+        // main river: flow tangent along x(z), always advancing +Z
+        const dx = (V.riverX(z + eps) - V.riverX(z - eps)) / (2 * eps);
+        const len = Math.hypot(dx, 1);
+        dirX = dx / len;
+        dirZ = 1 / len;
+        channelId = 0;
+      } else {
+        // nearest tributary: constant bearing from its own anchor to the basin
+        let nearest = trib[0];
+        let best = Infinity;
+        for (let i = 0; i < trib.length; i++) {
+          const d = distToSegment(x, z, trib[i].from, trib[i].to);
+          if (d < best) {
+            best = d;
+            nearest = trib[i];
+          }
+        }
+        const dx = nearest.to.x - nearest.from.x;
+        const dz = nearest.to.z - nearest.from.z;
+        const len = Math.hypot(dx, dz) || 1;
+        dirX = dx / len;
+        dirZ = dz / len;
+        channelId = (trib.indexOf(nearest) % 6) + 1;
+      }
+
+      // foam: shoreline band (peaks right at the bank, fades within ~3m)
+      // plus a confluence collar around the Sangam basin rim.
+      const shoreline = 1 - smooth01(Math.max(0, distWater) / 3);
+      const dBasin = Math.hypot(x - basin.x, z - basin.z);
+      const confluence = 1 - smooth01(Math.abs(dBasin - basin.r) / 10);
+      const foam = Math.max(shoreline, confluence * 0.8);
+
+      rgba[idx * 4 + 0] = Math.round((dirX * 0.5 + 0.5) * 255);
+      rgba[idx * 4 + 1] = Math.round((dirZ * 0.5 + 0.5) * 255);
+      rgba[idx * 4 + 2] = Math.round(Math.min(1, Math.max(0, foam)) * 255);
+      rgba[idx * 4 + 3] = Math.round((channelId / 6) * 255);
     }
-    rgba[i * 4 + 0] = Math.round(Math.min(255, Math.max(0, r)));
-    rgba[i * 4 + 1] = Math.round(Math.min(255, Math.max(0, g)));
-    rgba[i * 4 + 2] = Math.round(Math.min(255, Math.max(0, b)));
-    rgba[i * 4 + 3] = 255;
   }
-
-  const step = V.EXTENT / (GRID - 1);
-  const toPx = (x, z) => ({ px: (x - V.BOUNDS.xMin) / step, py: (z - V.BOUNDS.zMin) / step });
-
-  const riverPts = spline.filter((p) => p.z >= V.BOUNDS.zMin && p.z <= V.BOUNDS.zMax).map((p) => toPx(p.x, p.z));
-  const riverPath = riverPts.map((p, i) => `${i === 0 ? "M" : "L"}${p.px.toFixed(1)},${p.py.toFixed(1)}`).join(" ");
-
-  const tribLines = trib
-    .map((t) => {
-      const a = toPx(t.from.x, t.from.z);
-      const b = toPx(t.to.x, t.to.z);
-      const stroke = t.hasWater ? "#5ee6ff" : "#8a8a7a";
-      const dash = t.hasWater ? "" : ' stroke-dasharray="3,3"';
-      return `<line x1="${a.px.toFixed(1)}" y1="${a.py.toFixed(1)}" x2="${b.px.toFixed(1)}" y2="${b.py.toFixed(1)}" stroke="${stroke}" stroke-width="1.5"${dash} opacity="0.85"/>`;
-    })
-    .join("\n  ");
-
-  // Art-direction fix: alternating "above i even / below i odd" pushed each
-  // label toward whichever neighbour was closest on the amphitheatre arc,
-  // because the arc is symmetric about its midpoint (sin(200deg)==sin(340deg),
-  // sin(235deg)==sin(305deg)) — pairs of districts land on the SAME row, and
-  // the old scheme then offset them in opposite directions *into* each
-  // other ("doori"+"gaddi" and "candidai"+"kmp-app-template" fused). Instead,
-  // push each label radially outward from the basin along its own bearing —
-  // districts are already angularly separated on the arc, so radiating
-  // outward preserves that separation instead of fighting it — and anchor
-  // the text away from the basin on whichever side it lands.
-  const basinPxForLabels = toPx(basin.x, basin.z);
-  const labels = districts
-    .map((d) => {
-      const p = toPx(d.x, d.z);
-      const dx = p.px - basinPxForLabels.px;
-      const dy = p.py - basinPxForLabels.py;
-      const len = Math.hypot(dx, dy) || 1;
-      const lx = p.px + (dx / len) * 16;
-      const ly = p.py + (dy / len) * 16;
-      const anchor = dx < 0 ? "end" : "start";
-      return `<circle cx="${p.px.toFixed(1)}" cy="${p.py.toFixed(1)}" r="3.5" fill="#f2a13d"/><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-family="monospace" font-size="11" fill="#e8efe9">${d.id}</text>`;
-    })
-    .join("\n  ");
-
-  const basinPx = toPx(basin.x, basin.z);
-
-  const overlay = `<svg xmlns="http://www.w3.org/2000/svg" width="${GRID}" height="${GRID}">
-  <path d="${riverPath}" fill="none" stroke="#5ee6ff" stroke-width="2.5" opacity="0.9"/>
-  ${tribLines}
-  <circle cx="${basinPx.px.toFixed(1)}" cy="${basinPx.py.toFixed(1)}" r="${(basin.r / step).toFixed(1)}" fill="none" stroke="#f2a13d" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
-  <text x="${(basinPx.px + basin.r / step + 4).toFixed(1)}" y="${basinPx.py.toFixed(1)}" font-family="monospace" font-size="11" fill="#f2a13d">Sangam</text>
-  ${labels}
-  <text x="8" y="30" font-family="monospace" font-size="11" fill="#e8efe9">N — 2017</text>
-  <text x="8" y="${GRID - 10}" font-family="monospace" font-size="11" fill="#e8efe9">S — now</text>
-  <rect x="0" y="0" width="${GRID}" height="30" fill="#060807" opacity="0.55"/>
-  <text x="8" y="13" font-family="monospace" font-size="10" fill="#f2a13d">LAYOUT DEBUG — not a craft/terrain render (no lighting, no 3D). See heavy/world/terrain/*.png for the real heightmap+splat.</text>
-  <text x="8" y="26" font-family="monospace" font-size="10" fill="#e8efe9">river=time, cyan=measured tributary, grey dashed=declared</text>
-</svg>`;
-
-  const base = sharp(Buffer.from(rgba), { raw: { width: GRID, height: GRID, channels: 4 } }).png();
-  const composed = await sharp(await base.toBuffer())
-    .composite([{ input: Buffer.from(overlay) }])
-    .resize(GRID * 2, GRID * 2, { kernel: "nearest" })
-    .png()
+  const webp = await sharp(Buffer.from(rgba), { raw: { width: grid, height: grid, channels: 4 } })
+    .webp({ quality: 92, lossless: false })
     .toBuffer();
-
-  // Best-effort: the preview is a QA convenience, never a build artefact, so
-  // a write failure here (e.g. a read-only or missing parent on some
-  // machine) must not crash the deterministic terrain generation above it.
-  try {
-    mkdirSync(dirname(PREVIEW_PNG), { recursive: true });
-    writeFileSync(PREVIEW_PNG, composed);
-    console.log(`[gen-terrain] preview -> ${PREVIEW_PNG}`);
-  } catch (err) {
-    console.warn(`[gen-terrain] preview write skipped: ${err.message}`);
-  }
+  writeFileSync(join(OUT_DIR, "valley-flow-1024.webp"), webp);
 }
 
-main().catch((err) => {
-  console.warn("[gen-terrain] unexpected failure, leaving previous output untouched:", err);
-});
+const LICENSE_TEXT = `heavy/world/terrain — ODbL 1.0
+================================
+
+The heightmaps and flow map in this directory are derived from OpenStreetMap
+data (the Mutha river course, src/data/osm/mutha.json, fetched by
+scripts/gen-river-osm.mjs) through scripts/world-v2/gen-terrain.mjs, and are
+offered under the Open Database Licence 1.0 (ODbL), with attribution to
+OpenStreetMap contributors: (c) OpenStreetMap contributors,
+https://www.openstreetmap.org/copyright.
+
+Relief: SRTM/GMTED2010 via AWS Terrain Tiles (USGS, public domain), sampled
+near Vetal Tekdi.
+`;
+
+// Run only when invoked directly (`node scripts/world-v2/gen-terrain.mjs`),
+// never as a side effect of importing this module for its pure
+// `ridgeCrestHeightAtYm` export (gen-terrain.test.mjs) — the old generator
+// had no such guard, but that only ever mattered because nothing imported
+// it for anything but running it.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("[gen-terrain] failed:", err);
+    process.exitCode = 1;
+  });
+}
