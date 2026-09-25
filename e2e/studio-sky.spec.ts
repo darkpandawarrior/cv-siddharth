@@ -104,14 +104,22 @@ test("the hero rig is measurably brighter at Pune noon than at Pune night", asyn
   await page.goto("/");
   await waitForHydration(page);
   await expect(page.locator(".hero-studio-object canvas")).toBeVisible({ timeout: 30000 });
-  await page.waitForTimeout(300); // let the auto-rotate settle, same as studio-visuals.spec.ts
+  // 300ms alone (same as studio-visuals.spec.ts) flaked once cold: the very
+  // first WebGL paint in a fresh browser context can still be mid shader
+  // compile / first-frame lighting apply at 300ms, reading brighter than the
+  // settled scene. Two rAF ticks confirm the renderer has actually painted
+  // at least twice before the fixed wall-clock wait, so the settle window
+  // times real frames, not just wall time a slow first paint can eat into.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await page.waitForTimeout(500); // let the auto-rotate settle, same idea as studio-visuals.spec.ts
   const nightLuma = await meanLuma(await page.screenshot({ clip: await plinthClip(), path: testInfo.outputPath("hero-night-1440.png") }));
 
   await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
   await page.reload();
   await waitForHydration(page);
   await expect(page.locator(".hero-studio-object canvas")).toBeVisible({ timeout: 30000 });
-  await page.waitForTimeout(300);
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await page.waitForTimeout(500);
   const dayLuma = await meanLuma(await page.screenshot({ clip: await plinthClip(), path: testInfo.outputPath("hero-day-1440.png") }));
 
   await testInfo.attach("luma", { body: JSON.stringify({ nightLuma, dayLuma }), contentType: "application/json" });
@@ -128,12 +136,14 @@ test("the Blueprint needle reads the fixture's CI health", async ({ page }) => {
 
   const needleEl = page.locator("[data-needle]");
   await expect(needleEl).toBeAttached({ timeout: 30000 });
-  const [needleAttr, sourceAttr] = await Promise.all([
-    needleEl.getAttribute("data-needle"),
-    needleEl.getAttribute("data-needle-source"),
-  ]);
-  expect(Number(needleAttr)).toBeCloseTo(expectedAngle, 5);
-  expect(["pending", "model"]).toContain(sourceAttr);
+  // The element is attached immediately at angleDeg 0 (the pre-fetch
+  // default from needleReading(null)); poll until the mocked /api/ops
+  // response has actually landed and moved it, rather than a one-shot read
+  // racing the fetch.
+  await expect
+    .poll(async () => Number(await needleEl.getAttribute("data-needle")), { timeout: 10000 })
+    .toBeCloseTo(expectedAngle, 5);
+  expect(["pending", "model"]).toContain(await needleEl.getAttribute("data-needle-source"));
 });
 
 test("a disconnected CI board rests the needle at zero", async ({ page }) => {
@@ -153,7 +163,9 @@ test("a stale board keeps the needle but says 'last good'", async ({ page }) => 
   await waitForHydration(page);
   const needleEl = page.locator("[data-needle]");
   await expect(needleEl).toBeAttached({ timeout: 30000 });
-  expect(Number(await needleEl.getAttribute("data-needle"))).toBeCloseTo(computeNeedle(stale), 5);
+  await expect
+    .poll(async () => Number(await needleEl.getAttribute("data-needle")), { timeout: 10000 })
+    .toBeCloseTo(computeNeedle(stale), 5);
   await expect(needleEl).toContainText("last good,");
 });
 
@@ -171,6 +183,8 @@ test("a half-green board rests the needle at half the gauge", async ({ page }) =
   await waitForHydration(page);
   const needleEl = page.locator("[data-needle]");
   await expect(needleEl).toBeAttached({ timeout: 30000 });
-  expect(Number(await needleEl.getAttribute("data-needle"))).toBeCloseTo(computeNeedle(halfGreen), 5);
+  await expect
+    .poll(async () => Number(await needleEl.getAttribute("data-needle")), { timeout: 10000 })
+    .toBeCloseTo(computeNeedle(halfGreen), 5);
   expect(computeNeedle(halfGreen)).toBeCloseTo(NEEDLE_RANGE_DEG / 2, 5);
 });
