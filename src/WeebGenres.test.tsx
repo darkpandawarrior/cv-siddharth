@@ -1,4 +1,4 @@
-// ponytail: no .test.tsx here — see EvidenceChip.test.ts's note. This repo
+// ponytail: no .test.tsx here, see EvidenceChip.test.ts's note. This repo
 // tests React logic as plain functions and renderToString, never jsdom.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
@@ -17,7 +17,7 @@ describe("WeebGenres", () => {
     expect(weebTitles.every((t) => t.crowd != null && t.mine > 0)).toBe(true);
   });
 
-  it("carries no link to any project — no manufactured edge (REC-5)", () => {
+  it("carries no link to any project, no manufactured edge (REC-5)", () => {
     const html = renderToString(createElement(WeebGenres));
     expect(html).not.toContain("/project/");
   });

@@ -5,11 +5,11 @@ import { experience } from "./profile/experience.ts";
  * The fleet, joined against his own timeline (REC-7).
  *
  * Every fleet row's last Play update is banded into whichever `experience.ts`
- * period it falls in — never into who is credited for the update. A client
+ * period it falls in, never into who is credited for the update. A client
  * app can post a new build any day, whether or not he is anywhere near it;
  * the wording rule this file exists to enforce is that a bucket says WHEN,
  * never WHO. Copy reading this data says "last Play update fell in this
- * era", and must never say "shipped by" — updates after his Dice exit are
+ * era", and must never say "shipped by": updates after his Dice exit are
  * not his work.
  *
  * A row the periods cannot place (predates every period, or lands in a gap
@@ -45,8 +45,8 @@ interface Era {
 const slug = (company: string) => company.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 /** Chronological, oldest first (opposite of experience.ts's own order). An
- *  overlap — Neev started as a side consulting engagement while Dice was
- *  still his full-time role — resolves to whichever era started EARLIER and
+ *  overlap (Neev started as a side consulting engagement while Dice was
+ *  still his full-time role) resolves to whichever era started EARLIER and
  *  is still open, i.e. the continuing primary role rather than the newer
  *  concurrent one. A fleet app's last update is a ride-hailing platform
  *  build; nothing ties it to Neev's ERP contract even by coincidence of

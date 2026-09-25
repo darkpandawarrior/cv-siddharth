@@ -1,14 +1,14 @@
 import { weebTitles } from "./data/weebTitles.ts";
 
 /**
- * Mine-vs-crowd, by genre — the corpus's fourth finding, split out of
+ * Mine-vs-crowd, by genre: the corpus's fourth finding, split out of
  * WeebRoom because it is heavier than a paragraph and nobody scrolling past
  * the first three findings needs it paid for up front. Mounted lazily on
  * /weeb (see routes/weeb.tsx), same pattern as ResourceDirectory.
  *
  * Every point is one title with BOTH a crowd score and a score of his,
  * plotted crowd (AniList, 0-100) against his own (1-5, ×20 to share the
- * axis). Genre is a fill colour and a legend row, nothing else — this is
+ * axis). Genre is a fill colour and a legend row, nothing else: this is
  * Weeb, which gets no manufactured edge to any project (REC-5), so the only
  * links here are to AniList itself.
  */
@@ -17,7 +17,7 @@ const PALETTE = [
   "#f0a35f", "#7bc4ff", "#a97bff", "#6fd6a0", "#ff8fa3", "#ffd166", "#5fd0d0", "#c9c9c9",
 ];
 
-/** Each title counts once, under its first listed genre — a scatter reads as
+/** Each title counts once, under its first listed genre: a scatter reads as
  *  noise the moment one point tries to be five colours at once. */
 function primaryGenre(genres: readonly string[]): string {
   return genres[0] ?? "Unlabelled";
@@ -49,7 +49,7 @@ export function WeebGenres() {
       </h2>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
         {points.length} titles carry both a score of mine and AniList&rsquo;s crowd average. Each
-        point is one title, coloured by its primary genre — the axes share one scale (0&ndash;100)
+        point is one title, coloured by its primary genre, and the axes share one scale (0&ndash;100)
         so a point above the diagonal is one he rated above the crowd.
       </p>
 
@@ -74,7 +74,7 @@ export function WeebGenres() {
             opacity="0.85"
           >
             <title>
-              {p.name} ({p.year ?? "n/a"}) — {p.genre}: his {p.mine}/5, crowd {p.crowd}
+              {p.name} ({p.year ?? "n/a"}), {p.genre}: his {p.mine}/5, crowd {p.crowd}
             </title>
           </circle>
         ))}
