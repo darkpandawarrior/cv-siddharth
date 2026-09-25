@@ -82,11 +82,16 @@ jobs:
       # and its own id, unconditional on anything committed above, because its
       # field-contract self-check (scripts/kotlin-field-contract.json) is a
       # correctness guard on THIS repo's own data, not a consequence of the
-      # twin's build having changed — see "Gate result" below, which fails the
-      # whole job on this step alone, committed or not.
+      # twin's build having changed — see "Gate result" below, which reads
+      # this step's .outcome on its own, committed or not, and routes a
+      # regression to "Open or update gate-failure issue" rather than pushing.
+      # continue-on-error keeps that routing from also reddening the scheduled
+      # job's own conclusion (the same fix as gate_tsc/gate_lint/gate_test/
+      # gate_check_generated below).
       - name: Regenerate the twin's Kotlin data
         id: gate_kotlin
         if: always()
+        continue-on-error: true
         run: npm run gen:kotlin
 
       # Same fixture contract as refresh-media.yml, for a consistent
@@ -140,17 +145,29 @@ jobs:
           git commit -m "chore: refresh the embedded Compose twin and its figures"
           echo "committed=true" >> "$GITHUB_OUTPUT"
 
+      # continue-on-error on all four below, same as gate_kotlin above: "Gate
+      # result" reads each step's .outcome as DATA to decide passed=true/false
+      # and route a failure to "Open or update gate-failure issue" instead of
+      # pushing — without continue-on-error, a single failing check (e.g. the
+      # repoStats.ts self-consistency count, orchestrator-reconciled and
+      # expected to disagree on an unmerged lane branch) still failed the
+      # job's own conclusion regardless of `if: always()`, so dry_run could
+      # never finish green (run 36073585237: Unit tests / Generated artifacts
+      # failing here alone).
       - name: Type-check
         id: gate_tsc
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npx tsc -b
       - name: Lint
         id: gate_lint
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run lint
       - name: Unit tests
         id: gate_test
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run test
       # The same guard CI runs on a push. If a generator and its committed
       # artifact disagree after all of the above, that is a defect worth
@@ -158,6 +175,7 @@ jobs:
       - name: Generated artifacts match their generators
         id: gate_check_generated
         if: always() && steps.commit.outputs.committed == 'true'
+        continue-on-error: true
         run: npm run check:generated
 
       # Unconditional (not gated on `committed`): gate_kotlin ran regardless of
