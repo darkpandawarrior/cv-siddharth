@@ -221,6 +221,13 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
+  // Deterministic local node (content-hash stamp, not wall-clock — see its
+  // own header comment): every input is a committed file (profile/core.ts,
+  // routes.ts, projectStats.ts, store.ts), so it belongs in build+check like
+  // the other byte-deterministic local nodes (e.g. compare-sets).
+  { id: "agent-context", script: "gen-agent-context.mjs", npmName: "gen:agent-context", kind: "local",
+    inputs: ["src/data/profile/core.ts", "src/data/routes.ts", "src/data/projectStats.ts", "src/data/store.ts"],
+    outputs: ["public/agent-context.json"], stages: { build: 16, refresh: 28, check: 9 } },
 
   { id: "sync-media", script: "sync-project-media.mjs", npmName: "sync:media", kind: "network",
     inputs: [], outputs: ["public/projects/**"], stages: { refresh: 1 } },

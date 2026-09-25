@@ -237,13 +237,14 @@ describe("the README's numbers are the repo's numbers", () => {
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
       28: "Twenty-eight", 29: "Twenty-nine", 30: "Thirty", 31: "Thirty-one",
+      32: "Thirty-two",
     };
     const fileWords: Record<number, string> = {
       24: "twenty-four", 25: "twenty-five", 26: "twenty-six",
       27: "twenty-seven", 28: "twenty-eight", 29: "twenty-nine", 30: "thirty",
       31: "thirty-one", 32: "thirty-two", 33: "thirty-three", 34: "thirty-four",
       35: "thirty-five", 36: "thirty-six", 37: "thirty-seven", 38: "thirty-eight",
-      39: "thirty-nine",
+      39: "thirty-nine", 40: "forty",
     };
     const scriptWord = scriptWords[genScripts];
     const fileWord = fileWords[genFiles];
