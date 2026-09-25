@@ -28,6 +28,7 @@ Run with: blender --background --factory-startup --disable-autoexec
 """
 from pathlib import Path
 import math
+import subprocess
 import sys
 import bmesh
 import bpy
@@ -151,6 +152,24 @@ niche_pitch = sh.socket('socket.niche_pitch', (math.tau / 12, 0, 0), size=0.05)
 
 kit_objects = [tower_ring, tier_collar, niche, flame, base_plinth, finial, ring_pitch, niche_pitch]
 sh.export_kit(ID, kit_objects)
+
+
+def pack_glb(path):
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house pattern, M42:
+    _shared.py is frozen, so this lives here; mirrors candidai-rahat.py's pack_glb).
+    P2-07b task 4: pack every GLB, this file's own included (it predates the
+    packing pass P2-07a ran on its own six kits)."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
+
+pack_glb(sh.MODELS_OUT / f'{ID}.glb')
+print(f'{ID.upper().replace("-", "_")}_PACKED')
 
 # ---------------------------------------------------------------------------
 # Preview-only assembly: a representative 8-tier, 12-niche-per-ring tower
