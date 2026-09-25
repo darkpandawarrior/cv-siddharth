@@ -8,6 +8,7 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { useWeather } from "./lib/useSky.ts";
 import { WMO_LABEL } from "./lib/sky.ts";
+import { isPlausibleTempC, isPlausibleCloudPct, isPlausibleTimestamp } from "./lib/plausibility.ts";
 import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
@@ -134,6 +135,11 @@ function WeatherChip() {
   }
   const label = WMO_LABEL[weather.code] ?? "unknown";
   const aqi = air ? `, AQI ${Math.round(air.usAqi)}` : "";
+  // Same plausibility gate the spec asks every live reading to clear
+  // (idea-atlas SYS-3): a reading that arrived but looks wrong gets a shape
+  // (hollow ring), not a silent pass-through.
+  const suspect =
+    !isPlausibleTempC(weather.tempC) || !isPlausibleCloudPct(weather.cloudPct) || !isPlausibleTimestamp(weather.at);
   return (
     <span className="inline-flex items-center gap-2">
       <a
@@ -146,7 +152,13 @@ function WeatherChip() {
         Pune {weather.tempC.toFixed(1)} °C, {label}
         {aqi}
       </a>
-      <EvidenceChip file="weather" source="Open-Meteo (CC BY 4.0)" cadence="live" live={{ at: weather.at, ok: true }} />
+      <EvidenceChip
+        file="weather"
+        source="Open-Meteo (CC BY 4.0)"
+        cadence="live"
+        live={{ at: weather.at, ok: true }}
+        suspect={suspect}
+      />
     </span>
   );
 }

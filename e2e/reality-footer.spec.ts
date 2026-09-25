@@ -76,6 +76,24 @@ test("with /api/spotify {connected:false} the production build shows no placehol
   await expect(footer).not.toContainText("Artist name");
 });
 
+test("a weather reading outside plausible bounds marks the chip SUSPECT (idea-atlas SYS-3)", async ({ page }) => {
+  const suspectWeather = {
+    ...(WEATHER_OK as { weather: Record<string, unknown> }),
+    weather: { ...(WEATHER_OK as { weather: Record<string, unknown> }).weather, tempC: 60 },
+  };
+  await mockLiveRoutes(page, { weather: suspectWeather });
+  await page.clock.setFixedTime(new Date(NOON));
+  await page.goto("/", { waitUntil: "networkidle" });
+  await expect(page.locator('[data-evidence-chip][data-suspect="true"]')).toHaveCount(1);
+});
+
+test("the fixture's own plausible reading never marks the chip SUSPECT (break-it pair)", async ({ page }) => {
+  await mockLiveRoutes(page, { weather: WEATHER_OK });
+  await page.clock.setFixedTime(new Date(NOON));
+  await page.goto("/", { waitUntil: "networkidle" });
+  await expect(page.locator('[data-evidence-chip][data-suspect="true"]')).toHaveCount(0);
+});
+
 for (const at of [NOON, NIGHT]) {
   test(`no hydration warnings on / at ${at}`, async ({ page }) => {
     const hydrationWarnings: string[] = [];
