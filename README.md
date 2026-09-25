@@ -333,8 +333,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 1733 unit tests across 169 files (vitest)
-npm run test:e2e  # 482 Playwright tests across 30 files, every registry route
+npm test          # 1754 unit tests across 172 files (vitest)
+npm run test:e2e  # 488 Playwright tests across 31 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
