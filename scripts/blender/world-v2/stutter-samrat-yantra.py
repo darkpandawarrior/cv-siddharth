@@ -85,7 +85,7 @@ sh.export_kit(ID, kit_objects)
 
 
 def pack_glb(path):
-    """Compress with meshopt via pinned npx gltfpack (house pattern, M42:
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house pattern, M42:
     _shared.py is frozen, so this lives here; mirrors
     kmp-foundation-keystone.py's compress_with_meshopt)."""
     path = Path(path)
