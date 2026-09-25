@@ -1,5 +1,5 @@
 // PaymentsLab-KMP's five money-movement rails plus split payments, all
-// branching from one PaymentGateway contract — see idea-atlas.md#REC-2 and
+// branching from one PaymentGateway contract, see idea-atlas.md#REC-2 and
 // projects.ts's own "Five money-movement rails + split payments" section for
 // the full prose. Static, hand-authored: unlike providers.ts this has no
 // sibling checkout to regenerate from, the rail set itself only changes when

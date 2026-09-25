@@ -2,13 +2,13 @@ import { useState } from "react";
 import { providers } from "./data/providers.ts";
 import type { Provider } from "./data/providers.ts";
 
-/** Two gateways from PaymentsLab-KMP's cataloged providers, side by side —
+/** Two gateways from PaymentsLab-KMP's cataloged providers, side by side:
  *  archetype, region and shipped status. Reads providers.ts, the generated
- *  catalog (scripts/gen-providers.mjs) — no hand-typed provider list here,
+ *  catalog (scripts/gen-providers.mjs), no hand-typed provider list here,
  *  see idea-atlas.md#REC-2/#I3. */
 
 /** Pure lookup, exported so a test can exercise it without rendering (no
- *  jsdom/@testing-library/react in this repo's vitest config — see
+ *  jsdom/@testing-library/react in this repo's vitest config; see
  *  EvidenceChip.test.ts for the same convention). */
 export function findProvider(slug: string, list: Provider[] = providers): Provider | undefined {
   return list.find((p) => p.slug === slug);

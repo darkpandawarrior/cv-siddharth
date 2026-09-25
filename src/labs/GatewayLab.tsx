@@ -3,12 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { providers } from "../data/providers.ts";
 import { Figure } from "./Figure.tsx";
+import { GatewayCompare } from "../GatewayCompare.tsx";
 
 /* ── PaymentsLab-KMP Gateway Lab ─────────────────────────────────────────── */
 /* PaymentsLab-KMP's cataloged gateways, split by how each one is integrated and
    routed through one PaymentGateway abstraction. Every count comes straight
    off providers.ts (scripts/gen-providers.mjs, parsed from the sibling
-   `../../Android/PaymentsLab` checkout's own docs/providers/*.md) — no
+   `../../Android/PaymentsLab` checkout's own docs/providers/*.md), no
    hand-typed provider list or count here, see
    idea-atlas.md#REC-2/#I3. Only the colours and the four visible buckets
    are local presentation choices; "internal" (the wallet ledger) and
@@ -174,10 +175,10 @@ export function GatewayLab() {
   return (
     <div>
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-        PaymentsLab-KMP catalogs {providers.length} real payment providers — {CATEGORIES[0].count} native-SDK
+        PaymentsLab-KMP catalogs {providers.length} real payment providers: {CATEGORIES[0].count} native-SDK
         integrations, {CATEGORIES[1].count} hosted-webview providers, {CATEGORIES[2].count} mobile-money
         flows and {CATEGORIES[3].count} catalog-only/KYC-gated entries, plus a handful of internal and
-        uncategorized rails — behind one PaymentGateway interface. Toggle the abstraction off and every
+        uncategorized rails, behind one PaymentGateway interface. Toggle the abstraction off and every
         checkout call needs its own bespoke integration; switch it on and the same call routes through a
         single contract into whichever of the {TOTAL_GATEWAYS} gateways is on the other end.
       </p>
@@ -186,7 +187,7 @@ export function GatewayLab() {
           <canvas ref={canvasRef} className="h-full w-full" role="img" aria-label="PaymentsLab-KMP gateway routing simulation" />
         </div>
         {/* `blocked` and `bins` are already two independent accumulators that
-            survive a toggle flip — this just puts both on screen at once
+            survive a toggle flip; this just puts both on screen at once
             instead of losing the "before" the moment routing switches on. */}
         <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2">
           <Figure label="blocked calls" value={String(stats.blocked)} sub="custom integration required" tone="bad" />
@@ -213,6 +214,8 @@ export function GatewayLab() {
           </Link>
         </div>
       </div>
+      <h3 className="mb-3 mt-8 font-mono text-xs uppercase tracking-wide text-muted">Compare two gateways</h3>
+      <GatewayCompare />
     </div>
   );
 }
