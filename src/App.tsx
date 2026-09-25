@@ -18,7 +18,7 @@ import { countWord } from "./data/labs.ts";
 import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ReposShowcase } from "./ReposShowcase.tsx";
-import { openChat } from "./FloatingChat.tsx";
+import { openChat } from "./lib/chatBus.ts";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
