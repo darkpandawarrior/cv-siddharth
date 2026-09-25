@@ -119,11 +119,18 @@ export function validate(
 }
 
 describe("archive registry (real scan)", () => {
-  it("passes on the empty registry", () => {
-    const markers = scanMarkers();
-    const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
-    expect(validate(ARCHIVE, markers, anchorsIn(archiveMd))).toEqual([]);
-  });
+  it(
+    "passes on the empty registry",
+    () => {
+      const markers = scanMarkers();
+      const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
+      expect(validate(ARCHIVE, markers, anchorsIn(archiveMd))).toEqual([]);
+    },
+    // ponytail: scanning ~2k git-tracked files synchronously is fine alone
+    // (~4s) but can miss the 5s default under full-suite CPU contention;
+    // raise the ceiling here rather than optimizing the scan.
+    15000,
+  );
 
   it("ARCHIVE.md carries the marker format verbatim", () => {
     const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
