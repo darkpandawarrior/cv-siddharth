@@ -1,5 +1,17 @@
 import { projectStats } from "../projectStats.ts";
+import { kmpGraph } from "../kmpGraph.ts";
+import { mermaidFromGraph } from "../../lib/mermaidFromGraph.ts";
 import { projectModuleCounts, paymentGatewayCount, dooriStats, paymentStats } from "../../lib/projectStatLine.ts";
+// kmpGraph.modules preserves kmp-toolkit's own settings.gradle.kts include()
+// order (gen-project-stats.mjs's scanToolkitModules): core modules first,
+// then every `:provider:x` gateway module as one contiguous trailing block,
+// foundation.providerModules long. Slicing that many entries off the end is
+// how the generator itself tells providers apart from core modules (it never
+// keeps the ":provider:" prefix on the flattened id), so this is the same
+// definition, not a second one. Intersecting it with an app's
+// substitutedModules replaces a hand-counted literal with a real count.
+const kmpProviderModuleIds = new Set(kmpGraph.modules.slice(-projectStats.foundation.providerModules).map((m) => m.id));
+const paymentsLabProviderModulesUsed = paymentStats.substitutedModules.filter((m) => kmpProviderModuleIds.has(m)).length;
 // Split from profile.ts along its export seams (arch-L15) — the heavy
 // project registry (screenshots, case-study prose, per-target device
 // chrome). See projectCards.ts for the light card-list projection that
@@ -160,6 +172,20 @@ const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) =>
 // The recurring cast, most-appeared first — same derive-don't-type-it
 // discipline as the series/pillar ranks above.
 const castByAppearances = [...cast].sort((a, b) => b.appearances - a.appearances);
+
+// Every module the kmp-family prose (below) names as used by a given app,
+// kept beside the prose instead of parsed out of it so registry.test.ts can
+// hold the two honest against each other. This is what caught the original
+// bug: the prose claimed bots-policy was still unadopted while Gaddi had
+// already substituted it, and claimed llm-chat/settings/app-shell were
+// single-app modules when the measured substitutedModules lists said otherwise.
+export const kmpFamilyModuleClaims: Record<string, string[]> = {
+  doori: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security", "location", "settings", "app-shell", "offline-outbox"],
+  gaddi: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "feedback", "bots-policy"],
+  "paymentslab-kmp": ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security", "payments-api"],
+  candidai: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security"],
+  portfolio: ["network", "result", "llm-chat"],
+};
 
 export const projects: Project[] = [
   {
@@ -717,7 +743,7 @@ export const projects: Project[] = [
         },
         {
           heading: `${projectModuleCounts["paymentslab-kmp"]} modules, ${paymentGatewayCount} gateways`,
-          body: `One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are ${paymentStats.modules} local modules plus ${paymentStats.composedModules} composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans ${paymentGatewayCount} registered gateways: ${paymentStats.gatewaysNative} native-SDK integrations, an internal wallet ledger, ${paymentStats.gatewaysHosted} hosted-webview gateways behind one archetype, ${paymentStats.gatewaysMobileMoney} mobile-money flows and ${paymentStats.gatewaysStub} catalog-only / KYC-gated entries, each with its own status badge and region.`,
+          body: `One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are ${paymentStats.modules} local modules plus ${paymentStats.composedModules} composed from kmp-toolkit (${paymentsLabProviderModulesUsed} of kmp-toolkit's ${projectStats.foundation.providerModules} standalone provider gateway modules). The in-app catalog spans ${paymentGatewayCount} registered gateways: ${paymentStats.gatewaysNative} native-SDK integrations, an internal wallet ledger, ${paymentStats.gatewaysHosted} hosted-webview gateways behind one archetype, ${paymentStats.gatewaysMobileMoney} mobile-money flows and ${paymentStats.gatewaysStub} catalog-only / KYC-gated entries, each with its own status badge and region.`,
         },
         {
           heading: "Five money-movement rails + split payments",
@@ -1369,7 +1395,7 @@ export const projects: Project[] = [
       "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
-      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.`,
+      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the mvi-core base all four apps share to modules like device-integrity and a chart renderer still finding their first consumer.`,
       `kmp-build-logic: ${projectStats.foundation.conventionPlugins} convention plugins. The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.`,
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
       `Consumed by Doori (${dooriStats.composedModules} of its ${projectModuleCounts.doori} modules), PaymentsLab-KMP (${paymentStats.composedModules} of its ${projectModuleCounts["paymentslab-kmp"]}), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.`,
@@ -1398,7 +1424,7 @@ export const projects: Project[] = [
       sections: [
         {
           heading: `kmp-toolkit: ${projectStats.foundation.modules} modules, extracted, never designed`,
-          body: `The library repo, ${projectStats.foundation.modules} modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. In active use: the MVI ViewModel core (Candidai, PaymentsLab-KMP, Doori, Gaddi), network and on-device AI (both in Candidai), security (PaymentsLab-KMP) and Doori's own operation-log offline-outbox. Still finding a first consumer: typed Result, device-integrity, a screen-state store (ScreenState/DecisionEngine, a different module from Doori's outbox), settings, app-shell, llm-chat and a secrets vault pattern, plus bots-policy, the generic ISMCTS search shell Gaddi's own AI engine is actually built from. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base four apps build their reducer/store layer on.`,
+          body: `The library repo, ${projectStats.foundation.modules} modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. All four native apps (Doori, Gaddi, PaymentsLab-KMP and Candidai) build on the same eight: typed Result, the (State, Event) → Effects mvi-core base, common, network, on-device AI plus its ai-testing harness, the design system and llm-chat, three of which (Result, network, llm-chat) this portfolio's own Compose Multiplatform twin substitutes too, the narrower slice a résumé app actually needs. Security is one substitution short of universal: Doori, PaymentsLab-KMP and Candidai run it, Gaddi doesn't. Past that the toolkit gets consumer-specific: Doori alone runs the location tracking module, settings, app-shell and the operation-log offline-outbox; Gaddi alone runs feedback and bots-policy, the generic ISMCTS search shell its own AI engine is actually built from; PaymentsLab-KMP alone runs the payments-api contract plus its provider gateway modules. Still finding a first consumer: device-integrity, biometric, secure-store, auth, netlog, a screen-state store (ScreenState/DecisionEngine, a different module from Doori's outbox) and a chart renderer.`,
         },
         {
           heading: "kmp-build-logic: the setup written once",
@@ -1443,6 +1469,18 @@ export const projects: Project[] = [
   tk -.->|"includeBuild"| ku
   at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
         },
+        {
+          // Generated straight from kmpGraph.ts (idea-atlas.md#I2) instead of
+          // hand-typed: every module and every includeBuild edge, so this
+          // diagram can never drift from substitutedModules the way the prose
+          // above once did.
+          title: "Module adoption, generated from the measured graph",
+          code: mermaidFromGraph(kmpGraph),
+        },
+      ],
+      extraLinks: [
+        { label: "Sensors Who Lie: the location module, Doori's GPS tracking", url: "/loopdown#series-sensors-who-lie" },
+        { label: "Search Trees lab: bots-policy, Gaddi's ISMCTS engine", url: "/lab#search-trees" },
       ],
     },
   },
