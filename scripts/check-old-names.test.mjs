@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { findHits, trackedFiles, scan } from "./check-old-names.mjs";
+import { findHits, trackedFiles, scan, deriveOldSlugs, buildLowerSlugRe } from "./check-old-names.mjs";
 
 const root = new URL("../", import.meta.url).pathname;
 
@@ -146,6 +146,83 @@ describe("check-old-names", () => {
       expect(
         findHits("lighthouserc.json", '  "  total-byte-weight max 2,834,247. /project/mileway was 9,621,514 before",'),
       ).toHaveLength(0);
+    });
+  });
+
+  describe("SH-4: the rename map is derived from vercel.json, not hand-kept", () => {
+    it("adding a new /project redirect extends the old-slug net with no code change", () => {
+      const dir = mkdtempSync(join(tmpdir(), "check-old-names-vercel-"));
+      const vercelFixture = join(dir, "vercel.json");
+      writeFileSync(
+        vercelFixture,
+        JSON.stringify({ redirects: [{ source: "/project/zorp", destination: "/project/zorpnext" }] }),
+      );
+      const map = deriveOldSlugs(vercelFixture);
+      expect(map.get("zorp")).toBe("zorpnext");
+      const re = buildLowerSlugRe(map);
+      re.lastIndex = 0;
+      expect(re.test("see /project/zorp for details")).toBe(true);
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // best-effort cleanup
+      }
+    });
+
+    it("derives exactly the real repo's five old slugs from the real vercel.json", () => {
+      const map = deriveOldSlugs();
+      expect([...map.keys()].sort()).toEqual(["deadlock", "hiresignal", "kursi", "mileway", "paymentslab"]);
+      expect(map.get("paymentslab")).toBe("paymentslab-kmp");
+    });
+
+    it("ignores a dynamic redirect (/p/:slug) and a non-/project/ redirect", () => {
+      const map = deriveOldSlugs();
+      expect(map.has(":slug")).toBe(false);
+      expect(map.has("resume")).toBe(false);
+    });
+
+    it("excludes deadlock from the derived lowercase net (pass 3 owns it narrowly)", () => {
+      const re = buildLowerSlugRe(deriveOldSlugs());
+      re.lastIndex = 0;
+      expect(re.test("a deadlock between two locks")).toBe(false);
+    });
+
+    it("falls back to a never-matching pattern for a vercel.json with no /project/ redirects", () => {
+      const dir = mkdtempSync(join(tmpdir(), "check-old-names-vercel-empty-"));
+      const vercelFixture = join(dir, "vercel.json");
+      writeFileSync(vercelFixture, JSON.stringify({ redirects: [] }));
+      const re = buildLowerSlugRe(deriveOldSlugs(vercelFixture));
+      re.lastIndex = 0;
+      expect(re.test("mileway")).toBe(false);
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // best-effort cleanup
+      }
+    });
+  });
+
+  describe("SH-4: old-name:allow, CHANGELOG*, github.com/darkpandawarrior/ URLs", () => {
+    it("allows an old-name:allow marker, same as claim-audit:allow", () => {
+      expect(findHits("src/x.ts", "// Mileway shipped V24. <!-- old-name:allow -->")).toHaveLength(0);
+    });
+
+    it("skips any CHANGELOG* file, not just CHANGELOG.md", () => {
+      expect(scan(["CHANGELOG-2026.md"])).toEqual([]);
+    });
+
+    it("allows a github.com/darkpandawarrior/ URL mentioning the old repo name", () => {
+      expect(findHits("README.md", "See https://github.com/darkpandawarrior/Mileway for history.")).toHaveLength(0);
+    });
+
+    it("still flags an old name mentioned near a github.com URL for someone else's org", () => {
+      // Not slash/quote-bounded (the generic local-path exemption does not
+      // apply here), and not under darkpandawarrior/, so only the new
+      // github.com/darkpandawarrior/ rule could have exempted it — it does
+      // not, because this is a different org.
+      expect(
+        findHits("README.md", "See github.com/someoneelse/repo, still called Mileway in its README."),
+      ).toHaveLength(1);
     });
   });
 
