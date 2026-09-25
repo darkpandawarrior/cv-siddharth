@@ -15,6 +15,7 @@ Run with: blender --background --factory-startup --disable-autoexec
 """
 from pathlib import Path
 import math
+import subprocess
 import sys
 import bmesh
 import bpy
@@ -110,6 +111,24 @@ for c in range(cols):
                 poly.use_smooth = False
             glow_parts.append(pad)
 
+# P2-07e audit fix: each strut/pad was a bare bpy.ops.mesh.primitive_cube_add
+# object, never renamed off Blender's own default 'Cube'/'Cube.NNN' — 30
+# such nodes shipped in the exported GLB (a real gate finding this lane's
+# own kitSockets.audit.test.ts catches: '.004' etc. reads exactly like a
+# baked data-record count). Joined into one multi-material mesh, same
+# pattern as JharokhaFrame just above, except the two materials
+# (sandstone struts, jharokha_glow pads) are already correctly assigned
+# per source object, so nothing needs clearing/re-appending afterward.
+bpy.ops.object.select_all(action='DESELECT')
+bpy.context.view_layer.objects.active = glow_parts[0]
+for p in glow_parts:
+    p.select_set(True)
+bpy.ops.object.join()
+jharokha_lattice = bpy.context.object
+jharokha_lattice.name = 'JharokhaLattice'
+jharokha_lattice.data.name = 'JharokhaLattice'
+sh.canonicalize_object(jharokha_lattice)
+
 bpy.ops.object.select_all(action='DESELECT')
 bpy.context.view_layer.objects.active = frame_parts[0]
 for p in frame_parts:
@@ -164,9 +183,27 @@ sh.socket('socket.flights_top', (0, -d / 2 - 0.05, 0), size=0.18)
 mooring = [sh.socket(f'socket.mooring.{i:02d}', (1.6 + i * 0.9, -d / 2 - 1.6, -0.45), size=0.12)
            for i in range(3)]
 
-kit_objects = [seat, jharokha_frame, canopy, *glow_parts,
+kit_objects = [seat, jharokha_frame, canopy, jharokha_lattice,
                bpy.data.objects['socket.flights_top'], *mooring]
 sh.export_kit(ID, kit_objects)
+
+
+def pack_glb(path):
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house
+    pattern, M68: the exact pin, never added to package.json; mirrors
+    fleet-deepmal.py's pack_glb, since _shared.py is frozen per M42). This
+    lane's task 3 (P2-07e): pack every GLB."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
+
+pack_glb(sh.MODELS_OUT / f'{ID}.glb')
+print(f'{ID.upper().replace("-", "_")}_PACKED')
 
 # ---------------------------------------------------------------------------
 # Preview-only: mount ghat-kit's Step run at socket.flights_top and
@@ -183,15 +220,33 @@ if GHAT_KIT_GLB.exists():
     step_proto = next((o for o in imported if o.name == 'Step'), None)
     flights_top = bpy.data.objects['socket.flights_top']
     STEP_RUN, STEP_RISE, N_STEPS_PREVIEW = 0.32, 0.16, 12
+
+    def _dup_proto(proto, name):
+        """A packed GLB (this lane's task 3) quantizes a named node's mesh
+        onto an unnamed child (KHR_mesh_quantization) rather than keeping it
+        on the node itself - proto.data is then None and the geometry lives
+        on proto.children. Duplicate proto AND its children so a preview
+        copy keeps its geometry either way, and position the returned
+        (parent) object as before - a child's own local transform is
+        relative to its parent, so it comes along for free."""
+        dup = proto.copy()
+        dup.data = proto.data.copy() if proto.data else None
+        dup.name = name
+        bpy.context.collection.objects.link(dup)
+        for child in proto.children:
+            cdup = child.copy()
+            cdup.data = child.data.copy() if child.data else None
+            cdup.name = f'{name}_{child.name}'
+            cdup.parent = dup
+            bpy.context.collection.objects.link(cdup)
+        return dup
+
     if step_proto is not None:
         for i in range(N_STEPS_PREVIEW):
-            dup = step_proto.copy()
-            dup.data = step_proto.data.copy()
-            dup.name = f'Step_preview_{i}'
+            dup = _dup_proto(step_proto, f'Step_preview_{i}')
             dup.location = (flights_top.location.x,
                              flights_top.location.y - i * STEP_RUN,
                              flights_top.location.z - i * STEP_RISE)
-            bpy.context.collection.objects.link(dup)
     for o in imported:
         o.hide_render = True
         o.hide_viewport = True
