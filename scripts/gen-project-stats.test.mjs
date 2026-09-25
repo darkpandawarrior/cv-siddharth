@@ -4,7 +4,15 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, copyFileSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { scanConsumer, firstMonths, scanToolkitModules, adoptionFor, graphUsedBy, readPreviousStats } from "./gen-project-stats.mjs";
+import {
+  scanConsumer,
+  firstMonths,
+  scanToolkitModules,
+  adoptionFor,
+  graphUsedBy,
+  readPreviousStats,
+  readPreviousAdoption,
+} from "./gen-project-stats.mjs";
 
 const dirs = [];
 function tmp(prefix) {
@@ -157,11 +165,13 @@ const STATS_FIXTURE =
   `  "foundation": { "modules": 43, "providerModules": 20, "conventionPlugins": 18 },\n` +
   `  "doori": { "modules": 36, "composedModules": 13, "features": 13, "cores": 12, "dbVersion": 48, "schemaVersion": 48, "screenshots": 372, "substitutedModules": ["location", "common"] },\n` +
   `  "paymentslab-kmp": { "modules": 17, "composedModules": 29, "providers": 0, "features": 4, "cores": 9, "gatewaysNative": 15, "gatewaysInternal": 1, "gatewaysHosted": 44, "gatewaysMobileMoney": 7, "gatewaysStub": 3, "screenshots": 26, "substitutedModules": ["common"] },\n` +
-  `  "gaddi": { "modules": 15, "screenshots": 61, "composedModules": 10, "substitutedModules": ["mvi-core", "common", "network"] },\n` +
+  `  "gaddi": { "modules": 15, "screenshots": 61, "composedModules": 10, "substitutedModules": ["mvi-core", "common", "network"] }\n` +
+  `} as const;\n` +
+  `export const projectStatsGeneratedAt = "2026-09-20";\n` +
+  `export const kmpAdoption = {\n` +
   `  "candidai": { "composedModules": 9, "substitutedModules": ["common", "network"] },\n` +
   `  "portfolio": { "composedModules": 3, "substitutedModules": ["network", "result", "llm-chat"] }\n` +
-  `} as const;\n` +
-  `export const projectStatsGeneratedAt = "2026-09-20";\n`;
+  `} as const;\n`;
 
 describe("gen-project-stats.mjs (spawned, sandboxed)", () => {
   it("network and every local sibling absent: leaves projectStats.ts byte-identical, exit 0", () => {
@@ -216,13 +226,20 @@ describe("gen-project-stats.mjs (spawned, sandboxed)", () => {
 
     expect(result.status).toBe(0);
     const written = readPreviousStats(join(root, "src/data/projectStats.ts"));
+    const writtenAdoption = readPreviousAdoption(join(root, "src/data/projectStats.ts"));
     expect(written.gaddi.composedModules).toBe(3);
     expect(written.gaddi.substitutedModules).toEqual(["mvi-core", "common", "network"]);
-    expect(written.candidai.composedModules).toBe(2);
-    expect(written.candidai.substitutedModules).toEqual(["common", "security"]);
-    expect(written.portfolio.substitutedModules).toEqual(["network"]);
+    expect(writtenAdoption.candidai.composedModules).toBe(2);
+    expect(writtenAdoption.candidai.substitutedModules).toEqual(["common", "security"]);
+    expect(writtenAdoption.portfolio.substitutedModules).toEqual(["network"]);
     // Network was forced to fail — doori/paymentslab's network-only fields
     // are untouched from the fixture.
     expect(written.doori.dbVersion).toBe(48);
+    // candidai/portfolio are NOT keys on `projectStats` itself (see the
+    // generator's module docstring) — the two unowned readers of
+    // `projectStats` do unguarded `.modules` access that only compiles
+    // because every projectStats member has that field today.
+    expect(written).not.toHaveProperty("candidai");
+    expect(written).not.toHaveProperty("portfolio");
   }, 20000);
 });

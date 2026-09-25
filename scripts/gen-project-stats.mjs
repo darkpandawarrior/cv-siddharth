@@ -26,6 +26,22 @@
 // way to guarantee "missing sibling => byte-identical output" is to make
 // "nothing changed" produce literally the same write, not a special case.
 //
+// candidai and portfolio carry composedModules/substitutedModules only — no
+// locally-fetched `modules` count exists for either (candidai is private,
+// never fetched; portfolio is this repo's own KMP twin, not a tracked
+// consumer app). They are emitted as a SEPARATE `kmpAdoption` export rather
+// than as extra keys on `projectStats`, deliberately: `projectStats` is `as
+// const`, so TypeScript infers one discriminated union of its members, and
+// every existing reader of it (projectStatLine.ts, world/artifacts.ts) does
+// unguarded `stat.modules` access that only compiles because every member
+// today has that field. Adding a member without it is a real `tsc` error at
+// every such call site, and even where it slipped past the type checker it
+// printed "undefined modules" on the live Candidai card. Neither of those
+// reader files is owned by this lane (P1-10) or any other, so the fix has to
+// hold on this lane's side of the fence: candidai/portfolio's fields live
+// next to `projectStats` in this same file, under their own name, so no
+// existing reader's assumption about `projectStats`'s shape changes.
+//
 // Pure/IO-only building blocks are exported so a test can feed them fixture
 // paths directly (no subprocess, no env vars to juggle); only `main()` reads
 // process.env and writes files, and it runs only when this file is executed
@@ -235,6 +251,19 @@ export function readPreviousStats(file) {
   }
 }
 
+/** Same contract as readPreviousStats, for the separate candidai/portfolio
+ *  `kmpAdoption` export (see the module docstring for why it's separate). */
+export function readPreviousAdoption(file) {
+  if (!existsSync(file)) return {};
+  const m = /export const kmpAdoption = ([\s\S]*?) as const;/.exec(readFileSync(file, "utf8"));
+  if (!m) return {};
+  try {
+    return JSON.parse(m[1]);
+  } catch {
+    return {};
+  }
+}
+
 export function readPreviousGraph(file) {
   if (!existsSync(file)) return null;
   const m = /export const kmpGraph: KmpGraph = ([\s\S]*?);\n/.exec(readFileSync(file, "utf8"));
@@ -309,6 +338,7 @@ async function main() {
 
   const localScan = Object.fromEntries(consumerIds.map((app) => [app, scanConsumer(CONSUMER_DIRS[app])]));
   const previousStats = readPreviousStats(outFile);
+  const previousAdoption = readPreviousAdoption(outFile);
   const previousGraph = readPreviousGraph(graphOutFile);
 
   const banner =
@@ -316,7 +346,10 @@ async function main() {
     "// Numbers are derived from each app repo's settings.gradle.kts + Room DB over\n" +
     "// raw.githubusercontent, plus a local sibling-checkout scan for the KMP\n" +
     "// substitution/adoption fields (candidai's repo is private and can only ever\n" +
-    "// be read locally — see the module docstring). Run `npm run gen:stats` to refresh.\n";
+    "// be read locally, see the module docstring). candidai/portfolio's own\n" +
+    "// composedModules/substitutedModules live in the separate kmpAdoption export\n" +
+    "// below, not on projectStats itself, see the module docstring for why.\n" +
+    "// Run `npm run gen:stats` to refresh.\n";
 
   let networkStats = null;
   try {
@@ -350,14 +383,20 @@ async function main() {
       ...adoptionFor("paymentslab-kmp", localScan, previousStats, baseline["paymentslab-kmp"]),
     },
     gaddi: { ...previousStats.gaddi, ...baseline.gaddi, ...adoptionFor("gaddi", localScan, previousStats, baseline.gaddi) },
-    // candidai and portfolio have no network-fetched fields at all (private
-    // repo; a Compose Multiplatform twin, not a "consumer app" claim) — pure
-    // local-scan output, falling back to whatever was already committed.
-    candidai: adoptionFor("candidai", localScan, previousStats),
-    portfolio: adoptionFor("portfolio", localScan, previousStats),
   };
 
-  if (JSON.stringify(finalStats) === JSON.stringify(previousStats)) {
+  // candidai and portfolio have no network-fetched fields at all (private
+  // repo; a Compose Multiplatform twin, not a "consumer app" claim) — pure
+  // local-scan output, falling back to whatever was already committed. Kept
+  // out of `finalStats`/`projectStats` on purpose — see the module docstring.
+  const finalAdoption = {
+    candidai: adoptionFor("candidai", localScan, previousAdoption),
+    portfolio: adoptionFor("portfolio", localScan, previousAdoption),
+  };
+
+  const statsUnchanged = JSON.stringify(finalStats) === JSON.stringify(previousStats);
+  const adoptionUnchanged = JSON.stringify(finalAdoption) === JSON.stringify(previousAdoption);
+  if (statsUnchanged && adoptionUnchanged) {
     console.log("[gen-project-stats] no change — projectStats.ts left untouched");
   } else {
     const generatedAt = new Date().toISOString().slice(0, 10);
@@ -365,9 +404,10 @@ async function main() {
       outFile,
       banner +
         `export const projectStats = ${JSON.stringify(finalStats, null, 2)} as const;\n` +
-        `export const projectStatsGeneratedAt = "${generatedAt}";\n`,
+        `export const projectStatsGeneratedAt = "${generatedAt}";\n` +
+        `export const kmpAdoption = ${JSON.stringify(finalAdoption, null, 2)} as const;\n`,
     );
-    console.log("[gen-project-stats]", JSON.stringify(finalStats));
+    console.log("[gen-project-stats]", JSON.stringify(finalStats), JSON.stringify(finalAdoption));
   }
 
   /* ── kmpGraph.ts: kmp-toolkit's module catalog + who has adopted what ── */

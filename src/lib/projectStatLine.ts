@@ -53,13 +53,6 @@ export function repoStatLine(slug: string): string | null {
     const gateways = paymentGatewayCount;
     return `${s.modules + s.composedModules} modules · ${gateways} gateways`;
   }
-  // candidai (private repo) and portfolio (the Compose Multiplatform twin,
-  // not a "consumer app") carry composedModules/substitutedModules only —
-  // no local `modules` count to publish. Guarding here (not after the gaddi
-  // branch) matters: `s.modules` below is unguarded, and printed "undefined
-  // modules" on the Candidai card the moment P1-10's generator added those
-  // two keys to projectStats.ts.
-  if (!("modules" in s)) return null;
   if (slug === "gaddi") return `${s.modules} modules · 4 platforms`;
   return `${s.modules} modules`;
 }
