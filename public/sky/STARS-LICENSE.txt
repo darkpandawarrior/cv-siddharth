@@ -1,0 +1,15 @@
+stars-hyg41-m5.bin, derived from the HYG Database v4.1 (astronexus)
+https://github.com/astronexus/HYG-Database
+
+Licence: Creative Commons Attribution-ShareAlike 4.0 International
+(CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/
+
+The ShareAlike term binds this derived data file, not the site's code: this
+binary was produced from the HYG v4.1 CSV by filtering to stars of apparent
+magnitude 5.0 or brighter (scripts/gen-starfield.mjs) and re-encoding the
+right ascension, declination, magnitude and colour index of each as packed
+16-bit integers. Anyone is free to share and adapt this file under the same
+CC BY-SA 4.0 terms, with attribution to the HYG Database (astronexus).
+
+Attribution text used on this site: "Stars: HYG Database v41 (astronexus),
+CC BY-SA 4.0."
