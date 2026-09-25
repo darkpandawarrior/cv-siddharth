@@ -29,38 +29,47 @@ test("/hire mounts the chat launcher", async ({ page }) => {
 /** Mobile launchers occupy the reserved document-top utility row. They scroll
  * away with that row, while the route navigation and keyboard shortcuts keep
  * their existing behavior. Content must never enter either launcher footprint.
+ *
+ * Also run at 1440: the desktop chat lane (F5, body padding-right
+ * var(--chat-fab-clearance) at 768-1279px) and the Cmd+K trigger joining the
+ * right launcher lane above the chat FAB (F6) both claim fixed desktop
+ * screen-space the same way the mobile utility row does, so the same
+ * collision check applies at both widths.
  */
 const ROUTES = ["/", "/anthology", "/shipped", "/chess", "/project/candidai", "/project/stutter", "/map", "/resume"];
+const VIEWPORTS = [MOBILE, { width: 1440, height: 900 }];
 
 for (const path of ROUTES) {
-  test(`${path} — chat launcher vs. live content at ${MOBILE.width}px`, async ({ page }) => {
-    await page.setViewportSize(MOBILE);
-    await page.goto(path, { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Open chat" })).toBeVisible();
-    const collisions = await page.evaluate(() => {
-      const fab = document.querySelector('button[aria-label="Open chat"]');
-      if (!fab) return ["NO FAB FOUND"];
-      const search = document.querySelector('.palette-trigger');
-      if (!search) return ["NO SEARCH FOUND"];
-      const launcherRects = [fab, search].map(el => el.getBoundingClientRect());
-      const ownText = (el: Element) =>
-        Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 0);
-      const out: string[] = [];
-      for (const el of Array.from(document.body.querySelectorAll("*"))) {
-        if ([fab, search].some(launcher => el === launcher || launcher.contains(el) || el.contains(launcher))) continue;
-        if (!ownText(el)) continue;
-        const cs = getComputedStyle(el);
-        if (cs.visibility === "hidden" || cs.display === "none" || cs.opacity === "0") continue;
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 || r.height === 0) continue;
-        const overlap = launcherRects.some(rect => !(r.right <= rect.left || r.left >= rect.right || r.bottom <= rect.top || r.top >= rect.bottom));
-        if (overlap) out.push(`<${el.tagName.toLowerCase()} class="${(el.className as string).toString().slice(0, 40)}"> "${(el.textContent ?? "").trim().slice(0, 60)}"`);
-      }
-      // Outermost offenders only.
-      return out.filter((o, _i, all) => !all.some((p) => p !== o && o.startsWith(p.split('"')[0])));
+  for (const vp of VIEWPORTS) {
+    test(`${path} — chat launcher vs. live content at ${vp.width}px`, async ({ page }) => {
+      await page.setViewportSize(vp);
+      await page.goto(path, { waitUntil: "networkidle" });
+      await expect(page.getByRole("button", { name: "Open chat" })).toBeVisible();
+      const collisions = await page.evaluate(() => {
+        const fab = document.querySelector('button[aria-label="Open chat"]');
+        if (!fab) return ["NO FAB FOUND"];
+        const search = document.querySelector('.palette-trigger');
+        if (!search) return ["NO SEARCH FOUND"];
+        const launcherRects = [fab, search].map(el => el.getBoundingClientRect());
+        const ownText = (el: Element) =>
+          Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 0);
+        const out: string[] = [];
+        for (const el of Array.from(document.body.querySelectorAll("*"))) {
+          if ([fab, search].some(launcher => el === launcher || launcher.contains(el) || el.contains(launcher))) continue;
+          if (!ownText(el)) continue;
+          const cs = getComputedStyle(el);
+          if (cs.visibility === "hidden" || cs.display === "none" || cs.opacity === "0") continue;
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          const overlap = launcherRects.some(rect => !(r.right <= rect.left || r.left >= rect.right || r.bottom <= rect.top || r.top >= rect.bottom));
+          if (overlap) out.push(`<${el.tagName.toLowerCase()} class="${(el.className as string).toString().slice(0, 40)}"> "${(el.textContent ?? "").trim().slice(0, 60)}"`);
+        }
+        // Outermost offenders only.
+        return out.filter((o, _i, all) => !all.some((p) => p !== o && o.startsWith(p.split('"')[0])));
+      });
+      expect(collisions, `${path}: ${collisions.length} collision(s)`).toEqual([]);
     });
-    expect(collisions, `${path}: ${collisions.length} collision(s)`).toEqual([]);
-  });
+  }
 }
 
 test("desktop launchers remain fixed and the mobile chat opens", async ({ page }) => {
