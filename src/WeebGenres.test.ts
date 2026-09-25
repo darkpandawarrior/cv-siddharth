@@ -1,5 +1,6 @@
-// ponytail: no .test.tsx here, see EvidenceChip.test.ts's note. This repo
-// tests React logic as plain functions and renderToString, never jsdom.
+// See EvidenceChip.test.ts's note: this repo tests React logic as plain
+// functions and renderToString, never jsdom; createElement stands in for
+// JSX so this file stays a plain .ts module under vitest's include glob.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";

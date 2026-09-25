@@ -153,7 +153,7 @@ export function Shipped() {
             The fleet, by era
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
-            Each app&rsquo;s last Play update fell in one of the eras below &mdash; that is what a
+            Each app&rsquo;s last Play update fell in one of the eras below. That is what a
             client&rsquo;s current build date can honestly say. It is a timestamp, not a byline:
             an update after he left an employer is not work of his, and this strip never implies
             otherwise.
