@@ -32,6 +32,7 @@ Run with: blender --background --factory-startup --disable-autoexec
 """
 from pathlib import Path
 import math
+import subprocess
 import sys
 import bmesh
 import bpy
@@ -142,6 +143,24 @@ bpy.ops.object.select_all(action='DESELECT')
 
 kit_objects = [step, landing, pitch, chhatri]
 sh.export_kit(ID, kit_objects)
+
+
+def pack_glb(path):
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house
+    pattern, M68: the exact pin, never added to package.json; mirrors
+    fleet-deepmal.py's pack_glb, since _shared.py is frozen per M42). This
+    lane's task 3 (P2-07e): pack every GLB."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
+
+pack_glb(sh.MODELS_OUT / f'{ID}.glb')
+print(f'{ID.upper().replace("-", "_")}_PACKED')
 
 # ---------------------------------------------------------------------------
 # Preview-only assembly: a representative descending flight (~18 risers,
