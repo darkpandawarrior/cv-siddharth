@@ -217,6 +217,8 @@ export const GENERATORS = [
       "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
+  { id: "providers", script: "gen-providers.mjs", npmName: "gen:providers", kind: "sibling",
+    inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
 

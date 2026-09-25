@@ -51,6 +51,7 @@
     "gen:lighthouse-summary": "node scripts/gen-lighthouse-summary.mjs",
     "gen:kotlin": "node scripts/gen-kotlin-data.mjs",
     "gen:app-manifests": "node scripts/gen-app-manifests.mjs",
+    "gen:providers": "node scripts/gen-providers.mjs",
     "check:generated": "node scripts/check-generated.mjs",
     "check:freshness": "node scripts/check-freshness.mjs",
     "check:answers": "node scripts/check-answers.mjs",
