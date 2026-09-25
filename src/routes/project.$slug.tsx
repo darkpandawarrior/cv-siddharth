@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { projects } from "../data/profile.ts";
 import { CursorAura } from "../CursorAura.tsx";
@@ -6,6 +7,7 @@ import { SiteFooter } from "../SiteFooter.tsx";
 import { FloatingChat } from "../FloatingChat.tsx";
 import { buildProjectJsonLd } from "../lib/project-jsonld.ts";
 import { heavy } from "../lib/assetBase.ts";
+import { touch } from "../lib/sessionRipple.ts";
 
 /**
  * Slugs that used to be their own project and now live inside another one. They stay resolvable
@@ -65,6 +67,12 @@ export const Route = createFileRoute("/project/$slug")({
 
 function ProjectPage() {
   const { slug } = Route.useParams();
+  // Records the visit for /map's "your path" (sessionRipple.ts, P5), a
+  // client effect only, module-scope state that never persists or leaves
+  // the browser. ProjectDetail.tsx itself is not touched (phase 1 scope).
+  useEffect(() => {
+    touch(slug);
+  }, [slug]);
   return (
     <div className="min-h-screen">
       <CursorAura />
