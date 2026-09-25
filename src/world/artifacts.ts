@@ -118,10 +118,16 @@ function seeds(): Seed[] {
   for (const [slug, stat] of Object.entries(projectStats)) {
     const modules = "modules" in stat ? stat.modules : undefined;
     const screenshots = "screenshots" in stat ? stat.screenshots : undefined;
+    // candidai (private repo) and portfolio (the Compose Multiplatform twin)
+    // carry composedModules/substitutedModules only — no local `modules`
+    // count to publish (see gen-project-stats.mjs). Falling back to it here
+    // keeps every stat-<slug> non-empty instead of the two of them going
+    // silently blank the moment those keys existed at all.
+    const composed = !modules && "composedModules" in stat ? stat.composedModules : undefined;
     out.push({
       id: `stat-${slug}`,
       label: slug,
-      detail: [modules && `${modules} modules`, screenshots && `${screenshots} screenshots`]
+      detail: [modules && `${modules} modules`, screenshots && `${screenshots} screenshots`, composed && `${composed} composed modules`]
         .filter(Boolean)
         .join(" · "),
     });
