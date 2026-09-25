@@ -12,11 +12,15 @@ import {
 } from "./districtWest.ts";
 import { CITY } from "./city.ts";
 import { resolveAttributes, applyResolveShader, triggerTimeOf } from "./resolve.ts";
-import { worldPalette, dim , laneColors} from "./palette.ts";
+import { worldPalette, dim, laneColors, type WorldPalette } from "./palette.ts";
 import { useStudioModel } from "../three/models.ts";
 import { deviceTier } from "./deviceTier.ts";
 import { PLACEMENTS } from "./worldData.ts";
 import { LABEL_HEIGHT } from "./pavilionGeometry.ts";
+import { useLiveSignal } from "../lib/useLiveSignal.ts";
+import { useTouched } from "../lib/sessionRipple.ts";
+import { siteCiGlow, type CiGlow } from "./realityRows.ts";
+import type { Ops } from "../../api/_lib/ops-handler.ts";
 
 /**
  * WEST DISTRICT'S GEOMETRY — "what he was paid for," built.
@@ -242,7 +246,48 @@ function CaseStudyObelisks({ monuments }: { monuments: CaseStudyMonument[] }): J
 
 // ── project towers ──────────────────────────────────────────────────────
 
-function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element {
+/** The one project slug that stands for this site itself (`profile.ts`'s
+ *  `"portfolio"` entry, repo `cv-siddharth`) — M2's "portfolio monument,"
+ *  the one tower the site's own CI is allowed to light. Never the KMP
+ *  keystone (FoundationHub.tsx, untouched by this lane). */
+const PORTFOLIO_SLUG = "portfolio";
+
+/** M2/idea-atlas §3.1: `--state-ok` IS `--color-signal` and `--state-degraded`
+ *  IS `--color-accent` already (src/index.css) — reading `c.signal`/`c.accent`
+ *  directly keeps this file's one `getComputedStyle` call (worldPalette's own
+ *  doc comment) rather than a second, CSS-var-name-keyed lookup for the same
+ *  two colours. `base` returns `null`: "no override," the tower's ordinary
+ *  tint logic runs unchanged. */
+function ciTint(glow: CiGlow, c: WorldPalette): string | null {
+  if (glow === "ok") return c.signal;
+  if (glow === "degraded") return c.accent;
+  return null;
+}
+
+/** A touched or CI-lit tower's colour, or `null` to fall through to the
+ *  family's own dated/undated tint — shared by the shaft and the crown so
+ *  the two families can never render two different readings of the same
+ *  tower. CI is checked first: the portfolio tower is also (trivially)
+ *  "touched" the instant a visitor drives near it, and the site's own
+ *  build health is the more specific, more load-bearing signal to show. */
+function towerOverride(slug: string, touched: ReadonlySet<string>, ciGlow: CiGlow, c: WorldPalette): string | null {
+  if (slug === PORTFOLIO_SLUG) {
+    const tint = ciTint(ciGlow, c);
+    if (tint) return tint;
+  }
+  if (touched.has(slug)) return c.signal;
+  return null;
+}
+
+function ProjectTowerShafts({
+  towers,
+  touched,
+  ciGlow,
+}: {
+  towers: ProjectTower[];
+  touched: ReadonlySet<string>;
+  ciGlow: CiGlow;
+}): JSX.Element {
   const c = worldPalette();
   const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -271,12 +316,13 @@ function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element
       // An undated tower (stutter-class — see districtWest.ts) sits on a
       // dim, uncoloured plinth: the rendering of "the data has no date for
       // this," not a guess dressed up in the same bright tints as the rest.
-      color.set(t.dated ? tints[ti % tints.length] : dim(c.textDim, 0.6));
+      const override = towerOverride(t.slug, touched, ciGlow, c);
+      color.set(override ?? (t.dated ? tints[ti % tints.length] : dim(c.textDim, 0.6)));
       mesh.setColorAt(i, color);
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [segments, tints, c.textDim]);
+  }, [segments, tints, c, touched, ciGlow]);
 
   if (segments.length === 0) return <></>;
   return (
@@ -287,7 +333,15 @@ function ProjectTowerShafts({ towers }: { towers: ProjectTower[] }): JSX.Element
   );
 }
 
-function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element {
+function ProjectTowerCrowns({
+  towers,
+  touched,
+  ciGlow,
+}: {
+  towers: ProjectTower[];
+  touched: ReadonlySet<string>;
+  ciGlow: CiGlow;
+}): JSX.Element {
   const c = worldPalette();
   const tints = useMemo(() => laneColors(c), [c]);
   const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -308,12 +362,13 @@ function ProjectTowerCrowns({ towers }: { towers: ProjectTower[] }): JSX.Element
       dummy.scale.set(t.width * 1.15, 0.5, t.width * 1.15);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
-      color.set(t.dated ? tints[i % tints.length] : dim(c.textDim, 0.6));
+      const override = towerOverride(t.slug, touched, ciGlow, c);
+      color.set(override ?? (t.dated ? tints[i % tints.length] : dim(c.textDim, 0.6)));
       mesh.setColorAt(i, color);
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [towers, tints, c.textDim]);
+  }, [towers, tints, c, touched, ciGlow]);
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, towers.length]} castShadow>
@@ -425,13 +480,24 @@ export function Monuments(): JSX.Element {
   const blocks = useMemo(() => employerBlocks(), []);
   const monuments = useMemo(() => caseStudyMonuments(), []);
   const towers = useMemo(() => projectTowers(), []);
+
+  // The site's own CI (M2) and the visitor's own path (M1's "You" row) —
+  // both read directly here, the same "call the shared hook where it's
+  // needed" pattern the rest of this world uses (Ghosts' own usePresence,
+  // FoundationHub's own deviceTier()), rather than two more props threaded
+  // through World.tsx for values this component is the only consumer of.
+  const { data: ops } = useLiveSignal<Ops>("/api/ops");
+  const ciGlow = useMemo(() => siteCiGlow(ops ?? null), [ops]);
+  const touchedList = useTouched();
+  const touched = useMemo(() => new Set(touchedList), [touchedList]);
+
   return (
     <>
       <EmployerShells blocks={blocks} />
       <EmployerFloors blocks={blocks} />
       <CaseStudyObelisks monuments={monuments} />
-      <ProjectTowerShafts towers={towers} />
-      <ProjectTowerCrowns towers={towers} />
+      <ProjectTowerShafts towers={towers} touched={touched} ciGlow={ciGlow} />
+      <ProjectTowerCrowns towers={towers} touched={touched} ciGlow={ciGlow} />
       <FictionMonuments />
     </>
   );
