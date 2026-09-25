@@ -5,8 +5,12 @@ import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
+import { useNow } from "./lib/useSky.ts";
 import { WorldSwitch } from "./WorldSwitch.tsx";
 import { EvidenceChip } from "./EvidenceChip.tsx";
+import { LoopdownCast, seriesArt, leadCastIdOf, castArt, newestLiveLesson, lessonAgeLabel } from "./LoopdownCast.tsx";
+import { heavy } from "./lib/assetBase.ts";
+import VoiceMeasured from "./VoiceMeasured.tsx";
 import {
   LOOPDOWN_REPO,
   PLATFORMS,
@@ -29,12 +33,10 @@ import {
  * other, which is a cross-link; two full grids was a fork.
  */
 
-// Cast accents cycle through the series palette — the characters roam between series.
-const CAST_COLORS = ["#8f74ff", "#4ec9b0", "#f0883e", "#db61ff", "#38bdf8"];
-
 export function WritingView() {
   const { goToSection } = useSectionNav();
-  const { lessons, series, cast } = writing;
+  const { lessons, series } = writing;
+  const now = useNow();
   const sorted = [...lessons].sort((a, b) => {
     if ((a.status === "published") !== (b.status === "published")) return a.status === "published" ? -1 : 1;
     return (b.created || "").localeCompare(a.created || "");
@@ -45,6 +47,8 @@ export function WritingView() {
   // earn the full card; the rest collapse behind a count.
   const live = sorted.filter((l) => l.status === "published");
   const soon = sorted.filter((l) => l.status !== "published");
+  const newest = newestLiveLesson();
+  const ageLabel = newest?.created ? lessonAgeLabel(newest.created, now) : null;
 
   return (
     <div className="min-h-screen">
@@ -112,6 +116,19 @@ export function WritingView() {
             personified bugs. One idea, written once, adapted to dev.to, Medium, Hashnode, and
             LinkedIn.
           </p>
+          {/* reality-spec.md#6: "SSR: the absolute date". The row itself
+              renders as soon as there's a newest lesson to name, carrying
+              just the absolute date; ageLabel is null until the client clock
+              mounts (see lessonAgeLabel), and only then does " · N d ago"
+              hydrate in. Gating the whole row on ageLabel too would drop the
+              absolute date from SSR as well, which is the one thing this
+              spec line says must never happen. */}
+          {newest && (
+            <p className="mt-2 font-mono text-xs text-muted" data-testid="newest-lesson-age">
+              Newest: <span className="text-zinc-300">{newest.title}</span>, {newest.created}
+              {ageLabel ? ` · ${ageLabel}` : ""}
+            </p>
+          )}
         </section>
 
         {/* lessons */}
@@ -122,6 +139,7 @@ export function WritingView() {
               const accent = accentOf(l.series);
               const live = l.status === "published";
               const links = PLATFORMS.filter((p) => l.links?.[p.key]);
+              const avatar = castArt(leadCastIdOf(l.series) ?? "");
               return (
                 <Reveal key={l.slug} className="h-full" delay={(i % 2) * 100}>
                 <TiltCard>
@@ -130,7 +148,17 @@ export function WritingView() {
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: accent }}>
+                    <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider" style={{ color: accent }}>
+                      {avatar && (
+                        <img
+                          src={heavy(avatar.src)}
+                          alt={avatar.alt}
+                          width={avatar.width}
+                          height={avatar.height}
+                          loading="lazy"
+                          className="h-6 w-6 rounded-full object-cover"
+                        />
+                      )}
                       {titleize(l.series) || l.pillar}
                     </span>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${live ? "bg-accent/15 text-accent" : "border border-line text-muted"}`}>
@@ -202,56 +230,52 @@ export function WritingView() {
         <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Series</h2>
           <div className="mt-5 flex flex-wrap gap-3">
-            {series.map((s) => (
-              // The landing target for FieldNotes' chips, which carry
-              // `hash={`series-${n.id}`}`. Without an id here twelve
-              // differently-labelled chips all resolved to the same unfiltered
-              // index. scroll-mt-24 keeps the chip clear of the sticky header.
-              <span
-                key={s.id}
-                id={`series-${s.id}`}
-                className="flex scroll-mt-24 items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-zinc-200"
-                style={{ borderColor: `${accentOf(s.id)}55` }}
-              >
-                <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
-                {s.title}
-                <span className="text-xs text-muted">{s.episodes}</span>
-              </span>
-            ))}
+            {series.map((s) => {
+              const cover = seriesArt(s.id);
+              return (
+                // The landing target for FieldNotes' chips, which carry
+                // `hash={`series-${n.id}`}`. Without an id here twelve
+                // differently-labelled chips all resolved to the same unfiltered
+                // index. scroll-mt-24 keeps the chip clear of the sticky header.
+                <span
+                  key={s.id}
+                  id={`series-${s.id}`}
+                  className="flex scroll-mt-24 items-center gap-2 rounded-full border bg-card py-2 pl-2 pr-4 text-sm text-zinc-200"
+                  style={{ borderColor: `${accentOf(s.id)}55` }}
+                >
+                  {cover ? (
+                    <img
+                      src={heavy(cover.src)}
+                      alt={cover.alt}
+                      width={cover.width}
+                      height={cover.height}
+                      loading="lazy"
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="h-2 w-2 rounded-full" style={{ background: accentOf(s.id) }} />
+                  )}
+                  {s.title}
+                  <span className="text-xs text-muted">{s.episodes}</span>
+                </span>
+              );
+            })}
           </div>
         </section>
 
-        {/* the recurring cast */}
-        {cast.length > 0 && (
-          <section className="border-t border-line section-y">
-            <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">
-              The cast <span className="text-muted">· the bugs, personified</span>
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-              Every lesson stars a recurring character, the bug itself, given a face and a motive.
-              Appearances so far:
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {cast.map((c, i) => {
-                const color = CAST_COLORS[i % CAST_COLORS.length];
-                return (
-                  <span
-                    key={c.id}
-                    className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-zinc-200"
-                    style={{ borderColor: `${color}55` }}
-                  >
-                    <span className="font-display font-bold" style={{ color }}>
-                      {titleize(c.id)}
-                    </span>
-                    <span className="rounded-full border border-line px-1.5 text-[10px] text-muted">
-                      ×{c.appearances}
-                    </span>
-                  </span>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        {/* The bestiary: generated portraits for the recurring cast, replacing
+            the plain appearance-count chips this used to be (REC-9, M39: the
+            generated cast portraits replace the earlier FNV-sigil plan, and
+            the gallery IS the bestiary). */}
+        <LoopdownCast />
+
+        {/* Voice, measured (OD6 default: /loopdown), the same "a green build
+            that proves nothing" doctrine as the writing hub's own evidence
+            chips above, applied to the writing itself rather than to a
+            generator's freshness. */}
+        <section className="border-t border-line section-y">
+          <VoiceMeasured />
+        </section>
 
         {/* The other world, in one sentence. The archive grid that used to sit
             here was the same corpus /ink renders, so a reader who followed

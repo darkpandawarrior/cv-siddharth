@@ -67,10 +67,10 @@ export const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  * @property {string} id
  * @property {string} script - filename under scripts/
  * @property {string|null} npmName - the package.json script key that runs
- *   it, or null for the four manual/occasional scripts the README already
+ *   it, or null for the manual/occasional scripts the README already
  *   documents as having no alias (gen-store-archive/siblings/flavours,
- *   gen-excelsior — see check-generated.mjs's own comment on the last of
- *   those).
+ *   gen-excelsior, gen-loopdown-art — see check-generated.mjs's own comment
+ *   on gen-excelsior).
  * @property {GeneratorKind} kind
  * @property {string[]} inputs - repo-relative paths (or repo-relative paths
  *   inside a sibling checkout) this reads that ANOTHER node produces. Only
@@ -116,6 +116,14 @@ export const GENERATORS = [
   // this fixes that inconsistency rather than adding a second instance of it.
   { id: "loopdown", script: "gen-loopdown.mjs", npmName: "gen:loopdown", kind: "network",
     inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7 } },
+  // Manual/occasional, same posture as gen-starfield.mjs and gen-globe-earth.mjs
+  // below: 3.39 MB of committed webp over the-loopdown's raw.githubusercontent.com
+  // (M38), never re-encoded from anything in this repo. Exits 0 on any failure
+  // and keeps whatever heavy/loopdown/ and loopdownArt.ts already have (its own
+  // header explains why that is the one deliberate difference from loopdown and
+  // anthology just above, which exit 1). No npm alias, run by hand.
+  { id: "loopdown-art", script: "gen-loopdown-art.mjs", npmName: null, kind: "network",
+    inputs: [], outputs: ["src/data/loopdownArt.ts"], stages: {} },
   // check REMOVED for the same reason as loopdown just above: anthology.ts now
   // carries a wall-clock generatedAt.
   { id: "anthology", script: "gen-anthology.mjs", npmName: "gen:anthology", kind: "network",
