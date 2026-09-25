@@ -325,6 +325,11 @@ export const GENERATORS = [
   // admin-0 GeoJSON mirror by hand.
   { id: "globe-geo", script: "gen-globe-geo.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/world/globe/centroids.ts"], stages: {} },
+  // Manual/occasional (its own header says so): emits growthCounts.json and
+  // placements.json from GRAMMAR + the committed Ledger. Not yet wired into
+  // the build/refresh/check chains — run by hand: node scripts/gen-world-grammar.mjs
+  { id: "world-grammar", script: "gen-world-grammar.mjs", npmName: null, kind: "local",
+    inputs: [], outputs: ["src/world/v2/generated/growthCounts.json", "src/world/v2/generated/placements.json"], stages: {} },
 ];
 
 // gen-ops scans every top-level data file. Run it after their producers so
