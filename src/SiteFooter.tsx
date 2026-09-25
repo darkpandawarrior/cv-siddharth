@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { profile, projects } from "./data/profile.ts";
+import { FaqDock } from "./FaqDock.tsx";
 import { elsewhere } from "./data/elsewhere.ts";
 import { surfaces, type SurfaceGroup } from "./data/surfaces.ts";
 import { BOOKS_BEFORE_BROS, LOOPDOWN_REPO } from "./data/writingMeta.ts";
@@ -256,9 +257,16 @@ function NowChip() {
 
 export function SiteFooter() {
   const { goToSection } = useSectionNav();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <footer className="relative border-t border-line" data-spine="site-footer">
+      {/* The FAQ docks as the footer's FIRST band (spine F1, F2, H7): every
+          route with a footer gets it in the same place, by construction —
+          no per-route "mount FloatingChat after my own content" ordering
+          bug is possible once there is only one place this renders. JSON-LD
+          on / only (F14). */}
+      <FaqDock jsonLd={pathname === "/"} />
       {/* Below 640px a strict 2-col grid pairs columns by INDEX, not by
           height — Rooms+Writing (the two tallest, unrelated to each other)
           always land in the same row and set it to both their heights
