@@ -782,6 +782,12 @@ html.resume-mode .palette-trigger {
     display: none !important;
   }
 
+  /* SkyLine's fixed top hairline (P1-01b, [data-sky-line]) is a live decal,
+     not paper content — hidden here so that lane never has to touch CSS. */
+  [data-sky-line] {
+    display: none !important;
+  }
+
   /* Same reasoning for the Playground world: a WebGL canvas is a black
      rectangle on paper. .playground-canvas (Playground.tsx) is the wrapper
      around just the Canvas + WorldBoundary — NOT .playground-world itself,
