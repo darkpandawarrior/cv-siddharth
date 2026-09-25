@@ -28,10 +28,14 @@ describe("buildTleResponse", () => {
     const norads = result.objects.map((o) => o.norad);
     expect(norads).toContain("25544");
     expect(norads).toContain("48274");
-    // No other station NORAD from the 20-object stations fixture survives.
+    // No other station NORAD from the 20-object stations fixture survives,
+    // unless it independently qualifies through the visual group too (a
+    // station module bright enough to also be listed there is real
+    // CelesTrak behavior, not a filter leak).
+    const visualNorads = new Set(parseTleGroup(visualText).map((o) => o.norad));
     const stationOnlyNorads = parseTleGroup(stationsText)
       .map((o) => o.norad)
-      .filter((n) => n !== "25544" && n !== "48274");
+      .filter((n) => n !== "25544" && n !== "48274" && !visualNorads.has(n));
     for (const n of stationOnlyNorads) expect(norads).not.toContain(n);
   });
 
