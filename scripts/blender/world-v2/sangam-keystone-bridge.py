@@ -37,6 +37,9 @@ socket.* mount points the runtime instances against live data:
   - socket.deck_curve   : a Bezier the runtime samples for modules (43) lamps
   - socket.lantern      : mount for the shared brass_diya_lantern prop
   - socket.inflow.NN    : tributary mounts under the arch (tributaries().length)
+  - socket.niche.*      : 8 carved, dry niches (P2-07e audit, idea-atlas
+                          REC-1) for kmp-toolkit's zero-consumer modules,
+                          one named socket per module, no flame/emissive
 
 A separate, non-exported preview .blend assembles copies of the kit into a
 representative span, purely so the render can be judged at landmark scale.
@@ -46,6 +49,7 @@ Run with: blender --background --factory-startup --disable-autoexec
 """
 from pathlib import Path
 import math
+import subprocess
 import sys
 import bmesh
 import bpy
@@ -353,6 +357,65 @@ lamp_bm = sh.canonical_order(lamp_bm)
 lamp_post = sh.new_mesh_object('LampSocketPost', lamp_bm, palestone)
 sh.socket('socket.lamp', (0, 0, 0.30), parent=lamp_post, size=0.05)
 
+# --- dry niche: a carved, unlit alcove for a zero-consumer kmp-toolkit
+# module (idea-atlas.md#REC-1 "Sangam keystone dry niches" - "each
+# zero-consumer module ... is a carved, dry niche in the keystone piers,
+# labelled 'no consumer yet'"). Same arched-alcove vocabulary as
+# fleet-deepmal.py's NicheUnit, scaled for a pier face instead of a lamp
+# tower ring, and with no flame/emissive - REC-1's niches are dry by
+# definition, that's the whole point of the beat. The module list itself is
+# fixed (kmp-toolkit's own module set), so it is named sockets, not a
+# pitch+count instancing - the fixed-cardinality convention this file
+# already uses for socket.pier_a/_b, not the growing-count convention
+# socket.arch_curve uses for conventionPlugins. ---
+def niche_bm(n_arc=5):
+    hw, depth = 0.16, 0.09
+    spring_h = 0.12
+    r = hw
+    outline = [(-hw, 0.0)]
+    for i in range(n_arc + 1):
+        a = math.pi * i / n_arc
+        outline.append((-r * math.cos(a), spring_h + r * math.sin(a)))
+    outline.append((hw, 0.0))
+    n = len(outline)
+    bm = bmesh.new()
+    front = [bm.verts.new((x, 0, z)) for x, z in outline]
+    back = [bm.verts.new((x, -depth, z)) for x, z in outline]
+    bm.faces.new(front)
+    floor = bm.faces.new(back[::-1])
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((front[i], front[j], back[j], back[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.inset_individual(bm, faces=[floor], thickness=0.015, depth=-0.03)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.dissolve_degenerate(bm, dist=1e-5, edges=list(bm.edges))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return sh.canonical_order(bm)
+
+
+dry_niche = sh.new_mesh_object('DryNiche', niche_bm(), palestone)
+
+# kmp-toolkit's zero-consumer modules (idea-atlas.md#REC-1): device-integrity,
+# biometric, secure-store, auth, netlog, charts, store, the secrets pattern -
+# 8 named niches, 4 per pier, 2 columns x 2 courses so they read as carved
+# into the stone rather than floating on one flat plane.
+ZERO_CONSUMER_MODULES = [
+    'deviceIntegrity', 'biometric', 'secureStore', 'auth',
+    'netlog', 'charts', 'store', 'secretsPattern',
+]
+niche_sockets = []
+for idx, module_id in enumerate(ZERO_CONSUMER_MODULES):
+    # pier_x mirrors socket.pier_a/_b's own (-ARCH_R, ARCH_R) below - computed
+    # from the same constant rather than reading those sockets, since they are
+    # defined further down this file (no forward-reference needed either way).
+    pier_x = -ARCH_R if idx < 4 else ARCH_R
+    local_i = idx % 4
+    nx = pier_x + (-0.35 if local_i % 2 == 0 else 0.35)
+    nz = (1 + local_i // 2) * COURSE_H + COURSE_H * 0.5
+    niche_sockets.append(
+        sh.socket(f'socket.niche.{module_id}', (nx, -PIER_DEPTH / 2, nz), size=0.08))
+
 # --- named sockets the runtime samples for data counts ---
 # (DECK_Z is defined earlier, alongside _r_out — SpandrelWall needs it too)
 arch_curve_data = bpy.data.curves.new('socket.arch_curve', 'CURVE')
@@ -383,9 +446,28 @@ inflow_sockets = [sh.socket(f'socket.inflow.{i:02d}', (-2 + i * 1.0, -1.4, 0.05)
                   for i in range(5)]
 
 kit_objects = [voussoir, keystone, side_voussoir, side_keystone, pier_course, spandrel_wall,
-               side_spandrel_wall, cutwater, deck_segment, railing, lamp_post,
-               arch_curve, deck_curve, pier_a, pier_b, *inflow_sockets]
+               side_spandrel_wall, cutwater, deck_segment, railing, lamp_post, dry_niche,
+               arch_curve, deck_curve, pier_a, pier_b, *inflow_sockets, *niche_sockets]
 sh.export_kit(ID, kit_objects)
+
+
+def pack_glb(path):
+    """Compress with meshopt via the pinned npx gltfpack@1.2.0 call (house
+    pattern, M68: the exact pin, never added to package.json; mirrors
+    fleet-deepmal.py's pack_glb, since _shared.py is frozen per M42). This
+    lane's task 3: pack every GLB, this file's own included (it predates the
+    packing pass this lane runs on all five)."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
+
+pack_glb(sh.MODELS_OUT / f'{ID}.glb')
+print(f'{ID.upper().replace("-", "_")}_PACKED')
 
 # ---------------------------------------------------------------------------
 # Preview-only assembly: duplicate the kit prototypes into a representative
