@@ -116,7 +116,18 @@ const sharedLibs = sharedFoundation.libs.map((l) => `${l.name} (${l.role.replace
 // don't derive a "total PRs" count from its length, that's what caused the
 // original module-count-style drift. The real running total lives in the
 // candidai project's own `status` field, which projectLines already includes.
-const upstreamHighlights = openSource.slice(0, 3).map((c) => c.title).join("; ");
+//
+// Filtered to career-ops-hq's MERGED rows: openSource now also carries the
+// openMF/Mifos rows and one open career-ops PR (gen-oss-stats.mjs),
+// and both upstreamLine below and the "Recent upstream ... highlights" line
+// name career-ops specifically — an unfiltered slice(0, 3) would print an
+// openMF title (or an open PR) under a sentence that says "career-ops" and
+// "merged", which is wrong on both counts the moment either sorts first.
+const upstreamHighlights = openSource
+  .filter((c) => c.org === "career-ops-hq" && c.status === "merged")
+  .slice(0, 3)
+  .map((c) => c.title)
+  .join("; ");
 
 /**
  * A shipping-timeline entry whose detail the projects block above already
@@ -510,7 +521,11 @@ const growthFull = recentGrowth.map((g) => `- ${g.title} (${g.date}): ${g.detail
 // libraries need naming there; llms-full.txt prints the blurb and would say it
 // twice, so it does not repeat this.
 const sharedLibLines = sharedFoundation.libs.map((l) => `- ${l.name}: ${l.role} ${l.url}`).join("\n");
-const upstreamRepo = openSource[0]?.repo;
+// career-ops-hq/career-ops specifically, not openSource[0] — openSource[0]
+// used to be a safe stand-in for "the one upstream" because every row was
+// career-ops, but it now also carries openMF/Mifos rows, and the newest of
+// those (2026-09-18) sorts ahead of career-ops's own most recent merge.
+const upstreamRepo = openSource.find((c) => c.org === "career-ops-hq")?.repo;
 const upstreamLine = `- career-ops (upstream, open source at https://github.com/${upstreamRepo}): ${upstreamMergedPRs} merged PRs. Most recent: ${upstreamHighlights}.`;
 
 const publishedLessons = writing.lessons.filter((l) => l.live);

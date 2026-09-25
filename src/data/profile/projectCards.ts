@@ -217,7 +217,7 @@ export const projectCards: ProjectCard[] = [
       "MIT"
     ],
     "highlights": [
-      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.`,
+      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the mvi-core base all four apps share to modules like device-integrity and a chart renderer still finding their first consumer.`,
       `kmp-build-logic: ${projectStats.foundation.conventionPlugins} convention plugins. The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.`,
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
       `Consumed by Doori (${dooriStats.composedModules} of its ${projectModuleCounts.doori} modules), PaymentsLab-KMP (${paymentStats.composedModules} of its ${projectModuleCounts["paymentslab-kmp"]}), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.`

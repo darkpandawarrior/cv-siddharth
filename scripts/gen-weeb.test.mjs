@@ -14,13 +14,17 @@ it("expires metadata, supports forced refresh, and preserves the snapshot on fai
       export async function fetchWithTimeout() {
         appendFileSync(${JSON.stringify(join(root, "requests"))}, 'request\\n');
         if (process.env.FAIL_LOOKUP === '1') return new Response('Unavailable', {status: 503});
-        return Response.json({data: {Page: {media: [${JSON.stringify({ id: 1, title: { romaji: "Fixture", english: "Fixture" }, genres: [], relations: { edges: [] } })}]}}});
+        return Response.json({data: {Page: {media: [${JSON.stringify({ id: 1, title: { romaji: "Fixture", english: "Fixture" }, genres: ["Action"], averageScore: 70, relations: { edges: [] } })}]}}});
       }
     `);
-    writeFileSync(join(root, "data/weeb/anime.csv"), "Name,Watch Status\nFixture,Completed\n");
+    writeFileSync(
+      join(root, "data/weeb/anime.csv"),
+      "Name,Watch Status,Score /5\nFixture,Completed,⭐⭐⭐\n",
+    );
     writeFileSync(join(root, "data/weeb/manga.csv"), "Name\n");
     const cache = join(root, ".weeb-cache/anilist.json");
     const output = join(root, "src/data/weeb.ts");
+    const titlesOutput = join(root, "src/data/weebTitles.ts");
     const run = (args = [], fail = false) => spawnSync(process.execPath, [join(root, "scripts/gen-weeb.mjs"), ...args], {
       env: { ...process.env, FAIL_LOOKUP: fail ? "1" : "0" }, encoding: "utf8", timeout: 12000,
     });
@@ -39,6 +43,13 @@ it("expires metadata, supports forced refresh, and preserves the snapshot on fai
     const before = readFileSync(output, "utf8");
     expect(run(["--refresh"], true).status).toBe(1);
     expect(readFileSync(output, "utf8")).toBe(before);
+
+    // weebTitles.ts: matched + scored only, no covers.
+    const titles = readFileSync(titlesOutput, "utf8");
+    expect(titles).toContain('"name": "Fixture"');
+    expect(titles).toContain('"crowd": 70');
+    expect(titles).toContain('"mine": 3');
+    expect(titles).not.toContain('"cover"');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

@@ -22,8 +22,15 @@ import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
 import "./hero-studio.css";
 import { resourceRows } from "./data/resourceDirectory.ts";
-import { projectStatsGeneratedAt } from "./data/projectStats.ts";
+import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
+import { CiStrip } from "./CiStrip.tsx";
+import { KmpAdoption } from "./KmpAdoption.tsx";
+import { GatewayCompare } from "./GatewayCompare.tsx";
+import { RAILS_MERMAID } from "./data/rails.ts";
+import { kmpGraph } from "./data/kmpGraph.ts";
+import { touch } from "./lib/sessionRipple.ts";
+import { useDensity, markEvidenceOpened, type Density } from "./lib/density.ts";
 
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 // Derived from the registry's own showcase flag, not a hand-typed list that
@@ -37,6 +44,16 @@ const FILM_PROJECTS = new Set(projects.filter((p) => p.showcase).map((p) => p.sl
 // touches no projectStats value, so it stays out: the chip would otherwise
 // cite a source none of the numbers on screen actually came from.
 const PROJECT_STATS_METRICS = new Set(["doori", "paymentslab-kmp", "kmp-family"]);
+
+// kmp-family: one isolated node per catalog module, no edges — a plainer
+// companion to the "How it works" section's own full dependency diagram
+// (mermaidFromGraph, which also draws the includeBuild spine and so has more
+// nodes than modules.length). This one exists purely so the adoption matrix
+// above it has a node-per-module visual right next to it.
+const KMP_MODULES_MERMAID = [
+  "graph LR",
+  ...kmpGraph.modules.map((m) => `  m_${m.id.replace(/[^a-zA-Z0-9_]/g, "_")}["${m.id}"]`),
+].join("\n");
 
 // Project → its Lab Bench experiment.
 const LAB_OF: Record<string, LabKey> = {
@@ -264,6 +281,63 @@ function CaseSpine({
   );
 }
 
+/** idea-atlas.md#PATH-2: FOCUS by default; visiting two other project pages
+ *  this session offers GUIDED; opening an evidence link unlocks ANALYST; a
+ *  manual "show everything" toggle always wins. The body is a real
+ *  DOM-present `<details>` (open only for ANALYST/override) so SSR, print
+ *  and no-JS readers get the full sentence regardless of session state —
+ *  the summary line is what actually changes with density, and it's always
+ *  visible either way. */
+function EarnedDepth({
+  slug,
+  name,
+  stackCount,
+  resourceCount,
+  foundationCount,
+  connectedCount,
+}: {
+  slug: string;
+  name: string;
+  stackCount: number;
+  resourceCount: number;
+  foundationCount: number;
+  connectedCount: number;
+}) {
+  const [override, setOverride] = useState<Density | undefined>(undefined);
+  const level = useDensity(slug, override);
+  const summary =
+    level === "ANALYST"
+      ? "Analyst view"
+      : level === "GUIDED"
+        ? "You've explored other builds this session. Open the full analyst view."
+        : "Go deeper";
+  const foundationClause =
+    foundationCount > 0
+      ? `, and shares ${foundationCount} shared foundation${foundationCount === 1 ? "" : "s"} with ${connectedCount} other build${connectedCount === 1 ? "" : "s"}`
+      : "";
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-3 print:hidden" data-density={level}>
+      <details open={level === "ANALYST"}>
+        <summary className="cursor-pointer text-xs font-semibold text-accent/80 transition hover:text-accent">{summary}</summary>
+        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted">
+          Analyst view: {name} draws on {stackCount} stack entries and links to {resourceCount} outside source{resourceCount === 1 ? "" : "s"}
+          {foundationClause}.
+        </p>
+        {level !== "ANALYST" && (
+          <button
+            type="button"
+            onClick={() => setOverride("ANALYST")}
+            className="mt-2 text-xs font-semibold text-accent underline-offset-2 hover:underline"
+          >
+            Show everything
+          </button>
+        )}
+      </details>
+    </div>
+  );
+}
+
 export function ProjectDetail({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
@@ -290,6 +364,14 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
   const scrollRail = (dir: number) =>
     railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
+
+  // idea-atlas.md#PATH-1/reality-spec.md §6: every project page you land on
+  // registers in the session's own touched-path list — the earned-density
+  // GUIDED signal and /map's lit nodes both read this, and it's never
+  // persisted or sent (sessionRipple.ts's own contract).
+  useEffect(() => {
+    touch(slug);
+  }, [slug]);
 
   // Swap the browser-tab favicon to this project's brand icon while its page is
   // open; restore the site default on unmount (e.g. navigating back to #work).
@@ -500,6 +582,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
           <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
           <LessonNotes slug={slug} className="rise-in rise-in-3 mt-2" />
           <SystemStrip slug={slug} className="rise-in rise-in-3 mt-3" />
+          <div className="rise-in rise-in-3 mt-3">
+            <CiStrip slug={slug} links={project.links} />
+          </div>
         </div>
       </div>
 
@@ -526,6 +611,16 @@ export function ProjectDetail({ slug }: { slug: string }) {
           filmAnchor={FILM_PROJECTS.has(slug) ? `#showcase-${slug}` : undefined}
         />
       )}
+
+      {/* Earned density: idea-atlas.md#PATH-2 */}
+      <EarnedDepth
+        slug={slug}
+        name={project.name}
+        stackCount={project.stack.length}
+        resourceCount={resources.length}
+        foundationCount={foundations.length}
+        connectedCount={connected.length}
+      />
 
       {/* Narrated product tour — storyboarded from real screens */}
       {FILM_PROJECTS.has(slug) && (
@@ -590,7 +685,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {d?.metrics && d.metrics.length > 0 && (
         <section className="border-b border-line bg-surface">
           {PROJECT_STATS_METRICS.has(slug) && (
-            <div className="mx-auto flex max-w-5xl justify-end px-6 pt-4">
+            <div className="mx-auto flex max-w-5xl justify-end px-6 pt-4" onClick={markEvidenceOpened}>
               <EvidenceChip
                 file="projectStats.ts"
                 stamp={projectStatsGeneratedAt}
@@ -724,6 +819,62 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   </ul>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* kmp-family: the measured module-adoption matrix, idea-atlas.md#I4 */}
+      {slug === "kmp-family" && (
+        <section className="border-t border-line bg-surface">
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+              <SectionHeader eyebrow="adoption" title="Which app substituted which module" />
+              <div onClick={markEvidenceOpened}>
+                <EvidenceChip file="projectStats.ts" stamp={projectStatsGeneratedAt} source="repo settings.gradle.kts + README" />
+              </div>
+            </div>
+            <div className="reveal panel card-elevated p-4">
+              <KmpAdoption />
+            </div>
+            <div className="reveal panel card-elevated mt-8 p-5">
+              <h3 className="mb-4 text-sm font-semibold text-zinc-200">Every catalog module, one node each</h3>
+              <Mermaid code={KMP_MODULES_MERMAID} id={`mmd-${slug}-modules`} accent={t?.accent} card={t?.card} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* paymentslab-kmp: compare two cataloged gateways, and the rails they route to */}
+      {slug === "paymentslab-kmp" && (
+        <section className="border-t border-line bg-surface">
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <SectionHeader eyebrow="gateways" title="Compare two providers" />
+            <div className="reveal">
+              <GatewayCompare />
+            </div>
+            <div className="reveal panel card-elevated mt-8 p-5">
+              <h3 className="mb-4 text-sm font-semibold text-zinc-200">One contract, five money-movement rails</h3>
+              <Mermaid code={RAILS_MERMAID} id={`mmd-${slug}-rails`} accent={t?.accent} card={t?.card} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* doori: the Room schema version the app is actually on right now */}
+      {slug === "doori" && (
+        <section className="border-t border-line bg-surface">
+          <div className="section-y mx-auto max-w-5xl px-6">
+            <div className="reveal panel card-elevated flex flex-wrap items-center justify-between gap-4 p-6">
+              <div>
+                <p className="brief-label">Local database</p>
+                <p className="font-display mt-2 text-3xl font-bold text-accent">
+                  {projectStats.doori.schemaVersion} <span className="text-sm font-normal text-muted">schema version</span>
+                </p>
+              </div>
+              <div onClick={markEvidenceOpened}>
+                <EvidenceChip file="projectStats.ts" stamp={projectStatsGeneratedAt} source="repo settings.gradle.kts + README" />
+              </div>
             </div>
           </div>
         </section>

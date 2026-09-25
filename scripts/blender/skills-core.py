@@ -5,6 +5,24 @@ is authored at the same 2.35 world-unit radius. Run with Blender
 from pathlib import Path
 import bmesh
 import bpy
+import subprocess
+
+def compress_with_meshopt(path):
+    """Compress the exported GLB with meshopt via a dev-only npx binary
+    (gltfpack is never added to package.json). -cc is the higher
+    compression ratio; -kn keeps named nodes (e.g. blueprint-instrument's
+    'needle') attached and lookup-able by name. gltfpack is deterministic
+    given identical input, so this does not break the two-runs-identical
+    gate; write to a sibling temp file first since gltfpack cannot read and
+    write the same path."""
+    path = Path(path)
+    tmp = path.with_suffix('.tmp.glb')
+    subprocess.run(
+        ['npx', '-y', 'gltfpack@1.2.0', '-cc', '-kn', '-i', str(path), '-o', str(tmp)],
+        check=True,
+    )
+    tmp.replace(path)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / '.showcase-work/blender-20260923/skills-core'
@@ -29,12 +47,15 @@ silver = material('Brushed titanium', (.31, .38, .36), .82, .28)
 
 RADIUS = 2.35
 
+# Silhouette pass: one more subdivision level (20 -> 320 base facets) reads
+# as a proper cut gem rather than a coarse bevelled ball, while a smaller
+# per-facet inset keeps each panel crisp instead of shrinking to a point.
 bm = bmesh.new()
-bmesh.ops.create_icosphere(bm, subdivisions=1, radius=RADIUS)
+bmesh.ops.create_icosphere(bm, subdivisions=2, radius=RADIUS)
 # Gem-cut: inset every facet and push its centre in slightly, so each face
 # reads as a cut panel with a bevelled surround rather than a flat smooth
 # ball.
-bmesh.ops.inset_individual(bm, faces=list(bm.faces), thickness=RADIUS * .07, depth=-RADIUS * .018)
+bmesh.ops.inset_individual(bm, faces=list(bm.faces), thickness=RADIUS * .05, depth=-RADIUS * .012)
 bm.faces.ensure_lookup_table()
 
 mesh = bpy.data.meshes.new('SkillsCore')
@@ -53,3 +74,4 @@ for poly in mesh.polygons:
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'skills-core.blend'))
 bpy.ops.export_scene.gltf(filepath=str(ROOT / 'public/models/skills-core.glb'), export_format='GLB', export_yup=True)
 print('SKILLS_CORE_EXPORTED')
+compress_with_meshopt(ROOT / 'public/models/skills-core.glb')

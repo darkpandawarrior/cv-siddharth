@@ -41,42 +41,64 @@ export interface Contribution {
   url: string;
   status: "merged" | "open" | "closed";
   date: string;
+  /** GitHub org the repo sits under — career-ops-hq and openMF (Mifos) today.
+   *  Consumers group by this, never by parsing `repo`, so the career-ops
+   *  heading can never accidentally claim an openMF/Mifos row. */
+  org: string;
 }
 
-// Real public open-source contributions — merged PRs to career-ops, a public OSS project.
+// Real public open-source contributions — PRs against career-ops (a public
+// OSS project) and openMF/Mifos (three repos he has actually opened a PR
+// against, not every repo he has forked).
 // See https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior
 /**
- * Merged PRs upstream, as the live GitHub search reports it.
+ * Merged PRs upstream to career-ops-hq/career-ops specifically, as `gh pr
+ * list` reports it. openMF/Mifos has its own total, `mifosMergedPRs` in
+ * careerOpsUpstream.ts, because the two upstreams are unrelated projects and
+ * a single combined count would let one hide the other's drift.
  *
- * NOT openSource.length. That array is a CURATED subset — 17 entries against
- * 24 merged — and candidaiNumbers.test.ts documents shorter as expected.
- * ResumeView used the array length and so printed 17 while every other
- * surface on the site said 18, which is the kind of one-off disagreement a
- * reader notices and an owner never does.
+ * NOT openSource.filter(career-ops).length. That's a CURATED subset — 17
+ * entries against 24 merged — and candidaiNumbers.test.ts documents shorter
+ * as expected. ResumeView used the array length and so printed 17 while every
+ * other surface on the site said 18, which is the kind of one-off
+ * disagreement a reader notices and an owner never does.
  *
- * Refreshed by the upstream-stats generator alongside the nine other
- * places this number appears.
+ * Refreshed by scripts/gen-oss-stats.mjs alongside upstreamStats and
+ * mifosMergedPRs.
  */
 export const upstreamMergedPRs = 24;
 
 export const openSource: Contribution[] = [
-  { repo: "career-ops-hq/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/career-ops-hq/career-ops/pull/2656", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/career-ops-hq/career-ops/pull/2639", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "fix(agent-inbox): concurrent adds silently dropped queued requests", url: "https://github.com/career-ops-hq/career-ops/pull/2614", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "fix(liveness): a rate-limited posting was classified expired, not uncertain", url: "https://github.com/career-ops-hq/career-ops/pull/2613", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate", url: "https://github.com/career-ops-hq/career-ops/pull/2612", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "feat(rank): opt-in LLM relevance re-ranker for pipeline.md", url: "https://github.com/career-ops-hq/career-ops/pull/2579", status: "merged", date: "2026-08-12" },
-  { repo: "career-ops-hq/career-ops", title: "fix(cv): Korean and Traditional Chinese CVs had no font rule", url: "https://github.com/career-ops-hq/career-ops/pull/2616", status: "merged", date: "2026-08-11" },
-  { repo: "career-ops-hq/career-ops", title: "fix(states): aliases the engine accepts were missing from states.yml", url: "https://github.com/career-ops-hq/career-ops/pull/2615", status: "merged", date: "2026-08-11" },
-  { repo: "career-ops-hq/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/career-ops-hq/career-ops/pull/2590", status: "merged", date: "2026-08-07" },
-  { repo: "career-ops-hq/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/career-ops-hq/career-ops/pull/2589", status: "merged", date: "2026-08-07" },
-  { repo: "career-ops-hq/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/career-ops-hq/career-ops/pull/2588", status: "merged", date: "2026-08-07" },
-  { repo: "career-ops-hq/career-ops", title: "fix(dedup): distinct non-Latin companies merged into one, deleting a row", url: "https://github.com/career-ops-hq/career-ops/pull/2587", status: "merged", date: "2026-08-07" },
-  { repo: "career-ops-hq/career-ops", title: "fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter", url: "https://github.com/career-ops-hq/career-ops/pull/2586", status: "merged", date: "2026-08-07" },
-  { repo: "career-ops-hq/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/career-ops-hq/career-ops/pull/1472", status: "merged", date: "2026-07-03" },
-  { repo: "career-ops-hq/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/career-ops-hq/career-ops/pull/1186", status: "merged", date: "2026-06-23" },
-  { repo: "career-ops-hq/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1185", status: "merged", date: "2026-06-23" },
-  { repo: "career-ops-hq/career-ops", title: "feat(providers): add BambooHR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1141", status: "merged", date: "2026-06-20" },
+  { repo: "career-ops-hq/career-ops", title: "fix(deps): make js-yaml imports work on both 4.x and 5.x", url: "https://github.com/career-ops-hq/career-ops/pull/2656", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(scan): take the shared lock for scan-history.tsv appends", url: "https://github.com/career-ops-hq/career-ops/pull/2639", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(agent-inbox): concurrent adds silently dropped queued requests", url: "https://github.com/career-ops-hq/career-ops/pull/2614", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(liveness): a rate-limited posting was classified expired, not uncertain", url: "https://github.com/career-ops-hq/career-ops/pull/2613", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate", url: "https://github.com/career-ops-hq/career-ops/pull/2612", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "feat(rank): opt-in LLM relevance re-ranker for pipeline.md", url: "https://github.com/career-ops-hq/career-ops/pull/2579", status: "merged", date: "2026-08-12", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv): Korean and Traditional Chinese CVs had no font rule", url: "https://github.com/career-ops-hq/career-ops/pull/2616", status: "merged", date: "2026-08-11", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(states): aliases the engine accepts were missing from states.yml", url: "https://github.com/career-ops-hq/career-ops/pull/2615", status: "merged", date: "2026-08-11", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(web): states.yml cached for the process lifetime, so core updates go unseen", url: "https://github.com/career-ops-hq/career-ops/pull/2590", status: "merged", date: "2026-08-07", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(scan): --company/--posted-after/--posted-before ignored in =value form", url: "https://github.com/career-ops-hq/career-ops/pull/2589", status: "merged", date: "2026-08-07", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cv): $-patterns in candidate text splice the template into the CV", url: "https://github.com/career-ops-hq/career-ops/pull/2588", status: "merged", date: "2026-08-07", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(dedup): distinct non-Latin companies merged into one, deleting a row", url: "https://github.com/career-ops-hq/career-ops/pull/2587", status: "merged", date: "2026-08-07", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter", url: "https://github.com/career-ops-hq/career-ops/pull/2586", status: "merged", date: "2026-08-07", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "feat(agent-inbox): queue requests for the next session", url: "https://github.com/career-ops-hq/career-ops/pull/1472", status: "merged", date: "2026-07-03", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "fix(dashboard): rewrite only the Status cell on status update", url: "https://github.com/career-ops-hq/career-ops/pull/1186", status: "merged", date: "2026-06-23", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "feat(providers): add Breezy HR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1185", status: "merged", date: "2026-06-23", org: "career-ops-hq" },
+  { repo: "career-ops-hq/career-ops", title: "feat(providers): add BambooHR provider", url: "https://github.com/career-ops-hq/career-ops/pull/1141", status: "merged", date: "2026-06-20", org: "career-ops-hq" },
+  // Still open, not merged — see gen-oss-stats.mjs. Listed because it
+  // is real, current, in-flight work, and left labelled "open" rather than
+  // hidden: D5 in trove-map.md defaults to showing open Mifos/career-ops PRs
+  // with their real status.
+  { repo: "career-ops-hq/career-ops", title: "fix(apply): the code-fence strip reached inside JSON string values", url: "https://github.com/career-ops-hq/career-ops/pull/3302", status: "open", date: "2026-08-25", org: "career-ops-hq" },
+  // openMF/Mifos: a separate, unrelated upstream (the Mifos/openMF Kotlin
+  // Multiplatform banking-app template and its CI tooling), not career-ops.
+  // Every row below carries org: "openMF" so no consumer can misgroup it
+  // under the career-ops heading.
+  { repo: "openMF/kmp-project-template", title: "fix(core-base/common): un-swap default and io in the Android dispatchers", url: "https://github.com/openMF/kmp-project-template/pull/298", status: "merged", date: "2026-09-18", org: "openMF" },
+  { repo: "openMF/kmp-project-template", title: "fix(ci): guard the empty successful_tasks expansion in ci-prepush.sh", url: "https://github.com/openMF/kmp-project-template/pull/299", status: "merged", date: "2026-09-18", org: "openMF" },
+  { repo: "openMF/mifos-passcode-cmp", title: "fix(passcode): keep the chosen length when a 6-digit confirmation fails", url: "https://github.com/openMF/mifos-passcode-cmp/pull/82", status: "open", date: "2026-08-31", org: "openMF" },
+  { repo: "openMF/mifos-x-actionhub", title: "fix(deployment-status): declare appstore_issuer_id as a secret", url: "https://github.com/openMF/mifos-x-actionhub/pull/89", status: "open", date: "2026-08-31", org: "openMF" },
 ];
 
 export interface GrowthItem {

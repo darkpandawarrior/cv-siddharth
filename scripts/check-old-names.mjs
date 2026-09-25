@@ -91,13 +91,55 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // see it, so a boundary there would only add noise.
 const OLD_NAME_RE = /\bMileway\b|\bKursi\b|\bHireSignal\b|\bDEADLOCK\b|PaymentsLab(?!-KMP)/;
 
-// Pass 2: case-insensitive lowercase-slug net. No real-English collision on
-// any of these four, so any case is in scope; deliberately does NOT include
-// deadlock (handled separately below, since it collides with the CS term).
-// `-?kmp` (hyphen optional): excludes both the hyphenated current name
-// (`PaymentsLab-KMP`) and its camelCase form (`paymentsLabKmp`, a real
-// property/variable name in this codebase).
-const LOWER_SLUG_RE = /\b(mileway|kursi|hiresignal)\b|paymentslab(?!-?kmp)/gi;
+// Pass 2: case-insensitive lowercase-slug net, DERIVED from vercel.json's
+// own /project/<old> -> /project/<new> redirects (SH-4, self-healing-spec.md
+// #4 "the old-name guard": "rename map derived from the redirects in
+// vercel.json" — this is the one place the renames are already recorded, so
+// there is no second hand-kept list; adding a new redirect there extends
+// this net with no code change here). No real-English collision on any slug
+// vercel.json actually redirects, so any case is in scope; `deadlock` is
+// deliberately excluded (handled separately below, since it collides with
+// the CS term — see findDeadlockSlugMatch).
+export function deriveOldSlugs(vercelPath = join(root, "vercel.json")) {
+  let redirects;
+  try {
+    redirects = JSON.parse(readFileSync(vercelPath, "utf8")).redirects ?? [];
+  } catch {
+    return new Map();
+  }
+  const PROJECT_RE = /^\/project\/([a-z0-9-]+)$/;
+  const map = new Map(); // old slug (lower) -> new slug (lower); first redirect wins
+  for (const r of redirects) {
+    const oldMatch = PROJECT_RE.exec(r.source ?? "");
+    const newMatch = PROJECT_RE.exec(r.destination ?? "");
+    if (!oldMatch || !newMatch) continue;
+    const oldSlug = oldMatch[1].toLowerCase();
+    const newSlug = newMatch[1].toLowerCase();
+    if (oldSlug === newSlug || map.has(oldSlug)) continue;
+    map.set(oldSlug, newSlug);
+  }
+  return map;
+}
+
+// `-?<suffix>` (hyphen optional) when the new slug is the old one plus a
+// suffix (`paymentslab` -> `paymentslab-kmp`): excludes both the hyphenated
+// current name and its camelCase form (`paymentsLabKmp`, a real
+// property/variable name in this codebase) — the same shape the hand-kept
+// PaymentsLab(?!-KMP) exception encoded, now derived instead of hardcoded.
+export function buildLowerSlugRe(oldToNew) {
+  const parts = [];
+  for (const [oldSlug, newSlug] of oldToNew) {
+    if (oldSlug === "deadlock") continue; // pass 3 owns this one, narrowly
+    if (newSlug.startsWith(oldSlug + "-")) {
+      parts.push(`${oldSlug}(?!-?${newSlug.slice(oldSlug.length + 1)})`);
+    } else {
+      parts.push(`\\b${oldSlug}\\b`);
+    }
+  }
+  return new RegExp(parts.join("|") || "(?!)", "gi"); // (?!) never matches, for an empty map
+}
+
+const LOWER_SLUG_RE = buildLowerSlugRe(deriveOldSlugs());
 
 function findLowerSlugMatch(line) {
   LOWER_SLUG_RE.lastIndex = 0;
@@ -245,10 +287,18 @@ const HISTORICAL_MEASUREMENT_RE = /\bwas\s+[\d,]+\s+before\b|\bdied\s+the\s+mome
 const PATH_BOUNDARY_CHARS = new Set(['"', "`", "/"]);
 const isPathBoundary = (ch) => PATH_BOUNDARY_CHARS.has(ch);
 
+// A URL under github.com/darkpandawarrior/: GitHub redirects a renamed
+// repo's old URL on its own, so a link using the pre-rename repo name
+// breaks nothing and churns no history worth chasing (self-healing-spec.md
+// #4 "the old-name guard").
+const GITHUB_REPO_URL_RE = /github\.com\/darkpandawarrior\//;
+
 function isAllowed(file, line) {
   if (RENAME_RECORD_RE.test(line)) return true;
   if (file === "vercel.json" && line.includes('"source":')) return true;
-  if (line.includes("claim-audit:allow")) return true;
+  if (file.startsWith("CHANGELOG")) return true;
+  if (line.includes("claim-audit:allow") || line.includes("old-name:allow")) return true;
+  if (GITHUB_REPO_URL_RE.test(line)) return true;
   // The scanner's own pattern, wherever it is inline-quoted (this file, its
   // test, or a spec asserting a surface never leaks an old name): the
   // negative lookahead syntax only ever appears as the pattern's source.

@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { previous, shrinkage, uniqueRecords, engagementOf } from "./gen-loopdown.mjs";
+import { previous, shrinkage, uniqueRecords, engagementOf, devtoEngagementFor, fetchDevtoEngagement } from "./gen-loopdown.mjs";
 
 /**
  * The guard that stops a successful-but-empty registry fetch from blanking the
@@ -78,6 +78,56 @@ describe("engagementOf", () => {
       medium: "https://medium.com/p/1",
       linkedin: "https://linkedin.com/posts/1",
     });
+  });
+});
+
+describe("devtoEngagementFor", () => {
+  it("uses fresh numbers when dev.to has this URL", () => {
+    const byUrl = new Map([["https://dev.to/x/1", { reactions: 12, comments: 3 }]]);
+    expect(devtoEngagementFor("https://dev.to/x/1", byUrl, { reactions: 1, comments: 0 })).toEqual({
+      devto: { reactions: 12, comments: 3 },
+      engagementStale: false,
+    });
+  });
+
+  it("keeps the committed numbers and marks them stale when the fetch failed (byUrl is null)", () => {
+    expect(devtoEngagementFor("https://dev.to/x/1", null, { reactions: 9, comments: 2 })).toEqual({
+      devto: { reactions: 9, comments: 2 },
+      engagementStale: true,
+    });
+  });
+
+  it("keeps the committed numbers and marks them stale when dev.to no longer lists this URL", () => {
+    const byUrl = new Map(); // fetch succeeded, this article just isn't in it
+    expect(devtoEngagementFor("https://dev.to/x/1", byUrl, { reactions: 9, comments: 2 })).toEqual({
+      devto: { reactions: 9, comments: 2 },
+      engagementStale: true,
+    });
+  });
+
+  it("has nothing to report for a lesson with no dev.to URL and no prior numbers", () => {
+    expect(devtoEngagementFor(undefined, new Map(), undefined)).toEqual({ devto: undefined, engagementStale: false });
+  });
+});
+
+describe("fetchDevtoEngagement", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("maps a mocked dev.to response to reactions/comments keyed by canonical URL, exit-safe on success", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ url: "https://dev.to/x/1", public_reactions_count: 12, comments_count: 3 }],
+      }),
+    );
+    const byUrl = await fetchDevtoEngagement();
+    expect(byUrl.get("https://dev.to/x/1")).toEqual({ reactions: 12, comments: 3 });
+  });
+
+  it("returns null on a mocked failure instead of throwing, so the caller keeps committed numbers", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    await expect(fetchDevtoEngagement()).resolves.toBeNull();
   });
 });
 

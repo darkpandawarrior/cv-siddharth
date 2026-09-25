@@ -28,6 +28,14 @@ describe("storyMap: every registry project has a constellation node", () => {
     expect(projectNodes).toContain("kmp-family");
   });
 
+  // T7: the two nodes trove-map.md adds on top of the registry projects,
+  // real public proof (merged upstream PRs) and the systems this site itself
+  // runs on, both previously missing from the constellation.
+  it("also carries the oss and ops nodes", () => {
+    expect(ids).toContain("oss");
+    expect(ids).toContain("ops");
+  });
+
   it("gives every node a unique id", () => {
     const dupes = NODES.map((n) => n.id).filter((id, i, all) => all.indexOf(id) !== i);
     expect(dupes).toEqual([]);

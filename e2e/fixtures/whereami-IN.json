@@ -1,0 +1,4 @@
+{
+  "_note": "handleWhereami's response body when x-vercel-ip-country is IN — used to route-mock /api/whereami in e2e specs.",
+  "country": "IN"
+}

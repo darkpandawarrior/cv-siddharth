@@ -23,6 +23,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
+import { openSource } from "../src/data/profile/openSource.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(root, "src/data/timeline.ts");
 
@@ -155,10 +156,22 @@ async function openSourceLane() {
     }
   }
   if (counted === 0) return null;
+
+  // Merged upstream PRs become milestones only — never added to `months`,
+  // which stays the live GitHub contribution calendar above. Folding them
+  // into the ground height would double-count the same days (a merged PR is
+  // itself a contribution the calendar already counted) and inflate river
+  // width for no real second signal; a milestone marker is drive-past
+  // context, not more height.
+  const milestones = openSource
+    .filter((c) => c.status === "merged")
+    .map((c) => ({ ym: c.date.slice(0, 7), lane: "opensource", kind: "oss", label: `${c.repo} ${c.title}` }))
+    .filter((m) => m.ym in months);
+
   return {
     key: "opensource", label: "open source", unit: "public contributions", resolution: "month",
     source: "GitHub public contribution calendar, PUBLIC repos only; the Jugnoo and Dice work is on private company repos and is deliberately not counted here",
-    months, total: counted,
+    months, total: counted, milestones,
   };
 }
 

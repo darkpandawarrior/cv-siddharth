@@ -51,8 +51,8 @@ export const NODES: StoryNode[] = [
     "r": 14,
     "color": "#3ddc84",
     "target": "#project/doori",
-    "x": 0.6128,
-    "y": 0.2618
+    "x": 0.5995,
+    "y": 0.2567
   },
   {
     "id": "gaddi",
@@ -61,8 +61,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/gaddi",
-    "x": 0.7033,
-    "y": 0.3228
+    "x": 0.6838,
+    "y": 0.3044
   },
   {
     "id": "paymentslab-kmp",
@@ -71,8 +71,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/paymentslab-kmp",
-    "x": 0.7535,
-    "y": 0.411
+    "x": 0.7402,
+    "y": 0.3758
   },
   {
     "id": "candidai",
@@ -81,8 +81,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/candidai",
-    "x": 0.7535,
-    "y": 0.509
+    "x": 0.76,
+    "y": 0.46
   },
   {
     "id": "stutter",
@@ -91,8 +91,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/stutter",
-    "x": 0.7033,
-    "y": 0.5972
+    "x": 0.7402,
+    "y": 0.5442
   },
   {
     "id": "portfolio",
@@ -101,8 +101,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/portfolio",
-    "x": 0.6128,
-    "y": 0.6582
+    "x": 0.6838,
+    "y": 0.6156
   },
   {
     "id": "sinc-p",
@@ -111,8 +111,8 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#3ddc84",
     "target": "#project/sinc-p",
-    "x": 0.5,
-    "y": 0.68
+    "x": 0.5995,
+    "y": 0.6633
   },
   {
     "id": "kmp-family",
@@ -121,8 +121,8 @@ export const NODES: StoryNode[] = [
     "r": 13,
     "color": "#3ddc84",
     "target": "#project/kmp-family",
-    "x": 0.3872,
-    "y": 0.6582
+    "x": 0.5,
+    "y": 0.68
   },
   {
     "id": "experience",
@@ -130,8 +130,8 @@ export const NODES: StoryNode[] = [
     "r": 11,
     "color": "#5ee6ff",
     "target": "#experience",
-    "x": 0.2967,
-    "y": 0.5972
+    "x": 0.4005,
+    "y": 0.6633
   },
   {
     "id": "skills",
@@ -139,8 +139,8 @@ export const NODES: StoryNode[] = [
     "r": 11,
     "color": "#5ee6ff",
     "target": "#skills",
-    "x": 0.2465,
-    "y": 0.509
+    "x": 0.3162,
+    "y": 0.6156
   },
   {
     "id": "the-loopdown",
@@ -149,8 +149,8 @@ export const NODES: StoryNode[] = [
     "r": 15,
     "color": "#8f74ff",
     "target": "#loopdown",
-    "x": 0.2465,
-    "y": 0.411
+    "x": 0.2598,
+    "y": 0.5442
   },
   {
     "id": "books",
@@ -159,8 +159,8 @@ export const NODES: StoryNode[] = [
     "r": 13,
     "color": "#f0883e",
     "target": "https://booksbeforebros.wordpress.com/",
-    "x": 0.1073,
-    "y": 0.3955
+    "x": 0.1225,
+    "y": 0.5725
   },
   {
     "id": "chat",
@@ -169,8 +169,8 @@ export const NODES: StoryNode[] = [
     "r": 13,
     "color": "#5ee6ff",
     "target": "chat",
-    "x": 0.2967,
-    "y": 0.3228
+    "x": 0.24,
+    "y": 0.46
   },
   {
     "id": "blueprint",
@@ -179,12 +179,31 @@ export const NODES: StoryNode[] = [
     "r": 12,
     "color": "#f0883e",
     "target": "#blueprint",
-    "x": 0.3872,
-    "y": 0.2618
+    "x": 0.2598,
+    "y": 0.3758
+  },
+  {
+    "id": "oss",
+    "label": "Open source",
+    "sub": "26 merged upstream",
+    "r": 12,
+    "color": "#5ee6ff",
+    "target": "#source",
+    "x": 0.3162,
+    "y": 0.3044
+  },
+  {
+    "id": "ops",
+    "label": "Systems I run",
+    "r": 11,
+    "color": "#5ee6ff",
+    "target": "#ops",
+    "x": 0.4005,
+    "y": 0.2567
   }
 ];
 
-export const EDGES: [string, string][] = [["sid","work"],["sid","doori"],["sid","gaddi"],["sid","paymentslab-kmp"],["sid","candidai"],["sid","stutter"],["sid","portfolio"],["sid","sinc-p"],["sid","kmp-family"],["sid","experience"],["sid","skills"],["sid","the-loopdown"],["sid","chat"],["doori","the-loopdown"],["work","the-loopdown"],["books","the-loopdown"],["doori","gaddi"],["gaddi","paymentslab-kmp"],["paymentslab-kmp","candidai"],["candidai","stutter"],["kmp-family","doori"],["kmp-family","gaddi"],["kmp-family","paymentslab-kmp"],["kmp-family","candidai"],["kmp-family","portfolio"],["chat","the-loopdown"],["chat","work"],["sid","blueprint"],["gaddi","portfolio"],["doori","portfolio"],["paymentslab-kmp","portfolio"],["stutter","portfolio"]];
+export const EDGES: [string, string][] = [["sid","work"],["sid","doori"],["sid","gaddi"],["sid","paymentslab-kmp"],["sid","candidai"],["sid","stutter"],["sid","portfolio"],["sid","sinc-p"],["sid","kmp-family"],["sid","experience"],["sid","skills"],["sid","the-loopdown"],["sid","chat"],["doori","the-loopdown"],["work","the-loopdown"],["books","the-loopdown"],["doori","gaddi"],["gaddi","paymentslab-kmp"],["paymentslab-kmp","candidai"],["candidai","stutter"],["kmp-family","doori"],["kmp-family","gaddi"],["kmp-family","paymentslab-kmp"],["kmp-family","candidai"],["kmp-family","portfolio"],["chat","the-loopdown"],["chat","work"],["sid","blueprint"],["sid","oss"],["sid","ops"],["candidai","oss"],["gaddi","portfolio"],["doori","portfolio"],["paymentslab-kmp","portfolio"],["stutter","portfolio"]];
 
 /** "measured" edges are read straight from systemGraph.ts's own runs-here
  *  facts; "declared" edges are curated wiring — the same distinction
@@ -218,6 +237,9 @@ export const EDGE_KIND: Record<string, "measured" | "declared"> = {
   "chat->the-loopdown": "declared",
   "chat->work": "declared",
   "sid->blueprint": "declared",
+  "sid->oss": "declared",
+  "sid->ops": "declared",
+  "candidai->oss": "declared",
   "gaddi->portfolio": "measured",
   "doori->portfolio": "measured",
   "paymentslab-kmp->portfolio": "measured",
