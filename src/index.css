@@ -340,13 +340,19 @@ body {
    on top of "next room" / freshness / "latest note" links on several
    routes. Stacked into the right launcher lane instead, directly above the
    chat FAB (fixed bottom-6 right-6, 56px tall) — 1.5rem + 3.5rem + 0.5rem
-   gap = 5.5rem clears it exactly. Left untouched below 768: the mobile
-   utility-row placement above already keeps it clear of content there. */
+   gap = 5.5rem clears it exactly against the FAB alone, but two full-bleed
+   routes park their own bottom-right furniture in that exact gap: Blueprint
+   Room's own orbit/streets pair (SPINE_STRICT measured bottom 810.5px, i.e.
+   89.5px up from a 900px viewport) and Ops's runway table, which starts at
+   735px (165px up) and runs off the bottom of the page. 11rem (176px) clears
+   both with margin, measured against both routes directly rather than
+   guessed. Left untouched below 768: the mobile utility-row placement above
+   already keeps it clear of content there. */
 @media screen and (min-width: 768px) {
   .palette-trigger {
     left: auto;
     right: 1.5rem;
-    bottom: 5.5rem;
+    bottom: 11rem;
   }
 }
 
@@ -3426,6 +3432,30 @@ html.resume-mode .palette-trigger {
   .anomaly-rail-link {
     display: none;
   }
+  /* display:none only removes the individual link bands — the outer
+     24px-wide, full-height .anomaly-rail box (and .anomaly-rail-nav filling
+     it) still has geometry and default pointer-events:auto, so it kept
+     stealing taps site-wide even with no visible target inside it. The rail
+     is decorative-only below 768 (OD-S3), so make the whole strip
+     pass-through; pointer-events:none cascades to .anomaly-rail-nav and
+     .anomaly-rail-canvas underneath. */
+  .anomaly-rail {
+    pointer-events: none;
+  }
+}
+
+/* route-header budget (P1-01a debt): /compose stacks three toolbar rows
+   inside one <header> (nav + "examples" presets + the AI scenario builder,
+   src/ComposePlayground.tsx) and measured 157px tall at 1440 against the
+   spine registry's 150px route-header ceiling — src/rooms.tsx's seven
+   sticky headers are one row and clear it easily, this is the one exception.
+   ComposePlayground.tsx isn't owned by this lane, so the fix lives here as a
+   CSS trim of the two extra rows' vertical padding rather than a JSX change;
+   the selectors below are this component's own unique class combinations
+   (verified against every other header in the tree) so nothing else shifts. */
+header.z-10.border-b.border-line > .border-b.border-line.bg-ink\/60 > div,
+header.z-10.border-b.border-line > .border-b.border-line.bg-void\/40 > div {
+  padding-block: 0.5rem;
 }
 
 /* The rail's expansion — same trace as the rail, full-bleed. Only mounted
