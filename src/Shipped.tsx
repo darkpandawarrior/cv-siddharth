@@ -8,6 +8,7 @@ import {
   fleetStats,
   storeGeneratedAt,
 } from "./data/store.ts";
+import { fleetByEra } from "./data/fleetByEra.ts";
 import { AppIcon } from "./ShippedTile.tsx";
 import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
@@ -144,6 +145,31 @@ export function Shipped() {
             and do not, so they are not counted.
           </p>
           <ShippedTimeline />
+        </section>
+
+        {/* ── Fleet by era ──────────────────────────────────────────────── */}
+        <section id="fleet-era" className="mt-14">
+          <h2 className="font-display text-xl font-bold tracking-tight">
+            The fleet, by era
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
+            Each app&rsquo;s last Play update fell in one of the eras below. That is what a
+            client&rsquo;s current build date can honestly say. It is a timestamp, not a byline:
+            an update after he left an employer is not work of his, and this strip never implies
+            otherwise.
+          </p>
+          <ul className="mt-6 flex flex-wrap gap-3">
+            {fleetByEra.map((era) => (
+              <li
+                key={era.key}
+                className={`rounded-xl border px-4 py-3 ${era.key === "unmeasured" ? "border-line opacity-50" : "border-line"}`}
+              >
+                <p className="font-display text-2xl font-bold tabular-nums text-accent">{era.count}</p>
+                <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted">{era.label}</p>
+                {era.period && <p className="mt-0.5 font-mono text-xs text-muted">{era.period}</p>}
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="mt-14">
