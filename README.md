@@ -285,7 +285,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Thirty-two `gen:` scripts over forty-four generator files. The ones you
+Thirty-three `gen:` scripts over forty-four generator files. The ones you
 will actually reach for:
 
 ```bash
@@ -309,7 +309,7 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Twelve more generator files exist with no `npm run` script, deliberately: each
+Eleven more generator files exist with no `npm run` script, deliberately: each
 needs something a build machine doesn't have. `check-generated.mjs`'s header
 carries the same reasoning; this is that reasoning where a README reader can
 find it.
@@ -351,11 +351,12 @@ find it.
 - `gen-globe-geo.mjs`. Manual and occasional: bakes country centroids from
   Natural Earth's admin-0 GeoJSON mirror into `src/world/globe/centroids.ts`.
   Same posture as `gen-globe-earth.mjs` above.
-- `gen-loopdown-art.mjs`. Manual and occasional: pulls the Loopdown's 13 cast
-  portraits and 8 series covers (3.39 MB) from the-loopdown's own
-  `lore/assets/manifest.json` over `raw.githubusercontent.com`, never the
-  local checkout. A failed fetch exits 0 and keeps whatever `heavy/loopdown/`
-  and `loopdownArt.ts` already committed.
+
+`gen-loopdown-art.mjs` (`gen:loopdown-art`) runs in the refresh stage now: it
+pulls the Loopdown's 13 cast portraits and 8 series covers (3.39 MB) from
+the-loopdown's own `lore/assets/manifest.json` over `raw.githubusercontent.com`,
+never the local checkout. A failed fetch exits 0 and keeps whatever
+`heavy/loopdown/` and `loopdownArt.ts` already committed.
 
 </details>
 

@@ -237,7 +237,7 @@ describe("the README's numbers are the repo's numbers", () => {
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
       28: "Twenty-eight", 29: "Twenty-nine", 30: "Thirty", 31: "Thirty-one",
-      32: "Thirty-two",
+      32: "Thirty-two", 33: "Thirty-three",
     };
     const fileWords: Record<number, string> = {
       24: "twenty-four", 25: "twenty-five", 26: "twenty-six",
