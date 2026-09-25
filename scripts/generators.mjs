@@ -225,7 +225,7 @@ export const GENERATORS = [
   { id: "showcase", script: "rebuild-showcase.mjs", npmName: "showcase", kind: "network",
     inputs: [], outputs: ["public/projects/*/showcase/**"], stages: { refresh: 2 } },
   { id: "project-stats", script: "gen-project-stats.mjs", npmName: "gen:stats", kind: "network",
-    inputs: [], outputs: ["src/data/projectStats.ts"], stages: { refresh: 3 } },
+    inputs: [], outputs: ["src/data/projectStats.ts", "src/data/kmpGraph.ts"], stages: { refresh: 3 } },
   { id: "candidai-stats", script: "gen-candidai-stats.mjs", npmName: "gen:candidai", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
     // updated number into four otherwise hand-authored files. profile.ts
