@@ -61,6 +61,13 @@ heavy/world/concept/*-og.webp
 # regenerate it from. Ignoring it ships a README whose main illustration 404s on
 # GitHub — which is exactly the state this rule was written to prevent.
 !public/assets/readme/*.webp
+# ...and except the Loopdown cast portraits and series covers. Same reasoning
+# again: they are not derivatives of anything in this repo — scripts/gen-
+# loopdown-art.mjs fetches the-loopdown's own pre-optimized .webp files over
+# the network (raw.githubusercontent.com), it does not encode them from a
+# local .png sibling the way gen-images.mjs would. Ignoring them ships a
+# bestiary and a set of series headers with no art in them.
+!heavy/loopdown/**/*.webp
 
 # Playwright output
 test-results/

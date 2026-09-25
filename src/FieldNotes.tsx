@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { fieldNotesFor } from "./data/connections.ts";
 import { systemStripFor } from "./data/systemStrip.ts";
 import { lessonsFor } from "./data/writingMeta.ts";
+import { seriesArt } from "./LoopdownCast.tsx";
+import { heavy } from "./lib/assetBase.ts";
 
 /**
  * "Field notes" chips: the writing series that grew out of a piece of work,
@@ -22,20 +24,34 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
       <span className="kicker flex items-center gap-1">
         <PenLine size={10} /> field notes
       </span>
-      {notes.map((n) => (
-        <Link
-          key={n.id}
-          to="/loopdown"
-          hash={`series-${n.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1.5 rounded-full border bg-card/60 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:text-zinc-100"
-          style={{ borderColor: `${n.color}55` }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
-          {n.title}
-          <span className="text-[10px] text-muted">{n.episodes}</span>
-        </Link>
-      ))}
+      {notes.map((n) => {
+        const cover = seriesArt(n.id);
+        return (
+          <Link
+            key={n.id}
+            to="/loopdown"
+            hash={`series-${n.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 rounded-full border bg-card/60 py-1 pl-1 pr-2.5 text-[11px] text-zinc-300 transition hover:text-zinc-100"
+            style={{ borderColor: `${n.color}55` }}
+          >
+            {cover ? (
+              <img
+                src={heavy(cover.src)}
+                alt={cover.alt}
+                width={cover.width}
+                height={cover.height}
+                loading="lazy"
+                className="h-4 w-4 rounded-full object-cover"
+              />
+            ) : (
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
+            )}
+            {n.title}
+            <span className="text-[10px] text-muted">{n.episodes}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

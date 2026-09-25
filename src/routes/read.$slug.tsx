@@ -20,6 +20,10 @@ import { describes, endsMidSentence, storyOf } from "../lib/describes.ts";
 import { entryTheme, type EntryTheme } from "../lib/seasonTheme.ts";
 import { MarginNotes } from "../play/MarginNotes.tsx";
 import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
+import { writing, type Lesson } from "../data/writing.ts";
+import { titleize } from "../data/writingMeta.ts";
+import { lessonAgeLabel } from "../LoopdownCast.tsx";
+import { useNow } from "../lib/useSky.ts";
 
 /**
  * Read a piece — the prose, not a photograph of the prose.
@@ -65,11 +69,42 @@ import { DeferredPlayRoom } from "../play/DeferredPlayRoom.tsx";
  * carries an era, a magazine page and a print word count, and filing a 2026
  * piece under those would claim a provenance it does not have.
  */
+// A Loopdown lesson, resolved last (see the loader below) so a naming
+// collision would always favour the fiction corpus this page exists for.
+// Lessons live on dev.to/Medium/Hashnode/LinkedIn, not here (the writing
+// hub's cards already send a reader straight to the real post), so this
+// carries only what reality-spec.md#6 asks this route to show: the live
+// age beside the absolute date, and the way to the real thing.
+type LessonReadView = {
+  title: string;
+  slug: string;
+  pillar?: string;
+  series?: string;
+  created?: string;
+  tags?: string[];
+  href: string; // "" when nothing has published yet
+};
+
 type ReadView =
   | ({ kind: "printed" } & PrintedPiece)
   | ({ kind: "anthology" } & AnthologyEntry)
   | ({ kind: "unfiled" } & UnfiledPiece)
-  | ({ kind: "sibling"; series: SiblingSeries } & SiblingEntry);
+  | ({ kind: "sibling"; series: SiblingSeries } & SiblingEntry)
+  | ({ kind: "lesson" } & LessonReadView);
+
+function lessonBySlug(slug: string): LessonReadView | undefined {
+  const l: Lesson | undefined = writing.lessons.find((x) => x.slug === slug);
+  if (!l) return undefined;
+  return {
+    title: l.title,
+    slug: l.slug,
+    pillar: l.pillar,
+    series: l.series,
+    created: l.created,
+    tags: l.tags,
+    href: l.links?.devto || l.links?.hashnode || l.links?.medium || l.links?.linkedin || "",
+  };
+}
 
 // Every generated entry closes with exactly one "\n\n---\n\n" before its
 // Terminologies block (src/data/anthology.test.ts guards the shape this
@@ -98,8 +133,12 @@ function nodeText(node: ReactNode): string {
  * would start rendering a cut mark and a RELAY ENDS banner.
  */
 const cutsOff = (v: ReadView): boolean => v.kind === "anthology" && endsMidSentence(v.body);
-const describesView = (v: ReadView): string | null =>
-  cutsOff(v) ? describes(v) : v.blurb.trim() || null;
+const describesView = (v: ReadView): string | null => {
+  // A lesson has no blurb (it is not prose this site hosts), so this branches
+  // before the fallthrough below ever reads `.blurb` on it.
+  if (v.kind === "lesson") return v.tags?.length ? `A field note on ${v.tags.slice(0, 3).join(", ")}.` : null;
+  return cutsOff(v) ? describes(v) : v.blurb.trim() || null;
+};
 
 // storyOf / endsMidSentence / describes now live in ../lib/describes.ts, with
 // one implementation and two callers: this page's meta tags and the anthology
@@ -122,6 +161,8 @@ export const Route = createFileRoute("/read/$slug")({
     if (loose) return { kind: "unfiled", ...loose };
     const sib = siblingBySlug(params.slug);
     if (sib) return { kind: "sibling", series: sib.series, ...sib.entry };
+    const lesson = lessonBySlug(params.slug);
+    if (lesson) return { kind: "lesson", ...lesson };
     throw notFound();
   },
   head: ({ loaderData }) => {
@@ -153,6 +194,13 @@ function ReadPiece() {
   // The loader throws notFound() for an unknown slug, so by the time this
   // renders the piece exists — but the inferred type does not know that.
   const piece = Route.useLoaderData()!;
+
+  // A lesson has no local prose (see LessonReadView's own comment), so it
+  // returns before any of the markdown/theme/terminologies machinery below
+  // ever runs: every one of those branches assumes a `.body` that a lesson
+  // does not carry. TS narrows `piece` to exclude "lesson" for the rest of
+  // this function once this returns.
+  if (piece.kind === "lesson") return <LessonRead piece={piece} />;
 
   // Entry #2300 is filed incomplete on purpose: its own frontmatter says so,
   // and its last sentence has no closing punctuation because the Directory
@@ -818,5 +866,56 @@ function DamageRegister({ entry }: { entry: AnthologyEntry }) {
         </p>
       ))}
     </footer>
+  );
+}
+
+/**
+ * A Loopdown lesson's stub page: reality-spec.md#6's "/read/$slug live age"
+ * row, and nothing else this route's fiction machinery would otherwise pull
+ * in. Deliberately plain, matching this route's own doctrine (see the file's
+ * header comment): a lesson's actual reading experience already lives on
+ * dev.to/Medium/Hashnode/LinkedIn, and WritingView's cards link straight to
+ * it; this exists so a lesson has a URL on this site at all, one that can
+ * say how old it is.
+ */
+function LessonRead({ piece }: { piece: Extract<ReadView, { kind: "lesson" }> }) {
+  const now = useNow();
+  const age = piece.created ? lessonAgeLabel(piece.created, now) : null;
+  return (
+    <div className="min-h-screen">
+      <main id="main-content" tabIndex={-1} className="section-y mx-auto max-w-2xl px-6">
+        <Link to="/loopdown" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <ArrowLeft size={16} /> The Loopdown
+        </Link>
+        <p className="kicker-accent mt-8">{titleize(piece.series) || piece.pillar || "Field note"}</p>
+        <h1 className="font-display mt-3 text-hero">{piece.title}</h1>
+        {/* SSR ships the absolute date only; the live age hydrates in once
+            the client clock mounts (useNow returns null before that), same
+            contract as CiStrip's agoLabel and every other live-ticking label
+            on this site. */}
+        {piece.created && (
+          <p className="mt-3 text-sm" data-testid="lesson-age" style={{ color: "var(--color-muted)" }}>
+            {piece.created}
+            {age ? ` · ${age}` : ""}
+          </p>
+        )}
+        {piece.href ? (
+          <a
+            href={piece.href}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
+          >
+            <BookOpen size={15} /> Read it where it ran
+          </a>
+        ) : (
+          <p className="mt-5 text-sm" style={{ color: "var(--color-muted)" }}>
+            Not published yet.
+          </p>
+        )}
+      </main>
+      <FloatingChat />
+      <SiteFooter />
+    </div>
   );
 }
