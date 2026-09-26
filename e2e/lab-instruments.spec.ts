@@ -6,20 +6,10 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
  * Confidence Console's daypart caption, and the two new instruments labs.ts
  * registers.
  *
- * Known gap, not introduced by this lane: LabBench.tsx's tab body is a
- * hand-written switch (`{tab === "signal" && <SignalLabPane />}`, one line
- * per instrument), owned by P1-03 with no handoff declared to P2-13b or
- * P2-15 in master-plan.md's M22/M61. GuardLab.tsx shipped by P2-13b hit the
- * identical gap first. Both new tabs are correctly registered in
- * `labs.ts` (this lane's own file: they get their pill button, their
- * EvidenceChip-or-"cadence not tracked" card per the existing P1-03 test,
- * and their `data-lab-card`), but clicking either pill mounts no pane until
- * a future lane adds the matching `{tab === "guard-lab" && <GuardLab />}`
- * and `{tab === "routing-lab" && <RoutingLab />}` lines to LabBench.tsx.
- * The two tests below are written to the CORRECT end state and are expected
- * to go green the moment that two-line wiring lands; until then they fail
- * on the `waitFor` for each instrument's own aria-label, not on anything
- * this lane owns. See this lane's handoff notes for the recommended fix.
+ * The gap this comment used to describe (LabBench.tsx's hand-written
+ * `tab === "..."` switch had no line for "guard-lab"/"routing-lab", so
+ * labs.ts's pill buttons mounted no pane) is closed: LabBench.tsx now
+ * imports GuardLab/RoutingLab and renders them for those two tab keys.
  */
 
 async function mockLiveRoutes(page: Page): Promise<void> {

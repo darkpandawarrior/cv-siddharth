@@ -28,6 +28,8 @@ import { FanoutLab } from "./labs/FanoutLab.tsx";
 import { ReplayLab } from "./labs/ReplayLab.tsx";
 // Static: ClockLab reads data/chess.ts and nothing else — no engine, no worker.
 import { ClockLab } from "./labs/ClockLab.tsx";
+import { GuardLab } from "./labs/GuardLab.tsx";
+import { RoutingLab } from "./labs/RoutingLab.tsx";
 import { LAB_TABS, countWord, openLab, peekPendingLab, clearPendingLab, onOpenLab, type LabKey } from "./data/labs.ts";
 
 /**
@@ -188,6 +190,8 @@ export function LabBench() {
           {tab === "fanout" && <FanoutLab />}
           {tab === "replay" && <ReplayLab />}
           {tab === "chess-clock" && <ClockLab />}
+          {tab === "guard-lab" && <GuardLab />}
+          {tab === "routing-lab" && <RoutingLab />}
         </Reveal>
       </div>
     </section>
