@@ -39,7 +39,20 @@ test.describe("KmpAdoption matrix — /project/kmp-family", () => {
 
     const heading = page.getByRole("heading", { name: "Every catalog module, one node each" });
     await heading.scrollIntoViewIfNeeded();
-    const svg = page.locator(".mermaid-wrap svg").last();
+    // By id (Mermaid's own `id={\`mmd-${slug}-modules\`}`), not `.mermaid-wrap
+    // svg last()`: this page also renders the "architecture" diagrams
+    // (d.diagrams, e.g. "Three repos, one seam each") from an EARLIER
+    // section, each its own async Mermaid render. `.last()` re-queries the
+    // DOM on every poll, so `toBeVisible()` was satisfied by whichever
+    // <mermaid-wrap svg> happened to exist LAST *so far* the moment it
+    // polled — usually this one, but under load the architecture diagram
+    // above it (50 nodes) sometimes finishes rendering after this one and
+    // becomes the new last(), and the very next line's `.count()` call
+    // re-resolves `.last()` and reads ITS count instead
+    // (e2e/project-depth.spec.ts: flaky, exact under isolation, inflated by
+    // the other diagram's node count under the full suite). Targeting this
+    // diagram's own id is unambiguous regardless of render order.
+    const svg = page.locator("svg#mmd-kmp-family-modules");
     await expect(svg).toBeVisible({ timeout: 15_000 });
     const nodeCount = await svg.locator(".node").count();
     expect(nodeCount).toBe(kmpGraph.modules.length);

@@ -132,13 +132,25 @@ function AutoVideo({ src, caption }: { src: string; caption: string }) {
   );
 }
 
+// mermaid's `initialize()` sets GLOBAL config that `render()` then reads, and
+// neither is reentrant — two <Mermaid> instances mounting together (e.g.
+// /project/kmp-family's "architecture" diagram alongside its "every module"
+// one) call initialize-then-render concurrently, so one's initialize() can
+// still be in flight when the other's render() reads it, or one's rendered
+// nodes land in the wrong output. Under load this interleaves for real
+// (e2e/project-depth.spec.ts's Mermaid node-count test: exact under
+// isolation, inflated by the OTHER diagram's node count under the full
+// suite). One shared queue makes every initialize+render pair on the page
+// run start-to-finish before the next begins.
+let mermaidQueue: Promise<unknown> = Promise.resolve();
+
 /** Renders a Mermaid diagram, dark-themed. mermaid is dynamically imported so
  *  it stays out of the main bundle (loads only on project detail pages). */
 function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: string; id: string; accent?: string; card?: string }) {
   const [svg, setSvg] = useState("");
   useEffect(() => {
     let alive = true;
-    (async () => {
+    const run = mermaidQueue.then(async () => {
       try {
         const mermaid = (await import("mermaid")).default;
         mermaid.initialize({
@@ -164,7 +176,8 @@ function Mermaid({ code, id, accent = "#3ddc84", card = "#10231a" }: { code: str
       } catch {
         /* ignore render errors — diagram simply won't show */
       }
-    })();
+    });
+    mermaidQueue = run;
     return () => { alive = false; };
   }, [code, id, accent, card]);
   if (!svg) return null;
