@@ -1543,7 +1543,7 @@ export function OpsBoard() {
         subject: "Sun",
         subjectHref: "https://gml.noaa.gov/grad/solcalc/",
         detail: sky ? sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset) : "computed, cannot go stale",
-        verified: "computed, never stale",
+        verified: "computed, cannot go stale",
       },
       {
         key: "reality:presence",
@@ -2139,13 +2139,18 @@ export function OpsBoard() {
               four repos, one discipline: each law enforced on this site by a named test, never asked
               to be believed
             </span>
+            {/* w-full: forces this onto its own line in .ops-rule's wrapping
+                flex row — grouped with the heading (not below the rule's
+                border) since it is the heading's own citation, not a
+                separate note (e2e/ops-doctrine.spec.ts reads it off the
+                heading's parent). */}
+            <p className="ops-empty w-full">
+              The same measured/declared split lives on <Link to="/map">/map</Link> already: {edgeKindCounts.measured ?? 0}{" "}
+              solid edges read straight off systemGraph.ts&rsquo;s own runs-here facts, {edgeKindCounts.declared ?? 0} dashed
+              ones that are curated wiring. That is this doctrine in 2D, shipped before the Sangam valley
+              existed: one classification, two renderings, never a second one invented for either page (C2).
+            </p>
           </div>
-          <p className="ops-empty">
-            The same measured/declared split lives on <Link to="/map">/map</Link> already: {edgeKindCounts.measured ?? 0}{" "}
-            solid edges read straight off systemGraph.ts&rsquo;s own runs-here facts, {edgeKindCounts.declared ?? 0} dashed
-            ones that are curated wiring. That is this doctrine in 2D, shipped before the Sangam valley
-            existed: one classification, two renderings, never a second one invented for either page (C2).
-          </p>
           {DOCTRINE_LAWS.map((law) => (
             <div className="ops-row" data-state="OK" key={law.id}>
               <Led state="OK" />
