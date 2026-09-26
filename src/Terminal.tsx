@@ -14,12 +14,21 @@ import {
   metrics,
   experience,
   education,
-  skills,
-  projects,
   caseStudies,
-  sharedFoundation,
-  openSource,
 } from "./data/profile.ts";
+// Light (no store.ts/projects.ts behind it): projectCards carries exactly
+// the slug/name/tagline/status fields the always-rendered boot banner and
+// the plain listing commands below need. `skills`/`projects`/
+// `sharedFoundation`/`openSource` are the heavy ones (skills.ts and
+// openSource.ts each pull in the full projects.ts/store.ts fleet data) —
+// importing them at this top level, even though every use of them sits
+// inside a command's `run()`, still made the browser fetch and evaluate
+// both heavy chunks on every cold `/terminal` load, because a static
+// `import` is evaluated when the module loads, not when the closure runs
+// (e2e/spine-payload.spec.ts). useHeavyProfile below defers that fetch to
+// the moment one of the five commands that actually need it executes,
+// same on-demand `import()` shape as useSatellites.ts.
+import { projectCards } from "./data/profile/projectCards.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
 import { chess } from "./data/chess.ts";
 import { writing } from "./data/writing.ts";
@@ -205,6 +214,157 @@ interface Cmd {
 
 type Go = (hash: string) => void;
 
+/** The five command outputs that genuinely need the heavy profile data
+ *  (skills.ts/openSource.ts, and by extension projects.ts/store.ts) — each
+ *  `run()` below returns one of these components instead of computing the
+ *  output inline, so the dynamic `import()` only fires once that specific
+ *  command's output actually mounts. Same shape as useSatellites.ts. */
+type HeavyProfile = Pick<typeof import("./data/profile.ts"), "skills" | "projects" | "sharedFoundation" | "openSource">;
+function useHeavyProfile(): HeavyProfile | null {
+  const [mod, setMod] = useState<HeavyProfile | null>(null);
+  useEffect(() => {
+    let alive = true;
+    import("./data/profile.ts").then((m) => {
+      if (alive) setMod(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return mod;
+}
+
+function SkillsBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-1.5">
+      {heavy.skills.map((s) => (
+        <div key={s.group}>
+          <Hi>{s.group}</Hi>
+          <div className="flex flex-wrap gap-x-3 text-zinc-400">
+            {s.items.map((it) => (
+              <span key={it}>{it}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** `cat stack.txt` renders the same table in the plainer one-line-per-group
+ *  shape `cat` already uses for its other files. */
+function StackFileBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-1">
+      {heavy.skills.map((s) => (
+        <div key={s.group}>
+          <Hi>{s.group.padEnd(22)}</Hi>
+          <Dim>{s.items.join(" · ")}</Dim>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GraphBlock({ jump }: { jump: Go }) {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  const foundationUsers = Array.from(new Set(heavy.sharedFoundation.libs.flatMap((l) => l.usedBy)));
+  return (
+    <div className="space-y-2">
+      <div>
+        <Hi>shared foundation</Hi> <Dim>— written once, reused</Dim>
+        {heavy.sharedFoundation.libs.map((lib) => (
+          <div key={lib.name} className="ml-3">
+            <Dim>└─ </Dim>
+            <A dest={lib.url} ext>{lib.name}</A>
+            <Dim> → {lib.usedBy.join(", ")}</Dim>
+          </div>
+        ))}
+        <div className="ml-3 text-muted">
+          so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
+        </div>
+      </div>
+      <div>
+        <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
+        {Object.entries(RELATED_SERIES).map(([slug, series]) => (
+          <div key={slug} className="ml-3">
+            <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
+              {slug}
+            </button>
+            <Dim> → {series.map(titleize).join(" · ")}</Dim>
+          </div>
+        ))}
+      </div>
+      <Dim>every arrow is real. see it drawn: <A dest="#map">3D storyboard</A> · <A dest="#blueprint">blueprint room</A></Dim>
+    </div>
+  );
+}
+
+function ReposBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  const repos = [
+    ...heavy.projects.flatMap((p) => p.links.filter((l) => l.url.includes("github.com/")).map((l) => ({ name: p.name, url: l.url }))),
+    ...heavy.sharedFoundation.libs.map((l) => ({ name: l.name, url: l.url })),
+  ];
+  const seen = new Set<string>();
+  const unique = repos.filter((r) => !seen.has(r.url) && seen.add(r.url));
+  return (
+    <div className="space-y-0.5">
+      {unique.map((r) => (
+        <div key={r.url}>
+          <Dim>git clone </Dim>
+          <A dest={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OssBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-0.5">
+      {heavy.openSource.map((c) => (
+        <div key={c.url}>
+          <Hi>[{c.status}]</Hi> <A dest={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SitemapBlock({ jump }: { jump: Go }) {
+  const heavy = useHeavyProfile();
+  return (
+    <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+      {Object.entries(SECTION_ROUTES).map(([k, v]) => (
+        <div key={k}>
+          <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
+            {v.hash}
+          </button>{" "}
+          <Dim>{v.label}</Dim>
+        </div>
+      ))}
+      {heavy?.projects
+        .filter((p) => p.detail)
+        .map((p) => (
+          <div key={p.slug}>
+            <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
+              #project/{p.slug}
+            </button>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 /* ── Command table ───────────────────────────────────────────────────────
  * Ordered roughly by how often a visitor reaches for it. `help` renders from
  * this same list, so a new command is documented the moment it's added. */
@@ -313,16 +473,7 @@ function buildCommands(jump: Go): Cmd[] {
               </div>
             );
           case "stack":
-            return (
-              <div className="space-y-1">
-                {skills.map((s) => (
-                  <div key={s.group}>
-                    <Hi>{s.group.padEnd(22)}</Hi>
-                    <Dim>{s.items.join(" · ")}</Dim>
-                  </div>
-                ))}
-              </div>
-            );
+            return <StackFileBlock />;
           case "contact":
             return (
               <div className="space-y-0.5">
@@ -347,7 +498,7 @@ function buildCommands(jump: Go): Cmd[] {
       help: "the builds — with slugs for `open`",
       run: () => (
         <div className="space-y-2">
-          {projects.map((p) => {
+          {projectCards.map((p) => {
             const st = projectStats[p.slug as keyof typeof projectStats] as { modules?: number } | undefined;
             return (
               <div key={p.slug}>
@@ -374,8 +525,8 @@ function buildCommands(jump: Go): Cmd[] {
       run: (args) => {
         const raw = (args[0] ?? "").toLowerCase();
         const slug = RENAMED_SLUG_ALIASES[raw] ?? raw;
-        const p = projects.find((x) => x.slug === slug);
-        if (!raw) return <Dim>usage: open &lt;slug&gt; — {projects.map((x) => x.slug).join(", ")}</Dim>;
+        const p = projectCards.find((x) => x.slug === slug);
+        if (!raw) return <Dim>usage: open &lt;slug&gt; — {projectCards.map((x) => x.slug).join(", ")}</Dim>;
         if (!p) return <span className="text-red-400">open: no build "{raw}". Try `projects`.</span>;
         jump(`#project/${p.slug}`);
         return (
@@ -388,20 +539,7 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "skills",
       help: "the tech stack, grouped",
-      run: () => (
-        <div className="space-y-1.5">
-          {skills.map((s) => (
-            <div key={s.group}>
-              <Hi>{s.group}</Hi>
-              <div className="flex flex-wrap gap-x-3 text-zinc-400">
-                {s.items.map((it) => (
-                  <span key={it}>{it}</span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ),
+      run: () => <SkillsBlock />,
     },
     {
       name: "cases",
@@ -622,101 +760,25 @@ function buildCommands(jump: Go): Cmd[] {
       name: "graph",
       usage: "graph",
       help: "the synergy map — how the work, apps & writing connect",
-      run: () => {
-        const foundationUsers = Array.from(new Set(sharedFoundation.libs.flatMap((l) => l.usedBy)));
-        return (
-          <div className="space-y-2">
-            <div>
-              <Hi>shared foundation</Hi> <Dim>— written once, reused</Dim>
-              {sharedFoundation.libs.map((lib) => (
-                <div key={lib.name} className="ml-3">
-                  <Dim>└─ </Dim>
-                  <A dest={lib.url} ext>{lib.name}</A>
-                  <Dim> → {lib.usedBy.join(", ")}</Dim>
-                </div>
-              ))}
-              <div className="ml-3 text-muted">
-                so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
-              </div>
-            </div>
-            <div>
-              <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
-              {Object.entries(RELATED_SERIES).map(([slug, series]) => (
-                <div key={slug} className="ml-3">
-                  <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
-                    {slug}
-                  </button>
-                  <Dim> → {series.map(titleize).join(" · ")}</Dim>
-                </div>
-              ))}
-            </div>
-            <Dim>every arrow is real. see it drawn: <A dest="#map">3D storyboard</A> · <A dest="#blueprint">blueprint room</A></Dim>
-          </div>
-        );
-      },
+      run: () => <GraphBlock jump={jump} />,
     },
     {
       name: "repos",
       usage: "repos",
       help: "the public GitHub repositories",
-      run: () => {
-        const repos = [
-          ...projects.flatMap((p) => p.links.filter((l) => l.url.includes("github.com/")).map((l) => ({ name: p.name, url: l.url }))),
-          ...sharedFoundation.libs.map((l) => ({ name: l.name, url: l.url })),
-        ];
-        const seen = new Set<string>();
-        const unique = repos.filter((r) => !seen.has(r.url) && seen.add(r.url));
-        return (
-          <div className="space-y-0.5">
-            {unique.map((r) => (
-              <div key={r.url}>
-                <Dim>git clone </Dim>
-                <A dest={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
-              </div>
-            ))}
-          </div>
-        );
-      },
+      run: () => <ReposBlock />,
     },
     {
       name: "oss",
       usage: "oss",
       help: "merged open-source contributions",
-      run: () => (
-        <div className="space-y-0.5">
-          {openSource.map((c) => (
-            <div key={c.url}>
-              <Hi>[{c.status}]</Hi> <A dest={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
-            </div>
-          ))}
-        </div>
-      ),
+      run: () => <OssBlock />,
     },
     {
       name: "sitemap",
       usage: "sitemap",
       help: "every room in the site",
-      run: () => (
-        <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
-          {Object.entries(SECTION_ROUTES).map(([k, v]) => (
-            <div key={k}>
-              <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
-                {v.hash}
-              </button>{" "}
-              <Dim>{v.label}</Dim>
-            </div>
-          ))}
-          {projects
-            .filter((p) => p.detail)
-            .map((p) => (
-              <div key={p.slug}>
-                <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
-                  #project/{p.slug}
-                </button>
-              </div>
-            ))}
-        </div>
-      ),
+      run: () => <SitemapBlock jump={jump} />,
     },
     /* ── Easter eggs (hidden from help) ─────────────────────────────────── */
     {
@@ -1217,7 +1279,7 @@ function Neofetch() {
     ["gps", "50% → 95% accuracy"],
     ["crashes", "-80% (structured concurrency)"],
     ["compose", "~87% of UI-layer code (455k of 523k LOC)"],
-    ["builds", projects.map((p) => p.name).join(" · ")],
+    ["builds", projectCards.map((p) => p.name).join(" · ")],
   ];
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
@@ -1398,7 +1460,7 @@ export function Terminal() {
         // second-token completion for `open <slug>` / `cat <file>` / `theme <name>`
         const rest = prefix.slice(head.length + 1);
         let pool: string[] = [];
-        if (head === "open") pool = projects.map((p) => p.slug);
+        if (head === "open") pool = projectCards.map((p) => p.slug);
         else if (head === "cat") pool = ["about.txt", "resume.txt", "stack.txt", "contact.txt", "availability.txt"];
         else if (head === "theme") pool = Object.keys(THEMES);
         const hit = pool.find((p) => p.startsWith(rest));
