@@ -1253,6 +1253,17 @@ html.resume-mode .palette-trigger {
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
+/* A horizontally-scrollable rail with its scrollbar hidden (DeviceWall's
+   platform-tab row) has to say "more this way" some other way — a clipped
+   last tab with no scrollbar and no fade reads as broken, not scrollable.
+   Dissolves the row's own edges instead of hard-cutting them, the same
+   "continues past the viewport" cue .screen-marquee already uses full-bleed,
+   just scoped to this rail's own box. */
+.rail-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
+  mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
+}
+
 /* Animated accent underline / sheen */
 @keyframes sheen {
   0% { background-position: -150% 0; }

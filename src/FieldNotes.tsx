@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { PenLine, Network, ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { fieldNotesFor } from "./data/connections.ts";
@@ -5,6 +6,38 @@ import { systemStripFor } from "./data/systemStrip.ts";
 import { lessonsFor } from "./data/writingMeta.ts";
 import { seriesArt } from "./LoopdownCast.tsx";
 import { heavy } from "./lib/assetBase.ts";
+
+/** The series cover, or the plain dot every other chip without one already
+ *  falls back to — same "absent, not faked" contract as EarthDots.tsx: a
+ *  cover that 404s (the heavy asset unpublished, a network hiccup) degrades
+ *  to the dot rather than Chromium's broken-image glyph on every field-notes
+ *  chip that names a series.
+ *
+ *  /project/* prerenders, so the real <img src> is already in the HTML the
+ *  browser parses before any JS runs — its fetch can start, and finish
+ *  failing, before hydration ever attaches the onError handler below (a load
+ *  that already failed by mount time never re-fires `error` just because a
+ *  listener showed up late). The mount-time check catches that race; onError
+ *  still covers a genuine failure after mount. */
+function FieldNoteCover({ cover, color }: { cover: NonNullable<ReturnType<typeof seriesArt>>; color: string }) {
+  const [failed, setFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth === 0) setFailed(true);
+  }, []);
+  if (failed) return <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />;
+  return (
+    <img
+      ref={imgRef}
+      src={heavy(cover.src)}
+      alt={cover.alt}
+      width={cover.width}
+      height={cover.height}
+      onError={() => setFailed(true)}
+      className="h-4 w-4 rounded-full object-cover"
+    />
+  );
+}
 
 /**
  * "Field notes" chips: the writing series that grew out of a piece of work,
@@ -36,14 +69,7 @@ export function FieldNotes({ slug, className = "" }: { slug: string; className?:
             style={{ borderColor: `${n.color}55` }}
           >
             {cover ? (
-              <img
-                src={heavy(cover.src)}
-                alt={cover.alt}
-                width={cover.width}
-                height={cover.height}
-                loading="lazy"
-                className="h-4 w-4 rounded-full object-cover"
-              />
+              <FieldNoteCover cover={cover} color={n.color} />
             ) : (
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
             )}

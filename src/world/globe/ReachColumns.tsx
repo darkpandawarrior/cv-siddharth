@@ -8,6 +8,7 @@ import { fleetStats } from "../../data/store.ts";
 import { upstreamMergedPRs } from "../../data/profile.ts";
 import { globeFacts } from "./globeRows.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
+import { calculatePosition, calloutStyle } from "./htmlLabelClamp.ts";
 
 const COLUMN_RADIUS = 0.06;
 const MIN_HEIGHT = 0.4;
@@ -37,22 +38,8 @@ function Column({ base, up, height, color, label }: { base: THREE.Vector3; up: T
         <cylinderGeometry args={[COLUMN_RADIUS, COLUMN_RADIUS, height, 8]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} />
       </mesh>
-      <Html position={[0, height + 0.18, 0]} center distanceFactor={10} style={{ pointerEvents: "none" }}>
-        <div
-          data-reach-label
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            lineHeight: 1.3,
-            maxWidth: 180,
-            whiteSpace: "normal",
-            background: "rgba(5,7,10,0.75)",
-            padding: "3px 7px",
-            borderRadius: 6,
-            color: "#e8efe9",
-            border: `1px solid ${color.getStyle()}66`,
-          }}
-        >
+      <Html position={[0, height + 0.18, 0]} center distanceFactor={10} calculatePosition={calculatePosition} style={{ pointerEvents: "none" }}>
+        <div data-reach-label style={calloutStyle(color, 180)}>
           {label}
         </div>
       </Html>

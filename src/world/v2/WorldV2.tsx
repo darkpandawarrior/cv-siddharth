@@ -163,6 +163,16 @@ export default function WorldV2(): JSX.Element {
         </div>
       )}
 
+      {/* World v1's own Playground.tsx carries a comment for exactly this
+          gap: a full-bleed aria-hidden canvas with no heading of any level
+          announces itself to a screen reader as nothing, and ships an
+          h1-less document to a crawler. v2 had the same gap without the
+          fix carried over — document.querySelector('h1') returned null.
+          HudV2's own LandmarkList is already the accessible content this
+          heads (a visually hidden list of real, Tab-reachable buttons); this
+          just gives it — and the page — a name. */}
+      <h1 className="sr-only">Sangam — the growth model, drawn from real activity</h1>
+
       {sections && (
         <HudV2
           sections={sections}

@@ -336,7 +336,11 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
 
   return (
     <div>
-      <div role="tablist" aria-label="Platform" className="hide-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">
+      <div
+        role="tablist"
+        aria-label="Platform"
+        className="hide-scrollbar rail-fade-x mb-6 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1"
+      >
         {targets.map((t, i) => {
           const TIcon = PLATFORM_ICON[t.platform];
           return (
@@ -347,7 +351,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
               aria-selected={i === active}
               onClick={() => pick(i)}
               onKeyDown={onTabKeyDown}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+              className={`flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
                 i === active
                   ? "border-accent bg-accent/15 text-accent"
                   : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -371,7 +375,14 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
               <ChevronLeft size={16} />
             </button>
           )}
-          <div className="flex-1">
+          {/* min-w-0: a flex item won't shrink past its content's natural
+              width by default, so the browser-chrome URL bar's own `truncate`
+              (DeviceFrame below) never got the chance to apply — the frame,
+              and the page under it, stayed as wide as the longest untruncated
+              live-demo URL wanted (465px/459px scrollWidth on a 390px phone
+              for portfolio/stutter's longer URLs; gaddi's shorter one never
+              hit the natural-width floor this fixes). */}
+          <div className="min-w-0 flex-1">
             <DeviceFrame target={target} slug={slug} shot={shot} />
           </div>
           {target.screens.length > 1 && target.deviceFrame !== "browser" && (
