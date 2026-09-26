@@ -52,7 +52,17 @@ export const SPINE: SpineEntry[] = [
   // qualifies as spine on its own (registry.test.ts's own break-it check
   // requires it to) — it renders its own copy of this button once the panel
   // is later closed.
-  { id: "chat-launcher-root", file: "src/ChatLauncher.tsx", kind: "floating", selector: "button.chat-launcher", routes: "all", maxHeight: { "1440": 56, "390": 56 }, why: "root-mounted in __root.tsx; the eager half of F12/F13's split, h-14 w-14 = 56x56" },
+  // "except /playground": ChatLauncher.tsx's own hide gate (`pathname ===
+  // "/playground" && captured`) is true from first paint there, not just
+  // mid-session — WorldV2 (P2-19) mounts by default and attaches keyboard
+  // capture on mount, with no explicit "enter" gesture for a capable visitor
+  // (world/input.ts's `captured` module flag defaults `true`, exactly so
+  // WASD works immediately), so a capable /playground load never shows this
+  // button. Reduced-motion/no-WebGL visitors land on the concept-painting
+  // fallback instead, which never mounts the world at all, so the button
+  // stays visible there — the exception is real but route-wide because
+  // e2e/spine.spec.ts's Chromium run is always WebGL-capable.
+  { id: "chat-launcher-root", file: "src/ChatLauncher.tsx", kind: "floating", selector: "button.chat-launcher", routes: { except: ["/playground"] }, maxHeight: { "1440": 56, "390": 56 }, why: "root-mounted in __root.tsx; the eager half of F12/F13's split, h-14 w-14 = 56x56" },
   { id: "faq", file: "src/FaqDock.tsx", kind: "block", selector: '[data-spine="faq"]', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 240, "390": 180 }, debt: "SP-01", why: "17 answers, SSR-crawlable; docked as the footer's first band (F1, F2)" },
   { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4)" },
   { id: "room-pager", file: "src/rooms.tsx", kind: "block", selector: '[data-spine="room-pager"]', routes: "any", maxHeight: { "1440": 96, "390": 96 }, last: true, debt: "SP-10", why: "next-room pager; the FAQ rendered below it on 8 rooms (F2)" },
