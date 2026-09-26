@@ -18,7 +18,6 @@ const paymentsLabProviderModulesUsed = paymentStats.substitutedModules.filter((m
 // /hire and /resume actually need.
 import { providerCount, upstreamStars } from "../careerOpsUpstream.ts";
 import { repoStats } from "../repoStats.ts";
-import { surfaces } from "../surfaces.ts";
 import { writing } from "../writing.ts";
 import { cast, titleize } from "../writingMeta.ts";
 import { heavy, WASM_APP_PATH } from "../../lib/assetBase.ts";
@@ -1080,11 +1079,21 @@ export const projects: Project[] = [
       //
       // So they come from repoStats.ts, which gen-repo-stats.mjs derives from
       // the twin's own tree, and check-generated.mjs fails CI if the committed
-      // file and the generator disagree. The route count is derived from the
-      // route registry rather than a capture manifest, and the wasm size from
-      // the directory that is actually served.
+      // file and the generator disagree. The wasm size comes from the
+      // directory that is actually served.
+      //
+      // The surfaces count below is a literal, not `surfaces.length`: this
+      // file is forced into its own manualChunks bucket (profile-projects-
+      // heavy, vite.config.ts), and data/surfaces.ts drags in labs.ts +
+      // excelsior.ts for two of its own entries' blurb text — importing it
+      // here pulled THAT whole chain into the same bucket, which rooms.tsx
+      // (mounted on every route) also needs, so every route paid for the
+      // full project registry too (e2e/spine-payload.spec.ts: /chess,
+      // /terminal, /weeb, /hire). surfaces.test.ts asserts this literal
+      // against the real surfaces.length, so a drift fails the unit suite
+      // instead of silently going stale.
       metrics: [
-        { value: String(surfaces.length), label: "surfaces · every one on the wall" },
+        { value: "23", label: "surfaces · every one on the wall" },
         { value: String(repoStats.tests), label: `unit tests · ${repoStats.testFiles} files` },
         { value: `${(repoStats.kotlinLines / 1000).toFixed(1)}k`, label: "lines of Kotlin · the CMP twin" },
         { value: "14.7 MB", label: "the Wasm twin's honest cost" },

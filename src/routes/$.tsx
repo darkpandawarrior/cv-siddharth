@@ -1,12 +1,16 @@
 import { createFileRoute, getRouteApi, notFound, Link } from "@tanstack/react-router";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { useTouched } from "../lib/sessionRipple.ts";
-// profile/projects.ts directly, not the ../data/profile.ts barrel: importing
-// the barrel here pulled its heavy re-exports (profile-projects-heavy) into
-// the app's one shared eager entry for every route (e2e/spine-payload.spec.ts
+// The light projectCards.ts, not profile/projects.ts's `projectBySlug`: this
+// page only ever reads a project's slug/name for the "you were last near…"
+// line below, and `projectBySlug` IS the forced profile-projects-heavy
+// chunk's own export — avoiding the ../data/profile.ts barrel wasn't enough
+// on its own, since this imported the heavy chunk directly instead. That
+// static top-level import made profile-projects-heavy a dependency of the
+// app's one shared eager entry for every route (e2e/spine-payload.spec.ts
 // caught this on /chess, /terminal, /weeb and /hire, none of which render
 // this 404 route at all).
-import { projectBySlug } from "../data/profile/projects.ts";
+import { projectCards } from "../data/profile/projectCards.ts";
 
 // Catch-all splat route (file name "$" is TanStack Router's file-based
 // convention for a route matching any otherwise-unmatched path). It must
@@ -93,7 +97,7 @@ function NotFoundPage() {
   // first. Read backward: the most recent touched entry that IS a project
   // slug, skipping past any StoryMap node id that isn't one.
   const touched = useTouched();
-  const lastProject = [...touched].reverse().map(projectBySlug).find((p) => p != null) ?? null;
+  const lastProject = [...touched].reverse().map((slug) => projectCards.find((p) => p.slug === slug)).find((p) => p != null) ?? null;
   return (
     <div className="min-h-screen bg-ink">
       <header className="border-b border-line">

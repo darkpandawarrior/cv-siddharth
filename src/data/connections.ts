@@ -1,7 +1,12 @@
 // The synergy graph — which writing series grew out of which case study or
 // project. One source of truth powering the "field notes" chips on the home
 // cards, the project detail pages, and anywhere else work and writing meet.
-import { projects } from "./profile.ts";
+// The light projectCards, not ./profile.ts's `projects`: this file only ever
+// reads `.slug` for the ordering below, and it's imported by Terminal.tsx —
+// reachable from every route through the shared eager entry, so a static
+// import of the full barrel here leaked profile-projects-heavy onto /chess,
+// /terminal, /weeb and /hire (e2e/spine-payload.spec.ts).
+import { projectCards } from "./profile/projectCards.ts";
 import { writing } from "./writing.ts";
 import { accentOf, titleize } from "./writingMeta.ts";
 
@@ -54,6 +59,6 @@ export function fieldNotesFor(slug: string): FieldNoteLink[] {
 const CURATED = ["doori", "gaddi", "paymentslab-kmp", "candidai", "stutter"];
 
 export const PROJECT_ORDER = [
-  ...CURATED.filter((s) => projects.some((p) => p.slug === s)),
-  ...projects.map((p) => p.slug).filter((s) => !CURATED.includes(s)),
+  ...CURATED.filter((s) => projectCards.some((p) => p.slug === s)),
+  ...projectCards.map((p) => p.slug).filter((s) => !CURATED.includes(s)),
 ];

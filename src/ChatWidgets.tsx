@@ -2,7 +2,20 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import Markdown, { type Components } from "react-markdown";
 import { ArrowRight, Check, Copy } from "lucide-react";
-import { projectBySlug, metrics, skills, siteRooms, cardMedia, type Project } from "./data/profile.ts";
+// The light submodules, not the ../data/profile.ts barrel: that barrel
+// statically re-exports profile/projects.ts (spine-payload's
+// profile-projects-heavy chunk), and this file is reached from every route
+// through ChatLauncher.tsx's eager root mount -> its lazy FloatingChat panel
+// -> here — a static import of the barrel here is a static import of
+// profile-projects-heavy for every route, not just the one that opens chat
+// (e2e/spine-payload.spec.ts caught this on /chess, /terminal, /weeb and
+// /hire). Every widget below only ever needs slug/name from a project, which
+// the light projectCards carries — same fix shape as routes/project.$slug.tsx.
+import { metrics } from "./data/profile/core.ts";
+import { skills } from "./data/profile/skills.ts";
+import { siteRooms } from "./data/surfaces.ts";
+import { cardMedia } from "./data/profile/cardMedia.ts";
+import { projectCards, type ProjectCard as ProjectCardData } from "./data/profile/projectCards.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
 import { EMPTY_REPLY_NOTE, jdFitText, parseChatBlocks, type ChatBlock, type JdFitReport } from "./lib/chatBlocks.ts";
 import type { JdFitDossier } from "./lib/useJdFit.ts";
@@ -75,7 +88,7 @@ export function ChatLink({
 
 /* ── The widgets ─────────────────────────────────────────────────────────── */
 
-function ProjectCard({ project, onNavigate }: { project: Project; onNavigate?: () => void }) {
+function ProjectCard({ project, onNavigate }: { project: ProjectCardData; onNavigate?: () => void }) {
   const media = cardMedia[project.slug];
 
   return (
@@ -291,7 +304,7 @@ export function JdFitCard({
                 these rows carry their own left rule, not markdown bullets. */}
             <ul className="mt-1.5 space-y-2 list-none! pl-0!">
               {report.strengths.map((s, i) => {
-                const project = s.project ? projectBySlug(s.project) : undefined;
+                const project = s.project ? projectCards.find((p) => p.slug === s.project) : undefined;
                 return (
                   <li key={i} className="border-l-2 border-accent/40 pl-2">
                     <p className="text-[11px] font-semibold leading-snug text-zinc-200">{s.need}</p>
@@ -390,7 +403,7 @@ function chatWidget(
       // The directive's arg is model output — i.e. attacker-influenceable text.
       // It is never used to build anything; it only ever looks a project up, and
       // an invented slug renders nothing rather than a broken (or forged) card.
-      const project = block.arg ? projectBySlug(block.arg) : undefined;
+      const project = block.arg ? projectCards.find((p) => p.slug === block.arg) : undefined;
       return project ? <ProjectCard key={key} project={project} onNavigate={onNavigate} /> : null;
     }
     case "rooms":

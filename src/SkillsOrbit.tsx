@@ -3,7 +3,7 @@ import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { condition, visible } from "@tanstack/react-start/hydration";
 import SkillsOrbitScene from "./SkillsOrbitScene.tsx";
-import { provenIn } from "./data/profile/skills.ts";
+import { provenIn } from "./data/profile/skillsProven.ts";
 import { projects } from "./data/profile/projects.ts";
 
 function supportsWebGL(): boolean {

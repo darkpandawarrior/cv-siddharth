@@ -35,9 +35,6 @@ import { caseStudies } from "./data/profile/caseStudies.ts";
 import { projectCards } from "./data/profile/projectCards.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
 import { chess } from "./data/chess.ts";
-import { writing } from "./data/writing.ts";
-import { RELATED_SERIES } from "./data/connections.ts";
-import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
@@ -238,6 +235,26 @@ function useHeavyProfile(): HeavyProfile | null {
   return mod;
 }
 
+/** GraphBlock's own "work → writing" row, same reasoning as HeavyProfile
+ *  above: data/connections.ts and data/writingMeta.ts both reach into the
+ *  569-line data/writing.ts, and a top-level import made that a static
+ *  dependency of Terminal's eager chunk instead of one that only loads once
+ *  `graph` actually runs. */
+type GraphExtras = { RELATED_SERIES: (typeof import("./data/connections.ts"))["RELATED_SERIES"]; titleize: (typeof import("./data/writingMeta.ts"))["titleize"] };
+function useGraphExtras(): GraphExtras | null {
+  const [mod, setMod] = useState<GraphExtras | null>(null);
+  useEffect(() => {
+    let alive = true;
+    Promise.all([import("./data/connections.ts"), import("./data/writingMeta.ts")]).then(([c, w]) => {
+      if (alive) setMod({ RELATED_SERIES: c.RELATED_SERIES, titleize: w.titleize });
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return mod;
+}
+
 function SkillsBlock() {
   const heavy = useHeavyProfile();
   if (!heavy) return <Dim>loading…</Dim>;
@@ -276,7 +293,8 @@ function StackFileBlock() {
 
 function GraphBlock({ jump }: { jump: Go }) {
   const heavy = useHeavyProfile();
-  if (!heavy) return <Dim>loading…</Dim>;
+  const extras = useGraphExtras();
+  if (!heavy || !extras) return <Dim>loading…</Dim>;
   const foundationUsers = Array.from(new Set(heavy.sharedFoundation.libs.flatMap((l) => l.usedBy)));
   return (
     <div className="space-y-2">
@@ -295,12 +313,12 @@ function GraphBlock({ jump }: { jump: Go }) {
       </div>
       <div>
         <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
-        {Object.entries(RELATED_SERIES).map(([slug, series]) => (
+        {Object.entries(extras.RELATED_SERIES).map(([slug, series]) => (
           <div key={slug} className="ml-3">
             <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
               {slug}
             </button>
-            <Dim> → {series.map(titleize).join(" · ")}</Dim>
+            <Dim> → {series.map(extras.titleize).join(" · ")}</Dim>
           </div>
         ))}
       </div>
@@ -602,7 +620,14 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "writing",
       help: "latest field notes",
-      run: () => {
+      // data/writing.ts (569 lines) is only needed once this command actually
+      // runs; a top-level import made it a static dependency of Terminal's
+      // own eager chunk instead — shared with data/connections.ts (used by
+      // GraphBlock below) and profile/projects.ts's own `writing` need, this
+      // was one more edge into the profile-projects-heavy bucket every route
+      // pays for (e2e/spine-payload.spec.ts).
+      run: async () => {
+        const { writing } = await import("./data/writing.ts");
         const posts = writing.lessons.filter((l) => l.status === "published").slice(0, 6);
         return (
           <div className="space-y-1">
@@ -1051,8 +1076,20 @@ function AskBlock({ question }: { question: string }) {
             a directive that never closed, which renders to nothing — and an
             empty answer that never arrived would sit on "thinking…" forever.
             Once `done`, ChatMessageBody always renders something (see its
-            `done` prop); until then, the spinner. */}
-        {!done && !text ? <Dim>thinking…</Dim> : <ChatMessageBody content={text} done={done} />}
+            `done` prop); until then, the spinner.
+            `<Hydrate when={load()} split>`, same as FloatingChat.tsx and
+            FitCheck.tsx's own ChatMessageBody usage: this call was the one
+            unguarded static render of it left, and it alone was enough to pull
+            ChatWidgets.tsx (and its profile-projects-heavy dependency, via
+            skills.ts's own project-word-matching) into /terminal's initial
+            component chunk (e2e/spine-payload.spec.ts). */}
+        {!done && !text ? (
+          <Dim>thinking…</Dim>
+        ) : (
+          <Hydrate when={load()} split fallback={<Dim>thinking…</Dim>}>
+            <ChatMessageBody content={text} done={done} />
+          </Hydrate>
+        )}
       </div>
     </div>
   );

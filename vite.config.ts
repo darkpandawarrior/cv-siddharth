@@ -358,6 +358,59 @@ export default defineConfig(async () => ({
         // exists, never the heavy fields) is the fuller one and out of this
         // lane's file scope — see this lane's final report.
         manualChunks(id: string) {
+          // data/surfaces.ts is a genuinely light, EVERY-route module (rooms.tsx,
+          // CommandPalette and Launcher all read it, mounted from __root.tsx on
+          // every page) that also happens to be profile/projects.ts's own
+          // dependency (the portfolio case study used to read surfaces.length).
+          // Without forcing it apart, the whole surfaces.ts -> labs.ts ->
+          // excelsior.ts chain got swept into the profile-projects-heavy bucket
+          // below, so every route paid for the full project registry too
+          // (e2e/spine-payload.spec.ts: /chess, /terminal, /weeb, /hire all
+          // cold-loaded it via rooms.tsx, which never touches project data).
+          // data/careerOpsUpstream.ts needs the same isolation one hop further
+          // in: labs.ts reads its `providerCount` specifically to avoid a
+          // profile.ts dependency (see labs.ts's own comment), but profile/
+          // projects.ts reads it too — so leaving it unforced let it get swept
+          // into profile-projects-heavy right back, and surfaces-registry
+          // (via labs.ts) inherited that edge straight back to the chunk this
+          // whole split exists to keep off every route.
+          if (id.includes("/src/data/surfaces.ts")) return "surfaces-registry";
+          if (id.includes("/src/data/careerOpsUpstream.ts")) return "career-ops-upstream-registry";
+          // Same one-hop-further leak as careerOpsUpstream.ts above: excelsior.ts
+          // (part of the surfaces.ts chain) and profile/projects.ts both read
+          // this foundational, import-free helper, so leaving it unforced let
+          // it get swept into profile-projects-heavy and handed surfaces-
+          // registry an edge straight back to it.
+          if (id.includes("/src/lib/assetBase.ts")) return "asset-base-registry";
+          // Same shape a third time: projectCards.ts (the deliberately LIGHT
+          // card-list projection /hire, /resume, ChatWidgets.tsx and
+          // Terminal.tsx all read) shares projectStats.ts and lib/
+          // projectStatLine.ts with profile/projects.ts itself. Forcing THOSE
+          // two apart directly didn't stick — Rollup kept folding them back
+          // into profile-projects-heavy — but forcing projectCards.ts itself
+          // into its own named chunk gave it a home to be inlined into
+          // instead, breaking the edge every one of its every-route consumers
+          // was inheriting.
+          if (id.includes("/src/data/profile/projectCards.ts")) return "profile-project-cards";
+          // Fourth hop: data/facets.ts (the anomaly-rail chronology registry,
+          // read by AnomalyRail.tsx — mounted eagerly from __root.tsx on every
+          // route) imports data/writing.ts for its own entries, and profile/
+          // projects.ts's "the-loopdown" case study reads writing.ts too (real
+          // derived prose — lessons/series/archive counts and rank claims —
+          // not a one-line count, so unlike surfaces.length above this one
+          // isn't a literal-and-a-test fix). Forcing writing.ts apart directly
+          // didn't stick either; forcing facets.ts into its own named chunk,
+          // same trick as projectCards.ts, did.
+          if (id.includes("/src/data/facets.ts")) return "facets-registry";
+          // writing.ts/writingMeta.ts/connections.ts: the same fourth-hop
+          // shape one level further out — facets.ts's own isolation above
+          // only clears facets.ts's route to writing.ts; connections.ts
+          // (Terminal.tsx, FieldNotes.tsx, ProjectDetail.tsx) and
+          // writingMeta.ts (CommandPalette.tsx, eager from __root.tsx) each
+          // reach writing.ts independently and needed the same forcing.
+          if (id.includes("/src/data/writing.ts")) return "writing-registry";
+          if (id.includes("/src/data/writingMeta.ts")) return "writing-meta-registry";
+          if (id.includes("/src/data/connections.ts")) return "connections-registry";
           if (id.includes("/src/data/profile/projects.ts")) return "profile-projects-heavy";
           // store.ts (141 KB, gen-store.mjs's full Play Store fleet listing)
           // ends in a 13-line `fleetStats` summary object openSource.ts reads

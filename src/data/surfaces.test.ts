@@ -16,6 +16,7 @@ import { surfaces, WALL_GROUPS, wallSurfaces, siteRooms, demotedSurfaces } from 
 import { facets } from "./facets.ts";
 import { SURFACE_ICON } from "../rooms.tsx";
 import { anthologyEntries } from "./anthology.ts";
+import { projectBySlug } from "./profile/projects.ts";
 
 const root = join(import.meta.dirname, "..", "..");
 
@@ -252,5 +253,19 @@ describe("no surface is a dead end", () => {
       trapped,
       `route(s) with no pager, no footer and no internal link — a visitor who lands here can only go back: ${trapped.join(", ")}`,
     ).toEqual([]);
+  });
+});
+
+// profile/projects.ts's own "portfolio" case study quotes this file's
+// `surfaces.length` as a literal rather than importing it (see that file's
+// own comment: importing surfaces.ts there pulled labs.ts + excelsior.ts
+// into profile-projects-heavy's manualChunks bucket, which rooms.tsx — on
+// every route — also needs, so every route paid for the full project
+// registry too). This is the drift check that literal needs instead.
+describe("portfolio case study's surfaces count", () => {
+  it("matches the real surfaces.length", () => {
+    const portfolio = projectBySlug("portfolio");
+    const stat = portfolio?.detail?.metrics?.find((m) => m.label === "surfaces · every one on the wall");
+    expect(stat?.value).toBe(String(surfaces.length));
   });
 });

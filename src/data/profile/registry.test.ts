@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { projects, kmpFamilyModuleClaims } from "./projects.ts";
-import { provenIn, skills, resumeSkills } from "./skills.ts";
+import { skills, resumeSkills } from "./skills.ts";
+import { provenIn } from "./skillsProven.ts";
 import { projectStats, projectStatsGeneratedAt, kmpAdoption } from "../projectStats.ts";
 import { kmpGraph } from "../kmpGraph.ts";
 import { paymentStats } from "../../lib/projectStatLine.ts";

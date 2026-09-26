@@ -1,4 +1,10 @@
-import { recentGrowth, type GrowthItem } from "../data/profile.ts";
+// profile/openSource.ts directly, not the ../data/profile.ts barrel: the
+// barrel also re-exports profile/projects.ts and store.ts, and Terminal.tsx
+// imports this module at its own top level (for the `shipped` command and
+// its boot banner) — a static import of the barrel here made
+// profile-projects-heavy a dependency of Terminal's own route chunk too
+// (e2e/spine-payload.spec.ts).
+import { recentGrowth, type GrowthItem } from "../data/profile/openSource.ts";
 
 /**
  * `recentGrowth` is authored in the order things were written down, which is
