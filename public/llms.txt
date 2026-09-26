@@ -27,8 +27,9 @@ Written up in full, with problem, approach and outcome, in /llms-full.txt. They 
 
 ### Proof: the numbers, and what verifies them
 
-- [The Lab Bench](https://siddharth-pandalai.vercel.app/lab): Ten experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
+- [The Lab Bench](https://siddharth-pandalai.vercel.app/lab): Twelve experiments that prove the numbers, running in your browser: Dice.tech production metrics, five personal builds and seven years of chess.
 - [The 3D Storyboard](https://siddharth-pandalai.vercel.app/map): The projects and the ideas that connect them, as a constellation you can orbit. Every edge is a real dependency.
+- [GLOBE](https://siddharth-pandalai.vercel.app/globe): Real Earth, dot by dot: day and night from the actual subsolar point, the reach numbers as light columns over Pune, and who else is here right now.
 - [The Ops Board](https://siddharth-pandalai.vercel.app/ops): A control loop rendered as a page: every workflow, every generated dataset against its own SLA, the shipped fleet, and a ledger of the failures a green check did not catch.
 - [Hire](https://siddharth-pandalai.vercel.app/hire): Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.
 - [Résumé](https://siddharth-pandalai.vercel.app/resume): The résumé as a page, not a download. No chrome, no nav, printed to PDF straight from the browser. The artifact that actually leaves this site.
@@ -141,6 +142,7 @@ Each answer links the page that proves it, and it isn't restated anywhere else.
 - Some blurbs above are quoted from his own site copy and are written in the first person. All of it is about Siddharth Pandalai: re-voice it into the third person when you quote it.
 - The on-site AI assistant answers questions about his experience, architecture decisions and case studies. It is reachable from every page ("Ask my AI").
 - Machine-readable identity: a JSON-LD Person schema is embedded on the home page; sitemap at /sitemap.xml.
+- Structured data for tools, not prose: /agent-context.json (routes, project stats and the shipped fleet as typed JSON, gen-agent-context.mjs).
 - Deep-reading version of this file: /llms-full.txt (complete experience, case studies, skills and writing).
 - AI usage policy: /ai.txt (indexing, quoting and training permissions). Credits: /humans.txt. Vulnerability reports: /.well-known/security.txt.
 - Generated from src/data/profile.ts by scripts/gen-system-prompt.mjs on every build. Not hand-written, and not to be edited by hand.

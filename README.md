@@ -69,7 +69,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **twenty-two destinations**,
+The site is not a page with a few easter eggs; it is **twenty-three destinations**,
 each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
@@ -104,6 +104,7 @@ falls through it unregistered.
 | [`/ops`](https://siddharth-pandalai.vercel.app/ops) | control loop · live | every workflow, every generated dataset against its own SLA, what is published and signed, and a ledger of the failures a green check did not catch |
 | [`/blueprint`](https://siddharth-pandalai.vercel.app/blueprint) | 3D · WebGL | the portfolio as an infinite canvas: a three.js fly-through, an ASCII render of the same scene, and a sketchable tldraw whiteboard |
 | [`/map`](https://siddharth-pandalai.vercel.app/map) | 3D · graph | the projects and the ideas connecting them, as an orbitable constellation |
+| [`/globe`](https://siddharth-pandalai.vercel.app/globe) | 3D · live | real Earth, dot by dot: day and night from the actual subsolar point, reach numbers as light columns over Pune, who else is here right now |
 | [`/forge`](https://siddharth-pandalai.vercel.app/forge) | canvas · interactive | a few thousand particles spring-tied to a letter, parting around the cursor |
 | [`/terminal`](https://siddharth-pandalai.vercel.app/terminal) | text · easter egg | a faux shell you can type in: `ls`, `open doori`, `ask <q>`, `chess clock`. Backtick summons it from any route |
 | [`/playground`](https://siddharth-pandalai.vercel.app/playground) | 3d world · drivable | every room as a building on one street, drivable in 3D; north is 2017, south is now, and a West District turns his employers and case studies into towers |
@@ -285,14 +286,15 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Thirty-three `gen:` scripts over forty-four generator files. The ones you
-will actually reach for:
+Forty `gen:` scripts over forty-five generator files. The ones you will
+actually reach for:
 
 ```bash
 npm run refresh           # media sync + every generator (stats, galleries, og, prompt…)
 npm run gen:system-prompt # rebuild Panda's prompt after editing profile.ts
 npm run gen:og            # branded per-project OG cards (/p/<slug>/og.png)
 npm run capture:site      # screenshot every route (feeds the sentinel)
+npm run capture:globe-plate # /globe's no-WebGL static fallback (manual, needs a running preview)
 ```
 
 `gen:og` rasterizes at author time and commits its output, so the Vercel
@@ -309,10 +311,12 @@ the thirteen after it for eight days). `generators.test.mjs` fails the build
 if a script has no node, a node names a script that doesn't exist, or a
 generated file isn't a declared output.
 
-Eleven more generator files exist with no `npm run` script, deliberately: each
-needs something a build machine doesn't have. `check-generated.mjs`'s header
-carries the same reasoning; this is that reasoning where a README reader can
-find it.
+More generator files exist outside every build/refresh/check chain,
+deliberately: each needs something a build machine doesn't have, or reads
+live data whose mean barely moves. Most still have an `npm run gen:<name>`
+alias for running them by hand; the rest are invoked directly with `node`.
+`check-generated.mjs`'s header carries the same reasoning; this is that
+reasoning where a README reader can find it.
 
 - `gen-excelsior.mjs`. Manual and occasional: renders the source magazine
   PDFs, which live on MANIT's CDN and are not in this repo, and needs
@@ -335,22 +339,42 @@ find it.
   route's inline hydration scripts, so it structurally cannot run before
   `npm run build` and stays out of prebuild: `npm run build && node
   scripts/gen-csp.mjs`.
-- `gen-pune-normals.mjs`. Manual annual refresh of the 2015-2025 mean rainfall
-  per calendar day from Open-Meteo's ERA5 archive; the mean barely moves year
-  to year, so it stays out of every build/refresh/check chain.
-- `gen-starfield.mjs`. Manual and occasional: fetches the 34 MB HYG v41 star
-  catalogue and filters it to `public/sky/stars-hyg41-m5.bin`. Run by hand
-  when the catalogue needs a refresh.
-- `gen-globe-earth.mjs`. Manual and occasional: bakes NASA's public-domain
-  Black Marble night-radiance composite into a 360x180 land mask, `heavy/globe/earth-720x360.bin`.
-  The build must never block on NASA's server, so it stays out of every
+- `gen-pune-normals.mjs` (`npm run gen:pune-normals`). Manual annual refresh
+  of the 2015-2025 mean rainfall per calendar day from Open-Meteo's ERA5
+  archive; the mean barely moves year to year, so it stays out of every
   build/refresh/check chain.
-- `gen-world-grammar.mjs`. Manual and occasional: emits `growthCounts.json`
-  and `placements.json` from GRAMMAR plus the committed Ledger. Not yet wired
-  into build/refresh/check; run by hand: `node scripts/gen-world-grammar.mjs`.
-- `gen-globe-geo.mjs`. Manual and occasional: bakes country centroids from
-  Natural Earth's admin-0 GeoJSON mirror into `src/world/globe/centroids.ts`.
-  Same posture as `gen-globe-earth.mjs` above.
+- `gen-starfield.mjs` (`npm run gen:starfield`). Manual and occasional:
+  fetches the 34 MB HYG v41 star catalogue and filters it to
+  `public/sky/stars-hyg41-m5.bin`. Run by hand when the catalogue needs a
+  refresh.
+- `gen-globe-earth.mjs` (`npm run gen:globe-earth`). Manual and occasional:
+  bakes NASA's public-domain Black Marble night-radiance composite into a
+  360x180 land mask, `heavy/globe/earth-720x360.bin`. The build must never
+  block on NASA's server, so it stays out of every build/refresh/check chain.
+- `gen-globe-geo.mjs` (`npm run gen:globe-geo`). Manual and occasional: bakes
+  country centroids from Natural Earth's admin-0 GeoJSON mirror into
+  `src/world/globe/centroids.ts`. Same posture as `gen-globe-earth.mjs`
+  above.
+- `gen-terrain.mjs` (`npm run gen:terrain`, `scripts/world-v2/`). Manual:
+  bakes World v2's Sangam terrain heightmaps and flow map from committed
+  layout data plus `real-relief.mjs`'s real micro-relief. Never touches the
+  network; kept manual because it is heavy, not because it is live.
+- `gen-world-models.mjs` (`npm run gen:world-models`). Manual, needs a local
+  Blender 5.2 LTS binary: runs every World v2 Blender landmark kit in
+  `scripts/blender/world-v2/` headless, one at a time through
+  `render-watchdog.sh`. Each kit meshopt-packs its own GLB(s) through the
+  pinned `npx -y gltfpack@1.2.0 -cc -kn` (never added to `package.json`, M68).
+- `eval-ai-golden.mjs` (no `npm run` alias, runs only from
+  `ai-golden-eval.yml`, dispatch + weekly). Calls a live model against 5 JD
+  fixtures; inherently non-deterministic (model sampling, provider drift), so
+  it is never a required PR gate. Writes `not-run` with no provider key
+  configured; a band miss is recorded on `/ops`, never a failing exit code.
+
+`gen-world-grammar.mjs` (`gen:world-grammar`) runs in the refresh stage now,
+after `gen:stats`, `gen:chess`, `gen:store`, `gen:loopdown`, `gen:weeb`,
+`gen:timeline` and `gen:history` (living-ledger-spec.md §3.4 D5): it derives
+`growthCounts.json` and `placements.json` from GRAMMAR plus the committed
+Ledger, which reads all seven through `src/data/*.ts`.
 
 `gen-loopdown-art.mjs` (`gen:loopdown-art`) runs in the refresh stage now: it
 pulls the Loopdown's 13 cast portraits and 8 series covers (3.39 MB) from
@@ -418,7 +442,7 @@ different configs, and `--noEmit` misses errors the build fails on.
 
 ## Rendering and vitals
 
-Twenty-five of the twenty-seven route files server-render. Two stay client-only:
+Twenty-six of the twenty-eight route files server-render. Two stay client-only:
 `/ops` and `/pulse`. `/ops` is client-only because every age on its board is
 computed at load and a server render would ship a timestamp already wrong by
 the time it is read; `/pulse`'s numbers come off a websocket, so there is
@@ -498,6 +522,52 @@ to write a smaller number, because an empty success once deleted three real
 chess ratings. `scripts/lib/net.mjs` gives every fetch a timeout and bounded
 retries, since a stalled socket never rejects and hung the build for ten
 minutes.
+
+## Public surface
+
+These identifiers are the site's API, whether or not they look like one.
+Something else (a bookmark, a shared link, an agent's cached memory, this
+repo's own `/agent-context.json`) depends on each one staying stable. Changing
+one is a breaking change: ship a new version alongside it, never an edit in
+place.
+
+- `?path=` and its version prefix: the Blueprint Room canvas's saved-view
+  encoding.
+- `?world=`, `?at=`, `?focus=`: deep links into a world/lane/story position.
+- The `/api/*` response shapes `public/agent-context.json` points agents at.
+- The `playhtml` channel `geo-v1`: the shared, cross-viewer room state.
+- `localStorage` key `world:lastSeen`: per-viewer world-visit state.
+- The `heavy/` path layout (`heavy/<app>/...`): every heavy asset URL this
+  site or an agent constructs.
+- The `stars-hyg41-m5.bin` binary format: GLOBE's star catalogue.
+
+## Data licences
+
+- `src/data/osm/mutha.json` and `heavy/world/terrain/*`: [Open Database
+  Licence 1.0](https://opendatacommons.org/licenses/odbl/1-0/) (ODbL),
+  attribution to OpenStreetMap contributors: (c) OpenStreetMap contributors,
+  https://www.openstreetmap.org/copyright.
+- `public/sky/stars-hyg41-m5.bin`: [CC BY-SA
+  4.0](https://creativecommons.org/licenses/by-sa/4.0/) (HYG database).
+- Live `adsb.lol` and CelesTrak data is proxied at request time, never
+  stored; attribution only, no redistribution.
+- Relief data: SRTM/GMTED2010 via AWS Terrain Tiles (USGS, public domain).
+
+## Self-healing data
+
+`refresh-media.yml` (SH-12) runs the daily data refresh and opens a rolling
+PR against `bot/data-refresh`, merged automatically only when
+`classify-diff.mjs` proves every changed byte came from a registered
+generator's own declared outputs, never when the diff touches code, or looks
+collapsed. A red gate leaves the PR open, labelled `needs-human`, with an
+issue filed by `scripts/report-gate-failure.sh` instead of a silent stall.
+`doctor.yml` (SH-4) runs the same freshness checks against every SLA in
+`freshnessSla.ts` and its own review-by dates for archived work, and files an
+issue per stale entry rather than blocking anything downstream: staleness
+alarms where it can heal, not where it can only block. Read a `needs-human`
+PR as: the generator ran, produced a real diff, and something about that diff
+(size, shape, or a check failing alongside it) needs a person's judgement
+before it reaches `main`.
 
 ## Updating content
 

@@ -296,12 +296,12 @@ export const GENERATORS = [
   // Manual annual refresh, deliberately NOT wired into any build/refresh/check
   // chain (its own header says so, live-data-spec.md#1.3, #4 R6): the mean
   // barely moves year to year.
-  { id: "pune-normals", script: "gen-pune-normals.mjs", npmName: null, kind: "network",
+  { id: "pune-normals", script: "gen-pune-normals.mjs", npmName: "gen:pune-normals", kind: "network",
     inputs: [], outputs: ["src/data/generated/puneNormals.ts"], stages: {} },
   // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
   // header says so, live-data-spec.md#1.3, #4 R6): a 34 MB CSV fetch, run by
   // hand when the star catalogue needs a refresh.
-  { id: "starfield", script: "gen-starfield.mjs", npmName: null, kind: "network",
+  { id: "starfield", script: "gen-starfield.mjs", npmName: "gen:starfield", kind: "network",
     inputs: [], outputs: ["public/sky/stars-hyg41-m5.bin"], stages: {} },
   // Manual/occasional, same posture as gen-excelsior.mjs above (its own header
   // says so): needs `tesseract` on PATH, a system binary no CI runner can be
@@ -329,18 +329,37 @@ export const GENERATORS = [
   // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
   // header says so, G13): bakes the Black Marble night-radiance land mask by
   // hand; the build must never block on NASA's server.
-  { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: null, kind: "network",
+  { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: "gen:globe-earth", kind: "network",
     inputs: [], outputs: ["heavy/globe/earth-720x360.bin"], stages: {} },
   // Manual/occasional, same posture as gen-globe-earth.mjs above (its own
   // header says so, G13): bakes country centroids from Natural Earth's
   // admin-0 GeoJSON mirror by hand.
-  { id: "globe-geo", script: "gen-globe-geo.mjs", npmName: null, kind: "network",
+  { id: "globe-geo", script: "gen-globe-geo.mjs", npmName: "gen:globe-geo", kind: "network",
     inputs: [], outputs: ["src/world/globe/centroids.ts"], stages: {} },
-  // Manual/occasional (its own header says so): emits growthCounts.json and
-  // placements.json from GRAMMAR + the committed Ledger. Not yet wired into
-  // the build/refresh/check chains — run by hand: node scripts/gen-world-grammar.mjs
-  { id: "world-grammar", script: "gen-world-grammar.mjs", npmName: null, kind: "local",
-    inputs: [], outputs: ["src/world/v2/generated/growthCounts.json", "src/world/v2/generated/placements.json"], stages: {} },
+  // Deterministic local node (living-ledger-spec §3.4 D5): reads GRAMMAR +
+  // the committed Ledger (src/world/v2/ledger.ts), which itself reads the
+  // seven sources below through src/data/*.ts — so it must run after all
+  // seven refresh. Real input edges (not just stage-number ties) enforce
+  // that order via stageOrder's topological sort. P2-wire (M22, M62).
+  // Manual/occasional (M68): orchestrates the ~22 World v2 Blender landmark
+  // kits (needs a local Blender 5.2 LTS binary, one process at a time, G0
+  // cap) — never registered in the build pipeline, same posture as the other
+  // manual generators above.
+  { id: "world-models", script: "gen-world-models.mjs", npmName: "gen:world-models", kind: "local",
+    inputs: [], outputs: ["heavy/world/models/*.glb"], stages: {} },
+  // Manual/scheduled only (idea-atlas C4, M31): calls a live provider, so it
+  // is never a required build/refresh/check gate — runs only from
+  // ai-golden-eval.yml (workflow_dispatch + weekly, P2-wire). Writes
+  // "not-run" and exits 0 with no provider key configured.
+  { id: "ai-golden-eval", script: "eval-ai-golden.mjs", npmName: null, kind: "private-env",
+    inputs: [], outputs: ["src/data/generated/aiEval.ts"], stages: {} },
+  { id: "world-grammar", script: "gen-world-grammar.mjs", npmName: "gen:world-grammar", kind: "local",
+    inputs: [
+      "src/data/projectStats.ts", "src/data/chess.ts", "src/data/store.ts",
+      "src/data/writing.ts", "src/data/weeb.ts", "src/data/timeline.ts", "src/data/history.ts",
+    ],
+    outputs: ["src/world/v2/generated/growthCounts.json", "src/world/v2/generated/placements.json"],
+    stages: { refresh: 29 } },
 ];
 
 // gen-ops scans every top-level data file. Run it after their producers so

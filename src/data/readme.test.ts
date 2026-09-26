@@ -150,6 +150,7 @@ describe("the README's numbers are the repo's numbers", () => {
     const words: Record<number, string> = {
       15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
       19: "nineteen", 20: "twenty", 21: "twenty-one", 22: "twenty-two",
+      23: "twenty-three",
     };
     const word = words[surfaces.length];
     expect(word, `add a word for ${surfaces.length} to this test`).toBeDefined();
@@ -187,6 +188,7 @@ describe("the README's numbers are the repo's numbers", () => {
       16: "Sixteen", 17: "Seventeen", 18: "Eighteen", 19: "Nineteen",
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
+      28: "Twenty-eight", 29: "Twenty-nine",
     };
     const ssr = NUM[routes.length - clientOnly.length];
     const total = NUM[routes.length]?.toLowerCase();
@@ -237,7 +239,9 @@ describe("the README's numbers are the repo's numbers", () => {
       20: "Twenty", 21: "Twenty-one", 22: "Twenty-two", 23: "Twenty-three",
       24: "Twenty-four", 25: "Twenty-five", 26: "Twenty-six", 27: "Twenty-seven",
       28: "Twenty-eight", 29: "Twenty-nine", 30: "Thirty", 31: "Thirty-one",
-      32: "Thirty-two", 33: "Thirty-three",
+      32: "Thirty-two", 33: "Thirty-three", 34: "Thirty-four", 35: "Thirty-five",
+      36: "Thirty-six", 37: "Thirty-seven", 38: "Thirty-eight", 39: "Thirty-nine",
+      40: "Forty", 41: "Forty-one", 42: "Forty-two",
     };
     const fileWords: Record<number, string> = {
       24: "twenty-four", 25: "twenty-five", 26: "twenty-six",
@@ -245,7 +249,7 @@ describe("the README's numbers are the repo's numbers", () => {
       31: "thirty-one", 32: "thirty-two", 33: "thirty-three", 34: "thirty-four",
       35: "thirty-five", 36: "thirty-six", 37: "thirty-seven", 38: "thirty-eight",
       39: "thirty-nine", 40: "forty", 41: "forty-one", 42: "forty-two",
-      43: "forty-three", 44: "forty-four",
+      43: "forty-three", 44: "forty-four", 45: "forty-five", 46: "forty-six",
     };
     const scriptWord = scriptWords[genScripts];
     const fileWord = fileWords[genFiles];
