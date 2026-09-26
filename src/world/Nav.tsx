@@ -384,7 +384,17 @@ export function Onboarding({ onTour }: { onTour: () => void }): JSX.Element | nu
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-6">
-      <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-line bg-card/95 p-6 text-center backdrop-blur">
+      {/* A decorative scrim, not just the card's own translucent background —
+          bg-card/95 + backdrop-blur alone let a bright world-space label
+          sprite sitting right behind the card's rounded corner peek through
+          at the edge (verified: THE PARTICLE FORGE's label sliver at the
+          card's top-right on first load). Dims the whole scene the card
+          floats over instead of only the small area under the card itself,
+          so no label anywhere behind it can bleed through. pointer-events-
+          none: the world stays drivable while this card is up, same as
+          before this fix (only Escape/the two buttons below dismiss it). */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-ink/55" />
+      <div className="pointer-events-auto relative w-full max-w-md rounded-2xl border border-line bg-card p-6 text-center">
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent/70">// the playground</p>
         <h2 className="font-display mt-2 text-2xl font-bold">Eight rooms, one road.</h2>
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
