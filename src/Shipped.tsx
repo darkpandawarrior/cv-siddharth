@@ -162,7 +162,12 @@ export function Shipped() {
             {fleetByEra.map((era) => (
               <li
                 key={era.key}
-                className={`rounded-xl border px-4 py-3 ${era.key === "unmeasured" ? "border-line opacity-50" : "border-line"}`}
+                // era.key === "unmeasured": de-emphasise via a faded border,
+                // never CSS opacity on the whole card — opacity compounds
+                // into every descendant's paint, including text-muted's
+                // already-quiet color, and dropped its contrast ratio below
+                // AA (axe color-contrast, /shipped).
+                className={`rounded-xl border px-4 py-3 ${era.key === "unmeasured" ? "border-line/40" : "border-line"}`}
               >
                 <p className="font-display text-2xl font-bold tabular-nums text-accent">{era.count}</p>
                 <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted">{era.label}</p>
