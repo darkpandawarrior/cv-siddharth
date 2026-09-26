@@ -81,6 +81,30 @@ const EXPECTED_404 = [
   //   curl "https://cv-siddharth.vercel.app/api/ops"
   // after the first deploy and remove this entry if it is not 200.
   "/api/ops",
+  // Added with the live server layer (P2-01a/P2-01b/P2-02a/P2-02b): weather
+  // (+ air/river/season), the signals bus (lichess/dev.to/family CI/release
+  // downloads), the local aircraft cluster and CelesTrak TLEs, plus the
+  // visitor country lookup. Same "no production URL yet" story as /api/ops
+  // above — this branch has not deployed — verified the same way: all five
+  // currently 404 on the LIVE site too (curl
+  // https://cv-siddharth.vercel.app/api/weather etc.), which is exactly what
+  // "not deployed yet" looks like; re-curl after the first deploy and drop
+  // any entry that is not 200.
+  "/api/weather",
+  "/api/whereami",
+  "/api/aircraft",
+  "/api/signals",
+  "/api/tle",
+  // heavy/globe/earth-720x360.bin (P2-08 globe-core): HEAVY_ASSET_BASE
+  // defaults to the real GitHub Pages host whenever VITE_HEAVY_ASSET_BASE
+  // isn't set to "/" (assetBase.ts) — true for `npm run build && npm run
+  // serve`, same as every other WASM/showcase asset under heavy/. This one
+  // publishes on its own schedule, separate from this site's deploy
+  // (assetBase.ts's own doc comment), and curling it directly confirms it
+  // is not there yet: `curl -I https://darkpandawarrior.github.io/cv/globe/
+  // earth-720x360.bin` -> 404. Drop this entry once `npm run
+  // publish:heavy-assets` has actually shipped it.
+  "darkpandawarrior.github.io/cv/globe/earth-720x360.bin",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 
