@@ -37,7 +37,7 @@ export const perimeter = [
     "file": "kmpGraph.ts",
     "generatedAt": "2026-09-25",
     "slaDays": 45,
-    "generator": "npm run gen:kmp-graph"
+    "generator": "npm run gen:stats"
   },
   {
     "file": "lanes.ts",
@@ -58,6 +58,12 @@ export const perimeter = [
     "generator": "npm run gen:stats"
   },
   {
+    "file": "providers.ts",
+    "generatedAt": "2026-09-20",
+    "slaDays": 45,
+    "generator": "npm run gen:providers"
+  },
+  {
     "file": "repoStats.ts",
     "generatedAt": "2026-09-23",
     "slaDays": 30,
@@ -71,7 +77,7 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-09-25",
+    "generatedAt": "2026-09-26",
     "slaDays": 30,
     "generator": "npm run gen:system-graph"
   },
@@ -83,8 +89,14 @@ export const perimeter = [
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-09-24",
+    "generatedAt": "2026-09-26",
     "slaDays": 21,
+    "generator": "npm run gen:weeb"
+  },
+  {
+    "file": "weebTitles.ts",
+    "generatedAt": "2026-09-26",
+    "slaDays": 45,
     "generator": "npm run gen:weeb"
   },
   {

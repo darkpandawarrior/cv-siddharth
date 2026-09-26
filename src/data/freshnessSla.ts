@@ -173,6 +173,15 @@ export const STAMP_RE = /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4
 const GENERATOR_ALIAS: Record<string, string> = {
   "compareSets.ts": "compare",
   "projectStats.ts": "stats",
+  // gen-project-stats.mjs writes both projectStats.ts and kmpGraph.ts from
+  // one run (generators.mjs's single node lists both as `outputs`) — there
+  // is no separate `gen:kmp-graph` script for the derived kebab-case guess
+  // to find.
+  "kmpGraph.ts": "stats",
+  // gen-weeb.mjs writes both weeb.ts and weebTitles.ts from one run; the
+  // derived kebab-case guess for the second file ("gen:weeb-titles") has no
+  // matching script.
+  "weebTitles.ts": "weeb",
   "writing.ts": "loopdown",
 };
 
