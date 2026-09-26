@@ -15,6 +15,7 @@ import {
   ALL_OFF,
   CADENCE_S,
   STAGES,
+  classifyProvenance,
   runPipeline,
   simulate,
   truthDistance,
@@ -24,6 +25,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { readToken } from "../themeColor";
 import { useSectionNav } from "../lib/navigation.ts";
+import { useSky } from "../lib/useSky.ts";
 import { Figure } from "./Figure.tsx";
 
 /**
@@ -65,6 +67,31 @@ const SCENARIOS = [
 ] as const;
 
 const PLAYBACK_SECONDS = 26; // how long a full run takes to draw, regardless of length
+
+// SKY-5: the one thing that changes with the real sun is this caption, never
+// the simulation. The pipeline above is a pure function of a seed: same
+// input, same output, at any hour, so the copy states a real fact about
+// Pune's sky right now and stops there, rather than implying the run itself
+// is somehow live.
+const DAYPART_LABEL: Record<import("../lib/sky.ts").Daypart, string> = {
+  night: "night",
+  dawn: "dawn",
+  golden: "golden hour",
+  day: "midday",
+  dusk: "dusk",
+};
+
+// A subtle border/vignette tint, one per daypart, decoration only, applied
+// at 13-33% alpha below. Never a data channel (CAL-1 stays amber/cyan for
+// that), so these five hexes are a local exception on the same footing as
+// signalRoute.ts's own zone palette.
+const DAYPART_TINT: Record<import("../lib/sky.ts").Daypart, string> = {
+  night: "#1c2a4a",
+  dawn: "#f0883e",
+  golden: "#f2a13d",
+  day: "#8ff0b4",
+  dusk: "#db61ff",
+};
 
 const fmtKm = (m: number) => `${(m / 1000).toFixed(2)} km`;
 const fmtPct = (p: number) => `${p > 0 ? "+" : ""}${p.toFixed(1)}%`;
@@ -116,6 +143,7 @@ export function SignalLabPane() {
   // remount the whole app, and #work in particular has to survive the home
   // chunk still loading, which is exactly what goToSection's mount-wait does.
   const { goToSection } = useSectionNav();
+  const sky = useSky();
 
   /* ── The engine run. Pure, memoised, and the single source of every number
    *    and every pixel below. */
@@ -149,6 +177,13 @@ export function SignalLabPane() {
     const maxV = Math.max(20, run.rawPath.maxDriftM);
     return { raw, eng, maxV };
   }, [run]);
+
+  /* ── The Confidence Console (REC-3): every fix classified into original,
+   *    cleaned, abnormal, mock or spike, and kept. signalEngine.ts's
+   *    classifyProvenance is the single source, so this panel and
+   *    signalEngine.test.ts's invariant assertion read the exact same
+   *    function. */
+  const provenance = useMemo(() => classifyProvenance(run.samples), [run]);
 
   /* ── Playback ─────────────────────────────────────────────────────────── */
   const reduced = useRef(false);
@@ -436,10 +471,16 @@ export function SignalLabPane() {
         headlines.
       </p>
 
-      <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
+      <div
+        className="card-elevated overflow-hidden rounded-2xl border bg-void/70 transition-colors"
+        style={sky ? { borderColor: `${DAYPART_TINT[sky.daypart]}55` } : undefined}
+      >
         <div className="relative h-[380px] sm:h-[460px]">
           <div ref={mapHostRef} className="signal-lab-map absolute inset-0 isolate" />
-          <div className="pointer-events-none absolute inset-0 bg-void/30" />
+          <div
+            className="pointer-events-none absolute inset-0 bg-void/30"
+            style={sky ? { boxShadow: `inset 0 0 60px ${DAYPART_TINT[sky.daypart]}22` } : undefined}
+          />
           <canvas
             ref={canvasRef}
             className="pointer-events-none absolute inset-0 h-full w-full"
@@ -457,6 +498,16 @@ export function SignalLabPane() {
           `}</style>
         </div>
 
+        {/* SKY-5: a real fact about Pune's sky, not a claim about the sim.
+            `sky` is null until the client clock mounts (useNow), so this
+            renders nothing rather than a stale guess for that one frame. */}
+        {sky && (
+          <p data-signal-daypart className="border-t border-line px-5 py-2 font-mono text-[11px] text-muted">
+            {DAYPART_LABEL[sky.daypart]} in Pune, sun {Math.round(sky.sun.altitudeDeg)}°. The run above is a pure
+            function of its seed and does not change with it.
+          </p>
+        )}
+
         {/* Headline: the three distances, side by side. */}
         <div className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-3">
           <Figure label="raw GPS" value={fmtKm(run.rawPath.distanceM)} sub={fmtPct(rawErrPct)} tone="baseline" />
@@ -471,6 +522,39 @@ export function SignalLabPane() {
           <Figure label="reckoned" value={fmtKm(reckonedM)} sub="dead-reckoned through a gap" tone="neutral" />
           <Figure label="rejected" value={String(run.engine.rejected)} sub="fixes discarded outright" tone="bad" />
           <Figure label="ground truth so far" value={fmtKm(truthSoFarM)} sub={`${accuracyPct.toFixed(1)}% accuracy`} tone="baseline" />
+        </div>
+
+        {/* The Confidence Console (REC-3): the whole run reclassified into
+            the published architecture's five buckets. "Filtered should never
+            mean deleted": abnormal and mock are excluded from cleaned, but
+            every metre is still accounted for somewhere, and nothing here
+            ever removes a sample. */}
+        <div className="border-t border-line px-5 py-4">
+          <p className="kicker mb-2">the confidence console, every fix classified, none deleted</p>
+          <div className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-5">
+            <Figure label="original" value={fmtKm(provenance.originalM)} sub="every leg, always" tone="neutral" />
+            <Figure label="cleaned" value={fmtKm(provenance.cleanedM)} sub="original minus mock and abnormal" tone="good" />
+            <Figure label="abnormal" value={fmtKm(provenance.abnormalM)} sub="kept, excluded from cleaned" tone="bad" />
+            <Figure label="mock" value={fmtKm(provenance.mockM)} sub="not modelled in this sim" tone="baseline" />
+            <Figure label="spike" value={fmtKm(provenance.spikeM)} sub="multipath, tracked separately" tone="baseline" />
+          </div>
+          <p className="mt-2 font-mono text-[11px] text-muted">
+            {fmtKm(provenance.cleanedM)} = {fmtKm(provenance.originalM)} minus ({fmtKm(provenance.mockM)} +{" "}
+            {fmtKm(provenance.abnormalM)}), asserted live by signalEngine.test.ts.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[11px]">
+            <span className="text-muted">quality score per zone</span>
+            {ZONES.map((z) => {
+              const q = provenance.qualityByZone[z.id];
+              return (
+                <span key={z.id} className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: z.color }} />
+                  <span className="text-muted">{z.label.toLowerCase()}</span>
+                  <span className={q >= 70 ? "text-accent" : "text-warn"}>{q}/100</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
 
         {/* Convergence: raw vs filtered position error, as a time series

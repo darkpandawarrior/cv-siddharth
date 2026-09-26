@@ -26,7 +26,9 @@ export type LabKey =
   | "search-trees"
   | "fanout"
   | "replay"
-  | "chess-clock";
+  | "chess-clock"
+  | "guard-lab"
+  | "routing-lab";
 
 export type LabTab = {
   key: LabKey;
@@ -55,6 +57,11 @@ export const LAB_TABS: LabTab[] = [
   { key: "fanout", label: "Provider Fan-out", metric: `${providerCount} providers`, group: "personal" },
   { key: "replay", label: "Deterministic Replay", metric: "0-tolerance", group: "personal" },
   { key: "chess-clock", label: "Clock Burn", metric: "+8.5 pts", group: "personal" },
+  // idea-atlas SYS-9: the production prompt fence, running in the browser.
+  { key: "guard-lab", label: "Guard Lab", metric: "0 leaked fences", group: "personal" },
+  // idea-atlas CRAFT-7: AgentHarness's own routing rule ("the captain never
+  // rows"), running as a small queueing simulation.
+  { key: "routing-lab", label: "Routing Lab", metric: "1 captain, never rows", group: "personal" },
 ];
 
 const WORDS = [
