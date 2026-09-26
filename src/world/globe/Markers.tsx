@@ -5,6 +5,7 @@ import { latLonToXyz } from "./geoMath.ts";
 import { readColor } from "../../themeColorThree.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
+import { calculatePosition, calloutStyle } from "./htmlLabelClamp.ts";
 
 const RING_RADIUS = 0.18;
 const RING_TUBE = 0.012;
@@ -43,22 +44,8 @@ export function Markers() {
         <torusGeometry args={[RING_RADIUS, RING_TUBE, 8, 40]} />
         <meshBasicMaterial color={probe} toneMapped={false} />
       </mesh>
-      <Html position={[0, 0.14, 0]} center distanceFactor={10} style={{ pointerEvents: "none" }}>
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            lineHeight: 1.3,
-            maxWidth: 190,
-            whiteSpace: "normal",
-            textAlign: "center",
-            background: "rgba(5,7,10,0.75)",
-            padding: "3px 7px",
-            borderRadius: 6,
-            color: "#e8efe9",
-            border: `1px solid ${probe.getStyle()}66`,
-          }}
-        >
+      <Html position={[0, 0.14, 0]} center distanceFactor={10} calculatePosition={calculatePosition} style={{ pointerEvents: "none" }}>
+        <div style={calloutStyle(probe, 190, true)}>
           {names}
           {unresolvedNote}
         </div>
