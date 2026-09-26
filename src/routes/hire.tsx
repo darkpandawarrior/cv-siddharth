@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
 import { profile, metrics, caseStudies, projectCards } from "../data/profile.ts";
 import { roomHead } from "../lib/routeHead.ts";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { useNow } from "../lib/useSky.ts";
 import { skyState } from "../lib/sky.ts";
 
@@ -200,10 +199,6 @@ function HirePage() {
         </div>
       </div>
     </main>
-    {/* The one route this page's own docstring says is built for a recruiter
-        making a hiring call had no way to ask a follow-up — mounted the same
-        one-line way resume.tsx and shipped.tsx already do. */}
-    <FloatingChat />
     </>
   );
 }

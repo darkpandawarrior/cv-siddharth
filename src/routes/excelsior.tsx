@@ -6,7 +6,6 @@ import { excelsiorEditions } from "../data/excelsior.ts";
 import { excelsiorMarks } from "../data/excelsiorMarks.ts";
 import { writeProgress } from "../lib/excelsiorProgress.ts";
 import { countWord } from "../data/labs.ts";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { EvidenceChip } from "../EvidenceChip.tsx";
@@ -188,7 +187,6 @@ function ExcelsiorRoute() {
           />
         </div>
       </main>
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { initMonitoring } from "../lib/monitoring.ts";
 import { scrollToSectionWhenReady, SECTION_IDS } from "../lib/navigation.ts";
 import { surfaces } from "../data/surfaces.ts";
-import { profile, metrics } from "../data/profile.ts";
+import { profile, metrics } from "../data/profile/core.ts";
 import { PAGE_TITLE, PERSON_LD, PROFILEPAGE_LD } from "../lib/structuredData.ts";
 import { ErrorPanel } from "../ErrorPanel.tsx";
 import { SkyLine } from "../SkyLine.tsx";
@@ -31,6 +31,7 @@ import spaceGrotesk700 from "@fontsource/space-grotesk/files/space-grotesk-latin
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 
 import { CommandPalette } from "../CommandPalette.tsx";
+import { ChatLauncher } from "../ChatLauncher.tsx";
 import { DeferredGlobalPulse } from "../play/DeferredPlayRoom.tsx";
 
 export const Route = createRootRoute({
@@ -353,6 +354,16 @@ function RootDocument({ children }: { children: ReactNode }) {
             hydrated, so a click before that never lands on a dead handler
             the same way. */}
         <CommandPalette />
+        {/* Global, like CommandPalette above and for the same reason: it was
+            mounted by hand in src/App.tsx and 23 route files (F13), so /ops
+            and the 404 had no chat at all. One mount makes it true
+            everywhere. Also NOT behind `Hydrate when={idle()}` — same
+            eager-trigger argument as CommandPalette's comment above, and
+            ChatLauncher is deliberately tiny (F12): the 1,100-line panel
+            itself only loads once a click or a chatBus call actually wants
+            it, so mounting the trigger eagerly costs one small chunk, not
+            the heavy one. */}
+        <ChatLauncher />
         <InitMonitoring />
         <SpeedInsights />
         <Analytics />

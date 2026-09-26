@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
 import { profile } from "../data/profile.ts";
 import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { heavy } from "../lib/assetBase.ts";
 
 // The full record is the default and carries no param, so `/resume` keeps
@@ -57,15 +56,6 @@ function ResumePage() {
       <div style={{ viewTransitionName: "resume-hero" }}>
         <ResumeView cut={cut ?? "full"} />
       </div>
-      {/* Matching the other route files that already mount it. Two
-          bits of chatContext.ts had been dead code since the day they were
-          written — PAGE_CHIPS["/resume"] and its three résumé-specific
-          prompts — because the console they belong to was never on this
-          route. It also puts the JD fit check one click from the page a
-          recruiter who has already decided to read the résumé is standing on.
-          The launcher, the panel and the crawlable FAQ section all carry
-          print:hidden, so the printed PDF is unchanged by mounting this. */}
-      <FloatingChat />
     </>
   );
 }

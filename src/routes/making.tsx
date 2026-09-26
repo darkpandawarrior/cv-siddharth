@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
@@ -421,7 +420,6 @@ function MakingRoute() {
         </div>
       </main>
 
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

@@ -6,7 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
@@ -288,7 +287,6 @@ function AnthologyRoute() {
             {layer === "dark" && <SiblingTab />}
           </div>
         </main>
-        <FloatingChat />
         <SiteFooter />
       </div>
   </DeferredPlayRoom>
