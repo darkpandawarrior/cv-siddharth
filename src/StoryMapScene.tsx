@@ -292,7 +292,15 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
       aria-hidden
     >
       <SceneActivity />
-      <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
+      {/* enableDamping (not false): every OTHER OrbitControls in this codebase
+          that lets a visitor orbit-drag (Blueprint3D, Starmap) runs damped —
+          this was the one exception, and a from-scratch measurement showed
+          a 700px drag here moving the camera by roughly the same amount as
+          its own idle-frame GPU noise, while the identical drag on
+          Blueprint3D's damped controls visibly reorients the whole scene
+          (e2e/studio-visuals.spec.ts: "dragging the map background orbits
+          its nodes"). */}
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping dampingFactor={0.12} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
       <hemisphereLight args={["#e2f4ed", "#18251f", 1.5]} />
       <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 3, 4]} intensity={9} color={readToken("--color-probe", "#5ee6ff")} />

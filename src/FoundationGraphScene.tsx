@@ -214,7 +214,11 @@ export default function FoundationGraphScene() {
       aria-label="3D constellation of the shared KMP libraries and the apps built on them — hover a node to trace a dependency, click to open its repo"
     >
       <SceneActivity />
-      <OrbitControls enablePan={false} enableZoom={false} enableDamping={false} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
+      {/* enableDamping: see StoryMapScene.tsx's identical control block —
+          the same enableDamping={false} config measurably failed to orbit
+          there; kept consistent here since this is the same copy-pasted
+          constellation-drag setup. */}
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping dampingFactor={0.12} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
       <hemisphereLight args={["#e2f4ed", "#18251f", 1.5]} />
       <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 4, 4]} intensity={8} color={readToken("--color-probe", "#5ee6ff")} />
