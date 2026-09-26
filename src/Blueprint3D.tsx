@@ -263,9 +263,15 @@ function CameraRig({
   );
 }
 
-function FlowLine({ from, to, color }: { from: [number, number, number]; to: [number, number, number]; color: string }) {
+function FlowLine({ from, to, color, reducedMotion }: { from: [number, number, number]; to: [number, number, number]; color: string; reducedMotion: boolean }) {
   const ref = useRef<Line2 | LineSegments2>(null);
+  // Every other continuous per-frame mutation in this scene already checks
+  // reducedMotion (CameraRig's cursor sway, Sparkles/Float's speed=0); this
+  // "marching ants" dash offset was the one left ungated — with several of
+  // these lines always on screen, the shifting pattern was most of what
+  // e2e/blueprint.spec.ts's reduced-motion screenshot diff was catching.
   useFrame((_, delta) => {
+    if (reducedMotion) return;
     const mat = ref.current?.material as { dashOffset?: number } | undefined;
     if (mat && typeof mat.dashOffset === "number") mat.dashOffset -= delta * 0.6;
   });
@@ -572,6 +578,7 @@ function Scene({
             from={worldPosAt(ca.x, ca.y)}
             to={worldPosAt(cb.x, cb.y)}
             color={COLOR_HEX[color] ?? terminalGreen()}
+            reducedMotion={reducedMotion}
           />
         );
       })}
