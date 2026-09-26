@@ -365,6 +365,25 @@ export default defineConfig(async () => ({
           // export" shape as projects.ts above, just in a file this lane
           // does not own (see final report: out of scope to slim further).
           if (id.includes("/src/data/store.ts")) return "store-fleet-heavy";
+          // The "fuller fix" the comment above named as out of scope, applied
+          // narrowly the same way: openSource.ts (needs store.ts's fleetStats)
+          // and skills.ts (needs the full `projects` for its own project-
+          // stack word-matching) were the two remaining profile/ submodules
+          // still landing in the SAME auto-merged bucket as core.ts/
+          // projectCards.ts (every route that reads `profile.name` shares
+          // that chunk) purely because Rollup's "same importer set" heuristic
+          // doesn't know their heavy imports are unused by most of that set.
+          // e2e/spine-payload.spec.ts caught it: /chess, /terminal, /weeb and
+          // /hire were still fetching profile-projects-heavy + store-fleet-
+          // heavy through that shared bucket after Terminal.tsx (this wave's
+          // one direct consumer) stopped needing them itself. Forcing these
+          // two into their own chunks, same as projects.ts/store.ts above,
+          // keeps that shared bucket light for every route that doesn't
+          // render skills/foundation/open-source content (only /terminal and
+          // /resume do; both already lazy-load or isolate the rest of their
+          // heavy needs).
+          if (id.includes("/src/data/profile/openSource.ts")) return "profile-open-source-heavy";
+          if (id.includes("/src/data/profile/skills.ts")) return "profile-skills-heavy";
         },
       },
     },
