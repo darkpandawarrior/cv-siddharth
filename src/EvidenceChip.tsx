@@ -178,8 +178,13 @@ export function EvidenceChip({ file, stamp, source, cadence, live, nextPollAt, s
     <a
       className="chip-evidence"
       href={`/ops#${file}`}
+      // No aria-label: the visible <span>{visibleText}</span> below already
+      // gives the anchor its accessible name, and `sentence` (title, hover
+      // only) is a paraphrase — pairing it with aria-label made the visible
+      // text disappear from the accessible name (axe label-content-name-
+      // mismatch on every chip whose sentence doesn't literally contain its
+      // visible text, e.g. "computed · NOAA" vs "Computed, source NOAA").
       title={sentence}
-      aria-label={sentence}
       data-evidence-chip
       data-cadence={cadence ?? "weekly"}
       data-state={state ?? undefined}
