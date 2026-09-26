@@ -169,9 +169,13 @@ describe("buildProviders", () => {
  */
 function scratchRepo() {
   const root = tmp("gen-providers-e2e-");
-  mkdirSync(join(root, "scripts"), { recursive: true });
+  mkdirSync(join(root, "scripts", "lib"), { recursive: true });
   mkdirSync(join(root, "src", "data"), { recursive: true });
   copyFileSync(new URL("gen-providers.mjs", import.meta.url), join(root, "scripts/gen-providers.mjs"));
+  // Pulled in for the generatedAt stamp's `git log` call against the sibling
+  // checkout (same dependency gen-project-stats.test.mjs's own scratchRepo
+  // already copies for the same reason).
+  copyFileSync(new URL("lib/git-env.mjs", import.meta.url), join(root, "scripts/lib/git-env.mjs"));
   return root;
 }
 
