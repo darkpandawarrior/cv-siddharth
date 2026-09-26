@@ -1,7 +1,7 @@
 # cv-siddharth
 
 <p align="center">
-  <img src="./public/assets/readme/hero.gif" width="100%" alt="cv-siddharth, an interactive résumé with an AI assistant">
+  <img src="./.github/readme-assets/hero.gif" width="100%" alt="cv-siddharth, an interactive résumé with an AI assistant">
 </p>
 
 <p align="center">
@@ -88,7 +88,7 @@ sitemap or both), and `routeSystemisation.test.ts` fails the build if a route
 falls through it unregistered.
 
 <p align="center">
-  <img src="./public/assets/readme/wall.webp" width="100%" alt="The homepage surface wall: every route as a tile in its own device frame, grouped under Proof, Things that run, Corpus and Writing">
+  <img src="./.github/readme-assets/wall.webp" width="100%" alt="The homepage surface wall: every route as a tile in its own device frame, grouped under Proof, Things that run, Corpus and Writing">
   <br/>
   <sub><i>One group of four. Each poster is the route captured at that device's own viewport, not a desktop screenshot cropped to shape.</i></sub>
 </p>
