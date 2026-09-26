@@ -1,12 +1,14 @@
 import { Suspense, useRef, useState } from "react";
 import { SceneActivity } from "./SceneActivity.tsx";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
+import { Vector3 } from "three";
 import { skills } from "./data/profile.ts";
 import { readToken } from "./themeColor";
 import { useStudioModel } from "./three/models.ts";
 import { StudioRig } from "./three/StudioRig.tsx";
 import type { Mesh } from "three";
+import { declutter, type Candidate } from "./world/labels.ts";
 
 /**
  * The skill cloud as an orbiting word-sphere — every chip from the flat
@@ -75,28 +77,52 @@ function SkillsCore() {
 // fine, a per-frame React state churn isn't).
 const FACING_CHECK_INTERVAL = 0.15;
 
+// Mono 12px button, "3px 9px" padding + 1px border each side (SkillMarker's
+// own <Html> style below) — close enough to the real rendered box without
+// measuring a DOM ref per label every check, ponytail: swap for a measured
+// offsetWidth/offsetHeight (WorldLabels.tsx's own approach) if a label ever
+// visibly over- or under-claims its box.
+const CHAR_PX = 7.3;
+const LABEL_PAD_PX = 20;
+const LABEL_HEIGHT_PX = 24;
+const scratchProject = new Vector3();
+
 /**
- * Word-sphere labels overlap into an illegible pile without this: 30 DOM
- * labels rendered flat over the canvas, front and back hemisphere alike,
- * have no notion of "behind the sphere". `<Html occlude>` depth-tests against
- * rendered geometry, but the gem-cut core's inset facets aren't a clean
- * convex shell, so it doesn't reliably hide the far side. This does the same
- * job directly: a point only shows its text label when it faces the camera
- * (dot product of its direction from centre with the camera's direction is
- * positive), the same "only the near half talks" rule a word globe needs.
+ * Word-sphere labels overlap into an illegible pile without collision
+ * awareness: 30 DOM labels rendered flat over the canvas, front and back
+ * hemisphere alike, have no notion of "behind the sphere" OR of each other.
+ * `<Html occlude>` depth-tests against rendered geometry, but the gem-cut
+ * core's inset facets aren't a clean convex shell, so it doesn't reliably
+ * hide the far side.
+ *
+ * Two passes, same split World's own label layer (world/labels.ts) uses:
+ *   1. FACING — a point only becomes a candidate once it faces the camera
+ *      (dot product of its direction from centre with the camera's direction
+ *      is comfortably positive), the "only the near half talks" rule a word
+ *      globe needs.
+ *   2. DECLUTTER — reuses world/labels.ts's own pure `declutter` (same
+ *      greedy nearest-first AABB pass the driving world uses for its ~27
+ *      pills), fed this scene's projected screen boxes instead of writing a
+ *      second collision checker. `depth` is repurposed as `-dot`, so the
+ *      point most square-on to the camera always wins a collision — a real
+ *      screen-space check, not just the facing threshold, which still let
+ *      near-terminator labels pile up on each other after the sphere settled.
  * The coloured marker dot stays put either way — spinning the orbit still
- * shows where every skill lives, just not its text until it turns to face you.
+ * shows where every skill lives, just not its text until it turns to face
+ * you AND has room to say so.
  */
 function Orbit({ active, onSelect, onSelectItem }: { active: string | null; onSelect: (group: string) => void; onSelectItem?: (item: string) => void }) {
-  const [facing, setFacing] = useState<Set<string>>(() => new Set(POINTS.map((p) => p.item)));
+  const [visible, setVisible] = useState<Set<string>>(() => new Set(POINTS.map((p) => p.item)));
   const lastCheck = useRef(0);
+  const size = useThree((s) => s.size);
 
   useFrame(({ clock, camera }) => {
     if (clock.elapsedTime - lastCheck.current < FACING_CHECK_INTERVAL) return;
     lastCheck.current = clock.elapsedTime;
     const camLen = Math.hypot(camera.position.x, camera.position.y, camera.position.z) || 1;
-    const next = new Set<string>();
-    for (const p of POINTS) {
+    const candidates: Candidate[] = [];
+    for (let i = 0; i < POINTS.length; i++) {
+      const p = POINTS[i];
       const [x, y, z] = p.pos;
       const len = Math.hypot(x, y, z) || 1;
       const dot = (x * camera.position.x + y * camera.position.y + z * camera.position.z) / (len * camLen);
@@ -104,13 +130,23 @@ function Orbit({ active, onSelect, onSelectItem }: { active: string | null; onSe
       // equator-hemisphere density (dot > -0.08, ~17 shown) still piled into
       // an unreadable cluster near the sphere's screen-space centre. Capping
       // to the near cap keeps only the dozen or so facing the viewer head-on
-      // legible; the rest reveal themselves as the sphere is dragged around.
-      // ponytail: threshold is a tuned constant, not a real 2D collision
-      // check — if labels still touch at some camera angle, replace with the
-      // atlas lane's screen-space AABB pass (design-spec.md section "atlas").
-      if (dot > 0.35) next.add(p.item);
+      // as declutter candidates; the rest reveal themselves as the sphere is
+      // dragged around.
+      if (dot <= 0.35) continue;
+      scratchProject.set(x, y, z).project(camera);
+      candidates.push({
+        index: i,
+        kind: "project",
+        x: (scratchProject.x * 0.5 + 0.5) * size.width,
+        y: (1 - (scratchProject.y * 0.5 + 0.5)) * size.height,
+        depth: -dot,
+        width: p.item.length * CHAR_PX + LABEL_PAD_PX,
+        height: LABEL_HEIGHT_PX,
+      });
     }
-    setFacing((prev) => (prev.size === next.size && [...prev].every((k) => next.has(k)) ? prev : next));
+    const drawn = declutter(candidates);
+    const next = new Set(drawn.map((i) => POINTS[i].item));
+    setVisible((prev) => (prev.size === next.size && [...prev].every((k) => next.has(k)) ? prev : next));
   });
 
   return (
@@ -126,7 +162,7 @@ function Orbit({ active, onSelect, onSelectItem }: { active: string | null; onSe
             <Suspense fallback={null}>
               <SkillMarker pos={p.pos} color={color} />
             </Suspense>
-            {facing.has(p.item) && (
+            {visible.has(p.item) && (
               <Html position={p.pos} center distanceFactor={6.5} zIndexRange={[10, 0]}>
                 <button
                   onClick={() => { onSelect(p.group); onSelectItem?.(p.item); }}
