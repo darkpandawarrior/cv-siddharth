@@ -5,6 +5,7 @@ import { ArrowRight, Check, Copy } from "lucide-react";
 import { projectBySlug, metrics, skills, siteRooms, cardMedia, type Project } from "./data/profile.ts";
 import { classifyChatHref, useSectionNav } from "./lib/navigation.ts";
 import { EMPTY_REPLY_NOTE, jdFitText, parseChatBlocks, type ChatBlock, type JdFitReport } from "./lib/chatBlocks.ts";
+import type { JdFitDossier } from "./lib/useJdFit.ts";
 import { Picture } from "./Picture.tsx";
 
 /**
@@ -182,6 +183,7 @@ export function JdFitCard({
   report,
   onNavigate,
   onAsk,
+  dossier,
 }: {
   report: JdFitReport;
   onNavigate?: () => void;
@@ -189,6 +191,12 @@ export function JdFitCard({
    *  own send() (not openChat()) — the question goes into the SAME
    *  conversation the card is already sitting in, no extra round trip. */
   onAsk?: (question: string) => void;
+  /** SYS-7's dossier chit: click to see which skills matched, which JD
+   *  sections jd-condense kept or trimmed, and (via `report.source` above)
+   *  which engine answered. Absent for a report this card didn't get from
+   *  useJdFit (there is currently no other caller, but the prop stays
+   *  optional rather than assumed). */
+  dossier?: JdFitDossier;
 }) {
   const band = BANDS.find((b) => report.score >= b.min)!;
   const [copied, setCopied] = useState(false);
@@ -239,6 +247,37 @@ export function JdFitCard({
         <p className="mt-1.5 font-mono text-[10px] tabular-nums text-muted">
           {matched} matched · {gapCount} gap{gapCount === 1 ? "" : "s"}
         </p>
+        {/* SYS-7 dossier chit: click the score's receipt for the mechanism
+            behind it, a native <details>, not a second modal or a JS toggle
+            (rung 4 on the ladder); open/closed state lives in the DOM. */}
+        {dossier && (dossier.matchedSkills.length > 0 || dossier.trimmedSections.length > 0) && (
+          <details className="mt-2 border-t border-line pt-2">
+            {/* Reuses SECTION_LABEL's own class string (a reference, not a
+                second literal copy of it) rather than a fresh arbitrary
+                Tailwind value, per this file's design-system ratchet (G-DS). */}
+            <summary className={`${SECTION_LABEL} cursor-pointer text-muted marker:text-accent2 hover:text-accent2`}>
+              how this was scored
+            </summary>
+            <div className="mt-1.5 space-y-1.5 text-xs leading-snug text-zinc-400">
+              <p>
+                Engine:{" "}
+                {report.source === "offline"
+                  ? "instant keyword match against his stack (no model call)"
+                  : "the model's own read"}
+                .
+              </p>
+              {dossier.matchedSkills.length > 0 && (
+                <p>Matched on: {dossier.matchedSkills.join(", ")}.</p>
+              )}
+              {dossier.trimmedSections.length > 0 && (
+                <p>
+                  Kept: {dossier.keptSections.length > 0 ? dossier.keptSections.join(", ") : "the whole description"}.
+                  Trimmed as boilerplate before scoring: {dossier.trimmedSections.join(", ")}.
+                </p>
+              )}
+            </div>
+          </details>
+        )}
       </header>
 
       <div className="space-y-3 p-3">
@@ -344,6 +383,7 @@ function chatWidget(
   key: number,
   onNavigate?: () => void,
   onAsk?: (question: string) => void,
+  jdDossier?: JdFitDossier,
 ): React.ReactNode {
   switch (block.name) {
     case "project": {
@@ -360,7 +400,9 @@ function chatWidget(
     case "skills":
       return <SkillChips key={key} />;
     case "jdfit":
-      return block.data ? <JdFitCard key={key} report={block.data} onNavigate={onNavigate} onAsk={onAsk} /> : null;
+      return block.data ? (
+        <JdFitCard key={key} report={block.data} onNavigate={onNavigate} onAsk={onAsk} dossier={jdDossier} />
+      ) : null;
     default:
       return null;
   }
@@ -383,12 +425,17 @@ export function ChatMessageBody({
   done = false,
   onNavigate,
   onAsk,
+  jdDossier,
 }: {
   content: string;
   done?: boolean;
   onNavigate?: () => void;
   /** Threaded straight through to JdFitCard's gap rows — see its own prop doc. */
   onAsk?: (question: string) => void;
+  /** Threaded straight through to JdFitCard's dossier chit, see its own prop
+   *  doc. Only the caller (FloatingChat) knows which message this content
+   *  belongs to, so it decides when a dossier applies at all. */
+  jdDossier?: JdFitDossier;
 }) {
   const components = useMemo<Components>(
     () => ({ a: ({ href, children }) => <ChatLink href={href} onNavigate={onNavigate}>{children}</ChatLink> }),
@@ -402,7 +449,7 @@ export function ChatMessageBody({
         {block.text}
       </Markdown>
     ) : (
-      chatWidget(block, i, onNavigate, onAsk)
+      chatWidget(block, i, onNavigate, onAsk, jdDossier)
     ),
   );
 
