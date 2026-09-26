@@ -23,7 +23,7 @@ import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
 // `split` is what makes the compiler carve it into a separate module, not
 // whether the import itself is dynamic.
 import { plainText, speakableText } from "./lib/chatBlocks.ts";
-import { runJdFit } from "./lib/useJdFit.ts";
+import { runJdFit, type JdFitDossier } from "./lib/useJdFit.ts";
 import {
   HOME_GREETING,
   JD_PROMPT,
@@ -38,6 +38,7 @@ import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
 import { OPEN_CHAT_EVENT, openChat, openJdFit, type OpenChatDetail } from "./lib/chatBus.ts";
 import {
+  CHAT_API_URL,
   CHAT_FALLBACK,
   CHAT_UNAVAILABLE,
   JD_MAX_CHARS,
@@ -45,7 +46,7 @@ import {
   chatErrorText,
   isAbortError,
   isJdNearCap,
-  streamReply,
+  trimHistory,
   type ChatMessage,
 } from "./lib/chatClient.ts";
 
@@ -95,6 +96,82 @@ const MAX_STORED = 24;
 // openChat } from "./FloatingChat.tsx"` call sites across the codebase need
 // no change (SP-10 repoints them at chatBus directly; H8).
 export { openChat, openJdFit };
+
+/* ── Provenance (SYS-7, OD5) ──────────────────────────────────────────────
+ * "A green reply is a hint until its source is shown" (CRAFT-4). Every
+ * ordinary reply gets a receipt: which provider answered, live, or that every
+ * provider failed and the offline answer layer (or a plain apology) covered
+ * for it. Mirrors PROVIDER_HEADER in api/_lib/chat-handler.ts as a literal,
+ * not an import, because that module runs Edge-only setup (`process.env`
+ * reads) at load time that a browser bundle can't execute. */
+const PROVIDER_HEADER = "x-chat-provider";
+
+/** One assistant message's receipt, keyed by its index in `messages` (see the
+ *  `replyMeta` state below). Never totalled and never the same object once a
+ *  new question starts a fresh reply: OD5's "per reply, never a session
+ *  total" applies to what's SHOWN, and there is exactly one of these on
+ *  screen per settled reply. */
+type ReplyMeta = { kind: "live"; label: string; tokens: number | null } | { kind: "offline"; detail: string };
+
+function formatProviderLabel(label: string): string {
+  return label.length ? label[0].toUpperCase() + label.slice(1) : label;
+}
+
+/**
+ * Streams `/api/chat` exactly like chatClient.ts's shared `streamReply`, but
+ * also surfaces this lane's two provenance signals: the provider-label header
+ * (known as soon as the response arrives) and the per-reply token count chat-
+ * handler.ts appends as a final `{"tokens":N}` event just before `[DONE]`
+ * (only chatClient's `{"text":...}` shape is otherwise recognised, so that
+ * event is invisible to every OTHER caller of the shared function, additive,
+ * not a protocol change).
+ *
+ * Kept local rather than folded into chatClient.ts: that file is shared with
+ * src/Terminal.tsx and src/lib/useJdFit.ts, owned by other lanes in this wave
+ * (P2-13a owns FloatingChat.tsx only), so this is the smallest surface that
+ * adds the header/meta read without touching it.
+ */
+async function streamReplyWithProvenance(
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+  route: string | undefined,
+  signal: AbortSignal,
+): Promise<{ label: string | null; tokens: number | null }> {
+  const res = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ messages: trimHistory(messages), route }),
+    signal,
+  });
+  if (!res.ok || !res.body) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `Request failed (${res.status})`, { cause: res.status });
+  }
+  const label = res.headers.get(PROVIDER_HEADER);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let tokens: number | null = null;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data: ") || line.includes("[DONE]")) continue;
+      try {
+        const event = JSON.parse(line.slice(6));
+        if (typeof event.text === "string") onDelta(event.text);
+        else if (typeof event.tokens === "number") tokens = event.tokens;
+      } catch {
+        // partial or non-JSON keepalive, skip
+      }
+    }
+  }
+  return { label, tokens };
+}
 
 /* ── Slash commands ──────────────────────────────────────────────────────
  * These run entirely client-side — no model call, no latency, no API key
@@ -233,6 +310,15 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
   // whatever's still running rather than letting it finish unread — see
   // send()'s own abort at its top and the close effect below.
   const abortRef = useRef<AbortController | null>(null);
+  // SYS-7 provenance: one receipt per ordinary reply, keyed by its index in
+  // `messages`, set once the reply settles (live) or every provider is
+  // exhausted (offline); read by the chip rendered under that bubble.
+  const [replyMeta, setReplyMeta] = useState<Map<number, ReplyMeta>>(new Map());
+  // SYS-7 dossier chit: the LATEST JD analysis's data, tagged with the
+  // message index it belongs to. One at a time is enough; a second JD paste
+  // replaces it, same as canRetryJd/canRegenerate below only ever reason
+  // about the latest exchange.
+  const [jdDossier, setJdDossier] = useState<{ index: number; dossier: JdFitDossier } | null>(null);
 
   /* ── Voice ────────────────────────────────────────────────────────────
    * Speech-to-text FILLS the composer; it never submits on its own. A
@@ -441,16 +527,23 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
     // it streams deltas into a running transcript, which runJdFit's "replace
     // the whole bubble each update" contract doesn't need to know about.
     if (mode === "jd") {
+      // Captured now, not read from `messages` later: the assistant bubble
+      // this analysis owns is always the last slot of the array just below,
+      // whatever else happens to `messages` state by the time an update
+      // arrives.
+      const assistantIndex = base.length + 1;
       setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
       try {
         await runJdFit(
           content,
-          (update) =>
+          (update) => {
             setMessages((prev) => {
               const next = [...prev];
               next[next.length - 1] = { role: "assistant", content: update.content };
               return next;
-            }),
+            });
+            if (update.dossier) setJdDossier({ index: assistantIndex, dossier: update.dossier });
+          },
           controller.signal,
         );
       } catch (err) {
@@ -477,10 +570,11 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
     }
 
     const history: ChatMessage[] = [...base.filter((m) => m !== GREETING), { role: "user", content }];
+    const assistantIndex = base.length + 1;
     setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
 
     try {
-      await streamReply(
+      const { label, tokens } = await streamReplyWithProvenance(
         history,
         (delta) => {
           setMessages((prev) => {
@@ -490,10 +584,12 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
             return next;
           });
         },
-        mode,
         canonicalRoute(pathname),
         controller.signal,
       );
+      if (label) {
+        setReplyMeta((prev) => new Map(prev).set(assistantIndex, { kind: "live", label, tokens }));
+      }
     } catch (err) {
       if (isAbortError(err)) {
         setMessages((prev) => {
@@ -521,6 +617,16 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
         };
         return next;
       });
+      // Every provider on chat-handler.ts's ladder failed (a genuine network
+      // error, never an abort, that path returned above). SYS-7: the receipt
+      // says so instead of leaving the last "server: <label> · live" chip
+      // from an earlier reply looking like it still applies.
+      setReplyMeta((prev) =>
+        new Map(prev).set(assistantIndex, {
+          kind: "offline",
+          detail: offline ? "answer layer" : "no offline match",
+        }),
+      );
     } finally {
       setBusy(false);
     }
@@ -546,7 +652,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
     const api: SlashApi = {
       say: (content) => setMessages((prev) => [...prev, { role: "assistant", content }]),
       go: (to) => { setOpen(false); void navigate({ to }); },
-      clear: () => { setMessages([GREETING]); setJd(null); },
+      clear: () => { setMessages([GREETING]); setJd(null); setReplyMeta(new Map()); setJdDossier(null); },
       jd: (prefill) => setJd(prefill.slice(0, JD_MAX_CHARS)),
     };
     const cmd = SLASH_COMMANDS.find((c) => c.name === name.toLowerCase());
@@ -833,12 +939,32 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                           // which is a global event meant for callers outside
                           // an already-open panel that already owns send().
                           onAsk={(q) => void send(q)}
+                          jdDossier={jdDossier?.index === i ? jdDossier.dossier : undefined}
                         />
                         </Hydrate>
                       )}
                     </div>
                     {!streaming && m !== GREETING && m.content && (
                       <div className="mt-1 flex items-center gap-1 pl-1">
+                        {/* SYS-7 provenance chip: which provider actually
+                            answered, or that every one failed and this is the
+                            offline fallback (a receipt, not a promise,
+                            CRAFT-4). Absent on the greeting, on a still-
+                            streaming bubble, and on a JD reply (which carries
+                            its own "instant match"/"AI read" badge instead). */}
+                        {(() => {
+                          const meta = replyMeta.get(i);
+                          if (!meta) return null;
+                          return (
+                            <span className="mr-1 font-mono text-xs text-muted">
+                              {meta.kind === "live"
+                                ? `server: ${formatProviderLabel(meta.label)} · live${
+                                    meta.tokens !== null ? ` · ~${meta.tokens} tok` : ""
+                                  }`
+                                : `offline fallback (${meta.detail})`}
+                            </span>
+                          );
+                        })()}
                         <button onClick={() => void copyReply(m.content, i)} aria-label="Copy reply" className={ICON_BUTTON}>
                           {copied === i ? <Check size={13} className="text-accent" /> : <Copy size={13} />}
                         </button>
