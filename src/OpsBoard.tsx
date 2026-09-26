@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { useCursorPresences } from "@playhtml/react";
 import type { Ops, OpsRun } from "../api/_lib/ops-handler.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
@@ -1113,6 +1113,17 @@ function BrokenClock({ sinceIso }: { sinceIso: string }) {
   return <span className="ops-clock">worst unchanged for {d}d {t}</span>;
 }
 
+/** Renders nothing; its only job is to read playhtml's presence set client
+ *  side and lift the count up to OpsBoard's state. Kept as its own component
+ *  so it is the only place under OpsBoard.tsx that calls `useCursorPresences`
+ *  — rendered exclusively inside `<ClientOnly>`, below, which is what keeps
+ *  this reference out of the SSR bundle. */
+function PresenceCountBridge({ onCount }: { onCount: (n: number) => void }) {
+  const presences = useCursorPresences();
+  useEffect(() => { onCount(presences.size); }, [presences, onCount]);
+  return null;
+}
+
 /** A workflow's conclusion, mapped onto the board's three states. */
 function stateForRun(r: OpsRun): OpsState {
   if (r.conclusion === "success") return r.recentFailures > 0 ? "DEGRADED" : "OK";
@@ -1152,7 +1163,15 @@ export function OpsBoard() {
   const now = useNow();
   const sky = useSky();
   const weather = useWeather();
-  const presences = useCursorPresences();
+  // playhtml's presence count, not read directly here: a bare top-level
+  // `useCursorPresences()` call makes this whole component reachable from
+  // the SSR bundle, which is exactly what crashed /weeb and /anthology with
+  // "document is not defined" before those routes moved the read behind
+  // `<ClientOnly>` (see VisitorsNowLine in Terminal.tsx for the same split).
+  // `PresenceCountBridge` below is the only caller of the hook, and it is
+  // only ever rendered inside `<ClientOnly>`, so tanstackStart's compiler
+  // prunes that whole reference from the server bundle.
+  const [presenceCount, setPresenceCount] = useState<number | null>(null);
   const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
   const { data: signals } = useSignals();
   const aircraftPollMs = STREAMS.find((s) => s.id === "aircraft")?.pollMs ?? 20_000;
@@ -1532,7 +1551,9 @@ export function OpsBoard() {
         state: "OK",
         subject: "Presence",
         subjectHref: "/pulse",
-        detail: `${presences.size} here now, this tab included - this site's own realtime channel`,
+        detail: presenceCount === null
+          ? "reading..."
+          : `${presenceCount} here now, this tab included - this site's own realtime channel`,
         verified: "realtime",
       },
       {
@@ -1548,7 +1569,7 @@ export function OpsBoard() {
       },
     ];
     return rows;
-  }, [weather, sky, presences, activity, now]);
+  }, [weather, sky, presenceCount, activity, now]);
 
   /**
    * LIVE SOURCES (live-data-spec §3, §4 R6/R7): the eight rows added on top
@@ -1761,6 +1782,9 @@ export function OpsBoard() {
 
   return (
     <>
+      <ClientOnly>
+        <PresenceCountBridge onCount={setPresenceCount} />
+      </ClientOnly>
       {/* The skip link in __root.tsx targets #main-content, and every other
           route provides it. Without it "Skip to content" lands nowhere, which
           is both a real keyboard trap and what made e2e/a11y.spec.ts time out
