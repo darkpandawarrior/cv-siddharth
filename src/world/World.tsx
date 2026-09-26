@@ -31,6 +31,11 @@ import { useDwellEnter } from "./dwell.ts";
 import { Vehicle } from "./Vehicle.tsx";
 import { Ghosts } from "./Ghosts.tsx";
 import { Hud } from "./Hud.tsx";
+import { SkyBinding } from "./skyBinding.ts";
+import { useSky } from "../lib/useSky.ts";
+import { Rain } from "./Rain.tsx";
+import { Lamps, type LampPrompt } from "./Lamps.tsx";
+import type { DirectionalLight, HemisphereLight } from "three";
 import { input, attachKeyboard, isAutoDriving, setAutoAxes } from "./input.ts";
 import {
   BLOCKED_MS,
@@ -143,7 +148,25 @@ export default function World(props: { onShowList: () => void }) {
   // probe itself is already memoised for the session, but there is no
   // reason for this component to re-run the (cheap, but real) lookup logic
   // on every re-render either.
-  const budget = useMemo(() => tierBudget(deviceTier()), []);
+  const tier = deviceTier(); // module-memoised (deviceTier.ts) — cheap on every call after the first
+  const budget = useMemo(() => tierBudget(tier), [tier]);
+
+  // R4 — THE REALITY LAYER (reality-spec §4, master-plan.md#P1-05). One
+  // `useSky()` call, here: SkyBinding, Ghosts' own glow and Hud's ledger all
+  // need the identical reading, and this is the one file already common to
+  // all three (skyBinding.ts's own doc comment weighs this against calling
+  // it inside SkyBinding instead). `previewAt` is the day scrubber's state
+  // (Hud.tsx §4.3); `null` is always "now."
+  const [previewAt, setPreviewAt] = useState<Date | null>(null);
+  const sky = useSky(previewAt);
+  const sunRef = useRef<DirectionalLight>(null);
+  const hemiRef = useRef<HemisphereLight>(null);
+
+  // Lamps.tsx's own approach prompt (§4.2) — same shape as the room/landmark
+  // prompts above, lifted here only because Lamps mounts inside <Canvas>
+  // and the card that shows it (Hud) does not.
+  const [lampPrompt, setLampPrompt] = useState<LampPrompt | null>(null);
+
   const fogArgs = useMemo<[string, number, number]>(() => {
     const [near, far] = budget.fogNearFar;
     // Matches Sky.tsx's own horizon stop (owner's "blue hour, not black"
@@ -542,8 +565,13 @@ export default function World(props: { onShowList: () => void }) {
             same 13° raking angle (unchanged — that's what makes relief
             legible); only the two intensities are raised so the terrain
             reads from shading and silhouette alone. */}
-        <directionalLight color={NIGHT_SUN_HEX} intensity={NIGHT_SUN_INTENSITY} position={[-122, 28, 18]} />
-        <hemisphereLight args={[NIGHT_HEMI_SKY_HEX, NIGHT_HEMI_GROUND_HEX, NIGHT_HEMI_INTENSITY]} />
+        <directionalLight ref={sunRef} color={NIGHT_SUN_HEX} intensity={NIGHT_SUN_INTENSITY} position={[-122, 28, 18]} />
+        <hemisphereLight ref={hemiRef} args={[NIGHT_HEMI_SKY_HEX, NIGHT_HEMI_GROUND_HEX, NIGHT_HEMI_INTENSITY]} />
+        {/* R4 — zero-render: writes the two light refs above, Sky.tsx's dome
+            and the scene's own fog imperatively, once per SkyState change
+            (skyBinding.ts's own doc comment). Mounted right after the two
+            lights it owns and before anything that reads them by eye. */}
+        <SkyBinding sunRef={sunRef} hemiRef={hemiRef} sky={sky} tier={tier} />
         <MemoTerrain />
         <MemoFixtures />
         <MemoProps />
@@ -568,7 +596,14 @@ export default function World(props: { onShowList: () => void }) {
         {/* Phase 5 — other live visitors as moving points of light. Reads
             telemetry (this driver's own position, to publish) the same way
             Wake does, so it belongs in this same "after Vehicle" group. */}
-        <MemoGhosts />
+        <MemoGhosts ghostFactor={sky?.k.ghost ?? 1} />
+        {/* R4 — real rain (Open-Meteo's own precipMmH) and his own commits
+            as lamplight. Neither renders any geometry World.tsx has to
+            place relative to the craft, so either order after Vehicle is
+            fine; grouped with Ghosts as the reality layer's own scene
+            additions. */}
+        <Rain tier={tier} />
+        <Lamps onPrompt={setLampPrompt} />
         {/* Renders nothing (Night Survey §12 step 3 removed its dust) — still
             mounted unconditionally because its useFrame is what advances
             resolve.ts's ratchet every frame, which Monuments/Corpus's own
@@ -607,6 +642,7 @@ export default function World(props: { onShowList: () => void }) {
         <Hud
           promptRoom={promptRoom}
           promptLandmark={panelDestination ? null : promptLandmark}
+          promptLamp={panelDestination ? null : lampPrompt}
           onConfirm={onHudConfirm}
           onShowList={props.onShowList}
           waypoint={waypoint}
@@ -617,6 +653,9 @@ export default function World(props: { onShowList: () => void }) {
           artifactTotal={ARTIFACTS.length}
           toasts={toasts}
           totalRooms={ROOMS.length}
+          sky={sky}
+          previewAt={previewAt}
+          onPreviewChange={setPreviewAt}
         />
       </div>
       {/* PART 1's actual deliverable: a DOM panel over the still-running

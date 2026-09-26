@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { Eraser, LayoutGrid, Orbit as OrbitIcon, Play, Volume2, VolumeX, Hand } from "lucide-react";
+import { Eraser, LayoutGrid, Orbit as OrbitIcon, Play, Volume2, VolumeX, Hand, Sunrise } from "lucide-react";
+import { usePresence } from "@playhtml/react";
 import {
   Gauges,
   Minimap,
@@ -26,6 +27,19 @@ import {
 import { isMuted, toggleMuted } from "./audio.ts";
 import { resetProgress } from "./progressReset.ts";
 import type { Room } from "../rooms.tsx";
+import type { SkyState } from "../lib/sky.ts";
+import { useNow, useWeather } from "../lib/useSky.ts";
+import { useLiveSignal } from "../lib/useLiveSignal.ts";
+import type { GithubActivity } from "../../api/_lib/github-activity-handler.ts";
+import type { Ops } from "../../api/_lib/ops-handler.ts";
+import { useTouched } from "../lib/sessionRipple.ts";
+import { GHOST_CHANNEL, type GhostPresence } from "./Ghosts.tsx";
+import { buildRealityRows, recentPushes, type LedgerRow } from "./realityRows.ts";
+import { rainMode } from "./Rain.tsx";
+import { deviceTier } from "./deviceTier.ts";
+import { prefersReducedMotion } from "./reducedMotion.ts";
+import type { LampPrompt } from "./Lamps.tsx";
+import { worldPalette } from "./palette.ts";
 
 /**
  * The world's DOM overlay — everything a visitor reads or taps that isn't
@@ -305,11 +319,149 @@ function PromptCard({
   );
 }
 
+/** `HH:MM` in IST from minutes-since-midnight — the scrubber's own unit
+ *  (a `<input type="range">` reports a plain number, and 00:00-23:59 IST
+ *  is what reality-spec §4.3 asks for, not a UTC offset a reader would
+ *  have to do math on). */
+function hhmm(minutes: number): string {
+  const h = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** `previewAt` (a real Date, IST-anchored to "today") <-> the scrubber's
+ *  own minutes-since-midnight-IST unit. IST is a fixed UTC+05:30 offset
+ *  with no DST, so the conversion is one add, never a timezone library. */
+const IST_OFFSET_MIN = 5.5 * 60;
+function previewAtToMinutes(d: Date): number {
+  const utcMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return (utcMinutes + IST_OFFSET_MIN) % 1440;
+}
+function minutesToPreviewAt(minutes: number, base: Date): Date {
+  const dayStart = Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate());
+  return new Date(dayStart + (minutes - IST_OFFSET_MIN) * 60_000);
+}
+
+/**
+ * THE REALITY LEDGER (reality-spec §4.3, master-plan.md#M17/#P1-05) — every
+ * live input the world reads, in one place, toggled by the `R` key or the
+ * "Reality" button. Data gathering lives here rather than in World.tsx:
+ * every value below is read off the SAME shared buses (`useLiveSignal`,
+ * `useWeather`, `usePresence`, `useTouched`) every other live surface on
+ * the site already reads, so this panel costs no second fetch and no
+ * second clock — `sky` is the one exception, handed down as a prop, since
+ * World.tsx is already the single caller of `useSky()` (skyBinding.ts's own
+ * doc comment explains why).
+ */
+function RealityLedger({
+  open,
+  sky,
+  previewAt,
+  onPreviewChange,
+}: {
+  open: boolean;
+  sky: SkyState | null;
+  previewAt: Date | null;
+  onPreviewChange: (d: Date | null) => void;
+}) {
+  const { air, river } = useWeather();
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+  const { data: ops } = useLiveSignal<Ops>("/api/ops");
+  const { presences } = usePresence<GhostPresence>(GHOST_CHANNEL);
+  const touched = useTouched();
+  // useSky.ts's own `useNow()` rather than a direct `Date.now()` read here
+  // (a call to an impure function during render is a react-hooks/purity
+  // error) — see Lamps.tsx's identical fix.
+  const now = useNow();
+
+  const lampPushes = useMemo(() => (now ? recentPushes(activity?.items ?? [], now.getTime()) : []), [activity, now]);
+  const visitorCount = useMemo(
+    () => Array.from(presences.values()).filter((p) => !p.isMe).length,
+    [presences],
+  );
+
+  const rows: LedgerRow[] = useMemo(
+    () =>
+      buildRealityRows({
+        sky,
+        air,
+        river,
+        lampPushes,
+        visitorCount,
+        ops: ops ?? null,
+        touched,
+      }),
+    [sky, air, river, lampPushes, visitorCount, ops, touched],
+  );
+
+  if (!open) return null;
+
+  const previewMinutes = previewAt ? previewAtToMinutes(previewAt) : null;
+
+  return (
+    <div
+      role="dialog"
+      aria-label="Reality ledger"
+      className="pointer-events-auto flex w-full max-w-md flex-col gap-2 rounded-2xl border border-line bg-card/95 p-4 backdrop-blur"
+    >
+      <div
+        className="flex items-center justify-between text-text"
+        style={previewAt ? { color: "var(--state-degraded)" } : undefined}
+      >
+        <span className="flex items-center gap-1.5 font-display text-sm font-bold">
+          <Sunrise size={14} /> Reality
+        </span>
+        {previewAt && (
+          <span className="font-mono text-xs uppercase tracking-widest">PREVIEW {hhmm(previewMinutes!)} IST, not live</span>
+        )}
+      </div>
+
+      <ul className="flex flex-col gap-1 font-mono text-xs text-text">
+        {rows.map((row) => (
+          // A per-key attribute (reality-spec §4.3: "each row has a
+          // data-reality-* attribute"), not a shared `data-reality="key"` —
+          // the acceptance line reads `[data-reality-you]`, a real attribute
+          // name, not an attribute VALUE to filter on.
+          <li key={row.key} data-reality-row {...{ [`data-reality-${row.key}`]: "" }}>
+            {row.text}
+          </li>
+        ))}
+      </ul>
+
+      <div className="flex items-center gap-2 pt-1">
+        <input
+          type="range"
+          min={0}
+          max={1439}
+          value={previewMinutes ?? previewAtToMinutes(new Date())}
+          aria-label="Preview a time of day (IST)"
+          onChange={(e) => onPreviewChange(minutesToPreviewAt(Number(e.target.value), sky?.now ?? new Date()))}
+          className="flex-1"
+        />
+        {previewAt && (
+          <button
+            type="button"
+            onClick={() => onPreviewChange(null)}
+            className="rounded-full border border-line bg-card/80 px-2.5 py-1 text-xs text-zinc-400 hover:border-accent hover:text-accent"
+          >
+            Back to now
+          </button>
+        )}
+      </div>
+
+      <p className="pt-1 text-xs text-muted">Nothing fetched here is hidden when it fails. It is marked.</p>
+    </div>
+  );
+}
+
 export function Hud(props: {
   promptRoom: Room | null;
   /** The project/case-study equivalent of `promptRoom` — Landmarks.tsx's
    *  own approach prompt, carrying only what the card needs to render. */
   promptLandmark: { label: string; tint: string } | null;
+  /** Lamps.tsx's own approach prompt (§4.2) — reuses this same `PromptCard`
+   *  family, verb "view", `onConfirm` opening the commit's GitHub link. */
+  promptLamp: LampPrompt | null;
   onConfirm: () => void;
   onShowList: () => void;
   /** Where the world is currently pointing the driver. */
@@ -325,10 +477,17 @@ export function Hud(props: {
   collectedCount?: number;
   artifactTotal?: number;
   toasts?: Toast[];
+  /** R4 — the one shared sky every page reads (P1/P2), handed down rather
+   *  than read here a second time; see skyBinding.ts's own doc comment. */
+  sky: SkyState | null;
+  /** The day scrubber's own state — `null` is "now," the default. */
+  previewAt: Date | null;
+  onPreviewChange: (d: Date | null) => void;
 }) {
   const {
     promptRoom,
     promptLandmark,
+    promptLamp,
     onConfirm,
     onShowList,
     waypoint,
@@ -339,6 +498,9 @@ export function Hud(props: {
     collectedCount,
     artifactTotal,
     toasts,
+    sky,
+    previewAt,
+    onPreviewChange,
   } = props;
 
   // Mirrors input.ts's module-level capture flag into React state so this
@@ -355,6 +517,28 @@ export function Hud(props: {
   // would go stale the first time any of those fired.
   const [auto, setAuto] = useState(isAutoDriving());
   useEffect(() => subscribeAuto(setAuto), []);
+
+  // The Reality ledger's own open/closed state (§4.3: the `R` key or the
+  // "Reality" button) — local, not a subscription: nothing outside this
+  // component ever needs to know it's open.
+  const [ledgerOpen, setLedgerOpen] = useState(false);
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "r") return;
+      const target = e.target as HTMLElement | null;
+      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
+      setLedgerOpen((v) => !v);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // The rain layer's own render state (Rain.tsx's identical `rainMode`),
+  // restated here as a DOM marker: Rain.tsx draws inside the Canvas
+  // (`aria-hidden`, no DOM per-instance), so this is the one place a test
+  // (or an assistive script) can read "is it actually raining right now"
+  // without inspecting the WebGL scene graph.
+  const dataRealityRain = rainMode(sky?.weather?.precipMmH ?? 0, prefersReducedMotion(), deviceTier());
 
   return (
     // pointer-events-none on the wrapper: most of this overlay is readout,
@@ -374,9 +558,19 @@ export function Hud(props: {
         }
       `}</style>
 
+      {/* Not visible — the one place Rain.tsx's own render state (no DOM of
+          its own, inside the Canvas) reaches the DOM at all: a Playwright
+          probe, or an assistive script, reads this instead of the WebGL
+          scene graph. */}
+      <span className="sr-only" data-reality-rain={dataRealityRain} />
+
       <Onboarding onTour={() => setAutoDriving(true)} />
 
       <Waypoint target={waypoint} auto={auto} />
+
+      <div className="pointer-events-auto flex w-full justify-center">
+        <RealityLedger open={ledgerOpen} sky={sky} previewAt={previewAt} onPreviewChange={onPreviewChange} />
+      </div>
 
       {/* One wrapper for both the release banner and the room prompt, so the
           outer flex-col's `justify-between` still sees exactly 3 rows
@@ -429,6 +623,23 @@ export function Hud(props: {
           // panel over the running scene rather than navigating anywhere.
           <PromptCard label={promptLandmark.label} tint={promptLandmark.tint} verb="view" onConfirm={onConfirm} />
         )}
+
+        {promptLamp && (
+          // Lamps.tsx's own approach card (reality-spec §4.2: "fires the
+          // existing Landmarks onPrompt HUD card") — reusing this same
+          // `PromptCard` component is that reuse: Landmarks.tsx's own
+          // sensor is untouched (out of this lane's ownership), so a lamp's
+          // proximity is edge-detected independently (Lamps.tsx) and
+          // rendered through the identical card language. "View" opens the
+          // commit on GitHub in a new tab rather than navigating this page
+          // away from a running drive.
+          <PromptCard
+            label={`${promptLamp.repo} · ${promptLamp.message} · ${promptLamp.ageLabel}`}
+            tint={worldPalette().accent}
+            verb="view"
+            onConfirm={() => window.open(promptLamp.url, "_blank", "noopener,noreferrer")}
+          />
+        )}
       </div>
 
       {/* Side by side, this row does not fit a phone. Measured at 390px: the
@@ -460,6 +671,20 @@ export function Hud(props: {
           <AutoToggle on={auto} />
           <SoundToggle />
           <ResetButton />
+
+          <button
+            type="button"
+            aria-pressed={ledgerOpen}
+            onClick={() => setLedgerOpen((v) => !v)}
+            className={`pointer-events-auto flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm backdrop-blur transition ${
+              ledgerOpen
+                ? "border-accent bg-accent/15 text-accent"
+                : "border-line bg-card/80 text-zinc-400 hover:border-accent hover:text-accent"
+            }`}
+          >
+            <Sunrise size={14} /> <span className="hidden sm:inline">Reality</span>
+            <span className="sr-only sm:hidden">Toggle the Reality ledger</span>
+          </button>
 
           <button
             type="button"

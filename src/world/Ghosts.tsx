@@ -31,14 +31,20 @@ import { shortId } from "./ghostId.ts";
  * is kept once they leave.
  */
 
-const CHANNEL = "world-drivers-v1";
+// Exported (not just the type) so Hud.tsx's Reality ledger (P1-05, M1: the
+// row is 'Visitors', never 'fireflies') can read the SAME presence channel
+// for its "N here now" count — `usePresence` is a plain React hook over a
+// shared playhtml document keyed on this string, so a second caller costs
+// no second connection, the identical bus-reuse reasoning P4's
+// `useLiveSignal` already applies to `/api/*`.
+export const GHOST_CHANNEL = "world-drivers-v1";
 // How often THIS tab broadcasts its own position/heading — a moving light a
 // few frames stale reads as smooth; a moving light re-broadcast 60x/second
 // is a write every open tab pays for on every frame, for no visible gain.
 const PUBLISH_MS = 250;
 const MAX_GHOSTS = 8;
 
-type GhostPresence = { x: number; z: number; heading: number };
+export type GhostPresence = { x: number; z: number; heading: number };
 
 // §9's cart, ~2.4m x 1.5m — Vehicle.tsx's own HALF constants, restated here
 // rather than imported: that file's HALF is private, and the two shapes are
@@ -124,8 +130,12 @@ function GhostIdBillboard({ peerKey, x, z }: { peerKey: string; x: number; z: nu
   );
 }
 
-export function Ghosts(): JSX.Element {
-  const { presences, setMyPresence } = usePresence<GhostPresence>(CHANNEL);
+/** k.ghost (sky.ts's Keyframe row) — how brightly other visitors' tail
+ *  strips glow at the current daypart (design table §4.2: "emissive x
+ *  k.ghost"). Defaults to 1 (today's fixed intensity) so every existing
+ *  caller/test that never passed this keeps rendering exactly as before. */
+export function Ghosts({ ghostFactor = 1 }: { ghostFactor?: number } = {}): JSX.Element {
+  const { presences, setMyPresence } = usePresence<GhostPresence>(GHOST_CHANNEL);
   const cartRef = useRef<THREE.InstancedMesh>(null);
   const tailRef = useRef<THREE.InstancedMesh>(null);
   const lastPublish = useRef(0);
@@ -139,6 +149,10 @@ export function Ghosts(): JSX.Element {
     () => new THREE.MeshStandardMaterial({ color: "#050605", emissive: GHOST_TAIL_HEX, emissiveIntensity: GHOST_TAIL_EMISSIVE_INTENSITY }),
     [],
   );
+  // Re-set in place rather than rebuilt: ghostFactor ticks once a minute
+  // with the sky (P1-05), and this is the one field that changes — no
+  // reason to throw away and reallocate the material for it.
+  tailMaterial.emissiveIntensity = GHOST_TAIL_EMISSIVE_INTENSITY * ghostFactor;
 
   // Only entries with a real, already-published (x, z) — a peer's very
   // first frame after joining, before its own `setMyPresence` has ever

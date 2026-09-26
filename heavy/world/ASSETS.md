@@ -17,8 +17,13 @@ Fetched from Poly Haven (CC0) by `scripts/world-v2/fetch-polyhaven.mjs`. Re-run 
 | bark_brown_02 | mat.bark: banyan, neem, aerial roots | [https://polyhaven.com/a/bark_brown_02](https://polyhaven.com/a/bark_brown_02) | CC0 | bark_brown_02_c_1024.webp (256,964 B), bark_brown_02_c_512.webp (76,998 B), bark_brown_02_n_1024.webp (425,648 B), bark_brown_02_n_512.webp (127,896 B) | 887,506 |
 | palm_tree_bark | mat.palmBark: palm trunks (mid-distance) | [https://polyhaven.com/a/palm_tree_bark](https://polyhaven.com/a/palm_tree_bark) | CC0 | palm_tree_bark_c_512.webp (77,440 B), palm_tree_bark_n_512.webp (36,046 B) | 113,486 |
 | kloppenheim_06_puresky | offline only: Blender lighting for the foliage atlas bake and lookdev renders (no runtime HDRI; the sky dome is PMREM'd) | [https://polyhaven.com/a/kloppenheim_06_puresky](https://polyhaven.com/a/kloppenheim_06_puresky) | CC0 | kloppenheim_06_puresky_1k.hdr (1,173,154 B) | 1,173,154 |
+| fern_02 | fern clumps, T1 near-field scatter (world-v2-spec.md §6) | [https://polyhaven.com/a/fern_02](https://polyhaven.com/a/fern_02) | CC0 | fern_02.glb (95,284 B) | 95,284 |
+| rock_moss_set_01 | riverbank boulders (world-v2-spec.md §6) | [https://polyhaven.com/a/rock_moss_set_01](https://polyhaven.com/a/rock_moss_set_01) | CC0 | rock_moss_set_01.glb (426,824 B) | 426,824 |
+| brass_diya_lantern | boat-bow + keystone lantern prop (world-v2-spec.md §6) | [https://polyhaven.com/a/brass_diya_lantern](https://polyhaven.com/a/brass_diya_lantern) | CC0 | brass_diya_lantern.glb (194,736 B) | 194,736 |
 
-**Total: 10,250,188 bytes (9.78 MB)**
+**Total: 10,967,032 bytes (10.46 MB)**
+
+Elevation texture: SRTM/GMTED2010 via AWS Terrain Tiles (USGS, public domain)
 
 ## Models (lookdev scatter kit + props)
 
