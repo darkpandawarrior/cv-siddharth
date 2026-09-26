@@ -217,31 +217,31 @@ function buildCommands(jump: Go): Cmd[] {
       // out. The hiding stays; the docstring just stops claiming otherwise.
       help: "list the commands",
       run: () => (
-        <Fragment>
-          <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-            {cmds
-              .filter((c) => !c.hidden)
-              .map((c) => (
-                <div key={c.name}>
-                  <Hi>{c.usage ?? c.name}</Hi> <Dim>— {c.help}</Dim>
-                </div>
-              ))}
-            <div className="mt-2 sm:col-span-2">
-              <Dim>tip: ↑/↓ history · Tab completes · </Dim>
-              <Hi>graph</Hi>
-              <Dim> maps the connections · try </Dim>
-              <Hi>open doori</Hi>
-              <Dim>, </Dim>
-              <Hi>ask how did you cut crashes 80%</Hi>
-              <Dim> or </Dim>
-              <Hi>hire</Hi>
-              <Dim> · press </Dim>
-              <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
-              <Dim> anywhere to summon this shell</Dim>
-            </div>
+        <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+          {cmds
+            .filter((c) => !c.hidden)
+            .map((c) => (
+              <div key={c.name}>
+                <Hi>{c.usage ?? c.name}</Hi> <Dim>— {c.help}</Dim>
+              </div>
+            ))}
+          <div className="mt-2 sm:col-span-2">
+            <Dim>tip: ↑/↓ history · Tab completes · </Dim>
+            <Hi>graph</Hi>
+            <Dim> maps the connections · try </Dim>
+            <Hi>open doori</Hi>
+            <Dim>, </Dim>
+            <Hi>ask how did you cut crashes 80%</Hi>
+            <Dim> or </Dim>
+            <Hi>hire</Hi>
+            <Dim> · press </Dim>
+            <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
+            <Dim> anywhere to summon this shell</Dim>
           </div>
-          <RouterHint />
-        </Fragment>
+          <div className="sm:col-span-2">
+            <RouterHint />
+          </div>
+        </div>
       ),
     },
     {
@@ -770,11 +770,11 @@ function buildCommands(jump: Go): Cmd[] {
     },
     {
       // reality-spec.md#6 /terminal, live-data-spec.md#3: the Reality ledger
-      // as text — `weather` is kept as a bare alias rather than its own
+      // as text. `weather` is kept as a bare alias rather than its own
       // command, so both spellings answer with the same nine rows.
       name: "now",
       alias: ["weather"],
-      help: "the reality ledger, printed — sun, weather, air, river, moon, chess, CI, last push, visitors",
+      help: "the reality ledger, printed: sun, weather, air, river, moon, chess, CI, last push, visitors",
       run: () => <NowBlock />,
     },
     {
@@ -1039,7 +1039,7 @@ function GithubActivityBlock() {
   );
 }
 
-/** `now`/`weather`'s "Last push" row — the newest of HIS OWN pushes (never an
+/** `now`/`weather`'s "Last push" row: the newest of HIS OWN pushes (never an
  *  upstream contribution, same filter Lamps' `recentPushes` uses), formatted
  *  with CiStrip.tsx's own `agoLabel` rather than a third age formatter. */
 function lastPushRow(activity: GithubActivity | null, now: Date): string {
@@ -1051,7 +1051,7 @@ function lastPushRow(activity: GithubActivity | null, now: Date): string {
   return `Last push · [${push.repo.split("/")[1]}] ${push.message} · GitHub public events (last 20) · live, ${agoLabel(push.at, now)}`;
 }
 
-/** `sky`'s "Meteor" row — its own line (master-plan.md#M23/P2-16), unlike
+/** `sky`'s "Meteor" row: its own line (master-plan.md#M23/P2-16), unlike
  *  skyText.ts's `meteorClause` which appends to the Moon row for the v1/v2
  *  ledgers. Reuses `nextMeteorShower` (the data, not a restated sentence). */
 function meteorRow(date: Date): string {
@@ -1061,7 +1061,7 @@ function meteorRow(date: Date): string {
   return `Meteor · ${next.row.name} ${when} · calendar (${new URL(next.row.source).hostname})`;
 }
 
-/** `sky`'s "ISS" row, over `useSatellites` (P2-09, lazily imported — this
+/** `sky`'s "ISS" row, over `useSatellites` (P2-09, lazily imported: this
  *  file never imports satellites.ts itself). */
 function issRow(sat: SatellitesState): string {
   if (!sat.ready) return "ISS · unavailable right now · CelesTrak TLE";
@@ -1078,7 +1078,7 @@ function issRow(sat: SatellitesState): string {
 
 /** idea-atlas.md#PATH-5: "help and now append exactly one suggestion" once
  *  the session has touched three or more KMP-family project pages. Renders
- *  nothing below the threshold — one suggestion, never a menu. */
+ *  nothing below the threshold: one suggestion, never a menu. */
 function RouterHint() {
   const touched = useTouched();
   const hits = touched.filter((n) => KMP_FAMILY_TOUCH_SLUGS.has(n)).length;
@@ -1091,7 +1091,7 @@ function RouterHint() {
   );
 }
 
-/** `visitors`'s live "here now" count — the one row that needs playhtml, kept
+/** `visitors`'s live "here now" count: the one row that needs playhtml, kept
  *  behind the same `<ClientOnly>` + `<Hydrate>` split DeferredPlayRoom.tsx
  *  uses (M53/M23: /terminal is server-rendered, and a bare top-level
  *  `@playhtml/react` import here would crash SSR with "document is not
@@ -1114,8 +1114,8 @@ function VisitorsNowLineLive() {
 }
 
 /** `now`/`weather`: the Reality ledger's nine rows, from the same
- *  ledgerText/signalsText formatters the world's own ledger and `/ops` read
- *  — no sentence is restated here (reality-spec.md#6, live-data-spec.md#3). */
+ *  ledgerText/signalsText formatters the world's own ledger and `/ops` read,
+ *  so no sentence is restated here (reality-spec.md#6, live-data-spec.md#3). */
 function NowBlock() {
   const now = useNow();
   const sky = useSky();
@@ -1152,11 +1152,11 @@ function NowBlock() {
 }
 
 /** `sky`: five lines, always exactly five (live-data-spec.md#4 R7, P2-16's
- *  own acceptance) — sun and moon stay "computed, cannot go stale" (M23's
+ *  own acceptance). Sun and moon stay "computed, cannot go stale" (M23's
  *  /ops description) in the normal case, but this command treats a total
  *  upstream failure as one signal: if the weather pipe never answers within
  *  5 s, the whole readout degrades together rather than mixing live astronomy
- *  next to five dead rows. The 5 s timer only matters for a stalled request —
+ *  next to five dead rows. The 5 s timer only matters for a stalled request;
  *  an aborted one already rejects `useWeather` near-instantly. */
 function SkyBlock() {
   const now = useNow();
