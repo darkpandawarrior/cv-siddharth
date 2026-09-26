@@ -299,8 +299,19 @@ export default function StoryMapScene({ onNavigate }: { onNavigate: (target: str
           its own idle-frame GPU noise, while the identical drag on
           Blueprint3D's damped controls visibly reorients the whole scene
           (e2e/studio-visuals.spec.ts: "dragging the map background orbits
-          its nodes"). */}
-      <OrbitControls enablePan={false} enableZoom={false} enableDamping dampingFactor={0.12} minAzimuthAngle={-.6} maxAzimuthAngle={.6} minPolarAngle={1.15} maxPolarAngle={1.95} />
+          its nodes").
+          minAzimuthAngle/maxAzimuthAngle widened from ±0.6 to ±1.2: the
+          atlas lane (d1372b2) pulled the camera back from z=5.4 to z=6.8 to
+          make room for label collision, which nearly halved the on-screen
+          parallax a given orbit angle produces — a fresh drag from center
+          now saturates the OLD ±0.6 clamp in ~180px (this spec's own drag
+          distance) while moving a near-center node (Doori sits at x≈0.6 of
+          1) only ~2px, nowhere near its own >8px bar. enableDamping alone
+          never addressed the camera-distance change; doubling the clamp
+          gives the same drag room to swing further and restores a clearly
+          visible reorientation (measured ~30px for Doori at this distance,
+          same drag). */}
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping dampingFactor={0.12} minAzimuthAngle={-1.2} maxAzimuthAngle={1.2} minPolarAngle={1.15} maxPolarAngle={1.95} />
       <hemisphereLight args={["#e2f4ed", "#18251f", 1.5]} />
       <directionalLight position={[2, 4, 5]} intensity={2} />
       <pointLight position={[4, 3, 4]} intensity={9} color={readToken("--color-probe", "#5ee6ff")} />
