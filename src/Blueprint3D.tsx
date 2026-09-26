@@ -79,7 +79,16 @@ function worldPosAt(x: number, y: number, extraZ = 0): [number, number, number] 
   return toWorld(x, y, frameDepth(x, y) + extraZ);
 }
 
-const OVERVIEW = { pos: new THREE.Vector3(3, 4, 27), look: new THREE.Vector3(0, 0, 0) };
+// pos pulled back ~15% (27 -> 31, same direction) from its original framing:
+// "The Night Shift · 1 part" (the writing-series ring's last slot, x:2180
+// y:900) started half off the right edge on load — same unclamped-3D-label
+// class of bug as the globe's callouts, but NodeCard renders through drei's
+// `transform` Html mode (a full CSS 3D matrix, not a simple 2D translate),
+// which has no `calculatePosition` hook to clamp post-projection. Framing
+// wider so every seeded label starts on-screen is the fix that mode leaves
+// available; a real per-label clamp needs a transform-mode-aware rewrite
+// this lane doesn't own.
+const OVERVIEW = { pos: new THREE.Vector3(3.5, 4.6, 31), look: new THREE.Vector3(0, 0, 0) };
 
 function cloneOverview() {
   return { pos: OVERVIEW.pos.clone(), look: OVERVIEW.look.clone() };
