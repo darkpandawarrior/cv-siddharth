@@ -37,7 +37,12 @@ export function GlobePanel() {
       <ul className="space-y-2 font-mono text-sm text-zinc-300">
         {globeFacts.map((row) => (
           <li key={row.id} className="flex flex-wrap items-center gap-2">
-            <span>{row.label}</span>
+            {/* min-w-0: a flex item's default min-width is `auto` (its
+                content's natural width), not 0 - the sentence-length labels
+                here (e.g. "install floor across 88 live l...") never wrapped
+                and instead overflowed past the flex row, silently clipped by
+                html's overflow-x:hidden (e2e/overflow.spec.ts). */}
+            <span className="min-w-0">{row.label}</span>
             <EvidenceChip file={row.file} source={row.source} cadence="manual" stamp={STAMP_BY_ROW[row.id]} />
           </li>
         ))}
