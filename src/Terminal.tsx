@@ -2,7 +2,10 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type React
 import { LauncherButton } from "./Launcher.tsx";
 import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { ClientOnly, Link, useNavigate } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
+import { useCursorPresences } from "@playhtml/react";
 import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 import { didYouMean } from "./lib/didYouMean.ts";
 import { surfaces } from "./data/surfaces.ts";
@@ -29,7 +32,24 @@ import { chatErrorText, isAbortError, streamReply } from "./lib/chatClient.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
-import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
+import type { GithubActivity, GithubActivityItem } from "../api/_lib/github-activity-handler.ts";
+import { useNow, useSky, useWeather } from "./lib/useSky.ts";
+import { useSignals } from "./lib/useLive.ts";
+import { useSatellites, type SatellitesState } from "./lib/useSatellites.ts";
+import { moonPhase, moonTimes } from "./lib/moon.ts";
+import { airRow, riverRow, sunRow, weatherRow } from "./lib/ledgerText.ts";
+import { festivalRow, moonRow } from "./lib/skyText.ts";
+import { nextMeteorShower } from "./data/skyCalendar.ts";
+import { chessRow as signalsChessRow, ciRow as signalsCiRow } from "./lib/signalsText.ts";
+import { agoLabel } from "./CiStrip.tsx";
+import { useTouched } from "./lib/sessionRipple.ts";
+
+/** idea-atlas.md#PATH-5 + storyMap.ts's own `kmp-family` edges (doori, gaddi,
+ *  paymentslab-kmp, candidai, and the family's own project page): the touch
+ *  set the router hint fires on. A visitor who has landed on three or more of
+ *  these this session is reading the KMP story, not browsing at random. */
+const KMP_FAMILY_TOUCH_SLUGS = new Set(["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-family"]);
+const ROUTER_HINT_THRESHOLD = 3;
 
 // 2026-09-05 project renames — old GitHub repos redirect, so keep the old
 // slug typeable here too rather than making `open <old-name>` a dead end.
@@ -197,28 +217,31 @@ function buildCommands(jump: Go): Cmd[] {
       // out. The hiding stays; the docstring just stops claiming otherwise.
       help: "list the commands",
       run: () => (
-        <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-          {cmds
-            .filter((c) => !c.hidden)
-            .map((c) => (
-              <div key={c.name}>
-                <Hi>{c.usage ?? c.name}</Hi> <Dim>— {c.help}</Dim>
-              </div>
-            ))}
-          <div className="mt-2 sm:col-span-2">
-            <Dim>tip: ↑/↓ history · Tab completes · </Dim>
-            <Hi>graph</Hi>
-            <Dim> maps the connections · try </Dim>
-            <Hi>open doori</Hi>
-            <Dim>, </Dim>
-            <Hi>ask how did you cut crashes 80%</Hi>
-            <Dim> or </Dim>
-            <Hi>hire</Hi>
-            <Dim> · press </Dim>
-            <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
-            <Dim> anywhere to summon this shell</Dim>
+        <Fragment>
+          <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+            {cmds
+              .filter((c) => !c.hidden)
+              .map((c) => (
+                <div key={c.name}>
+                  <Hi>{c.usage ?? c.name}</Hi> <Dim>— {c.help}</Dim>
+                </div>
+              ))}
+            <div className="mt-2 sm:col-span-2">
+              <Dim>tip: ↑/↓ history · Tab completes · </Dim>
+              <Hi>graph</Hi>
+              <Dim> maps the connections · try </Dim>
+              <Hi>open doori</Hi>
+              <Dim>, </Dim>
+              <Hi>ask how did you cut crashes 80%</Hi>
+              <Dim> or </Dim>
+              <Hi>hire</Hi>
+              <Dim> · press </Dim>
+              <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
+              <Dim> anywhere to summon this shell</Dim>
+            </div>
           </div>
-        </div>
+          <RouterHint />
+        </Fragment>
       ),
     },
     {
@@ -746,6 +769,20 @@ function buildCommands(jump: Go): Cmd[] {
       run: () => <GithubActivityBlock />,
     },
     {
+      // reality-spec.md#6 /terminal, live-data-spec.md#3: the Reality ledger
+      // as text — `weather` is kept as a bare alias rather than its own
+      // command, so both spellings answer with the same nine rows.
+      name: "now",
+      alias: ["weather"],
+      help: "the reality ledger, printed — sun, weather, air, river, moon, chess, CI, last push, visitors",
+      run: () => <NowBlock />,
+    },
+    {
+      name: "sky",
+      help: "sun, moon, next meteor peak, ISS and the festival calendar",
+      run: () => <SkyBlock />,
+    },
+    {
       /* Every figure below reads from the generated `chess.*`. He is still
        * playing — the corpus grew by three games within an hour of first
        * generation — so a literal typed into this file is a number that goes
@@ -997,6 +1034,172 @@ function GithubActivityBlock() {
     <div>
       {data.items.map((it, i) => (
         <div key={i}>· [{it.repo.split("/")[1]}] {it.message}</div>
+      ))}
+    </div>
+  );
+}
+
+/** `now`/`weather`'s "Last push" row — the newest of HIS OWN pushes (never an
+ *  upstream contribution, same filter Lamps' `recentPushes` uses), formatted
+ *  with CiStrip.tsx's own `agoLabel` rather than a third age formatter. */
+function lastPushRow(activity: GithubActivity | null, now: Date): string {
+  if (!activity?.connected) return "Last push · unavailable right now · GitHub public events (last 20)";
+  const push = activity.items
+    .filter((i) => i.type === "push" && !i.upstream)
+    .reduce<GithubActivityItem | null>((newest, item) => (!newest || item.at > newest.at ? item : newest), null);
+  if (!push) return "Last push · none in the last 20 public events · GitHub public events (last 20)";
+  return `Last push · [${push.repo.split("/")[1]}] ${push.message} · GitHub public events (last 20) · live, ${agoLabel(push.at, now)}`;
+}
+
+/** `sky`'s "Meteor" row — its own line (master-plan.md#M23/P2-16), unlike
+ *  skyText.ts's `meteorClause` which appends to the Moon row for the v1/v2
+ *  ledgers. Reuses `nextMeteorShower` (the data, not a restated sentence). */
+function meteorRow(date: Date): string {
+  const next = nextMeteorShower(date);
+  if (!next) return "Meteor · none upcoming · calendar";
+  const when = next.nightsUntil === 0 ? "peaks tonight" : `peaks in ${next.nightsUntil} nights`;
+  return `Meteor · ${next.row.name} ${when} · calendar (${new URL(next.row.source).hostname})`;
+}
+
+/** `sky`'s "ISS" row, over `useSatellites` (P2-09, lazily imported — this
+ *  file never imports satellites.ts itself). */
+function issRow(sat: SatellitesState): string {
+  if (!sat.ready) return "ISS · unavailable right now · CelesTrak TLE";
+  if (sat.issNextPass === undefined) return "ISS · next visible pass still computing · live tracking";
+  if (sat.issNextPass === null) return "ISS · no visible pass in the next 7 days · live tracking (CelesTrak TLE)";
+  const hm = sat.issNextPass.start.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata",
+  });
+  return `ISS · next visible pass ${hm} IST, ${Math.round(sat.issNextPass.maxElDeg)}° · live tracking (CelesTrak TLE)`;
+}
+
+/** idea-atlas.md#PATH-5: "help and now append exactly one suggestion" once
+ *  the session has touched three or more KMP-family project pages. Renders
+ *  nothing below the threshold — one suggestion, never a menu. */
+function RouterHint() {
+  const touched = useTouched();
+  const hits = touched.filter((n) => KMP_FAMILY_TOUCH_SLUGS.has(n)).length;
+  if (hits < ROUTER_HINT_THRESHOLD) return null;
+  return (
+    <div className="mt-1">
+      <Dim>try </Dim>
+      <Hi>open kmp-family</Hi>
+    </div>
+  );
+}
+
+/** `visitors`'s live "here now" count — the one row that needs playhtml, kept
+ *  behind the same `<ClientOnly>` + `<Hydrate>` split DeferredPlayRoom.tsx
+ *  uses (M53/M23: /terminal is server-rendered, and a bare top-level
+ *  `@playhtml/react` import here would crash SSR with "document is not
+ *  defined" exactly as it did on /weeb and /anthology before that fix). The
+ *  fallback always carries a required tag word too, so the row never sits
+ *  untagged while the shared layer is still loading. */
+function VisitorsNowLine() {
+  return (
+    <ClientOnly fallback={<div>Visitors · unavailable right now · playhtml</div>}>
+      <Hydrate when={load()} split fallback={<div>Visitors · unavailable right now · playhtml</div>}>
+        <VisitorsNowLineLive />
+      </Hydrate>
+    </ClientOnly>
+  );
+}
+
+function VisitorsNowLineLive() {
+  const presences = useCursorPresences();
+  return <div>Visitors · {presences.size} here now · playhtml · live</div>;
+}
+
+/** `now`/`weather`: the Reality ledger's nine rows, from the same
+ *  ledgerText/signalsText formatters the world's own ledger and `/ops` read
+ *  — no sentence is restated here (reality-spec.md#6, live-data-spec.md#3). */
+function NowBlock() {
+  const now = useNow();
+  const sky = useSky();
+  const weather = useWeather();
+  const { data: signals } = useSignals();
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+
+  if (!now || !sky) return <Dim>reading now…</Dim>;
+
+  const phase = moonPhase(now);
+  const rise = moonTimes(now).rise;
+  const signalsAt = signals?.at ?? now.toISOString();
+
+  const lines = [
+    sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset),
+    weatherRow(weather.weather),
+    airRow(weather.air),
+    riverRow(weather.river),
+    moonRow(phase, rise),
+    signalsChessRow(signals?.lichess ?? null, signalsAt),
+    signalsCiRow(signals?.ci ?? null, signalsAt),
+    lastPushRow(activity ?? null, now),
+  ];
+
+  return (
+    <div className="space-y-0.5">
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+      <VisitorsNowLine />
+      <RouterHint />
+    </div>
+  );
+}
+
+/** `sky`: five lines, always exactly five (live-data-spec.md#4 R7, P2-16's
+ *  own acceptance) — sun and moon stay "computed, cannot go stale" (M23's
+ *  /ops description) in the normal case, but this command treats a total
+ *  upstream failure as one signal: if the weather pipe never answers within
+ *  5 s, the whole readout degrades together rather than mixing live astronomy
+ *  next to five dead rows. The 5 s timer only matters for a stalled request —
+ *  an aborted one already rejects `useWeather` near-instantly. */
+function SkyBlock() {
+  const now = useNow();
+  const sky = useSky();
+  const weather = useWeather();
+  const sat = useSatellites();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (weather.state !== "pending") return;
+    const t = window.setTimeout(() => setTimedOut(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [weather.state]);
+
+  if (!now || !sky) return <Dim>reading sky…</Dim>;
+  if (weather.state === "pending" && !timedOut) return <Dim>reading sky…</Dim>;
+
+  if (weather.state === "unavailable" || timedOut) {
+    return (
+      <div className="space-y-0.5">
+        <div>Sun · unavailable right now · computed</div>
+        <div>Moon · unavailable right now · computed</div>
+        <div>Meteor · unavailable right now · calendar</div>
+        <div>ISS · unavailable right now · CelesTrak TLE</div>
+        <div>Festival · unavailable right now · calendar</div>
+      </div>
+    );
+  }
+
+  const phase = moonPhase(now);
+  const rise = moonTimes(now).rise;
+  const lines = [
+    sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset),
+    moonRow(phase, rise),
+    meteorRow(now),
+    issRow(sat),
+    festivalRow(now),
+  ];
+
+  return (
+    <div className="space-y-0.5">
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
       ))}
     </div>
   );
