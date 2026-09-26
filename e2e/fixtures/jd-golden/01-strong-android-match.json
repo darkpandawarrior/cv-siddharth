@@ -1,0 +1,5 @@
+{
+  "id": "strong-android-match",
+  "band": { "min": 70, "max": 100 },
+  "jdText": "Senior Android Engineer\n\nWe are looking for a Senior Android Engineer to own our mobile platform end to end. Requirements: 5+ years of Android development, deep Kotlin and Jetpack Compose experience, Coroutines and Flow, MVVM/MVI architecture, Room persistence with schema migrations, a background service or location pipeline, and experience mentoring engineers or leading a small team. Bonus: crash reduction work, CI/CD pipelines, Kotlin Multiplatform."
+}

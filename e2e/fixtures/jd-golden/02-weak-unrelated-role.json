@@ -1,0 +1,5 @@
+{
+  "id": "weak-unrelated-role",
+  "band": { "min": 0, "max": 40 },
+  "jdText": "Senior Data Engineer (Warehouse & ETL)\n\nWe need a Senior Data Engineer with 6+ years building batch and streaming ETL pipelines in Python and Scala, deep Snowflake and Airflow experience, dbt modelling, and ownership of a petabyte-scale data warehouse. No mobile, frontend or Android experience required or relevant. Strong SQL and distributed systems background required."
+}

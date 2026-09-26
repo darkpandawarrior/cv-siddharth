@@ -1,0 +1,5 @@
+{
+  "id": "lead-principal-android",
+  "band": { "min": 65, "max": 100 },
+  "jdText": "Lead / Principal Android Engineer\n\nWe are hiring a Lead Android Engineer to set architecture direction across multiple squads. Requirements: 7+ years Android, proven Kotlin Multiplatform or multi-module architecture experience, a track record of measurable reliability or performance improvements (crash rate, load time), experience running interview loops or hiring, and comfort owning a platform end to end including build and release pipelines. Compose and Coroutines expected."
+}
