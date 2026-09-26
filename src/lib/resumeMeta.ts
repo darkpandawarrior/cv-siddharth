@@ -1,5 +1,12 @@
-import type { Experience } from "../data/profile.ts";
-import { profile, experience } from "../data/profile.ts";
+// core.ts/experience.ts directly, not the ../data/profile.ts barrel:
+// buildResumeJsonLd() runs from routes/resume.tsx's head(), which (like
+// every route's head/beforeLoad) can't be code-split and so lands in the
+// app's one shared eager entry — importing the barrel there pulled its
+// heavy re-exports (profile-projects-heavy) onto every route
+// (e2e/spine-payload.spec.ts caught this on /chess, /terminal, /weeb, /hire).
+import type { Experience } from "../data/profile/experience.ts";
+import { profile } from "../data/profile/core.ts";
+import { experience } from "../data/profile/experience.ts";
 
 const SITE_URL = profile.portfolio;
 

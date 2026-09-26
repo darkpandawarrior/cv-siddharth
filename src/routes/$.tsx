@@ -1,7 +1,12 @@
 import { createFileRoute, getRouteApi, notFound, Link } from "@tanstack/react-router";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { useTouched } from "../lib/sessionRipple.ts";
-import { projectBySlug } from "../data/profile.ts";
+// profile/projects.ts directly, not the ../data/profile.ts barrel: importing
+// the barrel here pulled its heavy re-exports (profile-projects-heavy) into
+// the app's one shared eager entry for every route (e2e/spine-payload.spec.ts
+// caught this on /chess, /terminal, /weeb and /hire, none of which render
+// this 404 route at all).
+import { projectBySlug } from "../data/profile/projects.ts";
 
 // Catch-all splat route (file name "$" is TanStack Router's file-based
 // convention for a route matching any otherwise-unmatched path). It must

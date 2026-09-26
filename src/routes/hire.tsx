@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
-import { profile, metrics, caseStudies, projectCards } from "../data/profile.ts";
+// core.ts/caseStudies.ts/projectCards.ts directly, not the ../data/profile.ts
+// barrel: that barrel statically re-exports profile/projects.ts and store.ts
+// too, and once ANY root-graph-reachable route imports it, rolldown pulls
+// the whole barrel chunk (and its heavy re-exports) into the app's one
+// shared eager entry for every route (e2e/spine-payload.spec.ts caught this
+// on /hire, which leaked profile-projects-heavy onto /chess, /terminal and
+// /weeb as well since they all share that one entry).
+import { profile, metrics } from "../data/profile/core.ts";
+import { caseStudies } from "../data/profile/caseStudies.ts";
+import { projectCards } from "../data/profile/projectCards.ts";
 import { roomHead } from "../lib/routeHead.ts";
 import { useNow } from "../lib/useSky.ts";
 import { skyState } from "../lib/sky.ts";

@@ -9,13 +9,17 @@ import { useCursorPresences } from "@playhtml/react";
 import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 import { didYouMean } from "./lib/didYouMean.ts";
 import { surfaces } from "./data/surfaces.ts";
-import {
-  profile,
-  metrics,
-  experience,
-  education,
-  caseStudies,
-} from "./data/profile.ts";
+// core.ts/experience.ts/caseStudies.ts directly, not the ../data/profile.ts
+// barrel: this static top-level import (unlike the dynamic `import("./data/
+// profile.ts")` a few lines below, which is already deliberately deferred)
+// tied Terminal.tsx's own chunk to the barrel's re-export of the heavy
+// profile/projects.ts alongside its OTHER static need (surfaces.ts above),
+// which is exactly the shape that kept pulling profile-projects-heavy into
+// the app's one shared entry (e2e/spine-payload.spec.ts caught it on
+// /chess, /terminal, /weeb and /hire).
+import { profile, metrics, education } from "./data/profile/core.ts";
+import { experience } from "./data/profile/experience.ts";
+import { caseStudies } from "./data/profile/caseStudies.ts";
 // Light (no store.ts/projects.ts behind it): projectCards carries exactly
 // the slug/name/tagline/status fields the always-rendered boot banner and
 // the plain listing commands below need. `skills`/`projects`/

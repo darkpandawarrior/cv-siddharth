@@ -16,7 +16,17 @@
  * Pure and DOM-free: `scripts/gen-system-prompt.mjs` imports ROUTE_PHRASES to
  * emit the server's allowlist, and the unit tests import the rest.
  */
-import { projects } from "../data/profile.ts";
+// projectCards, not the ../data/profile.ts barrel's `projects`: only
+// name/slug are used below, which projectCards.ts already carries.
+// Importing the full `projects` array made this file the one thing tying
+// data/surfaces.ts (needed eagerly, by __root.tsx) and profile/projects.ts
+// (heavy, forced into its own chunk in vite.config.ts) into the SAME
+// consumer, which is why the bundler kept co-locating them into one
+// physical file — the app's one shared entry then had to load the whole
+// heavy chunk just to get `surfaces` out of it
+// (e2e/spine-payload.spec.ts caught the resulting leak on /chess,
+// /terminal, /weeb and /hire).
+import { projectCards } from "../data/profile/projectCards.ts";
 import { surfaces } from "../data/surfaces.ts";
 
 export type RouteKind = "home" | "project" | "room" | "page";
@@ -76,7 +86,7 @@ const ROUTES: RouteInfo[] = [
       kind: s.kind === "room" ? "room" : "page",
     };
   }),
-  ...projects.map((p): RouteInfo => {
+  ...projectCards.map((p): RouteInfo => {
     const label = shortName(p.name);
     // Possessive rather than "the <name> case study": one of these names is
     // "This portfolio", and "the This portfolio case study" is not English.

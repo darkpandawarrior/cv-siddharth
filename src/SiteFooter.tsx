@@ -1,6 +1,16 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { profile, projects } from "./data/profile.ts";
+// core.ts + projectCards.ts directly, not the ../data/profile.ts barrel's
+// `projects`: the "Builds" column only ever needed hasDetail/name/slug, which
+// projectCards.ts already carries — importing the full `projects` array
+// pulled profile-projects-heavy chunk's whole reachability set (including
+// data/surfaces.ts, data/labs.ts and friends, which rolldown was bundling
+// alongside it) into every route that renders this footer, and from there
+// into the app's one shared entry (e2e/spine-payload.spec.ts caught the
+// resulting leak on /chess, /terminal, /weeb and /hire — none of which even
+// render this footer).
+import { profile } from "./data/profile/core.ts";
+import { projectCards } from "./data/profile/projectCards.ts";
 import { FaqDock } from "./FaqDock.tsx";
 import { elsewhere } from "./data/elsewhere.ts";
 import { surfaces, type SurfaceGroup } from "./data/surfaces.ts";
@@ -77,8 +87,8 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
        Short label per DeviceMorph's convention, because the portfolio entry's
        full name is a 60-character sentence. */
     title: "Builds",
-    links: projects
-      .filter((p) => p.detail)
+    links: projectCards
+      .filter((p) => p.hasDetail)
       .map((p) => ({
         label: p.name.split(" — ")[0],
         kind: "route" as const,
