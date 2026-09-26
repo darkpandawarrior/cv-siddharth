@@ -154,10 +154,23 @@ test.describe("`sky`: sun, moon, next meteor peak, ISS and festival", () => {
   });
 });
 
-test.describe("router hint (idea-atlas.md#PATH-5)", () => {
-  test("help and now stay quiet below the threshold, and suggest `open kmp-family` at 3 KMP-family touches", async ({ page }) => {
+// This one test deliberately imports plain @playwright/test's own `base`
+// rather than the visitor-safe `test` above (same trade-off visitors.spec.ts
+// documents for itself): it round-trips through three /project pages, and
+// the visitor-safe page's localStorage-denial init script interacts badly
+// with the browser's View Transitions API on that path (observed: a
+// `pageerror` "Transition was skipped" right as the project page's chunk
+// mounts, which silently drops its `touch(slug)` effect) — a test
+// infrastructure interaction, not a Terminal.tsx defect. Counted as one
+// ordinary visitor, same as visitors.spec.ts's own tests.
+base.describe("router hint (idea-atlas.md#PATH-5)", () => {
+  base("help and now stay quiet below the threshold, and suggest `open kmp-family` at 3 KMP-family touches", async ({ page }) => {
     await mockLiveRoutes(page);
-    await page.clock.setFixedTime(new Date(NIGHT));
+    // No fixed clock here on purpose: this test's own assertions never read a
+    // time value, and Playwright's clock mock also fakes the timer/scheduler
+    // primitives React's route transitions use, so a route mounted under a
+    // frozen clock never runs its effects (`touch(slug)` included) until
+    // something calls `page.clock.runFor`/`fastForward` to release them.
     await page.goto("/terminal");
     await waitForHydration(page);
 
@@ -167,23 +180,39 @@ test.describe("router hint (idea-atlas.md#PATH-5)", () => {
     // `open <slug>` navigates client-side (no reload), so sessionRipple's
     // module-scope touched list survives; `page.goBack()` is the same
     // client-side history pop, which is what brings the terminal back
-    // without losing that state.
+    // without losing that state. Neither `waitForURL` nor `waitForHydration`
+    // is enough of a signal on its own here: ProjectDetail's hero `<h1>`
+    // carries a `viewTransitionName` (a card-to-detail morph), and popping
+    // back while that transition is still in flight gets it logged as
+    // "Transition was skipped" and never actually swaps the DOM in — so the
+    // still-mounted `/terminal` shell (which has its own, different, sr-only
+    // `<h1>`) satisfies a generic `h1` or hydration wait immediately, before
+    // `touch(slug)` ever runs. Waiting for THIS project's own heading text
+    // is what actually proves the transition landed.
+    const PROJECT_NAME: Record<string, string> = { doori: "Doori", gaddi: "Gaddi", "paymentslab-kmp": "PaymentsLab-KMP" };
     for (const slug of ["doori", "gaddi", "paymentslab-kmp"]) {
       await runCommand(page, `open ${slug}`);
       await page.waitForURL(`**/project/${slug}`);
+      await page.getByRole("heading", { level: 1, name: PROJECT_NAME[slug] }).waitFor();
       await page.goBack();
       await page.waitForURL("**/terminal");
       await waitForHydration(page);
     }
 
     await runCommand(page, "help");
-    await expect(output(page)).toContainText("try");
-    await expect(output(page)).toContainText("open kmp-family");
-    // Exactly one suggestion, never a menu.
-    expect(await output(page).getByText("try").count()).toBe(1);
+    // Scoped to this command's own output block, not the whole scrollback
+    // (which still carries the first, hint-free `help` from above): "try"
+    // alone is not distinctive enough either, since help's own standing
+    // footer always reads "try open doori". Exactly one suggestion, never
+    // a menu, per idea-atlas.md#PATH-5.
+    const helpBlock = output(page).locator(".term-line").last();
+    await expect(helpBlock).toContainText("open kmp-family");
+    expect(await helpBlock.getByText("open kmp-family").count()).toBe(1);
 
     await runCommand(page, "now");
-    await expect(output(page)).toContainText("open kmp-family");
+    const nowBlock = output(page).locator(".term-line").last();
+    await expect(nowBlock).toContainText("open kmp-family");
+    expect(await nowBlock.getByText("open kmp-family").count()).toBe(1);
   });
 });
 
