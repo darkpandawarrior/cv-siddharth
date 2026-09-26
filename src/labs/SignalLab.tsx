@@ -502,7 +502,7 @@ export function SignalLabPane() {
             `sky` is null until the client clock mounts (useNow), so this
             renders nothing rather than a stale guess for that one frame. */}
         {sky && (
-          <p data-signal-daypart className="border-t border-line px-5 py-2 font-mono text-[11px] text-muted">
+          <p data-signal-daypart className="border-t border-line px-5 py-2 font-mono text-xs text-muted">
             {DAYPART_LABEL[sky.daypart]} in Pune, sun {Math.round(sky.sun.altitudeDeg)}°. The run above is a pure
             function of its seed and does not change with it.
           </p>
@@ -538,11 +538,11 @@ export function SignalLabPane() {
             <Figure label="mock" value={fmtKm(provenance.mockM)} sub="not modelled in this sim" tone="baseline" />
             <Figure label="spike" value={fmtKm(provenance.spikeM)} sub="multipath, tracked separately" tone="baseline" />
           </div>
-          <p className="mt-2 font-mono text-[11px] text-muted">
+          <p className="mt-2 font-mono text-xs text-muted">
             {fmtKm(provenance.cleanedM)} = {fmtKm(provenance.originalM)} minus ({fmtKm(provenance.mockM)} +{" "}
             {fmtKm(provenance.abnormalM)}), asserted live by signalEngine.test.ts.
           </p>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[11px]">
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs">
             <span className="text-muted">quality score per zone</span>
             {ZONES.map((z) => {
               const q = provenance.qualityByZone[z.id];
@@ -584,7 +584,7 @@ export function SignalLabPane() {
               vectorEffect="non-scaling-stroke"
             />
           </svg>
-          <p className="mt-1.5 flex gap-4 font-mono text-[11px]">
+          <p className="mt-1.5 flex gap-4 font-mono text-xs">
             <span className="text-accent2">— raw</span>
             <span className="text-accent">— engine</span>
             <span className="text-muted">error clamped to {errorSeries.maxV.toFixed(0)}m</span>
@@ -614,14 +614,14 @@ export function SignalLabPane() {
               );
             })}
           </div>
-          <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-3 font-mono text-xs leading-relaxed text-muted">
             {run.engine.rejected} fixes rejected · {run.engine.bridged} dead-reckoned · {run.engine.resets} divergence
             {run.engine.resets === 1 ? " reset" : " resets"} · worst drift {run.engine.maxDriftM.toFixed(0)}m
           </p>
         </div>
 
         {/* Where the error lives. */}
-        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-line px-5 py-3 font-mono text-[11px]">
+        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-line px-5 py-3 font-mono text-xs">
           <span className="text-muted">per zone</span>
           {ZONES.map((z) => {
             const got = run.engine.perZoneM[z.id];
@@ -683,9 +683,9 @@ export function SignalLabPane() {
             ))}
           </span>
 
-          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
-            {/* py-1 lifts these two to the 24px touch minimum. The row is 11px
-                  text, so the bare line box was about 17px and Lighthouse
+          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            {/* py-1 lifts these two to the 24px touch minimum. The row is
+                  text-xs (12px), so the bare line box was about 17px and Lighthouse
                   scored /lab at 96 on target-size. Padding rather than a
                   layout change keeps them inline in the sentence. */}
               <button type="button" onClick={() => goToSection("work")} className="inline-block py-1 transition hover:text-accent">
