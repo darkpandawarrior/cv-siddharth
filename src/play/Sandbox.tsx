@@ -36,10 +36,10 @@ const BOUNDS_ID = "cv-sandbox";
 const pieceDomId = (id: string) => `sandbox-${id}`;
 const MOVE_TAG = "can-move";
 
-function Piece({ piece }: { piece: (typeof PIECES)[number] }) {
+function Piece({ piece, standalone }: { piece: (typeof PIECES)[number]; standalone: boolean }) {
   const bump = usePulse();
   return (
-    <CanMoveElement bounds={`#${BOUNDS_ID}`}>
+    <CanMoveElement bounds={`#${BOUNDS_ID}`} standalone={standalone}>
       <span
         id={pieceDomId(piece.id)}
         onPointerUp={() => bump("playground:move")}
@@ -59,7 +59,17 @@ function Piece({ piece }: { piece: (typeof PIECES)[number] }) {
 }
 
 export function Sandbox() {
-  const { deleteElementData } = usePlayContext();
+  const playContext = usePlayContext();
+  const { deleteElementData } = playContext;
+  // DeferredSandbox (DeferredPlayRoom.tsx) code-splits independently of
+  // DeferredPlayRoom's own <PlayProvider> boundary, so this can render a beat
+  // before that provider mounts — `isProviderMissing` is real on the shipped
+  // context object (main.d.ts's PlayContextInfo doesn't type it, hence the
+  // cast) and is exactly the signal `standalone` exists for: each Piece below
+  // runs local-only for that one beat instead of spamming "No PlayProvider
+  // found" seven times a render, then switches to shared once the provider
+  // lands, no remount needed.
+  const isProviderMissing = Boolean((playContext as { isProviderMissing?: boolean }).isProviderMissing);
   const bump = usePulse();
 
   // Drops every piece's shared offset, which returns them all to the marks in
@@ -100,7 +110,7 @@ export function Sandbox() {
         }}
       >
         {PIECES.map((p) => (
-          <Piece key={p.id} piece={p} />
+          <Piece key={p.id} piece={p} standalone={isProviderMissing} />
         ))}
       </div>
     </section>
