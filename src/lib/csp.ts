@@ -38,7 +38,11 @@ const heavyOrigin = HEAVY_ASSET_BASE.startsWith("/") ? null : new URL(HEAVY_ASSE
  */
 export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
   "default-src": ["'self'"],
-  "script-src": ["'self'"], // hashes spliced in by buildCspHeader
+  // 'wasm-unsafe-eval': three/addons' MeshoptDecoder (src/three/models.ts,
+  // every GLTFLoader) compiles a WebAssembly module for every glTF this site
+  // loads — StudioRig (/blueprint) and the world scenes (/map, /playground)
+  // tripped "script-src: wasm-eval" without it (e2e/csp.spec.ts).
+  "script-src": ["'self'", "'wasm-unsafe-eval'"], // hashes spliced in by buildCspHeader
   "style-src": [
     "'self'",
     "'unsafe-inline'", // Tailwind + inline style attrs; out of this lane's scope
