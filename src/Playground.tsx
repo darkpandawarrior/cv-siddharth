@@ -111,10 +111,24 @@ export default function Playground() {
 function PlaygroundInner() {
   const { goToSection } = useSectionNav();
 
-  // Both start false and resolve after mount. hasWebGL()/matchMedia read real
-  // browser capability, not something to guess at during the render that also
-  // has to run before the DOM exists — deciding here rather than inline keeps
-  // the first paint deterministic instead of racing a capability check.
+  // Both start false and resolve after mount. hasWebGL() reads real browser
+  // capability, not something to guess at during the render that also has to
+  // run before the DOM exists — deciding here rather than inline keeps the
+  // first paint deterministic instead of racing a capability check.
+  //
+  // worldCapable is WebGL support alone now, not reduced-motion too: it used
+  // to gate BOTH the default landing view AND the "drive the 3D world
+  // instead" button/showWorld(), so a reduced-motion visitor with a working
+  // GPU could never reach the world even by explicit choice — the world's
+  // own reduced-motion handling (SceneActivity.tsx's demand frameloop,
+  // Rain.tsx's rainMode() returning "motion-reduced" with no rain mesh)
+  // existed for a visitor this gate never let in. The default LANDING view
+  // still respects reduced motion (e2e/world-fallback.spec.ts: "the list
+  // branch is what reduced-motion resolves to") — that's forcedList's
+  // initial value below, not worldCapable — so `wantsWorld` starts false
+  // for that visitor and flips true only once they click through, same as
+  // any other visitor's explicit choice (e2e/world-reality.spec.ts:
+  // "reduced motion marks rain motion-reduced, with no rain mesh mounted").
   const [forcedList, setForcedList] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [worldCapable, setWorldCapable] = useState(false);
@@ -123,8 +137,10 @@ function PlaygroundInner() {
   // being handled as a fallback render inside the boundary itself.
   const [worldFailed, setWorldFailed] = useState(false);
   useEffect(() => {
-    setForcedList(loadViewPref() === "list");
-    setWorldCapable(hasWebGL() && !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const saved = loadViewPref();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setForcedList(saved ? saved === "list" : reducedMotion);
+    setWorldCapable(hasWebGL());
   }, []);
 
   const wantsWorld = worldCapable && !forcedList && !worldFailed;
@@ -292,8 +308,13 @@ function PlaygroundInner() {
             small proof of the engineering the rest of the site describes. Pick one and poke it. If you only have
             two minutes, start here.
           </p>
-          {/* The corridor, as a picture, for the visitors who will never see
-              it move: no WebGL, or reduced-motion. It is baked at build time
+          {/* The corridor, as a picture, for the visitors who land here by
+              default rather than see it move: no WebGL, or reduced-motion
+              with no saved preference yet (forcedList's own comment above)
+              — either can still reach the real world through the "drive it
+              instead" button below, now that worldCapable no longer blocks
+              it for the reduced-motion half of that group. It is baked at
+              build time
               by scripts/gen-world-plate.mjs from the SAME heightfield the
               drivable terrain uses, so it cannot drift from the world it
               stands in for — the work ramp toward 2026, the 2020-12 chess

@@ -42,6 +42,12 @@ async function gotoPlayground(page: Page, at: string): Promise<void> {
   await page.addInitScript(() => localStorage.setItem("playground:onboarded", "1"));
   await page.goto("/playground");
   await waitForHydration(page);
+  // A reduced-motion visitor with no saved view preference lands on the
+  // static corridor/list branch by default (e2e/world-fallback.spec.ts) —
+  // same as any other visitor, they reach the drivable world through the
+  // "drive the 3D world instead" button rather than an automatic mount.
+  const driveButton = page.getByRole("button", { name: "drive the 3D world instead" });
+  if (await driveButton.isVisible().catch(() => false)) await driveButton.click();
   await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 }
 
@@ -210,21 +216,21 @@ test.describe("the You row (sessionRipple, in-memory)", () => {
 
 test.describe("reduced motion and low-tier rain rendering", () => {
   /**
-   * KNOWN EXTERNAL BLOCKER (out of P1-05's ownership — reported, not
-   * silently worked around). `src/Playground.tsx` (owned by P3-07 then
-   * P4-00 per master-plan.md#M22 handoff H2, never P1-05) sets
-   * `wantsWorld = worldCapable && ...` where `worldCapable` is
-   * `hasWebGL() && !matchMedia("(prefers-reduced-motion: reduce)").matches`
-   * — a reduced-motion visitor is routed to the static `CorridorPlate` +
-   * `RoomGrid` branch and the drivable `<World>` (this lane's Hud/Rain
-   * tree) never mounts at all, so `[data-reality-rain]` cannot appear in
-   * the DOM. `Rain.tsx`'s own `rainMode()` (this lane, verified correct:
-   * tier is checked before reducedMotion, `motion-reduced` is returned
-   * whenever `reducedMotion` is true and `precipMmH>0`) is the right
-   * answer to a question this route cannot currently ask it. This test
-   * stays written to reality-spec.md §7 R4's literal acceptance line so the
-   * gap is visible the moment Playground.tsx's gate changes, rather than
-   * silently dropped.
+   * `src/Playground.tsx`'s `worldCapable` used to be `hasWebGL() &&
+   * !matchMedia("(prefers-reduced-motion: reduce)").matches`, and gated
+   * BOTH the default landing view AND the "drive the 3D world instead"
+   * button/`showWorld()` — so a reduced-motion visitor could never reach
+   * the drivable `<World>` (this lane's Hud/Rain tree) at all, by default
+   * or by choice, and `[data-reality-rain]` could never appear in the DOM.
+   * `Rain.tsx`'s own `rainMode()` was already correct (tier checked before
+   * reducedMotion, `motion-reduced` returned whenever `reducedMotion` is
+   * true and `precipMmH>0`). `worldCapable` now reads `hasWebGL()` alone;
+   * the default landing view still respects reduced motion on its own
+   * (e2e/world-fallback.spec.ts), so `gotoPlayground()` above clicks
+   * through the "drive it instead" button when that's where it lands,
+   * same as any other visitor's explicit choice — reaching the real world
+   * (SceneActivity.tsx drops it to a demand frameloop) and this spec's
+   * literal reality-spec.md §7 R4 acceptance line.
    */
   test("reduced motion marks rain motion-reduced, with no rain mesh mounted", async ({ page }) => {
     await mockLiveRoutes(page, WEATHER_WET);
@@ -234,19 +240,18 @@ test.describe("reduced motion and low-tier rain rendering", () => {
   });
 
   /**
-   * KNOWN ENVIRONMENT LIMITATION (out of P1-05's ownership). `deviceTier.ts`
-   * (an already-merged, different lane) computes tier 3 from a wall-clock
-   * benchmark against `THROTTLE_BUDGET_MS = 180`. Measured directly against
-   * this same build (`localhost` preview, headless Chromium, CDP
-   * `Emulation.setCPUThrottlingRate`): the benchmark scales linearly with
-   * the CDP rate (rate 1 -> ~2ms, rate 6 -> ~12.6ms, rate 20 -> ~46.5ms on
-   * this machine) and does not cross 180ms until roughly rate ~90 — so
-   * reality-spec.md §7 R4's literal "rate 6" does not reach tier 3 on fast
-   * host hardware, only on a machine slow enough that 6x already clears
-   * 180ms (the doc's own "4x CPU-throttled device ... clears it" example).
-   * `rainMode(precipMmH, reducedMotion, tier)` (this lane) checks
-   * `tier === 3` first and is unit-provably correct; recalibrating
-   * `THROTTLE_BUDGET_MS` is deviceTier.ts's call, not this lane's.
+   * `deviceTier.ts` computes tier 3 from a wall-clock benchmark
+   * (`BENCH_ITERATIONS` fixed work) against `THROTTLE_BUDGET_MS = 180`.
+   * Measured directly against this build (`localhost` preview, headless
+   * Chromium, CDP `Emulation.setCPUThrottlingRate`): at the old
+   * `BENCH_ITERATIONS = 400_000` the benchmark only reached ~12.6ms at a 6x
+   * throttle — reality-spec.md §7 R4's literal worked example — nowhere
+   * near 180ms, so tier 3 was never reached and `rainMode()` (checked
+   * `tier === 3` first, unit-provably correct on its own) correctly read
+   * "on" for what should have read as a throttled device. Recalibrated to
+   * `10_000_000` iterations: ~40ms unthrottled (still an imperceptible
+   * one-time cost) and ~250ms at a 6x throttle, comfortably on the right
+   * side of `THROTTLE_BUDGET_MS` in both directions.
    */
   test("a CPU-throttled (tier 3) device gets fog only, never the rain mesh", async ({ page }) => {
     const client = await page.context().newCDPSession(page);
