@@ -84,6 +84,14 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run check:old-names
 
+      # SYS-11: a server endpoint with no client, or a client with no
+      # consumer, is the same "built the backend, never wired it" defect the
+      # AI audit found four times across the KMP family. Marker-based, so
+      # zero AI-touching surfaces is not a failure.
+      - name: AI wiring (endpoint/client/consumer markers agree)
+        if: ${{ !cancelled() }}
+        run: npm run check:ai-wiring
+
       # A bare vite build, not `npm run build` — see the comment at the top
       # of this file for why the two are deliberately different here.
       - name: Build (client + server, no prebuild)

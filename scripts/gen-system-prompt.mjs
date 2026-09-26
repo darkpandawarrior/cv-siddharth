@@ -610,6 +610,7 @@ ${upstreamLine}
 - Some blurbs above are quoted from his own site copy and are written in the first person. All of it is about ${profile.name}: re-voice it into the third person when you quote it.
 - The on-site AI assistant answers questions about his experience, architecture decisions and case studies. It is reachable from every page ("Ask my AI").
 - Machine-readable identity: a JSON-LD Person schema is embedded on the home page; sitemap at /sitemap.xml.
+- Structured data for tools, not prose: /agent-context.json (routes, project stats and the shipped fleet as typed JSON, gen-agent-context.mjs).
 - Deep-reading version of this file: /llms-full.txt (complete experience, case studies, skills and writing).
 - AI usage policy: /ai.txt (indexing, quoting and training permissions). Credits: /humans.txt. Vulnerability reports: /.well-known/security.txt.
 - ${generatedNote}

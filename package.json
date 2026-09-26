@@ -67,6 +67,7 @@
     "check:freshness": "node scripts/check-freshness.mjs",
     "check:answers": "node scripts/check-answers.mjs",
     "check:old-names": "node scripts/check-old-names.mjs",
+    "check:ai-wiring": "node scripts/check-ai-wiring.mjs",
     "validate:palette": "node scripts/validate_palette.js",
     "check:budget": "node scripts/check-budget.mjs",
     "sync:twin": "node scripts/sync-twin.mjs",

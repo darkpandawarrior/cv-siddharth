@@ -1,0 +1,45 @@
+name: AI golden eval
+
+# idea-atlas C4 / master-plan M31 (SYS-11, I5): scripts/eval-ai-golden.mjs
+# calls a real model against 5 JD fixtures, so its pass condition is
+# inherently non-deterministic (model sampling, provider-side version
+# drift). Never a required PR gate (ci.yml never runs this) — dispatch and
+# weekly only, matching idea-atlas.md#C4's fix: "no *required* gate hits a
+# live network." A band miss is recorded on /ops, never turned into a
+# failing exit code (the script's own doctrine).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # Monday, same cadence as the other self-healing crons
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Run the golden eval
+        run: node scripts/eval-ai-golden.mjs
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # No provider key configured yet: the script writes status "not-run"
+      # and exits 0 (its own doctrine). Once a key lands, refreshing the
+      # committed src/data/generated/aiEval.ts for /ops is a manual
+      # `node scripts/eval-ai-golden.mjs` + commit, the same as the other
+      # manual generators (G13) — this workflow only proves the eval still
+      # runs, it never writes back to main on its own.
+      - name: Upload result (diagnostic only, not committed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-golden-eval-result
+          path: src/data/generated/aiEval.ts
+          retention-days: 14
