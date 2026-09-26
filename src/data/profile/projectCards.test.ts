@@ -20,9 +20,13 @@ describe("projectCards stays in sync with projects", () => {
     for (const full of projects) {
       const card = projectCards.find((p) => p.slug === full.slug);
       if (!card) { drift.push(`${full.slug}: missing from projectCards`); continue; }
-      for (const key of ["name", "tagline", "status"] as const) {
+      for (const key of ["name", "tagline", "status", "description"] as const) {
         if (card[key] !== full[key]) drift.push(`${full.slug}.${key}: card="${card[key]}" full="${full[key]}"`);
       }
+      if (card.hasDetail !== !!full.detail) drift.push(`${full.slug}.hasDetail: card=${card.hasDetail} full detail present=${!!full.detail}`);
+      const fullRepo = full.links.find((l) => /github\.com|gitlab\.com|bitbucket\.org/.test(l.url))?.url;
+      if (card.repoUrl !== fullRepo) drift.push(`${full.slug}.repoUrl: card="${card.repoUrl}" full="${fullRepo}"`);
+      if (card.overview !== full.detail?.overview) drift.push(`${full.slug}.overview drifted from full.detail.overview`);
       if (JSON.stringify(card.stack) !== JSON.stringify(full.stack)) drift.push(`${full.slug}.stack differs`);
       if (JSON.stringify(card.highlights) !== JSON.stringify(full.highlights)) drift.push(`${full.slug}.highlights differs`);
       if (JSON.stringify(card.badges) !== JSON.stringify(full.badges)) drift.push(`${full.slug}.badges differs`);

@@ -13,10 +13,32 @@ import { projectModuleCounts, paymentGatewayCount, dooriStats, paymentStats } fr
 // prose in Project.detail — and because this is its own module, Rollup
 // builds it as its own chunk. Importing it (instead of the full `projects`)
 // is what keeps those two routes off the heavy chunk.
+//
+// `description`/`hasDetail` joined this file for the same reason: routes/
+// project.$slug.tsx's `beforeLoad`/`head` run before the route's component
+// (`ProjectDetail.tsx`, split into its own lazy chunk) ever loads — they
+// CANNOT be code-split, so whatever they import lands in every route's
+// shared eager graph, not just /project/*'s (e2e/spine-payload.spec.ts
+// caught this: /chess, /terminal, /weeb and /hire were all fetching
+// profile-projects-heavy purely because that route's `head()` read
+// `Project.description`/`Project.detail` from the full `projects` array).
 export interface ProjectCard {
   slug: string;
   name: string;
   tagline: string;
+  /** Same string as Project.description — duplicated here so /project/$slug's
+   *  `head()` (SEO meta, runs eagerly) never needs the full `projects` array. */
+  description: string;
+  /** Mirrors `!!Project.detail` — whether this project has an in-site case
+   *  study, used by `head()`'s OG-image choice without needing `detail` itself. */
+  hasDetail: boolean;
+  /** The one link from Project.links matching a code-host URL (github.com/
+   *  gitlab.com/bitbucket.org), or undefined — project-jsonld.ts's own
+   *  SoftwareSourceCode.codeRepository, without needing the full `links`. */
+  repoUrl?: string;
+  /** Same string as Project.detail.overview, present only when hasDetail —
+   *  project-jsonld.ts's Article.articleBody, without needing `detail`. */
+  overview?: string;
   stack: string[];
   highlights: string[];
   status: string;
@@ -29,6 +51,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "gaddi",
     "name": "Gaddi",
     "tagline": "A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega.",
+    "description": "Deterministic Kotlin Multiplatform social-deduction game with ISMCTS bot AI, shipped across Android, iOS, Desktop, and Web.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/Gaddi",
+    "overview": "Gaddi is a Hinglish social-deduction bluffing game set in a satirical India corporate-political underworld where six archetypes scheme for an empty chair, the Gaddi, and everyone is lying about what they hold. The Neta makes promises he'll forget tomorrow, the Bhai owns silence, the Babu approves nothing, the Jugaadu knows a shortcut, the Vakil has read every exception. Satire targets the archetype, never the person. Under the deadpan Hinglish voice (\"\u0938\u092c \u092e\u093f\u0932\u0947 \u0939\u0941\u090f \u0939\u0948\u0902\") sits a serious engineering exercise: one deterministic Kotlin engine that runs identically on Android, iOS, desktop and the web, and powers the AI, the UI and a server-authoritative backend from the same code.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
@@ -52,6 +78,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "doori",
     "name": "Doori",
     "tagline": "Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop.",
+    "description": "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, with a real Kotlin/Ktor backend built in, off by default.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/Doori",
+    "overview": "Doori is an original, fully-offline mileage / travel / expense tracker I designed and built end-to-end in Kotlin & Compose Multiplatform. It runs on Android, iOS, Wear OS, watchOS and Compose Desktop from one shared codebase, offline-first with a real Kotlin/Ktor backend built in and off by default, so the whole thing stays reproducible and reviewable. It's my reference implementation for the architecture I advocate at scale: strict module isolation, a real location engine, a policy/reimbursement layer and a durable submit-outbox, all over local data.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
@@ -80,6 +110,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "paymentslab-kmp",
     "name": "PaymentsLab-KMP",
     "tagline": "An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction.",
+    "description": "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/PaymentsLab-KMP",
+    "overview": "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab-KMP runs real payment flows across a 70-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
@@ -105,6 +139,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "candidai",
     "name": "Candidai",
     "tagline": "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
+    "description": "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/career-ops-hq/career-ops",
+    "overview": "Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (71k+ stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
@@ -131,6 +169,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "portfolio",
     "name": "Portfolio Twin",
     "tagline": "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
+    "description": "An interactive r\u00e9sum\u00e9 built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 35.7k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/cv-siddharth",
+    "overview": "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. The React version renders everything from one TypeScript file of profile data, which is also what the AI assistant, the r\u00e9sum\u00e9, the OG images and the two /llms.txt files are generated from, so none of them can disagree with each other. The Compose twin transcribes that file by hand, which is a different contract and a weaker one.",
     "stack": [
       "cv-siddharth",
       "React 19",
@@ -160,6 +202,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "stutter",
     "name": "STUTTER",
     "tagline": "A first-person time-loop game about a moment someone could not let end.",
+    "description": "Godot 4.7 in GDScript. A deterministic echo-replay spine powers cooperative echoes, ghosts, and boss desync from one system, with recorded input intent replayed through the same physics step. Built solo as an AI-orchestrated dev crew.",
+    "hasDetail": true,
+    "repoUrl": undefined,
+    "overview": "STUTTER is a first-person time-loop game about a moment someone could not let end: a grieving mind's mathematics, rendered as a room that lies about its own floor. Under the mood sits one deterministic engine: every action is recorded as intent, never position, and replayed through the exact same physics step. That one idea is reused, unmodified, five different ways across the game's core systems: record intent, replay deterministically.",
     "stack": [
       "Godot 4.7",
       "GDScript",
@@ -184,6 +230,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "sinc-p",
     "name": "SINC-P",
     "tagline": "A statutory student-grievance redressal system, built to survive a UGC inspection rather than a demo.",
+    "description": "Next.js 16 over Postgres with row-level security, rewriting a 2019 MANIT Bhopal final-year project (a downloaded complaint-box template, categories still reading E-commerce and Online Shopping) into a real compliance system: a statutory SLA clock, a hash-chained append-only audit trail, and published closure-time transparency with no login required.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/SINC-P",
+    "overview": "SINC-P rebuilds a 2019 final-year project from scratch: a statutory grievance-redressal system an Indian institution can put in front of a UGC inspector, with a clock on every case and a record nobody can quietly edit. Nothing from 2019 survived the rewrite, not the code, the schema, or the passwords, because almost every line of the original was an ordinary mistake (string-built SQL, unsalted md5, no ownership check on a grievance read) that is still running at real institutions today.",
     "stack": [
       "Next.js 16",
       "React 19",
@@ -210,6 +260,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "kmp-family",
     "name": "The KMP toolkit family",
     "tagline": "Three decoupled repos so a new app starts at \"write the feature\".",
+    "description": "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/kmp-toolkit",
+    "overview": "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Candidai, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
     "stack": [
       "Kotlin Multiplatform",
       "Gradle convention plugins",
@@ -234,6 +288,10 @@ export const projectCards: ProjectCard[] = [
     "slug": "the-loopdown",
     "name": "The Loopdown",
     "tagline": "Field notes from an engineer who writes: one war story, four channels, one branded card.",
+    "description": "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic, plus the consolidated back catalogue.",
+    "hasDetail": true,
+    "repoUrl": "https://github.com/darkpandawarrior/the-loopdown",
+    "overview": "The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. 17 lessons across 8 series sit alongside a 10-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.",
     "stack": [
       "Node.js",
       "Markdown",
