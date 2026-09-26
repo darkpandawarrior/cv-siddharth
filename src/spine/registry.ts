@@ -44,6 +44,15 @@ export const SPINE: SpineEntry[] = [
   { id: "anomaly-rail", file: "src/AnomalyRail.tsx", kind: "floating", selector: ".anomaly-rail", routes: "all", debt: "P1-01a", why: "secondary nav, fixed left edge; must not take taps meant for content (F7, F18)" },
   { id: "palette-trigger", file: "src/CommandPalette.tsx", kind: "floating", selector: "button.palette-trigger", routes: "all", maxHeight: { "1440": 44, "390": 44 }, debt: "P1-01a", why: "eager root mount; covers bottom-left content today (F6)" },
   { id: "chat-launcher", file: "src/FloatingChat.tsx", kind: "floating", selector: "button.chat-launcher", routes: "all", maxHeight: { "1440": 56, "390": 56 }, debt: "SP-10", why: "missing on /ops and 404 until mounted once in __root (F13)" },
+  // ChatLauncher.tsx split out of FloatingChat.tsx (SP-10, F12/F13): it is the
+  // actual eager root mount (imported directly by __root.tsx) and renders the
+  // SAME `.chat-launcher` button until chat is wanted, then lazy-hands off to
+  // FloatingChat's panel. Registered separately from "chat-launcher" above
+  // rather than repointing it, because FloatingChat.tsx still independently
+  // qualifies as spine on its own (registry.test.ts's own break-it check
+  // requires it to) — it renders its own copy of this button once the panel
+  // is later closed.
+  { id: "chat-launcher-root", file: "src/ChatLauncher.tsx", kind: "floating", selector: "button.chat-launcher", routes: "all", maxHeight: { "1440": 56, "390": 56 }, why: "root-mounted in __root.tsx; the eager half of F12/F13's split, h-14 w-14 = 56x56" },
   { id: "faq", file: "src/FaqDock.tsx", kind: "block", selector: '[data-spine="faq"]', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 240, "390": 180 }, debt: "SP-01", why: "17 answers, SSR-crawlable; docked as the footer's first band (F1, F2)" },
   { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4)" },
   { id: "room-pager", file: "src/rooms.tsx", kind: "block", selector: '[data-spine="room-pager"]', routes: "any", maxHeight: { "1440": 96, "390": 96 }, last: true, debt: "SP-10", why: "next-room pager; the FAQ rendered below it on 8 rooms (F2)" },
@@ -66,6 +75,11 @@ export const SPINE: SpineEntry[] = [
   { id: "picture", file: "src/Picture.tsx", kind: "primitive", why: "every raster image; a change is a change to 25 routes" },
   { id: "reveal", file: "src/Reveal.tsx", kind: "primitive", why: "scroll reveal wrapper on 12 routes; must respect reduced motion" },
   { id: "world-switch", file: "src/WorldSwitch.tsx", kind: "primitive", why: "mounted by 4 route files" },
+  // No own maxHeight/selector: it renders inline inside "route-header"'s
+  // already-budgeted row (src/rooms.tsx's RoomFrame), never a block of its
+  // own. altitudeFor() only shows it on /map (ORBIT) and /globe (GLOBE); its
+  // high reach comes from RoomFrame being every room route's shared wrapper.
+  { id: "altitude-rail", file: "src/world/AltitudeRail.tsx", kind: "primitive", why: "ORBIT/GLOBE altitude switcher, folded into route-header on /map and /globe (living-ledger-spec.md#6.2)" },
   { id: "evidence-chip", file: "src/EvidenceChip.tsx", kind: "primitive", why: "the evidence-chip primitive; mounted directly in 5 route files (16 files overall), unregistered when the spine audit's dry run was taken" },
   { id: "global-css", file: "src/index.css", kind: "css", bytes: 188_913, why: "one sheet on every route; owns the z-stack, body clearances, print, focus ring" },
   { id: "desktop-chat-lane", file: "src/index.css", kind: "css", debt: "P1-01a", why: "body padding-right 104 px; only at 768-1279 (F5)" },
