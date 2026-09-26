@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { condenseJd } from "./jd-condense";
+import { condenseJd, jdSections } from "./jd-condense";
 
 /**
  * A JD shaped like the real ones — and sized like them. The ModalX description
@@ -139,5 +139,41 @@ describe("condenseJd", () => {
       "- 5 years Android\n" +
       "z".repeat(2600);
     expect(condenseJd(jd)).toContain("Benefits administration experience");
+  });
+});
+
+// SYS-7's dossier chit (src/lib/useJdFit.ts, src/ChatWidgets.tsx) shows which
+// of these headings survived a real condensing pass — this is the data half
+// of that, kept alongside condenseJd rather than a second, hand-kept copy of
+// the same two heading regexes.
+describe("jdSections", () => {
+  it("names the headings condenseJd actually kept and trimmed on a real-shaped JD", () => {
+    const { kept, trimmed } = jdSections(REAL_SHAPED_JD);
+    expect(kept).toContain("Responsibilities");
+    expect(kept).toContain("Requirements");
+    expect(trimmed).toContain("Benefits");
+    expect(trimmed).toContain("Equal Opportunity");
+    // A KEPT heading is never also reported as trimmed.
+    expect(trimmed).not.toContain("Responsibilities");
+  });
+
+  it("reports nothing trimmed on a JD short enough that condenseJd is a no-op", () => {
+    const short = "Responsibilities\nOwn the Android app.\nBenefits\nFree snacks.";
+    expect(condenseJd(short)).toBe(short); // confirms the no-op precondition
+    expect(jdSections(short)).toEqual({ kept: ["Responsibilities"], trimmed: [] });
+  });
+
+  it("reports nothing trimmed when condenseJd's own floor reverts to the original", () => {
+    // Same shape as condenseJd's own "returns the original rather than a
+    // husk" case above: every heading reads as noise, so nothing survives
+    // condensing and condenseJd hands back the input untouched.
+    const jd = "Benefits\n" + "Real requirements hide in here. ".repeat(120);
+    expect(condenseJd(jd)).toBe(jd); // confirms the floor actually fired
+    expect(jdSections(jd).trimmed).toEqual([]);
+  });
+
+  it("finds no sections at all in a heading-less wall of text", () => {
+    const jd = "We need a senior Android engineer with Kotlin and Compose. ".repeat(60);
+    expect(jdSections(jd)).toEqual({ kept: [], trimmed: [] });
   });
 });
