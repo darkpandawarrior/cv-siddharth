@@ -43,10 +43,24 @@ interface Heightmap {
  *  "load a PNG's real pixels client-side" technique `terrainPlate.ts`
  *  already uses for its own baked texture, just reading a fetched image
  *  instead of drawing one from scratch. */
+async function fetchOk(url: string): Promise<Response> {
+  const res = await fetch(url);
+  // A missing heavy asset (unpublished, or the CDN sync hasn't run yet — see
+  // assetBase.ts's own doc comment) 404s to GitHub Pages' own HTML page, not
+  // to JSON/PNG bytes. Without this check that surfaced as `r.json()`
+  // throwing "Unexpected token '<'... is not valid JSON" — true but useless
+  // for finding which asset is actually missing. Same "absent, not faked"
+  // contract as EarthDots.tsx's loadEarthMask, just with a named error
+  // instead of a silent null: no ground mesh is ever built from a heightmap
+  // this obviously isn't, but the console now says which URL and status.
+  if (!res.ok) throw new Error(`Terrain.tsx: ${url} -> HTTP ${res.status} (heavy asset not published?)`);
+  return res;
+}
+
 async function loadHeightmap(pngUrl: string, jsonUrl: string): Promise<Heightmap> {
   const [meta, blob] = await Promise.all([
-    fetch(jsonUrl).then((r) => r.json() as Promise<HeightmapMeta>),
-    fetch(pngUrl).then((r) => r.blob()),
+    fetchOk(jsonUrl).then((r) => r.json() as Promise<HeightmapMeta>),
+    fetchOk(pngUrl).then((r) => r.blob()),
   ]);
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");

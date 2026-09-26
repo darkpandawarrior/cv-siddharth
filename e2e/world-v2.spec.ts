@@ -56,6 +56,13 @@ async function mockLiveRoutes(page: Page): Promise<void> {
 async function gotoWorldV2(page: Page): Promise<void> {
   await mockLiveRoutes(page);
   await page.clock.setFixedTime(new Date(NOON_IST));
+  // Pre-dismiss OnboardingV2's first-run card (its own SEEN_KEY) rather than
+  // clicking through it per test — same reasoning, and same fix, as
+  // e2e/world-reality.spec.ts's gotoPlayground for v1's Nav.tsx Onboarding:
+  // it is a `z-20` overlay centred on the whole viewport, so left undismissed
+  // it visually sits on top of the Reality ledger (also centred) and would
+  // intercept the ledger row hover/click below.
+  await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
   await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
   await waitForHydration(page);
   // Scoped to WorldV2's own root: the site's global chrome (the anomaly
@@ -125,6 +132,29 @@ test.describe("WorldV2 hub (P2-19, preview only)", () => {
     await expect(landmarkButtons.first()).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("[data-landmark]")).toBeVisible();
+  });
+
+  test("ships a real <h1> and a dismissable first-run card, same contract as v1", async ({ page }) => {
+    await mockLiveRoutes(page);
+    await page.clock.setFixedTime(new Date(NOON_IST));
+    // Deliberately NOT gotoWorldV2 here — this test wants the truly first-run
+    // state gotoWorldV2's own pre-dismiss (above) skips for every other test.
+    await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+    await waitForHydration(page);
+    await expect(page.locator("[data-world='v2'] canvas")).toHaveCount(1, { timeout: 15_000 });
+
+    await expect(page.locator("h1")).toHaveCount(1);
+
+    const card = page.getByRole("button", { name: "Got it" });
+    await expect(card).toBeVisible();
+    await card.click();
+    await expect(card).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("playground:v2:onboarded"))).toBe("1");
+
+    // Reload: a visitor who has already seen it doesn't see it again.
+    await page.reload({ waitUntil: "networkidle" });
+    await waitForHydration(page);
+    await expect(page.getByRole("button", { name: "Got it" })).toHaveCount(0);
   });
 
   test("a production build of the SAME route gates world=v2 back to v1 (data-world='v1')", async () => {
