@@ -732,7 +732,7 @@ export const projects: Project[] = [
       decision:
         "Put a Ktor server between the client and the truth: order creation, signature verification and webhook reconciliation happen there, a Room journal is written before the SDK even launches so a process death mid-payment is always recoverable, and a redaction layer keeps every secret and PII out of logs and screens.",
       outcome:
-        "${paymentGatewayCount} cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.",
+        `${paymentGatewayCount} cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.`,
       outcomeMetricIndex: 1,
       outcomeScreenshot: "web_home.png",
       sections: [
