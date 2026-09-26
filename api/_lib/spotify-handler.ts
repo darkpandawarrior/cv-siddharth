@@ -12,6 +12,8 @@ export type SpotifyNow = {
   albumArt?: string;
   url?: string;
   recent: SpotifyTrack[];
+  /** Set when Spotify refused the account (401/403), so /api/spotify says why it is dark. */
+  refusedStatus?: number;
 };
 
 const EMPTY: SpotifyNow = { connected: false, isPlaying: false, recent: [] };
@@ -89,6 +91,16 @@ export async function getSpotifyNow(
 
   const auth = { authorization: `Bearer ${token}` };
   const nowRes = await fetchImpl("https://api.spotify.com/v1/me/player/currently-playing", { headers: auth });
+
+  // A refusal is not "nothing playing". Dev-mode apps get 403 "Active premium
+  // subscription required for the owner of the app"; a revoked token gets 401.
+  // Report disconnected so no empty chip renders; the first request after the
+  // refusal lifts goes live on its own. A 401 also drops the cached token so
+  // the next request re-exchanges instead of reusing a dead one for an hour.
+  if (nowRes.status === 401 || nowRes.status === 403) {
+    if (nowRes.status === 401) cache.value = null;
+    return { ...EMPTY, refusedStatus: nowRes.status };
+  }
 
   if (nowRes.status === 200) {
     const json = (await nowRes.json()) as { is_playing: boolean; item: SpotifyApiTrack | null };
