@@ -23,7 +23,7 @@ token-position error tracking).
 This is the strongest engineering artifact on the site and it undersells itself. What exists today:
 
 - **Real interpreter.** `composeInterpreter.ts` is a hand-written tokenizer (`tokenize`) → recursive-descent parser (`class Parser`) → AST (`Program`/`Node`/`Expr`) → `renderNode` walk in `ComposePlayground.tsx`. No regex-templating, no lookup table. State is genuine: `applyActions` mutates a `StateMap` and React recomposes.
-- **7 presets** (`PRESETS` in `ComposePlayground.tsx`, lines 353–536): Counter, Profile card, Toggle, Kursi role, Mileway, Animation, Layout. Good breadth — state, DS-token integration, `AnimatedVisibility`, layout weights.
+- **7 presets** (`PRESETS` in `ComposePlayground.tsx`, lines 353–536): Counter, Profile card, Toggle, Gaddi role, Doori, Animation, Layout. Good breadth — state, DS-token integration, `AnimatedVisibility`, layout weights.
 - **AI generation** via `streamChat` → `/api/chat` with `mode: "compose"`, constrained by a real server-side grammar (`COMPOSE_SYSTEM_PROMPT`). This is honest: the model is generating into the *same* limited grammar the hand-parser accepts, not a separate more-capable path.
 - **Error handling exists but is thin.** A parse failure throws a plain `Error` (e.g. `Expected "}" near "end of code"`) with no position — the visitor sees the message but has no way to find the offending character in a textarea with no line/column markers beyond the static gutter.
 - **No proof-of-realness affordance.** Nothing in the UI demonstrates *why* this is a parser and not a canned demo. A skeptical engineer has to take the code comment's word for it, or open devtools.

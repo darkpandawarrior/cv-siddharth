@@ -43,6 +43,8 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
+import { needsStoreProbe } from "./lib/store-cache.mjs";
+import { readPublishedStore, assertPublishedListings } from "./lib/store-published.mjs";
 const CACHE = resolve(process.cwd(), ".store-cache.json");
 /** Written by scripts/gen-store-archive.mjs. Optional — the fleet works without it. */
 const ARCHIVE_CACHE = resolve(process.cwd(), ".store-archive-cache.json");
@@ -55,68 +57,12 @@ const SINCE_CACHE = resolve(process.cwd(), ".store-since-cache.json");
 const SIBLINGS_CACHE = resolve(process.cwd(), ".store-siblings.json");
 const OUT = resolve(process.cwd(), "src/data/store.ts");
 const ICON_DIR = resolve(process.cwd(), "public/store");
-
 const publishedOnly = process.argv.includes("--published-only");
-
-/**
- * The committed store.ts IS the allowlist in published-only mode, never a
- * source of new attribution. Reads the exported consts back out of the file
- * gen-store.mjs itself last wrote.
- */
-function readPublishedStore(path) {
-  const source = readFileSync(path, "utf8");
-  const readArr = (name) => {
-    const m = new RegExp(`export const ${name} = ([\\s\\S]*?) as const;`).exec(source);
-    if (!m) throw new Error(`[gen-store] published ${name} missing; full refresh required`);
-    return JSON.parse(m[1]);
-  };
-  const published = Object.fromEntries(
-    ["storeApps", "fleet", "delisted", "pastClients", "fleetStats"].map((name) => [name, readArr(name)]),
-  );
-  // Not wrapped `as const` (a plain date literal), so a separate read.
-  published.storeGeneratedAt = /export const storeGeneratedAt = "([^"]+)";/.exec(source)?.[1] ?? null;
-  const ids = [...published.storeApps, ...published.fleet].map((app) => app.id);
-  if (ids.length !== new Set(ids).size || ids.length !== published.fleetStats.live + published.storeApps.length) {
-    throw new Error("[gen-store] published IDs/count disagree; full refresh required");
-  }
-  return published;
-}
-
-/** The calibration knob for both the published-only tolerance below and the
- *  full-refresh bulk-drop backstop further down: wide enough to absorb a
- *  genuine small round of delistings, narrow enough to catch a throttled probe
- *  or a real outage rather than write either off as normal turnover. */
+/** The calibration knob for the full-refresh bulk-drop backstop further down:
+ *  wide enough to absorb a genuine small round of delistings, narrow enough
+ *  to catch a throttled probe or a real outage rather than write either off
+ *  as normal turnover. */
 const SHRINK_TOLERANCE = 3;
-
-/**
- * A 404 on a listing that used to resolve IS delisting evidence — gen-store's
- * whole reason to exist is to never ship a dead link — so a HANDFUL of them
- * (the same tolerance the full refresh already accepts without a human, see
- * SHRINK_TOLERANCE below) moves those ids to `delisted` automatically rather
- * than refusing the run. What published-only still cannot do without the
- * private checkouts is re-mine ATTRIBUTION, so a moved app keeps every field
- * it already had (setUpByHim, commits, developer, ...) and only gains a
- * `lastSeen` of today — the one thing this run just witnessed directly.
- * Anything larger, or any id Play never answered for at all, still refuses:
- * that shape is Play throttling or an outage, not an ordinary delisting.
- */
-function goneFromPublished(published, store, unresolved) {
-  // Flagships have no "delisted" tier and already fail loudly on their own
-  // (see the no-flagship-resolved guard below) — only the fleet moves here.
-  const ids = published.fleet.map((app) => app.id);
-  const missing = ids.filter((id) => !store[id]?.live || !store[id]?.name);
-  if (unresolved.length || missing.length > SHRINK_TOLERANCE) {
-    throw new Error(
-      `[gen-store] published-only stopped: ${unresolved.length} unknown, ` +
-        `${missing.length} missing/delisted (${missing.join(", ")}). ` +
-        "Public files unchanged; run a full provenance-aware refresh locally.",
-    );
-  }
-  if (missing.length)
-    console.warn(`[gen-store] published-only: confirmed gone, moving to delisted: ${missing.join(", ")}`);
-  return new Set(missing);
-}
-
 const published = publishedOnly ? readPublishedStore(OUT) : null;
 
 /**
@@ -299,13 +245,14 @@ async function probe(id) {
     try {
       const res = await fetchWithTimeout(url, { headers: { "user-agent": UA } });
       if (res.status === 404) return { v: PROBE_V, live: false };
-      if (res.status === 429 || res.status >= 500) {
+      if (!res.ok) {
         await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
         continue;
       }
       const html = await res.text();
       const name = html.match(/itemprop="name"[^>]*>([^<]{1,80})/)?.[1]?.trim();
-      if (!name) return { v: PROBE_V, live: false };
+      // A consent/challenge page or changed markup is not a delisting.
+      if (!name) continue;
       return {
         v: PROBE_V,
         live: true,
@@ -349,7 +296,7 @@ async function probe(id) {
     }
   }
   // Out of attempts, which is NOT the same answer as "not on the store". Only a
-  // 404, or a 200 whose HTML carries no itemprop="name", is evidence of absence;
+  // 404 is evidence of absence;
   // a 429 storm or three timeouts are evidence of nothing at all, and this line
   // used to launder them into `live: false` — which is how a throttled probe
   // could quietly delist a working app. Null means unknown, and every caller
@@ -387,7 +334,7 @@ async function verifyAll(ids) {
   const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {};
   // Re-probe anything live that predates the current schema, so the icon and
   // developer fields land. A dead id stays dead — no point spending a request.
-  const queue = ids.filter((id) => !(id in cache) || (cache[id].live && cache[id].v !== PROBE_V));
+  const queue = [...new Set(ids)].filter((id) => needsStoreProbe(cache[id], PROBE_V));
   /** Ids Play never gave an answer for, and that no earlier run has either. */
   const unresolved = [];
   console.log(`[gen-store] probing ${queue.length} listing(s), ${ids.length - queue.length} cached`);
@@ -403,8 +350,8 @@ async function verifyAll(ids) {
         // that has never resolved stays OUT of the cache, so the next run
         // retries it instead of writing it off forever, and lands in
         // `unresolved` so this run knows its own answer is incomplete.
-        if (r) cache[id] = r;
-        else if (!(id in cache)) unresolved.push(id);
+        if (r) cache[id] = { ...r, checkedAt: new Date().toISOString() };
+        else unresolved.push(id);
         if (++done % 100 === 0) writeFileSync(CACHE, JSON.stringify(cache));
       }
     }),
@@ -459,17 +406,12 @@ if (!publishedOnly) {
     console.log(`[gen-store] +${Object.keys(siblings).length} sibling app(s) from developer pages`);
 }
 
-const idsToVerify = publishedOnly
-  ? [...published.storeApps, ...published.fleet].map((f) => f.id)
-  : [...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)];
-const { store, unresolved } = await verifyAll(idsToVerify);
-const goneIds = publishedOnly ? goneFromPublished(published, store, unresolved) : new Set();
+const { store, unresolved } = await verifyAll([...FLAGSHIPS.map((f) => f.id), ...clients.map((c) => c.id)]);
+if (publishedOnly) assertPublishedListings(published, store, unresolved);
 
 const flagships = (publishedOnly ? published.storeApps : FLAGSHIPS)
-  .map((f) => ({ ...f, ...store[f.id] }))
-  .filter((f) => f.live);
-for (const f of publishedOnly ? published.storeApps : FLAGSHIPS)
-  if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
+  .map((f) => ({ ...f, ...store[f.id] })).filter((f) => f.live);
+for (const f of FLAGSHIPS) if (!store[f.id]?.live) console.warn(`[gen-store] DROPPED ${f.id}`);
 if (flagships.length === 0) throw new Error("[gen-store] no flagship resolved — refusing to write");
 
 const fleet = clients
@@ -485,21 +427,10 @@ const fleet = clients
  * an archived 200 for the listing URL is proof it was published, and absence of
  * a snapshot is proof of nothing at all — so this is a floor, never a count. */
 const archive = !publishedOnly && existsSync(ARCHIVE_CACHE) ? JSON.parse(readFileSync(ARCHIVE_CACHE, "utf8")) : {};
-// published-only: the delisted list is preserved verbatim, plus any fleet id
-// this run just confirmed gone (see goneFromPublished) carried over with its
-// existing attribution and a lastSeen of today — the one fact this run adds.
-const today8 = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-const delisted = publishedOnly
-  ? [
-      ...published.delisted,
-      ...published.fleet
-        .filter((f) => goneIds.has(f.id))
-        .map((f) => ({ ...f, lastSeen: today8, ratings: null })),
-    ]
-  : clients
-      .filter((c) => !store[c.id]?.live && archive[c.id]?.wasLive)
-      .map((c) => ({ ...c, ...archive[c.id] }))
-      .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
+const delisted = publishedOnly ? published.delisted : clients
+  .filter((c) => !store[c.id]?.live && archive[c.id]?.wasLive)
+  .map((c) => ({ ...c, ...archive[c.id] }))
+  .sort((a, b) => (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""));
 const archiveChecked = publishedOnly ? published.fleetStats.archiveChecked : Object.keys(archive).length;
 
 /* First-seen dates for the live listings, also from the Archive. Play never
@@ -528,16 +459,12 @@ const withinTenure = (app) => {
 const predating = [...fleet, ...delisted].filter((a) => !withinTenure(a));
 const liveKept = fleet.filter(withinTenure);
 const pastKept = delisted.filter(withinTenure);
+if (publishedOnly && (liveKept.length !== published.fleet.length || pastKept.length !== published.delisted.length)) {
+  throw new Error("[gen-store] published-only tenure changed; public files unchanged; full refresh required");
+}
 console.log(
   `[gen-store] tenure rule removed ${predating.length} app(s) last shipped before ${JOINED}`,
 );
-if (
-  publishedOnly &&
-  (liveKept.length !== published.fleet.length - goneIds.size ||
-    pastKept.length !== published.delisted.length + goneIds.size)
-) {
-  throw new Error("[gen-store] published-only tenure changed; public files unchanged; full refresh required");
-}
 
 /* THE BULK-DROP BACKSTOP.
  *
@@ -555,7 +482,7 @@ if (
  */
 const prevSrc = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
 const prevLive = +(/export const fleetStats = \{[\s\S]*?"live": (\d+)/.exec(prevSrc)?.[1] ?? 0);
-// SHRINK_TOLERANCE is declared near the top (goneFromPublished uses it too).
+// SHRINK_TOLERANCE is declared near the top of the file.
 const fleetIdsIn = (src) => {
   const i = src.indexOf("export const fleet = [");
   return i < 0 ? [] : [...src.slice(i, src.indexOf("] as const;", i)).matchAll(/"id": "([^"]+)"/g)].map((m) => m[1]);
@@ -753,12 +680,12 @@ function sharedName(names) {
 // developers, clientsLive — all read straight off today's probe); every
 // provenance count (setUpByHim, carryingHisCommits, archiveChecked,
 // predatingHim, branches) is preserved from the committed file, never
-// re-derived from data this mode does not have.
+// re-derived from data this mode does not have. live/delisted are restated
+// from liveKept/pastKept rather than trusted from the spread: the tenure
+// guard above already refuses to reach here if either count moved.
 const stats = publishedOnly
   ? {
       ...published.fleetStats,
-      // live/delisted move with any id goneFromPublished confirmed this run;
-      // everything else in fleetStats is a provenance count, untouched.
       live: liveKept.length,
       delisted: pastKept.length,
       installFloor: liveKept.reduce((s, a) => s + installFloor(a.installs), 0),
@@ -899,10 +826,10 @@ export const delisted = ${JSON.stringify(
  *  \`delisted\` already carries (id/name/side/...), so it needs no fresh probe
  *  and there is no reason to lag behind a client this run just confirmed gone.
  *  (Previously reused \`published.pastClients\` verbatim in published-only
- *  mode, which left a fleet id \`goneFromPublished\` moved to \`delisted\`
- *  ungrouped until the next full mine — the flat \`delisted\` export was
- *  correct while the grouped \`pastClients\` the page renders from was one app
- *  short, e.g. \`production.pickupbarbodas.driver\`.) */
+ *  mode, which left a newly-delisted fleet id ungrouped until the next full
+ *  mine — the flat \`delisted\` export was correct while the grouped
+ *  \`pastClients\` the page renders from was one app short, e.g.
+ *  \`production.pickupbarbodas.driver\`.) */
 export const pastClients = ${JSON.stringify(
     groupByClient(
       pastKept.map(({ id, name, side, setUpByHim, firstSeen, lastSeen, url, icon, color, rating }) => ({

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { CITY } from "./city.ts";
 import { worldPalette } from "./palette.ts";
+export { hashNoise } from "./v2/hash.ts";
+import { hashNoise } from "./v2/hash.ts";
 
 /**
  * THE RESOLUTION FIELD'S STATE MACHINE — one 8m cell grid over the whole
@@ -193,16 +195,6 @@ export function saveResolved(): void {
   } catch {
     /* private browsing — resolution just doesn't persist, which is survivable */
   }
-}
-
-/** Deterministic value noise — same generator gps.ts uses for the raw fix,
- *  reimplemented rather than imported so this stays a self-contained module
- *  with one job. Seeds a scatter position from an instance's OWN index, so
- *  regenerating a family (a data refresh, a hot reload) reproduces the same
- *  cloud rather than reshuffling it every mount. */
-function hashNoise(seed: number): number {
-  const s = Math.sin(seed * 12.9898) * 43758.5453;
-  return (s - Math.floor(s)) * 2 - 1;
 }
 
 /**

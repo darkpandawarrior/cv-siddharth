@@ -43,7 +43,7 @@ describe("the refresh chain cannot silence a generator", () => {
   it("still covers every generator", () => {
     expect(steps.length).toBeGreaterThanOrEqual(18);
     // The two that went stale because they ran last are the ones worth naming.
-    for (const must of ["gen:chess-deep", "gen:system-prompt", "gen:hiresignal", "sync:media"]) {
+    for (const must of ["gen:chess-deep", "gen:system-prompt", "gen:candidai", "sync:media"]) {
       expect(steps, `${must} dropped out of the refresh chain`).toContain(must);
     }
   });

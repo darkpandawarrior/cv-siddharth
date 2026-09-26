@@ -1,4 +1,6 @@
 import { CITY, yearZ, dateZ, type TallStructure, type ResolveSource, type PaletteToken } from "./city.ts";
+export { hashNoise, stringSeed } from "./v2/hash.ts";
+import { hashNoise, stringSeed } from "./v2/hash.ts";
 import { chess } from "../data/chess.ts";
 import { weeb } from "../data/weeb.ts";
 import { writing } from "../data/writing.ts";
@@ -34,16 +36,6 @@ import { boardProfiles } from "../data/beforeTheCode.ts";
  */
 
 // ── shared helpers ──────────────────────────────────────────────────────
-
-/** Deterministic value noise — reimplemented rather than imported from
- *  resolve.ts or districtWest.ts, same reasoning both of those give for
- *  their own copies: this file stays a plain data module, and each one
- *  independently satisfies its own test's "reproducible — same id, same
- *  cloud" check without a cross-file dependency to keep in step. */
-function hashNoise(seed: number): number {
-  const s = Math.sin(seed * 12.9898) * 43758.5453;
-  return (s - Math.floor(s)) * 2 - 1;
-}
 
 /** chess.arc's `t` is a raw epoch millisecond, not one of the date shapes
  *  city.ts's `dateZ` parses — so this file owns the one conversion from
@@ -392,11 +384,10 @@ const DUST_POINTS = 350;
 
 /** ~350 points scattered across a box's six outer faces — the identical
  *  sampler districtWest.ts's own `sampleBoxSurface` implements, reproduced
- *  here rather than imported for the same "stays a plain data module"
- *  reasoning as `hashNoise` above. */
+ *  here for the same "stays a plain data module" reasoning `hashNoise`
+ *  (v2/hash.ts) is built for. */
 function sampleBoxSurface(id: string, cx: number, cy: number, cz: number, w: number, h: number, d: number, count: number): Float32Array {
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) % 100000;
+  const seed = stringSeed(id);
   const out = new Float32Array(count * 3);
   const hw = w / 2;
   const hh = h / 2;

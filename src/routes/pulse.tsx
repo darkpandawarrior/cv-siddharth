@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import Pulse from "../Pulse.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 
 export const Route = createFileRoute("/pulse")({
   head: () => roomHead("/pulse"),
@@ -13,7 +12,6 @@ export const Route = createFileRoute("/pulse")({
     <>
       <CursorAura />
       <Pulse />
-      <FloatingChat />
     </>
   ),
 });

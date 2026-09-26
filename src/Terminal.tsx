@@ -2,35 +2,64 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type React
 import { LauncherButton } from "./Launcher.tsx";
 import { RoomPagerFooter } from "./rooms.tsx";
 import { ArrowLeft, TerminalSquare } from "lucide-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { ClientOnly, Link, useNavigate } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
+import { useCursorPresences } from "@playhtml/react";
 import { useSectionNav, classifyHash, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 import { didYouMean } from "./lib/didYouMean.ts";
 import { surfaces } from "./data/surfaces.ts";
-import {
-  profile,
-  metrics,
-  experience,
-  education,
-  skills,
-  projects,
-  caseStudies,
-  sharedFoundation,
-  openSource,
-} from "./data/profile.ts";
+// core.ts/experience.ts/caseStudies.ts directly, not the ../data/profile.ts
+// barrel: this static top-level import (unlike the dynamic `import("./data/
+// profile.ts")` a few lines below, which is already deliberately deferred)
+// tied Terminal.tsx's own chunk to the barrel's re-export of the heavy
+// profile/projects.ts alongside its OTHER static need (surfaces.ts above),
+// which is exactly the shape that kept pulling profile-projects-heavy into
+// the app's one shared entry (e2e/spine-payload.spec.ts caught it on
+// /chess, /terminal, /weeb and /hire).
+import { profile, metrics, education } from "./data/profile/core.ts";
+import { experience } from "./data/profile/experience.ts";
+import { caseStudies } from "./data/profile/caseStudies.ts";
+// Light (no store.ts/projects.ts behind it): projectCards carries exactly
+// the slug/name/tagline/status fields the always-rendered boot banner and
+// the plain listing commands below need. `skills`/`projects`/
+// `sharedFoundation`/`openSource` are the heavy ones (skills.ts and
+// openSource.ts each pull in the full projects.ts/store.ts fleet data) —
+// importing them at this top level, even though every use of them sits
+// inside a command's `run()`, still made the browser fetch and evaluate
+// both heavy chunks on every cold `/terminal` load, because a static
+// `import` is evaluated when the module loads, not when the closure runs
+// (e2e/spine-payload.spec.ts). useHeavyProfile below defers that fetch to
+// the moment one of the five commands that actually need it executes,
+// same on-demand `import()` shape as useSatellites.ts.
+import { projectCards } from "./data/profile/projectCards.ts";
 import { shippedNewestFirst } from "./lib/shipped.ts";
 import { chess } from "./data/chess.ts";
-import { writing } from "./data/writing.ts";
-import { RELATED_SERIES } from "./data/connections.ts";
-import { titleize } from "./data/writingMeta.ts";
 import { projectStats } from "./data/projectStats.ts";
-import { STATS_KEY } from "./lib/projectStatLine.ts";
 import { openChat } from "./FloatingChat.tsx";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { chatErrorText, isAbortError, streamReply } from "./lib/chatClient.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { SPOTIFY_PREVIEW } from "./lib/spotifyPreview.ts";
 import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
-import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
+import type { GithubActivity, GithubActivityItem } from "../api/_lib/github-activity-handler.ts";
+import { useNow, useSky, useWeather } from "./lib/useSky.ts";
+import { useSignals } from "./lib/useLive.ts";
+import { useSatellites, type SatellitesState } from "./lib/useSatellites.ts";
+import { moonPhase, moonTimes } from "./lib/moon.ts";
+import { airRow, riverRow, sunRow, weatherRow } from "./lib/ledgerText.ts";
+import { festivalRow, moonRow } from "./lib/skyText.ts";
+import { nextMeteorShower } from "./data/skyCalendar.ts";
+import { chessRow as signalsChessRow, ciRow as signalsCiRow } from "./lib/signalsText.ts";
+import { agoLabel } from "./CiStrip.tsx";
+import { useTouched } from "./lib/sessionRipple.ts";
+
+/** idea-atlas.md#PATH-5 + storyMap.ts's own `kmp-family` edges (doori, gaddi,
+ *  paymentslab-kmp, candidai, and the family's own project page): the touch
+ *  set the router hint fires on. A visitor who has landed on three or more of
+ *  these this session is reading the KMP story, not browsing at random. */
+const KMP_FAMILY_TOUCH_SLUGS = new Set(["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-family"]);
+const ROUTER_HINT_THRESHOLD = 3;
 
 // 2026-09-05 project renames — old GitHub repos redirect, so keep the old
 // slug typeable here too rather than making `open <old-name>` a dead end.
@@ -186,6 +215,178 @@ interface Cmd {
 
 type Go = (hash: string) => void;
 
+/** The five command outputs that genuinely need the heavy profile data
+ *  (skills.ts/openSource.ts, and by extension projects.ts/store.ts) — each
+ *  `run()` below returns one of these components instead of computing the
+ *  output inline, so the dynamic `import()` only fires once that specific
+ *  command's output actually mounts. Same shape as useSatellites.ts. */
+type HeavyProfile = Pick<typeof import("./data/profile.ts"), "skills" | "projects" | "sharedFoundation" | "openSource">;
+function useHeavyProfile(): HeavyProfile | null {
+  const [mod, setMod] = useState<HeavyProfile | null>(null);
+  useEffect(() => {
+    let alive = true;
+    import("./data/profile.ts").then((m) => {
+      if (alive) setMod(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return mod;
+}
+
+/** GraphBlock's own "work → writing" row, same reasoning as HeavyProfile
+ *  above: data/connections.ts and data/writingMeta.ts both reach into the
+ *  569-line data/writing.ts, and a top-level import made that a static
+ *  dependency of Terminal's eager chunk instead of one that only loads once
+ *  `graph` actually runs. */
+type GraphExtras = { RELATED_SERIES: (typeof import("./data/connections.ts"))["RELATED_SERIES"]; titleize: (typeof import("./data/writingMeta.ts"))["titleize"] };
+function useGraphExtras(): GraphExtras | null {
+  const [mod, setMod] = useState<GraphExtras | null>(null);
+  useEffect(() => {
+    let alive = true;
+    Promise.all([import("./data/connections.ts"), import("./data/writingMeta.ts")]).then(([c, w]) => {
+      if (alive) setMod({ RELATED_SERIES: c.RELATED_SERIES, titleize: w.titleize });
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return mod;
+}
+
+function SkillsBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-1.5">
+      {heavy.skills.map((s) => (
+        <div key={s.group}>
+          <Hi>{s.group}</Hi>
+          <div className="flex flex-wrap gap-x-3 text-zinc-400">
+            {s.items.map((it) => (
+              <span key={it}>{it}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** `cat stack.txt` renders the same table in the plainer one-line-per-group
+ *  shape `cat` already uses for its other files. */
+function StackFileBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-1">
+      {heavy.skills.map((s) => (
+        <div key={s.group}>
+          <Hi>{s.group.padEnd(22)}</Hi>
+          <Dim>{s.items.join(" · ")}</Dim>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GraphBlock({ jump }: { jump: Go }) {
+  const heavy = useHeavyProfile();
+  const extras = useGraphExtras();
+  if (!heavy || !extras) return <Dim>loading…</Dim>;
+  const foundationUsers = Array.from(new Set(heavy.sharedFoundation.libs.flatMap((l) => l.usedBy)));
+  return (
+    <div className="space-y-2">
+      <div>
+        <Hi>shared foundation</Hi> <Dim>— written once, reused</Dim>
+        {heavy.sharedFoundation.libs.map((lib) => (
+          <div key={lib.name} className="ml-3">
+            <Dim>└─ </Dim>
+            <A dest={lib.url} ext>{lib.name}</A>
+            <Dim> → {lib.usedBy.join(", ")}</Dim>
+          </div>
+        ))}
+        <div className="ml-3 text-muted">
+          so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
+        </div>
+      </div>
+      <div>
+        <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
+        {Object.entries(extras.RELATED_SERIES).map(([slug, series]) => (
+          <div key={slug} className="ml-3">
+            <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
+              {slug}
+            </button>
+            <Dim> → {series.map(extras.titleize).join(" · ")}</Dim>
+          </div>
+        ))}
+      </div>
+      <Dim>every arrow is real. see it drawn: <A dest="#map">3D storyboard</A> · <A dest="#blueprint">blueprint room</A></Dim>
+    </div>
+  );
+}
+
+function ReposBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  const repos = [
+    ...heavy.projects.flatMap((p) => p.links.filter((l) => l.url.includes("github.com/")).map((l) => ({ name: p.name, url: l.url }))),
+    ...heavy.sharedFoundation.libs.map((l) => ({ name: l.name, url: l.url })),
+  ];
+  const seen = new Set<string>();
+  const unique = repos.filter((r) => !seen.has(r.url) && seen.add(r.url));
+  return (
+    <div className="space-y-0.5">
+      {unique.map((r) => (
+        <div key={r.url}>
+          <Dim>git clone </Dim>
+          <A dest={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OssBlock() {
+  const heavy = useHeavyProfile();
+  if (!heavy) return <Dim>loading…</Dim>;
+  return (
+    <div className="space-y-0.5">
+      {heavy.openSource.map((c) => (
+        <div key={c.url}>
+          <Hi>[{c.status}]</Hi> <A dest={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SitemapBlock({ jump }: { jump: Go }) {
+  const heavy = useHeavyProfile();
+  return (
+    <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+      {Object.entries(SECTION_ROUTES).map(([k, v]) => (
+        <div key={k}>
+          <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
+            {v.hash}
+          </button>{" "}
+          <Dim>{v.label}</Dim>
+        </div>
+      ))}
+      {heavy?.projects
+        .filter((p) => p.detail)
+        .map((p) => (
+          <div key={p.slug}>
+            <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
+              #project/{p.slug}
+            </button>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 /* ── Command table ───────────────────────────────────────────────────────
  * Ordered roughly by how often a visitor reaches for it. `help` renders from
  * this same list, so a new command is documented the moment it's added. */
@@ -218,6 +419,9 @@ function buildCommands(jump: Go): Cmd[] {
             <Dim> · press </Dim>
             <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
             <Dim> anywhere to summon this shell</Dim>
+          </div>
+          <div className="sm:col-span-2">
+            <RouterHint />
           </div>
         </div>
       ),
@@ -291,16 +495,7 @@ function buildCommands(jump: Go): Cmd[] {
               </div>
             );
           case "stack":
-            return (
-              <div className="space-y-1">
-                {skills.map((s) => (
-                  <div key={s.group}>
-                    <Hi>{s.group.padEnd(22)}</Hi>
-                    <Dim>{s.items.join(" · ")}</Dim>
-                  </div>
-                ))}
-              </div>
-            );
+            return <StackFileBlock />;
           case "contact":
             return (
               <div className="space-y-0.5">
@@ -325,8 +520,8 @@ function buildCommands(jump: Go): Cmd[] {
       help: "the builds — with slugs for `open`",
       run: () => (
         <div className="space-y-2">
-          {projects.map((p) => {
-            const st = projectStats[(STATS_KEY[p.slug] ?? p.slug) as keyof typeof projectStats] as { modules?: number } | undefined;
+          {projectCards.map((p) => {
+            const st = projectStats[p.slug as keyof typeof projectStats] as { modules?: number } | undefined;
             return (
               <div key={p.slug}>
                 <button
@@ -352,8 +547,8 @@ function buildCommands(jump: Go): Cmd[] {
       run: (args) => {
         const raw = (args[0] ?? "").toLowerCase();
         const slug = RENAMED_SLUG_ALIASES[raw] ?? raw;
-        const p = projects.find((x) => x.slug === slug);
-        if (!raw) return <Dim>usage: open &lt;slug&gt; — {projects.map((x) => x.slug).join(", ")}</Dim>;
+        const p = projectCards.find((x) => x.slug === slug);
+        if (!raw) return <Dim>usage: open &lt;slug&gt; — {projectCards.map((x) => x.slug).join(", ")}</Dim>;
         if (!p) return <span className="text-red-400">open: no build "{raw}". Try `projects`.</span>;
         jump(`#project/${p.slug}`);
         return (
@@ -366,20 +561,7 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "skills",
       help: "the tech stack, grouped",
-      run: () => (
-        <div className="space-y-1.5">
-          {skills.map((s) => (
-            <div key={s.group}>
-              <Hi>{s.group}</Hi>
-              <div className="flex flex-wrap gap-x-3 text-zinc-400">
-                {s.items.map((it) => (
-                  <span key={it}>{it}</span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ),
+      run: () => <SkillsBlock />,
     },
     {
       name: "cases",
@@ -438,7 +620,14 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "writing",
       help: "latest field notes",
-      run: () => {
+      // data/writing.ts (569 lines) is only needed once this command actually
+      // runs; a top-level import made it a static dependency of Terminal's
+      // own eager chunk instead — shared with data/connections.ts (used by
+      // GraphBlock below) and profile/projects.ts's own `writing` need, this
+      // was one more edge into the profile-projects-heavy bucket every route
+      // pays for (e2e/spine-payload.spec.ts).
+      run: async () => {
+        const { writing } = await import("./data/writing.ts");
         const posts = writing.lessons.filter((l) => l.status === "published").slice(0, 6);
         return (
           <div className="space-y-1">
@@ -600,101 +789,25 @@ function buildCommands(jump: Go): Cmd[] {
       name: "graph",
       usage: "graph",
       help: "the synergy map — how the work, apps & writing connect",
-      run: () => {
-        const foundationUsers = Array.from(new Set(sharedFoundation.libs.flatMap((l) => l.usedBy)));
-        return (
-          <div className="space-y-2">
-            <div>
-              <Hi>shared foundation</Hi> <Dim>— written once, reused</Dim>
-              {sharedFoundation.libs.map((lib) => (
-                <div key={lib.name} className="ml-3">
-                  <Dim>└─ </Dim>
-                  <A dest={lib.url} ext>{lib.name}</A>
-                  <Dim> → {lib.usedBy.join(", ")}</Dim>
-                </div>
-              ))}
-              <div className="ml-3 text-muted">
-                so {foundationUsers.join(" & ")} share build wiring + the MVI contract.
-              </div>
-            </div>
-            <div>
-              <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
-              {Object.entries(RELATED_SERIES).map(([slug, series]) => (
-                <div key={slug} className="ml-3">
-                  <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
-                    {slug}
-                  </button>
-                  <Dim> → {series.map(titleize).join(" · ")}</Dim>
-                </div>
-              ))}
-            </div>
-            <Dim>every arrow is real. see it drawn: <A dest="#map">3D storyboard</A> · <A dest="#blueprint">blueprint room</A></Dim>
-          </div>
-        );
-      },
+      run: () => <GraphBlock jump={jump} />,
     },
     {
       name: "repos",
       usage: "repos",
       help: "the public GitHub repositories",
-      run: () => {
-        const repos = [
-          ...projects.flatMap((p) => p.links.filter((l) => l.url.includes("github.com/")).map((l) => ({ name: p.name, url: l.url }))),
-          ...sharedFoundation.libs.map((l) => ({ name: l.name, url: l.url })),
-        ];
-        const seen = new Set<string>();
-        const unique = repos.filter((r) => !seen.has(r.url) && seen.add(r.url));
-        return (
-          <div className="space-y-0.5">
-            {unique.map((r) => (
-              <div key={r.url}>
-                <Dim>git clone </Dim>
-                <A dest={r.url} ext>{r.url.replace("https://github.com/", "")}</A>
-              </div>
-            ))}
-          </div>
-        );
-      },
+      run: () => <ReposBlock />,
     },
     {
       name: "oss",
       usage: "oss",
       help: "merged open-source contributions",
-      run: () => (
-        <div className="space-y-0.5">
-          {openSource.map((c) => (
-            <div key={c.url}>
-              <Hi>[{c.status}]</Hi> <A dest={c.url} ext>{c.title}</A> <Dim>· {c.repo}</Dim>
-            </div>
-          ))}
-        </div>
-      ),
+      run: () => <OssBlock />,
     },
     {
       name: "sitemap",
       usage: "sitemap",
       help: "every room in the site",
-      run: () => (
-        <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
-          {Object.entries(SECTION_ROUTES).map(([k, v]) => (
-            <div key={k}>
-              <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
-                {v.hash}
-              </button>{" "}
-              <Dim>{v.label}</Dim>
-            </div>
-          ))}
-          {projects
-            .filter((p) => p.detail)
-            .map((p) => (
-              <div key={p.slug}>
-                <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
-                  #project/{p.slug}
-                </button>
-              </div>
-            ))}
-        </div>
-      ),
+      run: () => <SitemapBlock jump={jump} />,
     },
     /* ── Easter eggs (hidden from help) ─────────────────────────────────── */
     {
@@ -745,6 +858,20 @@ function buildCommands(jump: Go): Cmd[] {
       alias: ["gh"],
       help: "recent GitHub activity",
       run: () => <GithubActivityBlock />,
+    },
+    {
+      // reality-spec.md#6 /terminal, live-data-spec.md#3: the Reality ledger
+      // as text. `weather` is kept as a bare alias rather than its own
+      // command, so both spellings answer with the same nine rows.
+      name: "now",
+      alias: ["weather"],
+      help: "the reality ledger, printed: sun, weather, air, river, moon, chess, CI, last push, visitors",
+      run: () => <NowBlock />,
+    },
+    {
+      name: "sky",
+      help: "sun, moon, next meteor peak, ISS and the festival calendar",
+      run: () => <SkyBlock />,
     },
     {
       /* Every figure below reads from the generated `chess.*`. He is still
@@ -949,8 +1076,20 @@ function AskBlock({ question }: { question: string }) {
             a directive that never closed, which renders to nothing — and an
             empty answer that never arrived would sit on "thinking…" forever.
             Once `done`, ChatMessageBody always renders something (see its
-            `done` prop); until then, the spinner. */}
-        {!done && !text ? <Dim>thinking…</Dim> : <ChatMessageBody content={text} done={done} />}
+            `done` prop); until then, the spinner.
+            `<Hydrate when={load()} split>`, same as FloatingChat.tsx and
+            FitCheck.tsx's own ChatMessageBody usage: this call was the one
+            unguarded static render of it left, and it alone was enough to pull
+            ChatWidgets.tsx (and its profile-projects-heavy dependency, via
+            skills.ts's own project-word-matching) into /terminal's initial
+            component chunk (e2e/spine-payload.spec.ts). */}
+        {!done && !text ? (
+          <Dim>thinking…</Dim>
+        ) : (
+          <Hydrate when={load()} split fallback={<Dim>thinking…</Dim>}>
+            <ChatMessageBody content={text} done={done} />
+          </Hydrate>
+        )}
       </div>
     </div>
   );
@@ -1003,6 +1142,172 @@ function GithubActivityBlock() {
   );
 }
 
+/** `now`/`weather`'s "Last push" row: the newest of HIS OWN pushes (never an
+ *  upstream contribution, same filter Lamps' `recentPushes` uses), formatted
+ *  with CiStrip.tsx's own `agoLabel` rather than a third age formatter. */
+function lastPushRow(activity: GithubActivity | null, now: Date): string {
+  if (!activity?.connected) return "Last push · unavailable right now · GitHub public events (last 20)";
+  const push = activity.items
+    .filter((i) => i.type === "push" && !i.upstream)
+    .reduce<GithubActivityItem | null>((newest, item) => (!newest || item.at > newest.at ? item : newest), null);
+  if (!push) return "Last push · none in the last 20 public events · GitHub public events (last 20)";
+  return `Last push · [${push.repo.split("/")[1]}] ${push.message} · GitHub public events (last 20) · live, ${agoLabel(push.at, now)}`;
+}
+
+/** `sky`'s "Meteor" row: its own line (master-plan.md#M23/P2-16), unlike
+ *  skyText.ts's `meteorClause` which appends to the Moon row for the v1/v2
+ *  ledgers. Reuses `nextMeteorShower` (the data, not a restated sentence). */
+function meteorRow(date: Date): string {
+  const next = nextMeteorShower(date);
+  if (!next) return "Meteor · none upcoming · calendar";
+  const when = next.nightsUntil === 0 ? "peaks tonight" : `peaks in ${next.nightsUntil} nights`;
+  return `Meteor · ${next.row.name} ${when} · calendar (${new URL(next.row.source).hostname})`;
+}
+
+/** `sky`'s "ISS" row, over `useSatellites` (P2-09, lazily imported: this
+ *  file never imports satellites.ts itself). */
+function issRow(sat: SatellitesState): string {
+  if (!sat.ready) return "ISS · unavailable right now · CelesTrak TLE";
+  if (sat.issNextPass === undefined) return "ISS · next visible pass still computing · live tracking";
+  if (sat.issNextPass === null) return "ISS · no visible pass in the next 7 days · live tracking (CelesTrak TLE)";
+  const hm = sat.issNextPass.start.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata",
+  });
+  return `ISS · next visible pass ${hm} IST, ${Math.round(sat.issNextPass.maxElDeg)}° · live tracking (CelesTrak TLE)`;
+}
+
+/** idea-atlas.md#PATH-5: "help and now append exactly one suggestion" once
+ *  the session has touched three or more KMP-family project pages. Renders
+ *  nothing below the threshold: one suggestion, never a menu. */
+function RouterHint() {
+  const touched = useTouched();
+  const hits = touched.filter((n) => KMP_FAMILY_TOUCH_SLUGS.has(n)).length;
+  if (hits < ROUTER_HINT_THRESHOLD) return null;
+  return (
+    <div className="mt-1">
+      <Dim>try </Dim>
+      <Hi>open kmp-family</Hi>
+    </div>
+  );
+}
+
+/** `visitors`'s live "here now" count: the one row that needs playhtml, kept
+ *  behind the same `<ClientOnly>` + `<Hydrate>` split DeferredPlayRoom.tsx
+ *  uses (M53/M23: /terminal is server-rendered, and a bare top-level
+ *  `@playhtml/react` import here would crash SSR with "document is not
+ *  defined" exactly as it did on /weeb and /anthology before that fix). The
+ *  fallback always carries a required tag word too, so the row never sits
+ *  untagged while the shared layer is still loading. */
+function VisitorsNowLine() {
+  return (
+    <ClientOnly fallback={<div>Visitors · unavailable right now · playhtml</div>}>
+      <Hydrate when={load()} split fallback={<div>Visitors · unavailable right now · playhtml</div>}>
+        <VisitorsNowLineLive />
+      </Hydrate>
+    </ClientOnly>
+  );
+}
+
+function VisitorsNowLineLive() {
+  const presences = useCursorPresences();
+  return <div>Visitors · {presences.size} here now · playhtml · live</div>;
+}
+
+/** `now`/`weather`: the Reality ledger's nine rows, from the same
+ *  ledgerText/signalsText formatters the world's own ledger and `/ops` read,
+ *  so no sentence is restated here (reality-spec.md#6, live-data-spec.md#3). */
+function NowBlock() {
+  const now = useNow();
+  const sky = useSky();
+  const weather = useWeather();
+  const { data: signals } = useSignals();
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+
+  if (!now || !sky) return <Dim>reading now…</Dim>;
+
+  const phase = moonPhase(now);
+  const rise = moonTimes(now).rise;
+  const signalsAt = signals?.at ?? now.toISOString();
+
+  const lines = [
+    sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset),
+    weatherRow(weather.weather),
+    airRow(weather.air),
+    riverRow(weather.river),
+    moonRow(phase, rise),
+    signalsChessRow(signals?.lichess ?? null, signalsAt),
+    signalsCiRow(signals?.ci ?? null, signalsAt),
+    lastPushRow(activity ?? null, now),
+  ];
+
+  return (
+    <div className="space-y-0.5">
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+      <VisitorsNowLine />
+      <RouterHint />
+    </div>
+  );
+}
+
+/** `sky`: five lines, always exactly five (live-data-spec.md#4 R7, P2-16's
+ *  own acceptance). Sun and moon stay "computed, cannot go stale" (M23's
+ *  /ops description) in the normal case, but this command treats a total
+ *  upstream failure as one signal: if the weather pipe never answers within
+ *  5 s, the whole readout degrades together rather than mixing live astronomy
+ *  next to five dead rows. The 5 s timer only matters for a stalled request;
+ *  an aborted one already rejects `useWeather` near-instantly. */
+function SkyBlock() {
+  const now = useNow();
+  const sky = useSky();
+  const weather = useWeather();
+  const sat = useSatellites();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (weather.state !== "pending") return;
+    const t = window.setTimeout(() => setTimedOut(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [weather.state]);
+
+  if (!now || !sky) return <Dim>reading sky…</Dim>;
+  if (weather.state === "pending" && !timedOut) return <Dim>reading sky…</Dim>;
+
+  if (weather.state === "unavailable" || timedOut) {
+    return (
+      <div className="space-y-0.5">
+        <div>Sun · unavailable right now · computed</div>
+        <div>Moon · unavailable right now · computed</div>
+        <div>Meteor · unavailable right now · calendar</div>
+        <div>ISS · unavailable right now · CelesTrak TLE</div>
+        <div>Festival · unavailable right now · calendar</div>
+      </div>
+    );
+  }
+
+  const phase = moonPhase(now);
+  const rise = moonTimes(now).rise;
+  const lines = [
+    sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset),
+    moonRow(phase, rise),
+    meteorRow(now),
+    issRow(sat),
+    festivalRow(now),
+  ];
+
+  return (
+    <div className="space-y-0.5">
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+    </div>
+  );
+}
+
 /* neofetch-style two-column readout, sourced live from profile data. */
 function Neofetch() {
   const rows: [string, ReactNode][] = [
@@ -1015,7 +1320,7 @@ function Neofetch() {
     ["gps", "50% → 95% accuracy"],
     ["crashes", "-80% (structured concurrency)"],
     ["compose", "~87% of UI-layer code (455k of 523k LOC)"],
-    ["builds", projects.map((p) => p.name).join(" · ")],
+    ["builds", projectCards.map((p) => p.name).join(" · ")],
   ];
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
@@ -1037,6 +1342,22 @@ function Neofetch() {
   );
 }
 
+/**
+ * CLS audit for this room (design brief obligation, checked not assumed).
+ * /terminal has no <img>, no element that swaps size after mount, and
+ * staticBootBlocks() below is the exact tree both the server and the
+ * pre-hydration client paint, so there is nothing here with a "before" and
+ * an "after" size to reconcile. Measured against a production build's
+ * `vite preview`, mobile 412x823 with cpuSlowdownMultiplier 4 and simulated
+ * slow-4G (Lighthouse's default preset, the same conditions
+ * lighthouserc.json's cumulative-layout-shift gate grades at): CLS 0 with
+ * both `throttling-method=simulate` and `=devtools`. Cross-checked with a
+ * raw PerformanceObserver({type:"layout-shift", buffered:true}) under a
+ * CDP-emulated 4x CPU slowdown plus ~400kbps/400ms network: zero entries.
+ * Before and after this pass read the same: 0. No element needed a
+ * reserved size because none is moving.
+ */
+
 let blockId = 0;
 
 // Shared between the deterministic initial render (below) and the boot
@@ -1053,11 +1374,8 @@ const BOOT_LINES = ["booting sid.android shell…", "mounting /profile … ok", 
  * to anything that doesn't run JS, and ssr:false meant nothing rendered
  * server-side at all to make up for it.
  *
- * ponytail: a visitor with motion enabled gets this instantly, then the
- * boot effect clears it and re-types it for the animated reveal — one
- * extra reflow right after hydration. The alternative (typing the reveal
- * with no flash) needs a CSS-only animation instead of blocks*that*get
- * pushed over time; add one if the flash reads as janky.
+ * Preserve this banner through hydration. Each line already has a CSS entrance
+ * animation; clearing and rebuilding the log shifts the input and page layout.
  */
 function staticBootBlocks(): Block[] {
   const out: Block[] = BOOT_LINES.map((l) => ({ id: blockId++, kind: "out" as const, node: <Dim>{l}</Dim> }));
@@ -1154,9 +1472,7 @@ export function Terminal() {
     );
   }, [push]);
 
-  /* Boot once: theme, and (motion permitting) a typed replay of the static
-   * banner staticBootBlocks() already rendered. Reduced motion does nothing
-   * here on purpose — the initial state already IS this branch's output. */
+  /* Restore preferences without deleting the server-rendered output. */
   useEffect(() => {
     reduce.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const savedTheme = (() => {
@@ -1167,24 +1483,7 @@ export function Terminal() {
       }
     })();
     setTheme(savedTheme);
-
-    if (reduce.current) return;
-    setBlocks([]);
-    let i = 0;
-    const timers: number[] = [];
-    const step = () => {
-      if (i < BOOT_LINES.length) {
-        push("out", <Dim>{BOOT_LINES[i]}</Dim>);
-        i++;
-        timers.push(window.setTimeout(step, 260));
-      } else {
-        runBanner();
-      }
-    };
-    timers.push(window.setTimeout(step, 200));
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTheme]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -1202,7 +1501,7 @@ export function Terminal() {
         // second-token completion for `open <slug>` / `cat <file>` / `theme <name>`
         const rest = prefix.slice(head.length + 1);
         let pool: string[] = [];
-        if (head === "open") pool = projects.map((p) => p.slug);
+        if (head === "open") pool = projectCards.map((p) => p.slug);
         else if (head === "cat") pool = ["about.txt", "resume.txt", "stack.txt", "contact.txt", "availability.txt"];
         else if (head === "theme") pool = Object.keys(THEMES);
         const hit = pool.find((p) => p.startsWith(rest));

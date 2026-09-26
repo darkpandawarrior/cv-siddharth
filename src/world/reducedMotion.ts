@@ -1,11 +1,17 @@
 /**
- * One-shot `prefers-reduced-motion` read, shared by every world module that
+ * Live `prefers-reduced-motion` read, shared by every world module that
  * needs to freeze an ambient/automatic effect rather than a directly-driven
- * one. Memoised for the session exactly like deviceTier.ts's own device-tier
- * probe, and for the same reason (that file's own doc comment): a visitor
- * who starts reduced and later has the OS setting lifted (or vice versa)
- * mid-drive should see a *consistent* world, not one whose animation budget
- * flickers under them.
+ * one.
+ *
+ * Deliberately NOT memoised for the session, unlike deviceTier.ts's own
+ * device-tier probe: the design system's live-reduced-motion contract
+ * (SceneActivity.tsx's own doc comment, and the design spec's "reduced
+ * motion is LIVE" rule) rules out a mount-once snapshot for this specific
+ * media query — a visitor who toggles the OS setting mid-drive, or a
+ * Playwright test that calls `emulateMedia` after load, must see the effect.
+ * Every caller here already re-reads this once per frame (a `useFrame`
+ * body), so dropping the cache is the whole fix; nothing downstream needed
+ * to change to become live.
  *
  * Before this file, SpawnFlyIn.tsx was the only world module reading this
  * media query, with its own private `matchMedia` call — the same drift class
@@ -14,15 +20,10 @@
  * reads from.
  */
 
-let cached: boolean | null = null;
-
 export function prefersReducedMotion(): boolean {
-  if (cached !== null) return cached;
-  cached = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  return cached;
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** Test-only escape hatch — a fresh probe on the next call. */
-export function resetReducedMotionForTest(): void {
-  cached = null;
-}
+/** No-op — kept so every existing call site (afterEach hooks included)
+ *  doesn't need editing now that there is no cache to reset. */
+export function resetReducedMotionForTest(): void {}

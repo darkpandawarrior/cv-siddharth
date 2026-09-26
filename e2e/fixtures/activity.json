@@ -1,0 +1,53 @@
+{
+  "connected": true,
+  "items": [
+    {
+      "repo": "darkpandawarrior/Doori",
+      "type": "push",
+      "message": "fix: tighten the release checklist",
+      "url": "https://github.com/darkpandawarrior/Doori/commit/aaaa001",
+      "at": "2026-09-24T04:30:00Z",
+      "upstream": false
+    },
+    {
+      "repo": "darkpandawarrior/Gaddi",
+      "type": "push",
+      "message": "chore: bump the internal dev version",
+      "url": "https://github.com/darkpandawarrior/Gaddi/commit/aaaa002",
+      "at": "2026-09-23T20:30:00Z",
+      "upstream": false
+    },
+    {
+      "repo": "darkpandawarrior/PaymentsLab-KMP",
+      "type": "push",
+      "message": "feat: add the Koin module for the ledger screen",
+      "url": "https://github.com/darkpandawarrior/PaymentsLab-KMP/commit/aaaa003",
+      "at": "2026-09-23T08:30:00Z",
+      "upstream": false
+    },
+    {
+      "repo": "darkpandawarrior/Stutter",
+      "type": "push",
+      "message": "fix: correct the Echo recording buffer size",
+      "url": "https://github.com/darkpandawarrior/Stutter/commit/aaaa004",
+      "at": "2026-09-20T03:30:00Z",
+      "upstream": false
+    },
+    {
+      "repo": "darkpandawarrior/Candidai",
+      "type": "create",
+      "message": "created branch",
+      "url": "https://github.com/darkpandawarrior/Candidai/tree/chore/cleanup",
+      "at": "2026-09-15T03:30:00Z",
+      "upstream": false
+    },
+    {
+      "repo": "openMF/mifos-mobile",
+      "type": "pr",
+      "message": "fix(passcode): correct the biometric fallback copy",
+      "url": "https://github.com/openMF/mifos-mobile/pull/501",
+      "at": "2026-09-24T02:30:00Z",
+      "upstream": true
+    }
+  ]
+}

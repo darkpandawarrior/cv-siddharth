@@ -121,7 +121,7 @@ describe("/ops cannot lie about itself", () => {
     });
 
     it("reports an unfetched pin as unmeasured, never as zero", () => {
-      // HireSignal pins a kmp-build-logic commit the local clone has never
+      // Candidai pins a kmp-build-logic commit the local clone has never
       // fetched. `behind: null` is the honest answer; `0` would be a lie that
       // reads as "perfectly up to date".
       for (const d of drift) {

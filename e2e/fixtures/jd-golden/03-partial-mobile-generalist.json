@@ -1,0 +1,5 @@
+{
+  "id": "partial-mobile-generalist",
+  "band": { "min": 35, "max": 75 },
+  "jdText": "Mobile Engineer (Cross-Platform)\n\nJoin our small team building a consumer app. We primarily use Flutter and Dart, with a native Android module maintained in Kotlin for camera and payments. 3+ years mobile development, comfort reading Kotlin, familiarity with app store release processes, and interest in cross-platform tooling. Android-specific architecture depth is a plus, not a requirement."
+}

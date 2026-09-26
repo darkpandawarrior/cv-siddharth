@@ -13,7 +13,7 @@ describe("isRecruiterRoute", () => {
   });
 
   it("excludes any project route by prefix, including ones that don't exist yet", () => {
-    expect(isRecruiterRoute("/project/mileway")).toBe(true);
+    expect(isRecruiterRoute("/project/doori")).toBe(true);
     expect(isRecruiterRoute("/project/some-brand-new-case-study")).toBe(true);
   });
 

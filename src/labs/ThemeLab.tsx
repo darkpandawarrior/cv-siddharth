@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { useSectionNav } from "../lib/navigation.ts";
+import { projects } from "../data/profile.ts";
 
 /**
  * The White-label Lab — the "80% faster delivery" claim, running live. Brand
- * is a token, not a codebase: these are the site's own 6 real per-project
- * theme tokens (src/data/profile.ts `theme` fields), not fictional colors.
- * Picking Gaddi also swaps in its real display font (Rozha One) to prove the
- * token layer carries typography, not just color. A layout-engine toggle
- * (Card / Hero) proves it drives which UI archetype renders, not just paint.
+ * is a token, not a codebase: these are the site's own real per-project
+ * theme tokens (src/data/profile/projects.ts `theme` fields), not fictional
+ * colors — derived from the registry, plus one baseline row for the site's
+ * own portfolio accent, so a project's theme cannot silently drift out of
+ * sync with the picker. Picking Gaddi also swaps in its real display font
+ * (Rozha One) to prove the token layer carries typography, not just color. A
+ * layout-engine toggle (Card / Hero) proves it drives which UI archetype
+ * renders, not just paint.
  */
 
-type BrandToken = { name: string; label: string; color: string; font?: string };
+export type BrandToken = { name: string; label: string; color: string; font?: string };
 
-const BRANDS: BrandToken[] = [
+export const BRANDS: BrandToken[] = [
   { name: "portfolio", label: "Portfolio", color: "#f2a13d" },
-  { name: "gaddi", label: "Gaddi", color: "#E8C874", font: "'Rozha One', Georgia, serif" },
-  { name: "doori", label: "Doori", color: "#5ee6ff" },
-  { name: "paymentslab-kmp", label: "PaymentsLab-KMP", color: "#A78BFA" },
-  { name: "candidai", label: "Candidai", color: "#3B82F6" },
-  { name: "stutter", label: "Stutter", color: "#FF5C7A" },
+  ...projects
+    .filter((p) => p.theme)
+    .map((p) => ({ name: p.slug, label: p.name, color: p.theme!.accent, font: p.theme!.displayFont })),
 ];
 
 const CLIENTS = ["FleetCo", "ZipRide", "HaulHub", "GoTrux"];

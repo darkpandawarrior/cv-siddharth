@@ -25,7 +25,7 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-09-08T07:36:19.976Z",
+  "generatedAt": "2026-09-24T23:06:04.155Z",
   "from": "2019-01",
   "to": "2026-09",
   "months": [
@@ -155,77 +155,77 @@ export const timeline: Timeline = {
         "2020-10": 0,
         "2020-11": 0,
         "2020-12": 0,
-        "2021-01": 6,
-        "2021-02": 6,
-        "2021-03": 6,
-        "2021-04": 6,
-        "2021-05": 6,
-        "2021-06": 6,
-        "2021-07": 6,
-        "2021-08": 6,
-        "2021-09": 6,
-        "2021-10": 6,
-        "2021-11": 6,
-        "2021-12": 6,
-        "2022-01": 6,
-        "2022-02": 6,
-        "2022-03": 6,
-        "2022-04": 6,
-        "2022-05": 6,
-        "2022-06": 6,
-        "2022-07": 6,
-        "2022-08": 6,
-        "2022-09": 6,
-        "2022-10": 6,
-        "2022-11": 6,
-        "2022-12": 6,
-        "2023-01": 6,
-        "2023-02": 6,
-        "2023-03": 6,
-        "2023-04": 6,
-        "2023-05": 6,
-        "2023-06": 13,
-        "2023-07": 13,
-        "2023-08": 13,
-        "2023-09": 13,
-        "2023-10": 13,
-        "2023-11": 13,
-        "2023-12": 13,
-        "2024-01": 13,
-        "2024-02": 13,
-        "2024-03": 13,
-        "2024-04": 13,
-        "2024-05": 13,
-        "2024-06": 13,
-        "2024-07": 13,
-        "2024-08": 13,
-        "2024-09": 13,
-        "2024-10": 13,
-        "2024-11": 13,
-        "2024-12": 13,
-        "2025-01": 13,
-        "2025-02": 13,
-        "2025-03": 13,
-        "2025-04": 13,
-        "2025-05": 13,
-        "2025-06": 13,
-        "2025-07": 13,
-        "2025-08": 13,
-        "2025-09": 13,
-        "2025-10": 13,
-        "2025-11": 13,
-        "2025-12": 13,
-        "2026-01": 13,
-        "2026-02": 13,
-        "2026-03": 13,
-        "2026-04": 15,
-        "2026-05": 15,
-        "2026-06": 15,
-        "2026-07": 15,
-        "2026-08": 15,
-        "2026-09": 15
+        "2021-01": 7,
+        "2021-02": 7,
+        "2021-03": 7,
+        "2021-04": 7,
+        "2021-05": 7,
+        "2021-06": 7,
+        "2021-07": 7,
+        "2021-08": 7,
+        "2021-09": 7,
+        "2021-10": 7,
+        "2021-11": 7,
+        "2021-12": 7,
+        "2022-01": 7,
+        "2022-02": 7,
+        "2022-03": 7,
+        "2022-04": 7,
+        "2022-05": 7,
+        "2022-06": 7,
+        "2022-07": 7,
+        "2022-08": 7,
+        "2022-09": 7,
+        "2022-10": 7,
+        "2022-11": 7,
+        "2022-12": 7,
+        "2023-01": 7,
+        "2023-02": 7,
+        "2023-03": 7,
+        "2023-04": 7,
+        "2023-05": 7,
+        "2023-06": 17,
+        "2023-07": 17,
+        "2023-08": 17,
+        "2023-09": 17,
+        "2023-10": 17,
+        "2023-11": 17,
+        "2023-12": 17,
+        "2024-01": 17,
+        "2024-02": 17,
+        "2024-03": 17,
+        "2024-04": 17,
+        "2024-05": 17,
+        "2024-06": 17,
+        "2024-07": 17,
+        "2024-08": 17,
+        "2024-09": 17,
+        "2024-10": 17,
+        "2024-11": 17,
+        "2024-12": 17,
+        "2025-01": 17,
+        "2025-02": 17,
+        "2025-03": 17,
+        "2025-04": 17,
+        "2025-05": 17,
+        "2025-06": 17,
+        "2025-07": 17,
+        "2025-08": 17,
+        "2025-09": 17,
+        "2025-10": 17,
+        "2025-11": 17,
+        "2025-12": 17,
+        "2026-01": 17,
+        "2026-02": 17,
+        "2026-03": 17,
+        "2026-04": 19,
+        "2026-05": 19,
+        "2026-06": 19,
+        "2026-07": 19,
+        "2026-08": 19,
+        "2026-09": 19
       },
-      "total": 709,
+      "total": 898,
       "milestones": [
         {
           "ym": "2026-04",
@@ -249,127 +249,157 @@ export const timeline: Timeline = {
           "ym": "2023-06",
           "lane": "work",
           "kind": "role",
-          "label": "Dice.tech: SDE-2, Android & Product Owner"
+          "label": "Dice.tech: Senior Android Engineer (SDE-2) & Product Owner"
         },
         {
           "ym": "2023-07",
           "lane": "work",
           "kind": "delivered",
-          "label": "Own the Android platform end to end, a ~964k-LOC Kotlin app serving 50,000+ MAU, as both technical owner and Product Owner. Set the module architecture, release process and review "
+          "label": "I owned the Android platform end to end at 50,000+ MAU: expense claims, vouchers, advances and settlements, travel booking and trips, procurement from purchase request through good"
         },
         {
-          "ym": "2023-10",
+          "ym": "2023-09",
           "lane": "work",
           "kind": "delivered",
-          "label": "Owned requirements as well as delivery on the same platform. Here they are one job, not a handoff. Sprint planning, feature and code allocation across the team, review, release, de"
+          "label": "I owned requirements as well as delivery: sprint planning, feature allocation across the team, review, release, and the crash dashboard the morning after. Built the platform so a n"
         },
         {
-          "ym": "2024-01",
+          "ym": "2023-11",
           "lane": "work",
           "kind": "delivered",
-          "label": "Led interview loops and helped hire onto both the frontend and the React Native mobile teams; mentored a junior engineer from Flutter to production Kotlin, Java and React."
+          "label": "I ran interview loops and hiring for the frontend and React Native teams. Mentored a junior engineer from Flutter to production Kotlin; he now manages this app at the company that "
+        },
+        {
+          "ym": "2024-02",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "I led the migration off legacy Java and XML, taking roughly 87% of the UI layer to Jetpack Compose and Material 3, and built the shared component library every module renders throu"
         },
         {
           "ym": "2024-04",
           "lane": "work",
           "kind": "delivered",
-          "label": "That engineer now manages this app at the company that acquired it."
+          "label": "I built the in-app AI assistant: streaming responses, server-held conversation history, voice mode, and a feedback loop ranking what people actually ask. Earlier I built the odomet"
         },
         {
-          "ym": "2024-07",
+          "ym": "2024-06",
           "lane": "work",
           "kind": "delivered",
-          "label": "Led the migration off legacy Java and XML: ~87% of the UI layer is now Compose, migrated incrementally through interop with per-screen parity checks against the legacy XML baseline"
+          "label": "I owned the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection, surviving Andr"
         },
         {
-          "ym": "2024-10",
+          "ym": "2024-09",
           "lane": "work",
           "kind": "delivered",
-          "label": "Own the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection so implausible jump"
+          "label": "I took production crashes down 85%. The fix was the concurrency and threading model, not defensive try/catch. Firebase Crashlytics and Sentry caught regressions before users report"
+        },
+        {
+          "ym": "2024-11",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "I hardened the app to VAPT and banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via b"
         },
         {
           "ym": "2025-02",
           "lane": "work",
           "kind": "delivered",
-          "label": "Reduced production crashes 80% at 22,000+ daily users. The fix was the concurrency and threading model, not defensive try/catch. Crashlytics and Sentry catch regressions before use"
+          "label": "I ran the Room persistence layer across two production databases, including all 24 hand-written schema migrations, DataStore, and a WorkManager sync pipeline that keeps working off"
         },
         {
-          "ym": "2025-05",
+          "ym": "2025-04",
           "lane": "work",
           "kind": "delivered",
-          "label": "Hardened the app to VAPT/banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via build f"
+          "label": "I built the in-app review prompting that took the Play Store listing from 1.6 stars across 67 reviews to 4.5 stars across 27,300, and the A/B experiment framework behind it: determ"
         },
         {
-          "ym": "2025-08",
+          "ym": "2025-06",
           "lane": "work",
           "kind": "delivered",
-          "label": "Own the Room persistence layer across two databases with 24 verified production schema migrations."
+          "label": "I built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with dark mode, colour override and"
+        },
+        {
+          "ym": "2025-09",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "I built a second assistant inside travel that drafts and amends an itinerary in conversation, reusing the same streaming and history layer."
         },
         {
           "ym": "2025-11",
           "lane": "work",
           "kind": "delivered",
-          "label": "Built the in-app review prompting that moved the Play Store listing from 1.6★ across 67 reviews to 4.5★ across 27,300, the rating a prospective customer sees before they install an"
+          "label": "I built the dynamic form engine the expense, travel and procurement modules all render their inputs through, so a new field type is a server change rather than a release."
         },
         {
-          "ym": "2026-02",
+          "ym": "2026-01",
           "lane": "work",
           "kind": "delivered",
-          "label": "Shipped the Android side of Trip V2: Itinerary V2, GIN screens, and full Mixpanel instrumentation."
+          "label": "I built the storage management screen and moved the app onto Scoped Storage, dropping the external-storage permission entirely."
         },
         {
-          "ym": "2026-05",
+          "ym": "2026-04",
           "lane": "work",
           "kind": "delivered",
-          "label": "Built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with the client owning dark mode, use"
+          "label": "I built the in-app QR payment flow and the corporate card surfaces alongside the expense modules they settle against."
+        },
+        {
+          "ym": "2026-06",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "I led the procurement module, from purchase request through goods inward note to invoice, and shipped its vendor-inventory flows through review by the engineer I was mentoring."
         },
         {
           "ym": "2026-08",
           "lane": "work",
           "kind": "delivered",
-          "label": "Own the build platform: automated Fastlane build, signing and release pipelines, and drove the AGP 9 upgrade across the whole app, and wired agent tooling into the build itself (Fi"
+          "label": "I ran the build platform: Fastlane build, signing and release pipelines, the AGP 9 upgrade, and agent tooling wired into the build itself (Firebender over MCP). Kept the app curren"
         },
         {
           "ym": "2021-01",
           "lane": "work",
           "kind": "role",
-          "label": "Jugnoo / Tookan / Jungleworks: Software Engineer, Android & Vertical Owner"
+          "label": "Jugnoo (Jungleworks / Tookan): Software Engineer, Android & Vertical Owner"
         },
         {
           "ym": "2021-03",
           "lane": "work",
           "kind": "delivered",
-          "label": "Owned Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps. Joi"
+          "label": "I carried Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps "
         },
         {
-          "ym": "2021-08",
+          "ym": "2021-07",
           "lane": "work",
           "kind": "delivered",
-          "label": "Built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase across the customer and driver apps, rathe"
+          "label": "I built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase rather than a fork per client, with vert"
         },
         {
-          "ym": "2022-01",
+          "ym": "2021-11",
           "lane": "work",
           "kind": "delivered",
-          "label": "Owned both the requirements and the implementation for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build."
+          "label": "I owned requirements and delivery for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build."
         },
         {
-          "ym": "2022-05",
+          "ym": "2022-03",
           "lane": "work",
           "kind": "delivered",
-          "label": "Implemented Razorpay, Stripe, Beyonic and HyperPay gateway integrations across checkout flows; built Stripe 3DS payment retry/recovery handling and a corporate-account KYC verifica"
+          "label": "I built the Razorpay and Stripe gateway integrations across checkout flows, handled Stripe 3D Secure through an SDK migration, and built the corporate account verification flow fro"
         },
         {
-          "ym": "2022-10",
+          "ym": "2022-07",
           "lane": "work",
           "kind": "delivered",
-          "label": "Migrated the toolchain across a multi-branch, multi-client codebase: Kotlin plugin and Gradle 7.0 migrations, ViewBinding adoption, and Android 13 (API 33) compliance, without brea"
+          "label": "I built the animated and curved polyline rendering behind live ride tracking on Google Maps."
+        },
+        {
+          "ym": "2022-11",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "I migrated the toolchain across a multi-branch, multi-client codebase: Kotlin plugin and Gradle 7.0, and the Android 10 to 13 platform changes with the Play Store requirements each"
         },
         {
           "ym": "2023-03",
           "lane": "work",
           "kind": "delivered",
-          "label": "Collaborated cross-team on roadmaps with product and backend, cutting engineering overhead 40%."
+          "label": "I ran roadmap planning with product and backend across the carpool, trucking and e-bike lines."
         },
         {
           "ym": "2020-05",
@@ -386,7 +416,7 @@ export const timeline: Timeline = {
       ],
       "peak": {
         "ym": "2026-04",
-        "v": 15
+        "v": 19
       }
     },
     {
@@ -488,9 +518,9 @@ export const timeline: Timeline = {
         "2026-06": 296,
         "2026-07": 272,
         "2026-08": 205,
-        "2026-09": 57
+        "2026-09": 167
       },
-      "total": 4900,
+      "total": 5010,
       "peak": {
         "ym": "2023-07",
         "v": 328
@@ -722,9 +752,125 @@ export const timeline: Timeline = {
         "2026-06": 1391,
         "2026-07": 2906,
         "2026-08": 1479,
-        "2026-09": 978
+        "2026-09": 1879
       },
-      "total": 7282,
+      "total": 8183,
+      "milestones": [
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(deps): make js-yaml imports work on both 4.x and 5.x"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(scan): take the shared lock for scan-history.tsv appends"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(agent-inbox): concurrent adds silently dropped queued requests"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(liveness): a rate-limited posting was classified expired, not uncertain"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv-facts): a k/M/B magnitude suffix let an inflated claim past the gate"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(rank): opt-in LLM relevance re-ranker for pipeline.md"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv): Korean and Traditional Chinese CVs had no font rule"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(states): aliases the engine accepts were missing from states.yml"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(web): states.yml cached for the process lifetime, so core updates go unseen"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(scan): --company/--posted-after/--posted-before ignored in =value form"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cv): $-patterns in candidate text splice the template into the CV"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(dedup): distinct non-Latin companies merged into one, deleting a row"
+        },
+        {
+          "ym": "2026-08",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(cover): a custom template's unfilled {{TOKEN}} shipped into the letter"
+        },
+        {
+          "ym": "2026-07",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(agent-inbox): queue requests for the next session"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops fix(dashboard): rewrite only the Status cell on status update"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(providers): add Breezy HR provider"
+        },
+        {
+          "ym": "2026-06",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "career-ops-hq/career-ops feat(providers): add BambooHR provider"
+        },
+        {
+          "ym": "2026-09",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "openMF/kmp-project-template fix(core-base/common): un-swap default and io in the Android dispatchers"
+        },
+        {
+          "ym": "2026-09",
+          "lane": "opensource",
+          "kind": "oss",
+          "label": "openMF/kmp-project-template fix(ci): guard the empty successful_tasks expansion in ci-prepush.sh"
+        }
+      ],
       "peak": {
         "ym": "2026-07",
         "v": 2906

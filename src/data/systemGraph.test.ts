@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { systemGraph } from "./systemGraph.ts";
+import { systemGraph, includeBuildPairs } from "./systemGraph.ts";
 import { RELATED_SERIES } from "./connections.ts";
 import { projects, caseStudies } from "./profile.ts";
 import { writing } from "./writing.ts";
@@ -62,5 +62,24 @@ describe("systemGraph: the registry every repo/employer/series/surface/channel c
   it("carries a generatedAt stamp freshnessSla.ts / ops.ts can see", () => {
     const raw = readFileSync(fileURLToPath(new URL("./systemGraph.ts", import.meta.url)), "utf8");
     expect(STAMP_RE.test(raw)).toBe(true);
+  });
+
+  // trove-map#0: the harness path leak was 15 edges carrying AgentHarness/...
+  // or reference_all_repos.md in `detail`. No page renders them as text, but
+  // they ship in the client bundle, so `detail` is scrubbed to a description.
+  it("no edge detail leaks an internal harness path", () => {
+    const leaky = systemGraph.edges.filter((e) => e.detail && /AgentHarness\/|reference_[a-z_]+\.md|\.md$/.test(e.detail));
+    expect(leaky, `these edges leak a harness path in detail: ${leaky.map((e) => `${e.from}->${e.to}`).join(", ")}`).toEqual([]);
+  });
+
+  it("includeBuildPairs measures the portfolio twin's includeBuild of kmp-toolkit and kmp-build-logic (E1)", () => {
+    expect(includeBuildPairs).toContainEqual(["portfolio", "kmp-toolkit"]);
+    expect(includeBuildPairs).toContainEqual(["portfolio", "kmp-build-logic"]);
+  });
+
+  it("every operates target is a node", () => {
+    const operatesEdges = systemGraph.edges.filter((e) => e.kind === "operates");
+    expect(operatesEdges.length).toBeGreaterThan(0);
+    for (const e of operatesEdges) expect(ids.has(e.to), `operates edge targets "${e.to}", which has no node`).toBe(true);
   });
 });

@@ -9,6 +9,6 @@ export const Route = createFileRoute("/")({
   // (resume.tsx, project.$slug.tsx) would ship two conflicting canonical
   // tags (verified: multiple <link rel="canonical"> get ignored by crawlers
   // entirely, per Google's own guidance) instead of actually overriding.
-  head: () => ({ links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/" }] }),
+  head: () => ({ links: [{ rel: "canonical", href: "https://siddharth-pandalai.vercel.app/" }] }),
   component: HomePage,
 });

@@ -15,14 +15,15 @@ import {
 } from "lucide-react";
 import {profile, metrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
-import { projectStats } from "./data/projectStats.ts";
+import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ReposShowcase } from "./ReposShowcase.tsx";
-import { FloatingChat, openChat } from "./FloatingChat.tsx";
+import { openChat } from "./lib/chatBus.ts";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
-import { ParticleHero } from "./ParticleHero.tsx";
 import { Phone3D } from "./Phone3D.tsx";
+import "./hero-studio.css";
 import { TiltCard } from "./TiltCard.tsx";
 import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { Reveal } from "./Reveal.tsx";
@@ -50,6 +51,8 @@ import { shippedNewestFirst } from "./lib/shipped.ts";
 import { homeFastPath, homeDeepPath } from "./data/facets.ts";
 import { boardArc } from "./data/beforeTheCode.ts";
 import { BoardProfilesGrid } from "./BoardProfiles.tsx";
+import { useNow, useSky } from "./lib/useSky.ts";
+import { WMO_LABEL } from "./lib/sky.ts";
 
 /**
  * Below-the-fold homepage sections hydrate only once they are within 600px of
@@ -246,27 +249,14 @@ function MobileMenu() {
  * that shows a live local clock reads as a place someone actually is, not a
  * document that was uploaded once. Mono, muted, IST-pinned (the clock is *my*
  * time, not the viewer's — that's the whole point of showing it).
+ *
+ * R2: consumes the shared `useNow()` (lib/useSky.ts) instead of its own
+ * minute-boundary timer, so the whole site ticks off one clock rather than
+ * two that can drift (reality-spec.md#P2). Still `null` until mounted — same
+ * hydration-safety reasoning, now centralised in the one hook.
  */
 function NavClock({ className = "" }: { className?: string }) {
-  // `null` until mounted, deliberately: this renders under SSR, and a clock
-  // read on the server is milliseconds off the one read on the client, which
-  // React reports as a hydration mismatch. Server and first client render both
-  // emit nothing, then the effect fills it in.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    // Tick on the minute boundary, not every second: nothing here shows
-    // seconds, so a 1s interval would be 60x the wakeups for zero pixels.
-    let timer: number;
-    const schedule = () => {
-      timer = window.setTimeout(() => {
-        setNow(new Date());
-        schedule();
-      }, 60_000 - (Date.now() % 60_000));
-    };
-    schedule();
-    return () => clearTimeout(timer);
-  }, []);
+  const now = useNow();
   if (!now) return null;
   const time = now.toLocaleTimeString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -279,6 +269,27 @@ function NavClock({ className = "" }: { className?: string }) {
       <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" />
       <time dateTime={now.toISOString()}>{time} IST</time>
     </span>
+  );
+}
+
+/**
+ * "Lit by the sky over Pune" — the hero device's real caption (reality-spec
+ * §6 `/` row), read off the same `useSky()` every other live surface reads.
+ * `null` until mount (SSR renders the static floor: nothing here, same
+ * NavClock reasoning above), so a clock/weather reading taken on the server
+ * never has to agree with one taken moments later on the client.
+ */
+function HeroSkyCaption() {
+  const sky = useSky();
+  if (!sky) return null;
+  const time = sky.now.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false });
+  const altDeg = Math.round(Math.abs(sky.sun.altitudeDeg));
+  const side = sky.sun.altitudeDeg >= 0 ? "above" : "below";
+  const weatherLabel = sky.weather ? WMO_LABEL[sky.weather.code] : null;
+  return (
+    <p className="mt-2 text-center font-mono text-xs tracking-wide text-muted">
+      Lit by the sky over Pune, {time} IST, sun {altDeg}° {side} the horizon{weatherLabel ? `, ${weatherLabel}` : ""}.
+    </p>
   );
 }
 
@@ -349,12 +360,21 @@ function Nav() {
   );
 }
 
+// The hero device switcher's shortlist — read from the registry's own
+// `showcase` flag (projects.ts) rather than a second, hand-picked slug list
+// here. A project earns a slot in the registry, not in App.tsx.
+const HERO_PROJECTS = projects.filter((p) => p.showcase && p.heroShot);
+const HERO_SHOTS: Record<string, string> = Object.fromEntries(
+  HERO_PROJECTS.map((p) => [p.slug, p.heroShot!]),
+);
+
 function Hero() {
   const { goToSection } = useSectionNav();
+  const [selectedSlug, setSelectedSlug] = useState<string>(HERO_PROJECTS[0]?.slug ?? "doori");
+  const selectedProject = HERO_PROJECTS.find((project) => project.slug === selectedSlug)!;
   return (
-    <section id="top" className="section-y relative mx-auto grid max-w-5xl items-center gap-10 px-6 lg:grid-cols-[1fr_280px]">
-      <ParticleHero />
-      <div>
+    <section id="top" className="hero-studio section-y relative mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[minmax(0,1fr)_minmax(390px,0.88fr)]">
+      <div className="hero-studio-copy">
         {/* rise-in-lcp on every block of hero text, not just one element. The
             eyebrow carries no animation-delay, so it is the FIRST thing the
             page would paint — and while it is fading it counts as nothing
@@ -385,14 +405,11 @@ function Hero() {
           {profile.intro}
         </p>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
-          {/* The recruiter CTA, and now the hero's primary. It used to sit in
-              accent2 beside a filled "Chat with my AI assistant" button, which
-              opened the same panel as the FAB pinned to the corner of the
-              viewport. Pasting a JD is the one thing here a PDF cannot do. */}
+          <Link to="/project/$slug" params={{ slug: selectedSlug }} className="hero-studio-primary">Explore my work <ArrowUpRight size={17} aria-hidden="true" /></Link>
           <button
             type="button"
             onClick={() => goToSection("fit")}
-            className="btn-primary flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 font-semibold text-ink transition hover:bg-accent-dim"
+            className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
             <Target size={15} /> Paste a job description
           </button>
@@ -403,18 +420,38 @@ function Hero() {
           >
             View résumé
           </Link>
-          <button
-            type="button"
-            onClick={() => goToSection("work")}
-            className="flex items-center gap-1.5 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
-          >
-            See my work ↓
-          </button>
         </div>
         <p className="rise-in rise-in-3 mt-6 text-xs text-muted">{profile.availability}</p>
+        <nav className="hero-studio-paths" aria-label="Explore the portfolio">
+          <Link to="/map"><span>01</span> Connected work <ArrowUpRight size={14} /></Link>
+          <Link to="/blueprint"><span>02</span> Architecture <ArrowUpRight size={14} /></Link>
+          <Link to="/playground"><span>03</span> Enter the world <ArrowUpRight size={14} /></Link>
+        </nav>
         <LiveTicker />
       </div>
-      <Phone3D />
+      <div className="hero-studio-stage">
+        <div className="hero-studio-meta" aria-hidden="true"><span>SID / MOBILE ENGINEERING</span><span>0{HERO_PROJECTS.indexOf(selectedProject) + 1} / 0{HERO_PROJECTS.length}</span></div>
+        <div className="hero-studio-object"><span className="hero-studio-watermark" aria-hidden="true">BUILD.</span><Phone3D key={selectedSlug} shot={{ src: HERO_SHOTS[selectedSlug], label: selectedProject.name }} /><span className="hero-studio-caption" aria-hidden="true">REAL PRODUCTS · SHARED FOUNDATIONS</span></div>
+        <HeroSkyCaption />
+        <div className="hero-studio-dossier" aria-live="polite">
+          <div>
+            <p className="hero-studio-kicker">Selected build / {selectedSlug.replace("-", " ")}</p>
+            <h2 className="font-display text-2xl font-bold text-zinc-100">{selectedProject.name}</h2>
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-zinc-300">{selectedProject.tagline}</p>
+          </div>
+          <Link to="/project/$slug" params={{ slug: selectedSlug }} className="hero-studio-open">
+            Explore case study <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="hero-studio-selector" role="group" aria-label="Choose a project to preview">
+          {HERO_PROJECTS.map((project, index) => (
+            <button key={project.slug} type="button" aria-pressed={project.slug === selectedSlug}
+              onClick={() => setSelectedSlug(project.slug)}>
+              <span className="hero-studio-index">0{index + 1}</span><span>{project.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
@@ -746,8 +783,17 @@ function Projects() {
                   </div>
                   <p className="mt-3 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
-                    <p className="mt-2 font-mono text-[11px] text-muted">
-                      <span className="text-accent2">◇</span> {statLine}
+                    <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-muted">
+                      <span><span className="text-accent2">◇</span> {statLine}</span>
+                      {p.slug in projectStats && (
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <EvidenceChip
+                            file="projectStats.ts"
+                            stamp={projectStatsGeneratedAt}
+                            source="repo settings.gradle.kts + README"
+                          />
+                        </span>
+                      )}
                     </p>
                   )}
                   {platforms.length > 0 && (
@@ -948,7 +994,7 @@ function ExperienceSection() {
 const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
   "UI & Architecture": [
     { label: "~87% UI-layer Compose migration", href: "#work" },
-    { label: `Doori · ${projectStats.mileway.modules} modules`, href: "#project/doori" },
+    { label: `Doori · ${projectStats.doori.modules} modules`, href: "#project/doori" },
   ],
   "Concurrency & Data": [
     { label: "-80% crashes", href: "#work" },
@@ -1362,10 +1408,6 @@ export function HomePage() {
           );
         })}
       </main>
-      {/* FloatingChat also renders the crawlable "frequently asked" section in
-          page flow, so it goes BEFORE the footer on every route that has one:
-          nothing sits below the footer. The launcher button itself is fixed. */}
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

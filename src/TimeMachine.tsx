@@ -4,6 +4,9 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { historyMonths, historyGeneratedAt, totalCommits } from "./data/history.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
 /**
  * /time-machine — this repo's own commit history, navigable by month.
@@ -21,11 +24,43 @@ function monthLabel(ym: string) {
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+/** REC-6 (idea-atlas): `filesChanged` is generated and read by nothing;
+ *  months like 2026-08 (221 commits, 2,884 files) read as "this month
+ *  rewired the codebase" once breadth sits beside commit count. A second,
+ *  small sparkline rather than a third bar in the main chart: the two
+ *  series live on different scales (commits: tens to hundreds; files:
+ *  hundreds to thousands) and a shared axis would flatten one of them. */
+function FilesSparkline({ months }: { months: typeof historyMonths }) {
+  const w = 240;
+  const h = 32;
+  const max = Math.max(...months.map((m) => m.filesChanged), 1);
+  const xAt = (i: number) => (months.length === 1 ? w / 2 : (i / (months.length - 1)) * w);
+  const yAt = (v: number) => h - (v / max) * h;
+  const points = months.map((m, i) => `${xAt(i).toFixed(1)},${yAt(m.filesChanged).toFixed(1)}`).join(" ");
+  return (
+    <p className="mt-3 flex items-center gap-2 font-mono text-xs text-muted">
+      <span className="shrink-0">files touched, per month</span>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-4 w-[120px]" role="img" aria-label={`files changed per month: ${months.map((m) => m.filesChanged.toLocaleString("en-US")).join(", ")}`}>
+        <polyline data-points={months.length} points={points} fill="none" stroke="var(--color-accent2)" strokeWidth="1.5" />
+      </svg>
+      <span className="shrink-0 text-zinc-400">{months[months.length - 1].filesChanged.toLocaleString("en-US")} this month</span>
+    </p>
+  );
+}
+
 export default function TimeMachine() {
   const { goToSection } = useSectionNav();
   const [i, setI] = useState(historyMonths.length - 1);
   const month = historyMonths[i];
   const maxCommits = Math.max(...historyMonths.map((m) => m.commits), 1);
+
+  // reality-spec §6 /time-machine row: "history continues past the
+  // snapshot", the committed history.ts is frozen at historyGeneratedAt;
+  // this counts real pushes GitHub's public events feed has seen since.
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+  const pushesSince = activity?.connected
+    ? activity.items.filter((it) => it.type === "push" && it.at > historyGeneratedAt).length
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-void">
@@ -50,17 +85,29 @@ export default function TimeMachine() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-5xl flex-1 px-6">
-        <p className="section-eyebrow mb-2">// git history</p>
-        <h1 className="font-display text-hero font-bold tracking-tight">This repo, one month at a time</h1>
-        <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
-          {totalCommits.toLocaleString("en-US")} commits since this repo started, walked back month by
-          month. Pick one below to see what actually shipped that month, not a changelog written after
-          the fact.
-        </p>
-        <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
-          Read from a static snapshot of `git log`, taken {new Date(historyGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}.
-          Nothing here shells out to git at request time; a deployed static site has no git binary to call.
-        </p>
+        <header>
+          <p className="section-eyebrow mb-2">// git history</p>
+          <h1 className="font-display text-hero font-bold tracking-tight">This repo, one month at a time</h1>
+          <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
+            {totalCommits.toLocaleString("en-US")} commits since this repo started, walked back month
+            by month. Pick one below to see what actually shipped that month, not a changelog written
+            after the fact.
+          </p>
+          <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+            Read from a static snapshot of `git log`. Nothing here shells out to git at request time;
+            a deployed static site has no git binary to call.
+          </p>
+          <p className="mt-3">
+            <EvidenceChip file="history.ts" stamp={historyGeneratedAt.slice(0, 10)} source="git log" />
+          </p>
+          {pushesSince !== null && (
+            <p data-pushes-since={pushesSince} className="mt-2 font-mono text-xs text-muted">
+              {pushesSince} public push{pushesSince === 1 ? "" : "es"} since {historyGeneratedAt.slice(0, 10)}{" "}
+              (GitHub public events, last 20)
+            </p>
+          )}
+          <FilesSparkline months={historyMonths} />
+        </header>
 
         <div className="mt-10 flex items-end gap-1 overflow-x-auto pb-2" tabIndex={0} role="group" aria-label="Pick a month, scrollable horizontally once the history grows past one screen">
           {historyMonths.map((m, idx) => (

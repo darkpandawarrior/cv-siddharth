@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Corpus } from "../lib/useCorpus.ts";
+import { useNow } from "../lib/useSky.ts";
 
 /* ── Chess hours against commit hours ────────────────────────────────────
  * Two 24-hour distributions on one time axis, each normalised to its own
@@ -48,9 +49,26 @@ const line = (points: { hour: number; v: number }[]) =>
 const hh = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
+/** Reality P2/R5: "you caught me at this hour" (reality-spec §6 /chess row).
+ *  `d` is Intl-formatted straight to Asia/Kolkata rather than via
+ *  `getHours()`, which would read whatever offset the run happens to be in
+ *  (a CI box in UTC, a laptop in IST) instead of Pune's. */
+function istHour(d: Date): number {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  return Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+}
+
 export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
   const { chess: games, commits, commitSample } = hours;
   const [hour, setHour] = useState(() => games.reduce((a, b) => (b.n > a.n ? b : a), games[0]).hour);
+  // reality-spec §6 /chess row: "you caught me at this hour", the live IST
+  // hour, distinct from `hour` above (the slider's SELECTED hour). `null`
+  // until mount (useNow, same reasoning as EvidenceChip/useSky): the room is
+  // server-rendered, so a clock read on the server would disagree with the
+  // client's and React would report a hydration mismatch. SSR and the
+  // client's first paint both draw the chart with no marker.
+  const now = useNow();
+  const nowHour = now ? istHour(now) : null;
 
   const gameMax = Math.max(...games.map((h) => h.n));
   const commitMax = Math.max(...commits.map((h) => h.n));
@@ -87,6 +105,9 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
     `(${pct(hereCommits / commitMax)} of theirs)` +
     (typeof here.winRate === "number" ? `, winning ${pct(here.winRate)} of them` : "") +
     ".";
+
+  const nowGames = nowHour !== null ? (games.find((h) => h.hour === nowHour)?.n ?? 0) : null;
+  const nowCommits = nowHour !== null ? (commits.find((h) => h.hour === nowHour)?.n ?? 0) : null;
 
   return (
     <>
@@ -180,6 +201,22 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
               strokeDasharray="3 3"
             />
 
+            {/* "you caught me at this hour" (reality-spec §6). A solid line in
+                a third colour, so it never reads as the same thing as the
+                slider's dashed selection above: the two can land on the same
+                hour and still need to look different. */}
+            {nowHour !== null && (
+              <line
+                data-now-hour={nowHour}
+                x1={xAt(nowHour)}
+                x2={xAt(nowHour)}
+                y1={PAD.top}
+                y2={PAD.top + PLOT_H}
+                stroke="var(--color-signal)"
+                strokeWidth="1.5"
+              />
+            )}
+
             {[0, 6, 12, 18, 23].map((t) => (
               <text
                 key={t}
@@ -223,6 +260,18 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
             </text>
           </svg>
         </div>
+
+        {nowHour !== null && (
+          <p
+            data-now-hour-marker
+            data-now-hour={nowHour}
+            className="border-t border-line px-5 py-3 font-mono text-xs"
+            style={{ color: "var(--color-signal)" }}
+          >
+            It&apos;s the {hh(nowHour)} hour in Pune. I&apos;ve played {nowGames?.toLocaleString("en-US")} games in
+            this hour, and {nowCommits?.toLocaleString("en-US")} sampled commits land in it.
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line px-5 py-4">
           <label className="flex items-center gap-2 font-mono text-xs text-muted">

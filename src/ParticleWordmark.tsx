@@ -85,6 +85,113 @@ function sampleWordmark(width: number, height: number): { points: { x: number; y
   return { points: [...headline, ...tagline], step };
 }
 
+/* ── Topology targets (idea-atlas CRAFT-6, forge topology morphs) ────────
+ *
+ * Three closed surfaces, standard parametrisations, pure math, no data: a
+ * Mobius strip, a trefoil knot and a Klein bottle (the figure-8 immersion).
+ * Each is built only from sin/cos of finite inputs, so every point they
+ * produce is finite by construction, no division, no sqrt of a negative,
+ * no log. Sampled the same way sampleWordmark() samples the glyphs, so they
+ * drop into the same spring-to-target particle system as an alternate
+ * target set, cross-faded in only while the forge sits idle.
+ */
+
+type Point3 = { x: number; y: number; z: number };
+
+function mobiusPoint(u: number, v: number): Point3 {
+  const half = u / 2;
+  const r = 1 + v * Math.cos(half);
+  return { x: r * Math.cos(u), y: r * Math.sin(u), z: v * Math.sin(half) };
+}
+
+function trefoilPoint(t: number): Point3 {
+  return {
+    x: Math.sin(t) + 2 * Math.sin(2 * t),
+    y: Math.cos(t) - 2 * Math.cos(2 * t),
+    z: -Math.sin(3 * t),
+  };
+}
+
+/** Figure-8 immersion of the Klein bottle, the standard closed-form one
+ *  (a = 2). No division anywhere, so it is finite for every real u, v. */
+function kleinPoint(u: number, v: number): Point3 {
+  const a = 2;
+  const half = u / 2;
+  const r = a + Math.cos(half) * Math.sin(v) - Math.sin(half) * Math.sin(2 * v);
+  return {
+    x: r * Math.cos(u),
+    y: r * Math.sin(u),
+    z: Math.sin(half) * Math.sin(v) + Math.cos(half) * Math.sin(2 * v),
+  };
+}
+
+/** Samples a 2-parameter surface on a roughly square grid so `count`
+ *  particles spread across it, padding the tail if `count` isn't a perfect
+ *  square (a resize can ask for any number). */
+function sampleSurface(
+  fn: (u: number, v: number) => Point3,
+  count: number,
+  uMax: number,
+  vRange: readonly [number, number],
+): Point3[] {
+  const cols = Math.max(1, Math.round(Math.sqrt(count)));
+  const rows = Math.max(1, Math.ceil(count / cols));
+  const [vMin, vMax] = vRange;
+  const pts: Point3[] = [];
+  for (let i = 0; i < rows && pts.length < count; i++) {
+    const v = vMin + (vMax - vMin) * (rows > 1 ? i / (rows - 1) : 0);
+    for (let j = 0; j < cols && pts.length < count; j++) {
+      const u = uMax * (cols > 1 ? j / (cols - 1) : 0);
+      pts.push(fn(u, v));
+    }
+  }
+  while (pts.length < count) pts.push(pts[pts.length - 1] ?? fn(0, vMin));
+  return pts;
+}
+
+/** Samples a 1-parameter curve (the trefoil): densifying past its own point
+ *  count just traces the same closed loop again, which is the correct look
+ *  for a knot made of particles, not a bug. */
+function sampleCurve(fn: (t: number) => Point3, count: number): Point3[] {
+  const pts: Point3[] = [];
+  for (let i = 0; i < count; i++) pts.push(fn((i / Math.max(1, count)) * Math.PI * 2));
+  return pts;
+}
+
+/** Fixed three-quarter view, orthographic. No continuous rotation: the
+ *  spring-to-target physics is already the "morph", a moving target on top
+ *  of that would fight the settle-colour read (CAL-1) for no visual gain. */
+function projectTopology(p: Point3, scale: number, cx: number, cy: number): { x: number; y: number } {
+  const rotY = 0.6;
+  const rotX = 0.35;
+  const x1 = p.x * Math.cos(rotY) + p.z * Math.sin(rotY);
+  const z1 = -p.x * Math.sin(rotY) + p.z * Math.cos(rotY);
+  const y1 = p.y * Math.cos(rotX) - z1 * Math.sin(rotX);
+  return { x: cx + x1 * scale, y: cy + y1 * scale };
+}
+
+type TopologyKind = "mobius" | "trefoil" | "klein";
+const TOPOLOGY_ORDER: readonly TopologyKind[] = ["mobius", "trefoil", "klein"];
+// Raw coordinate magnitude of each parametrisation above, used only to
+// normalise it to roughly a unit sphere before the shared `scale` below.
+const TOPOLOGY_NORMALISE: Record<TopologyKind, number> = { mobius: 1.8, trefoil: 3.2, klein: 4.2 };
+
+function topologyPoints(kind: TopologyKind, count: number, width: number, height: number): { x: number; y: number }[] {
+  const raw =
+    kind === "mobius"
+      ? sampleSurface(mobiusPoint, count, Math.PI * 2, [-0.6, 0.6])
+      : kind === "trefoil"
+        ? sampleCurve(trefoilPoint, count)
+        : sampleSurface(kleinPoint, count, Math.PI * 2, [0, Math.PI * 2]);
+  const scale = (Math.min(width, height) * 0.34) / TOPOLOGY_NORMALISE[kind];
+  const cx = width / 2;
+  const cy = height * 0.52;
+  return raw.map((p) => projectTopology(p, scale, cx, cy));
+}
+
+const IDLE_MS = 6000; // no pointer activity for this long before the first morph
+const SHAPE_HOLD_MS = 4200; // how long each shape (and the wordmark) is shown mid-cycle
+
 export function ParticleWordmark() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -102,6 +209,13 @@ export function ParticleWordmark() {
     // Pointer in CSS pixels; parked far off-canvas until the cursor arrives.
     const pointer = { x: -9999, y: -9999, active: false };
 
+    // Idle-morph state (CRAFT-6): the wordmark's own target points, and which
+    // alternate target the particles currently spring toward.
+    let wordmarkPoints: { x: number; y: number }[] = [];
+    let shapeState: "wordmark" | TopologyKind = "wordmark";
+    let shapeChangedAt = performance.now();
+    let lastInteraction = performance.now();
+
     const build = () => {
       const rect = canvas.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
@@ -111,6 +225,10 @@ export function ParticleWordmark() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const { points } = sampleWordmark(width, height);
+      wordmarkPoints = points;
+      shapeState = "wordmark";
+      shapeChangedAt = performance.now();
+      lastInteraction = performance.now();
       particles = points.map((p) => {
         // Reuse a particle's current position on resize so it glides to the
         // new layout instead of teleporting; fresh ones fly in from a random
@@ -121,6 +239,21 @@ export function ParticleWordmark() {
       });
     };
     build();
+
+    // Reassigns every particle's target in place (same count throughout:
+    // topology shapes resample themselves to fit whatever the wordmark's own
+    // pixel-sampling produced), so the existing spring physics IS the morph;
+    // no second particle system or alpha cross-fade needed.
+    const setShape = (next: "wordmark" | TopologyKind) => {
+      if (next === shapeState) return;
+      shapeState = next;
+      shapeChangedAt = performance.now();
+      const targets = next === "wordmark" ? wordmarkPoints : topologyPoints(next, particles.length, width, height);
+      for (let i = 0; i < particles.length && i < targets.length; i++) {
+        particles[i].tx = targets[i].x;
+        particles[i].ty = targets[i].y;
+      }
+    };
 
     // settle: 0 = still scattered (baseline cyan), 1 = on target (measured
     // amber) — driven live by distance-to-target, not a fixed spawn-time mix,
@@ -157,6 +290,19 @@ export function ParticleWordmark() {
     const REPEL2 = REPEL * REPEL;
 
     const step = () => {
+      // Idle-morph cycle: no pointer activity for IDLE_MS swaps the wordmark
+      // for the first topology target; each shape holds for SHAPE_HOLD_MS
+      // before cycling to the next. Any interaction snaps straight back to
+      // the wordmark and restarts the idle clock.
+      const now = performance.now();
+      const idleFor = now - lastInteraction;
+      if (shapeState === "wordmark") {
+        if (idleFor > IDLE_MS) setShape(TOPOLOGY_ORDER[0]);
+      } else if (now - shapeChangedAt > SHAPE_HOLD_MS) {
+        const i = TOPOLOGY_ORDER.indexOf(shapeState);
+        setShape(TOPOLOGY_ORDER[(i + 1) % TOPOLOGY_ORDER.length]);
+      }
+
       ctx.clearRect(0, 0, width, height);
       for (const p of particles) {
         // Spring toward the glyph target (Hooke's law) + damping.
@@ -216,6 +362,8 @@ export function ParticleWordmark() {
     io.observe(canvas);
 
     const toLocal = (clientX: number, clientY: number) => {
+      lastInteraction = performance.now();
+      if (shapeState !== "wordmark") setShape("wordmark");
       const rect = canvas.getBoundingClientRect();
       pointer.x = clientX - rect.left;
       pointer.y = clientY - rect.top;

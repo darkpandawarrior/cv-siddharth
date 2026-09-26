@@ -13,7 +13,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const BASE = process.argv[2] ?? "https://cv-siddharth.vercel.app";
+const BASE = process.argv[2] ?? "https://siddharth-pandalai.vercel.app";
 
 // public/<dir>-app — the five bundled WASM apps this repo embeds live.
 const APPS = ["gaddi-app", "paymentslab-app", "doori-app", "portfolio-app", "stutter-app"];

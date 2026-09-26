@@ -23,16 +23,12 @@ const CX = 210;
 const CY = 175;
 const FEATURE_R = 108;
 const OUTER_R = 142;
-const LOCAL = projectStats.mileway.modules;
-const N_FEATURES = projectStats.mileway.features;
-/**
- * The modules Doori consumes through `includeBuild("external/kmp-toolkit")`
- * rather than declaring itself, so they never appear as `include(` lines and
- * gen-project-stats.mjs does not count them today. Hand-kept until the
- * generator emits a `composedModules` for mileway the way it already does for
- * paymentslab — see the deferred note in this change.
- */
-const COMPOSED = 10;
+const LOCAL = projectStats.doori.modules;
+const N_FEATURES = projectStats.doori.features;
+/** The modules Doori consumes through `includeBuild("external/kmp-toolkit")`
+ *  rather than declaring itself, so they never appear as `include(` lines —
+ *  gen-project-stats.mjs counts them separately as `composedModules`. */
+const COMPOSED = projectStats.doori.composedModules;
 const TOTAL = LOCAL + COMPOSED;
 const N_OTHER = TOTAL - N_FEATURES; // shared & composed modules, unlabeled
 const CYAN = "#5ee6ff";

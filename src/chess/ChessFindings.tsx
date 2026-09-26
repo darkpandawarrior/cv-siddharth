@@ -84,7 +84,15 @@ const latest = repertoire.at(-1);
 // dates don't.
 const lichessLastFlicker = [...chess.activityByYear].reverse().find((a) => a.lichess > 0);
 
-export function ChessFindings({ onPlayTheEngine }: { onPlayTheEngine?: () => void } = {}) {
+export function ChessFindings({
+  onPlayTheEngine,
+  onNavigate,
+}: {
+  onPlayTheEngine?: () => void;
+  /** Switches the room's own tab strip — wired to the arc and rhythm
+   *  callouts below, so "see the chart" is a real click, not a promise. */
+  onNavigate?: (tab: "arc" | "rhythm") => void;
+} = {}) {
   const { thesis, totals, discipline, span } = chess;
   const daysPlayed = discipline.spanDays ? discipline.distinctDays / discipline.spanDays : 0;
 
@@ -111,6 +119,29 @@ export function ChessFindings({ onPlayTheEngine }: { onPlayTheEngine?: () => voi
           I don't lose positions nearly as often as I lose time.
         </p>
       </Reveal>
+
+      {onNavigate && (
+        <Reveal delay={40}>
+          <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 font-mono text-[11px]">
+            <span className="text-muted">Same clock, two curves:</span>
+            <button
+              type="button"
+              onClick={() => onNavigate("rhythm")}
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+            >
+              the hour I play tracks the hour I commit →
+            </button>
+            <span className="text-muted">and the rating curve moves with it,</span>
+            <button
+              type="button"
+              onClick={() => onNavigate("arc")}
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+            >
+              see it
+            </button>
+          </p>
+        </Reveal>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         {/* the thesis, as the divergence curve */}

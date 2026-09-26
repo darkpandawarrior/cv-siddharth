@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { projects } from "./profile.ts";
 import { projectStats } from "./projectStats.ts";
-import { repoStatLine, STATS_KEY } from "../lib/projectStatLine.ts";
+import { repoStatLine } from "../lib/projectStatLine.ts";
 
 /**
  * A project card prints TWO module counts: the hand-written `status` string
@@ -12,7 +12,7 @@ import { repoStatLine, STATS_KEY } from "../lib/projectStatLine.ts";
  *   - Mileway (now Doori) said 46 and 36 on the same card. 46 is the audited
  *     claim (claims.json `mileway-modules`: "36 local includes + 10 composed
  *     from kmp-toolkit"); repoStatLine was using the raw local count for
- *     Mileway while already summing local + composed for PaymentsLab.
+ *     Mileway (now Doori) while already summing local + composed for PaymentsLab (now PaymentsLab-KMP).
  *   - Kursi (now Gaddi) said 13 while its settings.gradle.kts had 14 — a
  *     `:cli` module landed on 2026-08-26 and the hand-written line was never
  *     updated.
@@ -26,7 +26,7 @@ describe("hand-written status agrees with the generated repo stats", () => {
     return m ? Number(m[1]) : null;
   };
 
-  const covered = projects.filter((p) => (STATS_KEY[p.slug] ?? p.slug) in projectStats);
+  const covered = projects.filter((p) => p.slug in projectStats);
 
   it("finds the projects the stats generator covers", () => {
     expect(covered.length).toBeGreaterThanOrEqual(3);

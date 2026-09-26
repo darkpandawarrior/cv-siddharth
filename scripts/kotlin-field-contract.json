@@ -1,4 +1,28 @@
 {
+  "ProjectGallery": [
+    "slug",
+    "urls"
+  ],
+  "ProjectFacts": [
+    "dooriLocalModules",
+    "dooriComposedModules",
+    "dooriModules",
+    "dooriFeatures",
+    "paymentsLocalModules",
+    "paymentsComposedModules",
+    "paymentsModules",
+    "gatewaysNative",
+    "gatewaysInternal",
+    "gatewaysHosted",
+    "gatewaysMobileMoney",
+    "gatewaysStub",
+    "paymentGateways",
+    "gaddiModules",
+    "careerOpsProviders",
+    "toolkitModules",
+    "toolkitProviderModules",
+    "conventionPlugins"
+  ],
   "StoreApp": [
     "id",
     "name",

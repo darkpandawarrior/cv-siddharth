@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
+import { waitForHydration } from "./lib/test.ts";
 
 /**
  * The door counter, end to end against the production build.
@@ -209,6 +210,52 @@ test.describe("the visitor ledger", () => {
     await expect(page.locator("body")).not.toContainText(/something broke/i);
     // Nothing is known about anyone, so the plaque says nothing at all.
     await expect(page.locator(PLAQUE)).toHaveCount(0);
+
+    await context.close();
+  });
+
+  /**
+   * A visitor is never the one who waits for playhtml to finish connecting.
+   * `useNextRoom`'s pager fires a `bump("room:<x>")` write the moment its
+   * effect (re)runs, and the *first* mount's write is a genuine no-op (the
+   * real, playhtml-backed `bump` publishes into `PulseContext` an instant
+   * after that first commit, so the very first call is still the context's
+   * default no-op). The write that can race the socket is the SECOND one:
+   * clicking through to the next room over client-side routing re-fires the
+   * same effect with the real `bump` already in context, and on a fast
+   * client that can land well inside the second or so playhtml's socket
+   * takes to sync (see SYNC_GRACE_MS above). Before `usePulse` queued that
+   * write, playhtml's own setter ran anyway and logged `[@playhtml/react]
+   * ... setData called before init — ignored.` — a real console error on
+   * ordinary navigation, not an edge case. So this clicks through two rooms
+   * back to back, as fast as a visitor's browser (not this test) can manage,
+   * rather than waiting between them. /pulse is visited first, as the read
+   * side of the same channel, on the chance a stray write reaches it too.
+   */
+  test("visiting /pulse and a room never logs a write dropped before init", async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await stubListView(page);
+    const beforeInit: string[] = [];
+    page.on("console", (msg) => {
+      if (/setData called before init/i.test(msg.text())) beforeInit.push(msg.text());
+    });
+
+    await page.goto("/pulse");
+    await waitForHydration(page);
+    await page.goto("/chess");
+    await waitForHydration(page);
+    // Two client-side hops back to back, deliberately not awaited between
+    // clicks — this is the shape that used to race playhtml's own init.
+    const pager = page.getByRole("link", { name: /next room/i });
+    await pager.click();
+    await page.getByRole("link", { name: /next room/i }).click();
+    // Give the room's own hydration and playhtml's socket the rest of the
+    // couple of seconds they need to settle, so a delayed log still lands
+    // before the assertion below reads the captured list.
+    await page.waitForTimeout(3_000);
+
+    expect(beforeInit, `console carried: ${beforeInit.join("; ")}`).toEqual([]);
 
     await context.close();
   });

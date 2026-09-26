@@ -9,7 +9,7 @@ describe("resolveSectionAction", () => {
 
   it("navigates home first from any other route", () => {
     expect(resolveSectionAction("/resume")).toBe("navigate");
-    expect(resolveSectionAction("/project/mileway")).toBe("navigate");
+    expect(resolveSectionAction("/project/doori")).toBe("navigate");
     expect(resolveSectionAction("/lab")).toBe("navigate");
   });
 });
@@ -29,7 +29,7 @@ describe("classifyHash", () => {
   });
 
   it("classifies project slugs", () => {
-    expect(classifyHash("#project/mileway")).toEqual({ kind: "project", slug: "mileway" });
+    expect(classifyHash("#project/doori")).toEqual({ kind: "project", slug: "doori" });
   });
 
   it("falls back to a route for anything else", () => {
@@ -45,7 +45,7 @@ describe("classifyHash", () => {
 describe("classifyChatHref", () => {
   it("routes site paths, including per-project case studies", () => {
     expect(classifyChatHref("/lab")).toEqual({ kind: "route", to: "/lab" });
-    expect(classifyChatHref("/project/mileway")).toEqual({ kind: "route", to: "/project/mileway" });
+    expect(classifyChatHref("/project/doori")).toEqual({ kind: "route", to: "/project/doori" });
   });
 
   // The prompt explicitly offers /feed.xml. It's a static file in public/, not
@@ -56,7 +56,7 @@ describe("classifyChatHref", () => {
     expect(classifyChatHref("/llms.txt")).toEqual({ kind: "external", href: "/llms.txt" });
     expect(classifyChatHref("/og-image.png")).toEqual({ kind: "external", href: "/og-image.png" });
     // ...but a real route that merely contains a dot-free segment still routes.
-    expect(classifyChatHref("/project/paymentslab")).toEqual({ kind: "route", to: "/project/paymentslab" });
+    expect(classifyChatHref("/project/paymentslab-kmp")).toEqual({ kind: "route", to: "/project/paymentslab-kmp" });
   });
 
   it("scrolls home-page sections written as /#id or #id", () => {
@@ -66,7 +66,7 @@ describe("classifyChatHref", () => {
 
   it("treats an unknown #hash as the route of the same name", () => {
     expect(classifyChatHref("/#resume")).toEqual({ kind: "route", to: "/resume" });
-    expect(classifyChatHref("#project/kursi")).toEqual({ kind: "route", to: "/project/kursi" });
+    expect(classifyChatHref("#project/gaddi")).toEqual({ kind: "route", to: "/project/gaddi" });
   });
 
   it("leaves anything with a scheme (or protocol-relative) external", () => {

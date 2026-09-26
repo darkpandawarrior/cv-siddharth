@@ -1,0 +1,206 @@
+// Refreshes the two fastest-drifting Candidai numbers (merged PR count,
+// provider count) in profile.ts via targeted regex — career-ops-hq/career-ops
+// merges provider PRs regularly, so these go stale faster than anything else
+// on the site. The rest of the project card stays hand-curated prose. A fetch
+// error or a suspicious count leaves profile.ts untouched and exits 0; a DEAD
+// PATTERN, which is a repo bug rather than a network blip, writes what it can
+// and then exits non-zero so `npm run refresh` says so. Nothing here runs in
+// prebuild, so neither outcome can break a deploy.
+//
+// Points at career-ops-hq/career-ops (public, the real verified upstream Siddharth
+// contributes to) — NOT kirklazar-android/hiresignal, which is a private repo
+// owned by a third party where Siddharth is one of several collaborators.
+// That repo's PR/provider counts describe someone else's project, not his
+// public open-source contribution, and don't belong in this portfolio's
+// automated numbers. profile.ts's `upstreamMergedPRs` is the single value this
+// script's PR count writes, and `openSource` is the deliberately shorter
+// curated list of those PRs — see the comment on `upstreamMergedPRs` for why
+// the two are not the same number, and do not put a count in this comment.
+import { readFileSync, writeFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { fetchWithTimeout } from "./lib/net.mjs";
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+// profile.ts is a re-export barrel post-arch-L15 — the ATS/PR prose this
+// script splices numbers into actually lives in these two split files now.
+const projectsPath = join(root, "src", "data", "profile", "projects.ts");
+const openSourcePath = join(root, "src", "data", "profile", "openSource.ts");
+const fanoutPath = join(root, "src", "labs", "FanoutLab.tsx");
+const careerOpsUpstreamPath = join(root, "src", "data", "careerOpsUpstream.ts");
+const token = process.env.GITHUB_TOKEN;
+const headers = { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+async function prCount() {
+  const res = await fetchWithTimeout(
+    // career-ops-hq, NOT the old santifer path. The repo was renamed, and the SEARCH api does
+    // not follow that redirect the way the repos api does: the old path returns total_count 0,
+    // which the suspicious-count guard below turns into "refuse to write" — so the numbers would
+    // quietly freeze at their last value while this script kept exiting 0. Verified 2026-09-02:
+    // new path 24, old path 0.
+    "https://api.github.com/search/issues?q=repo:career-ops-hq/career-ops+type:pr+is:merged+author:darkpandawarrior",
+    { headers },
+  );
+  if (!res.ok) throw new Error(`${res.status} PR search`);
+  return (await res.json()).total_count;
+}
+
+/* careerOpsUpstream.ts's header has claimed since it was split out that this
+ * script refreshes THREE facts: merged PRs, providers and stars. It refreshed
+ * two. The star count was hand-typed, drifted to "68k+" while the repo passed
+ * 71,900, and nothing caught it because no pattern here ever looked at it.
+ *
+ * This is the same bug the providerCount comment below documents, in the same
+ * file, found the same way: a comment promising a refresh that no code performs.
+ * Fixing it properly rather than hand-typing 71k+, because a hand-typed number
+ * is exactly what goes stale next. Rounded DOWN to a thousand and suffixed "+",
+ * which is the form every surface already carries and cannot overstate. */
+async function starCount() {
+  const res = await fetchWithTimeout("https://api.github.com/repos/career-ops-hq/career-ops", { headers });
+  if (!res.ok) throw new Error(`${res.status} repo stars`);
+  const n = (await res.json()).stargazers_count;
+  if (!Number.isFinite(n) || n < 1000) throw new Error(`implausible star count ${n}`);
+  return `${Math.floor(n / 1000)}k+`;
+}
+
+async function providerCount() {
+  const res = await fetchWithTimeout("https://api.github.com/repos/career-ops-hq/career-ops/contents/providers", { headers });
+  if (!res.ok) throw new Error(`${res.status} providers dir`);
+  const list = await res.json();
+  // Upstream's own convention: infra files are underscore-prefixed, provider modules aren't.
+  return list.filter((f) => f.type === "file" && !f.name.startsWith("_") && /\.m?js$/.test(f.name)).length;
+}
+
+try {
+  const [prs, providers, stars] = await Promise.all([prCount(), providerCount(), starCount()]);
+  if (!prs || !providers) throw new Error(`suspicious counts prs=${prs} providers=${providers} — refusing to write`);
+  /* A regex that stops matching is the failure mode this script was built to
+   * have. Eleven chained .replace() calls silently no-op when the prose beside
+   * a number is reworded, and every one of them looked like it was still doing
+   * its job — that is how the case study came to print 76 providers and 62 on
+   * the same page. So every substitution now reports whether it hit anything.
+   *
+   * The misses are collected rather than thrown: throwing lands in this file's
+   * own catch, which by design only warns, and a throw before the write would
+   * sacrifice the ten good replacements to the one dead one — freezing every
+   * number over a single reworded sentence. */
+  const misses = [];
+  // arch-L15 split what used to be one profile.ts into profile/projects.ts
+  // (the ATS/PR mentions inside the candidai project) and profile/openSource.ts
+  // (upstreamMergedPRs + the recentGrowth entry) — a pattern below can land in
+  // either, or both (the "N merged PRs to the public career-ops project" line
+  // appears once in each), so every sub() now tries both buffers rather than one.
+  const files = [
+    { path: projectsPath, src: readFileSync(projectsPath, "utf8") },
+    { path: openSourcePath, src: readFileSync(openSourcePath, "utf8") },
+  ];
+  const sub = (re, to) => {
+    if (!files.some((f) => (f.src.match(re) || []).length)) misses.push(`${re} (profile/projects.ts + profile/openSource.ts)`);
+    for (const f of files) f.src = f.src.replace(re, to);
+  };
+
+  sub(/"\d+ ATS\/board providers"/, `"${providers} ATS/board providers"`);
+  sub(/\d+ ATS & job-board provider integrations/, `${providers} ATS & job-board provider integrations`);
+  // Four more sites this script could not see until 2026-08-24, and which had
+  // therefore frozen while the ones above kept moving: the case study said 76
+  // providers and 62 providers on the same page, and 17 merged PRs and 4 merged
+  // PRs. Every number below is the same fact as one above, so it belongs to the
+  // same refresh or it goes stale again by definition.
+  sub(/\{ value: "\d+", label: "ATS & job-board providers" \}/, `{ value: "${providers}", label: "ATS & job-board providers" }`);
+  sub(/\d+ ATS & job-board provider modules/, `${providers} ATS & job-board provider modules`);
+  sub(/"\d+ ATS\/job-board providers"/, `"${providers} ATS/job-board providers"`);
+  sub(/\{ value: "\d+", label: "PRs merged upstream" \}/, `{ value: "${prs}", label: "PRs merged upstream" }`);
+  /* REMOVED, not repaired: `cardMedia`'s hand-written alt text.
+   *
+   * This pattern maintained the "Candidai — active, 24 PRs merged upstream"
+   * string in profile.ts's cardMedia map. It had already gone dead once when
+   * the house dash sweep turned that em dash into a colon, and the daily
+   * refresh exited 1 for eight straight days (2026-08-20 to 08-27) — and
+   * because it dies at this step, every later step stopped running, which is
+   * how chessDeep.ts reached 29 days stale while its own alarm stayed green.
+   *
+   * The string is gone for good now: cardMedia is derived from the registry
+   * (`alt: `${p.name}: ${p.status}``), and `status` is kept current by the
+   * `status: "Active · N PRs merged to public career-ops"` substitution above.
+   * So the alt text still carries a live PR count — it just inherits it
+   * instead of keeping a second copy for this script to chase. One less
+   * hand-written surface is one less pattern that can quietly stop matching.
+   */
+  // Three more, found the same day, that the patterns above missed because they
+  // word the same fact differently ("merged to public career-ops", not "merged
+  // upstream"). Matching the NUMBER beside the phrase rather than a whole
+  // sentence keeps this working when the prose is edited.
+  sub(/\d+ merged PRs to the public career-ops project/g, `${prs} merged PRs to the public career-ops project`);
+  // A third wording of the same fact, "merged pull requests AGAINST the public
+  // career-ops REPOSITORY", which neither the "to the public career-ops
+  // project" pattern nor the digit scan could reach.
+  sub(/\d+ merged pull requests against the public career-ops repository/g, `${prs} merged pull requests against the public career-ops repository`);
+  // The trailing clause (org membership, etc.) is captured and preserved rather than
+  // rewritten: hand-editing the status line used to kill this pattern outright, and a dead
+  // pattern freezes the PR count at whatever it last wrote while the script still exits 0.
+  sub(
+    /status: "Active · \d+ PRs merged to public career-ops(?<rest>[^"]*)"/,
+    (_m, rest) => `status: "Active · ${prs} PRs merged to public career-ops${rest}"`,
+  );
+  // The single source the résumé prints, so it stops disagreeing with the rest
+  // of the site by using the curated array's length instead.
+  sub(/export const upstreamMergedPRs = \d+;/, `export const upstreamMergedPRs = ${prs};`);
+  for (const f of files) writeFileSync(f.path, f.src);
+
+  // The Fan-out Lab's ring size lives in its own file, so it needs its own
+  // write — chaining it onto profile.ts's contents would never have matched.
+  // It was a bare 62 while this same script kept profile.ts at 78: the lab
+  // understating the very work it exists to demonstrate.
+  const fanoutRe = /const TOTAL_PROVIDERS = \d+;/;
+  const fanout = readFileSync(fanoutPath, "utf8");
+  if (!fanoutRe.test(fanout)) misses.push(`${fanoutRe} (FanoutLab.tsx)`);
+  writeFileSync(fanoutPath, fanout.replace(fanoutRe, `const TOTAL_PROVIDERS = ${providers};`));
+
+  /* careerOpsUpstream.ts said in its own header that this script refreshes it. It did
+   * not: the file was never opened here, so providerCount sat at 78 while the
+   * same run wrote 81 into the case study and the lab. A comment claiming a
+   * refresh that no code performs is the quietest version of this whole bug
+   * class, and candidaiNumbers.test.ts is what finally caught it. */
+  const providerRe = /export const providerCount = \d+;/;
+  const starRe = /export const upstreamStars = "[^"]*";/;
+  const hs = readFileSync(careerOpsUpstreamPath, "utf8");
+  if (!providerRe.test(hs)) misses.push(`${providerRe} (careerOpsUpstream.ts)`);
+  if (!starRe.test(hs)) misses.push(`${starRe} (careerOpsUpstream.ts)`);
+  /* projectCards.ts hand-copies projects.ts (projectCards.test.ts enforces it),
+   * but projects.ts interpolates ${upstreamStars} while the card hardcodes the
+   * rendered string. So every star refresh silently desynced the two until the
+   * test failed and somebody re-typed it. Rewriting the literal here closes it. */
+  const cardsPath = join(root, "src", "data", "profile", "projectCards.ts");
+  const cardStarRe = /\(⭐[^)]*\)/g;
+  const cards = readFileSync(cardsPath, "utf8");
+  if (!cardStarRe.test(cards)) misses.push(`${cardStarRe} (projectCards.ts)`);
+  writeFileSync(cardsPath, cards.replace(cardStarRe, `(⭐${stars})`));
+
+  writeFileSync(
+    careerOpsUpstreamPath,
+    hs
+      .replace(providerRe, `export const providerCount = ${providers};`)
+      .replace(starRe, `export const upstreamStars = "${stars}";`),
+  );
+
+  /* The other half of the same hole: a number this script never had a pattern
+   * for at all. Reading whatever WORD sits in front of the phrase, rather than
+   * \d+, is what makes "Seventeen merged pull requests" visible — a digit scan
+   * could never have seen it, and it had been wrong for months.
+   *
+   * process.exitCode rather than throw: a dead regex is a repo bug, not the
+   * network blip the catch below exists to swallow, and setting it after the
+   * writes means a partial refresh still lands while `npm run refresh` fails
+   * loudly enough that somebody fixes the prose. */
+  const joined = files.map((f) => f.src).join("\n");
+  for (const [, n] of joined.matchAll(/(\w+) merged (?:PRs|pull requests)/g))
+    if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile/{projects,openSource}.ts`);
+  if (misses.length) {
+    console.error(`[gen-candidai-stats] dead patterns / stale counts:\n  ${misses.join("\n  ")}`);
+    process.exitCode = 1;
+  }
+
+  console.log(`[gen-candidai-stats] prs=${prs} providers=${providers}`);
+} catch (err) {
+  console.warn("[gen-candidai-stats] fetch failed, leaving profile.ts untouched —", err.message);
+}

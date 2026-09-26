@@ -71,4 +71,17 @@ describe("destinations()", () => {
       expect(d.externalLinks).toBe(p.links);
     }
   });
+
+  it("still pavilions /weeb even though it opts out of the homepage wall", () => {
+    // /weeb carries `wall: false` (surfaces.ts) — off the homepage's card
+    // wall only. roomDestinations() and Pavilions.tsx both iterate PLACEMENTS
+    // (worldData.ts, off ROOM_PLACEMENTS/cityData.ts), a registry `wall`
+    // never touches — this pins that a future refactor reusing the wall's
+    // own `wallSurfaces` filter for the drivable world can't silently drop
+    // a pavilion instead of just a homepage tile.
+    const weeb = ROOMS.find((r) => r.to === "/weeb");
+    expect(weeb?.wall).toBe(false);
+    expect(roomDestinations().some((d) => d.key === "room:/weeb")).toBe(true);
+    expect(destinations().some((d) => d.key === "room:/weeb")).toBe(true);
+  });
 });

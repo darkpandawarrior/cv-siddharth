@@ -102,8 +102,13 @@ function rank(san: string): number {
   return score;
 }
 
+// Schwartzian transform: rank() does string scanning, and sort()'s comparator
+// is called O(n log n) times — computing rank once per move up front instead
+// of once per comparison is the difference between O(n) and O(n log n) scans.
 function order(moves: string[]) {
-  moves.sort((a, b) => rank(b) - rank(a));
+  const ranked = moves.map((san) => [rank(san), san] as const);
+  ranked.sort((a, b) => b[0] - a[0]);
+  for (let i = 0; i < moves.length; i++) moves[i] = ranked[i][1];
 }
 
 function negamax(

@@ -1,4 +1,5 @@
-import { test, expect } from "./lib/test.ts";
+import { test, expect, waitForHydration } from "./lib/test.ts";
+import { SECTION_ID_LIST } from "../src/lib/navigation.ts";
 
 // The rail (src/AnomalyRail.tsx) and its instrument-view overlay
 // (src/InstrumentView.tsx) are the most focus-sensitive component on the
@@ -140,4 +141,45 @@ test("rail canvas is non-blank under prefers-reduced-motion (C1 regression)", as
   // until it hydrates) — it says nothing about whether useCanvasLoop's
   // effect, which requires the boundary to have actually hydrated, has run.
   await expect.poll(countPixels, { timeout: 5_000 }).toBeGreaterThan(0);
+});
+
+// The Evidence Atlas, home-scenes-and-chrome: AnomalyRail draws section
+// wayfinding on "/" — one tick per SECTION_ID_LIST entry, additive alongside
+// the Timeline facet nav above (unchanged, per the two tests at the top of
+// this file). "Unchanged elsewhere" means no second nav shows up off-home.
+test.describe("anomaly rail — section wayfinding (home only)", () => {
+  test("on / the rail shows one tick per SECTION_ID_LIST entry and the active marker moves after scrolling to #skills", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+    await waitForHydration(page);
+
+    const sections = page.getByRole("navigation", { name: "Sections" });
+    // <button>, not <Link> — TanStack's <Link> marks any link to the current
+    // pathname "active" regardless of hash, which stamped all thirteen with
+    // its own aria-current and ate the Timeline nav's pointer events beneath
+    // it (see AnomalyRail.tsx's comment on the switch).
+    const ticks = sections.getByRole("button");
+    await expect(ticks).toHaveCount(SECTION_ID_LIST.length);
+
+    for (const tick of await ticks.all()) {
+      await expect(tick).toHaveAccessibleName(/.+/);
+    }
+
+    // "top" is the section a fresh load starts on.
+    await expect
+      .poll(() => sections.locator('button[aria-current="true"]').count())
+      .toBe(1);
+
+    await page.locator("#skills").scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => sections.locator('button[aria-current="true"]').getAttribute("aria-label"))
+      .toBe("Skills");
+  });
+
+  test("the section nav does not render off the home route", async ({ page }) => {
+    await page.goto("/lab", { waitUntil: "networkidle" });
+    await expect(page.getByRole("navigation", { name: "Sections" })).toHaveCount(0);
+    // The facet nav is exactly what it always was there — nine links, same
+    // as the top-of-file test asserts on "/".
+    await expect(page.getByRole("navigation", { name: "Timeline" }).getByRole("link")).toHaveCount(9);
+  });
 });

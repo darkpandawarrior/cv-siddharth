@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 import { projectPaths, readPaths, surfacePaths } from "../src/data/routes.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = "https://siddharth-pandalai.vercel.app";
 
 /**
  * `priority` is a hint, not a ranking, and crawlers largely ignore it — it's

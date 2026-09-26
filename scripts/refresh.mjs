@@ -8,7 +8,7 @@
  * behind the two worst pipeline failures this repo has had:
  *
  *   - The daily job exited 1 for eight consecutive days (2026-08-20 to 08-27)
- *     on ONE dead regex in gen-hiresignal-stats, which sits fifth. The
+ *     on ONE dead regex in gen-candidai-stats, which sits fifth. The
  *     thirteen generators after it did not run at all for eight days.
  *   - chessDeep.ts reached 29 days stale while its own freshness alarm stayed
  *     green, because gen:chess-deep runs seventeenth and simply never

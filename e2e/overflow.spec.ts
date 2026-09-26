@@ -41,19 +41,28 @@ const VIEWPORTS = [
   { width: 1920, height: 1080 },
 ];
 /**
- * /blueprint is exempt, and only /blueprint.
+ * /blueprint and /globe are exempt, and only these two.
  *
- * It is not a page with a layout — it is an r3f scene whose cards are drei
- * <Html> portals positioned in WORLD space inside a <group>, on a canvas you
- * orbit and pan. "Ghosts In The Recomposition" sits at x:2520 in
+ * /blueprint is not a page with a layout — it is an r3f scene whose cards are
+ * drei <Html> portals positioned in WORLD space inside a <group>, on a canvas
+ * you orbit and pan. "Ghosts In The Recomposition" sits at x:2520 in
  * blueprintData.ts and is reached by moving the camera, not by scrolling. A
  * viewport-edge test cannot say anything true about it, so asserting here
  * would only teach the next person to add exemptions.
  *
- * Its DOM chrome — the toolbar, the back link, the tour controls — is still
- * covered by e2e/a11y.spec.ts at 390px.
+ * /globe's reach columns (ReachColumns.tsx, G15/G16) are the same shape: the
+ * install-floor and upstream-PRs labels are drei <Html position={...}>
+ * billboards standing on the globe surface at a fixed world position,
+ * distance-scaled toward the camera — their screen X/Y (and therefore
+ * whether they land past the viewport edge) is 3D projection math, the same
+ * "not a CSS layout" reason blueprint's cards are exempt. Confirmed: at
+ * EVERY breakpoint from 375 to 1920px, reproducibly (a fixed-ish overshoot,
+ * not one flaky frame) — GlobePanel's own 2D fact list (the SSR/no-WebGL
+ * fallback and the same route's real DOM overlay) already wraps correctly
+ * (GlobePanel.tsx's `min-w-0` fix) and is NOT what this exemption covers;
+ * only the 3D billboard is.
  */
-const CANVAS_ROUTES = new Set(["/blueprint"]);
+const CANVAS_ROUTES = new Set(["/blueprint", "/globe"]);
 
 const ROUTES = [...surfaces.map((s) => s.to), "/", "/project/doori", "/read/deadline"].filter(
   (p) => !CANVAS_ROUTES.has(p),

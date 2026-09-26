@@ -1,4 +1,7 @@
-// Split from profile.ts along its export seams (arch-L15).
+// Split from profile.ts along its export seams (arch-L15). `provenIn` (needs
+// the full `projects` array) moved to skillsProven.ts: keeping it here made
+// the plain `skills`/`resumeSkills` arrays below drag profile-projects-heavy
+// in behind them too (e2e/spine-payload.spec.ts) — see that file's comment.
 
 export const skills: { group: string; items: string[] }[] = [
   {
@@ -41,7 +44,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
   },
   {
     group: "Concurrency & DI",
-    items: ["Kotlin Coroutines", "Flow operators & reactive streams", "StateFlow / SharedFlow", "RxJava (legacy interop)", "Structured concurrency", "Hilt", "Dagger", "Koin", "Dependency injection", "LiveData", "LiveData"],
+    items: ["Kotlin Coroutines", "Flow operators & reactive streams", "StateFlow / SharedFlow", "RxJava (legacy interop)", "Structured concurrency", "Hilt", "Dagger", "Koin", "Dependency injection", "LiveData"],
   },
   {
     group: "Data & Networking",
@@ -64,7 +67,7 @@ export const resumeSkills: { group: string; items: string[] }[] = [
     // Honest ceiling: claims.json verifies 31 unit-test files and 4 androidTest
     // files at Dice — no framework name, coverage figure or outcome, since none
     // of those is verified and the guard regex forbids the outcome phrasing.
-    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "GitLab CI", "ProGuard / R8", "Git", "Android Studio", "Figma", "Unit testing and instrumented testing", "Macrobenchmark & Baseline Profiles", "Google Play Console & release management", "Android Studio", "Firebender + MCP agentic workflows", "LLM provider integration (Groq, Gemini, Claude)"],
+    items: ["Gradle (Kotlin DSL)", "AGP 9", "Fastlane", "GitLab CI", "ProGuard / R8", "Git", "Android Studio", "Figma", "Unit testing and instrumented testing", "Macrobenchmark & Baseline Profiles", "Google Play Console & release management", "Firebender + MCP agentic workflows", "LLM provider integration (Groq, Gemini, Claude)"],
   },
 ];
 

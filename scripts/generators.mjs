@@ -67,10 +67,11 @@ export const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  * @property {string} id
  * @property {string} script - filename under scripts/
  * @property {string|null} npmName - the package.json script key that runs
- *   it, or null for the four manual/occasional scripts the README already
+ *   it, or null for the manual/occasional scripts the README already
  *   documents as having no alias (gen-store-archive/siblings/flavours,
- *   gen-excelsior — see check-generated.mjs's own comment on the last of
- *   those).
+ *   gen-excelsior — see check-generated.mjs's own comment on gen-excelsior).
+ *   gen-loopdown-art has an alias (gen:loopdown-art) and runs in the refresh
+ *   stage (P1-wire).
  * @property {GeneratorKind} kind
  * @property {string[]} inputs - repo-relative paths (or repo-relative paths
  *   inside a sibling checkout) this reads that ANOTHER node produces. Only
@@ -103,10 +104,33 @@ export const GENERATORS = [
   // the-loopdown's registry.json off raw.githubusercontent.com (see
   // fetchWithTimeout in gen-loopdown.mjs) — the exact live-fetch-in-prebuild
   // shape F3 names for gen-anthology. Same fix: network kind, refresh only.
+  // check REMOVED by the freshness-pipelines lane: writing.ts now carries a
+  // wall-clock writingGeneratedAt (MUST_BE_STAMPED needs a real date, not a
+  // value derived from committed bytes), and check-generated.mjs re-runs
+  // every DETERMINISTIC node against LIVE data on every PR with no prior
+  // `npm run refresh` — a wall-clock stamp there would disagree with the
+  // committed file on every single day after the commit, on content that
+  // never changed. Exactly the failure class check-generated.mjs's own
+  // header comment documents for gen-ops.mjs's opsGeneratedAt. This node was
+  // "network" kind and in DETERMINISTIC at the same time even before this
+  // lane, which check-generated.mjs's own docstring says should not happen;
+  // this fixes that inconsistency rather than adding a second instance of it.
   { id: "loopdown", script: "gen-loopdown.mjs", npmName: "gen:loopdown", kind: "network",
-    inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7, check: 6 } },
+    inputs: [], outputs: ["src/data/writing.ts"], stages: { refresh: 7 } },
+  // Manual/occasional, same posture as gen-starfield.mjs and gen-globe-earth.mjs
+  // below: 3.39 MB of committed webp over the-loopdown's raw.githubusercontent.com
+  // (M38), never re-encoded from anything in this repo. Exits 0 on any failure
+  // and keeps whatever heavy/loopdown/ and loopdownArt.ts already have (its own
+  // header explains why that is the one deliberate difference from loopdown and
+  // anthology just above, which exit 1). Runs in the refresh stage now (P1-wire,
+  // M22): loopdownArt.ts already carries its own generatedAt stamp, so
+  // check-freshness.mjs watches it automatically once it lands on a scheduled run.
+  { id: "loopdown-art", script: "gen-loopdown-art.mjs", npmName: "gen:loopdown-art", kind: "network",
+    inputs: [], outputs: ["src/data/loopdownArt.ts"], stages: { refresh: 29 } },
+  // check REMOVED for the same reason as loopdown just above: anthology.ts now
+  // carries a wall-clock generatedAt.
   { id: "anthology", script: "gen-anthology.mjs", npmName: "gen:anthology", kind: "network",
-    inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8, check: 7 } },
+    inputs: [], outputs: ["src/data/anthology.ts"], stages: { refresh: 8 } },
   { id: "timeline", script: "gen-timeline.mjs", npmName: "gen:timeline", kind: "network",
     inputs: [], outputs: ["src/data/timeline.ts"], stages: { refresh: 9 } },
   // Re-shapes the already-committed timeline.ts (itself excluded from check
@@ -147,8 +171,12 @@ export const GENERATORS = [
   { id: "world-plate", script: "gen-world-plate.mjs", npmName: "gen:world-plate", kind: "local",
     inputs: ["src/data/timeline.ts"],
     outputs: ["src/world/corridorPlate.ts", "heavy/p/world/corridor.png"], stages: { refresh: 19 } },
+  // refresh added by the freshness-pipelines lane: repo-stats only reads the
+  // Compose twin (../cv-siddharth-kmp), which refresh-media.yml already
+  // checks out for check:generated — it had no refresh entry purely because
+  // nobody had wired it, not because the sibling it needs was ever missing.
   { id: "repo-stats", script: "gen-repo-stats.mjs", npmName: "gen:repo-stats", kind: "sibling",
-    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { check: 5 } },
+    inputs: [], outputs: ["src/data/repoStats.ts"], stages: { refresh: 25, check: 5 } },
   { id: "ops", script: "gen-ops.mjs", npmName: "gen:ops", kind: "sibling",
     // evidence.ts added by the arch-L14 lane: gen-ops.mjs's second output,
     // a straight map over THIS array (every node, automated or not) — so a
@@ -171,6 +199,7 @@ export const GENERATORS = [
     inputs: [
       "src/data/store.ts", "src/data/weeb.ts", "src/data/writing.ts", "src/data/anthology.ts",
       "src/data/ops.ts", "src/data/archiveText.ts", "src/data/chess.ts", "src/data/storyMap.ts",
+      "src/data/projectStats.ts", "src/data/careerOpsUpstream.ts", "src/data/galleries.ts",
     ],
     outputs: [
       "../cv-siddharth-kmp/cmp-shared/src/composeMain/kotlin/com/siddharth/cv/shared/data/generated/*.kt",
@@ -199,16 +228,25 @@ export const GENERATORS = [
       "heavy/stutter-app/build-manifest.json",
     ],
     stages: { refresh: 24 } },
+  { id: "providers", script: "gen-providers.mjs", npmName: "gen:providers", kind: "sibling",
+    inputs: [], outputs: ["src/data/providers.ts"], stages: { refresh: 27 } },
   { id: "images", script: "gen-images.mjs", npmName: "gen:images", kind: "local",
     inputs: [], outputs: ["public/**/*.avif", "public/**/*.webp", "public/**/*.mp4"], stages: { build: 15, refresh: 6 } },
+  // Deterministic local node (content-hash stamp, not wall-clock — see its
+  // own header comment): every input is a committed file (profile/core.ts,
+  // routes.ts, projectStats.ts, store.ts), so it belongs in build+check like
+  // the other byte-deterministic local nodes (e.g. compare-sets).
+  { id: "agent-context", script: "gen-agent-context.mjs", npmName: "gen:agent-context", kind: "local",
+    inputs: ["src/data/profile/core.ts", "src/data/routes.ts", "src/data/projectStats.ts", "src/data/store.ts"],
+    outputs: ["public/agent-context.json"], stages: { build: 16, refresh: 28, check: 9 } },
 
   { id: "sync-media", script: "sync-project-media.mjs", npmName: "sync:media", kind: "network",
     inputs: [], outputs: ["public/projects/**"], stages: { refresh: 1 } },
   { id: "showcase", script: "rebuild-showcase.mjs", npmName: "showcase", kind: "network",
     inputs: [], outputs: ["public/projects/*/showcase/**"], stages: { refresh: 2 } },
   { id: "project-stats", script: "gen-project-stats.mjs", npmName: "gen:stats", kind: "network",
-    inputs: [], outputs: ["src/data/projectStats.ts"], stages: { refresh: 3 } },
-  { id: "hiresignal-stats", script: "gen-hiresignal-stats.mjs", npmName: "gen:hiresignal", kind: "network",
+    inputs: [], outputs: ["src/data/projectStats.ts", "src/data/kmpGraph.ts"], stages: { refresh: 3 } },
+  { id: "candidai-stats", script: "gen-candidai-stats.mjs", npmName: "gen:candidai", kind: "network",
     // Partial rewrite, not a fresh banner-carrying file: it splices one
     // updated number into four otherwise hand-authored files. profile.ts
     // itself is a re-export barrel post-arch-L15 — the prose these numbers
@@ -216,12 +254,18 @@ export const GENERATORS = [
     inputs: [],
     outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
+  { id: "oss-stats", script: "gen-oss-stats.mjs", npmName: "gen:oss-stats", kind: "network",
+    // Measures merged/open/closed PR counts via `gh pr list`, not the search
+    // API (career-ops rename trap). Never fails the build on missing gh/auth.
+    inputs: [],
+    outputs: ["src/data/careerOpsUpstream.ts", "src/data/profile/openSource.ts"],
+    stages: { refresh: 4 } },
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",
     inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png"], stages: { refresh: 13 } },
   { id: "weeb", script: "gen-weeb.mjs", npmName: "gen:weeb", kind: "network",
-    inputs: [], outputs: ["src/data/weeb.ts"], stages: { refresh: 14 } },
+    inputs: [], outputs: ["src/data/weeb.ts", "src/data/weebTitles.ts"], stages: { refresh: 14 } },
   { id: "chess-stats", script: "gen-chess-stats.mjs", npmName: "gen:chess", kind: "network",
     inputs: [], outputs: ["src/data/chess.ts", "public/chess/corpus.json", ".chess-cache/lichess-games.json"],
     stages: { refresh: 15 } },
@@ -230,8 +274,13 @@ export const GENERATORS = [
     // committed file — a real dependency its own header comment names.
     inputs: [".chess-cache/lichess-games.json"], outputs: ["src/data/chessDeep.ts"], stages: { refresh: 16 } },
 
+  // check REMOVED, refresh ADDED by the freshness-pipelines lane, same reason
+  // as loopdown/anthology above: archiveText.ts now carries a wall-clock
+  // generatedAt, and it had no refresh entry at all before this — check was
+  // its only automated path, so removing check with nothing added would have
+  // made it purely manual, same trap system-graph's own comment names.
   { id: "archive-text", script: "gen-archive-text.mjs", npmName: "gen:archive-text", kind: "network",
-    inputs: [], outputs: ["src/data/archiveText.ts"], stages: { check: 4 } },
+    inputs: [], outputs: ["src/data/archiveText.ts"], stages: { refresh: 26 } },
 
   // Manual/occasional: no npm alias, no stage. README documents each by name.
   { id: "store", script: "gen-store.mjs", npmName: "gen:store", kind: "network",
@@ -244,6 +293,16 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
+  // Manual annual refresh, deliberately NOT wired into any build/refresh/check
+  // chain (its own header says so, live-data-spec.md#1.3, #4 R6): the mean
+  // barely moves year to year.
+  { id: "pune-normals", script: "gen-pune-normals.mjs", npmName: "gen:pune-normals", kind: "network",
+    inputs: [], outputs: ["src/data/generated/puneNormals.ts"], stages: {} },
+  // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
+  // header says so, live-data-spec.md#1.3, #4 R6): a 34 MB CSV fetch, run by
+  // hand when the star catalogue needs a refresh.
+  { id: "starfield", script: "gen-starfield.mjs", npmName: "gen:starfield", kind: "network",
+    inputs: [], outputs: ["public/sky/stars-hyg41-m5.bin"], stages: {} },
   // Manual/occasional, same posture as gen-excelsior.mjs above (its own header
   // says so): needs `tesseract` on PATH, a system binary no CI runner can be
   // assumed to have. No network call of its own — OCRs the pages the sibling
@@ -258,17 +317,57 @@ export const GENERATORS = [
   // autorun`, not from any of the three chains this file feeds.
   { id: "lighthouse-summary", script: "gen-lighthouse-summary.mjs", npmName: "gen:lighthouse-summary", kind: "local",
     inputs: [], outputs: ["src/data/generated/lighthouse.ts"], stages: {} },
-  // Manual/occasional, run after `npm run build` rather than before it (see
-  // its own docstring): every other node here produces a SOURCE file the
-  // vite build then consumes, and this one consumes the vite build's OWN
-  // output (dist/server/server.js) to hash each route's actual rendered
-  // inline scripts, so it structurally cannot join prebuild/predev. Partial
-  // rewrite of an otherwise hand-authored file, same posture as
-  // hiresignal-stats above: it splices one header's value into vercel.json,
-  // not a fresh banner-carrying file.
+  // postbuild hashes the exact prerendered HTML deployed with its middleware.
+  // The policy manifest and SSR response helper must come from this same build.
   { id: "csp", script: "gen-csp.mjs", npmName: null, kind: "local",
-    inputs: [], outputs: ["vercel.json"], stages: {} },
+    inputs: [], outputs: ["dist/csp-policy.json", "dist/csp/response.mjs"], stages: {} },
+  // Manual/occasional (its own header says so, G13): `npm run gen:river`.
+  // Fetches the Overpass mirrors on demand; keeps the committed snapshot on
+  // total mirror failure rather than failing the build.
+  { id: "river-osm", script: "gen-river-osm.mjs", npmName: "gen:river", kind: "network",
+    inputs: [], outputs: ["src/data/osm/mutha.json"], stages: {} },
+  // Manual/occasional, same posture as gen-pune-normals.mjs above (its own
+  // header says so, G13): bakes the Black Marble night-radiance land mask by
+  // hand; the build must never block on NASA's server.
+  { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: "gen:globe-earth", kind: "network",
+    inputs: [], outputs: ["heavy/globe/earth-720x360.bin"], stages: {} },
+  // Manual/occasional, same posture as gen-globe-earth.mjs above (its own
+  // header says so, G13): bakes country centroids from Natural Earth's
+  // admin-0 GeoJSON mirror by hand.
+  { id: "globe-geo", script: "gen-globe-geo.mjs", npmName: "gen:globe-geo", kind: "network",
+    inputs: [], outputs: ["src/world/globe/centroids.ts"], stages: {} },
+  // Deterministic local node (living-ledger-spec §3.4 D5): reads GRAMMAR +
+  // the committed Ledger (src/world/v2/ledger.ts), which itself reads the
+  // seven sources below through src/data/*.ts — so it must run after all
+  // seven refresh. Real input edges (not just stage-number ties) enforce
+  // that order via stageOrder's topological sort. P2-wire (M22, M62).
+  // Manual/occasional (M68): orchestrates the ~22 World v2 Blender landmark
+  // kits (needs a local Blender 5.2 LTS binary, one process at a time, G0
+  // cap) — never registered in the build pipeline, same posture as the other
+  // manual generators above.
+  { id: "world-models", script: "gen-world-models.mjs", npmName: "gen:world-models", kind: "local",
+    inputs: [], outputs: ["heavy/world/models/*.glb"], stages: {} },
+  // Manual/scheduled only (idea-atlas C4, M31): calls a live provider, so it
+  // is never a required build/refresh/check gate — runs only from
+  // ai-golden-eval.yml (workflow_dispatch + weekly, P2-wire). Writes
+  // "not-run" and exits 0 with no provider key configured.
+  { id: "ai-golden-eval", script: "eval-ai-golden.mjs", npmName: null, kind: "private-env",
+    inputs: [], outputs: ["src/data/generated/aiEval.ts"], stages: {} },
+  { id: "world-grammar", script: "gen-world-grammar.mjs", npmName: "gen:world-grammar", kind: "local",
+    inputs: [
+      "src/data/projectStats.ts", "src/data/chess.ts", "src/data/store.ts",
+      "src/data/writing.ts", "src/data/weeb.ts", "src/data/timeline.ts", "src/data/history.ts",
+    ],
+    outputs: ["src/world/v2/generated/growthCounts.json", "src/world/v2/generated/placements.json"],
+    stages: { refresh: 29 } },
 ];
+
+// gen-ops scans every top-level data file. Run it after their producers so
+// refreshing history or the system graph cannot invalidate the perimeter.
+GENERATORS.find((g) => g.id === "ops").inputs = GENERATORS
+  .filter((g) => g.id !== "ops")
+  .flatMap((g) => g.outputs)
+  .filter((out) => /^src\/data\/[^/]+\.ts$/.test(out));
 
 // Fold freshnessSla.ts's SLA_DAYS in as a field on the node that owns each
 // named file, rather than a second table a reader has to cross-reference by

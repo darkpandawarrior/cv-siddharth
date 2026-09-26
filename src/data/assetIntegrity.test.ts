@@ -7,7 +7,7 @@ import { join, extname } from "node:path";
  *
  * scripts/sync-project-media.mjs pulls each project's media over
  * raw.githubusercontent, and raw.githubusercontent serves the POINTER — about
- * 130 bytes of text — for anything the source repo tracks in Git LFS. DEADLOCK's
+ * 130 bytes of text — for anything the source repo tracks in Git LFS. Stutter's
  * .gitattributes puts every binary asset through LFS, so six of its files came
  * back as pointers and the sync wrote them straight over the real committed
  * images: title.webp went from 13 KB of WEBP to a text file, and gen-images.mjs

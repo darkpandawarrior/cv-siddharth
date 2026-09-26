@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { AdditiveBlending, Color, MathUtils } from "three";
 import { readColor } from "./themeColorThree.ts";
+import { useReducedMotion } from "./SceneActivity.tsx";
 import type { BufferAttribute, Group, Points as ThreePoints } from "three";
 
 /**
@@ -307,7 +308,6 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
 
 export interface ParticleHeroSceneProps {
   count: number;
-  reducedMotion: boolean;
   paused: boolean; // driven by the parent's IntersectionObserver
   // Desktop fine-pointer + motion-safe: enables idle cursor-lean + drag-to-spin.
   // Tap-to-kick works regardless of this flag — a stationary press is never a
@@ -320,8 +320,15 @@ export interface ParticleHeroSceneProps {
  * visible and motion-safe, "never" while scrolled off-screen (stops the
  * internal rAF loop entirely), "demand" for reduced-motion (paints exactly
  * once on mount, then nothing — invalidate() is never called again).
+ *
+ * reducedMotion is read live here (useReducedMotion(), a useSyncExternalStore
+ * over matchMedia's own change event) rather than taken as a prop snapshotted
+ * once by the parent's mount effect — a visitor who toggles the OS setting
+ * mid-session, or a Playwright test calling emulateMedia after load, now
+ * actually changes the frameloop and the swarm's own useFrame early-return.
  */
-export default function ParticleHeroScene({ count, reducedMotion, paused, interactive }: ParticleHeroSceneProps) {
+export default function ParticleHeroScene({ count, paused, interactive }: ParticleHeroSceneProps) {
+  const reducedMotion = useReducedMotion();
   const frameloop = reducedMotion ? "demand" : paused ? "never" : "always";
   return (
     <Canvas

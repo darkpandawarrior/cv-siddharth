@@ -89,7 +89,7 @@ function useLiveSignal<T>(url: string, intervalMs = 20000): { data: T | null; er
 
 1. **Footer chip** (`SiteFooter.tsx`) — album art thumbnail + track name (marquee if
    overflowing) when playing, "last played: X" otherwise; a compact GitHub-activity
-   line ("pushed to Mileway · 2h ago"). Links out to the Spotify track / GitHub repo.
+   line ("pushed to Doori · 2h ago"). Links out to the Spotify track / GitHub repo.
 2. **Terminal** (`Terminal.tsx`) — `spotify`/`np` command (now playing + last 5
    tracks) and `activity`/`gh` command (recent GitHub events), added to the same
    `cmds` array as `uptime`/`neofetch`, same terminal-styled output.
@@ -130,7 +130,7 @@ choice.
 
 ## Roadmap (researched, not built)
 
-- **CI badge strip** for Mileway/Kursi/PaymentsLab — keyless GitHub Actions status
+- **CI badge strip** for Doori/Gaddi/PaymentsLab-KMP — keyless GitHub Actions status
   API, same pattern as the GitHub-activity feature, cheap to add later.
 - **WakaTime coding-time stats** — needs a WakaTime account + API key (not
   currently set up).

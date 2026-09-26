@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Command, CornerDownLeft, MessageCircle, Compass, PenLine, Target, TerminalSquare } from "lucide-react";
-import { projects } from "./data/profile.ts";
+import { projectCards } from "./data/profile/projectCards.ts";
 import { SURFACES } from "./rooms.tsx";
-import { openChat } from "./FloatingChat.tsx";
+import { openChat } from "./lib/chatBus.ts";
 import { BOOKS_BEFORE_BROS } from "./data/writingMeta.ts";
 import { useSectionNav, SECTION_ID_LIST, type SectionId } from "./lib/navigation.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
@@ -85,7 +85,7 @@ function pushMru(id: string): void {
   }
 }
 
-const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
+export const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon: React.ReactNode }> = {
   top: { label: "Top / Hero", icon: <Compass size={15} /> },
   fit: {
     label: "Fit check — paste a job description",
@@ -99,7 +99,7 @@ const SECTION_JUMPS: Record<SectionId, { label: string; keywords?: string; icon:
   },
   work: { label: "Case studies", icon: <Compass size={15} /> },
   projects: { label: "Projects", icon: <Compass size={15} /> },
-  source: { label: "The Source — every public repo", keywords: "github repos code open source projects", icon: <TerminalSquare size={15} /> },
+  source: { label: "Resources — projects, docs and demos", keywords: "github repos code open source kdocs api docs live builds showcase fdroid project directory", icon: <TerminalSquare size={15} /> },
   shipped: {
     label: "Apps you can install",
     keywords: "play store shipped published apps install listing rating white label",
@@ -260,16 +260,14 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         icon: <MessageCircle size={15} />,
         run: () => openChat(),
       },
-      ...projects
-        .filter((p) => p.detail)
-        .map((p) => ({
-          id: `project-${p.slug}`,
-          label: `Open project: ${p.name}`,
-          hint: "Case study",
-          keywords: `${p.tagline} ${p.stack.join(" ")}`,
-          icon: <Compass size={15} />,
-          run: () => navigate({ to: "/project/$slug", params: { slug: p.slug } }),
-        })),
+      ...projectCards.map((p) => ({
+        id: `project-${p.slug}`,
+        label: `Open project: ${p.name}`,
+        hint: "Case study",
+        keywords: `${p.tagline} ${p.stack.join(" ")}`,
+        icon: <Compass size={15} />,
+        run: () => navigate({ to: "/project/$slug", params: { slug: p.slug } }),
+      })),
     ],
     [navigate, goToSection],
   );

@@ -33,5 +33,5 @@ An on-device AI assistant answers questions over your own trips and expenses —
 00:01:15.743 --> 00:01:23.030
 Under it all sits a plugin-composition platform — four personas reshape the entire app from one account.
 
-00:01:23.030 --> 00:01:32.744
-And the same shared Kotlin core drives the phone, the watch, and this desktop window — five platforms, one codebase, zero backend.
+00:01:23.030 --> 00:01:31.664
+And the same shared Kotlin core drives the phone, the watch, and this desktop window — five platforms, one shared core.

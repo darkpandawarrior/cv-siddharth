@@ -1,6 +1,30 @@
 import { useCallback, useRef, useState } from "react";
 import { chatErrorText, isAbortError, streamReply } from "./chatClient.ts";
 import { matchJd, toFitReport } from "./skillMatch.ts";
+// A value import from api/_lib on purpose (not the type-only imports the rest
+// of src/ uses for that directory): jd-condense.ts is pure string work with
+// no server-only API (no `process`, no Node builtin), so it bundles into the
+// client fine, and the dossier below needs the SAME split chat-handler.ts
+// actually sent upstream — not a second, hand-kept copy of the heading
+// regexes. (The promptFence.ts extraction a sibling lane, P2-13b, does for
+// prompt-guard.ts is the tidier long-term shape for this kind of sharing;
+// out of scope here since this lane doesn't own a new src/lib file to put it
+// in.)
+import { jdSections } from "../../api/_lib/jd-condense.ts";
+
+/**
+ * SYS-7's dossier chit: click-to-reveal provenance behind a JD Fit score —
+ * which of his skills the JD's own words matched, which sections of the
+ * pasted description survived jd-condense's boilerplate trim (or none, on a
+ * JD short enough that condensing never ran), and every heading it dropped.
+ * `report.source` (chatBlocks.ts's JdFitReport) already names the engine —
+ * this is what it doesn't carry.
+ */
+export interface JdFitDossier {
+  matchedSkills: string[];
+  keptSections: string[];
+  trimmedSections: string[];
+}
 
 /**
  * One update as a JD analysis progresses. `content` is the raw reply text —
@@ -8,11 +32,15 @@ import { matchJd, toFitReport } from "./skillMatch.ts";
  * renders; parse it with parseChatBlocks/parseJdFit (chatBlocks.ts) for a
  * JdFitReport. `done` mirrors parseChatBlocks' own flag: false while more
  * tokens may still arrive, true once the analysis has settled (model reply,
- * or every provider failed).
+ * or every provider failed). `dossier` is computed once, from the pasted text
+ * alone, and carried on every update from the first (the offline card) —
+ * unlike the report itself it never changes as the model's reply supersedes
+ * the instant match, so a caller can hold onto whichever copy arrived last.
  */
 export interface JdFitUpdate {
   content: string;
   done: boolean;
+  dossier?: JdFitDossier;
 }
 
 /**
@@ -43,8 +71,17 @@ export async function runJdFit(
   const jdMatch = matchJd(content);
   const hasOffline = jdMatch.asked > 0;
   const offlineCard = (final: boolean) => (hasOffline ? `[[jdfit:${JSON.stringify(toFitReport(jdMatch, final))}]]` : "");
+  // Computed once from the pasted text alone — never changes as the model's
+  // reply supersedes the offline card, so every onUpdate call below carries
+  // the same copy.
+  const sections = jdSections(content);
+  const dossier: JdFitDossier = {
+    matchedSkills: jdMatch.matched.map((m) => m.skill.name),
+    keptSections: sections.kept,
+    trimmedSections: sections.trimmed,
+  };
 
-  onUpdate({ content: offlineCard(false), done: false });
+  onUpdate({ content: offlineCard(false), done: false, dossier });
 
   // The model's answer SUPERSEDES the offline card rather than appending to
   // it — two scorecards stacked in one bubble is worse than either alone.
@@ -56,7 +93,7 @@ export async function runJdFit(
       (delta) => {
         streamed = (superseded ? streamed : "") + delta;
         superseded = true;
-        onUpdate({ content: streamed, done: false });
+        onUpdate({ content: streamed, done: false, dossier });
       },
       "jd",
       undefined,
@@ -70,10 +107,11 @@ export async function runJdFit(
     onUpdate({
       content: hasOffline && !superseded ? `${offlineCard(true)}\n\n${chatErrorText(err)}` : chatErrorText(err),
       done: true,
+      dossier,
     });
     return;
   }
-  onUpdate({ content: streamed, done: true });
+  onUpdate({ content: streamed, done: true, dossier });
 }
 
 /** Thin React wrapper around runJdFit — see it for the actual contract. */

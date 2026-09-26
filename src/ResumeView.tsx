@@ -2,6 +2,7 @@ import { ArrowLeft, Github, Globe, Linkedin, PenLine, Printer } from "lucide-rea
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { profile, resumeMetrics, experience, education, resumeSkills, skills, languages, competencies, projectCards, openSource, upstreamMergedPRs, upstreamStars} from "./data/profile.ts";
+import { mifosMergedPRs } from "./data/careerOpsUpstream.ts";
 import { useSectionNav } from "./lib/navigation.ts";
 import { emphasise } from "./lib/resumeEmphasis.tsx";
 import { concurrentCompanies } from "./lib/resumeMeta.ts";
@@ -136,7 +137,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
               phone, the number a recruiter most wants to tap was the one thing
               they could not. Spaces are stripped from the href (a `tel:` URI
               takes no whitespace) while the displayed text keeps them. */}
-          <address className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm not-italic text-zinc-600">
+          <address className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm not-italic text-zinc-600 [&_a]:min-h-6 [&_a]:inline-flex [&_a]:items-center print:gap-y-0.5 print:[&_a]:min-h-0">
             <a href={`tel:${profile.phone.replace(/\s+/g, "")}`} className="text-zinc-600">
               {profile.phone}
             </a>
@@ -241,13 +242,13 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
             .filter(({ points }) => points.length > 0)
             .map(({ job, points }) => (
             <div key={job.company} className={jobGap}>
-              <div className="flex items-baseline justify-between gap-4 break-after-avoid">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 print:flex-row print:items-baseline print:justify-between break-after-avoid">
                 <h3 className="text-sm font-bold text-zinc-900">
                   <span className="font-display text-violet-700">{job.company}</span>
                   <span className="font-normal text-zinc-400"> | </span>
                   {job.role}
                 </h3>
-                <p className="shrink-0 text-xs text-zinc-500">
+                <p className="text-xs text-zinc-500 sm:shrink-0">
                   {job.period} | {job.location}
                 </p>
               </div>
@@ -344,12 +345,27 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
           {/* Rendered from the same openSource data as the homepage so this
               line can never drift from the real merged-PR list again. The
               two-pager states the count and stops: four PR titles spelled out
-              cost three lines to say what "9 merged PRs" already said. */}
+              cost three lines to say what "9 merged PRs" already said.
+              Filtered to career-ops-hq's merged rows only — openSource now
+              also carries the one open career-ops PR and the openMF/Mifos
+              rows below, neither of which belongs in "merged PRs to
+              career-ops". */}
           {full && (
             <p className="mt-2 text-sm leading-snug text-zinc-700">
               <span className="font-semibold text-zinc-900">Upstream contributions:</span>{" "}
               {upstreamMergedPRs} merged PRs to <span className="whitespace-nowrap">career-ops</span> (public OSS, {upstreamStars} stars)
-              {full ? <>: {openSource.map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.</> : "."}
+              : {openSource.filter((c) => c.org === "career-ops-hq" && c.status === "merged").map((c) => c.title.replace(/^(feat|fix)\([^)]*\): /, "")).join("; ")}.
+            </p>
+          )}
+          {/* A second, unrelated upstream: openMF/Mifos. Its own paragraph
+              rather than folded into the one above, for the same reason
+              ReposShowcase gives it a separate heading — grouping by org
+              keeps career-ops's count honest instead of quietly absorbing
+              these rows. */}
+          {full && (
+            <p className="mt-1 text-sm leading-snug text-zinc-700">
+              <span className="font-semibold text-zinc-900">Also contributing to openMF/Mifos:</span>{" "}
+              {mifosMergedPRs} merged (openMF/kmp-project-template #298, #299), plus 2 open (mifos-passcode-cmp #82, mifos-x-actionhub #89).
             </p>
           )}
         </section>
@@ -422,7 +438,7 @@ export function ResumeView({ cut = "full" }: { cut?: ResumeCut }) {
                   {s.items.map((item, i) => (
                     <Fragment key={item}>
                       {i > 0 && ", "}
-                      <span className="whitespace-nowrap">{item}</span>
+                      <span className="sm:whitespace-nowrap print:whitespace-nowrap">{item}</span>
                     </Fragment>
                   ))}
                 </p>

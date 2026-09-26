@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { Check, Copy, Maximize2, MessageCircle, Mic, Minimize2, RotateCw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
-import { projects, projectBySlug } from "./data/profile.ts";
+// The light projection (F12), not the full projects.ts: slash commands and
+// the suggestion chips below only ever read .slug and .name, never the
+// screenshots/videos/case-study prose that make the full Project heavy —
+// and this module is now lazy-loaded on its own (src/ChatLauncher.tsx), so
+// pulling in the heavy one here would drag it into every first chat open.
+import { projectCards, type ProjectCard } from "./data/profile/projectCards.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { ANSWERS } from "./data/source/answers.ts";
 import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
-import { buildFaqJsonLd } from "./lib/faqJsonLd.ts";
 // ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
 // every route as a closed button. Rendering a message is the FIRST moment any
 // of it is needed, and it cannot happen before someone opens the panel — so
@@ -18,7 +23,7 @@ import { buildFaqJsonLd } from "./lib/faqJsonLd.ts";
 // `split` is what makes the compiler carve it into a separate module, not
 // whether the import itself is dynamic.
 import { plainText, speakableText } from "./lib/chatBlocks.ts";
-import { runJdFit } from "./lib/useJdFit.ts";
+import { runJdFit, type JdFitDossier } from "./lib/useJdFit.ts";
 import {
   HOME_GREETING,
   JD_PROMPT,
@@ -31,7 +36,9 @@ import {
 } from "./lib/chatContext.ts";
 import { useSpeechInput, useSpeechOutput } from "./lib/voice.ts";
 import { useInertBackdrop } from "./lib/inertBackdrop.ts";
+import { OPEN_CHAT_EVENT, openChat, openJdFit, type OpenChatDetail } from "./lib/chatBus.ts";
 import {
+  CHAT_API_URL,
   CHAT_FALLBACK,
   CHAT_UNAVAILABLE,
   JD_MAX_CHARS,
@@ -39,7 +46,7 @@ import {
   chatErrorText,
   isAbortError,
   isJdNearCap,
-  streamReply,
+  trimHistory,
   type ChatMessage,
 } from "./lib/chatClient.ts";
 
@@ -66,12 +73,6 @@ import {
 // the fallback for any path that reads it directly.
 const GREETING: ChatMessage = { role: "assistant", content: HOME_GREETING };
 
-// Computed once, not per render — ANSWERS is static module data, and every
-// route that mounts FloatingChat renders the identical FAQPage block (same
-// reasoning __root.tsx's PERSON_LD uses: one Person/one FAQPage repeated per
-// page is normal schema.org practice, not duplication of the underlying fact).
-const FAQ_JSON_LD = buildFaqJsonLd(ANSWERS);
-
 /** A user turn longer than this collapses behind a summary — a pasted JD is a wall. */
 const COLLAPSE_TURN_CHARS = 400;
 
@@ -90,28 +91,86 @@ const STOPPED_NOTE = "Stopped before it finished.";
 const STORE_KEY = "sid-chat-v1";
 const MAX_STORED = 24;
 
-/* ── Opening the console from anywhere ───────────────────────────────────
- * One custom event, two shapes of payload, so no caller needs prop drilling:
- *  - a string  → ask that question (every card deep-links into a conversation
- *    about itself). This is `openChat(question?)`, unchanged.
- *  - `{ mode: "jd", text }` → run the fit analyzer on a pasted job description.
- *    This is what the home page's Fit check section (src/FitCheck.tsx) sends,
- *    so the section owns the textarea and NOTHING else: the request, the
- *    streaming and the scorecard stay in the one JD path below. */
-const OPEN_CHAT_EVENT = "open-chat";
-type OpenChatDetail = string | { mode: "jd"; text: string };
+// openChat/openJdFit (and the event they dispatch) now live in
+// src/lib/chatBus.ts — re-exported here so the 15 existing `import {
+// openChat } from "./FloatingChat.tsx"` call sites across the codebase need
+// no change (SP-10 repoints them at chatBus directly; H8).
+export { openChat, openJdFit };
 
-function dispatchOpen(detail?: OpenChatDetail) {
-  window.dispatchEvent(new CustomEvent<OpenChatDetail | undefined>(OPEN_CHAT_EVENT, { detail }));
+/* ── Provenance (SYS-7, OD5) ──────────────────────────────────────────────
+ * "A green reply is a hint until its source is shown" (CRAFT-4). Every
+ * ordinary reply gets a receipt: which provider answered, live, or that every
+ * provider failed and the offline answer layer (or a plain apology) covered
+ * for it. Mirrors PROVIDER_HEADER in api/_lib/chat-handler.ts as a literal,
+ * not an import, because that module runs Edge-only setup (`process.env`
+ * reads) at load time that a browser bundle can't execute. */
+const PROVIDER_HEADER = "x-chat-provider";
+
+/** One assistant message's receipt, keyed by its index in `messages` (see the
+ *  `replyMeta` state below). Never totalled and never the same object once a
+ *  new question starts a fresh reply: OD5's "per reply, never a session
+ *  total" applies to what's SHOWN, and there is exactly one of these on
+ *  screen per settled reply. */
+type ReplyMeta = { kind: "live"; label: string; tokens: number | null } | { kind: "offline"; detail: string };
+
+function formatProviderLabel(label: string): string {
+  return label.length ? label[0].toUpperCase() + label.slice(1) : label;
 }
 
-export function openChat(question?: string) {
-  dispatchOpen(question);
-}
+/**
+ * Streams `/api/chat` exactly like chatClient.ts's shared `streamReply`, but
+ * also surfaces this lane's two provenance signals: the provider-label header
+ * (known as soon as the response arrives) and the per-reply token count chat-
+ * handler.ts appends as a final `{"tokens":N}` event just before `[DONE]`
+ * (only chatClient's `{"text":...}` shape is otherwise recognised, so that
+ * event is invisible to every OTHER caller of the shared function, additive,
+ * not a protocol change).
+ *
+ * Kept local rather than folded into chatClient.ts: that file is shared with
+ * src/Terminal.tsx and src/lib/useJdFit.ts, owned by other lanes in this wave
+ * (P2-13a owns FloatingChat.tsx only), so this is the smallest surface that
+ * adds the header/meta read without touching it.
+ */
+async function streamReplyWithProvenance(
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+  route: string | undefined,
+  signal: AbortSignal,
+): Promise<{ label: string | null; tokens: number | null }> {
+  const res = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ messages: trimHistory(messages), route }),
+    signal,
+  });
+  if (!res.ok || !res.body) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `Request failed (${res.status})`, { cause: res.status });
+  }
+  const label = res.headers.get(PROVIDER_HEADER);
 
-/** Open the console straight into a fit analysis of `text`. */
-export function openJdFit(text: string) {
-  dispatchOpen({ mode: "jd", text });
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let tokens: number | null = null;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data: ") || line.includes("[DONE]")) continue;
+      try {
+        const event = JSON.parse(line.slice(6));
+        if (typeof event.text === "string") onDelta(event.text);
+        else if (typeof event.tokens === "number") tokens = event.tokens;
+      } catch {
+        // partial or non-JSON keepalive, skip
+      }
+    }
+  }
+  return { label, tokens };
 }
 
 /* ── Slash commands ──────────────────────────────────────────────────────
@@ -129,7 +188,8 @@ interface SlashApi {
   jd: (prefill: string) => void;
 }
 
-const SLUGS = projects.map((p) => p.slug);
+const SLUGS = projectCards.map((p) => p.slug);
+const projectCardBySlug = (slug: string): ProjectCard | undefined => projectCards.find((p) => p.slug === slug);
 
 const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: string, api: SlashApi) => void }[] = [
   {
@@ -151,7 +211,7 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
     help: "jump to a case study",
     run: (arg, api) => {
       const slug = arg.toLowerCase();
-      const project = projectBySlug(slug); // typed by a visitor — never routed to unvalidated
+      const project = projectCardBySlug(slug); // typed by a visitor — never routed to unvalidated
       if (project) return api.go(`/project/${project.slug}`);
       api.say(
         slug
@@ -206,8 +266,18 @@ const COMPOSER_BUTTON =
 const MIC_DISCLOSURE =
   "Voice input is transcribed by your browser's speech service — in Chrome that means the audio is sent to Google.";
 
-export function FloatingChat() {
-  const [open, setOpen] = useState(false);
+export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail } = {}) {
+  // The launcher belongs to the document chrome, outside positioned route
+  // wrappers (including the writing world's themed container).
+  const [launcherRoot, setLauncherRoot] = useState<HTMLElement | null>(null);
+  useEffect(() => setLauncherRoot(document.body), []);
+  // src/ChatLauncher.tsx (F12, F13) never mounts this component until chat is
+  // wanted — a launcher click, or an openChat()/openJdFit() call that beat it
+  // there — so it always starts open. `initialDetail` carries that earlier
+  // call's payload (its own CustomEvent already fired and found nobody
+  // listening); see the mount effect below, which applies it the same way
+  // the window-event handler applies every later one.
+  const [open, setOpen] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   useInertBackdrop(open && expanded, panelRef);
@@ -240,6 +310,15 @@ export function FloatingChat() {
   // whatever's still running rather than letting it finish unread — see
   // send()'s own abort at its top and the close effect below.
   const abortRef = useRef<AbortController | null>(null);
+  // SYS-7 provenance: one receipt per ordinary reply, keyed by its index in
+  // `messages`, set once the reply settles (live) or every provider is
+  // exhausted (offline); read by the chip rendered under that bubble.
+  const [replyMeta, setReplyMeta] = useState<Map<number, ReplyMeta>>(new Map());
+  // SYS-7 dossier chit: the LATEST JD analysis's data, tagged with the
+  // message index it belongs to. One at a time is enough; a second JD paste
+  // replaces it, same as canRetryJd/canRegenerate below only ever reason
+  // about the latest exchange.
+  const [jdDossier, setJdDossier] = useState<{ index: number; dossier: JdFitDossier } | null>(null);
 
   /* ── Voice ────────────────────────────────────────────────────────────
    * Speech-to-text FILLS the composer; it never submits on its own. A
@@ -307,25 +386,52 @@ export function FloatingChat() {
     }
   }, [messages, expanded, busy]);
 
+  const applyOpenDetail = useCallback((detail: OpenChatDetail | undefined) => {
+    setOpen(true);
+    if (detail === undefined) return; // openChat() with no argument — just opens
+    if (typeof detail === "string") {
+      if (detail.trim()) setPendingAsk({ text: detail });
+      return;
+    }
+    if ("mode" in detail && detail.mode === "jd" && detail.text.trim()) {
+      // Clamped here as well as at the textarea: this event is reachable by
+      // any caller, and the raised JD cap is the one the server enforces.
+      setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
+      setJd(null); // a half-typed paste box would outlive the analysis it started
+      setExpanded(true); // a scorecard deserves the wide view, not the 370px default
+      return;
+    }
+    // The FaqDock follow-up shape ({ prompt?, context? }): `context` is a
+    // Q&A the visitor already read, seeded into the transcript as history
+    // rather than re-asked — the point is a REAL follow-up, not a repeat
+    // of the canned answer. `prompt`, when given, is then auto-sent the
+    // same way the plain-string shape above is; omitted, the panel opens
+    // with that context showing and the composer focused for whatever the
+    // visitor types next (see the focus-management effect below).
+    if (!("mode" in detail)) {
+      if (detail.context) {
+        const { question, answer } = detail.context;
+        setMessages((prev) => [...prev, { role: "user", content: question }, { role: "assistant", content: answer }]);
+      }
+      if (detail.prompt?.trim()) setPendingAsk({ text: detail.prompt.trim() });
+    }
+  }, []);
+
+  // Applies ChatLauncher's `initialDetail` exactly once, on mount — the
+  // deferred counterpart to the window-event listener below, for the one
+  // detail whose own event already fired before this component existed.
+  const appliedInitialRef = useRef(false);
   useEffect(() => {
-    const onOpen = (e: Event) => {
-      setOpen(true);
-      const detail = (e as CustomEvent<OpenChatDetail | undefined>).detail;
-      if (typeof detail === "string") {
-        if (detail.trim()) setPendingAsk({ text: detail });
-        return;
-      }
-      if (detail?.mode === "jd" && detail.text.trim()) {
-        // Clamped here as well as at the textarea: this event is reachable by
-        // any caller, and the raised JD cap is the one the server enforces.
-        setPendingAsk({ text: detail.text.trim().slice(0, JD_MAX_CHARS), mode: "jd" });
-        setJd(null); // a half-typed paste box would outlive the analysis it started
-        setExpanded(true); // a scorecard deserves the wide view, not the 370px default
-      }
-    };
+    if (appliedInitialRef.current) return;
+    appliedInitialRef.current = true;
+    if (initialDetail !== undefined) applyOpenDetail(initialDetail);
+  }, [applyOpenDetail, initialDetail]);
+
+  useEffect(() => {
+    const onOpen = (e: Event) => applyOpenDetail((e as CustomEvent<OpenChatDetail | undefined>).detail);
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
-  }, []);
+  }, [applyOpenDetail]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -421,16 +527,23 @@ export function FloatingChat() {
     // it streams deltas into a running transcript, which runJdFit's "replace
     // the whole bubble each update" contract doesn't need to know about.
     if (mode === "jd") {
+      // Captured now, not read from `messages` later: the assistant bubble
+      // this analysis owns is always the last slot of the array just below,
+      // whatever else happens to `messages` state by the time an update
+      // arrives.
+      const assistantIndex = base.length + 1;
       setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
       try {
         await runJdFit(
           content,
-          (update) =>
+          (update) => {
             setMessages((prev) => {
               const next = [...prev];
               next[next.length - 1] = { role: "assistant", content: update.content };
               return next;
-            }),
+            });
+            if (update.dossier) setJdDossier({ index: assistantIndex, dossier: update.dossier });
+          },
           controller.signal,
         );
       } catch (err) {
@@ -457,10 +570,11 @@ export function FloatingChat() {
     }
 
     const history: ChatMessage[] = [...base.filter((m) => m !== GREETING), { role: "user", content }];
+    const assistantIndex = base.length + 1;
     setMessages([...base, { role: "user", content }, { role: "assistant", content: "" }]);
 
     try {
-      await streamReply(
+      const { label, tokens } = await streamReplyWithProvenance(
         history,
         (delta) => {
           setMessages((prev) => {
@@ -470,10 +584,12 @@ export function FloatingChat() {
             return next;
           });
         },
-        mode,
         canonicalRoute(pathname),
         controller.signal,
       );
+      if (label) {
+        setReplyMeta((prev) => new Map(prev).set(assistantIndex, { kind: "live", label, tokens }));
+      }
     } catch (err) {
       if (isAbortError(err)) {
         setMessages((prev) => {
@@ -501,6 +617,16 @@ export function FloatingChat() {
         };
         return next;
       });
+      // Every provider on chat-handler.ts's ladder failed (a genuine network
+      // error, never an abort, that path returned above). SYS-7: the receipt
+      // says so instead of leaving the last "server: <label> · live" chip
+      // from an earlier reply looking like it still applies.
+      setReplyMeta((prev) =>
+        new Map(prev).set(assistantIndex, {
+          kind: "offline",
+          detail: offline ? "answer layer" : "no offline match",
+        }),
+      );
     } finally {
       setBusy(false);
     }
@@ -526,7 +652,7 @@ export function FloatingChat() {
     const api: SlashApi = {
       say: (content) => setMessages((prev) => [...prev, { role: "assistant", content }]),
       go: (to) => { setOpen(false); void navigate({ to }); },
-      clear: () => { setMessages([GREETING]); setJd(null); },
+      clear: () => { setMessages([GREETING]); setJd(null); setReplyMeta(new Map()); setJdDossier(null); },
       jd: (prefill) => setJd(prefill.slice(0, JD_MAX_CHARS)),
     };
     const cmd = SLASH_COMMANDS.find((c) => c.name === name.toLowerCase());
@@ -649,7 +775,7 @@ export function FloatingChat() {
   // follows; a chip already offered by the project doesn't get offered twice.
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m !== GREETING);
   const projectSlug = lastAssistant ? lastRenderedProjectSlug(lastAssistant.content) : undefined;
-  const project = projectSlug ? projectBySlug(projectSlug) : undefined;
+  const project = projectSlug ? projectCardBySlug(projectSlug) : undefined;
   const projectChips = project ? chipsForProject(shortName(project.name)) : [];
   const suggestions = settled
     ? [...projectChips, ...chips.filter((q) => !projectChips.includes(q))]
@@ -682,40 +808,19 @@ export function FloatingChat() {
 
   return (
     <>
-      {/* The answer layer (arch-L11) — unconditional, NOT gated by `open`, so
-          it's part of the server-rendered document on every route that mounts
-          this component: a closed-by-default <details> per question (real,
-          crawlable, collapsed — not CSS-hidden text) plus the FAQPage JSON-LD
-          that describes the same array. Every citation link and every id it
-          points at is checked against a real build by
-          scripts/check-answers.mjs — this block is what makes that check
-          meaningful rather than decorative. */}
-      <section aria-label="Frequently asked" className="border-t border-line bg-surface px-6 py-10 print:hidden">
-        <div className="mx-auto max-w-2xl space-y-2">
-          <p className="kicker-accent">frequently asked</p>
-          {ANSWERS.map((a) => (
-            <details key={a.id} className="rounded-xl border border-line bg-ink px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold text-zinc-100">{a.question}</summary>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                {a.answer}{" "}
-                <a href={a.anchor} className="text-accent underline">
-                  See the source
-                </a>
-                .
-              </p>
-            </details>
-          ))}
-        </div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      </section>
-      {!open && (
+      {/* The answer layer (arch-L11) moved to src/FaqDock.tsx, docked as
+          SiteFooter's first band (spine F1, F2, F14) — this component no
+          longer renders it. FloatingChat keeps only the launcher and the
+          panel below. */}
+      {!open && launcherRoot && createPortal(
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
+          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
         >
           <MessageCircle size={24} />
-        </button>
+        </button>,
+        launcherRoot,
       )}
 
       {open && (
@@ -834,12 +939,32 @@ export function FloatingChat() {
                           // which is a global event meant for callers outside
                           // an already-open panel that already owns send().
                           onAsk={(q) => void send(q)}
+                          jdDossier={jdDossier?.index === i ? jdDossier.dossier : undefined}
                         />
                         </Hydrate>
                       )}
                     </div>
                     {!streaming && m !== GREETING && m.content && (
                       <div className="mt-1 flex items-center gap-1 pl-1">
+                        {/* SYS-7 provenance chip: which provider actually
+                            answered, or that every one failed and this is the
+                            offline fallback (a receipt, not a promise,
+                            CRAFT-4). Absent on the greeting, on a still-
+                            streaming bubble, and on a JD reply (which carries
+                            its own "instant match"/"AI read" badge instead). */}
+                        {(() => {
+                          const meta = replyMeta.get(i);
+                          if (!meta) return null;
+                          return (
+                            <span className="mr-1 font-mono text-xs text-muted">
+                              {meta.kind === "live"
+                                ? `server: ${formatProviderLabel(meta.label)} · live${
+                                    meta.tokens !== null ? ` · ~${meta.tokens} tok` : ""
+                                  }`
+                                : `offline fallback (${meta.detail})`}
+                            </span>
+                          );
+                        })()}
                         <button onClick={() => void copyReply(m.content, i)} aria-label="Copy reply" className={ICON_BUTTON}>
                           {copied === i ? <Check size={13} className="text-accent" /> : <Copy size={13} />}
                         </button>

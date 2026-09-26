@@ -3,6 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import ParticleHeroScene from "./ParticleHeroScene.tsx";
+import { useReducedMotion } from "./SceneActivity.tsx";
 
 function supportsWebGL(): boolean {
   try {
@@ -31,7 +32,11 @@ function supportsWebGL(): boolean {
 export function ParticleHero() {
   const [ready, setReady] = useState(false);
   const [count, setCount] = useState(6000);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  // Live (useSyncExternalStore over matchMedia's change event) rather than a
+  // one-time mount-effect snapshot — a visitor toggling the OS setting, or a
+  // Playwright test calling emulateMedia after load, now actually reaches
+  // the pointer-events class below and ParticleHeroScene's own frameloop.
+  const reducedMotion = useReducedMotion();
   const [dragEnabled, setDragEnabled] = useState(false);
   const [visible, setVisible] = useState(true);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -41,7 +46,6 @@ export function ParticleHero() {
     // no DOM lib type for navigator.connection, so no shared hook for one flag.
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     if (!supportsWebGL() || saveData || location.search.includes("noambient")) return;
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setCount(window.matchMedia("(max-width: 767px)").matches ? 2000 : 6000);
     setDragEnabled(window.matchMedia("(pointer: fine)").matches && window.matchMedia("(min-width: 1024px)").matches);
 
@@ -92,7 +96,7 @@ export function ParticleHero() {
     <ClientOnly>
       <div ref={hostRef} className={`particle-hero ${reducedMotion ? "pointer-events-none" : ""}`} aria-hidden>
         <Hydrate when={load()} split fallback={null}>
-          <ParticleHeroScene count={count} reducedMotion={reducedMotion} paused={!visible} interactive={dragEnabled} />
+          <ParticleHeroScene count={count} paused={!visible} interactive={dragEnabled} />
         </Hydrate>
         {/* lg:right-[8.25rem] pulls the hint back inside the viewport. At
             ≥1024px .particle-hero deliberately bleeds `right: -7.75rem` past its

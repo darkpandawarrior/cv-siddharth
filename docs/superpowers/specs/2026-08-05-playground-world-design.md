@@ -252,7 +252,7 @@ was full of things competing for attention rather than pointing at a door.
 | Drive into a room to enter it | The whole mechanic. |
 | The compass | Eight rooms on a 100m map are unfindable without it. |
 | 16 artifacts, each a real fact from the site's own data | The one progression worth having: exploring the world and reading the CV become the same act. |
-| The Mileway GPS lens | Demonstrates the hero project instead of citing it. |
+| The Doori GPS lens | Demonstrates the hero project instead of citing it. |
 | Sound, List view, reset, print/no-WebGL/screen-reader fallbacks | Polish and non-negotiables. |
 
 **Cut:** flight and wings · orbit and space · thermals · launch pads · the

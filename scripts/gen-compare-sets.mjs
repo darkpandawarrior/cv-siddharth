@@ -1,6 +1,11 @@
 // Scans heavy/projects/<slug>/compare/<set>/ and emits src/data/compareSets.ts.
 // Same shape of contract as gen-galleries.mjs: drop files in, they appear — no list to maintain.
 //
+// No generatedAt stamp, same reason as gen-galleries.mjs: it is in
+// check-generated.mjs's byte-deterministic set and heavy/ is gitignored, so a
+// wall-clock stamp would disagree with the committed file every day with no
+// content actually changing.
+//
 // Layout:
 //   heavy/projects/doori/compare/expenses/1-ledger.png
 //   heavy/projects/doori/compare/expenses/2-signal.png
@@ -18,6 +23,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Compare sets moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts. They are
 // full-page before/after screenshots, the single heaviest thing the site shipped same-origin.
 const projectsDir = join(root, "heavy", "projects");
+if (!existsSync(projectsDir)) {
+  if (!existsSync(join(root, "src", "data", "compareSets.ts"))) {
+    throw new Error("[gen-compare-sets] Missing source media and committed registry");
+  }
+  console.log("[gen-compare-sets] Source media absent; retaining committed registry for hosted assets.");
+  process.exit(0);
+}
 
 // Mirrors gen-galleries.mjs: a .webp/.avif beside a same-basename raster is a gen-images.mjs
 // derivative, not a version to compare against.

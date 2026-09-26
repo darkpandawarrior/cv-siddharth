@@ -1,6 +1,13 @@
 // Scans heavy/projects/<slug>/screenshots and emits src/data/galleries.ts.
 // Runs as a prebuild step, so adding/removing a screenshot auto-updates the
 // project detail galleries — no manual list to maintain.
+//
+// No generatedAt stamp: it is in check-generated.mjs's byte-deterministic
+// DETERMINISTIC set, heavy/ is gitignored so there is no committed input to
+// derive a real date from, and a wall-clock one would disagree with the
+// committed file on every single calendar day regardless of whether a
+// screenshot actually changed — the exact false-positive check-generated.mjs's
+// own header comment documents for gen-ops.mjs's old opsGeneratedAt.
 import { readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +17,13 @@ import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Screenshots moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts.
 const projectsDir = join(root, "heavy", "projects");
+if (!existsSync(projectsDir)) {
+  if (!existsSync(join(root, "src", "data", "galleries.ts"))) {
+    throw new Error("[gen-galleries] Missing source media and committed registry");
+  }
+  console.log("[gen-galleries] Source media absent; retaining committed registry for hosted assets.");
+  process.exit(0);
+}
 const out = {};
 
 // A .webp/.avif next to a same-basename .png/.jpg/.jpeg is a derivative made

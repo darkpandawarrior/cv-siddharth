@@ -1,0 +1,42 @@
+{
+  "connected": true,
+  "weather": {
+    "at": "2026-09-26T22:19",
+    "intervalSec": 900,
+    "tempC": 24.1,
+    "code": 0,
+    "cloudPct": 4,
+    "precipMmH": 0,
+    "windKmh": 6.2,
+    "windFromDeg": 210,
+    "humidityPct": 58,
+    "visibilityM": 24000
+  },
+  "air": {
+    "at": "2026-09-26T22:19",
+    "pm25": 18.4,
+    "pm10": 26,
+    "usAqi": 61,
+    "euAqi": 34,
+    "aod": 0.2
+  },
+  "river": {
+    "date": "2026-09-26",
+    "dischargeM3s": 68.1,
+    "next": [70.2, 52.9],
+    "range7d": [32.27, 99.46]
+  },
+  "season": { "days": 30, "sumMm": 132 },
+  "rain6hMm": 0,
+  "attribution": [
+    "Weather data by Open-Meteo.com (CC BY 4.0)",
+    "Air quality: CAMS model via Open-Meteo.com (CC BY 4.0)",
+    "River discharge: GloFAS (Copernicus EMS) via Open-Meteo.com, modelled 5 km cell, not a gauge"
+  ],
+  "moon": {
+    "fraction": 0.999,
+    "waxing": true,
+    "phaseAngleDeg": 179.96,
+    "rise": "2026-09-26T18:09:00+05:30"
+  }
+}

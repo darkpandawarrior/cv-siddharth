@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
+import { useCursorPresences } from "@playhtml/react";
 import type { Ops, OpsRun } from "../api/_lib/ops-handler.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
+import type { AircraftResponse } from "../api/_lib/aircraft-handler.ts";
+import type { TleResponse } from "../api/_lib/tle-handler.ts";
 import { perimeter, leverage, drift, opsGeneratedAt } from "./data/ops.ts";
 import { generatorNodes, notMeasuredHere, evidenceGeneratedAt } from "./data/generated/evidence.ts";
 import { MAX_AGE_DAYS, ageDays, stateForAge, type OpsState } from "./data/freshnessSla.ts";
@@ -9,6 +13,20 @@ import { incidents } from "./data/incidents.ts";
 import { projects } from "./data/profile.ts";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { LauncherButton } from "./Launcher.tsx";
+import { EvidenceChip } from "./EvidenceChip.tsx";
+import { useNow, useSky, useWeather } from "./lib/useSky.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { useSignals } from "./lib/useLive.ts";
+import { sunRow, weatherRow, airRow, riverRow } from "./lib/ledgerText.ts";
+import { chessRow, ciRow as familyCiRow, downloadsRow, kitesRow } from "./lib/signalsText.ts";
+import { SKY_CALENDAR, validUntil as calendarValidUntil, activeFestival, nextFestival, nextMeteorShower } from "./data/skyCalendar.ts";
+import { PUNE_NORMALS_MM } from "./data/generated/puneNormals.ts";
+import { STREAMS } from "./world/v2/streams.ts";
+import { EDGE_KIND } from "./data/storyMap.ts";
+import { AI_FUNNEL_STAGES, mermaidFromAiFunnel } from "./data/aiFunnel.ts";
+import { aiEval } from "./data/generated/aiEval.ts";
+import { DOCTRINE_LAWS } from "./data/doctrine.ts";
+import { writing } from "./data/writing.ts";
 
 /**
  * /ops — a control loop rendered as a page.
@@ -85,9 +103,9 @@ type BudgetCheck = { name: string; actual: number | null; ceiling: number; pass:
 type BudgetReport = { generatedAt: string; checks: BudgetCheck[]; failing: boolean };
 
 const STATE_COLOR: Record<OpsState, string> = {
-  OK: "var(--color-signal)",
-  DEGRADED: "var(--color-accent)",
-  BROKEN: "var(--color-danger)",
+  OK: "var(--state-ok)",
+  DEGRADED: "var(--state-degraded)",
+  BROKEN: "var(--state-broken)",
 };
 
 const RANK: Record<OpsState, number> = { BROKEN: 0, DEGRADED: 1, OK: 2 };
@@ -140,6 +158,64 @@ function budget(age: number, sla: number): string {
 }
 
 const bytes = (n: number) => `${(n / 1_048_576).toFixed(1)} MB`;
+
+/** `HH:MM IST`, the one time format every live reading on the site uses.
+ *  Restated rather than imported (ledgerText.ts and useSky.ts both keep
+ *  their own copy private): six lines, cheaper to duplicate than to ask a
+ *  sibling lane's file to grow an export for one caller (world/realityRows.ts
+ *  makes the same call). */
+function istTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata",
+  });
+}
+
+/**
+ * The AI funnel, rendered through the site's existing lazy Mermaid path
+ * (idea-atlas SYS-8, I6): the same dynamic `import("mermaid")` ProjectDetail's
+ * own Mermaid component uses, so this diagram never lands in the main bundle.
+ * A second small copy rather than an export from ProjectDetail.tsx: that file
+ * belongs to a different lane, and this is the one place a shared component
+ * would have to cross an ownership line for a five-line render function.
+ */
+function FunnelMermaid({ code, id }: { code: string; id: string }) {
+  const [svg, setSvg] = useState("");
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const mermaid = (await import("mermaid")).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "loose",
+          theme: "base",
+          flowchart: { htmlLabels: true, curve: "basis", padding: 12 },
+          themeVariables: {
+            fontFamily: "Inter, system-ui, sans-serif",
+            background: "#171e1a",
+            primaryColor: "#10231a",
+            primaryBorderColor: "#3ddc84",
+            primaryTextColor: "#e8efe9",
+            lineColor: "#3ddc84",
+            secondaryColor: "#0f1512",
+            tertiaryColor: "#0f1512",
+          },
+        });
+        const { svg } = await mermaid.render(id, code);
+        if (alive) setSvg(svg);
+      } catch {
+        /* ignore render errors - the funnel's own text list below still
+           carries every stage and its symbol, so nothing is lost. */
+      }
+    })();
+    return () => { alive = false; };
+  }, [code, id]);
+  if (!svg) return null;
+  return <div className="mermaid-wrap flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
 
 /** The LED. One of the two things allowed to move FOREVER, and only when BROKEN. */
 function Led({ state }: { state: OpsState }) {
@@ -522,9 +598,13 @@ const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
  *
  * `lastShipped` is six years of one fact: the year each listing's last build
  * went out, split by whether Play still shows the listing. It belongs in the
- * fleet block rather than anywhere else because it is the same 173 listings the
- * block already counts — 89 live and 84 delisted, and both halves sum to
- * fleetStats exactly.
+ * fleet block rather than anywhere else because it is the same listings the
+ * block already counts — split live vs delisted, and both halves sum to
+ * fleetStats.live + fleetStats.delisted exactly. Deliberately not a hardcoded
+ * count here or in the caption below: `store.ts` is a live-refreshed corpus,
+ * so a number typed into this comment would be wrong the next time a listing
+ * changed — read the split off fleetStats itself, which is what CadenceFigure
+ * actually renders.
  *
  * ONE SHARED SCALE, both directions, topping out at the real maximum rather
  * than a rounded one. Unlike ChessArc's two rating pools these are the same
@@ -536,8 +616,8 @@ const runCadence = (el: HTMLElement) => { el.dataset.arrive = "run"; };
  * token means "lit/live/active", which is exactly what the live half is; but
  * /ops binds it to STATE_COLOR.OK, so it paints every OK LED, every .ops-state
  * reading OK, and the "ok" digit in all eight block censuses — including the
- * one 40px above this chart. In that neighbourhood a green bar reads "89 OK",
- * a verdict on the one block whose own note is that there is no SLA on
+ * one 40px above this chart. In that neighbourhood a green bar would read as a
+ * verdict — "OK" — on the one block whose own note is that there is no SLA on
  * anything in it. So: live is --color-probe ("unlit/idle counterpart", already
  * the counting-into colour for the web's discs and edges) and gone is
  * --color-muted. Two tokens this page has not bound to a state, which is what
@@ -656,7 +736,7 @@ const WEB = { w: 460, h: 360, left: 14, right: 300, label: 318, top: 34, rowGap:
  * EVERY EDGE IS THE SAME THICKNESS, and the caption says why: `repos` is a bare
  * string array. There is one `modules` integer per PLUGIN and no per-repo
  * count anywhere in the data, so mapping modules to edge width would assert
- * "31 modules land on HireSignal" and "31 on Mileway" and "31 on PaymentsLab"
+ * "31 modules land on Candidai" and "31 on Doori" and "31 on PaymentsLab-KMP"
  * simultaneously — three fabricated magnitudes out of one real number.
  *
  * REPO RADIUS IS AREA-PROPORTIONAL, sqrt not linear, and with NO floor added
@@ -1033,6 +1113,17 @@ function BrokenClock({ sinceIso }: { sinceIso: string }) {
   return <span className="ops-clock">worst unchanged for {d}d {t}</span>;
 }
 
+/** Renders nothing; its only job is to read playhtml's presence set client
+ *  side and lift the count up to OpsBoard's state. Kept as its own component
+ *  so it is the only place under OpsBoard.tsx that calls `useCursorPresences`
+ *  — rendered exclusively inside `<ClientOnly>`, below, which is what keeps
+ *  this reference out of the SSR bundle. */
+function PresenceCountBridge({ onCount }: { onCount: (n: number) => void }) {
+  const presences = useCursorPresences();
+  useEffect(() => { onCount(presences.size); }, [presences, onCount]);
+  return null;
+}
+
 /** A workflow's conclusion, mapped onto the board's three states. */
 function stateForRun(r: OpsRun): OpsState {
   if (r.conclusion === "success") return r.recentFailures > 0 ? "DEGRADED" : "OK";
@@ -1057,6 +1148,36 @@ export function OpsBoard() {
    *  apart from "still loading" via `budgetFailed`. */
   const [budgetReport, setBudgetReport] = useState<BudgetReport | null>(null);
   const [budgetFailed, setBudgetFailed] = useState(false);
+
+  /**
+   * THE REALITY LENS AND LIVE SOURCES (reality-spec §6 /ops row, live-data-spec
+   * §3, R7 idea-atlas I6/I1). `useSky` and `useWeather` are the one shared
+   * clock/weather bus every page reads (useSky.ts's own doc comment: "nothing
+   * that mounts this may add its own clock or its own weather fetch") - the
+   * same pair Terminal.tsx's `now`/`sky` commands already call together.
+   * `useLiveSignal` is called at the SAME urls Hud.tsx, LocalTraffic.tsx and
+   * useSatellites.ts already poll, so an extra mount here costs no extra
+   * fetch: the bus is keyed per url and shares one timer at the smallest
+   * requested interval (useLiveSignal.ts's own doc comment).
+   */
+  const now = useNow();
+  const sky = useSky();
+  const weather = useWeather();
+  // playhtml's presence count, not read directly here: a bare top-level
+  // `useCursorPresences()` call makes this whole component reachable from
+  // the SSR bundle, which is exactly what crashed /weeb and /anthology with
+  // "document is not defined" before those routes moved the read behind
+  // `<ClientOnly>` (see VisitorsNowLine in Terminal.tsx for the same split).
+  // `PresenceCountBridge` below is the only caller of the hook, and it is
+  // only ever rendered inside `<ClientOnly>`, so tanstackStart's compiler
+  // prunes that whole reference from the server bundle.
+  const [presenceCount, setPresenceCount] = useState<number | null>(null);
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+  const { data: signals } = useSignals();
+  const aircraftPollMs = STREAMS.find((s) => s.id === "aircraft")?.pollMs ?? 20_000;
+  const tlePollMs = STREAMS.find((s) => s.id === "satellites")?.pollMs ?? 21_600_000;
+  const { data: aircraft } = useLiveSignal<AircraftResponse>("/api/aircraft", aircraftPollMs);
+  const { data: tle } = useLiveSignal<TleResponse>("/api/tle", tlePollMs);
 
   useEffect(() => {
     let live = true;
@@ -1109,18 +1230,27 @@ export function OpsBoard() {
    * needs an edit either.
    */
   const manifestRows = useMemo<RowModel[]>(
-    () => generatorNodes.map((n): RowModel => ({
-      key: `manifest:${n.id}`,
-      lane: "manifest",
-      state: n.automated ? "OK" : "DEGRADED",
-      subject: n.id,
-      subjectHref: `${REPO}/blob/main/scripts/${n.script}`,
-      detail: n.automated
-        ? `${n.kind} · runs in ${n.stages.join(", ")}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`
-        : `UNAUTOMATED · run by hand: ${n.invocation}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}`,
-      verified: evidenceGeneratedAt,
-      verifiedHref: `${REPO}/blob/main/scripts/generators.mjs`,
-    })).sort(bySeverity),
+    () => generatorNodes.map((n): RowModel => {
+      // private-env is the one kind a hosted CI runner can NEVER be handed —
+      // it names a secret pointing at a private source checkout that only
+      // exists on the maintainer's own machine, unlike a "sibling" node,
+      // which refresh-media.yml's own Android/KMP checkouts now genuinely
+      // satisfy. Said once, plainly, rather than left to be inferred from
+      // the raw "private-env" kind string.
+      const laptopOnly = n.kind === "private-env" ? " · maintainer-laptop only" : "";
+      return {
+        key: `manifest:${n.id}`,
+        lane: "manifest",
+        state: n.automated ? "OK" : "DEGRADED",
+        subject: n.id,
+        subjectHref: `${REPO}/blob/main/scripts/${n.script}`,
+        detail: n.automated
+          ? `${n.kind} · runs in ${n.stages.join(", ")}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}${laptopOnly}`
+          : `UNAUTOMATED · run by hand: ${n.invocation}${n.slaDays ? ` · ${n.slaDays}d SLA` : ""}${laptopOnly}`,
+        verified: evidenceGeneratedAt,
+        verifiedHref: `${REPO}/blob/main/scripts/generators.mjs`,
+      };
+    }).sort(bySeverity),
     [],
   );
 
@@ -1380,6 +1510,183 @@ export function OpsBoard() {
     [],
   );
 
+  /**
+   * REALITY LENS (reality-spec §6): the four rows the /ops row of the reality
+   * layer names by name. Never BROKEN - none of these has a declared
+   * deadline to blow, only a live reading that is either flowing or not,
+   * which the footer chip and EvidenceChip both already treat as DEGRADED
+   * rather than a hard failure.
+   */
+  const realityLensRows = useMemo<RowModel[]>(() => {
+    const pushes = (activity?.items ?? []).filter((i) => i.type === "push" && !i.upstream);
+    // `now` (useNow, ticked once a minute), never Date.now(): an impure read
+    // during render is unstable across the renders React's own strict-mode
+    // double-invoke compares (react-hooks/purity).
+    const nowMs = now?.getTime() ?? null;
+    const recent24h = nowMs === null ? [] : pushes.filter((i) => nowMs - Date.parse(i.at) <= 24 * 60 * 60 * 1000);
+    const rows: RowModel[] = [
+      {
+        key: "reality:weather",
+        lane: "reality",
+        state: weather.state === "live" ? "OK" : "DEGRADED",
+        subject: "Weather",
+        subjectHref: "https://open-meteo.com",
+        detail: weather.state === "pending" ? "reading..." : weatherRow(weather.weather),
+        verified: weather.weather ? `${istTime(weather.weather.at)} IST` : "no successful read yet",
+      },
+      {
+        key: "reality:sun",
+        lane: "reality",
+        // computed, cannot go stale (reality-spec §6): the one row on this
+        // board with no failure mode at all.
+        state: "OK",
+        subject: "Sun",
+        subjectHref: "https://gml.noaa.gov/grad/solcalc/",
+        detail: sky ? sunRow(sky.sun.altitudeDeg, sky.times.sunrise, sky.times.sunset) : "computed, cannot go stale",
+        verified: "computed, cannot go stale",
+      },
+      {
+        key: "reality:presence",
+        lane: "reality",
+        state: "OK",
+        subject: "Presence",
+        subjectHref: "/pulse",
+        detail: presenceCount === null
+          ? "reading..."
+          : `${presenceCount} here now, this tab included - this site's own realtime channel`,
+        verified: "realtime",
+      },
+      {
+        key: "reality:github-activity",
+        lane: "reality",
+        state: activity?.connected ? "OK" : "DEGRADED",
+        subject: "GitHub activity",
+        subjectHref: "https://github.com/darkpandawarrior",
+        detail: activity?.connected
+          ? `${recent24h.length} of the last ${pushes.length} public pushes landed in the last 24h - GitHub Events API`
+          : "unavailable right now - GitHub Events API",
+        verified: pushes[0] ? ago(pushes[0].at) : "unmeasured",
+      },
+    ];
+    return rows;
+  }, [weather, sky, presenceCount, activity, now]);
+
+  /**
+   * LIVE SOURCES (live-data-spec §3, §4 R6/R7): the eight rows added on top
+   * of the reality lens. `signals` folds four upstreams into one row (M18's
+   * own "one combined family-CI row", extended here to the whole /api/signals
+   * envelope) because e2e/ops-reality.spec.ts and the spec table both name it
+   * as the single row "signals", not four.
+   */
+  const liveSourceRows = useMemo<RowModel[]>(() => {
+    // `now` (useNow), never Date.now(): see the same note on realityLensRows.
+    const nowMs = now?.getTime() ?? null;
+    const calendarExpired = nowMs !== null && nowMs > Date.parse(`${calendarValidUntil}T00:00:00Z`);
+    const activeF = now ? activeFestival(now) : null;
+    const nextF = now ? nextFestival(now) : null;
+    const nextM = now ? nextMeteorShower(now) : null;
+    const calendarDetail = calendarExpired
+      ? `${SKY_CALENDAR.length} rows need their annual refresh - table was only valid through ${calendarValidUntil}`
+      : [
+          activeF ? `${activeF.name} today` : nextF ? `next: ${nextF.row.name} in ${nextF.daysUntil}d` : null,
+          nextM ? `${nextM.row.name} peaks in ${nextM.nightsUntil}d` : null,
+          `valid through ${calendarValidUntil}`,
+        ].filter(Boolean).join(", ");
+
+    return [
+      {
+        key: "live:air",
+        lane: "live-source",
+        state: weather.air ? "OK" : "DEGRADED",
+        subject: "Air",
+        subjectHref: "https://open-meteo.com/en/docs/air-quality-api",
+        detail: airRow(weather.air),
+        verified: weather.air ? `${istTime(weather.air.at)} IST` : "no successful read yet",
+      },
+      {
+        key: "live:river",
+        lane: "live-source",
+        state: weather.river ? "OK" : "DEGRADED",
+        subject: "River",
+        subjectHref: "https://cds.climate.copernicus.eu/",
+        detail: riverRow(weather.river),
+        verified: weather.river ? weather.river.date : "no successful read yet",
+      },
+      {
+        key: "live:signals",
+        lane: "live-source",
+        state: signals ? "OK" : "DEGRADED",
+        subject: "Signals",
+        subjectHref: "https://github.com/darkpandawarrior",
+        detail: signals
+          ? [chessRow(signals.lichess, signals.at), kitesRow(signals.devto, writing.lessons.length, signals.at), familyCiRow(signals.ci, signals.at), downloadsRow(signals.downloads)].join(" · ")
+          : "unavailable right now - lichess.org, dev.to, GitHub Actions, GitHub Releases",
+        verified: signals ? `${istTime(signals.at)} IST` : "unmeasured",
+      },
+      {
+        key: "live:aircraft",
+        lane: "live-source",
+        state: aircraft?.connected ? "OK" : "DEGRADED",
+        subject: "Aircraft",
+        subjectHref: "https://adsb.lol",
+        detail: aircraft?.connected
+          ? `${aircraft.total} tracked within ${aircraft.radiusNm} nm of the Sangam, ambient - callsign kept, registration and hex dropped server-side · adsb.lol`
+          : "unavailable right now - adsb.lol",
+        verified: aircraft?.at ? `${istTime(aircraft.at)} IST` : "unmeasured",
+      },
+      {
+        key: "live:tle",
+        lane: "live-source",
+        state: tle?.connected ? "OK" : "DEGRADED",
+        subject: "Orbital elements (TLE)",
+        subjectHref: "https://celestrak.org",
+        detail: tle?.connected
+          ? `${tle.objects.length} objects tracked (ISS + every naked-eye-visual group member), newest epoch ${tle.epochNewest ? tle.epochNewest.slice(0, 10) : "unknown"} · CelesTrak`
+          : "unavailable right now - CelesTrak",
+        verified: tle?.at ? `${istTime(tle.at)} IST` : "unmeasured",
+      },
+      {
+        key: "live:stars",
+        lane: "live-source",
+        state: "OK",
+        subject: "Star catalogue",
+        subjectHref: "https://github.com/astronexus/HYG-Database",
+        detail: "HYG v41, magnitude 5 subset - static heavy asset, versioned by catalogue release rather than polled",
+        verified: "HYG v41",
+      },
+      {
+        key: "live:calendar",
+        lane: "live-source",
+        state: calendarExpired ? "DEGRADED" : "OK",
+        subject: "Festival + meteor calendar",
+        subjectHref: "https://www.drikpanchang.com/",
+        detail: calendarDetail,
+        verified: calendarValidUntil,
+      },
+      {
+        key: "live:normals",
+        lane: "live-source",
+        state: "OK",
+        subject: "Pune normals",
+        subjectHref: "https://open-meteo.com/en/docs/historical-weather-api",
+        detail: `366-day 2015-2025 daily rainfall climatology (${PUNE_NORMALS_MM.length} values) - static, manual annual refresh · Open-Meteo historical archive (ERA5)`,
+        verified: "2015-2025",
+      },
+    ];
+  }, [weather, now, signals, aircraft, tle]);
+
+  /** Every unique attribution STREAMS carries, in declaration order - the
+   *  #sources section renders straight from this so it can never list a
+   *  source the registry does not, or drop one it does
+   *  (P2-14 acceptance: "test derives the expected list from streams.ts"). */
+  const sourceAttributions = useMemo(() => [...new Set(STREAMS.map((s) => s.attribution))], []);
+
+  const edgeKindCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const kind of Object.values(EDGE_KIND)) counts[kind] = (counts[kind] ?? 0) + 1;
+    return counts;
+  }, []);
+
   const all = [
     ...towerRows, ...chainRows, ...perimeterRows, ...buildRows,
     ...driftRows, ...fleetRows, ...leverageRows, ...ledgerRows,
@@ -1475,6 +1782,9 @@ export function OpsBoard() {
 
   return (
     <>
+      <ClientOnly>
+        <PresenceCountBridge onCount={setPresenceCount} />
+      </ClientOnly>
       {/* The skip link in __root.tsx targets #main-content, and every other
           route provides it. Without it "Skip to content" lands nowhere, which
           is both a real keyboard trap and what made e2e/a11y.spec.ts time out
@@ -1487,7 +1797,6 @@ export function OpsBoard() {
           <Link to="/" className="kicker-accent transition hover:opacity-80">← Back to portfolio</Link>
           <LauncherButton />
         </div>
-        <p className="section-eyebrow mb-2">// the control loop</p>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>
         {/* ops-2: no local max-width — this paragraph was the only thing on
             the route with one, so the console and the runway table directly
@@ -1512,6 +1821,13 @@ export function OpsBoard() {
         <div className="ops-console font-mono-os">
           <div className="ops-banner" data-worst={worstState}>
             <div className="ops-banner__line">
+              {/* The eyebrow used to sit above the h1, in the scrollable
+                  intro, so it read "the control loop" once and then scrolled
+                  away with everything else this page argues against. It
+                  lives in the sticky banner now, so the page's own name for
+                  itself is on screen at every scroll position, not just the
+                  first. */}
+              <span className="ops-banner__mark">// the control loop</span>
               <span className="ops-banner__mark">SID//OS</span>
               <span className="ops-banner__name">ops console</span>
               <a className="ops-banner__link" href={REPO} target="_blank" rel="noreferrer">darkpandawarrior/cv-siddharth</a>
@@ -1703,6 +2019,206 @@ export function OpsBoard() {
             loop shut.
           </p>
         </div>
+
+        {/* THE REALITY LENS. Everything above audits whether this REPO is
+            still true; this audits whether the WORLD the site claims to read
+            from is still reachable, reality-spec §6's own /ops row, the
+            union of R2/R7/I6's criteria (master-plan M23). Its own Block, its
+            own local census: a flaky weather API going DEGRADED for a minute
+            is not the same finding as this repo's own CI going red, and
+            folding the two into one verdict would blur that. */}
+        <Block
+          title="Reality lens"
+          note="the four things every route's floor reads from, checked here on the same clock and the same live bus every other route uses"
+          rows={realityLensRows}
+        />
+        <Block
+          title="Live sources"
+          note="every value the world binds to something you can see, one row per stream: reality never means a value dressed as live once its own source stopped answering"
+          rows={liveSourceRows}
+        />
+
+        {/* #SOURCES (live-data-spec §3, living-ledger D7, M24). Rendered
+            straight from STREAMS's own attribution field: sourceAttributions
+            is a plain dedupe of it, so this list cannot name a source the
+            registry does not carry, or drop one it does. */}
+        <section className="ops-block" id="sources" aria-labelledby="ops-sources-h">
+          <div className="ops-rule">
+            <h2 id="ops-sources-h" className="ops-rule__title">Sources</h2>
+            <span className="ops-rule__note">
+              every upstream the reality lens and the live sources above read from, in one place. The
+              footer's own weather credit and every ledger row's chip title both point back here (M24)
+            </span>
+          </div>
+          {sourceAttributions.map((a) => (
+            <p className="ops-empty" key={a}>{a}</p>
+          ))}
+        </section>
+
+        {/* T8 SYSTEMS I OPERATE (trove-map T8). Hand-rolled rather than
+            RowModel/Block: the harness row's own rule, name only, a badge,
+            no link, no count (trove-map D1 default), has no honest OK/
+            DEGRADED/BROKEN state and Row always wraps SUBJECT in an <a>, so a
+            shared component would have had to grow a case for one row out of
+            five. */}
+        <section className="ops-block" aria-labelledby="ops-systems-h">
+          <div className="ops-rule">
+            <h2 id="ops-systems-h" className="ops-rule__title">Systems I operate</h2>
+            <span className="ops-rule__note">
+              the public systems this portfolio itself depends on, plus one private one named and
+              nothing else
+            </span>
+          </div>
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <span>This control loop</span>
+              <span className="ops-detail">refresh-media.yml, the generators above, the freshness perimeter they feed</span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="ops.ts" stamp={opsGeneratedAt} source="refresh-media.yml + generators.mjs" cadence="manual" />
+            </span>
+          </div>
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <a href="/shipped">Dice white-label Play fleet</a>
+              <span className="ops-detail">{fleetStats.live} live listings, {fleetStats.delisted} delisted, re-verified on the last sweep</span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="store.ts" stamp={storeGeneratedAt} source="Google Play + Internet Archive" cadence="manual" />
+            </span>
+          </div>
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <a href="https://darkpandawarrior.github.io" target="_blank" rel="noreferrer">F-Droid + Pages host</a>
+              <span className="ops-detail">darkpandawarrior.github.io: the F-Droid repo above and this domain&rsquo;s own Pages/Dokka host</span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="ops-board.md" source="darkpandawarrior.github.io" />
+            </span>
+          </div>
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <a href="https://github.com/darkpandawarrior/darkpandawarrior" target="_blank" rel="noreferrer">GitHub profile README pipeline</a>
+              <span className="ops-detail">reads timeline.ts and store.ts from this repo to draw its own lane and fleet charts (E3)</span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="timeline.ts" source="gen-lanes.mjs + gen-fleet-chart.mjs" />
+            </span>
+          </div>
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <span>A private agent harness</span>
+              <span className="ops-lane">private</span>
+              <span className="ops-detail">skills, agents and hooks that operate the pipeline above, named here and nowhere else on this board</span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="ops-board.md" source="not published" />
+            </span>
+          </div>
+        </section>
+
+        {/* THE DOCTRINE WALL (idea-atlas CRAFT-4, I6; critic C1/C2). Four
+            laws, each carried over from a real repo he shipped and enforced
+            on THIS site by a named test: doctrine.test.ts proves the file
+            and the test both exist, so this table cannot drift the way the
+            board it sits on exists to catch drift on. */}
+        <section className="ops-block" aria-labelledby="ops-doctrine-h">
+          <div className="ops-rule">
+            <h2 id="ops-doctrine-h" className="ops-rule__title">The doctrine wall</h2>
+            <span className="ops-rule__note">
+              four repos, one discipline: each law enforced on this site by a named test, never asked
+              to be believed
+            </span>
+            {/* w-full: forces this onto its own line in .ops-rule's wrapping
+                flex row — grouped with the heading (not below the rule's
+                border) since it is the heading's own citation, not a
+                separate note (e2e/ops-doctrine.spec.ts reads it off the
+                heading's parent). */}
+            <p className="ops-empty w-full">
+              The same measured/declared split lives on <Link to="/map">/map</Link> already: {edgeKindCounts.measured ?? 0}{" "}
+              solid edges read straight off systemGraph.ts&rsquo;s own runs-here facts, {edgeKindCounts.declared ?? 0} dashed
+              ones that are curated wiring. That is this doctrine in 2D, shipped before the Sangam valley
+              existed: one classification, two renderings, never a second one invented for either page (C2).
+            </p>
+          </div>
+          {DOCTRINE_LAWS.map((law) => (
+            <div className="ops-row" data-state="OK" key={law.id}>
+              <Led state="OK" />
+              <div className="ops-cell">
+                <span>{law.law}</span>
+                <span className="ops-detail">
+                  from {law.cameFrom} · enforced by {law.testFile}
+                  {law.alsoCites && <> · also: {law.alsoCites}</>}
+                </span>
+              </div>
+              <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+              <span className="ops-verified">
+                <EvidenceChip file="doctrine.ts" source={law.cameFrom} cadence="undated" />
+              </span>
+            </div>
+          ))}
+          {ledgerRows.length > 0 && <MttrFigure />}
+
+          <figure className="ops-figure">
+            <FunnelMermaid code={mermaidFromAiFunnel(AI_FUNNEL_STAGES)} id="ops-ai-funnel" />
+            <figcaption className="ops-figure__cap">
+              The AI funnel (SYS-8), drawn from the exact exported symbols that run it: every stage
+              names a real function in api/_lib/chat-handler.ts or prompt-guard.ts, checked against
+              those files by aiFunnel.test.ts, never a private tier name.
+            </figcaption>
+          </figure>
+
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <span>AI golden eval</span>
+              <span className="ops-detail">
+                5 synthetic JD fixtures through the real fence/condense pipeline, scheduled and
+                dispatch-only, never a required PR gate (SYS-11, critic C4): a band miss is descriptive
+                here, never a build failure
+              </span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip
+                file="aiEval.ts"
+                source="scripts/eval-ai-golden.mjs"
+                stamp={aiEval.measuredAt ?? undefined}
+                cadence={aiEval.status === "measured" ? "modelled" : undefined}
+              />
+            </span>
+          </div>
+          <p className="ops-empty">
+            {aiEval.status === "measured"
+              ? `last measured: ${aiEval.rows.filter((r) => r.withinBand).length}/${aiEval.rows.length}, ${aiEval.measuredAt?.slice(0, 10)}`
+              : "not run, no provider key in this environment"}
+          </p>
+
+          <div className="ops-row" data-state="OK">
+            <Led state="OK" />
+            <div className="ops-cell">
+              <span>AI wiring guard</span>
+              <span className="ops-detail">
+                every ai-endpoint/ai-client/ai-consumer marker must complete its own triple (SYS-11),
+                zero markers today, which the script itself treats as nothing to check yet, not a pass
+              </span>
+            </div>
+            <span className="ops-state" style={{ color: STATE_COLOR.OK }}>OK</span>
+            <span className="ops-verified">
+              <EvidenceChip file="check-ai-wiring.mjs" source="scripts/check-ai-wiring.mjs" />
+            </span>
+          </div>
+        </section>
 
         {/* THE BLIND SPOTS. Named rather than left silently absent — the same
             rule every other block on this page follows for a row it cannot

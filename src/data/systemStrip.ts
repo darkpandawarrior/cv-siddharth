@@ -4,7 +4,7 @@
 import { systemGraph, type SystemEdgeKind } from "./systemGraph.ts";
 
 export type SystemStripItem = { id: string; label: string; url?: string };
-export type SystemStripGroup = { kind: "built-on" | "feeds" | "ships-to" | "written-up-in"; label: string; items: SystemStripItem[] };
+export type SystemStripGroup = { kind: "built-on" | "feeds" | "ships-to" | "written-up-in" | "rebuilt-from" | "feeds-data"; label: string; items: SystemStripItem[] };
 
 const byId = new Map(systemGraph.nodes.map((n) => [n.id, n]));
 
@@ -15,6 +15,10 @@ const GROUPS: { edgeKind: SystemEdgeKind; kind: SystemStripGroup["kind"]; label:
   { edgeKind: "extracted-from", kind: "feeds", label: "feeds" },
   { edgeKind: "ships", kind: "ships-to", label: "ships to" },
   { edgeKind: "born-from", kind: "written-up-in", label: "written up in" },
+  // T2: rebuilds (E2, Candidai -> career-ops) and feeds-data (E3, portfolio ->
+  // the profile README repo), same "read straight off the graph" contract.
+  { edgeKind: "rebuilds", kind: "rebuilt-from", label: "rebuilt from" },
+  { edgeKind: "feeds-data", kind: "feeds-data", label: "data feeds" },
 ];
 
 /** Every non-empty "In the system" group for a project or employer slug, read

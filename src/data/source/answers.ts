@@ -24,13 +24,16 @@
 // English. scripts/gen-system-prompt.mjs, src/FloatingChat.tsx and
 // scripts/check-answers.mjs all import ANSWERS and render/check it — none of
 // them retype a question or an answer.
-import {
-  education,
-  experience,
-  metrics,
-  profile,
-  projects,
-} from "../profile.ts";
+// The light submodules, not the ../profile.ts barrel: that barrel also
+// re-exports profile/projects.ts, and this file is imported by
+// FloatingChat.tsx — reachable from every route through ChatLauncher.tsx's
+// eager root mount — so a static import of `projects` here made
+// profile-projects-heavy a dependency of every route's chunk graph
+// (e2e/spine-payload.spec.ts). Every quote below only ever reads a
+// project's `.tagline`, which the light projectCards carries too.
+import { education, metrics, profile } from "../profile/core.ts";
+import { experience } from "../profile/experience.ts";
+import { projectCards } from "../profile/projectCards.ts";
 
 /** One quotable Q&A, always citing a real, already-rendered anchor. */
 export interface Answer {
@@ -52,10 +55,10 @@ export interface Answer {
 
 const dice = experience.find((e) => e.company === "Dice.tech")!;
 const neev = experience.find((e) => e.company === "Neev Consulting")!;
-const doori = projects.find((p) => p.slug === "doori")!;
-const gaddi = projects.find((p) => p.slug === "gaddi")!;
-const paymentsLab = projects.find((p) => p.slug === "paymentslab-kmp")!;
-const candidai = projects.find((p) => p.slug === "candidai")!;
+const doori = projectCards.find((p) => p.slug === "doori")!;
+const gaddi = projectCards.find((p) => p.slug === "gaddi")!;
+const paymentsLab = projectCards.find((p) => p.slug === "paymentslab-kmp")!;
+const candidai = projectCards.find((p) => p.slug === "candidai")!;
 const [mau, gps, crash, compose] = metrics;
 
 export const ANSWERS: Answer[] = [
@@ -116,7 +119,7 @@ export const ANSWERS: Answer[] = [
     anchor: "/project/gaddi#main-content",
   },
   {
-    id: "paymentslab",
+    id: "paymentslab-kmp",
     question: "What is PaymentsLab-KMP?",
     keywords: ["payments", "ktor", "backend"],
     answer: `PaymentsLab-KMP: ${paymentsLab.tagline}`,

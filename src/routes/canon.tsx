@@ -4,10 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { anthology } from "../data/anthology.ts";
 import {
   AFTERLIVES_NOTE,
@@ -179,6 +179,13 @@ function CanonRoute() {
           <Reveal>
             <p className="kicker-accent">// the reference the fiction keeps about itself</p>
             <h1 className="font-display mt-3 text-hero">The Canon</h1>
+            <div className="mt-2">
+              <EvidenceChip
+                file="anthology.ts"
+                stamp={anthology.generatedAt}
+                source="the-loopdown/fiction/morkinstar-journals"
+              />
+            </div>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
               The rules {anthology.title} holds itself to, the units it measures time in, and what the
               instrument that produced every picture on this site does to the people it renders.
@@ -718,7 +725,6 @@ function CanonRoute() {
         </div>
       </main>
 
-      <FloatingChat />
       <SiteFooter />
     </div>
   );

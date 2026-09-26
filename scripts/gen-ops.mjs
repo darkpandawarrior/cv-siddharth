@@ -40,6 +40,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { STAMP_RE, slaFor, generatorFor } from "../src/data/freshnessSla.ts";
 import { GENERATORS } from "./generators.mjs";
+import { gitEnv } from "./lib/git-env.mjs";
+import { ownedBuildFiles } from "./lib/owned-build-files.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = join(root, "src", "data");
@@ -70,8 +72,9 @@ const perimeter = readdirSync(dataDir)
 /* ── The leverage board ────────────────────────────────────────────────── */
 
 /** Where the convention plugins are declared, and who consumes them. */
-const KMP = join(root, "..", "..", "KMP");
-const ANDROID = join(root, "..", "..", "Android");
+const sourceRoot = process.env.CV_REPOS_ROOT ?? join(root, "..", "..");
+const KMP = join(sourceRoot, "KMP");
+const ANDROID = join(sourceRoot, "Android");
 const BUILD_LOGIC = join(KMP, "kmp-build-logic", "convention", "build.gradle.kts");
 const CONSUMERS = [
   ["Doori", join(ANDROID, "Mileway")],
@@ -102,31 +105,16 @@ const CONSUMERS = [
  * `build-logic/` is skipped for the same reason: a repo's own convention
  * plugins declare the ids, they do not consume them.
  */
-const VENDORED = new Set(["build", ".git", ".gradle", "node_modules", "external", "build-logic"]);
-
-function buildFiles(dir, acc = []) {
-  let entries;
-  try {
-    entries = readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return acc;
-  }
-  for (const e of entries) {
-    if (VENDORED.has(e.name)) continue;
-    const p = join(dir, e.name);
-    if (e.isDirectory()) buildFiles(p, acc);
-    else if (e.name === "build.gradle.kts") acc.push(p);
-  }
-  return acc;
-}
 
 function scanLeverage() {
   if (!existsSync(BUILD_LOGIC)) return null;
   const ids = [...readFileSync(BUILD_LOGIC, "utf8").matchAll(/id = "(shared\.[a-z.]+)"/g)].map((m) => m[1]);
   const unique = [...new Set(ids)].sort();
 
-  const files = CONSUMERS.flatMap(([repo, dir]) =>
-    buildFiles(dir).map((f) => ({ repo, text: readFileSync(f, "utf8") })),
+  const consumers = CONSUMERS.map(([repo, dir]) => ({ repo, files: ownedBuildFiles(dir) }));
+  if (consumers.some(consumer => consumer.files === null)) return null;
+  const files = consumers.flatMap(({ repo, files }) =>
+    files.map(file => ({ repo, text: readFileSync(file, "utf8") })),
   );
   if (!files.length) return null;
 
@@ -162,7 +150,7 @@ const UPSTREAMS = [
 
 function git(cwd, args) {
   try {
-    return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execFileSync("git", args, { cwd, env: gitEnv(), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
     return null;
   }

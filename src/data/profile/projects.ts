@@ -1,10 +1,23 @@
+import { projectStats } from "../projectStats.ts";
+import { kmpGraph } from "../kmpGraph.ts";
+import { mermaidFromGraph } from "../../lib/mermaidFromGraph.ts";
+import { projectModuleCounts, paymentGatewayCount, dooriStats, paymentStats } from "../../lib/projectStatLine.ts";
+// kmpGraph.modules preserves kmp-toolkit's own settings.gradle.kts include()
+// order (gen-project-stats.mjs's scanToolkitModules): core modules first,
+// then every `:provider:x` gateway module as one contiguous trailing block,
+// foundation.providerModules long. Slicing that many entries off the end is
+// how the generator itself tells providers apart from core modules (it never
+// keeps the ":provider:" prefix on the flattened id), so this is the same
+// definition, not a second one. Intersecting it with an app's
+// substitutedModules replaces a hand-counted literal with a real count.
+const kmpProviderModuleIds = new Set(kmpGraph.modules.slice(-projectStats.foundation.providerModules).map((m) => m.id));
+const paymentsLabProviderModulesUsed = paymentStats.substitutedModules.filter((m) => kmpProviderModuleIds.has(m)).length;
 // Split from profile.ts along its export seams (arch-L15) — the heavy
 // project registry (screenshots, case-study prose, per-target device
 // chrome). See projectCards.ts for the light card-list projection that
 // /hire and /resume actually need.
 import { providerCount, upstreamStars } from "../careerOpsUpstream.ts";
 import { repoStats } from "../repoStats.ts";
-import { surfaces } from "../surfaces.ts";
 import { writing } from "../writing.ts";
 import { cast, titleize } from "../writingMeta.ts";
 import { heavy, WASM_APP_PATH } from "../../lib/assetBase.ts";
@@ -111,6 +124,15 @@ export interface Project {
    * is every project; the full record writes up all of them.
    */
   tier?: 1 | 2;
+  /** Marks the hero device switcher's shortlist on the homepage — the
+   *  registry is the one place this is decided, so HERO_PROJECTS in App.tsx
+   *  and SHOWCASE in resourceDirectory.ts both derive from it instead of
+   *  carrying their own hand-picked slug lists. */
+  showcase?: boolean;
+  /** The screenshot the hero device switcher shows for this project (a
+   *  `heavy()`-resolved URL — see App.tsx's HERO_SHOTS). Required whenever
+   *  `showcase` is true. */
+  heroShot?: string;
 }
 
 /* Re-exported so the résumé and the repo showcase keep reading upstream facts
@@ -150,6 +172,20 @@ const archiveByForm = writing.archive.reduce<Record<string, number>>((acc, a) =>
 // discipline as the series/pillar ranks above.
 const castByAppearances = [...cast].sort((a, b) => b.appearances - a.appearances);
 
+// Every module the kmp-family prose (below) names as used by a given app,
+// kept beside the prose instead of parsed out of it so registry.test.ts can
+// hold the two honest against each other. This is what caught the original
+// bug: the prose claimed bots-policy was still unadopted while Gaddi had
+// already substituted it, and claimed llm-chat/settings/app-shell were
+// single-app modules when the measured substitutedModules lists said otherwise.
+export const kmpFamilyModuleClaims: Record<string, string[]> = {
+  doori: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security", "location", "settings", "app-shell", "offline-outbox"],
+  gaddi: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "feedback", "bots-policy"],
+  "paymentslab-kmp": ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security", "payments-api"],
+  candidai: ["common", "mvi-core", "network", "ai", "ai-testing", "designsystem", "result", "llm-chat", "security"],
+  portfolio: ["network", "result", "llm-chat"],
+};
+
 export const projects: Project[] = [
   {
     slug: "gaddi",
@@ -163,12 +199,8 @@ export const projects: Project[] = [
       "ISMCTS AI with 10 bot personas plus a DARBAR social layer for bluffing and alliances.",
     ],
     links: [{ label: "GitHub", url: "https://github.com/darkpandawarrior/Gaddi" }],
-    // 14, not 13: Gaddi gained a `:cli` module on 2026-08-26 ("headless client
-    // proving :engine is a real SDK"), and this hand-written line went stale
-    // the moment it landed. gen-project-stats.mjs counts the repo's own
-    // settings.gradle.kts, so `repoStatLine` was already printing 14 directly
-    // under this 13 on the same card.
-    status: "14 modules · 4 platforms · 10 bot personas",
+    // Module totals follow the generated repository inventory.
+    status: `${projectModuleCounts.gaddi} modules · 4 platforms · 10 bot personas`,
     deployments: [
       {
         channel: "F-Droid",
@@ -198,6 +230,8 @@ export const projects: Project[] = [
       displayFont: "'Rozha One', Georgia, serif",
     },
     icon: "/projects/gaddi/brand/gaddi-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/gaddi/screenshots/home_phone.webp"),
     targets: [
       {
         platform: "Android",
@@ -371,7 +405,7 @@ export const projects: Project[] = [
       "Offline-first mileage, travel, and expense tracker spanning five platforms from one Kotlin codebase, with a real Kotlin/Ktor backend built in, off by default.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Android", "iOS", "Wear OS", "watchOS", "Desktop", "Room (KMP)", "Koin"],
     highlights: [
-      "49-module clean architecture: 13 feature modules meeting only at the composition root.",
+      `${projectModuleCounts.doori}-module clean architecture: ${dooriStats.features} feature modules meeting only at the composition root.`,
       "Real location engine, reimbursement policy engine, durable submit-outbox, and an on-device AI assistant.",
     ],
     links: [
@@ -379,7 +413,7 @@ export const projects: Project[] = [
       { label: "Case study", url: "#work" },
       { label: "PaymentsLab-KMP (sibling KMP app)", url: "#project/paymentslab-kmp" },
     ],
-    status: "49 modules · 5 platforms · 159 tests",
+    status: `${projectModuleCounts.doori} modules · 5 platforms · 159 tests`,
     deployments: [
       {
         channel: "F-Droid",
@@ -393,7 +427,7 @@ export const projects: Project[] = [
         url: "https://github.com/darkpandawarrior/Doori/releases",
       },
     ],
-    badges: ["Kotlin Multiplatform", "49 modules", "5 platforms", "Open source"],
+    badges: ["Kotlin Multiplatform", `${projectModuleCounts.doori} modules`, "5 platforms", "Open source"],
     // Telemetry-cyan — the site's own "depth" accent, reused rather than
     // invented: fitting for a location/tracking app, distinct from Gaddi's
     // teak/brass and PaymentsLab-KMP's violet.
@@ -406,6 +440,8 @@ export const projects: Project[] = [
       line: "#1c2733",
     },
     icon: "/projects/doori/brand/doori-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/doori/screenshots/track_data_preview_overview_tab.webp"),
     targets: [
       {
         platform: "Android",
@@ -462,7 +498,7 @@ export const projects: Project[] = [
       outcomeScreenshot: "tracking_success_screen.png",
       sections: [
         {
-          heading: "49-module clean architecture (36 local + 13 composed)",
+          heading: `${projectModuleCounts.doori}-module clean architecture (${dooriStats.modules} local + ${dooriStats.composedModules} composed)`,
           body: "Thirteen feature modules that never depend on each other, meeting only at the :app composition root and wired with Koin. A shared commonMain core holds the design system, Room (KMP) + DataStore, and every check-in / hardware-event screen, with platform services behind expect/actual. Convention plugins from my own kmp-build-logic keep every module's build consistent.",
         },
         {
@@ -499,7 +535,7 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "49", label: "Gradle modules (36 local + 13 composed)" },
+        { value: String(projectModuleCounts.doori), label: `Gradle modules (${dooriStats.modules} local + ${dooriStats.composedModules} composed)` },
         { value: "13", label: "isolated feature modules" },
         { value: "5", label: "platforms · one codebase" },
         { value: "0", label: "backend calls by default, real Ktor server opt-in" },
@@ -523,7 +559,7 @@ export const projects: Project[] = [
       ],
       diagrams: [
         {
-          title: "49-module architecture, features meet only at :app",
+          title: `${projectModuleCounts.doori}-module architecture, features meet only at :app`,
           code: `graph TD
   app[":app composition root"]
   t["feature: tracking"]
@@ -628,14 +664,14 @@ export const projects: Project[] = [
       "A Kotlin Multiplatform systems showcase: real payment flows across dozens of providers, all behind a single PaymentGateway abstraction, backed by a Ktor server that owns order creation, signature verification and webhook reconciliation.",
     stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Ktor", "Android", "iOS", "Room"],
     highlights: [
-      "44-module registry (15 local + 29 composed) spans 66 cataloged payment gateways.",
+      `${projectModuleCounts["paymentslab-kmp"]}-module registry (${paymentStats.modules} local + ${paymentStats.composedModules} composed) spans ${paymentGatewayCount} cataloged payment gateways.`,
       "Five money-movement rails plus split payments, all idempotency-keyed and MOCK_MODE-honest.",
     ],
     links: [
       { label: "GitHub", url: "https://github.com/darkpandawarrior/PaymentsLab-KMP" },
       { label: "Doori (sibling KMP app)", url: "#project/doori" },
     ],
-    status: "44 modules · 66 gateways · 5 rails",
+    status: `${projectModuleCounts["paymentslab-kmp"]} modules · ${paymentGatewayCount} gateways · 5 rails`,
     deployments: [
       {
         channel: "F-Droid",
@@ -649,7 +685,7 @@ export const projects: Project[] = [
         url: "https://github.com/darkpandawarrior/PaymentsLab-KMP/releases",
       },
     ],
-    badges: ["Kotlin Multiplatform", "44 modules", "66 gateways", "Open source"],
+    badges: ["Kotlin Multiplatform", `${projectModuleCounts["paymentslab-kmp"]} modules`, `${paymentGatewayCount} gateways`, "Open source"],
     theme: {
       accent: "#A78BFA",
       accentDim: "#7C3AED",
@@ -659,6 +695,8 @@ export const projects: Project[] = [
       line: "#3F2B66",
     },
     icon: "/projects/paymentslab-kmp/brand/paymentslab-kmp-icon.svg",
+    showcase: true,
+    heroShot: heavy("/projects/paymentslab-kmp/screenshots/ios_catalog.png"),
     targets: [
       {
         platform: "Android",
@@ -688,13 +726,13 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        "Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab-KMP runs real payment flows across a 66-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.",
+        `Payments is the hardest integration surface on Android: every gateway ships a different SDK, most of them are Activity-callback-era, the client can lie about the outcome, and the interesting logic (signatures, webhooks, idempotency, recovery) lives on the server. PaymentsLab-KMP runs real payment flows across a ${paymentGatewayCount}-gateway catalog behind a single PaymentGateway abstraction, and visualizes them step by step. A Ktor server does the order creation, signature verification and webhook reconciliation a real integration requires. Beyond one-shot pay-in it models five money-movement rails.`,
       problem:
         "Every payment gateway ships a different, mostly Activity-callback-era SDK, and the client can lie about the outcome: the logic that actually decides whether money moved (signatures, webhooks, idempotency, recovery) has to live somewhere the client can't fake it.",
       decision:
         "Put a Ktor server between the client and the truth: order creation, signature verification and webhook reconciliation happen there, a Room journal is written before the SDK even launches so a process death mid-payment is always recoverable, and a redaction layer keeps every secret and PII out of logs and screens.",
       outcome:
-        "66 cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.",
+        "${paymentGatewayCount} cataloged gateways now sit behind one PaymentGateway contract, with a client-side Success read only as a hint until the server confirms it. The same discipline now extends to five money-movement rails beyond one-shot checkout, every one of them MOCK_MODE-honest until real sandbox keys are set.",
       outcomeMetricIndex: 1,
       outcomeScreenshot: "web_home.png",
       sections: [
@@ -703,8 +741,8 @@ export const projects: Project[] = [
           body: "A client-side Success is a hint, never proof. Only the server decides the true state, after signature verification and webhook reconciliation. A server that owns price and truth, a client that always confirms before trusting, a journal written to Room before the SDK launches so a process death mid-payment is always recoverable, and a redaction layer so no secret or PII ever renders or logs.",
         },
         {
-          heading: "44 modules, 66 gateways",
-          body: "One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are 15 local modules plus 25 composed from kmp-toolkit (19 of them standalone provider gateway modules). The in-app catalog spans 66 registered gateways: 7 native-SDK integrations, 47 hosted-webview gateways behind one archetype, 8 mobile-money flows and 4 catalog-only / KYC-gated entries, each with its own status badge and region.",
+          heading: `${projectModuleCounts["paymentslab-kmp"]} modules, ${paymentGatewayCount} gateways`,
+          body: `One Gradle module per native-SDK provider is contributed into a registry via Koin's getAll<PaymentGateway>(), so adding gateway N+1 touches no existing code. There are ${paymentStats.modules} local modules plus ${paymentStats.composedModules} composed from kmp-toolkit (${paymentsLabProviderModulesUsed} of kmp-toolkit's ${projectStats.foundation.providerModules} standalone provider gateway modules). The in-app catalog spans ${paymentGatewayCount} registered gateways: ${paymentStats.gatewaysNative} native-SDK integrations, an internal wallet ledger, ${paymentStats.gatewaysHosted} hosted-webview gateways behind one archetype, ${paymentStats.gatewaysMobileMoney} mobile-money flows and ${paymentStats.gatewaysStub} catalog-only / KYC-gated entries, each with its own status badge and region.`,
         },
         {
           heading: "Five money-movement rails + split payments",
@@ -724,13 +762,13 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "44", label: "Gradle modules (15 local + 29 composed)" },
-        { value: "66", label: "gateways cataloged" },
+        { value: String(projectModuleCounts["paymentslab-kmp"]), label: `Gradle modules (${paymentStats.modules} local + ${paymentStats.composedModules} composed)` },
+        { value: String(paymentGatewayCount), label: "gateways cataloged" },
         { value: "5", label: "money-movement rails" },
         { value: "1", label: "PaymentGateway contract" },
       ],
       techStack: [
-        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", "44 Gradle modules (15 + 25 composed)", "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
+        { group: "Architecture", items: ["Kotlin Multiplatform", "Compose Multiplatform", `${projectModuleCounts["paymentslab-kmp"]} Gradle modules (${paymentStats.modules} local + ${paymentStats.composedModules} composed)`, "Koin registry (getAll)", "kmp-toolkit (shared MVI base)"] },
         { group: "Backend & rails", items: ["Ktor server", "HMAC-SHA256 signatures", "Webhook reconciliation", "Payouts · mandates · vault · connect · wallet ledger"] },
         { group: "Data & Security", items: ["Room (process-death journal)", "Android Keystore AES-256-GCM", "Certificate pinning", "Device-integrity checks"] },
         { group: "Build & quality", items: ["kmp-build-logic convention plugins", "Roborazzi screenshot tests", "ktlint", "detekt", "GitHub Actions CI"] },
@@ -816,7 +854,7 @@ export const projects: Project[] = [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
       "89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      `24 merged PRs to the public career-ops project (⭐${upstreamStars}): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
+      `24 merged PRs to the public career-ops project (${upstreamStars} stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -826,7 +864,7 @@ export const projects: Project[] = [
     // is deliberately kept private. A public fork was deleted on 2026-08-01 for
     // exactly that reason.
     links: [
-      { label: `Upstream (career-ops, ⭐${upstreamStars})`, url: "https://github.com/career-ops-hq/career-ops" },
+      { label: `Upstream (career-ops, ${upstreamStars} stars)`, url: "https://github.com/career-ops-hq/career-ops" },
     ],
     status: "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
@@ -849,7 +887,7 @@ export const projects: Project[] = [
     ],
     detail: {
       overview:
-        `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (⭐${upstreamStars}) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
+        `Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (${upstreamStars} stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.`,
       problem:
         "career-ops's scoring engine lived in a single Node.js process. Proving the same logic could run identically on a phone, in a browser tab and on a server meant more than porting the syntax: it meant the scoring could not quietly drift from the original the moment it moved.",
       decision:
@@ -893,7 +931,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "24 merged pull requests against the public career-ops repository (⭐" + upstreamStars + ", independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "24 merged pull requests against the public career-ops repository (" + upstreamStars + " stars, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
@@ -951,14 +989,14 @@ export const projects: Project[] = [
     tagline: "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
     description:
       `An interactive résumé built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from ${(repoStats.kotlinLines / 1000).toFixed(1)}k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.`,
-    stack: ["cv-siddharth", "React 19", "Vite 7", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
+    stack: ["cv-siddharth", "React 19", "Vite 8", "Tailwind v4", "Vercel Edge", "Multi-provider LLM", "Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm"],
     highlights: [
       "Two full implementations of one portfolio: the same content rendered by React on the web and by Compose Multiplatform to four targets, which makes the comparison concrete rather than theoretical.",
       "Provider-agnostic chat backend (Groq / Gemini / Claude) with prompt-injection guards. Panda is grounded in this file, the same source of truth the pages render from, so the assistant cannot drift from the site.",
       "Every claim on this site is checked mechanically before it ships, not recalled: a claim-audit script verifies the facts and scans every outward-facing surface for phrases already disproven.",
     ],
     links: [
-      { label: "Live", url: "https://cv-siddharth.vercel.app" },
+      { label: "Live", url: "https://siddharth-pandalai.vercel.app" },
       { label: "React source", url: "https://github.com/darkpandawarrior/cv-siddharth" },
       { label: "Compose Multiplatform source", url: "https://github.com/darkpandawarrior/cv-siddharth-kmp" },
       { label: "kmp-app-template", url: "https://github.com/darkpandawarrior/kmp-app-template" },
@@ -1003,7 +1041,7 @@ export const projects: Project[] = [
       sections: [
         {
           heading: "The React site: how it is put together",
-          body: "React 19 + Vite 7 + Tailwind v4, file-routed with TanStack Router and server-rendered, deployed on Vercel Edge. There is no CMS and no database: profile.ts is the single source of truth, and a set of prebuild generators derive everything else from disk: galleries from the screenshot folders, comparison sets, the sitemap, the RSS feed, OG images, llms.txt, and AVIF/WebP derivatives for every raster. Adding a screenshot is a file drop, never a list edit, which is the only reason the media stays honest as it grows.",
+          body: "React 19 + Vite 8 + Tailwind v4, file-routed with TanStack Router and server-rendered, deployed on Vercel Edge. There is no CMS and no database: profile.ts is the single source of truth, and a set of prebuild generators derive everything else from disk: galleries from the screenshot folders, comparison sets, the sitemap, the RSS feed, OG images, llms.txt, and AVIF/WebP derivatives for every raster. Adding a screenshot is a file drop, never a list edit, which is the only reason the media stays honest as it grows.",
         },
         {
           heading: "The surfaces: a guide to what is where",
@@ -1015,7 +1053,7 @@ export const projects: Project[] = [
         },
         {
           heading: "The Compose Multiplatform twin",
-          body: `${repoStats.kotlinLines.toLocaleString("en-US")} lines of hand-written Kotlin across ${repoStats.kotlinFiles} files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. The corpora it renders are generated into Kotlin from this repo's own data rather than transcribed, so the two versions cannot disagree about a number. Deliberately bleeding edge: Kotlin ${repoStats.kotlin}, Compose Multiplatform ${repoStats.compose}, AGP ${repoStats.agp}, Gradle ${repoStats.gradle}, every version the newest published including pre-release. The question it exists to answer is where the edge actually is.`,
+          body: `${repoStats.kotlinLines.toLocaleString("en-US")} lines of hand-written Kotlin across ${repoStats.kotlinFiles} files and four Gradle modules (cmp-shared, cmp-web, cmp-desktop, cmp-android, plus an Xcode project on top of the shared one) rendering the same portfolio to Kotlin/Wasm, Desktop, Android and iOS from one commonMain. The corpora it renders are generated into Kotlin from this repo's own data rather than transcribed, so the two versions cannot disagree about a number. Deliberately bleeding edge: Kotlin ${repoStats.kotlin}, Compose Multiplatform ${repoStats.compose}, AGP ${repoStats.agp}, Gradle ${repoStats.gradle}, with pre-release toolchains included. The question it exists to answer is where the edge actually is.`,
         },
         {
           heading: "What the CMP build refuses to depend on",
@@ -1041,17 +1079,27 @@ export const projects: Project[] = [
       //
       // So they come from repoStats.ts, which gen-repo-stats.mjs derives from
       // the twin's own tree, and check-generated.mjs fails CI if the committed
-      // file and the generator disagree. The route count is derived from the
-      // route registry rather than a capture manifest, and the wasm size from
-      // the directory that is actually served.
+      // file and the generator disagree. The wasm size comes from the
+      // directory that is actually served.
+      //
+      // The surfaces count below is a literal, not `surfaces.length`: this
+      // file is forced into its own manualChunks bucket (profile-projects-
+      // heavy, vite.config.ts), and data/surfaces.ts drags in labs.ts +
+      // excelsior.ts for two of its own entries' blurb text — importing it
+      // here pulled THAT whole chain into the same bucket, which rooms.tsx
+      // (mounted on every route) also needs, so every route paid for the
+      // full project registry too (e2e/spine-payload.spec.ts: /chess,
+      // /terminal, /weeb, /hire). surfaces.test.ts asserts this literal
+      // against the real surfaces.length, so a drift fails the unit suite
+      // instead of silently going stale.
       metrics: [
-        { value: String(surfaces.length), label: "surfaces · every one on the wall" },
+        { value: "23", label: "surfaces · every one on the wall" },
         { value: String(repoStats.tests), label: `unit tests · ${repoStats.testFiles} files` },
         { value: `${(repoStats.kotlinLines / 1000).toFixed(1)}k`, label: "lines of Kotlin · the CMP twin" },
         { value: "14.7 MB", label: "the Wasm twin's honest cost" },
       ],
       techStack: [
-        { group: "React site", items: ["React 19", "Vite 7", "Tailwind v4", "TanStack Router + Start", "three.js / R3F", "Vercel Edge", "Playwright", "Vitest"] },
+        { group: "React site", items: ["React 19", "Vite 8", "Tailwind v4", "TanStack Router + Start", "three.js / R3F", "Vercel Edge", "Playwright", "Vitest"] },
         { group: "Assistant", items: ["Groq", "Gemini", "Claude", "SSE streaming", "Prompt-injection guards"] },
         { group: "CMP twin", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Kotlin/Wasm", "Desktop (JVM)", "Android", "iOS", "Ktor"] },
       ],
@@ -1356,10 +1404,10 @@ export const projects: Project[] = [
       "The reusable libraries, the shared build logic and the app shape each live in their own repo, vendored into five consumers via Gradle includeBuild, so a version bump happens once instead of per project.",
     stack: ["Kotlin Multiplatform", "Gradle convention plugins", "Compose Multiplatform", "MIT"],
     highlights: [
-      "kmp-toolkit: 39 modules, each extracted the moment a second consumer needed the same logic, never designed as a \"platform\" up front, from the MVI core four apps build on to modules like store and bots-policy still finding their first consumer.",
-      "kmp-build-logic: 17 convention plugins here (22 authored across all repos). The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.",
+      `kmp-toolkit: ${projectStats.foundation.modules} modules, each extracted the moment a second consumer needed the same logic, never designed as a "platform" up front, from the mvi-core base all four apps share to modules like device-integrity and a chart renderer still finding their first consumer.`,
+      `kmp-build-logic: ${projectStats.foundation.conventionPlugins} convention plugins. The AGP / Kotlin / Compose / test / lint / Firebase / Room / Koin setup written once and applied with one line.`,
       "kmp-app-template, the app shape the toolkit slots into: one shared Compose UI, a wired Splash → Login → Home nav scaffold, thin Android + Desktop shells, and a customizer.sh that renames the whole project in one command.",
-      "Consumed by Doori (13 of its 49 modules), PaymentsLab-KMP (29 of its 44), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.",
+      `Consumed by Doori (${dooriStats.composedModules} of its ${projectModuleCounts.doori} modules), PaymentsLab-KMP (${paymentStats.composedModules} of its ${projectModuleCounts["paymentslab-kmp"]}), Candidai and Gaddi. The composition is the proof the extraction was real, not a library nobody uses.`,
     ],
     links: [
       { label: "kmp-toolkit", url: "https://github.com/darkpandawarrior/kmp-toolkit" },
@@ -1371,7 +1419,7 @@ export const projects: Project[] = [
       { label: "Gaddi (sibling KMP app)", url: "#project/gaddi" },
     ],
     status: "Active · MIT · vendored across 5 repos",
-    badges: ["Kotlin Multiplatform", "39 modules", "22 convention plugins", "MIT"],
+    badges: ["Kotlin Multiplatform", `${projectStats.foundation.modules} modules`, `${projectStats.foundation.conventionPlugins} convention plugins`, "MIT"],
     detail: {
       overview:
         "The KMP toolkit family is three decoupled repos (kmp-toolkit, kmp-build-logic and kmp-app-template) instead of one \"platform\" repo, so that using one of them never means dragging the other two along. None of the three were designed up front: each exists because a second consumer needed something the first one already had, and extracting it once was cheaper than copy-pasting it again. The family is vendored into Doori, PaymentsLab-KMP, Candidai, Gaddi and this portfolio's own Compose Multiplatform twin via Gradle includeBuild, so a fix or a version bump lands once and every consumer picks it up on its own schedule.",
@@ -1384,12 +1432,12 @@ export const projects: Project[] = [
       outcomeMetricIndex: 2,
       sections: [
         {
-          heading: "kmp-toolkit: 39 modules, extracted, never designed",
-          body: "The library repo, 39 modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. In active use: the MVI ViewModel core (Candidai, PaymentsLab-KMP, Doori, Gaddi), network and on-device AI (both in Candidai), security (PaymentsLab-KMP) and Doori's own operation-log offline-outbox. Still finding a first consumer: typed Result, device-integrity, a screen-state store (ScreenState/DecisionEngine, a different module from Doori's outbox), settings, app-shell, llm-chat and a secrets vault pattern, plus bots-policy, the generic ISMCTS search shell Gaddi's own AI engine is actually built from. It is the smaller of the two contracts described in the shared-foundation write-up: the tiny (State, Event) → Effects mvi-core base four apps build their reducer/store layer on.",
+          heading: `kmp-toolkit: ${projectStats.foundation.modules} modules, extracted, never designed`,
+          body: `The library repo, ${projectStats.foundation.modules} modules, each pulled out the moment a second consumer needed the same logic rather than sketched in ahead of demand. All four native apps (Doori, Gaddi, PaymentsLab-KMP and Candidai) build on the same eight: typed Result, the (State, Event) → Effects mvi-core base, common, network, on-device AI plus its ai-testing harness, the design system and llm-chat, three of which (Result, network, llm-chat) this portfolio's own Compose Multiplatform twin substitutes too, the narrower slice a résumé app actually needs. Security is one substitution short of universal: Doori, PaymentsLab-KMP and Candidai run it, Gaddi doesn't. Past that the toolkit gets consumer-specific: Doori alone runs the location tracking module, settings, app-shell and the operation-log offline-outbox; Gaddi alone runs feedback and bots-policy, the generic ISMCTS search shell its own AI engine is actually built from; PaymentsLab-KMP alone runs the payments-api contract plus its provider gateway modules. Still finding a first consumer: device-integrity, biometric, secure-store, auth, netlog, a screen-state store (ScreenState/DecisionEngine, a different module from Doori's outbox) and a chart renderer.`,
         },
         {
           heading: "kmp-build-logic: the setup written once",
-          body: "17 convention plugins live in this repo (22 authored across the whole family). AGP, Kotlin, Compose, test, lint, Firebase, Room and Koin configuration for a module is one line (apply the plugin) instead of a build.gradle.kts a new module has to get right from scratch. This is the other half of the shared foundation: the composite build every consumer app pulls in for its module wiring.",
+          body: `${projectStats.foundation.conventionPlugins} convention plugins live in this repo. AGP, Kotlin, Compose, test, lint, Firebase, Room and Koin configuration for a module is one line (apply the plugin) instead of a build.gradle.kts a new module has to get right from scratch. This is the other half of the shared foundation: the composite build every consumer app pulls in for its module wiring.`,
         },
         {
           heading: "kmp-app-template: the shape a new app starts from",
@@ -1397,7 +1445,7 @@ export const projects: Project[] = [
         },
         {
           heading: "The composition is the proof",
-          body: "Doori consumes 13 of its 49 modules from the toolkit; PaymentsLab-KMP consumes 29 of its 44; Candidai and Gaddi draw on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fifth independent consumer.",
+          body: `Doori consumes ${dooriStats.composedModules} of its ${projectModuleCounts.doori} modules from the toolkit; PaymentsLab-KMP consumes ${paymentStats.composedModules} of its ${projectModuleCounts["paymentslab-kmp"]}; Candidai and Gaddi draw on the same foundation. This portfolio's own Compose Multiplatform twin is built on kmp-app-template too, which is the reason that project's write-up can say the template carries a real four-target app rather than a hello-world, the same claim this family makes about itself, checked by a fifth independent consumer.`,
         },
         {
           heading: "One MVI contract, four apps",
@@ -1405,13 +1453,13 @@ export const projects: Project[] = [
         },
       ],
       metrics: [
-        { value: "36", label: "modules · kmp-toolkit" },
-        { value: "17", label: "convention plugins here · 22 across the family" },
+        { value: String(projectStats.foundation.modules), label: "modules · kmp-toolkit" },
+        { value: String(projectStats.foundation.conventionPlugins), label: "convention plugins" },
         { value: "5", label: "repos vendoring this family" },
-        { value: "19", label: "gateway providers behind one abstraction" },
+        { value: String(projectStats.foundation.providerModules), label: "payment provider modules" },
       ],
       techStack: [
-        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "network + security", "on-device AI seam", "device-integrity", "operation-log offline-outbox (Doori)", "screen-state store (ScreenState/DecisionEngine, no consumer app yet)", "settings", "app-shell", "llm-chat", "secrets vault pattern", "bots-policy (Gaddi's ISMCTS shell)", "19-provider payment-gateway abstraction"] },
+        { group: "kmp-toolkit", items: ["typed Result", "MVI ViewModel core (State, Event) → Effects", "network + security", "on-device AI seam", "device-integrity", "operation-log offline-outbox (Doori)", "screen-state store (ScreenState/DecisionEngine, no consumer app yet)", "settings", "app-shell", "llm-chat", "secrets vault pattern", "bots-policy (Gaddi's ISMCTS shell)", `${projectStats.foundation.providerModules} payment provider modules`] },
         { group: "kmp-build-logic", items: ["AGP", "Kotlin", "Compose", "test + lint", "Firebase", "Room", "Koin"] },
         { group: "kmp-app-template", items: ["Shared Compose UI", "Splash → Login → Home nav scaffold", "Android + Desktop shells", "customizer.sh"] },
         { group: "Distribution", items: ["Gradle includeBuild", "MIT license"] },
@@ -1420,16 +1468,28 @@ export const projects: Project[] = [
         {
           title: "Three repos, one seam each",
           code: `graph LR
-  bl["kmp-build-logic<br/>17 plugins"] -.->|"includeBuild"| m["Doori"]
+  bl["kmp-build-logic<br/>${projectStats.foundation.conventionPlugins} plugins"] -.->|"includeBuild"| m["Doori"]
   bl -.->|"includeBuild"| p["PaymentsLab-KMP"]
   bl -.->|"includeBuild"| c["Candidai"]
   bl -.->|"includeBuild"| ku["Gaddi"]
-  tk["kmp-toolkit<br/>39 modules"] -.->|"includeBuild"| m
+  tk["kmp-toolkit<br/>${projectStats.foundation.modules} modules"] -.->|"includeBuild"| m
   tk -.->|"includeBuild"| p
   tk -.->|"includeBuild"| c
   tk -.->|"includeBuild"| ku
   at["kmp-app-template"] -.->|"scaffold"| cv["cv-siddharth-kmp"]`,
         },
+        {
+          // Generated straight from kmpGraph.ts (idea-atlas.md#I2) instead of
+          // hand-typed: every module and every includeBuild edge, so this
+          // diagram can never drift from substitutedModules the way the prose
+          // above once did.
+          title: "Module adoption, generated from the measured graph",
+          code: mermaidFromGraph(kmpGraph),
+        },
+      ],
+      extraLinks: [
+        { label: "Sensors Who Lie: the location module, Doori's GPS tracking", url: "/loopdown#series-sensors-who-lie" },
+        { label: "Search Trees lab: bots-policy, Gaddi's ISMCTS engine", url: "/lab#search-trees" },
       ],
     },
   },

@@ -61,13 +61,11 @@ const APRON_X_MIN = CITY.laneHalf + 1.5;
 const APRON_X_MAX = CITY.buildInner - 1;
 
 /** How far an artifact's z is nudged, and how many times, when it lands
- *  inside a pavilion's own approach sensor — see `place()` below. Matches
- *  Pavilions.tsx's sensor half-extent (4.8m) plus a margin, so one nudge is
- *  always enough in practice; the loop just bounds the pathological case. */
+ *  inside a pavilion's own approach sensor. Matches its half-extent plus a margin. */
 const ROOM_Z_CLEARANCE = 6.5;
-const MAX_NUDGES = 8;
+export const ARTIFACT_PICKUP_RADIUS = 3.2;
 
-function place(index: number, total: number): [number, number, number] {
+function place(index: number, total: number, placed: Artifact[]): [number, number, number] {
   const { z0, z1, groundY } = TERRAIN.mainland;
   const side = index % 2 === 0 ? -1 : 1;
 
@@ -79,22 +77,17 @@ function place(index: number, total: number): [number, number, number] {
   const usableZ = z1 - z0 - marginZ * 2;
   let z = z0 + marginZ + (index / Math.max(1, total - 1)) * usableZ;
 
-  // A collectible sitting inside a pavilion's approach volume reads as
-  // buried in the doorway rather than found, so nudge south until clear of
-  // every room's z — cheap because there are only eight of them, and
-  // deterministic because the nudge step is fixed, not randomised.
-  for (let tries = 0; tries < MAX_NUDGES; tries++) {
-    const blocked = PLACEMENTS.some((p) => Math.abs(p.position[2] - z) < ROOM_Z_CLEARANCE);
-    if (!blocked) break;
-    z += ROOM_Z_CLEARANCE;
-  }
-
-  // Golden-angle walk across the apron's width, same low-discrepancy idea the
-  // old phyllotaxis spiral used, just bounded to a corridor instead of a disc.
   const spread = ((index * GOLDEN_ANGLE) % 1 + 1) % 1;
   const x = side * (APRON_X_MIN + spread * (APRON_X_MAX - APRON_X_MIN));
-
-  return [x, groundY + 1.2, z];
+  // Source refreshes change the number of collectibles. Scan the bounded
+  // apron for a free slot, checking both doorways and already placed facts.
+  for (let tries = 0; tries <= Math.ceil(usableZ / 0.5); tries++) {
+    const doorway = PLACEMENTS.some(p => Math.abs(p.position[2] - z) < ROOM_Z_CLEARANCE);
+    const overlap = placed.some(a => Math.hypot(a.position[0] - x, a.position[2] - z) <= ARTIFACT_PICKUP_RADIUS);
+    if (!doorway && !overlap) return [x, groundY + 1.2, z];
+    z = z0 + marginZ + ((z - z0 - marginZ + 0.5) % usableZ);
+  }
+  throw new Error("The collectible apron has no free slot");
 }
 
 type Seed = { id: string; label: string; detail: string };
@@ -165,11 +158,7 @@ function seeds(): Seed[] {
   return out;
 }
 
-export const ARTIFACTS: Artifact[] = seeds().map((s, i, all) => ({
-  ...s,
-  position: place(i, all.length),
-}));
-
-/** How close the craft has to get. Generous — hunting a collectible should be
- *  about finding it, not about threading a hitbox. */
-export const ARTIFACT_PICKUP_RADIUS = 3.2;
+export const ARTIFACTS: Artifact[] = seeds().reduce<Artifact[]>((placed, seed, index, all) => {
+  placed.push({ ...seed, position: place(index, all.length, placed) });
+  return placed;
+}, []);

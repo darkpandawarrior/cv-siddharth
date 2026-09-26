@@ -152,7 +152,8 @@ writeFileSync(
     `  /** Markdown. Rendered with react-markdown, which the site already ships. */\n  body: string;\n` +
     `}\n\n` +
     `export const printedPieces: PrintedPiece[] = ${JSON.stringify(out, null, 2)};\n\n` +
-    `export const pieceBySlug = (slug: string) => printedPieces.find((p) => p.slug === slug);\n`,
+    `export const pieceBySlug = (slug: string) => printedPieces.find((p) => p.slug === slug);\n\n` +
+    `export const archiveTextGeneratedAt = "${new Date().toISOString().slice(0, 10)}";\n`,
 );
 
 console.log(

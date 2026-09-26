@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Float, Grid, Html, Lightformer, Line, OrbitControls, Sparkles, Stars, Trail } from "@react-three/drei";
 import { Bloom, ChromaticAberration, EffectComposer, Glitch, Scanline, Vignette } from "@react-three/postprocessing";
@@ -7,11 +7,21 @@ import * as THREE from "three";
 import type { Mesh } from "three";
 import type { Line2, LineSegments2, OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { ARROWS, COLOR_HEX, FRAMES, METRICS, NODES, NOTES, PINS, TOUR, centerOf, type NodeSpec } from "./blueprintData.ts";
-import { CountUp, ShapeBoundary, hasWebGL } from "./blueprintShared.tsx";
+import { ShapeBoundary, hasWebGL } from "./blueprintShared.tsx";
 import { HoloCore } from "./blueprintHologram.tsx";
 import { AsciiEffect } from "./asciiEffect.ts";
 import { readToken } from "./themeColor";
 import { RippleEffect } from "./rippleEffect.ts";
+import { SceneActivity, useReducedMotion } from "./SceneActivity.tsx";
+
+// The lathe-turned Blender instrument, alongside the existing hologram —
+// its own chunk (public/models/blueprint-instrument.glb plus the
+// GLTFLoader weight), so it doesn't spend this already-63-byte-headroom
+// bundle's budget. HoloCore stays exactly as it was: removing its import
+// here measurably cost MORE bytes in this merged chunk than keeping it
+// (Rollup's chunk graph is not linear in module count — verified, not
+// assumed, by isolating the change).
+const BlueprintInstrument = lazy(() => import("./BlueprintInstrument.tsx"));
 
 /* Custom Effect instances (anything not shipped by @react-three/postprocessing)
  * plug into <EffectComposer> as a <primitive>, per the library's documented
@@ -253,9 +263,15 @@ function CameraRig({
   );
 }
 
-function FlowLine({ from, to, color }: { from: [number, number, number]; to: [number, number, number]; color: string }) {
+function FlowLine({ from, to, color, reducedMotion }: { from: [number, number, number]; to: [number, number, number]; color: string; reducedMotion: boolean }) {
   const ref = useRef<Line2 | LineSegments2>(null);
+  // Every other continuous per-frame mutation in this scene already checks
+  // reducedMotion (CameraRig's cursor sway, Sparkles/Float's speed=0); this
+  // "marching ants" dash offset was the one left ungated — with several of
+  // these lines always on screen, the shifting pattern was most of what
+  // e2e/blueprint.spec.ts's reduced-motion screenshot diff was catching.
   useFrame((_, delta) => {
+    if (reducedMotion) return;
     const mat = ref.current?.material as { dashOffset?: number } | undefined;
     if (mat && typeof mat.dashOffset === "number") mat.dashOffset -= delta * 0.6;
   });
@@ -355,7 +371,7 @@ function MetricTile({ m, ascii, reducedMotion }: { m: (typeof METRICS)[number]; 
           }}
         >
           <div style={{ fontSize: 24, fontWeight: 700, color: terminalGreen(), lineHeight: 1.1 }}>
-            <CountUp value={m.value} />
+            {m.value}
           </div>
           <div style={{ fontSize: 10, color: ascii ? "color-mix(in srgb, var(--color-signal) 60%, transparent)" : "rgba(232,239,233,0.6)", marginTop: 4 }}>{m.label}</div>
         </div>
@@ -479,21 +495,28 @@ function Scene({
   ascii: boolean;
 }) {
   const byKey = useMemo(() => Object.fromEntries(NODES.map((n) => [n.key, n])), []);
-  // Computed once — matches the inline window.matchMedia pattern already used
-  // elsewhere on the site (labs/useCanvasLoop.ts) rather than a new shared hook.
-  const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  // Live read (useSyncExternalStore over matchMedia's own change event), not
+  // a mount-once snapshot — a visitor who toggles reduced motion mid-session,
+  // or a Playwright test calling emulateMedia after load, is honoured either
+  // way. The banned pattern this replaced never saw a change after mount.
+  const reducedMotion = useReducedMotion();
   const { legend, trigger } = useLegendMode();
   // Only recomputed when legend actually flips, not on every tour/reset/zoom
   // re-render — see the note on the hoisted constants above.
   const asciiGlitchDelay = useMemo(() => (legend ? new THREE.Vector2(0.6, 1.5) : new THREE.Vector2(4, 10)), [legend]);
   const asciiGlitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.3, 0.5) : new THREE.Vector2(0.1, 0.25)), [legend]);
-  const glitchDelay = useMemo(() => (legend ? new THREE.Vector2(0.6, 1.5) : new THREE.Vector2(6, 14)), [legend]);
   const glitchStrength = useMemo(() => (legend ? new THREE.Vector2(0.15, 0.3) : new THREE.Vector2(0.05, 0.15)), [legend]);
   return (
     <>
+      {/* The proven live-reduced-motion mechanism (matchMedia's own change
+          event, not a mount-once read) — sets the Canvas frameloop to
+          'demand' itself via useThree, which is what actually stops every
+          useFrame in this scene from firing, not just the ones that check
+          reducedMotion individually. */}
+      <SceneActivity />
       <color attach="background" args={[readToken("--color-void", "#060807")]} />
       <fog attach="fog" args={[readToken("--color-void", "#060807"), 22, 58]} />
-      <ambientLight intensity={0.5} />
+      <hemisphereLight args={["#e4f3ea", "#17251f", 1.25]} />
       <pointLight position={[8, 8, 12]} intensity={22} color={readToken("--color-signal", "#3ddc84")} />
       <pointLight position={[-8, -4, 8]} intensity={16} color={readToken("--color-probe", "#5ee6ff")} />
       {/* Procedural env (not a fetched HDRI — a portfolio shouldn't depend on a
@@ -555,11 +578,20 @@ function Scene({
             from={worldPosAt(ca.x, ca.y)}
             to={worldPosAt(cb.x, cb.y)}
             color={COLOR_HEX[color] ?? terminalGreen()}
+            reducedMotion={reducedMotion}
           />
         );
       })}
       <group scale={1.9}>
         <HoloCore />
+      </group>
+      {/* The lathe-turned instrument sits on its own low pedestal beneath the
+          hologram — still loaded when reduced motion is on, it has no idle
+          animation to gate either way. */}
+      <group position={[0, -2.3, 0]}>
+        <Suspense fallback={null}>
+          <BlueprintInstrument />
+        </Suspense>
       </group>
       {/* Mesh raycasting for onClick here fights OrbitControls' own pointer
        * handling on the same canvas and never reliably fires — a plain Html
@@ -606,28 +638,23 @@ function Scene({
             blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
           />
         </EffectComposer>
-      ) : (
-        // Bloom does the heavy lifting for the glow look. The rest are kept
-        // deliberately subtle — ChromaticAberration/Scanline read as "blueprint
-        // schematic on an old CRT" texture rather than a filter slapped on top,
-        // and Glitch fires rarely (SPORADIC mode, long random delay) so it reads
-        // as an occasional signal hiccup, not a constant distraction.
+      ) : legend ? (
+        // Keep the default tour readable. The optional legend mode owns CRT effects.
         <EffectComposer multisampling={0}>
-          <RipplePass />
           <Bloom mipmapBlur luminanceThreshold={0.5} luminanceSmoothing={0.2} intensity={legend ? 0.6 : 0.4} radius={0.15} />
           <ChromaticAberration offset={CHROMATIC_OFFSET} radialModulation={true} modulationOffset={0.4} />
           <Scanline blendFunction={BlendFunction.OVERLAY} density={1.3} />
           <Glitch
             mode={GlitchMode.SPORADIC}
-            delay={glitchDelay}
+            delay={asciiGlitchDelay}
             duration={GLITCH_DURATION}
             strength={glitchStrength}
             chromaticAberrationOffset={GLITCH_CHROMATIC_OFFSET}
             blendFunction={reducedMotion ? BlendFunction.SKIP : BlendFunction.NORMAL}
           />
-          <Vignette eskil={false} offset={0.2} darkness={0.6} />
+          <Vignette eskil={false} offset={0.2} darkness={0.25} />
         </EffectComposer>
-      )}
+      ) : null}
     </>
   );
 }

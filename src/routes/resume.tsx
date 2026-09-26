@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
-import { profile } from "../data/profile.ts";
+// core.ts directly (not the ../data/profile.ts barrel): `head()` only needs
+// name/title, same reasoning as __root.tsx's own profile/core.ts import.
+import { profile } from "../data/profile/core.ts";
 import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { heavy } from "../lib/assetBase.ts";
 
 // The full record is the default and carries no param, so `/resume` keeps
@@ -26,12 +27,12 @@ export const Route = createFileRoute("/resume")({
       meta: [
         { title: `Résumé — ${profile.name} | ${profile.title}` },
         { name: "description", content: desc },
-        { property: "og:url", content: "https://cv-siddharth.vercel.app/resume" },
+        { property: "og:url", content: "https://siddharth-pandalai.vercel.app/resume" },
         { property: "og:description", content: desc },
         { property: "og:image", content: heavy("/p/resume/og.png") },
         { name: "twitter:image", content: heavy("/p/resume/og.png") },
       ],
-      links: [{ rel: "canonical", href: "https://cv-siddharth.vercel.app/resume" }],
+      links: [{ rel: "canonical", href: "https://siddharth-pandalai.vercel.app/resume" }],
       // Résumé-specific Person schema, derived from the same profile/experience
       // data the page itself renders from — unlike __root.tsx's PERSON_LD this
       // can't drift from what /resume actually says.
@@ -41,8 +42,12 @@ export const Route = createFileRoute("/resume")({
   component: ResumePage,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment — `Route.useSearch()` inside
+// a split component re-imports the whole route module.
+const route = getRouteApi("/resume");
+
 function ResumePage() {
-  const { cut } = Route.useSearch();
+  const { cut } = route.useSearch();
   // The portfolio is dark; the résumé prints on white.
   useEffect(() => {
     document.documentElement.classList.add("resume-mode");
@@ -57,15 +62,6 @@ function ResumePage() {
       <div style={{ viewTransitionName: "resume-hero" }}>
         <ResumeView cut={cut ?? "full"} />
       </div>
-      {/* Matching the other route files that already mount it. Two
-          bits of chatContext.ts had been dead code since the day they were
-          written — PAGE_CHIPS["/resume"] and its three résumé-specific
-          prompts — because the console they belong to was never on this
-          route. It also puts the JD fit check one click from the page a
-          recruiter who has already decided to read the résumé is standing on.
-          The launcher, the panel and the crawlable FAQ section all carry
-          print:hidden, so the printed PDF is unchanged by mounting this. */}
-      <FloatingChat />
     </>
   );
 }

@@ -8,7 +8,8 @@
     }
   ],
   "namedChunks": {
-    "SketchBoard": 1666666
+    "SketchBoard": 1666666,
+    "Globe": 26924
   },
   "largestChunkBytes": 1666798,
   "totalDeploySizeBytes": 28311552

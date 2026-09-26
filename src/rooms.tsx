@@ -1,12 +1,14 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, type LucideIcon } from "lucide-react";
-import { openChat } from "./FloatingChat.tsx";
+import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, Globe as GlobeIcon, type LucideIcon } from "lucide-react";
+import { openChat } from "./lib/chatBus.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { usePulseUI } from "./play/pulseUI.ts";
 import type { PulseEvent } from "./play/pulse.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
+import { AltitudeRail } from "./world/AltitudeRail.tsx";
+import { altitudeFor } from "./world/altitude.ts";
 
 /**
  * The room registry and the chrome every room route wears.
@@ -15,8 +17,8 @@ import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
  * fine until the hub grew a shared realtime layer: App.tsx imports ROOMS and
  * /map, /lab and /forge import RoomFrame, so one static import chain was enough
  * to pull playhtml's ~75 kB into the landing page's bundle. Splitting the
- * registry out from the page keeps the weight where it is actually used —
- * /playground, /blueprint and /pulse — and leaves the rest of the site paying
+ * registry out from the page keeps the weight where it is actually used -
+ * /playground, /blueprint and /pulse - and leaves the rest of the site paying
  * nothing for a feature it doesn't render.
  */
 
@@ -28,7 +30,7 @@ export type Room = Surface & { icon: LucideIcon };
  * Icons are React values, and `src/data/surfaces.ts` must stay importable by
  * `scripts/gen-system-prompt.mjs` (a Node script can't import this .tsx and
  * shouldn't resolve lucide-react), so the icon lives here and everything else
- * — label, blurb, tag, tint, device, group — lives in the registry. `tint`
+ * - label, blurb, tag, tint, device, group - lives in the registry. `tint`
  * moved to the registry because it is a plain string and the wall needs it
  * without pulling in React.
  *
@@ -40,6 +42,7 @@ export const SURFACE_ICON: Record<string, LucideIcon> = {
   "/lab": FlaskConical,
   "/blueprint": Compass,
   "/map": Boxes,
+  "/globe": GlobeIcon,
   "/forge": Sparkles,
   "/terminal": TerminalSquare,
   "/chess": Crown,
@@ -60,7 +63,7 @@ export const SURFACE_ICON: Record<string, LucideIcon> = {
   "/time-machine": History,
 };
 
-/** Every surface with its icon attached — what the wall renders. */
+/** Every surface with its icon attached - what the wall renders. */
 export const SURFACES: Room[] = surfaces.map((s) => ({ ...s, icon: SURFACE_ICON[s.to] ?? LayoutGrid }));
 
 /** The full-screen rooms, in pager order. */
@@ -71,15 +74,15 @@ export const ROOMS: Room[] = siteRooms.map((r) => ({ ...r, icon: SURFACE_ICON[r.
  *
  * Two things this now fixes, both found by auditing the whole site at once:
  *
- * 1. NO DEAD ENDS. Every room used to offer only two ways out — back to the hub
- *    or back to the portfolio — so the rooms were leaves hanging off a hub with
+ * 1. NO DEAD ENDS. Every room used to offer only two ways out - back to the hub
+ *    or back to the portfolio - so the rooms were leaves hanging off a hub with
  *    no edges between them. A visitor who liked one room had no way to discover
  *    its neighbour except by going back and choosing again. The pager at the
  *    foot loops the rooms into each other, the same device `NextProject` already
  *    gives the case studies.
  *
- * 2. ⌘K EVERYWHERE. The command palette — the one control that can reach every
- *    surface on this site — was mounted inside HomePage(), so it existed on `/`
+ * 2. ⌘K EVERYWHERE. The command palette - the one control that can reach every
+ *    surface on this site - was mounted inside HomePage(), so it existed on `/`
  *    and nowhere else. Mounting it here gives it to every room. (The remaining
  *    routes that don't use RoomFrame still need it; see the audit.)
  */
@@ -87,16 +90,16 @@ export const ROOMS: Room[] = siteRooms.map((r) => ({ ...r, icon: SURFACE_ICON[r.
 // `siteRooms` order the hub and the assistant's prompt both read, so the
 // three can never disagree about what follows what.
 //
-// Every room-chrome variant calls this hook — RoomFrame (5 rooms) plus
+// Every room-chrome variant calls this hook - RoomFrame (5 rooms) plus
 // BlueprintRoom, Terminal and ComposePlayground, which each draw their own
-// header and reuse only the pager — so it is the one place a mount-time
+// header and reuse only the pager - so it is the one place a mount-time
 // `room:<slug>` pulse bump reaches every entry path: backtick, the palette,
 // the pager link, or a pasted URL. Previously that count only bumped from
 // RoomCard's onClick in RoomGrid, which is why /pulse undercounted every
 // other way into a room; usePulse's own 1s dedupe makes a click-then-mount
 // in the same second collapse to one, so there is nothing to double-count.
 //
-// `usePulseUI`, not `usePulse` — this hook runs from every room, including
+// `usePulseUI`, not `usePulse` - this hook runs from every room, including
 // ones a node-environment test reaches through nothing more than an icon
 // import (surfaces.test.ts imports SURFACE_ICON from here). `usePulse`
 // pulls in `@playhtml/react`, which reads `document` the moment it is
@@ -144,7 +147,7 @@ export function NextRoomLink({ next, className = "" }: { next: Room; className?:
 }
 
 /**
- * D1: for a room with no footer of its own (BlueprintRoom, Terminal) — the
+ * D1: for a room with no footer of its own (BlueprintRoom, Terminal) - the
  * same pager RoomFrame gives every other room, in its own landmark. A room
  * that already draws a `<footer>` (ComposePlayground) uses `useNextRoom` +
  * `NextRoomLink` directly instead, folded into that existing footer.
@@ -153,7 +156,7 @@ export function RoomPagerFooter() {
   const next = useNextRoom();
   if (!next) return null;
   return (
-    <footer className="border-t border-line bg-ink/80">
+    <footer data-spine="room-pager" className="border-t border-line bg-ink/80">
       <NextRoomLink next={next} className="mx-auto max-w-7xl px-4 py-4 sm:px-6" />
     </footer>
   );
@@ -161,12 +164,20 @@ export function RoomPagerFooter() {
 
 export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
   const { goToSection } = useSectionNav();
+  // The altitude rail (living-ledger-spec.md#6.2) only makes sense on the two
+  // rooms that ARE altitudes other than STREET: /map (ORBIT) and /globe
+  // (GLOBE). Every other RoomFrame room (chess, weeb, lab, forge, terminal,
+  // blueprint, compose) falls back to "street" from altitudeFor and renders
+  // nothing here; STREET's own copy of the rail is AltitudeRailV2.tsx,
+  // mounted into world-v2's HUD instead, not here.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showAltitudeRail = altitudeFor(pathname) !== "street";
   return (
     <div className="flex min-h-screen flex-col bg-void">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <header data-spine="route-header" className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Was a link to /playground — the hub that lists the rooms. The
+            {/* Was a link to /playground - the hub that lists the rooms. The
                 launcher shows the same set without leaving the room, which is
                 the difference between "go back and choose again" and moving
                 sideways. /playground is still a route and still on the wall. */}
@@ -181,14 +192,15 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
           </div>
           {/* weeb-1 / blueprint-title-hidden-mobile / compose-no-title-below-desktop:
               this used to be `hidden ... lg:flex`, so below 1024px a visitor
-              had no on-screen answer to "what page am I on" — the sr-only
+              had no on-screen answer to "what page am I on" - the sr-only
               <h1> below carries the same text but announces to nobody
               looking at the screen. Always shown now; it truncates instead
               of pushing the launcher or the Ask button off a narrow row. */}
-          <span className="kicker flex min-w-0 items-center gap-2 truncate">
-            {title} — {tagline}
+          <span className="kicker tagline-wrap min-w-0">
+            {title} · {tagline}
           </span>
           <div className="flex items-center gap-2">
+            {showAltitudeRail && <AltitudeRail />}
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
@@ -200,18 +212,18 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
       </header>
       <main id="main-content" tabIndex={-1} className="min-h-0 flex-1">
         {/* Every room route is single-purpose full-screen chrome (no scrollable
-            page around it), so it never gets its own visible <h1> — this one
+            page around it), so it never gets its own visible <h1> - this one
             is screen-reader-only, keeping heading order sane (the room's own
             content, e.g. LabBench's h2, follows it) without duplicating the
             title bar's visible text above. */}
-        <h1 className="sr-only">{title} — {tagline}</h1>
+        <h1 className="sr-only">{title} · {tagline}</h1>
         {children}
       </main>
       {/* The onward path. Without this a room is a leaf: the only exits were
           "back to the hub" and "back to the portfolio", so the rooms never led
           to each other and the deepest work on the site was the hardest to
           stumble into. Same component BlueprintRoom and Terminal render for
-          their own hand-drawn chrome — one footer, not three copies. */}
+          their own hand-drawn chrome - one footer, not three copies. */}
       <RoomPagerFooter />
     </div>
   );

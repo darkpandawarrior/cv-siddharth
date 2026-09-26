@@ -109,3 +109,30 @@ export function condenseJd(text: string): string {
   const out = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
   return out.length >= MIN_KEPT_CHARS ? out : text;
 }
+
+/** Which heading this JD's condensing pass kept and which it dropped — the
+ *  data the SYS-7 dossier chit shows (src/lib/useJdFit.ts, src/ChatWidgets.tsx).
+ *  Pure and side-effect-free like the rest of this file, so it's safe to
+ *  import into the client bundle (useJdFit.ts does, to compute the dossier
+ *  the instant an offline card renders, before any network round trip). */
+export interface JdSectionSplit {
+  kept: string[];
+  trimmed: string[];
+}
+
+export function jdSections(text: string): JdSectionSplit {
+  // Mirrors condenseJd's own verdict exactly, including its MIN_KEPT_CHARS
+  // floor: if condensing was a no-op (short JD, or too little survived and
+  // the original was sent instead), nothing was actually trimmed, whatever a
+  // line-by-line reading of the noise regex alone would suggest.
+  const actuallyTrimmed = condenseJd(text) !== text;
+  const kept: string[] = [];
+  const trimmed: string[] = [];
+  for (const line of text.split("\n")) {
+    if (!isHeadingCandidate(line)) continue;
+    const label = line.trim();
+    if (KEEP_HEADING.test(line)) kept.push(label);
+    else if (actuallyTrimmed && NOISE_HEADING.test(line)) trimmed.push(label);
+  }
+  return { kept, trimmed };
+}

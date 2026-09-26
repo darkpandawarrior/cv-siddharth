@@ -129,7 +129,7 @@ function cropPngTop(buf, keepH) {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
 const outRoot = join(root, "heavy", "p");
-const SITE = "https://cv-siddharth.vercel.app";
+const SITE = "https://siddharth-pandalai.vercel.app";
 
 // Shared with gen-project-heroes.mjs — and now includes macOS, where this list
 // previously matched nothing and the script skipped on every local run.

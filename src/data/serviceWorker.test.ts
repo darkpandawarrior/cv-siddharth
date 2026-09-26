@@ -48,7 +48,7 @@ describe("service worker wasm bypass", () => {
   });
 
   it("still lets ordinary pages and assets through to the caching logic", () => {
-    for (const path of ["/", "/project/kursi", "/assets/index-abc.js", "/projects/kursi/screenshots/home.png"]) {
+    for (const path of ["/", "/project/gaddi", "/assets/index-abc.js", "/projects/gaddi/screenshots/home.png"]) {
       expect(bypassed(path), `${path} should NOT bypass the service worker`).toBe(false);
     }
   });

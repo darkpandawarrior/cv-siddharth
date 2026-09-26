@@ -29,4 +29,17 @@ describe("systemStripFor", () => {
   it("returns [] rather than throwing for an unknown slug", () => {
     expect(systemStripFor("not-a-real-slug")).toEqual([]);
   });
+
+  // T2: rebuilt-from (E2) and feeds-data (E3) groups.
+  it("gives candidai a 'rebuilt from' entry pointing at the real upstream, never a fork", () => {
+    const groups = systemStripFor("candidai");
+    const rebuilt = groups.find((g) => g.kind === "rebuilt-from");
+    expect(rebuilt?.items[0]?.url).toMatch(/^https:\/\/github\.com\/career-ops-hq\//);
+  });
+
+  it("gives portfolio a 'built on' group listing kmp-toolkit and kmp-build-logic", () => {
+    const groups = systemStripFor("portfolio");
+    const builtOn = groups.find((g) => g.kind === "built-on");
+    expect(builtOn?.items.map((i) => i.id)).toEqual(expect.arrayContaining(["kmp-toolkit", "kmp-build-logic"]));
+  });
 });

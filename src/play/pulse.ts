@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import { usePageData } from "@playhtml/react";
+import { useCallback, useEffect, useRef } from "react";
+import { usePageData, usePlayContext } from "@playhtml/react";
 import { PULSE_EVENTS, type PulseCounts, type PulseEvent } from "./pulseEvents.ts";
 
 /**
@@ -46,19 +46,53 @@ export function usePulseCounts(): PulseCounts {
   return counts;
 }
 
-/** `const bump = usePulse(); bump("room:lab")`. Safe to call before the socket
- *  has synced (and when it never does) — playhtml's setter no-ops until then,
- *  so a dead backend costs the visitor nothing. */
+/**
+ * `const bump = usePulse(); bump("room:lab")`. Safe to call before the socket
+ * has synced (and when it never does).
+ *
+ * playhtml's own `usePageData` setter does NOT silently no-op before init —
+ * it calls through and logs `[@playhtml/react] ... setData called before
+ * init — ignored.` to the console on every dropped write. A visitor who pokes
+ * a room in its first second (the common case: the room mounts, they click,
+ * the socket is still connecting) produced one of those on every click, which
+ * is a real console error e2e/home-console.spec.ts and friends assert against
+ * — and the interaction itself is lost, not just logged.
+ *
+ * So the write is queued here instead of attempted early: while
+ * `usePlayContext().isLoading` is true, a bump goes into a ref-held queue
+ * rather than calling `setCounts` at all. One effect drains that queue in a
+ * single write the instant loading flips false, so a burst of early clicks
+ * costs one page-data write, not one dropped write per click.
+ */
 export function usePulse(): (event: PulseEvent) => void {
+  const { isLoading } = usePlayContext();
   const [, setCounts] = usePageData<PulseCounts>(CHANNEL, {});
+  const queued = useRef<PulseEvent[]>([]);
+
+  // Drains whatever queued up before init resolved, in the one write below —
+  // never call setCounts while isLoading is still true, or playhtml logs and
+  // drops it exactly as if this queue didn't exist.
+  useEffect(() => {
+    if (isLoading || queued.current.length === 0) return;
+    const events = queued.current;
+    queued.current = [];
+    setCounts((draft) => {
+      for (const event of events) draft[event] = (draft[event] ?? 0) + 1;
+    });
+  }, [isLoading, setCounts]);
+
   return useCallback(
     (event: PulseEvent) => {
       if (!dedupeOncePerSecond(event, lastBump)) return;
+      if (isLoading) {
+        queued.current.push(event);
+        return;
+      }
       setCounts((draft) => {
         draft[event] = (draft[event] ?? 0) + 1;
       });
     },
-    [setCounts],
+    [isLoading, setCounts],
   );
 }
 

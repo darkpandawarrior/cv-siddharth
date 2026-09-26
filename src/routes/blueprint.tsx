@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import BlueprintRoom from "../BlueprintRoom.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 
 /**
  * Server-rendered now, like /playground: BlueprintRoom already gates its own
@@ -17,7 +16,6 @@ export const Route = createFileRoute("/blueprint")({
   component: () => (
     <>
       <BlueprintRoom />
-      <FloatingChat />
     </>
   ),
 });

@@ -1,15 +1,15 @@
 import { useCallback, useState } from "react";
-import { createFileRoute, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { Reveal } from "../Reveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { anthology, anthologyEntries, entriesOfSeason, unfiledPieces, siblingSeries } from "../data/anthology.ts";
 import type { AnthologyEntry, AnthologyWitness } from "../data/anthology.ts";
 // The register's targets and this route's validateSearch have to agree about
@@ -134,8 +134,12 @@ export const Route = createFileRoute("/anthology")({
   component: AnthologyRoute,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment — the same fix Starmap.tsx's
+// own weight needs here, same shape as StoryMap.tsx there.
+const route = getRouteApi("/anthology");
+
 function AnthologyRoute() {
-  const { layer = DEFAULT_LAYER, world, at } = Route.useSearch();
+  const { layer = DEFAULT_LAYER, world, at } = route.useSearch();
   const navigate = useNavigate({ from: "/anthology" });
 
   return (
@@ -163,6 +167,13 @@ function AnthologyRoute() {
               {TOTAL_WORDS.toLocaleString()} words
             </p>
             <h1 className="font-display mt-3 text-hero">{anthology.title}</h1>
+            <div className="mt-2">
+              <EvidenceChip
+                file="anthology.ts"
+                stamp={anthology.generatedAt}
+                source="the-loopdown/fiction/morkinstar-journals"
+              />
+            </div>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--color-text)" }}>
               {anthology.tagline}
             </p>
@@ -280,7 +291,6 @@ function AnthologyRoute() {
             {layer === "dark" && <SiblingTab />}
           </div>
         </main>
-        <FloatingChat />
         <SiteFooter />
       </div>
   </DeferredPlayRoom>

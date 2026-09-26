@@ -27,6 +27,28 @@ heavy/**/*.webp
 # pages in it. gen-images.mjs skips this directory for the same reason.
 !public/excelsior/pages/**/*.webp
 !heavy/excelsior/pages/**/*.webp
+# ...and except GLOBE's static no-WebGL plates (scripts/capture-globe-plate.mjs,
+# P2-10b): a manual capture of the live scene, not a derivative gen-images.mjs
+# would ever create from a PNG sibling in this repo. Ignoring them ships a
+# no-WebGL /globe visitor a fact list with no image beside it.
+!heavy/globe/plates/*.avif
+# ...and except the world-v2 concept-art frames. Same reasoning again: they are
+# not derivatives of anything in this repo, they are the source paintings
+# (gemini-3-pro-image, packed by scripts/world-v2/pack-concept.mjs from the
+# gitignored .showcase-work/concept/ PNGs, which are never committed).
+# Ignoring them ships a playground fallback and share preview with no image.
+# NOTE: 01-golden-spawn-og.jpg is real source too (the share-preview crop),
+# but gen-images.mjs walks heavy/ and bakes it its own .webp/.avif sibling
+# derivative at build time — that one IS regenerable, so it stays re-ignored
+# below (order matters: a later negated pattern wins).
+!heavy/world/concept/**/*.webp
+heavy/world/concept/*-og.webp
+# ...and except this lane's own flow-map bake (scripts/world-v2/gen-terrain.mjs,
+# P2-05): it is the canonical output of a generator reading real committed
+# data (river/tributary tangents, the confluence collar), not a derivative
+# gen-images.mjs would ever create from a PNG sibling — there is no
+# valley-flow-1024.png. Ignoring it ships terrain with no real flow map.
+!heavy/world/terrain/valley-flow-1024.webp
 # ...and except the Play Store icons. Same reasoning: not derivatives of
 # anything in this repo. scripts/gen-store.mjs downloads them from the live
 # listings, and it needs the private Jugnoo repos to run, which a build machine
@@ -38,12 +60,13 @@ heavy/**/*.webp
 # machine has. Ignoring them fails surfaces.test.ts on a fresh clone and ships
 # a homepage wall of empty frames.
 !public/surfaces/*.webp
-# ...and once more for the README's wall capture. Same reasoning as all three
-# above: it is a screenshot of the LIVE site taken by driving a real browser,
-# not a derivative of any source in this repo, so gen-images.mjs has nothing to
-# regenerate it from. Ignoring it ships a README whose main illustration 404s on
-# GitHub — which is exactly the state this rule was written to prevent.
-!public/assets/readme/*.webp
+# ...and except the Loopdown cast portraits and series covers. Same reasoning
+# again: they are not derivatives of anything in this repo — scripts/gen-
+# loopdown-art.mjs fetches the-loopdown's own pre-optimized .webp files over
+# the network (raw.githubusercontent.com), it does not encode them from a
+# local .png sibling the way gen-images.mjs would. Ignoring them ships a
+# bestiary and a set of series headers with no art in them.
+!heavy/loopdown/**/*.webp
 
 # Playwright output
 test-results/
@@ -75,3 +98,13 @@ graphify-out/
 # piper voice models — ~61MB of weights, re-fetchable from the same URL the
 # script derives. Same rule as the avif/webp block above: regenerable, not carried.
 .piper-voices/
+
+# Raw Poly Haven model downloads (scripts/blender/world-v2/fetch-polyhaven-models.py)
+# — source jpg/gltf/bin for the lookdev scatter kit (fern/shrub/rock/lantern).
+# Same regenerable-input rule as heavy/**/*.webp above; the CC0 attribution
+# that IS carried lives in heavy/world/ASSETS.md, and the baked lookdev
+# render + exported landmark GLBs are committed separately.
+heavy/world/models/polyhaven/
+
+# Blender's bytecode cache for the world-v2 kit scripts (scripts/blender/world-v2/*.py).
+__pycache__/

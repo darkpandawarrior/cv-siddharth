@@ -256,14 +256,10 @@ function cspPreviewPlugin(): Plugin {
   return {
     name: "csp-report-only-preview",
     async configurePreviewServer(server) {
-      const { buildCspHeader } = await import("./src/lib/csp.ts");
+      const { buildCspHeader, inlineScriptBodies } = await import("./src/lib/csp.ts");
       const { createHash } = await import("node:crypto");
       const { PERSON_LD, PROFILEPAGE_LD } = await import("./src/lib/structuredData.ts");
-      // __root.tsx's `scripts:` head entries never render into the
-      // server-sent HTML on any route (see csp.ts's buildCspHeader
-      // docstring) — hashed once here rather than relying on THIS
-      // response's own raw body to happen to contain them, which it never
-      // does on an ssr:false route.
+      // Also allow the root JSON-LD when a client-side head update inserts it.
       const globalScriptHashes = [
         createHash("sha256").update(JSON.stringify(PERSON_LD), "utf8").digest("base64"),
         createHash("sha256").update(JSON.stringify(PROFILEPAGE_LD), "utf8").digest("base64"),
@@ -301,8 +297,8 @@ function cspPreviewPlugin(): Plugin {
           collect(chunk);
           const body = Buffer.concat(chunks).toString("utf8");
           const hashes = new Set<string>(globalScriptHashes);
-          for (const m of body.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
-            if (m[1].trim()) hashes.add(createHash("sha256").update(m[1], "utf8").digest("base64"));
+          for (const script of inlineScriptBodies(body)) {
+            hashes.add(createHash("sha256").update(script, "utf8").digest("base64"));
           }
           res.setHeader("Content-Security-Policy-Report-Only", buildCspHeader([...hashes]));
           if (headArgs) writeHead(...headArgs);
@@ -330,6 +326,20 @@ export default defineConfig(async () => ({
   build: {
     manifest: true,
     rollupOptions: {
+      // satellite.js@7.1.0 re-exports its Emscripten WASM/pthreads runtime
+      // (`export * from './wasm/index.js'` in dist/index.js) alongside the
+      // plain-JS SGP4 math src/lib/satellites.ts actually imports. Nothing in
+      // this app ever calls the WASM path, but satellite.js ships no
+      // "sideEffects": false, so rolldown can't prove that branch dead and
+      // walks into wasm-build/pthreads-release/index.js — Emscripten's own
+      // `new Worker(new URL(...))` bootstrap for its pthreads pool, which
+      // fails to bundle as a worker (top-level await isn't legal in the
+      // default iife worker format). Externalizing the wasm subtree stops
+      // rolldown from ever parsing it; none of our named imports resolve
+      // through it (they come from transforms.js/sun.js/shadow.js/io.js/
+      // propagation.js), so nothing in the shipped bundle references this
+      // specifier at runtime.
+      external: (id: string) => /satellite\.js\/(dist\/wasm|wasm-build)\//.test(id),
       output: {
         // Rollup's automatic chunking merges modules reached by the exact
         // same SET of importing routes into one physical chunk — which is
@@ -348,6 +358,59 @@ export default defineConfig(async () => ({
         // exists, never the heavy fields) is the fuller one and out of this
         // lane's file scope — see this lane's final report.
         manualChunks(id: string) {
+          // data/surfaces.ts is a genuinely light, EVERY-route module (rooms.tsx,
+          // CommandPalette and Launcher all read it, mounted from __root.tsx on
+          // every page) that also happens to be profile/projects.ts's own
+          // dependency (the portfolio case study used to read surfaces.length).
+          // Without forcing it apart, the whole surfaces.ts -> labs.ts ->
+          // excelsior.ts chain got swept into the profile-projects-heavy bucket
+          // below, so every route paid for the full project registry too
+          // (e2e/spine-payload.spec.ts: /chess, /terminal, /weeb, /hire all
+          // cold-loaded it via rooms.tsx, which never touches project data).
+          // data/careerOpsUpstream.ts needs the same isolation one hop further
+          // in: labs.ts reads its `providerCount` specifically to avoid a
+          // profile.ts dependency (see labs.ts's own comment), but profile/
+          // projects.ts reads it too — so leaving it unforced let it get swept
+          // into profile-projects-heavy right back, and surfaces-registry
+          // (via labs.ts) inherited that edge straight back to the chunk this
+          // whole split exists to keep off every route.
+          if (id.includes("/src/data/surfaces.ts")) return "surfaces-registry";
+          if (id.includes("/src/data/careerOpsUpstream.ts")) return "career-ops-upstream-registry";
+          // Same one-hop-further leak as careerOpsUpstream.ts above: excelsior.ts
+          // (part of the surfaces.ts chain) and profile/projects.ts both read
+          // this foundational, import-free helper, so leaving it unforced let
+          // it get swept into profile-projects-heavy and handed surfaces-
+          // registry an edge straight back to it.
+          if (id.includes("/src/lib/assetBase.ts")) return "asset-base-registry";
+          // Same shape a third time: projectCards.ts (the deliberately LIGHT
+          // card-list projection /hire, /resume, ChatWidgets.tsx and
+          // Terminal.tsx all read) shares projectStats.ts and lib/
+          // projectStatLine.ts with profile/projects.ts itself. Forcing THOSE
+          // two apart directly didn't stick — Rollup kept folding them back
+          // into profile-projects-heavy — but forcing projectCards.ts itself
+          // into its own named chunk gave it a home to be inlined into
+          // instead, breaking the edge every one of its every-route consumers
+          // was inheriting.
+          if (id.includes("/src/data/profile/projectCards.ts")) return "profile-project-cards";
+          // Fourth hop: data/facets.ts (the anomaly-rail chronology registry,
+          // read by AnomalyRail.tsx — mounted eagerly from __root.tsx on every
+          // route) imports data/writing.ts for its own entries, and profile/
+          // projects.ts's "the-loopdown" case study reads writing.ts too (real
+          // derived prose — lessons/series/archive counts and rank claims —
+          // not a one-line count, so unlike surfaces.length above this one
+          // isn't a literal-and-a-test fix). Forcing writing.ts apart directly
+          // didn't stick either; forcing facets.ts into its own named chunk,
+          // same trick as projectCards.ts, did.
+          if (id.includes("/src/data/facets.ts")) return "facets-registry";
+          // writing.ts/writingMeta.ts/connections.ts: the same fourth-hop
+          // shape one level further out — facets.ts's own isolation above
+          // only clears facets.ts's route to writing.ts; connections.ts
+          // (Terminal.tsx, FieldNotes.tsx, ProjectDetail.tsx) and
+          // writingMeta.ts (CommandPalette.tsx, eager from __root.tsx) each
+          // reach writing.ts independently and needed the same forcing.
+          if (id.includes("/src/data/writing.ts")) return "writing-registry";
+          if (id.includes("/src/data/writingMeta.ts")) return "writing-meta-registry";
+          if (id.includes("/src/data/connections.ts")) return "connections-registry";
           if (id.includes("/src/data/profile/projects.ts")) return "profile-projects-heavy";
           // store.ts (141 KB, gen-store.mjs's full Play Store fleet listing)
           // ends in a 13-line `fleetStats` summary object openSource.ts reads
@@ -355,6 +418,25 @@ export default defineConfig(async () => ({
           // export" shape as projects.ts above, just in a file this lane
           // does not own (see final report: out of scope to slim further).
           if (id.includes("/src/data/store.ts")) return "store-fleet-heavy";
+          // The "fuller fix" the comment above named as out of scope, applied
+          // narrowly the same way: openSource.ts (needs store.ts's fleetStats)
+          // and skills.ts (needs the full `projects` for its own project-
+          // stack word-matching) were the two remaining profile/ submodules
+          // still landing in the SAME auto-merged bucket as core.ts/
+          // projectCards.ts (every route that reads `profile.name` shares
+          // that chunk) purely because Rollup's "same importer set" heuristic
+          // doesn't know their heavy imports are unused by most of that set.
+          // e2e/spine-payload.spec.ts caught it: /chess, /terminal, /weeb and
+          // /hire were still fetching profile-projects-heavy + store-fleet-
+          // heavy through that shared bucket after Terminal.tsx (this wave's
+          // one direct consumer) stopped needing them itself. Forcing these
+          // two into their own chunks, same as projects.ts/store.ts above,
+          // keeps that shared bucket light for every route that doesn't
+          // render skills/foundation/open-source content (only /terminal and
+          // /resume do; both already lazy-load or isolate the rest of their
+          // heavy needs).
+          if (id.includes("/src/data/profile/openSource.ts")) return "profile-open-source-heavy";
+          if (id.includes("/src/data/profile/skills.ts")) return "profile-skills-heavy";
         },
       },
     },
@@ -383,6 +465,7 @@ export default defineConfig(async () => ({
     // already-client-only `@react-three/postprocessing` import). `server`
     // is what keeps them out of the SSR path these libs actually crash.
     tanstackStart({
+      router: { routeFileIgnorePattern: "\\.test\\.tsx?$" },
       importProtection: {
         behavior: "error",
         server: { specifiers: ["leaflet", "tldraw", "@playhtml/react", "playhtml", "three", "@react-three/*"] },

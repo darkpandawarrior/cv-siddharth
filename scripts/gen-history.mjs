@@ -117,7 +117,15 @@ const body =
   `// file's own note on "git commit counts").\n` +
   `export interface HistoryMonth {\n  ym: string;\n  commits: number;\n  insertions: number;\n  deletions: number;\n  filesChanged: number;\n  subjects: string[];\n  cumulative: { commits: number; insertions: number; deletions: number };\n}\n` +
   `export const historyMonths: HistoryMonth[] = ${JSON.stringify(monthRows, null, 2)} as const;\n` +
-  `export const historyGeneratedAt = ${JSON.stringify(new Date().toISOString())};\n` +
+  // Bare date, not a full timestamp: historyGeneratedAt feeds
+  // src/world/v2/ledger.ts's `generatedAt` (max of every source's own
+  // stamp, by string comparison). A millisecond-precision stamp here made
+  // that max non-reproducible on regeneration with zero new commits, and
+  // cascaded into gen-world-grammar.mjs's committed output (generatedAt,
+  // and by extension every C-class peakAt) changing on every run — the same
+  // date-only convention gen-system-graph.mjs, gen-project-stats.mjs and
+  // gen-weeb.mjs already use for this exact field.
+  `export const historyGeneratedAt = ${JSON.stringify(new Date().toISOString().slice(0, 10))};\n` +
   `export const historyFrom = ${JSON.stringify(firstMonth)};\n` +
   `export const historyTo = ${JSON.stringify(lastMonth)};\n` +
   `export const totalCommits = ${cumulativeCommits};\n`;

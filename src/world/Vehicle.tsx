@@ -48,7 +48,7 @@ const WHEEL_WIDTH = 0.42; // "oversized tread" — a chunky offroad-cart tyre, n
 // deliberately near-black-but-not-void, the same "structural colour that
 // isn't in the theme's own palette rotation" exception READHEAD_HEX carries
 // in palette.ts) plus its hazard-trim geometry, in local (chassis) space.
-const CART_BODY_HEX = "#0d100f";
+const CART_BODY_HEX = "#293c34";
 const TRIM_WIDTH = 0.06;
 const CORNER_X = HALF.x - TRIM_WIDTH / 2;
 const CORNER_Z = HALF.z - TRIM_WIDTH / 2;
@@ -321,7 +321,7 @@ export function Vehicle(props: {
       {decalTexture && (
         <mesh ref={decalRef} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[DECAL_WIDTH, DECAL_DEPTH]} />
-          <meshBasicMaterial map={decalTexture} blending={THREE.MultiplyBlending} depthWrite={false} />
+          <meshBasicMaterial map={decalTexture} blending={THREE.MultiplyBlending} premultipliedAlpha depthWrite={false} />
         </mesh>
       )}
     <group ref={groupRef}>
@@ -340,7 +340,7 @@ export function Vehicle(props: {
         args={[HALF.x * 2, HALF.y * 2, HALF.z * 2]}
         position={[0, CHASSIS_RESTING_HEIGHT, 0]}
         radius={0.08}
-        smoothness={2}
+        smoothness={4}
         castShadow
         receiveShadow
       >
@@ -351,13 +351,24 @@ export function Vehicle(props: {
       <RoundedBox
         args={[0.92, 0.62, 0.9]}
         radius={0.05}
-        smoothness={2}
+        smoothness={4}
         position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + 0.31, 0.35]}
         castShadow
       >
         <meshStandardMaterial color={CART_BODY_HEX} metalness={0.5} roughness={0.45} />
       </RoundedBox>
 
+      {/* Inset rear glass and machined deck ribs make the chase view readable. */}
+      <RoundedBox args={[.74, .36, .025]} radius={.035} smoothness={3}
+        position={[0, CHASSIS_RESTING_HEIGHT + HALF.y + .34, -.112]}>
+        <meshPhysicalMaterial color="#7ea99c" metalness={.5} roughness={.16} clearcoat={1} />
+      </RoundedBox>
+      {[-.45, -.22, 0, .22, .45].map(x => (
+        <RoundedBox key={x} args={[.045, .035, .65]} radius={.012} smoothness={2}
+          position={[x, CHASSIS_RESTING_HEIGHT + HALF.y + .018, -.75]}>
+          <meshStandardMaterial color="#64786c" metalness={.7} roughness={.3} />
+        </RoundedBox>
+      ))}
       {/* Exposed roll bar over the cab — two verticals plus a top rail, bare
           equipment steel, no shell around it. */}
       {[-1, 1].map((side) => (
@@ -442,8 +453,16 @@ export function Vehicle(props: {
             }}
           >
             <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 14]} />
-              <meshStandardMaterial color={c.void} roughness={0.8} />
+              <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 32]} />
+              <meshStandardMaterial color="#19211e" roughness={0.8} />
+            </mesh>
+            <mesh rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[WHEEL_RADIUS * .57, WHEEL_RADIUS * .57, WHEEL_WIDTH + .025, 24]} />
+              <meshStandardMaterial color="#819589" metalness={.8} roughness={.28} />
+            </mesh>
+            <mesh rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[WHEEL_RADIUS * .2, WHEEL_RADIUS * .2, WHEEL_WIDTH + .055, 16]} />
+              <meshStandardMaterial color={c.accent} metalness={.55} roughness={.3} />
             </mesh>
           </group>
         </group>

@@ -31,7 +31,7 @@ Where an increment is genuinely blocked, the blocker is named.
 ### Wave 0 — Foundations (build once, five specs consume them)
 
 **0 · Widen the a11y gate before widening the surface.** `e2e/a11y.spec.ts`'s `ROUTES` is
-`/, /hire, /resume, /project/mileway, /lab, /terminal, /blueprint, /compose, /forge, /map,
+`/, /hire, /resume, /project/doori, /lab, /terminal, /blueprint, /compose, /forge, /map,
 /playground, /pulse, /loopdown, /chess`. **`/excelsior`, `/ink` and `/read/$slug` are not in it.**
 Increments 13, 14, 18 and 20 all add interactive controls (a range input, two dialogs, a reordered
 `/ink` body) to routes nothing scans today. Add the three routes now, while they still pass, so
@@ -87,7 +87,7 @@ spec counted in its own directory. Do it as one mechanical PR per zone, in this 
   highest tedium; do it last or accept the debt knowingly.
 - **Exclusions, non-negotiable:** `ComposePlayground.tsx`'s `NAMED_COLORS` (Kotlin's own
   `Color.Green` — remapping it is a fidelity regression an Android engineer clocks instantly),
-  each lab's project brand colour (Kursi gold, HireSignal blue, PaymentsLab purple, Mileway cyan
+  each lab's project brand colour (Gaddi gold, Candidai blue, PaymentsLab-KMP purple, Doori cyan
   — `ThemeLab` exists to demonstrate exactly those), and `THEMES.green` in the terminal (stays a
   typeable option, only the default moves).
 *Blocks: nothing functionally. Verify: `grep -rn "3ddc84" src/` returns only the exclusion list.*
@@ -323,8 +323,8 @@ decision about what happens when `profile.ts` changes under an old link, for som
 copy already do. No KV/Upstash rate limiter — `chat-handler.ts` already documents why the
 per-isolate approximation is a deliberate trade.
 
-**Sweeps that destroy information.** Do not push amber/cyan over every canvas: Kursi's gold,
-HireSignal's blue, PaymentsLab's purple and Mileway's cyan are real client identities and
+**Sweeps that destroy information.** Do not push amber/cyan over every canvas: Gaddi's gold,
+Candidai's blue, PaymentsLab-KMP's purple and Doori's cyan are real client identities and
 `ThemeLab` exists to show them. Do not touch `NAMED_COLORS` — `Color.Green` rendering non-green is
 a fidelity regression, not a retheme. Do not delete `THEMES.green`, the queued-lessons list, the
 series ticker, or either search instrument's `full story →` link; the instruction is merge and

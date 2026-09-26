@@ -15,6 +15,8 @@
  */
 
 import type { TallStructure } from "./city.ts";
+export { hashNoise } from "./v2/hash.ts";
+import { hashNoise } from "./v2/hash.ts";
 
 export type Fix = { x: number; z: number };
 
@@ -40,16 +42,6 @@ const CANYON_MULTIPLIER = 5.5;
 /** How far a spike jumps when one lands, and how often. */
 const SPIKE_M = 14;
 const SPIKE_CHANCE = 0.04;
-
-/**
- * Deterministic value noise. Math.random would make the raw trail different on
- * every frame for a stationary craft, which reads as static rather than as
- * position error, and would make this module untestable.
- */
-function hashNoise(seed: number): number {
-  const s = Math.sin(seed * 12.9898) * 43758.5453;
-  return (s - Math.floor(s)) * 2 - 1;
-}
 
 /** Error multiplier at a point, given the tall structures near it. */
 export function canyonFactor(x: number, z: number, structures: TallStructure[]): number {

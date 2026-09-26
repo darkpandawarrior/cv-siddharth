@@ -11,10 +11,10 @@ Signal Lab (GPS 50%→95%), Crash Triage (-80%), Recomposition (92% Compose),
 White-label (80% faster). The animation/interaction quality is good but the
 content is thin: it only covers one employer, some sims don't actually land on
 the numbers they claim to prove, and none of it draws on the much richer real
-data already sitting in `src/data/profile.ts` for Mileway (46 modules, 5
-platforms, real location engine), PaymentsLab (66 gateways, 5 money rails),
-Kursi (ISMCTS AI, 10 personas), HireSignal (62 providers, zero-token scan),
-and Deadlock (deterministic replay, 0-tolerance gate).
+data already sitting in `src/data/profile.ts` for Doori (46 modules, 5
+platforms, real location engine), PaymentsLab-KMP (66 gateways, 5 money rails),
+Gaddi (ISMCTS AI, 10 personas), Candidai (62 providers, zero-token scan),
+and Stutter (deterministic replay, 0-tolerance gate).
 
 ## Goals
 
@@ -42,11 +42,11 @@ src/labs/
   CrashLab.tsx          (extracted, recalibrated)
   RecomposeLab.tsx      (extracted, stat added)
   ThemeLab.tsx           (extracted, rewritten — see below)
-  MilewayLab.tsx        (new)
-  PaymentsLabLab.tsx    (new)
-  KursiLab.tsx          (new)
-  HireSignalLab.tsx     (new)
-  DeadlockLab.tsx       (new)
+  DooriLab.tsx          (new)
+  PaymentsLab-KMPLab.tsx (new)
+  GaddiLab.tsx          (new)
+  CandidaiLab.tsx       (new)
+  StutterLab.tsx        (new)
 ```
 
 `useCanvasLoop(draw, step, opts)` hook: takes a `step(dtMs)` + `draw()` pair,
@@ -76,7 +76,7 @@ justify one.
 3. **Signal Lab → full journey simulation on a real map** (near-total
    rewrite, revised after first pass — see Addendum below for why). A
    longer looping route with five labeled zones, each modeling a documented
-   Mileway location-engine challenge: open road (clean) → urban canyon
+   Doori location-engine challenge: open road (clean) → urban canyon
    (multipath spikes) → tunnel (total dropout) → highway on-ramp (high
    speed, sparse sampling) → parking structure (intermittent weak signal).
    The route renders over a real Leaflet + CARTO dark raster-tile basemap
@@ -95,7 +95,7 @@ justify one.
      cadence, shows fusion compensating for sparser data)
 
    Two live readouts:
-   - A **four-bucket distance accumulator** (named after Mileway's real
+   - A **four-bucket distance accumulator** (named after Doori's real
      one) — running trip distance split into confirmed / reckoned /
      rejected buckets vs. ground-truth distance, with a live accuracy %.
    - An **optimization convergence chart** — a small live sparkline of raw
@@ -105,7 +105,7 @@ justify one.
 
    Toggling stages should visibly move both readouts the way spike
    rejection actually moved GPS accuracy 50%→95% in production. Footer
-   links to both the Dice.tech case study and `/#project/mileway`, credited
+   links to both the Dice.tech case study and `/#project/doori`, credited
    to both.
 
    **Addendum (post-approval revisions):** the first implementation pass
@@ -132,9 +132,9 @@ justify one.
 4. **White-label → real theme tokens + layout engine** (near-total rewrite).
    Replace the 5 fictional brand colors (mint/ocean/grape/ember/rose) with
    the 6 real per-project theme tokens already defined in `profile.ts`:
-   site default green, Kursi's teak/gold (+ its `Rozha One` display font —
-   swap font, not just color), Mileway's cyan, PaymentsLab's violet,
-   HireSignal's blue, Deadlock's rose. Add a **layout-engine toggle**
+   site default green, Gaddi's teak/gold (+ its `Rozha One` display font —
+   swap font, not just color), Doori's cyan, PaymentsLab-KMP's violet,
+   Candidai's blue, Stutter's rose. Add a **layout-engine toggle**
    (Card / Hero — two template archetypes, same tokens) so the demo proves
    the token layer drives more than color. Keep the 4 detailed client cards
    + add a compressed ~16-swatch strip beneath them (real number is 20+
@@ -145,11 +145,11 @@ justify one.
 
 | Lab | Metaphor | Live stat | Links to |
 |---|---|---|---|
-| **Mileway** | Radial module graph; toggle "isolate features" between a tangled all-to-all blob and the real 13-feature-module star meeting only at `:app` | "cross-feature dependencies: N → 0" | `/#project/mileway` |
-| **PaymentsLab** | Particles from "checkout" bounce off with a red ✕ (no shared contract) or funnel through one `PaymentGateway` hub into 4 category bins (native/hosted/mobile-money/stub) — bin motif reused from Crash Triage, inverted | "66 gateways reachable · 0 gateway-specific code" | `/#project/paymentslab` |
-| **Kursi** | Difficulty slider (Easy→Grandmaster) drives a live-growing Monte Carlo search tree, iteration count climbing 1.5k→16k, ending in a bot's bluff/fold call | "iterations: N · persona: X" | `/#project/kursi` |
-| **HireSignal** | One query fans out to a ring of 62 provider dots; toggle SimHash de-dup on/off, watch duplicate listings collapse or pile up | "62 providers · N duplicates collapsed · 0 tokens spent" | `/#project/hiresignal` |
-| **Deadlock** | Two replays of the same recorded input path overlap exactly (drift 0.000000); a "perturb" button edits one frame, paths visibly diverge, gate flips to BLOCKED | "drift: 0.000000 · gate: PASS" → "BLOCKED" | `/#project/deadlock` |
+| **Doori** | Radial module graph; toggle "isolate features" between a tangled all-to-all blob and the real 13-feature-module star meeting only at `:app` | "cross-feature dependencies: N → 0" | `/#project/doori` |
+| **PaymentsLab-KMP** | Particles from "checkout" bounce off with a red ✕ (no shared contract) or funnel through one `PaymentGateway` hub into 4 category bins (native/hosted/mobile-money/stub) — bin motif reused from Crash Triage, inverted | "66 gateways reachable · 0 gateway-specific code" | `/#project/paymentslab-kmp` |
+| **Gaddi** | Difficulty slider (Easy→Grandmaster) drives a live-growing Monte Carlo search tree, iteration count climbing 1.5k→16k, ending in a bot's bluff/fold call | "iterations: N · persona: X" | `/#project/gaddi` |
+| **Candidai** | One query fans out to a ring of 62 provider dots; toggle SimHash de-dup on/off, watch duplicate listings collapse or pile up | "62 providers · N duplicates collapsed · 0 tokens spent" | `/#project/candidai` |
+| **Stutter** | Two replays of the same recorded input path overlap exactly (drift 0.000000); a "perturb" button edits one frame, paths visibly diverge, gate flips to BLOCKED | "drift: 0.000000 · gate: PASS" → "BLOCKED" | `/#project/stutter` |
 
 No new content/data files — every number above already exists in
 `profile.ts` / `projectStats.ts`.
@@ -157,9 +157,9 @@ No new content/data files — every number above already exists in
 ## Wiring & UI
 
 - `LAB_OF`-equivalent maps extended in `App.tsx` (case studies) and
-  `ProjectDetail.tsx` (project pages) so Mileway/Kursi/PaymentsLab/
-  HireSignal/Deadlock cards get an "Open in Lab Bench →" button, mirroring
-  the existing 4-case-study pattern. The Mileway featured card (currently
+  `ProjectDetail.tsx` (project pages) so Doori/Gaddi/PaymentsLab-KMP/
+  Candidai/Stutter cards get an "Open in Lab Bench →" button, mirroring
+  the existing 4-case-study pattern. The Doori featured card (currently
   link-only) gets one too.
 - Tab row in `LabBench.tsx` groups into two labeled rows — **Dice.tech
   (production)** vs **Personal builds** — instead of 9 undifferentiated

@@ -1,12 +1,13 @@
 // Pulls a curated, hand-picked set of frames + demo gifs from each app repo's
 // docs/ over raw.githubusercontent into heavy/projects/<slug>/screenshots/.
-// A 404 logs MISS and continues — never fails the build. Runs before
+// A failed pull retains the last asset and exits nonzero after all pulls. Runs before
 // gen-galleries so new files land in the gallery. Local committed media is the
 // fallback: with no network the build still works off what's already on disk.
 import { writeFileSync, mkdirSync, statSync, renameSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const token = process.env.GITHUB_TOKEN;
@@ -66,16 +67,39 @@ async function get(url) {
   return res.ok ? Buffer.from(await res.arrayBuffer()) : res.status;
 }
 
+// Private LFS objects need the authenticated batch endpoint; the media CDN
+// can return 404 even when the repository's pointer is readable.
+async function downloadLfs(repo, pointer) {
+  const text = pointer.toString("utf8");
+  const oid = text.match(/^oid sha256:([a-f0-9]{64})$/m)?.[1];
+  const size = Number(text.match(/^size (\d+)$/m)?.[1]);
+  if (!token || !oid || !Number.isSafeInteger(size) || size <= 0) throw new Error("LFS download requires a valid pointer and GitHub token");
+  const response = await fetchWithTimeout(`https://github.com/${repo}.git/info/lfs/objects/batch`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`, "Content-Type": "application/vnd.git-lfs+json", Accept: "application/vnd.git-lfs+json" },
+    body: JSON.stringify({ operation: "download", transfers: ["basic"], objects: [{ oid, size }] }),
+  });
+  if (!response.ok) throw new Error(`LFS batch HTTP ${response.status}`);
+  const action = (await response.json()).objects?.[0]?.actions?.download;
+  if (!action?.href || new URL(action.href).protocol !== "https:") throw new Error("LFS returned no HTTPS download");
+  const asset = await fetchWithTimeout(action.href, { headers: action.header ?? {} });
+  if (!asset.ok) throw new Error(`LFS asset HTTP ${asset.status}`);
+  const bytes = Buffer.from(await asset.arrayBuffer());
+  if (bytes.length !== size || createHash("sha256").update(bytes).digest("hex") !== oid) throw new Error("LFS integrity mismatch");
+  return bytes;
+}
+
 async function pull(repo, srcPath, dest) {
   try {
     let buf = await get(raw(repo, srcPath));
-    if (typeof buf === "number") return console.warn(`[sync-media] MISS ${buf} ${srcPath}`);
+    if (typeof buf === "number") throw new Error(`HTTP ${buf}: ${srcPath}`);
     if (isLfsPointer(buf)) {
-      const viaLfs = await get(lfs(repo, srcPath));
+      let viaLfs = await get(lfs(repo, srcPath));
+      if (typeof viaLfs === "number" || isLfsPointer(viaLfs)) viaLfs = await downloadLfs(repo, buf);
       if (typeof viaLfs === "number" || isLfsPointer(viaLfs)) {
         // Never write the pointer. Keeping the committed asset is always
         // better than replacing a real image with 130 bytes of text.
-        return console.warn(`[sync-media] LFS ${srcPath} — pointer only, kept the committed file`);
+        throw new Error(`LFS ${srcPath}: pointer only; kept the committed file`);
       }
       buf = viaLfs;
     }
@@ -83,6 +107,7 @@ async function pull(repo, srcPath, dest) {
     compressGif(dest);
     console.log(`[sync-media] ok ${srcPath} -> ${dest}`);
   } catch (err) {
+    process.exitCode = 1;
     console.warn(`[sync-media] MISS ${srcPath} — ${err.message}`);
   }
 }

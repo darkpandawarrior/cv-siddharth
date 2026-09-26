@@ -38,11 +38,21 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "refresh",
-      "check"
+      "refresh"
+    ],
+    "slaDays": 21,
+    "invocation": "npm run gen:loopdown"
+  },
+  {
+    "id": "loopdown-art",
+    "script": "gen-loopdown-art.mjs",
+    "kind": "network",
+    "automated": true,
+    "stages": [
+      "refresh"
     ],
     "slaDays": null,
-    "invocation": "npm run gen:loopdown"
+    "invocation": "npm run gen:loopdown-art"
   },
   {
     "id": "anthology",
@@ -50,10 +60,9 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "refresh",
-      "check"
+      "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 21,
     "invocation": "npm run gen:anthology"
   },
   {
@@ -77,7 +86,7 @@ export const generatorNodes: GeneratorNode[] = [
       "refresh",
       "check"
     ],
-    "slaDays": null,
+    "slaDays": 45,
     "invocation": "npm run gen:lanes"
   },
   {
@@ -154,9 +163,10 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "sibling",
     "automated": true,
     "stages": [
+      "refresh",
       "check"
     ],
-    "slaDays": null,
+    "slaDays": 30,
     "invocation": "npm run gen:repo-stats"
   },
   {
@@ -179,7 +189,7 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [
       "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 30,
     "invocation": "npm run gen:system-graph"
   },
   {
@@ -206,6 +216,17 @@ export const generatorNodes: GeneratorNode[] = [
     "invocation": "npm run gen:app-manifests"
   },
   {
+    "id": "providers",
+    "script": "gen-providers.mjs",
+    "kind": "sibling",
+    "automated": true,
+    "stages": [
+      "refresh"
+    ],
+    "slaDays": null,
+    "invocation": "npm run gen:providers"
+  },
+  {
     "id": "images",
     "script": "gen-images.mjs",
     "kind": "local",
@@ -216,6 +237,19 @@ export const generatorNodes: GeneratorNode[] = [
     ],
     "slaDays": null,
     "invocation": "npm run gen:images"
+  },
+  {
+    "id": "agent-context",
+    "script": "gen-agent-context.mjs",
+    "kind": "local",
+    "automated": true,
+    "stages": [
+      "build",
+      "refresh",
+      "check"
+    ],
+    "slaDays": null,
+    "invocation": "npm run gen:agent-context"
   },
   {
     "id": "sync-media",
@@ -247,19 +281,30 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [
       "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 21,
     "invocation": "npm run gen:stats"
   },
   {
-    "id": "hiresignal-stats",
-    "script": "gen-hiresignal-stats.mjs",
+    "id": "candidai-stats",
+    "script": "gen-candidai-stats.mjs",
     "kind": "network",
     "automated": true,
     "stages": [
       "refresh"
     ],
     "slaDays": null,
-    "invocation": "npm run gen:hiresignal"
+    "invocation": "npm run gen:candidai"
+  },
+  {
+    "id": "oss-stats",
+    "script": "gen-oss-stats.mjs",
+    "kind": "network",
+    "automated": true,
+    "stages": [
+      "refresh"
+    ],
+    "slaDays": null,
+    "invocation": "npm run gen:oss-stats"
   },
   {
     "id": "project-heroes",
@@ -322,9 +367,9 @@ export const generatorNodes: GeneratorNode[] = [
     "kind": "network",
     "automated": true,
     "stages": [
-      "check"
+      "refresh"
     ],
-    "slaDays": null,
+    "slaDays": 45,
     "invocation": "npm run gen:archive-text"
   },
   {
@@ -373,6 +418,24 @@ export const generatorNodes: GeneratorNode[] = [
     "invocation": "node scripts/gen-excelsior.mjs"
   },
   {
+    "id": "pune-normals",
+    "script": "gen-pune-normals.mjs",
+    "kind": "network",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:pune-normals"
+  },
+  {
+    "id": "starfield",
+    "script": "gen-starfield.mjs",
+    "kind": "network",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:starfield"
+  },
+  {
     "id": "excelsior-text",
     "script": "gen-excelsior-text.mjs",
     "kind": "local",
@@ -398,6 +461,62 @@ export const generatorNodes: GeneratorNode[] = [
     "stages": [],
     "slaDays": null,
     "invocation": "node scripts/gen-csp.mjs"
+  },
+  {
+    "id": "river-osm",
+    "script": "gen-river-osm.mjs",
+    "kind": "network",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:river"
+  },
+  {
+    "id": "globe-earth",
+    "script": "gen-globe-earth.mjs",
+    "kind": "network",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:globe-earth"
+  },
+  {
+    "id": "globe-geo",
+    "script": "gen-globe-geo.mjs",
+    "kind": "network",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:globe-geo"
+  },
+  {
+    "id": "world-models",
+    "script": "gen-world-models.mjs",
+    "kind": "local",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "npm run gen:world-models"
+  },
+  {
+    "id": "ai-golden-eval",
+    "script": "eval-ai-golden.mjs",
+    "kind": "private-env",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "node scripts/eval-ai-golden.mjs"
+  },
+  {
+    "id": "world-grammar",
+    "script": "gen-world-grammar.mjs",
+    "kind": "local",
+    "automated": true,
+    "stages": [
+      "refresh"
+    ],
+    "slaDays": null,
+    "invocation": "npm run gen:world-grammar"
   }
 ];
 
@@ -409,4 +528,4 @@ export const notMeasuredHere: string[] = [
   "The external claim-audit run record — the script lives outside this repo by design and writes nothing back here."
 ];
 
-export const evidenceGeneratedAt = "2026-09-08";
+export const evidenceGeneratedAt = "2026-09-26";

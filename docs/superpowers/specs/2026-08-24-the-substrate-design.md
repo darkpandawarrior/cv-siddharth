@@ -111,7 +111,7 @@ Approach + dwell opens an **in-world panel**: the 3D scene keeps running
 behind it, the car parks, the panel carries real project content and a link
 to the full case study. No route change, no scene teardown.
 
-Each destination sits at its true (time, lane) coordinate. Mileway's die
+Each destination sits at its true (time, lane) coordinate. Doori's die
 stands at its actual ship date. The data places the geometry; no aesthetic
 placement.
 

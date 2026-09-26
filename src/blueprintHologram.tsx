@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Mesh } from "three";
 import { readToken } from "./themeColor.ts";
+import { useReducedMotion } from "./SceneActivity.tsx";
 
 /**
  * Split out of blueprintShared.tsx on purpose: this is the only half that
@@ -56,12 +57,18 @@ export function HoloCore() {
   const knot = useRef<Mesh>(null);
   const shell = useRef<Mesh>(null);
   const fresnelMaterial = useFresnelShellMaterial("#5ee6ff");
+  // The one always-on centerpiece (rendered in both Blueprint3D.tsx and
+  // SketchBoard.tsx) that had no reduced-motion guard at all: a continuously
+  // spinning torus knot plus a shader pulse — the single biggest source of
+  // e2e/blueprint.spec.ts's reduced-motion screenshot diff not collapsing.
+  const reducedMotion = useReducedMotion();
   useFrame((_, delta) => {
+    if (reducedMotion) return;
     if (knot.current) {
-      knot.current.rotation.x += delta * 0.5;
-      knot.current.rotation.y += delta * 0.7;
+      knot.current.rotation.x += delta * 0.15;
+      knot.current.rotation.y += delta * 0.2;
     }
-    if (shell.current) shell.current.rotation.y -= delta * 0.25;
+    if (shell.current) shell.current.rotation.y -= delta * 0.08;
     fresnelMaterial.uniforms.uTime.value += delta;
   });
   return (
@@ -74,7 +81,7 @@ export function HoloCore() {
         <meshStandardMaterial color="#0b0f0d" emissive={readToken("--color-signal", "#3ddc84")} emissiveIntensity={0.32} metalness={0.8} roughness={0.25} />
       </mesh>
       <mesh ref={shell} material={fresnelMaterial}>
-        <icosahedronGeometry args={[1.7, 1]} />
+        <sphereGeometry args={[1.7, 48, 32]} />
       </mesh>
     </>
   );

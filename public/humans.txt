@@ -1,6 +1,6 @@
 /* TEAM */
 Engineer, designer, writer: Siddharth Pandalai
-Site: https://cv-siddharth.vercel.app/
+Site: https://siddharth-pandalai.vercel.app/
 GitHub: https://github.com/darkpandawarrior
 Location: Pune, India
 

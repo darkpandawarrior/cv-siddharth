@@ -458,3 +458,125 @@ export function truthDistance(samples: Sample[]): number {
   for (let i = 1; i < samples.length; i++) d += distXY(samples[i - 1].truth, samples[i].truth);
   return d;
 }
+
+/* ── Provenance layer (idea-atlas REC-3, the Confidence Console) ──────────
+ *
+ * "Filtered should never mean deleted." The pipeline above already keeps
+ * every sample; this layer classifies every leg of the fix stream into the
+ * buckets the published architecture uses (notes/gps-provenance-architecture.md
+ * on the-loopdown, the source for the "the-captain-never-rows" sibling lesson's
+ * "50% to 95%" claim), so the invariant it validates before submission can be
+ * asserted on screen instead of just in a commit message:
+ *
+ *   cleaned = total - (mock + abnormal)
+ *
+ * Spike is deliberately excluded from that equation, in either direction:
+ * the published note calls this out as the exact thing a refactor silently
+ * breaks, so it is tracked as its own bucket, never added to or subtracted
+ * from `cleanedM`.
+ *
+ * Every constant below is one of the specific numbers already disclosed in
+ * that published note. Nothing here is invented, and signalEngine.test.ts's
+ * "provenance constants" block greps this file for a fixed allowlist. A new
+ * PROV_ constant added without updating that list fails the build.
+ */
+
+/** Soft accuracy gate: a fix worse than this is still kept in `originalM`,
+ *  only excluded from `cleanedM` (the note's "persist, do not count"). */
+export const PROV_ACCURACY_THRESHOLD_M = 50;
+/** Speed bands (m/s) the note's jitter gate is keyed on: walking, cycling;
+ *  anything faster is the driving band. */
+export const PROV_SPEED_WALK_MPS = 2.5;
+export const PROV_SPEED_CYCLE_MPS = 7.0;
+/** Minimum displacement (m) to escape jitter, one per band above. */
+export const PROV_GATE_WALK_M = 2;
+export const PROV_GATE_CYCLE_M = 3;
+export const PROV_GATE_DRIVE_M = 5;
+
+function provenanceGateFor(speedMps: number): number {
+  if (speedMps < PROV_SPEED_WALK_MPS) return PROV_GATE_WALK_M;
+  if (speedMps < PROV_SPEED_CYCLE_MPS) return PROV_GATE_CYCLE_M;
+  return PROV_GATE_DRIVE_M;
+}
+
+export interface ProvenanceStep {
+  originalM: number;
+  cleanedM: number;
+  abnormalM: number;
+  mockM: number;
+}
+
+export interface ProvenanceResult extends ProvenanceStep {
+  spikeM: number;
+  /** 0-100 per zone: the share of that zone's distance which landed in
+   *  `cleanedM` rather than `abnormalM`/`mockM`. Always finite: a zone with
+   *  no legs yet (playhead hasn't reached it) reads 100, not NaN. */
+  qualityByZone: Record<ZoneId, number>;
+  /** Cumulative totals after every processed leg, so the invariant can be
+   *  checked "at every step", not only at the end of the run. */
+  series: ProvenanceStep[];
+}
+
+/**
+ * Classify every leg of the fix stream (consecutive accepted fixes) into
+ * original/cleaned/abnormal/mock/spike, without ever touching `samples`
+ * itself: it is only read here, never filtered or spliced, so every sample
+ * this run produced is still exactly where `simulate()` put it.
+ *
+ * `cleanedM` and `abnormalM` are accumulated independently on mutually
+ * exclusive branches (mock never fires, see below), not derived from one
+ * another by subtraction, so the equality checked in signalEngine.test.ts is
+ * an emergent property of the classification staying exhaustive: exactly
+ * the property a later refactor (a third bucket someone forgets to route
+ * through the split) would silently break.
+ *
+ * This simulation has no mock-location-provider concept: there is nothing
+ * in `Sample` that models GPS spoofing, so `mockM` stays 0 here. The bucket
+ * is kept for shape-parity with the published architecture, never invented
+ * data. SignalLab says only true things, and "some fixes were mocked" would
+ * not be one of them.
+ */
+export function classifyProvenance(samples: Sample[]): ProvenanceResult {
+  const zeroPerZone = (): Record<ZoneId, number> => ({ open: 0, canyon: 0, tunnel: 0, ramp: 0, parking: 0 });
+  const perZoneOriginal = zeroPerZone();
+  const perZoneAbnormal = zeroPerZone();
+
+  let originalM = 0;
+  let cleanedM = 0;
+  let abnormalM = 0;
+  let spikeM = 0;
+  const mockM = 0;
+  const series: ProvenanceStep[] = [];
+
+  let prevFix: XY | null = null;
+  let prevT = 0;
+  for (const s of samples) {
+    if (!s.fix) continue; // dropout: no leg to classify, nothing to add anywhere
+    if (prevFix) {
+      const d = distXY(prevFix, s.fix);
+      const dt = Math.max(1e-6, s.t - prevT);
+      originalM += d;
+      perZoneOriginal[s.zone] += d;
+      if (s.spike) spikeM += d;
+
+      const impliedSpeed = d / dt;
+      if (s.accuracy > PROV_ACCURACY_THRESHOLD_M || d < provenanceGateFor(impliedSpeed)) {
+        abnormalM += d;
+        perZoneAbnormal[s.zone] += d;
+      } else {
+        cleanedM += d;
+      }
+      series.push({ originalM, cleanedM, abnormalM, mockM });
+    }
+    prevFix = s.fix;
+    prevT = s.t;
+  }
+
+  const qualityByZone = zeroPerZone();
+  for (const z of Object.keys(perZoneOriginal) as ZoneId[]) {
+    const total = perZoneOriginal[z];
+    qualityByZone[z] = total > 0 ? Math.round(100 * (1 - perZoneAbnormal[z] / total)) : 100;
+  }
+
+  return { originalM, cleanedM, abnormalM, mockM, spikeM, qualityByZone, series };
+}

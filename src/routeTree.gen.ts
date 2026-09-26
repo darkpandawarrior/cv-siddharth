@@ -18,6 +18,7 @@ import { Route as ChessRouteImport } from './routes/chess'
 import { Route as ComposeRouteImport } from './routes/compose'
 import { Route as ExcelsiorRouteImport } from './routes/excelsior'
 import { Route as ForgeRouteImport } from './routes/forge'
+import { Route as GlobeRouteImport } from './routes/globe'
 import { Route as HireRouteImport } from './routes/hire'
 import { Route as InkRouteImport } from './routes/ink'
 import { Route as LabRouteImport } from './routes/lab'
@@ -79,6 +80,11 @@ const ExcelsiorRoute = ExcelsiorRouteImport.update({
 const ForgeRoute = ForgeRouteImport.update({
   id: '/forge',
   path: '/forge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GlobeRoute = GlobeRouteImport.update({
+  id: '/globe',
+  path: '/globe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HireRoute = HireRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/globe': typeof GlobeRoute
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/globe': typeof GlobeRoute
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/compose': typeof ComposeRoute
   '/excelsior': typeof ExcelsiorRoute
   '/forge': typeof ForgeRoute
+  '/globe': typeof GlobeRoute
   '/hire': typeof HireRoute
   '/ink': typeof InkRoute
   '/lab': typeof LabRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/globe'
     | '/hire'
     | '/ink'
     | '/lab'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/globe'
     | '/hire'
     | '/ink'
     | '/lab'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/compose'
     | '/excelsior'
     | '/forge'
+    | '/globe'
     | '/hire'
     | '/ink'
     | '/lab'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   ComposeRoute: typeof ComposeRoute
   ExcelsiorRoute: typeof ExcelsiorRoute
   ForgeRoute: typeof ForgeRoute
+  GlobeRoute: typeof GlobeRoute
   HireRoute: typeof HireRoute
   InkRoute: typeof InkRoute
   LabRoute: typeof LabRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/forge'
       fullPath: '/forge'
       preLoaderRoute: typeof ForgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/globe': {
+      id: '/globe'
+      path: '/globe'
+      fullPath: '/globe'
+      preLoaderRoute: typeof GlobeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hire': {
@@ -565,6 +585,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComposeRoute: ComposeRoute,
   ExcelsiorRoute: ExcelsiorRoute,
   ForgeRoute: ForgeRoute,
+  GlobeRoute: GlobeRoute,
   HireRoute: HireRoute,
   InkRoute: InkRoute,
   LabRoute: LabRoute,

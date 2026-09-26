@@ -30,7 +30,7 @@ describe("buildResumeJsonLd", () => {
   it("builds a Person schema whose worksFor matches the live current roles", () => {
     const ld = buildResumeJsonLd();
     expect(ld["@type"]).toBe("Person");
-    expect(ld.url).toBe("https://cv-siddharth.vercel.app/resume");
+    expect(ld.url).toBe("https://siddharth-pandalai.vercel.app/resume");
     expect(Array.isArray(ld.worksFor)).toBe(true);
     expect((ld.worksFor as Array<{ name: string }>).length).toBeGreaterThan(0);
   });

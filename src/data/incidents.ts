@@ -85,7 +85,7 @@ export const incidents: Incident[] = [
     id: "mileway-46-36",
     subject: "Mileway (now Doori) module count",
     subjectHref: "https://cv-siddharth.vercel.app/project/doori",
-    what: "the card printed 46 and 36 modules 30px apart; the audited definition was applied to PaymentsLab but not Mileway",
+    what: "the card printed 46 and 36 modules 30px apart; the audited definition was applied to PaymentsLab (now PaymentsLab-KMP) but not Mileway (now Doori)",
     days: 0,
     resolved: true,
     evidenceHref: "https://github.com/darkpandawarrior/cv-siddharth/blob/main/src/data/statusDrift.test.ts",

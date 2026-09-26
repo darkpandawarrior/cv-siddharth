@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { PulseContext, type PulseUI } from "./pulseUI.ts";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -47,7 +48,7 @@ import { PresenceBadge } from "./PlayRoom.tsx";
 import { VisitorPlaque } from "./Visitors.tsx";
 import { Sandbox } from "./Sandbox.tsx";
 import { GUEST_WALL_ENABLED, GuestWall } from "./GuestWall.tsx";
-import LivePulse from "./LivePulse.tsx";
+import LivePulse, { PulseBridge } from "./LivePulse.tsx";
 
 /**
  * The same trick for the widgets, not just the provider.
@@ -141,5 +142,20 @@ export function DeferredLivePulse({ children }: { children: ReactNode }) {
         <LivePulse>{children}</LivePulse>
       </Hydrate>
     </ClientOnly>
+  );
+}
+
+/** Keep route ancestry stable while the optional shared connection loads. */
+export function DeferredGlobalPulse({ children }: { children: ReactNode }) {
+  const [value, setValue] = useState<PulseUI>({ counts: {}, bump: () => {} });
+  return (
+    <PulseContext.Provider value={value}>
+      {children}
+      <ClientOnly>
+        <Hydrate when={load()} split fallback={null}>
+          <PlayRoom><PulseBridge publish={setValue} /></PlayRoom>
+        </Hydrate>
+      </ClientOnly>
+    </PulseContext.Provider>
   );
 }

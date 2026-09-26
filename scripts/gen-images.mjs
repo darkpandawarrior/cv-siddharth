@@ -51,8 +51,12 @@ for (const src of walkRoots([publicDir, heavyDir])) {
    * still name it, and it is the source these regenerate from.
    */
   if (ext === ".gif") {
-    // Only what the site renders through Picture. public/assets/readme is
-    // GitHub's copy, and GitHub will not play a <video> in a README.
+    // Only what the site renders through Picture. GitHub's own README copy
+    // used to live under public/ (moved to .github/readme-assets/ — G3's
+    // budget gate: those files shipped in dist/client with nothing on the
+    // deployed site ever referencing them) and GitHub will not play a
+    // <video> in a README anyway, so this generator was never the right
+    // place to touch it even before the move.
     if (!src.includes(`${sep}projects${sep}`)) continue;
     const base = src.slice(0, -ext.length);
     const mp4 = `${base}.mp4`;

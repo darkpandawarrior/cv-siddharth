@@ -97,6 +97,34 @@
      themeable, and counted. If a second component ever wants it, that is the
      moment it earns a real token name. */
   --lab-gold: #e8c874;
+
+  /* Evidence Atlas state tokens — aliases onto the existing three-colour
+     system, not a fourth tint. OpsBoard's STATE_COLOR and EvidenceChip both
+     read these, so a state's colour is set in exactly one place. */
+  --state-ok: var(--color-signal);
+  --state-degraded: var(--color-accent);
+  --state-broken: var(--color-danger);
+
+  /* The two stroke weights the brand system allows. 1px for a hairline
+     divider or an idle border, 1.5px for a rule that carries meaning
+     (a legend key, an active outline). No third weight. */
+  --stroke-hair: 1px;
+  --stroke-rule: 1.5px;
+}
+
+/* SkyLine's runtime variables (P1-01b, reality-spec §3 P7) — declared here,
+   not in that lane's own CSS, so P1-01b edits no CSS at all: SkyLine.tsx
+   only ever calls documentElement.style.setProperty on these, once a
+   minute. The defaults are Night Survey byte for byte (reality-spec §3 P1's
+   KEYFRAMES night row), so a page that renders before SkyLine's first paint
+   (or a Playground scene reading these before the shared sky mounts) still
+   shows the correct night hairline, never an unstyled one. --sun-progress
+   0 is "not yet computed", not "sunrise" — SkyLine sets the real value
+   before the dot's `left` ever reads it. */
+:root {
+  --sky-horizon: #16292b;
+  --sky-zenith: #0a0f10;
+  --sun-progress: 0;
 }
 
 html {
@@ -258,36 +286,74 @@ body {
   background-color: var(--color-ink);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  /* Global chrome clearance. FloatingChat.tsx's collapsed launcher is a fixed
-     56px circle sitting bottom-6/right-6 in every viewport, on top of
-     whatever the page has scrolled underneath it, and nothing reserved that
-     corner. Two dimensions, both needed — a document-end bug and a
-     first-viewport bug are the same root cause seen at two scroll
-     positions:
-       - padding-bottom reserves the launcher's footprint at the true end of
-         the document, so trailing content (/map's room-to-room link,
-         /resume's closing paragraph) isn't the last thing the viewport can
-         show flush against the bottom edge.
-       - padding-right reserves the same footprint as a permanent column
-         down the right edge of every route, because the launcher is
-         viewport-fixed, not document-end-fixed — it also sits over
-         whatever text happens to occupy that corner AT ANY scroll position,
-         which is what made /shipped's fourth stat, /chess's thesis
-         sentence, and mid-paragraph text on /project/candidai and
-         /project/stutter collide on first paint, nowhere near the
-         document's end. A column no text ever enters removes the overlap
-         at every scroll position at once — this repo's containers are all
-         `mx-auto max-w-* px-6` flow children of body, so a body-level
-         padding-right shrinks their available width instead of any of them
-         needing their own clearance.
-     Sized to the launcher's own footprint (3.5rem + its 1.5rem offset + a
-     margin) in both directions, since the footprint is square. A custom
-     property rather than a bare number so CommandPalette's own fixed corner
-     (bottom-6 left-6, same footprint) can be sized from the same value if
-     it ever needs to. */
+  /* Desktop keeps a narrow lane for the fixed chat launcher. On phones the
+     launchers live in a document-top utility row instead: reserving a 104px
+     column there squeezed a 390px page down to 286px. */
   --chat-fab-clearance: 6.5rem;
   padding-bottom: var(--chat-fab-clearance);
   padding-right: var(--chat-fab-clearance);
+}
+
+@media screen and (max-width: 767px) {
+  body {
+    position: relative;
+    padding-top: 80px;
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+  .palette-trigger,
+  .chat-launcher {
+    position: absolute;
+    bottom: auto;
+  }
+  .palette-trigger { top: 18px; min-height: 44px; }
+  .chat-launcher { top: 12px; }
+}
+
+/* F8: seven hand-rolled `header.sticky` copies (App.tsx, WritingView.tsx,
+   Pulse.tsx, TimeMachine.tsx, Lanes.tsx, rooms.tsx, Playground.tsx) pin
+   126-145px at the top of an 844px viewport — 15-17%, on top of the 80px
+   mobile utility row already reserved above. One rule un-sticks all seven
+   at once instead of editing each file (fix later: a shared compact header,
+   SP-20). */
+@media (max-width: 767px) {
+  header.sticky {
+    position: relative;
+  }
+}
+
+/* F5: the chat-lane clearance is only earned space at 768-1279px, where the
+   fixed chat FAB and palette trigger genuinely sit inside the content
+   column. At >= 1280 the crawl measured max-w-6xl content ending at x=1296
+   while the lane still reserved 104px nobody needed — header and footer
+   were 1,336px wide instead of 1,440, and centred content sat 52px left of
+   true centre on 20 routes. Dropping the padding is enough: the FAB and
+   palette-trigger are `position: fixed`, so they float over content at any
+   width and need no reserved lane once the page itself has room to spare. */
+@media screen and (min-width: 1280px) {
+  body {
+    padding-right: 0;
+  }
+}
+
+/* F6: at >= 768 the Cmd+K trigger used to sit fixed bottom-left (24, 842),
+   on top of "next room" / freshness / "latest note" links on several
+   routes. Stacked into the right launcher lane instead, directly above the
+   chat FAB (fixed bottom-6 right-6, 56px tall) — 1.5rem + 3.5rem + 0.5rem
+   gap = 5.5rem clears it exactly against the FAB alone, but two full-bleed
+   routes park their own bottom-right furniture in that exact gap: Blueprint
+   Room's own orbit/streets pair (SPINE_STRICT measured bottom 810.5px, i.e.
+   89.5px up from a 900px viewport) and Ops's runway table, which starts at
+   735px (165px up) and runs off the bottom of the page. 11rem (176px) clears
+   both with margin, measured against both routes directly rather than
+   guessed. Left untouched below 768: the mobile utility-row placement above
+   already keeps it clear of content there. */
+@media screen and (min-width: 768px) {
+  .palette-trigger {
+    left: auto;
+    right: 1.5rem;
+    bottom: 11rem;
+  }
 }
 
 /* The ambient gradient wash lives on a fixed, GPU-composited layer instead of
@@ -716,6 +782,12 @@ html.resume-mode .palette-trigger {
     display: none !important;
   }
 
+  /* SkyLine's fixed top hairline (P1-01b, [data-sky-line]) is a live decal,
+     not paper content — hidden here so that lane never has to touch CSS. */
+  [data-sky-line] {
+    display: none !important;
+  }
+
   /* Same reasoning for the Playground world: a WebGL canvas is a black
      rectangle on paper. .playground-canvas (Playground.tsx) is the wrapper
      around just the Canvas + WorldBoundary — NOT .playground-world itself,
@@ -726,6 +798,48 @@ html.resume-mode .palette-trigger {
      printing a blank page. */
   .playground-canvas {
     display: none !important;
+  }
+
+  /* Any WebGL surface is a black rectangle on paper, wherever it is mounted
+     (the hero phone, the Blueprint instrument, the skills core, the chess
+     marker — all lit by the one shared StudioRig). One rule instead of
+     chasing every scene's own wrapper class. */
+  canvas {
+    display: none !important;
+  }
+
+  /* F11: about 18 of the site's ~35 routes are an interactive app, not a
+     document — printed as they render on screen they are dark-surfaced,
+     absolutely-positioned chrome with no paper layout, which is what the
+     concerns report actually found (near-invisible text on white paper).
+     Only /resume and /project/* case studies are prepared for print (the
+     rules above); everywhere else, hide the app and print a short notice
+     instead. #main-content is the one element every route renders
+     (__root.tsx), so this needs no per-route markup change — a route with
+     no #main-content at all (a couple of listing pages that delegate to a
+     shared component with none) still gets the notice, just not the content
+     hide, which is the smaller half of this fix and already covered by the
+     dark-on-white rules above being scoped to .resume/.project-detail only.
+
+     A third exemption, same shape: .playground-world (the world-view <main>,
+     Playground.tsx) is ALSO prepared for print, just not by staying on
+     screen as-is like .resume/.project-detail — .playground-canvas inside it
+     is hidden and its sr-only RoomGrid is unhidden by the rules above this
+     block. Blanket-hiding #main-content here would hide that grid along with
+     the canvas, since the grid is #main-content's own descendant, and print
+     a blank page under a notice that's wrong besides (the room grid isn't a
+     visit-online apology, it's the thing that actually prints). */
+  #main-content:not(.project-detail):not(:has(.resume)):not(.playground-world) {
+    display: none !important;
+  }
+  body:not(:has(.project-detail)):not(:has(.resume)):not(:has(.playground-world))::after {
+    content: "This page is an interactive app and prints poorly. Visit siddharth-pandalai.vercel.app to view it online, or print /resume or a /project/<slug> case study. Both are built for paper.";
+    display: block;
+    padding: 24mm 12mm;
+    font-family: var(--font-body), sans-serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #111;
   }
 }
 
@@ -1249,7 +1363,7 @@ html.resume-mode .palette-trigger {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: color-mix(in oklab, var(--color-accent) 70%, transparent);
+  color: var(--color-accent);
 }
 
 .section-eyebrow::before {
@@ -2934,10 +3048,10 @@ html.resume-mode .palette-trigger {
   height: clamp(11rem, 22vw, 17rem);
   /* No forced aspect-ratio. `aspect-ratio: 9/19.5` is a phone, and object-cover
      inside it cropped every landscape capture to an unreadable vertical sliver —
-     this site's own route captures are all 1440x900, and Kursi's are mostly
+     this site's own route captures are all 1440x900, and Gaddi's are mostly
      1440x900 desktop frames. Exactly the bug the gallery rail below already
      fixed for itself: fixed height, natural width, capped. The cap lives on the
-     img (with object-contain) so a genuinely extreme strip — PaymentsLab ships
+     img (with object-contain) so a genuinely extreme strip — PaymentsLab-KMP ships
      component captures as wide as 6.67:1 — letterboxes instead of running
      1,900px across the band. */
   flex-shrink: 0;
@@ -3279,16 +3393,19 @@ html.resume-mode .palette-trigger {
 
 /* --- Anomaly rail --- */
 /* Pinned to the left edge on every route (mounted in __root.tsx, outside
-   <main>) — the site's secondary nav. z-index sits above ordinary page
-   content but below the skip link (100) and the contact sheet (50): nothing
-   here should ever compete with those. Narrow enough (24px) to stay out of
-   the way of real content on small viewports without a separate breakpoint. */
+   <main>) — the site's secondary nav. z-index 41 (F18) sits above the
+   sticky route header (40, seven hand-rolled copies — the header used to
+   cover the rail's own top link bands, "EB Profiles" at 1440 and
+   "Excelsior" at 390, on every route with one) and below the contact sheet
+   (50) and the skip link (100): nothing here should ever compete with
+   those. Narrow enough (24px) to stay out of the way of real content at
+   1440, but NOT at 390 — see .anomaly-rail-link below (F7). */
 .anomaly-rail {
   position: fixed;
   inset-block: 0;
   left: 0;
   width: 24px;
-  z-index: 30;
+  z-index: 41;
 }
 /* Decoration only (aria-hidden in the component) — never a click/hover
    target, so pointer-events pass straight through to the real <a>s beneath
@@ -3319,6 +3436,43 @@ html.resume-mode .palette-trigger {
   border-radius: 4px;
 }
 
+/* F7: below 768 these 24x20 bands sat on top of "Enlarge preview of ..." on
+   7 /project/* pages and the horizontal scrollers on /lanes and
+   /time-machine — real content, and the targets were under the WCAG 2.5.8
+   24x24 minimum besides. The rail's own canvas trace (.anomaly-rail-canvas,
+   pointer-events: none) stays: it is decorative wherever it renders. Mobile
+   navigation goes through the utility row's palette and Launcher instead
+   (owner decision OD-S3). */
+@media (max-width: 767px) {
+  .anomaly-rail-link {
+    display: none;
+  }
+  /* display:none only removes the individual link bands — the outer
+     24px-wide, full-height .anomaly-rail box (and .anomaly-rail-nav filling
+     it) still has geometry and default pointer-events:auto, so it kept
+     stealing taps site-wide even with no visible target inside it. The rail
+     is decorative-only below 768 (OD-S3), so make the whole strip
+     pass-through; pointer-events:none cascades to .anomaly-rail-nav and
+     .anomaly-rail-canvas underneath. */
+  .anomaly-rail {
+    pointer-events: none;
+  }
+}
+
+/* route-header budget (P1-01a debt): /compose stacks three toolbar rows
+   inside one <header> (nav + "examples" presets + the AI scenario builder,
+   src/ComposePlayground.tsx) and measured 157px tall at 1440 against the
+   spine registry's 150px route-header ceiling — src/rooms.tsx's seven
+   sticky headers are one row and clear it easily, this is the one exception.
+   ComposePlayground.tsx isn't owned by this lane, so the fix lives here as a
+   CSS trim of the two extra rows' vertical padding rather than a JSX change;
+   the selectors below are this component's own unique class combinations
+   (verified against every other header in the tree) so nothing else shifts. */
+header.z-10.border-b.border-line > .border-b.border-line.bg-ink\/60 > div,
+header.z-10.border-b.border-line > .border-b.border-line.bg-void\/40 > div {
+  padding-block: 0.5rem;
+}
+
 /* The rail's expansion — same trace as the rail, full-bleed. Only mounted
    while open (InstrumentView returns null when closed — a dialog that only
    LOOKS hidden while closed still carries role="dialog" in the
@@ -3331,10 +3485,10 @@ html.resume-mode .palette-trigger {
    fixed here), so closing is instant; an accepted trade-off.
 
    z-index 80: a true modal, so it must sit above everything else the site
-   ever stacks — the rail itself (30), a route header (40), the flipbook's
-   ContactSheet (50), CommandPalette (60), and the mobile nav's hamburger
-   backdrop (70, App.tsx) — and below only the one thing that must survive
-   any overlay, the skip-to-content link (100, __root.tsx). */
+   ever stacks — a route header (40), the rail itself (41, F18), the
+   flipbook's ContactSheet (50), CommandPalette (60), and the mobile nav's
+   hamburger backdrop (70, App.tsx) — and below only the one thing that must
+   survive any overlay, the skip-to-content link (100, __root.tsx). */
 .instrument-view {
   position: fixed;
   inset: 0;
@@ -4266,4 +4420,55 @@ a.ops-verified:hover { color: var(--color-accent); }
      is what makes that a guarantee rather than a promise. */
   .ops-cadence[data-arrive] .ops-cadence__bar { transform: none; }
   .ops-cadence[data-arrive="run"] .ops-cadence__bar { animation: none; transform: none; }
+}
+
+/* ── EvidenceChip + tagline utilities (design-system lane) ────────────────
+   .chip-evidence: the one badge shape every "as of <date>" claim on the site
+   uses, from the homepage metrics row to a data room's header. Muted and
+   near-invisible when the source is fresh; the state dot is the only thing
+   that changes, and it is painted by EvidenceChip via an inline custom
+   property so this class stays state-agnostic. */
+.chip-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.chip-evidence:hover,
+.chip-evidence:focus-visible {
+  color: var(--color-text);
+}
+.chip-evidence__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--chip-dot-color, transparent);
+}
+/* SUSPECT (idea-atlas SYS-3): a value that arrived but failed
+   plausibility.ts's bounds. A hollow ring instead of a filled dot — a
+   shape, not a fourth colour, reusing --state-degraded's amber (the same
+   token DEGRADED's dot already uses) so no new tint enters the system. */
+.chip-evidence__ring {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1.5px solid var(--state-degraded);
+}
+
+/* .tagline-wrap: RoomFrame's tagline used to truncate with an ellipsis at
+   390px, which hid the second clause of a two-clause sentence entirely. Two
+   full lines, wrapped, beats one line cut off. */
+.tagline-wrap {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

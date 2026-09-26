@@ -1,4 +1,5 @@
 import { expect, test } from "./lib/test.ts";
+import { projects } from "../src/data/profile.ts";
 
 /**
  * The showcase film must belong to the project you are looking at.
@@ -14,8 +15,24 @@ import { expect, test } from "./lib/test.ts";
  * everything and looks fine, which is why this test clicks a link rather than
  * calling goto() twice — the first version of this check passed against the
  * broken build.
+ *
+ * Derived from the registry's own showcase flag (same set ProjectDetail.tsx's
+ * FILM_PROJECTS reads), not a hand-typed list that can drift when a project's
+ * showcase status changes.
  */
-const FILMS = ["doori", "gaddi", "paymentslab-kmp"];
+const FILMS = projects.filter((p) => p.showcase).map((p) => p.slug);
+
+test("the showcase film renders exactly for projects with showcase true, none for the rest", async ({ page }) => {
+  for (const p of projects) {
+    await page.goto(`/project/${p.slug}`);
+    const showcase = page.locator(`#showcase-${p.slug}`);
+    if (p.showcase) {
+      await expect(showcase).toBeAttached();
+    } else {
+      await expect(showcase).toHaveCount(0);
+    }
+  }
+});
 
 async function currentFilm(page: import("@playwright/test").Page): Promise<string> {
   return page.evaluate(() => {

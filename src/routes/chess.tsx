@@ -3,7 +3,6 @@ import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { RoomFrame } from "../rooms.tsx";
 import { ChessRoom } from "../ChessRoom.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
 import { chess } from "../data/chess.ts";
 import { countWord } from "../data/labs.ts";
 
@@ -27,7 +26,6 @@ export const Route = createFileRoute("/chess")({
       <RoomFrame title="The Board" tagline={`${chessYears} years of games, mined`}>
         <ChessRoom />
       </RoomFrame>
-      <FloatingChat />
     </>
   ),
 });

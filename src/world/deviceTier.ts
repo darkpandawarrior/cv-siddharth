@@ -32,10 +32,16 @@ const THROTTLE_BUDGET_MS = 180;
 
 /** A fixed amount of deterministic floating-point work — not a time-boxed
  *  loop — so the SAME work is measured on every device; only the clock
- *  differs. Calibrated so a normal desktop finishes in low single-digit ms
- *  (leaving a wide, unambiguous margin under THROTTLE_BUDGET_MS) while a 4x
- *  CPU-throttled device (this doc's own worked example) clears it. */
-const BENCH_ITERATIONS = 400_000;
+ *  differs. Recalibrated (e2e/world-reality.spec.ts's own measurement
+ *  against current V8/hardware: at 400_000 iterations a CDP 6x throttle —
+ *  reality-spec.md §7 R4's literal worked example — only reached ~12.6ms on
+ *  a fast host, nowhere near THROTTLE_BUDGET_MS, so tier 3 was never
+ *  reached and rainMode() correctly returned "on" for what should have
+ *  read as a throttled device). 10_000_000 measures ~40ms unthrottled
+ *  (still low tens of ms, an imperceptible one-time cost) and ~250ms at a
+ *  6x CDP throttle — comfortably on the right side of THROTTLE_BUDGET_MS
+ *  in both directions. */
+const BENCH_ITERATIONS = 10_000_000;
 
 /** The core §10 test, as a pure function of two already-measured values —
  *  everything below this line is data, not a browser call, so it is

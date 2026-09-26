@@ -9,7 +9,7 @@ The site runs on a Vite 7 SPA with hand-rolled hash routing (`useHashRoute()` in
 `App.tsx`). That was the right call at the time, but it caps the site in ways
 that now matter:
 
-- Every route (`#/projects/mileway`, `#/resume`, `#/lab-bench`) is client-only —
+- Every route (`#/projects/doori`, `#/resume`, `#/lab-bench`) is client-only —
   no HTML content until the JS bundle executes, no per-route `<title>`/OG tags,
   invisible to any crawler that doesn't execute JS. A shared link to a specific
   project always previews as the homepage.

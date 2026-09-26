@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Billboard, OrbitControls, Text } from "@react-three/drei";
 import { Color, MathUtils } from "three";
 import type { Mesh } from "three";
+import { useReducedMotion } from "../SceneActivity.tsx";
 // Same reasoning as ChessArcScene: troika fetches a fallback font from a CDN
 // for any glyph its font lacks, so the font ships in the bundle and every
 // in-canvas string stays ASCII.
@@ -86,13 +87,16 @@ function Column({
 export default function GraveyardScene({
   counts,
   view,
-  reduced,
 }: {
   /** 64 occupancy counts, index 0 = a1 … 63 = h8. */
   counts: number[];
   view: GraveyardView;
-  reduced: boolean;
 }) {
+  // Live, not a mount-once snapshot: ChessRoom's `useEnv()` only ever reads
+  // matchMedia once, so a visitor who flips the OS setting mid-visit here
+  // (unlike the Arc, which is gated on ChessRoom's snapshot at the INITIAL
+  // mount only) needs this scene to see the change itself.
+  const reduced = useReducedMotion();
   const max = Math.max(1, ...counts);
   const colour = viewColour(view);
 

@@ -1,48 +1,67 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy } from "react";
+import { createFileRoute, getRouteApi, ClientOnly } from "@tanstack/react-router";
+import { Hydrate } from "@tanstack/react-start";
+import { load } from "@tanstack/react-start/hydration";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import Playground from "../Playground.tsx";
-import { FloatingChat } from "../FloatingChat.tsx";
-import { isCaptured, isWorldActive, subscribeCaptured } from "../world/input.ts";
 
-/**
- * The FAB floats over the same canvas a driving craft steers in. Left up
- * unconditionally it sits on top of the HUD's own corner controls (and eats
- * the taps meant for them) the moment the world is actually being driven.
- * Gated on `isWorldActive() && isCaptured()` rather than `isCaptured()`
- * alone: captured defaults to `true` before the world ever mounts (see
- * input.ts), so reading it by itself would hide the FAB on the list view
- * too, before anyone has touched a control.
- */
-function PlaygroundFloatingChat() {
-  const [hide, setHide] = useState(() => isWorldActive() && isCaptured());
-  useEffect(() => subscribeCaptured((captured) => setHide(isWorldActive() && captured)), []);
-  return hide ? null : <FloatingChat />;
-}
+type PlaygroundSearch = { world?: "v2" };
+
+// M56/M67 — the world-v2 hub is preview-only: it renders on every branch
+// deploy and local dev, but a PRODUCTION build of `/playground?world=v2`
+// falls back to the unchanged v1 world (this lane's own acceptance line).
+// `import.meta.env.VITE_VERCEL_ENV` is a build-time constant Vite inlines,
+// so this branch is identical on the server and the client — no hydration
+// mismatch from checking it here rather than a runtime request header.
+const WORLD_V2_ALLOWED = import.meta.env.VITE_VERCEL_ENV !== "production";
+
+const worldV2LoadingFallback = (
+  <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the world…</div>
+);
+
+// Lazy: nothing outside this branch pays for WorldV2's own three.js/drei/
+// postprocessing chunk, and it never even reaches the SERVER compile
+// (`<ClientOnly>` strips it there, the same pattern `Playground.tsx` uses
+// for v1's own `World.tsx`) — see this lane's own acceptance line on the
+// WorldV2 chunk staying separate from the v1 Playground chunk.
+const WorldV2 = lazy(() => import("../world/v2/WorldV2.tsx"));
 
 export const Route = createFileRoute("/playground")({
   head: () => roomHead("/playground"),
+  validateSearch: (search: Record<string, unknown>): PlaygroundSearch => ({
+    world: search.world === "v2" ? "v2" : undefined,
+  }),
   /*
-   * This route server-renders, unlike the other WebGL rooms.
-   *
-   * It used to be `ssr: false` like the rest of them, which meant the server
-   * sent a shell and a phone saw nothing at all until the client bundle and
-   * three.js had both arrived. Lighthouse did not score it slow, it scored it
-   * NO_FCP: the page painted no content whatsoever.
-   *
-   * There is no reason for that here, because this route already has a real
-   * thing to show without any of it. The world only mounts once a capability
-   * check passes in an effect, so the server always renders the other branch,
-   * which is the room grid plus the baked corridor plate. That is a complete,
-   * readable page, and it is now the first paint instead of the last resort.
-   * The world replaces it after hydration on hardware that can run it.
+   * This route server-renders, unlike the other WebGL rooms — see below for
+   * why that is unaffected by the world=v2 branch this lane adds.
    */
-  component: () => (
-    <>
+  component: PlaygroundRoute,
+});
+
+// getRouteApi: see src/routes/map.tsx's comment.
+const route = getRouteApi("/playground");
+
+function PlaygroundRoute() {
+  const { world } = route.useSearch();
+  const showV2 = world === "v2" && WORLD_V2_ALLOWED;
+
+  if (showV2) {
+    return (
+      <div className="relative h-screen w-screen overflow-hidden">
+        <ClientOnly fallback={worldV2LoadingFallback}>
+          <Hydrate when={load()} split fallback={worldV2LoadingFallback}>
+            <WorldV2 />
+          </Hydrate>
+        </ClientOnly>
+      </div>
+    );
+  }
+
+  return (
+    <div data-world="v1">
       <CursorAura />
       <Playground />
-      <PlaygroundFloatingChat />
-    </>
-  ),
-});
+    </div>
+  );
+}

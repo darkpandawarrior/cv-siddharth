@@ -1,0 +1,72 @@
+name: Drift doctor
+
+# Daily heal-or-escalate over five checks: generated drift (site side and the
+# Compose twin), freshness SLA breaches, old product names, and archive rows
+# past their review-by date. self-healing-spec.md#4, master-plan.md#M62.
+#
+# A healed check lands its own small PR (bot/doctor-<check>, or the twin's
+# bot/generated-sync) and closes its own issue with a link to it. An
+# unhealable check opens or updates ONE issue (report-gate-failure.sh's
+# search-then-comment pattern, generalised in scripts/doctor.mjs). A green
+# day produces zero commits, zero issues, zero notifications — see
+# scripts/doctor.mjs's own header comment for the full design.
+on:
+  schedule:
+    - cron: '30 7 * * *' # daily 07:30 UTC, after refresh-media (06:17) and refresh-twin (Mon 05:41)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Plan every check but open nothing. (true/false)"
+        default: 'false'
+      fixture:
+        description: Force one check to fire, for the smoke test (G19/G21). Always forces dry_run.
+        type: choice
+        options: [none, dirty-output, backdated-stamp, old-name-in-prose, archive-past-review]
+        default: none
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: doctor
+  cancel-in-progress: true
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # The twin side of check:generated (CvOpsData.kt drift) needs the
+      # sibling checkout in the same place check-generated.mjs and
+      # refresh-media.yml already put it.
+      - uses: actions/checkout@v4
+        with:
+          repository: darkpandawarrior/cv-siddharth-kmp
+          path: cv-siddharth-kmp-checkout
+      - name: Put the twin where the scripts expect it
+        run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+
+      - name: Run the doctor
+        id: doctor
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # M65: reuses the credential already behind PAGES_DEPLOY_TOKEN;
+          # nothing new is minted. If its scope does not cover
+          # cv-siddharth-kmp contents + pull-requests, doctor.mjs's own
+          # planTwinGenerated downgrades that one check to dry-run-only
+          # rather than failing the run — see scripts/doctor.mjs.
+          TWIN_PR_TOKEN: ${{ secrets.TWIN_PR_TOKEN || secrets.PAGES_DEPLOY_TOKEN }}
+        run: |
+          ARGS=()
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ -n "${{ inputs.fixture }}" ] && [ "${{ inputs.fixture }}" != "none" ]; then
+            ARGS+=(--fixture "${{ inputs.fixture }}")
+          fi
+          node scripts/doctor.mjs "${ARGS[@]}"
