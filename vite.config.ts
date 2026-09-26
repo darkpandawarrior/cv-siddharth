@@ -326,6 +326,20 @@ export default defineConfig(async () => ({
   build: {
     manifest: true,
     rollupOptions: {
+      // satellite.js@7.1.0 re-exports its Emscripten WASM/pthreads runtime
+      // (`export * from './wasm/index.js'` in dist/index.js) alongside the
+      // plain-JS SGP4 math src/lib/satellites.ts actually imports. Nothing in
+      // this app ever calls the WASM path, but satellite.js ships no
+      // "sideEffects": false, so rolldown can't prove that branch dead and
+      // walks into wasm-build/pthreads-release/index.js — Emscripten's own
+      // `new Worker(new URL(...))` bootstrap for its pthreads pool, which
+      // fails to bundle as a worker (top-level await isn't legal in the
+      // default iife worker format). Externalizing the wasm subtree stops
+      // rolldown from ever parsing it; none of our named imports resolve
+      // through it (they come from transforms.js/sun.js/shadow.js/io.js/
+      // propagation.js), so nothing in the shipped bundle references this
+      // specifier at runtime.
+      external: (id: string) => /satellite\.js\/(dist\/wasm|wasm-build)\//.test(id),
       output: {
         // Rollup's automatic chunking merges modules reached by the exact
         // same SET of importing routes into one physical chunk — which is
