@@ -1,12 +1,14 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, Globe as GlobeIcon, type LucideIcon } from "lucide-react";
 import { openChat } from "./lib/chatBus.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
 import { usePulseUI } from "./play/pulseUI.ts";
 import type { PulseEvent } from "./play/pulse.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
+import { AltitudeRail } from "./world/AltitudeRail.tsx";
+import { altitudeFor } from "./world/altitude.ts";
 
 /**
  * The room registry and the chrome every room route wears.
@@ -40,6 +42,7 @@ export const SURFACE_ICON: Record<string, LucideIcon> = {
   "/lab": FlaskConical,
   "/blueprint": Compass,
   "/map": Boxes,
+  "/globe": GlobeIcon,
   "/forge": Sparkles,
   "/terminal": TerminalSquare,
   "/chess": Crown,
@@ -161,6 +164,14 @@ export function RoomPagerFooter() {
 
 export function RoomFrame({ title, tagline, children }: { title: string; tagline: string; children: ReactNode }) {
   const { goToSection } = useSectionNav();
+  // The altitude rail (living-ledger-spec.md#6.2) only makes sense on the two
+  // rooms that ARE altitudes other than STREET: /map (ORBIT) and /globe
+  // (GLOBE). Every other RoomFrame room (chess, weeb, lab, forge, terminal,
+  // blueprint, compose) falls back to "street" from altitudeFor and renders
+  // nothing here; STREET's own copy of the rail is AltitudeRailV2.tsx,
+  // mounted into world-v2's HUD instead, not here.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showAltitudeRail = altitudeFor(pathname) !== "street";
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header data-spine="route-header" className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
@@ -189,6 +200,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             {title} · {tagline}
           </span>
           <div className="flex items-center gap-2">
+            {showAltitudeRail && <AltitudeRail />}
             <button
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"

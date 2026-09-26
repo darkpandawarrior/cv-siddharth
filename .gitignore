@@ -27,6 +27,11 @@ heavy/**/*.webp
 # pages in it. gen-images.mjs skips this directory for the same reason.
 !public/excelsior/pages/**/*.webp
 !heavy/excelsior/pages/**/*.webp
+# ...and except GLOBE's static no-WebGL plates (scripts/capture-globe-plate.mjs,
+# P2-10b): a manual capture of the live scene, not a derivative gen-images.mjs
+# would ever create from a PNG sibling in this repo. Ignoring them ships a
+# no-WebGL /globe visitor a fact list with no image beside it.
+!heavy/globe/plates/*.avif
 # ...and except the world-v2 concept-art frames. Same reasoning again: they are
 # not derivatives of anything in this repo, they are the source paintings
 # (gemini-3-pro-image, packed by scripts/world-v2/pack-concept.mjs from the

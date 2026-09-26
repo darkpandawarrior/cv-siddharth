@@ -309,6 +309,25 @@ const roomSurfaces: SurfaceInput[] = [
 /** Ordinary scroll routes. */
 const pageSurfaces: SurfaceInput[] = [
   {
+    // `kind: "page"` here, not "room": /globe already wears RoomFrame's
+    // full-screen chrome (routes/globe.tsx, P2-10a), but declaring it in
+    // `roomSurfaces` would add it to `siteRooms`/`ROOMS`, the next-room
+    // pager's own registry, and surfaces.test.ts pins that array's exact
+    // eight-room order (a back-compat test this lane does not own, see
+    // owns). GLOBE's own onward navigation is the altitude rail
+    // (AltitudeRail.tsx), a deliberately separate concern from the room
+    // pager's "next room" sequence, so leaving it out of that sequence is
+    // correct, not a workaround.
+    to: "/globe",
+    label: "GLOBE",
+    blurb:
+      "Real Earth, dot by dot: day and night from the actual subsolar point, the reach numbers as light columns over Pune, and who else is here right now.",
+    tag: "3d · reach",
+    group: "proof",
+    tint: ACCENT,
+    device: "desktop",
+  },
+  {
     // Under "proof" rather than "things that run": it is not a toy, it is the
     // evidence that the rest of the numbers on this site are still true. Its
     // own spec (docs/ops-board.md) calls it the one claim a portfolio almost
