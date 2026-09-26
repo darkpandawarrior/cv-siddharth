@@ -801,7 +801,15 @@ export function ProjectDetail({ slug }: { slug: string }) {
         <section id="architecture" className="border-t border-line">
           <div className="section-y mx-auto max-w-5xl px-6">
             <SectionHeader eyebrow="architecture" title="How it's built" />
-            <div className="grid gap-6 lg:grid-cols-2">
+            {/* items-start: CSS Grid's default align-items is stretch, so a
+                short diagram's card used to inflate to match a tall sibling's
+                height in the same row (kmp-family's "Three repos, one seam
+                each" next to its several-thousand-pixel module-adoption
+                graph) — a large empty bordered void rather than a short card
+                beside a long one. Sizing each card to its own content is the
+                right default for every project's diagram pair, not only
+                kmp-family's mismatched one. */}
+            <div className="grid items-start gap-6 lg:grid-cols-2">
               {d.diagrams.map((dg, i) => (
                 <div key={dg.title} className="panel reveal card-elevated p-5">
                   <h3 className="mb-4 text-sm font-semibold text-zinc-200">{dg.title}</h3>
