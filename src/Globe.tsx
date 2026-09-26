@@ -20,15 +20,27 @@ const sceneLoadingFallback = (
  * CelesTrak orbits and the local aircraft cluster.
  *
  * `GlobePanel` (the fact list) renders unconditionally - "SSR/no-WebGL
- * renders the same facts as a list" (task 5) - so a visitor without WebGL,
- * one who has asked for reduced motion, and the server's own first paint all
- * read the same reach sentences a capable visitor sees beside the 3D scene.
- * Only the canvas is gated behind capability, the same ClientOnly/Hydrate
- * split every other WebGL room here uses (StoryMap.tsx, FoundationGraph.tsx,
- * Playground.tsx's own World): `capable` is a runtime-only flag the bundler
- * can't see through, so `<ClientOnly>` is what strips GlobeScene's three.js
- * import from the SSR compile. Checked once at mount, like Playground.tsx's
- * own `worldCapable` - not re-probed if the OS setting changes mid-session.
+ * renders the same facts as a list" (task 5) - so a visitor without WebGL
+ * and the server's own first paint both read the same reach sentences a
+ * capable visitor sees beside the 3D scene. Only the canvas is gated behind
+ * capability, the same ClientOnly/Hydrate split every other WebGL room here
+ * uses (StoryMap.tsx, FoundationGraph.tsx, Playground.tsx's own World):
+ * `capable` is a runtime-only flag the bundler can't see through, so
+ * `<ClientOnly>` is what strips GlobeScene's three.js import from the SSR
+ * compile. Checked once at mount, like Playground.tsx's own `worldCapable`
+ * - not re-probed if the OS setting changes mid-session.
+ *
+ * `capable` is WebGL support ALONE, not reduced-motion too - same fix as
+ * Playground.tsx's `worldCapable` (see its own comment): reduced motion is
+ * GlobeScene's problem to handle (autoRotate = !reducedMotion &&
+ * tier !== 3, live-read by GlobeHud's own useReducedMotion) and GlobeScene
+ * already handles it, so a reduced-motion visitor with a working GPU gets
+ * the STATIC dot-sphere earth, not the no-WebGL text fallback. Nothing
+ * suppresses the scene while the weather poll is still in flight either -
+ * `now` falls back to the real wall clock so the earth renders immediately
+ * off `useSky`'s clock tick, with day/night and the reach arcs correct from
+ * the first frame; `sky.now` only replaces it once useSky's own effect has
+ * run (same tick in practice, but the scene never blocks on it).
  */
 export function Globe() {
   const sky = useSky();
@@ -36,12 +48,12 @@ export function Globe() {
   const [tier, setTier] = useState<1 | 2 | 3>(1);
 
   useEffect(() => {
-    setCapable(hasWebGL() && !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    setCapable(hasWebGL());
     setTier(deviceTier());
   }, []);
 
-  const now = sky?.now ?? null;
-  const showScene = capable && now !== null;
+  const now = sky?.now ?? new Date();
+  const showScene = capable;
 
   return (
     <div data-globe-root className="relative h-full min-h-[70vh] w-full overflow-hidden bg-void">
@@ -65,8 +77,7 @@ export function Globe() {
             <p className="section-eyebrow mb-2">// globe</p>
             <h1 className="font-display text-h2 font-bold tracking-tight">The reach, from orbit</h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              This browser can't run the 3D globe (no WebGL, or reduced motion is on) - the same facts it would
-              draw, as a list.
+              This browser can't run the 3D globe (no WebGL) - the same facts it would draw, as a list.
             </p>
           </>
         )}
