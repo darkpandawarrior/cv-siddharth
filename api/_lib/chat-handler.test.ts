@@ -2,9 +2,11 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   EMPTY_STREAM_FALLBACK,
   NATIVE_CLIENT_HEADER,
+  PROVIDER_HEADER,
   PROVIDERS,
   checkRateLimit,
   clientIp,
+  estimateReplyTokens,
   handleChat,
   isAllowedOrigin,
   isNativeClient,
@@ -791,6 +793,82 @@ describe("output token budget (per mode)", () => {
     }
     await PROVIDERS.find((p) => p.name === "gemini")!.request("k", messages, "sys", 4242);
     expect(JSON.parse(bodies.last).generationConfig.maxOutputTokens).toBe(4242);
+  });
+});
+
+// SYS-7 (OD5): a receipt on every AI reply, never a promise (CRAFT-4).
+// FloatingChat.tsx reads this header directly (not through chatClient.ts's
+// shared streamReply, which never surfaces it to a caller) to render
+// "server: <label> · live".
+describe("provenance (SYS-7): the provider header and the per-reply token estimate", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("names the provider that actually served the reply, and nothing else", async () => {
+    const { res } = await callHandler({ messages: [{ role: "user", content: "hi" }] });
+    expect(res.headers.get(PROVIDER_HEADER)).toBe("groq");
+  });
+
+  it("every real provider's label is safe to ship to a browser: no key, no URL, no model config", () => {
+    for (const p of PROVIDERS) {
+      expect(p.name, p.name).toMatch(/^[a-z0-9 .-]+$/i);
+      expect(p.name.toLowerCase()).not.toContain("key");
+      expect(p.name).not.toMatch(/https?:\/\//);
+    }
+  });
+
+  it("estimateReplyTokens is the same ~4-chars-per-token approximation the routing estimator uses", () => {
+    expect(estimateReplyTokens("")).toBe(0);
+    expect(estimateReplyTokens("Hello")).toBe(2); // ceil(5/4)
+    expect(estimateReplyTokens("x".repeat(400))).toBe(100);
+  });
+
+  // normalizeStream's 4th argument is opt-in and defaults to false SPECIFICALLY
+  // so every existing direct caller (api/_lib/chat-truncation.test.ts, owned by
+  // an earlier lane) keeps seeing the exact SSE body it always did; only
+  // handleChat below turns it on. Break-it: flip the default and the "normal
+  // (non-length) stop still flushes everything" fixture next door would start
+  // failing on an unexpected trailing tokens frame.
+  it("normalizeStream appends a tokens event only when emitTokenMeta is true", async () => {
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    const frame = () => sse(['data: {"choices":[{"delta":{"content":"Hi"}}]}\n', "data: [DONE]\n"]);
+
+    const unchanged = await collect(normalizeStream(frame(), groq.extractDelta));
+    expect(unchanged).toBe('data: {"text":"Hi"}\n\ndata: [DONE]\n\n');
+
+    const withMeta = await collect(normalizeStream(frame(), groq.extractDelta, undefined, true));
+    expect(withMeta).toBe('data: {"text":"Hi"}\n\ndata: {"tokens":1}\n\ndata: [DONE]\n\n');
+  });
+
+  it("the exhausted-fallback path never reports a token count, even with emitTokenMeta on", async () => {
+    const groq = PROVIDERS.find((p) => p.name === "groq")!;
+    const out = await collect(normalizeStream(sse(["data: [DONE]\n"]), groq.extractDelta, undefined, true));
+    expect(out).toBe(`data: ${JSON.stringify({ text: EMPTY_STREAM_FALLBACK })}\n\ndata: [DONE]\n\n`);
+  });
+
+  it("a real streaming reply through handleChat carries the tokens event in its body", async () => {
+    vi.stubEnv("CHAT_PROVIDER", "groq");
+    vi.stubEnv("GROQ_API_KEY", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(sse(['data: {"choices":[{"delta":{"content":"Hi there."}}]}\n', "data: [DONE]\n"]), {
+          status: 200,
+        }),
+      ),
+    );
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://cv-siddharth.vercel.app" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      }),
+    );
+    const body = await collect(res.body!);
+    expect(body).toContain('"tokens"');
+    expect(body.indexOf('"tokens"')).toBeLessThan(body.indexOf("[DONE]")); // before, not after
   });
 });
 

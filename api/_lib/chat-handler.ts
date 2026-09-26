@@ -91,6 +91,27 @@ interface ChatRequest {
 
 export const NATIVE_CLIENT_HEADER = "x-cv-client-token";
 
+// ---------------------------------------------------------------------------
+// Provenance (SYS-7, OD5) — a receipt on every reply, not a promise.
+//
+// The provider label is the ONLY thing this header ever carries: which of
+// PROVIDERS actually served the reply (`served.name`, e.g. "groq"). Never a
+// model name, a routing decision or anything from an env var — a visitor's
+// browser sees this, so it is scoped to the one fact that is safe to publish.
+// FloatingChat.tsx reads it directly (via `fetch`, not chatClient.ts's shared
+// streamReply — that module is owned by a different lane in this wave) to
+// render "server: <label> · live".
+// ---------------------------------------------------------------------------
+export const PROVIDER_HEADER = "x-chat-provider";
+
+/** ~4 chars/token, the same approximation estimateTokens uses for routing —
+ *  good enough for a receipt, not a metering system. Never persisted, never
+ *  totalled across replies (OD5): the caller reads exactly one of these per
+ *  answer and throws it away. */
+export function estimateReplyTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
 export function isNativeClient(
   request: Request,
   env: Record<string, string | undefined> = process.env,
@@ -879,10 +900,20 @@ export function lastSentenceEnd(text: string): number {
  * reached the client it cannot be un-sent, which is why this holds text back
  * rather than trying to correct it after the fact.
  */
+/**
+ * `emitTokenMeta` (SYS-7/OD5, default off): appends one extra
+ * `data: {"tokens":N}` event right before `[DONE]`, the per-reply count
+ * FloatingChat.tsx's chip reads. Default-off, and handleChat is the only
+ * caller that turns it on, so every existing direct caller of this function
+ * (api/_lib/chat-truncation.test.ts, owned by an earlier lane) keeps seeing
+ * exactly the SSE body it always did — additive behind an opt-in flag rather
+ * than a change to this function's default output.
+ */
 export function normalizeStream(
   upstream: ReadableStream<Uint8Array>,
   extractDelta: Provider["extractDelta"],
   extractFinishReason: Provider["extractFinishReason"] = () => undefined,
+  emitTokenMeta: boolean = false,
 ): ReadableStream<Uint8Array> {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
@@ -922,8 +953,16 @@ export function normalizeStream(
       },
       flush(controller) {
         flush(controller, true);
+        // A per-reply token count rides the stream itself, not a header: it
+        // is only known once `full` has stopped growing, and headers are
+        // already committed by the time a streaming Response starts. Skipped
+        // on the fallback path (`!emitted`) — a static apology sentence has
+        // no real usage to report, and counting it would misrepresent an
+        // empty reply as a costed one.
         if (!emitted) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: EMPTY_STREAM_FALLBACK })}\n\n`));
+        } else if (emitTokenMeta) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ tokens: estimateReplyTokens(full) })}\n\n`));
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       },
@@ -1080,10 +1119,11 @@ export async function handleChat(request: Request): Promise<Response> {
     return exhaustedResponse(failures, allowedOrigin);
   }
 
-  return new Response(normalizeStream(upstream.body!, served.extractDelta, served.extractFinishReason), {
+  return new Response(normalizeStream(upstream.body!, served.extractDelta, served.extractFinishReason, true), {
     headers: {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
+      [PROVIDER_HEADER]: served.name,
       ...corsHeaders(allowedOrigin),
     },
   });
