@@ -93,6 +93,12 @@ export function SkyLine() {
       data-daypart={sky?.daypart}
       data-sun-progress={sky ? sky.progress : undefined}
       title={sr ?? undefined}
+      // role="region": mounted in __root outside every routed landmark
+      // (header/main/nav), so the sr-only sentence below needs its own
+      // landmark or axe's "region" rule flags it on every route (all 26
+      // reproduced the same way — this is the shared root cause).
+      role="region"
+      aria-label="Sky status"
       // Decor, not chrome you can click: pointer-events:none keeps a 1px
       // strip across the very top of every route from ever intercepting a
       // tap meant for whatever sits at y=0 beneath it.
