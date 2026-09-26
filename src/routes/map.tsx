@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { RoomFrame } from "../rooms.tsx";
@@ -24,8 +24,21 @@ export const Route = createFileRoute("/map")({
   component: MapRoute,
 });
 
+// getRouteApi("/map"), not `Route.useSearch()`: this component is split into
+// its own lazy chunk (`?tsr-split=component`), and referencing the `Route`
+// object it was split OUT of pulls the whole module — Route, validateSearch,
+// createFileRoute call and all — back in, which Rollup can only resolve by
+// treating this chunk and the framework's always-eager client entry as one
+// circular group. That leaked StoryMap.tsx's three.js weight into EVERY
+// route's cold-load graph, not just /map's (G3's total-size ceiling, not
+// just /map's own budget — confirmed via the built manifest: client.tsx's
+// own `imports` listed storyMap-*.js before this fix). getRouteApi reads
+// only the route id (a string), so the split chunk never re-imports its own
+// parent module.
+const route = getRouteApi("/map");
+
 function MapRoute() {
-  const { focus } = Route.useSearch();
+  const { focus } = route.useSearch();
   return (
     <>
       <CursorAura />

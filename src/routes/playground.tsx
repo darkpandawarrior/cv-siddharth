@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { createFileRoute, ClientOnly } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { roomHead } from "../lib/routeHead.ts";
@@ -39,8 +39,11 @@ export const Route = createFileRoute("/playground")({
   component: PlaygroundRoute,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment.
+const route = getRouteApi("/playground");
+
 function PlaygroundRoute() {
-  const { world } = Route.useSearch();
+  const { world } = route.useSearch();
   const showV2 = world === "v2" && WORLD_V2_ALLOWED;
 
   if (showV2) {

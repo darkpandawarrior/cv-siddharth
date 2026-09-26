@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ResumeView, type ResumeCut } from "../ResumeView.tsx";
-import { profile } from "../data/profile.ts";
+// core.ts directly (not the ../data/profile.ts barrel): `head()` only needs
+// name/title, same reasoning as __root.tsx's own profile/core.ts import.
+import { profile } from "../data/profile/core.ts";
 import { buildResumeJsonLd } from "../lib/resumeMeta.ts";
 import { heavy } from "../lib/assetBase.ts";
 
@@ -40,8 +42,12 @@ export const Route = createFileRoute("/resume")({
   component: ResumePage,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment — `Route.useSearch()` inside
+// a split component re-imports the whole route module.
+const route = getRouteApi("/resume");
+
 function ResumePage() {
-  const { cut } = Route.useSearch();
+  const { cut } = route.useSearch();
   // The portfolio is dark; the résumé prints on white.
   useEffect(() => {
     document.documentElement.classList.add("resume-mode");

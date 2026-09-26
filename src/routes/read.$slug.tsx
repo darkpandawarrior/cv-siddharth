@@ -1,7 +1,7 @@
 import { profile } from "../data/profile/core.ts";
 import { Children, cloneElement, isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
@@ -189,10 +189,18 @@ export const Route = createFileRoute("/read/$slug")({
   component: ReadPiece,
 });
 
+// getRouteApi (not `Route.useLoaderData()`): this file already splits
+// loader/component/errorComponent/notFoundComponent into separate chunks —
+// referencing `Route` from inside the split component re-imports the whole
+// module those groupings exist to keep apart, and Rollup can only resolve
+// the resulting cycle by folding this route's own weight into the always-
+// eager client entry (the same bug as /map's — see that file's comment).
+const route = getRouteApi("/read/$slug");
+
 function ReadPiece() {
   // The loader throws notFound() for an unknown slug, so by the time this
   // renders the piece exists — but the inferred type does not know that.
-  const piece = Route.useLoaderData()!;
+  const piece = route.useLoaderData()!;
 
   // A lesson has no local prose (see LessonReadView's own comment), so it
   // returns before any of the markdown/theme/terminologies machinery below

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { createFileRoute, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { ArrowLeft } from "lucide-react";
@@ -134,8 +134,12 @@ export const Route = createFileRoute("/anthology")({
   component: AnthologyRoute,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment — the same fix Starmap.tsx's
+// own weight needs here, same shape as StoryMap.tsx there.
+const route = getRouteApi("/anthology");
+
 function AnthologyRoute() {
-  const { layer = DEFAULT_LAYER, world, at } = Route.useSearch();
+  const { layer = DEFAULT_LAYER, world, at } = route.useSearch();
   const navigate = useNavigate({ from: "/anthology" });
 
   return (

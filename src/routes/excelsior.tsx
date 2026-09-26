@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { Flipbook } from "../Flipbook.tsx";
@@ -37,8 +37,11 @@ export const Route = createFileRoute("/excelsior")({
   component: ExcelsiorRoute,
 });
 
+// getRouteApi: see src/routes/map.tsx's comment.
+const route = getRouteApi("/excelsior");
+
 function ExcelsiorRoute() {
-  const { year, page } = Route.useSearch();
+  const { year, page } = route.useSearch();
   const navigate = useNavigate({ from: "/excelsior" });
   // The same filter the pill row runs, hoisted so the sentence above it counts
   // the pills it actually renders. "The five I wrote" was typed in beside the

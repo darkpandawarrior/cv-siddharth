@@ -1,4 +1,4 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, notFound, Link } from "@tanstack/react-router";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { useTouched } from "../lib/sessionRipple.ts";
 import { projectBySlug } from "../data/profile.ts";
@@ -29,6 +29,9 @@ export const Route = createFileRoute("/$")({
   }),
   notFoundComponent: NotFoundPage,
 });
+
+// getRouteApi: see src/routes/map.tsx's comment.
+const route = getRouteApi("/$");
 
 const OUTBOUND_CLASS =
   "flex items-center gap-2 rounded-full border border-line px-6 py-3 font-semibold text-zinc-100 transition hover:border-accent hover:text-accent";
@@ -78,7 +81,7 @@ function TornMapGlyph() {
  * for this much chrome.
  */
 function NotFoundPage() {
-  const { _splat } = Route.useParams();
+  const { _splat } = route.useParams();
   // In-memory by design (sessionRipple.ts) — a fresh full page load (this
   // page's own beforeLoad always runs through SSR first) starts empty, so
   // this only ever resolves after client-side navigation touched a project
