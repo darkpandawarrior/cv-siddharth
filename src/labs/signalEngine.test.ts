@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   CUMULATIVE,
@@ -12,6 +13,7 @@ import {
 import {
   ALL_OFF,
   ALL_ON,
+  classifyProvenance,
   gainsFor,
   runPipeline,
   simulate,
@@ -218,5 +220,83 @@ describe("stages are cumulative and measured", () => {
     const withImu = runPipeline(s, ALL_ON);
     expect(withImu.rmseM).toBeLessThan(withoutImu.rmseM);
     expect(withImu.bridged).toBeGreaterThan(0);
+  });
+});
+
+describe("provenance (REC-3, the Confidence Console)", () => {
+  it("cleaned = total - (mock + abnormal) at every step, for three seeds, and removes no sample", () => {
+    for (const seed of [1, 99, 20260726]) {
+      const samples = simulate({ seed });
+      const before = samples.length;
+      const result = classifyProvenance(samples);
+
+      expect(samples.length).toBe(before); // classifyProvenance only reads `samples`
+      expect(result.series.length).toBeGreaterThan(0);
+      for (const step of result.series) {
+        expect(step.cleanedM).toBeCloseTo(step.originalM - (step.mockM + step.abnormalM), 6);
+      }
+      // And the final totals agree with the last step in the series.
+      const last = result.series[result.series.length - 1];
+      expect(result.originalM).toBeCloseTo(last.originalM, 6);
+      expect(result.cleanedM).toBeCloseTo(last.cleanedM, 6);
+    }
+  });
+
+  it("spike is tracked but never folded into the cleaned/abnormal split", () => {
+    // Only the canyon zone throws multipath spikes (signalRoute.ts's
+    // spikeChance), so a run that touches it must produce spikeM > 0 while
+    // the cleaned/total/abnormal equation above still holds exactly.
+    const samples = simulate();
+    const result = classifyProvenance(samples);
+    const touchesCanyon = samples.some((s) => s.zone === "canyon" && s.spike);
+    expect(touchesCanyon).toBe(true);
+    expect(result.spikeM).toBeGreaterThan(0);
+    expect(result.cleanedM).toBeCloseTo(result.originalM - result.abnormalM, 6);
+  });
+
+  it("this simulation carries no mock-provider concept, honestly: mock stays 0", () => {
+    const result = classifyProvenance(simulate());
+    expect(result.mockM).toBe(0);
+  });
+
+  it("quality score per zone is always a finite 0-100 integer, including zones with no data yet", () => {
+    for (const seed of [1, 99, 20260726]) {
+      const result = classifyProvenance(simulate({ seed, distanceM: 50 })); // short run: some zones untouched
+      for (const zone of ZONES) {
+        const q = result.qualityByZone[zone.id];
+        expect(Number.isFinite(q)).toBe(true);
+        expect(q).toBeGreaterThanOrEqual(0);
+        expect(q).toBeLessThanOrEqual(100);
+      }
+    }
+  });
+
+  it("a new, unlisted provenance constant fails the allowlist (break-it)", () => {
+    // The exact set of constants idea-atlas REC-3 permits: the accuracy
+    // threshold, the two speed bands, and their three displacement gates,
+    // every one of them a number already published in
+    // notes/gps-provenance-architecture.md. Adding a PROV_ constant to
+    // signalEngine.ts without adding it here is the failure this test exists
+    // to catch.
+    const ALLOWLIST = [
+      "PROV_ACCURACY_THRESHOLD_M",
+      "PROV_SPEED_WALK_MPS",
+      "PROV_SPEED_CYCLE_MPS",
+      "PROV_GATE_WALK_M",
+      "PROV_GATE_CYCLE_M",
+      "PROV_GATE_DRIVE_M",
+    ].sort();
+
+    const source = readFileSync(new URL("./signalEngine.ts", import.meta.url), "utf8");
+    const found = [...source.matchAll(/export const (PROV_[A-Z0-9_]+)/g)].map((m) => m[1]).sort();
+    expect(found).toEqual(ALLOWLIST);
+
+    // Break-it: the fixture below is the exact kind of addition the allowlist
+    // must catch: a constant with a plausible-looking name that was never
+    // disclosed anywhere. This never touches the real source; it only proves
+    // the same comparison the test above runs would go red on it.
+    const fixtureSource = `${source}\nexport const PROV_FUTURE_MYSTERY_M = 12;\n`;
+    const fixtureFound = [...fixtureSource.matchAll(/export const (PROV_[A-Z0-9_]+)/g)].map((m) => m[1]).sort();
+    expect(fixtureFound).not.toEqual(ALLOWLIST);
   });
 });
