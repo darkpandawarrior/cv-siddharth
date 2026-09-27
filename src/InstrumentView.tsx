@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp, isRecovered } from "./lib/facets";
 import { wrapFocusTarget } from "./lib/focusTrap";
+import { RIPPLE_DECAY_MS, type Ripple } from "./lib/railGeometry";
 
 /**
  * The rail's expansion: a full-bleed overlay listing every facet as a
@@ -30,10 +31,36 @@ const FOCUSABLE_SELECTOR = "a[href], button:not([disabled])";
 interface InstrumentViewProps {
   open: boolean;
   onClose: () => void;
+  /** The rail's own currently-live ripples (live-rail-spec §3.3/§5) — passed
+   *  as a prop rather than lifted into a shared store, since InstrumentView
+   *  is already a direct child of AnomalyRail. Real DOM, screen-reader
+   *  visible: the same information a sighted visitor gets from hovering a
+   *  ripple on the (aria-hidden) canvas, so it isn't sighted-only. Usually
+   *  empty — that's the honest state; the rail stays quiet until something
+   *  real just happened. */
+  recentSignals?: Ripple[];
 }
 
-export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
+export default function InstrumentView({ open, onClose, recentSignals = [] }: InstrumentViewProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // "Right now" (§3.3) needs to know which of `recentSignals` haven't
+  // decayed YET — a real clock, but read only from inside this effect/
+  // interval, never during render itself: calling Date.now() at render time
+  // is an impure render under the React Compiler (react-hooks/purity), so
+  // `now` is state, ticked while the dialog is actually open (and only then —
+  // no interval runs for a closed, off-screen dialog).
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open) {
+      setNow(null);
+      return;
+    }
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 500);
+    return () => window.clearInterval(id);
+  }, [open]);
+  const recent = now === null ? [] : recentSignals.filter((r) => now - r.bornAtMs < RIPPLE_DECAY_MS);
   // §3.3: the entrance (@starting-style, on .instrument-view below) had no
   // matching exit — `if (!open) return null` unmounted this instantly. Stay
   // mounted for one more --dur-base beat after `open` goes false (painting
@@ -168,6 +195,18 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
       <button type="button" onClick={onClose} aria-label="Close" className="ctrl instrument-view-close">
         Esc
       </button>
+      <section aria-label="Right now">
+        <h2 className="instrument-view-now-heading">Right now</h2>
+        {recent.length === 0 ? (
+          <p className="instrument-view-now-empty">Nothing just happened — the rail's quiet right now.</p>
+        ) : (
+          <ul className="instrument-view-now-list">
+            {recent.map((r) => (
+              <li key={r.id}>{r.label}</li>
+            ))}
+          </ul>
+        )}
+      </section>
       <ol className="instrument-view-list">
         {orderedFacets.map((facet) => (
           <li key={facet.id}>
