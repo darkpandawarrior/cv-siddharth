@@ -1,0 +1,367 @@
+{
+  "generatedAt": "2026-09-27T09:49:40.713Z",
+  "totalBytes": 5347562,
+  "byTier": {
+    "meta": 23319,
+    "plates": 2721444,
+    "B": 904176,
+    "A": 1721942
+  },
+  "files": [
+    {
+      "path": "heavy/world/assets.json",
+      "bytes": 10710,
+      "tier": "meta"
+    },
+    {
+      "path": "heavy/world/ASSETS.md",
+      "bytes": 6708,
+      "tier": "meta"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn-960.avif",
+      "bytes": 34027,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn-960.webp",
+      "bytes": 100528,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn-og.avif",
+      "bytes": 53891,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn-og.jpg",
+      "bytes": 130903,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn-og.webp",
+      "bytes": 71894,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn.avif",
+      "bytes": 75346,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/01-golden-spawn.webp",
+      "bytes": 234516,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/02-night-survey-960.avif",
+      "bytes": 22094,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/02-night-survey-960.webp",
+      "bytes": 58884,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/02-night-survey.avif",
+      "bytes": 39162,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/02-night-survey.webp",
+      "bytes": 107838,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/03-monsoon-960.avif",
+      "bytes": 40245,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/03-monsoon-960.webp",
+      "bytes": 127448,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/03-monsoon.avif",
+      "bytes": 79798,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/03-monsoon.webp",
+      "bytes": 267532,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/04-diwali-960.avif",
+      "bytes": 32161,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/04-diwali-960.webp",
+      "bytes": 87586,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/04-diwali.avif",
+      "bytes": 70029,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/04-diwali.webp",
+      "bytes": 194670,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/05-bridge-closeup-960.avif",
+      "bytes": 34698,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/05-bridge-closeup-960.webp",
+      "bytes": 104114,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/05-bridge-closeup.avif",
+      "bytes": 80004,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/05-bridge-closeup.webp",
+      "bytes": 249978,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/06-amphitheatre-districts-960.avif",
+      "bytes": 30761,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/06-amphitheatre-districts-960.webp",
+      "bytes": 94812,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/06-amphitheatre-districts.avif",
+      "bytes": 68775,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/06-amphitheatre-districts.webp",
+      "bytes": 229750,
+      "tier": "plates"
+    },
+    {
+      "path": "heavy/world/concept/concept.json",
+      "bytes": 5901,
+      "tier": "meta"
+    },
+    {
+      "path": "heavy/world/models/banyan-neem.glb",
+      "bytes": 42528,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/brass_diya_lantern.glb",
+      "bytes": 194736,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/candidai-rahat.glb",
+      "bytes": 5324,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/diya-kit.glb",
+      "bytes": 3168,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/doori-ghat.glb",
+      "bytes": 8376,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/fern_02.glb",
+      "bytes": 95284,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/festival-kit.glb",
+      "bytes": 7072,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/fleet-deepmal.glb",
+      "bytes": 7920,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/gaddi-ghat.glb",
+      "bytes": 13084,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/ghat-kit.glb",
+      "bytes": 5988,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/hero-stone-kit.glb",
+      "bytes": 2640,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/hodi-boatman.glb",
+      "bytes": 7032,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/loopdown-kite-masts.glb",
+      "bytes": 3572,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/misc-kit.glb",
+      "bytes": 14440,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/palm.glb",
+      "bytes": 3032,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/paymentslab-bell-toran.glb",
+      "bytes": 6940,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/portfolio-twin-chhatri.glb",
+      "bytes": 5812,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/pr-stepping-stones.glb",
+      "bytes": 3568,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/rock_moss_set_01.glb",
+      "bytes": 426824,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/room-chhatri-kit.glb",
+      "bytes": 4488,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/sangam-keystone-bridge.glb",
+      "bytes": 25704,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/sinc-p-baori.glb",
+      "bytes": 6372,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/stutter-samrat-yantra.glb",
+      "bytes": 3320,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/tara-kund-observatory.glb",
+      "bytes": 4824,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/models/template-gomukh.glb",
+      "bytes": 2128,
+      "tier": "B"
+    },
+    {
+      "path": "heavy/world/terrain/heightmap.avif",
+      "bytes": 1839,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/heightmap.webp",
+      "bytes": 2040,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/LICENSE-ODbL.txt",
+      "bytes": 555,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/splat.avif",
+      "bytes": 3881,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/splat.webp",
+      "bytes": 4916,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-flow-1024.avif",
+      "bytes": 12538,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-flow-1024.webp",
+      "bytes": 18094,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-1025.avif",
+      "bytes": 9092,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-1025.json",
+      "bytes": 399,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-1025.png",
+      "bytes": 339435,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-1025.webp",
+      "bytes": 12928,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-513.avif",
+      "bytes": 4768,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-513.json",
+      "bytes": 397,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-513.png",
+      "bytes": 131904,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/terrain/valley-h-513.webp",
+      "bytes": 6002,
+      "tier": "A"
+    },
+    {
+      "path": "heavy/world/textures/kloppenheim_06_puresky_1k.hdr",
+      "bytes": 1173154,
+      "tier": "A"
+    }
+  ]
+}
