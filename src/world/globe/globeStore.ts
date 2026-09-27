@@ -17,8 +17,10 @@ export type LayerId = (typeof LAYER_IDS)[number];
 export type EarthStyle = "imagery" | "dots";
 
 /** orbit: free OrbitControls. ground: standing at `focus`, looking up.
- *  follow: the camera rides a moving entity (the ISS, an aircraft). */
-export type GlobeView = "orbit" | "ground" | "follow";
+ *  follow: the camera rides a moving entity (the ISS, an aircraft).
+ *  street: the globe hands off to a street-level map and photos at `focus`
+ *  (a DOM surface over the canvas, ui/StreetView.tsx). */
+export type GlobeView = "orbit" | "ground" | "follow" | "street";
 
 /** A camera target: a surface point, or a moving entity a layer registered. */
 export type Focus = { kind: "latlon"; lat: number; lon: number; distance?: number } | { kind: "entity"; id: string };
