@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl } from "./gibs.ts";
+import { MUR_SEA_ICE, dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl, seaIceAttempts } from "./gibs.ts";
 
 describe("isoDateUTC", () => {
   it("subtracts whole UTC days", () => {
@@ -80,5 +80,23 @@ describe("describeImagerySource", () => {
       date: "2026-09-26",
       source: "NASA GIBS VIIRS SNPP Corrected Reflectance (True Color)",
     });
+  });
+});
+
+describe("seaIceAttempts", () => {
+  it("asks for the MUR L4 map as a transparent PNG, two then three days back", () => {
+    const [first, second] = seaIceAttempts(new Date("2026-09-27T10:00:00Z"), { width: 1024, height: 512 });
+    const a = new URL(first.url);
+    expect(a.searchParams.get("LAYERS")).toBe(MUR_SEA_ICE);
+    expect(a.searchParams.get("FORMAT")).toBe("image/png");
+    expect(a.searchParams.get("TRANSPARENT")).toBe("true");
+    expect(a.searchParams.get("TIME")).toBe("2026-09-25");
+    expect(new URL(second.url).searchParams.get("TIME")).toBe("2026-09-24");
+  });
+
+  it("leaves the JPEG layers opaque", () => {
+    const u = new URL(gibsGetMapUrl("X", { width: 2, height: 1 }));
+    expect(u.searchParams.get("FORMAT")).toBe("image/jpeg");
+    expect(u.searchParams.has("TRANSPARENT")).toBe(false);
   });
 });

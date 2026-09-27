@@ -5,7 +5,7 @@ import { EarthDots } from "../EarthDots.tsx";
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe } from "../globeStore.ts";
 import { Atmosphere } from "./Atmosphere.tsx";
-import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, type ImageryAttempt } from "./gibs.ts";
+import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, type ImageryAttempt } from "./gibs.ts";
 import { EARTH_IMAGERY_FRAG, INNER_HAZE_FRAG } from "./earthImageryShader.ts";
 import { sunDirection, VERT } from "./sun.ts";
 
@@ -22,12 +22,20 @@ const SEGMENTS: Record<1 | 2, readonly [number, number]> = { 1: [128, 96], 2: [9
 const DAY_SIZE = { width: 2048, height: 1024 };
 const HI_DAY_SIZE = { width: 4096, height: 2048 };
 const NIGHT_SIZE: Record<1 | 2, { width: number; height: number }> = { 1: DAY_SIZE, 2: { width: 1024, height: 512 } };
+// Sea ice only fills the polar caps, so it needs far less resolution.
+const ICE_SIZE = { width: 1024, height: 512 };
 
 // A 1x1 black placeholder so the shader always has a bound sampler before the
 // real textures land — never visible: the component renders EarthDots, not
 // this mesh, until the day texture is ready (see the early return below).
 const PLACEHOLDER = (() => {
   const tex = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat);
+  tex.needsUpdate = true;
+  return tex;
+})();
+// Fully transparent: "no ice anywhere" until (or unless) the MUR map loads.
+const NO_ICE = (() => {
+  const tex = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1, THREE.RGBAFormat);
   tex.needsUpdate = true;
   return tex;
 })();
@@ -95,6 +103,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
       uDay: { value: PLACEHOLDER as THREE.Texture },
       uBase: { value: PLACEHOLDER as THREE.Texture },
       uNight: { value: PLACEHOLDER as THREE.Texture },
+      uIce: { value: NO_ICE as THREE.Texture },
     }),
     [],
   );
@@ -103,19 +112,14 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
     sunDirection(now, uniforms.uSun.value);
   }, [now, uniforms]);
 
-  // R3F's `<shaderMaterial uniforms={...}>` only copies our uniforms object's
-  // fields onto the material's OWN bound uniforms when this component
-  // re-renders (`applyProps`'s `Object.assign(targetUniform, uniform)` —
-  // node_modules/@react-three/fiber/dist/events-*.esm.js, "ShaderMaterial
-  // uniforms must keep a stable target reference"). Reassigning
-  // `uniforms.uBase.value`/`uniforms.uNight.value` to a brand-new Texture
-  // inside a `.then()` mutates OUR object but never reaches the compiled
-  // material unless something re-renders afterward — `uDay`'s own swap only
-  // ever worked because it's paired with `setDayTex`. This tick exists
-  // purely to force that re-render for the two textures that have no state
-  // setter of their own (found by A/B-ing a debug passthrough shader against
-  // each texture in turn: uDay rendered, uBase and uNight did not).
-  const [, bumpUniformSync] = useState(0);
+  // Both materials below are CONSTRUCTED with this uniforms object (`args`),
+  // so three binds this exact object and a texture swapped into `.value`
+  // later reaches the GPU. Passed as a `uniforms` prop instead, R3F copies
+  // each uniform once at mount into the material's own objects: a later
+  // in-place Vector3 edit (uSun) still propagated, but a replaced Texture
+  // never did, so the base, night lights, sea ice and the 4096 upgrade all
+  // loaded and stayed invisible whenever they landed after the mesh mounted
+  // (always, on a real network; never, against instant e2e fixtures).
 
   // Re-fetch only when the UTC calendar day (or the tier) actually changes,
   // never on every minute tick of `now` — a daily mosaic has one frame a day.
@@ -156,7 +160,6 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
           if (!alive) return tex.dispose();
           loaded.push(configureTexture(tex));
           uniforms.uBase.value = tex;
-          bumpUniformSync((n) => n + 1);
         })
         .catch(() => {});
       loadTexture(nightLightsUrl(NIGHT_SIZE[tier]))
@@ -164,7 +167,15 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
           if (!alive) return tex.dispose();
           loaded.push(configureTexture(tex));
           uniforms.uNight.value = tex;
-          bumpUniformSync((n) => n + 1);
+        })
+        .catch(() => {});
+
+      loadFirst(seaIceAttempts(now, ICE_SIZE))
+        .then((ice) => {
+          if (!ice) return;
+          if (!alive) return ice.tex.dispose();
+          loaded.push(configureTexture(ice.tex));
+          uniforms.uIce.value = ice.tex;
         })
         .catch(() => {});
 
@@ -222,13 +233,13 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
       <group>
         <mesh ref={meshRef}>
           <sphereGeometry args={[GLOBE_RADIUS, segments[0], segments[1]]} />
-          <shaderMaterial vertexShader={VERT} fragmentShader={EARTH_IMAGERY_FRAG} uniforms={uniforms} />
+          <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: EARTH_IMAGERY_FRAG, uniforms }]} />
         </mesh>
         <Atmosphere uniforms={uniforms} />
         {/* Thinner inner-limb haze, this lane's own addition alongside the shared Atmosphere. */}
         <mesh scale={1.02}>
           <sphereGeometry args={[GLOBE_RADIUS, segments[0], segments[1]]} />
-          <shaderMaterial vertexShader={VERT} fragmentShader={INNER_HAZE_FRAG} uniforms={uniforms} side={THREE.BackSide} blending={THREE.AdditiveBlending} transparent depthWrite={false} />
+          <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: INNER_HAZE_FRAG, uniforms }]} side={THREE.BackSide} blending={THREE.AdditiveBlending} transparent depthWrite={false} />
         </mesh>
       </group>
     </>

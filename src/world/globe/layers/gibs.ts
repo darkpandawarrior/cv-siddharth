@@ -8,6 +8,7 @@
 //   MODIS_Terra_CorrectedReflectance_TrueColor (day fallback, dated)
 //   BlueMarble_ShadedRelief_Bathymetry         (static, no TIME — gap fill)
 //   VIIRS_Black_Marble                         (static, no TIME — city lights)
+//   GHRSST_L4_MUR_Sea_Ice_Concentration        (dated, gap-free PNG — polar fill)
 
 export const GIBS_WMS_ENDPOINT = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi";
 
@@ -15,6 +16,10 @@ export const VIIRS_TRUE_COLOR = "VIIRS_SNPP_CorrectedReflectance_TrueColor";
 export const MODIS_TERRA_TRUE_COLOR = "MODIS_Terra_CorrectedReflectance_TrueColor";
 export const BLUE_MARBLE_BASE = "BlueMarble_ShadedRelief_Bathymetry";
 export const BLACK_MARBLE_NIGHT = "VIIRS_Black_Marble";
+// A Level-4 analysis: gap-free by construction (passive microwave sees
+// through polar night), unlike VIIRS reflectance, which has no data wherever
+// the sun is low. It lags a day or two, hence the older dates below.
+export const MUR_SEA_ICE = "GHRSST_L4_MUR_Sea_Ice_Concentration";
 
 export interface GibsSize {
   width: number;
@@ -32,7 +37,7 @@ export function isoDateUTC(now: Date, daysAgo: number): string {
 /** A GIBS WMS GetMap URL. `time` omitted entirely for the two static layers
  *  (BlueMarble, Black Marble) — sending a TIME on those either errors or is
  *  silently ignored depending on the layer, so simplest is to never send one. */
-export function gibsGetMapUrl(layer: string, size: GibsSize, time?: string): string {
+export function gibsGetMapUrl(layer: string, size: GibsSize, time?: string, transparentPng = false): string {
   const params = new URLSearchParams({
     SERVICE: "WMS",
     REQUEST: "GetMap",
@@ -42,8 +47,9 @@ export function gibsGetMapUrl(layer: string, size: GibsSize, time?: string): str
     BBOX: "-90,-180,90,180",
     WIDTH: String(size.width),
     HEIGHT: String(size.height),
-    FORMAT: "image/jpeg",
+    FORMAT: transparentPng ? "image/png" : "image/jpeg",
   });
+  if (transparentPng) params.set("TRANSPARENT", "true");
   if (time) params.set("TIME", time);
   return `${GIBS_WMS_ENDPOINT}?${params.toString()}`;
 }
@@ -78,6 +84,16 @@ export function gapFillUrl(size: GibsSize): string {
 /** Static VIIRS Black Marble: night-side city lights. */
 export function nightLightsUrl(size: GibsSize): string {
   return gibsGetMapUrl(BLACK_MARBLE_NIGHT, size);
+}
+
+/** Real sea ice for the polar no-data cap: the MUR L4 concentration map as
+ *  a transparent PNG (alpha 0 off the ice), two then three days back. The
+ *  shader draws ice only where VIIRS itself has no data. */
+export function seaIceAttempts(now: Date, size: GibsSize): ImageryAttempt[] {
+  return [2, 3].map((daysAgo) => {
+    const date = isoDateUTC(now, daysAgo);
+    return { url: gibsGetMapUrl(MUR_SEA_ICE, size, date, true), detail: `GHRSST MUR sea ice, ${date}` };
+  });
 }
 
 export interface ImagerySource {

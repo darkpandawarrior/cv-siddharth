@@ -171,7 +171,10 @@ export function SkyMoon({ now }: { now: Date }) {
       }}
     >
       <sphereGeometry args={[MOON_RADIUS, 48, 32]} />
-      <shaderMaterial vertexShader={VERT} fragmentShader={FRAG} uniforms={uniforms} />
+      {/* Constructed WITH the uniforms object (args), not given it as a prop:
+          R3F copies prop uniforms once at mount, so the texture and uHasMap
+          set after the map loads would never reach the GPU. */}
+      <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: FRAG, uniforms }]} />
     </mesh>
   );
 }
