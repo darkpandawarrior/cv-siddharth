@@ -73,7 +73,7 @@ export function ChatLauncher() {
         type="button"
         onClick={() => setPending({ detail: undefined })}
         aria-label="Open chat"
-        className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
+        className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 active:scale-95 active:duration-[90ms] print:hidden"
       >
         <MessageCircle size={24} />
       </button>

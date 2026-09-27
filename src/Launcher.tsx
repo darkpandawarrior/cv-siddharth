@@ -57,7 +57,7 @@ export function LauncherButton({ className = "" }: { className?: string }) {
       type="button"
       onClick={() => openLauncher()}
       aria-haspopup="dialog"
-      className={`flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 transition hover:border-accent hover:text-accent ${className}`}
+      className={`ctrl flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-zinc-400 hover:border-accent hover:text-accent ${className}`}
     >
       <LayoutGrid size={14} aria-hidden /> <span className="label-wide">Surfaces</span>
     </button>
