@@ -5,6 +5,8 @@ import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { Reveal } from "../Reveal.tsx";
+import { StaggerReveal } from "../StaggerReveal.tsx";
+import { AnimatedMetric } from "../AnimatedMetric.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
 import { EvidenceChip } from "../EvidenceChip.tsx";
@@ -252,11 +254,13 @@ function CanonRoute() {
                   {/* The thirteen as DOM text, because the plate's names are
                       baked pixels and a raster cannot be the only channel. */}
                   <ul className="mt-5 flex list-none flex-wrap gap-x-4 gap-y-2 p-0 font-mono text-xs">
-                    {NAMED_THIRTEEN.map((n) => (
-                      <li key={n} style={{ color: "var(--color-text-dim)" }}>
-                        {n}
-                      </li>
-                    ))}
+                    <StaggerReveal as="li" step={40}>
+                      {NAMED_THIRTEEN.map((n) => (
+                        <span key={n} style={{ color: "var(--color-text-dim)" }}>
+                          {n}
+                        </span>
+                      ))}
+                    </StaggerReveal>
                     {/* The fourteenth slot is a real element, not a gap. The
                         blank is the subject: morkinstar-art.mjs's own comment
                         says it "is not a placeholder to fill in later".
@@ -489,19 +493,21 @@ function CanonRoute() {
                     </tr>
                   </thead>
                   <tbody>
-                    {RIG_CONSTRAINTS.map((row) => (
-                      <tr key={row.species} className="border-b border-line/50 last:border-0">
-                        <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
-                          {row.species}
-                        </td>
-                        <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
-                          {row.world}
-                        </td>
-                        <td className="py-2" style={{ color: "var(--color-text-dim)" }}>
-                          {row.constraint}
-                        </td>
-                      </tr>
-                    ))}
+                    <StaggerReveal as="tr" step={40} className="border-b border-line/50 last:border-0">
+                      {RIG_CONSTRAINTS.map((row) => (
+                        <Fragment key={row.species}>
+                          <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
+                            {row.species}
+                          </td>
+                          <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
+                            {row.world}
+                          </td>
+                          <td className="py-2" style={{ color: "var(--color-text-dim)" }}>
+                            {row.constraint}
+                          </td>
+                        </Fragment>
+                      ))}
+                    </StaggerReveal>
                   </tbody>
                 </table>
               </div>
@@ -512,9 +518,13 @@ function CanonRoute() {
           </Reveal>
 
           {/* ---- 5. The tether ------------------------------------------
-              Three real figures, the big one first. No sparkline: AnimatedMetric
-              draws a fixed ascending line that would be a trend for a thing
-              with no trend. */}
+              Three real figures, the big one first. Bare-mode AnimatedMetric
+              (§2.2 of the aliveness kit): a real count-up with no gauge, no
+              sparkline — this is the literal fix for the objection this
+              docstring already raised (AnimatedMetric's decorative sparkline
+              would be a fixed ascending trend for a thing with no trend).
+              Bare mode makes "count-up, no trend" the supported path instead
+              of the page opting out of the component entirely. */}
           <Reveal className="mt-16">
             <section aria-labelledby="tether-h">
               <h2 id="tether-h" className="font-display text-2xl font-bold sm:text-3xl">
@@ -522,10 +532,12 @@ function CanonRoute() {
               </h2>
               <div className="mt-6 grid gap-6 sm:grid-cols-3">
                 {TETHER.map((t) => (
-                  <p key={t.label} className="font-display text-metric font-bold text-accent">
-                    {t.value}
-                    <span className="kicker mt-2 block">{t.label}</span>
-                  </p>
+                  <AnimatedMetric
+                    key={t.label}
+                    className=""
+                    viz="none"
+                    metric={{ value: String(t.value), label: t.label }}
+                  />
                 ))}
               </div>
               <p className="mt-6 max-w-3xl leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
@@ -560,27 +572,29 @@ function CanonRoute() {
                     </tr>
                   </thead>
                   <tbody>
-                    {STANDARD_INTERVALS.map((row) => (
-                      <tr key={row.interval} className="border-b border-line/50 last:border-0">
-                        <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
-                          {row.interval}
-                        </td>
-                        <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
-                          {row.realm}
-                        </td>
-                        {/* The two founding blanks read as blanks rather than
-                            as data. --color-muted is the same #a4978a as
-                            --color-text-dim in this world (6.7:1); the italic
-                            is what carries the difference, so the distinction
-                            does not depend on colour alone. */}
-                        <td
-                          className={`py-2 ${row.blank ? "italic" : ""}`}
-                          style={{ color: row.blank ? "var(--color-muted)" : "var(--color-text-dim)" }}
-                        >
-                          {row.length}
-                        </td>
-                      </tr>
-                    ))}
+                    <StaggerReveal as="tr" step={40} className="border-b border-line/50 last:border-0">
+                      {STANDARD_INTERVALS.map((row) => (
+                        <Fragment key={row.interval}>
+                          <td className="py-2 pr-4" style={{ color: "var(--color-text)" }}>
+                            {row.interval}
+                          </td>
+                          <td className="py-2 pr-4" style={{ color: "var(--color-text-dim)" }}>
+                            {row.realm}
+                          </td>
+                          {/* The two founding blanks read as blanks rather than
+                              as data. --color-muted is the same #a4978a as
+                              --color-text-dim in this world (6.7:1); the italic
+                              is what carries the difference, so the distinction
+                              does not depend on colour alone. */}
+                          <td
+                            className={`py-2 ${row.blank ? "italic" : ""}`}
+                            style={{ color: row.blank ? "var(--color-muted)" : "var(--color-text-dim)" }}
+                          >
+                            {row.length}
+                          </td>
+                        </Fragment>
+                      ))}
+                    </StaggerReveal>
                   </tbody>
                 </table>
               </div>
