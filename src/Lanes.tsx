@@ -4,6 +4,7 @@ import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
 import { SiteFooter } from "./SiteFooter.tsx";
 import { Reveal } from "./Reveal.tsx";
+import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { lanes, laneMonths, lanesGeneratedAt } from "./data/lanes.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
@@ -159,22 +160,34 @@ export default function Lanes() {
                 ))}
               </div>
             </div>
+
+            {/* reality-spec §6, "the cheapest highest-leverage single fix in
+                the whole audit": these four cards used to sit OUTSIDE this
+                Reveal entirely, popping in flat while the grid above them
+                faded in. Same Reveal, same one-shot arrival; the total is
+                now a real count-up rather than a static number (no comma
+                grouping in the animated value itself — the tick loop only
+                touches the leading digit run, so `.toLocaleString()` here
+                would count "0,183" → "1,183" instead of 0 → 8,183). */}
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {lanes.map((lane) => (
+                <div key={lane.key} className="card-elevated rounded-2xl border border-line bg-surface p-4">
+                  <p className="font-mono text-[10px] font-semibold" style={{ color: `var(${lane.hueVar})` }}>
+                    {lane.label}
+                  </p>
+                  <AnimatedMetric
+                    className=""
+                    viz="none"
+                    metric={{
+                      value: `${lane.total} ${lane.unit}`,
+                      label: `peak ${lane.peak.ym}: ${lane.peak.v.toLocaleString("en-US")}`,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </Reveal>
-
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {lanes.map((lane) => (
-            <div key={lane.key} className="card-elevated rounded-2xl border border-line bg-surface p-4">
-              <p className="font-mono text-[10px] font-semibold" style={{ color: `var(${lane.hueVar})` }}>
-                {lane.label}
-              </p>
-              <p className="mt-1 font-display text-xl font-bold tracking-tight">
-                {lane.total.toLocaleString("en-US")} <span className="text-sm font-normal text-muted">{lane.unit}</span>
-              </p>
-              <p className="mt-1 font-mono text-[10px] text-muted">peak {lane.peak.ym}: {lane.peak.v.toLocaleString("en-US")}</p>
-            </div>
-          ))}
-        </div>
 
         <p className="mt-6 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
           {years.length} calendar years on one axis. Each lane states its own unit because they are not
