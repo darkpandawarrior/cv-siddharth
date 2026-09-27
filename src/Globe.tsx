@@ -53,6 +53,7 @@ export function Globe() {
   const [zoomInTick, setZoomInTick] = useState(0);
   const [zoomOutTick, setZoomOutTick] = useState(0);
   const [autoRotatePaused, setAutoRotatePaused] = useState(false);
+  const [markersHidden, setMarkersHidden] = useState(false);
 
   useEffect(() => {
     setCapable(hasWebGL());
@@ -72,6 +73,8 @@ export function Globe() {
         onZoomOut={() => setZoomOutTick((t) => t + 1)}
         autoRotatePaused={autoRotatePaused}
         onToggleAutoRotate={() => setAutoRotatePaused((p) => !p)}
+        markersHidden={markersHidden}
+        onToggleMarkers={() => setMarkersHidden((h) => !h)}
       />
       {showScene && (
         <ClientOnly fallback={sceneLoadingFallback}>
@@ -82,6 +85,7 @@ export function Globe() {
               zoomInTick={zoomInTick}
               zoomOutTick={zoomOutTick}
               autoRotatePaused={autoRotatePaused}
+              showMarkers={!markersHidden}
             />
           </Hydrate>
         </ClientOnly>

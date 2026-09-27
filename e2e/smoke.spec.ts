@@ -95,16 +95,6 @@ const EXPECTED_404 = [
   "/api/aircraft",
   "/api/signals",
   "/api/tle",
-  // heavy/globe/earth-720x360.bin (P2-08 globe-core): HEAVY_ASSET_BASE
-  // defaults to the real GitHub Pages host whenever VITE_HEAVY_ASSET_BASE
-  // isn't set to "/" (assetBase.ts) — true for `npm run build && npm run
-  // serve`, same as every other WASM/showcase asset under heavy/. This one
-  // publishes on its own schedule, separate from this site's deploy
-  // (assetBase.ts's own doc comment), and curling it directly confirms it
-  // is not there yet: `curl -I https://darkpandawarrior.github.io/cv/globe/
-  // earth-720x360.bin` -> 404. Drop this entry once `npm run
-  // publish:heavy-assets` has actually shipped it.
-  "darkpandawarrior.github.io/cv/globe/earth-720x360.bin",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 

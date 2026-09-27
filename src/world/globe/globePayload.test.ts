@@ -3,10 +3,10 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * living-ledger-spec.md#12: `heavy/globe` (earth-720x360.bin, the two static
- * plates) stays under 1 MB, its own budget line, separate from world-v2's
- * `worldPayload.test.ts` tier ceilings, since GLOBE is a different route with
- * a different heavy manifest.
+ * living-ledger-spec.md#12: `heavy/globe` (the two static plates; the earth
+ * mask moved same-origin to public/sky/) stays under 1 MB, its own budget
+ * line, separate from world-v2's `worldPayload.test.ts` tier ceilings, since
+ * GLOBE is a different route with a different heavy manifest.
  */
 export const HEAVY_GLOBE_MAX = 1_048_576;
 

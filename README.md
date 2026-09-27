@@ -349,7 +349,7 @@ reasoning where a README reader can find it.
   refresh.
 - `gen-globe-earth.mjs` (`npm run gen:globe-earth`). Manual and occasional:
   bakes NASA's public-domain Black Marble night-radiance composite into a
-  360x180 land mask, `heavy/globe/earth-720x360.bin`. The build must never
+  360x180 land mask, `public/sky/earth-720x360.bin`. The build must never
   block on NASA's server, so it stays out of every build/refresh/check chain.
 - `gen-globe-geo.mjs` (`npm run gen:globe-geo`). Manual and occasional: bakes
   country centroids from Natural Earth's admin-0 GeoJSON mirror into
@@ -391,8 +391,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 2265 unit tests across 231 files (vitest)
-npm run test:e2e  # 630 Playwright tests across 47 files, every registry route
+npm test          # 2298 unit tests across 231 files (vitest)
+npm run test:e2e  # 631 Playwright tests across 47 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

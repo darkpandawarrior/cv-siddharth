@@ -1,3 +1,5 @@
+import type { RefObject } from "react";
+import type { Object3D } from "three";
 import { Html } from "@react-three/drei";
 import { latLonToXyz } from "./geoMath.ts";
 import { centroids } from "./centroids.ts";
@@ -17,7 +19,7 @@ const centroidByCc = new Map(centroids.map((c) => [c.iso2, c] as const));
  * count (GlobePanel's own row, not this layer) but no per-country dots, T3
  * drops the presence layer entirely.
  */
-export function LiveDots({ tier }: { tier: 1 | 2 | 3 }) {
+export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObject<Object3D>[] }) {
   const counts = usePresenceGeo();
   if (tier !== 1) return null;
 
@@ -30,7 +32,7 @@ export function LiveDots({ tier }: { tier: 1 | 2 | 3 }) {
         const r = GLOBE_RADIUS + 0.03;
         const position: [number, number, number] = [p.x * r, p.y * r, p.z * r];
         return (
-          <Html key={cc} position={position} center distanceFactor={10} style={{ pointerEvents: "none" }}>
+          <Html key={cc} position={position} center distanceFactor={10} occlude={occlude} style={{ pointerEvents: "none" }}>
             <span
               data-live-dot={cc}
               title={`${n} here now from ${centroid.name}`}

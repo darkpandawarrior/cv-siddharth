@@ -330,7 +330,7 @@ export const GENERATORS = [
   // header says so, G13): bakes the Black Marble night-radiance land mask by
   // hand; the build must never block on NASA's server.
   { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: "gen:globe-earth", kind: "network",
-    inputs: [], outputs: ["heavy/globe/earth-720x360.bin"], stages: {} },
+    inputs: [], outputs: ["public/sky/earth-720x360.bin"], stages: {} },
   // Manual/occasional, same posture as gen-globe-earth.mjs above (its own
   // header says so, G13): bakes country centroids from Natural Earth's
   // admin-0 GeoJSON mirror by hand.

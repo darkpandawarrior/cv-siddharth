@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Manual generator, never run by the build (G13). `node scripts/gen-globe-earth.mjs`.
 //
-// Bakes heavy/globe/earth-720x360.bin: a 360x180 (1 deg/cell) land mask plus
+// Bakes public/sky/earth-720x360.bin: a 360x180 (1 deg/cell) land mask plus
 // a 4-bit NASA Black Marble night-radiance value per cell, box-sampled from
 // NASA's own public-domain "Earth at Night 2016" 0.1-degree composite --
 // eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_01deg.jpg,
@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const SRC_URL = "https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_01deg.jpg";
-const OUT_PATH = fileURLToPath(new URL("../heavy/globe/earth-720x360.bin", import.meta.url));
+const OUT_PATH = fileURLToPath(new URL("../public/sky/earth-720x360.bin", import.meta.url));
 const OUT_WIDTH = 360;
 const OUT_HEIGHT = 180;
 export const LAND_SUM_THRESHOLD = 30;
@@ -149,7 +149,7 @@ async function main() {
     jpegBuf = inputPath ? readFileSync(inputPath) : await fetchSourceJpeg();
   } catch (err) {
     console.error(
-      `gen-globe-earth: source unavailable (${err.message}), kept committed heavy/globe/earth-720x360.bin`,
+      `gen-globe-earth: source unavailable (${err.message}), kept committed public/sky/earth-720x360.bin`,
     );
     return;
   }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
+import { MapPin, MapPinOff, Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
 import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
@@ -34,6 +34,10 @@ export interface GlobeHudProps {
   onZoomOut?: () => void;
   autoRotatePaused?: boolean;
   onToggleAutoRotate?: () => void;
+  /** Hides the Pune card, reach columns and employer ring for a clean view
+   *  of the earth; the same button brings them back. */
+  markersHidden?: boolean;
+  onToggleMarkers?: () => void;
 }
 
 /**
@@ -50,7 +54,7 @@ export interface GlobeHudProps {
  * (Globe.tsx): there is always a Pune reading, even when there is nothing
  * to orbit.
  */
-export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotatePaused = false, onToggleAutoRotate }: GlobeHudProps) {
+export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotatePaused = false, onToggleAutoRotate, markersHidden = false, onToggleMarkers }: GlobeHudProps) {
   const reducedMotion = useReducedMotion();
   const autoRotate = hasWebGL && !reducedMotion && tier !== 3 && !autoRotatePaused;
   const daypart = sky?.daypart ?? null;
@@ -83,6 +87,18 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
         >
           {autoRotatePaused ? <Play size={12} /> : <Pause size={12} />}
+        </button>
+      )}
+      {hasWebGL && onToggleMarkers && (
+        <button
+          type="button"
+          onClick={onToggleMarkers}
+          aria-pressed={markersHidden}
+          aria-label={markersHidden ? "Show the Pune markers and card" : "Hide the Pune markers and card"}
+          title={markersHidden ? "Show markers" : "Hide markers"}
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
+        >
+          {markersHidden ? <MapPinOff size={12} /> : <MapPin size={12} />}
         </button>
       )}
       {hasWebGL && onZoomIn && onZoomOut && (

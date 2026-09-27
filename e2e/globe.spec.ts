@@ -8,27 +8,21 @@ import type { Page } from "@playwright/test";
 /**
  * /globe, end to end (living-ledger-spec.md#6.3, this lane's own acceptance
  * list). Fixed clock, every /api/* the route touches routed to a committed
- * fixture (G10) — including the Black Marble mask, a static heavy asset
- * `heavy()` resolves to an absolute darkpandawarrior.github.io URL in a real
- * deploy, so a required gate mocks it here rather than depending on that
- * publish step having run.
+ * fixture (G10). The Black Marble mask is NOT mocked: it ships same-origin
+ * from public/sky/, and mocking it is how a production 404 once passed this
+ * whole spec while the live globe drew no earth at all.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
 const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
 const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
 const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
-const EARTH_MASK_PATH = join(ROOT, "heavy", "globe", "earth-720x360.bin");
 
 async function withApiFixtures(page: Page) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
-  await page.route("**/earth-720x360.bin", (route) =>
-    route.fulfill({ path: EARTH_MASK_PATH, contentType: "application/octet-stream" }),
-  );
 }
 
 /** Mean 0..255 luma of a screenshot buffer — same technique as
@@ -43,7 +37,7 @@ async function meanLuma(buffer: Buffer): Promise<number> {
 
 type Box = { x: number; y: number; width: number; height: number };
 
-/** Splits the canvas's own bounding box into the day/night halves that
+/** Splits the globe's own screen square into the day/night halves that
  *  `data-day-side` (GlobeScene's SubsolarProbe) names — the "clip regions
  *  computed from the subsolar point projection" this lane's acceptance line
  *  asks for, computed once in-page and read here as a plain string. */
@@ -59,13 +53,21 @@ function dayNightClips(box: Box, daySide: string): { day: Box; night: Box } {
   return { day: half(box, side), night: half(box, opposite[side]) };
 }
 
-test("the day hemisphere reads brighter than the night hemisphere at real Pune noon", async ({ page }, testInfo) => {
+// Pune dusk, not noon: the camera opens over Pune, so at noon the whole
+// visible disk is daylit and a half-vs-half luma comparison only measured
+// how much land each half happened to hold. At dusk the terminator runs
+// through the view, which is the one condition this test is about. Reduced
+// motion freezes auto-rotate so the crop matches the probe's frame, and the
+// Pune card is hidden so only WebGL pixels are measured.
+test("the day hemisphere reads brighter than the night hemisphere at Pune dusk", async ({ page }, testInfo) => {
   test.slow(); // a real WebGL settle plus two screenshot crops
   await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await withApiFixtures(page);
-  await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
+  await page.clock.setFixedTime(new Date("2026-09-24T18:27:00+05:30"));
   await page.goto("/globe");
   await waitForHydration(page);
+  await page.addStyleTag({ content: "[data-pune-card]{display:none!important}" });
 
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
@@ -76,8 +78,10 @@ test("the day hemisphere reads brighter than the night hemisphere at real Pune n
   await expect.poll(async () => probe.getAttribute("data-day-side")).not.toBeNull();
   const daySide = (await probe.getAttribute("data-day-side"))!;
 
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("globe canvas has no bounding box");
+  const canvasBox = await canvas.boundingBox();
+  if (!canvasBox) throw new Error("globe canvas has no bounding box");
+  const [gx, gy, gr] = await Promise.all(["x", "y", "r"].map(async (k) => Number(await probe.getAttribute(`data-globe-${k}`))));
+  const box = { x: canvasBox.x + gx - gr, y: canvasBox.y + gy - gr, width: 2 * gr, height: 2 * gr };
   const { day, night } = dayNightClips(box, daySide);
 
   const dayLuma = await meanLuma(await page.screenshot({ clip: day, path: testInfo.outputPath("globe-day-1440.png") }));
@@ -85,6 +89,21 @@ test("the day hemisphere reads brighter than the night hemisphere at real Pune n
   await testInfo.attach("luma", { body: JSON.stringify({ daySide, dayLuma, nightLuma }), contentType: "application/json" });
 
   expect(dayLuma, `day luma ${dayLuma} vs night luma ${nightLuma} (day side: ${daySide})`).toBeGreaterThan(nightLuma);
+});
+
+test("the markers toggle hides the Pune card and brings it back", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await withApiFixtures(page);
+  await page.goto("/globe");
+  await waitForHydration(page);
+  // Attached, not visible: auto-rotate can carry Pune behind the earth,
+  // where occlusion hides the card without unmounting it.
+  const card = page.locator("[data-pune-card]");
+  await expect(card).toBeAttached({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Hide the Pune markers and card" }).click();
+  await expect(card).toHaveCount(0);
+  await page.getByRole("button", { name: "Show the Pune markers and card" }).click();
+  await expect(card).toBeAttached();
 });
 
 test("two mocked presences from two countries show two live dots and the right count", async ({ page }) => {

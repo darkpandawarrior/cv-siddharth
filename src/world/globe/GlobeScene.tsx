@@ -4,7 +4,7 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { SceneActivity, useReducedMotion } from "../../SceneActivity.tsx";
-import { subsolarPoint } from "../../lib/sky.ts";
+import { PUNE, subsolarPoint } from "../../lib/sky.ts";
 import { latLonToXyz } from "./geoMath.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
@@ -27,8 +27,23 @@ function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-// §6.3 Tiers: "dots 6,000 / 2,500 / 1,200 by tier".
-const TIER_DOT_COUNT: Record<1 | 2 | 3, number> = { 1: 6000, 2: 2500, 3: 1200 };
+// §6.3 Tiers named 6,000 / 2,500 / 1,200; at 6,000 the land came out as
+// ~1,750 dots four diameters apart, which read as noise rather than
+// continents. Flat discs (EarthDots.tsx) make this density cheaper to draw
+// than the old count was.
+const TIER_DOT_COUNT: Record<1 | 2 | 3, number> = { 1: 16000, 2: 8000, 3: 3500 };
+
+// The opening view: over Pune, tilted 12 degrees north so the reach columns
+// stand up off the surface instead of pointing straight down the lens. The
+// distance here is only the first frame's; SceneRig re-frames on mount.
+const START = latLonToXyz(PUNE.lat + 12, PUNE.lon);
+const START_DISTANCE = 26;
+// Framing on the golden ratio: the globe's diameter is 1/phi of the canvas
+// height, and its centre sits on the upper golden section (38.2% down) by
+// shifting the frustum, not the orbit centre. That line also clears
+// GlobePanel's fact list along the bottom edge.
+const PHI = (1 + Math.sqrt(5)) / 2;
+const LIFT = 0.5 - 1 / PHI ** 2;
 
 /**
  * Two per-frame/per-event scene seams sharing one component (both need
@@ -37,9 +52,10 @@ const TIER_DOT_COUNT: Record<1 | 2 | 3, number> = { 1: 6000, 2: 2500, 3: 1200 };
  *
  * - Writes the real subsolar point's CURRENT screen projection onto a plain
  *   DOM sibling (never React state - recomputes every frame, including
- *   while OrbitControls auto-rotates). `data-day-side` is which screen half
- *   currently faces the subsolar point, so e2e/globe.spec.ts can crop a
- *   day/night luma comparison from the CURRENT camera orientation.
+ *   while OrbitControls auto-rotates). `data-day-side` is which half of the
+ *   globe's screen disk (`data-globe-x/y/r`) faces the subsolar point, so
+ *   e2e/globe.spec.ts can crop a day/night luma comparison from the CURRENT
+ *   camera orientation.
  * - Keyboard zoom (§2): today there is no keyboard path into the globe's
  *   zoom at all (the Canvas is `role="img"`, correctly non-interactive to
  *   AT, but a sighted keyboard-only or switch-access visitor got nothing).
@@ -49,19 +65,54 @@ const TIER_DOT_COUNT: Record<1 | 2 | 3, number> = { 1: 6000, 2: 2500, 3: 1200 };
  */
 function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.RefObject<HTMLDivElement | null>; controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
   const { camera, size } = useThree();
+  const get = useThree((s) => s.get);
+
+  useEffect(() => {
+    // Read through get(): the camera is three's own mutable object, and
+    // framing it IS the point of this effect.
+    const { camera: c, size } = get();
+    const cam = c as THREE.PerspectiveCamera;
+    // Projected radius as a fraction of canvas height: 1/(2 phi) on
+    // landscape. On portrait, GlobePanel's list grows to its 45% cap over
+    // the canvas bottom, so the globe fits the free top half instead: a
+    // quarter-height radius centred at 27.5%, never wider than 90% of the
+    // width. A sphere at distance d subtends sin(a) = R/d, and fills
+    // tan(a)/tan(fov/2) of the half-height.
+    const portrait = size.width < size.height;
+    const r = Math.min(portrait ? 0.25 : 1 / (2 * PHI), (0.9 * size.width) / size.height / 2);
+    const tanHalf = Math.tan((cam.fov * Math.PI) / 360);
+    cam.position.setLength(GLOBE_RADIUS / Math.sin(Math.atan(2 * r * tanHalf)));
+    // Fractions (a 1x1 "full" view), so the lift survives R3F's own resize
+    // handling. setViewOffset also sets aspect to fullWidth/fullHeight, i.e.
+    // 1, which stretched the globe sideways until the real aspect went back.
+    cam.setViewOffset(1, 1, 0, portrait ? 0.225 : LIFT, 1, 1);
+    cam.aspect = size.width / size.height;
+    cam.updateProjectionMatrix();
+    // Mount-time framing only: re-running on resize would snap the camera
+    // back out after a visitor zoomed.
+  }, [get]);
 
   useFrame(() => {
     const el = probeRef.current;
     if (!el) return;
+    const toScreen = (v: THREE.Vector3) => {
+      v.project(camera);
+      return [(v.x * 0.5 + 0.5) * size.width, (-v.y * 0.5 + 0.5) * size.height];
+    };
     const sub = subsolarPoint(now);
     const p = latLonToXyz(sub.lat, sub.lon);
-    const world = new THREE.Vector3(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS).project(camera);
-    const x = (world.x * 0.5 + 0.5) * size.width;
-    const y = (-world.y * 0.5 + 0.5) * size.height;
-    const dx = x - size.width / 2;
-    const dy = y - size.height / 2;
+    const [x, y] = toScreen(new THREE.Vector3(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS));
+    // The globe's own screen disk: the view is lifted off the canvas centre,
+    // so day/night halves are split at the globe's centre, not the canvas's.
+    const [cx, cy] = toScreen(new THREE.Vector3());
+    const [ex] = toScreen(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS));
+    const dx = x - cx;
+    const dy = y - cy;
     el.dataset.subsolarX = String(Math.round(x));
     el.dataset.subsolarY = String(Math.round(y));
+    el.dataset.globeX = String(Math.round(cx));
+    el.dataset.globeY = String(Math.round(cy));
+    el.dataset.globeR = String(Math.round(Math.abs(ex - cx)));
     el.dataset.daySide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "right" : "left") : dy >= 0 ? "bottom" : "top";
   });
 
@@ -94,6 +145,9 @@ export interface GlobeSceneProps {
   /** The manual pause toggle in GlobeHud (§2, Auto-rotate row) — a visitor
    *  can permanently stop the spin without needing reduced-motion OS-wide. */
   autoRotatePaused?: boolean;
+  /** GlobeHud's markers toggle: false hides the Pune card, the reach
+   *  columns and the employer ring. */
+  showMarkers?: boolean;
 }
 
 /**
@@ -106,9 +160,12 @@ export interface GlobeSceneProps {
  * LIVE" rule - a visitor who toggles the OS setting mid-session, or a test
  * that calls `emulateMedia` after load, must see auto-rotate actually stop.
  */
-export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false }: GlobeSceneProps) {
+export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false, showMarkers = true }: GlobeSceneProps) {
   const probeRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  // The ocean sphere, handed to every <Html> callout as its occluder so a
+  // label on the far side hides instead of floating over the globe.
+  const earthRef = useRef<THREE.Mesh>(null!);
   const reducedMotion = useReducedMotion();
   const autoRotate = !reducedMotion && tier !== 3 && !autoRotatePaused;
 
@@ -132,7 +189,7 @@ export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRot
       <div ref={probeRef} data-subsolar-probe aria-hidden style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }} />
       <Canvas
         dpr={[1, tier === 3 ? 1 : 1.5]}
-        camera={{ position: [0, 2.4, 15], fov: 42 }}
+        camera={{ position: [START.x * START_DISTANCE, START.y * START_DISTANCE, START.z * START_DISTANCE], fov: 42 }}
         gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
         style={{ position: "absolute", inset: 0 }}
         role="img"
@@ -143,8 +200,9 @@ export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRot
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
+          rotateSpeed={0.5}
           minDistance={9}
-          maxDistance={26}
+          maxDistance={42}
           minPolarAngle={MIN_POLAR}
           maxPolarAngle={MAX_POLAR}
           autoRotate={autoRotate}
@@ -156,10 +214,14 @@ export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRot
           dampingFactor={0.08}
         />
         <SceneRig now={now} probeRef={probeRef} controlsRef={controlsRef} />
-        <EarthDots count={TIER_DOT_COUNT[tier]} now={now} />
-        <ReachColumns />
-        <Markers />
-        <LiveDots tier={tier} />
+        <EarthDots count={TIER_DOT_COUNT[tier]} now={now} earthRef={earthRef} />
+        {showMarkers && (
+          <>
+            <ReachColumns />
+            <Markers occlude={[earthRef]} />
+          </>
+        )}
+        <LiveDots tier={tier} occlude={[earthRef]} />
         {tier === 1 && <OrbitLayer />}
         {tier !== 3 && <LocalTraffic tier={tier} />}
       </Canvas>
