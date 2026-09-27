@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, Globe as GlobeIcon, type LucideIcon } from "lucide-react";
 import { openChat } from "./lib/chatBus.ts";
 import { LauncherButton } from "./Launcher.tsx";
@@ -9,6 +9,8 @@ import type { PulseEvent } from "./play/pulse.ts";
 import { surfaces, siteRooms, type Surface } from "./data/surfaces.ts";
 import { AltitudeRail } from "./world/AltitudeRail.tsx";
 import { altitudeFor } from "./world/altitude.ts";
+import { prefersReducedMotion } from "./world/reducedMotion.ts";
+import { navigateWithViewTransition } from "./lib/viewTransition.ts";
 
 /**
  * The room registry and the chrome every room route wears.
@@ -124,8 +126,20 @@ export function useNextRoom(): Room | null {
  * three hand-copies of this markup drifting apart.
  */
 export function NextRoomLink({ next, className = "" }: { next: Room; className?: string }) {
+  const navigate = useNavigate();
   return (
-    <Link to={next.to} className={`group flex items-center justify-between gap-4 ${className}`}>
+    <Link
+      to={next.to}
+      className={`ctrl group flex items-center justify-between gap-4 ${className}`}
+      // Real <Link> kept (real href, crawlable) — the click is intercepted
+      // only to run the same startViewTransition/fallback/instant contract
+      // AltitudeRail.tsx already proved, via the shared helper (§2, Lane 7),
+      // instead of the router's own instant swap.
+      onClick={(e) => {
+        e.preventDefault();
+        navigateWithViewTransition(() => navigate({ to: next.to }), prefersReducedMotion());
+      }}
+    >
       <span className="flex items-center gap-3">
         <span
           aria-hidden
@@ -185,7 +199,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             <button
               type="button"
               onClick={() => goToSection("top")}
-              className="flex items-center gap-1.5 text-sm text-muted transition hover:text-accent"
+              className="ctrl flex items-center gap-1.5 text-sm text-muted hover:text-accent"
             >
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
@@ -203,7 +217,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             {showAltitudeRail && <AltitudeRail />}
             <button
               onClick={() => openChat()}
-              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
+              className="ctrl rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4"
             >
               Ask <span className="label-wide">my AI</span>
             </button>
