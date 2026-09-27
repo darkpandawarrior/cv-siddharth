@@ -20,6 +20,21 @@ describe("latLonToXyz / xyzToLatLon", () => {
     }
   });
 
+  // Round-trips and unit length both pass on a mirror image, which is how
+  // the globe shipped with every continent flipped. Handedness is its own
+  // check: at any surface point, east x north must point OUT of the globe.
+  it("is right-handed: east x north points outward, so the globe is not mirrored", () => {
+    const at = latLonToXyz(0, 0);
+    const east = latLonToXyz(0, 90);
+    const north = latLonToXyz(90, 0);
+    const out = {
+      x: east.y * north.z - east.z * north.y,
+      y: east.z * north.x - east.x * north.z,
+      z: east.x * north.y - east.y * north.x,
+    };
+    expect(out.x * at.x + out.y * at.y + out.z * at.z).toBeCloseTo(1, 10);
+  });
+
   it("returns a unit vector for any lat/lon", () => {
     const p = latLonToXyz(37, -122);
     expect(Math.hypot(p.x, p.y, p.z)).toBeCloseTo(1, 10);
