@@ -169,7 +169,7 @@ export function WritingSection() {
                   (so-p1-soul-surfaced, App.tsx's `EbProfiles`), so the two
                   rooms render the identical grid rather than two copies that
                   can drift. */}
-              <BoardProfilesGrid />
+              <BoardProfilesGrid stagger />
             </div>
 
             {/* The two societies, and what they published. */}

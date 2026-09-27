@@ -592,9 +592,9 @@ export function ProjectDetail({ slug }: { slug: string }) {
             <ShareProject slug={slug} name={project.name} />
             <span className="text-sm text-muted">{project.status}</span>
           </div>
-          <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" />
-          <LessonNotes slug={slug} className="rise-in rise-in-3 mt-2" />
-          <SystemStrip slug={slug} className="rise-in rise-in-3 mt-3" />
+          <FieldNotes slug={slug} className="rise-in rise-in-3 mt-4" stagger />
+          <LessonNotes slug={slug} className="rise-in rise-in-3 mt-2" stagger />
+          <SystemStrip slug={slug} className="rise-in rise-in-3 mt-3" stagger />
           <div className="rise-in rise-in-3 mt-3">
             <CiStrip slug={slug} links={project.links} />
           </div>

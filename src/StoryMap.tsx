@@ -3,6 +3,7 @@ import { Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { EDGES, EDGE_KIND, NODES, type StoryNode } from "./data/storyMap.ts";
 import { systemGraph } from "./data/systemGraph.ts";
@@ -400,7 +401,12 @@ export function StoryMap({ focus }: { focus?: string } = {}) {
           </Link>
         </div>
         {/* Same destinations as real links — keyboard, touch and small screens. */}
+        {/* The one deliberate stagger on this page — aliveness-spec.md §3:
+            everything else here (breathing nodes, bezier signal pulses, the
+            real useTouched() path overlay) is already the house reference
+            implementation and stays untouched. */}
         <div className="mt-4 flex flex-wrap gap-2">
+          <StaggerReveal step={30}>
           {NODES.filter((n) => n.id !== "sid").map((n) => {
             const chipClass = "tag-chip rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-400 transition hover:text-zinc-100";
             const c = classifyNodeTarget(n.target);
@@ -432,6 +438,7 @@ export function StoryMap({ focus }: { focus?: string } = {}) {
               </Link>
             );
           })}
+          </StaggerReveal>
         </div>
       </Reveal>
     </section>

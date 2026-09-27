@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { createFileRoute, getRouteApi, notFound, Link } from "@tanstack/react-router";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { useTouched } from "../lib/sessionRipple.ts";
@@ -52,6 +53,13 @@ const OUTBOUND_CLASS =
  * at the end of it: the "you are here" marker a real map would draw, except
  * there is nothing here to mark. Decorative - the words carry the meaning.
  */
+/** The tear draws itself in once, on mount — pure CSS (stroke-dasharray/
+ *  dashoffset, the same technique AnimatedMetric's own sparkline reveal
+ *  uses), no scroll trigger and no JS: this glyph is small and always near
+ *  the top of a short page. `prefers-reduced-motion` renders the finished
+ *  glyph immediately (index.css `.torn-map-draw`'s guard). Purely
+ *  decorative — the words carry the actual meaning, per this component's
+ *  own docstring below. The dotted route stays static, see its own note. */
 function TornMapGlyph() {
   return (
     <svg width="168" height="132" viewBox="0 0 168 132" fill="none" aria-hidden="true" className="text-accent">
@@ -61,8 +69,14 @@ function TornMapGlyph() {
         strokeOpacity="0.55"
         strokeWidth="1.5"
         strokeLinejoin="round"
+        className="torn-map-draw"
+        style={{ "--tm-len": 520 } as unknown as CSSProperties}
       />
       <path d="M8 8 V76 M160 8 V96" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" />
+      {/* Stays a static dotted line, not drawn-in: its own dasharray ("1 5")
+          already IS the pattern that reads as a route, and layering a second
+          dasharray-driven reveal on top would either fight that pattern or
+          replace the dots with a solid stroke. */}
       <path
         d="M24 24 C 50 20, 62 44, 88 40 S 128 30, 148 44"
         stroke="var(--color-probe)"

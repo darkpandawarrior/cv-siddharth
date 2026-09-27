@@ -20,7 +20,11 @@ const DEFAULT_B = providers[1]?.slug ?? DEFAULT_A;
 function ProviderColumn({ provider }: { provider: Provider | undefined }) {
   if (!provider) return <p className="text-sm text-muted">No provider selected.</p>;
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
+    // Keyed on the provider so a real, user-driven selection change remounts
+    // this <dl> and retriggers the CSS fade-in below (index.css
+    // .gateway-compare-fade) — a cross-fade with zero fabrication, since it
+    // only ever plays on an actual selection change, never on a timer.
+    <dl key={provider.slug} className="gateway-compare-fade grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
       <dt className="text-muted">Region</dt>
       <dd className="text-zinc-100">{provider.region}</dd>
       <dt className="text-muted">Archetype</dt>
