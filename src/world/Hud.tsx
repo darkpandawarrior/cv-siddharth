@@ -113,6 +113,12 @@ function Thumbstick() {
   const baseRef = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
   const activePointer = useRef<number | null>(null);
+  // §3.4: the knob's left/top are plain inline styles with no transition —
+  // correct while dragging (1:1 tracking, no lag), but on release it used to
+  // teleport back to centre in one frame. `releasing` turns a transition on
+  // only between release and the next grab, so the spring-back is free
+  // motion with zero input lag.
+  const [releasing, setReleasing] = useState(false);
 
   const updateFromPointer = (e: ReactPointerEvent<HTMLDivElement>) => {
     const base = baseRef.current;
@@ -133,6 +139,7 @@ function Thumbstick() {
   const release = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (activePointer.current !== e.pointerId) return;
     activePointer.current = null;
+    setReleasing(true);
     setKnob({ x: 0, y: 0 });
     setTouchSteer(0);
     setTouchThrottle(0);
@@ -157,6 +164,7 @@ function Thumbstick() {
       aria-valuenow={Math.round((knob.x / STICK_RADIUS) * 100) / 100}
       className="relative h-[76px] w-[76px] touch-none rounded-full border border-line bg-card/80 backdrop-blur"
       onPointerDown={(e) => {
+        setReleasing(false);
         e.currentTarget.setPointerCapture(e.pointerId);
         activePointer.current = e.pointerId;
         updateFromPointer(e);
@@ -169,7 +177,7 @@ function Thumbstick() {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute h-8 w-8 rounded-full bg-accent"
+        className={`pointer-events-none absolute h-8 w-8 rounded-full bg-accent${releasing ? " thumb-knob-spring" : ""}`}
         style={{ left: `calc(50% + ${knob.x}px - 1rem)`, top: `calc(50% + ${knob.y}px - 1rem)` }}
       />
     </div>
