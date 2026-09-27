@@ -1628,7 +1628,7 @@ export function Terminal() {
             RoomFrame's launcher. */}
         <span className="flex items-center gap-2">
           <LauncherButton />
-          <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-xs text-zinc-400 transition hover:text-[var(--t-accent)]">
+          <button type="button" onClick={() => goToSection("top")} className="ctrl flex items-center gap-2 text-xs text-zinc-400 hover:text-[var(--t-accent)]">
             <ArrowLeft size={14} /> <span className="label-wide">Back to portfolio</span>
           </button>
         </span>
