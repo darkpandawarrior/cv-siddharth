@@ -1,5 +1,7 @@
+import { Fragment } from "react";
 import { kmpGraph } from "./data/kmpGraph.ts";
 import { projectStats, kmpAdoption } from "./data/projectStats.ts";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 
 /** One `substitutedModules` array per consumer app, in `kmpGraph.consumers`
  *  order — three live on `projectStats.ts` (measured off each app's own
@@ -36,23 +38,25 @@ export function KmpAdoption() {
           </tr>
         </thead>
         <tbody>
-          {kmpGraph.modules.map((mod) => (
-            <tr key={mod.id} className="border-t border-line">
-              <th scope="row" className="p-2 text-left font-mono font-normal text-zinc-300">
-                {mod.id}
-              </th>
-              {kmpGraph.consumers.map((consumer) => {
-                const used = SUBSTITUTED[consumer.id]?.includes(mod.id) ?? false;
-                return (
-                  <td key={consumer.id} className="p-2 text-center text-accent">
-                    <span aria-label={used ? `substituted in ${consumer.label}` : `not substituted in ${consumer.label}`}>
-                      {used ? "●" : "·"}
-                    </span>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+          <StaggerReveal as="tr" step={40} className="border-t border-line">
+            {kmpGraph.modules.map((mod) => (
+              <Fragment key={mod.id}>
+                <th scope="row" className="p-2 text-left font-mono font-normal text-zinc-300">
+                  {mod.id}
+                </th>
+                {kmpGraph.consumers.map((consumer) => {
+                  const used = SUBSTITUTED[consumer.id]?.includes(mod.id) ?? false;
+                  return (
+                    <td key={consumer.id} className="p-2 text-center text-accent">
+                      <span aria-label={used ? `substituted in ${consumer.label}` : `not substituted in ${consumer.label}`}>
+                        {used ? "●" : "·"}
+                      </span>
+                    </td>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </StaggerReveal>
         </tbody>
       </table>
     </div>
