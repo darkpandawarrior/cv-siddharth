@@ -64,6 +64,10 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // rendered by SiteFooter) — the URL comes from Spotify's own API
     // response, so it never appears as a literal in this repo's source.
     "https://i.scdn.co",
+    // NASA GIBS WMS (src/world/globe/layers/gibs.ts): /globe's real-imagery
+    // earth loads yesterday's VIIRS mosaic plus the Blue and Black Marble
+    // bases as textures, straight from NASA (CORS *), never proxied.
+    "https://gibs.earthdata.nasa.gov",
     ...(heavyOrigin ? [heavyOrigin] : []),
   ],
   "media-src": ["'self'", ...(heavyOrigin ? [heavyOrigin] : [])], // ShowcaseFilm's project videos
