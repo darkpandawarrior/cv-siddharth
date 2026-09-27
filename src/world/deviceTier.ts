@@ -20,6 +20,23 @@
  * those measurements from the browser. Tiers are cumulative, not exclusive:
  * tier 3 (throttled) gets every tier-2 drop as well as its own — a throttled
  * desktop is not a phone, but it needs the aggressive drops just as much.
+ *
+ * AMENDMENT (world-v2-spec.md §8 "Dynamic resolution", P3-01c): world-v2's
+ * T1 (desktop) canvas runs a *second*, narrower mechanism on top of this
+ * one-shot tier read — `src/world/v2/dynamicResolution.ts`'s hysteresis,
+ * which adjusts the drawing-buffer resolution scale (0.72-1) frame to frame
+ * from a rolling frame-time average. This does not contradict this file's
+ * "never a runtime FPS watchdog" rule above: that rule is about *features*
+ * flickering mid-drive (fog distance, particle counts, shadow presence —
+ * anything a visitor would read as the scene changing), which stays exactly
+ * as one-shot as `deviceTier()` always was. `dynamicResolution.ts` only
+ * ever changes internal render resolution, which a scaled-down GPU
+ * rasterisation doesn't read as "the world changed" the way a feature drop
+ * would, so the flicker this file's own reasoning rules out still cannot
+ * happen. `deviceTier()` itself is unchanged: it still runs once, still
+ * never re-probes, and still gates every feature-level budget below as
+ * before — this amendment lives in the doc comment, next to the rule it
+ * narrows, so the rule and the one place that bends it never drift apart.
  */
 
 export type DeviceTier = 1 | 2 | 3;
