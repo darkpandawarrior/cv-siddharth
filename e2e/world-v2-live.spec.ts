@@ -119,6 +119,18 @@ test.describe("ledger rows — pure formatters, real production code", () => {
     await expect(airRow).toContainText(/modelled/i);
   });
 
+  test("the CI (family) row reads 'paymentslab-kmp ✗ (Quality Gate)' straight off the default signals fixture", async ({ page }) => {
+    // Already wired (unlike kites-devto below): ledgerRows.ts's own
+    // SECTION_BY_STREAM_ID + streamRowText already route "ci-family" through
+    // src/lib/signalsText.ts's ciRow()/ciRepoLabel() — this is a real,
+    // integrated DOM assertion, not a direct formatter call.
+    await gotoWorldV2(page, NOON);
+    await page.keyboard.press("r");
+    const ciRow = page.locator("[data-ledger-row='ci-family']");
+    await expect(ciRow).toBeVisible();
+    await expect(ciRow).toContainText("paymentslab-kmp ✗ (Quality Gate)");
+  });
+
   test("the river row's live DOM text ('not a gauge') and the row-10 IST correction, proven on riverRow() directly", async ({ page }) => {
     // What the live, integrated ledger actually shows today: `raw.river` is
     // Open-Meteo's raw `dischargeM3s` (UTC-anchored), with no IST correction
