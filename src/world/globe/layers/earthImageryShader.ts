@@ -34,11 +34,14 @@ void main(){
 
   float sun = dot(normalize(vW), normalize(uSun));
   float lit = smoothstep(-0.12, 0.08, sun); // soft terminator band
-  vec3 color = mix(nightLights, land, lit);
 
-  // Warm twilight band straddling the terminator itself.
+  // Warm twilight band straddling the terminator, as a TINT of the lit
+  // surface (low sun reddens what it lights). It was an additive glow, which
+  // at the equinox painted the gap-filled dark polar ocean a flat tan disc:
+  // light added to a surface the sun barely reaches.
   float twilight = (1.0 - smoothstep(0.0, 0.22, abs(sun))) * step(-0.3, sun);
-  color += vec3(1.0, 0.55, 0.22) * twilight * 0.22;
+  vec3 warm = mix(vec3(1.0), vec3(1.0, 0.72, 0.5), twilight * 0.55);
+  vec3 color = mix(nightLights, land * warm, lit);
 
   // Ocean specular glint (item 4), masked to ocean by the base texture's own
   // blue dominance — Blue Marble already separates land from ocean by
