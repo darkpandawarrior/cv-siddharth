@@ -2,9 +2,12 @@
 // DOM, no fetch, same discipline as sky.ts. Shared by /globe's orbits,
 // /terminal's sky and the valley's NightSky/Satellites (M10): one module, one
 // SGP4 implementation, imported through satellite.js@7.1.0 rather than
-// hand-rolled (open-data-spec.md §10 OD1). useSatellites.ts is the only
-// caller, and only through a dynamic import() (M10, G-budget: this file's
-// chunk must stay lazy and under 13 KB gzip).
+// hand-rolled (open-data-spec.md §10 OD1). useSatellites.ts is one caller,
+// only through a dynamic import(); satelliteEcef.ts (LANE L3, /globe's real
+// orbits) is the other, reusing this module's satrec cache (toSatRec) and
+// freshness/eclipse checks (isFresh/isSunlitAt) rather than re-parsing the
+// same TLEs a second time — both stay behind their own lazy chunk (M10,
+// G-budget: this file's chunk must stay lazy and under 13 KB gzip).
 //
 // Imports only the eight named exports open-data-spec.md §3 A2 names —
 // nothing else survives esbuild's tree-shake of satellite.js's WASM re-export
@@ -37,7 +40,7 @@ export type SatelliteVisibility =
  *  the 1957/2000 pivot per the TLE spec — the same parse as
  *  api/_lib/tle-handler.ts's tleEpoch, kept local rather than imported so
  *  this client chunk never pulls in that server module's own imports. */
-function tleEpoch(l1: string): Date {
+export function tleEpoch(l1: string): Date {
   const yy = Number(l1.slice(18, 20));
   const fullYear = yy < 57 ? 2000 + yy : 1900 + yy;
   const dayOfYear = Number(l1.slice(20, 32));
@@ -49,7 +52,7 @@ const MAX_EPOCH_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** SGP4 error grows with element age (open-data-spec.md §3 A2: "a 7-day-old
  *  LEO element set can be tens of km off"), so anything older than 7 days
  *  from the passed-in clock is dropped rather than propagated. */
-function isFresh(object: TleObject, clock: Date): boolean {
+export function isFresh(object: TleObject, clock: Date): boolean {
   return clock.getTime() - tleEpoch(object.l1).getTime() <= MAX_EPOCH_AGE_MS;
 }
 
@@ -75,7 +78,7 @@ function toObserverGeodetic(observer: GeoPoint) {
 // TleObject repeatedly, so this caches by line content. Never grows unbounded
 // in practice — the whole catalogue is 158 objects (open-data-spec.md §1).
 const satrecCache = new Map<string, ReturnType<typeof twoline2satrec>>();
-function toSatRec(object: TleObject) {
+export function toSatRec(object: TleObject) {
   const key = `${object.l1}|${object.l2}`;
   let rec = satrecCache.get(key);
   if (!rec) {
@@ -101,7 +104,7 @@ export function lookAnglesFor(object: TleObject, date: Date, observer: GeoPoint 
 
 /** Fraction of the Sun's disc showing (0 = fully eclipsed by Earth), so
  *  `> 0` — used as `< 1` below, i.e. "not fully in shadow" — is "sunlit". */
-function isSunlitAt(object: TleObject, date: Date): boolean | null {
+export function isSunlitAt(object: TleObject, date: Date): boolean | null {
   const rec = toSatRec(object);
   const pv = propagate(rec, date);
   if (!pv || !pv.position || typeof pv.position === "boolean") return null;
