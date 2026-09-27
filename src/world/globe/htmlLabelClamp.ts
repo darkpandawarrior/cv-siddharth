@@ -11,6 +11,9 @@ export const CARD_W = 288;
 export const LEADER = 13;
 const EDGE = 8;
 const HALF_H = 90;
+// GlobePanel's fact list overlays the bottom of the canvas (about 22% on
+// desktop, where this card shows); the card never slides into it.
+const PANEL_FRACTION = 0.25;
 
 /**
  * A drei `<Html>` card whose 3D anchor sits near the globe's horizon can
@@ -26,7 +29,7 @@ export function calculatePosition(el: Object3D, camera: Camera, size: { width: n
   v.setFromMatrixPosition(el.matrixWorld).project(camera);
   return [
     Math.max(EDGE, Math.min(size.width - CARD_W - LEADER - EDGE, (v.x * 0.5 + 0.5) * size.width)),
-    Math.min(size.height - HALF_H, Math.max(HALF_H, (0.5 - v.y * 0.5) * size.height)),
+    Math.min(size.height * (1 - PANEL_FRACTION) - HALF_H, Math.max(HALF_H, (0.5 - v.y * 0.5) * size.height)),
   ];
 }
 
