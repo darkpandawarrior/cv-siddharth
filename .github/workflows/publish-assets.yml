@@ -95,12 +95,19 @@ jobs:
           mkdir -p ../../Profile
           mv pages-checkout ../../Profile/darkpandawarrior.github.io
 
+      # Must run before the commit below, not after: publish-heavy-assets.mjs
+      # itself runs `git commit` in this checkout, and a fresh checkout carries
+      # no identity — "Push" used to set this, one step too late, so every run
+      # failed here with "empty ident name" before a push was ever attempted.
+      - name: Configure git identity in the Pages repo
+        working-directory: ../../Profile/darkpandawarrior.github.io
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Sync and commit in the Pages repo
         run: node scripts/publish-heavy-assets.mjs
 
       - name: Push
         working-directory: ../../Profile/darkpandawarrior.github.io
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git push
+        run: git push
