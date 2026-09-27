@@ -1016,6 +1016,97 @@ html.resume-mode .palette-trigger {
   }
 }
 
+/* --- Interaction kit (2026-09-27-controls-spec.md §3) ---------------------
+ * .ctrl/.ctrl-icon generalize .btn-primary's own hover-lift + crisp-press
+ * recipe (above) to every plain button/link/pill in the app — one class
+ * instead of copy-pasting transform/transition per component. .sheet lifts
+ * .instrument-view's @starting-style entrance (below) into a reusable
+ * overlay-entrance class, replacing the flat `.palette-in` fade at both its
+ * call sites. */
+.ctrl {
+  transition: transform var(--dur-fast) var(--ease-spring),
+    color var(--dur-fast) var(--ease-out-quart),
+    background-color var(--dur-fast) var(--ease-out-quart),
+    border-color var(--dur-fast) var(--ease-out-quart);
+}
+.ctrl:hover { transform: translateY(-1px); }
+.ctrl:active { transform: translateY(0) scale(0.96); transition-duration: 0.09s; }
+
+/* Smaller lift for 32-40px icon/round buttons — a 1px lift reads fine on a
+   pill, it reads jittery on a 36px circle. Same transition list as .ctrl,
+   restated rather than `inherit`: every real call site uses .ctrl-icon on
+   its own (never alongside .ctrl on the same element), and `inherit` reads
+   the ELEMENT's parent, not a sibling class — used alone it would resolve to
+   "no transition" on every button that has it. */
+.ctrl-icon {
+  transition: transform var(--dur-fast) var(--ease-spring),
+    color var(--dur-fast) var(--ease-out-quart),
+    background-color var(--dur-fast) var(--ease-out-quart),
+    border-color var(--dur-fast) var(--ease-out-quart);
+}
+.ctrl-icon:hover { transform: scale(1.06); }
+.ctrl-icon:active { transform: scale(0.92); transition-duration: 0.09s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl, .ctrl-icon,
+  .ctrl:hover, .ctrl:active,
+  .ctrl-icon:hover, .ctrl-icon:active {
+    transform: none;
+    transition-duration: 1ms;
+  }
+}
+
+/* The generalized overlay entrance — every dialog/panel/drawer that either
+   had no entrance or a flat `.palette-in` fade converges here. */
+.sheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo);
+}
+@starting-style {
+  .sheet { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; }
+}
+/* Exit state for the one true animate-on-unmount case (InstrumentView) —
+   mirrors .sheet's own @starting-style values so open/close feel symmetric.
+   `:is(.sheet, .instrument-view).sheet-out`, not `.sheet-out` alone: a bare
+   single-class rule ties with .instrument-view's own opacity/transform decl
+   at equal (0,1,0) specificity, and .instrument-view is declared LATER in
+   this file, so the tie would go to it and silently no-op the exit. The :is()
+   wrapper bumps this to (0,2,0) so it wins regardless of source order. */
+:is(.sheet, .instrument-view).sheet-out {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+/* Thumbstick spring-back (world/Hud.tsx): transition is added only between
+   release and the next grab, never while a pointer is captured, so the knob
+   still tracks 1:1 during a drag and only springs back on release. */
+.thumb-knob-spring {
+  transition: left var(--dur-fast) var(--ease-spring), top var(--dur-fast) var(--ease-spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb-knob-spring { transition: none; }
+}
+
+/* Chess board square hover/press (chess/BoardSurface.tsx) — box-shadow, not
+   background-color: the square's real background (pick/target highlight) is
+   set as an inline style, which always wins over a stylesheet rule for the
+   same property, so a hover background here would silently never paint. */
+.chess-square-ctrl {
+  transition: box-shadow var(--dur-fast) var(--ease-out-quart);
+}
+.chess-square-ctrl:hover {
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.05);
+}
+.chess-square-ctrl:active {
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.1);
+  transition-duration: 0.09s;
+}
+
 /* Progressive-disclosure expanders (native <details>) */
 .expander summary {
   list-style: none;
@@ -3246,20 +3337,6 @@ html.resume-mode .palette-trigger {
 }
 @media (prefers-reduced-motion: reduce) {
   .live-badge {
-    animation: none;
-  }
-}
-
-/* Command palette entrance */
-@keyframes palette-in {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  to { opacity: 1; transform: none; }
-}
-.palette-in {
-  animation: palette-in 0.18s ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .palette-in {
     animation: none;
   }
 }
