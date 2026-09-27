@@ -7,7 +7,7 @@ export function Atmosphere({ uniforms }: { uniforms: { uSun: { value: THREE.Vect
   return (
     <mesh scale={1.1}>
       <sphereGeometry args={[GLOBE_RADIUS, 64, 48]} />
-      <shaderMaterial vertexShader={VERT} fragmentShader={ATMO_FRAG} uniforms={uniforms} side={THREE.BackSide} blending={THREE.AdditiveBlending} transparent depthWrite={false} />
+      <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: ATMO_FRAG, uniforms }]} side={THREE.BackSide} blending={THREE.AdditiveBlending} transparent depthWrite={false} />
     </mesh>
   );
 }

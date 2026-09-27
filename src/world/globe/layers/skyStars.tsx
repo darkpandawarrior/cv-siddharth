@@ -185,10 +185,12 @@ export function StarField({ now, tier, onStatus }: StarFieldProps) {
     <group ref={groupRef}>
       <points frustumCulled={false}>
         <primitive object={geometry} attach="geometry" />
+        {/* Constructed WITH the uniforms object (args): as a prop, R3F
+            shallow-copies each uniform at mount, so the per-frame uTime and
+            uTwinkle floats written below never reached the GPU and the
+            twinkle stayed frozen. */}
         <shaderMaterial
-          vertexShader={VERT}
-          fragmentShader={FRAG}
-          uniforms={uniforms}
+          args={[{ vertexShader: VERT, fragmentShader: FRAG, uniforms }]}
           transparent
           depthWrite={false}
           blending={THREE.AdditiveBlending}

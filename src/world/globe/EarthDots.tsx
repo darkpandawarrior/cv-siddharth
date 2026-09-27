@@ -134,7 +134,7 @@ export function EarthDots({ count, now, earthRef }: { count: number; now: Date; 
     <group>
       <mesh ref={earthRef}>
         <sphereGeometry args={[GLOBE_RADIUS * 0.995, 64, 48]} />
-        <shaderMaterial vertexShader={VERT} fragmentShader={OCEAN_FRAG} uniforms={uniforms} />
+        <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: OCEAN_FRAG, uniforms }]} />
       </mesh>
       <Atmosphere uniforms={uniforms} />
       {dots.length > 0 && (

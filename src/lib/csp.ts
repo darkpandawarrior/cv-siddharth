@@ -81,6 +81,14 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // websocket for the room state plus its presence channel.
     "wss://api.playhtml.fun",
     "https://api.playhtml.fun",
+    // /globe's live earth events (src/world/globe/layers/{quake,eonet,
+    // hazardAlerts,aurora,launches}.ts): keyless public feeds that answer
+    // with CORS *, fetched straight from the browser, never proxied.
+    "https://earthquake.usgs.gov",
+    "https://eonet.gsfc.nasa.gov",
+    "https://www.gdacs.org",
+    "https://services.swpc.noaa.gov",
+    "https://ll.thespacedevs.com",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.
