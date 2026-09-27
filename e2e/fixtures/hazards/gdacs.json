@@ -1,0 +1,247 @@
+{
+  "type": "FeatureCollection",
+  "bbox": null,
+  "features": [
+    {
+      "type": "Feature",
+      "bbox": [
+        85.3649,
+        27.2953,
+        85.3649,
+        27.2953
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.3649,
+          27.2953
+        ]
+      },
+      "properties": {
+        "eventtype": "FL",
+        "eventid": 1104124,
+        "episodeid": 1,
+        "eventname": "",
+        "glide": "FL-2026-000167-NPL",
+        "name": "Flood in Nepal",
+        "description": "Flood in Nepal",
+        "htmldescription": "Red Flood in Nepal from: 26 Aug 2026 01 to: 01 Sep 2026 14.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Red/FL.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Red/FL.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=FL&eventid=1104124&episodeid=1",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1104124&episodeid=1&eventtype=FL",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=FL&eventid=1104124"
+        },
+        "alertlevel": "Red",
+        "alertscore": 3,
+        "episodealertlevel": "Red",
+        "episodealertscore": 2.5,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "Nepal",
+        "fromdate": "2026-08-26T01:00:00",
+        "todate": "2026-09-01T14:00:00",
+        "datemodified": "2026-09-27T08:25:21",
+        "iso3": "NPL",
+        "source": "GLOFAS",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "NP",
+            "iso3": "NPL",
+            "countryname": "Nepal"
+          }
+        ],
+        "severitydata": {
+          "severity": 0.0,
+          "severitytext": "Magnitude 0 ",
+          "severityunit": ""
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -113.1,
+        19.3,
+        -113.1,
+        19.3
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.1,
+          19.3
+        ]
+      },
+      "properties": {
+        "eventtype": "TC",
+        "eventid": 1001325,
+        "episodeid": 26,
+        "eventname": "POLO-26",
+        "glide": "",
+        "name": "Tropical Cyclone POLO-26",
+        "description": "Tropical Cyclone POLO-26",
+        "htmldescription": "Orange Tropical Cyclone POLO-26 in Mexico from: 21 Sep 2026  to: 27 Sep 2026 .",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001325&episodeid=26",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1001325&episodeid=26&eventtype=TC",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001325"
+        },
+        "alertlevel": "Orange",
+        "alertscore": 2,
+        "episodealertlevel": "Orange",
+        "episodealertscore": 2.0,
+        "istemporary": "false",
+        "iscurrent": "true",
+        "country": "Mexico",
+        "fromdate": "2026-09-21T03:00:00",
+        "todate": "2026-09-27T03:00:00",
+        "datemodified": "2026-09-27T08:23:25",
+        "iso3": "MEX",
+        "source": "NOAA",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "countryonland": "",
+        "affectedcountries": [
+          {
+            "iso2": "MX",
+            "iso3": "MEX",
+            "countryname": "Mexico"
+          }
+        ],
+        "severitydata": {
+          "severity": 287.0352,
+          "severitytext": "Hurricane/Typhoon > 74 mph (maximum wind speed of 287 km/h)",
+          "severityunit": "km/h"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        21.1671,
+        44.8678,
+        21.1671,
+        44.8678
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.1671,
+          44.8678
+        ]
+      },
+      "properties": {
+        "eventtype": "WF",
+        "eventid": 1030252,
+        "episodeid": 40,
+        "eventname": "",
+        "glide": "WF-2026-000156-SRB",
+        "name": "Forest fires in Serbia",
+        "description": "Forest fires in Serbia",
+        "htmldescription": "Orange Forest fires in Serbia from: 05 Aug 2026 to: 25 Aug 2026.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/WF.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/WF.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=WF&eventid=1030252&episodeid=40",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1030252&episodeid=40&eventtype=WF",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=WF&eventid=1030252"
+        },
+        "alertlevel": "Orange",
+        "alertscore": 2,
+        "episodealertlevel": "Orange",
+        "episodealertscore": 1.5,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "Serbia",
+        "fromdate": "2026-08-05T00:00:00",
+        "todate": "2026-08-25T00:00:00",
+        "datemodified": "2026-09-27T08:25:22",
+        "iso3": "SRB",
+        "source": "GWIS",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "RS",
+            "iso3": "SRB",
+            "countryname": "Serbia"
+          }
+        ],
+        "severitydata": {
+          "severity": 18310.0,
+          "severitytext": "Orange impact for forestfire in 18310 ha",
+          "severityunit": "ha"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        76.6455,
+        9.6287,
+        76.6455,
+        9.6287
+      ],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6455,
+          9.6287
+        ]
+      },
+      "properties": {
+        "eventtype": "FL",
+        "eventid": 1104121,
+        "episodeid": 16,
+        "eventname": "",
+        "glide": "FL-2026-000165-IND",
+        "name": "Flood in India",
+        "description": "Flood in India",
+        "htmldescription": "Orange Flood in India from: 09 Aug 2026 01 to: 22 Sep 2026 01.",
+        "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/FL.png",
+        "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/FL.png",
+        "url": {
+          "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=FL&eventid=1104121&episodeid=16",
+          "report": "https://www.gdacs.org/report.aspx?eventid=1104121&episodeid=16&eventtype=FL",
+          "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=FL&eventid=1104121"
+        },
+        "alertlevel": "Orange",
+        "alertscore": 2,
+        "episodealertlevel": "Green",
+        "episodealertscore": 0.5,
+        "istemporary": "false",
+        "iscurrent": "false",
+        "country": "India",
+        "fromdate": "2026-08-09T01:00:00",
+        "todate": "2026-09-22T01:00:00",
+        "datemodified": "2026-09-22T06:28:10",
+        "iso3": "IND",
+        "source": "GLOFAS",
+        "sourceid": "",
+        "polygonlabel": "Centroid",
+        "Class": "Point_Centroid",
+        "affectedcountries": [
+          {
+            "iso2": "IN",
+            "iso3": "IND",
+            "countryname": "India"
+          }
+        ],
+        "severitydata": {
+          "severity": 0.0,
+          "severitytext": "Magnitude 0 ",
+          "severityunit": ""
+        }
+      }
+    }
+  ]
+}

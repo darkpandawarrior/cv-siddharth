@@ -1,0 +1,213 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1790497631000,
+    "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+    "title": "USGS All Earthquakes, Past Day",
+    "status": 200,
+    "api": "2.7.0",
+    "count": 5
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 0.7,
+        "place": "74 km NNW of Karluk, Alaska",
+        "time": 1790496770785,
+        "updated": 1790496818860,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/aka2026tdmifh",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/aka2026tdmifh.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "automatic",
+        "tsunami": 0,
+        "sig": 8,
+        "net": "ak",
+        "code": "a2026tdmifh",
+        "ids": ",aka2026tdmifh,",
+        "sources": ",ak,",
+        "types": ",origin,phase-data,",
+        "nst": 8,
+        "dmin": 0.1,
+        "rms": 0.2,
+        "gap": 213,
+        "magType": "ml",
+        "type": "earthquake",
+        "title": "M 0.7 - 74 km NNW of Karluk, Alaska"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -154.837,
+          58.202,
+          5.7
+        ]
+      },
+      "id": "aka2026tdmifh"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 2.6,
+        "place": "17 km NE of P\u0101hala, Hawaii",
+        "time": 1790451714851,
+        "updated": 1790453321040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000txux",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000txux.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 104,
+        "net": "us",
+        "code": "6000txux",
+        "ids": ",us6000txux,",
+        "sources": ",us,",
+        "types": ",origin,phase-data,",
+        "nst": 18,
+        "dmin": 0.068,
+        "rms": 0.22,
+        "gap": 93,
+        "magType": "ml",
+        "type": "earthquake",
+        "title": "M 2.6 - 17 km NE of P\u0101hala, Hawaii"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -155.3735,
+          19.3226,
+          31.712
+        ]
+      },
+      "id": "us6000txux"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 4.6,
+        "place": "Rat Islands, Aleutian Islands, Alaska",
+        "time": 1790495291749,
+        "updated": 1790496341040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000txxm",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000txxm.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": 3.291,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 326,
+        "net": "us",
+        "code": "6000txxm",
+        "ids": ",aka2026tdlmve,us6000txxm,",
+        "sources": ",ak,us,",
+        "types": ",origin,phase-data,shakemap,",
+        "nst": 57,
+        "dmin": 0.475,
+        "rms": 0.78,
+        "gap": 127,
+        "magType": "mb",
+        "type": "earthquake",
+        "title": "M 4.6 - Rat Islands, Aleutian Islands, Alaska"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          179.3215,
+          50.9044,
+          46.522
+        ]
+      },
+      "id": "us6000txxm"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 5.2,
+        "place": "148 km NW of Kilmia, Yemen",
+        "time": 1790440423270,
+        "updated": 1790441540040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000txtz",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000txtz.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 416,
+        "net": "us",
+        "code": "6000txtz",
+        "ids": ",us6000txtz,",
+        "sources": ",us,",
+        "types": ",origin,phase-data,",
+        "nst": 199,
+        "dmin": 6.955,
+        "rms": 0.53,
+        "gap": 32,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 5.2 - 148 km NW of Kilmia, Yemen"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4282,
+          13.2741,
+          10
+        ]
+      },
+      "id": "us6000txtz"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 5.6,
+        "place": "74 km ESE of Kokopo, Papua New Guinea",
+        "time": 1790431697704,
+        "updated": 1790448001040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000txtc",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000txtc.geojson",
+        "felt": 1,
+        "cdi": 2,
+        "mmi": 4.268,
+        "alert": "green",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 483,
+        "net": "us",
+        "code": "6000txtc",
+        "ids": ",us6000txtc,",
+        "sources": ",us,",
+        "types": ",dyfi,losspager,moment-tensor,origin,phase-data,shakemap,",
+        "nst": 150,
+        "dmin": 0.838,
+        "rms": 0.86,
+        "gap": 23,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 5.6 - 74 km ESE of Kokopo, Papua New Guinea"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          152.8383,
+          -4.6952,
+          57.78
+        ]
+      },
+      "id": "us6000txtc"
+    }
+  ]
+}
