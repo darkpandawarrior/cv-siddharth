@@ -1,27 +1,7 @@
-import { useSyncExternalStore } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { altitudeFor, focusHandoffUrl, type Altitude } from "./altitude.ts";
-
-// Restated from SceneActivity.tsx rather than imported (same reasoning as
-// GlobeHud.tsx's own copy of this hook): that file also statically imports
-// @react-three/fiber, and AltitudeRail mounts from RoomFrame (rooms.tsx),
-// which every room route pulls in (chess, weeb, forge, terminal included),
-// none of which otherwise touch r3f. A plain import of any name from
-// SceneActivity.tsx would drag r3f's import chain into all of them.
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-function subscribeReducedMotion(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
-  const mql = window.matchMedia(REDUCED_MOTION_QUERY);
-  mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
-}
-function useReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
-    () => false,
-  );
-}
+import { prefersReducedMotion } from "./reducedMotion.ts";
+import { navigateWithViewTransition } from "../lib/viewTransition.ts";
 
 const STOPS: { altitude: Altitude; label: string }[] = [
   { altitude: "street", label: "STREET" },
@@ -49,30 +29,12 @@ const STOPS: { altitude: Altitude; label: string }[] = [
 export function AltitudeRail() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const reducedMotion = useReducedMotion();
   const here = altitudeFor(pathname);
 
   function go(target: Altitude) {
     if (target === here) return;
     const to = focusHandoffUrl(here, target);
-    if (reducedMotion) {
-      navigate({ to });
-      return;
-    }
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => void };
-    if (typeof doc.startViewTransition === "function") {
-      doc.startViewTransition(() => navigate({ to }));
-      return;
-    }
-    const root = document.documentElement;
-    root.style.transition = "opacity 180ms ease";
-    root.style.opacity = "0";
-    window.setTimeout(() => {
-      navigate({ to });
-      requestAnimationFrame(() => {
-        root.style.opacity = "1";
-      });
-    }, 180);
+    navigateWithViewTransition(() => navigate({ to }), prefersReducedMotion());
   }
 
   return (
@@ -92,7 +54,7 @@ export function AltitudeRail() {
             }}
             aria-current={active ? "true" : undefined}
             data-altitude-stop={stop.altitude}
-            className={`rounded-full px-2.5 py-1 font-mono transition ${
+            className={`ctrl rounded-full px-2.5 py-1 font-mono ${
               active ? "bg-accent text-ink" : "text-muted hover:text-zinc-100"
             }`}
           >

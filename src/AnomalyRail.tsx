@@ -4,11 +4,41 @@ import { useRouterState } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp } from "./lib/facets";
-import { baselineTicks, deviationsFor, hitTest } from "./lib/railGeometry";
+import {
+  baselineTicks,
+  deviationsFor,
+  hitTest,
+  ambientAlpha,
+  hazeFromAqi,
+  decayAlpha,
+  rippleY,
+  withRipple,
+  pruneRipples,
+  didChange,
+  didIncrease,
+  stateFlips,
+  didNewPush,
+  didAircraftArrive,
+  RIPPLE_DECAY_MS,
+  type Ripple,
+} from "./lib/railGeometry";
 import { useCanvasLoop } from "./labs/useCanvasLoop";
 import InstrumentView from "./InstrumentView";
 import { SECTION_ID_LIST, type SectionId, useSectionNav } from "./lib/navigation.ts";
 import { SECTION_JUMPS } from "./CommandPalette.tsx";
+// Reality ripples (live-rail-spec §3.1/§7 Lane A) — every source below is an
+// EXISTING poll this app already runs elsewhere; AnomalyRail becomes one more
+// subscriber on useLiveSignal's shared bus (zero new fetches when mounted
+// alongside e.g. OpsBoard/CiStrip, one more at the source's own interval
+// otherwise — useLiveSignal.ts's own doc comment).
+import { useSignals } from "./lib/useLive.ts";
+import { useWeather } from "./lib/useSky.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { usePresenceCount } from "./play/presenceBus.ts";
+import type { Ops } from "../api/_lib/ops-handler.ts";
+import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
+import type { SpotifyNow } from "../api/_lib/spotify-handler.ts";
+import type { AircraftResponse } from "../api/_lib/aircraft-handler.ts";
 
 /**
  * The site's secondary nav: a live trace pinned to the left edge on every
@@ -46,6 +76,13 @@ const LEAN_MAX_PX = 3;
 // than an incidental wobble.
 const DRAG_OPEN_THRESHOLD_PX = 40;
 
+// live-rail-spec §0's table — reused intervals, not new ones (matches the
+// other call sites already on these URLs; useLiveSignal's bus takes the
+// smallest interval any subscriber asks for, so this never slows anyone down
+// and costs nothing extra when mounted alongside them).
+const OPS_POLL_MS = 120_000;
+const AIRCRAFT_POLL_MS = 20_000;
+
 // localStorage throws in private-mode Safari — the sweep hint is a nicety,
 // never worth crashing the rail over.
 function hasSweptBefore(): boolean {
@@ -76,7 +113,45 @@ export default function AnomalyRail() {
   // pointer isn't over the rail (mouse only; touch never sets this, same as
   // the drag-to-open gesture below).
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Reality ripples (live-rail-spec §3, Layer 2): a capped ring buffer, kept
+  // as a plain array in a ref — like hoveredRef/pointerRef above, this
+  // doesn't need to trigger a React render, the canvas loop already redraws
+  // every frame. `liveRipples` mirrors every push into real state too, but
+  // ONLY on push (not per-frame decay) — that's what InstrumentView's "Right
+  // now" section (Lane B) reads, so a non-sighted visitor gets the same
+  // information without depending on the (aria-hidden) canvas ever repainting.
+  const ringRef = useRef<Ripple[]>([]);
+  const [liveRipples, setLiveRipples] = useState<Ripple[]>([]);
+  // Hovered ripple id, same shape as hoveredRef above but a separate ref: a
+  // ripple and a facet deviation can legitimately sit at the same y (the
+  // work/chess facets are exactly where two ripple rows are anchored, §3.1).
+  const hoveredRippleRef = useRef<string | null>(null);
+  // Set once by the canvas's own setup closure (below) so effects outside it
+  // can force one extra repaint — needed only under prefers-reduced-motion,
+  // where useCanvasLoop draws once at mount/resize and never again on its
+  // own, so a ripple pushed mid-session would otherwise never be painted.
+  const drawRef = useRef<(() => void) | null>(null);
+  const reducedRef = useRef(false);
   const [instrumentOpen, setInstrumentOpen] = useState(false);
+
+  // Pushes one ripple into the ring buffer (ref + mirrored state) and, under
+  // reduced motion only, forces the one-off repaint-then-vanish described in
+  // §5: draw it now, then draw once more after its dwell has elapsed so
+  // pruneRipples (inside the draw loop) has something to actually remove.
+  const pushRipple = useCallback((input: Omit<Ripple, "id" | "bornAtMs">) => {
+    const next = withRipple(ringRef.current, {
+      ...input,
+      id: `${input.label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      bornAtMs: Date.now(),
+    });
+    ringRef.current = next;
+    setLiveRipples(next);
+    if (reducedRef.current) {
+      drawRef.current?.();
+      window.setTimeout(() => drawRef.current?.(), RIPPLE_DECAY_MS + 50);
+    }
+  }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHome = pathname === "/";
   const { goToSection } = useSectionNav();
@@ -224,6 +299,140 @@ export default function AnomalyRail() {
     ]),
   );
 
+  // §3.1: CI/push ripples anchor to "the work it's about", chess ripples to
+  // the chess facet's own y — falling back to mid-rail only while the facet
+  // trace hasn't laid out yet (height === 0, first paint).
+  const workY = yById.get("work") ?? height / 2;
+  const chessY = yById.get("chess") ?? height / 2;
+
+  // --- §0/§7 Lane A: one more subscriber on each source's EXISTING poll —
+  // zero new endpoints, zero new fetches when mounted alongside the other
+  // consumer already on the same URL. ---
+  const { data: ops } = useLiveSignal<Ops>("/api/ops", OPS_POLL_MS);
+  const { data: signals } = useSignals();
+  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity");
+  const { data: spotify } = useLiveSignal<SpotifyNow>("/api/spotify");
+  const { data: aircraft } = useLiveSignal<AircraftResponse>("/api/aircraft", AIRCRAFT_POLL_MS);
+  const { air } = useWeather();
+  const presenceCount = usePresenceCount();
+  // Read by the draw loop every frame (Layer 0, §3) — a ref because the
+  // canvas setup closure below runs once at mount, same reason accent/accent2
+  // are re-read from getComputedStyle rather than closed over as props.
+  const airRef = useRef<typeof air>(null);
+  useEffect(() => {
+    airRef.current = air;
+  }, [air]);
+
+  const conclusionColor = (conclusion: string) => (conclusion === "success" ? "--color-signal" : "--color-danger");
+  const stateColor = (state: string) => (state === "fail" ? "--color-danger" : state === "pass" ? "--color-signal" : "--color-signal-dim");
+
+  // --- Edge detection: one effect per source, each keeping its own
+  // "last seen" ref and pushing a ripple only on a real transition (§3.1's
+  // "edge, not level" — a poll that repeats the same value stays silent). ---
+
+  const prevOpsRef = useRef<Record<string, { state: string }> | null>(null);
+  useEffect(() => {
+    if (!ops) return;
+    // ops.runs is typed as always-present (api/_lib/ops-handler.ts's own
+    // EMPTY fallback sets it to []), but a disconnected/degraded response
+    // still satisfies `Ops` structurally without it in practice — OpsBoard.tsx
+    // already guards the same field with `ops?.runs ?? []`; this effect needs
+    // the same guard, not just the `!ops` check above.
+    const next = Object.fromEntries((ops.runs ?? []).map((r) => [r.workflow, { state: r.conclusion }]));
+    for (const workflow of stateFlips(prevOpsRef.current, next)) {
+      pushRipple({
+        y: DEVIATION_PAD / 2,
+        colorToken: conclusionColor(next[workflow].state),
+        label: `CI: ${next[workflow].state} · ${workflow} · GitHub Actions`,
+      });
+    }
+    prevOpsRef.current = next;
+  }, [ops, pushRipple]);
+
+  const prevFamilyCiRef = useRef<Record<string, { state: string }> | null>(null);
+  useEffect(() => {
+    if (!signals?.ci) return;
+    const next = signals.ci as Record<string, { state: string }>;
+    for (const repo of stateFlips(prevFamilyCiRef.current, next)) {
+      pushRipple({
+        y: DEVIATION_PAD / 2,
+        colorToken: stateColor(next[repo].state),
+        dimAlpha: 0.7,
+        label: `CI: ${repo} ${next[repo].state} · GitHub Actions (family)`,
+      });
+    }
+    prevFamilyCiRef.current = next;
+  }, [signals, pushRipple]);
+
+  const prevActivityRef = useRef<GithubActivity["items"] | null>(null);
+  useEffect(() => {
+    if (!activity?.items) return;
+    if (didNewPush(prevActivityRef.current, activity.items)) {
+      pushRipple({ y: workY, colorToken: "--color-signal", label: "New commit · GitHub" });
+    }
+    prevActivityRef.current = activity.items;
+  }, [activity, workY, pushRipple]);
+
+  const prevSpotifyRef = useRef<{ track?: string } | null>(null);
+  useEffect(() => {
+    if (!spotify) return;
+    const prev = prevSpotifyRef.current;
+    if (prev && spotify.isPlaying && spotify.track && didChange(prev.track, spotify.track)) {
+      pushRipple({
+        y: height * 0.85,
+        colorToken: "--color-alt",
+        label: `Spotify · now playing · ${spotify.track}${spotify.artist ? ` — ${spotify.artist}` : ""}`,
+      });
+    }
+    prevSpotifyRef.current = { track: spotify.track };
+  }, [spotify, height, pushRipple]);
+
+  const prevLichessRef = useRef<{ online: boolean; playing: boolean } | null>(null);
+  useEffect(() => {
+    if (!signals?.lichess) return;
+    const prev = prevLichessRef.current;
+    const next = signals.lichess;
+    if (prev && (didChange(prev.online, next.online) || didChange(prev.playing, next.playing))) {
+      pushRipple({
+        y: chessY,
+        colorToken: next.playing ? "--color-signal" : "--color-signal-dim",
+        label: next.playing ? "Lichess · game in progress" : next.online ? "Lichess · online" : "Lichess · offline",
+      });
+    }
+    prevLichessRef.current = next;
+  }, [signals, chessY, pushRipple]);
+
+  const prevAircraftRef = useRef<AircraftResponse["aircraft"] | null>(null);
+  useEffect(() => {
+    if (!aircraft?.aircraft) return;
+    if (didAircraftArrive(prevAircraftRef.current, aircraft.aircraft)) {
+      const newest = aircraft.aircraft[aircraft.aircraft.length - 1];
+      // §3.1: "x-position offset slightly by azDeg (left of centre = west of
+      // Pune)" — az=90 (east) -> +lean, az=270 (west) -> -lean.
+      const lean = Math.sin(((newest?.azDeg ?? 0) * Math.PI) / 180) * LEAN_MAX_PX;
+      pushRipple({
+        y: DEVIATION_PAD,
+        yTo: Math.max(DEVIATION_PAD, height - DEVIATION_PAD),
+        x: lean,
+        colorToken: "--color-probe",
+        label: `Aircraft · adsb.lol (ODbL)${newest ? ` · ${newest.cs}` : ""}`,
+      });
+    }
+    prevAircraftRef.current = aircraft.aircraft;
+  }, [aircraft, height, pushRipple]);
+
+  // Lane C (§4/§7): the presence bus is a plain module-scope store, not a
+  // hook into the PlayProvider tree AnomalyRail doesn't sit inside — see
+  // play/presenceBus.ts. `null` (shared layer not loaded/synced yet) never
+  // counts as a reading to compare against.
+  const prevPresenceRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (didIncrease(prevPresenceRef.current, presenceCount)) {
+      pushRipple({ y: Math.max(DEVIATION_PAD, height - DEVIATION_PAD / 2), colorToken: "--color-signal-dim", label: "A visitor arrived" });
+    }
+    prevPresenceRef.current = presenceCount;
+  }, [presenceCount, height, pushRipple]);
+
   const canvasRef = useCanvasLoop((_canvas, ctx, getSize) => {
     // useCanvasLoop already fast-forwards+freezes this step/draw pair under
     // prefers-reduced-motion — that's the ambient loop covered. The sweep is
@@ -231,6 +440,7 @@ export default function AnomalyRail() {
     // explicit gate: skipped outright when reduced motion is on, rather than
     // relying on the fast-forward to land it mid-animation.
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    reducedRef.current = reduced;
     let sweepT = reduced || hasSweptBefore() ? 1 : 0;
     if (sweepT === 0) markSwept();
 
@@ -259,6 +469,10 @@ export default function AnomalyRail() {
     let cachedDeviations = deviationsFor(facets, 0, DEVIATION_PAD);
     let accent = "";
     let accent2 = "";
+    // Ripple tokens (§3.2's palette discipline) — same read-once-per-resize
+    // cache as accent/accent2 above, keyed by the same `resized` flag.
+    const rippleTokens: Record<string, string> = {};
+    const RIPPLE_TOKEN_NAMES = ["--color-signal", "--color-signal-dim", "--color-danger", "--color-alt", "--color-probe"];
 
     // There used to be a "skip this frame, nothing changed" early return
     // here (I3's perf fix). It no longer has a case to apply to: under
@@ -289,6 +503,7 @@ export default function AnomalyRail() {
         const tokens = getComputedStyle(document.documentElement);
         accent = tokens.getPropertyValue("--color-accent").trim();
         accent2 = tokens.getPropertyValue("--color-accent2").trim();
+        for (const name of RIPPLE_TOKEN_NAMES) rippleTokens[name] = tokens.getPropertyValue(name).trim();
       }
 
       const hovered = hoveredRef.current;
@@ -299,9 +514,18 @@ export default function AnomalyRail() {
       // Baseline: a faint repeating tick scale — the thing deviations are
       // measured against. One path for every tick (not one stroke() call
       // per tick) — same pixels, a fraction of the draw calls.
+      //
+      // Layer 0 (§3, live-rail-spec v2): the baseline's own alpha rides a
+      // very slow, always-on sine (elapsedMs is already tracked for the
+      // deviation pulse below — this is one more Math.sin() call on the same
+      // clock, not a second timer) dimmed by Pune's current air quality. This
+      // is the "calmer at rest, premium" fix — the baseline itself now
+      // breathes almost imperceptibly instead of sitting at a flat, printed-
+      // looking 0.3.
+      const haze = hazeFromAqi(airRef.current?.usAqi);
       ctx.strokeStyle = accent2;
       ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = ambientAlpha(elapsedMs, haze, reduced);
       ctx.beginPath();
       for (const y of cachedTicks) {
         ctx.moveTo(cx - 4, y + 0.5);
@@ -371,8 +595,50 @@ export default function AnomalyRail() {
           }
         }
       });
+
+      // Layer 2 (§3, front-most): reality ripples — drawn only while
+      // decaying; pruneRipples below is what keeps the rail silent at rest
+      // (nothing here at all until something real happened in the last
+      // RIPPLE_DECAY_MS). Reuses the exact ctx.arc + globalAlpha + shadowBlur
+      // primitives the hover-glow above already uses — no new canvas API.
+      const nowMs = Date.now();
+      pruneRipples(ringRef.current, nowMs, RIPPLE_DECAY_MS);
+      const hoveredRipple = hoveredRippleRef.current;
+      for (const r of ringRef.current) {
+        // §5: under reduced motion the loop above never runs again after
+        // mount/resize, so there is no per-frame "age" to animate — render
+        // every live ripple at one fixed mid-decay frame instead (still a
+        // real, true "this happened" mark, just not tweening).
+        const age = reduced ? RIPPLE_DECAY_MS / 2 : nowMs - r.bornAtMs;
+        const alpha = decayAlpha(age, RIPPLE_DECAY_MS) * (r.dimAlpha ?? 1);
+        if (alpha <= 0) continue;
+        const ry = rippleY(r, age, RIPPLE_DECAY_MS);
+        const rx = cx + (r.x ?? 0);
+        const radius = 3 + (age / RIPPLE_DECAY_MS) * 8;
+        const color = rippleTokens[r.colorToken] ?? accent;
+        ctx.beginPath();
+        ctx.arc(rx, ry, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = alpha;
+        if (r.id === hoveredRipple) {
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 8;
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+
+        if (r.id === hoveredRipple) {
+          ctx.font = '11px "JetBrains Mono", ui-monospace, monospace';
+          ctx.fillStyle = color;
+          ctx.textBaseline = "middle";
+          ctx.fillText(r.label, rx + radius + 6, ry);
+        }
+      }
     };
 
+    drawRef.current = draw;
     return { step, draw };
   });
 
@@ -382,6 +648,21 @@ export default function AnomalyRail() {
     const y = e.clientY - rect.top;
     pointerRef.current = { x: e.clientX - rect.left, y };
     hoveredRef.current = hitTest(deviations, y, HOVER_TOLERANCE);
+    // §3.3: a ripple gets the same hover label a facet dot does — nearest
+    // live ripple within tolerance, by its CURRENT (possibly travelling) y.
+    const nowMs = Date.now();
+    let best: string | null = null;
+    let bestDist = HOVER_TOLERANCE;
+    for (const r of ringRef.current) {
+      const age = nowMs - r.bornAtMs;
+      const ry = rippleY(r, age, RIPPLE_DECAY_MS);
+      const dist = Math.abs(ry - y);
+      if (dist <= bestDist) {
+        best = r.id;
+        bestDist = dist;
+      }
+    }
+    hoveredRippleRef.current = best;
   };
 
   return (
@@ -395,6 +676,7 @@ export default function AnomalyRail() {
         onPointerLeave={() => {
           hoveredRef.current = null;
           pointerRef.current = null;
+          hoveredRippleRef.current = null;
         }}
       >
         <nav aria-label="Timeline" className="anomaly-rail-nav" data-spine="anomaly-rail">
@@ -489,7 +771,11 @@ export default function AnomalyRail() {
           </nav>
         )}
       </div>
-      <InstrumentView open={instrumentOpen} onClose={closeInstrument} />
+      {/* Age-filtering (which of these is still "live") happens inside
+          InstrumentView itself, on a state clock ticked from an effect —
+          calling Date.now() here, during render, would be an impure render
+          (react-hooks/purity) now that this app runs the React Compiler. */}
+      <InstrumentView open={instrumentOpen} onClose={closeInstrument} recentSignals={liveRipples} />
     </>
   );
 }

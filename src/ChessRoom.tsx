@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Fragment } from "react";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -6,6 +6,7 @@ import { useCorpus, type Corpus } from "./lib/useCorpus.ts";
 import { ChessArc } from "./ChessArc.tsx";
 import { chess } from "./data/chess.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 import { ChessVsCommits } from "./chess/ChessVsCommits.tsx";
 import { ChessFindings } from "./chess/ChessFindings.tsx";
 
@@ -241,14 +242,16 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
         matrix:
       </p>
       <ol className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
-        {top.map((t, i) => (
-          <li key={t.square}>
-            <span className="text-zinc-200">
-              {i + 1}. {t.square}
-            </span>{" "}
-            {t.n.toLocaleString()}
-          </li>
-        ))}
+        <StaggerReveal as="li" step={40}>
+          {top.map((t, i) => (
+            <Fragment key={t.square}>
+              <span className="text-zinc-200">
+                {i + 1}. {t.square}
+              </span>{" "}
+              {t.n.toLocaleString()}
+            </Fragment>
+          ))}
+        </StaggerReveal>
       </ol>
     </div>
   );
@@ -320,11 +323,13 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
   const alt = (
     <div className="mt-4 text-sm leading-relaxed text-zinc-400">
       <ul className="space-y-1">
-        {arcLines.map((l) => (
-          <li key={l.name}>
-            <span className="text-zinc-200">{l.name}</span> — {l.runs.join(" · ")}
-          </li>
-        ))}
+        <StaggerReveal as="li" step={40}>
+          {arcLines.map((l) => (
+            <span key={l.name}>
+              <span className="text-zinc-200">{l.name}</span> — {l.runs.join(" · ")}
+            </span>
+          ))}
+        </StaggerReveal>
       </ul>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[34rem] border-collapse font-mono text-xs">
@@ -343,23 +348,25 @@ function RepertoirePane({ corpus }: { corpus: Corpus }) {
             </tr>
           </thead>
           <tbody>
-            {years.flatMap((y) =>
-              y.platforms.map((p) => (
-                <tr key={`${y.year}-${p.key}`} className="border-b border-line/50">
-                  <th scope="row" className="py-1 pr-3 text-left font-normal text-zinc-300">{y.year}</th>
-                  <td className="py-1 pr-3">{p.key === "lichess" ? "lichess" : "chess.com"}</td>
-                  <td className="py-1 pr-3">{p.blackGames.toLocaleString()}</td>
-                  {focus.map((f) => {
-                    const o = p.openings.find((x) => x.name === f);
-                    return (
-                      <td key={f} className="py-1 pr-3">
-                        {p.thin ? `thin (n=${o?.count ?? 0})` : `${pct(o?.share ?? 0)}`}
-                      </td>
-                    );
-                  })}
-                </tr>
-              )),
-            )}
+            <StaggerReveal as="tr" step={30} className="border-b border-line/50">
+              {years.flatMap((y) =>
+                y.platforms.map((p) => (
+                  <Fragment key={`${y.year}-${p.key}`}>
+                    <th scope="row" className="py-1 pr-3 text-left font-normal text-zinc-300">{y.year}</th>
+                    <td className="py-1 pr-3">{p.key === "lichess" ? "lichess" : "chess.com"}</td>
+                    <td className="py-1 pr-3">{p.blackGames.toLocaleString()}</td>
+                    {focus.map((f) => {
+                      const o = p.openings.find((x) => x.name === f);
+                      return (
+                        <td key={f} className="py-1 pr-3">
+                          {p.thin ? `thin (n=${o?.count ?? 0})` : `${pct(o?.share ?? 0)}`}
+                        </td>
+                      );
+                    })}
+                  </Fragment>
+                )),
+              )}
+            </StaggerReveal>
           </tbody>
         </table>
       </div>
@@ -558,10 +565,6 @@ export function ChessRoom() {
           </>
         )}
       </div>
-
-      {corpus && (
-        <p className="mt-4 font-mono text-[11px] text-muted">corpus generated {corpus.generatedAt.slice(0, 10)}</p>
-      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { Reveal } from "./Reveal.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { chess } from "./data/chess.ts";
 // ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
@@ -118,6 +119,7 @@ export function LabBench() {
           <div className="mb-2">
             <p className="kicker mb-2 font-semibold">Dice.tech — production</p>
             <div className="mb-4 flex flex-wrap gap-2">
+              <StaggerReveal step={30}>
               {TABS.filter((t) => t.group === "production").map((t) => (
                 <div key={t.key} data-lab-card className="flex flex-col items-start gap-1">
                   <button
@@ -140,9 +142,11 @@ export function LabBench() {
                   <LabEvidence tab={t.key} />
                 </div>
               ))}
+              </StaggerReveal>
             </div>
             <p className="kicker mb-2 font-semibold">Personal builds</p>
             <div className="mb-6 flex flex-wrap gap-2">
+              <StaggerReveal step={30}>
               {TABS.filter((t) => t.group === "personal").map((t) => (
                 <div key={t.key} data-lab-card className="flex flex-col items-start gap-1">
                   <button
@@ -165,6 +169,7 @@ export function LabBench() {
                   <LabEvidence tab={t.key} />
                 </div>
               ))}
+              </StaggerReveal>
             </div>
           </div>
           {tab === "signal" && (

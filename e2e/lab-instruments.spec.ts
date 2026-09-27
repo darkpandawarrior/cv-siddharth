@@ -43,7 +43,16 @@ test.describe("labs.ts registers guard-lab and routing-lab (I9)", () => {
     await page.clock.setFixedTime(new Date(NIGHT));
     await page.goto("/lab");
     await waitForHydration(page);
-    await page.getByRole("button", { name: "Guard Lab" }).click();
+    // Same re-click-until-selected idiom as offline.spec.ts's Arc tab: /lab
+    // now wraps every pill button in StaggerReveal, and waitForHydration's
+    // "some element has a React fiber" check can resolve before this
+    // specific, newly-deeper subtree's own listeners are live — a click
+    // right after can still land on inert markup and be lost.
+    const guardTab = page.getByRole("button", { name: "Guard Lab" });
+    await expect(async () => {
+      await guardTab.click();
+      await expect(guardTab).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 });
+    }).toPass({ timeout: 10_000 });
     await expect(page.getByLabel(/untrusted text to fence/i)).toBeVisible({ timeout: 10_000 });
   });
 
@@ -52,7 +61,12 @@ test.describe("labs.ts registers guard-lab and routing-lab (I9)", () => {
     await page.clock.setFixedTime(new Date(NIGHT));
     await page.goto("/lab");
     await waitForHydration(page);
-    await page.getByRole("button", { name: "Routing Lab" }).click();
+    // See the guard-lab test above for why this retries instead of a bare click.
+    const routingTab = page.getByRole("button", { name: "Routing Lab" });
+    await expect(async () => {
+      await routingTab.click();
+      await expect(routingTab).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 });
+    }).toPass({ timeout: 10_000 });
     await expect(page.getByRole("img", { name: /captain, workers, mechanical/i })).toBeVisible({ timeout: 10_000 });
     // The toggle exists and the caption changes when it flips: the actual
     // behaviour CRAFT-7 asks for ("overload the captain with volume and the

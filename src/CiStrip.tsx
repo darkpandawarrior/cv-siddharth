@@ -1,6 +1,8 @@
+import { Fragment } from "react";
 import { useNow } from "./lib/useSky.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { useSignals } from "./lib/useLive.ts";
+import { LiveNumber } from "./LiveNumber.tsx";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 import type { CiRepoSlug, DownloadRepoSlug } from "../api/_lib/signals-handler.ts";
 
@@ -67,9 +69,29 @@ export function CiStrip({ slug, links }: { slug: string; links: { label: string;
   const ciLabel = ci && ci.state !== "none" ? `main CI ${ci.state === "pass" ? "✓" : "✗"}` : null;
 
   const download = signals?.downloads?.[slug as DownloadRepoSlug];
-  const downloadsLabel = download ? `${download.apk} APK downloads (GitHub)` : null;
 
-  const row = [pushLabel, ciLabel, downloadsLabel].filter((part): part is string => Boolean(part)).join(" · ");
+  // Parts as nodes rather than one joined string, so the two fields that can
+  // actually change on a live poll (the CI checkmark, the download count)
+  // flash on a real change instead of silently snapping — LiveNumber, fed
+  // from this same poll bus useLiveSignal already reads.
+  const parts = [
+    pushLabel,
+    ciLabel && <LiveNumber key="ci" value={ciLabel} />,
+    download && (
+      <Fragment key="dl">
+        <LiveNumber value={download.apk} /> APK downloads (GitHub)
+      </Fragment>
+    ),
+  ].filter((part): part is NonNullable<typeof part> => Boolean(part));
 
-  return <p className="font-mono text-xs text-muted">{row}</p>;
+  return (
+    <p className="font-mono text-xs text-muted">
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {i > 0 && " · "}
+          {part}
+        </Fragment>
+      ))}
+    </p>
+  );
 }

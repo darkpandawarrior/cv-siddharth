@@ -193,7 +193,7 @@ function MobileMenu() {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
+        className="ctrl-icon flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
       >
         <span className="h-px w-4 bg-zinc-300" />
         <span className="h-px w-4 bg-zinc-300" />
@@ -201,7 +201,7 @@ function MobileMenu() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-ink/85 backdrop-blur-md" onClick={closeMenu} role="presentation">
           <nav
-            className="palette-in glass-panel absolute inset-x-4 top-4 rounded-2xl p-5"
+            className="sheet glass-panel absolute inset-x-4 top-4 rounded-2xl p-5"
             style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
             aria-label="Site menu"
             onClick={(e) => e.stopPropagation()}
@@ -210,7 +210,7 @@ function MobileMenu() {
               <span className="font-display text-sm font-bold">
                 sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
               </span>
-              <button onClick={closeMenu} aria-label="Close menu" className="rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
+              <button onClick={closeMenu} aria-label="Close menu" className="ctrl rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
                 esc
               </button>
             </div>
@@ -219,20 +219,20 @@ function MobileMenu() {
                 <button
                   key={l.href}
                   onClick={() => go(l.href)}
-                  className="panel-sm px-4 py-3 text-left text-sm font-semibold text-zinc-200 transition hover:border-accent/50 hover:text-accent"
+                  className="ctrl panel-sm px-4 py-3 text-left text-sm font-semibold text-zinc-200 hover:border-accent/50 hover:text-accent"
                 >
                   {l.label}
                 </button>
               ))}
               <button
                 onClick={() => { setOpen(false); openLauncher(); }}
-                className="col-span-2 rounded-xl border border-accent/40 bg-card px-4 py-3 text-sm font-semibold text-accent transition hover:border-accent"
+                className="ctrl col-span-2 rounded-xl border border-accent/40 bg-card px-4 py-3 text-sm font-semibold text-accent hover:border-accent"
               >
                 All surfaces →
               </button>
               <button
                 onClick={() => { setOpen(false); openChat(); }}
-                className="col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
+                className="ctrl col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
               >
                 Ask my AI
               </button>
@@ -346,7 +346,7 @@ function Nav() {
               /hire was a grey text link beside it. */}
           <Link
             to="/hire"
-            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+            className="ctrl rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink hover:bg-accent-dim"
           >
             Hire me
           </Link>

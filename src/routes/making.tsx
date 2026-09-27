@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { roomHead } from "../lib/routeHead.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { Reveal } from "../Reveal.tsx";
+import { StaggerReveal } from "../StaggerReveal.tsx";
 import { Picture } from "../Picture.tsx";
 import { ChapterWord, GiantCTA } from "../Editorial.tsx";
 import { EvidenceChip } from "../EvidenceChip.tsx";
@@ -254,19 +255,21 @@ function MakingRoute() {
                 The pipeline
               </h2>
               <ol className="mt-6 space-y-5">
-                {PIPELINE_STAGES.map((s, i) => (
-                  <li key={s.step} className="flex gap-4">
-                    <span className="font-display text-lg font-bold text-accent">{i + 1}</span>
-                    <div>
-                      <p className="font-display text-base font-bold" style={{ color: "var(--color-text)" }}>
-                        {s.step}
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
-                        {s.detail}
-                      </p>
-                    </div>
-                  </li>
-                ))}
+                <StaggerReveal as="li" step={60} className="flex gap-4">
+                  {PIPELINE_STAGES.map((s, i) => (
+                    <Fragment key={s.step}>
+                      <span className="font-display text-lg font-bold text-accent">{i + 1}</span>
+                      <div>
+                        <p className="font-display text-base font-bold" style={{ color: "var(--color-text)" }}>
+                          {s.step}
+                        </p>
+                        <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
+                          {s.detail}
+                        </p>
+                      </div>
+                    </Fragment>
+                  ))}
+                </StaggerReveal>
               </ol>
             </section>
           </Reveal>
@@ -395,9 +398,10 @@ function MakingRoute() {
           <div className="mt-10">
             <p className="kicker-accent">receipts</p>
             <ul className="mt-3 space-y-2">
-              {RECEIPTS.map((r) => (
-                <li key={r.href}>
+              <StaggerReveal as="li" step={40}>
+                {RECEIPTS.map((r) => (
                   <a
+                    key={r.href}
                     href={r.href}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -405,8 +409,8 @@ function MakingRoute() {
                   >
                     {r.label}
                   </a>
-                </li>
-              ))}
+                ))}
+              </StaggerReveal>
             </ul>
           </div>
 

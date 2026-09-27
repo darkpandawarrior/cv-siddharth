@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
 import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
@@ -27,6 +28,12 @@ export interface GlobeHudProps {
   sky: SkyState | null;
   tier: 1 | 2 | 3;
   hasWebGL: boolean;
+  /** Zoom-pill + pause-toggle wiring (§2) — omitted (no-WebGL branch) means
+   *  there's no scene to drive, so the controls simply don't render. */
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  autoRotatePaused?: boolean;
+  onToggleAutoRotate?: () => void;
 }
 
 /**
@@ -43,24 +50,51 @@ export interface GlobeHudProps {
  * (Globe.tsx): there is always a Pune reading, even when there is nothing
  * to orbit.
  */
-export function GlobeHud({ sky, tier, hasWebGL }: GlobeHudProps) {
+export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotatePaused = false, onToggleAutoRotate }: GlobeHudProps) {
   const reducedMotion = useReducedMotion();
-  const autoRotate = hasWebGL && !reducedMotion && tier !== 3;
+  const autoRotate = hasWebGL && !reducedMotion && tier !== 3 && !autoRotatePaused;
   const daypart = sky?.daypart ?? null;
   const tempC = sky?.weather?.tempC;
   const weatherLabel = sky?.weather ? WMO_LABEL[sky.weather.code] : undefined;
 
   return (
-    <div
-      data-autorotate={autoRotate ? "on" : "off"}
-      className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur"
-    >
-      <span>
-        Pune{daypart ? ` · ${daypart}` : ""}
-        {weatherLabel ? ` · ${weatherLabel}` : ""}
-        {tempC != null ? ` · ${Math.round(tempC)}°C` : ""}
-      </span>
-      {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
+    <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
+      <div
+        data-autorotate={autoRotate ? "on" : "off"}
+        className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur"
+      >
+        <span>
+          Pune{daypart ? ` · ${daypart}` : ""}
+          {weatherLabel ? ` · ${weatherLabel}` : ""}
+          {tempC != null ? ` · ${Math.round(tempC)}°C` : ""}
+        </span>
+        {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
+      </div>
+      {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
+          shown at every breakpoint (the drag hint above stays sm:-only, but
+          this is the one accessible affordance a touch/keyboard visitor has
+          for stopping the spin without reaching for OS-level reduced motion). */}
+      {hasWebGL && onToggleAutoRotate && (
+        <button
+          type="button"
+          onClick={onToggleAutoRotate}
+          aria-pressed={autoRotatePaused}
+          aria-label={autoRotatePaused ? "Resume the globe's ambient rotation" : "Pause the globe's ambient rotation"}
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
+        >
+          {autoRotatePaused ? <Play size={12} /> : <Pause size={12} />}
+        </button>
+      )}
+      {hasWebGL && onZoomIn && onZoomOut && (
+        <div className="pointer-events-auto flex items-center rounded-full border border-line bg-ink/70 backdrop-blur">
+          <button type="button" onClick={onZoomOut} aria-label="Zoom out" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
+            <ZoomOut size={13} />
+          </button>
+          <button type="button" onClick={onZoomIn} aria-label="Zoom in" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
+            <ZoomIn size={13} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

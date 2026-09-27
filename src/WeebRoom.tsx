@@ -3,6 +3,7 @@ import { PauseCircle, Star, CalendarClock, ArrowUpRight } from "lucide-react";
 import { weeb } from "./data/weeb.ts";
 import { Reveal } from "./Reveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
+import { AnimatedMetric } from "./AnimatedMetric.tsx";
 import { ReactionRow } from "./play/ReactionRow.tsx";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 
@@ -93,7 +94,7 @@ export function WeebRoom() {
                 <li key={label} className="flex items-center gap-3">
                   <span className="w-24 shrink-0 font-mono text-xs text-zinc-400">{label}</span>
                   <span
-                    className="h-2 rounded-full bg-accent/70"
+                    className="weeb-bar h-2 rounded-full bg-accent/70 transition-[width] duration-700"
                     style={{ width: `${(n / maxStatus) * 62}%` }}
                   />
                   <span className="font-mono text-xs text-muted">{n}</span>
@@ -110,10 +111,13 @@ export function WeebRoom() {
                   <TiltCard key={k}>
                     <div className="rounded-xl border border-line p-5">
                       <Icon size={17} className="text-accent" />
-                      <p className="mt-3 font-display text-3xl font-bold">{pct(v.pct)}</p>
-                      <p className="mt-1 text-sm text-zinc-400">
-                        of the {v.n} “{k}” shows are actually caught up with every season out.
-                      </p>
+                      <AnimatedMetric
+                        className="mt-3"
+                        metric={{
+                          value: pct(v.pct),
+                          label: `of the ${v.n} “${k}” shows are actually caught up with every season out.`,
+                        }}
+                      />
                     </div>
                   </TiltCard>
                 ) : null,

@@ -7,6 +7,7 @@ import { roomHead } from "../lib/routeHead.ts";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { Reveal } from "../Reveal.tsx";
+import { StaggerReveal } from "../StaggerReveal.tsx";
 import { TiltCard } from "../TiltCard.tsx";
 import { Picture } from "../Picture.tsx";
 import { EvidenceChip } from "../EvidenceChip.tsx";
@@ -298,11 +299,16 @@ function AnthologyRoute() {
 }
 
 function SeasonGrid({ season }: { season: number }) {
+  // A season switch is a real, user-driven state change — StaggerReveal on
+  // the CARD (chrome), never on the prose inside it: the fiction text itself
+  // never fades character-by-character or otherwise reads as produced.
   return (
     <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {entriesOfSeason(season).map((e, i) => (
-        <EntryCard key={e.slug} entry={e} index={i} />
-      ))}
+      <StaggerReveal step={60}>
+        {entriesOfSeason(season).map((e, i) => (
+          <EntryCard key={e.slug} entry={e} index={i} />
+        ))}
+      </StaggerReveal>
     </div>
   );
 }

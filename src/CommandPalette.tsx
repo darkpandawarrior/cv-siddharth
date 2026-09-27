@@ -171,7 +171,7 @@ export function CommandPalette() {
         // "always-visible … reachable on mobile/touch too", but it rendered
         // in normal document flow — the literal last element in body, after
         // every route's footer. Reachable now, and not stacked on the chat FAB.
-        className="palette-trigger fixed bottom-6 left-6 z-50 flex items-center gap-1.5 rounded-full border border-line bg-ink/90 px-3 py-2 text-xs font-semibold text-zinc-400 shadow-lg backdrop-blur transition hover:border-accent hover:text-accent print:hidden"
+        className="ctrl palette-trigger fixed bottom-6 left-6 z-50 flex items-center gap-1.5 rounded-full border border-line bg-ink/90 px-3 py-2 text-xs font-semibold text-zinc-400 shadow-lg backdrop-blur hover:border-accent hover:text-accent print:hidden"
       >
         {/* The lucide Command icon IS the ⌘ glyph, so a literal "⌘K" beside it
             rendered as "⌘ ⌘K". Icon carries the modifier, text carries the key. */}
@@ -357,7 +357,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     >
       <div
         ref={paletteRef}
-        className="palette-in glass-panel w-full max-w-lg overflow-hidden rounded-2xl"
+        className="sheet glass-panel w-full max-w-lg overflow-hidden rounded-2xl"
         style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
         role="dialog"
         aria-modal="true"
@@ -398,7 +398,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
                 c.run();
                 onClose();
               }}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+              className={`ctrl flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm ${
                 i === activeIndex ? "bg-accent/15 text-zinc-100" : "text-zinc-300"
               }`}
             >

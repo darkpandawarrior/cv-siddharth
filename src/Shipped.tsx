@@ -14,6 +14,8 @@ import { ShippedClient } from "./ShippedClient.tsx";
 import { ShippedTimeline } from "./ShippedTimeline.tsx";
 import { compact } from "./shippedFormat.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
+import { AnimatedMetric } from "./AnimatedMetric.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 
 import { SiteFooter } from "./SiteFooter.tsx";
 /**
@@ -62,19 +64,20 @@ export function Shipped() {
           </p>
         </header>
 
-        <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-line py-8 sm:grid-cols-4">
+        {/* Bare-mode AnimatedMetric: a real count-up, never an invented trend
+            (no gauge, no sparkline — these four numbers have no history worth
+            drawing). Every value is real and generated (store.ts, cadence
+            "manual", already behind the EvidenceChip above). */}
+        <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-line py-8 sm:grid-cols-4">
           {[
-            [String(reached), "apps reached the store"],
-            [String(fleetStats.live), "still on it today"],
-            [String(fleetStats.developers), "companies published them"],
-            [`≥ ${compact(fleetStats.installFloor)}`, "installs, on Play's own counts"],
-          ].map(([value, label]) => (
-            <div key={label}>
-              <dt className="font-display text-4xl font-bold tabular-nums text-accent">{value}</dt>
-              <dd className="mt-1.5 text-xs leading-relaxed text-muted">{label}</dd>
-            </div>
+            { value: String(reached), label: "apps reached the store" },
+            { value: String(fleetStats.live), label: "still on it today" },
+            { value: String(fleetStats.developers), label: "companies published them" },
+            { value: `≥ ${compact(fleetStats.installFloor)}`, label: "installs, on Play's own counts" },
+          ].map((m) => (
+            <AnimatedMetric key={m.label} className="" viz="none" metric={m} />
           ))}
-        </dl>
+        </div>
 
         {/* ── The three ─────────────────────────────────────────────────── */}
         <section className="mt-14">
@@ -87,9 +90,10 @@ export function Shipped() {
             comes out of.
           </p>
           <ul className="mt-6 grid gap-4 sm:grid-cols-3">
-            {storeApps.map((app) => (
-              <li key={app.id}>
+            <StaggerReveal as="li">
+              {storeApps.map((app) => (
                 <a
+                  key={app.id}
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -125,8 +129,8 @@ export function Shipped() {
                     />
                   </span>
                 </a>
-              </li>
-            ))}
+              ))}
+            </StaggerReveal>
           </ul>
         </section>
 
@@ -159,21 +163,23 @@ export function Shipped() {
             otherwise.
           </p>
           <ul className="mt-6 flex flex-wrap gap-3">
-            {fleetByEra.map((era) => (
-              <li
-                key={era.key}
-                // era.key === "unmeasured": de-emphasise via a faded border,
-                // never CSS opacity on the whole card — opacity compounds
-                // into every descendant's paint, including text-muted's
-                // already-quiet color, and dropped its contrast ratio below
-                // AA (axe color-contrast, /shipped).
-                className={`rounded-xl border px-4 py-3 ${era.key === "unmeasured" ? "border-line/40" : "border-line"}`}
-              >
-                <p className="font-display text-2xl font-bold tabular-nums text-accent">{era.count}</p>
-                <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted">{era.label}</p>
-                {era.period && <p className="mt-0.5 font-mono text-xs text-muted">{era.period}</p>}
-              </li>
-            ))}
+            <StaggerReveal as="li">
+              {fleetByEra.map((era) => (
+                <div
+                  key={era.key}
+                  // era.key === "unmeasured": de-emphasise via a faded border,
+                  // never CSS opacity on the whole card — opacity compounds
+                  // into every descendant's paint, including text-muted's
+                  // already-quiet color, and dropped its contrast ratio below
+                  // AA (axe color-contrast, /shipped).
+                  className={`rounded-xl border px-4 py-3 ${era.key === "unmeasured" ? "border-line/40" : "border-line"}`}
+                >
+                  <p className="font-display text-2xl font-bold tabular-nums text-accent">{era.count}</p>
+                  <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted">{era.label}</p>
+                  {era.period && <p className="mt-0.5 font-mono text-xs text-muted">{era.period}</p>}
+                </div>
+              ))}
+            </StaggerReveal>
           </ul>
         </section>
 
@@ -191,11 +197,11 @@ export function Shipped() {
               class the track is `auto`, which sizes to the widest card's
               max-content and pushes the page 50px past a 390px viewport. */}
           <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {liveClients.map((client) => (
-              <li key={client.key}>
-                <ShippedClient client={client} />
-              </li>
-            ))}
+            <StaggerReveal as="li">
+              {liveClients.map((client) => (
+                <ShippedClient key={client.key} client={client} />
+              ))}
+            </StaggerReveal>
           </ul>
         </section>
 
@@ -217,11 +223,11 @@ export function Shipped() {
               class the track is `auto`, which sizes to the widest tile's
               max-content and pushes the page 50px past a 390px viewport. */}
           <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {pastClients.map((client) => (
-              <li key={client.key}>
-                <ShippedClient client={client} past />
-              </li>
-            ))}
+            <StaggerReveal as="li">
+              {pastClients.map((client) => (
+                <ShippedClient key={client.key} client={client} past />
+              ))}
+            </StaggerReveal>
           </ul>
         </section>
 

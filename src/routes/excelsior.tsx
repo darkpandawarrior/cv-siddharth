@@ -9,6 +9,7 @@ import { countWord } from "../data/labs.ts";
 import { SiteFooter } from "../SiteFooter.tsx";
 import { WorldSwitch } from "../WorldSwitch.tsx";
 import { EvidenceChip } from "../EvidenceChip.tsx";
+import { StaggerReveal } from "../StaggerReveal.tsx";
 
 /**
  * The magazine, hosted here rather than linked away. `?year=&page=` are the
@@ -140,16 +141,18 @@ function ExcelsiorRoute() {
             Rather read it? The {countWord(readable.length).toLowerCase()} I wrote, in full
           </h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            {readable.map((m) => (
-              <Link
-                key={m.readSlug}
-                to="/read/$slug"
-                params={{ slug: m.readSlug! }}
-                className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
-              >
-                {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
-              </Link>
-            ))}
+            <StaggerReveal step={40}>
+              {readable.map((m) => (
+                <Link
+                  key={m.readSlug}
+                  to="/read/$slug"
+                  params={{ slug: m.readSlug! }}
+                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
+                >
+                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+                </Link>
+              ))}
+            </StaggerReveal>
           </div>
         </div>
 

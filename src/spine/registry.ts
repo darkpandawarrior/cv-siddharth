@@ -84,6 +84,7 @@ export const SPINE: SpineEntry[] = [
   { id: "chat-widgets", file: "src/ChatWidgets.tsx", kind: "primitive", internal: true, why: "renders only inside the chat panel" },
   { id: "picture", file: "src/Picture.tsx", kind: "primitive", why: "every raster image; a change is a change to 25 routes" },
   { id: "reveal", file: "src/Reveal.tsx", kind: "primitive", why: "scroll reveal wrapper on 12 routes; must respect reduced motion" },
+  { id: "stagger-reveal", file: "src/StaggerReveal.tsx", kind: "primitive", why: "aliveness-spec.md kit: index-aware Reveal wrapper for a list, hand-mounted across the FRINGE/DATA lanes; inherits Reveal's own reduced-motion contract" },
   { id: "world-switch", file: "src/WorldSwitch.tsx", kind: "primitive", why: "mounted by 4 route files" },
   // No own maxHeight/selector: it renders inline inside "route-header"'s
   // already-budgeted row (src/rooms.tsx's RoomFrame), never a block of its

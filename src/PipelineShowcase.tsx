@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
 import { ArrowUpRight, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import type { Pipeline } from "../api/_lib/pipeline-handler.ts";
+import { useLiveSignal } from "./lib/useLiveSignal.ts";
+import { EvidenceChip } from "./EvidenceChip.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 
 /** Live CI/CD panel for a project page.
  *
@@ -8,21 +10,16 @@ import type { Pipeline } from "../api/_lib/pipeline-handler.ts";
  *  an API, and these builds take 10 to 25 minutes, so a reader would never see the
  *  end of one. What is worth showing is the supply chain: which workflows ran, how
  *  long they took, what version reached the F-Droid repo, and the signing
- *  certificate a reader can verify against the APK themselves. */
+ *  certificate a reader can verify against the APK themselves.
+ *
+ *  aliveness-spec.md §4: this used to own a private `fetch()` instead of
+ *  reading the shared poll bus — the one live surface on the site NOT
+ *  sharing it with the footer, /lanes, /time-machine and everything else on
+ *  useLiveSignal. That was a real inconsistency (one fetch per mounted
+ *  instance, no shared interval, no `EvidenceChip cadence="live"`), not just
+ *  missing polish; this migrates it onto the same bus. */
 export function PipelineShowcase({ slug }: { slug: string }) {
-  const [data, setData] = useState<Pipeline | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    fetch(`/api/pipeline?slug=${encodeURIComponent(slug)}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: Pipeline) => live && setData(d))
-      .catch(() => live && setFailed(true));
-    return () => {
-      live = false;
-    };
-  }, [slug]);
+  const { data, error, nextPollAt } = useLiveSignal<Pipeline>(`/api/pipeline?slug=${encodeURIComponent(slug)}`);
 
   // D2: say nothing wrong rather than say nothing at all. A bare `return
   // null` here read as a section that promised live data and then vanished,
@@ -32,7 +29,7 @@ export function PipelineShowcase({ slug }: { slug: string }) {
   const unreachable = (
     <p className="font-mono text-[11px] text-muted">Live CI/CD data isn&rsquo;t reachable right now.</p>
   );
-  if (failed) return unreachable;
+  if (error && !data) return unreachable;
   if (!data) {
     return (
       <p className="flex items-center gap-2 font-mono text-[11px] text-muted">
@@ -40,16 +37,26 @@ export function PipelineShowcase({ slug }: { slug: string }) {
       </p>
     );
   }
-  // `connected: false` here is the same fact as `failed` above, just caught
+  // `connected: false` here is the same fact as `error` above, just caught
   // one layer down: the client's own fetch succeeded but the handler's live
   // read of GitHub/F-Droid did not (pipeline-handler.ts:69). Rendering
   // nothing for it is the identical defect with a different trigger.
   if (!data.connected && !data.published) return unreachable;
 
   const mb = data.published ? (data.published.sizeBytes / 1048576).toFixed(1) : null;
+  const latestRunAt = data.runs[0]?.at ?? null;
 
   return (
     <div className="flex flex-col gap-5">
+      <div className="flex justify-end">
+        <EvidenceChip
+          file="pipeline"
+          source="GitHub Actions + F-Droid index"
+          cadence="live"
+          live={{ at: latestRunAt, ok: !error }}
+          nextPollAt={nextPollAt}
+        />
+      </div>
       {data.published && (
         <div className="panel flex flex-wrap items-baseline gap-x-6 gap-y-2 p-5">
           <span className="font-display text-2xl font-bold text-accent">{data.published.versionName}</span>
@@ -65,31 +72,33 @@ export function PipelineShowcase({ slug }: { slug: string }) {
 
       {data.runs.length > 0 && (
         <ul className="flex flex-col divide-y divide-line">
-          {data.runs.map((r) => {
-            const ok = r.conclusion === "success";
-            const running = r.conclusion === "running";
-            return (
-              <li key={r.url} className="flex items-center gap-3 py-2.5">
-                {running ? (
-                  <Loader2 size={13} className="shrink-0 animate-spin text-muted" />
-                ) : ok ? (
-                  <CheckCircle2 size={13} className="shrink-0 text-accent" />
-                ) : (
-                  <XCircle size={13} className="shrink-0 text-red-400" />
-                )}
-                <a href={r.url} target="_blank" rel="noreferrer" className="flex-1 truncate text-sm text-zinc-300 hover:text-accent">
-                  {r.name}
-                </a>
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">
-                  {r.durationSec === null
-                    ? ""
-                    : r.durationSec >= 60
-                      ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
-                      : `${r.durationSec}s`}
-                </span>
-              </li>
-            );
-          })}
+          <StaggerReveal as="li" step={60}>
+            {data.runs.map((r) => {
+              const ok = r.conclusion === "success";
+              const running = r.conclusion === "running";
+              return (
+                <div key={r.url} className="flex items-center gap-3 py-2.5">
+                  {running ? (
+                    <Loader2 size={13} className="shrink-0 animate-spin text-muted" />
+                  ) : ok ? (
+                    <CheckCircle2 size={13} className="shrink-0 text-accent" />
+                  ) : (
+                    <XCircle size={13} className="shrink-0 text-red-400" />
+                  )}
+                  <a href={r.url} target="_blank" rel="noreferrer" className="flex-1 truncate text-sm text-zinc-300 hover:text-accent">
+                    {r.name}
+                  </a>
+                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">
+                    {r.durationSec === null
+                      ? ""
+                      : r.durationSec >= 60
+                        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+                        : `${r.durationSec}s`}
+                  </span>
+                </div>
+              );
+            })}
+          </StaggerReveal>
         </ul>
       )}
 

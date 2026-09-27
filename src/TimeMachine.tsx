@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, History } from "lucide-react";
 import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
@@ -7,6 +7,8 @@ import { historyMonths, historyGeneratedAt, totalCommits } from "./data/history.
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
+import { StaggerReveal } from "./StaggerReveal.tsx";
+import { AnimatedMetric } from "./AnimatedMetric.tsx";
 
 /**
  * /time-machine — this repo's own commit history, navigable by month.
@@ -110,26 +112,28 @@ export default function TimeMachine() {
         </header>
 
         <div className="mt-10 flex items-end gap-1 overflow-x-auto pb-2" tabIndex={0} role="group" aria-label="Pick a month, scrollable horizontally once the history grows past one screen">
-          {historyMonths.map((m, idx) => (
-            <button
-              key={m.ym}
-              type="button"
-              onClick={() => setI(idx)}
-              title={`${monthLabel(m.ym)}: ${m.commits} commits`}
-              className="flex w-8 shrink-0 flex-col items-center gap-1 rounded-t transition"
-            >
-              <span
-                className="w-full rounded-t"
-                style={{
-                  height: `${Math.max((m.commits / maxCommits) * 96, 4)}px`,
-                  background: idx === i ? "var(--color-accent)" : "var(--color-line)",
-                }}
-              />
-              <span className={`font-mono text-[9px] ${idx === i ? "text-accent" : "text-muted"}`}>
-                {m.ym.slice(2)}
-              </span>
-            </button>
-          ))}
+          <StaggerReveal step={20} className="w-8 shrink-0">
+            {historyMonths.map((m, idx) => (
+              <button
+                key={m.ym}
+                type="button"
+                onClick={() => setI(idx)}
+                title={`${monthLabel(m.ym)}: ${m.commits} commits`}
+                className="flex w-full shrink-0 flex-col items-center gap-1 rounded-t transition"
+              >
+                <span
+                  className="w-full rounded-t"
+                  style={{
+                    height: `${Math.max((m.commits / maxCommits) * 96, 4)}px`,
+                    background: idx === i ? "var(--color-accent)" : "var(--color-line)",
+                  }}
+                />
+                <span className={`font-mono text-[9px] ${idx === i ? "text-accent" : "text-muted"}`}>
+                  {m.ym.slice(2)}
+                </span>
+              </button>
+            ))}
+          </StaggerReveal>
         </div>
 
         <div className="mt-8 flex items-center justify-between">
@@ -155,7 +159,10 @@ export default function TimeMachine() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
             <p className="font-mono text-[10px] text-muted">commits this month</p>
-            <p className="mt-1 font-display text-2xl font-bold tracking-tight">{month.commits}</p>
+            {/* metric.value changes on every month click — a real state
+                transition, not fake ticking — and AnimatedMetric's own effect
+                depends on it, so the count-up retriggers each time. */}
+            <AnimatedMetric className="mt-1" viz="none" metric={{ value: String(month.commits), label: "" }} />
           </div>
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
             <p className="font-mono text-[10px] text-muted">lines changed</p>
@@ -166,7 +173,7 @@ export default function TimeMachine() {
           </div>
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
             <p className="font-mono text-[10px] text-muted">total commits through this month</p>
-            <p className="mt-1 font-display text-2xl font-bold tracking-tight">{month.cumulative.commits.toLocaleString("en-US")}</p>
+            <AnimatedMetric className="mt-1" viz="none" metric={{ value: String(month.cumulative.commits), label: "" }} />
           </div>
         </div>
 
@@ -174,11 +181,11 @@ export default function TimeMachine() {
           <div className="mt-8">
             <p className="kicker mb-3">what shipped</p>
             <ul className="flex flex-col gap-2">
-              {month.subjects.map((s) => (
-                <li key={s} className="rounded-lg border border-line bg-card/60 px-3 py-2 font-mono text-[12px] leading-relaxed text-zinc-300">
-                  {s}
-                </li>
-              ))}
+              <StaggerReveal as="li" step={40} className="rounded-lg border border-line bg-card/60 px-3 py-2 font-mono text-[12px] leading-relaxed text-zinc-300">
+                {month.subjects.map((s) => (
+                  <Fragment key={s}>{s}</Fragment>
+                ))}
+              </StaggerReveal>
             </ul>
           </div>
         )}

@@ -910,6 +910,72 @@ html.resume-mode .palette-trigger {
   .cell-flash-good { animation: none; }
 }
 
+/* Aliveness kit: idle phase-offset "breathing" for a card grid — lifted out
+   of AnomalyRail's own canvas-drawn pulse (2.6s period, phase-shifted per
+   dot so nothing blinks in unison) into a reusable CSS utility. Set --i to
+   the item's index (the same index already looped over for StaggerReveal).
+   Pure decoration — never implies real activity on its own. */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.015); opacity: 0.96; }
+}
+.breathe {
+  animation: breathe 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 390ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathe { animation: none; }
+}
+
+/* Aliveness kit: LiveNumber's flash-on-change, the financial-ticker
+   convention (a changed cell flashes rather than silently updating). Same
+   color-mix(accent) idiom the rest of this file uses for a transient glow. */
+@keyframes live-number-flash {
+  0% { background: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+  100% { background: transparent; }
+}
+.live-number-flash { animation: live-number-flash 0.4s ease-out; border-radius: 0.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  .live-number-flash { animation: none; }
+}
+
+/* Aliveness kit: GatewayCompare's cross-fade on a real, user-driven
+   selection change (a React `key` change remounts the element, retriggering
+   this animation — never a timer). */
+@keyframes gateway-compare-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gateway-compare-fade { animation: gateway-compare-fade-in 0.2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .gateway-compare-fade { animation: none; }
+}
+
+/* Aliveness kit: /weeb's STATUSES bars fill 0→width on the SAME Reveal
+   trigger the section already has, instead of a second observer. The
+   duration itself is Tailwind's own `duration-700` utility class on the bar
+   element (same value Pulse.tsx's Bar already animates its width over) —
+   this rule only supplies the "start at zero while armed-but-not-yet-
+   revealed" override, the exact `.reveal.reveal-armed:not(.revealed)` state
+   Reveal.tsx itself defines, so a reduced-motion visitor (who never gets
+   `.reveal-armed` at all) always sees the real width, never a stuck zero. */
+.reveal.reveal-armed:not(.revealed) .weeb-bar { width: 0 !important; }
+
+/* Aliveness kit: the 404 page's torn-map glyph draws its tear in once, on
+   mount — a fixed-guess stroke length (decorative art, not a data path, so
+   an approximate length is fine) instead of a JS getTotalLength() call. */
+@keyframes torn-map-draw {
+  from { stroke-dashoffset: var(--tm-len, 400); }
+  to { stroke-dashoffset: 0; }
+}
+.torn-map-draw {
+  stroke-dasharray: var(--tm-len, 400);
+  animation: torn-map-draw 0.9s var(--ease-out-quart, ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .torn-map-draw { animation: none; stroke-dashoffset: 0; }
+}
+
 /* Circuit divider: a signal pulse traveling the seam between sections */
 .circuit-line {
   position: relative;
@@ -1014,6 +1080,97 @@ html.resume-mode .palette-trigger {
   .btn-primary:active {
     transform: none;
   }
+}
+
+/* --- Interaction kit (2026-09-27-controls-spec.md §3) ---------------------
+ * .ctrl/.ctrl-icon generalize .btn-primary's own hover-lift + crisp-press
+ * recipe (above) to every plain button/link/pill in the app — one class
+ * instead of copy-pasting transform/transition per component. .sheet lifts
+ * .instrument-view's @starting-style entrance (below) into a reusable
+ * overlay-entrance class, replacing the flat `.palette-in` fade at both its
+ * call sites. */
+.ctrl {
+  transition: transform var(--dur-fast) var(--ease-spring),
+    color var(--dur-fast) var(--ease-out-quart),
+    background-color var(--dur-fast) var(--ease-out-quart),
+    border-color var(--dur-fast) var(--ease-out-quart);
+}
+.ctrl:hover { transform: translateY(-1px); }
+.ctrl:active { transform: translateY(0) scale(0.96); transition-duration: 0.09s; }
+
+/* Smaller lift for 32-40px icon/round buttons — a 1px lift reads fine on a
+   pill, it reads jittery on a 36px circle. Same transition list as .ctrl,
+   restated rather than `inherit`: every real call site uses .ctrl-icon on
+   its own (never alongside .ctrl on the same element), and `inherit` reads
+   the ELEMENT's parent, not a sibling class — used alone it would resolve to
+   "no transition" on every button that has it. */
+.ctrl-icon {
+  transition: transform var(--dur-fast) var(--ease-spring),
+    color var(--dur-fast) var(--ease-out-quart),
+    background-color var(--dur-fast) var(--ease-out-quart),
+    border-color var(--dur-fast) var(--ease-out-quart);
+}
+.ctrl-icon:hover { transform: scale(1.06); }
+.ctrl-icon:active { transform: scale(0.92); transition-duration: 0.09s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl, .ctrl-icon,
+  .ctrl:hover, .ctrl:active,
+  .ctrl-icon:hover, .ctrl-icon:active {
+    transform: none;
+    transition-duration: 1ms;
+  }
+}
+
+/* The generalized overlay entrance — every dialog/panel/drawer that either
+   had no entrance or a flat `.palette-in` fade converges here. */
+.sheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo);
+}
+@starting-style {
+  .sheet { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; }
+}
+/* Exit state for the one true animate-on-unmount case (InstrumentView) —
+   mirrors .sheet's own @starting-style values so open/close feel symmetric.
+   `:is(.sheet, .instrument-view).sheet-out`, not `.sheet-out` alone: a bare
+   single-class rule ties with .instrument-view's own opacity/transform decl
+   at equal (0,1,0) specificity, and .instrument-view is declared LATER in
+   this file, so the tie would go to it and silently no-op the exit. The :is()
+   wrapper bumps this to (0,2,0) so it wins regardless of source order. */
+:is(.sheet, .instrument-view).sheet-out {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+/* Thumbstick spring-back (world/Hud.tsx): transition is added only between
+   release and the next grab, never while a pointer is captured, so the knob
+   still tracks 1:1 during a drag and only springs back on release. */
+.thumb-knob-spring {
+  transition: left var(--dur-fast) var(--ease-spring), top var(--dur-fast) var(--ease-spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb-knob-spring { transition: none; }
+}
+
+/* Chess board square hover/press (chess/BoardSurface.tsx) — box-shadow, not
+   background-color: the square's real background (pick/target highlight) is
+   set as an inline style, which always wins over a stylesheet rule for the
+   same property, so a hover background here would silently never paint. */
+.chess-square-ctrl {
+  transition: box-shadow var(--dur-fast) var(--ease-out-quart);
+}
+.chess-square-ctrl:hover {
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.05);
+}
+.chess-square-ctrl:active {
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.1);
+  transition-duration: 0.09s;
 }
 
 /* Progressive-disclosure expanders (native <details>) */
@@ -3246,20 +3403,6 @@ html.resume-mode .palette-trigger {
 }
 @media (prefers-reduced-motion: reduce) {
   .live-badge {
-    animation: none;
-  }
-}
-
-/* Command palette entrance */
-@keyframes palette-in {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  to { opacity: 1; transform: none; }
-}
-.palette-in {
-  animation: palette-in 0.18s ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .palette-in {
     animation: none;
   }
 }

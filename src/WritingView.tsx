@@ -2,6 +2,7 @@ import { ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { writing, writingGeneratedAt } from "./data/writing.ts";
 import { Reveal } from "./Reveal.tsx";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 import { TiltCard } from "./TiltCard.tsx";
 import { openChat } from "./FloatingChat.tsx";
 import { useSectionNav } from "./lib/navigation.ts";
@@ -230,6 +231,7 @@ export function WritingView() {
         <section className="border-t border-line section-y">
           <h2 className="font-display text-xs font-bold uppercase tracking-widest text-muted">Series</h2>
           <div className="mt-5 flex flex-wrap gap-3">
+            <StaggerReveal step={50}>
             {series.map((s) => {
               const cover = seriesArt(s.id);
               return (
@@ -260,6 +262,7 @@ export function WritingView() {
                 </span>
               );
             })}
+            </StaggerReveal>
           </div>
         </section>
 

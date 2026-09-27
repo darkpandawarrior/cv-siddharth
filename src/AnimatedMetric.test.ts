@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AnimatedMetric } from "./AnimatedMetric.tsx";
+import { AnimatedMetric, sparkPathFrom } from "./AnimatedMetric.tsx";
 
 /**
  * THE NUMBER HAS TO BE IN THE MARKUP.
@@ -39,5 +39,22 @@ describe("AnimatedMetric server markup", () => {
     const html = cases.map(render).join("");
     // The exact shape the bug produced: >0k+< and >0%< .
     expect(html).not.toMatch(/>0[k%]/);
+  });
+});
+
+describe("sparkPathFrom (real-trend mode)", () => {
+  it("falls back to the decorative default path for fewer than 2 points", () => {
+    expect(sparkPathFrom([])).toBe("M2,20 L14,16 L26,18 L38,10 L50,12 L62,4");
+    expect(sparkPathFrom([5])).toBe("M2,20 L14,16 L26,18 L38,10 L50,12 L62,4");
+  });
+
+  it("maps the highest real value to the top of the viewBox and the lowest to the bottom", () => {
+    const d = sparkPathFrom([0, 10]);
+    expect(d).toBe("M2.0,20.0 L62.0,4.0");
+  });
+
+  it("never divides by zero for a flat real series", () => {
+    const d = sparkPathFrom([7, 7, 7]);
+    expect(d).toBe("M2.0,20.0 L32.0,20.0 L62.0,20.0");
   });
 });

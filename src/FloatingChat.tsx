@@ -251,11 +251,11 @@ const SLASH_COMMANDS: { name: string; usage: string; help: string; run: (arg: st
   },
 ];
 
-const ICON_BUTTON = "rounded p-1 text-muted transition hover:text-accent focus-visible:text-accent focus-visible:outline-none";
+const ICON_BUTTON = "ctrl-icon rounded p-1 text-muted hover:text-accent focus-visible:text-accent focus-visible:outline-none";
 // The composer's round controls (mic, reader, send) — same 36px hit target as
 // the send button so a phone user can hit any of them.
 const COMPOSER_BUTTON =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line transition focus-visible:border-accent focus-visible:outline-none";
+  "ctrl-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line focus-visible:border-accent focus-visible:outline-none";
 
 /**
  * The honest version of what "voice input" does. Chrome's SpeechRecognition is
@@ -835,7 +835,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
           ref={panelRef}
           role="dialog"
           aria-label="Panda, Siddharth’s AI assistant"
-          className={`panel fixed z-50 flex flex-col overflow-hidden shadow-2xl print:hidden ${ expanded ? "inset-2 sm:inset-6 lg:inset-10" : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]" }`}
+          className={`sheet panel fixed z-50 flex flex-col overflow-hidden shadow-2xl print:hidden ${ expanded ? "inset-2 sm:inset-6 lg:inset-10" : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]" }`}
         >
           {/* A plain div, not <header>: inside a role="dialog" this is the
               panel's own title bar, but HTML-AAM still maps <header> to the
@@ -1018,7 +1018,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                   onMouseEnter={() => setMenuIndex(i)}
                   onMouseDown={(e) => e.preventDefault()} // keep focus in the input
                   onClick={() => submit(`/${c.name}`)}
-                  className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2 py-1.5 ${
+                  className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2 py-1.5 transition-colors duration-(--dur-fast) ${
                     i === menuIndex ? "bg-surface" : ""
                   }`}
                 >
@@ -1228,7 +1228,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                 type="button"
                 onClick={stop}
                 aria-label="Stop generating"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent2 text-ink transition"
+                className="ctrl-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent2 text-ink"
               >
                 <Square size={12} fill="currentColor" />
               </button>
@@ -1237,7 +1237,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                 type="submit"
                 disabled={!input.trim()}
                 aria-label="Send"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-ink transition disabled:opacity-40"
+                className="ctrl-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-ink disabled:opacity-40"
               >
                 <Send size={15} />
               </button>

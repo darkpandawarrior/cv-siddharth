@@ -3,6 +3,7 @@ import { ArrowUpRight, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { excelsiorEditions } from "./data/excelsior.ts";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 import { readProgress } from "./lib/excelsiorProgress.ts";
 import { heavy } from "./lib/assetBase.ts";
 
@@ -143,9 +144,11 @@ export function ExcelsiorShelf() {
   return (
     <div>
       <div className="magazine-shelf">
-        {EXCELSIOR.map((ed) => (
-          <EditionCard key={ed.year} ed={ed} onOpen={setOpen} />
-        ))}
+        <StaggerReveal step={80}>
+          {EXCELSIOR.map((ed) => (
+            <EditionCard key={ed.year} ed={ed} onOpen={setOpen} />
+          ))}
+        </StaggerReveal>
       </div>
 
       {open?.spread && (

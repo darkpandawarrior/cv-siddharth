@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { boardProfiles } from "./data/beforeTheCode.ts";
+import { StaggerReveal } from "./StaggerReveal.tsx";
 
 /**
  * The EB Profiles grid: one card per Editorial Board year, each a teammate's
@@ -12,10 +13,11 @@ import { boardProfiles } from "./data/beforeTheCode.ts";
  * same JSX drifting apart. Each caller supplies its own heading and intro
  * paragraph — the framing differs by room, the cards don't.
  */
-export function BoardProfilesGrid() {
-  return (
-    <div className="mt-6 grid gap-4 md:grid-cols-3">
-      {boardProfiles.map((p) => (
+/** `stagger`: opt-in, defaults to false — the homepage's own EB Profiles
+ *  section renders this same grid and is out of this pass's scope (the
+ *  hero-surface fence); /ink's WritingSection turns it on. */
+export function BoardProfilesGrid({ stagger = false }: { stagger?: boolean } = {}) {
+  const cards = boardProfiles.map((p) => (
         <Link
           key={p.year}
           to="/excelsior"
@@ -40,7 +42,10 @@ export function BoardProfilesGrid() {
             Excelsior &rsquo;{p.year.slice(2)} · page {p.page} &rarr;
           </span>
         </Link>
-      ))}
+  ));
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-3">
+      {stagger ? <StaggerReveal step={50}>{cards}</StaggerReveal> : cards}
     </div>
   );
 }

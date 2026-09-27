@@ -242,7 +242,7 @@ function BlueprintRoomInner() {
               away. */}
           <div className="flex items-center gap-2 sm:gap-3">
             <LauncherButton />
-            <BackToPortfolio className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
+            <BackToPortfolio className="ctrl flex items-center gap-2 text-sm text-zinc-400 hover:text-accent">
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </BackToPortfolio>
           </div>
@@ -277,7 +277,7 @@ function BlueprintRoomInner() {
                     // it right.
                     aria-label={`${label} — ${disabled ? unavailable : hint}`}
                     aria-pressed={mode === id}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                    className={`ctrl flex items-center gap-1.5 rounded-full px-3 py-1 disabled:cursor-not-allowed disabled:opacity-40 ${
                       mode === id ? "bg-accent text-ink" : "text-zinc-400 hover:text-accent"
                     }`}
                   >
@@ -293,7 +293,7 @@ function BlueprintRoomInner() {
               // "next: X" — a 2.5.3 mismatch that only appears after the first
               // click, which is why the scan (which never clicks) missed it.
               aria-label={stop === -1 ? "Start guided tour" : `Guided tour — next: ${TOUR[(stop + 1) % TOUR.length].title}`}
-              className="flex items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10 sm:px-4"
+              className="ctrl flex items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 hover:border-accent2 hover:bg-accent2/10 sm:px-4"
             >
               <Play size={13} /> <span className="label-wide">{stop === -1 ? "guided tour" : `next: ${TOUR[(stop + 1) % TOUR.length].title}`}</span>
             </button>
@@ -303,7 +303,7 @@ function BlueprintRoomInner() {
                   onClick={() => setZoomOutTick((t) => t + 1)}
                   title="Zoom out"
                   aria-label="Zoom out"
-                  className="rounded-full p-2 text-zinc-400 transition hover:text-accent"
+                  className="ctrl-icon rounded-full p-2 text-zinc-400 hover:text-accent"
                 >
                   <ZoomOut size={14} />
                 </button>
@@ -311,7 +311,7 @@ function BlueprintRoomInner() {
                   onClick={() => setZoomInTick((t) => t + 1)}
                   title="Zoom in"
                   aria-label="Zoom in"
-                  className="rounded-full p-2 text-zinc-400 transition hover:text-accent"
+                  className="ctrl-icon rounded-full p-2 text-zinc-400 hover:text-accent"
                 >
                   <ZoomIn size={14} />
                 </button>
@@ -321,14 +321,14 @@ function BlueprintRoomInner() {
               onClick={resetView}
               title="Reset the camera and layout"
               aria-label="Reset the camera and layout"
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
+              className="ctrl flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-zinc-400 hover:border-accent hover:text-accent"
             >
               <RotateCcw size={13} /> <span className="label-wide">Reset</span>
             </button>
             <DeferredPresenceBadge className="hidden md:flex" />
             <button
               onClick={() => openChat()}
-              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
+              className="ctrl rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4"
             >
               Ask <span className="label-wide">my AI</span>
             </button>

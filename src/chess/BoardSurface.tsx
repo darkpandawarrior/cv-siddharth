@@ -167,7 +167,7 @@ export function BoardSurface({
                 }`}
                 onFocus={() => setCursor(square)}
                 onKeyDown={onSquareKeyDown}
-                className="block cursor-pointer border-0 p-0 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
+                className="chess-square-ctrl block cursor-pointer border-0 p-0 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
                 style={style}
               >
                 {children}
