@@ -19,6 +19,15 @@ const centroidByCc = new Map(centroids.map((c) => [c.iso2, c] as const));
  * count (GlobePanel's own row, not this layer) but no per-country dots, T3
  * drops the presence layer entirely.
  */
+// living-earth L4: a soft pulsing disc reads as a live presence heartbeat
+// rather than a static cyan dot -- a plain CSS animation (not r3f/WebGL),
+// same as ArcLayer's dash marker communicates the same "arriving now" idea
+// on the WebGL side. `prefers-reduced-motion` freezes it via the media
+// query itself (no JS branch needed for a CSS-only animation).
+const PULSE_KEYFRAMES = `@keyframes globe-live-dot-pulse{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.6);opacity:0.35}}
+.globe-live-dot-ring{animation:globe-live-dot-pulse 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.globe-live-dot-ring{animation:none;opacity:0.6}}`;
+
 export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObject<Object3D>[] }) {
   const counts = usePresenceGeo();
   if (tier !== 1) return null;
@@ -33,10 +42,12 @@ export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObje
         const position: [number, number, number] = [p.x * r, p.y * r, p.z * r];
         return (
           <Html key={cc} position={position} center distanceFactor={10} occlude={occlude} style={{ pointerEvents: "none" }}>
+            <style>{PULSE_KEYFRAMES}</style>
             <span
               data-live-dot={cc}
               title={`${n} here now from ${centroid.name}`}
               style={{
+                position: "relative",
                 display: "block",
                 width: 8,
                 height: 8,
@@ -44,7 +55,19 @@ export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObje
                 background: "#5ee6ff",
                 boxShadow: "0 0 6px 2px rgba(94,230,255,0.7)",
               }}
-            />
+            >
+              <span
+                aria-hidden
+                className="globe-live-dot-ring"
+                style={{
+                  position: "absolute",
+                  inset: -4,
+                  borderRadius: "50%",
+                  border: "1px solid rgba(94,230,255,0.8)",
+                  animationDelay: `${(cc.charCodeAt(0) % 5) * 0.3}s`,
+                }}
+              />
+            </span>
           </Html>
         );
       })}
