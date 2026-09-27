@@ -45,6 +45,17 @@ export interface Selection {
 export type LayerHealth = { state: "loading" | "live" | "snapshot" | "failed"; detail?: string };
 export type StatusKey = LayerId | "earth";
 
+/** Phones show one bottom sheet at a time; opening one closes the others. */
+export type GlobeSheet = "layers" | "time" | "tour" | "inspector" | null;
+
+/** The NASA GIBS imagery stack (ui/LayerCatalog.tsx edits it, layers/
+ *  TileLayer.tsx draws it): one base layer plus overlays drawn above it in
+ *  order, each at its own opacity. Ids are GIBS layer identifiers. */
+export interface ImageryStack {
+  base: string;
+  overlays: { id: string; opacity: number }[];
+}
+
 interface GlobeState {
   style: EarthStyle;
   layers: Record<LayerId, boolean>;
@@ -56,6 +67,8 @@ interface GlobeState {
   /** Index into the guided tour's stops, or null when no tour is running. */
   tourStep: number | null;
   status: Partial<Record<StatusKey, LayerHealth>>;
+  sheet: GlobeSheet;
+  imagery: ImageryStack;
   setStyle: (style: EarthStyle) => void;
   toggleLayer: (id: LayerId) => void;
   setView: (view: GlobeView) => void;
@@ -64,6 +77,8 @@ interface GlobeState {
   setTimeOffset: (minutes: number) => void;
   setTourStep: (step: number | null) => void;
   setStatus: (key: StatusKey, health: LayerHealth | undefined) => void;
+  setSheet: (sheet: GlobeSheet) => void;
+  setImagery: (imagery: ImageryStack) => void;
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
@@ -75,6 +90,8 @@ export const useGlobe = create<GlobeState>((set) => ({
   timeOffsetMin: 0,
   tourStep: null,
   status: {},
+  sheet: null,
+  imagery: { base: "VIIRS_SNPP_CorrectedReflectance_TrueColor", overlays: [] },
   setStyle: (style) => set({ style }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setView: (view) => set({ view }),
@@ -83,6 +100,8 @@ export const useGlobe = create<GlobeState>((set) => ({
   setTimeOffset: (timeOffsetMin) => set({ timeOffsetMin }),
   setTourStep: (tourStep) => set({ tourStep }),
   setStatus: (key, health) => set((s) => ({ status: { ...s.status, [key]: health } })),
+  setSheet: (sheet) => set({ sheet }),
+  setImagery: (imagery) => set({ imagery }),
 }));
 
 /** The simulated instant every time-aware layer draws: the real clock plus
