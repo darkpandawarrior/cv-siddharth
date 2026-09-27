@@ -237,6 +237,13 @@ export function ReplayLab() {
             the full story → Stutter's determinism gate
           </Link>
         </div>
+        {/* PATH-7: press E on the Sangam hodi to see this same contract
+         *  outside a lab canvas: driveSpline.ts's step() replaces this
+         *  file's own physicsStep(), echo.ts's replayEcho() replaces
+         *  replay(), same shape, real river. */}
+        <p className="border-t border-line px-5 py-3 font-mono text-xs text-muted">
+          the same math drives the ghost boat in the valley
+        </p>
       </div>
     </div>
   );
