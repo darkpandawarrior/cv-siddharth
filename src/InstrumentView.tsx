@@ -88,11 +88,20 @@ export default function InstrumentView({ open, onClose, recentSignals = [] }: In
 
   // Move focus in the moment the overlay opens. Closing's focus return is
   // the caller's job (AnomalyRail owns "the rail element" this returns to).
+  //
+  // Depends on `mounted`, not just `open`: on a fresh open (mounted starts
+  // false), `if (!mounted) return null` below means THIS render still
+  // returns null when this effect's own commit runs, so dialogRef.current
+  // is null the first time — and since `open` itself doesn't change again,
+  // an `[open]`-only effect never got a second chance to run once the
+  // dialog actually mounted. Introduced alongside the exit-motion's
+  // `mounted` gate (living-ledger's §3.3); focus silently stopped landing
+  // in the dialog on open until this effect started watching `mounted` too.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !mounted) return;
     const first = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
     first?.focus();
-  }, [open]);
+  }, [open, mounted]);
 
   // Inert everything else at the document.body level while open. Trapping
   // Tab (below) only stops keyboard focus from leaving the dialog — a screen
@@ -113,7 +122,10 @@ export default function InstrumentView({ open, onClose, recentSignals = [] }: In
   // `inert` is inherited: an inert ancestor makes this whole dialog (and the
   // "first focusable" `.focus()` above) silently inert right along with it.
   useEffect(() => {
-    if (!open) return;
+    // Same `mounted`-not-just-`open` requirement as the focus effect above:
+    // on a fresh open, dialogRef.current is still null the one time an
+    // `[open]`-only effect would have run.
+    if (!open || !mounted) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
     const toInert: HTMLElement[] = [];
@@ -132,7 +144,7 @@ export default function InstrumentView({ open, onClose, recentSignals = [] }: In
     return () => {
       for (const el of toInert) el.inert = false;
     };
-  }, [open]);
+  }, [open, mounted]);
 
   // Background scroll lock. Plain `overflow: hidden` rather than the classic
   // `position: fixed` body trick — that trick has to record scrollY and
@@ -179,9 +191,12 @@ export default function InstrumentView({ open, onClose, recentSignals = [] }: In
   }, [open, onClose]);
 
   // Not rendered at all once the exit beat above has run — see the doc
-  // comment above. Every effect above the exit timer is still gated on
-  // `open` (not `mounted`), so they fire/tear down exactly when they always
-  // did; only the JSX stays a beat longer.
+  // comment above. The scroll-lock and Tab/Escape listener just above stay
+  // `open`-gated: neither reads `dialogRef.current` at effect-setup time (the
+  // keydown handler only queries it lazily, once a key is actually pressed),
+  // so they fire/tear down exactly when they always did. The focus and inert
+  // effects further up do read `dialogRef.current` at setup time and had to
+  // start watching `mounted` too — see their own comments.
   if (!mounted) return null;
 
   return (

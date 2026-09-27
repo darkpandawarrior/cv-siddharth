@@ -87,22 +87,10 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
       )}
       {hasWebGL && onZoomIn && onZoomOut && (
         <div className="pointer-events-auto flex items-center rounded-full border border-line bg-ink/70 backdrop-blur">
-          <button
-            type="button"
-            onClick={onZoomOut}
-            aria-label="Zoom out"
-            title="Zoom out"
-            className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent"
-          >
+          <button type="button" onClick={onZoomOut} aria-label="Zoom out" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
             <ZoomOut size={13} />
           </button>
-          <button
-            type="button"
-            onClick={onZoomIn}
-            aria-label="Zoom in"
-            title="Zoom in"
-            className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent"
-          >
+          <button type="button" onClick={onZoomIn} aria-label="Zoom in" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
             <ZoomIn size={13} />
           </button>
         </div>

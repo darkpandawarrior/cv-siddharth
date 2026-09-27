@@ -333,7 +333,12 @@ export default function AnomalyRail() {
   const prevOpsRef = useRef<Record<string, { state: string }> | null>(null);
   useEffect(() => {
     if (!ops) return;
-    const next = Object.fromEntries(ops.runs.map((r) => [r.workflow, { state: r.conclusion }]));
+    // ops.runs is typed as always-present (api/_lib/ops-handler.ts's own
+    // EMPTY fallback sets it to []), but a disconnected/degraded response
+    // still satisfies `Ops` structurally without it in practice — OpsBoard.tsx
+    // already guards the same field with `ops?.runs ?? []`; this effect needs
+    // the same guard, not just the `!ops` check above.
+    const next = Object.fromEntries((ops.runs ?? []).map((r) => [r.workflow, { state: r.conclusion }]));
     for (const workflow of stateFlips(prevOpsRef.current, next)) {
       pushRipple({
         y: DEVIATION_PAD / 2,

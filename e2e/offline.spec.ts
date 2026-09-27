@@ -86,8 +86,15 @@ test("/chess renders the room from committed data with no network", async ({ pag
     { timeout: 20_000 },
   );
 
-  // corpus.json's own stamp — only rendered once the fetch resolved and parsed.
-  await expect(page.locator("#main-content")).toContainText(/corpus generated \d{4}-\d{2}-\d{2}/);
+  // corpus.json's own stamp used to get its own footer paragraph
+  // ("corpus generated YYYY-MM-DD"); the stagger-sweep pass deleted it as
+  // redundant with EvidenceChip's "as of" date higher on the page. That chip
+  // reads the bundled chess.ts stamp, not the runtime fetch, so it is not a
+  // like-for-like replacement for THIS test's purpose — but the
+  // "Where the arc changes hands" assertion above already proves the fetched
+  // corpus resolved and parsed (it quotes numbers straight out of
+  // corpus.arc), so the guarantee this line existed for is still covered and
+  // nothing here needs a dated-stamp check of its own any more.
 
   // Not an assertion, a breadcrumb: if this ever prints a lichess or chess.com
   // URL, the room grew a runtime API call and the offline property is gone.
