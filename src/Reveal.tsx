@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, createElement, type ElementType, type ReactNode } from "react";
 
 /**
  * Fades sections in as they scroll into view; `delay` staggers siblings.
@@ -18,12 +18,19 @@ export function Reveal({
   children,
   className = "",
   delay = 0,
+  as = "div",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   delay?: number;
+  /** The root element's tag. Defaults to "div"; StaggerReveal passes "tr" for
+   *  a table's rows, since wrapping a <tr> in a <div> would break the table
+   *  and get auto-corrected out of the DOM. CSS `transform`/`opacity` apply
+   *  to table-row boxes same as any other box, so no special-casing needed
+   *  in index.css. */
+  as?: ElementType;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -44,9 +51,12 @@ export function Reveal({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  return (
-    <div ref={ref} className={`reveal ${className}`} style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
-      {children}
-    </div>
+  // createElement rather than JSX with a variable tag: a union `as` type
+  // makes JSX's element-type overload resolution collapse shared props like
+  // `children` to `never` (TS2745) — createElement has no such overload set.
+  return createElement(
+    as,
+    { ref, className: `reveal ${className}`, style: delay ? { transitionDelay: `${delay}ms` } : undefined },
+    children,
   );
 }

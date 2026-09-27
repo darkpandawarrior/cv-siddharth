@@ -910,6 +910,72 @@ html.resume-mode .palette-trigger {
   .cell-flash-good { animation: none; }
 }
 
+/* Aliveness kit: idle phase-offset "breathing" for a card grid — lifted out
+   of AnomalyRail's own canvas-drawn pulse (2.6s period, phase-shifted per
+   dot so nothing blinks in unison) into a reusable CSS utility. Set --i to
+   the item's index (the same index already looped over for StaggerReveal).
+   Pure decoration — never implies real activity on its own. */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.015); opacity: 0.96; }
+}
+.breathe {
+  animation: breathe 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 390ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .breathe { animation: none; }
+}
+
+/* Aliveness kit: LiveNumber's flash-on-change, the financial-ticker
+   convention (a changed cell flashes rather than silently updating). Same
+   color-mix(accent) idiom the rest of this file uses for a transient glow. */
+@keyframes live-number-flash {
+  0% { background: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+  100% { background: transparent; }
+}
+.live-number-flash { animation: live-number-flash 0.4s ease-out; border-radius: 0.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  .live-number-flash { animation: none; }
+}
+
+/* Aliveness kit: GatewayCompare's cross-fade on a real, user-driven
+   selection change (a React `key` change remounts the element, retriggering
+   this animation — never a timer). */
+@keyframes gateway-compare-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gateway-compare-fade { animation: gateway-compare-fade-in 0.2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .gateway-compare-fade { animation: none; }
+}
+
+/* Aliveness kit: /weeb's STATUSES bars fill 0→width on the SAME Reveal
+   trigger the section already has, instead of a second observer. The
+   duration itself is Tailwind's own `duration-700` utility class on the bar
+   element (same value Pulse.tsx's Bar already animates its width over) —
+   this rule only supplies the "start at zero while armed-but-not-yet-
+   revealed" override, the exact `.reveal.reveal-armed:not(.revealed)` state
+   Reveal.tsx itself defines, so a reduced-motion visitor (who never gets
+   `.reveal-armed` at all) always sees the real width, never a stuck zero. */
+.reveal.reveal-armed:not(.revealed) .weeb-bar { width: 0 !important; }
+
+/* Aliveness kit: the 404 page's torn-map glyph draws its tear in once, on
+   mount — a fixed-guess stroke length (decorative art, not a data path, so
+   an approximate length is fine) instead of a JS getTotalLength() call. */
+@keyframes torn-map-draw {
+  from { stroke-dashoffset: var(--tm-len, 400); }
+  to { stroke-dashoffset: 0; }
+}
+.torn-map-draw {
+  stroke-dasharray: var(--tm-len, 400);
+  animation: torn-map-draw 0.9s var(--ease-out-quart, ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .torn-map-draw { animation: none; stroke-dashoffset: 0; }
+}
+
 /* Circuit divider: a signal pulse traveling the seam between sections */
 .circuit-line {
   position: relative;
