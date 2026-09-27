@@ -1,6 +1,8 @@
 import { useEffect, useMemo, type ReactNode } from "react";
+import { useCursorPresences } from "@playhtml/react";
 import { usePulse, usePulseCounts } from "./pulse.ts";
 import { PulseContext, type PulseUI } from "./pulseUI.ts";
+import { publishPresence } from "./presenceBus.ts";
 
 /**
  * Fills PulseContext with the real shared counter.
@@ -22,5 +24,11 @@ export function PulseBridge({ publish }: { publish: (value: PulseUI) => void }) 
   const counts = usePulseCounts();
   const bump = usePulse();
   useEffect(() => { publish({ counts, bump }); }, [counts, bump, publish]);
+  // AnomalyRail's presence ripple (live-rail-spec §4, Lane C): this bridge
+  // already runs inside the real PlayProvider and already re-renders on
+  // every presence change, so republishing its size costs nothing new here —
+  // presenceBus.ts is the module-scope-independent read side.
+  const presenceSize = useCursorPresences().size;
+  useEffect(() => { publishPresence(presenceSize); }, [presenceSize]);
   return null;
 }
