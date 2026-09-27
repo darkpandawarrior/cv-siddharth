@@ -8,6 +8,9 @@ import { subsolarPoint } from "../../lib/sky.ts";
 
 const RAD = Math.PI / 180;
 
+/** The render-space earth radius every globe layer scales unit vectors by. */
+export const GLOBE_RADIUS = 6;
+
 export interface LatLon {
   lat: number;
   lon: number;

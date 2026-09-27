@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -8,6 +8,14 @@ import { deviceTier } from "./world/deviceTier.ts";
 import { GlobeScene } from "./world/globe/GlobeScene.tsx";
 import { GlobeHud } from "./world/globe/GlobeHud.tsx";
 import { GlobePanel } from "./world/globe/GlobePanel.tsx";
+import { useGlobe } from "./world/globe/globeStore.ts";
+
+// The living-earth UI (layer panel, inspector, time scrubber, tour): client
+// only, one lazy chunk each, mounted beside the canvas they drive.
+const LayerPanel = lazy(() => import("./world/globe/ui/LayerPanel.tsx"));
+const Inspector = lazy(() => import("./world/globe/ui/Inspector.tsx"));
+const TimeScrubber = lazy(() => import("./world/globe/ui/TimeScrubber.tsx"));
+const GlobeTour = lazy(() => import("./world/globe/ui/GlobeTour.tsx"));
 
 const sceneLoadingFallback = (
   <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the globe…</div>
@@ -53,7 +61,8 @@ export function Globe() {
   const [zoomInTick, setZoomInTick] = useState(0);
   const [zoomOutTick, setZoomOutTick] = useState(0);
   const [autoRotatePaused, setAutoRotatePaused] = useState(false);
-  const [markersHidden, setMarkersHidden] = useState(false);
+  const markersShown = useGlobe((s) => s.layers.markers);
+  const toggleLayer = useGlobe((s) => s.toggleLayer);
 
   useEffect(() => {
     setCapable(hasWebGL());
@@ -73,8 +82,8 @@ export function Globe() {
         onZoomOut={() => setZoomOutTick((t) => t + 1)}
         autoRotatePaused={autoRotatePaused}
         onToggleAutoRotate={() => setAutoRotatePaused((p) => !p)}
-        markersHidden={markersHidden}
-        onToggleMarkers={() => setMarkersHidden((h) => !h)}
+        markersHidden={!markersShown}
+        onToggleMarkers={() => toggleLayer("markers")}
       />
       {showScene && (
         <ClientOnly fallback={sceneLoadingFallback}>
@@ -85,9 +94,18 @@ export function Globe() {
               zoomInTick={zoomInTick}
               zoomOutTick={zoomOutTick}
               autoRotatePaused={autoRotatePaused}
-              showMarkers={!markersHidden}
             />
           </Hydrate>
+        </ClientOnly>
+      )}
+      {showScene && (
+        <ClientOnly fallback={null}>
+          <Suspense fallback={null}>
+            <LayerPanel tier={tier} />
+            <Inspector tier={tier} />
+            <TimeScrubber tier={tier} />
+            <GlobeTour tier={tier} />
+          </Suspense>
         </ClientOnly>
       )}
       <div

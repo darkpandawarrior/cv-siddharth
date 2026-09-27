@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -10,8 +10,18 @@ import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
 import { LiveDots } from "./LiveDots.tsx";
-import { OrbitLayer } from "./OrbitLayer.tsx";
 import { LocalTraffic } from "./LocalTraffic.tsx";
+import { useGlobe, useSimNow } from "./globeStore.ts";
+
+// One lazy chunk per layer (living-earth plan): the Globe chunk stays the
+// scene shell, and a layer a tier or a toggle never shows is never fetched.
+const EarthImagery = lazy(() => import("./layers/EarthImagery.tsx"));
+const SkyLayer = lazy(() => import("./layers/SkyLayer.tsx"));
+const SatelliteLayer = lazy(() => import("./layers/SatelliteLayer.tsx"));
+const PulseLayer = lazy(() => import("./layers/PulseLayer.tsx"));
+const ArcLayer = lazy(() => import("./layers/ArcLayer.tsx"));
+const HazardLayer = lazy(() => import("./layers/HazardLayer.tsx"));
+const CameraDirector = lazy(() => import("./CameraDirector.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -145,9 +155,6 @@ export interface GlobeSceneProps {
   /** The manual pause toggle in GlobeHud (§2, Auto-rotate row) — a visitor
    *  can permanently stop the spin without needing reduced-motion OS-wide. */
   autoRotatePaused?: boolean;
-  /** GlobeHud's markers toggle: false hides the Pune card, the reach
-   *  columns and the employer ring. */
-  showMarkers?: boolean;
 }
 
 /**
@@ -160,14 +167,25 @@ export interface GlobeSceneProps {
  * LIVE" rule - a visitor who toggles the OS setting mid-session, or a test
  * that calls `emulateMedia` after load, must see auto-rotate actually stop.
  */
-export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false, showMarkers = true }: GlobeSceneProps) {
+export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false }: GlobeSceneProps) {
   const probeRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   // The ocean sphere, handed to every <Html> callout as its occluder so a
   // label on the far side hides instead of floating over the globe.
   const earthRef = useRef<THREE.Mesh>(null!);
   const reducedMotion = useReducedMotion();
-  const autoRotate = !reducedMotion && tier !== 3 && !autoRotatePaused;
+  // Orbit view only: ground and follow views hand the camera to
+  // CameraDirector, and a spinning orbit would fight it.
+  const view = useGlobe((s) => s.view);
+  const autoRotate = !reducedMotion && tier !== 3 && !autoRotatePaused && view === "orbit";
+  const style = useGlobe((s) => s.style);
+  const layers = useGlobe((s) => s.layers);
+  // Live feeds cannot time-travel: while the scrubber is off "now" they hide
+  // rather than draw a present-tense reading against a past sky.
+  const live = useGlobe((s) => s.timeOffsetMin === 0);
+  const now = useSimNow(realNow);
+  const count = TIER_DOT_COUNT[tier];
+  const dotsEarth = <EarthDots count={count} now={now} earthRef={earthRef} />;
 
   // Zoom-pill ticks — bump-and-consume, same pattern as Blueprint3D.tsx's
   // CameraRig (see its own comment on the dollyIn/dollyOut naming
@@ -214,16 +232,30 @@ export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRot
           dampingFactor={0.08}
         />
         <SceneRig now={now} probeRef={probeRef} controlsRef={controlsRef} />
-        <EarthDots count={TIER_DOT_COUNT[tier]} now={now} earthRef={earthRef} />
-        {showMarkers && (
+        {style === "imagery" ? (
+          <Suspense fallback={dotsEarth}>
+            <EarthImagery count={count} now={now} tier={tier} earthRef={earthRef} />
+          </Suspense>
+        ) : (
+          dotsEarth
+        )}
+        {layers.markers && (
           <>
             <ReachColumns />
             <Markers occlude={[earthRef]} />
           </>
         )}
-        <LiveDots tier={tier} occlude={[earthRef]} />
-        {tier === 1 && <OrbitLayer />}
-        {tier !== 3 && <LocalTraffic tier={tier} />}
+        {layers.presence && live && <LiveDots tier={tier} occlude={[earthRef]} />}
+        {layers.aircraft && live && tier !== 3 && <LocalTraffic tier={tier} />}
+        {/* Separate boundaries: one slow chunk never holds up another. */}
+        <Suspense fallback={null}>{layers.stars && <SkyLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{layers.satellites && <SatelliteLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{layers.pulses && live && <PulseLayer tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{layers.presence && live && <ArcLayer tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{layers.hazards && <HazardLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>
+          <CameraDirector controlsRef={controlsRef} />
+        </Suspense>
       </Canvas>
     </>
   );
