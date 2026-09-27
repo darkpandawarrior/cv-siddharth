@@ -12,6 +12,7 @@ import { useSky } from "./lib/useSky.ts";
 import { WMO_LABEL } from "./lib/sky.ts";
 import { useLiveSignal } from "./lib/useLiveSignal.ts";
 import { useTouched } from "./lib/sessionRipple.ts";
+import { LiveNumber } from "./LiveNumber.tsx";
 import { projectBySlug } from "./data/profile.ts";
 import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
 
@@ -545,7 +546,9 @@ function PulseInner() {
                   <li key={r.event} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1.5">
                     <span className="font-mono text-[11px] text-muted">{String(i + 1).padStart(2, "0")}</span>
                     <span className="text-sm text-zinc-300">{r.label}</span>
-                    <span className="font-mono text-sm tabular-nums text-signal">{r.count.toLocaleString()}</span>
+                    <span className="font-mono text-sm tabular-nums text-signal">
+                      <LiveNumber value={r.count.toLocaleString()} />
+                    </span>
                     <span className="col-span-3">
                       <Bar count={r.count} max={top5Max} tint="var(--color-signal)" />
                     </span>
@@ -581,7 +584,7 @@ function PulseInner() {
                         <li key={r.event} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5">
                           <span className={`text-sm ${r.count > 0 ? "text-zinc-300" : "text-muted"}`}>{r.label}</span>
                           <span className="font-mono text-sm tabular-nums" style={{ color: r.count > 0 ? tint : undefined }}>
-                            {r.count.toLocaleString()}
+                            <LiveNumber value={r.count.toLocaleString()} />
                           </span>
                           <span className="col-span-2">
                             <Bar count={r.count} max={max} tint={tint} />
@@ -625,7 +628,7 @@ function PulseInner() {
                     <span className="text-muted">reading the live counter…</span>
                   ) : f.entered > 0 && f.engaged > 0 ? (
                     <>
-                      {f.entered.toLocaleString()} came in, {f.engaged.toLocaleString()} things done inside{" "}
+                      <LiveNumber value={f.entered.toLocaleString()} /> came in, <LiveNumber value={f.engaged.toLocaleString()} /> things done inside{" "}
                       <span className="text-muted">· {(f.engaged / f.entered).toFixed(1)}× per visit</span>
                     </>
                   ) : f.entered > 0 ? (
@@ -634,7 +637,7 @@ function PulseInner() {
                        verdict on the room, next to an empty bar — and the
                        ratio adds nothing the two counts have not said. */
                     <>
-                      {f.entered.toLocaleString()} came in,{" "}
+                      <LiveNumber value={f.entered.toLocaleString()} /> came in,{" "}
                       <span className="text-muted">nothing counted inside yet</span>
                     </>
                   ) : f.engaged > 0 ? (
@@ -642,7 +645,7 @@ function PulseInner() {
                        a document anyone can write, so the inside can be ahead
                        of the entry. "Nobody in yet" would be flatly false here. */
                     <span className="text-muted">
-                      {f.engaged.toLocaleString()} things done inside, and no door count to divide them by
+                      <LiveNumber value={f.engaged.toLocaleString()} /> things done inside, and no door count to divide them by
                     </span>
                   ) : (
                     <span className="text-muted">nobody in yet</span>
