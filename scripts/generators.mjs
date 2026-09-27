@@ -171,6 +171,11 @@ export const GENERATORS = [
   { id: "world-plate", script: "gen-world-plate.mjs", npmName: "gen:world-plate", kind: "local",
     inputs: ["src/data/timeline.ts"],
     outputs: ["src/world/corridorPlate.ts", "heavy/p/world/corridor.png"], stages: { refresh: 19 } },
+  // Walks heavy/world/ itself (no declared inputs beyond the directory
+  // listing); generatedAt is the newest file mtime, not Date.now() (G13),
+  // so two runs over the same tree are byte-identical. Local, refresh only.
+  { id: "world-payload", script: "world-v2/gen-world-payload.mjs", npmName: "gen:world-payload", kind: "local",
+    inputs: [], outputs: ["heavy/world/payload.json"], stages: { refresh: 20 } },
   // refresh added by the freshness-pipelines lane: repo-stats only reads the
   // Compose twin (../cv-siddharth-kmp), which refresh-media.yml already
   // checks out for check:generated — it had no refresh entry purely because
