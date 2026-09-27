@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { facets } from "./data/facets";
 import { byChronology, dualStamp, isRecovered } from "./lib/facets";
@@ -34,6 +34,30 @@ interface InstrumentViewProps {
 
 export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  // §3.3: the entrance (@starting-style, on .instrument-view below) had no
+  // matching exit — `if (!open) return null` unmounted this instantly. Stay
+  // mounted for one more --dur-base beat after `open` goes false (painting
+  // `sheet-out`), then actually unmount. Every onClose call site (the close
+  // button, Escape, AnomalyRail's own close/route-change paths) is unchanged
+  // — they still just flip `open` to false; only what happens *inside* this
+  // component between that and the actual unmount is new.
+  const [mounted, setMounted] = useState(open);
+  const [closing, setClosing] = useState(false);
+  const wasOpenRef = useRef(open);
+  useEffect(() => {
+    if (open) {
+      wasOpenRef.current = true;
+      setMounted(true);
+      setClosing(false);
+      return;
+    }
+    if (!wasOpenRef.current) return;
+    wasOpenRef.current = false;
+    setClosing(true);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = window.setTimeout(() => setMounted(false), reduced ? 0 : 300);
+    return () => window.clearTimeout(t);
+  }, [open]);
 
   // Move focus in the moment the overlay opens. Closing's focus return is
   // the caller's job (AnomalyRail owns "the rail element" this returns to).
@@ -127,21 +151,27 @@ export default function InstrumentView({ open, onClose }: InstrumentViewProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  // Not rendered at all while closed — see the doc comment above. Every
-  // effect above is already gated on `open`, so this costs nothing extra:
-  // they simply never fire (open effects) or already tore themselves down
-  // (close effects) by the time this returns null.
-  if (!open) return null;
+  // Not rendered at all once the exit beat above has run — see the doc
+  // comment above. Every effect above the exit timer is still gated on
+  // `open` (not `mounted`), so they fire/tear down exactly when they always
+  // did; only the JSX stays a beat longer.
+  if (!mounted) return null;
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Timeline" className="instrument-view">
-      <button type="button" onClick={onClose} aria-label="Close" className="instrument-view-close">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Timeline"
+      className={`instrument-view${closing ? " sheet-out" : ""}`}
+    >
+      <button type="button" onClick={onClose} aria-label="Close" className="ctrl instrument-view-close">
         Esc
       </button>
       <ol className="instrument-view-list">
         {orderedFacets.map((facet) => (
           <li key={facet.id}>
-            <Link to={facet.to} hash={facet.hash} onClick={onClose} className="instrument-view-link">
+            <Link to={facet.to} hash={facet.hash} onClick={onClose} className="ctrl instrument-view-link">
               <span className="instrument-view-label">{facet.label}</span>
               <span className="instrument-view-stamp">
                 {isRecovered(facet, 2) ? dualStamp(facet) : facet.authored}
