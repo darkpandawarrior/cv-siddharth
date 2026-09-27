@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   EMPTY_STREAM_FALLBACK,
   NATIVE_CLIENT_HEADER,
@@ -1043,6 +1043,10 @@ describe("the Compose generator prompt is server-side (no message-content author
     vi.stubEnv("GROQ_API_KEY", "");
     vi.stubEnv("GEMINI_API_KEY", "");
     vi.stubEnv("ANTHROPIC_API_KEY", "");
+    // CEREBRAS_API_KEY too, or a real one left set in the ambient shell (a dev
+    // machine, an agent session — never CI) configures a provider this test
+    // means to leave empty, and the 503 it expects never fires.
+    vi.stubEnv("CEREBRAS_API_KEY", "");
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = await handleChat(
       new Request("https://cv-siddharth.vercel.app/api/chat", {
@@ -1300,6 +1304,19 @@ describe("normalizeStream", () => {
  * spends the reserve on a request that cannot succeed. */
 describe("provider failover", () => {
   const env = { ...process.env };
+  // Every test below sets only the keys IT cares about and asserts an exact
+  // provider list — hermetic only if the four keys start unset every time.
+  // Without this, a real ANTHROPIC_API_KEY (or GROQ/GEMINI/CEREBRAS) sitting
+  // in the ambient shell — common on a dev machine or an agent session, never
+  // present on CI, which is why this passed there and nowhere else — leaks
+  // an extra "anthropic" into pickProviders()'s result and fails 8 tests.
+  beforeEach(() => {
+    delete process.env.GROQ_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.CEREBRAS_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.CHAT_PROVIDER;
+  });
   afterEach(() => {
     process.env = { ...env };
     vi.unstubAllGlobals();
