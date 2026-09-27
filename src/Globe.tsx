@@ -46,6 +46,13 @@ export function Globe() {
   const sky = useSky();
   const [capable, setCapable] = useState(false);
   const [tier, setTier] = useState<1 | 2 | 3>(1);
+  // §2 (Group A): the zoom pill and the pause toggle live in GlobeHud (plain
+  // DOM, SSR-safe) but drive GlobeScene's OrbitControls (WebGL-only) — this
+  // is the one component that mounts both, so the shared state lives here
+  // rather than either one reaching into the other.
+  const [zoomInTick, setZoomInTick] = useState(0);
+  const [zoomOutTick, setZoomOutTick] = useState(0);
+  const [autoRotatePaused, setAutoRotatePaused] = useState(false);
 
   useEffect(() => {
     setCapable(hasWebGL());
@@ -57,11 +64,25 @@ export function Globe() {
 
   return (
     <div data-globe-root className="relative h-full min-h-[70vh] w-full overflow-hidden bg-void">
-      <GlobeHud sky={sky} tier={tier} hasWebGL={capable} />
+      <GlobeHud
+        sky={sky}
+        tier={tier}
+        hasWebGL={capable}
+        onZoomIn={() => setZoomInTick((t) => t + 1)}
+        onZoomOut={() => setZoomOutTick((t) => t + 1)}
+        autoRotatePaused={autoRotatePaused}
+        onToggleAutoRotate={() => setAutoRotatePaused((p) => !p)}
+      />
       {showScene && (
         <ClientOnly fallback={sceneLoadingFallback}>
           <Hydrate when={load()} split fallback={sceneLoadingFallback}>
-            <GlobeScene now={now} tier={tier} />
+            <GlobeScene
+              now={now}
+              tier={tier}
+              zoomInTick={zoomInTick}
+              zoomOutTick={zoomOutTick}
+              autoRotatePaused={autoRotatePaused}
+            />
           </Hydrate>
         </ClientOnly>
       )}

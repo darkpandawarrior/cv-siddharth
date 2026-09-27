@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { SceneActivity, useReducedMotion } from "../../SceneActivity.tsx";
 import { subsolarPoint } from "../../lib/sky.ts";
 import { latLonToXyz } from "./geoMath.ts";
@@ -11,6 +12,77 @@ import { Markers } from "./Markers.tsx";
 import { LiveDots } from "./LiveDots.tsx";
 import { OrbitLayer } from "./OrbitLayer.tsx";
 import { LocalTraffic } from "./LocalTraffic.tsx";
+
+// §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
+// zoom and keyboard zoom both drive the same dolly OrbitControls itself
+// uses for scroll — same math as Blueprint3D.tsx's own CameraRig, copied
+// (not imported: Blueprint3D's version is tour/reset-flight aware in a way
+// this scene has no equivalent of) because it's the one already-tuned
+// pattern for "orbit + zoom buttons + keyboard" in this codebase. Note
+// three-stdlib's dollyIn/dollyOut naming is the inverse of what it sounds
+// like — dollyIn(x>1) zooms OUT, dollyOut(x>1) zooms IN (Blueprint3D.tsx's
+// own comment, confirmed empirically there).
+const ZOOM_STEP = 1.35;
+const ORBIT_STEP_RAD = 0.12;
+const MIN_POLAR = 0.15;
+const MAX_POLAR = Math.PI * 0.85;
+// How long the ambient spin stays paused after a drag/zoom ends before it
+// resumes — the "politely steps aside and comes back" yield (§2).
+const AUTO_ROTATE_RESUME_MS = 2500;
+
+function isTypingTarget(el: EventTarget | null): boolean {
+  return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+/** True while any modal dialog (command palette, launcher, InstrumentView)
+ *  is open — every one of them renders `aria-modal="true"`, so this needs no
+ *  per-component wiring to stay in step with what's actually open. */
+function isModalOpen(): boolean {
+  return document.querySelector('[aria-modal="true"]') !== null;
+}
+
+/**
+ * Keyboard orbit/zoom — a genuinely new a11y surface (§2): today there is no
+ * keyboard path into the globe's orbit/zoom at all (the Canvas is
+ * `role="img"`, correctly non-interactive to AT, but a sighted keyboard-only
+ * or switch-access visitor got nothing). `+`/`-` dolly the same distance a
+ * zoom-button click does; arrow keys orbit the camera around the current
+ * look target via three's own Spherical helper — the already-installed
+ * primitive for exactly this, rather than hand-rolling the same trig
+ * `geoMath.ts` does for lat/lon placement (this is camera orbit, not sphere
+ * placement, so Spherical is the closer-fitting stdlib tool).
+ */
+function KeyboardOrbit({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target) || isModalOpen()) return;
+      const controls = controlsRef.current;
+      if (!controls) return;
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        controls.dollyOut(ZOOM_STEP);
+        controls.update();
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        controls.dollyIn(ZOOM_STEP);
+        controls.update();
+      } else if (e.key.startsWith("Arrow")) {
+        e.preventDefault();
+        const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+        if (e.key === "ArrowLeft") spherical.theta += ORBIT_STEP_RAD;
+        if (e.key === "ArrowRight") spherical.theta -= ORBIT_STEP_RAD;
+        if (e.key === "ArrowUp") spherical.phi = Math.max(MIN_POLAR, spherical.phi - ORBIT_STEP_RAD);
+        if (e.key === "ArrowDown") spherical.phi = Math.min(MAX_POLAR, spherical.phi + ORBIT_STEP_RAD);
+        camera.position.setFromSpherical(spherical).add(controls.target);
+        controls.update();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [camera, controlsRef]);
+  return null;
+}
 
 // §6.3 Tiers: "dots 6,000 / 2,500 / 1,200 by tier".
 const TIER_DOT_COUNT: Record<1 | 2 | 3, number> = { 1: 6000, 2: 2500, 3: 1200 };
@@ -47,6 +119,14 @@ function SubsolarProbe({ now, probeRef }: { now: Date; probeRef: React.RefObject
 export interface GlobeSceneProps {
   now: Date;
   tier: 1 | 2 | 3;
+  /** Bumped by GlobeHud's zoom-in pill (§2) — one dolly step per bump, same
+   *  tick-count pattern Blueprint3D.tsx's CameraRig already uses. */
+  zoomInTick?: number;
+  /** Bumped by GlobeHud's zoom-out pill. */
+  zoomOutTick?: number;
+  /** The manual pause toggle in GlobeHud (§2, Auto-rotate row) — a visitor
+   *  can permanently stop the spin without needing reduced-motion OS-wide. */
+  autoRotatePaused?: boolean;
 }
 
 /**
@@ -59,10 +139,54 @@ export interface GlobeSceneProps {
  * LIVE" rule - a visitor who toggles the OS setting mid-session, or a test
  * that calls `emulateMedia` after load, must see auto-rotate actually stop.
  */
-export function GlobeScene({ now, tier }: GlobeSceneProps) {
+export function GlobeScene({ now, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false }: GlobeSceneProps) {
   const probeRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const reducedMotion = useReducedMotion();
-  const autoRotate = !reducedMotion && tier !== 3;
+  // §2, Auto-rotate row: a drag/zoom in progress (or its ~2.5s idle grace
+  // period after) holds the ambient spin off, so it never fights the user's
+  // own input mid-gesture — the same "yield to the user" idiom as
+  // Blueprint3D.tsx's CameraRig, generalized from a one-shot flight-yield to
+  // a resumable pause/resume.
+  const [dragActive, setDragActive] = useState(false);
+  const autoRotate = !reducedMotion && tier !== 3 && !autoRotatePaused && !dragActive;
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    let idleTimer: number | undefined;
+    const onStart = () => {
+      window.clearTimeout(idleTimer);
+      setDragActive(true);
+    };
+    const onEnd = () => {
+      idleTimer = window.setTimeout(() => setDragActive(false), AUTO_ROTATE_RESUME_MS);
+    };
+    controls.addEventListener("start", onStart);
+    controls.addEventListener("end", onEnd);
+    return () => {
+      window.clearTimeout(idleTimer);
+      controls.removeEventListener("start", onStart);
+      controls.removeEventListener("end", onEnd);
+    };
+  }, []);
+
+  // Zoom-pill ticks — bump-and-consume, same pattern as Blueprint3D.tsx's
+  // CameraRig (see its own comment on the dollyIn/dollyOut naming inversion).
+  const lastZoomIn = useRef(zoomInTick);
+  const lastZoomOut = useRef(zoomOutTick);
+  useEffect(() => {
+    if (zoomInTick === lastZoomIn.current) return;
+    lastZoomIn.current = zoomInTick;
+    controlsRef.current?.dollyOut(ZOOM_STEP);
+    controlsRef.current?.update();
+  }, [zoomInTick]);
+  useEffect(() => {
+    if (zoomOutTick === lastZoomOut.current) return;
+    lastZoomOut.current = zoomOutTick;
+    controlsRef.current?.dollyIn(ZOOM_STEP);
+    controlsRef.current?.update();
+  }, [zoomOutTick]);
 
   return (
     <>
@@ -79,13 +203,21 @@ export function GlobeScene({ now, tier }: GlobeSceneProps) {
         <SceneActivity />
         <color attach="background" args={["#05070a"]} />
         <OrbitControls
+          ref={controlsRef}
           enablePan={false}
           minDistance={9}
           maxDistance={26}
+          minPolarAngle={MIN_POLAR}
+          maxPolarAngle={MAX_POLAR}
           autoRotate={autoRotate}
           autoRotateSpeed={0.35}
           enableDamping
+          // Matches Blueprint3D.tsx's own tuned value — three.js's default
+          // (0.05) is noticeably looser/floatier than the feel every other
+          // 3D scene in this app already has.
+          dampingFactor={0.08}
         />
+        <KeyboardOrbit controlsRef={controlsRef} />
         <SubsolarProbe now={now} probeRef={probeRef} />
         <EarthDots count={TIER_DOT_COUNT[tier]} now={now} />
         <ReachColumns />
