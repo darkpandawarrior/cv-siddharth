@@ -7,6 +7,7 @@ import { PUNE } from "../../../lib/sky.ts";
 import { readColor } from "../../../themeColorThree.ts";
 import { latLonToXyz, GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe } from "../globeStore.ts";
+import { useReducedMotion } from "../../../SceneActivity.tsx";
 import type { GithubActivity } from "../../../../api/_lib/github-activity-handler.ts";
 import type { Ops } from "../../../../api/_lib/ops-handler.ts";
 import type { SignalsResponse } from "../../../../api/_lib/signals-handler.ts";
@@ -32,6 +33,10 @@ const INTRO_STAGGER_MS = 420;
 const RING_GEOMETRY = new THREE.RingGeometry(0.03, 0.05, 20);
 const PACKET_GEOMETRY = new THREE.SphereGeometry(0.028, 8, 8);
 const dummy = new THREE.Object3D();
+// Per-frame scratch: the loop below runs per live pulse every frame.
+const _base = new THREE.Vector3();
+const _packet = new THREE.Vector3();
+const _color = new THREE.Color();
 
 interface Slot {
   event: PulseEvent;
@@ -70,6 +75,7 @@ function colorForKind(kind: PulseKind): THREE.Color {
  * time-ago (never "now") in the inspector.
  */
 export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
+  const reducedMotion = useReducedMotion();
   const cap = CAP_BY_TIER[tier];
   const select = useGlobe((s) => s.select);
   const setStatus = useGlobe((s) => s.setStatus);
@@ -175,9 +181,11 @@ export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
     const count = Math.min(slots.length, MAX_PULSES);
     for (let i = 0; i < count; i++) {
       const slot = slots[i];
-      const t = Math.min(1, (nowMs - slot.spawnMs) / LIFE_MS);
+      // Reduced motion: the ring and packet hold still at 30% for their
+      // lifetime (the event still shows; nothing expands or rises).
+      const t = reducedMotion ? 0.3 : Math.min(1, (nowMs - slot.spawnMs) / LIFE_MS);
       const eased = 1 - (1 - t) * (1 - t); // ease-out: quick to appear, gentle to fade
-      const base = normal.clone().multiplyScalar(GLOBE_RADIUS);
+      const base = _base.copy(normal).multiplyScalar(GLOBE_RADIUS);
       const jitterX = Math.cos((slot.angle * Math.PI) / 180) * 0.12;
       const jitterY = Math.sin((slot.angle * Math.PI) / 180) * 0.12;
       base.addScaledVector(tangent, jitterX).addScaledVector(bitangent, jitterY);
@@ -191,16 +199,15 @@ export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
       dummy.scale.set(ringScale, ringScale, 1);
       dummy.updateMatrix();
       rMesh.setMatrixAt(i, dummy.matrix);
-      rMesh.setColorAt(i, slot.color.clone().multiplyScalar(1 - eased * 0.85));
+      rMesh.setColorAt(i, _color.copy(slot.color).multiplyScalar(1 - eased * 0.85));
 
       // Packet: rises straight up the normal from the surface.
-      const packetPos = base.clone().addScaledVector(normal, eased * PACKET_RISE);
-      dummy.position.copy(packetPos);
+      dummy.position.copy(_packet.copy(base).addScaledVector(normal, eased * PACKET_RISE));
       dummy.quaternion.identity();
       dummy.scale.setScalar(1 - eased * 0.4);
       dummy.updateMatrix();
       pMesh.setMatrixAt(i, dummy.matrix);
-      pMesh.setColorAt(i, slot.color.clone().multiplyScalar(1 - eased * 0.5));
+      pMesh.setColorAt(i, _color.copy(slot.color).multiplyScalar(1 - eased * 0.5));
 
       metaRef.current[i] = slot.event;
     }
@@ -213,8 +220,9 @@ export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
     if (rMesh.instanceColor) rMesh.instanceColor.needsUpdate = true;
     if (pMesh.instanceColor) pMesh.instanceColor.needsUpdate = true;
 
+    // Test seam: written only when the pulse set changes, not every frame.
     const dom = domRef.current;
-    if (dom) {
+    if (dom && (dom.dataset.pulseCount !== String(count) || dom.dataset.pulseIntroPending !== String(queue.length))) {
       dom.dataset.pulseCount = String(count);
       dom.dataset.pulseIntroPending = String(queue.length);
       dom.dataset.pulseTotal = String(statsRef.current.total);

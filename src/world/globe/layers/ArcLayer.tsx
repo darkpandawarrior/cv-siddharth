@@ -8,6 +8,7 @@ import { latLonToXyz, GLOBE_RADIUS } from "../geoMath.ts";
 import { centroids } from "../centroids.ts";
 import { usePresenceGeo } from "../presenceGeo.ts";
 import { useGlobe } from "../globeStore.ts";
+import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { arcApexHeight, arcPoint, centralAngleDeg, sampleArc } from "./arcGeo.ts";
 
 const centroidByCc = new Map(centroids.map((c) => [c.iso2, c] as const));
@@ -66,6 +67,7 @@ function IndiaRing({ count, onSelect }: { count: number; onSelect: () => void })
  * not the thousands EarthDots pools for).
  */
 export default function ArcLayer({ tier }: { tier: 1 | 2 | 3 }) {
+  const reducedMotion = useReducedMotion();
   const cap = CAP_BY_TIER[tier];
   const counts = usePresenceGeo();
   const select = useGlobe((s) => s.select);
@@ -104,7 +106,8 @@ export default function ArcLayer({ tier }: { tier: 1 | 2 | 3 }) {
 
   useEffect(() => {
     if (cap === 0) {
-      setStatus("presence", { state: "failed", detail: "off at this tier" });
+      // Off by design at this tier, not broken: no health dot at all.
+      setStatus("presence", undefined);
       return;
     }
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -131,7 +134,8 @@ export default function ArcLayer({ tier }: { tier: 1 | 2 | 3 }) {
     if (!mesh || entries.length === 0) return;
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
-      const t = (clock.elapsedTime * DASH_SPEED + i * 0.13) % 1;
+      // Reduced motion parks each dash mid-arc instead of travelling.
+      const t = reducedMotion ? 0.5 : (clock.elapsedTime * DASH_SPEED + i * 0.13) % 1;
       const p = arcPoint(entry.from, PUNE_UNIT, t, entry.apex);
       dummy.position.set(p.x, p.y, p.z);
       dummy.scale.setScalar(0.7 + Math.min(entry.count, 10) * 0.05);

@@ -38,17 +38,30 @@ function altitudeUnits(altFt: number | null): number {
   return (km / KM_PER_UNIT) * ALT_EXAGGERATION;
 }
 
-/** East/north/up at a lat/lon -- the tangent-plane basis a chevron's
- *  heading is drawn in. Falls back to a fixed reference near the poles,
- *  where `worldUp` and the surface normal nearly coincide. */
-function localFrame(lat: number, lon: number): { normal: THREE.Vector3; north: THREE.Vector3; east: THREE.Vector3 } {
+// Scratch objects for the per-frame path. useFrame runs the helpers below
+// once per aircraft (and per trail dot) every frame, so they write into
+// these instead of allocating: at the T1 cap that was hundreds of short-lived
+// vectors, quaternions and matrices a frame, all garbage.
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const X_AXIS = new THREE.Vector3(1, 0, 0);
+const _normal = new THREE.Vector3();
+const _east = new THREE.Vector3();
+const _north = new THREE.Vector3();
+const _forward = new THREE.Vector3();
+const _right = new THREE.Vector3();
+const _basis = new THREE.Matrix4();
+const _trailColor = new THREE.Color();
+const NO_TRAIL: readonly { lat: number; lon: number }[] = [];
+
+/** East/north/up at a lat/lon into _east/_north/_normal -- the tangent-plane
+ *  basis a chevron's heading is drawn in. Falls back to a fixed reference
+ *  near the poles, where `WORLD_UP` and the surface normal nearly coincide. */
+function localFrame(lat: number, lon: number): void {
   const p = latLonToXyz(lat, lon);
-  const normal = new THREE.Vector3(p.x, p.y, p.z);
-  const worldUp = new THREE.Vector3(0, 1, 0);
-  const ref = Math.abs(normal.dot(worldUp)) > 0.999 ? new THREE.Vector3(1, 0, 0) : worldUp;
-  const east = new THREE.Vector3().crossVectors(ref, normal).normalize();
-  const north = new THREE.Vector3().crossVectors(normal, east).normalize();
-  return { normal, north, east };
+  _normal.set(p.x, p.y, p.z);
+  const ref = Math.abs(_normal.dot(WORLD_UP)) > 0.999 ? X_AXIS : WORLD_UP;
+  _east.crossVectors(ref, _normal).normalize();
+  _north.crossVectors(_normal, _east).normalize();
 }
 
 /** A flat, forward-pointing triangle -- authored in its own XY plane, nose
@@ -68,19 +81,19 @@ const TRAIL_GEOMETRY = new THREE.SphereGeometry(0.012, 6, 6);
 /** Orients local +Z to the surface normal (flat, tangent) and local +Y to
  *  the true-track bearing (measured clockwise from north) -- the chevron's
  *  nose points where the aircraft is actually headed. */
-function chevronQuaternion(lat: number, lon: number, trackDeg: number | null): THREE.Quaternion {
-  const { normal, north, east } = localFrame(lat, lon);
+function chevronQuaternion(lat: number, lon: number, trackDeg: number | null, out: THREE.Quaternion): THREE.Quaternion {
+  localFrame(lat, lon);
   const theta = ((trackDeg ?? 0) * Math.PI) / 180;
-  const forward = north.clone().multiplyScalar(Math.cos(theta)).addScaledVector(east, Math.sin(theta)).normalize();
-  const right = new THREE.Vector3().crossVectors(forward, normal).normalize();
-  const m = new THREE.Matrix4().makeBasis(right, forward, normal);
-  return new THREE.Quaternion().setFromRotationMatrix(m);
+  _forward.copy(_north).multiplyScalar(Math.cos(theta)).addScaledVector(_east, Math.sin(theta)).normalize();
+  _right.crossVectors(_forward, _normal).normalize();
+  _basis.makeBasis(_right, _forward, _normal);
+  return out.setFromRotationMatrix(_basis);
 }
 
-function worldPosition(lat: number, lon: number, altFt: number | null): THREE.Vector3 {
+function worldPosition(lat: number, lon: number, altFt: number | null, out: THREE.Vector3): THREE.Vector3 {
   const p = latLonToXyz(lat, lon);
   const r = GLOBE_RADIUS + altitudeUnits(altFt);
-  return new THREE.Vector3(p.x * r, p.y * r, p.z * r);
+  return out.set(p.x * r, p.y * r, p.z * r);
 }
 
 /**
@@ -145,7 +158,8 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
         if (!entry) return null;
         const dtSec = clampDeadReckonSec((performance.now() - pollAtMsRef.current) / 1000);
         const pos = entry.trkDeg !== null && entry.gsKt !== null ? deadReckon(entry, entry.trkDeg, entry.gsKt, dtSec) : entry;
-        return worldPosition(pos.lat, pos.lon, entry.altFt);
+        // Fresh vector: the follow camera may hold on to it across frames.
+        return worldPosition(pos.lat, pos.lon, entry.altFt, new THREE.Vector3());
       });
     }
     return () => {
@@ -168,9 +182,8 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
     for (let i = 0; i < list.length; i++) {
       const a = list[i];
       const pos = a.trkDeg !== null && a.gsKt !== null ? deadReckon(a, a.trkDeg, a.gsKt, dtSec) : a;
-      const world = worldPosition(pos.lat, pos.lon, a.altFt);
-      dummy.position.copy(world);
-      dummy.quaternion.copy(chevronQuaternion(pos.lat, pos.lon, a.trkDeg));
+      worldPosition(pos.lat, pos.lon, a.altFt, dummy.position);
+      chevronQuaternion(pos.lat, pos.lon, a.trkDeg, dummy.quaternion);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -183,20 +196,19 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
 
     let trailIndex = 0;
     for (const a of list) {
-      const path = trailsRef.current.get(a.cs) ?? [];
+      const path = trailsRef.current.get(a.cs) ?? NO_TRAIL;
       // Drop the newest sample (that's the current chevron itself) and fade
       // the rest, oldest dimmest.
-      const history = path.slice(0, -1);
-      for (let h = 0; h < history.length; h++) {
+      const historyLen = path.length - 1;
+      for (let h = 0; h < historyLen; h++) {
         if (trailIndex >= MAX_AIRCRAFT * TRAIL_LEN) break;
-        const world = worldPosition(history[h].lat, history[h].lon, a.altFt);
-        dummy.position.copy(world);
+        worldPosition(path[h].lat, path[h].lon, a.altFt, dummy.position);
         dummy.quaternion.identity();
-        const age = history.length - h; // 1 = most recent trail dot
+        const age = historyLen - h; // 1 = most recent trail dot
         dummy.scale.setScalar(1 / (age + 1));
         dummy.updateMatrix();
         trailMesh.setMatrixAt(trailIndex, dummy.matrix);
-        trailMesh.setColorAt(trailIndex, TRAIL_COLOR.clone().multiplyScalar(1 / (age + 1.4)));
+        trailMesh.setColorAt(trailIndex, _trailColor.copy(TRAIL_COLOR).multiplyScalar(1 / (age + 1.4)));
         trailIndex++;
       }
     }
