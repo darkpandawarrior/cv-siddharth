@@ -1,7 +1,380 @@
-import type { RefObject } from "react";
+import { useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { PUNE } from "../../lib/sky.ts";
+import {
+  dampTowards,
+  easeInOutCubic,
+  flyPosition,
+  GLOBE_RADIUS,
+  groundLookDirection,
+  groundPosition,
+  latLonToXyz,
+  vDot,
+  xyzToLatLon,
+  type Vec3,
+} from "./cameraMath.ts";
+import { entityPositions, useGlobe, type Focus } from "./globeStore.ts";
 
-/** LANE L5 (navigation: fly-to, ground view, follow) owns this file. */
-export default function CameraDirector(_props: { controlsRef: RefObject<OrbitControlsImpl | null> }) {
-  return null;
+/** LANE L5 (navigation: fly-to, ground view, follow). One component owns the
+ *  camera whenever the view isn't a free "orbit": it disables OrbitControls
+ *  and drives `camera` directly in useFrame, restoring the controls exactly
+ *  when a view hands back to "orbit" (never leaves a stale near/far/fov or
+ *  a disabled OrbitControls behind). */
+
+const FLY_SECONDS = 1.1;
+// Three's own PerspectiveCamera defaults (GlobeScene.tsx sets neither), and
+// the fov GlobeScene opens the Canvas with -- what "restore exactly" restores
+// to when a view hands back to orbit.
+const ORBIT_NEAR = 0.1;
+const ORBIT_FAR = 2000;
+const ORBIT_FOV = 42;
+// Ground view: near/far suited to standing at the surface looking at a sky
+// that may hold stars thousands of units out (SkyLayer, a sibling lane).
+const GROUND_NEAR = 0.01;
+const GROUND_FAR = 4000;
+const GROUND_EYE_HEIGHT = GLOBE_RADIUS * 0.004; // just above the dot/ocean shell, reads as "standing on it"
+const FOV_MIN = 30;
+const FOV_MAX = 90;
+const YAW_SPEED = 0.006; // radians per pixel of drag
+const PITCH_SPEED = 0.006;
+const FOV_WHEEL_SPEED = 0.06; // degrees per wheel-delta unit
+// Follow view: a fixed offset behind (opposite the entity's own heading) and
+// above (further from the globe's centre) so a moving entity sits ahead of
+// centre-frame rather than dead centre.
+const FOLLOW_ABOVE = 0.35;
+const FOLLOW_BEHIND = 0.55;
+const FOLLOW_DAMP_HALFLIFE = 0.25;
+
+type Flight = { from: Vec3; fromDist: number; to: Vec3; toDist: number; elapsed: number; duration: number } | null;
+
+function isTypingTarget(el: EventTarget | null): boolean {
+  return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+// Restated from SceneActivity.tsx's own useReducedMotion (not imported):
+// SceneActivity.tsx has exactly one other consumer (GlobeScene.tsx, eagerly
+// bundled into the "Globe" shell), and importing it here would give it a
+// second, differently-chunked consumer -- the same chunk-promotion problem
+// documented at the top of cameraMath.ts, measured to grow the shell chunk
+// past check-budget.mjs's ceiling. Same query, same fallback, same shape.
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+function subscribeReducedMotion(cb: () => void): () => void {
+  const mql = window.matchMedia(REDUCED_MOTION_QUERY);
+  mql.addEventListener("change", cb);
+  return () => mql.removeEventListener("change", cb);
+}
+function useReducedMotionLocal(): boolean {
+  return useSyncExternalStore(subscribeReducedMotion, () => window.matchMedia(REDUCED_MOTION_QUERY).matches, () => false);
+}
+
+/** Where a Focus resolves to on the sphere, in (direction, distance) form --
+ *  the two things a flight interpolates. `entity` focuses resolve through
+ *  entityPositions at call time (a snapshot; follow view re-reads every
+ *  frame instead of relying on this one-off resolution). */
+function resolveFocusDirDist(focus: Focus | null, fallbackDir: Vec3, fallbackDist: number): { dir: Vec3; dist: number } {
+  if (!focus) return { dir: fallbackDir, dist: fallbackDist };
+  if (focus.kind === "latlon") {
+    const p = latLonToXyz(focus.lat, focus.lon);
+    return { dir: p, dist: focus.distance ?? fallbackDist };
+  }
+  const getter = entityPositions.get(focus.id);
+  const p = getter?.();
+  if (!p) return { dir: fallbackDir, dist: fallbackDist };
+  const d = { x: p.x, y: p.y, z: p.z };
+  const len = Math.hypot(d.x, d.y, d.z) || 1;
+  return { dir: { x: d.x / len, y: d.y / len, z: d.z / len }, dist: len };
+}
+
+export default function CameraDirector({ controlsRef }: { controlsRef: RefObject<OrbitControlsImpl | null> }) {
+  // Read through get() at the point of use (GlobeScene.tsx's own SceneRig
+  // does the same) rather than destructuring `camera`/`gl` here: React
+  // Compiler treats a value destructured straight off a hook's return as
+  // permanently read-only, which the whole point of this component --
+  // mutating the live three.js camera every frame -- would violate on every
+  // line. `get()`'s return is a fresh read each call, not "the hook's
+  // value", so mutating what it hands back raises nothing.
+  const get = useThree((s) => s.get);
+  const reducedMotion = useReducedMotionLocal();
+  const view = useGlobe((s) => s.view);
+  const focus = useGlobe((s) => s.focus);
+  const setView = useGlobe((s) => s.setView);
+
+  const flightRef = useRef<Flight>(null);
+  const yawRef = useRef(0);
+  const pitchRef = useRef(0.35); // starts looking a little above the horizon, not flat along it
+  const fovRef = useRef(ORBIT_FOV);
+  const followPosRef = useRef<Vec3 | null>(null);
+  const prevEntityPosRef = useRef<Vec3 | null>(null);
+  const settledRef = useRef(true); // false while a fly-in animation owns the camera
+  const dragRef = useRef<{ x: number; y: number } | null>(null);
+  const prevViewRef = useRef(view);
+
+  // Horizon glow ring: ambient scene furniture, never a brand/live colour
+  // (house rule: "ambient things never use brand tokens"). A warm, dim band
+  // just above the ground-view stand point so the ground plane reads as a
+  // horizon rather than the camera floating in a starfield.
+  const horizonRef = useRef<THREE.Mesh>(null);
+
+  // xyzToLatLon of the ground-view target, read by useFrame's ground-view
+  // branch every frame. Ref, not state: written only from the effect below.
+  const groundLatLon = useRef<{ lat: number; lon: number }>({ lat: PUNE.lat, lon: PUNE.lon });
+
+  // Arm a new flight whenever the store hands this component a new target:
+  // a focus change (click-to-fly), or a view switch away from orbit (the
+  // camera needs to travel to the ground/follow stand point first). Orbit
+  // <- ground/follow does NOT re-arm a flight: OrbitControls already has a
+  // valid camera pose to resume from, and re-flying it back would fight
+  // whatever the visitor was doing a moment before.
+  useEffect(() => {
+    const prevView = prevViewRef.current;
+    prevViewRef.current = view;
+    const controls = controlsRef.current;
+    const { camera } = get();
+
+    if (view === "orbit") {
+      if (controls) {
+        controls.enabled = true;
+        camera.near = ORBIT_NEAR;
+        camera.far = ORBIT_FAR;
+        if (camera instanceof THREE.PerspectiveCamera) {
+          camera.fov = ORBIT_FOV;
+          camera.updateProjectionMatrix();
+        }
+        controls.update();
+      }
+      settledRef.current = true;
+      flightRef.current = null;
+      return;
+    }
+
+    if (controls) controls.enabled = false;
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.near = view === "ground" ? GROUND_NEAR : ORBIT_NEAR;
+      camera.far = view === "ground" ? GROUND_FAR : ORBIT_FAR;
+      camera.fov = fovRef.current;
+      camera.updateProjectionMatrix();
+    }
+
+    const from = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    const fromDist = Math.hypot(from.x, from.y, from.z) || GLOBE_RADIUS;
+    const fromDir = fromDist > 0 ? { x: from.x / fromDist, y: from.y / fromDist, z: from.z / fromDist } : { x: 1, y: 0, z: 0 };
+
+    let toDir: Vec3;
+    let toDist: number;
+    if (view === "ground") {
+      const target = focus?.kind === "latlon" ? focus : { kind: "latlon" as const, lat: PUNE.lat, lon: PUNE.lon };
+      toDir = latLonToXyz(target.lat, target.lon);
+      toDist = GLOBE_RADIUS + GROUND_EYE_HEIGHT;
+      const ll = xyzToLatLon(toDir);
+      yawRef.current = 0;
+      pitchRef.current = 0.35;
+      // Stash resolved lat/lon on the ref-held flight so useFrame's ground
+      // branch doesn't need to re-derive it from a direction vector once
+      // the flight has landed.
+      groundLatLon.current = ll;
+    } else {
+      // follow: fly toward wherever the entity is RIGHT NOW; useFrame takes
+      // over tracking once settled.
+      const resolved = resolveFocusDirDist(focus, fromDir, fromDist + FOLLOW_ABOVE);
+      toDir = resolved.dir;
+      toDist = resolved.dist + FOLLOW_ABOVE;
+      followPosRef.current = null;
+      prevEntityPosRef.current = null;
+    }
+
+    if (reducedMotion || prevView === view) {
+      // Either an instant jump (reduced motion), or the same view re-armed
+      // by a focus change while already there (e.g. tour steps 4->4-ish) --
+      // both skip the travelling animation and land directly.
+      camera.position.set(toDir.x * toDist, toDir.y * toDist, toDir.z * toDist);
+      settledRef.current = true;
+      flightRef.current = null;
+    } else {
+      flightRef.current = { from: fromDir, fromDist, to: toDir, toDist, elapsed: 0, duration: FLY_SECONDS };
+      settledRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- controlsRef/get are stable R3F handles, not reactive inputs
+  }, [view, focus, reducedMotion]);
+
+  // Also fly (without a view switch) whenever `focus` changes while already
+  // in orbit view -- the plain click-to-fly case. Handled in the same
+  // effect above via the `view === "orbit"` early return NOT covering a
+  // focus-only change: split out below so orbit's own focus changes still
+  // animate the camera around the fixed OrbitControls target.
+  useEffect(() => {
+    if (view !== "orbit" || !focus) return;
+    const { camera } = get();
+    const from = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    const fromDist = Math.hypot(from.x, from.y, from.z) || GLOBE_RADIUS;
+    const fromDir = { x: from.x / fromDist, y: from.y / fromDist, z: from.z / fromDist };
+    const resolved = resolveFocusDirDist(focus, fromDir, fromDist);
+    if (reducedMotion) {
+      camera.position.set(resolved.dir.x * resolved.dist, resolved.dir.y * resolved.dist, resolved.dir.z * resolved.dist);
+      flightRef.current = null;
+      settledRef.current = true;
+    } else {
+      flightRef.current = { from: fromDir, fromDist, to: resolved.dir, toDist: resolved.dist, elapsed: 0, duration: FLY_SECONDS };
+      settledRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-arm on an actual focus identity change, get() is stable
+  }, [focus]);
+
+  // Esc: back to orbit from anywhere. Guarded against typing targets even
+  // though the globe canvas itself never holds text focus, restated per the
+  // house rule (GlobeScene.tsx's own isTypingTarget) rather than imported,
+  // since importing a non-exported helper from a file this lane may not
+  // edit would create a silent coupling to its internals.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "Escape" && useGlobe.getState().view !== "orbit") {
+        setView("orbit");
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [setView]);
+
+  // Ground-view drag-to-look + wheel-to-zoom. Attached directly to the
+  // canvas element (not React pointer props) because OrbitControls already
+  // owns pointer events on this element in every other view, and we only
+  // want these listeners live while ground view actually needs them.
+  useEffect(() => {
+    if (view !== "ground") return;
+    const el = get().gl.domElement;
+    const onPointerDown = (e: PointerEvent) => {
+      dragRef.current = { x: e.clientX, y: e.clientY };
+      el.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      const start = dragRef.current;
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      dragRef.current = { x: e.clientX, y: e.clientY };
+      yawRef.current -= dx * YAW_SPEED;
+      pitchRef.current = Math.max(0, Math.min(Math.PI / 2, pitchRef.current + dy * PITCH_SPEED));
+    };
+    const onPointerUp = () => {
+      dragRef.current = null;
+    };
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      fovRef.current = Math.max(FOV_MIN, Math.min(FOV_MAX, fovRef.current + e.deltaY * FOV_WHEEL_SPEED * 0.1));
+    };
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, [view, get]);
+
+  useFrame((state, dt) => {
+    const { camera, gl } = state;
+    const el = gl.domElement;
+
+    // In-flight: interpolate position, ignore drag/follow until it lands.
+    const flight = flightRef.current;
+    if (flight) {
+      flight.elapsed += dt;
+      const t = easeInOutCubic(Math.min(1, flight.elapsed / flight.duration));
+      const p = flyPosition(flight.from, flight.fromDist, flight.to, flight.toDist, t, GLOBE_RADIUS);
+      camera.position.set(p.x, p.y, p.z);
+      // Mid-flight, every view looks at the globe's centre -- ground view's
+      // horizon-relative look-up direction only takes over once landed.
+      camera.lookAt(0, 0, 0);
+      if (t >= 1) {
+        flightRef.current = null;
+        settledRef.current = true;
+      }
+      el.dataset.cameraView = view;
+      el.dataset.cameraFlying = "true";
+      return;
+    }
+    el.dataset.cameraFlying = "false";
+
+    if (view === "orbit") {
+      el.dataset.cameraView = "orbit";
+      return;
+    }
+
+    if (view === "ground") {
+      const { lat, lon } = groundLatLon.current;
+      const pos = groundPosition(lat, lon, GLOBE_RADIUS, GROUND_EYE_HEIGHT);
+      camera.position.set(pos.x, pos.y, pos.z);
+      const look = groundLookDirection(lat, lon, yawRef.current, pitchRef.current);
+      camera.up.set(pos.x, pos.y, pos.z); // radially "up" at this point on the sphere
+      camera.lookAt(pos.x + look.x, pos.y + look.y, pos.z + look.z);
+      if (camera instanceof THREE.PerspectiveCamera && Math.abs(camera.fov - fovRef.current) > 1e-3) {
+        camera.fov = fovRef.current;
+        camera.updateProjectionMatrix();
+      }
+      if (horizonRef.current) {
+        horizonRef.current.position.set(pos.x, pos.y, pos.z);
+        horizonRef.current.lookAt(0, 0, 0);
+      }
+      el.dataset.cameraView = "ground";
+      el.dataset.cameraFov = String(Math.round(fovRef.current));
+      return;
+    }
+
+    // follow
+    if (focus?.kind !== "entity") {
+      setView("orbit");
+      return;
+    }
+    const getter = entityPositions.get(focus.id);
+    const p = getter?.();
+    if (!p) {
+      // The entity vanished (layer failed, tier dropped it, TLE went stale):
+      // never keep a follow camera aimed at nothing.
+      setView("orbit");
+      return;
+    }
+    const entityPos: Vec3 = { x: p.x, y: p.y, z: p.z };
+    const entityDist = Math.hypot(entityPos.x, entityPos.y, entityPos.z) || GLOBE_RADIUS;
+    const entityDir = { x: entityPos.x / entityDist, y: entityPos.y / entityDist, z: entityPos.z / entityDist };
+
+    const prev = prevEntityPosRef.current ?? entityPos;
+    const headingRaw = { x: entityPos.x - prev.x, y: entityPos.y - prev.y, z: entityPos.z - prev.z };
+    const headingLen = Math.hypot(headingRaw.x, headingRaw.y, headingRaw.z);
+    // Tangential "behind": the component of -heading perpendicular to the
+    // radial direction, so "behind" means along the entity's own track, not
+    // straight down through the globe.
+    const back = headingLen > 1e-6 ? { x: -headingRaw.x / headingLen, y: -headingRaw.y / headingLen, z: -headingRaw.z / headingLen } : entityDir;
+    const radial = vDot(back, entityDir);
+    const tangentBack = { x: back.x - entityDir.x * radial, y: back.y - entityDir.y * radial, z: back.z - entityDir.z * radial };
+    const tangentLen = Math.hypot(tangentBack.x, tangentBack.y, tangentBack.z);
+    const tangentDir = tangentLen > 1e-6 ? { x: tangentBack.x / tangentLen, y: tangentBack.y / tangentLen, z: tangentBack.z / tangentLen } : { x: 0, y: 0, z: 0 };
+    prevEntityPosRef.current = entityPos;
+
+    const desired = {
+      x: entityDir.x * (entityDist + FOLLOW_ABOVE) + tangentDir.x * FOLLOW_BEHIND,
+      y: entityDir.y * (entityDist + FOLLOW_ABOVE) + tangentDir.y * FOLLOW_BEHIND,
+      z: entityDir.z * (entityDist + FOLLOW_ABOVE) + tangentDir.z * FOLLOW_BEHIND,
+    };
+    const smoothed = dampTowards(followPosRef.current ?? desired, desired, FOLLOW_DAMP_HALFLIFE, dt);
+    followPosRef.current = smoothed;
+    camera.position.set(smoothed.x, smoothed.y, smoothed.z);
+    camera.up.set(0, 1, 0);
+    camera.lookAt(entityPos.x, entityPos.y, entityPos.z);
+    el.dataset.cameraView = "follow";
+  });
+
+  return (
+    <mesh ref={horizonRef} visible={view === "ground"} renderOrder={-1}>
+      <ringGeometry args={[GLOBE_RADIUS * 0.05, GLOBE_RADIUS * 0.12, 48]} />
+      {/* Ambient furniture (the "ground plane reads as a horizon" glow), not
+          a live/claim signal, so this stays off the brand palette (house
+          rule) -- a warm, dim, desaturated band. */}
+      <meshBasicMaterial color="#4a3d2c" transparent opacity={0.28} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
+  );
 }
