@@ -197,7 +197,11 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
       </div>
       <div className="mb-3 text-xs leading-relaxed">{stopBody}</div>
       {dots}
-      <div className="flex items-center justify-between gap-2">
+      {/* Sticky, same reason as Inspector.tsx's own actions row: a narrow
+          sm+ width with a wrapped topbar shrinks the card's available
+          height (Globe.tsx's --globe-top-offset), which can push Back/Next
+          out of the initial scroll view on a longer stop's body text. */}
+      <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
         <button
           type="button"
           onClick={() => setTourStep(Math.max(0, step - 1))}
@@ -251,7 +255,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
           data-globe-tour
           role="dialog"
           aria-label="Guided tour"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-none"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
         >
           {cardBody("py-1")}
         </div>
