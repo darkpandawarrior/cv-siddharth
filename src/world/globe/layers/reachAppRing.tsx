@@ -24,7 +24,7 @@ const COLUMN_GEOMETRY = new THREE.CylinderGeometry(COLUMN_RADIUS, COLUMN_RADIUS,
 // occlude a thin target before the ray ever reaches it. `depthTest: false`
 // on its material (below) means this hit volume is never blocked by
 // anything else at Pune, so it is the tap target, not the visual shaft.
-const HIT_RADIUS = 0.05;
+const HIT_RADIUS = 0.08;
 const HIT_GEOMETRY = new THREE.CylinderGeometry(HIT_RADIUS, HIT_RADIUS, 1, 8);
 // A small radial offset off the exact surface point -- Markers.tsx's own
 // employer ring uses the same +0.01-ish epsilon to keep a flat ring from
@@ -33,6 +33,7 @@ const SURFACE_EPS = 0.02;
 const HOVER_BOOST = 1.5;
 const dummy = new THREE.Object3D();
 const _scratch = new THREE.Vector3();
+const _instMat = new THREE.Matrix4();
 
 // Static data (committed store.ts, never fetched): computed once at module
 // scope rather than re-derived per mount.
@@ -102,14 +103,22 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
   // e2e seam only: the first (biggest-install) column's current screen
   // projection, so globe-W6.spec.ts can click a real, computed pixel rather
   // than guess one (reachDebug.ts's own convention, HazardLayer's for a
-  // lazy layer). One Vector3 op per frame, no allocation after the first.
+  // lazy layer). Reads the HIT instance's own `matrixWorld` (getMatrixAt +
+  // hitRef.matrixWorld) -- the exact transform Three's raycaster tests
+  // against -- rather than re-deriving the same point from `quaternion`/
+  // `position` by hand: both agree numerically (checked), but this one
+  // stays correct even if a future edit nests this group under another
+  // transform this file doesn't know about.
   useFrame(() => {
-    if (ENTRIES.length === 0) return;
+    const hit = hitRef.current;
+    if (ENTRIES.length === 0 || !hit) return;
     const dbg = ensureReachDebug();
     dbg.appCount = ENTRIES.length;
-    _scratch.copy(localPosition(ENTRIES[0])).applyQuaternion(quaternion).add(position).project(camera);
-    dbg.appProbeX = Math.round((_scratch.x * 0.5 + 0.5) * size.width);
-    dbg.appProbeY = Math.round((-_scratch.y * 0.5 + 0.5) * size.height);
+    hit.getMatrixAt(0, _instMat);
+    _instMat.premultiply(hit.matrixWorld);
+    _scratch.setFromMatrixPosition(_instMat).project(camera);
+    dbg.appProbeX = (_scratch.x * 0.5 + 0.5) * size.width;
+    dbg.appProbeY = (-_scratch.y * 0.5 + 0.5) * size.height;
   });
 
   function onPick(e: ThreeEvent<MouseEvent>) {
