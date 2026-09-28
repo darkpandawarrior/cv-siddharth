@@ -18,7 +18,12 @@ const DASH_SPEED = 0.2; // full traversals/second -- a slower, narrative pace th
 export default function StoryArc({ tier }: { tier: 1 | 2 | 3 }) {
   const chapter = useStoryChapterState((s) => s.chapter);
   const reducedMotion = useReducedMotion();
-  const color = useMemo(() => readColor("--color-accent", "#f2a13d"), []);
+  // living-ledger's own Colour rule: claim/live things use one of the four
+  // globe semantic tokens, never a brand token -- --color-accent is the
+  // site-wide UI amber (buttons, focus rings), not a globe-scene colour.
+  // --color-alt marks this as the one narrative arc, distinct from
+  // ArcLayer's live --color-probe visitor arcs.
+  const color = useMemo(() => readColor("--color-alt", "#db61ff"), []);
   const dashRef = useRef<THREE.Mesh>(null);
 
   // Off by design at T3 (living-ledger tier budgets: "T3 minimal or off"),
