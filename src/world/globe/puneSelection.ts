@@ -2,8 +2,16 @@
 // to exporting only the `Markers` component (react-refresh/only-export-
 // components warns otherwise - fast refresh needs a component-only module).
 // Pure logic, no three/R3F/React import, so it is unit-testable without a
-// WebGL context (puneSelection.test.ts).
-import { readColor } from "../../themeColorThree.ts";
+// WebGL context (puneSelection.test.ts) AND safe to import from Globe.tsx,
+// which server-renders (routes/globe.tsx). `readToken` (themeColor.ts), not
+// `readColor` (themeColorThree.ts, imports `three`) - the swatch is only
+// ever painted through a plain DOM `style` prop (Inspector.tsx), never a
+// three.js material, and `themeColorThree.ts`'s own docstring is explicit
+// that importProtection denies `three` from the SSR bundle. Markers.tsx's
+// ring keeps its own `readColor` call for the actual three.js material -
+// that file is never reached from the server bundle (GlobeScene.tsx, its
+// only importer, is shielded behind Hydrate's own `split`).
+import { readToken } from "../../themeColor.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
 import { globeFacts } from "./globeRows.ts";
 import type { Selection } from "./globeStore.ts";
@@ -22,8 +30,8 @@ export const PUNE_SELECTION_ID = "pune-origin";
  *  truth, not two. */
 export function buildPuneSelection(): Selection | null {
   if (employerMarkers.length === 0) return null;
-  const signal = readColor("--color-signal", "#3ddc84").getStyle();
-  const probe = readColor("--color-probe", "#5ee6ff").getStyle();
+  const signal = readToken("--color-signal", "#3ddc84");
+  const probe = readToken("--color-probe", "#5ee6ff");
   const home = employerMarkers[0];
   const names = employerMarkers.map((m) => m.company).join(", ");
   const unresolvedNote = employersUnresolved.length > 0 ? ` - ${employersUnresolved.join(", ")} listed, never geocoded` : "";

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+import { PUNE_SELECTION_ID } from "../src/world/globe/puneSelection.ts";
 import type { Page } from "@playwright/test";
 
 /**
@@ -34,10 +35,26 @@ async function openGlobe(page: Page) {
   return canvas;
 }
 
-test("the layer panel's own markers toggle hides and restores the Pune card", async ({ page }) => {
+// The floating Pune <Html> card is retired (LANE U1, task 4): the ring is now
+// a plain 3D marker with nothing to attach/detach in the DOM when toggled, so
+// this test now verifies the thing that actually matters - the toggle state
+// itself round-trips, and (unlike the HUD's own markers pill, see
+// globe.spec.ts) this per-layer row does NOT close an open Pune selection;
+// it is a generic layer toggle, not the dedicated affordance task 4 names.
+test("the layer panel's own markers toggle flips state without touching an open selection", async ({ page }) => {
+  await page.addInitScript((id) => {
+    (window as unknown as { __GLOBE_TEST_SELECT__: unknown }).__GLOBE_TEST_SELECT__ = {
+      id,
+      kind: "origin",
+      title: "PUNE · 18.52°N 73.86°E",
+      rows: [{ label: "Reach", value: "test claim", swatch: "#3ddc84" }],
+      source: "test fixture",
+      live: false,
+    };
+  }, PUNE_SELECTION_ID);
   await openGlobe(page);
-  const card = page.locator("[data-pune-card]");
-  await expect(card).toBeAttached({ timeout: 30_000 });
+  const inspector = page.locator("[data-globe-inspector]");
+  await expect(inspector).toBeVisible({ timeout: 30_000 });
 
   const panel = page.locator("[data-globe-layer-panel]");
   await expect(panel).toBeVisible();
@@ -45,11 +62,11 @@ test("the layer panel's own markers toggle hides and restores the Pune card", as
   await expect(markersToggle).toHaveAttribute("aria-pressed", "true");
   await markersToggle.click();
   await expect(markersToggle).toHaveAttribute("aria-pressed", "false");
-  await expect(card).toHaveCount(0);
+  await expect(inspector).toBeVisible();
 
   await markersToggle.click();
   await expect(markersToggle).toHaveAttribute("aria-pressed", "true");
-  await expect(card).toBeAttached();
+  await expect(inspector).toBeVisible();
 });
 
 test("the earth-style segmented control switches between real imagery and dots", async ({ page }) => {
