@@ -2,12 +2,14 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
+import { ArrowLeft, Clock, Compass, Layers as LayersIcon } from "lucide-react";
 import { hasWebGL } from "./blueprintShared.tsx";
 import { useSky } from "./lib/useSky.ts";
 import { deviceTier } from "./world/deviceTier.ts";
 import { GlobeScene } from "./world/globe/GlobeScene.tsx";
 import { GlobeHud } from "./world/globe/GlobeHud.tsx";
 import { GlobePanel } from "./world/globe/GlobePanel.tsx";
+import { buildPuneSelection, PUNE_SELECTION_ID } from "./world/globe/puneSelection.ts";
 import { useGlobe } from "./world/globe/globeStore.ts";
 
 // The living-earth UI (layer panel, inspector, time scrubber, tour): client
@@ -17,10 +19,27 @@ const Inspector = lazy(() => import("./world/globe/ui/Inspector.tsx"));
 const TimeScrubber = lazy(() => import("./world/globe/ui/TimeScrubber.tsx"));
 const GlobeTour = lazy(() => import("./world/globe/ui/GlobeTour.tsx"));
 const StreetView = lazy(() => import("./world/globe/ui/StreetView.tsx"));
+// WAVE 2 LANE W1's search/measure bar - not in this worktree yet (see the
+// reserved-slot comment below, in the top row).
+// const ExploreBar = lazy(() => import("./world/globe/ui/ExploreBar.tsx"));
 
 const sceneLoadingFallback = (
   <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the globe…</div>
 );
+
+// Right-edge LayerPanel reservation the top row and the fact list both stay
+// clear of, so neither runs under the panel column (233px wide + margins,
+// collapsed to a 34px icon + margin) — see LANE U1's composition report for
+// the full region map. Pixel values are guidance, not a pixel-exact contract.
+// Two forms of the same number: `pr-*` shrinks the top row's own content
+// box (it is a normal flow element, not absolutely positioned - see its own
+// comment below for why), `right-*` repositions the absolutely positioned
+// fact list. Mixing `inset-x-0` and an explicit `right-*` on one element
+// risks a Tailwind cascade conflict (utility order in its generated
+// stylesheet is not the same as className string order), so anything using
+// PANEL_RESERVE_RIGHT sets `left-0` explicitly instead of `inset-x-0`.
+const PANEL_RESERVE_PAD = { open: "sm:pr-[249px]", collapsed: "sm:pr-[50px]" };
+const PANEL_RESERVE_RIGHT = { open: "sm:right-[249px]", collapsed: "sm:right-[50px]" };
 
 /**
  * /globe - the third altitude (living-ledger-spec.md#6.3): real Earth as a
@@ -50,6 +69,41 @@ const sceneLoadingFallback = (
  * off `useSky`'s clock tick, with day/night and the reach arcs correct from
  * the first frame; `sky.now` only replaces it once useSky's own effect has
  * run (same tick in practice, but the scene never blocks on it).
+ *
+ * LANE U1 (composition, wave 2): the six wave-1 lanes each built their own
+ * piece (HUD, layer panel, inspector, scrubber, tour, Pune card, fact list)
+ * with an independently-guessed absolute position, and merged that way -
+ * at 1440x900 the scrubber covered the northern hemisphere, "Take the tour"
+ * floated over Europe, the layer panel's Keys section was clipped, and the
+ * globe room was a fixed 70vh with dead space below it. This file is now
+ * the one place that owns the actual region map:
+ *
+ *   - `data-globe-stage`: the WebGL canvas plus every overlay that has to
+ *     resolve its position against the ROOM (not the viewport) - the top
+ *     row, the layer panel column, the inspector/tour left slot. Position:
+ *     relative, so `position:absolute` descendants land where the numbers
+ *     below say, regardless of the top row's own wrapped height.
+ *   - `data-globe-topbar`: the ONE shared flex-wrap row for the HUD pills,
+ *     the compact time bar, the tour's idle pill and the back-to-orbit
+ *     pill. It has to be a CSS *positioned* element to paint above the
+ *     WebGL canvas at all (an unpositioned sibling of an absolutely
+ *     positioned canvas paints BEHIND it, per the CSS painting order,
+ *     regardless of z-index) - which is exactly why GlobeTour's running
+ *     card is a SEPARATE mount ("overlay" slot) rather than nested inside
+ *     this row: nested here, its own `position:absolute` coordinates would
+ *     resolve against the row instead of the stage. Split left/right into
+ *     two clusters with a % max-width each, leaving a reserved centre band
+ *     for LANE W1's ExploreBar (search/measure), which mounts here later,
+ *     right after StreetView below - not in this worktree yet.
+ *   - The left slot (Inspector / the tour's running card) and the right
+ *     LayerPanel column both stop short of GlobePanel's fact-list band
+ *     (bottom ~45% of the stage) via percentage `bottom`/`right` math that
+ *     resolves against the stage's own height/width, not a guessed pixel.
+ *
+ * Phones (< 640): the canvas stage is a fixed ~62svh block ABOVE the fact
+ * list in normal flow (not an overlay on top of it) - the previous 70vh
+ * canvas with the fact list floating over its lower half is exactly the
+ * defect being fixed here.
  */
 export function Globe() {
   const sky = useSky();
@@ -64,56 +118,166 @@ export function Globe() {
   const [autoRotatePaused, setAutoRotatePaused] = useState(false);
   const markersShown = useGlobe((s) => s.layers.markers);
   const toggleLayer = useGlobe((s) => s.toggleLayer);
+  const view = useGlobe((s) => s.view);
+  const setView = useGlobe((s) => s.setView);
+  const select = useGlobe((s) => s.select);
+  const panelOpen = useGlobe((s) => s.panelOpen);
+  const sheet = useGlobe((s) => s.sheet);
+  const setSheet = useGlobe((s) => s.setSheet);
+  const tourStep = useGlobe((s) => s.tourStep);
+  const setTourStep = useGlobe((s) => s.setTourStep);
 
   useEffect(() => {
     setCapable(hasWebGL());
     setTier(deviceTier());
   }, []);
 
+  // Desktop first load only (task 4): preselect Pune so the Inspector isn't
+  // empty on arrival. A later __GLOBE_TEST_SELECT__ or a real click both
+  // overwrite `selected` same as ever - this only fires once, and only if
+  // nothing has claimed the slot by the time it runs.
+  useEffect(() => {
+    if (!capable || typeof window === "undefined" || window.innerWidth < 640) return;
+    if (useGlobe.getState().selected) return;
+    const selection = buildPuneSelection();
+    if (selection) select(selection);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires once when the scene becomes capable, not on every selection change
+  }, [capable]);
+
   const now = sky?.now ?? new Date();
   const showScene = capable;
+  const panelReservePad = panelOpen ? PANEL_RESERVE_PAD.open : PANEL_RESERVE_PAD.collapsed;
+  const panelReserveRight = panelOpen ? PANEL_RESERVE_RIGHT.open : PANEL_RESERVE_RIGHT.collapsed;
 
   return (
-    <div data-globe-root className="relative h-full min-h-[70vh] w-full overflow-hidden bg-void">
-      <GlobeHud
-        sky={sky}
-        tier={tier}
-        hasWebGL={capable}
-        onZoomIn={() => setZoomInTick((t) => t + 1)}
-        onZoomOut={() => setZoomOutTick((t) => t + 1)}
-        autoRotatePaused={autoRotatePaused}
-        onToggleAutoRotate={() => setAutoRotatePaused((p) => !p)}
-        markersHidden={!markersShown}
-        onToggleMarkers={() => toggleLayer("markers")}
-      />
-      {showScene && (
-        <ClientOnly fallback={sceneLoadingFallback}>
-          <Hydrate when={load()} split fallback={sceneLoadingFallback}>
-            <GlobeScene
-              now={now}
-              tier={tier}
-              zoomInTick={zoomInTick}
-              zoomOutTick={zoomOutTick}
-              autoRotatePaused={autoRotatePaused}
-            />
-          </Hydrate>
-        </ClientOnly>
-      )}
-      {showScene && (
-        <ClientOnly fallback={null}>
-          <Suspense fallback={null}>
-            <LayerPanel tier={tier} />
-            <Inspector tier={tier} />
-            <TimeScrubber tier={tier} />
-            <GlobeTour tier={tier} />
-            <StreetView tier={tier} />
-          </Suspense>
-        </ClientOnly>
-      )}
+    <div data-globe-root className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block">
+      {/* STAGE: the canvas and every overlay whose position resolves against
+          the room, not the viewport. ~62svh block on phones (flow, above
+          the fact list); fills the root on sm+ (the fact list overlays its
+          bottom edge there instead). */}
+      <div data-globe-stage className="relative h-[62svh] w-full shrink-0 sm:absolute sm:inset-0 sm:h-auto">
+        {showScene && (
+          <ClientOnly fallback={sceneLoadingFallback}>
+            <Hydrate when={load()} split fallback={sceneLoadingFallback}>
+              <GlobeScene now={now} tier={tier} zoomInTick={zoomInTick} zoomOutTick={zoomOutTick} autoRotatePaused={autoRotatePaused} />
+            </Hydrate>
+          </ClientOnly>
+        )}
+
+        {/* TOP ROW (z-20): HUD pills, the compact time bar, the tour's idle
+            pill, the back-to-orbit pill, and (phones only) icon buttons for
+            Layers/Time/Tour. Split into a left and a right cluster with a
+            reserved centre band for LANE W1's ExploreBar (~377px desktop,
+            full width minus 32px on phones - it mounts on its own line
+            there, since 360-390px has no room to share with these icons). */}
+        {showScene && (
+          <div
+            data-globe-topbar
+            className={`pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-2 p-4 ${panelReservePad}`}
+          >
+            <div className="pointer-events-none flex flex-wrap items-center gap-2 sm:max-w-[38%]">
+              <GlobeHud
+                sky={sky}
+                tier={tier}
+                hasWebGL={capable}
+                onZoomIn={() => setZoomInTick((t) => t + 1)}
+                onZoomOut={() => setZoomOutTick((t) => t + 1)}
+                autoRotatePaused={autoRotatePaused}
+                onToggleAutoRotate={() => setAutoRotatePaused((p) => !p)}
+                markersHidden={!markersShown}
+                onToggleMarkers={() => {
+                  const hiding = markersShown;
+                  toggleLayer("markers");
+                  // The ring and the reach columns are what the toggle hides;
+                  // a Pune selection with nothing left on screen to point at
+                  // has no reason to stay open (task 4).
+                  if (hiding && useGlobe.getState().selected?.id === PUNE_SELECTION_ID) select(null);
+                }}
+              />
+              <ClientOnly fallback={null}>
+                <Suspense fallback={null}>
+                  <TimeScrubber tier={tier} />
+                </Suspense>
+              </ClientOnly>
+            </div>
+
+            <div className="pointer-events-none flex flex-wrap items-center justify-end gap-2 sm:max-w-[38%]">
+              <ClientOnly fallback={null}>
+                <Suspense fallback={null}>
+                  <GlobeTour tier={tier} slot="row" />
+                </Suspense>
+              </ClientOnly>
+              {view !== "orbit" && (
+                <button
+                  type="button"
+                  onClick={() => setView("orbit")}
+                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-accent backdrop-blur hover:text-accent-dim focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <ArrowLeft size={12} aria-hidden /> Back to orbit
+                </button>
+              )}
+              {/* Phones only: Layers/Time/Tour open as bottom sheets, one at
+                  a time (store.sheet). Inspector has no icon here - a
+                  selection itself opens it (Inspector.tsx). */}
+              <div className="pointer-events-auto flex items-center gap-2 sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSheet(sheet === "layers" ? null : "layers")}
+                  aria-pressed={sheet === "layers"}
+                  aria-label="Open the layers sheet"
+                  className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <LayersIcon size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSheet(sheet === "time" ? null : "time")}
+                  aria-pressed={sheet === "time"}
+                  aria-label="Open the time sheet"
+                  className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <Clock size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (tourStep === null) setTourStep(0);
+                    setSheet("tour");
+                  }}
+                  aria-pressed={sheet === "tour"}
+                  aria-label="Open the guided tour"
+                  className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <Compass size={16} aria-hidden />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panels and cards (z-30): the right-edge layer panel column, the
+            shared left slot (inspector or the tour's running card - never
+            both), and the street-level hand-off surface. Each resolves its
+            own position against this stage. */}
+        {showScene && (
+          <ClientOnly fallback={null}>
+            <Suspense fallback={null}>
+              <LayerPanel tier={tier} />
+              <Inspector tier={tier} />
+              <GlobeTour tier={tier} slot="overlay" />
+              <StreetView tier={tier} />
+              {/* <ExploreBar tier={tier} /> mounts here once LANE W1 lands. */}
+            </Suspense>
+          </ClientOnly>
+        )}
+      </div>
+
+      {/* FACT LIST (z-10): below the stage in flow on phones, overlaying its
+          bottom edge on sm+ (stopping short of the layer panel column). */}
       <div
         className={
           capable
-            ? "pointer-events-none absolute inset-x-0 bottom-0 z-10 max-h-[45%] overflow-y-auto bg-gradient-to-t from-ink/95 via-ink/70 to-transparent p-4 sm:p-6"
+            ? `relative z-10 order-2 max-h-[38svh] overflow-y-auto bg-gradient-to-t from-ink/95 via-ink/70 to-transparent p-4 sm:absolute sm:bottom-0 sm:left-0 sm:order-none sm:max-h-[45%] sm:p-6 ${panelReserveRight}`
             : "relative z-10 mx-auto max-w-2xl px-6 py-16"
         }
       >

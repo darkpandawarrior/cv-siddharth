@@ -74,9 +74,29 @@ const LIFT = 0.5 - 1 / PHI ** 2;
  *   orbit is a natural follow-up but didn't fit this chunk's byte budget
  *   (check-budget.mjs) alongside it — see this lane's PR notes.
  */
+// LANE U1 (composition): sm+ only - the right LayerPanel column and the
+// shared left slot (Inspector / the tour's running card) each reserve this
+// much screen width, in pixels, matching Globe.tsx's own PANEL_RESERVE_*/
+// left-slot constants (288px card + 16px edge). Duplicated as plain numbers
+// rather than imported - Globe.tsx's constants are Tailwind class strings,
+// and this file may only touch SceneRig, not add a shared-constants module.
+const PANEL_RESERVE_PX = { open: 249, collapsed: 50 };
+const LEFT_SLOT_RESERVE_PX = 304;
+// Below this width the layer panel and the inspector/tour slot are bottom
+// sheets, not docked columns (Globe.tsx's own `sm` breakpoint) - the globe's
+// screen centre never needs a horizontal nudge on phones.
+const DOCKED_MIN_WIDTH = 640;
+const H_OFFSET_HALF_LIFE = 0.25; // seconds - smooths the shift when a panel opens/closes
+
 function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.RefObject<HTMLDivElement | null>; controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
   const { camera, size } = useThree();
   const get = useThree((s) => s.get);
+  // Set once at mount (see the effect below - re-running it on resize would
+  // snap the camera back out after a visitor zoomed); useFrame re-applies
+  // the SAME value every frame alongside the animated horizontal offset,
+  // since setViewOffset takes both axes in one call.
+  const offsetYRef = useRef(0);
+  const hOffsetRef = useRef(0);
 
   useEffect(() => {
     // Read through get(): the camera is three's own mutable object, and
@@ -93,17 +113,51 @@ function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.R
     const r = Math.min(portrait ? 0.25 : 1 / (2 * PHI), (0.9 * size.width) / size.height / 2);
     const tanHalf = Math.tan((cam.fov * Math.PI) / 360);
     cam.position.setLength(GLOBE_RADIUS / Math.sin(Math.atan(2 * r * tanHalf)));
+    offsetYRef.current = portrait ? 0.225 : LIFT;
     // Fractions (a 1x1 "full" view), so the lift survives R3F's own resize
     // handling. setViewOffset also sets aspect to fullWidth/fullHeight, i.e.
     // 1, which stretched the globe sideways until the real aspect went back.
-    cam.setViewOffset(1, 1, 0, portrait ? 0.225 : LIFT, 1, 1);
+    cam.setViewOffset(1, 1, 0, offsetYRef.current, 1, 1);
     cam.aspect = size.width / size.height;
     cam.updateProjectionMatrix();
     // Mount-time framing only: re-running on resize would snap the camera
     // back out after a visitor zoomed.
   }, [get]);
 
-  useFrame(() => {
+  useFrame((_state, dt) => {
+    // Horizontal re-centring (task 2): the globe's screen centre sits in the
+    // free region between the left slot and the right panel column, docked
+    // sm+ only. `setViewOffset`'s x-offset shifts the rendered frustum
+    // window RIGHT by that fraction, which moves an object fixed at world
+    // centre LEFT on screen (three.js's PerspectiveCamera.updateProjection
+    // Matrix adds `offsetX * width / fullWidth` to the frustum's left
+    // bound - a larger left bound shifts the whole window right, so a
+    // world-centre object now sits closer to the window's left edge).
+    // rightReserve > leftReserve should therefore give a POSITIVE offsetX
+    // (push the globe left, away from the wider right reservation) -
+    // verified against screenshots at panel-open vs panel-collapsed
+    // (globe visibly sits further right once the right panel collapses).
+    const docked = size.width >= DOCKED_MIN_WIDTH;
+    let targetOffsetX = 0;
+    if (docked) {
+      const s = useGlobe.getState();
+      const rightReserve = s.panelOpen ? PANEL_RESERVE_PX.open : PANEL_RESERVE_PX.collapsed;
+      const leftReserve = s.selected || s.tourStep !== null ? LEFT_SLOT_RESERVE_PX : 0;
+      targetOffsetX = (rightReserve - leftReserve) / (2 * size.width);
+    }
+    const k = 1 - 0.5 ** (dt / H_OFFSET_HALF_LIFE);
+    const next = hOffsetRef.current + (targetOffsetX - hOffsetRef.current) * k;
+    hOffsetRef.current = next;
+    // Only pay for a matrix recompute while an offset is actually in play -
+    // once it has decayed back to (near) zero and the target is zero too
+    // (phones, or every panel closed with nothing selected), there is
+    // nothing left to animate.
+    if (Math.abs(next) > 1e-6 || Math.abs(targetOffsetX) > 1e-6) {
+      const cam = camera as THREE.PerspectiveCamera;
+      cam.setViewOffset(1, 1, next, offsetYRef.current, 1, 1);
+      cam.updateProjectionMatrix();
+    }
+
     const el = probeRef.current;
     if (!el) return;
     const toScreen = (v: THREE.Vector3) => {

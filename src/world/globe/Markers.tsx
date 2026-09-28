@@ -2,44 +2,10 @@ import { useMemo, type RefObject } from "react";
 import * as THREE from "three";
 import { latLonToXyz } from "./geoMath.ts";
 import { readColor } from "../../themeColorThree.ts";
-import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
-import { globeFacts } from "./globeRows.ts";
+import { employerMarkers } from "../../data/globeGeo.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
-import { useGlobe, type Selection } from "./globeStore.ts";
-
-/** LANE U1 (composition): the id every Pune selection carries, so the HUD's
- *  markers toggle (Globe.tsx) can tell "the inspector is showing Pune" apart
- *  from any other selection before closing it. */
-export const PUNE_SELECTION_ID = "pune-origin";
-
-/** Builds the exact Inspector payload the retired floating Pune card used to
- *  carry inline - the three claim sentences from globeRows.ts, each row
- *  keyed by the column/ring colour it describes, "source"/"live" naming
- *  where the numbers come from (G8) rather than inventing a fresh copy.
- *  Exported so Globe.tsx's desktop-first-load preselect uses the identical
- *  payload a ring click produces - one source of truth, not two. */
-export function buildPuneSelection(): Selection | null {
-  if (employerMarkers.length === 0) return null;
-  const signal = readColor("--color-signal", "#3ddc84").getStyle();
-  const probe = readColor("--color-probe", "#5ee6ff").getStyle();
-  const home = employerMarkers[0];
-  const names = employerMarkers.map((m) => m.company).join(", ");
-  const unresolvedNote = employersUnresolved.length > 0 ? ` - ${employersUnresolved.join(", ")} listed, never geocoded` : "";
-  const fact = (id: string) => globeFacts.find((r) => r.id === id)!.label;
-  return {
-    id: PUNE_SELECTION_ID,
-    kind: "origin",
-    title: `${home.location.split(",")[0].toUpperCase()} · ${home.lat.toFixed(2)}°N ${home.lon.toFixed(2)}°E`,
-    rows: [
-      { label: "Reach", value: fact("reach-installs"), swatch: signal },
-      { label: "Upstream", value: fact("reach-upstream"), swatch: probe },
-      { label: "Employers", value: names + unresolvedNote, swatch: probe },
-    ],
-    source: "store.ts, profile/openSource.ts, profile/experience.ts",
-    live: false,
-    focus: { kind: "latlon", lat: home.lat, lon: home.lon, distance: 18 },
-  };
-}
+import { useGlobe } from "./globeStore.ts";
+import { buildPuneSelection } from "./puneSelection.ts";
 
 const RING_RADIUS = 0.18;
 const RING_TUBE = 0.012;

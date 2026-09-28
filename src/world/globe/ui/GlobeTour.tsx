@@ -8,7 +8,27 @@ import { liveDotsLabel } from "../globeRows.ts";
 import { usePresenceGeo } from "../presenceGeo.ts";
 import { useGlobe } from "../globeStore.ts";
 
-/** LANE L5 (navigation and UI) owns this file. */
+/** LANE L5 (navigation and UI) wrote the stops and the original single
+ *  floating dialog. LANE U1 (composition) split the shell into three forms
+ *  sharing the same stop content: an idle pill in the shared top row (sm+),
+ *  a running card in the shared left slot (sm+, the same slot Inspector
+ *  uses - they never show together, since entering a stop already clears
+ *  the selection below), and a running bottom sheet on phones (< 640,
+ *  opened by Globe.tsx's own Tour icon button via `store.sheet`).
+ *
+ *  Mounted TWICE by Globe.tsx with a different `slot`, not once: the idle
+ *  pill (`slot="row"`) must be a plain flow child of the top bar for
+ *  flex-wrap to place it correctly, which means the top bar has to be a
+ *  CSS positioned element (so it paints above the WebGL canvas at all,
+ *  since an unpositioned sibling of an absolutely-positioned canvas paints
+ *  BEHIND it per the CSS painting order, regardless of z-index). But the
+ *  running card's `position:absolute` coordinates (`slot="overlay"`) are
+ *  meant to resolve against the globe root/stage, not against the top bar -
+ *  nesting both forms in one mount would make the card a child of a
+ *  positioned top bar and silently resolve its percentages against the
+ *  WRONG box. Two mounts, one shared store, no such conflict; the
+ *  keyboard/enter effects below only run from the "overlay" instance so
+ *  they never double-fire. */
 
 function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
@@ -109,97 +129,80 @@ const STOPS: Stop[] = [
   },
 ];
 
-export default function GlobeTour(_props: { tier: 1 | 2 | 3 }) {
+export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "overlay" }) {
   const tourStep = useGlobe((s) => s.tourStep);
   const setTourStep = useGlobe((s) => s.setTourStep);
   const flyTo = useGlobe((s) => s.flyTo);
   const setView = useGlobe((s) => s.setView);
   const select = useGlobe((s) => s.select);
+  const sheet = useGlobe((s) => s.sheet);
+  const setSheet = useGlobe((s) => s.setSheet);
   const presence = usePresenceGeo();
 
   const running = tourStep !== null;
   const step = running ? Math.max(0, Math.min(STOPS.length - 1, tourStep!)) : 0;
 
+  // Both effects below own real side effects (flying the camera, a global
+  // keydown listener) - gated to the "overlay" instance only, so mounting
+  // this component twice (see the file docstring) never double-fires them.
   useEffect(() => {
-    if (tourStep === null) return;
-    // The tour owns the camera and this same on-screen band; a stale
+    if (slot !== "overlay" || tourStep === null) return;
+    // The tour owns the camera and both its own on-screen slots; a stale
     // Inspector card from before the tour started has nowhere non-
-    // overlapping left to sit (measured via screenshot QA at 1024x768 and
-    // 390x844 -- Inspector.tsx's own card collided with this one no matter
-    // which of the two was pushed lower). Closing it here is simpler and
-    // more honest than chasing pixel offsets between two independent cards.
+    // overlapping left to sit (they share the same left slot / sheet).
+    // Closing it here is simpler and more honest than chasing pixel offsets
+    // between two independent cards.
     select(null);
     STOPS[step].enter({ flyTo, setView });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- flyTo/setView/select are stable store actions
-  }, [tourStep]);
+  }, [tourStep, slot]);
 
   useEffect(() => {
-    if (!running) return;
+    if (slot !== "overlay" || !running) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
-      if (e.key === "Escape") setTourStep(null);
+      if (e.key === "Escape") exit();
       else if (e.key === "ArrowRight") setTourStep(Math.min(STOPS.length - 1, step + 1));
       else if (e.key === "ArrowLeft") setTourStep(Math.max(0, step - 1));
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [running, step, setTourStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- exit/setTourStep close over fresh state via the store
+  }, [running, step, slot]);
 
   const stopBody = useMemo(() => STOPS[step].body({ presence }), [step, presence]);
 
-  if (!running) {
-    return (
-      <button
-        type="button"
-        onClick={() => setTourStep(0)}
-        // Top-anchored, under the HUD row and the time scrubber (both live
-        // above y=44 at every required breakpoint) rather than bottom-
-        // anchored off GlobePanel: a bottom anchor plus this card's own
-        // variable height (up to 4 employer lines) is what collided with
-        // the scrubber (measured via screenshot QA at 1440x900).
-        className="pointer-events-auto absolute left-1/2 top-44 z-20 -translate-x-1/2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-      >
-        Take the tour
-      </button>
-    );
+  // Fully ends the tour AND releases the phone sheet slot it may have been
+  // using — a no-op on desktop, where there is no sheet to close.
+  function exit() {
+    setTourStep(null);
+    setSheet(null);
   }
 
-  return (
-    <div
-      data-globe-tour
-      role="dialog"
-      aria-label="Guided tour"
-      className="pointer-events-auto absolute left-1/2 top-44 z-30 max-h-[min(48vh,360px)] w-[min(90vw,340px)] -translate-x-1/2 overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur"
-    >
+  const dots = (
+    <div className="mb-2 flex items-center justify-center gap-1.5" aria-hidden>
+      {STOPS.map((s, i) => (
+        <span key={s.title} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === step ? "var(--color-signal)" : "#3f3f46" }} />
+      ))}
+    </div>
+  );
+
+  const cardBody = (touchTarget: string) => (
+    <>
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-zinc-100">{STOPS[step].title}</h2>
-        <button
-          type="button"
-          onClick={() => setTourStep(null)}
-          className="rounded-full border border-line px-2 py-0.5 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-        >
+        <button type="button" onClick={exit} className={`rounded-full border border-line px-2 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget}`}>
           Exit
         </button>
       </div>
-
       <div className="mb-3 text-xs leading-relaxed">{stopBody}</div>
-
-      <div className="mb-2 flex items-center justify-center gap-1.5" aria-hidden>
-        {STOPS.map((s, i) => (
-          <span
-            key={s.title}
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: i === step ? "var(--color-signal)" : "#3f3f46" }}
-          />
-        ))}
-      </div>
-
+      {dots}
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setTourStep(Math.max(0, step - 1))}
           disabled={step === 0}
-          className="rounded-full border border-line px-2 py-1 text-xs disabled:opacity-30 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className={`rounded-full border border-line px-2 text-xs disabled:opacity-30 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget}`}
         >
           Back
         </button>
@@ -208,12 +211,63 @@ export default function GlobeTour(_props: { tier: 1 | 2 | 3 }) {
         </span>
         <button
           type="button"
-          onClick={() => (step === STOPS.length - 1 ? setTourStep(null) : setTourStep(step + 1))}
-          className="rounded-full border border-line px-2 py-1 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={() => (step === STOPS.length - 1 ? exit() : setTourStep(step + 1))}
+          className={`rounded-full border border-line px-2 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget}`}
         >
           {step === STOPS.length - 1 ? "Done" : "Next"}
         </button>
       </div>
-    </div>
+    </>
+  );
+
+  if (slot === "row") {
+    // Desktop/tablet (sm+) idle pill only, a plain flow child of the shared
+    // top row. Phones get a dedicated icon button from Globe.tsx instead
+    // (44px touch target, starts the tour and opens the sheet in one tap).
+    // Running state has nothing to show here - the card lives in the
+    // "overlay" mount instead.
+    if (running) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => setTourStep(0)}
+        className="pointer-events-auto hidden items-center rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:inline-flex"
+      >
+        Take the tour
+      </button>
+    );
+  }
+
+  // slot === "overlay": positioned relative to the globe root/stage, not the
+  // top row - see the file docstring for why this has to be a separate
+  // mount from the idle pill above.
+  return (
+    <>
+      {/* Desktop/tablet running card - the shared left slot (Inspector's own
+          absolute box; they are never both visible, so occupying the exact
+          same coordinates never collides). */}
+      {running && (
+        <div
+          data-globe-tour
+          role="dialog"
+          aria-label="Guided tour"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-none"
+        >
+          {cardBody("py-1")}
+        </div>
+      )}
+
+      {/* Phone (< 640): a bottom sheet, one of store.sheet's four. */}
+      {sheet === "tour" && running && (
+        <div
+          data-globe-tour-sheet
+          role="dialog"
+          aria-label="Guided tour"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+        >
+          {cardBody("min-h-11 min-w-11")}
+        </div>
+      )}
+    </>
   );
 }
