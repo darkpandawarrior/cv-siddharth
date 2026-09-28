@@ -7,6 +7,7 @@ import { useGlobe } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useTogetherPresence } from "../togetherPresence.ts";
 import { GLIDE_MS, MAX_RENDERED, hoverLabel, interpolateLatLon, quantizeLatLon, shouldPublish, zoomBucket, type ViewPresence } from "../together.ts";
+import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
 
 /**
  * WAVE 5 LANE W15 (together: anonymous live viewports of other explorers,
@@ -120,6 +121,12 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const trailRef = useRef<THREE.LineSegments>(null);
   const trailMap = useRef(new Map<string, PeerTrail>());
+  // WAVE 6 LANE X1 (live world feed): true until the first sync effect has
+  // run once, so the peers already on the channel at mount are a baseline,
+  // not a burst of "N explorers joined" the instant this tab opens
+  // (PulseLayer's own prevRef === null / ArcLayer's own seenCountriesRef
+  // === null convention, restated for a Map that starts non-null but empty).
+  const firstSyncRef = useRef(true);
   const metaRef = useRef<InstanceMeta[]>([]);
   const lastPublished = useRef<ViewPresence | null>(null);
   const sincePublishMs = useRef(0);
@@ -148,6 +155,19 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
       const existing = map.get(key);
       if (!existing) {
         map.set(key, { from: { lat: view.lat, lon: view.lon }, target: view, glideMs: GLIDE_MS, history: [{ lat: view.lat, lon: view.lon }], sinceSampleMs: 0 });
+        if (!firstSyncRef.current) {
+          publish({
+            id: `together:${key}:${Date.now()}`,
+            kind: "together",
+            title: "An explorer joined",
+            detail: hoverLabel(view),
+            whenMs: Date.now(),
+            source: "together presence channel",
+            live: true,
+            focus: { kind: "latlon", lat: view.lat, lon: view.lon },
+            severity: "info",
+          });
+        }
         continue;
       }
       if (!samePresence(existing.target, view)) {
@@ -157,6 +177,7 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
         existing.glideMs = 0;
       }
     }
+    firstSyncRef.current = false;
     for (const key of Array.from(map.keys())) {
       if (!seen.has(key)) map.delete(key);
     }
