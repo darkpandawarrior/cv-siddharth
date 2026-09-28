@@ -36,6 +36,8 @@ const LABEL: Record<LayerId, string> = {
   presence: "Visitors",
   pulses: "Live pulses",
   hazards: "Earth events",
+  wind: "Wind",
+  reach: "My apps and repos",
 };
 
 // Same guard as GlobeScene.tsx's own isTypingTarget, restated per this
