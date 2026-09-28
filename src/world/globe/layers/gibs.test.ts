@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MUR_SEA_ICE, dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl, seaIceAttempts } from "./gibs.ts";
+import { MUR_SEA_ICE, dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, shouldUpgradeHiDay } from "./gibs.ts";
 
 describe("isoDateUTC", () => {
   it("subtracts whole UTC days", () => {
@@ -98,5 +98,36 @@ describe("seaIceAttempts", () => {
     const u = new URL(gibsGetMapUrl("X", { width: 2, height: 1 }));
     expect(u.searchParams.get("FORMAT")).toBe("image/jpeg");
     expect(u.searchParams.has("TRANSPARENT")).toBe(false);
+  });
+});
+
+describe("shouldUpgradeHiDay", () => {
+  it("never upgrades off tier 1, whatever the connection says", () => {
+    expect(shouldUpgradeHiDay(2, undefined)).toBe(false);
+    expect(shouldUpgradeHiDay(3, undefined)).toBe(false);
+    expect(shouldUpgradeHiDay(2, { effectiveType: "4g" })).toBe(false);
+  });
+
+  it("upgrades on tier 1 when navigator.connection doesn't exist (desktop Safari/Firefox) — behaviour unchanged", () => {
+    expect(shouldUpgradeHiDay(1, undefined)).toBe(true);
+  });
+
+  it("skips under Data Saver, even on a fast connection", () => {
+    expect(shouldUpgradeHiDay(1, { saveData: true, effectiveType: "4g" })).toBe(false);
+  });
+
+  it("skips on anything below 4G", () => {
+    expect(shouldUpgradeHiDay(1, { effectiveType: "3g" })).toBe(false);
+    expect(shouldUpgradeHiDay(1, { effectiveType: "2g" })).toBe(false);
+    expect(shouldUpgradeHiDay(1, { effectiveType: "slow-2g" })).toBe(false);
+  });
+
+  it("upgrades on tier 1, 4G, no Data Saver", () => {
+    expect(shouldUpgradeHiDay(1, { effectiveType: "4g" })).toBe(true);
+    expect(shouldUpgradeHiDay(1, { saveData: false, effectiveType: "4g" })).toBe(true);
+  });
+
+  it("treats a present-but-empty connection object (effectiveType unset) as no opinion, not as slow", () => {
+    expect(shouldUpgradeHiDay(1, {})).toBe(true);
   });
 });

@@ -101,6 +101,43 @@ export interface ImagerySource {
   source: string;
 }
 
+/** The shape of `navigator.connection` (Network Information API) this
+ *  decision reads — a structural subset, not the real (Chromium-only, `lib
+ *  dom` doesn't ship it) `NetworkInformation` type, so a plain object test
+ *  stub type-checks with no DOM lib gymnastics. */
+export interface ConnectionLike {
+  saveData?: boolean;
+  effectiveType?: string;
+}
+
+/**
+ * Should EarthImagery.tsx's T1 progressive upgrade (swapping the 2048 day
+ * texture for a ~2+ MB 4096x2048 one, once idle) actually fire? Audit fix,
+ * 2026-09-28: it used to run unconditionally on every T1 session, spending
+ * the extra download on Data Saver and slow connections that asked NOT to
+ * pay for it.
+ *
+ * `tier !== 1` is always false: the caller already gates this to T1 only
+ * (T2/T3 never reach the idle() callback at all), but the check is repeated
+ * here so the decision is total and correct on its own, not only correct at
+ * its one real call site.
+ *
+ * `connection` is `navigator.connection`, `undefined` when the Network
+ * Information API doesn't exist at all (desktop Safari, Firefox, as of this
+ * writing) — there is no signal to act on there, so behaviour is unchanged:
+ * the upgrade proceeds exactly as it always did. Skipped when `saveData` is
+ * true, or when `effectiveType` is present and isn't `"4g"` (`effectiveType`
+ * itself can be absent even when the rest of the API exists, per the spec —
+ * treated the same as "no opinion", not as "slow").
+ */
+export function shouldUpgradeHiDay(tier: 1 | 2 | 3, connection: ConnectionLike | undefined): boolean {
+  if (tier !== 1) return false;
+  if (!connection) return true;
+  if (connection.saveData) return false;
+  if (connection.effectiveType !== undefined && connection.effectiveType !== "4g") return false;
+  return true;
+}
+
 /** What the day side IS showing for `now`, for integration's attribution
  *  line — the intended best-case source, not necessarily which fallback rung
  *  a failed fetch actually landed on (that live detail is

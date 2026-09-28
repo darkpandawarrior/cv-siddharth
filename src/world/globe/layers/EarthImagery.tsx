@@ -5,7 +5,7 @@ import { EarthDots } from "../EarthDots.tsx";
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe } from "../globeStore.ts";
 import { Atmosphere } from "./Atmosphere.tsx";
-import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, type ImageryAttempt } from "./gibs.ts";
+import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, shouldUpgradeHiDay, type ConnectionLike, type ImageryAttempt } from "./gibs.ts";
 import { EARTH_IMAGERY_FRAG, INNER_HAZE_FRAG } from "./earthImageryShader.ts";
 import { sunDirection, VERT } from "./sun.ts";
 
@@ -179,8 +179,12 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
         })
         .catch(() => {});
 
-      // T1 progressive upgrade: swap in a 4096x2048 day texture once idle.
-      if (tier === 1) {
+      // T1 progressive upgrade: swap in a 4096x2048 day texture once idle —
+      // but only on a fast, unmetered connection (audit fix, 2026-09-28: this
+      // ~2+ MB extra download used to fire unconditionally on every T1
+      // session). `navigator.connection` isn't in `lib dom`, hence the cast.
+      const connection = (navigator as Navigator & { connection?: ConnectionLike }).connection;
+      if (shouldUpgradeHiDay(tier, connection)) {
         idle(() => {
           if (!alive) return;
           loadTexture(dayImageryAttempts(now, HI_DAY_SIZE)[0].url)
