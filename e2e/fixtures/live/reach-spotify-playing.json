@@ -1,0 +1,10 @@
+{
+  "connected": true,
+  "isPlaying": true,
+  "track": "Test Track",
+  "artist": "Test Artist",
+  "album": "Test Album",
+  "albumArt": "https://example.com/art.jpg",
+  "url": "https://open.spotify.com/track/test",
+  "recent": []
+}
