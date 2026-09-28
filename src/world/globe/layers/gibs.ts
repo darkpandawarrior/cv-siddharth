@@ -20,6 +20,11 @@ export const BLACK_MARBLE_NIGHT = "VIIRS_Black_Marble";
 // through polar night), unlike VIIRS reflectance, which has no data wherever
 // the sun is low. It lags a day or two, hence the older dates below.
 export const MUR_SEA_ICE = "GHRSST_L4_MUR_Sea_Ice_Concentration";
+// Static greyscale hillshade from ASTER GDEM (verified 200, CORS *, ~32 KB at
+// 1024 px). Flat land reads 0.564 (measured over the Deccan plateau), so
+// the shader treats that as neutral and only lights or shades slopes.
+export const ASTER_RELIEF = "ASTER_GDEM_Greyscale_Shaded_Relief";
+export const RELIEF_NEUTRAL = 0.564;
 
 export interface GibsSize {
   width: number;
@@ -79,6 +84,11 @@ export function dayImageryAttempts(now: Date, size: GibsSize): ImageryAttempt[] 
  *  polar night, and (via its own land/ocean colour) the sun-glint mask. */
 export function gapFillUrl(size: GibsSize): string {
   return gibsGetMapUrl(BLUE_MARBLE_BASE, size);
+}
+
+/** Static ASTER GDEM hillshade: relief shading on land. */
+export function reliefUrl(size: GibsSize): string {
+  return gibsGetMapUrl(ASTER_RELIEF, size);
 }
 
 /** Static VIIRS Black Marble: night-side city lights. */

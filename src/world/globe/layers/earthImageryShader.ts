@@ -8,7 +8,9 @@
 // shader automatically (node_modules/three/src/renderers/webgl/
 // WebGLProgram.js), so redeclaring either is a duplicate-symbol compile
 // error, not a no-op.
+import { CLOUD_HEIGHT, CLOUD_MASK_GLSL } from "./cloudMask.ts";
 import { GLOBE_RADIUS } from "../geoMath.ts";
+import { RELIEF_NEUTRAL } from "./gibs.ts";
 
 export const EARTH_IMAGERY_FRAG = `
 uniform vec3 uSun;
@@ -16,8 +18,12 @@ uniform sampler2D uDay;
 uniform sampler2D uBase;
 uniform sampler2D uNight;
 uniform sampler2D uIce;
+uniform float uCloudReady;
+uniform sampler2D uRelief;
+uniform float uReliefReady;
 varying vec3 vW;varying vec3 vN;varying vec3 vV;varying vec2 vUv;
 
+${CLOUD_MASK_GLSL}
 void main(){
   vec3 dayColor = texture2D(uDay, vUv).rgb;
   vec3 baseColor = texture2D(uBase, vUv).rgb;
@@ -39,7 +45,30 @@ void main(){
   vec4 ice = texture2D(uIce, vUv);
   float iceAmt = ice.a * mix(0.55, 1.0, ice.r);
   vec3 fill = mix(baseColor, vec3(0.86, 0.9, 0.94), iceAmt);
-  vec3 land = mix(dayColor, fill, gap);
+  float clouds = cloudMask(vUv) * uCloudReady;
+  vec3 land = mix(mix(dayColor, baseColor, clouds), fill, gap);
+  float oceanness = smoothstep(0.03, 0.14, baseColor.b - max(baseColor.r, baseColor.g));
+  // The base carries actual bathymetry colours, not invented depth bands.
+  land = mix(land, baseColor, oceanness * 0.22);
+
+  // Relief on land only: the ASTER hillshade brightens and shades slopes
+  // around its flat-land neutral, so mountain ranges read in 3D. It is lit
+  // from a fixed cartographic direction, not the real sun, so it stays a
+  // gentle modulation rather than the lighting itself.
+  float h = texture2D(uRelief, vUv).r;
+  land *= mix(1.0, 1.0 + (h - ${RELIEF_NEUTRAL}) * 1.1, (1.0 - oceanness) * uReliefReady);
+
+  // Intersect the ray TOWARD the sun with the raised sphere. This stays
+  // bounded at the terminator and wraps at the date line in sphere UVs.
+  vec3 n = normalize(vW);
+  vec3 lightDir = normalize(uSun);
+  float mu = dot(n, lightDir);
+  float ray = -mu + sqrt(mu*mu + ${((1 + CLOUD_HEIGHT) ** 2 - 1).toFixed(8)});
+  vec3 hit = normalize(n + lightDir * ray);
+  vec2 shadowUv = vec2(fract(0.5 + atan(-hit.z, hit.x)/6.28318530718),
+                       0.5 + asin(clamp(hit.y,-1.0,1.0))/3.14159265359);
+  float shadow = cloudMask(shadowUv) * uCloudReady * smoothstep(0.0,0.12,mu);
+  land *= 1.0 - 0.24 * shadow;
 
   // City lights (item 3): brighten only — a cheap stand-in for bloom that
   // needs no extra postprocessing pass.
@@ -65,7 +94,6 @@ void main(){
   // Ocean specular glint (item 4), masked to ocean by the base texture's own
   // blue dominance — Blue Marble already separates land from ocean by
   // colour, so no separate land-mask fetch earns its cost here.
-  float oceanness = smoothstep(0.03, 0.14, baseColor.b - max(baseColor.r, baseColor.g));
   vec3 worldPos = normalize(vW) * ${GLOBE_RADIUS.toFixed(1)};
   vec3 viewDirW = normalize(cameraPosition - worldPos);
   vec3 reflectDir = reflect(-normalize(uSun), normalize(vW));
