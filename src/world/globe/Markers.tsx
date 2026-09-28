@@ -1,50 +1,66 @@
 import { useMemo, type RefObject } from "react";
-import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { latLonToXyz } from "./geoMath.ts";
 import { readColor } from "../../themeColorThree.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
 import { globeFacts } from "./globeRows.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
-import { LEADER, calculatePosition, cardStyle } from "./htmlLabelClamp.ts";
+import { useGlobe, type Selection } from "./globeStore.ts";
+
+/** LANE U1 (composition): the id every Pune selection carries, so the HUD's
+ *  markers toggle (Globe.tsx) can tell "the inspector is showing Pune" apart
+ *  from any other selection before closing it. */
+export const PUNE_SELECTION_ID = "pune-origin";
+
+/** Builds the exact Inspector payload the retired floating Pune card used to
+ *  carry inline - the three claim sentences from globeRows.ts, each row
+ *  keyed by the column/ring colour it describes, "source"/"live" naming
+ *  where the numbers come from (G8) rather than inventing a fresh copy.
+ *  Exported so Globe.tsx's desktop-first-load preselect uses the identical
+ *  payload a ring click produces - one source of truth, not two. */
+export function buildPuneSelection(): Selection | null {
+  if (employerMarkers.length === 0) return null;
+  const signal = readColor("--color-signal", "#3ddc84").getStyle();
+  const probe = readColor("--color-probe", "#5ee6ff").getStyle();
+  const home = employerMarkers[0];
+  const names = employerMarkers.map((m) => m.company).join(", ");
+  const unresolvedNote = employersUnresolved.length > 0 ? ` - ${employersUnresolved.join(", ")} listed, never geocoded` : "";
+  const fact = (id: string) => globeFacts.find((r) => r.id === id)!.label;
+  return {
+    id: PUNE_SELECTION_ID,
+    kind: "origin",
+    title: `${home.location.split(",")[0].toUpperCase()} · ${home.lat.toFixed(2)}°N ${home.lon.toFixed(2)}°E`,
+    rows: [
+      { label: "Reach", value: fact("reach-installs"), swatch: signal },
+      { label: "Upstream", value: fact("reach-upstream"), swatch: probe },
+      { label: "Employers", value: names + unresolvedNote, swatch: probe },
+    ],
+    source: "store.ts, profile/openSource.ts, profile/experience.ts",
+    live: false,
+    focus: { kind: "latlon", lat: home.lat, lon: home.lon, distance: 18 },
+  };
+}
 
 const RING_RADIUS = 0.18;
 const RING_TUBE = 0.012;
 
-function Swatch({ color, ring }: { color: string; ring?: boolean }) {
-  return (
-    <span
-      aria-hidden
-      style={{
-        width: 8,
-        height: 8,
-        marginTop: 4,
-        flex: "none",
-        borderRadius: ring ? "50%" : 2,
-        background: ring ? "transparent" : color,
-        border: ring ? `1.5px solid ${color}` : undefined,
-      }}
-    />
-  );
-}
-
 /**
- * Employer markers (G17, living-ledger-spec.md#6.3 task 2): city precision
+ * Employer marker (G17, living-ledger-spec.md#6.3 task 2): city precision
  * only. Both resolvable employers (Dice.tech, John Deere India) sit in Pune
  * today, so this draws one ring at that single point rather than one marker
- * each - "both mapped employers sit in Pune today, so they are a ring on the
- * origin." The two unresolved locations (Remote/Contract, India) are named
- * in the label, never geocoded and never given an arc: "no arc is ever drawn
- * to a location this table does not actually know."
+ * each.
  *
- * The ring also carries the one Pune card. The two reach columns and this
- * ring all stand within a few pixels of each other, so three floating
- * labels could only ever overlap; one card keeps each exact claim sentence,
- * keyed by a swatch to the column or ring it describes.
+ * LANE U1 retired the floating `<Html>` card this ring used to carry (it
+ * collided with the time scrubber, the tour and the layer panel at every
+ * measured breakpoint - the bug this lane exists to fix). The three claim
+ * sentences it held now live in the Inspector (buildPuneSelection above);
+ * this ring is a plain clickable 3D marker that opens them there, same as
+ * any other selectable entity on the globe.
  */
-export function Markers({ occlude }: { occlude?: RefObject<THREE.Object3D>[] }) {
-  const signal = useMemo(() => readColor("--color-signal", "#3ddc84").getStyle(), []);
+export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Object3D>[] }) {
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
+  const select = useGlobe((s) => s.select);
+  const setView = useGlobe((s) => s.setView);
 
   const placement = useMemo(() => {
     if (employerMarkers.length === 0) return null;
@@ -59,39 +75,27 @@ export function Markers({ occlude }: { occlude?: RefObject<THREE.Object3D>[] }) 
 
   if (!placement) return null;
 
-  const names = employerMarkers.map((m) => m.company).join(", ");
-  const unresolvedNote = employersUnresolved.length > 0 ? ` - ${employersUnresolved.join(", ")} listed, never geocoded` : "";
-  const home = employerMarkers[0];
-  const header = `${home.location.split(",")[0].toUpperCase()} · ${home.lat.toFixed(2)}°N ${home.lon.toFixed(2)}°E`;
-  const fact = (id: string) => globeFacts.find((r) => r.id === id)!.label;
-  const rows: { color: string; ring?: boolean; text: string }[] = [
-    { color: signal, text: fact("reach-installs") },
-    { color: probe.getStyle(), text: fact("reach-upstream") },
-    { color: probe.getStyle(), ring: true, text: names + unresolvedNote },
-  ];
-
   return (
     <group data-employer-ring position={placement.position} quaternion={placement.quaternion}>
-      <mesh>
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          const selection = buildPuneSelection();
+          if (!selection) return;
+          setView("orbit");
+          select(selection);
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = "auto";
+        }}
+      >
         <torusGeometry args={[RING_RADIUS, RING_TUBE, 8, 40]} />
         <meshBasicMaterial color={probe} toneMapped={false} />
       </mesh>
-      <Html calculatePosition={calculatePosition} occlude={occlude} style={{ pointerEvents: "none" }}>
-        {/* Hidden under 640px: the card would cover most of a phone's
-            globe, and GlobePanel right below carries the same sentences. */}
-        <div data-pune-card className="hidden sm:flex" style={{ alignItems: "center", transform: "translateY(-50%)" }}>
-          <span aria-hidden style={{ width: LEADER, height: 1, flex: "none", background: "rgba(232,239,233,0.4)" }} />
-          <div style={cardStyle}>
-            <div style={{ fontSize: 10, letterSpacing: "0.08em", color: "rgba(232,239,233,0.55)" }}>{header}</div>
-            {rows.map((r) => (
-              <div key={r.text} style={{ display: "flex", gap: 8 }}>
-                <Swatch color={r.color} ring={r.ring} />
-                <span>{r.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Html>
     </group>
   );
 }

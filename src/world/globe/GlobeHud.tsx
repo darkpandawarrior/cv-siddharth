@@ -34,8 +34,8 @@ export interface GlobeHudProps {
   onZoomOut?: () => void;
   autoRotatePaused?: boolean;
   onToggleAutoRotate?: () => void;
-  /** Hides the Pune card, reach columns and employer ring for a clean view
-   *  of the earth; the same button brings them back. */
+  /** Hides the reach columns and employer ring for a clean view of the
+   *  earth; the same button brings them back. */
   markersHidden?: boolean;
   onToggleMarkers?: () => void;
 }
@@ -53,6 +53,14 @@ export interface GlobeHudProps {
  * that acceptance line. Rendered in both the WebGL and the no-WebGL branch
  * (Globe.tsx): there is always a Pune reading, even when there is nothing
  * to orbit.
+ *
+ * LANE U1 (composition): used to wrap itself in its own absolutely
+ * positioned top-left corner. Six lanes each doing that independently is the
+ * bug this lane exists to fix — this now returns a flat run of pills, and
+ * Globe.tsx's single shared top-row bar lays them out alongside the time bar
+ * and the tour/back-to-orbit pills, so the whole row wraps together instead
+ * of five components silently overlapping. Every pill keeps the same ~30px
+ * height (px-3 py-1.5 on text-xs) the rest of that row matches.
  */
 export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotatePaused = false, onToggleAutoRotate, markersHidden = false, onToggleMarkers }: GlobeHudProps) {
   const reducedMotion = useReducedMotion();
@@ -62,7 +70,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
   const weatherLabel = sky?.weather ? WMO_LABEL[sky.weather.code] : undefined;
 
   return (
-    <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
+    <>
       <div
         data-autorotate={autoRotate ? "on" : "off"}
         className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur"
@@ -94,7 +102,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           type="button"
           onClick={onToggleMarkers}
           aria-pressed={markersHidden}
-          aria-label={markersHidden ? "Show the Pune markers and card" : "Hide the Pune markers and card"}
+          aria-label={markersHidden ? "Show the Pune ring and reach columns" : "Hide the Pune ring and reach columns"}
           title={markersHidden ? "Show markers" : "Hide markers"}
           className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
         >
@@ -111,6 +119,6 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 }
