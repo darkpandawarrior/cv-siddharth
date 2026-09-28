@@ -68,6 +68,14 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // earth loads yesterday's VIIRS mosaic plus the Blue and Black Marble
     // bases as textures, straight from NASA (CORS *), never proxied.
     "https://gibs.earthdata.nasa.gov",
+    // Panoramax's photo storage host (src/world/globe/ui/streetPhotoViewer.tsx
+    // and StreetView.tsx's click-to-open lightbox/360 viewer): the search
+    // API (api.panoramax.xyz, below) answers with asset URLs on THIS
+    // different host — plain <img> and THREE.TextureLoader loads, CORS "*",
+    // keyless. Not tiles.openfreemap.org: MapLibre fetches every style/tile/
+    // sprite/glyph resource with `fetch()` (confirmed in its own bundled
+    // source), which CSP scopes under connect-src, never img-src.
+    "https://panoramax.openstreetmap.fr",
     ...(heavyOrigin ? [heavyOrigin] : []),
   ],
   "media-src": ["'self'", ...(heavyOrigin ? [heavyOrigin] : [])], // ShowcaseFilm's project videos
@@ -89,6 +97,15 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     "https://www.gdacs.org",
     "https://services.swpc.noaa.gov",
     "https://ll.thespacedevs.com",
+    // /globe's street level (src/world/globe/ui/StreetView.tsx, streetPhotos.ts):
+    // OpenFreeMap's keyless "liberty" style (style JSON, vector .pbf tiles,
+    // sprite JSON/PNG, glyph .pbf, and the fallback raster base) — MapLibre
+    // GL fetches every one of these with `fetch()`, never `<img>`, so this
+    // whole family sits under connect-src, not img-src. CORS "*", verified.
+    "https://tiles.openfreemap.org",
+    // Panoramax's search API (StreetView.tsx's bbox photo query) — CORS
+    // echoes the request Origin rather than "*", still keyless.
+    "https://api.panoramax.xyz",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.
