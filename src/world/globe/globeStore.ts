@@ -56,6 +56,17 @@ export interface ImageryStack {
   overlays: { id: string; opacity: number }[];
 }
 
+/** LANE W15 (together): the full live count of OTHER explorers on
+ *  `/globe` right now (never capped -- TogetherLayer.tsx may draw fewer
+ *  than this) and whether this tab shares its own view. Nothing here is a
+ *  location or an identity, and nothing here is ever persisted -- see
+ *  together.ts's own header comment for the privacy contract this field
+ *  is downstream of. */
+export interface TogetherState {
+  count: number;
+  sharing: boolean;
+}
+
 interface GlobeState {
   style: EarthStyle;
   layers: Record<LayerId, boolean>;
@@ -69,6 +80,7 @@ interface GlobeState {
   status: Partial<Record<StatusKey, LayerHealth>>;
   sheet: GlobeSheet;
   imagery: ImageryStack;
+  together: TogetherState;
   setStyle: (style: EarthStyle) => void;
   toggleLayer: (id: LayerId) => void;
   setView: (view: GlobeView) => void;
@@ -79,6 +91,8 @@ interface GlobeState {
   setStatus: (key: StatusKey, health: LayerHealth | undefined) => void;
   setSheet: (sheet: GlobeSheet) => void;
   setImagery: (imagery: ImageryStack) => void;
+  setTogetherCount: (count: number) => void;
+  setTogetherSharing: (sharing: boolean) => void;
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
@@ -92,6 +106,9 @@ export const useGlobe = create<GlobeState>((set) => ({
   status: {},
   sheet: null,
   imagery: { base: "VIIRS_SNPP_CorrectedReflectance_TrueColor", overlays: [] },
+  // Default ON (brief: "Default sharing ON with an obvious toggle later" --
+  // the UI lane wires the toggle to setTogetherSharing).
+  together: { count: 0, sharing: true },
   setStyle: (style) => set({ style }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setView: (view) => set({ view }),
@@ -102,6 +119,8 @@ export const useGlobe = create<GlobeState>((set) => ({
   setStatus: (key, health) => set((s) => ({ status: { ...s.status, [key]: health } })),
   setSheet: (sheet) => set({ sheet }),
   setImagery: (imagery) => set({ imagery }),
+  setTogetherCount: (count) => set((s) => ({ together: { ...s.together, count } })),
+  setTogetherSharing: (sharing) => set((s) => ({ together: { ...s.together, sharing } })),
 }));
 
 /** The simulated instant every time-aware layer draws: the real clock plus
