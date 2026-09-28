@@ -28,6 +28,9 @@ const ReachLayer = lazy(() => import("./layers/ReachLayer.tsx"));
 const CloudShell = lazy(() => import("./layers/CloudShell.tsx"));
 const CountryLayer = lazy(() => import("./layers/CountryLayer.tsx"));
 const TogetherLayer = lazy(() => import("./layers/TogetherLayer.tsx"));
+const HistoryLayer = lazy(() => import("./layers/HistoryLayer.tsx"));
+const StoryArc = lazy(() => import("./layers/StoryArc.tsx"));
+const HexbinLayer = lazy(() => import("./layers/HexbinLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -383,6 +386,13 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>{layers.countries && <CountryLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.together && live && tier !== 3 && <TogetherLayer tier={tier} />}</Suspense>
+        {/* Wave 6 seams: replay (renders only off "now"), story arcs (only while
+            a story plays), density columns (toggle). */}
+        <Suspense fallback={null}>{layers.hazards && <HistoryLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>
+          <StoryArc tier={tier} />
+        </Suspense>
+        <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />

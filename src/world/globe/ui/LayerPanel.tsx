@@ -47,6 +47,7 @@ const LABEL: Record<LayerId, string> = {
   reach: "My apps and repos",
   countries: "Countries",
   together: "Explorers here now",
+  density: "Quake and fire density",
 };
 
 // Same guard as GlobeScene.tsx's own isTypingTarget, restated per this

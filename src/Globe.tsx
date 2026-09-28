@@ -22,6 +22,9 @@ const StreetView = lazy(() => import("./world/globe/ui/StreetView.tsx"));
 // The explore bar (place search, "what's here", measure) takes the reserved
 // centre band in the top row; see the slot comment below.
 const ExploreBar = lazy(() => import("./world/globe/ui/ExploreBar.tsx"));
+const StoryPlayer = lazy(() => import("./world/globe/ui/StoryPlayer.tsx"));
+const Intro = lazy(() => import("./world/globe/ui/Intro.tsx"));
+const SoundToggle = lazy(() => import("./world/globe/ui/SoundToggle.tsx"));
 
 const sceneLoadingFallback = (
   <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the globe…</div>
@@ -333,6 +336,9 @@ export function Globe() {
               <GlobeTour tier={tier} slot="overlay" />
               <StreetView tier={tier} />
               <ExploreBar tier={tier} />
+              <StoryPlayer tier={tier} />
+              <Intro tier={tier} />
+              <SoundToggle tier={tier} />
             </Suspense>
           </ClientOnly>
         )}
