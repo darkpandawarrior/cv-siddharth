@@ -20,9 +20,18 @@ import {
   type PulseSources,
 } from "./pulseEvents.ts";
 
-// streams.ts's own pollMs for ci-site/ci-family/chess-presence/kites-devto/
-// downloads -- one shared cadence for all three feeds this layer reads.
+// streams.ts's own pollMs for ci-site (endpoint /api/ops) -- shared cadence
+// for the github-activity/ops feeds below.
 const POLL_MS = 60_000;
+// audit fix (2026-09-28): /api/signals's edge cache is s-maxage=120
+// (signals-handler.ts), and useLive.ts's useSignals() -- the other callers
+// of this same URL (CiStrip, Terminal, OpsBoard, AnomalyRail) -- already
+// polls at 120_000. useLiveSignal's shared bus polls at whichever mounted
+// subscriber asks fastest, so this layer's own 60_000 was silently
+// overriding that agreement on any page where it and one of those others are
+// both mounted, doubling real origin traffic for no fresher data (the edge
+// cache made the extra polls a guaranteed miss half the time).
+const SIGNALS_POLL_MS = 120_000;
 // living-ledger §6.3 Tiers: "capped pulse rings ... T1 12, T2 6, T3 0".
 const CAP_BY_TIER: Record<1 | 2 | 3, number> = { 1: 12, 2: 6, 3: 0 };
 const MAX_PULSES = 12;
@@ -82,7 +91,7 @@ export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
 
   const { data: activity, error: activityError } = useLiveSignal<GithubActivity>("/api/github-activity", POLL_MS);
   const { data: ops, error: opsError } = useLiveSignal<Ops>("/api/ops", POLL_MS);
-  const { data: signals, error: signalsError } = useLiveSignal<SignalsResponse>("/api/signals", POLL_MS);
+  const { data: signals, error: signalsError } = useLiveSignal<SignalsResponse>("/api/signals", SIGNALS_POLL_MS);
 
   const prevRef = useRef<PulseSources | null>(null);
   const slotsRef = useRef<Slot[]>([]);

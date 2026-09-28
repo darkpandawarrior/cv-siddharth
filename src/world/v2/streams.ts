@@ -220,7 +220,7 @@ export const STREAMS: readonly Stream[] = [
     licence: "GitHub API terms",
     attribution: "CI status: GitHub Actions (family repos)",
     endpoint: "/api/signals",
-    pollMs: 60_000,
+    pollMs: 120_000, // matches signals-handler.ts's s-maxage=120 (audit fix 2026-09-28); see useLive.ts's useSignals
     altitudes: STREET_ONLY,
     tiers: { 1: "per-repo deck-lamp state across the family", 2: "worst-state lamp only", 3: "text state only" },
     reducedMotion: "no motion in this stream regardless of the setting",
@@ -235,7 +235,7 @@ export const STREAMS: readonly Stream[] = [
     licence: "lichess API terms (no data licence stated; public endpoint)",
     attribution: "Presence: lichess.org",
     endpoint: "/api/signals",
-    pollMs: 60_000,
+    pollMs: 120_000, // matches signals-handler.ts's s-maxage=120 (audit fix 2026-09-28); see useLive.ts's useSignals
     altitudes: STREET_ONLY,
     tiers: { 1: "ridge glows while online, brighter while a game is live", 2: "ridge glow, online only, no live-game distinction", 3: "no glow" },
     reducedMotion: "glow state still updates on poll; no pulse animation",
@@ -250,7 +250,7 @@ export const STREAMS: readonly Stream[] = [
     licence: "Forem/dev.to API terms (public endpoint)",
     attribution: "Reactions: dev.to",
     endpoint: "/api/signals",
-    pollMs: 60_000,
+    pollMs: 120_000, // matches signals-handler.ts's s-maxage=120 (audit fix 2026-09-28); see useLive.ts's useSignals
     altitudes: STREET_ONLY,
     tiers: { 1: "kite altitude from live reaction count", 2: "kite altitude from last-cached reaction count", 3: "kite at its unmeasured floor" },
     reducedMotion: "no motion in this stream regardless of the setting",
@@ -265,7 +265,7 @@ export const STREAMS: readonly Stream[] = [
     licence: "GitHub API terms",
     attribution: "Downloads: GitHub Releases",
     endpoint: "/api/signals",
-    pollMs: 60_000,
+    pollMs: 120_000, // matches signals-handler.ts's s-maxage=120 (audit fix 2026-09-28); see useLive.ts's useSignals
     altitudes: STREET_ONLY,
     tiers: { 1: "live per-release download counts", 2: "totals only", 3: "no download detail" },
     reducedMotion: "no motion in this stream regardless of the setting",
