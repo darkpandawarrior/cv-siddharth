@@ -81,10 +81,12 @@ test("feed items appear from the hazard and signals fixtures", async ({ page }) 
 
   const rail = page.locator("[data-globe-feed-rail]");
   // A hazard item (quake.ts's own M>=4.5 floor: this fixture's largest is
-  // M5.6 off Kokopo) and a signals item (the fixture's one CI failure,
-  // paymentslab-kmp) both come from the same two families the brief names.
+  // M5.6 off Kokopo) and a signals item (activity.json's newest push, which
+  // PulseLayer's own opening replay always stages first since it's the most
+  // recent of the fixture's 14 candidate events) both come from the two
+  // families the brief names.
   await expect(rail.getByText(/M5\.6 .*Kokopo/)).toBeVisible({ timeout: 15_000 });
-  await expect(rail.getByText("paymentslab-kmp")).toBeVisible({ timeout: 15_000 });
+  await expect(rail.getByText("tighten the release checklist")).toBeVisible({ timeout: 15_000 });
   // Every row so far is what it claims to be: no invented geography, and a
   // magnitude below this lane's own 4.5 floor never appears (the fixture's
   // M0.7/M2.6 quakes).
