@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLOBE_RADIUS } from "../geoMath.ts";
-import { useGlobe } from "../globeStore.ts";
+import { useGlobe, type ImageryStack } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { sunDirection, VERT } from "./sun.ts";
 import { TILE_MATRIX_SETS, type TileMatrixSetId } from "./tileMatrix.ts";
@@ -32,6 +32,22 @@ import { GIBS_CATALOG, tileUrl, type GibsCatalogEntry } from "./gibsCatalog.ts";
  * useFrame, not N React components).
  */
 
+// e2e-only seam, the same shape as Inspector.tsx's __GLOBE_TEST_SELECT__ and
+// LayerPanel.tsx's __GLOBE_TEST_SET_ENTITY__: LayerCatalog.tsx isn't wired
+// into LayerPanel's own render yet (another lane's job, this ownership rule
+// forbids editing LayerPanel to do it here), so an e2e test that wants to
+// "add an overlay via the catalog" without waiting on that wiring calls this
+// directly instead. A no-op in production — nothing outside a test ever
+// calls it.
+declare global {
+  interface Window {
+    __GLOBE_TEST_SET_IMAGERY__?: (imagery: ImageryStack) => void;
+  }
+}
+if (typeof window !== "undefined") {
+  window.__GLOBE_TEST_SET_IMAGERY__ = (imagery) => useGlobe.getState().setImagery(imagery);
+}
+
 // A hair above the whole-globe sphere (EarthImagery's own GLOBE_RADIUS) so a
 // tile never z-fights it, never so far above that a tile's edge visibly
 // floats off the base sphere at a shallow viewing angle.
@@ -47,6 +63,21 @@ const MAX_IN_FLIGHT = 6;
 // still reacts within a frame or two.
 const RECOMPUTE_DISTANCE_EPS = 0.5;
 const RECOMPUTE_ANGLE_COS_EPS = 0.9994; // ~2 degrees
+// A damped zoom-button dolly or a drag-orbit moves the camera past the
+// epsilons above on nearly every frame for its whole duration — recomputing
+// on EVERY one of those frames means a new generation (new geometries, new
+// queued fetches) started before the previous one even finished loading,
+// without bound for as long as the motion continues, which is enough to
+// visibly stall the page (caught by e2e/globe-W1.spec.ts's own zoom test: a
+// real hang, not a slow test, until this rate limit existed). This is a
+// minimum WALL-CLOCK gap between recomputes, not a "wait until idle"
+// debounce — a debounce keyed off "has the camera moved since the last
+// recompute" has a chicken-and-egg bug at mount (nothing has ever been
+// recomputed for yet, so "moved" is trivially true forever, so the debounce
+// timer resets every frame and never fires). A plain rate limit has no such
+// bootstrap problem and still caps recompute frequency during sustained
+// motion to a sane rate.
+const RECOMPUTE_MIN_INTERVAL_MS = 150;
 
 interface TileEntry {
   tile: SelectedTile;
@@ -130,6 +161,9 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
   const queueRef = useRef<QueuedRequest[]>([]);
   const inFlightRef = useRef(0);
   const scratchForward = useRef(new THREE.Vector3());
+  // Rate limit (module doc comment on RECOMPUTE_MIN_INTERVAL_MS): the clock
+  // time of the most recent actual recompute.
+  const lastRecomputeAtMs = useRef(-Infinity);
 
   useEffect(() => {
     sunDirection(now, sunRef.current);
@@ -345,23 +379,28 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // this is a reference each frame costs nothing to hand out again.
     camera.getWorldDirection(scratchForward.current);
 
-    // Throttle: only re-walk tile selection when the camera actually moved
-    // or turned enough to matter (module doc comment above).
+    // Rate-limited throttle (module doc comment on RECOMPUTE_MIN_INTERVAL_MS):
+    // re-walk tile selection only when the camera moved/turned past the
+    // epsilon AND enough wall-clock time has passed since the last actual
+    // recompute — the epsilon alone isn't enough during sustained motion
+    // (see that comment for why a "wait until idle" debounce has a bootstrap
+    // bug here instead).
+    const nowMs = clock.elapsedTime * 1000;
     const moved = camera.position.distanceTo(lastCamPos.current) > RECOMPUTE_DISTANCE_EPS;
     const turnedCos = lastCamForward.current.lengthSq() === 0 ? -1 : lastCamForward.current.dot(scratchForward.current);
     const turned = turnedCos < RECOMPUTE_ANGLE_COS_EPS;
-    if (moved || turned) {
+    if ((moved || turned) && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS) {
       const t0 = performance.now();
       for (const role of rolesRef.current.values()) recomputeRole(role);
       tileLayerStats.lastRecomputeMs = performance.now() - t0;
       lastCamPos.current.copy(camera.position);
       lastCamForward.current.copy(scratchForward.current);
+      lastRecomputeAtMs.current = nowMs;
     }
 
     // Crossfade + settle check, every frame regardless of whether a
     // recompute ran (an in-flight generation can finish loading on any
     // frame, not just the one that requested it).
-    const nowMs = clock.elapsedTime * 1000;
     for (const role of rolesRef.current.values()) {
       if (role.pendingGeneration !== null && role.transitionStart === null) {
         let allSettled = true;
@@ -422,8 +461,11 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     ensureRole("base", imagery.base, "day", 1);
     for (const overlay of imagery.overlays) ensureRole(`overlay:${overlay.id}`, overlay.id, "plain", overlay.opacity);
     // Force a recompute next frame for any role whose tile set might now be
-    // stale (a fresh role, or an existing one whose catalog id changed).
+    // stale (a fresh role, or an existing one whose catalog id changed) — a
+    // user-initiated layer change gets no rate-limit delay, only sustained
+    // camera motion does.
     lastCamPos.current.set(Infinity, Infinity, Infinity);
+    lastRecomputeAtMs.current = -Infinity;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ensureRole/recomputeRole close over refs, not props; imagery is the real dependency.
   }, [imagery]);
 
