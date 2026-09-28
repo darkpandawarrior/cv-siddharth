@@ -32,7 +32,13 @@ export interface Selection {
   id: string;
   kind: string;
   title: string;
-  rows: { label: string; value: string }[];
+  /** `swatch` (a CSS colour) keys a row to the 3D marker it describes (a
+   *  ring, a reach column) - LANE U1's composition fix for the retired
+   *  floating Pune card, whose rows carried the same per-row colour dot.
+   *  Rows without a swatch render as the original two-column label/value
+   *  grid; a swatch row renders full-width so a long claim sentence is never
+   *  truncated (G8: never abbreviate a claim). */
+  rows: { label: string; value: string; swatch?: string }[];
   source: string;
   live: boolean;
   focus?: Focus;
@@ -91,6 +97,13 @@ interface GlobeState {
   imagery: ImageryStack;
   filters: GlobeFilters;
   together: TogetherState;
+  /** LANE U1 (layout): whether the right-edge LayerPanel column is expanded
+   *  or collapsed to its 34px icon, sm+ only (phones use `sheet` instead).
+   *  Read at store-creation time from the viewport (open by default at
+   *  >= 1280, collapsed below it, per the composed layout spec) rather than
+   *  a component's own lazy useState, so GlobeScene's SceneRig can shift the
+   *  camera's screen centre by the same value without prop-threading it. */
+  panelOpen: boolean;
   setStyle: (style: EarthStyle) => void;
   toggleLayer: (id: LayerId) => void;
   setView: (view: GlobeView) => void;
@@ -107,6 +120,19 @@ interface GlobeState {
   setFilters: (patch: GlobeFilters) => void;
   setTogetherCount: (count: number) => void;
   setTogetherSharing: (sharing: boolean) => void;
+  setPanelOpen: (open: boolean) => void;
+}
+
+// Desktop-open / narrower-collapsed default: read once at module load, not
+// in a component effect, so it is available before LayerPanel's own first
+// render and before SceneRig frames the camera around it. Guarded for SSR
+// (this store is imported by Globe.tsx, which routes/globe.tsx server-
+// renders) - `window` is defined by the time this module re-evaluates on the
+// client, since every consumer of `panelOpen` is mounted behind Globe.tsx's
+// ClientOnly gate.
+const PANEL_OPEN_DEFAULT_QUERY = "(min-width: 1280px)";
+function initialPanelOpen(): boolean {
+  return typeof window === "undefined" ? true : window.matchMedia(PANEL_OPEN_DEFAULT_QUERY).matches;
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
@@ -124,6 +150,7 @@ export const useGlobe = create<GlobeState>((set) => ({
   // Default ON (brief: "Default sharing ON with an obvious toggle later" --
   // the UI lane wires the toggle to setTogetherSharing).
   together: { count: 0, sharing: true },
+  panelOpen: initialPanelOpen(),
   setStyle: (style) => set({ style }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setView: (view) => set({ view }),
@@ -143,6 +170,7 @@ export const useGlobe = create<GlobeState>((set) => ({
     })),
   setTogetherCount: (count) => set((s) => ({ together: { ...s.together, count } })),
   setTogetherSharing: (sharing) => set((s) => ({ together: { ...s.together, sharing } })),
+  setPanelOpen: (panelOpen) => set({ panelOpen }),
 }));
 
 /** The simulated instant every time-aware layer draws: the real clock plus

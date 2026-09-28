@@ -6,6 +6,8 @@ import { PUNE } from "../../lib/sky.ts";
 import { fleetStats } from "../../data/store.ts";
 import { upstreamMergedPRs } from "../../data/profile.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
+import { useGlobe } from "./globeStore.ts";
+import { buildPuneSelection } from "./puneSelection.ts";
 
 const COLUMN_RADIUS = 0.06;
 const MIN_HEIGHT = 0.4;
@@ -31,11 +33,36 @@ function surfaceNormal(lat: number, lon: number): THREE.Vector3 {
  *  emissive shaft standing on the globe surface, height by log10 of its own
  *  magnitude. Its exact claim sentence lives on the Pune card (Markers.tsx),
  *  keyed by colour - never a bare number with no source in reach. */
-function Column({ base, up, height, color }: { base: THREE.Vector3; up: THREE.Vector3; height: number; color: THREE.Color }) {
+function Column({
+  base,
+  up,
+  height,
+  color,
+  onSelect,
+}: {
+  base: THREE.Vector3;
+  up: THREE.Vector3;
+  height: number;
+  color: THREE.Color;
+  onSelect: () => void;
+}) {
   const quaternion = useMemo(() => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up), [up]);
   return (
     <group position={base} quaternion={quaternion}>
-      <mesh position={[0, height / 2, 0]}>
+      <mesh
+        position={[0, height / 2, 0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = "auto";
+        }}
+      >
         <cylinderGeometry args={[COLUMN_RADIUS, COLUMN_RADIUS, height, 8]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} />
       </mesh>
@@ -50,6 +77,15 @@ function Column({ base, up, height, color }: { base: THREE.Vector3; up: THREE.Ve
 export function ReachColumns() {
   const signal = useMemo(() => readColor("--color-signal", "#3ddc84"), []);
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
+  const select = useGlobe((s) => s.select);
+  const setView = useGlobe((s) => s.setView);
+
+  const onSelect = () => {
+    const selection = buildPuneSelection();
+    if (!selection) return;
+    setView("orbit");
+    select(selection);
+  };
 
   const normal = useMemo(() => surfaceNormal(PUNE.lat, PUNE.lon), []);
   const tangent = useMemo(() => {
@@ -63,8 +99,8 @@ export function ReachColumns() {
 
   return (
     <group>
-      <Column base={baseA} up={normal} height={columnHeight(fleetStats.installFloor)} color={signal} />
-      <Column base={baseB} up={normal} height={columnHeight(upstreamMergedPRs)} color={probe} />
+      <Column base={baseA} up={normal} height={columnHeight(fleetStats.installFloor)} color={signal} onSelect={onSelect} />
+      <Column base={baseB} up={normal} height={columnHeight(upstreamMergedPRs)} color={probe} onSelect={onSelect} />
     </group>
   );
 }

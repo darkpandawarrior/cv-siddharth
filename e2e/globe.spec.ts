@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+import { PUNE_SELECTION_ID } from "../src/world/globe/puneSelection.ts";
 import type { Page } from "@playwright/test";
 
 /**
@@ -67,7 +68,10 @@ test("the day hemisphere reads brighter than the night hemisphere at Pune dusk",
   await page.clock.setFixedTime(new Date("2026-09-24T18:27:00+05:30"));
   await page.goto("/globe");
   await waitForHydration(page);
-  await page.addStyleTag({ content: "[data-pune-card]{display:none!important}" });
+  // Desktop preselects Pune in the Inspector on first load (LANE U1, task
+  // 4); hide it so a luma crop of the globe's own disk never measures the
+  // Inspector card's flat background instead of WebGL pixels.
+  await page.addStyleTag({ content: "[data-globe-inspector]{display:none!important}" });
 
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
@@ -91,19 +95,52 @@ test("the day hemisphere reads brighter than the night hemisphere at Pune dusk",
   expect(dayLuma, `day luma ${dayLuma} vs night luma ${nightLuma} (day side: ${daySide})`).toBeGreaterThan(nightLuma);
 });
 
-test("the markers toggle hides the Pune card and brings it back", async ({ page }) => {
+// The floating Pune <Html> card is retired (LANE U1, task 4) - its three
+// claim sentences now live in the Inspector, opened by clicking the ring or,
+// on desktop, preselected on first load. These two tests replace the old
+// "hides the Pune card" coverage: one proves the preselect, one proves the
+// HUD's own markers toggle closes that selection (and only that toggle -
+// see globe-L5.spec.ts for the layer panel's own row, which deliberately
+// does NOT carry this side effect).
+test("desktop first load preselects Pune in the Inspector", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await withApiFixtures(page);
   await page.goto("/globe");
   await waitForHydration(page);
-  // Attached, not visible: auto-rotate can carry Pune behind the earth,
-  // where occlusion hides the card without unmounting it.
-  const card = page.locator("[data-pune-card]");
-  await expect(card).toBeAttached({ timeout: 30_000 });
-  await page.getByRole("button", { name: "Hide the Pune markers and card" }).click();
-  await expect(card).toHaveCount(0);
-  await page.getByRole("button", { name: "Show the Pune markers and card" }).click();
-  await expect(card).toBeAttached();
+
+  const inspector = page.locator("[data-globe-inspector]");
+  await expect(inspector).toBeVisible({ timeout: 30_000 });
+  await expect(inspector).toContainText("PUNE");
+  // Never abbreviated (G8) - the exact claim sentence, not a summary.
+  await expect(inspector).toContainText("install floor across 88 live listings");
+});
+
+test("the HUD's markers toggle closes the Pune selection when it is showing", async ({ page }) => {
+  await page.addInitScript((id) => {
+    (window as unknown as { __GLOBE_TEST_SELECT__: unknown }).__GLOBE_TEST_SELECT__ = {
+      id,
+      kind: "origin",
+      title: "PUNE · 18.52°N 73.86°E",
+      rows: [{ label: "Reach", value: "test claim", swatch: "#3ddc84" }],
+      source: "test fixture",
+      live: false,
+    };
+  }, PUNE_SELECTION_ID);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await withApiFixtures(page);
+  await page.goto("/globe");
+  await waitForHydration(page);
+
+  const inspector = page.locator("[data-globe-inspector]");
+  await expect(inspector).toBeVisible({ timeout: 30_000 });
+
+  await page.getByRole("button", { name: "Hide the Pune ring and reach columns" }).click();
+  await expect(inspector).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Show the Pune ring and reach columns" }).click();
+  // Showing the ring again does not resurrect a closed selection - only a
+  // fresh ring click (or the desktop first-load preselect) does that.
+  await expect(inspector).toHaveCount(0);
 });
 
 test("two mocked presences from two countries show two live dots and the right count", async ({ page }) => {

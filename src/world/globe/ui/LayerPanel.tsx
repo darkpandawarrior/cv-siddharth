@@ -7,7 +7,11 @@ import { entityPositions, LAYER_IDS, useGlobe, type LayerId, type LayerHealth } 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
 
-/** LANE L5 (navigation and UI) owns this file. */
+/** LANE L5 (navigation and UI) wrote the layer/view logic; LANE U1
+ *  (composition) owns this file's shell: the right-edge column (sm+,
+ *  collapsible to a 34px icon via `store.panelOpen`, top16/bottom16 so its
+ *  own content scrolls instead of clipping) and the phone bottom sheet
+ *  (`store.sheet === "layers"`, opened by Globe.tsx's icon row). */
 
 declare global {
   interface Window {
@@ -28,6 +32,9 @@ if (typeof window !== "undefined") {
   };
 }
 
+// A label for every LayerId - the Record type below fails to compile if a
+// future layer (e.g. "wind", "reach") lands without one, so this list can
+// never silently drift behind globeStore's own LAYER_IDS.
 const LABEL: Record<LayerId, string> = {
   markers: "Pune markers",
   stars: "Stars and Moon",
@@ -65,16 +72,41 @@ function dotStyle(health: LayerHealth | undefined): { color: string; pulse: bool
   }
 }
 
-const MOBILE_QUERY = "(max-width: 639px)";
+function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, boolean>; status: Partial<Record<LayerId, LayerHealth>>; toggleLayer: (id: LayerId) => void }) {
+  return (
+    <ul className="space-y-1">
+      {LAYER_IDS.map((id) => {
+        const health = status[id];
+        const dot = dotStyle(health);
+        const on = layers[id];
+        return (
+          <li key={id}>
+            <button
+              type="button"
+              onClick={() => toggleLayer(id)}
+              aria-pressed={on}
+              className="flex min-h-8 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot.pulse ? "animate-pulse" : ""}`} style={{ backgroundColor: dot.color }} />
+              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500 line-through"}`}>{LABEL[id]}</span>
+            </button>
+            {health?.detail && (
+              <p className="ml-4 truncate text-xs text-muted" title={health.detail}>
+                {health.detail}
+              </p>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
-  // Desktop: the panel is there by default. Mobile: it is a bottom sheet a
-  // visitor opens on purpose (brief's own split) -- starting it open there
-  // buried the whole screen under it, GlobePanel and the tour included.
-  // Lazy initializer: matchMedia is client-only, but this component is
-  // already behind Globe.tsx's own ClientOnly gate, so it never runs on the
-  // server's first paint.
-  const [open, setOpen] = useState(() => typeof window === "undefined" || !window.matchMedia(MOBILE_QUERY).matches);
+  const panelOpen = useGlobe((s) => s.panelOpen);
+  const setPanelOpen = useGlobe((s) => s.setPanelOpen);
+  const sheet = useGlobe((s) => s.sheet);
+  const setSheet = useGlobe((s) => s.setSheet);
   const [issAvailable, setIssAvailable] = useState(false);
   const style = useGlobe((s) => s.style);
   const setStyle = useGlobe((s) => s.setStyle);
@@ -102,7 +134,7 @@ export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
       if (isTypingTarget(e.target)) return;
       const key = e.key.toLowerCase();
       if (key === "l") {
-        setOpen((o) => !o);
+        setPanelOpen(!panelOpen);
         return;
       }
       const digit = Number(e.key);
@@ -125,145 +157,176 @@ export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [toggleLayer, setStyle, setView, flyTo, setTourStep, issAvailable]);
+  }, [panelOpen, setPanelOpen, toggleLayer, setStyle, setView, flyTo, setTourStep, issAvailable]);
 
-  if (!open) {
-    return (
+  const viewButtons = (touchTarget: string) => (
+    <div className="space-y-1">
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        aria-pressed={false}
-        aria-label="Open the layers panel"
-        title="Layers (L)"
-        className="ctrl-icon absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        onClick={() => setView("orbit")}
+        aria-pressed={view === "orbit"}
+        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+          view === "orbit" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
+        }`}
       >
-        <Layers size={15} />
+        Orbit
       </button>
-    );
-  }
+      <button
+        type="button"
+        onClick={() => {
+          flyTo({ kind: "latlon", lat: PUNE.lat, lon: PUNE.lon });
+          setView("ground");
+        }}
+        aria-pressed={view === "ground"}
+        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+          view === "ground" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
+        }`}
+      >
+        Look up from Pune
+      </button>
+      {/* Street-level entry point for lane W3's surface - this lane only
+          ever sets store state (flyTo + setView("street")); the surface
+          itself is StreetView.tsx, not ours. */}
+      <button
+        type="button"
+        onClick={() => {
+          flyTo({ kind: "latlon", lat: PUNE.lat, lon: PUNE.lon });
+          setView("street");
+        }}
+        aria-pressed={view === "street"}
+        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+          view === "street" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
+        }`}
+      >
+        Street level at Pune
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (!issAvailable) return;
+          flyTo({ kind: "entity", id: ISS_ENTITY });
+          setView("follow");
+        }}
+        aria-pressed={view === "follow"}
+        disabled={!issAvailable}
+        title={issAvailable ? undefined : "No ISS position yet"}
+        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+          !issAvailable ? "cursor-not-allowed text-zinc-600" : view === "follow" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
+        }`}
+      >
+        Follow the ISS{!issAvailable ? " (no ISS registered yet)" : ""}
+      </button>
+    </div>
+  );
+
+  const earthStyleToggle = (
+    <div className="flex overflow-hidden rounded-full border border-line" role="group" aria-label="Earth style">
+      {(["imagery", "dots"] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => setStyle(s)}
+          aria-pressed={style === s}
+          className={`flex-1 px-2 py-1.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+            style === s ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          {s === "imagery" ? "Real imagery" : "Dots"}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <div
-      data-globe-layer-panel
-      className="pointer-events-auto fixed inset-x-0 bottom-0 z-30 max-h-[45vh] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:absolute sm:inset-x-auto sm:bottom-auto sm:top-4 sm:right-4 sm:max-h-[calc(100vh-32px)] sm:w-[233px] sm:rounded-2xl sm:border"
-    >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
+    <>
+      {/* Desktop/tablet (sm+): a right-edge column, top16/bottom16, its own
+          content scrolling rather than clipping (the Keys section used to
+          be cut off at the bottom - measured via screenshot QA). Collapses
+          to a 34px icon; open by default at >= 1280 (globeStore's own
+          matchMedia default), collapsed below it. */}
+      {panelOpen ? (
+        <div
+          data-globe-layer-panel
+          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl border border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:bottom-4 sm:flex"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-line p-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
+            <button
+              type="button"
+              onClick={() => setPanelOpen(false)}
+              aria-pressed
+              aria-label="Collapse the layers panel"
+              title="Collapse (L)"
+              className="ctrl-icon flex h-7 w-7 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <X size={13} />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <section className="mb-3">
+              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
+              {earthStyleToggle}
+            </section>
+            <section className="mb-3">
+              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
+              <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+            </section>
+            <section className="mb-3">
+              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
+              {viewButtons("py-1.5")}
+            </section>
+            <section>
+              <h3 className="mb-1 text-xs uppercase tracking-wide text-muted">Keys</h3>
+              <p className="text-xs leading-relaxed text-zinc-500">
+                L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
+              </p>
+            </section>
+          </div>
+        </div>
+      ) : (
         <button
           type="button"
-          onClick={() => setOpen(false)}
-          aria-pressed
-          aria-label="Collapse the layers panel"
-          title="Collapse (L)"
-          className="ctrl-icon flex h-7 w-7 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={() => setPanelOpen(true)}
+          aria-pressed={false}
+          aria-label="Open the layers panel"
+          title="Layers (L)"
+          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
         >
-          <X size={13} />
+          <Layers size={15} />
         </button>
-      </div>
+      )}
 
-      <section className="mb-3">
-        <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
-        <div className="flex overflow-hidden rounded-full border border-line" role="group" aria-label="Earth style">
-          {(["imagery", "dots"] as const).map((s) => (
+      {/* Phone (< 640): a bottom sheet, one of store.sheet's four. */}
+      {sheet === "layers" && (
+        <div
+          data-globe-layer-sheet
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+        >
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
             <button
-              key={s}
               type="button"
-              onClick={() => setStyle(s)}
-              aria-pressed={style === s}
-              className={`flex-1 px-2 py-1.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
-                style === s ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
-              }`}
+              onClick={() => setSheet(null)}
+              aria-label="Close the layers sheet"
+              className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
-              {s === "imagery" ? "Real imagery" : "Dots"}
+              <X size={16} />
             </button>
-          ))}
+          </div>
+          <section className="mb-3">
+            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
+            {earthStyleToggle}
+          </section>
+          <section className="mb-3">
+            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
+            <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+          </section>
+          <section>
+            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
+            {viewButtons("min-h-11")}
+          </section>
         </div>
-      </section>
-
-      <section className="mb-3">
-        <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
-        <ul className="space-y-1">
-          {LAYER_IDS.map((id) => {
-            const health = status[id];
-            const dot = dotStyle(health);
-            const on = layers[id];
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  onClick={() => toggleLayer(id)}
-                  aria-pressed={on}
-                  className="flex w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                >
-                  <span
-                    aria-hidden
-                    className={`h-2 w-2 shrink-0 rounded-full ${dot.pulse ? "animate-pulse" : ""}`}
-                    style={{ backgroundColor: dot.color }}
-                  />
-                  <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500 line-through"}`}>{LABEL[id]}</span>
-                </button>
-                {health?.detail && <p className="ml-4 truncate text-xs text-muted" title={health.detail}>{health.detail}</p>}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className="mb-3">
-        <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
-        <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => setView("orbit")}
-            aria-pressed={view === "orbit"}
-            className={`block w-full rounded px-2 py-1.5 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
-              view === "orbit" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
-            }`}
-          >
-            Orbit
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              flyTo({ kind: "latlon", lat: PUNE.lat, lon: PUNE.lon });
-              setView("ground");
-            }}
-            aria-pressed={view === "ground"}
-            className={`block w-full rounded px-2 py-1.5 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
-              view === "ground" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
-            }`}
-          >
-            Look up from Pune
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!issAvailable) return;
-              flyTo({ kind: "entity", id: ISS_ENTITY });
-              setView("follow");
-            }}
-            aria-pressed={view === "follow"}
-            disabled={!issAvailable}
-            title={issAvailable ? undefined : "No ISS position yet"}
-            className={`block w-full rounded px-2 py-1.5 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
-              !issAvailable
-                ? "cursor-not-allowed text-zinc-600"
-                : view === "follow"
-                  ? "bg-accent/20 text-accent"
-                  : "text-zinc-300 hover:bg-white/5"
-            }`}
-          >
-            Follow the ISS{!issAvailable ? " (no ISS registered yet)" : ""}
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-1 text-xs uppercase tracking-wide text-muted">Keys</h3>
-        <p className="text-xs leading-relaxed text-zinc-500">
-          L panel · 1-7 layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
-        </p>
-      </section>
-    </div>
+      )}
+    </>
   );
 }

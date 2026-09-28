@@ -79,9 +79,50 @@ const LIFT = 0.5 - 1 / PHI ** 2;
  *   orbit is a natural follow-up but didn't fit this chunk's byte budget
  *   (check-budget.mjs) alongside it — see this lane's PR notes.
  */
-function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.RefObject<HTMLDivElement | null>; controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
+// LANE U1 (composition): sm+ only - the right LayerPanel column and the
+// shared left slot (Inspector / the tour's running card) each reserve this
+// much screen width, in pixels, matching Globe.tsx's own PANEL_RESERVE_*/
+// left-slot constants (288px card + 16px edge). Duplicated as plain numbers
+// rather than imported - Globe.tsx's constants are Tailwind class strings,
+// and this file may only touch SceneRig, not add a shared-constants module.
+const PANEL_RESERVE_PX = { open: 249, collapsed: 50 };
+const LEFT_SLOT_RESERVE_PX = 304;
+// Below this width the layer panel and the inspector/tour slot are bottom
+// sheets, not docked columns (Globe.tsx's own `sm` breakpoint) - the globe's
+// screen centre never needs a horizontal nudge on phones.
+const DOCKED_MIN_WIDTH = 640;
+const H_OFFSET_HALF_LIFE = 0.25; // seconds - smooths the shift when a panel opens/closes
+
+function SceneRig({
+  now,
+  probeRef,
+  controlsRef,
+  topOffsetPx,
+}: {
+  now: Date;
+  probeRef: React.RefObject<HTMLDivElement | null>;
+  controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  /** LANE U1: the topbar's real measured height in pixels (Globe.tsx's own
+   *  ResizeObserver) - portrait's vertical reserve tracks this instead of a
+   *  guessed constant, since the topbar wraps to 1-3 rows depending on
+   *  viewport width and content (Pune pill, zoom controls, sheet icons).
+   *  `null` before the first measurement lands. */
+  topOffsetPx: number | null;
+}) {
   const { camera, size } = useThree();
   const get = useThree((s) => s.get);
+  // useFrame re-applies the SAME-or-animated value every frame alongside the
+  // horizontal offset, since setViewOffset takes both axes in one call.
+  const offsetYRef = useRef(0);
+  const hOffsetRef = useRef(0);
+  // Framing (both `r`, which sets camera DISTANCE via position.setLength,
+  // and the vertical offset) only ever applies twice: once at mount with a
+  // guessed portrait reserve (so there's something on screen immediately),
+  // once for real once Globe.tsx's ResizeObserver hands back the topbar's
+  // actual height - then never again, so a later reflow (say, the weather
+  // pill's text arriving and rewrapping the row) can't snap a visitor's own
+  // zoom back out from under them.
+  const framedForReal = useRef(false);
 
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
@@ -99,31 +140,90 @@ function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.R
   }, [get]);
 
   useEffect(() => {
+    if (framedForReal.current && topOffsetPx == null) return;
     // Read through get(): the camera is three's own mutable object, and
     // framing it IS the point of this effect.
     const { camera: c, size } = get();
     const cam = c as THREE.PerspectiveCamera;
-    // Projected radius as a fraction of canvas height: 1/(2 phi) on
-    // landscape. On portrait, GlobePanel's list grows to its 45% cap over
-    // the canvas bottom, so the globe fits the free top half instead: a
-    // quarter-height radius centred at 27.5%, never wider than 90% of the
-    // width. A sphere at distance d subtends sin(a) = R/d, and fills
-    // tan(a)/tan(fov/2) of the half-height.
     const portrait = size.width < size.height;
-    const r = Math.min(portrait ? 0.25 : 1 / (2 * PHI), (0.9 * size.width) / size.height / 2);
+    let r: number;
+    let offsetY: number;
+    if (portrait) {
+      // Phones: the fact list is flow content BELOW the stage now (Globe.tsx,
+      // LANE U1's own composition rewrite), not an overlay over the canvas's
+      // bottom half the way it is on sm+ - so the only real reserve here is
+      // the topbar floating over the canvas's TOP. A fixed 0.225 predates
+      // that rewrite and was tuned for the old bottom-overlay layout; it
+      // left only a few px of headroom, which a topbar wrapped to 2-3 rows
+      // (a narrow phone, or the ISS tooltip/panel text) ate into (caught by
+      // e2e/globe-U1.spec.ts's overlap test). +12px margin below the topbar,
+      // capped at 45% of the canvas so an unexpectedly tall topbar still
+      // leaves a globe worth looking at rather than a sliver.
+      const topReserve = Math.min(0.45, ((topOffsetPx ?? size.height * 0.225) + 12) / size.height);
+      const free = 1 - topReserve;
+      r = Math.min(0.25, free / 2);
+      // Centred in the free band below the topbar, not at a fixed 27.5% -
+      // see the NDC derivation in this lane's PR notes: increasing
+      // setViewOffset's y pushes screen content UP (`top -= offsetY*height`
+      // in three's own PerspectiveCamera.updateProjectionMatrix), so
+      // clearing the TOP needs a SMALLER (often negative) offsetY, not a
+      // larger one - the fraction down from the canvas top is `0.5 - offsetY`.
+      offsetY = 0.5 - (topReserve + free / 2);
+    } else {
+      // Landscape (sm+): unchanged - GlobePanel's fact list really does
+      // overlay the canvas's bottom 45% here (Globe.tsx's `sm:absolute
+      // sm:max-h-[45%]`), which LIFT already clears.
+      r = Math.min(1 / (2 * PHI), (0.9 * size.width) / size.height / 2);
+      offsetY = LIFT;
+    }
     const tanHalf = Math.tan((cam.fov * Math.PI) / 360);
     cam.position.setLength(GLOBE_RADIUS / Math.sin(Math.atan(2 * r * tanHalf)));
+    offsetYRef.current = offsetY;
     // Fractions (a 1x1 "full" view), so the lift survives R3F's own resize
     // handling. setViewOffset also sets aspect to fullWidth/fullHeight, i.e.
     // 1, which stretched the globe sideways until the real aspect went back.
-    cam.setViewOffset(1, 1, 0, portrait ? 0.225 : LIFT, 1, 1);
+    cam.setViewOffset(1, 1, 0, offsetYRef.current, 1, 1);
     cam.aspect = size.width / size.height;
     cam.updateProjectionMatrix();
-    // Mount-time framing only: re-running on resize would snap the camera
-    // back out after a visitor zoomed.
-  }, [get]);
+    if (topOffsetPx != null) framedForReal.current = true;
+  }, [get, topOffsetPx]);
 
-  useFrame(() => {
+  useFrame((_state, dt) => {
+    // Horizontal re-centring (task 2): the globe's screen centre sits in the
+    // free region between the left slot and the right panel column, docked
+    // sm+ only. `setViewOffset`'s x-offset shifts the rendered frustum
+    // window RIGHT by that fraction, which moves an object fixed at world
+    // centre LEFT on screen (three.js's PerspectiveCamera.updateProjection
+    // Matrix adds `offsetX * width / fullWidth` to the frustum's left
+    // bound - a larger left bound shifts the whole window right, so a
+    // world-centre object now sits closer to the window's left edge).
+    // rightReserve > leftReserve should therefore give a POSITIVE offsetX
+    // (push the globe left, away from the wider right reservation) -
+    // verified against screenshots at panel-open vs panel-collapsed
+    // (globe visibly sits further right once the right panel collapses).
+    const docked = size.width >= DOCKED_MIN_WIDTH;
+    let targetOffsetX = 0;
+    if (docked) {
+      const s = useGlobe.getState();
+      const rightReserve = s.panelOpen ? PANEL_RESERVE_PX.open : PANEL_RESERVE_PX.collapsed;
+      const leftReserve = s.selected || s.tourStep !== null ? LEFT_SLOT_RESERVE_PX : 0;
+      targetOffsetX = (rightReserve - leftReserve) / (2 * size.width);
+    }
+    const k = 1 - 0.5 ** (dt / H_OFFSET_HALF_LIFE);
+    const next = hOffsetRef.current + (targetOffsetX - hOffsetRef.current) * k;
+    hOffsetRef.current = next;
+    // Only pay for a matrix recompute while an offset is actually in play -
+    // once it has decayed back to (near) zero and the target is zero too
+    // (phones, or every panel closed with nothing selected), there is
+    // nothing left to animate. offsetYRef itself is static between the
+    // mount-time effect's two framings (see its own comment) - re-applied
+    // here unchanged because setViewOffset takes both axes in one call.
+    if (Math.abs(next) > 1e-6 || Math.abs(targetOffsetX) > 1e-6) {
+      const cam = camera as THREE.PerspectiveCamera;
+      cam.setViewOffset(1, 1, next, offsetYRef.current, 1, 1);
+      cam.updateProjectionMatrix();
+    }
+
     const el = probeRef.current;
     if (!el) return;
     const toScreen = (v: THREE.Vector3) => {
@@ -176,6 +276,9 @@ export interface GlobeSceneProps {
   /** The manual pause toggle in GlobeHud (§2, Auto-rotate row) — a visitor
    *  can permanently stop the spin without needing reduced-motion OS-wide. */
   autoRotatePaused?: boolean;
+  /** LANE U1: Globe.tsx's measured topbar height in pixels, portrait only -
+   *  see SceneRig's own comment on why this replaced a fixed fraction. */
+  topOffsetPx?: number | null;
 }
 
 /**
@@ -188,7 +291,7 @@ export interface GlobeSceneProps {
  * LIVE" rule - a visitor who toggles the OS setting mid-session, or a test
  * that calls `emulateMedia` after load, must see auto-rotate actually stop.
  */
-export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false }: GlobeSceneProps) {
+export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0, autoRotatePaused = false, topOffsetPx = null }: GlobeSceneProps) {
   const probeRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   // The ocean sphere, handed to every <Html> callout as its occluder so a
@@ -252,7 +355,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
           // 3D scene in this app already has.
           dampingFactor={0.08}
         />
-        <SceneRig now={now} probeRef={probeRef} controlsRef={controlsRef} />
+        <SceneRig now={now} probeRef={probeRef} controlsRef={controlsRef} topOffsetPx={topOffsetPx} />
         {style === "imagery" ? (
           <Suspense fallback={dotsEarth}>
             <EarthImagery count={count} now={now} tier={tier} earthRef={earthRef} />
