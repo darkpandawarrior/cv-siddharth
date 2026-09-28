@@ -9,6 +9,28 @@ function cameraOver(lat: number, lon: number, distance: number): CameraSample {
 }
 
 describe("selectVisibleTiles", () => {
+  // Regression: a live screenshot at the globe's own real opening view
+  // (over Pune+12N, distance ~26, fov 42deg, a REAL canvas height of 630px
+  // — this lane's site has a header above the canvas, not the full 900px
+  // viewport) showed only 2 of the 6 available level-1 tiles: the whole
+  // southern half of the visible cap was missing. isBeyondHorizon tested
+  // only a tile's centre point with no allowance for the tile's own size,
+  // so a giant coarse tile whose centre had dipped just past the true
+  // horizon was dropped even though most of its body was still visible.
+  it("the opening view (real canvas height, not the full viewport) covers both hemispheres, not just the near one", () => {
+    const dir = latLonToXyz(18.52 + 12, 73.86); // PUNE.lat + 12, the real opening tilt
+    const distance = 25.99;
+    const cam: CameraSample = {
+      position: { x: dir.x * distance, y: dir.y * distance, z: dir.z * distance },
+      forward: { x: -dir.x, y: -dir.y, z: -dir.z },
+      fovRadians: (42 * Math.PI) / 180,
+      canvasHeightPx: 630,
+    };
+    const tiles = selectVisibleTiles("250m", 8, cam);
+    const anySouthern = tiles.some((t) => t.bounds.lat1 < 0);
+    expect(anySouthern, `expected at least one selected tile reaching below the equator, got levels/rows: ${tiles.map((t) => `${t.level}/${t.row}`).join(", ")}`).toBe(true);
+  });
+
   it("the tile directly under the camera is always in the result", () => {
     const cam = cameraOver(19.5, 73.9, 9); // Pune, min zoom distance
     const tiles = selectVisibleTiles("250m", 8, cam);

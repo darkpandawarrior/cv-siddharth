@@ -78,7 +78,7 @@ export function selectVisibleTiles(matrixSet: TileMatrixSetId, maxLevel: number,
       const midLat = (bounds.lat0 + bounds.lat1) / 2;
       const midLon = (bounds.lon0 + bounds.lon1) / 2;
       const dir = latLonToXyz(midLat, midLon);
-      if (isBeyondHorizon(dir, cam.position)) continue;
+      if (isBeyondHorizon(dir, cam.position, GLOBE_RADIUS, tileHalfAngleRad)) continue;
       if (!isInViewCone(dir, cam.position, cam.forward, cam.fovRadians / 2, 1.5, tileHalfAngleRad)) continue;
       out.push({ key: tileKey(matrixSet, level, row, col), level, row, col, bounds });
     }

@@ -64,16 +64,27 @@ export function selectLevel(distance: number, fovRadians: number, canvasHeightPx
 }
 
 /** True when a point on the globe (given as its own unit direction from the
- *  centre) is behind the sphere as seen from `cameraPos` — the exact same
+ *  centre) is behind the sphere as seen from `cameraPos` — the same
  *  `cos(horizon) = GLOBE_RADIUS / camDist` test SatelliteLayer.tsx's own
  *  `isOccluded` already uses for label visibility, restated here per this
  *  lane's file-ownership rule rather than imported from a file this lane may
- *  not edit. */
-export function isBeyondHorizon(pointDir: Vec3, cameraPos: Vec3, globeRadius: number = GLOBE_RADIUS): boolean {
+ *  not edit.
+ *
+ *  `extraAngleRadians` widens the horizon by that much (relaxing the
+ *  threshold, never tightening it) — the same fix `isInViewCone` needed and
+ *  for the same reason: testing only a tile's CENTRE point drops a coarse
+ *  tile whose centre has just dipped past the true horizon while most of
+ *  its own body is still visible (caught the same way — a real screenshot
+ *  at the default view showing the whole southern half of the visible cap
+ *  missing, not a unit test). tileSelect.ts passes the tile's own angular
+ *  half-size here, same as it does for the view cone. */
+export function isBeyondHorizon(pointDir: Vec3, cameraPos: Vec3, globeRadius: number = GLOBE_RADIUS, extraAngleRadians = 0): boolean {
   const camDist = length(cameraPos);
   if (camDist <= globeRadius) return false; // camera inside/at the surface: degenerate, never cull
   const camDir = normalize(cameraPos);
-  return dot(pointDir, camDir) < globeRadius / camDist;
+  const horizonAngle = Math.acos(Math.min(1, globeRadius / camDist));
+  const threshold = Math.cos(Math.min(Math.PI, horizonAngle + extraAngleRadians));
+  return dot(pointDir, camDir) < threshold;
 }
 
 /** True when a surface point (given as its own unit direction from the

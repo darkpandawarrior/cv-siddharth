@@ -43,6 +43,25 @@ describe("isBeyondHorizon", () => {
     expect(isBeyondHorizon({ x: -1, y: 0, z: 0 }, { x: 1, y: 0, z: 0 })).toBe(false);
   });
 
+  // Regression: the first version of this function tested only a tile's
+  // CENTRE point with no allowance for the tile's own angular size, so a
+  // coarse tile whose centre had just dipped past the true horizon was
+  // dropped even though most of its body was still visible — a real
+  // screenshot at the default camera view showed the whole southern half
+  // of the visible cap missing because of exactly this. `extraAngleRadians`
+  // relaxes the threshold by that much.
+  it("extraAngleRadians keeps a point just past the strict horizon when it's within that margin", () => {
+    // The strict horizon for this camera/globe pair (d=20, R=6) is acos(0.3)
+    // ~= 72.5deg; 80deg is ~7.5deg past it, comfortably inside a 20deg margin.
+    const justPast = { x: Math.cos((80 * Math.PI) / 180), y: Math.sin((80 * Math.PI) / 180), z: 0 };
+    expect(isBeyondHorizon(justPast, camera, GLOBE_RADIUS)).toBe(true); // strict: beyond
+    expect(isBeyondHorizon(justPast, camera, GLOBE_RADIUS, (20 * Math.PI) / 180)).toBe(false); // widened by 20deg: back in
+  });
+
+  it("break-it: extraAngleRadians never pulls in a point that's still far beyond even the widened horizon", () => {
+    expect(isBeyondHorizon({ x: -1, y: 0, z: 0 }, camera, GLOBE_RADIUS, (20 * Math.PI) / 180)).toBe(true);
+  });
+
   // Break-it: prove the cos(horizon)=R/d threshold is really being compared,
   // not a fixed constant — a point exactly AT that threshold angle for one
   // camera distance is on the visible side of a much closer camera.
