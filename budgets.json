@@ -5,12 +5,6 @@
       "entry": "src/routes/index.tsx?tsr-split=component",
       "rawBytes": 2001000,
       "transferBytes": 581000
-    },
-    {
-      "route": "/globe",
-      "entry": "src/routes/globe.tsx?tsr-split=component",
-      "rawBytes": 1171548,
-      "transferBytes": 354135
     }
   ],
   "namedChunks": {
