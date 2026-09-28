@@ -3,6 +3,10 @@ import { Layers, X } from "lucide-react";
 import type { Vector3 } from "three";
 import { PUNE } from "../../../lib/sky.ts";
 import { entityPositions, LAYER_IDS, useGlobe, type LayerId, type LayerHealth } from "../globeStore.ts";
+// WAVE 6 LANE X1 (live world feed): the "Layers | Live" tab this file adds
+// below renders FeedRail for the "Live" tab; every other line in this file
+// is unchanged.
+import FeedRail from "./FeedRail.tsx";
 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
@@ -103,7 +107,35 @@ function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, bo
   );
 }
 
-export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
+// WAVE 6 LANE X1: which of the panel's two tabs is showing — component
+// state, not globeStore, since nothing outside this file's own two render
+// sites (desktop column, phone sheet) needs to read or drive it.
+type PanelTab = "layers" | "live";
+
+function TabSwitcher({ tab, setTab }: { tab: PanelTab; setTab: (t: PanelTab) => void }) {
+  return (
+    <div className="mb-3 flex overflow-hidden rounded-full border border-line" role="tablist" aria-label="Layer panel tabs">
+      {(["layers", "live"] as const).map((t) => (
+        <button
+          key={t}
+          type="button"
+          role="tab"
+          aria-selected={tab === t}
+          data-feed-tab={t}
+          onClick={() => setTab(t)}
+          className={`flex-1 px-2 py-1.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+            tab === t ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          {t === "layers" ? "Layers" : "Live"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
+  const [tab, setTab] = useState<PanelTab>("layers");
   const panelOpen = useGlobe((s) => s.panelOpen);
   const setPanelOpen = useGlobe((s) => s.setPanelOpen);
   const sheet = useGlobe((s) => s.sheet);
@@ -264,24 +296,31 @@ export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            <section className="mb-3">
-              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
-              {earthStyleToggle}
-            </section>
-            <section className="mb-3">
-              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
-              <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
-            </section>
-            <section className="mb-3">
-              <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
-              {viewButtons("py-1.5")}
-            </section>
-            <section>
-              <h3 className="mb-1 text-xs uppercase tracking-wide text-muted">Keys</h3>
-              <p className="text-xs leading-relaxed text-zinc-500">
-                L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
-              </p>
-            </section>
+            <TabSwitcher tab={tab} setTab={setTab} />
+            {tab === "live" ? (
+              <FeedRail tier={tier} />
+            ) : (
+              <>
+                <section className="mb-3">
+                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
+                  {earthStyleToggle}
+                </section>
+                <section className="mb-3">
+                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
+                  <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+                </section>
+                <section className="mb-3">
+                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
+                  {viewButtons("py-1.5")}
+                </section>
+                <section>
+                  <h3 className="mb-1 text-xs uppercase tracking-wide text-muted">Keys</h3>
+                  <p className="text-xs leading-relaxed text-zinc-500">
+                    L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
+                  </p>
+                </section>
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -314,18 +353,25 @@ export default function LayerPanel(_props: { tier: 1 | 2 | 3 }) {
               <X size={16} />
             </button>
           </div>
-          <section className="mb-3">
-            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
-            {earthStyleToggle}
-          </section>
-          <section className="mb-3">
-            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
-            <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
-          </section>
-          <section>
-            <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
-            {viewButtons("min-h-11")}
-          </section>
+          <TabSwitcher tab={tab} setTab={setTab} />
+          {tab === "live" ? (
+            <FeedRail tier={tier} />
+          ) : (
+            <>
+              <section className="mb-3">
+                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
+                {earthStyleToggle}
+              </section>
+              <section className="mb-3">
+                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
+                <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+              </section>
+              <section>
+                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
+                {viewButtons("min-h-11")}
+              </section>
+            </>
+          )}
         </div>
       )}
     </>
