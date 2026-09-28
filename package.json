@@ -90,6 +90,7 @@
     "chess.js": "^1.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
+    "maplibre-gl": "^6.11.2",
     "mermaid": "^11.16.0",
     "playhtml": "^2.13.2",
     "postprocessing": "^6.39.3",
