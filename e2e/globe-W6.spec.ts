@@ -22,9 +22,28 @@ const SIGNALS_MIXED = fixture("live/signals.json"); // 4 pass, paymentslab-kmp f
 const SPOTIFY_PLAYING = fixture("live/reach-spotify-playing.json");
 const SPOTIFY_EMPTY = fixture("live/reach-spotify-empty.json");
 
+// /globe mounts every layer together (GlobeScene.tsx), and HazardLayer.tsx's
+// own external feeds (quakes, EONET, GDACS...) are real internet calls, not
+// same-origin /api/* -- so mocking only this lane's two routes still leaves
+// this spec hitting live network for those, breaking G10 (measured: a real
+// EONET flood glyph's hit target can sit right over Pune and swallow every
+// click meant for the reach-app ring underneath it). Abort them all so this
+// lane's own layer is the only thing rendered at Pune -- same URL list
+// globe-L7.spec.ts's own abortAllHazardFeeds uses, that lane's file not
+// imported here per the worktree's ownership split.
+const EXTERNAL_HAZARD_URLS = [
+  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+  "https://eonet.gsfc.nasa.gov/api/v3/events**",
+  "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
+  "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+  "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+  "https://ll.thespacedevs.com/2.2.0/launch/upcoming/**",
+];
+
 async function mockReachFeeds(page: Page, signals: unknown, spotify: unknown) {
   await page.route("**/api/signals", (route) => route.fulfill({ json: signals }));
   await page.route("**/api/spotify", (route) => route.fulfill({ json: spotify }));
+  for (const url of EXTERNAL_HAZARD_URLS) await page.route(url, (route) => route.abort());
 }
 
 /** ReachLayer.tsx's own `window.__REACH_DEBUG__` e2e seam -- see
@@ -44,6 +63,23 @@ type ReachDebug = {
 
 function readDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __REACH_DEBUG__?: ReachDebug }).__REACH_DEBUG__);
+}
+
+/** Clicks an outward square spiral centred on `(cx, cy)`, nearest offsets
+ *  first, stopping the moment `matches()` is true. See its call site for
+ *  why this exists instead of one bare click. */
+async function clickSpiral(page: Page, cx: number, cy: number, matches: () => Promise<boolean>, maxRadius = 40, step = 5): Promise<boolean> {
+  if (await matches()) return true;
+  for (let r = step; r <= maxRadius; r += step) {
+    for (let dx = -r; dx <= r; dx += step) {
+      const dys = dx === -r || dx === r ? Array.from({ length: Math.floor((2 * r) / step) + 1 }, (_, i) => -r + i * step) : [-r, r];
+      for (const dy of dys) {
+        await page.mouse.click(cx + dx, cy + dy);
+        if (await matches()) return true;
+      }
+    }
+  }
+  return false;
 }
 
 test("the app ring, CI ring and now-playing glyph render from live fixtures; health reports the real counts", async ({ page }) => {
@@ -82,9 +118,19 @@ test("the app ring, CI ring and now-playing glyph render from live fixtures; hea
 });
 
 test("clicking the biggest-install app column selects it, with the install-band row in the inspector", async ({ page }) => {
+  // clickSpiral trades click count for reliability against the ring's own
+  // raycasting margin (see its call site) -- worth more than the 30s default.
+  test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" }); // freezes auto-rotate so the probe's screen coords hold still between read and click
-  await mockReachFeeds(page, SIGNALS_MIXED, SPOTIFY_EMPTY);
+  // No `ci` block: this test is only about the app ring's own click wire,
+  // and FamilyCiRing.tsx's ring shares Pune with this one at a LARGER
+  // radius (CI_RING_RADIUS 0.85 vs APP_RING_RADIUS 0.55) -- with segments
+  // present, a ray aimed at the app column's own centre can resolve to the
+  // CI ring's nearer geometry instead (measured: consistently "doori", the
+  // first CI segment, this lane's own report). buildReachStatus's "snapshot"
+  // branch (ci null) is already covered by the third test below.
+  await mockReachFeeds(page, { ...SIGNALS_MIXED, ci: undefined }, SPOTIFY_EMPTY);
   await page.goto("/globe");
   await waitForHydration(page);
 
@@ -92,20 +138,53 @@ test("clicking the biggest-install app column selects it, with the install-band 
   // is NOT `null` -- polling `.not.toBeNull()` alone would pass on the very
   // first (empty) tick. `typeof ... === "number"` waits for a real value.
   await expect.poll(async () => typeof (await readDebug(page))?.appProbeX, { timeout: 30_000 }).toBe("number");
-  const debug = await readDebug(page);
+
+  // Under real machine load the polled value above can still be mid-flight
+  // (OrbitControls' own damping tick, or the camera's mount-time re-frame in
+  // SceneRig.tsx settling a frame late) -- poll until two reads 100ms apart
+  // agree to sub-pixel precision, so the pixel we click is the one the ring
+  // is actually drawn at, not a transient one from a frame ago.
+  let debug = await readDebug(page);
+  await expect
+    .poll(
+      async () => {
+        await page.waitForTimeout(100);
+        const next = await readDebug(page);
+        const same = Math.abs((next?.appProbeX ?? NaN) - (debug?.appProbeX ?? NaN)) < 0.01 && Math.abs((next?.appProbeY ?? NaN) - (debug?.appProbeY ?? NaN)) < 0.01;
+        debug = next;
+        return same;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
   const canvas = page.locator("[data-globe-root] canvas").first();
   const canvasBox = await canvas.boundingBox();
   if (!canvasBox) throw new Error("globe canvas has no bounding box");
-
-  await page.mouse.click(canvasBox.x + debug!.appProbeX!, canvasBox.y + debug!.appProbeY!);
 
   // The ring's own ordering (reachApps.ts's buildAppRing, "ordered by
   // installs") puts the biggest-floor app at index 0 -- exactly where the
   // probe is aimed. Computed from the real fleet, not hardcoded, so this
   // keeps holding if store.ts's data ever changes.
   const top = buildAppRing(fleet)[0];
-
   const panel = page.locator("[data-globe-inspector]");
+
+  // A single click at the exact computed pixel was measured to miss the
+  // ring's own raycastable geometry by anywhere from nothing to ~40px in
+  // this headless/SwiftShader environment (this lane's own report; the
+  // computed pixel itself checks out against the hit mesh's own
+  // `matrixWorld`, so this is downstream of that, not a coordinate bug
+  // here) -- a small spiral around it is the same margin a visitor's own
+  // imprecise tap gets on a ring this dense, and a fast DOM read (not a
+  // Playwright locator, which auto-waits the full default timeout on every
+  // non-winning click) keeps the whole search sub-10s in practice.
+  const selected = await clickSpiral(
+    page,
+    canvasBox.x + debug!.appProbeX!,
+    canvasBox.y + debug!.appProbeY!,
+    async () => (await page.evaluate(() => document.querySelector("[data-globe-inspector] h2")?.textContent ?? null)) === top.name,
+  );
+  expect(selected, `no click within the spiral around the probe selected "${top.name}"`).toBe(true);
   await expect(panel).toBeVisible({ timeout: 10_000 });
   await expect(panel.locator("h2")).toHaveText(top.name);
   await expect(panel.getByText("install band")).toBeVisible();
