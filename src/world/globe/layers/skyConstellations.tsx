@@ -184,7 +184,10 @@ function ConstellationLabels({ constellations, now }: { constellations: Constell
   return (
     <>
       {constellations.map((c, i) => (
-        <Html key={c.id} position={[positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]]} center zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
+        // Serpens is the one IAU figure split into two entries sharing id
+        // "Ser" (Caput/Cauda) - `i` keeps the key unique without assuming
+        // every other id is (it is, for the other 87).
+        <Html key={`${c.id}-${i}`} position={[positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]]} center zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
           <span
             ref={(el) => {
               spansRef.current[i] = el;
