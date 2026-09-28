@@ -5,7 +5,8 @@ import { entityPositions, useGlobe, type Focus } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { PUNE } from "../../../lib/sky.ts";
 import { focusHandoffUrl } from "../../altitude.ts";
-import { xyzToLatLon } from "../cameraMath.ts";
+import { GLOBE_RADIUS, xyzToLatLon } from "../cameraMath.ts";
+import { consumeStreetHandoff, streetZoomToAltitude } from "../cameraZoomGate.ts";
 import {
   LIBERTY_STYLE_URL,
   PHOTO_SOURCE_ID,
@@ -26,11 +27,32 @@ const STREET_ZOOM = 16.5;
 const STREET_PITCH = 60;
 const STREET_BEARING = 0;
 const QUERY_DEBOUNCE_MS = 400;
+// WAVE 6 LANE X5 hand-off hooks: below this the visitor is trying to zoom
+// OUT past the surface's own floor -- "past its min zoom returns to the
+// globe" (the brief's own words). Below altitudeToStreetZoom's own MIN_Z
+// (12, cameraZoomGate.ts) with margin, so the widest seamless-zoom hand-off
+// never opens already sitting at/under this floor.
+const STREET_MIN_ZOOM = 11;
+// WAVE 6 LANE X5: a feed that never resolves (hangs, not fails) would
+// otherwise leave "Looking for street photos…" up forever -- the house rule
+// is "no invented/stale data", not "eventually say something", so this is a
+// real watchdog, not a repeat of the already-existing "loaded, zero results"
+// message below.
+const NO_FEATURES_TIMEOUT_MS = 3000;
 // "For Pune only" (this lane's brief): a loose radius, not an exact-equality
 // check — a fly-to that lands a few metres off Pune's own coordinate (e.g. a
 // registered entity's current position) should still count as Pune.
 const PUNE_EPSILON_DEG = 0.05;
 const FADE_MS = 300;
+// WAVE 6 LANE X5: restated from GlobeScene.tsx's own OrbitControls
+// min/maxDistance (out of this lane's file ownership; CameraDirector.tsx --
+// a Canvas-side sibling this file can't reach into -- already restates the
+// same two numbers as its own fallback default when `controls` isn't
+// mounted). altitudeToStreetZoom's inverse needs the exact same band its
+// forward direction used, or "matching orbit distance" lands at the wrong
+// distance from what the zoom-in side computed.
+const ORBIT_MIN_ALTITUDE = GLOBE_RADIUS * 1.5 - GLOBE_RADIUS; // 3
+const ORBIT_MAX_ALTITUDE = GLOBE_RADIUS * 7 - GLOBE_RADIUS; // 36
 
 declare global {
   interface Window {
@@ -88,6 +110,15 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   const [photoStatus, setPhotoStatus] = useState<"loading" | "loaded" | "failed">("loading");
   const [selectedPhoto, setSelectedPhoto] = useState<StreetPhoto | null>(null);
   const [visible, setVisible] = useState(false);
+  // WAVE 6 LANE X5: "No streets here" if nothing has loaded within 3s (a
+  // watchdog, not a repeat of the "loaded, zero results" message below —
+  // that one only ever fires once a query has actually FINISHED).
+  const [noFeaturesTimedOut, setNoFeaturesTimedOut] = useState(false);
+  const noFeaturesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // WAVE 6 LANE X5: guards the zoom-out hand-off firing more than once per
+  // open — MapLibre's own "zoom" event fires on every frame of a wheel/pinch
+  // gesture, not just the one that first crosses STREET_MIN_ZOOM.
+  const exitedRef = useRef(false);
 
   // e2e-only seam: fires once on mount, before the map-creation effect below
   // ever reads `view`/`focus` — the same "read on mount, no-op absent a
@@ -197,6 +228,13 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     let map: MaplibreMap | null = null;
     const isTestMode = Boolean(window.__GLOBE_TEST_STREET__);
     const limit = TIER_PHOTO_LIMIT[tier];
+    exitedRef.current = false;
+    // WAVE 6 LANE X5: read-once hand-off from the seamless zoom-in gesture
+    // (CameraDirector.tsx armed it right before calling setView("street")).
+    // Absent one (the explicit street button, or a re-open), STREET_ZOOM is
+    // the pre-existing default this lane's brief says to keep.
+    const handoff = consumeStreetHandoff();
+    const openZoom = handoff?.zoom ?? STREET_ZOOM;
 
     const queryPhotos = async () => {
       if (!map) return;
@@ -205,6 +243,9 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       if (!shouldRequery(lastBoundsRef.current, bounds)) return;
       lastBoundsRef.current = bounds;
       setPhotoStatus("loading");
+      setNoFeaturesTimedOut(false);
+      if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
+      noFeaturesTimerRef.current = setTimeout(() => setNoFeaturesTimedOut(true), NO_FEATURES_TIMEOUT_MS);
       try {
         const res = await fetch(panoramaxSearchUrl(bounds, limit));
         if (!res.ok) throw new Error(`panoramax ${res.status}`);
@@ -212,6 +253,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         const parsed = parsePanoramaxFeatures(json);
         if (parsed === null) throw new Error("panoramax: unexpected response shape");
         if (cancelled || !map) return;
+        if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
         setPhotos(parsed);
         setPhotoStatus("loaded");
         const source = map.getSource(PHOTO_SOURCE_ID) as GeoJSONSource | undefined;
@@ -220,6 +262,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         // House rule: a feed that fails draws nothing and says so — never a
         // stale or invented photo list.
         if (cancelled) return;
+        if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
         setPhotos([]);
         setPhotoStatus("failed");
       }
@@ -260,7 +303,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         container,
         style: LIBERTY_STYLE_URL,
         center: [lon, lat],
-        zoom: STREET_ZOOM,
+        zoom: openZoom,
         pitch: STREET_PITCH,
         bearing: STREET_BEARING,
         attributionControl: false,
@@ -301,18 +344,43 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => void queryPhotos(), QUERY_DEBOUNCE_MS);
       });
+
+      // WAVE 6 LANE X5: "zooming out of the street map past its min zoom
+      // returns to the globe at the matching orbit distance over the same
+      // point" (the brief's own words). `map.getCenter()` — not `focus`,
+      // which is only where this surface OPENED — so panning around inside
+      // street level before zooming back out still lands the orbit camera
+      // over wherever the visitor actually ended up, not the stale entry
+      // point. `flyTo` + `setView("orbit")` together (both synchronous
+      // Zustand writes, same tick): CameraDirector.tsx's own
+      // view-change-to-orbit effect resets any in-flight state first, then
+      // its focus-only effect (still queued for the same commit, `focus`'s
+      // identity having also just changed) arms the actual flight — the same
+      // two-effect handshake it already uses for a plain click-to-fly while
+      // orbit is the CURRENT view.
+      map.on("zoom", () => {
+        if (!map || exitedRef.current || map.getZoom() >= STREET_MIN_ZOOM) return;
+        exitedRef.current = true;
+        const center = map.getCenter();
+        const altitude = streetZoomToAltitude(map.getZoom(), ORBIT_MIN_ALTITUDE, ORBIT_MAX_ALTITUDE);
+        flyTo({ kind: "latlon", lat: center.lat, lon: center.lng, distance: GLOBE_RADIUS + altitude });
+        setView("orbit");
+      });
     })();
 
     return () => {
       cancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = null;
+      if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
+      noFeaturesTimerRef.current = null;
       map?.remove();
       map = null;
       delete window.__GLOBE_TEST_STREET_MAP__;
       lastBoundsRef.current = null;
       setPhotos([]);
       setPhotoStatus("loading");
+      setNoFeaturesTimedOut(false);
       setSelectedPhoto(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- create/destroy only on `active`; `focus`/`tier` are read once at open time on purpose
@@ -382,7 +450,8 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         data-street-status
         className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-[11px] text-zinc-300 backdrop-blur"
       >
-        {photoStatus === "loading" && "Looking for street photos…"}
+        {photoStatus === "loading" && !noFeaturesTimedOut && "Looking for street photos…"}
+        {photoStatus === "loading" && noFeaturesTimedOut && "No streets here"}
         {photoStatus === "failed" && "Street photo search failed"}
         {photoStatus === "loaded" && photos.length === 0 && "No open street photos here yet"}
         {photoStatus === "loaded" && photos.length > 0 && `${photos.length} street photo${photos.length === 1 ? "" : "s"}`}
