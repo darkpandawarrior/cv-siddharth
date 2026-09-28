@@ -256,6 +256,15 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
       const controls = controlsRef.current;
       const { camera } = get();
       if (phase === "playing") {
+        // A duplicate "playing" notification with the flight already armed
+        // is a no-op, not a reason to bail -- StrictMode's dev-only double
+        // effect invocation re-runs this exact mount body (cleanup only
+        // unsubscribes; introRef itself survives) with `phase` unchanged at
+        // "playing", so this is the ordinary case, not a race. Confirmed via
+        // this component's own console.log("[intro-debug]") trace, which
+        // showed finishIntro() firing under 1s into a fresh mount, from
+        // right here.
+        if (introRef.current) return;
         // Belt and braces (house idiom, this file's own Esc-handler
         // comment): ui/Intro.tsx already gates on tier/reducedMotion before
         // ever calling startIntro(), but "never under reduced motion" is a
@@ -265,7 +274,7 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
         // "orbit" here means the visitor already navigated before the bus
         // notified (a slow-mount race): playing a fly-in over their own
         // navigation would be worse than skipping the cinematic outright.
-        if (introRef.current || window.matchMedia(REDUCED_MOTION_QUERY).matches || useGlobe.getState().view !== "orbit") {
+        if (window.matchMedia(REDUCED_MOTION_QUERY).matches || useGlobe.getState().view !== "orbit") {
           finishIntro();
           return;
         }
