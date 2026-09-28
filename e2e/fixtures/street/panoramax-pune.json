@@ -1,0 +1,155 @@
+{
+  "features": [
+    {
+      "id": "5ea97644-0c58-4d2f-8ff4-427789916f64",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.8399939,
+          18.5196311
+        ]
+      },
+      "assets": {
+        "hd": {
+          "href": "https://panoramax.openstreetmap.fr/images/5e/a9/76/44/0c58-4d2f-8ff4-427789916f64.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "data"
+          ],
+          "title": "HD picture",
+          "description": "Highest resolution available of this picture"
+        },
+        "sd": {
+          "href": "https://panoramax.openstreetmap.fr/derivates/5e/a9/76/44/0c58-4d2f-8ff4-427789916f64/sd.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "visual"
+          ],
+          "title": "SD picture",
+          "description": "Picture in standard definition (fixed width of 2048px)"
+        },
+        "thumb": {
+          "href": "https://panoramax.openstreetmap.fr/derivates/5e/a9/76/44/0c58-4d2f-8ff4-427789916f64/thumb.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "thumbnail"
+          ],
+          "title": "Thumbnail",
+          "description": "Picture in low definition (fixed width of 500px)"
+        }
+      },
+      "providers": [
+        {
+          "id": "9913ccd3-f7b7-4659-8c3d-284cd758609f",
+          "name": "Devdatta",
+          "roles": [
+            "producer"
+          ]
+        }
+      ],
+      "links": [
+        {
+          "rel": "license",
+          "href": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "title": "License for this object (CC-BY-SA-4.0)"
+        },
+        {
+          "rel": "self",
+          "href": "https://api.panoramax.xyz/api/collections/658d9adb-97b5-45b4-a383-0909b5673d47/items/5ea97644-0c58-4d2f-8ff4-427789916f64",
+          "type": "application/geo+json"
+        }
+      ],
+      "properties": {
+        "license": "CC-BY-SA-4.0",
+        "datetime": "2022-11-09T03:15:55+00:00",
+        "geovisio:producer": "Devdatta",
+        "pers:interior_orientation": {
+          "camera_model": "Max",
+          "focal_length": 3.0,
+          "field_of_view": 360,
+          "camera_manufacturer": "GoPro",
+          "sensor_array_dimensions": [
+            5760,
+            2880
+          ]
+        }
+      }
+    },
+    {
+      "id": "a7270ce2-fdd2-47ba-8c1e-581ce45b08b9",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.8398654,
+          18.5196542
+        ]
+      },
+      "assets": {
+        "hd": {
+          "href": "https://panoramax.openstreetmap.fr/images/a7/27/0c/e2/fdd2-47ba-8c1e-581ce45b08b9.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "data"
+          ],
+          "title": "HD picture",
+          "description": "Highest resolution available of this picture"
+        },
+        "sd": {
+          "href": "https://panoramax.openstreetmap.fr/derivates/a7/27/0c/e2/fdd2-47ba-8c1e-581ce45b08b9/sd.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "visual"
+          ],
+          "title": "SD picture",
+          "description": "Picture in standard definition (fixed width of 2048px)"
+        },
+        "thumb": {
+          "href": "https://panoramax.openstreetmap.fr/derivates/a7/27/0c/e2/fdd2-47ba-8c1e-581ce45b08b9/thumb.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "thumbnail"
+          ],
+          "title": "Thumbnail",
+          "description": "Picture in low definition (fixed width of 500px)"
+        }
+      },
+      "providers": [
+        {
+          "id": "9913ccd3-f7b7-4659-8c3d-284cd758609f",
+          "name": "Devdatta",
+          "roles": [
+            "producer"
+          ]
+        }
+      ],
+      "links": [
+        {
+          "rel": "license",
+          "href": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "title": "License for this object (CC-BY-SA-4.0)"
+        },
+        {
+          "rel": "self",
+          "href": "https://api.panoramax.xyz/api/collections/658d9adb-97b5-45b4-a383-0909b5673d47/items/a7270ce2-fdd2-47ba-8c1e-581ce45b08b9",
+          "type": "application/geo+json"
+        }
+      ],
+      "properties": {
+        "license": "CC-BY-SA-4.0",
+        "datetime": "2022-11-09T03:15:52+00:00",
+        "geovisio:producer": "Devdatta",
+        "pers:interior_orientation": {
+          "camera_model": "Max",
+          "focal_length": 3.0,
+          "field_of_view": 360,
+          "camera_manufacturer": "GoPro",
+          "sensor_array_dimensions": [
+            5760,
+            2880
+          ]
+        }
+      }
+    }
+  ],
+  "links": []
+}
