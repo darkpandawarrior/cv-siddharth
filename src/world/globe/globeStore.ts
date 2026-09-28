@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
-import type { Vector3 } from "three";
+import type { Camera, Vector3 } from "three";
 
 /**
  * /globe's one piece of shared state. The HUD, the layer panel, the
@@ -123,3 +123,10 @@ export function useSimNow(realNow: Date): Date {
  *  React state) and unregister on unmount. Module-level because there is
  *  exactly one globe. */
 export const entityPositions = new Map<string, () => Vector3 | null>();
+
+/** The live scene camera, published by GlobeScene's SceneRig on mount so DOM
+ *  surfaces (the explore bar's "what's here" and measure clicks) can raycast
+ *  the globe without reaching into R3F's internal root registry. Read it at
+ *  event time, never cache it: it is null until the Canvas mounts and after
+ *  it unmounts. */
+export const sceneHandles: { camera: Camera | null; canvas: HTMLCanvasElement | null } = { camera: null, canvas: null };

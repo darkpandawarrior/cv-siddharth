@@ -11,7 +11,7 @@ import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
 import { LiveDots } from "./LiveDots.tsx";
 import { LocalTraffic } from "./LocalTraffic.tsx";
-import { useGlobe, useSimNow } from "./globeStore.ts";
+import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
@@ -82,6 +82,17 @@ const LIFT = 0.5 - 1 / PHI ** 2;
 function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.RefObject<HTMLDivElement | null>; controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
   const { camera, size } = useThree();
   const get = useThree((s) => s.get);
+
+  // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
+  useEffect(() => {
+    const { camera: c, gl } = get();
+    sceneHandles.camera = c;
+    sceneHandles.canvas = gl.domElement;
+    return () => {
+      sceneHandles.camera = null;
+      sceneHandles.canvas = null;
+    };
+  }, [get]);
 
   useEffect(() => {
     // Read through get(): the camera is three's own mutable object, and
