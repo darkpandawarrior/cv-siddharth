@@ -123,18 +123,18 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
       {results.length > 0 && <ul id="explore-results" role="listbox" aria-label="Places" className="max-h-52 overflow-y-auto border-t border-line py-1">
         {results.map((place, i) => <li key={`${place.lat}:${place.lon}:${i}`} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
           <button type="button" tabIndex={-1} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent" onClick={() => choose(place)}>
-            <span className="block truncate">{place.name}</span><span className="block truncate text-[11px] text-zinc-400">{place.country} · {place.type}</span>
+            <span className="block truncate">{place.name}</span><span className="block truncate text-zinc-400">{place.country} · {place.type}</span>
           </button>
         </li>)}
       </ul>}
       <div role="status" aria-live="polite">
         {message && <p className="px-2 py-1">{message}</p>}
-        {mode === "here" && !message && <p className="px-2 py-1 text-[11px]">Click the globe to look up a point</p>}
-        {mode === "measure" && <p data-measure-result className="px-2 py-1 text-[11px]">
+        {mode === "here" && !message && <p className="px-2 py-1">Click the globe to look up a point</p>}
+        {mode === "measure" && <p data-measure-result className="px-2 py-1">
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
         </p>}
       </div>
-      <p className="px-2 pt-1 text-[11px] text-zinc-400"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
+      <p className="px-2 pt-1 text-zinc-400"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
       <ExploreMeasure canvas={canvas} tier={tier} />
     </div>
   );
