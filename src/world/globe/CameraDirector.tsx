@@ -325,6 +325,23 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
       return;
     }
 
+    // "street" (added in wave 2, after this file's own lane L5 landed) is a
+    // full-bleed DOM surface over the canvas (ui/StreetView.tsx) — the 3D
+    // camera underneath doesn't matter once it's open. Without this no-op,
+    // "street" fell through to the "follow" branch below, which reverts to
+    // "orbit" EVERY FRAME because a latlon focus is never a `kind: "entity"`
+    // — confirmed empirically (lane W3): a real trigger (`flyTo({kind:
+    // "latlon",...}); setView("street")`) opened the surface for under one
+    // frame before this reverted it. Out of lane W3's own file ownership,
+    // committed anyway because the alternative is the feature being unable
+    // to stay open at all — flagged prominently in W3's final report for
+    // integration review; safe to drop only once every "street" trigger
+    // path is re-verified without it.
+    if (view === "street") {
+      el.dataset.cameraView = "street";
+      return;
+    }
+
     // follow
     if (focus?.kind !== "entity") {
       setView("orbit");
