@@ -1,5 +1,43 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { isBehindEarth, raDecToXyz, rotateY, toSegmentPairs, type ConstellationRaw } from "./skyConstellations.ts";
+
+describe("public/sky/constellations.json (shipped trim)", () => {
+  // Guards the Serpens Caput/Cauda regression: the only IAU id (`Ser`) that
+  // legitimately appears twice in the trim (two disconnected figures). A
+  // future re-trim that collapses their name or centroid back together
+  // would silently mislabel one figure and give React two identical
+  // <Html key> siblings (ConstellationLabels.tsx) - catch it here instead
+  // of a visitor noticing a wrong label in ground view.
+  const path = fileURLToPath(new URL("../../../../public/sky/constellations.json", import.meta.url));
+  const data = JSON.parse(readFileSync(path, "utf8")) as { constellations: ConstellationRaw[] };
+  const byId = new Map<string, ConstellationRaw[]>();
+  for (const c of data.constellations) {
+    const list = byId.get(c.id) ?? [];
+    list.push(c);
+    byId.set(c.id, list);
+  }
+
+  it("every constellation id maps to distinct names when it repeats (Serpens Caput vs Cauda)", () => {
+    for (const [id, entries] of byId) {
+      const names = new Set(entries.map((e) => e.name));
+      expect(names.size, `id "${id}" has ${entries.length} entries but only ${names.size} distinct name(s)`).toBe(entries.length);
+    }
+  });
+
+  it("every constellation id maps to distinct centroids when it repeats (never two figures sharing one ra/dec)", () => {
+    for (const [id, entries] of byId) {
+      const centroids = new Set(entries.map((e) => `${e.ra},${e.dec}`));
+      expect(centroids.size, `id "${id}" has ${entries.length} entries but only ${centroids.size} distinct centroid(s)`).toBe(entries.length);
+    }
+  });
+
+  it("Serpens splits into Caput and Cauda specifically (not just \"distinct\", the right two names)", () => {
+    const ser = byId.get("Ser") ?? [];
+    expect(ser.map((e) => e.name).sort()).toEqual(["Serpens Caput", "Serpens Cauda"]);
+  });
+});
 
 describe("toSegmentPairs", () => {
   it("turns a single 4-point polyline into 3 adjacent segment pairs", () => {
