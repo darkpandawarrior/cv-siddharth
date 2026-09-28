@@ -26,6 +26,7 @@ const DAY_JPG = readFileSync(join(GIBS_DIR, "gibs-day.jpg"));
 const BASE_JPG = readFileSync(join(GIBS_DIR, "gibs-base.jpg"));
 const NIGHT_JPG = readFileSync(join(GIBS_DIR, "gibs-night.jpg"));
 const SEA_ICE_PNG = readFileSync(join(GIBS_DIR, "gibs-seaice.png"));
+const RELIEF_JPG = readFileSync(join(GIBS_DIR, "gibs-relief.jpg"));
 
 async function withApiFixtures(page: Page) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
@@ -41,6 +42,7 @@ async function withGibsFixtures(page: Page) {
   await page.route("https://gibs.earthdata.nasa.gov/**", (route) => {
     const url = route.request().url();
     if (url.includes("Sea_Ice")) return route.fulfill({ contentType: "image/png", body: SEA_ICE_PNG });
+    if (url.includes("ASTER_GDEM")) return route.fulfill({ contentType: "image/jpeg", body: RELIEF_JPG });
     const body = url.includes("Black_Marble") ? NIGHT_JPG : url.includes("BlueMarble") ? BASE_JPG : DAY_JPG;
     return route.fulfill({ contentType: "image/jpeg", body });
   });

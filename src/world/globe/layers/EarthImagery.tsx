@@ -5,7 +5,7 @@ import { EarthDots } from "../EarthDots.tsx";
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe } from "../globeStore.ts";
 import { Atmosphere } from "./Atmosphere.tsx";
-import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, type ImageryAttempt } from "./gibs.ts";
+import { dayImageryAttempts, gapFillUrl, isoDateUTC, nightLightsUrl, reliefUrl, seaIceAttempts, type ImageryAttempt } from "./gibs.ts";
 import { EARTH_IMAGERY_FRAG, INNER_HAZE_FRAG } from "./earthImageryShader.ts";
 import { sunDirection, VERT } from "./sun.ts";
 
@@ -104,6 +104,9 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
       uBase: { value: PLACEHOLDER as THREE.Texture },
       uNight: { value: PLACEHOLDER as THREE.Texture },
       uIce: { value: NO_ICE as THREE.Texture },
+      uCloudReady: { value: 0 },
+      uRelief: { value: PLACEHOLDER as THREE.Texture },
+      uReliefReady: { value: 0 },
     }),
     [],
   );
@@ -160,6 +163,18 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
           if (!alive) return tex.dispose();
           loaded.push(configureTexture(tex));
           uniforms.uBase.value = tex;
+          uniforms.uCloudReady.value = 1;
+        })
+        .catch(() => {});
+      // Relief is data, not colour: sample it raw (NoColorSpace) so the
+      // shader's neutral 0.564 is the value it actually reads.
+      loadTexture(reliefUrl(NIGHT_SIZE[tier]))
+        .then((tex) => {
+          if (!alive) return tex.dispose();
+          loaded.push(configureTexture(tex));
+          tex.colorSpace = THREE.NoColorSpace;
+          uniforms.uRelief.value = tex;
+          uniforms.uReliefReady.value = 1;
         })
         .catch(() => {});
       loadTexture(nightLightsUrl(NIGHT_SIZE[tier]))
@@ -199,6 +214,8 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
 
     return () => {
       alive = false;
+      uniforms.uCloudReady.value = 0;
+      uniforms.uReliefReady.value = 0;
       for (const tex of loaded) tex.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `yesterday` (not `now`) is the real dependency: see the comment above it.
