@@ -84,6 +84,9 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // /globe's live earth events (src/world/globe/layers/{quake,eonet,
     // hazardAlerts,aurora,launches}.ts): keyless public feeds that answer
     // with CORS *, fetched straight from the browser, never proxied.
+    "https://photon.komoot.io", // W11 user-initiated place search (OpenStreetMap).
+    "https://api.bigdatacloud.net", // W11 user-initiated reverse geocoding.
+    "https://api.open-meteo.com", // W11 user-initiated current weather (CC BY 4.0).
     "https://earthquake.usgs.gov",
     "https://eonet.gsfc.nasa.gov",
     "https://www.gdacs.org",
