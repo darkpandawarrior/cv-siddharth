@@ -26,7 +26,21 @@ async function whereamiHandler(request: Request): Promise<Response> {
   const body: WhereamiResponse = { country: countryFromHeader(request) };
   return new Response(JSON.stringify(body), {
     status: 200,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
+    headers: {
+      "content-type": "application/json",
+      // audit fix (2026-09-28): "no-store" meant one Vercel function
+      // invocation per /globe visit even though presenceGeo.ts's
+      // usePresenceGeo() already fetches this exactly once per mount and
+      // never re-polls (a visitor's country doesn't change mid-session).
+      // "private" (never "public"): the response is derived from THIS
+      // request's own edge-observed x-vercel-ip-country header, so it must
+      // never sit in a shared/CDN cache where visitor A's country could be
+      // served back to visitor B — only this visitor's own browser may
+      // cache it. 3600s: long enough that a page revisited within the hour
+      // (nav away and back, a refresh) costs no invocation, short enough
+      // that stale data never lingers past a session.
+      "cache-control": "private, max-age=3600",
+    },
   });
 }
 

@@ -1137,9 +1137,12 @@ const LIVE_BUILDS = projects.flatMap((p) => {
   return t?.liveUrl ? [{ slug: p.slug, name: p.name.split(/\s*[—–:]\s+/)[0], url: t.liveUrl }] : [];
 });
 
+// audit fix (2026-09-28): matches AnomalyRail.tsx's own OPS_POLL_MS and
+// ops-handler.ts's real s-maxage=120 — polling faster is a guaranteed cache
+// miss for no fresher data.
+const OPS_POLL_MS = 120_000;
+
 export function OpsBoard() {
-  const [ops, setOps] = useState<Ops | null>(null);
-  const [failed, setFailed] = useState(false);
   /** slug → HTTP status of its embed, checked same-origin in the browser. */
   const [builds, setBuilds] = useState<Record<string, number | "err">>({});
   /** arch-L14: check-budget.mjs's own report — see the type above. `null`
@@ -1178,14 +1181,16 @@ export function OpsBoard() {
   const tlePollMs = STREAMS.find((s) => s.id === "satellites")?.pollMs ?? 21_600_000;
   const { data: aircraft } = useLiveSignal<AircraftResponse>("/api/aircraft", aircraftPollMs);
   const { data: tle } = useLiveSignal<TleResponse>("/api/tle", tlePollMs);
+  // audit fix (2026-09-28): was a raw one-shot `fetch("/api/ops")` outside
+  // the bus — no re-poll, no pause while hidden, and a second fetch on any
+  // page that ALSO mounts Hud.tsx/Monuments.tsx/useNowModel.ts's own
+  // useLiveSignal<Ops>("/api/ops") call. Routed through the same bus so it
+  // joins theirs instead of duplicating it (useLiveSignal.ts's own doc
+  // comment: keyed per url, one timer at the smallest requested interval).
+  const { data: ops, error: failed } = useLiveSignal<Ops>("/api/ops", OPS_POLL_MS);
 
   useEffect(() => {
     let live = true;
-    fetch("/api/ops")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: Ops) => live && setOps(d))
-      .catch(() => live && setFailed(true));
-
     // Same-origin static file, written by the build this deploy shipped —
     // not an API, and not anything a visitor's browser can write back to.
     fetch("/evidence-budget.json")
