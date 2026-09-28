@@ -5,6 +5,11 @@ import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt.js";
 import { condenseJd } from "./jd-condense.js";
 import { applyPromptGuard } from "./prompt-guard.js";
+// LANE W12 ("Ask the globe"): mode:"globe" is a different request shape
+// ({ text, context }, not { messages }) with its own validation, prompt and
+// non-streaming response — see that file's own header for why this is a
+// dispatch rather than a new ChatMode branch through the rest of this file.
+import { handleGlobeAsk } from "./globe-ask.js";
 import {
   isAllowedOrigin,
   clientIp,
@@ -1030,7 +1035,17 @@ export async function handleChat(request: Request): Promise<Response> {
     return jsonError(503, "Chat is not configured right now.", allowedOrigin);
   }
 
-  const parsed = validateRequest(parseJson(raw));
+  const bodyJson = parseJson(raw);
+  // LANE W12 dispatch: globe mode's own body shape doesn't fit
+  // validateRequest's `{ messages }` contract, so it's handled here, before
+  // validateRequest ever sees it. Everything above this line (origin,
+  // general rate limit, provider-configured check) already ran — see
+  // globe-ask.ts's own doc comment.
+  if ((bodyJson as { mode?: unknown } | null)?.mode === "globe") {
+    return handleGlobeAsk(bodyJson, { allowedOrigin });
+  }
+
+  const parsed = validateRequest(bodyJson);
   if (!parsed) return jsonError(400, 'Expected { messages: [{role, content}, ...], mode?: "compose" | "jd" }.', allowedOrigin);
 
   // The second, tighter budget for the expensive mode — spent on top of the
