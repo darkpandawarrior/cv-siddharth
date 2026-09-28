@@ -7,6 +7,9 @@ import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { entityPositions, simTime, useGlobe, type Selection } from "../globeStore.ts";
 import { propagateState, ecefToScene, type SatelliteState, type TleObject } from "../../../lib/satelliteEcef.ts";
 import { trailPoints, groundTrackPoints, type ScenePoint } from "./satTrails.ts";
+// LANE W4 (wave 3): ISS visible-pass rows only — this file's ownership for
+// this lane is scoped to selectSatellite/selectionRows below, nothing else.
+import { azimuthToCompass, formatDurationMin, formatPuneClock, nextVisiblePassDetail, type VisiblePassDetail } from "./satPasses.ts";
 
 /**
  * LANE L3 (real orbits): CelesTrak TLE (/api/tle) propagated live with SGP4,
@@ -70,17 +73,52 @@ function selectionRows(object: TleObject, state: SatelliteState | null): Selecti
   ];
 }
 
+// LANE W4: the four extra rows a "next visible pass" ISS selection gets,
+// appended after the station's own rows above. `null` pass (nothing
+// qualifying in the 7-day scan window, or the element too stale to trust)
+// reads as an honest "none", never a guessed or stale claim.
+function issPassRows(pass: VisiblePassDetail | null): Selection["rows"] {
+  if (!pass) return [{ label: "Next visible pass (Pune)", value: "none in the next 7 days" }];
+  return [
+    { label: "Next visible pass (Pune)", value: formatPuneClock(pass.start) },
+    { label: "Max elevation", value: `${pass.maxElDeg.toFixed(0)}°` },
+    { label: "Direction", value: `${azimuthToCompass(pass.startAzDeg)} → ${azimuthToCompass(pass.endAzDeg)}` },
+    { label: "Duration", value: formatDurationMin(pass.durationMin) },
+  ];
+}
+
 function selectSatellite(object: TleObject, now: Date): void {
   const state = propagateState(object, now);
+  const id = `sat:${object.norad}`;
+  const baseRows = selectionRows(object, state);
+  const isIss = object.norad === ISS_NORAD;
   useGlobe.getState().select({
-    id: `sat:${object.norad}`,
+    id,
     kind: "satellite",
     title: object.name,
-    rows: selectionRows(object, state),
+    rows: isIss ? [...baseRows, { label: "Next visible pass (Pune)", value: "computing…" }] : baseRows,
     source: "CelesTrak TLE via /api/tle, SGP4",
     live: true,
-    focus: { kind: "entity", id: `sat:${object.norad}` },
+    focus: { kind: "entity", id },
   });
+
+  // The pass scan can take a moment (up to a 7-day/30s-step sweep, chunked
+  // to the browser's idle time by nextVisiblePass itself) — patch the
+  // selection in place once it resolves, but only if the ISS is STILL the
+  // current selection (a visitor may have clicked elsewhere while this was
+  // in flight; never clobber a later, unrelated selection).
+  if (!isIss) return;
+  nextVisiblePassDetail(object, now)
+    .then((pass) => {
+      const current = useGlobe.getState().selected;
+      if (current?.id !== id) return;
+      useGlobe.getState().select({ ...current, rows: [...baseRows, ...issPassRows(pass)] });
+    })
+    .catch(() => {
+      const current = useGlobe.getState().selected;
+      if (current?.id !== id) return;
+      useGlobe.getState().select({ ...current, rows: [...baseRows, { label: "Next visible pass (Pune)", value: "unavailable" }] });
+    });
 }
 
 /** Cheap "is this point on the globe's far side" test, no raycast: GlobeScene
