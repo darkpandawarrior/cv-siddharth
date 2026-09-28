@@ -25,6 +25,8 @@ const CameraDirector = lazy(() => import("./CameraDirector.tsx"));
 const TileLayer = lazy(() => import("./layers/TileLayer.tsx"));
 const WindLayer = lazy(() => import("./layers/WindLayer.tsx"));
 const ReachLayer = lazy(() => import("./layers/ReachLayer.tsx"));
+const CloudShell = lazy(() => import("./layers/CloudShell.tsx"));
+const CountryLayer = lazy(() => import("./layers/CountryLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -259,6 +261,8 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         {/* Wind is a nowcast: like the other live feeds it hides off "now". */}
         <Suspense fallback={null}>{layers.wind && live && tier !== 3 && <WindLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.reach && <ReachLayer tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        <Suspense fallback={null}>{layers.countries && <CountryLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />

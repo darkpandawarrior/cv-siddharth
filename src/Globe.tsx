@@ -17,6 +17,7 @@ const Inspector = lazy(() => import("./world/globe/ui/Inspector.tsx"));
 const TimeScrubber = lazy(() => import("./world/globe/ui/TimeScrubber.tsx"));
 const GlobeTour = lazy(() => import("./world/globe/ui/GlobeTour.tsx"));
 const StreetView = lazy(() => import("./world/globe/ui/StreetView.tsx"));
+const ExploreBar = lazy(() => import("./world/globe/ui/ExploreBar.tsx"));
 
 const sceneLoadingFallback = (
   <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the globe…</div>
@@ -107,6 +108,7 @@ export function Globe() {
             <TimeScrubber tier={tier} />
             <GlobeTour tier={tier} />
             <StreetView tier={tier} />
+            <ExploreBar tier={tier} />
           </Suspense>
         </ClientOnly>
       )}
