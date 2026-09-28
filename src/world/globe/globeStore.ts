@@ -56,6 +56,15 @@ export interface ImageryStack {
   overlays: { id: string; opacity: number }[];
 }
 
+/** LANE W12 ("Ask the globe"): the quake filter a "show quakes above 5" /
+ *  "quakes this week" command sets. Read by HazardLayer.tsx (L7) on top of
+ *  its own existing tier-based magnitude floor. `undefined` means unset —
+ *  never restricts. */
+export interface GlobeFilters {
+  quakeMinMag?: number;
+  quakeSinceHours?: number;
+}
+
 interface GlobeState {
   style: EarthStyle;
   layers: Record<LayerId, boolean>;
@@ -69,6 +78,7 @@ interface GlobeState {
   status: Partial<Record<StatusKey, LayerHealth>>;
   sheet: GlobeSheet;
   imagery: ImageryStack;
+  filters: GlobeFilters;
   setStyle: (style: EarthStyle) => void;
   toggleLayer: (id: LayerId) => void;
   setView: (view: GlobeView) => void;
@@ -79,6 +89,10 @@ interface GlobeState {
   setStatus: (key: StatusKey, health: LayerHealth | undefined) => void;
   setSheet: (sheet: GlobeSheet) => void;
   setImagery: (imagery: ImageryStack) => void;
+  /** Merges the given fields into `filters`; a field left `undefined` here
+   *  keeps its current value (so "show quakes above 5" then "this week"
+   *  composes instead of clobbering). */
+  setFilters: (patch: GlobeFilters) => void;
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
@@ -92,6 +106,7 @@ export const useGlobe = create<GlobeState>((set) => ({
   status: {},
   sheet: null,
   imagery: { base: "VIIRS_SNPP_CorrectedReflectance_TrueColor", overlays: [] },
+  filters: {},
   setStyle: (style) => set({ style }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setView: (view) => set({ view }),
@@ -102,6 +117,13 @@ export const useGlobe = create<GlobeState>((set) => ({
   setStatus: (key, health) => set((s) => ({ status: { ...s.status, [key]: health } })),
   setSheet: (sheet) => set({ sheet }),
   setImagery: (imagery) => set({ imagery }),
+  setFilters: (patch) =>
+    set((s) => ({
+      filters: {
+        quakeMinMag: patch.quakeMinMag ?? s.filters.quakeMinMag,
+        quakeSinceHours: patch.quakeSinceHours ?? s.filters.quakeSinceHours,
+      },
+    })),
 }));
 
 /** The simulated instant every time-aware layer draws: the real clock plus

@@ -4,6 +4,15 @@
 // composite health line (task 6), and the one e2e data seam (task 11); the
 // actual instancing lives in quakeGlyphs/eonetGlyphs/hazardHalos/
 // auroraOval/launchMarkers.tsx.
+//
+// LANE W12 ("Ask the globe") edit, scoped to exactly this: honouring
+// `store.filters` (a "show quakes above 5" / "quakes this week" command) on
+// top of this component's own tier-based magnitude floor, extending its
+// existing __HAZARD_DEBUG__ e2e seam with the two fields that command's
+// effect needs to verify (`topQuakes`, `filters`), and — because AskBox.tsx
+// isn't mounted anywhere in this wave and this is the one W12-owned file
+// that IS mounted — bootstrapping the copilot's own e2e seam behind
+// `?globeTest=1` (see copilot/execute.ts's file-level comment).
 import { useEffect, useMemo, useState } from "react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useLiveSignal, type LiveSignalSnapshot } from "../../../lib/useLiveSignal.ts";
@@ -19,6 +28,12 @@ import { EonetGlyphs } from "./eonetGlyphs.tsx";
 import { HazardHalos } from "./hazardHalos.tsx";
 import { AuroraOval } from "./auroraOval.tsx";
 import { LaunchMarkers } from "./launchMarkers.tsx";
+
+// W12: the e2e-only seam bootstrap, gated so a real visitor never pays for
+// it (dynamic import -> its own chunk, fetched only when the flag is set).
+if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("globeTest") === "1") {
+  void import("../copilot/execute.ts");
+}
 
 const QUAKES_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 const EONET_URL = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30";
@@ -60,6 +75,13 @@ declare global {
       selectedKind: string;
       selectedRows: { label: string; value: string }[] | null;
       status: LayerHealth;
+      /** W12 additions: the 5 largest quakes CURRENTLY DRAWN (post-tier,
+       *  post-filter, post-time-scrub) and the filter that produced them —
+       *  copilot/context.ts reads the former for the LLM's grounding
+       *  snapshot; both exist here so the "quakes above 5" e2e case can
+       *  assert on the same object the layer already exposes. */
+      topQuakes: { place: string; mag: number }[];
+      filters: { quakeMinMag?: number; quakeSinceHours?: number };
     };
   }
 }
@@ -76,6 +98,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
   const live = useGlobe((s) => s.timeOffsetMin === 0);
   const selected = useGlobe((s) => s.selected);
   const setStatus = useGlobe((s) => s.setStatus);
+  const filters = useGlobe((s) => s.filters); // W12: "show quakes above 5" / "quakes this week"
   const reducedMotion = useReducedMotion();
   const simNowMs = now.getTime();
   const staticTier = TIER_STATIC[tier] || reducedMotion; // task 8 + house motion rule: a looping ripple is exactly what reduced motion forbids
@@ -99,11 +122,26 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
   const kpLoading = kpRaw.data === null && !kpRaw.error;
 
   const quakesTiered = useMemo(() => (quakesAll ? filterQuakesForTier(quakesAll, tier) : []), [quakesAll, tier]);
+  // W12: a visitor-set filter on top of the tier floor above — "show quakes
+  // above 5" raises the magnitude floor further (never lowers it below the
+  // tier's own cap, since `Math.max` picks the stricter of the two); "this
+  // week" drops anything older than `quakeSinceHours` from the simulated
+  // instant. Both are optional and compose independently.
+  const quakesFiltered = useMemo(() => {
+    const minMag = filters.quakeMinMag;
+    const sinceHours = filters.quakeSinceHours;
+    if (minMag === undefined && sinceHours === undefined) return quakesTiered;
+    return quakesTiered.filter((q) => {
+      if (minMag !== undefined && q.mag < minMag) return false;
+      if (sinceHours !== undefined && simNowMs - q.timeMs > sinceHours * 3_600_000) return false;
+      return true;
+    });
+  }, [quakesTiered, filters.quakeMinMag, filters.quakeSinceHours, simNowMs]);
   // Task 7: every time-aware layer draws only up to the simulated instant.
   // At `timeOffsetMin === 0` this is a no-op (real event times are never in
   // the simulated future), so there is no separate "live" branch to keep in
   // sync with this one.
-  const quakesShown = useMemo(() => quakesAtTime(quakesTiered, simNowMs), [quakesTiered, simNowMs]);
+  const quakesShown = useMemo(() => quakesAtTime(quakesFiltered, simNowMs), [quakesFiltered, simNowMs]);
   const eonetShown = useMemo(() => (eonetAll ? eventsAtTime(eonetAll, simNowMs) : []), [eonetAll, simNowMs]);
 
   const matchedAlerts = useMemo(
@@ -184,6 +222,13 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
         selectedKind: selected?.kind ?? "",
         selectedRows: selected?.rows ?? null,
         status,
+        // W12: top 5 by magnitude, from what's actually drawn (post-filter,
+        // post-time-scrub) — copilot/context.ts's own grounding snapshot.
+        topQuakes: [...quakesShown]
+          .sort((a, b) => b.mag - a.mag)
+          .slice(0, 5)
+          .map((q) => ({ place: q.place, mag: q.mag })),
+        filters,
       };
     }
   }, [
@@ -205,6 +250,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     launchesFailed,
     selected,
     setStatus,
+    filters,
   ]);
 
   return (

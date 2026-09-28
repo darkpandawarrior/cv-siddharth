@@ -1808,6 +1808,53 @@ describe("validateRequest (route)", () => {
   });
 });
 
+// LANE W12 ("Ask the globe"). globe-ask.test.ts covers handleGlobeAsk's own
+// logic in isolation; this covers the one line that actually reaches it —
+// handleChat's `mode === "globe"` dispatch, BEFORE validateRequest's
+// `{ messages }` contract ever sees the body (a `{ text, context }` body
+// would otherwise 400 there). Every guard above the dispatch (origin,
+// rate limit, provider-configured) still applies, unchanged by this branch.
+describe("handleChat: globe mode dispatch", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it('routes { mode: "globe", text, context } to the globe co-pilot, not the { messages } validator', async () => {
+    vi.stubEnv("CHAT_PROVIDER", "groq");
+    vi.stubEnv("GROQ_API_KEY", "test-key");
+    // No stubbed fetch success needed — this only proves the DISPATCH
+    // happened. A rejected upstream call still degrades to globe-ask.ts's
+    // own friendly 200 (see globe-ask.test.ts), which is exactly the shape
+    // (`{ actions, narrate }`) that tells the two modes apart: chat mode
+    // streams SSE, and a { text, context } body would 400 chat mode's own
+    // "Expected { messages: ... }" validator.
+    vi.stubGlobal("fetch", async () => new Response("upstream said no", { status: 500 }));
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://cv-siddharth.vercel.app", "x-forwarded-for": "203.0.113.200" },
+        body: JSON.stringify({ mode: "globe", text: "fly to Tokyo", context: {} }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty("actions");
+    expect(body).toHaveProperty("narrate");
+  });
+
+  it("still enforces the origin allowlist before the dispatch", async () => {
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://evil.com" },
+        body: JSON.stringify({ mode: "globe", text: "fly to Tokyo", context: {} }),
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+});
+
 // audit fix (2026-09-28): the paid Anthropic fallback had no site-wide spend
 // ceiling — only the per-IP windows above, which a caller spread across
 // enough addresses (or a wide free-tier outage) never touches. tryAnthropicCall
