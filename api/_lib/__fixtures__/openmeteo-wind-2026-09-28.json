@@ -1,0 +1,89 @@
+[
+  {
+    "latitude": -85.02636,
+    "longitude": -180.0,
+    "generationtime_ms": 2.168893814086914,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 2339.0,
+    "current_units": {
+      "time": "iso8601",
+      "interval": "seconds",
+      "wind_speed_10m": "km/h",
+      "wind_direction_10m": "\u00b0"
+    },
+    "current": {
+      "time": "2026-09-28T07:30",
+      "interval": 900,
+      "wind_speed_10m": 23.3,
+      "wind_direction_10m": 176
+    }
+  },
+  {
+    "latitude": -85.09666,
+    "longitude": -170.27028,
+    "generationtime_ms": 0.04661083221435547,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 1373.0,
+    "location_id": 1,
+    "current_units": {
+      "time": "iso8601",
+      "interval": "seconds",
+      "wind_speed_10m": "km/h",
+      "wind_direction_10m": "\u00b0"
+    },
+    "current": {
+      "time": "2026-09-28T07:30",
+      "interval": 900,
+      "wind_speed_10m": 5.4,
+      "wind_direction_10m": 296
+    }
+  },
+  {
+    "latitude": -84.95606,
+    "longitude": -159.86842,
+    "generationtime_ms": 0.038623809814453125,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 116.0,
+    "location_id": 2,
+    "current_units": {
+      "time": "iso8601",
+      "interval": "seconds",
+      "wind_speed_10m": "km/h",
+      "wind_direction_10m": "\u00b0"
+    },
+    "current": {
+      "time": "2026-09-28T07:30",
+      "interval": 900,
+      "wind_speed_10m": 21.9,
+      "wind_direction_10m": 129
+    }
+  },
+  {
+    "latitude": -85.02636,
+    "longitude": -149.99998,
+    "generationtime_ms": 0.044345855712890625,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 127.0,
+    "location_id": 3,
+    "current_units": {
+      "time": "iso8601",
+      "interval": "seconds",
+      "wind_speed_10m": "km/h",
+      "wind_direction_10m": "\u00b0"
+    },
+    "current": {
+      "time": "2026-09-28T07:30",
+      "interval": 900,
+      "wind_speed_10m": 20.9,
+      "wind_direction_10m": 132
+    }
+  }
+]
