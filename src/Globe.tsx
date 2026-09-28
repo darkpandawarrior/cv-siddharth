@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -126,6 +126,31 @@ export function Globe() {
   const setSheet = useGlobe((s) => s.setSheet);
   const tourStep = useGlobe((s) => s.tourStep);
   const setTourStep = useGlobe((s) => s.setTourStep);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // sm+ only: the room's <main> is a flex item (RoomFrame's own sticky-
+  // footer column) with no `height` declared, only a flexed size - Chromium
+  // measured at 0px against it for every percentage-height descendant here
+  // (`h-full`, confirmed via getBoundingClientRect during this lane's own
+  // QA: an 841px <main> gave this root a 0px box, not 70vh, not full - the
+  // dead-space defect this lane exists to fix, just further than reported).
+  // RoomFrame is a shared file this lane may not edit, so the fix lives
+  // here: measure the real parent height and set it explicitly. Phones are
+  // exempt - the root there sizes itself from its own flow content (a
+  // 62svh stage plus the fact list), which needs no measurement.
+  const [desktopHeightPx, setDesktopHeightPx] = useState<number | null>(null);
+  useEffect(() => {
+    const parent = rootRef.current?.parentElement;
+    if (!parent) return;
+    const update = () => setDesktopHeightPx(window.innerWidth >= 640 ? parent.clientHeight : null);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(parent);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   useEffect(() => {
     setCapable(hasWebGL());
@@ -150,7 +175,12 @@ export function Globe() {
   const panelReserveRight = panelOpen ? PANEL_RESERVE_RIGHT.open : PANEL_RESERVE_RIGHT.collapsed;
 
   return (
-    <div data-globe-root className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block">
+    <div
+      data-globe-root
+      ref={rootRef}
+      className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block"
+      style={desktopHeightPx != null ? { height: desktopHeightPx } : undefined}
+    >
       {/* STAGE: the canvas and every overlay whose position resolves against
           the room, not the viewport. ~62svh block on phones (flow, above
           the fact list); fills the root on sm+ (the fact list overlays its
