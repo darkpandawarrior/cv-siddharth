@@ -85,12 +85,16 @@ function SceneRig({ now, probeRef, controlsRef }: { now: Date; probeRef: React.R
 
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
-    const { camera: c, gl } = get();
+    const { camera: c, gl, scene, invalidate } = get();
     sceneHandles.camera = c;
     sceneHandles.canvas = gl.domElement;
+    sceneHandles.scene = scene;
+    sceneHandles.invalidate = () => invalidate();
     return () => {
       sceneHandles.camera = null;
       sceneHandles.canvas = null;
+      sceneHandles.scene = null;
+      sceneHandles.invalidate = null;
     };
   }, [get]);
 

@@ -1,13 +1,18 @@
-import { _roots, type RootState } from "@react-three/fiber";
-import { Raycaster, Sphere, Vector2, Vector3 } from "three";
+import { Raycaster, Sphere, Vector2, Vector3, type Camera, type Scene } from "three";
 import { GLOBE_RADIUS, xyzToLatLon, type LatLon } from "./geoMath.ts";
+import { sceneHandles } from "./globeStore.ts";
 
-/** R3F 9 exports _roots. Isolate that adapter here: the DOM bar can't use
- * useThree, and W11 cannot add a component to GlobeScene. No second renderer. */
-export function canvasState(canvas: HTMLCanvasElement): RootState | undefined {
-  return _roots.get(canvas)?.store.getState();
+export interface SceneAccess { camera: Camera; scene: Scene; invalidate: () => void }
+
+/** The live scene as GlobeScene's SceneRig publishes it (sceneHandles), for
+ * DOM surfaces that cannot call useThree. Read at event time; undefined
+ * until the Canvas mounts, or if the handles belong to another canvas. */
+export function canvasState(canvas: HTMLCanvasElement): SceneAccess | undefined {
+  const { camera, scene, invalidate, canvas: live } = sceneHandles;
+  if (!camera || !scene || !invalidate || live !== canvas) return undefined;
+  return { camera, scene, invalidate };
 }
-export function surfacePicker(canvas: HTMLCanvasElement, get: () => RootState | undefined) {
+export function surfacePicker(canvas: HTMLCanvasElement, get: () => { camera: Camera } | undefined) {
   const ray = new Raycaster(), pointer = new Vector2(), hit = new Vector3();
   const earth = new Sphere(new Vector3(), GLOBE_RADIUS);
   return (clientX: number, clientY: number): LatLon | null => {

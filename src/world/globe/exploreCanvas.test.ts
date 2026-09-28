@@ -1,13 +1,12 @@
 import { expect, test, vi } from "vitest";
 import { PerspectiveCamera } from "three";
-import type { RootState } from "@react-three/fiber";
 import { surfaceClicks, surfacePicker } from "./exploreCanvas.ts";
 
 test("surface ray hits the near side in the right-handed frame and misses space", () => {
   const camera = new PerspectiveCamera(42, 1, 0.1, 2000);
   camera.position.set(26, 0, 0); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
   const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 600, height: 600 }) } as HTMLCanvasElement;
-  const pick = surfacePicker(canvas, () => ({ camera }) as RootState);
+  const pick = surfacePicker(canvas, () => ({ camera }));
   expect(pick(300, 300)?.lat).toBeCloseTo(0); expect(pick(300, 300)?.lon).toBeCloseTo(0);
   expect(pick(330, 300)!.lon).toBeGreaterThan(0);
   expect(pick(0, 0)).toBeNull();

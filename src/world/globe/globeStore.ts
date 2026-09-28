@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
-import type { Camera, Vector3 } from "three";
+import type { Camera, Scene, Vector3 } from "three";
 
 /**
  * /globe's one piece of shared state. The HUD, the layer panel, the
@@ -151,4 +151,10 @@ export const entityPositions = new Map<string, () => Vector3 | null>();
  *  the globe without reaching into R3F's internal root registry. Read it at
  *  event time, never cache it: it is null until the Canvas mounts and after
  *  it unmounts. */
-export const sceneHandles: { camera: Camera | null; canvas: HTMLCanvasElement | null } = { camera: null, canvas: null };
+export const sceneHandles: {
+  camera: Camera | null;
+  canvas: HTMLCanvasElement | null;
+  scene: Scene | null;
+  /** Request a frame: the Canvas may run frameloop "demand" (SceneActivity). */
+  invalidate: (() => void) | null;
+} = { camera: null, canvas: null, scene: null, invalidate: null };
