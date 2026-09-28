@@ -80,17 +80,23 @@ test("feed items appear from the hazard and signals fixtures", async ({ page }) 
   await openLiveTab(page);
 
   const rail = page.locator("[data-globe-feed-rail]");
+  // Scoped to the visible row list, not the whole rail: the sr-only
+  // aria-live region echoes the single newest item's own title+detail text,
+  // which is a real substring collision with this fixture's own push row
+  // (strict mode caught it) -- the list is what a sighted visitor reads, so
+  // that's what these assertions check.
+  const list = rail.locator("[data-feed-list]");
   // A hazard item (quake.ts's own M>=4.5 floor: this fixture's largest is
   // M5.6 off Kokopo) and a signals item (activity.json's newest push, which
   // PulseLayer's own opening replay always stages first since it's the most
   // recent of the fixture's 14 candidate events) both come from the two
   // families the brief names.
-  await expect(rail.getByText(/M5\.6 .*Kokopo/)).toBeVisible({ timeout: 15_000 });
-  await expect(rail.getByText("tighten the release checklist")).toBeVisible({ timeout: 15_000 });
+  await expect(list.getByText(/M5\.6 .*Kokopo/)).toBeVisible({ timeout: 15_000 });
+  await expect(list.getByText("tighten the release checklist")).toBeVisible({ timeout: 15_000 });
   // Every row so far is what it claims to be: no invented geography, and a
   // magnitude below this lane's own 4.5 floor never appears (the fixture's
   // M0.7/M2.6 quakes).
-  await expect(rail.getByText(/M0\.7|M2\.6/)).toHaveCount(0);
+  await expect(list.getByText(/M0\.7|M2\.6/)).toHaveCount(0);
 });
 
 test("clicking a feed item flies to its focus and selects it", async ({ page }) => {
@@ -103,7 +109,9 @@ test("clicking a feed item flies to its focus and selects it", async ({ page }) 
   await waitForHydration(page);
   await openLiveTab(page);
 
-  const row = page.locator("[data-globe-feed-rail]").getByText(/M5\.6 .*Kokopo/);
+  // Scoped to the visible list, not the whole rail -- same strict-mode
+  // collision with the sr-only announcer as the test above.
+  const row = page.locator("[data-globe-feed-rail] [data-feed-list]").getByText(/M5\.6 .*Kokopo/);
   await expect(row).toBeVisible({ timeout: 15_000 });
   await row.click();
 
