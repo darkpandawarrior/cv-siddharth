@@ -79,16 +79,33 @@ export function publish(item: FeedItem): void {
 
 /** "just now" / "3s ago" / "5m ago" / "2h ago" / "3d ago" — matches
  *  quake.ts's own `formatTimeAgo` register but at second granularity, since
- *  a feed row is read within seconds of an item arriving. */
-export function formatRelative(whenMs: number, nowMs: number): string {
-  const deltaS = Math.max(0, Math.round((nowMs - whenMs) / 1000));
-  if (deltaS < 5) return "just now";
-  if (deltaS < 60) return `${deltaS}s ago`;
+ *  a feed row is read within seconds of an item arriving. Every publisher
+ *  here is retrospective (a quake, a push, a pass computed after the fact)
+ *  except one: an upcoming launch's `whenMs` is its NET time, still in the
+ *  future when it first qualifies (inside 24h). Visual QA caught the
+ *  original version of this function clamping that negative delta to zero,
+ *  so every upcoming launch read as "just now" -- honest for a past event,
+ *  a fabricated timestamp for a future one. `magnitude()` shares the exact
+ *  bucket thresholds across both directions so "in 5m" and "5m ago" round
+ *  the same way. */
+function magnitude(deltaS: number): string {
+  if (deltaS < 5) return "now";
+  if (deltaS < 60) return `${deltaS}s`;
   const deltaM = Math.round(deltaS / 60);
-  if (deltaM < 60) return `${deltaM}m ago`;
+  if (deltaM < 60) return `${deltaM}m`;
   const deltaH = Math.round(deltaM / 60);
-  if (deltaH < 24) return `${deltaH}h ago`;
-  return `${Math.round(deltaH / 24)}d ago`;
+  if (deltaH < 24) return `${deltaH}h`;
+  return `${Math.round(deltaH / 24)}d`;
+}
+
+export function formatRelative(whenMs: number, nowMs: number): string {
+  const deltaS = Math.round((nowMs - whenMs) / 1000);
+  if (deltaS >= 0) {
+    const mag = magnitude(deltaS);
+    return mag === "now" ? "just now" : `${mag} ago`;
+  }
+  const mag = magnitude(-deltaS);
+  return mag === "now" ? "just now" : `in ${mag}`;
 }
 
 /** One bucket per minute of `whenMs` — two items in the same minute share a

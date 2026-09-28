@@ -54,6 +54,14 @@ describe("formatRelative", () => {
     expect(formatRelative(0, 3 * 3_600_000)).toBe("3h ago");
     expect(formatRelative(0, 2 * 86_400_000)).toBe("2d ago");
   });
+  it("reads a future whenMs (an upcoming launch) as 'in X', never clamped to 'ago'", () => {
+    // Regression: visual QA caught every upcoming launch reading "just now"
+    // before this branch existed (the old code clamped a negative delta to
+    // zero) -- an honest future timestamp is "in 5h", not a fabricated past one.
+    expect(formatRelative(3_000, 0)).toBe("just now");
+    expect(formatRelative(5 * 60_000, 0)).toBe("in 5m");
+    expect(formatRelative(3 * 3_600_000, 0)).toBe("in 3h");
+  });
 });
 
 describe("minuteBucket", () => {
