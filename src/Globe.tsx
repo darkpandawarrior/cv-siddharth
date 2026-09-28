@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -152,6 +152,24 @@ export function Globe() {
     };
   }, []);
 
+  // Phones: the topbar wraps the HUD pills into 1-3 rows depending on
+  // viewport width, so its real height varies - measured here and handed to
+  // GlobeScene as `topOffsetPx` (SceneRig's own comment has the why) rather
+  // than guessed, the same fix as `desktopHeightPx` above for RoomFrame.
+  const topbarRef = useRef<HTMLDivElement>(null);
+  const [topOffsetPx, setTopOffsetPx] = useState<number | null>(null);
+  useEffect(() => {
+    const el = topbarRef.current;
+    if (!el) return;
+    const update = () => setTopOffsetPx(el.getBoundingClientRect().height);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // showScene (via capable) gates the topbar's own mount below - this
+    // effect has to re-run once that ref actually exists.
+  }, [capable]);
+
   useEffect(() => {
     setCapable(hasWebGL());
     setTier(deviceTier());
@@ -185,11 +203,28 @@ export function Globe() {
           the room, not the viewport. ~62svh block on phones (flow, above
           the fact list); fills the root on sm+ (the fact list overlays its
           bottom edge there instead). */}
-      <div data-globe-stage className="relative h-[62svh] w-full shrink-0 sm:absolute sm:inset-0 sm:h-auto">
+      <div
+        data-globe-stage
+        className="relative h-[62svh] w-full shrink-0 sm:absolute sm:inset-0 sm:h-auto"
+        // The real topbar height (+16px margin), consumed by Inspector.tsx
+        // and GlobeTour.tsx's left-slot card instead of a guessed `top-20` -
+        // at narrower sm+ widths (1024px) the HUD row wraps to two lines and
+        // a fixed 80px let the card's top edge cover the zoom/layer icon row
+        // underneath it (caught via screenshot QA). Falls back to 5rem
+        // (the old constant) before the first measurement lands.
+        style={{ ["--globe-top-offset" as string]: topOffsetPx != null ? `${topOffsetPx + 16}px` : "5rem" } as CSSProperties}
+      >
         {showScene && (
           <ClientOnly fallback={sceneLoadingFallback}>
             <Hydrate when={load()} split fallback={sceneLoadingFallback}>
-              <GlobeScene now={now} tier={tier} zoomInTick={zoomInTick} zoomOutTick={zoomOutTick} autoRotatePaused={autoRotatePaused} />
+              <GlobeScene
+                now={now}
+                tier={tier}
+                zoomInTick={zoomInTick}
+                zoomOutTick={zoomOutTick}
+                autoRotatePaused={autoRotatePaused}
+                topOffsetPx={topOffsetPx}
+              />
             </Hydrate>
           </ClientOnly>
         )}
@@ -203,6 +238,7 @@ export function Globe() {
         {showScene && (
           <div
             data-globe-topbar
+            ref={topbarRef}
             className={`pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-2 p-4 ${panelReservePad}`}
           >
             <div className="pointer-events-none flex flex-wrap items-center gap-2 sm:max-w-[38%]">
