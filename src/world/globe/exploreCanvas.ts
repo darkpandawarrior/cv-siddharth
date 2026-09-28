@@ -1,0 +1,50 @@
+import { _roots, type RootState } from "@react-three/fiber";
+import { Raycaster, Sphere, Vector2, Vector3 } from "three";
+import { GLOBE_RADIUS, xyzToLatLon, type LatLon } from "./geoMath.ts";
+
+/** R3F 9 exports _roots. Isolate that adapter here: the DOM bar can't use
+ * useThree, and W11 cannot add a component to GlobeScene. No second renderer. */
+export function canvasState(canvas: HTMLCanvasElement): RootState | undefined {
+  return _roots.get(canvas)?.store.getState();
+}
+export function surfacePicker(canvas: HTMLCanvasElement, get: () => RootState | undefined) {
+  const ray = new Raycaster(), pointer = new Vector2(), hit = new Vector3();
+  const earth = new Sphere(new Vector3(), GLOBE_RADIUS);
+  return (clientX: number, clientY: number): LatLon | null => {
+    const state = get();
+    if (!state) return null;
+    const box = canvas.getBoundingClientRect();
+    if (!box.width || !box.height) return null;
+    pointer.set((clientX - box.left) / box.width * 2 - 1, 1 - (clientY - box.top) / box.height * 2);
+    ray.setFromCamera(pointer, state.camera);
+    return ray.ray.intersectSphere(earth, hit) ? xyzToLatLon(hit) : null;
+  };
+}
+
+/** Movement is tracked throughout, so dragging away and back isn't a click. */
+export function surfaceClicks(canvas: HTMLCanvasElement, pick: ReturnType<typeof surfacePicker>, click: (point: LatLon) => void) {
+  let start: { x: number; y: number; id: number } | null = null;
+  let dragged = false;
+  const down = (event: PointerEvent) => {
+    if (!event.isPrimary || event.button !== 0) { dragged = true; return; }
+    start = { x: event.clientX, y: event.clientY, id: event.pointerId }; dragged = false;
+  };
+  const move = (event: PointerEvent) => { if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) dragged = true; };
+  const cancel = () => { start = null; };
+  const up = (event: PointerEvent) => {
+    if (!start || event.pointerId !== start.id) return;
+    move(event);
+    const accept = !dragged;
+    start = null;
+    if (accept) { const point = pick(event.clientX, event.clientY); if (point) click(point); }
+  };
+  canvas.addEventListener("pointerdown", down);
+  canvas.addEventListener("pointermove", move);
+  canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointercancel", cancel);
+  canvas.addEventListener("pointerleave", cancel);
+  return () => {
+    canvas.removeEventListener("pointerdown", down); canvas.removeEventListener("pointermove", move);
+    canvas.removeEventListener("pointerup", up); canvas.removeEventListener("pointercancel", cancel); canvas.removeEventListener("pointerleave", cancel);
+  };
+}
