@@ -23,6 +23,7 @@ import { parseGdacsAlerts, matchGdacsAlerts, GDACS_POLL_MS } from "./hazardAlert
 import { parseOvationGrid, parseLatestKp, AURORA_POLL_MS, KP_POLL_MS } from "./aurora.ts";
 import { type Launch, parseLaunches, getCachedLaunches, setCachedLaunches } from "./launches.ts";
 import { buildHazardStatus } from "./hazardStatus.ts";
+import { setHazardSnapshot } from "./hazardSnapshot.ts"; // WAVE 6 LANE X6: minimal additive edit, see that file's own comment
 import { QuakeGlyphs } from "./quakeGlyphs.tsx";
 import { EonetGlyphs } from "./eonetGlyphs.tsx";
 import { HazardHalos } from "./hazardHalos.tsx";
@@ -186,6 +187,16 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       alive = false;
     };
   }, []);
+
+  // X6: refresh the snapshot every time the drawn sets change — same inputs
+  // as the status effect below, kept separate so a sibling layer's read
+  // never depends on this component's own debug-global bookkeeping.
+  useEffect(() => {
+    setHazardSnapshot({
+      quakes: quakesShown.map((q) => ({ id: q.id, lat: q.lat, lon: q.lon, mag: q.mag })),
+      fires: eonetShown.filter((e) => e.category === "wildfires").map((f) => ({ id: f.id, lat: f.lat, lon: f.lon })),
+    });
+  }, [quakesShown, eonetShown]);
 
   useEffect(() => {
     const fires = eonetShown.filter((e) => e.category === "wildfires").length;
