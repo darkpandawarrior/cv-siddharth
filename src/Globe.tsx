@@ -25,6 +25,12 @@ const ExploreBar = lazy(() => import("./world/globe/ui/ExploreBar.tsx"));
 const StoryPlayer = lazy(() => import("./world/globe/ui/StoryPlayer.tsx"));
 const Intro = lazy(() => import("./world/globe/ui/Intro.tsx"));
 const SoundToggle = lazy(() => import("./world/globe/ui/SoundToggle.tsx"));
+// LANE C1 ("Share a view"): URL state, the Share button and the postcard
+// export. One mount, beside the tour pill and SoundToggle in the topbar's
+// right cluster (see the mount site below) — see that file's own header for
+// why one instance also owns the restore-on-load and debounced address-bar
+// write, regardless of which of its two render sites is on screen.
+const ShareView = lazy(() => import("./world/globe/ui/ShareView.tsx"));
 
 const sceneLoadingFallback = (
   <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the globe…</div>
@@ -295,6 +301,7 @@ export function Globe() {
               <ClientOnly fallback={null}>
                 <Suspense fallback={null}>
                   <GlobeTour tier={tier} slot="row" />
+                  <ShareView tier={tier} />
                   <SoundToggle tier={tier} />
                 </Suspense>
               </ClientOnly>

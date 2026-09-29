@@ -11,6 +11,10 @@ import FeedRail from "./FeedRail.tsx";
 // button over this sheet's own content (see that file's own "Needs from
 // integration" comment) — LANE H1 (integration) adds the slot here.
 import { SoundToggleSlot } from "./SoundToggle.tsx";
+// LANE C1 ("Share a view"): same in-sheet-row shape as SoundToggleSlot
+// above, for the same reason — phones get the Share/Postcard popover as a
+// header row here rather than a second floating button.
+import { ShareSlot } from "./ShareView.tsx";
 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
@@ -355,6 +359,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
             <div className="flex items-center gap-2">
+              <ShareSlot />
               <SoundToggleSlot />
               <button
                 type="button"
