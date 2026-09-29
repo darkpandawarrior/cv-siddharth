@@ -134,6 +134,10 @@ interface GlobeState {
   setTogetherCount: (count: number) => void;
   setTogetherSharing: (sharing: boolean) => void;
   setPanelOpen: (open: boolean) => void;
+  /** WAVE 7 LANE V3B: the physical-atmosphere spike's one flag, off by
+   *  default (see `initialPhysicalAtmosphere` above). */
+  physicalAtmosphere: boolean;
+  setPhysicalAtmosphere: (on: boolean) => void;
 }
 
 // Desktop-open / narrower-collapsed default: read once at module load, not
@@ -146,6 +150,15 @@ interface GlobeState {
 const PANEL_OPEN_DEFAULT_QUERY = "(min-width: 1280px)";
 function initialPanelOpen(): boolean {
   return typeof window === "undefined" ? true : window.matchMedia(PANEL_OPEN_DEFAULT_QUERY).matches;
+}
+
+// WAVE 7 LANE V3B (physical-atmosphere spike, docs/globe-physical-
+// atmosphere-spike.md): off for every visitor by default, same
+// read-once-at-module-load pattern as `initialPanelOpen` above. `?atmo=
+// physical` in the URL is the only way in until (if ever) the go/no-go
+// promotes it to a UI toggle -- see layers/PhysicalAtmosphere.tsx.
+function initialPhysicalAtmosphere(): boolean {
+  return typeof window !== "undefined" && new URLSearchParams(window.location.search).get("atmo") === "physical";
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
@@ -164,6 +177,7 @@ export const useGlobe = create<GlobeState>((set) => ({
   // the UI lane wires the toggle to setTogetherSharing).
   together: { count: 0, sharing: true },
   panelOpen: initialPanelOpen(),
+  physicalAtmosphere: initialPhysicalAtmosphere(),
   setStyle: (style) => set({ style }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setView: (view) => set({ view }),
@@ -184,6 +198,7 @@ export const useGlobe = create<GlobeState>((set) => ({
   setTogetherCount: (count) => set((s) => ({ together: { ...s.together, count } })),
   setTogetherSharing: (sharing) => set((s) => ({ together: { ...s.together, sharing } })),
   setPanelOpen: (panelOpen) => set({ panelOpen }),
+  setPhysicalAtmosphere: (physicalAtmosphere) => set({ physicalAtmosphere }),
 }));
 
 /** The simulated instant every time-aware layer draws: the real clock plus

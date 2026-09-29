@@ -32,6 +32,10 @@ const HistoryLayer = lazy(() => import("./layers/HistoryLayer.tsx"));
 const StoryArc = lazy(() => import("./layers/StoryArc.tsx"));
 const HexbinLayer = lazy(() => import("./layers/HexbinLayer.tsx"));
 const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
+// Wave 7 Lane 3 step B spike, off by default (docs/globe-physical-
+// atmosphere-spike.md): a lazy chunk so a visitor with the flag off never
+// fetches @takram/three-atmosphere.
+const PhysicalAtmosphere = lazy(() => import("./layers/PhysicalAtmosphere.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -311,6 +315,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
   // Live feeds cannot time-travel: while the scrubber is off "now" they hide
   // rather than draw a present-tense reading against a past sky.
   const live = useGlobe((s) => s.timeOffsetMin === 0);
+  const physicalAtmosphere = useGlobe((s) => s.physicalAtmosphere);
   const now = useSimNow(realNow);
   const count = TIER_DOT_COUNT[tier];
   const dotsEarth = <EarthDots count={count} now={now} earthRef={earthRef} />;
@@ -399,6 +404,9 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>
+        {/* Wave 7 Lane 3 step B spike: off by default, tier 1 only -- see
+            docs/globe-physical-atmosphere-spike.md. */}
+        <Suspense fallback={null}>{physicalAtmosphere && tier === 1 && <PhysicalAtmosphere now={now} />}</Suspense>
       </Canvas>
     </>
   );
