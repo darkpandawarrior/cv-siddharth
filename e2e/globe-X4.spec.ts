@@ -43,47 +43,65 @@ function chapterCard(page: Page) {
   return page.locator("[data-story-chapter-card]");
 }
 
-test("start the story: opens on the earliest chapter, Bhopal", async ({ page }) => {
+test("start the story: opens on the earliest chapter, Kuwait City", async ({ page }) => {
   await openGlobe(page, 1440, 900);
   await expect(storyEntry(page)).toBeVisible();
   await storyEntry(page).click();
 
   const card = chapterCard(page);
   await expect(card).toBeVisible();
-  // buildStory() sorts chronologically; NIT Bhopal (2017) predates every
-  // other claim the site makes (earliest role: John Deere, May 2020) — so
-  // "reach the Bhopal chapter" is the story's own opening chapter, chapter 1
-  // of N, not a later one this test has to navigate to.
-  await expect(card).toHaveAttribute("data-story-chapter-id", "education");
-  await expect(card).toContainText("NIT Bhopal");
+  // buildStory() sorts chronologically and inserts the life-places chapters
+  // first (storyModel.ts, lane T1) so a same-year tie (Kuwait's departure and
+  // NIT Bhopal's start both read 2017) resolves stably to Kuwait first — the
+  // owner's own account of where he grew up predates every claim about where
+  // he studied or worked. "reach the Kuwait chapter" is the story's own
+  // opening chapter, chapter 1 of N, not a later one this test navigates to.
+  await expect(card).toHaveAttribute("data-story-chapter-id", "life:kuwait-city");
+  await expect(card).toContainText("Grew up in Kuwait and finished school here");
+  // The Kuwait chapter itself carries no arc — the Kuwait->Bhopal journey is
+  // drawn on the NEXT chapter it leads into (education), not this one.
   await expect(page.locator("[data-story-arc]")).toHaveCount(0);
 });
 
-test("the first Pune role chapter shows the arc; no other chapter does", async ({ page }) => {
+test("the life path draws one arc per transition; role chapters never carry one", async ({ page }) => {
   await openGlobe(page, 1440, 900);
   await storyEntry(page).click();
   const card = chapterCard(page);
-  await expect(card).toHaveAttribute("data-story-chapter-id", "education");
+  await expect(card).toHaveAttribute("data-story-chapter-id", "life:kuwait-city");
   await expect(page.locator("[data-story-arc]")).toHaveCount(0);
 
-  // Walk forward with Next until the John Deere chapter (the earliest role
-  // whose location resolves to a known place other than Bhopal — storyModel
-  // .ts's own "one journey the data can draw honestly") — bounded by the
-  // real chapter count so a data change fails loudly instead of hanging.
   const nextBtn = card.getByRole("button", { name: "Next" });
+  // storyModel.ts (lane T1) puts the arcs on the life path itself, one per
+  // transition, never on a role chapter: Kuwait City -> Bhopal lands on the
+  // education chapter (the destination of that move), Bhopal -> Chandigarh
+  // on the Chandigarh life chapter, Chandigarh -> Pune on the Pune life
+  // chapter. Walking the whole sequence (bounded by the real chapter count)
+  // proves the full path, not just one hop of it.
+  const path: Array<{ id: string; from: string; to: string }> = [
+    { id: "education", from: "Kuwait City, Kuwait", to: "Bhopal, India" },
+    { id: "life:chandigarh", from: "Bhopal, India", to: "Chandigarh, India" },
+    { id: "life:pune", from: "Chandigarh, India", to: "Pune, India" },
+  ];
+  for (const { id, from, to } of path) {
+    for (let i = 0; i < 40; i++) {
+      const current = await card.getAttribute("data-story-chapter-id");
+      if (current === id) break;
+      await nextBtn.click();
+    }
+    await expect(card).toHaveAttribute("data-story-chapter-id", id);
+    await expect(page.locator("[data-story-arc]")).toBeAttached();
+    await expect(page.locator(`[data-story-arc-label="${from}"]`)).toBeAttached();
+    await expect(page.locator(`[data-story-arc-label="${to}"]`)).toBeAttached();
+  }
+
+  // The first Pune role chapter (the earliest role at a known place other
+  // than the life chapters above) no longer carries an arc of its own.
   for (let i = 0; i < 40; i++) {
     const id = await card.getAttribute("data-story-chapter-id");
     if (id === "role:John Deere India") break;
     await nextBtn.click();
   }
   await expect(card).toHaveAttribute("data-story-chapter-id", "role:John Deere India");
-  await expect(page.locator("[data-story-arc]")).toBeAttached();
-  await expect(page.locator('[data-story-arc-label="Bhopal, India"]')).toBeAttached();
-  await expect(page.locator('[data-story-arc-label="Pune, India"]')).toBeAttached();
-
-  // One step further (a chapter with no arcs of its own): the arc probe
-  // disappears — proven, not assumed, that it tracks the active chapter.
-  await nextBtn.click();
   await expect(page.locator("[data-story-arc]")).toHaveCount(0);
 });
 
@@ -100,8 +118,9 @@ test("exit restores a layer the story forced back on", async ({ page }) => {
   const nextBtn = card.getByRole("button", { name: "Next" });
   const exitBtn = card.getByRole("button", { name: "Exit my story" });
 
-  // Chapter 0 (education) emphasises "markers", not "reach" — the toggle
-  // must stay exactly as the visitor left it until a chapter actually asks.
+  // Chapter 0 (life:kuwait-city, a place chapter) emphasises "markers", not
+  // "reach" — the toggle must stay exactly as the visitor left it until a
+  // chapter actually asks.
   await expect(reachToggle).toHaveAttribute("aria-pressed", "false");
 
   // Walk forward until some chapter's own emphasis forces "reach" back on
