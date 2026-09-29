@@ -12,9 +12,8 @@ const RING_TUBE = 0.012;
 
 /**
  * Employer marker (G17, living-ledger-spec.md#6.3 task 2): city precision
- * only. Both resolvable employers (Dice.tech, John Deere India) sit in Pune
- * today, so this draws one ring at that single point rather than one marker
- * each.
+ * only. One ring per distinct resolved city: Dice.tech/John Deere in Pune,
+ * Jugnoo in Chandigarh. Duplicate employers never stack rings.
  *
  * LANE U1 retired the floating `<Html>` card this ring used to carry (it
  * collided with the time scrubber, the tour and the layer panel at every
@@ -28,25 +27,23 @@ export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Objec
   const select = useGlobe((s) => s.select);
   const setView = useGlobe((s) => s.setView);
 
-  const placement = useMemo(() => {
-    if (employerMarkers.length === 0) return null;
-    const { lat, lon } = employerMarkers[0];
-    const p = latLonToXyz(lat, lon);
+  const placements = useMemo(() => [...new Map(employerMarkers.map((marker) => [marker.location, marker])).values()].map((marker) => {
+    const p = latLonToXyz(marker.lat, marker.lon);
     const normal = new THREE.Vector3(p.x, p.y, p.z);
-    return {
-      position: normal.clone().multiplyScalar(GLOBE_RADIUS + 0.01),
-      quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal),
-    };
-  }, []);
-
-  if (!placement) return null;
+    return { ...marker, position: normal.clone().multiplyScalar(GLOBE_RADIUS + 0.01), quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal) };
+  }), []);
 
   return (
-    <group data-employer-ring position={placement.position} quaternion={placement.quaternion}>
+    <>{placements.map((placement) => <group key={placement.location} data-employer-ring position={placement.position} quaternion={placement.quaternion}>
       <mesh
         onClick={(e) => {
           e.stopPropagation();
-          const selection = buildPuneSelection();
+          const selection = placement.location === "Pune, India" ? buildPuneSelection() : {
+            id: `employer:${placement.location}`, kind: "employer", title: placement.location,
+            rows: employerMarkers.filter((marker) => marker.location === placement.location).map((marker) => ({ label: marker.company, value: marker.role })),
+            source: "src/data/profile/experience.ts, city-level employer location", live: false,
+            focus: { kind: "latlon" as const, lat: placement.lat, lon: placement.lon, distance: 14 },
+          };
           if (!selection) return;
           setView("orbit");
           select(selection);
@@ -62,6 +59,6 @@ export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Objec
         <torusGeometry args={[RING_RADIUS, RING_TUBE, 8, 40]} />
         <meshBasicMaterial color={probe} toneMapped={false} />
       </mesh>
-    </group>
+    </group>)}</>
   );
 }

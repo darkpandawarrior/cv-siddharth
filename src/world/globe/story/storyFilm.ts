@@ -1,4 +1,4 @@
-// LANE C3 ("Life journey film"): the four life chapters storyModel.ts's own
+// LANE C3 ("Life journey film"): the five dated life chapters storyModel.ts's own
 // buildStory() already derives from src/data/profile/lifePlaces.ts, replayed
 // in the owner's own fixed order (lifePlaces.ts's own listing) rather than
 // buildStory()'s full chronological reach across every role/OSS/store claim.
@@ -22,14 +22,14 @@ export interface FilmChapter extends StoryChapter {
 
 // The owner's own account, in the order lifePlaces.ts already lists a lived
 // stay: Kuwait, then college in Bhopal, then the first job in Chandigarh,
-// then Pune. Mumbai carries neither `from` nor `to` in that file (family
-// home, not a dated stay), so it is never in this list -- the same exclusion
-// storyModel.ts's own buildStory() applies to the general chronology.
-const FILM_SLUGS = ["kuwait-city", "bhopal", "chandigarh", "pune"] as const;
+// then Pune, with the family's July 2019 Mumbai move inserted by date.
+// Mumbai does not change the origin of the owner's Bhopal-to-Chandigarh move.
+const FILM_SLUGS = ["kuwait-city", "bhopal", "mumbai", "chandigarh", "pune"] as const;
 const PLACE_NAME: Record<(typeof FILM_SLUGS)[number], string> = {
   "kuwait-city": "Kuwait City, Kuwait",
   bhopal: "Bhopal, India",
   chandigarh: "Chandigarh, India",
+  mumbai: "Mumbai, India",
   pune: "Pune, India",
 };
 
@@ -38,14 +38,16 @@ const PLACE_NAME: Record<(typeof FILM_SLUGS)[number], string> = {
  * city, this is belt and braces) and its year falls within the lived years,
  * one year of slack either side for a visit close to the actual move date.
  * A decade-later trip back must never stand in for "the college years". */
-function honestPhotos(slug: string, from: number | undefined, to: number | undefined): MapsPhoto[] {
+function honestPhotos(slug: string, fromDate: number | string | undefined, toDate: number | string | undefined): MapsPhoto[] {
+  const from = fromDate === undefined ? undefined : Number(String(fromDate).slice(0, 4));
+  const to = toDate === undefined ? undefined : Number(String(toDate).slice(0, 4));
   if (from === undefined && to === undefined) return [];
   const lo = Math.min(from ?? Infinity, to ?? Infinity) - 1;
   const hi = Math.max(from ?? -Infinity, to ?? -Infinity) + 1;
   return mapsPhotos.filter((p) => p.slug === slug && p.year >= lo && p.year <= hi).sort((a, b) => b.views - a.views);
 }
 
-/** The four-chapter short film: city, then arc in from the previous city
+/** The five-chapter short film: city, then arc in from the previous city
  * (storyArc()'s own guard -- unknown endpoint or same-city hop draws
  * nothing), then this city's own Maps contribution line and honest photos.
  * No new coordinate, count or caption is invented anywhere in this file. */
@@ -62,7 +64,7 @@ export function buildStoryFilm(): FilmChapter[] {
     const lo = years.length ? Math.min(...years) : undefined;
     const hi = years.length ? Math.max(...years) : undefined;
     const mapsLine = mapsPlace ? `${mapsPlace.reviews} reviews, ${mapsPlace.photos} photos on Google Maps, ${lo}${hi !== lo ? ` to ${hi}` : ""}` : undefined;
-    const arc = storyArc(prevPlace, place);
+    const arc = storyArc(slug === "mumbai" ? storyPlace("Kuwait City, Kuwait") : prevPlace, place);
     chapters.push({
       id: `film:${slug}`,
       title: `${lp.city}, ${lp.country}`,
@@ -70,8 +72,8 @@ export function buildStoryFilm(): FilmChapter[] {
         {
           id: `film:${slug}`,
           date: String(raw),
-          precision: "year",
-          dateNote: "Owner's account; year only",
+          precision: String(raw).length === 7 ? "month" : "year",
+          dateNote: `${lp.dateNote ?? "Owner's account; year only"}; ${String(raw).length === 7 ? "month" : "year"} precision`,
           title: `${lp.city}, ${lp.country}`,
           detail: lp.line,
           source: "src/data/profile/lifePlaces.ts",
@@ -79,11 +81,11 @@ export function buildStoryFilm(): FilmChapter[] {
         },
       ],
       camera: { focus: place, anchor: place, distance: GLOBE_RADIUS * 3, emphasise: ["markers"] },
-      arcs: arc ? [arc] : [],
+      arcs: arc ? [{ ...arc, ...(slug === "mumbai" ? { familyMove: true } : {}) }] : [],
       mapsLine,
       photos: honestPhotos(slug, lp.from, lp.to),
     });
-    prevPlace = place;
+    if (slug !== "mumbai") prevPlace = place;
   }
   return chapters;
 }

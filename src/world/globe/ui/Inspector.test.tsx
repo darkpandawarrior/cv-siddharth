@@ -24,3 +24,17 @@ it("renders frequency buckets as zero-based bars and preserves time-series lines
   expect(line).toContain("<polyline");
   expect(line).not.toContain("<rect");
 });
+
+
+it("keeps full public review text behind More and dates the owner's attestation", () => {
+  const text = "Public review words ".repeat(20);
+  const review = { id: "review-test", name: "Public place", rating: 4, month: "2022-05", city: "Pune", slug: "pune", country: "India", lat: 18.5, lon: 73.8, text };
+  useGlobe.getState().select({ id: "guide-review:test", kind: "guide-review", title: review.name, rows: [], source: "Google Maps review by Siddharth, 2022-05", live: false, guide: { review }, media: [{ src: "", alt: "Source still image could not be decoded", caption: "2022-05" }] });
+  const html = renderToStaticMarkup(<Inspector tier={1} />);
+  expect(html).toContain("<details");
+  expect(html).toContain(text);
+  expect(html).toContain("as of 30 Sep 2026");
+  expect(html).toContain("My Google Maps profile");
+  expect(html).toContain("Photo unavailable");
+  expect(html).not.toContain('src=""');
+});

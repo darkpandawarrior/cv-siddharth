@@ -15,21 +15,27 @@
 // Spain marker comes from career-ops-hq's own country-level location field.
 // Pune's inspector shows public GitHub activity by IST hour only when at
 // least five valid event timestamps exist.
-import { useEffect, useMemo, useRef } from "react";
-import type { ThreeEvent } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { GLOBE_RADIUS, latLonToXyz } from "../geoMath.ts";
 import { readColor } from "../../../themeColorThree.ts";
 import { readToken } from "../../../themeColor.ts";
 import { sceneHandles, simTime, useGlobe } from "../globeStore.ts";
 import { lifePlaces, lifePlaceGeo } from "../../../data/profile/lifePlaces.ts";
-import { mapsExport, mapsPhotos, mapsPlaces, mapsTotals } from "../../../data/generated/mapsPlaces.ts";
+import { mapsExport, mapsPhotos, mapsPlaces, mapsReviews, mapsTotals } from "../../../data/generated/mapsPlaces.ts";
 import { upstreamMergedPRs } from "../../../data/profile/openSource.ts";
 import { upstreamStars } from "../../../data/careerOpsUpstream.ts";
 import { useLiveSignal } from "../../../lib/useLiveSignal.ts";
 import type { GithubActivity } from "../../../../api/_lib/github-activity-handler.ts";
+import { localGuide } from "../../../data/profile/localGuide.ts";
+import { guideMedia, guideReviewSelection } from "./guideReviewSelection.ts";
 import { scaleForYear, hourHistogram } from "./guideActivity.ts";
 
+const PIN_GEOMETRY = new THREE.SphereGeometry(0.018, 8, 6);
+const PIN_HIT_GEOMETRY = new THREE.SphereGeometry(0.03, 8, 6);
+const PIN_ZOOM_DISTANCE = 11.5;
 const RING_GEOMETRY = new THREE.RingGeometry(0.72, 1, 28);
 const LIFE_RING_GEOMETRY = new THREE.RingGeometry(1.25, 1.45, 28);
 const HIT_GEOMETRY = new THREE.CircleGeometry(1, 16);
@@ -129,6 +135,9 @@ declare global {
 }
 
 export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
+  const pinRef = useRef<THREE.InstancedMesh>(null);
+  const pinHitRef = useRef<THREE.InstancedMesh>(null);
+  const [hoverReview, setHoverReview] = useState<number | null>(null);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const lifeRef = useRef<THREE.InstancedMesh>(null);
@@ -225,7 +234,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     }
 
     const notLive = simYear !== new Date().getFullYear();
-    const statusDetail = `${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.qaAnswers} Q&A answers, ${mapsTotals.answers} automated-prompt answers, Maps export ${mapsExport}${notLive ? ` · rings scaled by recorded active years through ${simYear} (computed, not contribution totals)` : ""}`;
+    const statusDetail = `${localGuide.label} · ${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.qaAnswers} Q&A answers, ${mapsTotals.answers} automated-prompt answers, Maps export ${mapsExport}${notLive ? ` · rings scaled by recorded active years through ${simYear} (computed, not contribution totals)` : ""}`;
     useGlobe.getState().setStatus("guide", { state: "snapshot", detail: statusDetail });
     scalesRef.current = scales;
     statusDetailRef.current = statusDetail;
@@ -246,15 +255,15 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       activityHistogram,
       // Stage only the camera, never a selection: e2e must hit the real mesh.
       face: (slug) => {
-        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug);
-        if (p) useGlobe.getState().flyTo({ kind: "latlon", lat: p.lat, lon: p.lon, distance: 14 });
+        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug) ?? mapsReviews.find((review) => review.id === slug);
+        if (p) useGlobe.getState().flyTo({ kind: "latlon", lat: p.lat, lon: p.lon, distance: slug.startsWith("review-") ? 9.5 : 14 });
       },
       screenPoint: (slug) => {
-        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug);
+        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug) ?? mapsReviews.find((review) => review.id === slug);
         const { camera, canvas } = sceneHandles;
         if (!p || !camera || !canvas) return null;
         const xyz = latLonToXyz(p.lat, p.lon);
-        const point = new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + LIFT).project(camera);
+        const point = new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + (slug.startsWith("review-") ? 0.06 : LIFT)).project(camera);
         const box = canvas.getBoundingClientRect();
         return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
       },
@@ -281,10 +290,11 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
         ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
       ],
-      source: `Google Maps Takeout, exported ${mapsExport} · city level, years only`,
+      source: `Google Maps Takeout, exported ${mapsExport} · city rings, reviewed public places at exact pins`,
+      guide: { places: mapsReviews.filter((review) => review.slug === p.slug).sort((a, b) => b.month.localeCompare(a.month)) },
       live: false,
       focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
-      media: photos.length > 0 ? photos.map((ph) => ({ src: ph.src, alt: ph.caption ?? `Photo in ${ph.city}, ${ph.year}`, caption: `${ph.year} · ${ph.views.toLocaleString("en-IN")} views` })) : undefined,
+      media: photos.length > 0 ? guideMedia(photos) : undefined,
       ...(p.slug === "pune" && activityHistogram
         ? {
             spark: activityHistogram,
@@ -315,10 +325,47 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     document.body.style.cursor = hover ? "pointer" : "auto";
   };
 
+  useEffect(() => {
+    if (!pinRef.current || !pinHitRef.current) return;
+    const colours = ["--color-danger", "--color-warn", "--color-accent", "--color-probe", "--color-alt"].map((token) => readColor(token, "#5ee6ff"));
+    mapsReviews.forEach((review, i) => {
+      const xyz = latLonToXyz(review.lat, review.lon);
+      dummy.position.set(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + 0.06);
+      dummy.quaternion.identity(); dummy.scale.setScalar(1); dummy.updateMatrix();
+      pinRef.current!.setMatrixAt(i, dummy.matrix); pinHitRef.current!.setMatrixAt(i, dummy.matrix);
+      pinRef.current!.setColorAt(i, colours[review.rating - 1]);
+    });
+    pinRef.current.instanceMatrix.needsUpdate = true;
+    pinHitRef.current.instanceMatrix.needsUpdate = true;
+    if (pinRef.current.instanceColor) pinRef.current.instanceColor.needsUpdate = true;
+  }, []);
+  useFrame(({ camera }) => {
+    const visible = camera.position.length() < PIN_ZOOM_DISTANCE;
+    if (pinRef.current) pinRef.current.visible = visible;
+    if (pinHitRef.current) pinHitRef.current.visible = visible;
+  });
+  const onReviewClick = (event: ThreeEvent<MouseEvent>) => {
+    if (!pinHitRef.current?.visible) return;
+    event.stopPropagation();
+    const review = mapsReviews[event.instanceId ?? -1];
+    if (review) { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); }
+  };
+  const hover = hoverReview === null ? undefined : mapsReviews[hoverReview];
+  const hoverPoint = hover ? latLonToXyz(hover.lat, hover.lon) : null;
+
   if (GUIDE_PLACES.length === 0) return null;
 
   return (
     <group>
+      <instancedMesh ref={pinRef} args={[PIN_GEOMETRY, undefined, mapsReviews.length]} frustumCulled={false} visible={false}>
+        <meshBasicMaterial toneMapped={false} />
+      </instancedMesh>
+      <instancedMesh ref={pinHitRef} args={[PIN_HIT_GEOMETRY, undefined, mapsReviews.length]} frustumCulled={false} visible={false} onClick={onReviewClick}
+        onPointerOver={(event) => { if (!pinHitRef.current?.visible) return; event.stopPropagation(); setHoverReview(event.instanceId ?? null); setCursor(true); }}
+        onPointerOut={() => { setHoverReview(null); setCursor(false); }}>
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </instancedMesh>
+      {hover && hoverPoint && <Html position={[hoverPoint.x * (GLOBE_RADIUS + 0.09), hoverPoint.y * (GLOBE_RADIUS + 0.09), hoverPoint.z * (GLOBE_RADIUS + 0.09)]} center style={{ pointerEvents: "none" }}><span role="tooltip" className="whitespace-nowrap rounded bg-ink px-2 py-1 text-xs text-zinc-100">{hover.name}</span></Html>}
       <instancedMesh ref={meshRef} args={[RING_GEOMETRY, undefined, GUIDE_PLACES.length]} frustumCulled={false}>
         <meshBasicMaterial toneMapped={false} transparent opacity={0.85} side={THREE.DoubleSide} />
       </instancedMesh>

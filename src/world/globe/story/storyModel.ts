@@ -75,13 +75,13 @@ export function buildStory(): StoryChapter[] {
   // LANE T1 (life places): the owner's own account of where he has lived
   // (src/data/profile/lifePlaces.ts), inserted FIRST so the sort's stability
   // on equal dates puts Kuwait ahead of the education chapter (both 2017) —
-  // see the file's own header comment. Mumbai carries neither `from` nor
-  // `to` (it is the family home, not a dated stay) so it gets no chapter.
+  // see the file's own header comment. Mumbai records the family move in July 2019; months remain
+  // source-backed rather than invented for the year-only chapters.
   for (const p of lifePlaces) {
     const raw = p.from ?? p.to;
     if (raw === undefined) continue;
     const title = `${p.city}, ${p.country}`;
-    const note = p.slug === "kuwait-city" ? "Owner's account; year only; left in 2017, earlier years not recorded" : "Owner's account; year only";
+    const note = p.dateNote ?? (p.slug === "kuwait-city" ? "Owner's account; year only; left in 2017, earlier years not recorded" : "Owner's account; year only");
     add(`life:${p.slug}`, String(raw), title, p.line, "src/data/profile/lifePlaces.ts", note, storyPlace(title));
   }
   // The school string itself names the city ("NIT Bhopal (MANIT)"), so the
@@ -122,5 +122,8 @@ export function buildStory(): StoryChapter[] {
   if (chandigarhChapter && bhopalToChandigarh) chandigarhChapter.arcs = [bhopalToChandigarh];
   const chandigarhToPune = storyArc(chandigarhLife, puneLife);
   if (puneChapter && chandigarhToPune) puneChapter.arcs = [chandigarhToPune];
+  const mumbai = chapters.find((chapter) => chapter.id === "life:mumbai");
+  const familyMove = storyArc(kuwait, mumbai?.events[0].place);
+  if (mumbai && familyMove) mumbai.arcs = [{ ...familyMove, familyMove: true }];
   return chapters;
 }

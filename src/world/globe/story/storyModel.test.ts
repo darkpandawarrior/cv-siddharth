@@ -58,7 +58,7 @@ describe("story evidence", () => {
       if (raw === undefined) continue; // Mumbai: undated, no chapter
       check(`life:${p.slug}`, "src/data/profile/lifePlaces.ts", `${p.city}, ${p.country}`, p.line);
       expect(byId(`life:${p.slug}`).date).toBe(String(raw));
-      expect(byId(`life:${p.slug}`).dateNote).toContain("Owner's account; year only");
+      expect(byId(`life:${p.slug}`).dateNote).toContain(p.dateNote ?? "Owner's account; year only");
       expect(byId(`life:${p.slug}`).place?.name).toBe(`${p.city}, ${p.country}`);
     }
     expect(byId("life:kuwait-city").dateNote).toContain("left in 2017, earlier years not recorded");
@@ -143,6 +143,7 @@ describe("geography guards", () => {
     // role chapter (the 2020 internship gets no arc).
     expect(chapters.flatMap((c) => c.arcs).map((a) => `${a.from.name}->${a.to.name}`)).toEqual([
       "Kuwait City, Kuwait->Bhopal, India",
+      "Kuwait City, Kuwait->Mumbai, India",
       "Bhopal, India->Chandigarh, India",
       "Chandigarh, India->Pune, India",
     ]);
@@ -172,7 +173,10 @@ describe("the life path", () => {
 
   it("draws exactly three arcs, one per life transition, never touching a role chapter", () => {
     const story = buildStory();
-    const withArcs = story.filter((c) => c.arcs.length > 0);
+    const withArcs = story.filter((c) => c.arcs.length > 0 && !c.arcs[0].familyMove);
+    const family = story.find((chapter) => chapter.id === "life:mumbai")!;
+    expect(family.events[0].date).toBe("2019-07");
+    expect(family.arcs[0]).toMatchObject({ familyMove: true, from: { name: "Kuwait City, Kuwait" }, to: { name: "Mumbai, India" } });
     expect(withArcs.map((c) => c.id)).toEqual(["education", "life:chandigarh", "life:pune"]);
     expect(withArcs[0].arcs[0].from.name).toBe("Kuwait City, Kuwait");
     expect(withArcs[0].arcs[0].to.name).toBe("Bhopal, India");
@@ -182,11 +186,11 @@ describe("the life path", () => {
     expect(withArcs[2].arcs[0].to.name).toBe("Pune, India");
   });
 
-  it("gives Mumbai no chapter (undated) and every other life place exactly one", () => {
+  it("gives every source-dated life place exactly one chapter", () => {
     const story = buildStory();
     for (const p of lifePlaces) {
       const hasChapter = story.some((c) => c.id === `life:${p.slug}`);
-      expect(hasChapter, p.slug).toBe(p.slug !== "mumbai");
+      expect(hasChapter, p.slug).toBe(true);
     }
   });
 });
