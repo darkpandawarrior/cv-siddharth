@@ -125,5 +125,11 @@ test("Esc exits the story", async ({ page }) => {
   await expect(chapterCard(page)).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(chapterCard(page)).toHaveCount(0);
-  await expect(storyEntry(page)).toBeVisible();
+  // enter() clears the desktop preselect (select(null)), so `busy` is false
+  // post-exit and the component correctly swaps to the full left-column
+  // pill instead of the compact fallback it opened from. Both buttons stay
+  // mounted (only a Tailwind visibility class differs), so a plain OR
+  // locator resolves to 2 elements and trips Playwright's strict mode --
+  // the :visible pseudo-class narrows it to whichever one actually renders.
+  await expect(page.locator("[data-story-entry]:visible, [data-story-entry-compact]:visible")).toBeVisible();
 });
