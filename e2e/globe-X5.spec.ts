@@ -114,6 +114,45 @@ test.describe("seamless zoom into street level and back", () => {
     await expect(page.locator("[data-street-view]")).toBeVisible();
   });
 
+  // LANE I2 (root cause fix): the product bug this covers -- resting AT the
+  // floor with no further input used to keep accumulating toward the 400ms
+  // trigger regardless, so a visitor who zoomed in to study the floor and
+  // then just looked was thrown into street view a moment later. Stops
+  // clicking the instant CameraDirector's own data-camera-distance probe
+  // (test/tooling seam, same convention as data-subsolar-*) confirms the
+  // floor is actually reached, so "stayed in orbit" means the gate held,
+  // not "never got the chance to trigger".
+  test("resting at the closest zoom with no further input stays in orbit", async ({ page }) => {
+    test.slow();
+    await seedIntroSeen(page);
+    const canvas = await openGlobe(page);
+    await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+
+    const zoomInRole = page.getByRole("button", { name: "Zoom in" });
+    let atFloor = false;
+    for (let i = 0; i < 12 && !atFloor; i++) {
+      const box = await zoomInRole.boundingBox().catch(() => null);
+      if (box) {
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.mouse.up();
+      }
+      await page.waitForTimeout(150);
+      const [distance, minDistance] = await Promise.all([
+        canvas.getAttribute("data-camera-distance"),
+        canvas.getAttribute("data-camera-min-distance"),
+      ]);
+      if (distance && minDistance && Number(distance) <= Number(minDistance) + 0.05) atFloor = true;
+    }
+    expect(atFloor).toBe(true);
+
+    // No further input at all from here -- the exact scenario the old,
+    // unbounded hold got wrong.
+    await page.waitForTimeout(2_000);
+    await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+    await expect(page.locator("[data-street-view]")).toHaveCount(0);
+  });
+
   // Two different orbit orientations, through the seam StreetView.tsx arms
   // with (the exact StreetHandoff box the real zoom-hold gesture uses, not a
   // shortcut around it) -- proving the hand-off actually reaches MapLibre's
@@ -177,6 +216,10 @@ test.describe("seamless zoom into street level and back", () => {
 });
 
 test.describe("cinematic first-visit intro", () => {
+  // Opt back out of the suite-wide "already seen" storageState (playwright.config.ts):
+  // this is the one describe block that actually tests the intro playing.
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test("plays once on a fresh browser, then never replays", async ({ page }) => {
     test.slow();
     const canvas = await openGlobe(page);
