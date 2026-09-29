@@ -1,4 +1,4 @@
 {
-  "hash": "53b5e2e348889f0bcc2655543dbc8b9325c58fa54d37e22fe06496586935a200",
-  "note": "sha256 of globeRows.ts's globeFacts (G15-G17 inputs) — see globePlateFreshness.test.ts"
+  "hash": "6cf1b7d452e6682fe01d471a9fa45ae56196c25bb123d00799bc362330c04ef5",
+  "note": "sha256 of globeRows.ts's globeFacts (G15-G17 inputs); see globePlateFreshness.test.ts"
 }
