@@ -61,12 +61,24 @@ void main(){
   // Swath gaps and polar night in the daily VIIRS mosaic read as near-black;
   // patch them from the static Blue Marble base rather than draw a hole
   // (living-earth spec item 2).
-  // The mask reads a BLURRED mip (bias 5, ~32 texels): VIIRS has no
-  // reflectance where the sun is low, so the polar cap is a hard-edged
-  // no-data disc, and a per-texel mask cut from bright sea ice straight to
-  // the base's dark polar ocean on a visible rim. Averaging over the edge
-  // feathers it across a few degrees instead.
-  float dayLuma = dot(texture2D(uDay, vUv, 5.0).rgb, vec3(0.299, 0.587, 0.114));
+  // WAVE 6 LANE X3 FIX: this mask must read whichever frame is actually
+  // drawn as dayColor above — the live uDay, a scrubbed time-lapse
+  // crossfade, or a compare pick — never a hardcoded uDay sample. A past
+  // day's real mosaic can have a swath/no-data gap that today's live uDay
+  // does not share at the same texel; reading uDay unconditionally then
+  // reports "no gap" from a texture that isn't even on screen, and the
+  // scrubbed frame's actual black hole goes unpatched.
+  // The mask reads a BLURRED mip (bias 5, ~32 texels) of every texture that
+  // can feed dayColor, composited with the exact same mix() calls as
+  // liveDay/dayColor above: VIIRS has no reflectance where the sun is
+  // low, so the polar cap is a hard-edged no-data disc, and a per-texel mask
+  // cut from bright sea ice straight to the base's dark polar ocean on a
+  // visible rim. Averaging over the edge feathers it across a few degrees
+  // instead.
+  vec3 liveDayBlur = mix(texture2D(uDay, vUv, 5.0).rgb, mix(texture2D(uTLOlder, vUv, 5.0).rgb, texture2D(uTLNewer, vUv, 5.0).rgb, uTLBlend), uTLActive);
+  vec3 comparePickBlur = mix(texture2D(uComparePast, vUv, 5.0).rgb, texture2D(uDay, vUv, 5.0).rgb, compareSide);
+  vec3 dayColorBlur = mix(liveDayBlur, comparePickBlur, uCompareActive);
+  float dayLuma = dot(dayColorBlur, vec3(0.299, 0.587, 0.114));
   float gap = 1.0 - smoothstep(0.02, 0.16, dayLuma);
   // Inside the gap, real sea ice (GHRSST MUR, alpha 0 off the ice) goes over
   // the Blue Marble base, whose polar ocean is open water: without it the

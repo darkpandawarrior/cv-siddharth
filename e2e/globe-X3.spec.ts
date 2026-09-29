@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { offsetToSlider } from "../src/world/globe/timeMachine/rangeModel.ts";
 import type { Page, Locator } from "@playwright/test";
@@ -32,6 +33,12 @@ const BASE_JPG = readFileSync(join(GIBS_DIR, "gibs-base.jpg"));
 const NIGHT_JPG = readFileSync(join(GIBS_DIR, "gibs-night.jpg"));
 const SEA_ICE_PNG = readFileSync(join(GIBS_DIR, "gibs-seaice.png"));
 const RELIEF_JPG = readFileSync(join(GIBS_DIR, "gibs-relief.jpg"));
+// WAVE 6 LANE X3 defect fix: a past-day mosaic with a full-width no-data
+// swath band (rows v in [0.15, 0.65], pure black; see the generating note in
+// this file's own gap-mask test sibling) — the composited pixel a visitor
+// actually sees while scrubbed into the past, distinct from the bright live
+// "today" image the gap mask used to read instead.
+const SWATHGAP_JPG = readFileSync(join(GIBS_DIR, "gibs-day-swathgap.jpg"));
 
 const MONTH_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
 const WEEK_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson";
@@ -239,4 +246,61 @@ test("swipe compare: the divider drags and nudges, Esc exits", async ({ page }) 
 
   await page.keyboard.press("Escape");
   await expect(page.locator("[data-globe-compare]")).toHaveCount(0);
+});
+
+test("a past day's swath gap gets patched, not drawn as a black hole", async ({ page }) => {
+  test.setTimeout(90_000); // see the sibling tests' own note on this sandbox's slow software-rendered WebGL.
+  await openGlobe(page, "2026-09-24T06:30:00Z"); // Pune local noon, well clear of the terminator
+  // Registered AFTER withAllFixtures (already applied inside openGlobe), so
+  // it wins for exactly the time-lapse frame requests (WIDTH=1024 — the
+  // only GIBS fetch EarthImagery ever makes at that size; the live "today"
+  // day fetch and compare's fetch are both WIDTH=2048) while every other
+  // GIBS request keeps answering with the ordinary bright DAY_JPG. This is
+  // the regression itself: the live uDay stays bright, so the old gap mask
+  // (reading uDay unconditionally) reported "no gap" while the actually
+  // drawn frame — this swath-gap fixture — was black.
+  //
+  // TileLayer.tsx (another lane's file, WAVE 2 LANE W1) draws real GIBS
+  // WMTS tiles a hair above EarthImagery's own whole-globe sphere and
+  // covers almost the entire visible disk with its own always-"live"-dated
+  // fetch, unrelated to the time machine's scrub position — so its tiles
+  // are aborted here, letting its own documented failure path do the work
+  // ("a tile that hasn't loaded yet, or that failed, simply shows that
+  // lower-resolution photo through"): the base EarthImagery sphere, this
+  // lane's actual fix target, is what ends up on screen everywhere.
+  await page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route) => route.abort());
+  await page.route("https://gibs.earthdata.nasa.gov/wms/**", (route) => {
+    const url = route.request().url();
+    if (url.includes("WIDTH=1024")) return route.fulfill({ contentType: "image/jpeg", body: SWATHGAP_JPG });
+    return route.fallback();
+  });
+
+  const slider = page.getByLabel(/Simulated time offset, non-linear/);
+  const probe = page.locator("[data-earth-style]");
+  await expect(probe).toHaveAttribute("data-earth-status", "live", { timeout: 30_000 });
+
+  await setOffsetMinutes(slider, -3 * 1440); // inside the T1 7-day preload window
+  await expect.poll(async () => probe.getAttribute("data-earth-detail"), { timeout: 45_000 }).toContain("time machine");
+
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
+  const canvasBox = await canvas.boundingBox();
+  if (!canvasBox) throw new Error("globe canvas has no bounding box");
+  const globeProbe = page.locator("[data-subsolar-probe]");
+  await expect.poll(async () => globeProbe.getAttribute("data-globe-r")).not.toBeNull();
+  const [gx, gy] = await Promise.all(["x", "y"].map(async (k) => Number(await globeProbe.getAttribute(`data-globe-${k}`))));
+
+  // The globe's own screen centre is exactly the sub-observer point (the
+  // camera always looks at the sphere's origin — GlobeScene.tsx's own
+  // day/night probe relies on the same fact), which sits well inside the
+  // fixture's [0.15, 0.65] band for this app's default Pune-anchored view
+  // (~18.5N). One real render frame after the scrub before reading pixels.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const shot = await page.screenshot({ clip: { x: canvasBox.x + gx - 4, y: canvasBox.y + gy - 4, width: 8, height: 8 } });
+  const { data } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
+  let sum = 0;
+  for (const p of data as Buffer) sum += p;
+  const meanLuma = sum / (data as Buffer).length;
+
+  expect(meanLuma, `mean luma ${meanLuma} at the swath-gap band's centre — should be gap-filled (Blue Marble base/ice), not the fixture's pure black`).toBeGreaterThan(10);
 });
