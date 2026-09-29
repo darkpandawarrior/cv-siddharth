@@ -16,16 +16,6 @@ import { fleet, storeGeneratedAt, storeVerifiedAt } from "../../../data/store.ts
 
 const COLUMN_RADIUS = 0.01;
 const COLUMN_GEOMETRY = new THREE.CylinderGeometry(COLUMN_RADIUS, COLUMN_RADIUS, 1, 6);
-// A separate, fatter, invisible cylinder purely for raycasting -- the
-// visual column is a thin 0.01-radius shaft, and quakeGlyphs.tsx's own
-// HIT_GEOMETRY comment already found the real problem this solves: a click
-// (or a fingertip) aimed at a thin glyph mostly lands beside it, and depth
-// test against the ring's own base arc / the neighbouring columns can
-// occlude a thin target before the ray ever reaches it. `depthTest: false`
-// on its material (below) means this hit volume is never blocked by
-// anything else at Pune, so it is the tap target, not the visual shaft.
-const HIT_RADIUS = 0.08;
-const HIT_GEOMETRY = new THREE.CylinderGeometry(HIT_RADIUS, HIT_RADIUS, 1, 8);
 // A small radial offset off the exact surface point -- Markers.tsx's own
 // employer ring uses the same +0.01-ish epsilon to keep a flat ring from
 // z-fighting the earth surface/imagery mesh right under it.
@@ -33,15 +23,48 @@ const SURFACE_EPS = 0.02;
 const HOVER_BOOST = 1.5;
 const dummy = new THREE.Object3D();
 const _scratch = new THREE.Vector3();
-const _instMat = new THREE.Matrix4();
 
 // Static data (committed store.ts, never fetched): computed once at module
 // scope rather than re-derived per mount.
 const ENTRIES: AppRingEntry[] = buildAppRing(fleet);
 const STORE_DATE = freshestStoreDate(storeGeneratedAt, storeVerifiedAt);
+const ANGLE_STEP = (Math.PI * 2) / Math.max(ENTRIES.length, 1);
+const MAX_ENTRY_HEIGHT = ENTRIES.reduce((max, e) => Math.max(max, e.height), 0);
+
+// One shared, invisible, generously-fat hit cylinder standing over the whole
+// ring -- not one hit volume per app. At the real fleet's count, individual
+// columns sit only ~2*pi*APP_RING_RADIUS/count world units apart (a fraction
+// of a screen pixel at the globe's default framing): a per-instance hit
+// volume fat enough to tap either overlaps its neighbours (several instances
+// answer the same ray) or, sized to avoid that, shrinks to a sub-pixel
+// target no click can land in reliably (both measured, this lane's own
+// report). A single fat cylinder has no such ceiling -- ANY click that lands
+// on the ring at all resolves to a real hit, and `nearestEntryIndex` below
+// turns *where* on that cylinder's rim it landed into *which* app, the same
+// way a real visitor reads "the nearest column to where I tapped".
+// The wall sits at EXACTLY APP_RING_RADIUS, the same radius the visible
+// columns stand at -- padding it outward (tried first, this lane's own
+// report) moves the surface a click actually lands on off the columns'
+// own radius, and at a shallow viewing angle that shift reads back as a
+// large swing in angle once re-derived from (x, z), landing on an entry
+// many places away from the one the pixel was aimed at. Height is padded
+// (a little above the tallest column) since that dimension has no such
+// parallax problem -- any point up the wall at the right angle is fine.
+const HIT_HEIGHT_PAD = 0.15;
+const HIT_GEOMETRY = new THREE.CylinderGeometry(APP_RING_RADIUS, APP_RING_RADIUS, MAX_ENTRY_HEIGHT + HIT_HEIGHT_PAD, 128, 1, true);
 
 function localPosition(entry: AppRingEntry): THREE.Vector3 {
   return new THREE.Vector3(Math.cos(entry.angle) * APP_RING_RADIUS, entry.height / 2, Math.sin(entry.angle) * APP_RING_RADIUS);
+}
+
+/** Which entry a click on the shared hit cylinder belongs to: entries sit at
+ *  even `ANGLE_STEP` multiples starting at 0 (buildAppRing's own "spread
+ *  evenly around a full turn"), so the nearest one is a direct round, not a
+ *  scan -- robust to which HEIGHT along the cylinder's wall the ray actually
+ *  struck, since only the strike point's (x, z) angle is read, never y. */
+function nearestEntryIndex(localX: number, localZ: number): number {
+  const angle = (Math.atan2(localZ, localX) + Math.PI * 2) % (Math.PI * 2);
+  return Math.round(angle / ANGLE_STEP) % ENTRIES.length;
 }
 
 /** `interactive` gates hover highlighting only -- click stays live at every
@@ -63,14 +86,13 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
   const quaternion = useMemo(() => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal), [normal]);
   const position = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS + SURFACE_EPS), [normal]);
 
+  const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const hitRef = useRef<THREE.InstancedMesh>(null);
   const [hovered, setHovered] = useState<number | null>(null);
 
   useEffect(() => {
     const mesh = meshRef.current;
-    const hit = hitRef.current;
-    if (!mesh || !hit) return;
+    if (!mesh) return;
     for (let i = 0; i < ENTRIES.length; i++) {
       const e = ENTRIES[i];
       dummy.position.copy(localPosition(e));
@@ -79,11 +101,9 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
       mesh.setColorAt(i, colorFor(e));
-      hit.setMatrixAt(i, dummy.matrix); // same transform, the fatter hit-test geometry
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    hit.instanceMatrix.needsUpdate = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ENTRIES is a module-level constant; colorFor closes over signal/alt, both real deps.
   }, [signal, alt]);
 
@@ -103,27 +123,20 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
   // e2e seam only: the first (biggest-install) column's current screen
   // projection, so globe-W6.spec.ts can click a real, computed pixel rather
   // than guess one (reachDebug.ts's own convention, HazardLayer's for a
-  // lazy layer). Reads the HIT instance's own `matrixWorld` (getMatrixAt +
-  // hitRef.matrixWorld) -- the exact transform Three's raycaster tests
-  // against -- rather than re-deriving the same point from `quaternion`/
-  // `position` by hand: both agree numerically (checked), but this one
-  // stays correct even if a future edit nests this group under another
-  // transform this file doesn't know about.
+  // lazy layer). No per-instance hit mesh to read any more (see
+  // HIT_GEOMETRY's own comment) -- this is just the visual column's own
+  // local point, carried to world space by the same group transform the
+  // renderer uses.
   useFrame(() => {
-    const hit = hitRef.current;
-    if (ENTRIES.length === 0 || !hit) return;
+    if (ENTRIES.length === 0) return;
     const dbg = ensureReachDebug();
     dbg.appCount = ENTRIES.length;
-    hit.getMatrixAt(0, _instMat);
-    _instMat.premultiply(hit.matrixWorld);
-    _scratch.setFromMatrixPosition(_instMat).project(camera);
+    _scratch.copy(localPosition(ENTRIES[0])).applyQuaternion(quaternion).add(position).project(camera);
     dbg.appProbeX = (_scratch.x * 0.5 + 0.5) * size.width;
     dbg.appProbeY = (-_scratch.y * 0.5 + 0.5) * size.height;
   });
 
-  function onPick(e: ThreeEvent<MouseEvent>) {
-    if (e.instanceId === undefined) return;
-    const entry = ENTRIES[e.instanceId];
+  function pick(entry: AppRingEntry) {
     const rows = [
       { label: "install band", value: entry.installs },
       ...(entry.rating != null ? [{ label: "rating", value: entry.rating.toFixed(1) }] : []),
@@ -141,8 +154,20 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
     });
   }
 
+  /** Both click and hover resolve the SAME way: the event's world-space hit
+   *  point, carried into the group's own local frame (`worldToLocal`, not a
+   *  hand-rolled inverse -- correct even if a future edit nests this group
+   *  under another transform), then the nearest entry by angle. */
+  function entryAt(e: ThreeEvent<PointerEvent | MouseEvent>): AppRingEntry | null {
+    const group = groupRef.current;
+    if (!group || ENTRIES.length === 0) return null;
+    _scratch.copy(e.point);
+    group.worldToLocal(_scratch);
+    return ENTRIES[nearestEntryIndex(_scratch.x, _scratch.z)];
+  }
+
   return (
-    <group position={position} quaternion={quaternion}>
+    <group ref={groupRef} position={position} quaternion={quaternion}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <torusGeometry args={[APP_RING_RADIUS, 0.004, 6, 96]} />
         <meshBasicMaterial color={muted} toneMapped={false} transparent opacity={0.35} />
@@ -150,23 +175,26 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
       <instancedMesh ref={meshRef} args={[COLUMN_GEOMETRY, undefined, ENTRIES.length]} frustumCulled={false}>
         <meshBasicMaterial toneMapped={false} transparent opacity={0.85} />
       </instancedMesh>
-      <instancedMesh
-        ref={hitRef}
-        args={[HIT_GEOMETRY, undefined, ENTRIES.length]}
-        frustumCulled={false}
-        onClick={onPick}
-        onPointerOver={
+      <mesh
+        geometry={HIT_GEOMETRY}
+        position={[0, (MAX_ENTRY_HEIGHT + HIT_HEIGHT_PAD) / 2, 0]}
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          const entry = entryAt(e);
+          if (entry) pick(entry);
+        }}
+        onPointerMove={
           interactive
             ? (e: ThreeEvent<PointerEvent>) => {
                 e.stopPropagation();
-                setHovered(e.instanceId ?? null);
+                const entry = entryAt(e);
+                setHovered(entry ? ENTRIES.indexOf(entry) : null);
               }
             : undefined
         }
         onPointerOut={interactive ? () => setHovered(null) : undefined}
       >
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
-      </instancedMesh>
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
+      </mesh>
     </group>
   );
 }
