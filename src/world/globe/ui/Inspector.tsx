@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useGlobe, type Selection } from "../globeStore.ts";
 import { useKpSpark, useQuakeRegionSpark, type SparkSeries } from "./sparkSeries.ts";
+
+// LANE V7 (wave 7, "How it's built" panel): its own chunk, loaded only once
+// a visitor opens it -- never in the eager Globe chunk (check-budget.mjs).
+const HowItsBuilt = lazy(() => import("./HowItsBuilt.tsx"));
 
 /** LANE L5 (navigation and UI) owns the selection contract; LANE U1
  *  (composition) owns this file's layout: the shared left slot on sm+ (the
@@ -79,6 +83,15 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const regionFocus = selected && (selected.kind === "quake" || selected.kind === "density") && selected.focus?.kind === "latlon" ? selected.focus : null;
   const regionSpark = useQuakeRegionSpark(regionFocus?.lat ?? null, regionFocus?.lon ?? null);
   const kpSpark = useKpSpark();
+
+  // WAVE 7 LANE V7: a plain open/closed flag, not selection-filtered -- most
+  // Selection.kind values (quake, guide-place, satellite, ...) name an
+  // INSTANCE, not one of the handful of shader/data layers this panel can
+  // honestly show (see howItsBuiltData.ts's own "could not wire" note), so
+  // there is no clean instance-to-layer mapping to filter on without editing
+  // files outside this lane's scope. The panel always lists every layer it
+  // knows, organised per layer inside itself.
+  const [showBuild, setShowBuild] = useState(false);
 
   useEffect(() => {
     const seam = window.__GLOBE_TEST_SELECT__;
@@ -225,6 +238,21 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
       <p className="mb-3 truncate text-xs text-muted" title={selected.source}>
         {selected.live ? "Live" : "Snapshot"} · {selected.source}
       </p>
+
+      <button
+        type="button"
+        onClick={() => setShowBuild((v) => !v)}
+        aria-expanded={showBuild}
+        data-how-its-built-toggle
+        className="mb-2 rounded-full border border-line px-2 py-0.5 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        {showBuild ? "Hide how it's built" : "How it's built"}
+      </button>
+      {showBuild && (
+        <Suspense fallback={<p className="mb-2 text-xs text-muted">Loading...</p>}>
+          <HowItsBuilt />
+        </Suspense>
+      )}
     </>
   );
 
