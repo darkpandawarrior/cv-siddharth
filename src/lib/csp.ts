@@ -117,6 +117,11 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // file already draws for OpenFreeMap above). CORS *, keyless, verified
     // 2026-09-29.
     "https://tiles.maps.eox.at",
+    // LANE V5 (wave 7, lane 5 step A): NOAA NHC's forecast-cone MapServer
+    // (src/world/globe/layers/feedUrls.ts's NHC_MAPSERVER_BASE) — queried
+    // straight from the browser, CORS echoes the request Origin with
+    // credentials, keyless, verified 2026-09-29.
+    "https://mapservices.weather.noaa.gov",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.

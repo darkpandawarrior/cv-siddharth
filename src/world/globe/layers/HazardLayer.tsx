@@ -30,19 +30,16 @@ import { EonetGlyphs } from "./eonetGlyphs.tsx";
 import { HazardHalos } from "./hazardHalos.tsx";
 import { AuroraOval } from "./auroraOval.tsx";
 import { LaunchMarkers } from "./launchMarkers.tsx";
+// LANE V5 (wave 7, lane 5, step A): hurricane forecast cones.
+import { type ConePolygon, matchConeToGdacs, NHC_POLL_MS, parseNhcCones } from "./nhcCones.ts";
+import { NhcConeGlyphs } from "./nhcConeGlyphs.tsx";
+import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "./feedUrls.ts";
 
 // W12: the e2e-only seam bootstrap, gated so a real visitor never pays for
 // it (dynamic import -> its own chunk, fetched only when the flag is set).
 if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("globeTest") === "1") {
   void import("../copilot/execute.ts");
 }
-
-const QUAKES_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
-const EONET_URL = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30";
-const GDACS_URL = "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH";
-const OVATION_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
-const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
-const LAUNCHES_URL = "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10";
 
 // ponytail: EONET (~70 open events), GDACS (~90 orange/red) and Launch
 // Library (capped at 10 by its own query) never approach a count where a
@@ -84,6 +81,11 @@ declare global {
        *  assert on the same object the layer already exposes. */
       topQuakes: { place: string; mag: number }[];
       filters: { quakeMinMag?: number; quakeSinceHours?: number };
+      /** V5: cones currently drawn, and this poll's own health -- "failed"
+       *  means every one of the 15 sub-layer queries errored this round
+       *  (see HazardLayer's own nhcStatus effect). */
+      nhcCones: number;
+      nhcStatus: "loading" | "live" | "failed";
     };
   }
 }
@@ -189,6 +191,59 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     };
   }, []);
 
+  // V5: hurricane forecast cones (step A). Mounted only while
+  // layers.hazards is on (GlobeScene.tsx's own Suspense gate), which is the
+  // "when the layer is turned on" the brief asks for -- no separate toggle
+  // needed here. The 15 cone sub-layers are queried in parallel every poll;
+  // most answer an empty FeatureCollection (no storm in that slot) and that
+  // is success, not failure -- "failed" means every single one of the 15
+  // requests errored this round, not that most slots are quiet.
+  const [nhcCones, setNhcCones] = useState<ConePolygon[]>([]);
+  const [nhcStatus, setNhcStatus] = useState<"loading" | "live" | "failed">("loading");
+  useEffect(() => {
+    let alive = true;
+    async function poll() {
+      const results = await Promise.allSettled(
+        NHC_CONE_LAYER_IDS.map(async (id) => {
+          const res = await fetch(nhcConeUrl(id));
+          if (!res.ok) throw new Error(String(res.status));
+          return parseNhcCones(await res.json());
+        }),
+      );
+      if (!alive) return;
+      const cones: ConePolygon[] = [];
+      let anyOk = false;
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value !== null) {
+          anyOk = true;
+          cones.push(...r.value);
+        }
+      }
+      setNhcCones(cones);
+      setNhcStatus(anyOk ? "live" : "failed");
+    }
+    void poll();
+    const id = setInterval(() => void poll(), NHC_POLL_MS);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  // "matched to GDACS tropical-cyclone points by name or distance" -- used
+  // only to pick the fill colour (a GDACS red alert draws the cone in the
+  // house danger colour instead of the default warn one); the cone itself
+  // is drawn regardless of whether a GDACS match exists.
+  const nhcDangerIds = useMemo(() => {
+    const set = new Set<string>();
+    if (!gdacsAll) return set;
+    for (const cone of nhcCones) {
+      const m = matchConeToGdacs(cone, gdacsAll);
+      if (m?.alertLevel === "red") set.add(cone.id);
+    }
+    return set;
+  }, [nhcCones, gdacsAll]);
+
   // X6: refresh the snapshot every time the drawn sets change — same inputs
   // as the status effect below, kept separate so a sibling layer's read
   // never depends on this component's own debug-global bookkeeping.
@@ -221,7 +276,20 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
         launches: launches === null && !launchesFailed,
       },
     );
-    setStatus("hazards", status);
+    // V5: fold the cone layer's own clause into the composite "hazards"
+    // detail line (the only place LayerPanel.tsx renders per-layer detail
+    // text, so no panel edit is needed) without touching hazardStatus.ts,
+    // which this lane does not own. A failed NHC poll never flips the
+    // whole "hazards" row to failed on its own -- the other five feeds can
+    // still be live -- it only names itself as unreachable in the sentence,
+    // same as buildHazardStatus already does per sub-feed.
+    const nhcClause =
+      nhcStatus === "failed" ? "NHC unreachable" : nhcCones.length > 0 ? `${nhcCones.length} NHC cones` : "No active NHC storms";
+    const combinedStatus: LayerHealth = {
+      state: status.state,
+      detail: [status.detail, `${nhcClause}, NHC basins only (Atlantic, East and Central Pacific)`].filter(Boolean).join(", "),
+    };
+    setStatus("hazards", combinedStatus);
     if (typeof window !== "undefined") {
       window.__HAZARD_DEBUG__ = {
         quakes: quakesShown.length,
@@ -233,7 +301,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
         aurora: auroraShown !== null,
         selectedKind: selected?.kind ?? "",
         selectedRows: selected?.rows ?? null,
-        status,
+        status: combinedStatus,
         // W12: top 5 by magnitude, from what's actually drawn (post-filter,
         // post-time-scrub) — copilot/context.ts's own grounding snapshot.
         topQuakes: [...quakesShown]
@@ -241,6 +309,8 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
           .slice(0, 5)
           .map((q) => ({ place: q.place, mag: q.mag })),
         filters,
+        nhcCones: nhcCones.length,
+        nhcStatus,
       };
     }
   }, [
@@ -253,6 +323,8 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     gdacsAll,
     matchedAlerts,
     gdacsLoading,
+    nhcCones,
+    nhcStatus,
     auroraGrid,
     auroraShown,
     auroraLoading,
@@ -348,6 +420,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       <HazardHalos alerts={matchedAlerts} />
       <AuroraOval grid={auroraShown} now={now} reducedMotion={reducedMotion} />
       <LaunchMarkers launches={launches ?? []} now={now} />
+      <NhcConeGlyphs cones={nhcCones} dangerIds={nhcDangerIds} />
     </>
   );
 }
