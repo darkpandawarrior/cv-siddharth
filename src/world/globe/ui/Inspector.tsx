@@ -122,14 +122,16 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
 
   if (!selected) return null;
 
-  // Sticky, not just a trailing block: at a narrow sm+ width with a wrapped
-  // topbar (the card's own available height shrinks with it - see
-  // Globe.tsx's --globe-top-offset), a long selection's rows can push
-  // "Close" out of the initial scroll view entirely. -mx-3/-mb-3 bleeds back
-  // out to the card's own edge (its padding is p-3) so the sticky footer's
-  // background covers edge to edge instead of leaving a transparent gutter.
+  // A real flex-column sibling below the scrollable body, not a `sticky`
+  // overlay inside it: `sticky bottom-0` floats on TOP of whatever content
+  // is last in the scroll flow, so opening a tall "How it's built" panel
+  // (WAVE 7 LANE V7) covered its first lines on first open, before any
+  // manual scroll -- verifier-caught desktop overlap defect. Giving this row
+  // its own flex slot outside the `overflow-y-auto` div means it occupies
+  // real layout space instead of floating over it, so nothing it sits above
+  // can ever render underneath it.
   const actions = (touchTarget: string) => (
-    <div className="sticky bottom-0 -mx-3 -mb-3 mt-2 flex flex-wrap gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+    <div className="flex shrink-0 flex-wrap gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
       {selected.focus && (
         <button
           type="button"
@@ -264,9 +266,9 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         role="region"
         aria-live="polite"
         aria-label="Selection details"
-        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/80 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col rounded-2xl border border-line bg-ink/80 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
       >
-        {body}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">{body}</div>
         {actions("py-1")}
       </div>
 
@@ -277,9 +279,9 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
           role="region"
           aria-live="polite"
           aria-label="Selection details"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] flex-col rounded-t-2xl border-t border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
         >
-          {body}
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">{body}</div>
           {actions("min-h-11 min-w-11")}
         </div>
       )}
