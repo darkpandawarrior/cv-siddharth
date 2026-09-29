@@ -96,7 +96,7 @@ function dotStyle(health: LayerHealth | undefined): { color: string; pulse: bool
   }
 }
 
-function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, boolean>; status: Partial<Record<LayerId, LayerHealth>>; toggleLayer: (id: LayerId) => void }) {
+export function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, boolean>; status: Partial<Record<LayerId, LayerHealth>>; toggleLayer: (id: LayerId) => void }) {
   return (
     <ul className="space-y-1">
       {LAYER_IDS.map((id) => {

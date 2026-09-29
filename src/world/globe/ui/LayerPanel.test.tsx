@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import LayerPanel from "./LayerPanel.tsx";
+import { LayerRows } from "./LayerPanel.tsx";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useGlobe } from "../globeStore.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
@@ -8,13 +8,9 @@ import { QUAKE_DEPTH_LEGEND, depthToColor } from "../layers/quake.ts";
 
 describe("layer legend and health", () => {
   it("distinguishes unavailable upstream data from a product error", () => {
-    const prior = useGlobe.getState();
-    try {
-      useGlobe.setState({ panelOpen: true, status: { wind: { state: "failed", detail: "feed unreachable" }, hazards: { state: "failed", detail: "invalid renderer state" } } });
-      const html = renderToStaticMarkup(<LayerPanel />);
-      expect(html).toContain("background-color:var(--color-degraded)");
-      expect(html).toContain("background-color:var(--color-danger)");
-    } finally { useGlobe.setState(prior); }
+    const html = renderToStaticMarkup(<LayerRows layers={useGlobe.getState().layers} toggleLayer={() => {}} status={{ wind: { state: "failed", detail: "feed unreachable" }, hazards: { state: "failed", detail: "invalid renderer state" } }} />);
+    expect(html).toContain("background-color:var(--color-degraded)");
+    expect(html).toContain("background-color:var(--color-danger)");
   });
   it("labels the renderer's actual color endpoints", () => {
     expect(WIND_LEGEND.stops.map((s) => s.label)).toEqual(["2", "12", "22+"]);
