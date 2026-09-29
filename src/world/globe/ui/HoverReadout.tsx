@@ -70,6 +70,14 @@ export default function HoverReadout() {
   const indexRef = useRef<CountryIndex | null>(null);
   const windCache = useRef<{ data: WindResponse | null; field: WindField | null }>({ data: null, field: null });
   const quakeCache = useRef<{ raw: unknown; quakes: Quake[] | null }>({ raw: undefined, quakes: null });
+  const lastChipRef = useRef<Chip | null>(null);
+  // Kept current by the effect just below `tick`'s declaration, so the
+  // self-rescheduling rAF chain inside `tick` always calls the CURRENT
+  // closure instead of capturing itself by name -- referencing `tick` from
+  // inside its own useCallback initializer would read it before it's
+  // declared (react-hooks/immutability flags this as a real bug: an early
+  // access that never sees later reassignments).
+  const tickRef = useRef<() => void>(() => {});
   // Derived from `canvas`, not tracked separately -- `.closest` is the same
   // one-call lookup layers/CountryLayer.tsx's own tooltip already uses.
   const root = canvas?.closest<HTMLElement>("[data-globe-root]") ?? null;
@@ -91,7 +99,7 @@ export default function HoverReadout() {
     frameRef.current = null;
     const point = hoverPoint.current;
     const globe = useGlobe.getState();
-    if (!point || useExplore.getState().mode || globe.view !== "orbit") { setChip(null); return; }
+    if (!point || useExplore.getState().mode || globe.view !== "orbit") { setChip(null); lastChipRef.current = null; return; }
 
     const countryId = globe.layers.countries && hoverPoint.countryId >= 0
       ? hoverPoint.countryId
@@ -120,13 +128,27 @@ export default function HoverReadout() {
     const box = root?.getBoundingClientRect();
     const x = Math.max(8, Math.min(point.clientX - (box?.left ?? 0) + CHIP_OFFSET, (box?.width ?? 1440) - CHIP_W_GUESS - 8));
     const y = Math.max(8, Math.min(point.clientY - (box?.top ?? 0) + CHIP_OFFSET, (box?.height ?? 900) - CHIP_H_GUESS - 8));
-    setChip({ x, y, readout });
+    const last = lastChipRef.current;
+    if (!last || last.x !== x || last.y !== y || last.readout.country !== readout.country
+      || last.readout.time !== readout.time || last.readout.wind !== readout.wind || last.readout.quake !== readout.quake) {
+      const next = { x, y, readout };
+      lastChipRef.current = next;
+      setChip(next);
+    }
+    // Keep ticking every frame while genuinely hovering (never faster --
+    // frameRef's null-check above still caps this at one rAF in flight):
+    // wind/quake come from WindLayer/HazardLayer's own poll, fetched
+    // independently of this component, so a one-shot tick on pointer move
+    // alone can freeze on a stale "no data yet" readout if that fetch
+    // resolves after the point was set and the pointer stopped moving.
+    frameRef.current = requestAnimationFrame(() => tickRef.current());
   }, [root]);
+  useEffect(() => { tickRef.current = tick; }, [tick]);
 
   const scheduleFrame = useCallback(() => {
     if (frameRef.current != null) return;
-    frameRef.current = requestAnimationFrame(tick);
-  }, [tick]);
+    frameRef.current = requestAnimationFrame(() => tickRef.current());
+  }, []);
 
   // Loaded once regardless of hovering (the module-level singleton promise
   // in countryLoad.ts means this never duplicates layers/CountryLayer.tsx's
