@@ -21,22 +21,64 @@ uniform sampler2D uIce;
 uniform float uCloudReady;
 uniform sampler2D uRelief;
 uniform float uReliefReady;
+// WAVE 6 LANE X3 (time machine): daily time-lapse (uTL*) and swipe compare
+// (uCompare*/uSplit) both only ever change what "the day photo" IS before
+// the rest of the pipeline (gap fill, clouds, relief, terminator, night
+// lights) runs on it unchanged — neither feature re-simulates lighting for
+// a different date, they replay a different real photo under today's sun.
+uniform sampler2D uTLOlder;
+uniform sampler2D uTLNewer;
+uniform float uTLBlend;
+uniform float uTLActive;
+uniform sampler2D uComparePast;
+uniform float uCompareActive;
+uniform float uSplit;
+uniform vec2 uResolution;
 varying vec3 vW;varying vec3 vN;varying vec3 vV;varying vec2 vUv;
 
 ${CLOUD_MASK_GLSL}
 void main(){
-  vec3 dayColor = texture2D(uDay, vUv).rgb;
+  // Daily time-lapse: while scrubbed into a past UTC day and both of that
+  // day's neighbouring frames are preloaded, crossfade between them
+  // (uTLBlend, EarthImagery.tsx's own gibsDates.frameForTime) instead of
+  // the live "yesterday" mosaic. uTLActive is 0 until a chosen day's
+  // textures are actually in hand — falls back to the live image rather
+  // than ever showing a placeholder dressed as a real date.
+  vec3 liveDay = mix(texture2D(uDay, vUv).rgb, mix(texture2D(uTLOlder, vUv).rgb, texture2D(uTLNewer, vUv).rgb, uTLBlend), uTLActive);
+
+  // Swipe compare: a hard SCREEN-SPACE split (not a UV split — a UV divider
+  // would rotate and warp with the sphere instead of reading as a vertical
+  // curtain over the viewport, the whole point of the swipe metaphor).
+  // Right is always literal "today" (uDay), even mid-time-lapse-playback:
+  // compare.ts's own CompareView is two fixed dates, independent of the
+  // scrubber's live position.
+  float screenX = gl_FragCoord.x / max(uResolution.x, 1.0);
+  float compareSide = step(uSplit, screenX);
+  vec3 comparePick = mix(texture2D(uComparePast, vUv).rgb, texture2D(uDay, vUv).rgb, compareSide);
+  vec3 dayColor = mix(liveDay, comparePick, uCompareActive);
   vec3 baseColor = texture2D(uBase, vUv).rgb;
 
   // Swath gaps and polar night in the daily VIIRS mosaic read as near-black;
   // patch them from the static Blue Marble base rather than draw a hole
   // (living-earth spec item 2).
-  // The mask reads a BLURRED mip (bias 5, ~32 texels): VIIRS has no
-  // reflectance where the sun is low, so the polar cap is a hard-edged
-  // no-data disc, and a per-texel mask cut from bright sea ice straight to
-  // the base's dark polar ocean on a visible rim. Averaging over the edge
-  // feathers it across a few degrees instead.
-  float dayLuma = dot(texture2D(uDay, vUv, 5.0).rgb, vec3(0.299, 0.587, 0.114));
+  // WAVE 6 LANE X3 FIX: this mask must read whichever frame is actually
+  // drawn as dayColor above — the live uDay, a scrubbed time-lapse
+  // crossfade, or a compare pick — never a hardcoded uDay sample. A past
+  // day's real mosaic can have a swath/no-data gap that today's live uDay
+  // does not share at the same texel; reading uDay unconditionally then
+  // reports "no gap" from a texture that isn't even on screen, and the
+  // scrubbed frame's actual black hole goes unpatched.
+  // The mask reads a BLURRED mip (bias 5, ~32 texels) of every texture that
+  // can feed dayColor, composited with the exact same mix() calls as
+  // liveDay/dayColor above: VIIRS has no reflectance where the sun is
+  // low, so the polar cap is a hard-edged no-data disc, and a per-texel mask
+  // cut from bright sea ice straight to the base's dark polar ocean on a
+  // visible rim. Averaging over the edge feathers it across a few degrees
+  // instead.
+  vec3 liveDayBlur = mix(texture2D(uDay, vUv, 5.0).rgb, mix(texture2D(uTLOlder, vUv, 5.0).rgb, texture2D(uTLNewer, vUv, 5.0).rgb, uTLBlend), uTLActive);
+  vec3 comparePickBlur = mix(texture2D(uComparePast, vUv, 5.0).rgb, texture2D(uDay, vUv, 5.0).rgb, compareSide);
+  vec3 dayColorBlur = mix(liveDayBlur, comparePickBlur, uCompareActive);
+  float dayLuma = dot(dayColorBlur, vec3(0.299, 0.587, 0.114));
   float gap = 1.0 - smoothstep(0.02, 0.16, dayLuma);
   // Inside the gap, real sea ice (GHRSST MUR, alpha 0 off the ice) goes over
   // the Blue Marble base, whose polar ocean is open water: without it the
