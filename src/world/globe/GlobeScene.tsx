@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,6 +12,7 @@ import { Markers } from "./Markers.tsx";
 import { LiveDots } from "./LiveDots.tsx";
 import { LocalTraffic } from "./LocalTraffic.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
+import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
@@ -32,6 +33,11 @@ const HistoryLayer = lazy(() => import("./layers/HistoryLayer.tsx"));
 const StoryArc = lazy(() => import("./layers/StoryArc.tsx"));
 const HexbinLayer = lazy(() => import("./layers/HexbinLayer.tsx"));
 const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
+// LANE C2 ("X-ray mode"): the tile-outline/renderer.info overlay — only
+// meaningful alongside TileLayer.tsx (it reads that layer's own read-only
+// `drawnTileSet` export), so it mounts under the identical condition as
+// TileLayer below, with the X-ray toggle ANDed on top.
+const XRayTiles = lazy(() => import("./layers/XRayTiles.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -312,6 +318,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
   // rather than draw a present-tense reading against a past sky.
   const live = useGlobe((s) => s.timeOffsetMin === 0);
   const now = useSimNow(realNow);
+  const xrayOn = useSyncExternalStore(subscribeXray, isXrayEnabled, () => false);
   const count = TIER_DOT_COUNT[tier];
   const dotsEarth = <EarthDots count={count} now={now} earthRef={earthRef} />;
 
@@ -396,6 +403,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         </Suspense>
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && xrayOn && <XRayTiles />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>
