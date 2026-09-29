@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MUR_SEA_ICE, dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, shouldUpgradeHiDay } from "./gibs.ts";
+import { MUR_SEA_ICE, dayImageryAttempts, describeImagerySource, gapFillUrl, gibsGetMapUrl, isoDateUTC, nightLightsUrl, seaIceAttempts, shouldUpgradeHiDay, subdailyInstantUTC } from "./gibs.ts";
 
 describe("isoDateUTC", () => {
   it("subtracts whole UTC days", () => {
@@ -98,6 +98,30 @@ describe("seaIceAttempts", () => {
     const u = new URL(gibsGetMapUrl("X", { width: 2, height: 1 }));
     expect(u.searchParams.get("FORMAT")).toBe("image/jpeg");
     expect(u.searchParams.has("TRANSPARENT")).toBe(false);
+  });
+});
+
+// LANE V1 (wave 7, step A): the subdaily (PT10M) rounding for GOES/Himawari.
+describe("subdailyInstantUTC", () => {
+  it("10-minute step, 40-minute lag, rounds down (the acceptance example)", () => {
+    expect(subdailyInstantUTC(new Date("2026-09-29T01:07:00Z"), 10, 40)).toBe("2026-09-29T00:20:00Z");
+  });
+
+  it("lands exactly on a step boundary even when `now` doesn't", () => {
+    expect(subdailyInstantUTC(new Date("2026-09-29T01:07:59Z"), 10, 40)).toBe("2026-09-29T00:20:00Z");
+  });
+
+  it("crosses a day boundary", () => {
+    expect(subdailyInstantUTC(new Date("2026-09-29T00:05:00Z"), 10, 40)).toBe("2026-09-28T23:20:00Z");
+  });
+
+  // Break-it: prove the floor is real, not a lucky round-number coincidence —
+  // one second earlier must NOT still read the same 10-minute mark.
+  it("break-it: one second before a step boundary still rounds down to the PREVIOUS boundary", () => {
+    const justBefore = subdailyInstantUTC(new Date("2026-09-29T01:09:59Z"), 10, 40);
+    const justAfter = subdailyInstantUTC(new Date("2026-09-29T01:10:00Z"), 10, 40);
+    expect(justBefore).toBe("2026-09-29T00:20:00Z");
+    expect(justAfter).toBe("2026-09-29T00:30:00Z");
   });
 });
 

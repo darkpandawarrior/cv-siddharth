@@ -1,5 +1,5 @@
 import { GIBS_BASES, GIBS_OVERLAYS, catalogDateLabel, type GibsCatalogEntry } from "../layers/gibsCatalog.ts";
-import { simTime, useGlobe, type ImageryStack } from "../globeStore.ts";
+import { simTime, useGlobe, type ImageryStack, type StatusKey } from "../globeStore.ts";
 
 /**
  * WAVE 2 LANE W1 (deep zoom): the NASA GIBS layer catalog UI — base picker,
@@ -16,12 +16,23 @@ import { simTime, useGlobe, type ImageryStack } from "../globeStore.ts";
  */
 
 const DEFAULT_OVERLAY_OPACITY = 0.75;
-// Fibonacci spacing steps this lane's own brief calls for (8/13/21px) — the
-// site-wide scale doesn't define these as tokens, so they're arbitrary
-// Tailwind values rather than invented utility classes.
-const GAP_8 = "gap-[8px]";
-const PAD_13 = "p-[13px]";
-const SPACE_8 = "space-y-[8px]";
+// LANE V1 (wave 7): design-system ratchet fix (G-DS, src/design/
+// designSystem.test.ts) — this file's own arbitrary Tailwind bracket count
+// had to stay at or under its committed baseline (0: this file has never been
+// in ds-baseline.json), so the Tailwind DEFAULT spacing/type scale replaces
+// the two constants that used a bracketed pixel value (8px is exactly the
+// default `gap-2`; 13px has no exact default step, so `p-3.5`, 14px, is one
+// step off rather than a new invented bracket) and every bracketed 11-pixel
+// text size below becomes the default extra-small size (12px, still above
+// the site's 11px minimum). The two bottom-margin constants further down are
+// UNCHANGED: the ratchet's own pattern only matches a bare two-sided margin
+// utility in brackets, never a bottom-only one, so those were never counted
+// violations in the first place — left as the Fibonacci steps this lane's
+// brief actually calls for (8/13/21px) rather than churned for no ratchet
+// reason.
+const GAP_8 = "gap-2";
+const PAD_14 = "p-3.5";
+const SPACE_8 = "space-y-2";
 const MB_13 = "mb-[13px]";
 const MB_21 = "mb-[21px]";
 
@@ -41,7 +52,7 @@ function Legend({ legend }: { legend: NonNullable<GibsCatalogEntry["legend"]> })
   return (
     <div className="mt-1" aria-hidden={false}>
       <div className="h-2 w-full rounded-full" style={{ background: gradient }} />
-      <div className="mt-0.5 flex items-center justify-between text-[11px] text-muted">
+      <div className="mt-0.5 flex items-center justify-between text-xs text-muted">
         <span>
           {legend.stops[0].label} {legend.unit}
         </span>
@@ -57,6 +68,15 @@ export default function LayerCatalog() {
   const imagery = useGlobe((s) => s.imagery);
   const setImagery = useGlobe((s) => s.setImagery);
   const timeOffsetMin = useGlobe((s) => s.timeOffsetMin);
+  // LANE V1 (wave 7, step A): TileLayer.tsx reports a subdaily overlay's own
+  // feed health here, keyed by its GIBS layer id — not one of globeStore.ts's
+  // fixed LayerId union (this is a role INSIDE the imagery stack, not a
+  // top-level toggle), but `status` is a plain string-keyed record at
+  // runtime, and reusing it is the existing "report failed, draw nothing,
+  // never a stale value as live" convention rather than a second bespoke
+  // reactive channel for the same idea. See TileLayer.tsx's own comment
+  // where it writes this same key.
+  const status = useGlobe((s) => s.status);
   const now = simTime(timeOffsetMin);
 
   const activeBase = GIBS_BASES.find((b) => b.id === imagery.base) ?? GIBS_BASES[0];
@@ -75,9 +95,9 @@ export default function LayerCatalog() {
   }
 
   return (
-    <div data-globe-layer-catalog className={`w-full max-w-[233px] font-mono text-[11px] text-zinc-300`}>
+    <div data-globe-layer-catalog className={`w-full max-w-[233px] font-mono text-xs text-zinc-300`}>
       <section className={MB_21}>
-        <h4 className={`${MB_13} text-[11px] uppercase tracking-wide text-muted`}>Base imagery</h4>
+        <h4 className={`${MB_13} text-xs uppercase tracking-wide text-muted`}>Base imagery</h4>
         <div className={`flex flex-col ${SPACE_8}`} role="radiogroup" aria-label="Base imagery layer">
           {GIBS_BASES.map((entry) => {
             const active = entry.id === imagery.base;
@@ -98,18 +118,18 @@ export default function LayerCatalog() {
             );
           })}
         </div>
-        <p className="mt-1 text-[11px] text-muted">{catalogDateLabel(activeBase, now)}</p>
+        <p className="mt-1 text-xs text-muted">{catalogDateLabel(activeBase, now)}</p>
       </section>
 
       <section>
-        <h4 className={`${MB_13} text-[11px] uppercase tracking-wide text-muted`}>Overlays</h4>
+        <h4 className={`${MB_13} text-xs uppercase tracking-wide text-muted`}>Overlays</h4>
         <ul className={SPACE_8}>
           {GIBS_OVERLAYS.map((entry) => {
             const active = isOverlayActive(imagery, entry.id);
             const opacity = overlayOpacity(imagery, entry.id);
             const inputId = `layer-catalog-opacity-${entry.id}`;
             return (
-              <li key={entry.id} className={`rounded-lg border border-line ${PAD_13} ${GAP_8}`}>
+              <li key={entry.id} className={`rounded-lg border border-line ${PAD_14} ${GAP_8}`}>
                 <button
                   type="button"
                   aria-pressed={active}
@@ -137,9 +157,15 @@ export default function LayerCatalog() {
                       className="w-full accent-[var(--color-signal)]"
                     />
                     {entry.legend && <Legend legend={entry.legend} />}
-                    <p className="mt-1 truncate text-[11px] text-muted" title={catalogDateLabel(entry, now)}>
-                      {catalogDateLabel(entry, now)}
-                    </p>
+                    {status[entry.id as StatusKey]?.state === "failed" ? (
+                      <p className="mt-1 truncate text-xs" style={{ color: "var(--color-warn)" }}>
+                        {status[entry.id as StatusKey]?.detail ?? "feed unavailable"}
+                      </p>
+                    ) : (
+                      <p className="mt-1 truncate text-xs text-muted" title={catalogDateLabel(entry, now)}>
+                        {catalogDateLabel(entry, now)}
+                      </p>
+                    )}
                   </div>
                 )}
               </li>
