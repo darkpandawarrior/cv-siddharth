@@ -89,7 +89,9 @@ export function worldTint(hex: string, c: WorldPalette): string {
   const lanes = laneColors(c);
   const h = (v: string) => {
     const n = parseInt(v.replace("#", ""), 16);
-    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((x) => x / 255);
+    const r = ((n >> 16) & 255) / 255;
+    const g = ((n >> 8) & 255) / 255;
+    const b = (n & 255) / 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
     if (d === 0) return -1; // achromatic: matches the text lane
     const deg = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
