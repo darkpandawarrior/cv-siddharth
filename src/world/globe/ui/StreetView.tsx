@@ -27,6 +27,16 @@ const STREET_ZOOM = 16.5;
 const STREET_PITCH = 60;
 const STREET_BEARING = 0;
 const QUERY_DEBOUNCE_MS = 400;
+// WAVE 10 LANE P10B: real 3D terrain (AWS elevation-tiles-prod, Terrarium
+// PNG DEM, proxied through api/_lib/terrain-handler.ts — see that file for
+// the curl verification of the source's own zoom ceiling and encoding).
+// Tier 3 (throttled) stays flat per the brief; tier 1/2 get relief only once
+// zoomed in enough that it reads as more than noise.
+const TERRAIN_SOURCE_ID = "terrain-dem";
+const TERRAIN_HILLSHADE_LAYER_ID = "terrain-hillshade";
+const TERRAIN_MIN_ZOOM = 10;
+const TERRAIN_EXAGGERATION = 1.3; // modest — real relief, not a cartoon
+const TERRAIN_ATTRIBUTION = "Terrain: SRTM, courtesy of the U.S. Geological Survey, via AWS Open Data";
 // WAVE 6 LANE X5 hand-off hooks: below this the visitor is trying to zoom
 // OUT past the surface's own floor -- "past its min zoom returns to the
 // globe" (the brief's own words). Below altitudeToStreetZoom's own MIN_Z
@@ -115,6 +125,11 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   const [photoStatus, setPhotoStatus] = useState<"loading" | "loaded" | "failed">("loading");
   const [selectedPhoto, setSelectedPhoto] = useState<StreetPhoto | null>(null);
   const [visible, setVisible] = useState(false);
+  // WAVE 10 LANE P10B: drives the attribution line's terrain credit — only
+  // true while the DEM source is actually loaded, tier-eligible, and past
+  // TERRAIN_MIN_ZOOM (never claim a credit for a layer that isn't drawing).
+  const [terrainOn, setTerrainOn] = useState(false);
+  const [terrainFailed, setTerrainFailed] = useState(false);
   // WAVE 6 LANE X5: "No streets here" if nothing has loaded within 3s (a
   // watchdog, not a repeat of the "loaded, zero results" message below —
   // that one only ever fires once a query has actually FINISHED).
@@ -370,6 +385,56 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           if (photo) setSelectedPhoto(photo);
         });
         void queryPhotos();
+
+        // WAVE 10 LANE P10B: raster-dem source over api/_lib/terrain-handler.ts
+        // (Terrarium encoding — the format that route's PNG bytes are in).
+        // Tier 3 never gets this source at all (house tier rule: "T3 minimal
+        // or off", and a DEM source is real per-frame GPU/network cost this
+        // lane's brief explicitly excludes it from). Added once at open,
+        // toggled on/off by zoom below rather than added/removed, since
+        // MapLibre's setTerrain(null) / layer visibility are cheap and this
+        // avoids re-adding a source on every zoom crossing.
+        if (tier !== 3 && map) {
+          let failed = false;
+          map.addSource(TERRAIN_SOURCE_ID, {
+            type: "raster-dem",
+            encoding: "terrarium",
+            tiles: ["/api/terrain?z={z}&x={x}&y={y}"],
+            tileSize: 256,
+            maxzoom: 15, // matches terrain-handler.ts's curl-verified MAX_Z
+            attribution: TERRAIN_ATTRIBUTION,
+          });
+          // Hillshade under labels: the style's own first symbol layer id,
+          // so shading paints under place-name text instead of over it —
+          // same "insert before" pattern as every other MapLibre layer this
+          // house adds under an existing style's labels.
+          const beforeId = map.getStyle()?.layers?.find((l) => l.type === "symbol")?.id;
+          map.addLayer(
+            {
+              id: TERRAIN_HILLSHADE_LAYER_ID,
+              type: "hillshade",
+              source: TERRAIN_SOURCE_ID,
+              paint: { "hillshade-exaggeration": 0.5 },
+            },
+            beforeId,
+          );
+
+          const applyTerrainForZoom = () => {
+            if (!map) return;
+            const on = !failed && map.getZoom() >= TERRAIN_MIN_ZOOM;
+            map.setTerrain(on ? { source: TERRAIN_SOURCE_ID, exaggeration: TERRAIN_EXAGGERATION } : null);
+            map.setLayoutProperty(TERRAIN_HILLSHADE_LAYER_ID, "visibility", on ? "visible" : "none");
+            setTerrainOn(on);
+          };
+          applyTerrainForZoom();
+          map.on("zoom", applyTerrainForZoom);
+          map.on("error", (event) => {
+            if (!("sourceId" in event) || event.sourceId !== TERRAIN_SOURCE_ID) return;
+            failed = true;
+            setTerrainFailed(true);
+            applyTerrainForZoom();
+          });
+        }
       });
 
       map.on("moveend", () => {
@@ -414,6 +479,8 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       setPhotoStatus("loading");
       setNoFeaturesTimedOut(false);
       setSelectedPhoto(null);
+      setTerrainOn(false);
+      setTerrainFailed(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- create/destroy only on `active`; `focus`/`tier` are read once at open time on purpose
   }, [active]);
@@ -439,6 +506,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     <div
       ref={rootRef}
       data-street-view
+      data-terrain-state={terrainFailed ? "unreachable" : terrainOn ? "enabled" : "off"}
       role="dialog"
       aria-modal="true"
       aria-label="Street level"
@@ -494,6 +562,8 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500 backdrop-blur">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
+        {terrainOn ? ` · ${TERRAIN_ATTRIBUTION}` : ""}
+        {terrainFailed ? " · Terrain unreachable; showing a flat map" : ""}
       </div>
 
       {selectedPhoto && <StreetPhotoViewer photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />}

@@ -19,6 +19,7 @@ import { handleOps } from "./ops-handler.js";
 import { handlePipeline } from "./pipeline-handler.js";
 import { handleSignals } from "./signals-handler.js";
 import { handleSpotify } from "./spotify-handler.js";
+import { handleTerrain } from "./terrain-handler.js";
 import { handleTle } from "./tle-handler.js";
 import { handleWeather } from "./weather-handler.js";
 import { handleWhereami } from "./whereami-handler.js";
@@ -37,6 +38,7 @@ export const ROUTES: Record<string, RouteHandler> = {
   pipeline: handlePipeline,
   signals: handleSignals,
   spotify: handleSpotify,
+  terrain: handleTerrain,
   tle: handleTle,
   weather: handleWeather,
   whereami: handleWhereami,
