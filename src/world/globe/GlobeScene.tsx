@@ -39,6 +39,12 @@ const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
 // TileLayer below, with the X-ray toggle ANDed on top.
 const XRayTiles = lazy(() => import("./layers/XRayTiles.tsx"));
 
+declare global {
+  interface Window {
+    __GLOBE_TEST_GET_DRAW_CALLS__?: () => number;
+  }
+}
+
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
 // for scroll (three-stdlib's dollyIn/dollyOut naming is the inverse of what
@@ -141,11 +147,20 @@ function SceneRig({
     sceneHandles.canvas = gl.domElement;
     sceneHandles.scene = scene;
     sceneHandles.invalidate = () => invalidate();
+    // LANE C2 (X-ray mode e2e seam): renderer.info.render.calls, readable
+    // whether or not X-ray is actually mounted -- so e2e/globe-C2.spec.ts can
+    // grade "toggling X-ray off removes its own draw call" against the real
+    // renderer instead of against the debug card's own number, which would
+    // only be proving X-ray agrees with itself. A no-op in production --
+    // nothing outside a test ever calls it (same convention TileLayer.tsx's
+    // own __GLOBE_TEST_* seams already use).
+    window.__GLOBE_TEST_GET_DRAW_CALLS__ = () => gl.info.render.calls;
     return () => {
       sceneHandles.camera = null;
       sceneHandles.canvas = null;
       sceneHandles.scene = null;
       sceneHandles.invalidate = null;
+      window.__GLOBE_TEST_GET_DRAW_CALLS__ = undefined;
     };
   }, [get]);
 

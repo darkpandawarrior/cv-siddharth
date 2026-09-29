@@ -1,0 +1,165 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { test, expect, waitForHydration } from "./lib/test.ts";
+import type { Page } from "@playwright/test";
+
+/**
+ * LANE C2 ("X-ray mode"), end to end. Reuses e2e/globe-W1.spec.ts's own
+ * fixture shapes (whole-globe WMS imagery + real WMTS tile requests) rather
+ * than duplicating them, since X-ray only has anything to draw once
+ * TileLayer.tsx itself has real tiles on screen.
+ */
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
+const WMTS_DIR = join(FIXTURES, "wmts");
+const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
+const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
+const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
+const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
+
+const GIBS_DAY_JPG = readFileSync(join(FIXTURES, "gibs", "gibs-day.jpg"));
+const GIBS_BASE_JPG = readFileSync(join(FIXTURES, "gibs", "gibs-base.jpg"));
+const GIBS_NIGHT_JPG = readFileSync(join(FIXTURES, "gibs", "gibs-night.jpg"));
+const GIBS_SEAICE_PNG = readFileSync(join(FIXTURES, "gibs", "gibs-seaice.png"));
+const TILE_BASE_JPG = readFileSync(join(WMTS_DIR, "tile-base.jpg"));
+
+async function withApiFixtures(page: Page) {
+  await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
+  await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
+  await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
+  await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
+}
+
+async function withWholeGlobeFixtures(page: Page) {
+  await page.route("https://gibs.earthdata.nasa.gov/wms/**", (route) => {
+    const url = route.request().url();
+    if (url.includes("Sea_Ice")) return route.fulfill({ contentType: "image/png", body: GIBS_SEAICE_PNG });
+    const body = url.includes("Black_Marble") ? GIBS_NIGHT_JPG : url.includes("BlueMarble") ? GIBS_BASE_JPG : GIBS_DAY_JPG;
+    return route.fulfill({ contentType: "image/jpeg", body });
+  });
+}
+
+/** Records every real WMTS tile request as it happens (registered before
+ *  `page.goto`, unlike `page.waitForResponse`, which only sees responses
+ *  that resolve AFTER it is called and misses ones already in flight or
+ *  already settled by the time a test gets around to awaiting it -- the
+ *  same request-array pattern e2e/globe-W1.spec.ts's own withWmtsFixtures
+ *  uses, restated here per this lane's file-ownership rule). */
+function withWmtsFixtures(page: Page): { count: number } {
+  const counter = { count: 0 };
+  void page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route) => {
+    counter.count++;
+    return route.fulfill({ contentType: route.request().url().endsWith(".png") ? "image/png" : "image/jpeg", body: TILE_BASE_JPG });
+  });
+  return counter;
+}
+
+/** Seeds "already seen" so the cinematic intro doesn't fight this suite for
+ *  OrbitControls / the topbar's own click targets (globe-X5.spec.ts's own
+ *  pattern, restated here per this lane's file-ownership rule). */
+async function seedIntroSeen(page: Page) {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem("cv-siddharth:globe-intro-seen", "1");
+    } catch {
+      /* private mode: the intro plays again, not this suite's concern */
+    }
+  });
+}
+
+async function gotoLiveGlobe(page: Page) {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seedIntroSeen(page);
+  await withApiFixtures(page);
+  await withWholeGlobeFixtures(page);
+  await page.clock.setFixedTime(new Date("2026-09-27T12:27:00+05:30"));
+  await page.goto("/globe");
+  await waitForHydration(page);
+  await expect(page.locator("[data-earth-style]")).toHaveAttribute("data-earth-style", "imagery", { timeout: 30_000 });
+}
+
+/** Parses "draw calls\n123" out of the stats grid's own plain text. */
+function parseStatValue(gridText: string, label: string): number {
+  const m = gridText.match(new RegExp(`${label}\\s*\\n?\\s*([\\d,]+)`));
+  return m ? Number(m[1].replace(/,/g, "")) : NaN;
+}
+
+test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card; toggling off removes both and draw calls drop", async ({ page }) => {
+  const wmts = withWmtsFixtures(page);
+  await gotoLiveGlobe(page);
+
+  const toggle = page.locator("[data-xray-toggle]");
+  await expect(toggle).toBeVisible();
+  const panel = page.locator("[data-xray-panel]");
+  await expect(panel).toBeHidden();
+
+  // Real WMTS tiles must actually be on screen first, or X-ray has nothing
+  // to draw an outline for.
+  await expect.poll(() => wmts.count, { timeout: 15_000, message: "expected at least one WMTS tile request" }).toBeGreaterThan(0);
+
+  await toggle.click();
+  await expect(panel).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+  // The legend must show real tiles, not the empty state, once TileLayer's
+  // own fetch/settle loop has actually loaded one.
+  await expect
+    .poll(async () => (await page.locator("[data-xray-legend]").innerText()).includes("no tiles drawn"), { timeout: 15_000 })
+    .toBe(false);
+
+  const statsText = await page.locator("[data-xray-stats]").innerText();
+  const drawCallsOn = parseStatValue(statsText, "draw calls");
+  const triangles = parseStatValue(statsText, "triangles");
+  const geometries = parseStatValue(statsText, "geometries");
+  expect(drawCallsOn).toBeGreaterThan(0);
+  expect(triangles).toBeGreaterThan(0);
+  expect(geometries).toBeGreaterThan(0);
+  // fps is sampled from real frame timing (renderer.info doesn't cover it);
+  // just assert it is a real, plausible number, not NaN or negative.
+  const fps = parseStatValue(statsText, "fps");
+  expect(fps).toBeGreaterThanOrEqual(0);
+  expect(fps).toBeLessThan(1000);
+
+  const drawCallsWhileOn = await page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.());
+  expect(drawCallsWhileOn).toBeGreaterThan(0);
+
+  await toggle.click();
+  await expect(panel).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+  // The outline mesh (and its own draw call) is gone once X-ray unmounts --
+  // TileLayer's own tiles are still drawn, so this must be strictly less
+  // than the reading captured while X-ray's overlay was also in the scene.
+  await expect
+    .poll(() => page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.()), { timeout: 5_000 })
+    .toBeLessThan(drawCallsWhileOn!);
+});
+
+test("the keyboard shortcut (x) toggles X-ray the same as the topbar button", async ({ page }) => {
+  withWmtsFixtures(page);
+  await gotoLiveGlobe(page);
+  const panel = page.locator("[data-xray-panel]");
+  await expect(panel).toBeHidden();
+
+  // Move focus onto the canvas (not a typing target) first -- ExploreBar's
+  // own search combobox is reachable by tab and this lane's own keydown
+  // guard correctly refuses to fire while a real typing target has focus,
+  // same as it should.
+  await page.locator("[data-globe-root] canvas").first().click({ position: { x: 10, y: 10 } });
+  await page.keyboard.press("x");
+  await expect(panel).toBeVisible();
+
+  await page.keyboard.press("x");
+  await expect(panel).toBeHidden();
+});
+
+// Break-it: prove the stats parser this suite's own assertions lean on
+// actually reads the card's real "label\nvalue" shape, so a typo in the
+// regex can't make every numeric assertion above vacuously pass.
+test("break-it: the stats-card text parser reads a real value correctly", async () => {
+  const sample = "draw calls\n42\ntriangles\n12,345\ngeometries\n7\ntextures\n3\nfps\n58";
+  expect(parseStatValue(sample, "draw calls")).toBe(42);
+  expect(parseStatValue(sample, "triangles")).toBe(12345);
+  expect(parseStatValue(sample, "fps")).toBe(58);
+  expect(parseStatValue(sample, "not a real label")).toBeNaN();
+});
