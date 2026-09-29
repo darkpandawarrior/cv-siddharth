@@ -24,6 +24,7 @@ import { parseOvationGrid, parseLatestKp, AURORA_POLL_MS, KP_POLL_MS } from "./a
 import { type Launch, parseLaunches, getCachedLaunches, setCachedLaunches } from "./launches.ts";
 import { buildHazardStatus } from "./hazardStatus.ts";
 import { setHazardSnapshot } from "./hazardSnapshot.ts"; // WAVE 6 LANE X6: minimal additive edit, see that file's own comment
+import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
 import { QuakeGlyphs } from "./quakeGlyphs.tsx";
 import { EonetGlyphs } from "./eonetGlyphs.tsx";
 import { HazardHalos } from "./hazardHalos.tsx";
@@ -263,6 +264,82 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     setStatus,
     filters,
   ]);
+
+  // WAVE 6 LANE X1 (live world feed): every qualifying item is published on
+  // every poll, not just "the first time seen" — the feed store's own
+  // de-dup by id (feed.ts) is what turns "still true on this poll" into
+  // "announced once", so this effect never needs its own tracked-id set.
+  // Kp is the one feed with no per-reading id upstream: its own `timeIso`
+  // stands in, so a genuinely new reading (not just a re-poll of the same
+  // one) is what actually changes the id and gets through the de-dup.
+  useEffect(() => {
+    for (const q of quakesShown) {
+      if (q.mag < 4.5) continue;
+      publish({
+        id: `quake:${q.id}`,
+        kind: "quake",
+        title: `M${q.mag.toFixed(1)} ${q.place}`,
+        detail: `${q.depthKm.toFixed(0)} km deep`,
+        whenMs: q.timeMs,
+        source: "USGS",
+        live,
+        focus: { kind: "latlon", lat: q.lat, lon: q.lon },
+        severity: q.mag >= 6 ? "danger" : "warn",
+      });
+    }
+    for (const e of eonetShown) {
+      publish({
+        id: `eonet:${e.id}`,
+        kind: e.category === "wildfires" ? "wildfire" : e.category === "volcanoes" ? "volcano" : "storm",
+        title: e.title,
+        detail: e.category === "wildfires" ? "wildfire" : e.category === "volcanoes" ? "volcano" : "severe storm",
+        whenMs: e.dateMs,
+        source: "NASA EONET",
+        live,
+        focus: { kind: "latlon", lat: e.lat, lon: e.lon },
+        severity: "warn",
+      });
+    }
+    for (const a of matchedAlerts) {
+      publish({
+        id: `gdacs:${a.id}`,
+        kind: "gdacs",
+        title: a.name,
+        detail: `${a.eventType} · ${a.alertLevel} alert`,
+        whenMs: simNowMs, // GDACS carries no discrete event timestamp in this parse — stamped at first observation, then stable (de-dup keeps the id from ever re-publishing a later whenMs)
+        source: "GDACS",
+        live,
+        focus: { kind: "latlon", lat: a.lat, lon: a.lon },
+        severity: a.alertLevel === "red" ? "danger" : "warn",
+      });
+    }
+    for (const l of launches ?? []) {
+      if (!l.within24h) continue;
+      publish({
+        id: `launch:${l.id}`,
+        kind: "launch",
+        title: l.name,
+        detail: `${l.provider} · ${l.padName}`,
+        whenMs: l.netMs,
+        source: "Launch Library 2",
+        live,
+        focus: { kind: "latlon", lat: l.lat, lon: l.lon },
+        severity: "info",
+      });
+    }
+    if (kpReading && kpReading.kp >= 5) {
+      publish({
+        id: `kp:${kpReading.timeIso}`,
+        kind: "aurora",
+        title: `Kp ${kpReading.kp.toFixed(2)}, geomagnetic storm`,
+        detail: "aurora oval active",
+        whenMs: Date.parse(kpReading.timeIso),
+        source: "NOAA SWPC",
+        live,
+        severity: kpReading.kp >= 7 ? "danger" : "warn",
+      });
+    }
+  }, [quakesShown, eonetShown, matchedAlerts, launches, kpReading, live, simNowMs]);
 
   return (
     <>

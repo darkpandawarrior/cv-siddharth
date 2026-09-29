@@ -7,6 +7,7 @@ import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { entityPositions, simTime, useGlobe, type Selection } from "../globeStore.ts";
 import { propagateState, ecefToScene, type SatelliteState, type TleObject } from "../../../lib/satelliteEcef.ts";
 import { trailPoints, groundTrackPoints, type ScenePoint } from "./satTrails.ts";
+import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
 // LANE W4 (wave 3): ISS visible-pass rows only — this file's ownership for
 // this lane is scoped to selectSatellite/selectionRows below, nothing else.
 // Type-only import (erased at build time) plus a runtime dynamic import()
@@ -123,11 +124,28 @@ function selectSatellite(object: TleObject, now: Date): void {
   // in flight; never clobber a later, unrelated selection).
   if (!isIss) return;
   import("./satPasses.ts")
-    .then(({ nextVisiblePassDetail, ...fmt }) => nextVisiblePassDetail(object, now).then((pass) => issPassRows(pass, fmt)))
-    .then((rows) => {
+    .then(({ nextVisiblePassDetail, ...fmt }) => nextVisiblePassDetail(object, now).then((pass) => ({ pass, rows: issPassRows(pass, fmt) })))
+    .then(({ pass, rows }) => {
       const current = useGlobe.getState().selected;
       if (current?.id !== id) return;
       useGlobe.getState().select({ ...current, rows: [...baseRows, ...rows] });
+      // WAVE 6 LANE X1 (live world feed): published only when a real
+      // qualifying pass row exists (never invented) and it starts inside
+      // 30 min -- this is the one publisher gated behind a visitor's own
+      // click (a pass is only ever computed here), not a poll.
+      if (pass && pass.start.getTime() - now.getTime() <= 30 * 60_000 && pass.start.getTime() >= now.getTime()) {
+        publish({
+          id: `iss-pass:${pass.start.toISOString()}`,
+          kind: "satellite",
+          title: "ISS visible pass over Pune",
+          detail: `max elevation ${pass.maxElDeg.toFixed(0)}°, starting soon`,
+          whenMs: pass.start.getTime(),
+          source: "CelesTrak TLE, SGP4",
+          live: true,
+          focus: { kind: "entity", id },
+          severity: "info",
+        });
+      }
     })
     .catch(() => {
       const current = useGlobe.getState().selected;
