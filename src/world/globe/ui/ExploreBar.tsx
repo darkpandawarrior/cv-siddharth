@@ -1,15 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { debounce, distanceAndBearing, rateLimit } from "../exploreMath.ts";
 import { placeSelection, pointSelection, searchPlaces, type Place } from "../exploreApi.ts";
 import { canvasState, surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
 import { useExplore } from "../exploreState.ts";
 import { simTime, useGlobe } from "../globeStore.ts";
 import type { LatLon } from "../geoMath.ts";
+import { askGlobeLLM } from "../copilot/askLLM.ts";
+import { buildGlobeContext } from "../copilot/context.ts";
+import { executeActions } from "../copilot/execute.ts";
+import { parseIntent } from "../copilot/intents.ts";
+import type { GlobeAction } from "../copilot/actions.ts";
+import { buildUndo, describeActions, EXAMPLE_CHIPS } from "./oneBox.ts";
 import ExploreMeasure from "./exploreMeasure.tsx";
 
 declare global { interface Window { __W11_POINT__?: (point: LatLon) => void } }
 const typing = (target: EventTarget | null) => target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 const buttonClass = "min-h-9 whitespace-nowrap rounded-lg px-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent aria-pressed:bg-white/10";
+
+// LANE X2 ("ONE BOX"): a place-search result and the box's own leading
+// command/ask row share one keyboard-navigable list, so both live behind a
+// single discriminated type instead of two parallel index spaces.
+type TopRow = { kind: "run"; label: string; actions: GlobeAction[] } | { kind: "ask"; text: string };
+type Row = TopRow | { kind: "place"; place: Place };
+
+/** No network call, no store import: safe to run on every keystroke. */
+function classify(query: string): TopRow | null {
+  const text = query.trim();
+  if (!text) return null;
+  const actions = parseIntent(text);
+  return actions ? { kind: "run", label: `Run: ${describeActions(actions)}`, actions } : { kind: "ask", text };
+}
 
 /** Lazy DOM surface. Tiers share five results; only the measurement's
  * fixed vertex cap changes. No background geolocation/weather requests. */
@@ -20,10 +40,17 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const [results, setResults] = useState<Place[]>([]);
   const [active, setActive] = useState(-1);
   const [message, setMessage] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [answer, setAnswer] = useState<{ text: string; undo: GlobeAction[] } | null>(null);
   const searchAbort = useRef<AbortController | null>(null), pointAbort = useRef<AbortController | null>(null);
   const scheduler = useRef<ReturnType<typeof debounce<string>> | null>(null);
+  const allowAsk = useRef(rateLimit(3000));
+  const askToken = useRef(0);
   const mode = useExplore(s => s.mode), points = useExplore(s => s.points);
   const view = useGlobe(s => s.view);
+
+  const topRow = useMemo(() => classify(query), [query]);
+  const rows: Row[] = useMemo(() => [...(topRow ? [topRow] : []), ...results.map((place): Row => ({ kind: "place", place }))], [topRow, results]);
 
   useEffect(() => {
     const root = host.current?.closest("[data-globe-root]");
@@ -41,7 +68,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
       setMessage("Searching…");
       try {
         const places = await searchPlaces(value, AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]));
-        if (!controller.signal.aborted) { setResults(places); setActive(-1); setMessage(places.length ? "" : "No places found"); }
+        if (!controller.signal.aborted) { setResults(places); setMessage(places.length ? "" : "No places found"); }
       } catch { if (!controller.signal.aborted) setMessage("Search unavailable. Try again."); }
     });
     return () => { scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort(); };
@@ -49,18 +76,45 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
 
   const clear = () => {
     scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
-    setQuery(""); setResults([]); setActive(-1); setMessage(""); useExplore.getState().setMode(null);
+    askToken.current++;
+    setQuery(""); setResults([]); setActive(-1); setMessage(""); setAsking(false); setAnswer(null);
+    useExplore.getState().setMode(null);
   };
+
+  // "/" and Cmd/Ctrl-K both focus this box; Esc clears/closes.
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key === "/" && !typing(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); input.current?.focus(); }
       if (event.key === "Escape") {
         scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
-        setQuery(""); setResults([]); setActive(-1); setMessage(""); useExplore.getState().setMode(null);
+        askToken.current++;
+        setQuery(""); setResults([]); setActive(-1); setMessage(""); setAsking(false); setAnswer(null);
+        useExplore.getState().setMode(null);
       }
     };
     window.addEventListener("keydown", key);
     return () => { window.removeEventListener("keydown", key); useExplore.getState().setMode(null); };
+  }, []);
+
+  // Cmd/Ctrl-K: CommandPalette.tsx already claims this globally on a plain
+  // (bubble-phase) window listener with no target check at all - see its
+  // own file header. Taking it everywhere here would fight that palette, so
+  // this only fires when focus already sits inside the globe root, and does
+  // so from the CAPTURE phase (which always runs before a same-target bubble
+  // listener regardless of mount order) so `stopPropagation` reliably keeps
+  // the palette's own handler from also toggling open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
+      const root = host.current?.closest("[data-globe-root]");
+      if (!root || !root.contains(document.activeElement)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      input.current?.focus();
+      input.current?.select();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, []);
 
   useEffect(() => {
@@ -89,6 +143,58 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     return () => { unclick(); pointAbort.current?.abort(); delete window.__W11_POINT__; };
   }, [canvas]);
 
+  /** Free, instant, no network - straight through execute.ts's own store
+   *  writer. Snapshots BEFORE applying so the undo restores the real prior
+   *  value (see oneBox.ts's buildUndo header for why a plain flip is wrong). */
+  const runCommand = (actions: GlobeAction[]) => {
+    const before = { layers: useGlobe.getState().layers, timeOffsetMin: useGlobe.getState().timeOffsetMin };
+    const summary = executeActions(actions);
+    setAnswer({ text: summary, undo: buildUndo(actions, before) });
+  };
+
+  /** The LLM fallback (brief: "calls copilot/askLLM.ts ... with a thinking
+   *  state, then the narrate text and the list of applied actions"). The
+   *  three-line fallback-text shape below intentionally mirrors
+   *  execute.ts's own runGlobeAsk rather than importing it: that entry point
+   *  returns a single string with no actions, and no undo can be built
+   *  without them - reaching into execute.ts for a second export was the
+   *  brief's offered escape hatch, but it isn't needed since askGlobeLLM and
+   *  executeActions are already public exports this file can call directly. */
+  const runAsk = async (text: string) => {
+    if (!allowAsk.current()) { setMessage("Ask the globe is limited to one question every 3 seconds. Try again in a moment."); return; }
+    const token = ++askToken.current;
+    setAsking(true); setAnswer(null); setMessage("");
+    const before = { layers: useGlobe.getState().layers, timeOffsetMin: useGlobe.getState().timeOffsetMin };
+    const { actions, narrate } = await askGlobeLLM(text, buildGlobeContext());
+    if (token !== askToken.current) return; // query changed or box closed while the request was in flight
+    const summary = actions.length ? executeActions(actions) : "";
+    const label = narrate
+      ? (summary ? `${narrate} (${summary})` : narrate)
+      : (summary || "I didn't catch a command in that. Try \"fly to Tokyo\" or \"show quakes above 5\".");
+    setAsking(false);
+    setAnswer({ text: label, undo: actions.length ? buildUndo(actions, before) : [] });
+  };
+
+  const runRow = (row: Row) => {
+    scheduler.current?.cancel(); searchAbort.current?.abort();
+    if (row.kind === "place") { choose(row.place); return; }
+    setResults([]);
+    if (row.kind === "run") { setQuery(""); setActive(-1); void runCommand(row.actions); return; }
+    void runAsk(row.text);
+  };
+
+  const undoLast = () => {
+    if (!answer?.undo.length) return;
+    executeActions(answer.undo);
+    setAnswer(null);
+  };
+
+  const applyQuery = (value: string) => {
+    setQuery(value); setResults([]); setActive(-1); setMessage(""); setAnswer(null); setAsking(false);
+    searchAbort.current?.abort(); scheduler.current?.cancel(); askToken.current++;
+    if (value.trim().length >= 3) scheduler.current?.schedule(value.trim());
+  };
+
   const choose = (place: Place) => {
     scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
     const store = useGlobe.getState(), selection = placeSelection(place, simTime(store.timeOffsetMin));
@@ -102,33 +208,65 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    <div ref={host} data-explore-bar className="pointer-events-auto absolute left-1/2 top-[104px] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-200 backdrop-blur sm:top-[108px]">
+    // Mobile top offset tracks the topbar's REAL measured height
+    // (Globe.tsx's `--globe-top-offset`, the same var Inspector.tsx and
+    // GlobeTour.tsx already consume at sm+) instead of a guessed constant.
+    // On mobile the topbar's own icon row (Layers/Time/Tour) is part of
+    // that measured height, and a real weather/status line makes the whole
+    // stack taller than the old fixed 104px assumed - which put this box's
+    // top edge OVER those icon buttons and silently ate every click meant
+    // for them (globe-U1.spec.ts's "phones open one sheet at a time" is
+    // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
+    // ExploreBar sits IN the topbar's reserved centre band beside the HUD
+    // pills, not below the full stack, so it was never affected.
+    <div ref={host} data-explore-bar className="pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-200 backdrop-blur sm:top-[108px]">
       <div className="flex items-center gap-1">
-        <input ref={input} type="search" role="combobox" aria-label="Search places" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={results.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
-          placeholder="Search places /" value={query} className="h-9 min-w-0 flex-1 rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
-          onChange={event => {
-            const value = event.target.value; setQuery(value); setResults([]); setActive(-1); setMessage("");
-            searchAbort.current?.abort(); scheduler.current?.cancel();
-            if (value.trim().length >= 3) scheduler.current?.schedule(value.trim());
-          }}
+        <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
+          placeholder="Search or ask the globe / ⌘K" value={query} className="h-9 min-w-0 flex-1 rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
+          onChange={event => applyQuery(event.target.value)}
           onKeyDown={event => {
-            if ((event.key === "ArrowDown" || event.key === "ArrowUp") && results.length) {
-              event.preventDefault(); setActive(i => (i + (event.key === "ArrowDown" ? 1 : -1) + results.length) % results.length);
-            } else if (event.key === "Enter" && results.length) { event.preventDefault(); choose(results[active < 0 ? 0 : active]); }
+            if ((event.key === "ArrowDown" || event.key === "ArrowUp") && rows.length) {
+              event.preventDefault(); setActive(i => (i + (event.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length);
+            } else if (event.key === "Enter" && rows.length) { event.preventDefault(); runRow(rows[active < 0 ? 0 : active]); }
           }} />
         <button type="button" className={buttonClass} onClick={clear} aria-label="Clear exploration">×</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "here"} disabled={view !== "orbit"} onClick={() => toggle("here")}>What's here</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
       </div>
-      {results.length > 0 && <ul id="explore-results" role="listbox" aria-label="Places" className="max-h-52 overflow-y-auto border-t border-line py-1">
-        {results.map((place, i) => <li key={`${place.lat}:${place.lon}:${i}`} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
-          <button type="button" tabIndex={-1} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent" onClick={() => choose(place)}>
-            <span className="block truncate">{place.name}</span><span className="block truncate text-zinc-400">{place.country} · {place.type}</span>
+      {/* ponytail: hidden below sm (the phone bottom-sheet breakpoint) - at
+          390px the gap between this box and the topbar's wrapped icon-button
+          row is already single digits of px (measured), and this row's own
+          height was enough to push into it and block the layers/time/tour
+          buttons (globe-U1.spec.ts's "phones open one sheet at a time"
+          caught it). Desktop has no such squeeze, so the chips stay there
+          unconditionally. Upgrade path: give phones the chips too once the
+          topbar/box vertical budget is re-measured and given real room. */}
+      {!query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
+        {EXAMPLE_CHIPS.map(chip => (
+          <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
+            className="rounded-full border border-line px-2 py-1 text-[11px] text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+            {chip}
+          </button>
+        ))}
+      </div>}
+      {rows.length > 0 && <ul id="explore-results" role="listbox" aria-label="Commands and places" className="max-h-52 overflow-y-auto border-t border-line py-1">
+        {rows.map((row, i) => <li key={row.kind === "place" ? `${row.place.lat}:${row.place.lon}:${i}` : row.kind} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
+          <button type="button" tabIndex={-1} onClick={() => runRow(row)} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent">
+            {row.kind === "place"
+              ? <><span className="block truncate">{row.place.name}</span><span className="block truncate text-zinc-400">{row.place.country} · {row.place.type}</span></>
+              : row.kind === "run"
+                ? <span className="block truncate">{row.label}</span>
+                : <><span className="block truncate">Ask the globe</span><span className="block truncate text-zinc-400">"{row.text}"</span></>}
           </button>
         </li>)}
       </ul>}
       <div role="status" aria-live="polite">
-        {message && <p className="px-2 py-1">{message}</p>}
+        {asking && <p data-onebox-thinking className="px-2 py-1">Thinking…</p>}
+        {!asking && answer && <p data-onebox-answer className="flex items-start justify-between gap-2 px-2 py-1">
+          <span>{answer.text}</span>
+          {answer.undo.length > 0 && <button type="button" onClick={undoLast} className="shrink-0 whitespace-nowrap rounded-lg px-1 text-zinc-400 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Undo</button>}
+        </p>}
+        {!asking && !answer && message && <p className="px-2 py-1">{message}</p>}
         {mode === "here" && !message && <p className="px-2 py-1">Click the globe to look up a point</p>}
         {mode === "measure" && <p data-measure-result className="px-2 py-1">
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
