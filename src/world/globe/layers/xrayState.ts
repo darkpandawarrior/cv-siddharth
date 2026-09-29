@@ -51,6 +51,15 @@ export function setXrayStats(next: XrayStats): void {
   for (const listener of statsListeners) listener();
 }
 
+/** Called by layers/XRayTiles.tsx on unmount (style switched off "imagery",
+ *  or tier flips to 3, while X-ray is still toggled on) so the stats card
+ *  and tile legend go back to zero instead of freezing on the last real
+ *  reading — a stale non-zero number would contradict the brief's own
+ *  "reflects what is actually drawn, never simulated" guarantee. */
+export function resetXrayStats(): void {
+  setXrayStats(ZERO_STATS);
+}
+
 export function subscribeXrayStats(listener: () => void): () => void {
   statsListeners.add(listener);
   return () => statsListeners.delete(listener);

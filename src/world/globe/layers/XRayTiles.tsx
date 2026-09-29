@@ -9,7 +9,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { latLonToXyz, GLOBE_RADIUS } from "../geoMath.ts";
 import { drawnTileSet, type DrawnTile } from "./TileLayer.tsx";
-import { levelColorHex, setXrayStats } from "./xrayState.ts";
+import { levelColorHex, setXrayStats, resetXrayStats } from "./xrayState.ts";
 
 // A hair above TileLayer.tsx's own TILE_RADIUS (GLOBE_RADIUS * 1.0015) so an
 // outline never z-fights the tile surface it's tracing.
@@ -76,11 +76,19 @@ export default function XRayTiles() {
   const framesSinceSampleRef = useRef(0);
 
   // Tells TileLayer.tsx to start (and stop) populating drawnTileSet — see
-  // that export's own doc comment on why this is opt-in.
+  // that export's own doc comment on why this is opt-in. This component and
+  // TileLayer.tsx unmount together (GlobeScene.tsx ANDs the same
+  // style/tier condition into both), so on unmount TileLayer's own useFrame
+  // loop has already stopped refreshing `tiles` — clear it here rather than
+  // leave the last real frame behind as a stale ghost reading. Same reason
+  // the stats card gets reset instead of frozen: a switch to "Dots" or tier
+  // 3 while X-ray is still on must read zero, never the last imagery frame.
   useEffect(() => {
     drawnTileSet.enabled = true;
     return () => {
       drawnTileSet.enabled = false;
+      drawnTileSet.tiles.length = 0;
+      resetXrayStats();
     };
   }, []);
 

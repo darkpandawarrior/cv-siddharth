@@ -156,6 +156,54 @@ test("the keyboard shortcut (x) toggles X-ray the same as the topbar button", as
   await expect(panel).toBeHidden();
 });
 
+// Regression for a wave-8 verifier defect: with X-ray open on real imagery,
+// switching the earth style to "Dots" via the always-visible Layers panel
+// left the stats card and tile legend frozen on the last real reading
+// instead of reflecting the now-tileless dot-matrix earth -- and a re-toggle
+// of X-ray off/on did not clear it either. layers/XRayTiles.tsx's own
+// unmount cleanup (it unmounts together with TileLayer.tsx the moment style
+// leaves "imagery") now resets both drawnTileSet.tiles and xrayState's
+// stats, so this must read the empty/zero state, not a stale one.
+test("switching earth style to Dots while X-ray is open clears the stale tile legend and stats, not just on re-toggle", async ({ page }) => {
+  const wmts = withWmtsFixtures(page);
+  await gotoLiveGlobe(page);
+
+  const toggle = page.locator("[data-xray-toggle]");
+  await toggle.click();
+  const panel = page.locator("[data-xray-panel]");
+  await expect(panel).toBeVisible({ timeout: 15_000 });
+
+  await expect.poll(() => wmts.count, { timeout: 15_000, message: "expected at least one WMTS tile request" }).toBeGreaterThan(0);
+  await expect
+    .poll(async () => (await page.locator("[data-xray-legend]").innerText()).includes("no tiles drawn"), { timeout: 15_000 })
+    .toBe(false);
+  await expect.poll(async () => parseStatValue(await page.locator("[data-xray-stats]").innerText(), "draw calls")).toBeGreaterThan(0);
+
+  // "data-earth-style" is EarthImagery.tsx's own load-status probe
+  // (imagery vs its internal GIBS-failure dots fallback) and only exists
+  // while style === "imagery" -- it is not how the Layers panel's own Dots
+  // toggle is read. That toggle's aria-pressed is (ui/LayerPanel.tsx's
+  // earthStyleToggle, same pattern e2e/globe-L5.spec.ts already asserts).
+  const dotsBtn = page.getByRole("button", { name: "Dots" });
+  await dotsBtn.click();
+  await expect(dotsBtn).toHaveAttribute("aria-pressed", "true");
+
+  // The overlay component itself unmounts with TileLayer.tsx (both gated on
+  // style === "imagery"), so the legend/stats card should now read empty,
+  // never the last frame captured while imagery was still on screen.
+  await expect(page.locator("[data-xray-legend]")).toContainText("no tiles drawn", { timeout: 5_000 });
+  await expect.poll(async () => parseStatValue(await page.locator("[data-xray-stats]").innerText(), "draw calls")).toBe(0);
+
+  // Re-toggling X-ray off and back on while still on Dots must not resurrect
+  // the stale reading either.
+  await toggle.click();
+  await expect(panel).toBeHidden();
+  await toggle.click();
+  await expect(panel).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("[data-xray-legend]")).toContainText("no tiles drawn");
+  await expect.poll(async () => parseStatValue(await page.locator("[data-xray-stats]").innerText(), "draw calls")).toBe(0);
+});
+
 // Break-it: prove the stats parser this suite's own assertions lean on
 // actually reads the card's real "label\nvalue" shape, so a typo in the
 // regex can't make every numeric assertion above vacuously pass.
