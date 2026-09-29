@@ -12,7 +12,8 @@ import * as THREE from "three";
 import { latLonToXyz } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { useGlobe } from "../globeStore.ts";
-import { type Quake, RIPPLE_MIN_MAG, magnitudeToRadius, depthToColor, quakeFadeAlpha, formatTimeAgo } from "./quake.ts";
+import { type Quake, RIPPLE_MIN_MAG, magnitudeToRadius, depthToColor, quakeFadeAlpha } from "./quake.ts";
+import { formatQuakeTime } from "./quakeTimeFormat.ts";
 
 // A flat annulus, scaled per instance to magnitudeToRadius(mag) — thin
 // enough to read as a ring, not a filled disc, at every size this draws.
@@ -169,7 +170,7 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
         { label: "Magnitude", value: q.mag.toFixed(1) },
         { label: "Place", value: q.place },
         { label: "Depth", value: `${q.depthKm.toFixed(1)} km` },
-        { label: "Time", value: formatTimeAgo(simNowMs, q.timeMs) },
+        { label: "Time", value: formatQuakeTime(simNowMs, q.timeMs) },
       ],
       source: "USGS, live",
       live: true,

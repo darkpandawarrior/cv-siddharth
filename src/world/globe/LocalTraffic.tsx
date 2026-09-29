@@ -8,6 +8,7 @@ import { GLOBE_RADIUS } from "./EarthDots.tsx";
 import { useGlobe, entityPositions } from "./globeStore.ts";
 import { deadReckon, clampDeadReckonSec, pushTrail, pruneTrails, type LatLon } from "./layers/aircraftTrack.ts";
 import { formatTimeAgo } from "./layers/pulseEvents.ts";
+import { formatAltitude } from "./localTrafficFormat.ts";
 import type { AircraftEntry, AircraftResponse } from "../../../api/_lib/aircraft-handler.ts";
 
 // S7, ambient (claim: false) - the local Pune cluster only, never global
@@ -229,7 +230,7 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
       title: a.cs,
       rows: [
         { label: "type", value: a.type ?? "unknown" },
-        { label: "altitude", value: a.altFt !== null ? `${a.altFt.toLocaleString("en-US")} ft (height x20 on GLOBE, not to scale)` : "unknown" },
+        { label: "altitude", value: formatAltitude(a.altFt) },
         { label: "speed", value: a.gsKt !== null ? `${a.gsKt} kt` : "unknown" },
         { label: "heading", value: a.trkDeg !== null ? `${a.trkDeg}°` : "unknown" },
       ],
