@@ -7,14 +7,16 @@ import { handleOps } from "./ops-handler";
 import { handlePipeline } from "./pipeline-handler";
 import { handleSignals } from "./signals-handler";
 import { handleSpotify } from "./spotify-handler";
+import { handleTerrain } from "./terrain-handler";
 import { handleTle } from "./tle-handler";
 import { handleWeather } from "./weather-handler";
 import { handleWhereami } from "./whereami-handler";
 import { handleWind } from "./wind-handler";
 
-// Every route this table replaced (the 11 former top-level api/*.ts files) —
-// one entry per file lane/globe-F1 deleted, so a route quietly dropped from
-// the table fails this list, not just a runtime 404 nobody wrote a test for.
+// Every route this table replaced (the 11 former top-level api/*.ts files),
+// plus every route added since (lane/globe-P10B's terrain) — one entry per
+// handler, so a route quietly dropped from the table fails this list, not
+// just a runtime 404 nobody wrote a test for.
 const EXPECTED: Record<string, unknown> = {
   aircraft: handleAircraft,
   chat: handleChat,
@@ -23,6 +25,7 @@ const EXPECTED: Record<string, unknown> = {
   pipeline: handlePipeline,
   signals: handleSignals,
   spotify: handleSpotify,
+  terrain: handleTerrain,
   tle: handleTle,
   weather: handleWeather,
   whereami: handleWhereami,
@@ -30,7 +33,7 @@ const EXPECTED: Record<string, unknown> = {
 };
 
 describe("ROUTES", () => {
-  it("has exactly the 11 former routes, none dropped or added", () => {
+  it("has exactly the 12 current routes, none dropped or added", () => {
     expect(Object.keys(ROUTES).sort()).toEqual(Object.keys(EXPECTED).sort());
   });
 
