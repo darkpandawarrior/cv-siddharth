@@ -48,6 +48,7 @@ const LABEL: Record<LayerId, string> = {
   countries: "Countries",
   together: "Explorers here now",
   density: "Quake and fire density",
+  guide: "My Maps places",
 };
 
 // Same guard as GlobeScene.tsx's own isTypingTarget, restated per this
