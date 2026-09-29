@@ -36,11 +36,48 @@ export const GIBS_LEVELS: readonly TileLevel[] = [
 
 export const TILE_SIZE_PX = 512;
 
+// LANE V1 (wave 7, step B): EOX's own WMTS EPSG:4326 "WGS84" tile matrix
+// (https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml, fetched
+// 2026-09-29) — the deep-zoom s2cloudless base. A genuinely different
+// matrix from GIBS_LEVELS above: 256px tiles (not 512), TopLeftCorner is
+// still (90,-180) but matrixWidth/matrixHeight exactly DOUBLE every level
+// (a real quadtree, unlike GIBS's own irregular levels 0-2) out to level 17
+// (~0.6m/px at the equator). Still pinned as literal verified numbers rather
+// than trusted to the doubling formula, same convention as GIBS_LEVELS —
+// this is what the endpoint actually published today, not a derivation that
+// could silently drift from it.
+export const EOX_LEVELS: readonly TileLevel[] = [
+  { level: 0, scaleDenominator: 279541132.0143589, matrixWidth: 2, matrixHeight: 1 },
+  { level: 1, scaleDenominator: 139770566.0071794, matrixWidth: 4, matrixHeight: 2 },
+  { level: 2, scaleDenominator: 69885283.00358972, matrixWidth: 8, matrixHeight: 4 },
+  { level: 3, scaleDenominator: 34942641.50179486, matrixWidth: 16, matrixHeight: 8 },
+  { level: 4, scaleDenominator: 17471320.75089743, matrixWidth: 32, matrixHeight: 16 },
+  { level: 5, scaleDenominator: 8735660.375448715, matrixWidth: 64, matrixHeight: 32 },
+  { level: 6, scaleDenominator: 4367830.187724357, matrixWidth: 128, matrixHeight: 64 },
+  { level: 7, scaleDenominator: 2183915.093862179, matrixWidth: 256, matrixHeight: 128 },
+  { level: 8, scaleDenominator: 1091957.546931089, matrixWidth: 512, matrixHeight: 256 },
+  { level: 9, scaleDenominator: 545978.7734655, matrixWidth: 1024, matrixHeight: 512 },
+  { level: 10, scaleDenominator: 272989.3867327723, matrixWidth: 2048, matrixHeight: 1024 },
+  { level: 11, scaleDenominator: 136494.6933663862, matrixWidth: 4096, matrixHeight: 2048 },
+  { level: 12, scaleDenominator: 68247.34668319309, matrixWidth: 8192, matrixHeight: 4096 },
+  { level: 13, scaleDenominator: 34123.67334159654, matrixWidth: 16384, matrixHeight: 8192 },
+  { level: 14, scaleDenominator: 17061.83667079825, matrixWidth: 32768, matrixHeight: 16384 },
+  { level: 15, scaleDenominator: 8530.918335399127, matrixWidth: 65536, matrixHeight: 32768 },
+  { level: 16, scaleDenominator: 4265.459167699563, matrixWidth: 131072, matrixHeight: 65536 },
+  { level: 17, scaleDenominator: 2132.729583849786, matrixWidth: 262144, matrixHeight: 131072 },
+];
+export const EOX_TILE_SIZE_PX = 256;
+
 /** Which GIBS TileMatrixSet each catalog entry rides, and how far into
  *  GIBS_LEVELS it goes — also verified from GetCapabilities per layer (see
  *  gibsCatalog.ts). Note the reference/label layers use "15.625m", not the
  *  "31.25m" a quick guess from the brief's own resolution list would reach
- *  for — GetCapabilities names it plainly, this is that name. */
+ *  for — GetCapabilities names it plainly, this is that name.
+ *
+ *  "WGS84" is the odd one out: it's EOX's matrix (EOX_LEVELS above), not
+ *  GIBS's — kept in this same lookup so `TILE_MATRIX_SETS[matrixSet].maxLevel`
+ *  stays one uniform call for every role in TileLayer.tsx regardless of
+ *  provider, rather than a special case at every call site. */
 export const TILE_MATRIX_SETS = {
   "2km": { id: "2km", maxLevel: 5 },
   "1km": { id: "1km", maxLevel: 6 },
@@ -48,29 +85,36 @@ export const TILE_MATRIX_SETS = {
   "250m": { id: "250m", maxLevel: 8 },
   "31.25m": { id: "31.25m", maxLevel: 11 },
   "15.625m": { id: "15.625m", maxLevel: 12 },
+  WGS84: { id: "WGS84", maxLevel: 17 },
 } as const;
 export type TileMatrixSetId = keyof typeof TILE_MATRIX_SETS;
 
-export function levelDef(level: number): TileLevel {
-  const l = GIBS_LEVELS[level];
-  if (!l) throw new RangeError(`tileMatrix: no such level ${level} (0..${GIBS_LEVELS.length - 1})`);
+/** `levels` defaults to GIBS_LEVELS so every existing GIBS caller (tileSelect.ts
+ *  included, which this lane doesn't own and can't edit to thread a table
+ *  through) is byte-for-byte unaffected — EOX_LEVELS is passed explicitly
+ *  only by this lane's own EOX-scoped selection code (tileSelectEox.ts). */
+export function levelDef(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): TileLevel {
+  const l = levels[level];
+  if (!l) throw new RangeError(`tileMatrix: no such level ${level} (0..${levels.length - 1})`);
   return l;
 }
 
-export function lonStepDeg(level: number): number {
-  return 360 / levelDef(level).matrixWidth;
+export function lonStepDeg(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): number {
+  return 360 / levelDef(level, levels).matrixWidth;
 }
 
-export function latStepDeg(level: number): number {
-  return 180 / levelDef(level).matrixHeight;
+export function latStepDeg(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): number {
+  return 180 / levelDef(level, levels).matrixHeight;
 }
 
 /** WMTS's standard pixel size is 0.28mm (OGC 07-057r7 §7); ground metres per
  *  pixel is the scale denominator times that. Every GIBS level table above
  *  shares this convention, so this one line gives a real physical ground
- *  resolution per level without needing a separate lookup. */
-export function groundResolutionMetersPerPixel(level: number): number {
-  return levelDef(level).scaleDenominator * 0.00028;
+ *  resolution per level without needing a separate lookup. EOX's own WGS84
+ *  matrix (verified GetCapabilities scale denominators) follows the same
+ *  WMTS convention, so the one formula covers both tables. */
+export function groundResolutionMetersPerPixel(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): number {
+  return levelDef(level, levels).scaleDenominator * 0.00028;
 }
 
 /** Normalises a longitude into [-180, 180) — the antimeridian wrap every
@@ -90,8 +134,8 @@ export interface TileRowCol {
  *  (there is no wrap there); longitude wraps. Both indices are additionally
  *  clamped into the matrix's own bounds, so float error at an exact edge
  *  (lon = 180, lat = -90) never returns an out-of-range tile. */
-export function tileRowColForLatLon(latDeg: number, lonDeg: number, level: number): TileRowCol {
-  const { matrixWidth, matrixHeight } = levelDef(level);
+export function tileRowColForLatLon(latDeg: number, lonDeg: number, level: number, levels: readonly TileLevel[] = GIBS_LEVELS): TileRowCol {
+  const { matrixWidth, matrixHeight } = levelDef(level, levels);
   const lat = Math.max(-90, Math.min(90, latDeg));
   const lon = wrapLon(lonDeg);
   const col = Math.min(matrixWidth - 1, Math.max(0, Math.floor(((lon + 180) / 360) * matrixWidth)));
@@ -113,9 +157,9 @@ export interface TileBounds {
 
 /** The lat/lon rectangle a given (level, row, col) covers. Inverse of
  *  `tileRowColForLatLon` up to the row/col rounding. */
-export function tileBounds(level: number, row: number, col: number): TileBounds {
-  const lonStep = lonStepDeg(level);
-  const latStep = latStepDeg(level);
+export function tileBounds(level: number, row: number, col: number, levels: readonly TileLevel[] = GIBS_LEVELS): TileBounds {
+  const lonStep = lonStepDeg(level, levels);
+  const latStep = latStepDeg(level, levels);
   const lon0 = -180 + col * lonStep;
   const lat0 = 90 - row * latStep;
   return { lat0, lat1: lat0 - latStep, lon0, lon1: lon0 + lonStep };

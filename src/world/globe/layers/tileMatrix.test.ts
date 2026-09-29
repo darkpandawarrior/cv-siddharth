@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groundResolutionMetersPerPixel, latStepDeg, lonStepDeg, tileBounds, tileKey, tileRowColForLatLon, wrapLon } from "./tileMatrix.ts";
+import { EOX_LEVELS, groundResolutionMetersPerPixel, latStepDeg, lonStepDeg, tileBounds, tileKey, tileRowColForLatLon, wrapLon } from "./tileMatrix.ts";
 
 describe("wrapLon", () => {
   it("leaves in-range values alone", () => {
@@ -91,5 +91,51 @@ describe("break-it: out-of-range inputs are clamped, not passed through raw", ()
   it("a col of exactly matrixWidth would be off the end of the real matrix", () => {
     const { col } = tileRowColForLatLon(0, 180, 3); // exactly the east edge
     expect(col).toBeLessThan(10); // level 3 matrixWidth is 10 — col 10 would 400
+  });
+});
+
+// LANE V1 (wave 7, step B): EOX's own WGS84 matrix (256px tiles, a real
+// quadtree unlike GIBS_LEVELS) — every leveled function accepts EOX_LEVELS
+// explicitly and must read IT, not silently fall back to GIBS_LEVELS.
+describe("EOX_LEVELS (WGS84 / GoogleCRS84Quad)", () => {
+  it("level 0 is 2x1, matching GIBS at level 0 (coincidence — the doubling diverges from level 1 on)", () => {
+    expect(EOX_LEVELS[0]).toMatchObject({ matrixWidth: 2, matrixHeight: 1 });
+  });
+
+  it("is a real quadtree: matrixWidth exactly doubles every level, unlike GIBS_LEVELS' own irregular 0-2", () => {
+    for (let level = 1; level < EOX_LEVELS.length; level++) {
+      expect(EOX_LEVELS[level].matrixWidth).toBe(EOX_LEVELS[level - 1].matrixWidth * 2);
+      expect(EOX_LEVELS[level].matrixHeight).toBe(EOX_LEVELS[level - 1].matrixHeight * 2);
+    }
+  });
+
+  it("lonStepDeg/latStepDeg read the EOX table when passed explicitly, not GIBS_LEVELS", () => {
+    // GIBS level 1 is 120deg x 90deg (irregular); EOX level 1 is 90deg x 90deg
+    // (regular quadtree) — a real behavioural difference, not just a renamed
+    // constant, so this proves the `levels` param actually routes.
+    expect(lonStepDeg(1, EOX_LEVELS)).toBeCloseTo(90);
+    expect(latStepDeg(1, EOX_LEVELS)).toBeCloseTo(90);
+  });
+
+  it("a Pune-ish point round-trips through tileBounds at a deep EOX level (13, ~10m/px)", () => {
+    const { row, col } = tileRowColForLatLon(18.52, 73.84, 13, EOX_LEVELS);
+    const b = tileBounds(13, row, col, EOX_LEVELS);
+    expect(b.lon0).toBeLessThanOrEqual(73.84);
+    expect(b.lon1).toBeGreaterThanOrEqual(73.84);
+    expect(b.lat1).toBeLessThanOrEqual(18.52);
+    expect(b.lat0).toBeGreaterThanOrEqual(18.52);
+  });
+
+  it("groundResolutionMetersPerPixel reads close to 10m at EOX level 13 (deep-zoom target)", () => {
+    const res = groundResolutionMetersPerPixel(13, EOX_LEVELS);
+    expect(res).toBeGreaterThan(8);
+    expect(res).toBeLessThan(11);
+  });
+
+  // Break-it: without the `levels` default staying GIBS_LEVELS, every existing
+  // GIBS caller (tileSelect.ts, unowned by this lane) would silently read the
+  // wrong table the moment EOX_LEVELS existed alongside it.
+  it("break-it: omitting the levels param still reads GIBS_LEVELS, not EOX_LEVELS", () => {
+    expect(lonStepDeg(1)).not.toBeCloseTo(lonStepDeg(1, EOX_LEVELS));
   });
 });
