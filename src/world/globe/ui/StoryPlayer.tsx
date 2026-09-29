@@ -53,7 +53,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
 const FAB_RESERVE_RIGHT = { open: "sm:right-[273px]", collapsed: "sm:right-[74px]" };
 
 const btn = "rounded-full border border-line px-2 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
-const pill = "pointer-events-auto flex w-fit items-center gap-1.5 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
+const pill = "pointer-events-auto flex w-fit items-center gap-1.5 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
@@ -243,7 +243,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           onClick={enter}
           aria-label="My story"
           title="My story"
-          className={`pointer-events-auto fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${storyFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+          className={`pointer-events-auto fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${storyFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
         >
           <BookOpen size={16} aria-hidden />
         </button>
@@ -255,7 +255,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           onClick={enterFilm}
           aria-label="Life journey film"
           title="Life journey film"
-          className={`pointer-events-auto fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${filmFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+          className={`pointer-events-auto fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${filmFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
         >
           <Clapperboard size={16} aria-hidden />
         </button>
@@ -285,13 +285,13 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
             <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeIndex ? "var(--color-signal)" : "#3f3f46" }} />
           ))}
         </div>
-        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl glass-panel px-3 pb-3 pt-2">
           <button type="button" onClick={back} disabled={activeIndex === 0} className={`${btn} disabled:opacity-30 ${touchTarget}`}>
             Back
           </button>
           {!reducedMotion && (
             <button type="button" onClick={togglePlay} aria-pressed={playing} aria-label={playing ? "Pause the story" : "Play the story"} className={`${btn} ${touchTarget}`}>
-              {playing ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+              {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
             </button>
           )}
           <span className="text-xs text-muted">{activeIndex + 1} / {CHAPTERS.length}</span>
@@ -312,7 +312,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-story-chapter-id={chapter.id}
           role="dialog"
           aria-label="My story"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
         >
           {cardBody("py-1")}
         </div>
@@ -326,7 +326,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-story-chapter-id={chapter.id}
           role="dialog"
           aria-label="My story"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           {cardBody("min-h-11 min-w-11")}
         </div>
@@ -358,7 +358,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
             <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeFilmIndex ? "var(--color-signal)" : "#3f3f46" }} />
           ))}
         </div>
-        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-1 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-1 rounded-b-2xl glass-panel px-3 pb-3 pt-2">
           <button type="button" onClick={filmBack} disabled={activeFilmIndex === 0} className={`${btn} disabled:opacity-30 ${touchTarget}`}>
             Back
           </button>
@@ -368,10 +368,10 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
               cut, and StoryArc.tsx already draws the arc fully formed
               instead of animating it, so nothing here still moves. */}
           <button type="button" onClick={toggleFilmPlay} aria-pressed={filmPlaying} aria-label={filmPlaying ? "Pause the film" : "Play the film"} className={`${btn} ${touchTarget}`}>
-            {filmPlaying ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+            {filmPlaying ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
           </button>
           <button type="button" onClick={skipToEnd} aria-label="Skip to the end" title="Skip to the end" className={`${btn} ${touchTarget}`}>
-            <SkipForward size={14} aria-hidden />
+            <SkipForward size={16} aria-hidden />
           </button>
           <span className="text-xs text-muted">{activeFilmIndex + 1} / {FILM_CHAPTERS.length}</span>
           <button type="button" onClick={filmNext} className={`${btn} ${touchTarget}`}>
@@ -388,7 +388,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-film-chapter-id={filmChapter.id}
           role="dialog"
           aria-label="Life journey film"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
         >
           {filmCardBody("py-1")}
         </div>
@@ -397,7 +397,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-film-chapter-id={filmChapter.id}
           role="dialog"
           aria-label="Life journey film"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           {filmCardBody("min-h-11 min-w-11")}
         </div>
@@ -415,10 +415,10 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
       {!busy && (
         <div className="absolute left-4 top-20 z-30 hidden flex-col items-start gap-2 sm:top-[var(--globe-top-offset,5rem)] sm:flex">
           <button type="button" data-story-entry onClick={enter} className={pill}>
-            <BookOpen size={12} aria-hidden /> My story
+            <BookOpen size={16} aria-hidden /> My story
           </button>
           <button type="button" data-film-entry onClick={enterFilm} className={pill}>
-            <Clapperboard size={12} aria-hidden /> Life journey film
+            <Clapperboard size={16} aria-hidden /> Life journey film
           </button>
         </div>
       )}

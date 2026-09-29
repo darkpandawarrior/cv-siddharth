@@ -138,7 +138,7 @@ export default function StreetPhotoViewer({ photo, onClose }: { photo: StreetPho
       role="dialog"
       aria-modal="true"
       aria-label={photo.is360 ? "360 street photo" : "Street photo"}
-      className="pointer-events-auto absolute inset-0 z-10 flex flex-col bg-ink/95 backdrop-blur"
+      className="pointer-events-auto absolute inset-0 z-10 flex flex-col glass-panel"
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-3 py-2 font-mono text-xs text-zinc-300">
         <span>{photo.is360 ? "360 photo — drag to look, scroll to zoom" : "Street photo"}</span>

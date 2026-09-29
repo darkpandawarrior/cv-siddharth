@@ -93,7 +93,7 @@ function ProvenanceRow({ p }: { p: Provenance }) {
 export default function HowItsBuilt() {
   const entries = buildHowItsBuiltEntries();
   return (
-    <div data-how-its-built className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-line bg-ink/80 p-3 font-mono text-xs text-zinc-300 backdrop-blur">
+    <div data-how-its-built className="mt-2 max-h-64 overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300">
       {entries.map((e) => (
         <section key={e.id} className="mb-3 last:mb-0">
           <h4 className="mb-1 truncate text-zinc-100">{e.title}</h4>

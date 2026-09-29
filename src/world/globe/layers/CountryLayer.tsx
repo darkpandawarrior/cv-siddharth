@@ -98,7 +98,7 @@ export default function CountryLayer(_props: { tier: 1 | 2 | 3 }) {
     scene.add(borders); invalidate();
     const tooltip = document.createElement("div");
     tooltip.setAttribute("role", "tooltip"); tooltip.dataset.countryTooltip = "";
-    tooltip.className = "pointer-events-none absolute z-20 rounded-lg border border-line bg-ink/90 px-2 py-1 font-mono text-xs text-zinc-100 backdrop-blur";
+    tooltip.className = "pointer-events-none absolute z-20 rounded-lg glass-panel px-2 py-1 font-mono text-xs text-zinc-100";
     tooltip.hidden = true; root?.appendChild(tooltip);
     let highlighted = -1;
     const paint = (id: number, x = 16, y = 150) => {

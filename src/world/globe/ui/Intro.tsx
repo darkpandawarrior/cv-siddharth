@@ -137,7 +137,7 @@ export default function Intro({ tier }: { tier: 1 | 2 | 3 }) {
         type="button"
         onClick={skipIntro}
         aria-label="Skip introduction"
-        className="pointer-events-auto absolute right-4 top-4 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-200 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="pointer-events-auto absolute right-4 top-4 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-200 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         Skip
       </button>

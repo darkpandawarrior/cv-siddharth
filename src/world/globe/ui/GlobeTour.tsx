@@ -201,7 +201,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
           sm+ width with a wrapped topbar shrinks the card's available
           height (Globe.tsx's --globe-top-offset), which can push Back/Next
           out of the initial scroll view on a longer stop's body text. */}
-      <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+      <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl glass-panel px-3 pb-3 pt-2">
         <button
           type="button"
           onClick={() => setTourStep(Math.max(0, step - 1))}
@@ -235,7 +235,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
       <button
         type="button"
         onClick={() => setTourStep(0)}
-        className="pointer-events-auto hidden items-center rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:inline-flex"
+        className="pointer-events-auto hidden items-center rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:inline-flex"
       >
         Take the tour
       </button>
@@ -255,7 +255,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
           data-globe-tour
           role="dialog"
           aria-label="Guided tour"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
         >
           {cardBody("py-1")}
         </div>
@@ -267,7 +267,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
           data-globe-tour-sheet
           role="dialog"
           aria-label="Guided tour"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           {cardBody("min-h-11 min-w-11")}
         </div>

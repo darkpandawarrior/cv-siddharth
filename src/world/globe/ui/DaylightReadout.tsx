@@ -126,7 +126,7 @@ export default function DaylightReadout() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Cities rising and setting right now"
-        className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent"
+        className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent"
       >
         <Sunrise size={13} aria-hidden />
         {rising.length}
@@ -144,7 +144,7 @@ export default function DaylightReadout() {
             // which stacking context they render in, same as
             // CompareDivider's fixed z-50 root.
             style={{ left: anchor.left, top: anchor.top }}
-            className="fixed z-50 w-56 rounded-lg border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-300 backdrop-blur"
+            className="fixed z-50 w-56 rounded-lg glass-panel p-2 font-mono text-xs text-zinc-300"
           >
             <div className="mb-1 flex items-center gap-1 text-muted">
               <Sunrise size={12} aria-hidden />

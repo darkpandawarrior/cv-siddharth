@@ -1452,6 +1452,14 @@ html.resume-mode .palette-trigger {
   box-shadow: var(--shadow-elevation-2);
 }
 
+/* Globe controls keep a full touch target even when the glyph is compact. */
+@media (max-width: 639px) {
+  [data-globe-root] button {
+    min-width: calc(var(--spacing) * 11);
+    min-height: calc(var(--spacing) * 11);
+  }
+}
+
 .font-mono-os {
   font-family: var(--font-mono);
 }

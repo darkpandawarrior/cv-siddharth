@@ -57,7 +57,7 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
   return (
     <div
       data-xray-panel
-      className="pointer-events-none flex w-64 flex-col gap-2.5 rounded-lg border border-line bg-ink/70 p-3 font-mono text-xs leading-snug text-zinc-300 backdrop-blur"
+      className="pointer-events-none flex w-64 flex-col gap-2.5 rounded-lg glass-panel p-3 font-mono text-xs leading-snug text-zinc-300"
     >
       <p className="text-zinc-400">
         X-ray mode <span aria-hidden>&middot;</span> read-only, reflects what is actually drawn

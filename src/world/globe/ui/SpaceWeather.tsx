@@ -72,7 +72,7 @@ export default function SpaceWeather() {
 
   if (allFailed) {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur">
+      <div className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
         <span data-space-weather-status="failed">Space weather feed unreachable</span>
       </div>
     );
@@ -82,7 +82,7 @@ export default function SpaceWeather() {
   if (!detail) return null;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur">
+    <div className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
       <span data-space-weather-status="live">{detail}</span>
     </div>
   );

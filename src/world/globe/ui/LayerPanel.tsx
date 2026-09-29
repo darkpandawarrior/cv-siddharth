@@ -393,7 +393,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {panelOpen ? (
         <div
           data-globe-layer-panel
-          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl border border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:bottom-4 sm:flex"
+          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:bottom-4 sm:flex"
         >
           <div className="flex items-center justify-between gap-2 border-b border-line p-3">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
@@ -444,7 +444,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           aria-pressed={false}
           aria-label="Open the layers panel"
           title="Layers (L)"
-          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
         >
           <Layers size={15} />
         </button>
@@ -459,7 +459,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {sheet === "layers" && (
         <div
           data-globe-layer-sheet
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>

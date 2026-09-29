@@ -140,7 +140,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   // real layout space instead of floating over it, so nothing it sits above
   // can ever render underneath it.
   const actions = (touchTarget: string) => (
-    <div className="flex shrink-0 flex-wrap gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+    <div className="flex shrink-0 flex-wrap gap-2 rounded-b-2xl glass-panel px-3 pb-3 pt-2">
       {selected.focus && (
         <button
           type="button"
@@ -277,7 +277,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         role="region"
         aria-live="polite"
         aria-label="Selection details"
-        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col rounded-2xl border border-line bg-ink/80 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
       >
         <div className="min-h-0 flex-1 overflow-y-auto p-3">{body}</div>
         {actions("py-1")}
@@ -290,7 +290,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
           role="region"
           aria-live="polite"
           aria-label="Selection details"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] flex-col rounded-t-2xl border-t border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] flex-col rounded-t-2xl glass-panel font-mono text-xs text-zinc-300 sm:hidden"
         >
           <div className="min-h-0 flex-1 overflow-y-auto p-4">{body}</div>
           {actions("min-h-11 min-w-11")}

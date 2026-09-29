@@ -180,7 +180,7 @@ function SharePopoverButton({ buttonClassName, iconSize }: { buttonClassName: st
       {open && (
         <div
           data-share-panel
-          className="pointer-events-auto absolute right-0 top-full z-40 mt-2 w-60 overflow-hidden rounded-2xl border border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur"
+          className="pointer-events-auto absolute right-0 top-full z-40 mt-2 w-60 overflow-hidden rounded-2xl glass-panel font-mono text-xs text-zinc-300"
         >
           <button
             type="button"
@@ -253,7 +253,7 @@ export default function ShareView({ tier: _tier }: { tier: 1 | 2 | 3 }) {
 
   return (
     <SharePopoverButton
-      buttonClassName="pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+      buttonClassName="pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
       iconSize={13}
     />
   );
