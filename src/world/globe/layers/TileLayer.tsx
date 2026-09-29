@@ -7,10 +7,12 @@ import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { sunDirection, VERT } from "./sun.ts";
 import { TILE_MATRIX_SETS, type TileMatrixSetId } from "./tileMatrix.ts";
 import { selectVisibleTiles, type SelectedTile } from "./tileSelect.ts";
+import { selectVisibleEoxTiles } from "./tileSelectEox.ts";
 import { buildTilePatchGeometry } from "./tileGeometry.ts";
 import { TILE_FRAG_DAY, TILE_FRAG_PLAIN } from "./tileShader.ts";
 import { TileLRU } from "./tileCache.ts";
 import { GIBS_CATALOG, tileUrl, type GibsCatalogEntry } from "./gibsCatalog.ts";
+import type { StatusKey } from "../globeStore.ts";
 
 /**
  * WAVE 2 LANE W1 (deep zoom): draws real NASA GIBS tiles a hair above the
@@ -42,10 +44,17 @@ import { GIBS_CATALOG, tileUrl, type GibsCatalogEntry } from "./gibsCatalog.ts";
 declare global {
   interface Window {
     __GLOBE_TEST_SET_IMAGERY__?: (imagery: ImageryStack) => void;
+    // LANE V1 (wave 7, step A): the same reasoning as __GLOBE_TEST_SET_IMAGERY__
+    // above — LayerCatalog.tsx (where a visitor would otherwise read a
+    // "feed unavailable" status) isn't wired into LayerPanel's render yet
+    // either, so e2e reads the same store status TileLayer.tsx writes to
+    // directly instead of through unreachable UI.
+    __GLOBE_TEST_GET_IMAGERY_STATUS__?: (layerId: string) => unknown;
   }
 }
 if (typeof window !== "undefined") {
   window.__GLOBE_TEST_SET_IMAGERY__ = (imagery) => useGlobe.getState().setImagery(imagery);
+  window.__GLOBE_TEST_GET_IMAGERY_STATUS__ = (layerId) => useGlobe.getState().status[layerId as StatusKey];
 }
 
 // A hair above the whole-globe sphere (EarthImagery's own GLOBE_RADIUS) so a
@@ -78,6 +87,13 @@ const RECOMPUTE_ANGLE_COS_EPS = 0.9994; // ~2 degrees
 // bootstrap problem and still caps recompute frequency during sustained
 // motion to a sane rate.
 const RECOMPUTE_MIN_INTERVAL_MS = 150;
+// LANE V1 (wave 7, step A): "steps back 10 minutes on a 404 or blank frame up
+// to 3 times, then reports 'feed unavailable'" (the brief, verbatim) — this
+// is the "up to 3 times" cap. Scoped to `subdaily` roles only (GOES/Himawari):
+// a daily/static role 404ing means something is actually broken, not "this
+// exact 10-minute frame hasn't published yet", so it keeps the plain
+// per-tile error handling below instead of this retry loop.
+const MAX_SUBDAILY_BACKOFF_STEPS = 3;
 
 interface TileEntry {
   tile: SelectedTile;
@@ -107,6 +123,12 @@ interface RoleState {
   pendingGeneration: number | null;
   transitionStart: number | null;
   generationCounter: number;
+  /** LANE V1 (wave 7, step A): how many times in a row this `subdaily`
+   *  role's most recent frame request has come back with zero tiles loaded
+   *  (a 404/blank frame, not a partial network hiccup — see the settle-check
+   *  comment in the useFrame loop below). 0 once any tile of the current
+   *  frame has loaded. Unused (stays 0) for daily/static roles. */
+  subdailyBackoffSteps: number;
 }
 
 /** Module-level integration seam (brief: "keep your own detail in a module
@@ -275,7 +297,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
       removeRole(roleId);
       const group = new THREE.Group();
       groupRef.current.add(group);
-      role = { role: roleId, catalogEntry, shader, opacity, group, entries: new Map(), liveGeneration: 0, pendingGeneration: null, transitionStart: null, generationCounter: 0 };
+      role = { role: roleId, catalogEntry, shader, opacity, group, entries: new Map(), liveGeneration: 0, pendingGeneration: null, transitionStart: null, generationCounter: 0, subdailyBackoffSteps: 0 };
       rolesRef.current.set(roleId, role);
     }
     role.opacity = opacity;
@@ -285,12 +307,19 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     const fovRadians = (camera as THREE.PerspectiveCamera).fov ? (((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180) : 0.7;
     const matrixSet = role.catalogEntry.matrixSet as TileMatrixSetId;
     const maxLevel = Math.min(role.catalogEntry.maxLevel, TILE_MATRIX_SETS[matrixSet].maxLevel);
-    const selected = selectVisibleTiles(matrixSet, maxLevel, {
+    const cam = {
       position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
       forward: { x: scratchForward.current.x, y: scratchForward.current.y, z: scratchForward.current.z },
       fovRadians,
       canvasHeightPx: size.height,
-    });
+    };
+    // LANE V1 (wave 7, step B): EOX's s2cloudless base rides a genuinely
+    // different tile matrix (tileMatrix.ts's own EOX_LEVELS, 256px tiles) —
+    // tileSelect.ts's shared `selectVisibleTiles` always reads GIBS_LEVELS
+    // (a file this lane doesn't own, see tileSelectEox.ts's own header), so
+    // "WGS84" is the one matrixSet routed to this lane's own EOX-scoped
+    // selector instead.
+    const selected = matrixSet === "WGS84" ? selectVisibleEoxTiles(maxLevel, cam) : selectVisibleTiles(matrixSet, maxLevel, cam);
 
     const newKeys = new Set(selected.map((t) => t.key));
     const currentGenKeys = new Set(
@@ -370,6 +399,30 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     pump();
   }
 
+  /** LANE V1 (wave 7, step A): re-requests a `subdaily` role's just-failed
+   *  frame at a stepped-back time — SAME row/col/level (a 404'd timestamp
+   *  doesn't change what's on screen, only when the requested frame is), so
+   *  this reuses the existing mesh/geometry/material for each tile rather
+   *  than tearing down and rebuilding what recomputeRole would (recomputeRole
+   *  itself can't be reused for this: its own "did the tile KEY set change"
+   *  dedup — tileKey has no time component — would see the identical
+   *  row/col/level set and bail out as "nothing changed", never reissuing
+   *  the fetch at the new time). */
+  function retrySubdailyRole(role: RoleState, effectiveNow: Date): void {
+    const nextGeneration = ++role.generationCounter;
+    for (const entry of role.entries.values()) {
+      if (entry.generation !== role.pendingGeneration) continue;
+      entry.generation = nextGeneration;
+      entry.status = "loading";
+      tileLayerStats.requested++;
+      const controller = new AbortController();
+      queueRef.current.push({ entry, url: tileUrl(role.catalogEntry, entry.tile.level, entry.tile.row, entry.tile.col, effectiveNow), controller });
+    }
+    role.pendingGeneration = nextGeneration;
+    role.transitionStart = null;
+    pump();
+  }
+
   useFrame(({ clock }) => {
     const group = groupRef.current;
     if (!group) return;
@@ -404,13 +457,39 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     for (const role of rolesRef.current.values()) {
       if (role.pendingGeneration !== null && role.transitionStart === null) {
         let allSettled = true;
+        const pendingEntries: TileEntry[] = [];
         for (const entry of role.entries.values()) {
-          if (entry.generation === role.pendingGeneration && entry.status === "loading") {
-            allSettled = false;
-            break;
-          }
+          if (entry.generation !== role.pendingGeneration) continue;
+          pendingEntries.push(entry);
+          if (entry.status === "loading") allSettled = false;
         }
-        if (allSettled) role.transitionStart = reducedMotion ? nowMs - FADE_MS : nowMs;
+        if (allSettled) {
+          const dateRule = role.catalogEntry.dateRule;
+          if (dateRule.kind === "subdaily" && pendingEntries.length > 0 && !pendingEntries.some((e) => e.status === "loaded")) {
+            // LANE V1 (wave 7, step A): every tile of this frame errored (a
+            // 404, "this timestamp isn't published yet", not a partial
+            // network hiccup — a partial failure already reads honestly
+            // through the ordinary per-tile blank-on-error path below) — step
+            // back and retry, up to MAX_SUBDAILY_BACKOFF_STEPS times, before
+            // giving up and reporting the feed unavailable. Never promotes
+            // this failed generation to `liveGeneration`, so nothing but a
+            // blank tile is ever shown for it — no stale frame, silently or
+            // otherwise.
+            if (role.subdailyBackoffSteps < MAX_SUBDAILY_BACKOFF_STEPS) {
+              role.subdailyBackoffSteps++;
+              const effectiveNow = new Date(now.getTime() - role.subdailyBackoffSteps * dateRule.stepMin * 60_000);
+              retrySubdailyRole(role, effectiveNow);
+              continue; // this role's frame isn't settled yet — re-enter next frame
+            }
+            useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, { state: "failed", detail: "feed unavailable" });
+          } else if (dateRule.kind === "subdaily" && pendingEntries.some((e) => e.status === "loaded")) {
+            // Recovered (or a normal first success): clear any earlier
+            // "feed unavailable" and reset the backoff counter for next time.
+            if (role.subdailyBackoffSteps > 0) role.subdailyBackoffSteps = 0;
+            useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, undefined);
+          }
+          role.transitionStart = reducedMotion ? nowMs - FADE_MS : nowMs;
+        }
       }
 
       if (role.transitionStart !== null) {
