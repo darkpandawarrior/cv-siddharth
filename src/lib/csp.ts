@@ -68,6 +68,10 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // earth loads yesterday's VIIRS mosaic plus the Blue and Black Marble
     // bases as textures, straight from NASA (CORS *), never proxied.
     "https://gibs.earthdata.nasa.gov",
+    // LANE V1 (wave 7, step B): EOX's s2cloudless deep-zoom base
+    // (src/world/globe/layers/gibsCatalog.ts's "s2cloudless" entry, drawn by
+    // TileLayer.tsx) — CORS *, keyless, verified 2026-09-29.
+    "https://tiles.maps.eox.at",
     // Panoramax's photo storage host (src/world/globe/ui/streetPhotoViewer.tsx
     // and StreetView.tsx's click-to-open lightbox/360 viewer): the search
     // API (api.panoramax.xyz, below) answers with asset URLs on THIS
