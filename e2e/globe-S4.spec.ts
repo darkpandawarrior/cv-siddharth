@@ -94,15 +94,18 @@ async function openGlobe(page: Page, isoNow: string, activity: unknown = activit
 test("the guide layer's status line surfaces the real Q&A answers count, computed from mapsTotals", async ({ page }) => {
   await openGlobe(page, "2026-09-24T12:27:00+05:30");
   const debug = await readGuideDebug(page);
-  // mapsTotals.answers, src/data/generated/mapsPlaces.ts — this is the
-  // literal number the generated data carries today; a future re-export
-  // changing it is expected to move this assertion, not to be a hardcoded
-  // 670 baked into GuideLayer.tsx itself (see this lane's own status-line
-  // template, which reads the field rather than a copied literal).
-  expect(debug?.statusDetail).toContain("670 Q&A answers");
+  // mapsTotals.qaAnswers, src/data/generated/mapsPlaces.ts — the community
+  // Q&A feature's answer count (NOT mapsTotals.answers, which is a
+  // different, much larger field: binary yes/no responses to Google's
+  // automated prompts). This is the literal number the generated data
+  // carries today; a future re-export changing it is expected to move this
+  // assertion, not to be a hardcoded 6 baked into GuideLayer.tsx itself (see
+  // this lane's own status-line template, which reads the field rather than
+  // a copied literal).
+  expect(debug?.statusDetail).toContain("6 Q&A answers");
 
   const panel = page.locator("[data-globe-layer-panel]");
-  await expect(panel).toContainText("670 Q&A answers");
+  await expect(panel).toContainText("6 Q&A answers");
 });
 
 test("Local Guide rings scale to cumulative-to-date as the Time Machine crosses a year boundary", async ({ page }) => {
@@ -148,6 +151,37 @@ test("career-ops-hq's org marker is a self-published, country-level location, di
   // Spain's country centroid, not a city (sources-owner.md's own live check
   // of api.github.com/orgs/career-ops-hq, re-verified this lane's session).
   expect(debug?.orgMarker).toEqual({ lat: 40.0, lon: -4.0 });
+});
+
+const ORG_SELECTION = {
+  id: "guide-org:career-ops-hq",
+  kind: "guide-org",
+  title: "career-ops-hq — open source, out",
+  rows: [
+    { label: "Merged PRs", value: "" },
+    { label: "Upstream stars", value: "" },
+    { label: "Location", value: "Spain — org-published location, not a person or office" },
+  ],
+  source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only",
+  live: false,
+  focus: { kind: "latlon", lat: 40.0, lon: -4.0, distance: 14 },
+};
+
+test("the org marker's Inspector carries the honesty-guard label, not just its coordinates", async ({ page }) => {
+  // GuideLayer.tsx's onOrgClick shape, same seam globe-T1.spec.ts uses for
+  // this layer's other marker type — a real raycast click needs camera
+  // framing this spec doesn't otherwise depend on (see this file's own
+  // header note on why T1's seam applies here too).
+  await page.addInitScript((sel) => {
+    (window as unknown as { __GLOBE_TEST_SELECT__: unknown }).__GLOBE_TEST_SELECT__ = sel;
+  }, ORG_SELECTION);
+  await openGlobe(page, "2026-09-24T12:27:00+05:30");
+
+  const inspector = page.locator("[data-globe-inspector]");
+  await expect(inspector).toBeVisible({ timeout: 30_000 });
+  await expect(inspector).toContainText("Spain — org-published location, not a person or office");
+  await expect(inspector).toContainText("api.github.com/orgs/career-ops-hq");
+  await expect(inspector.getByText("LIVE")).toHaveCount(0);
 });
 
 test("the recent-public-GitHub-activity histogram renders only with >= 5 events, labelled as public-only", async ({ page }) => {

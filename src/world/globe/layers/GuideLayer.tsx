@@ -19,6 +19,11 @@
 // and a recent-public-GitHub-activity-by-hour histogram fed into Pune's
 // existing Inspector `spark` slot, gated to >= 5 events so a quiet week
 // never renders a misleadingly sparse bar chart.
+//
+// `mapsTotals.qaAnswers` (not `.answers`, which is a DIFFERENT field: binary
+// yes/no responses to Google's automated prompts, not the community Q&A
+// feature) is the field this file's status line reads — see
+// scripts/gen-maps-places.mjs's own console-log line, which names both.
 import { useEffect, useMemo, useRef } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
@@ -228,7 +233,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     }
 
     const notLive = simYear !== new Date().getFullYear();
-    const statusDetail = `${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.answers} Q&A answers, Maps export ${mapsExport}${notLive ? ` · rings shown cumulative through ${simYear}` : ""}`;
+    const statusDetail = `${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.qaAnswers} Q&A answers, Maps export ${mapsExport}${notLive ? ` · rings shown cumulative through ${simYear}` : ""}`;
     useGlobe.getState().setStatus("guide", { state: "snapshot", detail: statusDetail });
     scalesRef.current = scales;
     statusDetailRef.current = statusDetail;
