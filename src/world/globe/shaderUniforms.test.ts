@@ -39,3 +39,25 @@ describe("globe shader materials bind their uniforms by construction", () => {
     expect(propUniformMaterials(`<shaderMaterial args={[{ vertexShader: V, uniforms }]} />`)).toBe(0);
   });
 });
+
+/**
+ * WAVE 7 LANE V2 (city-light bloom): `uNightGain` has to be a real uniform,
+ * not a literal multiplier baked into the shader string — GlobePost.tsx's
+ * plain Bloom pass needs a floor (luminanceThreshold) it can share with
+ * whatever pushes the night term over it, and a hardcoded `* 1.6` can't be
+ * tuned from outside the shader source. This also guards that EarthImagery's
+ * uniforms object (constructed WITH the material via `args`, this file's own
+ * house rule above) actually carries it, not just the shader declaration.
+ */
+describe("uNightGain is a real, constructed uniform", () => {
+  it("earthImageryShader.ts declares uNightGain and multiplies the night-lights term by it, not a literal", () => {
+    const source = readFileSync(join(DIR, "layers/earthImageryShader.ts"), "utf8");
+    expect(source).toMatch(/uniform float uNightGain;/);
+    expect(source).toMatch(/texture2D\(uNight,\s*vUv\)\.rgb\s*\*\s*uNightGain/);
+  });
+
+  it("EarthImagery.tsx's uniforms object (the one passed via args) includes uNightGain", () => {
+    const source = readFileSync(join(DIR, "layers/EarthImagery.tsx"), "utf8");
+    expect(source).toMatch(/uNightGain:\s*\{\s*value:/);
+  });
+});
