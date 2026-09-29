@@ -5,7 +5,7 @@
 // living-earth plan's own "no per-frame allocation, rotate the object
 // instead of the points" requirement.
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { loadStarField, type Star } from "../../../lib/stars.ts";
 import { bvToRgb, gmstDeg, magToPointSize } from "./skyMath.ts";
@@ -48,14 +48,17 @@ const MAG_CAP: Record<1 | 2 | 3, number> = { 1: Infinity, 2: 4, 3: 3 };
 
 const VERT = `attribute float aSize;attribute vec3 aColor;attribute float aPhase;
 varying vec3 vColor;varying float vAlpha;
-uniform float uTime;uniform float uTwinkle;
+uniform float uTime;uniform float uTwinkle;uniform float uPixelRatio;
 void main(){
   vColor=aColor;
   float tw=1.0+uTwinkle*sin(uTime*1.6+aPhase);
   vAlpha=clamp(tw,0.55,1.35);
   vec4 mv=modelViewMatrix*vec4(position,1.0);
   gl_Position=projectionMatrix*mv;
-  gl_PointSize=aSize;
+  // render.md finding 4: gl_PointSize is physical-pixel, aSize is CSS-pixel
+  // (magToPointSize's own units) — without this, stars shrink relative to
+  // the CSS layout at devicePixelRatio>1 instead of staying pin-sharp.
+  gl_PointSize=aSize*uPixelRatio;
 }`;
 // sizeAttenuation off (living-earth plan #1: "stars stay pin-sharp at any
 // zoom") is exactly gl_PointSize set with no distance term above - never
@@ -83,6 +86,9 @@ function setTwinkle(u: { uTwinkle: { value: number } }, amp: number) {
 function tickTime(u: { uTime: { value: number } }, t: number) {
   u.uTime.value = t;
 }
+function setPixelRatio(u: { uPixelRatio: { value: number } }, ratio: number) {
+  u.uPixelRatio.value = ratio;
+}
 
 export interface StarFieldProps {
   now: Date;
@@ -95,7 +101,14 @@ export function StarField({ now, tier, onStatus }: StarFieldProps) {
   const [failed, setFailed] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const reducedMotion = useReducedMotion();
-  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uTwinkle: { value: 0 } }), []);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uTwinkle: { value: 0 }, uPixelRatio: { value: 1 } }), []);
+  // Same selector pattern EarthImagery.tsx uses for uResolution: `gl` is a
+  // stable reference across the session, so reading it doesn't itself force
+  // a re-render on every camera move the way a bare useThree() would.
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    setPixelRatio(uniforms, gl.getPixelRatio());
+  }, [gl, uniforms]);
 
   useEffect(() => {
     let alive = true;

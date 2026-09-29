@@ -34,10 +34,20 @@ float r=pow(1.-max(dot(normalize(vN),normalize(vV)),0.),3.);gl_FragColor=vec4(c+
 // ~15-line fix). RAYLEIGH_BETA_PER_M / RAYLEIGH_SCALE_HEIGHT_M below hold the
 // same three numbers in testable TS form; this GLSL copy exists only because
 // a fragment shader can't import them.
+// render.md finding 6 (P1, 2026-09-30): additive gradient shells (this halo,
+// EarthImagery.tsx's inner haze) risk visible 8-bit banding at their smooth
+// falloff. `dither()` reproduces three.js's own built-in dithering chunks
+// (`common`/`dithering_pars_fragment`, MIT) inline, since a raw ShaderMaterial
+// doesn't get them auto-injected the way a ShaderLib material does.
+const DITHER_GLSL = `
+float rand(vec2 uv){const float a=12.9898,b=78.233,c=43758.5453;float dt=dot(uv,vec2(a,b)),sn=mod(dt,3.14159265359);return fract(sin(sn)*c);}
+vec3 dither(vec3 color){float g=rand(gl_FragCoord.xy);vec3 shift=mix(vec3(0.5/255.0,-0.5/255.0,0.5/255.0),vec3(-0.5/255.0,0.5/255.0,-0.5/255.0),g);return color+shift;}`;
+
 export const ATMO_FRAG = `uniform vec3 uSun;varying vec3 vW;varying vec3 vN;varying vec3 vV;
+${DITHER_GLSL}
 void main(){float t=clamp(-dot(normalize(vN),normalize(vV))/.42,0.,1.);float cs=dot(normalize(vW),uSun);float d=.3+.7*smoothstep(-.3,.5,cs);
 float p=8000./max(abs(cs),.04);vec3 tr=exp(-vec3(5.802e-6,13.558e-6,33.1e-6)*p);
-gl_FragColor=vec4(vec3(.3,.55,1.)*tr*t*t*d*.9,1.);}`;
+gl_FragColor=vec4(dither(vec3(.3,.55,1.)*tr*t*t*d*.9),1.);}`;
 
 // Rayleigh scattering coefficients (beta, per metre, at 680/550/440nm) and
 // the atmosphere's Rayleigh scale height (metres) -- both read verbatim off

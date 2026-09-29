@@ -61,3 +61,22 @@ describe("uNightGain is a real, constructed uniform", () => {
     expect(source).toMatch(/uNightGain:\s*\{\s*value:/);
   });
 });
+
+/**
+ * render.md finding 6 (P1, 2026-09-30): the atmosphere shell and inner-limb
+ * haze are both additive exponential-falloff gradients over near-black — the
+ * textbook 8-bit banding case, per the audit's own grep (`dithering` had no
+ * matches outside test files before this fix). Both fragment shaders now
+ * apply a per-pixel ordered dither to their final colour before output.
+ */
+describe("atmosphere and haze gradients dither their output", () => {
+  it("sun.ts's ATMO_FRAG applies dither() to its final colour", () => {
+    const source = readFileSync(join(DIR, "layers/sun.ts"), "utf8");
+    expect(source).toMatch(/gl_FragColor\s*=\s*vec4\(dither\(/);
+  });
+
+  it("earthImageryShader.ts's INNER_HAZE_FRAG applies dither() to its final colour", () => {
+    const source = readFileSync(join(DIR, "layers/earthImageryShader.ts"), "utf8");
+    expect(source).toMatch(/gl_FragColor\s*=\s*vec4\(dither\(/);
+  });
+});

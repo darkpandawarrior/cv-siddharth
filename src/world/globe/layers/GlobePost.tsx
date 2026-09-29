@@ -34,11 +34,26 @@ export default function GlobePost({ tier }: GlobePostProps) {
           a test can query for tier 3's "no composer" case, which is simply
           this component never mounting. */}
       <Html center style={{ pointerEvents: "none" }} wrapperClass="sr-only">
-        <div data-globe-composer="bloom" aria-hidden />
+        {/* render.md finding 1: SMAA now mounts for both tier 1 and tier 2 —
+            `data-globe-composer-smaa` lets an e2e test confirm the pass is
+            actually in the tree at the tier being tested, without a new
+            globeStore.ts state just to expose it (same reasoning as the
+            "bloom" marker beside it). */}
+        <div data-globe-composer="bloom" data-globe-composer-smaa="1" aria-hidden />
       </Html>
+      {/* render.md finding 1 (2026-09-30): tier 2 used to get NO antialiasing
+          at all once this composer mounted — worse than tier 3, which never
+          mounts a composer and keeps the canvas's own native MSAA
+          (GlobeScene.tsx's `gl={{ antialias: true }}`, which a post-processed
+          render bypasses). SMAA is the fix: same per-pass cost class as
+          tier 1's own SMAA (postprocessing's SMAA is a fixed-cost screen-space
+          pass, unlike `multisampling`, which scales with sample count on the
+          composer's own offscreen target) — cheaper than raising
+          `multisampling` above 0 for a second tier, so tier 2 gets the same
+          pass tier 1 already had rather than a costlier composer-level MSAA. */}
       <EffectComposer multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={BLOOM_THRESHOLD} intensity={BLOOM_INTENSITY} levels={tier === 1 ? BLOOM_LEVELS_T1 : BLOOM_LEVELS_T2} />
-        {tier === 1 ? <SMAA /> : <></>}
+        <SMAA />
       </EffectComposer>
     </>
   );

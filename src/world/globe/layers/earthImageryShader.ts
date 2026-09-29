@@ -159,10 +159,25 @@ void main(){
 // outer halo; this is EarthImagery's own addition). Same falloff shape as
 // sun.ts's ATMO_FRAG, tighter and dimmer so it reads as the thin inner edge
 // of the same atmosphere rather than a second halo.
+// render.md finding 6: an additive exponential-falloff gradient over near-
+// black is the textbook 8-bit banding case. `dither()` mirrors three's own
+// built-in `dithering_fragment`/`dithering_pars_fragment` chunks (three.js's
+// `common`/`dithering_pars_fragment` GLSL, MIT) — a per-pixel ordered offset
+// from a deterministic hash of gl_FragCoord, +-0.25/255 per channel, cheap
+// enough to run unconditionally on a shell that already renders every frame.
+// Inlined rather than `material.dithering=true` because that three.js flag
+// only auto-injects the chunk for ShaderLib-built materials; a raw
+// ShaderMaterial's fragment source is used verbatim, so a custom shader has
+// to carry the same logic itself to get the same effect.
+const DITHER_GLSL = `
+float rand(vec2 uv){const float a=12.9898,b=78.233,c=43758.5453;float dt=dot(uv,vec2(a,b)),sn=mod(dt,3.14159265359);return fract(sin(sn)*c);}
+vec3 dither(vec3 color){float g=rand(gl_FragCoord.xy);vec3 shift=mix(vec3(0.5/255.0,-0.5/255.0,0.5/255.0),vec3(-0.5/255.0,0.5/255.0,-0.5/255.0),g);return color+shift;}`;
+
 export const INNER_HAZE_FRAG = `
 uniform vec3 uSun;varying vec3 vW;varying vec3 vN;varying vec3 vV;
+${DITHER_GLSL}
 void main(){
   float t=clamp(-dot(normalize(vN),normalize(vV))/.2,0.,1.);
   float d=.3+.7*smoothstep(-.3,.5,dot(normalize(vW),normalize(uSun)));
-  gl_FragColor=vec4(vec3(.4,.65,1.)*t*t*d*.5,1.);
+  gl_FragColor=vec4(dither(vec3(.4,.65,1.)*t*t*d*.5),1.);
 }`;
