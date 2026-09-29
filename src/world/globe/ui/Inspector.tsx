@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useGlobe, type Selection } from "../globeStore.ts";
 import { useKpSpark, useQuakeRegionSpark, type SparkSeries } from "./sparkSeries.ts";
+
+// LANE V7 (wave 7, "How it's built" panel): its own chunk, loaded only once
+// a visitor opens it -- never in the eager Globe chunk (check-budget.mjs).
+const HowItsBuilt = lazy(() => import("./HowItsBuilt.tsx"));
 
 /** LANE L5 (navigation and UI) owns the selection contract; LANE U1
  *  (composition) owns this file's layout: the shared left slot on sm+ (the
@@ -82,6 +86,15 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const regionSpark = useQuakeRegionSpark(regionFocus?.lat ?? null, regionFocus?.lon ?? null);
   const kpSpark = useKpSpark();
 
+  // WAVE 7 LANE V7: a plain open/closed flag, not selection-filtered -- most
+  // Selection.kind values (quake, guide-place, satellite, ...) name an
+  // INSTANCE, not one of the handful of shader/data layers this panel can
+  // honestly show (see howItsBuiltData.ts's own "could not wire" note), so
+  // there is no clean instance-to-layer mapping to filter on without editing
+  // files outside this lane's scope. The panel always lists every layer it
+  // knows, organised per layer inside itself.
+  const [showBuild, setShowBuild] = useState(false);
+
   useEffect(() => {
     const seam = window.__GLOBE_TEST_SELECT__;
     if (seam) select(seam);
@@ -111,14 +124,16 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
 
   if (!selected) return null;
 
-  // Sticky, not just a trailing block: at a narrow sm+ width with a wrapped
-  // topbar (the card's own available height shrinks with it - see
-  // Globe.tsx's --globe-top-offset), a long selection's rows can push
-  // "Close" out of the initial scroll view entirely. -mx-3/-mb-3 bleeds back
-  // out to the card's own edge (its padding is p-3) so the sticky footer's
-  // background covers edge to edge instead of leaving a transparent gutter.
+  // A real flex-column sibling below the scrollable body, not a `sticky`
+  // overlay inside it: `sticky bottom-0` floats on TOP of whatever content
+  // is last in the scroll flow, so opening a tall "How it's built" panel
+  // (WAVE 7 LANE V7) covered its first lines on first open, before any
+  // manual scroll -- verifier-caught desktop overlap defect. Giving this row
+  // its own flex slot outside the `overflow-y-auto` div means it occupies
+  // real layout space instead of floating over it, so nothing it sits above
+  // can ever render underneath it.
   const actions = (touchTarget: string) => (
-    <div className="sticky bottom-0 -mx-3 -mb-3 mt-2 flex flex-wrap gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+    <div className="flex shrink-0 flex-wrap gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
       {selected.focus && (
         <button
           type="button"
@@ -229,6 +244,21 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
       <p className="mb-3 truncate text-xs text-muted" title={selected.source}>
         {selected.live ? "Live" : "Snapshot"} · {selected.source}
       </p>
+
+      <button
+        type="button"
+        onClick={() => setShowBuild((v) => !v)}
+        aria-expanded={showBuild}
+        data-how-its-built-toggle
+        className="mb-2 rounded-full border border-line px-2 py-0.5 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        {showBuild ? "Hide how it's built" : "How it's built"}
+      </button>
+      {showBuild && (
+        <Suspense fallback={<p className="mb-2 text-xs text-muted">Loading...</p>}>
+          <HowItsBuilt />
+        </Suspense>
+      )}
     </>
   );
 
@@ -240,9 +270,9 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         role="region"
         aria-live="polite"
         aria-label="Selection details"
-        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/80 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col rounded-2xl border border-line bg-ink/80 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
       >
-        {body}
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">{body}</div>
         {actions("py-1")}
       </div>
 
@@ -253,9 +283,9 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
           role="region"
           aria-live="polite"
           aria-label="Selection details"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] flex-col rounded-t-2xl border-t border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
         >
-          {body}
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">{body}</div>
           {actions("min-h-11 min-w-11")}
         </div>
       )}
