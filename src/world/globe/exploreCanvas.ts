@@ -26,6 +26,23 @@ export function surfacePicker(canvas: HTMLCanvasElement, get: () => { camera: Ca
   };
 }
 
+/** LANE V4 (hover readout): desktop-mouse-only pointer tracking, reusing
+ * `surfacePicker`'s raycast. Any button held down (dragging/orbiting) or a
+ * non-mouse pointer (touch/pen -- "touch keeps today's tap behaviour")
+ * reports `null`, the same "hidden" outcome as leaving the canvas or missing
+ * the globe entirely, so the caller has one branch for all three. */
+export function surfaceHover(canvas: HTMLCanvasElement, pick: ReturnType<typeof surfacePicker>, onMove: (point: (LatLon & { clientX: number; clientY: number }) | null) => void) {
+  const move = (event: PointerEvent) => {
+    if (event.pointerType !== "mouse" || event.buttons) { onMove(null); return; }
+    const point = pick(event.clientX, event.clientY);
+    onMove(point ? { ...point, clientX: event.clientX, clientY: event.clientY } : null);
+  };
+  const leave = () => onMove(null);
+  canvas.addEventListener("pointermove", move);
+  canvas.addEventListener("pointerleave", leave);
+  return () => { canvas.removeEventListener("pointermove", move); canvas.removeEventListener("pointerleave", leave); };
+}
+
 /** Movement is tracked throughout, so dragging away and back isn't a click. */
 export function surfaceClicks(canvas: HTMLCanvasElement, pick: ReturnType<typeof surfacePicker>, click: (point: LatLon) => void) {
   let start: { x: number; y: number; id: number } | null = null;

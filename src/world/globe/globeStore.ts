@@ -218,3 +218,18 @@ export const sceneHandles: {
   /** Request a frame: the Canvas may run frameloop "demand" (SceneActivity). */
   invalidate: (() => void) | null;
 } = { camera: null, canvas: null, scene: null, invalidate: null };
+
+/** LANE V4 (hover readout): the pointer's current globe surface point, kept
+ *  as a plain ref like `entityPositions`/`sceneHandles` above rather than
+ *  reactive state -- a pointermove firing at native event rate would
+ *  re-render every store subscriber on every pixel if this were `set()`, and
+ *  ui/HoverReadout.tsx only ever needs the latest value once per animation
+ *  frame. `countryId` is filled in by layers/CountryLayer.tsx from the exact
+ *  point-in-polygon test it already runs for its own highlight (when that
+ *  boundaries layer happens to be mounted), so HoverReadout can skip a
+ *  redundant Natural Earth lookup on the frames where one is already fresh;
+ *  -1 means "not computed here" (layer unmounted, or point outside every
+ *  country's bounding cell), and HoverReadout falls back to its own copy of
+ *  the (memoised, singleton-fetched) country index either way. */
+export interface HoverPoint { lat: number; lon: number; clientX: number; clientY: number }
+export const hoverPoint: { current: HoverPoint | null; countryId: number } = { current: null, countryId: -1 };
