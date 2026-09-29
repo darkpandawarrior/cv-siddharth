@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Sunrise, Sunset } from "lucide-react";
 import { risingAndSettingCities, type DaylightCityStatus } from "../layers/daylight.ts";
 import { simTime, useGlobe, type Selection } from "../globeStore.ts";
@@ -63,16 +64,40 @@ function CityRow({ status, onPick }: { status: DaylightCityStatus; onPick: (stat
  *
  * Collapses to one glass pill in the shared top row (globe-lanes.md's
  * composed-layout spec reserves that row for exactly this kind of chip);
- * the city list opens as a popover BELOW the pill rather than a docked
- * panel, so it never contests the right-column LayerPanel or left-slot
- * Inspector/tour real estate e2e/globe-U1.spec.ts guards.
+ * the city list opens as a popover BELOW the pill.
+ *
+ * The pill itself mounts inline (GlobeHud -> the topbar's own `relative
+ * z-20` div in src/Globe.tsx), but that div is a stacking context of its
+ * own, so no z-index the popover declares as a normal descendant could ever
+ * outrank a sibling like Inspector's z-30 card or ExploreBar's z-30 search
+ * box, which sit outside that context entirely -- the same trap
+ * CompareDivider.tsx and StreetView.tsx already document and fix. Body-level
+ * `createPortal` escapes it; the popover tracks the pill's own
+ * getBoundingClientRect so it still opens directly under the pill.
  */
 export default function DaylightReadout() {
   const enabled = useGlobe((s) => s.layers.daylight);
   const select = useGlobe((s) => s.select);
   const flyTo = useGlobe((s) => s.flyTo);
   const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const now = useSimNowTicking();
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+    const place = () => {
+      const rect = buttonRef.current!.getBoundingClientRect();
+      setAnchor({ left: rect.left, top: rect.bottom + 8 });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -96,6 +121,7 @@ export default function DaylightReadout() {
   return (
     <div className="pointer-events-auto relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -107,44 +133,48 @@ export default function DaylightReadout() {
         <Sunset size={13} aria-hidden />
         {setting.length}
       </button>
-      {open && (
-        <div
-          role="dialog"
-          aria-label="Cities rising and setting right now"
-          // z-40: above ExploreBar's search overlay (z-30) -- both are
-          // transient floating surfaces anchored independently in the top
-          // row, and the one a visitor just opened should never render
-          // underneath the other.
-          className="absolute left-0 top-full z-40 mt-2 w-56 rounded-lg border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-300 backdrop-blur"
-        >
-          <div className="mb-1 flex items-center gap-1 text-muted">
-            <Sunrise size={12} aria-hidden />
-            <span>Rising</span>
-          </div>
-          {rising.length === 0 ? (
-            <p className="px-1 py-1 text-zinc-500">No sizeable city near sunrise right now</p>
-          ) : (
-            <ul>
-              {rising.map((s) => (
-                <CityRow key={s.city.name} status={s} onPick={onPick} />
-              ))}
-            </ul>
-          )}
-          <div className="mb-1 mt-2 flex items-center gap-1 text-muted">
-            <Sunset size={12} aria-hidden />
-            <span>Setting</span>
-          </div>
-          {setting.length === 0 ? (
-            <p className="px-1 py-1 text-zinc-500">No sizeable city near sunset right now</p>
-          ) : (
-            <ul>
-              {setting.map((s) => (
-                <CityRow key={s.city.name} status={s} onPick={onPick} />
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {open &&
+        anchor &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-label="Cities rising and setting right now"
+            // z-50, body-level portal: outranks every in-flow z-30/z-40
+            // panel (Inspector, ExploreBar, GlobeTour, ...) regardless of
+            // which stacking context they render in, same as
+            // CompareDivider's fixed z-50 root.
+            style={{ left: anchor.left, top: anchor.top }}
+            className="fixed z-50 w-56 rounded-lg border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-300 backdrop-blur"
+          >
+            <div className="mb-1 flex items-center gap-1 text-muted">
+              <Sunrise size={12} aria-hidden />
+              <span>Rising</span>
+            </div>
+            {rising.length === 0 ? (
+              <p className="px-1 py-1 text-zinc-500">No sizeable city near sunrise right now</p>
+            ) : (
+              <ul>
+                {rising.map((s) => (
+                  <CityRow key={s.city.name} status={s} onPick={onPick} />
+                ))}
+              </ul>
+            )}
+            <div className="mb-1 mt-2 flex items-center gap-1 text-muted">
+              <Sunset size={12} aria-hidden />
+              <span>Setting</span>
+            </div>
+            {setting.length === 0 ? (
+              <p className="px-1 py-1 text-zinc-500">No sizeable city near sunset right now</p>
+            ) : (
+              <ul>
+                {setting.map((s) => (
+                  <CityRow key={s.city.name} status={s} onPick={onPick} />
+                ))}
+              </ul>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

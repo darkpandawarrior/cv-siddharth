@@ -133,6 +133,46 @@ test.describe("LANE C4: living daylight", () => {
     expect(after).not.toBe(before);
   });
 
+  test("the open readout paints above the Pune inspector card, not underneath it", async ({ page }) => {
+    // Regression for the wave-8 verifier's blocking find: Pune preselects
+    // itself on desktop first load (useGlobe's `capable && innerWidth>=640
+    // && !selected` rule), so the readout's own popover and the Inspector
+    // card are both on screen by default -- the exact overlap the
+    // topbar's `relative z-20` stacking context used to hide the popover
+    // behind, regardless of the popover's own declared z-index (see
+    // DaylightReadout.tsx's doc comment).
+    await openGlobe(page);
+    await expect(page.locator("[data-globe-inspector]")).toBeVisible();
+    const pill = page.getByRole("button", { name: "Cities rising and setting right now" });
+    await pill.click();
+    const dialog = page.getByRole("dialog", { name: "Cities rising and setting right now" });
+    await expect(dialog).toBeVisible();
+
+    // Body-level portal now places the dialog by the pill's own
+    // getBoundingClientRect rather than nesting it inside the topbar's
+    // `relative z-20` context, so it no longer reliably overlaps the
+    // Inspector card's box the way the reported bug did. What actually
+    // matters, and what's tested directly here regardless of exact
+    // geometry: every corner of the dialog's own box must resolve (via
+    // elementFromPoint) to the dialog itself, never to whatever else is
+    // stacked underneath it.
+    const box = (await dialog.boundingBox())!;
+    const corners: Array<[number, number]> = [
+      [box.x + 4, box.y + 4],
+      [box.x + box.width - 4, box.y + 4],
+      [box.x + 4, box.y + box.height - 4],
+      [box.x + box.width - 4, box.y + box.height - 4],
+      [box.x + box.width / 2, box.y + box.height / 2],
+    ];
+    for (const [x, y] of corners) {
+      const hitsDialog = await page.evaluate(
+        ([px, py]) => document.elementFromPoint(px, py)?.closest('[role="dialog"][aria-label="Cities rising and setting right now"]') != null,
+        [x, y],
+      );
+      expect(hitsDialog, `point (${x}, ${y}) inside the dialog's own box must hit the dialog`).toBe(true);
+    }
+  });
+
   test("break-it: turning the layer off hides the readout pill", async ({ page }) => {
     await openGlobe(page);
     await expect(page.getByRole("button", { name: "Cities rising and setting right now" })).toBeVisible();
