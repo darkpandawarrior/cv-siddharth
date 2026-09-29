@@ -13,9 +13,10 @@
 // actually drawn (`altitudes: GLOBE_ONLY` in grammar.ts), so reading their
 // inputs straight is not a second copy of a claim computed elsewhere - it is
 // the same computation, done once, for the one surface that needs it.
-import { fleetStats } from "../../data/store.ts";
+import { fleetStats, storeGeneratedAt } from "../../data/store.ts";
 import { upstreamMergedPRs, upstreamStars } from "../../data/profile.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
+import { ageDays } from "../../data/freshnessSla.ts";
 
 export interface GlobeRow {
   id: string;
@@ -32,6 +33,20 @@ export const REACH_UPSTREAM_CLAIM = `${upstreamMergedPRs} merged PRs in a reposi
 
 const employerTotal = employerMarkers.length + employersUnresolved.length;
 
+/** data.md finding #6: `storeGeneratedAt` is already shown as an absolute
+ *  "as of <date>" chip (GlobePanel.tsx's EvidenceChip), but a visitor has to
+ *  do their own date math to know 54 days is nearly two months. This turns
+ *  the stamp into the same "N weeks ago" qualifier every other snapshot on
+ *  the page carries. `now` defaults to `new Date()` so the label is current
+ *  at render time; weeks-only granularity means an SSR/hydration mismatch
+ *  would require rendering exactly across a week boundary, which this app
+ *  accepts elsewhere (EvidenceChip's own age math has the same shape). */
+export function weeksAgoLabel(stamp: string, now: Date = new Date()): string {
+  const weeks = Math.floor(ageDays(stamp, now) / 7);
+  if (weeks <= 0) return "less than a week ago";
+  return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+}
+
 /** GLOBE's static facts (task 2, task 5): the two reach columns and the
  *  employer-marker resolution state. Static because every input is a
  *  committed data snapshot, not a live read - same "no clock, no fetch"
@@ -39,7 +54,7 @@ const employerTotal = employerMarkers.length + employersUnresolved.length;
 export const globeFacts: readonly GlobeRow[] = [
   {
     id: "reach-installs",
-    label: `${fleetStats.installFloor.toLocaleString("en-US")} ${REACH_INSTALLS_CLAIM}`,
+    label: `${fleetStats.installFloor.toLocaleString("en-IN")} ${REACH_INSTALLS_CLAIM} (${weeksAgoLabel(storeGeneratedAt)})`,
     file: "store.ts",
     source: "Play Store listings",
   },
