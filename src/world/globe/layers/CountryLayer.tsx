@@ -10,7 +10,7 @@ import { surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
 import { localTime } from "../exploreMath.ts";
 import { useExplore } from "../exploreState.ts";
 import { GLOBE_RADIUS, latLonToXyz, type LatLon } from "../geoMath.ts";
-import { simTime, useGlobe } from "../globeStore.ts";
+import { hoverPoint, simTime, useGlobe } from "../globeStore.ts";
 import { usePresenceGeo } from "../presenceGeo.ts";
 import { parseQuakes, QUAKE_POLL_MS } from "./quake.ts";
 
@@ -116,12 +116,18 @@ export default function CountryLayer(_props: { tier: 1 | 2 | 3 }) {
     selectRef.current = choose;
     const pick = surfacePicker(canvas, get);
     const available = () => !useExplore.getState().mode && useGlobe.getState().view === "orbit";
+    // LANE V4 (hover readout): this handler already runs the exact
+    // point-in-polygon test HoverReadout also wants -- publish the id here
+    // (module-level ref, not React state) so it can reuse this frame's
+    // answer instead of loading a second copy of the Natural Earth index.
     const move = (event: PointerEvent) => {
-      if (!available() || event.buttons) { paint(-1); return; }
+      if (!available() || event.buttons) { paint(-1); hoverPoint.countryId = -1; return; }
       const point = pick(event.clientX, event.clientY), box = root?.getBoundingClientRect();
-      paint(point ? countryAt(index, point) : -1, event.clientX - (box?.left ?? 0), event.clientY - (box?.top ?? 0));
+      const id = point ? countryAt(index, point) : -1;
+      hoverPoint.countryId = id;
+      paint(id, event.clientX - (box?.left ?? 0), event.clientY - (box?.top ?? 0));
     };
-    const leave = () => paint(-1);
+    const leave = () => { paint(-1); hoverPoint.countryId = -1; };
     canvas.addEventListener("pointermove", move); canvas.addEventListener("pointerleave", leave);
     const unclick = surfaceClicks(canvas, pick, point => { if (available()) choose(countryAt(index, point)); });
     const unmode = useExplore.subscribe(() => paint(-1));
@@ -136,7 +142,7 @@ export default function CountryLayer(_props: { tier: 1 | 2 | 3 }) {
     return () => {
       clearInterval(tick); unclick(); unmode(); canvas.removeEventListener("pointermove", move); canvas.removeEventListener("pointerleave", leave);
       tooltip.remove(); scene.remove(borders); geometry.dispose(); material.dispose(); invalidate();
-      selectRef.current = null; delete window.__W11_COUNTRY__;
+      selectRef.current = null; delete window.__W11_COUNTRY__; hoverPoint.countryId = -1;
     };
   }, [get, index]);
 
