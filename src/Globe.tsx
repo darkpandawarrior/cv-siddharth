@@ -222,6 +222,7 @@ export function Globe() {
   return (
     <div
       data-globe-root
+      tabIndex={-1}
       ref={rootRef}
       className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block"
       style={desktopHeightPx != null ? { height: desktopHeightPx } : undefined}
@@ -259,6 +260,9 @@ export function Globe() {
           </ClientOnly>
         )}
 
+        {/* Selection actions precede the controls in keyboard order. */}
+        {showScene && <ClientOnly fallback={null}><Suspense fallback={null}><Inspector tier={tier} /></Suspense></ClientOnly>}
+
         {/* TOP ROW (z-20): HUD pills, the compact time bar, the tour's idle
             pill, the back-to-orbit pill, and (phones only) icon buttons for
             Layers/Time/Tour. Split into a left and a right cluster with a
@@ -269,7 +273,7 @@ export function Globe() {
           <div
             data-globe-topbar
             ref={topbarRef}
-            className={`pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-2 p-4 ${panelReservePad}`}
+            className={`pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-2 p-2 sm:p-4 ${panelReservePad}`}
           >
             <div className="pointer-events-none flex flex-wrap items-center gap-2 sm:max-w-[38%]">
               <GlobeHud
@@ -361,7 +365,6 @@ export function Globe() {
           <ClientOnly fallback={null}>
             <Suspense fallback={null}>
               <LayerPanel tier={tier} />
-              <Inspector tier={tier} />
               <GlobeTour tier={tier} slot="overlay" />
               <StreetView tier={tier} />
               <ExploreBar tier={tier} />

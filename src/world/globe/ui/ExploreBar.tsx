@@ -50,6 +50,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const askToken = useRef(0);
   const mode = useExplore(s => s.mode), points = useExplore(s => s.points);
   const view = useGlobe(s => s.view);
+  const sheet = useGlobe(s => s.sheet);
 
   const topRow = useMemo(() => classify(query), [query]);
   const rows: Row[] = useMemo(() => [...(topRow ? [topRow] : []), ...results.map((place): Row => ({ kind: "place", place }))], [topRow, results]);
@@ -245,10 +246,10 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
     // ExploreBar sits IN the topbar's reserved centre band beside the HUD
     // pills, not below the full stack, so it was never affected.
-    <div ref={host} data-explore-bar className="pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-200 backdrop-blur sm:top-[108px]">
-      <div className="flex items-center gap-1">
+    <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-200 backdrop-blur sm:top-[108px]`}>
+      <div className="flex flex-wrap items-center gap-1">
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
-          placeholder="Search or ask the globe / ⌘K" value={query} className="h-9 min-w-0 flex-1 rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
+          placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-44px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
           onChange={event => applyQuery(event.target.value)}
           onKeyDown={event => {
             if ((event.key === "ArrowDown" || event.key === "ArrowUp") && rows.length) {
@@ -258,15 +259,8 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         <button type="button" className={buttonClass} onClick={clear} aria-label="Clear exploration">×</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "here"} disabled={view !== "orbit"} onClick={() => toggle("here")}>What's here</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
-        {/* ponytail: hidden below sm, same measured constraint as the chips
-            row further down (this component's own comment there) -- a 4th
-            button in this row left the search input a few px wide on a
-            390px screenshot (measured). Upgrade path is the same one that
-            comment names: give phones this control once the topbar/box
-            vertical budget is re-measured and given real room. */}
-        <button type="button" className={`hidden sm:inline-flex ${buttonClass}`} onClick={runSurprise}>Surprise me</button>
+        {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
-      {!query && !answer && <button type="button" className={`sm:hidden min-h-11 ${buttonClass}`} onClick={runSurprise}>Surprise me</button>}
       {/* ponytail: hidden below sm (the phone bottom-sheet breakpoint) - at
           390px the gap between this box and the topbar's wrapped icon-button
           row is already single digits of px (measured), and this row's own
