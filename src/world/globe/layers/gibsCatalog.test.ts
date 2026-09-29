@@ -114,3 +114,51 @@ describe("tileUrl", () => {
     expect(url).toBe("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless/default/WGS84/13/3253/11554.jpg");
   });
 });
+
+// LANE S1 (wave 9): the six new overlays appended to GIBS_OVERLAYS — each
+// live-curled today (2026-09-29 UTC) per this lane's report, not trusted
+// from the earlier audit sweep alone.
+describe("S1 overlay pack", () => {
+  const S1_IDS = [
+    "MODIS_Aqua_L2_Chlorophyll_A",
+    "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day",
+    "MODIS_Terra_L3_NDVI_16Day",
+    "GPW_Population_Density_2020",
+    "SMAP_L4_Analyzed_Surface_Soil_Moisture",
+    "GOES-East_ABI_Dust",
+    "GOES-West_ABI_Dust",
+  ];
+
+  it("all seven new entries are present in the catalog with a legend each", () => {
+    for (const id of S1_IDS) {
+      expect(GIBS_CATALOG[id], `${id} missing from catalog`).toBeDefined();
+      expect(GIBS_CATALOG[id].legend, `${id} has no legend`).toBeDefined();
+    }
+  });
+
+  it("each new layer's own verified lag, not a uniform one", () => {
+    expect(catalogDate(GIBS_CATALOG.MODIS_Aqua_L2_Chlorophyll_A, NOW)).toBe("2026-09-27"); // lag 1
+    expect(catalogDate(GIBS_CATALOG.MODIS_Terra_L3_Land_Surface_Temp_Daily_Day, NOW)).toBe("2026-09-26"); // lag 2
+    expect(catalogDate(GIBS_CATALOG.MODIS_Terra_L3_NDVI_16Day, NOW)).toBe("2026-08-28"); // lag 31, real 16-day compositing lag
+    expect(catalogDate(GIBS_CATALOG.SMAP_L4_Analyzed_Surface_Soil_Moisture, NOW)).toBe("2026-09-25"); // lag 3
+  });
+
+  it("GPW population density is static — no Time segment, ever", () => {
+    expect(catalogDate(GIBS_CATALOG.GPW_Population_Density_2020, NOW)).toBeUndefined();
+    const url = tileUrl(GIBS_CATALOG.GPW_Population_Density_2020, 2, 1, 2, NOW);
+    expect(url).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/GPW_Population_Density_2020/default/1km/2/1/2.png");
+  });
+
+  it("the GOES dust pair rides the same PT10M subdaily rule as their GeoColor/FireTemp siblings", () => {
+    for (const id of ["GOES-East_ABI_Dust", "GOES-West_ABI_Dust"]) {
+      expect(GIBS_CATALOG[id].dateRule).toEqual({ kind: "subdaily", stepMin: 10, lagMin: 40 });
+      expect(GIBS_CATALOG[id].description, `${id} missing the coverage caveat`).toMatch(/Europe, Africa and India are not covered/);
+    }
+    const url = tileUrl(GIBS_CATALOG["GOES-East_ABI_Dust"], 2, 1, 2, NOW);
+    expect(url).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/GOES-East_ABI_Dust/default/2026-09-28T08:20:00Z/1km/2/1/2.png");
+  });
+
+  it("NDVI's own description flags the real compositing lag honestly", () => {
+    expect(GIBS_CATALOG.MODIS_Terra_L3_NDVI_16Day.description).toMatch(/lag/i);
+  });
+});

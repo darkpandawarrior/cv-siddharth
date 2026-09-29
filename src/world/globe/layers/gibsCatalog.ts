@@ -349,6 +349,148 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
     dateRule: { kind: "subdaily", stepMin: 10, lagMin: 40 },
     attribution: "NASA GIBS / GOES-West ABI FireTemp",
   },
+  // LANE S1 (wave 9): six new GIBS overlays from the earth-observation source
+  // sweep (audit-2026-09-30/sources-eo.md) — re-curled live today (2026-09-29
+  // UTC, matching sources-eo.md's own method) rather than trusted from the
+  // audit alone; every lagDays value below is the REAL gap between today's
+  // GetCapabilities Default and today's date for that product, not copied
+  // blind from the audit's slightly earlier check. Legend stops reuse this
+  // catalog's own established palette (the same hex values IMERG/AOD/cloud-
+  // top-temp already use above) rather than inventing a new one per layer.
+  {
+    id: "MODIS_Aqua_L2_Chlorophyll_A",
+    title: "Ocean chlorophyll",
+    description:
+      "Near-real-time chlorophyll-a concentration from Aqua: algal blooms and coastal upwelling read green and yellow against dark open ocean, GIBS's lowest-latency ocean product.",
+    format: "png",
+    matrixSet: "1km",
+    maxLevel: 6,
+    dateRule: { kind: "daily", lagDays: 1 },
+    legend: {
+      unit: "mg/m³",
+      stops: [
+        { color: "#0b1d51", label: "0.01" },
+        { color: "#2e6f95", label: "0.3" },
+        { color: "#3ddc84", label: "1" },
+        { color: "#f0883e", label: "5" },
+        { color: "#ff5c5c", label: "20+" },
+      ],
+    },
+    attribution: "NASA GIBS / MODIS Aqua",
+  },
+  {
+    id: "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day",
+    title: "Land surface temperature (day)",
+    description: "Daytime land-surface temperature from Terra: hot deserts and cities glow orange-red, a heat story the ocean-only sea surface temperature overlay above can't tell.",
+    format: "png",
+    matrixSet: "1km",
+    maxLevel: 6,
+    dateRule: { kind: "daily", lagDays: 2 },
+    legend: {
+      unit: "°C",
+      stops: [
+        { color: "#5ee6ff", label: "-10" },
+        { color: "#3ddc84", label: "10" },
+        { color: "#f0883e", label: "30" },
+        { color: "#ff5c5c", label: "50+" },
+      ],
+    },
+    attribution: "NASA GIBS / MODIS Terra",
+  },
+  {
+    id: "MODIS_Terra_L3_NDVI_16Day",
+    title: "Vegetation index",
+    description:
+      "16-day composite vegetation greenness from Terra, 250m — the finest resolution overlay here. Forest bands read deep green, deserts read pale; a genuine measured index, not photographic green. Published with a real compositing lag, not today's imagery.",
+    format: "png",
+    matrixSet: "250m",
+    maxLevel: 8,
+    dateRule: { kind: "daily", lagDays: 31 },
+    legend: {
+      unit: "NDVI",
+      stops: [
+        { color: "#c9d4d0", label: "-0.1" },
+        { color: "#f0883e", label: "0.2" },
+        { color: "#3ddc84", label: "0.9" },
+      ],
+    },
+    attribution: "NASA GIBS / MODIS Terra",
+  },
+  {
+    id: "GPW_Population_Density_2020",
+    title: "Population density",
+    description: "Gridded Population of the World v4, a fixed 2020 census-modelled year, not today's imagery — a demographic layer independent of night-lights brightness or built-up-area extent.",
+    format: "png",
+    matrixSet: "1km",
+    maxLevel: 6,
+    dateRule: { kind: "static" },
+    legend: {
+      unit: "people/km²",
+      stops: [
+        { color: "#0b1d51", label: "0" },
+        { color: "#2e6f95", label: "100" },
+        { color: "#f0883e", label: "1000" },
+        { color: "#ff5c5c", label: "10000+" },
+      ],
+    },
+    attribution: "NASA GIBS / CIESIN GPW v4 (2020)",
+  },
+  {
+    id: "SMAP_L4_Analyzed_Surface_Soil_Moisture",
+    title: "Soil moisture",
+    description: "Daily gap-filled (model-analyzed) surface soil moisture from SMAP: pairs with the precipitation overlay above for a drought/monsoon story, no swath holes to explain.",
+    format: "png",
+    matrixSet: "2km",
+    maxLevel: 5,
+    dateRule: { kind: "daily", lagDays: 3 },
+    legend: {
+      unit: "m³/m³",
+      stops: [
+        { color: "#f0883e", label: "0.05" },
+        { color: "#2e6f95", label: "0.2" },
+        { color: "#5ee6ff", label: "0.4+" },
+      ],
+    },
+    attribution: "NASA GIBS / SMAP L4",
+  },
+  {
+    id: "GOES-East_ABI_Dust",
+    title: "GOES-East dust / smoke",
+    description:
+      "Near-live IR-derived dust and smoke detection over the Americas and the Atlantic, updated every 10 minutes, day and night unlike the true-colour GeoColor layer above. No Meteosat on this endpoint: Europe, Africa and India are not covered.",
+    format: "png",
+    matrixSet: "1km",
+    maxLevel: 6,
+    dateRule: { kind: "subdaily", stepMin: 10, lagMin: 40 },
+    legend: {
+      unit: "dust signal",
+      stops: [
+        { color: "#0b1d51", label: "none" },
+        { color: "#f0883e", label: "light" },
+        { color: "#db61ff", label: "heavy" },
+      ],
+    },
+    attribution: "NASA GIBS / GOES-East ABI Dust",
+  },
+  {
+    id: "GOES-West_ABI_Dust",
+    title: "GOES-West dust / smoke",
+    description:
+      "Near-live IR-derived dust and smoke detection over the Pacific and the western Americas, updated every 10 minutes, day and night. No Meteosat on this endpoint: Europe, Africa and India are not covered.",
+    format: "png",
+    matrixSet: "1km",
+    maxLevel: 6,
+    dateRule: { kind: "subdaily", stepMin: 10, lagMin: 40 },
+    legend: {
+      unit: "dust signal",
+      stops: [
+        { color: "#0b1d51", label: "none" },
+        { color: "#f0883e", label: "light" },
+        { color: "#db61ff", label: "heavy" },
+      ],
+    },
+    attribution: "NASA GIBS / GOES-West ABI Dust",
+  },
 ];
 
 export const GIBS_CATALOG: Record<string, GibsCatalogEntry> = Object.fromEntries([...GIBS_BASES, ...GIBS_OVERLAYS].map((e) => [e.id, e]));
