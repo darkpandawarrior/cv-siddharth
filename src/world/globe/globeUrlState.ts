@@ -19,7 +19,7 @@ import type { GlobeView, LayerId } from "./globeStore.ts";
  *  "duplicated, never silently drifts" discipline LayerPanel.tsx's own LABEL
  *  record uses (a Record<LayerId, ...> fails to compile if the two lists
  *  disagree). */
-const KNOWN_LAYER_IDS: readonly LayerId[] = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide"];
+const KNOWN_LAYER_IDS: readonly LayerId[] = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide", "daylight"];
 const KNOWN_VIEWS: readonly GlobeView[] = ["orbit", "ground", "follow", "street"];
 
 // TimeScrubber.tsx's own range ("30 days back to 2 days ahead", its slider's

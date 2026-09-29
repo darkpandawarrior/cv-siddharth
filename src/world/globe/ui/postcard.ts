@@ -26,6 +26,7 @@ const LAYER_LABEL: Record<LayerId, string> = {
   together: "explorers here now",
   density: "quake/fire density",
   guide: "My Maps places",
+  daylight: "golden hour and waking bands (computed from the sun position)",
 };
 
 export interface StampInput {
