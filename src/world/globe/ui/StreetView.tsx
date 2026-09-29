@@ -6,7 +6,7 @@ import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { PUNE } from "../../../lib/sky.ts";
 import { focusHandoffUrl } from "../../altitude.ts";
 import { GLOBE_RADIUS, xyzToLatLon } from "../cameraMath.ts";
-import { consumeStreetHandoff, streetZoomToAltitude } from "../cameraZoomGate.ts";
+import { armStreetHandoff, consumeStreetHandoff, streetZoomToAltitude } from "../cameraZoomGate.ts";
 import {
   LIBERTY_STYLE_URL,
   PHOTO_SOURCE_ID,
@@ -60,8 +60,13 @@ declare global {
      *  Inspector.tsx's own `__GLOBE_TEST_SELECT__`: no trigger lane's UI
      *  lives in this worktree, so a test flies here directly and switches
      *  the view itself. Read once on mount; a no-op in production since
-     *  nothing outside a test ever sets it. */
-    __GLOBE_TEST_STREET__?: { lat: number; lon: number };
+     *  nothing outside a test ever sets it. `bearing`/`pitch` are optional:
+     *  a test asserting a real bearing/pitch hand-off arms them (routed
+     *  through the exact same StreetHandoff box the zoom-hold gesture
+     *  uses -- see the mount effect below), one that only cares about
+     *  lat/lon (the pre-existing exit-hand-off test) leaves them out and
+     *  gets the plain STREET_BEARING/STREET_PITCH defaults. */
+    __GLOBE_TEST_STREET__?: { lat: number; lon: number; bearing?: number; pitch?: number };
     /** Exposed only while `__GLOBE_TEST_STREET__` armed this session — lets
      *  an e2e test compute a marker's real screen position (`map.project`)
      *  to click it, since photo markers are a GL circle layer, not DOM
@@ -126,6 +131,14 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   useEffect(() => {
     const seam = window.__GLOBE_TEST_STREET__;
     if (seam) {
+      // Same StreetHandoff box the real zoom-hold gesture arms (in
+      // CameraDirector.tsx) -- a test asserting map.getBearing()/getPitch()
+      // exercises the actual hand-off/consume/map-init path this way,
+      // rather than a separate seam that would only prove the test's own
+      // plumbing works.
+      if (seam.bearing !== undefined || seam.pitch !== undefined) {
+        armStreetHandoff({ zoom: STREET_ZOOM, bearing: seam.bearing, pitch: seam.pitch });
+      }
       flyTo({ kind: "latlon", lat: seam.lat, lon: seam.lon });
       setView("street");
     }
@@ -231,10 +244,16 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     exitedRef.current = false;
     // WAVE 6 LANE X5: read-once hand-off from the seamless zoom-in gesture
     // (CameraDirector.tsx armed it right before calling setView("street")).
-    // Absent one (the explicit street button, or a re-open), STREET_ZOOM is
-    // the pre-existing default this lane's brief says to keep.
+    // Absent one (the explicit street button, or a re-open), STREET_ZOOM/
+    // STREET_BEARING/STREET_PITCH are the pre-existing defaults this lane's
+    // brief says to keep. Bearing/pitch matching the globe camera (not just
+    // zoom) is the verifier-flagged blocking gap this pass fixes --
+    // cameraOrientation.ts's cameraForwardToBearingPitch is what
+    // CameraDirector.tsx derived them from.
     const handoff = consumeStreetHandoff();
     const openZoom = handoff?.zoom ?? STREET_ZOOM;
+    const openBearing = handoff?.bearing ?? STREET_BEARING;
+    const openPitch = handoff?.pitch ?? STREET_PITCH;
 
     const queryPhotos = async () => {
       if (!map) return;
@@ -304,8 +323,13 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         style: LIBERTY_STYLE_URL,
         center: [lon, lat],
         zoom: openZoom,
-        pitch: STREET_PITCH,
-        bearing: STREET_BEARING,
+        pitch: openPitch,
+        bearing: openBearing,
+        // MapLibre's own default maxPitch is 60 -- below cameraOrientation.ts's
+        // clamp ceiling of 85, so a real matched hand-off past 60 would
+        // otherwise get silently re-clamped a second time, right here,
+        // regardless of what this lane computed.
+        maxPitch: 85,
         attributionControl: false,
       });
       if (isTestMode) window.__GLOBE_TEST_STREET_MAP__ = map;
@@ -422,7 +446,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           height regardless of which `position` wins. */}
       <div ref={mapContainerRef} data-street-map className="absolute inset-0 h-full w-full" />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-ink/70 px-3 py-2 font-mono text-[11px] text-zinc-200 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-ink/70 px-3 py-2 font-mono text-xs text-zinc-200 backdrop-blur">
         <div className="pointer-events-auto min-w-0 truncate">
           {placeTitle && <span className="mr-2 font-semibold text-zinc-100">{placeTitle}</span>}
           <span className="text-zinc-400">{formatLatLon(lat, lon)}</span>
@@ -448,7 +472,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
 
       <div
         data-street-status
-        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-[11px] text-zinc-300 backdrop-blur"
+        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-xs text-zinc-300 backdrop-blur"
       >
         {photoStatus === "loading" && !noFeaturesTimedOut && "Looking for street photos…"}
         {photoStatus === "loading" && noFeaturesTimedOut && "No streets here"}
@@ -460,7 +484,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       {/* No `truncate` here on purpose: attribution text is required, not
           decorative, so on a 390px phone it wraps to a second line instead
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-[11px] leading-snug text-zinc-500 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500 backdrop-blur">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
       </div>
 
