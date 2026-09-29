@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 338,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-54.06, 21.57],
+            [-53.7, 22.0],
+            [-53.0, 21.8],
+            [-52.4, 21.3],
+            [-52.9, 20.7],
+            [-54.06, 21.57]
+          ]
+        ]
+      },
+      "properties": {
+        "objectid": 338,
+        "stormname": "Fay",
+        "stormtype": "TS",
+        "basin": "AL",
+        "advdate": "500 AM AST Tue Sep 29 2026",
+        "advisnum": "37",
+        "fcstprd": 120,
+        "stormnum": 6,
+        "binnumber": "AT1"
+      }
+    }
+  ]
+}
