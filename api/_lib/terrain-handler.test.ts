@@ -63,6 +63,12 @@ describe("getTerrainTile / handleTerrain", () => {
     expect(bytes).toEqual(FAKE_PNG_BYTES);
   });
 
+  it("rejects oversized PNG bodies before base64 buffering", async () => {
+    const { getTerrainTile } = await import("./terrain-handler");
+    const fetchImpl = vi.fn(async () => new Response(new Uint8Array(300 * 1024 + 1)));
+    expect(await getTerrainTile(14, 11553, 7334, fetchImpl as unknown as typeof fetch)).toBeNull();
+  });
+
   it("a failed upstream fetch gives null", async () => {
     const { getTerrainTile } = await import("./terrain-handler");
     const fetchImpl = vi.fn(async () => {

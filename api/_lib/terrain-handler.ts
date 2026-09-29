@@ -92,7 +92,15 @@ async function fetchTileAsBase64(z: number, x: number, y: number, fetchImpl: typ
   // Not-ok is returned as-is: governed() only reads res.ok/res.headers on
   // this branch, never the body, so no base64 wrapping is needed here.
   if (!res.ok) return res;
-  const buf = await res.arrayBuffer();
+  let size = 0;
+  const capped = res.body?.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      size += chunk.byteLength;
+      if (size > 300 * 1024) throw new Error("terrain tile exceeded 300 KiB");
+      controller.enqueue(chunk);
+    },
+  }));
+  const buf = await new Response(capped).arrayBuffer();
   return new Response(bufferToBase64(buf), { status: res.status });
 }
 
