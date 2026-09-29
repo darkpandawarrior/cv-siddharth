@@ -119,6 +119,9 @@ test("a subdaily GOES overlay requests tiles with a rounded 10-minute UTC frame 
 });
 
 test("break-it: a subdaily layer stuck 404ing steps back up to 3 times, then reports 'feed unavailable' — never a stale frame", async ({ page }) => {
+  // 45s poll below + setup/navigation overhead exceeds Playwright's 30s
+  // default test timeout; this file sets no per-test override otherwise.
+  test.setTimeout(60_000);
   const requestedInstants = new Set<string>();
   await page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route: Route) => {
     const url = route.request().url();
@@ -169,6 +172,13 @@ test("break-it: a subdaily layer stuck 404ing steps back up to 3 times, then rep
 });
 
 test("the EOX deep-zoom base requests the real tiles.maps.eox.at WGS84 matrix, and zooming in requests a finer level", async ({ page }) => {
+  // Two chained 15s polls plus zoom-click waits and initial navigation
+  // exceed the 30s default; measured under real host contention (see the
+  // 404-backoff test above for the same story) even 90s wasn't always
+  // enough alongside five other lanes' own concurrent build/test load
+  // (host load average 27 to 117, this lane's own report), so this one
+  // takes a wider margin than its 60s peer.
+  test.setTimeout(120_000);
   const requests: ReturnType<typeof parseEoxWmtsUrl>[] = [];
   await page.route("https://tiles.maps.eox.at/**", (route: Route) => {
     const parsed = parseEoxWmtsUrl(route.request().url());
