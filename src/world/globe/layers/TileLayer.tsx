@@ -5,7 +5,7 @@ import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe, type ImageryStack } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { sunDirection, VERT } from "./sun.ts";
-import { TILE_MATRIX_SETS, type TileMatrixSetId } from "./tileMatrix.ts";
+import { TILE_MATRIX_SETS, type TileBounds, type TileMatrixSetId } from "./tileMatrix.ts";
 import { selectVisibleTiles, type SelectedTile } from "./tileSelect.ts";
 import { selectVisibleEoxTiles } from "./tileSelectEox.ts";
 import { buildTilePatchGeometry } from "./tileGeometry.ts";
@@ -152,6 +152,28 @@ export const tileLayerStats = {
   roles: 0,
   lastRecomputeMs: 0,
 };
+
+/** LANE C2 (X-ray mode): read-only export of the tile set actually on screen
+ *  right now — one entry per tile that has loaded and is currently visible
+ *  (opacity > 0), across every role. `enabled` is a plain bool layers/
+ *  XRayTiles.tsx flips true on mount / false on unmount: an ordinary visitor
+ *  who never opens X-ray never pays for this (the population loop below is
+ *  skipped outright while `enabled` is false, same "zero cost when off"
+ *  discipline tileLayerStats's own module comment already states for the
+ *  stats counters above). Mutated in place (array truncated and refilled),
+ *  never replaced, so a reader holding the reference always sees the latest
+ *  frame — same convention tileLayerStats and globeStore.ts's own
+ *  entityPositions already use. */
+export interface DrawnTile {
+  key: string;
+  role: string;
+  level: number;
+  bounds: TileBounds;
+  status: "loaded";
+  opacity: number;
+}
+// eslint-disable-next-line react-refresh/only-export-components
+export const drawnTileSet: { enabled: boolean; tiles: DrawnTile[] } = { enabled: false, tiles: [] };
 
 function disposeEntry(entry: TileEntry): void {
   entry.cancelled = true;
@@ -527,6 +549,24 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     for (const role of rolesRef.current.values()) cacheSize += role.entries.size;
     tileLayerStats.cacheSize = textureCache.size;
     void cacheSize;
+
+    // LANE C2 (X-ray mode): skipped entirely while nobody is looking (see
+    // drawnTileSet's own doc comment) — while it IS enabled this allocates a
+    // small object per visible tile every frame, which is fine for a debug
+    // overlay (at most a few hundred tiles, MAX_SELECTED_TILES-capped per
+    // role) but deliberately not paid by every other visitor.
+    if (drawnTileSet.enabled) {
+      const out = drawnTileSet.tiles;
+      out.length = 0;
+      for (const role of rolesRef.current.values()) {
+        for (const entry of role.entries.values()) {
+          if (entry.status !== "loaded") continue;
+          const opacity = entry.material.uniforms.uOpacity.value as number;
+          if (opacity <= 0) continue;
+          out.push({ key: entry.tile.key, role: role.role, level: entry.tile.level, bounds: entry.tile.bounds, status: "loaded", opacity });
+        }
+      }
+    }
   });
 
   // Keeping roles in sync with the store is a genuine (if infrequent) event,

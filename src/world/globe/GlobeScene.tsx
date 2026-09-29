@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,6 +12,7 @@ import { Markers } from "./Markers.tsx";
 import { LiveDots } from "./LiveDots.tsx";
 import { LocalTraffic } from "./LocalTraffic.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
+import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
@@ -36,6 +37,17 @@ const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
 // its postprocessing imports stay out of the Globe shell chunk.
 const GlobePost = lazy(() => import("./layers/GlobePost.tsx"));
 const DaylightLayer = lazy(() => import("./layers/DaylightLayer.tsx"));
+// LANE C2 ("X-ray mode"): the tile-outline/renderer.info overlay — only
+// meaningful alongside TileLayer.tsx (it reads that layer's own read-only
+// `drawnTileSet` export), so it mounts under the identical condition as
+// TileLayer below, with the X-ray toggle ANDed on top.
+const XRayTiles = lazy(() => import("./layers/XRayTiles.tsx"));
+
+declare global {
+  interface Window {
+    __GLOBE_TEST_GET_DRAW_CALLS__?: () => number;
+  }
+}
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -139,11 +151,20 @@ function SceneRig({
     sceneHandles.canvas = gl.domElement;
     sceneHandles.scene = scene;
     sceneHandles.invalidate = () => invalidate();
+    // LANE C2 (X-ray mode e2e seam): renderer.info.render.calls, readable
+    // whether or not X-ray is actually mounted -- so e2e/globe-C2.spec.ts can
+    // grade "toggling X-ray off removes its own draw call" against the real
+    // renderer instead of against the debug card's own number, which would
+    // only be proving X-ray agrees with itself. A no-op in production --
+    // nothing outside a test ever calls it (same convention TileLayer.tsx's
+    // own __GLOBE_TEST_* seams already use).
+    window.__GLOBE_TEST_GET_DRAW_CALLS__ = () => gl.info.render.calls;
     return () => {
       sceneHandles.camera = null;
       sceneHandles.canvas = null;
       sceneHandles.scene = null;
       sceneHandles.invalidate = null;
+      window.__GLOBE_TEST_GET_DRAW_CALLS__ = undefined;
     };
   }, [get]);
 
@@ -316,6 +337,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
   // rather than draw a present-tense reading against a past sky.
   const live = useGlobe((s) => s.timeOffsetMin === 0);
   const now = useSimNow(realNow);
+  const xrayOn = useSyncExternalStore(subscribeXray, isXrayEnabled, () => false);
   const count = TIER_DOT_COUNT[tier];
   const dotsEarth = <EarthDots count={count} now={now} earthRef={earthRef} />;
 
@@ -408,6 +430,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
             every tier (the brief's own "tier 3 draws the bands only" caps
             what tier 3 gets, it never turns the layer off). */}
         <Suspense fallback={null}>{layers.daylight && <DaylightLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && xrayOn && <XRayTiles />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>

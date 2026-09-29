@@ -1,7 +1,8 @@
-import { lazy, Suspense, useSyncExternalStore } from "react";
+import { lazy, Suspense, useEffect, useSyncExternalStore } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, MapPinOff, Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
 import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
+import { isXrayEnabled, setXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 
 // LANE V4 (hover readout): lazy so this chunk never joins the Globe shell.
 // `<ClientOnly>`, not just `lazy()`, is load-bearing here -- `lazy()` alone
@@ -19,6 +20,9 @@ const DaylightReadout = lazy(() => import("./ui/DaylightReadout.tsx"));
 // above — this chunk must never join the eager "Globe" shell, and its own
 // live-signal fetches have no business running on the server.
 const SpaceWeather = lazy(() => import("./ui/SpaceWeather.tsx"));
+// LANE C2 (X-ray mode): same reasoning -- only fetched once a visitor
+// actually turns X-ray on (the `xrayOn &&` guard below), never eagerly.
+const XRay = lazy(() => import("./ui/XRay.tsx"));
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
 // imported: that file also exports SceneActivity, which statically imports
@@ -86,6 +90,21 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
   const daypart = sky?.daypart ?? null;
   const tempC = sky?.weather?.tempC;
   const weatherLabel = sky?.weather ? WMO_LABEL[sky.weather.code] : undefined;
+  const xrayOn = useSyncExternalStore(subscribeXray, isXrayEnabled, () => false);
+  // LANE C2: "x" toggles X-ray mode from anywhere on the page, not just
+  // while a control has focus -- inlined rather than a shared helper: the
+  // only other typing-target guard in this tree (GlobeScene.tsx's own, for
+  // +/- zoom) lives in a file this lane doesn't own.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "x" && e.key !== "X") return;
+      const el = e.target;
+      if (el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      setXrayEnabled(!isXrayEnabled());
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <>
@@ -103,6 +122,32 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><DaylightReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><SpaceWeather /></Suspense></ClientOnly>}
+      {/* LANE C2 (X-ray mode): a toggle reachable at every breakpoint (this
+          row is GlobeHud's own flat pill run, laid out by Globe.tsx's shared
+          topbar at both sm+ and phone widths -- this lane doesn't own
+          ui/LayerPanel.tsx's phone Layers sheet, so the toggle lives here
+          instead; see this lane's own report). */}
+      {hasWebGL && (
+        <>
+          <button
+            type="button"
+            onClick={() => setXrayEnabled(!xrayOn)}
+            aria-pressed={xrayOn}
+            aria-label={xrayOn ? "Turn off X-ray mode" : "Turn on X-ray mode"}
+            data-xray-toggle
+            className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-xs font-bold text-zinc-300 backdrop-blur hover:text-accent"
+          >
+            X
+          </button>
+          {xrayOn && (
+            <ClientOnly fallback={null}>
+              <Suspense fallback={null}>
+                <XRay tier={tier} />
+              </Suspense>
+            </ClientOnly>
+          )}
+        </>
+      )}
       {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
           shown at every breakpoint (the drag hint above stays sm:-only, but
           this is the one accessible affordance a touch/keyboard visitor has
