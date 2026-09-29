@@ -23,7 +23,8 @@ export type FeedKind =
   | "lichess"
   | "satellite"
   | "presence"
-  | "together";
+  | "together"
+  | "flare"; // LANE S2 (wave 9, space weather): M/X-class X-ray flares
 
 export type FeedSeverity = "info" | "warn" | "danger";
 

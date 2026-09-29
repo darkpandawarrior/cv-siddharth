@@ -21,6 +21,7 @@ const GROUP_OF: Record<FeedKind, FeedGroup> = {
   gdacs: "hazard",
   launch: "hazard",
   aurora: "hazard",
+  flare: "hazard", // LANE S2 (wave 9, space weather): M/X-class X-ray flares
   "ci-pass": "signal",
   "ci-fail": "signal",
   push: "signal",
