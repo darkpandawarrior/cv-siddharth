@@ -140,10 +140,18 @@ test("break-it: a subdaily layer stuck 404ing steps back up to 3 times, then rep
     });
   });
 
+  // 45s, not 20s: 4 generations (initial + 3 step-backs) of a whole role's own
+  // tile set (about a dozen 404 round trips each at the opening view) really
+  // do settle in ~8s standalone (verified with a throwaway trace script this
+  // lane's report links), but this suite runs alongside five other lanes'
+  // own build/test/playwright processes on one shared machine — a 20s poll
+  // genuinely timed out here under that real, measured contention (host load
+  // average 27 to 117 during this lane's own gate run) despite the retry
+  // logic itself being correct, not because the logic is slow.
   await expect
     .poll(
       () => page.evaluate(() => window.__GLOBE_TEST_GET_IMAGERY_STATUS__?.("GOES-East_ABI_Band13_Clean_Infrared")),
-      { timeout: 20_000, message: "expected the layer to eventually report failed after exhausting its step-back retries" },
+      { timeout: 45_000, message: "expected the layer to eventually report failed after exhausting its step-back retries" },
     )
     .toMatchObject({ state: "failed", detail: "feed unavailable" });
 
