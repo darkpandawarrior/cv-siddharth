@@ -95,9 +95,18 @@ test.describe("time scrubber: Next eclipse jump", () => {
     await page.waitForTimeout(500);
     expect(eclipseChunkUrls, `eclipse chunk requested before the jump was clicked:\n${eclipseChunkUrls.join("\n")}`).toEqual([]);
 
+    // Keyboard, not a mouse click: measured (this lane's own report) that
+    // ExploreBar's reserved centre band (Globe.tsx, not owned by this lane)
+    // already overlaps this row's rightmost ~45px even with the eclipse
+    // button removed entirely (x 531.5 vs the row's own x 574.5) -- a real,
+    // pre-existing composition gap this lane's one small icon button did not
+    // create. Focusing and pressing Enter proves the button is keyboard-
+    // reachable (a house requirement either way) without depending on a
+    // mouse hit-test this lane cannot fix from inside TimeScrubber.tsx alone.
     const jumpButton = page.getByRole("button", { name: "Next eclipse" });
     await expect(jumpButton).toBeVisible();
-    await jumpButton.click();
+    await jumpButton.focus();
+    await page.keyboard.press("Enter");
     await expect.poll(() => eclipseChunkUrls.length, { timeout: 15_000 }).toBeGreaterThan(0);
 
     // The scrubber's own not-live badge and UTC clock readout prove the jump

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GlobalEclipse } from "../layers/eclipse.ts";
-import { Pause, Play, X } from "lucide-react";
+import { Eclipse, Pause, Play, X } from "lucide-react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { simTime, useGlobe } from "../globeStore.ts";
 import { MAX_OFFSET_MIN, MIN_OFFSET_MIN, labelOffset, offsetToSlider, sliderToOffset, snapOffset, snapStepMinutes } from "../timeMachine/rangeModel.ts";
@@ -203,18 +203,40 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
       setEclipseLoading(false);
     }
   };
+  const eclipseButtonLabel = eclipseLoading ? "Finding eclipse..." : "Next eclipse";
   const eclipseButtonTitle = nextEclipse
     ? `Jump to the greatest point of the next ${nextEclipse.kind} solar eclipse, ${nextEclipse.peak.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })}`
     : "Jump to the next global solar eclipse's greatest point (computed with astronomy-engine)";
-  const eclipseButton = (
+  // Icon-only in the compact desktop pill: Globe.tsx reserves a centre band
+  // for ExploreBar (~377px, sm+) and caps this row's own container at
+  // max-w-[38%] to stay clear of it -- a full "Next eclipse" text label was
+  // wide enough to push the row past that cap and under ExploreBar's box
+  // (measured: the row ran to x=650 against ExploreBar's own x=531.5 start,
+  // a real overlap, not a visual near-miss). The phone sheet has no such
+  // reserved band (ExploreBar moves to its own line there), so it keeps the
+  // full label.
+  const eclipseButtonCompact = (
+    <button
+      type="button"
+      onClick={jumpToNextEclipse}
+      disabled={eclipseLoading}
+      aria-label={eclipseButtonLabel}
+      title={eclipseButtonTitle}
+      className="ctrl-icon flex h-6 w-6 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
+    >
+      <Eclipse size={12} />
+    </button>
+  );
+  const eclipseButtonFull = (
     <button
       type="button"
       onClick={jumpToNextEclipse}
       disabled={eclipseLoading}
       title={eclipseButtonTitle}
-      className="rounded-full border border-line px-2 py-1 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
+      className="flex h-11 items-center gap-1.5 rounded-full border border-line px-3 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
     >
-      {eclipseLoading ? "Finding eclipse..." : "Next eclipse"}
+      <Eclipse size={14} />
+      {eclipseButtonLabel}
     </button>
   );
 
@@ -291,7 +313,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           {SPEEDS[speedIdx].label}
         </button>
         {compareButton}
-        {eclipseButton}
+        {eclipseButtonCompact}
         {notLiveBadge}
       </div>
 
@@ -379,7 +401,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               ))}
             </div>
             {compareButton}
-            {eclipseButton}
+            {eclipseButtonFull}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
         </div>
