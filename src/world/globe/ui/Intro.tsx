@@ -68,15 +68,27 @@ export default function Intro({ tier }: { tier: 1 | 2 | 3 }) {
     const onInput = (e: Event) => {
       // The Skip button's own onClick already handles a deliberate
       // activation of it. Letting this catch-all ALSO fire on the same
-      // mousedown/keydown races React's resulting unmount (phase flips to
-      // "skipped" synchronously, inside this same event) against the
+      // pointerdown/touchstart races React's resulting unmount (phase flips
+      // to "skipped" synchronously, inside this same event) against the
       // browser's own click dispatch -- sometimes the button is gone from
       // the DOM before mouseup/click completes, which a real visitor never
       // notices (the intro is already skipped either way) but a driver that
       // insists on finishing its click protocol against a still-present node
-      // can hang waiting for an element that will not reappear. Every OTHER
-      // input, anywhere else on the page or any key, still skips immediately.
-      if (e.target === skipButtonRef.current) return;
+      // can hang waiting for an element that will not reappear. That race
+      // is pointer/touch-specific (down -> up -> click), so only those
+      // event types exclude the button as a target. Keydown does NOT get
+      // the same exclusion: a keyboard "click" (Enter/Space) synthesizes on
+      // keyUP, well after this handler already ran, so there is no race to
+      // avoid there -- and excluding it here silently broke Space
+      // specifically, since a sibling global listener elsewhere
+      // (TimeScrubber's own Space-to-pause-time handler) calls
+      // preventDefault() on that same keydown, which suppresses the native
+      // click this button was relying on. skipIntro() is idempotent past
+      // the first call, so firing here AND from the button's own click
+      // (when it does land) costs nothing. Every OTHER input, anywhere else
+      // on the page or any key, still skips immediately regardless of
+      // target.
+      if (e.target === skipButtonRef.current && e.type !== "keydown") return;
       skipIntro();
     };
     window.addEventListener("pointerdown", onInput);
@@ -94,13 +106,28 @@ export default function Intro({ tier }: { tier: 1 | 2 | 3 }) {
   if (phase !== "playing") return null;
 
   return (
-    <div data-globe-intro className="pointer-events-none fixed inset-0 z-40 flex flex-col items-center justify-end pb-16 sm:pb-24">
+    // `absolute inset-0`, not `fixed`: this has to resolve against
+    // `data-globe-stage` (the positioned ancestor Globe.tsx mounts it
+    // inside), not the viewport -- a `fixed` overlay ignored the stage
+    // entirely and its copy line landed at the bottom of the whole page,
+    // colliding with GlobePanel's fact list (which "renders unconditionally"
+    // directly below/under the stage per Globe.tsx's own comment). The
+    // copy's own `bottom-[calc(45%+16px)]` on sm+ is the same clearance
+    // Inspector.tsx and GlobeTour.tsx already use to stay clear of that
+    // same bottom-45% fact-list band -- it has to live on the <p> itself as
+    // an absolute offset, not as `padding-bottom` on this flex container:
+    // percentage padding resolves against the containing block's WIDTH
+    // (always, regardless of axis), but percentage `bottom` on an
+    // absolutely positioned element resolves against its HEIGHT, which is
+    // the number this needs. On phones the fact list is a separate flow
+    // block below the stage, so the smaller `bottom-16` default is enough.
+    <div data-globe-intro className="pointer-events-none absolute inset-0 z-40">
       {/* Decorative and transient — the same claim is always available,
           untimed, in GlobePanel's own fact list, so a screen reader visitor
           loses nothing by this line never being announced mid-flight. */}
       <p
         aria-hidden="true"
-        className="pointer-events-none max-w-sm px-6 text-center font-mono text-sm text-zinc-200 transition-opacity ease-in-out"
+        className="pointer-events-none absolute inset-x-0 bottom-16 mx-auto max-w-sm px-6 text-center font-mono text-sm text-zinc-200 transition-opacity ease-in-out sm:bottom-[calc(45%+16px)]"
         style={{ opacity: copyVisible ? 1 : 0, transitionDuration: `${COPY_FADE_MS}ms` }}
       >
         {INTRO_LINE}
