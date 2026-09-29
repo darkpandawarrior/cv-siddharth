@@ -122,6 +122,14 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // straight from the browser, CORS echoes the request Origin with
     // credentials, keyless, verified 2026-09-29.
     "https://mapservices.weather.noaa.gov",
+    // LANE S3 (wave 9): Open-Meteo's marine/air-quality/flood sibling
+    // subdomains (src/world/globe/layers/{marine,airQuality,flood}.ts) --
+    // same free, keyless, CC BY 4.0, CORS "*" family as api.open-meteo.com
+    // above, fetched straight from the browser on hover, never proxied.
+    // Verified live 2026-09-30.
+    "https://marine-api.open-meteo.com",
+    "https://air-quality-api.open-meteo.com",
+    "https://flood-api.open-meteo.com",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.
