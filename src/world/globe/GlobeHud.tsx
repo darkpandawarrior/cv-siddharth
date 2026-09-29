@@ -1,6 +1,15 @@
-import { useSyncExternalStore } from "react";
+import { lazy, Suspense, useSyncExternalStore } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, MapPinOff, Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
 import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
+
+// LANE V4 (hover readout): lazy so this chunk never joins the Globe shell.
+// `<ClientOnly>`, not just `lazy()`, is load-bearing here -- `lazy()` alone
+// does not keep a module off the SSR bundle (vite.config.ts's own
+// importProtection comment), and exploreCanvas.ts imports "three" for its
+// raycast. `<ClientOnly>` is the same wrapper Globe.tsx already gives this
+// row's sibling, TimeScrubber, for the identical reason.
+const HoverReadout = lazy(() => import("./ui/HoverReadout.tsx"));
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
 // imported: that file also exports SceneActivity, which statically imports
@@ -82,6 +91,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
         </span>
         {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
       </div>
+      {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
       {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
           shown at every breakpoint (the drag hint above stays sm:-only, but
           this is the one accessible affordance a touch/keyboard visitor has
