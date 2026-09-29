@@ -11,6 +11,7 @@ import { executeActions } from "../copilot/execute.ts";
 import { parseIntent } from "../copilot/intents.ts";
 import type { GlobeAction } from "../copilot/actions.ts";
 import { buildUndo, describeActions, EXAMPLE_CHIPS } from "./oneBox.ts";
+import { pickSurprise } from "./surpriseMe.ts";
 import ExploreMeasure from "./exploreMeasure.tsx";
 
 declare global { interface Window { __W11_POINT__?: (point: LatLon) => void } }
@@ -20,13 +21,14 @@ const buttonClass = "min-h-9 whitespace-nowrap rounded-lg px-2 hover:text-accent
 // LANE X2 ("ONE BOX"): a place-search result and the box's own leading
 // command/ask row share one keyboard-navigable list, so both live behind a
 // single discriminated type instead of two parallel index spaces.
-type TopRow = { kind: "run"; label: string; actions: GlobeAction[] } | { kind: "ask"; text: string };
+type TopRow = { kind: "surprise"; label: string } | { kind: "run"; label: string; actions: GlobeAction[] } | { kind: "ask"; text: string };
 type Row = TopRow | { kind: "place"; place: Place };
 
 /** No network call, no store import: safe to run on every keystroke. */
 function classify(query: string): TopRow | null {
   const text = query.trim();
   if (!text) return null;
+  if (/^surprise me[.!]?$/i.test(text)) return { kind: "surprise", label: "Surprise me with a real place" };
   const actions = parseIntent(text);
   return actions ? { kind: "run", label: `Run: ${describeActions(actions)}`, actions } : { kind: "ask", text };
 }
@@ -41,7 +43,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const [active, setActive] = useState(-1);
   const [message, setMessage] = useState("");
   const [asking, setAsking] = useState(false);
-  const [answer, setAnswer] = useState<{ text: string; undo: GlobeAction[] } | null>(null);
+  const [answer, setAnswer] = useState<{ text: string; undo: GlobeAction[]; restore?: () => void } | null>(null);
   const searchAbort = useRef<AbortController | null>(null), pointAbort = useRef<AbortController | null>(null);
   const scheduler = useRef<ReturnType<typeof debounce<string>> | null>(null);
   const allowAsk = useRef(rateLimit(3000));
@@ -177,22 +179,46 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
 
   const runRow = (row: Row) => {
     scheduler.current?.cancel(); searchAbort.current?.abort();
+    if (row.kind === "surprise") { runSurprise(); return; }
     if (row.kind === "place") { choose(row.place); return; }
     setResults([]);
     if (row.kind === "run") { setQuery(""); setActive(-1); void runCommand(row.actions); return; }
     void runAsk(row.text);
   };
 
+  /** LANE P1 (wave 7): "Surprise me" -- flies to a real, currently
+   *  interesting place computed from data this page already loaded (see
+   *  surpriseMe.ts's own header for the exact sources and why each counts
+   *  as "already loaded"), and says why it picked it. Snapshots the prior
+   *  focus/selection first so a single Undo can put the view back. */
+  const runSurprise = () => {
+    scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
+    askToken.current++;
+    setAsking(false); setQuery("");
+    useExplore.getState().setMode(null);
+    setResults([]); setActive(-1); setMessage(""); setAnswer(null);
+    const before = { focus: useGlobe.getState().focus, selected: useGlobe.getState().selected, view: useGlobe.getState().view };
+    const result = pickSurprise();
+    if (!result) { setMessage("No source is available for Surprise me right now. Try again in a moment."); return; }
+    const store = useGlobe.getState();
+    store.setView("orbit");
+    store.flyTo(result.selection.focus ?? null);
+    store.select(result.selection);
+    store.setSheet("inspector");
+    setAnswer({ text: `Surprise: ${result.reason}.`, undo: [], restore: before.focus ? () => { store.flyTo(before.focus); store.select(before.selected); store.setView(before.view); } : undefined });
+  };
+
   const undoLast = () => {
-    if (!answer?.undo.length) return;
-    executeActions(answer.undo);
+    if (!answer) return;
+    if (answer.restore) answer.restore();
+    else executeActions(answer.undo);
     setAnswer(null);
   };
 
   const applyQuery = (value: string) => {
     setQuery(value); setResults([]); setActive(-1); setMessage(""); setAnswer(null); setAsking(false);
     searchAbort.current?.abort(); scheduler.current?.cancel(); askToken.current++;
-    if (value.trim().length >= 3) scheduler.current?.schedule(value.trim());
+    if (value.trim().length >= 3 && classify(value)?.kind !== "surprise") scheduler.current?.schedule(value.trim());
   };
 
   const choose = (place: Place) => {
@@ -232,7 +258,15 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         <button type="button" className={buttonClass} onClick={clear} aria-label="Clear exploration">×</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "here"} disabled={view !== "orbit"} onClick={() => toggle("here")}>What's here</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
+        {/* ponytail: hidden below sm, same measured constraint as the chips
+            row further down (this component's own comment there) -- a 4th
+            button in this row left the search input a few px wide on a
+            390px screenshot (measured). Upgrade path is the same one that
+            comment names: give phones this control once the topbar/box
+            vertical budget is re-measured and given real room. */}
+        <button type="button" className={`hidden sm:inline-flex ${buttonClass}`} onClick={runSurprise}>Surprise me</button>
       </div>
+      {!query && !answer && <button type="button" className={`sm:hidden min-h-11 ${buttonClass}`} onClick={runSurprise}>Surprise me</button>}
       {/* ponytail: hidden below sm (the phone bottom-sheet breakpoint) - at
           390px the gap between this box and the topbar's wrapped icon-button
           row is already single digits of px (measured), and this row's own
@@ -254,7 +288,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           <button type="button" tabIndex={-1} onClick={() => runRow(row)} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent">
             {row.kind === "place"
               ? <><span className="block truncate">{row.place.name}</span><span className="block truncate text-zinc-400">{row.place.country} · {row.place.type}</span></>
-              : row.kind === "run"
+              : (row.kind === "run" || row.kind === "surprise")
                 ? <span className="block truncate">{row.label}</span>
                 : <><span className="block truncate">Ask the globe</span><span className="block truncate text-zinc-400">"{row.text}"</span></>}
           </button>
@@ -264,7 +298,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         {asking && <p data-onebox-thinking className="px-2 py-1">Thinking…</p>}
         {!asking && answer && <p data-onebox-answer className="flex items-start justify-between gap-2 px-2 py-1">
           <span>{answer.text}</span>
-          {answer.undo.length > 0 && <button type="button" onClick={undoLast} className="shrink-0 whitespace-nowrap rounded-lg px-1 text-zinc-400 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Undo</button>}
+          {(answer.restore || answer.undo.length > 0) && <button type="button" onClick={undoLast} className="shrink-0 whitespace-nowrap rounded-lg px-1 text-zinc-400 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Undo</button>}
         </p>}
         {!asking && !answer && message && <p className="px-2 py-1">{message}</p>}
         {mode === "here" && !message && <p className="px-2 py-1">Click the globe to look up a point</p>}

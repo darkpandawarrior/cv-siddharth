@@ -333,6 +333,8 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
   const autoRotate = !reducedMotion && tier !== 3 && !autoRotatePaused && view === "orbit";
   const style = useGlobe((s) => s.style);
   const layers = useGlobe((s) => s.layers);
+  const cloudsOn = useGlobe((s) => s.cloudsOn);
+  const storyArcsOn = useGlobe((s) => s.storyArcsOn);
   // Live feeds cannot time-travel: while the scrubber is off "now" they hide
   // rather than draw a present-tense reading against a past sky.
   const live = useGlobe((s) => s.timeOffsetMin === 0);
@@ -411,14 +413,14 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>{layers.wind && live && tier !== 3 && <WindLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.reach && <ReachLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.guide && <GuideLayer tier={tier} />}</Suspense>
-        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        <Suspense fallback={null}>{style === "imagery" && cloudsOn && tier !== 3 && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>{layers.countries && <CountryLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.together && live && tier !== 3 && <TogetherLayer tier={tier} />}</Suspense>
         {/* Wave 6 seams: replay (renders only off "now"), story arcs (only while
             a story plays), density columns (toggle). */}
         <Suspense fallback={null}>{layers.hazards && <HistoryLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
-          <StoryArc tier={tier} />
+          {storyArcsOn && <StoryArc tier={tier} />}
         </Suspense>
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
