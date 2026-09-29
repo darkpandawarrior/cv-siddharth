@@ -65,16 +65,30 @@ function readDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __REACH_DEBUG__?: ReachDebug }).__REACH_DEBUG__);
 }
 
-/** Clicks an outward square spiral centred on `(cx, cy)`, nearest offsets
- *  first, stopping the moment `matches()` is true. See its call site for
- *  why this exists instead of one bare click. */
-async function clickSpiral(page: Page, cx: number, cy: number, matches: () => Promise<boolean>, maxRadius = 40, step = 5): Promise<boolean> {
+/** Clicks near `(cx, cy)`, nearest offsets first, stopping the moment
+ *  `matches()` is true. Biased vertical over horizontal on purpose:
+ *  reachAppRing.tsx's own shared hit cylinder sits at EXACTLY the ring's
+ *  radius (a click radially off it resolves to a different angle around the
+ *  ring, i.e. a NEIGHBOURING app, per that file's own comment on why a
+ *  padded radius broke this), so any residual pixel drift between reading
+ *  the probe and the actual click (camera settle, a frame of damping under
+ *  this worker's real load) is only ever forgiving along the column's own
+ *  HEIGHT -- straight up or down from the probe pixel, never sideways. A
+ *  small sideways nudge is still tried last, in case the drift itself has a
+ *  sideways component, but the bulk of the search stays on the axis that can
+ *  actually still be this column at a different height. */
+async function clickSpiral(page: Page, cx: number, cy: number, matches: () => Promise<boolean>): Promise<boolean> {
   if (await matches()) return true;
-  for (let r = step; r <= maxRadius; r += step) {
-    for (let dx = -r; dx <= r; dx += step) {
-      const dys = dx === -r || dx === r ? Array.from({ length: Math.floor((2 * r) / step) + 1 }, (_, i) => -r + i * step) : [-r, r];
-      for (const dy of dys) {
-        await page.mouse.click(cx + dx, cy + dy);
+  for (let dy = 2; dy <= 24; dy += 2) {
+    for (const sy of [-1, 1]) {
+      await page.mouse.click(cx, cy + sy * dy);
+      if (await matches()) return true;
+    }
+  }
+  for (let dx = 1; dx <= 3; dx++) {
+    for (const sx of [-1, 1]) {
+      for (let dy = -6; dy <= 6; dy += 3) {
+        await page.mouse.click(cx + sx * dx, cy + dy);
         if (await matches()) return true;
       }
     }
