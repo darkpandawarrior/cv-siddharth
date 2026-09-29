@@ -68,10 +68,6 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // earth loads yesterday's VIIRS mosaic plus the Blue and Black Marble
     // bases as textures, straight from NASA (CORS *), never proxied.
     "https://gibs.earthdata.nasa.gov",
-    // LANE V1 (wave 7, step B): EOX's s2cloudless deep-zoom base
-    // (src/world/globe/layers/gibsCatalog.ts's "s2cloudless" entry, drawn by
-    // TileLayer.tsx) — CORS *, keyless, verified 2026-09-29.
-    "https://tiles.maps.eox.at",
     // Panoramax's photo storage host (src/world/globe/ui/streetPhotoViewer.tsx
     // and StreetView.tsx's click-to-open lightbox/360 viewer): the search
     // API (api.panoramax.xyz, below) answers with asset URLs on THIS
@@ -113,6 +109,14 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // Panoramax's search API (StreetView.tsx's bbox photo query) — CORS
     // echoes the request Origin rather than "*", still keyless.
     "https://api.panoramax.xyz",
+    // LANE V1 (wave 7, step B): EOX's s2cloudless deep-zoom base
+    // (src/world/globe/layers/gibsCatalog.ts's "s2cloudless" entry) —
+    // TileLayer.tsx loads every tile, GIBS and EOX alike, with
+    // `fetch()` + `createImageBitmap()`, which CSP governs under
+    // connect-src, not img-src (same fetch()-vs-img-src distinction this
+    // file already draws for OpenFreeMap above). CORS *, keyless, verified
+    // 2026-09-29.
+    "https://tiles.maps.eox.at",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.
