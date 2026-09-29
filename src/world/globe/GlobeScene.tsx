@@ -35,6 +35,7 @@ const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
 // WAVE 7 LANE V2 (city-light bloom): the globe's first composer, lazy so
 // its postprocessing imports stay out of the Globe shell chunk.
 const GlobePost = lazy(() => import("./layers/GlobePost.tsx"));
+const DaylightLayer = lazy(() => import("./layers/DaylightLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -402,6 +403,11 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         {/* WAVE 7 LANE V2: city-light bloom, tier 1/2 imagery only — tier 3
             (and the dot-matrix style) never mount a composer at all. */}
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <GlobePost tier={tier} />}</Suspense>
+        {/* LANE C4 ("Living daylight"): the golden-hour and waking bands,
+            drawn from the same subsolar point the terminator uses -- kept at
+            every tier (the brief's own "tier 3 draws the bands only" caps
+            what tier 3 gets, it never turns the layer off). */}
+        <Suspense fallback={null}>{layers.daylight && <DaylightLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>
