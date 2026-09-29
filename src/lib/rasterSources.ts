@@ -11,11 +11,14 @@
  * negotiated — DeviceMorph's homepage poster alone was 104 kB against a 13 kB
  * AVIF sibling.
  */
+import { DERIVABLE_EXTENSIONS } from "../data/derivableExtensions.ts";
+
 /**
- * Only these get derivatives. It is the same list gen-images.mjs walks
- * (`[".png", ".jpg", ".jpeg", ".webp"]`), and it is an ALLOW-list on purpose:
- * the old check excluded `gif` and let everything else through, so an SVG got
- * `<source srcSet="....avif">` pointing at a file no generator ever writes.
+ * Only these get derivatives — the same list gen-images.mjs walks, imported
+ * from src/data/derivableExtensions.ts so the two can't drift apart again.
+ * It is an ALLOW-list on purpose: the old check excluded `gif` and let
+ * everything else through, so an SVG got `<source srcSet="....avif">`
+ * pointing at a file no generator ever writes.
  *
  * That breaks the image outright rather than degrading. A <picture> chooses
  * its <source> on `type`/`media` alone — it does NOT fall back to the <img>
@@ -23,7 +26,7 @@
  * four broken images on its case study. Naming what IS derivable means the
  * next vector or exotic format is handled by default instead of by luck.
  */
-const DERIVABLE = new Set(["png", "jpg", "jpeg", "webp"]);
+const DERIVABLE = new Set(DERIVABLE_EXTENSIONS.map((ext) => ext.slice(1)));
 
 export function rasterSources(src: string): { avif: string; webp: string | null } | null {
   const dot = src.lastIndexOf(".");
