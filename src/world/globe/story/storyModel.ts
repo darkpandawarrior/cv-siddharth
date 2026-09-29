@@ -1,5 +1,6 @@
 import { education } from "../../../data/profile/core.ts";
 import { experience } from "../../../data/profile/experience.ts";
+import { lifePlaces } from "../../../data/profile/lifePlaces.ts";
 import { openSource, recentGrowth } from "../../../data/profile/openSource.ts";
 import { historyMonths } from "../../../data/history.ts";
 import { fleetStats, storeApps, storeVerifiedAt } from "../../../data/store.ts";
@@ -71,6 +72,18 @@ export function buildStory(): StoryChapter[] {
       distance: GLOBE_RADIUS * 3, emphasise: place ? ["markers"] : ["reach"],
     }, arcs: [] });
   }
+  // LANE T1 (life places): the owner's own account of where he has lived
+  // (src/data/profile/lifePlaces.ts), inserted FIRST so the sort's stability
+  // on equal dates puts Kuwait ahead of the education chapter (both 2017) —
+  // see the file's own header comment. Mumbai carries neither `from` nor
+  // `to` (it is the family home, not a dated stay) so it gets no chapter.
+  for (const p of lifePlaces) {
+    const raw = p.from ?? p.to;
+    if (raw === undefined) continue;
+    const title = `${p.city}, ${p.country}`;
+    const note = p.slug === "kuwait-city" ? "Owner's account; year only; left in 2017, earlier years not recorded" : "Owner's account; year only";
+    add(`life:${p.slug}`, String(raw), title, p.line, "src/data/profile/lifePlaces.ts", note, storyPlace(title));
+  }
   // The school string itself names the city ("NIT Bhopal (MANIT)"), so the
   // chapter stands on Bhopal at city precision; see storyGeo.ts.
   add("education", education.period.split(" - ")[0], education.school, `${education.degree} · ${education.period}`, "src/data/profile/core.ts", "Period start", /Bhopal/.test(education.school) ? storyPlace("Bhopal, India") : undefined);
@@ -91,12 +104,23 @@ export function buildStory(): StoryChapter[] {
   storeApps.forEach((app) => add(`store:${app.id}`, storeVerifiedAt, app.name, `${app.installs} · ${app.role} · ${app.employer}`, "src/data/store.ts", "Listing verification snapshot, not a threshold crossing or launch", undefined, { label: "installs", value: app.installs, unit: "Play install band", source: "src/data/store.ts" }));
   add("install-floor", storeVerifiedAt, "Play Store listings", `install floor across ${fleetStats.live} live listings (Play's own install bands, summed as floors)`, "src/data/store.ts", "Listing verification snapshot, not a threshold crossing", undefined, { label: "install floor", value: fleetStats.installFloor, unit: "installs", source: "src/data/store.ts" });
   chapters.sort((a, b) => a.events[0].date.localeCompare(b.events[0].date));
-  // The one journey the data can draw honestly: from the university city to
-  // the first role in a known city. Both ends are registered STORY_GEO places,
-  // and storyArc refuses anything else.
-  const school = chapters.find((c) => c.id === "education")?.events[0].place;
-  const firstRole = chapters.find((c) => c.id.startsWith("role:") && c.events[0].place && c.events[0].place.name !== school?.name);
-  const arc = storyArc(school, firstRole?.events[0].place);
-  if (firstRole && arc) firstRole.arcs = [arc];
+  // The life path the owner's own account draws, city to city, built through
+  // storyArc only (which refuses an unknown endpoint or a same-city hop) —
+  // replaces the old single "university city to first role" arc, which had
+  // drawn to the 2020 internship rather than any real destination. No arc
+  // ever touches a "role:" chapter now.
+  const kuwait = chapters.find((c) => c.id === "life:kuwait-city")?.events[0].place;
+  const bhopalLife = chapters.find((c) => c.id === "life:bhopal")?.events[0].place;
+  const chandigarhLife = chapters.find((c) => c.id === "life:chandigarh")?.events[0].place;
+  const puneLife = chapters.find((c) => c.id === "life:pune")?.events[0].place;
+  const eduChapter = chapters.find((c) => c.id === "education");
+  const chandigarhChapter = chapters.find((c) => c.id === "life:chandigarh");
+  const puneChapter = chapters.find((c) => c.id === "life:pune");
+  const kuwaitToBhopal = storyArc(kuwait, eduChapter?.events[0].place);
+  if (eduChapter && kuwaitToBhopal) eduChapter.arcs = [kuwaitToBhopal];
+  const bhopalToChandigarh = storyArc(bhopalLife, chandigarhLife);
+  if (chandigarhChapter && bhopalToChandigarh) chandigarhChapter.arcs = [bhopalToChandigarh];
+  const chandigarhToPune = storyArc(chandigarhLife, puneLife);
+  if (puneChapter && chandigarhToPune) puneChapter.arcs = [chandigarhToPune];
   return chapters;
 }
