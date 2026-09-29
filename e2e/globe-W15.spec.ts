@@ -68,6 +68,60 @@ test("the live count reads 2, the same total the store and the future \"explorin
   await expect.poll(async () => seam.getAttribute("data-together-total"), { timeout: 10_000 }).toBe("2");
 });
 
+// Waits, entirely in-browser via requestAnimationFrame (no Node/CDP
+// round-trip in the loop, so a slow shared machine can't fake "stable" by
+// merely stalling between two Node-side polls -- this samples the actual
+// render cadence and only accepts a run of REQUIRED consecutive equal
+// frames), for data-together-first-x/y to stop moving -- i.e. the camera
+// has genuinely come to rest, not just that autoRotate's own flag flipped
+// off (see the damping comment at the call site).
+//
+// The 20s budget (not 8s) is deliberate: OrbitControls' own dampingFactor
+// (GlobeScene.tsx, 0.08) decays sphericalDelta a fixed FRACTION PER
+// update() CALL, not per real elapsed time -- so on this ten-lanes-sharing-
+// one-machine box, a slow tick means fewer update() calls per real second,
+// which means the SAME fixed per-call decay takes proportionally longer
+// in wall-clock time to settle. Measured isolated (no contention) this
+// resolves in 6 frames; under real gate load it needs real seconds of
+// headroom, not frames.
+async function waitForStableReticle(page: Page, timeoutMs = 20_000): Promise<{ x: number; y: number }> {
+  return page.evaluate(
+    ({ timeoutMs: budgetMs }) =>
+      new Promise<{ x: number; y: number }>((resolve, reject) => {
+        const el = document.querySelector("[data-together-layer]") as HTMLElement | null;
+        if (!el) {
+          reject(new Error("no [data-together-layer] element"));
+          return;
+        }
+        const REQUIRED_STABLE_FRAMES = 5;
+        const deadline = performance.now() + budgetMs;
+        let last: string | null = null;
+        let stableFrames = 0;
+        const tick = () => {
+          const x = el.dataset.togetherFirstX;
+          const y = el.dataset.togetherFirstY;
+          const cur = `${x},${y}`;
+          if (cur === last) stableFrames++;
+          else {
+            stableFrames = 0;
+            last = cur;
+          }
+          if (stableFrames >= REQUIRED_STABLE_FRAMES) {
+            resolve({ x: Number(x), y: Number(y) });
+            return;
+          }
+          if (performance.now() > deadline) {
+            reject(new Error(`reticle position never stabilized (stuck reading ${cur})`));
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    { timeoutMs },
+  );
+}
+
 test("clicking a reticle flies the camera to look where that explorer looks", async ({ page }) => {
   test.slow(); // a real WebGL settle plus a camera flight to land
   await setExplorers(page, TWO_EXPLORERS);
@@ -77,15 +131,51 @@ test("clicking a reticle flies the camera to look where that explorer looks", as
   // data-camera-flying below would never see "true" under the default
   // reducedMotion: true this file's other tests use.
   const canvas = await openGlobe(page, { reducedMotion: false });
+  // Pune sits close enough to peer-mumbai's (21, 72) reading that, at
+  // "region" zoom, their screen projections overlap: PulseLayer.tsx's own
+  // ring/packet instancedMeshes (over Pune, LayerPanel.tsx's own onClick)
+  // sit in front and steal the raycast before it ever reaches this layer's
+  // hit target. Can't fix it in PulseLayer.tsx -- another lane's file --
+  // so this test turns that layer off via LayerPanel.tsx's own keyboard map
+  // (digit keys toggle LAYER_IDS by index; "6" is "pulses"). That listener
+  // is on `window`, not the canvas, so no click-to-focus is needed first.
+  await page.keyboard.press("6");
 
   const seam = page.locator("[data-together-layer]");
   await expect.poll(async () => seam.getAttribute("data-together-count"), { timeout: 10_000 }).toBe("2");
   await expect.poll(async () => seam.getAttribute("data-together-first-x"), { timeout: 10_000 }).not.toBeNull();
 
   await expect.poll(async () => canvas.getAttribute("data-camera-view")).toBe("orbit");
-  const x = Number(await seam.getAttribute("data-together-first-x"));
-  const y = Number(await seam.getAttribute("data-together-first-y"));
-  await canvas.click({ position: { x, y } });
+
+  // Freeze ambient auto-rotate before reading the reticle's screen position.
+  // Without this, the real wall-clock gap between reading
+  // data-together-first-x/y and Playwright's click actually landing
+  // (actionability checks, event dispatch) lets the live spin drift the
+  // reticle off the coordinate that was read -- a race against
+  // GlobeScene's own OrbitControls autoRotate, not a coordinate-calculation
+  // bug. The pause button is orthogonal to reducedMotion: false above:
+  // CameraDirector's flyTo animation gates on the prefers-reduced-motion
+  // media query, not on this button, so the flying/landed assertions below
+  // still exercise the real animation.
+  await page.getByRole("button", { name: "Pause the globe's ambient rotation" }).click();
+  await expect(page.locator("[data-autorotate]")).toHaveAttribute("data-autorotate", "off");
+
+  // OrbitControls' own enableDamping (GlobeScene.tsx, dampingFactor 0.08)
+  // keeps bleeding off the autoRotate spin for a few more rendered frames
+  // after autoRotate itself flips off, so the reticle can still be sliding
+  // for a short beat right after the button click above. waitForStableReticle
+  // samples on the browser's own rAF cadence until the position genuinely
+  // stops moving, before trusting the coordinate the click below uses.
+  const { x, y } = await waitForStableReticle(page);
+  // page.mouse.click at an absolute point, not canvas.click({position}) --
+  // Locator.click() re-runs its own actionability wait (visible/stable/
+  // receives-events, each its own poll) before dispatching, which is exactly
+  // the kind of extra real-time gap that let auto-rotate drift the target
+  // out from under a click in the first place. The camera is already
+  // paused and proven stable above, so there is nothing left to wait on.
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("canvas has no bounding box");
+  await page.mouse.click(box.x + x, box.y + y);
 
   // A click-to-fly in orbit view re-arms CameraDirector's flight without
   // switching `view` away from "orbit" (CameraDirector.tsx's own focus-only

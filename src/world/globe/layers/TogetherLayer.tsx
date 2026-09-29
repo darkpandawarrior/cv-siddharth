@@ -298,6 +298,23 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
       if (hit) {
         hit.count = ringCount;
         hit.instanceMatrix.needsUpdate = true;
+        // three's own InstancedMesh.raycast() computes (and permanently
+        // CACHES) boundingSphere lazily on its first call, from whatever
+        // instance matrices exist AT THAT MOMENT (its own doc comment:
+        // "you may need to recompute the bounding sphere if an instance is
+        // transformed via setMatrixAt"). Since this layer is React.lazy
+        // -loaded, there is a real window where the canvas already takes
+        // pointer events (other layers mounted) before this component's
+        // first useFrame tick has ever run -- an incidental pointermove
+        // anywhere on the canvas in that window locks in a bounding sphere
+        // built from the mesh's still-default identity matrices (all
+        // instances at the origin), and every later raycast at the real,
+        // correct position then fails the coarse sphere pre-check forever,
+        // for the rest of that page session. Recomputing every frame (12
+        // instances max, negligible) means the cached sphere is always
+        // built from the CURRENT real matrices by the time any raycast
+        // reads it.
+        hit.computeBoundingSphere();
       }
     }
     if (line) {
