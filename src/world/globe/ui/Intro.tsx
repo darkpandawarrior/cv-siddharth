@@ -65,7 +65,20 @@ export default function Intro({ tier }: { tier: 1 | 2 | 3 }) {
   // button's own click bubbling to this same window listener costs nothing.
   useEffect(() => {
     if (phase !== "playing") return;
-    const onInput = () => skipIntro();
+    const onInput = (e: Event) => {
+      // The Skip button's own onClick already handles a deliberate
+      // activation of it. Letting this catch-all ALSO fire on the same
+      // mousedown/keydown races React's resulting unmount (phase flips to
+      // "skipped" synchronously, inside this same event) against the
+      // browser's own click dispatch -- sometimes the button is gone from
+      // the DOM before mouseup/click completes, which a real visitor never
+      // notices (the intro is already skipped either way) but a driver that
+      // insists on finishing its click protocol against a still-present node
+      // can hang waiting for an element that will not reappear. Every OTHER
+      // input, anywhere else on the page or any key, still skips immediately.
+      if (e.target === skipButtonRef.current) return;
+      skipIntro();
+    };
     window.addEventListener("pointerdown", onInput);
     window.addEventListener("keydown", onInput);
     window.addEventListener("wheel", onInput, { passive: true });

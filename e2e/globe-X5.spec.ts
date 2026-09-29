@@ -70,8 +70,15 @@ test.describe("seamless zoom into street level and back", () => {
     const zoomIn = page.getByRole("button", { name: "Zoom in" });
     // Resting distance is 26, OrbitControls clamps at minDistance 9 -- a
     // handful of clicks overshoots the clamp several times over, so this
-    // doesn't depend on getting the click count exactly right.
-    for (let i = 0; i < 12; i++) await zoomIn.click();
+    // doesn't depend on getting the click count exactly right. Checked
+    // before each click and stopped the moment street level opens: once it
+    // does, the street surface itself covers this same button, and a click
+    // Playwright insists on delivering to a now-hidden target hangs for the
+    // rest of the test budget instead of failing fast.
+    for (let i = 0; i < 12; i++) {
+      if ((await canvas.getAttribute("data-camera-view").catch(() => null)) === "street") break;
+      await zoomIn.click().catch(() => {});
+    }
 
     await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 8_000 }).toBe("street");
     await expect(page.locator("[data-street-view]")).toBeVisible();
@@ -96,7 +103,10 @@ test.describe("seamless zoom into street level and back", () => {
     await page.evaluate(() => window.__GLOBE_TEST_STREET_MAP__!.setZoom(9));
 
     await expect(page.locator("[data-street-view]")).toHaveCount(0);
-    await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 5_000 }).toBe("orbit");
+    // A generous timeout: this exit path arms a real camera flight (not an
+    // instant snap) from a MapLibre event handler outside React's own render
+    // cycle, one render tick removed from the store write above.
+    await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 15_000 }).toBe("orbit");
   });
 });
 
