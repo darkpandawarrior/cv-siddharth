@@ -39,6 +39,21 @@ export function isoDateUTC(now: Date, daysAgo: number): string {
   return new Date(now.getTime() - daysAgo * 86_400_000).toISOString().slice(0, 10);
 }
 
+/** LANE V1 (wave 7, step A): the rounded-down WMTS Time instant for a
+ *  subdaily (PT10M) GIBS layer — `now` minus `lagMin` (GIBS's own publish
+ *  lag, verified per layer against its GetCapabilities Dimension Default
+ *  today), floored to the nearest `stepMin` boundary. Floors on the epoch
+ *  millisecond (never local-timezone field math, same reasoning as
+ *  `isoDateUTC` above), so the result is always exactly on a `stepMin`
+ *  boundary regardless of what second `now` itself falls on. No milliseconds
+ *  in the output — GIBS's own Time dimension values never carry them. */
+export function subdailyInstantUTC(now: Date, stepMin: number, lagMin: number): string {
+  const stepMs = stepMin * 60_000;
+  const laggedMs = now.getTime() - lagMin * 60_000;
+  const roundedMs = Math.floor(laggedMs / stepMs) * stepMs;
+  return new Date(roundedMs).toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 /** A GIBS WMS GetMap URL. `time` omitted entirely for the two static layers
  *  (BlueMarble, Black Marble) — sending a TIME on those either errors or is
  *  silently ignored depending on the layer, so simplest is to never send one. */
