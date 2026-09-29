@@ -1,3 +1,9 @@
+// Shared with the layer legend; the renderer consumes these exact speed stops.
+export const WIND_LEGEND = {
+  unit: "m/s",
+  stops: [{ color: "#3f5e78", label: "2" }, { color: "#468f88", label: "12" }, { color: "#d8c98a", label: "22+" }],
+};
+
 // LANE W5 (global wind): the client half of /api/wind's grid contract —
 // pure, no three, no React, no fetch, same shape as geoMath.ts. Mirrors
 // api/_lib/wind-handler.ts's WindGridSpec exactly (duplicated, not imported:

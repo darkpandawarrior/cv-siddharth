@@ -41,6 +41,7 @@
   --color-signal-dim: #8ff0b4; /* 7x — the same signal, attenuated */
   --color-probe: #5ee6ff; /* 43x — unlit/idle counterpart to signal */
   --color-warn: #f0883e; /* 22x */
+  --color-degraded: #f2a13d;
   --color-danger: #ff5c5c; /* 11x */
   --color-alt: #db61ff; /* 11x */
   --color-text: #e8efe9; /* 22x — bright body text on dark grounds */

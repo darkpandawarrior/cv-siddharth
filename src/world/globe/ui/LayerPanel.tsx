@@ -1,3 +1,7 @@
+import { Legend } from "./LayerCatalog.tsx";
+import { WIND_LEGEND } from "../layers/windField.ts";
+import { DENSITY_LEGEND } from "../layers/hexbin.ts";
+import { QUAKE_DEPTH_LEGEND } from "../layers/quake.ts";
 import { useEffect, useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
 import type { Vector3 } from "three";
@@ -79,14 +83,14 @@ function isTypingTarget(el: EventTarget | null): boolean {
  *  (a soft pulse) rather than a fixed state. `undefined` (a layer that
  *  hasn't reported at all, e.g. its lane not yet merged) reads the same as
  *  "loading": never green, never silently absent. */
-function dotStyle(health: LayerHealth | undefined): { color: string; pulse: boolean } {
+export function dotStyle(health: LayerHealth | undefined): { color: string; pulse: boolean } {
   switch (health?.state) {
     case "live":
       return { color: "var(--color-signal)", pulse: false };
     case "snapshot":
       return { color: "var(--color-probe)", pulse: false };
     case "failed":
-      return { color: "var(--color-danger)", pulse: false };
+      return { color: /unreachable|unavailable|off at this tier/i.test(health.detail ?? "") ? "var(--color-degraded)" : "var(--color-danger)", pulse: false };
     default:
       return { color: "#71717a", pulse: true };
   }
@@ -105,11 +109,14 @@ function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, bo
               type="button"
               onClick={() => toggleLayer(id)}
               aria-pressed={on}
-              className="flex min-h-8 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex min-h-11 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot.pulse ? "animate-pulse" : ""}`} style={{ backgroundColor: dot.color }} />
-              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500 line-through"}`}>{LABEL[id]}</span>
+              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500"}`}>{LABEL[id]}</span>
             </button>
+            {on && id === "wind" && <Legend legend={WIND_LEGEND} />}
+            {on && id === "density" && <Legend legend={DENSITY_LEGEND} />}
+            {on && id === "hazards" && <Legend legend={QUAKE_DEPTH_LEGEND} />}
             {health?.detail && (
               <p className="ml-4 truncate text-xs text-muted" title={health.detail}>
                 {health.detail}
