@@ -2,7 +2,7 @@ import { useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { PUNE } from "../../lib/sky.ts";
+import { PUNE, subsolarPoint } from "../../lib/sky.ts";
 import {
   dampTowards,
   easeInOutCubic,
@@ -15,6 +15,9 @@ import {
   xyzToLatLon,
   type Vec3,
 } from "./cameraMath.ts";
+import { finishIntro, getIntroPhase, INTRO_DURATION_MS, introStartDirectionFromLatLon, subscribeIntro, type IntroPhase } from "./cameraIntro.ts";
+import { altitudeToStreetZoom, armStreetHandoff, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
+import { cameraForwardToBearingPitch } from "./cameraOrientation.ts";
 import { entityPositions, useGlobe, type Focus } from "./globeStore.ts";
 
 /** LANE L5 (navigation: fly-to, ground view, follow). One component owns the
@@ -47,7 +50,18 @@ const FOLLOW_ABOVE = 0.35;
 const FOLLOW_BEHIND = 0.55;
 const FOLLOW_DAMP_HALFLIFE = 0.25;
 
-type Flight = { from: Vec3; fromDist: number; to: Vec3; toDist: number; elapsed: number; duration: number } | null;
+type Flight = { from: Vec3; fromDist: number; to: Vec3; toDist: number; elapsed: number; duration: number; kind?: "intro" } | null;
+
+// WAVE 6 LANE X5: intro cinematic camera path. END matches GlobeScene.tsx's
+// own hardcoded `START`/`START_DISTANCE` (duplicated here -- same
+// chunk-isolation reason cameraMath.ts's own header gives for not importing
+// geoMath.ts: GlobeScene.tsx is the eager "Globe" shell, this file is a lazy
+// chunk) so the flight lands exactly where the resting orbit camera already
+// sits -- no visible jump when the intro finishes or is skipped.
+const INTRO_END_LAT_OFFSET = 12;
+const INTRO_END_DISTANCE = 26;
+const INTRO_START_DISTANCE = GLOBE_RADIUS * 30; // far enough Earth reads as a small lit crescent, not a close-up
+const INTRO_DURATION_SEC = INTRO_DURATION_MS / 1000;
 
 function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
@@ -109,6 +123,13 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
   const prevEntityPosRef = useRef<Vec3 | null>(null);
   const settledRef = useRef(true); // false while a fly-in animation owns the camera
   const dragRef = useRef<{ x: number; y: number } | null>(null);
+  // WAVE 6 LANE X5: ms the camera has sat pinned at minDistance while
+  // orbiting (seamless zoom -> street), whether the intro's own flight
+  // currently owns the camera, and whether this lane hid the markers layer
+  // for the intro's "markers last" beat (so it can restore it unconditionally).
+  const zoomHoldRef = useRef(0);
+  const introRef = useRef(false);
+  const introMarkersHiddenRef = useRef(false);
   const prevViewRef = useRef(view);
 
   // Horizon glow ring: ambient scene furniture, never a brand/live colour
@@ -221,6 +242,89 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-arm on an actual focus identity change, get() is stable
   }, [focus]);
 
+  // WAVE 6 LANE X5: the cinematic first-visit intro. ui/Intro.tsx (a DOM
+  // overlay mounted OUTSIDE the Canvas -- see cameraIntro.ts's own header
+  // for why) is the only place that knows tier/reducedMotion/the seen-flag,
+  // and decides WHETHER to play; this effect just answers "playing" by
+  // flying the camera from a far, sun-facing start to the app's own resting
+  // view, and answers "skipped"/"done" by snapping straight there and
+  // handing the camera back to OrbitControls. Mount-only: the phase bus
+  // itself is the source of truth (`applyPhase(getIntroPhase())` covers
+  // whichever of this effect or ui/Intro.tsx's own `startIntro()` call runs
+  // first), not a dependency array.
+  useEffect(() => {
+    const applyPhase = (phase: IntroPhase) => {
+      const controls = controlsRef.current;
+      const { camera } = get();
+      if (phase === "playing") {
+        // A duplicate "playing" notification with the flight already armed
+        // is a no-op, not a reason to bail -- StrictMode's dev-only double
+        // effect invocation re-runs this exact mount body (cleanup only
+        // unsubscribes; introRef itself survives) with `phase` unchanged at
+        // "playing", so this is the ordinary case, not a race. Confirmed via
+        // this component's own console.log("[intro-debug]") trace, which
+        // showed finishIntro() firing under 1s into a fresh mount, from
+        // right here.
+        if (introRef.current) return;
+        // Belt and braces (house idiom, this file's own Esc-handler
+        // comment): ui/Intro.tsx already gates on tier/reducedMotion before
+        // ever calling startIntro(), but "never under reduced motion" is a
+        // hard MUST, worth a second, independent check rather than trusting
+        // a single source -- a fresh matchMedia read, not the closed-over
+        // `reducedMotion` (stale in a mount-only effect). A view other than
+        // "orbit" here means the visitor already navigated before the bus
+        // notified (a slow-mount race): playing a fly-in over their own
+        // navigation would be worse than skipping the cinematic outright.
+        if (window.matchMedia(REDUCED_MOTION_QUERY).matches || useGlobe.getState().view !== "orbit") {
+          finishIntro();
+          return;
+        }
+        introRef.current = true;
+        if (controls) controls.enabled = false;
+        const sun = subsolarPoint(new Date());
+        const endDir = latLonToXyz(PUNE.lat + INTRO_END_LAT_OFFSET, PUNE.lon);
+        const fromDir = introStartDirectionFromLatLon(sun.lat, sun.lon, endDir);
+        flightRef.current = { from: fromDir, fromDist: INTRO_START_DISTANCE, to: endDir, toDist: INTRO_END_DISTANCE, elapsed: 0, duration: INTRO_DURATION_SEC, kind: "intro" };
+        settledRef.current = false;
+        // "layers blooming in ... markers last" (the brief's own words):
+        // the one layer this lane can move without reaching into
+        // GlobeScene.tsx's per-layer JSX (out of file ownership) or risking
+        // a real user preference left off if something goes wrong. Hidden
+        // for the flight's own duration only, restored the instant it ends
+        // OR is skipped (both paths below) -- never left off.
+        if (useGlobe.getState().layers.markers) {
+          introMarkersHiddenRef.current = true;
+          useGlobe.getState().toggleLayer("markers");
+        }
+        return;
+      }
+      // "skipped" or "done": stop owning the camera, land exactly at the
+      // flight's own end point (an early skip just gets there without the
+      // scenic route), hand back to OrbitControls precisely the way every
+      // other view already does on return to "orbit".
+      if (!introRef.current) return;
+      introRef.current = false;
+      const flight = flightRef.current;
+      if (flight?.kind === "intro") {
+        camera.position.set(flight.to.x * flight.toDist, flight.to.y * flight.toDist, flight.to.z * flight.toDist);
+        camera.lookAt(0, 0, 0);
+        flightRef.current = null;
+      }
+      settledRef.current = true;
+      if (introMarkersHiddenRef.current) {
+        introMarkersHiddenRef.current = false;
+        if (!useGlobe.getState().layers.markers) useGlobe.getState().toggleLayer("markers");
+      }
+      if (controls && useGlobe.getState().view === "orbit") {
+        controls.enabled = true;
+        controls.update();
+      }
+    };
+    applyPhase(getIntroPhase());
+    return subscribeIntro(() => applyPhase(getIntroPhase()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only subscription; controlsRef/get are stable R3F handles
+  }, []);
+
   // Esc: back to orbit from anywhere. Guarded against typing targets even
   // though the globe canvas itself never holds text focus, restated per the
   // house rule (GlobeScene.tsx's own isTypingTarget) rather than imported,
@@ -293,6 +397,13 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
       if (t >= 1) {
         flightRef.current = null;
         settledRef.current = true;
+        // WAVE 6 LANE X5: the intro's own flight reaching t=1 IS "finished
+        // playing" -- tell the bus so ui/Intro.tsx's overlay unmounts and
+        // the seen-flag gets set. The phase-bus subscription above then
+        // handles the (already-done) camera/controls/markers cleanup;
+        // `introRef.current` is still true at this point, so that handler
+        // still runs its restore branch.
+        if (flight.kind === "intro") finishIntro();
       }
       el.dataset.cameraView = view;
       el.dataset.cameraFlying = "true";
@@ -300,8 +411,48 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
     }
     el.dataset.cameraFlying = "false";
 
+    if (view !== "orbit") {
+      // Only orbit ever accumulates a zoom-hold (see below); leaving orbit
+      // for any reason -- ground/follow/street, or a click-to-fly -- must
+      // not leave a stale hold that instantly re-triggers street the moment
+      // the visitor lands back in orbit later.
+      zoomHoldRef.current = 0;
+    }
+
     if (view === "orbit") {
       el.dataset.cameraView = "orbit";
+      if (!introRef.current) {
+        // WAVE 6 LANE X5: seamless zoom -> street. `flight` (above) already
+        // covers "mid-animation"; this only ever runs once OrbitControls
+        // itself has the camera settled, so a pinned distance genuinely
+        // means the visitor is holding at the closest orbit lets them get,
+        // not that a fly-to just happens to be passing through it.
+        const controls = controlsRef.current;
+        const minDistance = controls?.minDistance ?? GLOBE_RADIUS * 1.5;
+        const maxDistance = controls?.maxDistance ?? GLOBE_RADIUS * 7;
+        const distance = camera.position.length();
+        zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt);
+        if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
+          zoomHoldRef.current = 0;
+          const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };
+          const { lat, lon } = xyzToLatLon(unit);
+          // OrbitControls' target is fixed at the origin (GlobeScene.tsx
+          // never overrides it), so the camera always looks straight at the
+          // globe's own centre -- its forward direction is always this same
+          // unit vector, negated. WAVE 6 LANE X5 (verifier-flagged blocking
+          // gap): matching bearing/pitch, not just zoom, is what "seamless"
+          // requires -- see cameraOrientation.ts's own header.
+          const forward = { x: -unit.x, y: -unit.y, z: -unit.z };
+          const { bearingDeg, pitchDeg } = cameraForwardToBearingPitch(forward, lat, lon);
+          armStreetHandoff({
+            zoom: altitudeToStreetZoom(distance - GLOBE_RADIUS, minDistance - GLOBE_RADIUS, maxDistance - GLOBE_RADIUS),
+            bearing: bearingDeg,
+            pitch: pitchDeg,
+          });
+          useGlobe.getState().flyTo({ kind: "latlon", lat, lon });
+          setView("street");
+        }
+      }
       return;
     }
 

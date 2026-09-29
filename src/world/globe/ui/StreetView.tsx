@@ -5,7 +5,8 @@ import { entityPositions, useGlobe, type Focus } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { PUNE } from "../../../lib/sky.ts";
 import { focusHandoffUrl } from "../../altitude.ts";
-import { xyzToLatLon } from "../cameraMath.ts";
+import { GLOBE_RADIUS, xyzToLatLon } from "../cameraMath.ts";
+import { armStreetHandoff, consumeStreetHandoff, streetZoomToAltitude } from "../cameraZoomGate.ts";
 import {
   LIBERTY_STYLE_URL,
   PHOTO_SOURCE_ID,
@@ -26,11 +27,32 @@ const STREET_ZOOM = 16.5;
 const STREET_PITCH = 60;
 const STREET_BEARING = 0;
 const QUERY_DEBOUNCE_MS = 400;
+// WAVE 6 LANE X5 hand-off hooks: below this the visitor is trying to zoom
+// OUT past the surface's own floor -- "past its min zoom returns to the
+// globe" (the brief's own words). Below altitudeToStreetZoom's own MIN_Z
+// (12, cameraZoomGate.ts) with margin, so the widest seamless-zoom hand-off
+// never opens already sitting at/under this floor.
+const STREET_MIN_ZOOM = 11;
+// WAVE 6 LANE X5: a feed that never resolves (hangs, not fails) would
+// otherwise leave "Looking for street photos…" up forever -- the house rule
+// is "no invented/stale data", not "eventually say something", so this is a
+// real watchdog, not a repeat of the already-existing "loaded, zero results"
+// message below.
+const NO_FEATURES_TIMEOUT_MS = 3000;
 // "For Pune only" (this lane's brief): a loose radius, not an exact-equality
 // check — a fly-to that lands a few metres off Pune's own coordinate (e.g. a
 // registered entity's current position) should still count as Pune.
 const PUNE_EPSILON_DEG = 0.05;
 const FADE_MS = 300;
+// WAVE 6 LANE X5: restated from GlobeScene.tsx's own OrbitControls
+// min/maxDistance (out of this lane's file ownership; CameraDirector.tsx --
+// a Canvas-side sibling this file can't reach into -- already restates the
+// same two numbers as its own fallback default when `controls` isn't
+// mounted). altitudeToStreetZoom's inverse needs the exact same band its
+// forward direction used, or "matching orbit distance" lands at the wrong
+// distance from what the zoom-in side computed.
+const ORBIT_MIN_ALTITUDE = GLOBE_RADIUS * 1.5 - GLOBE_RADIUS; // 3
+const ORBIT_MAX_ALTITUDE = GLOBE_RADIUS * 7 - GLOBE_RADIUS; // 36
 
 declare global {
   interface Window {
@@ -38,8 +60,13 @@ declare global {
      *  Inspector.tsx's own `__GLOBE_TEST_SELECT__`: no trigger lane's UI
      *  lives in this worktree, so a test flies here directly and switches
      *  the view itself. Read once on mount; a no-op in production since
-     *  nothing outside a test ever sets it. */
-    __GLOBE_TEST_STREET__?: { lat: number; lon: number };
+     *  nothing outside a test ever sets it. `bearing`/`pitch` are optional:
+     *  a test asserting a real bearing/pitch hand-off arms them (routed
+     *  through the exact same StreetHandoff box the zoom-hold gesture
+     *  uses -- see the mount effect below), one that only cares about
+     *  lat/lon (the pre-existing exit-hand-off test) leaves them out and
+     *  gets the plain STREET_BEARING/STREET_PITCH defaults. */
+    __GLOBE_TEST_STREET__?: { lat: number; lon: number; bearing?: number; pitch?: number };
     /** Exposed only while `__GLOBE_TEST_STREET__` armed this session — lets
      *  an e2e test compute a marker's real screen position (`map.project`)
      *  to click it, since photo markers are a GL circle layer, not DOM
@@ -88,6 +115,15 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   const [photoStatus, setPhotoStatus] = useState<"loading" | "loaded" | "failed">("loading");
   const [selectedPhoto, setSelectedPhoto] = useState<StreetPhoto | null>(null);
   const [visible, setVisible] = useState(false);
+  // WAVE 6 LANE X5: "No streets here" if nothing has loaded within 3s (a
+  // watchdog, not a repeat of the "loaded, zero results" message below —
+  // that one only ever fires once a query has actually FINISHED).
+  const [noFeaturesTimedOut, setNoFeaturesTimedOut] = useState(false);
+  const noFeaturesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // WAVE 6 LANE X5: guards the zoom-out hand-off firing more than once per
+  // open — MapLibre's own "zoom" event fires on every frame of a wheel/pinch
+  // gesture, not just the one that first crosses STREET_MIN_ZOOM.
+  const exitedRef = useRef(false);
 
   // e2e-only seam: fires once on mount, before the map-creation effect below
   // ever reads `view`/`focus` — the same "read on mount, no-op absent a
@@ -95,6 +131,14 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   useEffect(() => {
     const seam = window.__GLOBE_TEST_STREET__;
     if (seam) {
+      // Same StreetHandoff box the real zoom-hold gesture arms (in
+      // CameraDirector.tsx) -- a test asserting map.getBearing()/getPitch()
+      // exercises the actual hand-off/consume/map-init path this way,
+      // rather than a separate seam that would only prove the test's own
+      // plumbing works.
+      if (seam.bearing !== undefined || seam.pitch !== undefined) {
+        armStreetHandoff({ zoom: STREET_ZOOM, bearing: seam.bearing, pitch: seam.pitch });
+      }
       flyTo({ kind: "latlon", lat: seam.lat, lon: seam.lon });
       setView("street");
     }
@@ -197,6 +241,19 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     let map: MaplibreMap | null = null;
     const isTestMode = Boolean(window.__GLOBE_TEST_STREET__);
     const limit = TIER_PHOTO_LIMIT[tier];
+    exitedRef.current = false;
+    // WAVE 6 LANE X5: read-once hand-off from the seamless zoom-in gesture
+    // (CameraDirector.tsx armed it right before calling setView("street")).
+    // Absent one (the explicit street button, or a re-open), STREET_ZOOM/
+    // STREET_BEARING/STREET_PITCH are the pre-existing defaults this lane's
+    // brief says to keep. Bearing/pitch matching the globe camera (not just
+    // zoom) is the verifier-flagged blocking gap this pass fixes --
+    // cameraOrientation.ts's cameraForwardToBearingPitch is what
+    // CameraDirector.tsx derived them from.
+    const handoff = consumeStreetHandoff();
+    const openZoom = handoff?.zoom ?? STREET_ZOOM;
+    const openBearing = handoff?.bearing ?? STREET_BEARING;
+    const openPitch = handoff?.pitch ?? STREET_PITCH;
 
     const queryPhotos = async () => {
       if (!map) return;
@@ -205,6 +262,9 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       if (!shouldRequery(lastBoundsRef.current, bounds)) return;
       lastBoundsRef.current = bounds;
       setPhotoStatus("loading");
+      setNoFeaturesTimedOut(false);
+      if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
+      noFeaturesTimerRef.current = setTimeout(() => setNoFeaturesTimedOut(true), NO_FEATURES_TIMEOUT_MS);
       try {
         const res = await fetch(panoramaxSearchUrl(bounds, limit));
         if (!res.ok) throw new Error(`panoramax ${res.status}`);
@@ -212,6 +272,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         const parsed = parsePanoramaxFeatures(json);
         if (parsed === null) throw new Error("panoramax: unexpected response shape");
         if (cancelled || !map) return;
+        if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
         setPhotos(parsed);
         setPhotoStatus("loaded");
         const source = map.getSource(PHOTO_SOURCE_ID) as GeoJSONSource | undefined;
@@ -220,6 +281,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         // House rule: a feed that fails draws nothing and says so — never a
         // stale or invented photo list.
         if (cancelled) return;
+        if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
         setPhotos([]);
         setPhotoStatus("failed");
       }
@@ -260,9 +322,14 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         container,
         style: LIBERTY_STYLE_URL,
         center: [lon, lat],
-        zoom: STREET_ZOOM,
-        pitch: STREET_PITCH,
-        bearing: STREET_BEARING,
+        zoom: openZoom,
+        pitch: openPitch,
+        bearing: openBearing,
+        // MapLibre's own default maxPitch is 60 -- below cameraOrientation.ts's
+        // clamp ceiling of 85, so a real matched hand-off past 60 would
+        // otherwise get silently re-clamped a second time, right here,
+        // regardless of what this lane computed.
+        maxPitch: 85,
         attributionControl: false,
       });
       if (isTestMode) window.__GLOBE_TEST_STREET_MAP__ = map;
@@ -301,18 +368,43 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => void queryPhotos(), QUERY_DEBOUNCE_MS);
       });
+
+      // WAVE 6 LANE X5: "zooming out of the street map past its min zoom
+      // returns to the globe at the matching orbit distance over the same
+      // point" (the brief's own words). `map.getCenter()` — not `focus`,
+      // which is only where this surface OPENED — so panning around inside
+      // street level before zooming back out still lands the orbit camera
+      // over wherever the visitor actually ended up, not the stale entry
+      // point. `flyTo` + `setView("orbit")` together (both synchronous
+      // Zustand writes, same tick): CameraDirector.tsx's own
+      // view-change-to-orbit effect resets any in-flight state first, then
+      // its focus-only effect (still queued for the same commit, `focus`'s
+      // identity having also just changed) arms the actual flight — the same
+      // two-effect handshake it already uses for a plain click-to-fly while
+      // orbit is the CURRENT view.
+      map.on("zoom", () => {
+        if (!map || exitedRef.current || map.getZoom() >= STREET_MIN_ZOOM) return;
+        exitedRef.current = true;
+        const center = map.getCenter();
+        const altitude = streetZoomToAltitude(map.getZoom(), ORBIT_MIN_ALTITUDE, ORBIT_MAX_ALTITUDE);
+        flyTo({ kind: "latlon", lat: center.lat, lon: center.lng, distance: GLOBE_RADIUS + altitude });
+        setView("orbit");
+      });
     })();
 
     return () => {
       cancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = null;
+      if (noFeaturesTimerRef.current) clearTimeout(noFeaturesTimerRef.current);
+      noFeaturesTimerRef.current = null;
       map?.remove();
       map = null;
       delete window.__GLOBE_TEST_STREET_MAP__;
       lastBoundsRef.current = null;
       setPhotos([]);
       setPhotoStatus("loading");
+      setNoFeaturesTimedOut(false);
       setSelectedPhoto(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- create/destroy only on `active`; `focus`/`tier` are read once at open time on purpose
@@ -354,7 +446,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           height regardless of which `position` wins. */}
       <div ref={mapContainerRef} data-street-map className="absolute inset-0 h-full w-full" />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-ink/70 px-3 py-2 font-mono text-[11px] text-zinc-200 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-ink/70 px-3 py-2 font-mono text-xs text-zinc-200 backdrop-blur">
         <div className="pointer-events-auto min-w-0 truncate">
           {placeTitle && <span className="mr-2 font-semibold text-zinc-100">{placeTitle}</span>}
           <span className="text-zinc-400">{formatLatLon(lat, lon)}</span>
@@ -380,9 +472,10 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
 
       <div
         data-street-status
-        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-[11px] text-zinc-300 backdrop-blur"
+        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-xs text-zinc-300 backdrop-blur"
       >
-        {photoStatus === "loading" && "Looking for street photos…"}
+        {photoStatus === "loading" && !noFeaturesTimedOut && "Looking for street photos…"}
+        {photoStatus === "loading" && noFeaturesTimedOut && "No streets here"}
         {photoStatus === "failed" && "Street photo search failed"}
         {photoStatus === "loaded" && photos.length === 0 && "No open street photos here yet"}
         {photoStatus === "loaded" && photos.length > 0 && `${photos.length} street photo${photos.length === 1 ? "" : "s"}`}
@@ -391,7 +484,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       {/* No `truncate` here on purpose: attribution text is required, not
           decorative, so on a 390px phone it wraps to a second line instead
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-[11px] leading-snug text-zinc-500 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500 backdrop-blur">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
       </div>
 
