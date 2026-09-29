@@ -58,6 +58,12 @@ describe("scaleForYear", () => {
 });
 
 describe("hourHistogram", () => {
+  it("excludes invalid timestamps before applying the minimum-event gate", () => {
+    const valid = new Array(4).fill({ at: "2026-09-28T01:00:00Z" });
+    expect(hourHistogram([...valid, { at: "invalid" }])).toBeNull();
+    const histogram = hourHistogram([...valid, valid[0], { at: "invalid" }])!;
+    expect(histogram.reduce((a, b) => a + b, 0)).toBe(5);
+  });
   it("returns null when there are fewer than 5 events (the honesty gate)", () => {
     expect(hourHistogram(undefined)).toBeNull();
     expect(hourHistogram([])).toBeNull();

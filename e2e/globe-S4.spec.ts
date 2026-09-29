@@ -103,6 +103,7 @@ test("the guide layer's status line surfaces the real Q&A answers count, compute
   // this lane's own status-line template, which reads the field rather than
   // a copied literal).
   expect(debug?.statusDetail).toContain("6 Q&A answers");
+  expect(debug?.statusDetail).toContain("670 automated-prompt answers");
 
   const panel = page.locator("[data-globe-layer-panel]");
   await expect(panel).toContainText("6 Q&A answers");
@@ -135,8 +136,8 @@ test("Local Guide rings scale to cumulative-to-date as the Time Machine crosses 
   expect(scrubbed?.scales["bhopal"]).toBeCloseTo(liveBhopal, 6);
   // "say so in the inspector": the same layer panel row a visitor already
   // sees names the scrub year rather than silently reshaping the ring.
-  expect(scrubbed?.statusDetail).toContain("rings shown cumulative through 2025");
-  await expect(page.locator("[data-globe-layer-panel]")).toContainText("rings shown cumulative through 2025");
+  expect(scrubbed?.statusDetail).toContain("rings scaled by recorded active years through 2025");
+  await expect(page.locator("[data-globe-layer-panel]")).toContainText("rings scaled by recorded active years through 2025");
 
   // Scrubbing back to "now" restores the lifetime totals.
   await setOffsetMinutes(slider, 0);
@@ -156,11 +157,11 @@ test("career-ops-hq's org marker is a self-published, country-level location, di
 const ORG_SELECTION = {
   id: "guide-org:career-ops-hq",
   kind: "guide-org",
-  title: "career-ops-hq — open source, out",
+  title: "career-ops-hq · open source, out",
   rows: [
     { label: "Merged PRs", value: "" },
     { label: "Upstream stars", value: "" },
-    { label: "Location", value: "Spain — org-published location, not a person or office" },
+    { label: "Location", value: "Spain · org-published location, not a person or office" },
   ],
   source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only",
   live: false,
@@ -179,12 +180,12 @@ test("the org marker's Inspector carries the honesty-guard label, not just its c
 
   const inspector = page.locator("[data-globe-inspector]");
   await expect(inspector).toBeVisible({ timeout: 30_000 });
-  await expect(inspector).toContainText("Spain — org-published location, not a person or office");
+  await expect(inspector).toContainText("Spain · org-published location, not a person or office");
   await expect(inspector).toContainText("api.github.com/orgs/career-ops-hq");
   await expect(inspector.getByText("LIVE")).toHaveCount(0);
 });
 
-test("the recent-public-GitHub-activity histogram renders only with >= 5 events, labelled as public-only", async ({ page }) => {
+test("the recent-public-GitHub-activity histogram is computed only with >= 5 public events", async ({ page }) => {
   // The committed fixture (e2e/fixtures/activity.json) carries 6 events.
   await openGlobe(page, "2026-09-24T12:27:00+05:30");
   await expect.poll(async () => (await readGuideDebug(page))?.activityEvents, { timeout: 15_000 }).toBe(6);

@@ -26,6 +26,7 @@ export function cumulativeFraction(years: readonly number[], simYear: number): n
  *  has reached. `scaleFor` is passed in rather than imported so this module
  *  stays free of GuideLayer.tsx's own MIN_SCALE/MAX_SCALE tuning constants —
  *  one direction of dependency, not two files agreeing on a magic number. */
+// ponytail: active-year proxy; use per-city annual totals when the export supplies them.
 export function scaleForYear(scaleFor: (reviews: number, photos: number) => number, reviews: number, photos: number, years: readonly number[], simYear: number): number {
   return scaleFor(reviews, photos) * cumulativeFraction(years, simYear);
 }
@@ -49,8 +50,9 @@ function istHour(at: string): number {
  *  newest" contract as closely as an hour-of-day series can). `null` below
  *  `ACTIVITY_MIN_EVENTS`: see this file's own honesty-guard comment above. */
 export function hourHistogram(items: { at: string }[] | undefined): number[] | null {
-  if (!items || items.length < ACTIVITY_MIN_EVENTS) return null;
+  const valid = items?.filter((item) => Number.isFinite(Date.parse(item.at)));
+  if (!valid || valid.length < ACTIVITY_MIN_EVENTS) return null;
   const buckets = new Array(24).fill(0);
-  for (const item of items) buckets[istHour(item.at)] += 1;
+  for (const item of valid) buckets[istHour(item.at)] += 1;
   return buckets;
 }

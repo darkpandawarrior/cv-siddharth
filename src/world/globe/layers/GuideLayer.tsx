@@ -9,21 +9,12 @@
 // calendar year (see `simYear` below) — not per frame, not on every offset
 // tick, so scrubbing still costs nothing per animation frame.
 //
-// WAVE 9 LANE S4 (sources-owner.md) added three more things this file now
-// owns: (1) scaling each ring to cumulative-to-date instead of a lifetime
-// total, keyed to the Time Machine's simulated year; (2) a single static
-// marker for career-ops-hq's own self-published org location (Spain,
-// country level — verified live against api.github.com/orgs/career-ops-hq
-// on 2026-09-30, see the marker's own comment below); (3) reading
-// `mapsTotals.answers` (until now dead in this file) into the status line,
-// and a recent-public-GitHub-activity-by-hour histogram fed into Pune's
-// existing Inspector `spark` slot, gated to >= 5 events so a quiet week
-// never renders a misleadingly sparse bar chart.
-//
-// `mapsTotals.qaAnswers` (not `.answers`, which is a DIFFERENT field: binary
-// yes/no responses to Google's automated prompts, not the community Q&A
-// feature) is the field this file's status line reads — see
-// scripts/gen-maps-places.mjs's own console-log line, which names both.
+// S4: contribution rings scale by the fraction of recorded active years
+// reached by the Time Machine, not reconstructed per-year totals. Maps
+// community Q&A and automated-prompt answers remain separate counts. The
+// Spain marker comes from career-ops-hq's own country-level location field.
+// Pune's inspector shows public GitHub activity by IST hour only when at
+// least five valid event timestamps exist.
 import { useEffect, useMemo, useRef } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
@@ -31,7 +22,7 @@ import { GLOBE_RADIUS, latLonToXyz } from "../geoMath.ts";
 import { readColor } from "../../../themeColorThree.ts";
 import { readToken } from "../../../themeColor.ts";
 import { simTime, useGlobe } from "../globeStore.ts";
-import { lifePlaces } from "../../../data/profile/lifePlaces.ts";
+import { lifePlaces, lifePlaceGeo } from "../../../data/profile/lifePlaces.ts";
 import { mapsExport, mapsPhotos, mapsPlaces, mapsTotals } from "../../../data/generated/mapsPlaces.ts";
 import { upstreamMergedPRs } from "../../../data/profile/openSource.ts";
 import { upstreamStars } from "../../../data/careerOpsUpstream.ts";
@@ -106,8 +97,7 @@ function buildGuidePlaces(): GuidePlace[] {
   const seen = new Set(out.map((p) => p.slug));
   for (const lp of lifePlaces) {
     if (seen.has(lp.slug)) continue;
-    const gaz = mapsPlaces.find((p) => p.slug === lp.slug); // never true today; kept for the guard
-    const geo = gaz ?? undefined;
+    const geo = lifePlaceGeo(lp.slug);
     if (!geo) continue;
     out.push({ slug: lp.slug, city: lp.city, country: lp.country, lat: geo.lat, lon: geo.lon, reviews: 0, photos: 0, photoViews: 0, years: [], isLifePlace: true, lifeLine: lp.line });
   }
@@ -233,7 +223,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     }
 
     const notLive = simYear !== new Date().getFullYear();
-    const statusDetail = `${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.qaAnswers} Q&A answers, Maps export ${mapsExport}${notLive ? ` · rings shown cumulative through ${simYear}` : ""}`;
+    const statusDetail = `${mapsTotals.reviews} reviews, ${mapsTotals.photos} photos, ${mapsTotals.qaAnswers} Q&A answers, ${mapsTotals.answers} automated-prompt answers, Maps export ${mapsExport}${notLive ? ` · rings scaled by recorded active years through ${simYear} (computed, not contribution totals)` : ""}`;
     useGlobe.getState().setStatus("guide", { state: "snapshot", detail: statusDetail });
     scalesRef.current = scales;
     statusDetailRef.current = statusDetail;
@@ -272,7 +262,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         { label: "Photos", value: String(p.photos) },
         { label: "Photo views", value: p.photoViews.toLocaleString("en-IN") },
         { label: "Years active", value: p.years.join(", ") || "Not recorded" },
-        ...(notLive ? [{ label: "Ring shown", value: `cumulative through ${simYear}, Time Machine` }] : []),
+        ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
         ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
       ],
       source: `Google Maps Takeout, exported ${mapsExport} · city level, years only`,
@@ -293,13 +283,13 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     select({
       id: "guide-org:career-ops-hq",
       kind: "guide-org",
-      title: "career-ops-hq — open source, out",
+      title: "career-ops-hq · open source, out",
       rows: [
         { label: "Merged PRs", value: String(upstreamMergedPRs) },
         { label: "Upstream stars", value: upstreamStars },
-        { label: "Location", value: "Spain — org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
+        { label: "Location", value: "Spain · org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
       ],
-      source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only",
+      source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only · checked 2026-09-30",
       live: false,
       focus: { kind: "latlon" as const, lat: CAREER_OPS_HQ.lat, lon: CAREER_OPS_HQ.lon, distance: 14 },
     });
