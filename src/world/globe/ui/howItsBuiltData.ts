@@ -5,14 +5,12 @@
 // below is the literal exported constant or builder function the same layer
 // calls to fetch, for the same reason (howItsBuiltData.test.ts proves both).
 //
-// Layers this lane could NOT wire honestly: USGS quakes, EONET, GDACS, SWPC
-// space weather and Launch Library all build their fetch URL as a private
-// (non-exported) `const` inside HazardLayer.tsx, and CelesTrak's lives the
-// same way inside api/_lib/tle-handler.ts — neither file is this lane's to
-// edit (ownership is new files plus Inspector.tsx only). Hand-copying those
-// URLs as string literals here would be exactly the drift risk this panel
-// exists to prevent, so they are left out rather than faked. See this
-// lane's report, "needs from integration".
+// The hazard and space-weather feeds are cited through layers/feedUrls.ts,
+// the constants HazardLayer.tsx itself fetches (lane V5 moved them there for
+// this panel). CelesTrak is the one feed still left out: its URL lives as a
+// private const inside api/_lib/tle-handler.ts, a server file, and
+// hand-copying it here would be exactly the drift this panel exists to
+// prevent.
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { VERT, ATMO_FRAG, OCEAN_FRAG } from "../layers/sun.ts";
 import { CLOUD_FRAG } from "../layers/cloudShader.ts";
@@ -21,6 +19,7 @@ import { GIBS_CATALOG, tileUrl } from "../layers/gibsCatalog.ts";
 import { dayImageryAttempts, gapFillUrl, reliefUrl, nightLightsUrl, seaIceAttempts, describeImagerySource, type GibsSize } from "../layers/gibs.ts";
 import { LIBERTY_STYLE_URL, PANORAMAX_SEARCH_ENDPOINT } from "../streetPhotos.ts";
 import { mapsExport } from "../../../data/generated/mapsPlaces.ts";
+import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
 
 export interface ShaderSource {
   name: string;
@@ -101,6 +100,20 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
           endpoint: "https://github.com/ebruneton/precomputed_atmospheric_scattering",
           licence: "BSD-3-Clause",
         },
+      ],
+    },
+    {
+      id: "hazards",
+      title: "Earth events and space weather (live feeds, fetched in the browser)",
+      shaders: [],
+      provenance: [
+        { label: "Earthquakes, last 24 hours", endpoint: QUAKES_URL, licence: "USGS, US government, public domain" },
+        { label: "Natural events (fires, storms, volcanoes)", endpoint: EONET_URL, licence: "NASA EONET, US government, public domain" },
+        { label: "Disaster alerts", endpoint: GDACS_URL, licence: "GDACS (UN and European Commission), shown with attribution under its terms" },
+        { label: "Aurora oval", endpoint: OVATION_URL, licence: "NOAA SWPC OVATION, US government, public domain" },
+        { label: "Planetary Kp index", endpoint: KP_URL, licence: "NOAA SWPC, US government, public domain" },
+        { label: "Upcoming launches", endpoint: LAUNCHES_URL, licence: "The Space Devs Launch Library 2, free tier (15 requests an hour), with attribution" },
+        { label: `Hurricane forecast cones (${NHC_CONE_LAYER_IDS.length} NHC slots, one query each)`, endpoint: nhcConeUrl(NHC_CONE_LAYER_IDS[0]), licence: "NOAA National Hurricane Center, US government, public domain" },
       ],
     },
     {

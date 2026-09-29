@@ -7,6 +7,7 @@ import { GIBS_CATALOG, tileUrl } from "../layers/gibsCatalog.ts";
 import { dayImageryAttempts, gapFillUrl, reliefUrl, nightLightsUrl, seaIceAttempts, type GibsSize } from "../layers/gibs.ts";
 import { LIBERTY_STYLE_URL, PANORAMAX_SEARCH_ENDPOINT } from "../streetPhotos.ts";
 import { mapsExport } from "../../../data/generated/mapsPlaces.ts";
+import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
 
 const NOW = new Date("2026-09-29T12:00:00Z");
 const SIZE: GibsSize = { width: 2048, height: 1024 };
@@ -53,6 +54,12 @@ describe("howItsBuiltData", () => {
     const provenance = byId(entries, "guide-places").provenance[0];
     expect(provenance.fetchedAt).toBe(mapsExport);
     expect(provenance.licence).toBe("Google Maps Takeout, owner export, city level, years only");
+  });
+
+  it("hazard provenance endpoints are the same feedUrls.ts constants HazardLayer.tsx fetches, in order", () => {
+    expect(byId(entries, "hazards").provenance.map((p) => p.endpoint)).toEqual([
+      QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, nhcConeUrl(NHC_CONE_LAYER_IDS[0]),
+    ]);
   });
 
   it("re-running with a different `now` changes the dated GIBS entries but never the shader strings", () => {
