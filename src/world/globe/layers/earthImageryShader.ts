@@ -21,11 +21,41 @@ uniform sampler2D uIce;
 uniform float uCloudReady;
 uniform sampler2D uRelief;
 uniform float uReliefReady;
+// WAVE 6 LANE X3 (time machine): daily time-lapse (uTL*) and swipe compare
+// (uCompare*/uSplit) both only ever change what "the day photo" IS before
+// the rest of the pipeline (gap fill, clouds, relief, terminator, night
+// lights) runs on it unchanged — neither feature re-simulates lighting for
+// a different date, they replay a different real photo under today's sun.
+uniform sampler2D uTLOlder;
+uniform sampler2D uTLNewer;
+uniform float uTLBlend;
+uniform float uTLActive;
+uniform sampler2D uComparePast;
+uniform float uCompareActive;
+uniform float uSplit;
+uniform vec2 uResolution;
 varying vec3 vW;varying vec3 vN;varying vec3 vV;varying vec2 vUv;
 
 ${CLOUD_MASK_GLSL}
 void main(){
-  vec3 dayColor = texture2D(uDay, vUv).rgb;
+  // Daily time-lapse: while scrubbed into a past UTC day and both of that
+  // day's neighbouring frames are preloaded, crossfade between them
+  // (uTLBlend, EarthImagery.tsx's own gibsDates.frameForTime) instead of
+  // the live "yesterday" mosaic. uTLActive is 0 until a chosen day's
+  // textures are actually in hand — falls back to the live image rather
+  // than ever showing a placeholder dressed as a real date.
+  vec3 liveDay = mix(texture2D(uDay, vUv).rgb, mix(texture2D(uTLOlder, vUv).rgb, texture2D(uTLNewer, vUv).rgb, uTLBlend), uTLActive);
+
+  // Swipe compare: a hard SCREEN-SPACE split (not a UV split — a UV divider
+  // would rotate and warp with the sphere instead of reading as a vertical
+  // curtain over the viewport, the whole point of the swipe metaphor).
+  // Right is always literal "today" (uDay), even mid-time-lapse-playback:
+  // compare.ts's own CompareView is two fixed dates, independent of the
+  // scrubber's live position.
+  float screenX = gl_FragCoord.x / max(uResolution.x, 1.0);
+  float compareSide = step(uSplit, screenX);
+  vec3 comparePick = mix(texture2D(uComparePast, vUv).rgb, texture2D(uDay, vUv).rgb, compareSide);
+  vec3 dayColor = mix(liveDay, comparePick, uCompareActive);
   vec3 baseColor = texture2D(uBase, vUv).rgb;
 
   // Swath gaps and polar night in the daily VIIRS mosaic read as near-black;

@@ -1,21 +1,60 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, X } from "lucide-react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { simTime, useGlobe } from "../globeStore.ts";
+import { MAX_OFFSET_MIN, MIN_OFFSET_MIN, labelOffset, offsetToSlider, sliderToOffset, snapOffset, snapStepMinutes } from "../timeMachine/rangeModel.ts";
+import { useCompare } from "../timeMachine/compareStore.ts";
+import { VIIRS_TRUE_COLOR } from "../layers/gibs.ts";
+import CompareDivider from "./CompareDivider.tsx";
 
 /** LANE L5 (navigation and UI) built the original single floating card;
  *  LANE U1 (composition) split it into the two forms below - a compact
  *  single-row pill for the shared top bar (sm+) and a bottom sheet for
  *  phones, gated on `store.sheet` like every other phone sheet, since the
  *  centred floating card used to sit directly on top of the globe and the
- *  reach columns at every measured breakpoint. */
+ *  reach columns at every measured breakpoint.
+ *
+ *  WAVE 6 LANE X3 (time machine UI) swapped the linear +-24h slider for
+ *  rangeModel's non-linear +-30d/+2d range (fine control near now, coarse
+ *  day-scale steps far from it), added the day-per-second speed and the
+ *  Compare toggle, and kept every L5/U1 shape (compact pill, phone sheet,
+ *  not-live badge) unchanged. */
 
-const MIN_OFFSET = -24 * 60;
-const MAX_OFFSET = 24 * 60;
-const SPEEDS = [60, 600, 3600] as const;
+const MIN_OFFSET = MIN_OFFSET_MIN;
+const MAX_OFFSET = MAX_OFFSET_MIN;
+// `mul` is simulated SECONDS per wall second (usgsHistory.pulseState's own
+// units) — not a relabelling, the existing `speed * dtSec / 60` minutes-per-
+// tick formula below already equals `mul` seconds of sim time per real
+// second, so HistoryLayer's independently measured playback speed lands on
+// the same number without this file exporting anything.
+const SPEEDS = [
+  { mul: 60, label: "x60" },
+  { mul: 600, label: "x600" },
+  { mul: 3600, label: "x3600" },
+  { mul: 86400, label: "1d/s" },
+] as const;
+// Day-boundary marks under the slider track (rangeModel spec item: "day
+// ticks") — UTC midnights across the whole +-30d/+2d horizon, positioned by
+// the same non-linear map the thumb uses, so they visibly bunch up exactly
+// where the range itself gets coarse (far from now) rather than claiming a
+// precision the slider doesn't have there.
+const DAY_TICKS = Array.from({ length: MAX_OFFSET_MIN / 1440 - MIN_OFFSET_MIN / 1440 + 1 }, (_, i) => {
+  const minutes = MIN_OFFSET_MIN + i * 1440;
+  return { minutes, pct: (offsetToSlider(minutes) + 1) * 50 };
+});
 
 function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+function DayTicks() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2">
+      {DAY_TICKS.map((t) => (
+        <span key={t.minutes} className="absolute top-0 h-1 w-px bg-zinc-500/50" style={{ left: `${t.pct}%` }} />
+      ))}
+    </div>
+  );
 }
 
 /** Compact form for the top-row pill: hour:minute only, no room for a date
@@ -37,6 +76,9 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   const [speedIdx, setSpeedIdx] = useState(0);
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number | null>(null);
+  const compareState = useCompare((s) => s.state);
+  const openCompare = useCompare((s) => s.open);
+  const closeCompare = useCompare((s) => s.close);
 
   // Reduced motion disables auto-play outright: derived, not synced via an
   // effect, so a mid-session OS toggle takes effect on the very next render
@@ -51,8 +93,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
       lastRef.current = t;
       if (last !== null) {
         const dtSec = (t - last) / 1000;
-        const speed = SPEEDS[speedIdx];
-        const deltaMin = (speed * dtSec) / 60;
+        const deltaMin = (SPEEDS[speedIdx].mul * dtSec) / 60;
         const next = useGlobe.getState().timeOffsetMin + deltaMin;
         if (next >= MAX_OFFSET || next <= MIN_OFFSET) {
           setTimeOffset(Math.max(MIN_OFFSET, Math.min(MAX_OFFSET, next)));
@@ -72,8 +113,12 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
-      if (e.key === "[") setTimeOffset(Math.max(MIN_OFFSET, useGlobe.getState().timeOffsetMin - 60));
-      else if (e.key === "]") setTimeOffset(Math.min(MAX_OFFSET, useGlobe.getState().timeOffsetMin + 60));
+      // Step size follows rangeModel's own coarseness (15/60/1440 min), not
+      // a fixed 60 min, now that the range spans 30 real days: a fixed step
+      // would take 720 presses to cross the far end.
+      const current = useGlobe.getState().timeOffsetMin;
+      if (e.key === "[") setTimeOffset(Math.max(MIN_OFFSET, current - snapStepMinutes(current)));
+      else if (e.key === "]") setTimeOffset(Math.min(MAX_OFFSET, current + snapStepMinutes(current)));
       else if (e.key === " " || e.code === "Space") {
         if (!reducedMotion) {
           e.preventDefault();
@@ -86,7 +131,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   }, [setTimeOffset, reducedMotion]);
 
   const onSliderKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const step = e.shiftKey ? 60 : 15;
+    const step = snapStepMinutes(offset) * (e.shiftKey ? 4 : 1);
     if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
       e.preventDefault();
       setTimeOffset(Math.max(MIN_OFFSET, offset - step));
@@ -96,8 +141,44 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     }
   };
 
+  // The <input type="range"> now moves in rangeModel's SLIDER position
+  // space (-1..1), not raw minutes: an equal drag distance always covers an
+  // equal on-screen distance, which is what makes the fine-near/coarse-far
+  // non-linearity actually usable with a mouse. `snapOffset` on commit keeps
+  // the stored value on the same 15/60/1440-min grid the keyboard path uses.
+  const onSliderChange = (value: number) => setTimeOffset(snapOffset(sliderToOffset(value)));
+
   const now = simTime(offset);
   const notLive = offset !== 0;
+  // Derived from `now` rather than a second `Date.now()` read: same real
+  // instant `now` was built from (algebraically `now - offset`), and render
+  // must stay pure — no direct clock read here (react-hooks/purity).
+  const label = useMemo(() => labelOffset(offset, now.getTime() - offset * 60_000), [offset, now]);
+
+  const compareButton = (
+    <button
+      type="button"
+      onClick={() => {
+        if (compareState) {
+          closeCompare();
+        } else {
+          // Left is wherever the visitor already scrubbed to (or a week
+          // back from a live view, so Compare always has two genuinely
+          // different dates to show); right is literal today regardless of
+          // the current scrub — compare.ts's own CompareView shape.
+          openCompare(notLive ? now.getTime() : Date.now() - 7 * 86_400_000, Date.now(), VIIRS_TRUE_COLOR);
+          setPlaying(false);
+        }
+      }}
+      aria-pressed={compareState !== null}
+      title="Swipe-compare a past date against today"
+      className={`rounded-full border border-line px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+        compareState ? "bg-accent/20 text-accent" : "hover:text-accent"
+      }`}
+    >
+      Compare
+    </button>
+  );
 
   const nowButton = (
     <button
@@ -146,17 +227,21 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
         <span className="whitespace-nowrap">
           {fmtCompact(now, "Asia/Kolkata")} IST · {fmtCompact(now, "UTC")} UTC
         </span>
-        <input
-          type="range"
-          min={MIN_OFFSET}
-          max={MAX_OFFSET}
-          step={15}
-          value={offset}
-          onChange={(e) => setTimeOffset(Number(e.target.value))}
-          onKeyDown={onSliderKeyDown}
-          aria-label="Simulated time offset, minutes from now"
-          className="h-1 w-36 accent-accent"
-        />
+        <span className="whitespace-nowrap text-zinc-500">{label}</span>
+        <div className="relative flex w-36 items-center">
+          <DayTicks />
+          <input
+            type="range"
+            min={-1}
+            max={1}
+            step={0.0005}
+            value={offsetToSlider(offset)}
+            onChange={(e) => onSliderChange(Number(e.target.value))}
+            onKeyDown={onSliderKeyDown}
+            aria-label="Simulated time offset, non-linear, 30 days back to 2 days ahead"
+            className="relative h-1 w-36 accent-accent"
+          />
+        </div>
         {nowButton}
         {playButton}
         <button
@@ -165,8 +250,9 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           title="Cycle playback speed"
           className="rounded-full border border-line px-1.5 py-0.5 text-zinc-400 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         >
-          x{SPEEDS[speedIdx]}
+          {SPEEDS[speedIdx].label}
         </button>
+        {compareButton}
         {notLiveBadge}
       </div>
 
@@ -199,20 +285,24 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             </span>
             {notLiveBadge}
           </div>
+          <p className="mb-2 text-zinc-500">{label}</p>
 
-          <input
-            type="range"
-            min={MIN_OFFSET}
-            max={MAX_OFFSET}
-            step={15}
-            value={offset}
-            onChange={(e) => setTimeOffset(Number(e.target.value))}
-            onKeyDown={onSliderKeyDown}
-            aria-label="Simulated time offset, minutes from now (sheet)"
-            className="h-2 w-full accent-accent"
-          />
+          <div className="relative flex items-center">
+            <DayTicks />
+            <input
+              type="range"
+              min={-1}
+              max={1}
+              step={0.0005}
+              value={offsetToSlider(offset)}
+              onChange={(e) => onSliderChange(Number(e.target.value))}
+              onKeyDown={onSliderKeyDown}
+              aria-label="Simulated time offset, non-linear, 30 days back to 2 days ahead (sheet)"
+              className="relative h-2 w-full accent-accent"
+            />
+          </div>
 
-          <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => {
@@ -223,7 +313,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             >
               Now
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {!reducedMotion && (
                 <button
                   type="button"
@@ -237,7 +327,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               )}
               {SPEEDS.map((s, i) => (
                 <button
-                  key={s}
+                  key={s.mul}
                   type="button"
                   onClick={() => setSpeedIdx(i)}
                   aria-pressed={speedIdx === i}
@@ -245,14 +335,17 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
                     speedIdx === i ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
-                  x{s}
+                  {s.label}
                 </button>
               ))}
             </div>
+            {compareButton}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
         </div>
       )}
+
+      <CompareDivider />
     </>
   );
 }
