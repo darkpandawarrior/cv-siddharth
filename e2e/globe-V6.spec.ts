@@ -18,11 +18,34 @@ const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
 const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
 const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
 
+// /globe mounts every layer together (GlobeScene.tsx), and HazardLayer.tsx's
+// own external feeds (quakes, EONET, GDACS, aurora, Kp, launches) are real
+// internet calls, not same-origin /api/* -- so leaving them unmocked means
+// this spec's "changes exactly once" and "0 mutations over 60s idle" checks
+// on [data-scene-summary] are hostage to whenever those feeds happen to
+// resolve on the real network (measured: a Hazards sentence kept rewriting
+// itself over several seconds as EONET/GDACS/launches landed one at a time,
+// each one a spurious extra mutation the satellites toggle never caused).
+// Abort them all so Hazards settles to one deterministic "failed" sentence
+// before any test starts counting -- same URL list and same `abort()`
+// pattern globe-L7.spec.ts's own abortAllHazardFeeds and globe-W6.spec.ts's
+// own EXTERNAL_HAZARD_URLS use, neither importable here per the worktree's
+// ownership split (each lane's e2e spec is a new file, G10).
+const EXTERNAL_HAZARD_URLS = [
+  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+  "https://eonet.gsfc.nasa.gov/api/v3/events**",
+  "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
+  "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+  "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+  "https://ll.thespacedevs.com/2.2.0/launch/upcoming/**",
+];
+
 async function withApiFixtures(page: Page) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
+  for (const url of EXTERNAL_HAZARD_URLS) await page.route(url, (route) => route.abort());
 }
 
 async function openGlobe(page: Page) {
