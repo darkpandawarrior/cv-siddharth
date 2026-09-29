@@ -11,6 +11,11 @@ import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
 // row's sibling, TimeScrubber, for the identical reason.
 const HoverReadout = lazy(() => import("./ui/HoverReadout.tsx"));
 
+// LANE S2 (space weather): same lazy + ClientOnly reasoning as HoverReadout
+// above — this chunk must never join the eager "Globe" shell, and its own
+// live-signal fetches have no business running on the server.
+const SpaceWeather = lazy(() => import("./ui/SpaceWeather.tsx"));
+
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
 // imported: that file also exports SceneActivity, which statically imports
 // @react-three/fiber, and this component is SSR-rendered (GlobePanel's own
@@ -92,6 +97,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
         {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
       </div>
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
+      {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><SpaceWeather /></Suspense></ClientOnly>}
       {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
           shown at every breakpoint (the drag hint above stays sm:-only, but
           this is the one accessible affordance a touch/keyboard visitor has
