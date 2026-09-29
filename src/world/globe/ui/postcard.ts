@@ -13,6 +13,7 @@ import { LAYER_IDS, sceneHandles, useGlobe, type LayerId, type StatusKey } from 
  *  (a live headcount, not a drawn feature) are still listed since both do
  *  render visible geometry. */
 const LAYER_LABEL: Record<LayerId, string> = {
+  buoys: "Ocean buoys",
   markers: "Pune markers",
   stars: "stars and Moon",
   satellites: "satellites",

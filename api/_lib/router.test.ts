@@ -1,3 +1,6 @@
+import { handleBuoys } from "./buoys-handler.js";
+import { handleVolcanoes } from "./volcano-handler.js";
+import { handleSun } from "./sun-handler.js";
 import { describe, it, expect } from "vitest";
 import { ROUTES, routeNameFrom, dispatch } from "./router";
 import { handleAircraft } from "./aircraft-handler";
@@ -16,6 +19,9 @@ import { handleWind } from "./wind-handler";
 // one entry per file lane/globe-F1 deleted, so a route quietly dropped from
 // the table fails this list, not just a runtime 404 nobody wrote a test for.
 const EXPECTED: Record<string, unknown> = {
+  buoys: handleBuoys,
+  volcanoes: handleVolcanoes,
+  sun: handleSun,
   aircraft: handleAircraft,
   chat: handleChat,
   "github-activity": handleGithubActivity,
@@ -30,7 +36,7 @@ const EXPECTED: Record<string, unknown> = {
 };
 
 describe("ROUTES", () => {
-  it("has exactly the 11 former routes, none dropped or added", () => {
+  it("has every registered route", () => {
     expect(Object.keys(ROUTES).sort()).toEqual(Object.keys(EXPECTED).sort());
   });
 

@@ -54,6 +54,7 @@ const LABEL: Record<LayerId, string> = {
   aircraft: "Aircraft",
   presence: "Visitors",
   pulses: "Live pulses",
+  buoys: "Ocean buoys",
   hazards: "Earth events",
   wind: "Wind",
   reach: "My apps and repos",

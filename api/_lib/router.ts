@@ -1,3 +1,6 @@
+import { handleBuoys } from "./buoys-handler.js";
+import { handleVolcanoes } from "./volcano-handler.js";
+import { handleSun } from "./sun-handler.js";
 // LANE F1: the table `api/[route].ts` dispatches through. Before this file,
 // each of these 11 routes was its own top-level api/*.ts, and Vercel (which
 // creates one Function per file directly under api/, per the `_lib/` prefix
@@ -30,6 +33,9 @@ export type RouteHandler = (request: Request) => Promise<Response>;
 // its own caching headers, its own api/_lib/upstream.ts governor and its own
 // error behaviour — this table only picks which function runs, nothing else.
 export const ROUTES: Record<string, RouteHandler> = {
+  buoys: handleBuoys,
+  volcanoes: handleVolcanoes,
+  sun: handleSun,
   aircraft: handleAircraft,
   chat: handleChat,
   "github-activity": handleGithubActivity,

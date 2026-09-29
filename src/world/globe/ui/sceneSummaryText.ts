@@ -19,6 +19,7 @@ import { WMO_LABEL, subsolarPoint, type SkyState } from "../../../lib/sky.ts";
 // `Record<LayerId, ...>` for the same reason LayerPanel's own copy is — a
 // future LayerId with no label here fails the build, not silently.
 export const LAYER_LABEL: Record<LayerId, string> = {
+  buoys: "Ocean buoys",
   markers: "Pune markers",
   stars: "Stars and Moon",
   satellites: "Satellites",

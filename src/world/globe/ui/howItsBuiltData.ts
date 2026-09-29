@@ -61,6 +61,16 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
 
   return [
     {
+      id: "keyless-ocean-volcano-sun",
+      title: "Ocean observations, weekly volcanic reports and solar disc",
+      shaders: [],
+      provenance: [
+        { label: "NOAA NDBC latest observations (sampled 200 stations maximum, 10 min cache)", endpoint: "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt", licence: "NOAA NWS public domain; https://www.weather.gov/disclaimer" },
+        { label: "Smithsonian GVP / USGS weekly report (6 hour cache, report week shown)", endpoint: "https://volcano.si.edu/news/WeeklyVolcanoRSS.xml", licence: "US government employee product; https://volcano.si.edu/gvp_termsofuse.cfm" },
+        { label: "Helioviewer / NASA SDO AIA 171 (256 px PNG, 30 min cache)", endpoint: "https://api.helioviewer.org/v2/takeScreenshot/", licence: "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams; https://sdo.gsfc.nasa.gov/data/rules.php" },
+      ],
+    },
+    {
       id: "earth-imagery",
       title: `Earth imagery (photoreal earth style, radius ${GLOBE_RADIUS} world units = 6,371 km)`,
       shaders: [
