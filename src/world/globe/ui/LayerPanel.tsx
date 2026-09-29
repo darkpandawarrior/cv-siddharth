@@ -83,7 +83,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
  *  (a soft pulse) rather than a fixed state. `undefined` (a layer that
  *  hasn't reported at all, e.g. its lane not yet merged) reads the same as
  *  "loading": never green, never silently absent. */
-export function dotStyle(health: LayerHealth | undefined): { color: string; pulse: boolean } {
+function dotStyle(health: LayerHealth | undefined): { color: string; pulse: boolean } {
   switch (health?.state) {
     case "live":
       return { color: "var(--color-signal)", pulse: false };

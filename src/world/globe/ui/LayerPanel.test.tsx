@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { dotStyle } from "./LayerPanel.tsx";
+import LayerPanel from "./LayerPanel.tsx";
+import { renderToStaticMarkup } from "react-dom/server";
+import { useGlobe } from "../globeStore.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
 import { DENSITY_LEGEND, densityColor } from "../layers/hexbin.ts";
 import { QUAKE_DEPTH_LEGEND, depthToColor } from "../layers/quake.ts";
 
 describe("layer legend and health", () => {
   it("distinguishes unavailable upstream data from a product error", () => {
-    expect(dotStyle({ state: "failed", detail: "feed unreachable" }).color).toBe("var(--color-degraded)");
-    expect(dotStyle({ state: "failed", detail: "invalid renderer state" }).color).toBe("var(--color-danger)");
+    const prior = useGlobe.getState();
+    try {
+      useGlobe.setState({ panelOpen: true, status: { wind: { state: "failed", detail: "feed unreachable" }, hazards: { state: "failed", detail: "invalid renderer state" } } });
+      const html = renderToStaticMarkup(<LayerPanel />);
+      expect(html).toContain("background-color:var(--color-degraded)");
+      expect(html).toContain("background-color:var(--color-danger)");
+    } finally { useGlobe.setState(prior); }
   });
   it("labels the renderer's actual color endpoints", () => {
     expect(WIND_LEGEND.stops.map((s) => s.label)).toEqual(["2", "12", "22+"]);
