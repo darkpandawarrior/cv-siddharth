@@ -165,9 +165,16 @@ function disposeEntry(entry: TileEntry): void {
 
 export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Date; tier: 1 | 2 | 3; earthRef?: RefObject<THREE.Mesh> }) {
   const groupRef = useRef<THREE.Group>(null!);
-  const { size, camera } = useThree();
+  const { size, camera, gl } = useThree();
   const reducedMotion = useReducedMotion();
   const imagery = useGlobe((s) => s.imagery);
+  // perf.md: TileLayer and EarthImagery used to fire the same-region fetch
+  // at two resolutions simultaneously — the whole-globe base texture and
+  // deep-zoom tiles racing for the same bytes on the same connection. Wait
+  // for EarthImagery's own base sphere to settle (live OR failed — either
+  // way it's done fetching) before this layer's tiles start requesting, so
+  // the low-res base always wins the wire first and detail streams in after.
+  const earthReady = useGlobe((s) => s.status.earth?.state === "live" || s.status.earth?.state === "failed");
 
   // T1 (desktop) caches more tiles than T2 (phone) — living-earth's own
   // per-tier cost/cap convention (GlobeScene.tsx's TIER_DOT_COUNT is the
@@ -239,9 +246,20 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
           if (!texture) {
             texture = new THREE.Texture(bitmap);
             texture.colorSpace = THREE.SRGBColorSpace;
-            texture.generateMipmaps = false;
-            texture.minFilter = THREE.LinearFilter;
+            // render.md finding 3: every GIBS tile bitmap is power-of-two
+            // (256/512px), so three's own default mip chain
+            // (generateMipmaps=true + LinearMipmapLinearFilter) is free to
+            // enable and kills the moire/shimmer a flat LinearFilter-only
+            // sample gets at oblique limb angles or when zoomed out past 1
+            // tile-texel per screen pixel — the default view, not an edge
+            // case. Anisotropy matches EarthImagery.tsx's own whole-globe
+            // sphere (8) for consistency, capped at 8 on tier 2 specifically
+            // per the brief; tier 1 (desktop) takes the GPU's real max.
+            texture.generateMipmaps = true;
+            texture.minFilter = THREE.LinearMipmapLinearFilter;
             texture.magFilter = THREE.LinearFilter;
+            const maxAniso = gl.capabilities.getMaxAnisotropy();
+            texture.anisotropy = tier === 2 ? Math.min(maxAniso, 8) : maxAniso;
             texture.wrapS = THREE.ClampToEdgeWrapping;
             texture.wrapT = THREE.ClampToEdgeWrapping;
             texture.needsUpdate = true;
@@ -442,7 +460,12 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     const moved = camera.position.distanceTo(lastCamPos.current) > RECOMPUTE_DISTANCE_EPS;
     const turnedCos = lastCamForward.current.lengthSq() === 0 ? -1 : lastCamForward.current.dot(scratchForward.current);
     const turned = turnedCos < RECOMPUTE_ANGLE_COS_EPS;
-    if ((moved || turned) && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS) {
+    // perf.md fetch-race fix: `moved` is true on frame 1 regardless (camera
+    // hasn't left its Infinity-sentinel start), so gating on `earthReady`
+    // here alone is enough — the first real recompute (and its fetches)
+    // simply waits for the base sphere's own load to settle first, no extra
+    // effect/timer needed to "wake up" once it does.
+    if (earthReady && (moved || turned) && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS) {
       const t0 = performance.now();
       for (const role of rolesRef.current.values()) recomputeRole(role);
       tileLayerStats.lastRecomputeMs = performance.now() - t0;
