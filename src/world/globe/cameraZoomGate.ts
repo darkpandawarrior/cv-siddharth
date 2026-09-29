@@ -81,6 +81,18 @@ export function streetZoomToAltitude(zoom: number, minAltitude: number, maxAltit
 export interface StreetHandoff {
   /** MapLibre zoom to open the map at (see altitudeToStreetZoom). */
   zoom: number;
+  /** MapLibre bearing (degrees) matching the orbit camera's own heading at
+   *  the moment of hand-off -- cameraOrientation.ts's
+   *  cameraForwardToBearingPitch, called from CameraDirector.tsx's own
+   *  zoom-hold trigger, the only real producer. Optional: this module's own
+   *  pre-existing unit test arms a hand-off with only `zoom` set, and
+   *  StreetView.tsx falls back to its own STREET_BEARING constant when
+   *  absent (a direct __GLOBE_TEST_STREET__ trigger, or a re-open, never
+   *  arms one at all). */
+  bearing?: number;
+  /** MapLibre pitch (degrees, 0-85) matching the orbit camera's own tilt at
+   *  hand-off. Same optionality/fallback as `bearing` above. */
+  pitch?: number;
 }
 let pendingHandoff: StreetHandoff | null = null;
 export function armStreetHandoff(h: StreetHandoff): void {

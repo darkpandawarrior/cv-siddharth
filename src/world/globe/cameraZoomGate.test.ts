@@ -80,4 +80,10 @@ describe("street hand-off box", () => {
     expect(consumeStreetHandoff()).toEqual({ zoom: 14.2 });
     expect(consumeStreetHandoff()).toBeNull();
   });
+
+  it("carries bearing/pitch alongside zoom", () => {
+    clearStreetHandoffForTest();
+    armStreetHandoff({ zoom: 15, bearing: 42.5, pitch: 30 });
+    expect(consumeStreetHandoff()).toEqual({ zoom: 15, bearing: 42.5, pitch: 30 });
+  });
 });

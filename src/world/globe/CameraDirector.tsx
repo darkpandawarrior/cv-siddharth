@@ -17,6 +17,7 @@ import {
 } from "./cameraMath.ts";
 import { finishIntro, getIntroPhase, INTRO_DURATION_MS, introStartDirectionFromLatLon, subscribeIntro, type IntroPhase } from "./cameraIntro.ts";
 import { altitudeToStreetZoom, armStreetHandoff, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
+import { cameraForwardToBearingPitch } from "./cameraOrientation.ts";
 import { entityPositions, useGlobe, type Focus } from "./globeStore.ts";
 
 /** LANE L5 (navigation: fly-to, ground view, follow). One component owns the
@@ -433,8 +434,21 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
         zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt);
         if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
           zoomHoldRef.current = 0;
-          const { lat, lon } = xyzToLatLon({ x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance });
-          armStreetHandoff({ zoom: altitudeToStreetZoom(distance - GLOBE_RADIUS, minDistance - GLOBE_RADIUS, maxDistance - GLOBE_RADIUS) });
+          const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };
+          const { lat, lon } = xyzToLatLon(unit);
+          // OrbitControls' target is fixed at the origin (GlobeScene.tsx
+          // never overrides it), so the camera always looks straight at the
+          // globe's own centre -- its forward direction is always this same
+          // unit vector, negated. WAVE 6 LANE X5 (verifier-flagged blocking
+          // gap): matching bearing/pitch, not just zoom, is what "seamless"
+          // requires -- see cameraOrientation.ts's own header.
+          const forward = { x: -unit.x, y: -unit.y, z: -unit.z };
+          const { bearingDeg, pitchDeg } = cameraForwardToBearingPitch(forward, lat, lon);
+          armStreetHandoff({
+            zoom: altitudeToStreetZoom(distance - GLOBE_RADIUS, minDistance - GLOBE_RADIUS, maxDistance - GLOBE_RADIUS),
+            bearing: bearingDeg,
+            pitch: pitchDeg,
+          });
           useGlobe.getState().flyTo({ kind: "latlon", lat, lon });
           setView("street");
         }
