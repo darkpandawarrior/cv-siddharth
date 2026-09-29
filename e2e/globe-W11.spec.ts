@@ -27,7 +27,10 @@ test("Paris search supports keyboard selection and populates the place inspector
   await expect(search).toBeFocused();
   await search.fill("Pa"); await page.waitForTimeout(400); expect(requests).toBe(0);
   await search.fill("Paris"); await expect(page.getByRole("option")).toContainText("Paris");
-  await search.press("ArrowDown"); await search.press("Enter");
+  // The one-box command/ask row precedes the first place result.
+  await search.press("ArrowDown"); await search.press("ArrowDown");
+  await expect(page.getByRole("option", { name: /^Paris\b/ })).toHaveAttribute("aria-selected", "true");
+  await search.press("Enter");
   const inspector = page.getByRole("region", { name: "Selection details" });
   await expect(inspector.getByRole("heading")).toHaveText("Paris");
   await expect(inspector).toContainText("France"); await expect(inspector).toContainText("Photon (OpenStreetMap, ODbL)");

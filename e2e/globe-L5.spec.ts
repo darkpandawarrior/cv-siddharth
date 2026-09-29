@@ -126,7 +126,7 @@ test("the time scrubber moves the subsolar probe and shows the not-live notice",
   const before = await probe.getAttribute("data-subsolar-x");
 
   await expect(page.locator("[data-globe-not-live]")).toHaveCount(0);
-  const slider = page.getByLabel("Simulated time offset, minutes from now");
+  const slider = page.getByLabel("Simulated time offset, non-linear, 30 days back to 2 days ahead");
   await slider.focus();
   // Shift+ArrowRight steps +1h each (TimeScrubber's own keyboard contract);
   // ten of them is +10h, well clear of "now".
