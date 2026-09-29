@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { GlobalEclipse } from "../layers/eclipse.ts";
 import { Pause, Play, X } from "lucide-react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { simTime, useGlobe } from "../globeStore.ts";
@@ -74,6 +75,8 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   const reducedMotion = useReducedMotion();
   const [playing, setPlaying] = useState(false);
   const [speedIdx, setSpeedIdx] = useState(0);
+  const [eclipseLoading, setEclipseLoading] = useState(false);
+  const [nextEclipse, setNextEclipse] = useState<GlobalEclipse | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number | null>(null);
   const compareState = useCompare((s) => s.state);
@@ -180,6 +183,41 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     </button>
   );
 
+  // WAVE 7 LANE 8 (eclipse paths): astronomy-engine loads only when this is
+  // clicked (its own lazy chunk, shared with EclipseLayer.tsx if that layer
+  // is on) -- never a static import here, or its ~47 KB gzip would land in
+  // the eager Globe chunk. The jump sets a real offset past the normal +-30
+  // day/2 day range (rangeModel.ts, not owned by this lane); the slider
+  // visually pins to its end, and `label` below still prints an honest
+  // "in N days" for however far out the jump actually lands.
+  const jumpToNextEclipse = async () => {
+    setEclipseLoading(true);
+    try {
+      const { nextGlobalEclipses } = await import("../layers/eclipse.ts");
+      const [eclipse] = nextGlobalEclipses(new Date(), 1);
+      if (!eclipse) return;
+      setNextEclipse(eclipse);
+      setTimeOffset((eclipse.peak.getTime() - Date.now()) / 60_000);
+      setPlaying(false);
+    } finally {
+      setEclipseLoading(false);
+    }
+  };
+  const eclipseButtonTitle = nextEclipse
+    ? `Jump to the greatest point of the next ${nextEclipse.kind} solar eclipse, ${nextEclipse.peak.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })}`
+    : "Jump to the next global solar eclipse's greatest point (computed with astronomy-engine)";
+  const eclipseButton = (
+    <button
+      type="button"
+      onClick={jumpToNextEclipse}
+      disabled={eclipseLoading}
+      title={eclipseButtonTitle}
+      className="rounded-full border border-line px-2 py-1 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
+    >
+      {eclipseLoading ? "Finding eclipse..." : "Next eclipse"}
+    </button>
+  );
+
   const nowButton = (
     <button
       type="button"
@@ -253,6 +291,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           {SPEEDS[speedIdx].label}
         </button>
         {compareButton}
+        {eclipseButton}
         {notLiveBadge}
       </div>
 
@@ -340,6 +379,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               ))}
             </div>
             {compareButton}
+            {eclipseButton}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
         </div>
