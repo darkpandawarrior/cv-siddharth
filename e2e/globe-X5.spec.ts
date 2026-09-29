@@ -67,17 +67,47 @@ test.describe("seamless zoom into street level and back", () => {
     const canvas = await openGlobe(page);
     await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
 
-    const zoomIn = page.getByRole("button", { name: "Zoom in" });
-    // Resting distance is 26, OrbitControls clamps at minDistance 9 -- a
-    // handful of clicks overshoots the clamp several times over, so this
-    // doesn't depend on getting the click count exactly right. Checked
-    // before each click and stopped the moment street level opens: once it
-    // does, the street surface itself covers this same button, and a click
-    // Playwright insists on delivering to a now-hidden target hangs for the
-    // rest of the test budget instead of failing fast.
+    const zoomInRole = page.getByRole("button", { name: "Zoom in" });
+    // Resting distance is 26, OrbitControls clamps at minDistance 9, and the
+    // multiplicative ZOOM_STEP (1.35, GlobeScene.tsx) crosses that floor in
+    // ~4 clicks -- 12 gives several clicks of slack, so this doesn't depend
+    // on getting the click count exactly right. Checked before each click
+    // and stopped the moment street level opens.
+    //
+    // Root-caused (this pass) why `zoomIn.click()` itself is the wrong tool
+    // here, not the button or the camera logic: Locator.click() on this
+    // production build reliably gets stuck on its own internal "waiting for
+    // scheduled navigations to finish" step AFTER the click is actually
+    // delivered -- reproduced standalone with a throwaway script
+    // (X5F-fix/probe3.mjs, kept in scratch) logging Playwright's own call
+    // log, which shows "click action done" immediately followed by a stall
+    // that only ever times out, never resolves; over half of a 12-click run
+    // failed that way. Nothing here actually navigates (`Zoom in` is a plain
+    // `<button>`, no href, no history call) -- this reads as Playwright's own
+    // click heuristic misfiring against this SPA shell, not a bug in the
+    // click target. Dispatching the SAME gesture via raw
+    // move/down/up (no actionability wait, no post-click navigation wait) --
+    // exactly what a real pointer does -- reached street level cleanly in
+    // every one of several repeated standalone runs against this same built
+    // preview server. That is the fix: drive the pointer directly instead of
+    // through Locator.click().
+    //
+    // The 150ms gap between attempts still matters and is kept from
+    // e2e/globe-W1.spec.ts's own zoom loop: .ctrl-icon's hover/active
+    // transform (index.css, `transform: scale(1.06)` on hover with
+    // --dur-fast 0.18s spring easing) keeps the button's own bounding box
+    // animating for ~180ms after every click, and a fresh boundingBox() read
+    // each iteration (rather than one taken before the loop) is what a real
+    // pointer effectively gets too, since it re-locates the target every time.
     for (let i = 0; i < 12; i++) {
       if ((await canvas.getAttribute("data-camera-view").catch(() => null)) === "street") break;
-      await zoomIn.click().catch(() => {});
+      const box = await zoomInRole.boundingBox().catch(() => null);
+      if (box) {
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.mouse.up();
+      }
+      await page.waitForTimeout(150);
     }
 
     await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 8_000 }).toBe("street");
