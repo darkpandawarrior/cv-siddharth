@@ -291,6 +291,19 @@ function SceneRig({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [controlsRef]);
 
+  useEffect(() => {
+    const canvas = get().gl.domElement;
+    const zoom = (event: MouseEvent) => {
+      const controls = controlsRef.current;
+      if (!controls || useGlobe.getState().view !== "orbit") return;
+      event.preventDefault();
+      controls.dollyOut(ZOOM_STEP);
+      controls.update();
+    };
+    canvas.addEventListener("dblclick", zoom);
+    return () => canvas.removeEventListener("dblclick", zoom);
+  }, [controlsRef, get]);
+
   return null;
 }
 

@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { TLE_STATIONS_URL, TLE_VISUAL_URL } from "../layers/tleSource.ts";
+
+it("satellite provenance uses the same CelesTrak endpoints as the server", () => {
+  expect(buildHowItsBuiltEntries().find((e) => e.id === "satellites")?.provenance.map((p) => p.endpoint)).toEqual([TLE_STATIONS_URL, TLE_VISUAL_URL]);
+});
 import { buildHowItsBuiltEntries } from "./howItsBuiltData.ts";
 import { VERT, ATMO_FRAG, OCEAN_FRAG } from "../layers/sun.ts";
 import { CLOUD_FRAG } from "../layers/cloudShader.ts";

@@ -4,13 +4,6 @@
 // so drift is structurally impossible; every provenance endpoint/licence
 // below is the literal exported constant or builder function the same layer
 // calls to fetch, for the same reason (howItsBuiltData.test.ts proves both).
-//
-// The hazard and space-weather feeds are cited through layers/feedUrls.ts,
-// the constants HazardLayer.tsx itself fetches (lane V5 moved them there for
-// this panel). CelesTrak is the one feed still left out: its URL lives as a
-// private const inside api/_lib/tle-handler.ts, a server file, and
-// hand-copying it here would be exactly the drift this panel exists to
-// prevent.
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { VERT, ATMO_FRAG, OCEAN_FRAG } from "../layers/sun.ts";
 import { CLOUD_FRAG } from "../layers/cloudShader.ts";
@@ -20,6 +13,7 @@ import { dayImageryAttempts, gapFillUrl, reliefUrl, nightLightsUrl, seaIceAttemp
 import { LIBERTY_STYLE_URL, PANORAMAX_SEARCH_ENDPOINT } from "../streetPhotos.ts";
 import { mapsExport } from "../../../data/generated/mapsPlaces.ts";
 import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
+import { TLE_SOURCE, TLE_STATIONS_URL, TLE_VISUAL_URL } from "../layers/tleSource.ts";
 
 export interface ShaderSource {
   name: string;
@@ -60,6 +54,12 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
   const src = describeImagerySource(now);
 
   return [
+    {
+      id: "satellites",
+      title: "Satellites (CelesTrak GP elements, propagated with SGP4)",
+      shaders: [],
+      provenance: [TLE_STATIONS_URL, TLE_VISUAL_URL].map((endpoint) => ({ label: TLE_SOURCE, endpoint, licence: "CelesTrak orbital data, shown with attribution" })),
+    },
     {
       id: "earth-imagery",
       title: `Earth imagery (photoreal earth style, radius ${GLOBE_RADIUS} world units = 6,371 km)`,
