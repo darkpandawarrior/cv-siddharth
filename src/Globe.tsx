@@ -161,14 +161,32 @@ export function Globe() {
   // than guessed, the same fix as `desktopHeightPx` above for RoomFrame.
   const topbarRef = useRef<HTMLDivElement>(null);
   const [topOffsetPx, setTopOffsetPx] = useState<number | null>(null);
+  // Phone bottom sheets (Layers/Time/Tour) are `position: fixed; bottom: 0`,
+  // so their max-height is what keeps their TOP edge off the topbar's own
+  // icon row (task H1 #3) - a bare 70vh reaches into that row on a short
+  // viewport (measured: 390x844 puts a 70vh sheet's top above the topbar's
+  // real bottom). `topOffsetPx` alone isn't enough here: it's a height, not
+  // a position, and the topbar doesn't start at the viewport's top (site
+  // chrome sits above the stage) - the sheet cap needs the topbar's real
+  // BOTTOM edge in viewport coordinates, from the same rect this effect
+  // already reads.
+  const [sheetMaxPx, setSheetMaxPx] = useState<number | null>(null);
   useEffect(() => {
     const el = topbarRef.current;
     if (!el) return;
-    const update = () => setTopOffsetPx(el.getBoundingClientRect().height);
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setTopOffsetPx(rect.height);
+      setSheetMaxPx(Math.max(0, window.innerHeight - rect.bottom - 8));
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
     // showScene (via capable) gates the topbar's own mount below - this
     // effect has to re-run once that ref actually exists.
   }, [capable]);
@@ -215,7 +233,10 @@ export function Globe() {
         // a fixed 80px let the card's top edge cover the zoom/layer icon row
         // underneath it (caught via screenshot QA). Falls back to 5rem
         // (the old constant) before the first measurement lands.
-        style={{ ["--globe-top-offset" as string]: topOffsetPx != null ? `${topOffsetPx + 16}px` : "5rem" } as CSSProperties}
+        style={{
+          ["--globe-top-offset" as string]: topOffsetPx != null ? `${topOffsetPx + 16}px` : "5rem",
+          ["--globe-sheet-max-h" as string]: sheetMaxPx != null ? `${sheetMaxPx}px` : "70vh",
+        } as CSSProperties}
       >
         {showScene && (
           <ClientOnly fallback={sceneLoadingFallback}>
@@ -274,6 +295,7 @@ export function Globe() {
               <ClientOnly fallback={null}>
                 <Suspense fallback={null}>
                   <GlobeTour tier={tier} slot="row" />
+                  <SoundToggle tier={tier} />
                 </Suspense>
               </ClientOnly>
               {view !== "orbit" && (
@@ -338,7 +360,6 @@ export function Globe() {
               <ExploreBar tier={tier} />
               <StoryPlayer tier={tier} />
               <Intro tier={tier} />
-              <SoundToggle tier={tier} />
             </Suspense>
           </ClientOnly>
         )}
