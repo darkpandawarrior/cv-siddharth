@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { gmstDeg, substellarLatLon, bvToRgb, magToPointSize } from "./skyMath.ts";
+import { gmstDeg, substellarLatLon, bvToRgb, magToPointSize, physicalPointSize } from "./skyMath.ts";
 
 describe("gmstDeg", () => {
   // Both values are independently published, not derived from this
@@ -67,5 +67,17 @@ describe("magToPointSize", () => {
     expect(magToPointSize(-1.44)).toBeGreaterThan(magToPointSize(4.5));
     expect(magToPointSize(-10)).toBeLessThanOrEqual(4.2);
     expect(magToPointSize(20)).toBeGreaterThanOrEqual(1.1);
+  });
+});
+
+describe("physicalPointSize", () => {
+  it("scales linearly with pixel ratio, so DPR 2 covers the same CSS footprint as DPR 1", () => {
+    const mag = 2.1;
+    expect(physicalPointSize(mag, 1)).toBeCloseTo(magToPointSize(mag), 10);
+    expect(physicalPointSize(mag, 2)).toBeCloseTo(magToPointSize(mag) * 2, 10);
+  });
+
+  it("at DPR 1 is a no-op over the plain CSS-space size", () => {
+    expect(physicalPointSize(0, 1)).toBe(magToPointSize(0));
   });
 });

@@ -69,3 +69,17 @@ export function bvToRgb(ci: number): [number, number, number] {
 export function magToPointSize(mag: number): number {
   return Math.max(1.1, Math.min(4.2, 3.6 - mag * 0.55));
 }
+
+/** render.md finding 4: `gl_PointSize` is specified in PHYSICAL framebuffer
+ *  pixels, not CSS pixels — three's own PointsMaterial compensates for this
+ *  via `renderer.getPixelRatio()` internally, but skyStars.tsx's hand-rolled
+ *  shader does not, so a star sized for `magToPointSize(mag)` covers fewer
+ *  and fewer CSS pixels as devicePixelRatio rises (undercutting this file's
+ *  own "stars stay pin-sharp at any zoom" intent), and can fall under the
+ *  fragment shader's `a<=0.003 discard` cutoff at DPR 2 where it would have
+ *  survived at DPR 1. Pure so this scaling is testable without a WebGL
+ *  context — the shader itself just multiplies `aSize` by a `uPixelRatio`
+ *  uniform carrying the same value. */
+export function physicalPointSize(mag: number, pixelRatio: number): number {
+  return magToPointSize(mag) * pixelRatio;
+}
