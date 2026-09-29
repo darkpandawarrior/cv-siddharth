@@ -116,7 +116,16 @@ export function minuteBucket(whenMs: number): number {
 
 /** The group header's own label: a plain local clock reading, not a
  *  relative one (a relative label would have to keep re-deriving which
- *  bucket a row belongs to as time passes; a clock reading never moves). */
-export function bucketLabel(whenMs: number): string {
-  return new Date(whenMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+ *  bucket a row belongs to as time passes; a clock reading never moves).
+ *  A bare clock reading is ambiguous once the feed spans more than a day
+ *  (a replayed 105-day-old EONET entry next to a launch "in 23h" can print
+ *  the same "05:30 AM" twice) and can misread as time going backwards, so
+ *  a bucket whose calendar day differs from `nowMs`'s gets a short date
+ *  prefix. `nowMs` defaults to `Date.now()` for callers that don't scrub. */
+export function bucketLabel(whenMs: number, nowMs: number = Date.now()): string {
+  const time = new Date(whenMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const sameDay = new Date(whenMs).toDateString() === new Date(nowMs).toDateString();
+  if (sameDay) return time;
+  const date = new Date(whenMs).toLocaleDateString([], { month: "short", day: "numeric" });
+  return `${date} ${time}`;
 }

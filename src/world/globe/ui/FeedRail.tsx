@@ -195,7 +195,7 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
             const prev = filtered[i - 1];
             const newGroup = !prev || minuteBucket(prev.whenMs) !== minuteBucket(item.whenMs);
             return (
-              <FeedGroupBoundary key={item.id} showHeader={newGroup} whenMs={item.whenMs}>
+              <FeedGroupBoundary key={item.id} showHeader={newGroup} whenMs={item.whenMs} nowMs={nowMs}>
                 <FeedRow item={item} nowMs={nowMs} onPick={onPick} />
               </FeedGroupBoundary>
             );
@@ -210,12 +210,12 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
  *  row of that minute — kept as a tiny wrapper rather than a nested `<ul>`
  *  per group, so the list stays one flat `role="list"` (screen readers read
  *  a flat list far more predictably than repeated nested lists). */
-function FeedGroupBoundary({ showHeader, whenMs, children }: { showHeader: boolean; whenMs: number; children: React.ReactNode }) {
+function FeedGroupBoundary({ showHeader, whenMs, nowMs, children }: { showHeader: boolean; whenMs: number; nowMs: number; children: React.ReactNode }) {
   return (
     <>
       {showHeader && (
         <li aria-hidden className="px-1 pb-0.5 pt-2 text-xs uppercase tracking-wide text-zinc-600 first:pt-0">
-          {bucketLabel(whenMs)}
+          {bucketLabel(whenMs, nowMs)}
         </li>
       )}
       {children}

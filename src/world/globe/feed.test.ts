@@ -75,4 +75,17 @@ describe("bucketLabel", () => {
   it("is a non-empty clock string", () => {
     expect(bucketLabel(Date.parse("2026-09-29T10:32:00Z")).length).toBeGreaterThan(0);
   });
+
+  // Visual QA caught two rows 105 days apart sharing an identical bare
+  // "05:30 AM" header -- a same-time-of-day coincidence across days that
+  // reads as time going backwards. A whenMs on a different calendar day
+  // from nowMs must carry a date so the two never collide.
+  it("disambiguates a bucket that falls on a different day than now", () => {
+    const now = Date.parse("2026-09-29T10:32:00Z");
+    const longAgo = Date.parse("2026-06-16T10:32:00Z"); // 105 days earlier, same clock time
+    const today = bucketLabel(now, now);
+    const old = bucketLabel(longAgo, now);
+    expect(old).not.toBe(today);
+    expect(old).toMatch(/Jun/);
+  });
 });
