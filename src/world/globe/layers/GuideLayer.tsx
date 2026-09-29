@@ -20,15 +20,21 @@ import { mapsExport, mapsPhotos, mapsPlaces, mapsTotals } from "../../../data/ge
 const RING_GEOMETRY = new THREE.RingGeometry(0.72, 1, 28);
 const LIFE_RING_GEOMETRY = new THREE.RingGeometry(1.25, 1.45, 28);
 const HIT_GEOMETRY = new THREE.CircleGeometry(1, 16);
-const MIN_SCALE = 0.12;
-const MAX_SCALE = 0.42;
-const HIT_RADIUS_MULTIPLIER = 1.6;
-const LIFT = 0.015;
+// City scale, not region scale: 1 world unit is ~1,062 km, so MAX_SCALE 0.2
+// is a ~210 km ring. An earlier 0.42 (~450 km, with a ~700 km hit disc)
+// read as a region and swallowed clicks on quakes across north India.
+const MIN_SCALE = 0.07;
+const MAX_SCALE = 0.2;
+const HIT_RADIUS_MULTIPLIER = 1.3;
+// Below every point entity (hexbin base 0.01, quake glyphs 0.015/0.02,
+// launches 0.02), so a raycast reaches a quake or a launch before this
+// static owner layer and they stay clickable where they overlap a city.
+const LIFT = 0.008;
 const UP = new THREE.Vector3(0, 0, 1);
 const dummy = new THREE.Object3D();
 
 function scaleFor(reviews: number, photos: number): number {
-  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.sqrt(reviews + photos) * 0.08));
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.sqrt(reviews + photos) * 0.035));
 }
 
 interface GuidePlace {

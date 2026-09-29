@@ -62,6 +62,8 @@ function Spark({ series }: { series: SparkSeries }) {
   );
 }
 
+const KP_KINDS = new Set(["quake", "density", "fire", "satellite", "launch", "aurora", "moon", "planet"]);
+
 export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
   const select = useGlobe((s) => s.select);
@@ -201,7 +203,9 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         const sparks: SparkSeries[] = [];
         if (selected.spark && selected.spark.length > 0) sparks.push({ values: selected.spark, label: selected.sparkLabel ?? selected.source });
         else if (regionSpark) sparks.push(regionSpark);
-        if (kpSpark) sparks.push(kpSpark);
+        // Kp is geomagnetic activity: it belongs beside space and hazard
+        // selections, never beside an owner card or a Maps place.
+        if (kpSpark && KP_KINDS.has(selected.kind)) sparks.push(kpSpark);
         return sparks.map((s, i) => <Spark key={`${s.label}-${i}`} series={s} />);
       })()}
 
