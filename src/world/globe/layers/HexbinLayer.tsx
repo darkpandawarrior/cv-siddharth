@@ -48,6 +48,8 @@ export default function HexbinLayer({ tier }: { now: Date; tier: 1 | 2 | 3 }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const select = useGlobe((s) => s.select);
+  const setStatus = useGlobe((s) => s.setStatus);
+  const hazardsStatus = useGlobe((s) => s.status.hazards);
   const [hovered, setHovered] = useState<HexBin | null>(null);
   const [tick, setTick] = useState(0);
   // e2e-only seam, same trick as LocalTraffic.tsx's own `data-aircraft-layer`
@@ -78,6 +80,24 @@ export default function HexbinLayer({ tier }: { now: Date; tier: 1 | 2 | 3 }) {
   }, [tier, tick]);
 
   const maxTotal = useMemo(() => bins.reduce((m, b) => Math.max(m, b.total), 0), [bins]);
+
+  // Health, same house convention every other layer follows (globe-lanes.md:
+  // "a layer's honest health, shown beside its toggle"). This layer has no
+  // feed of its own to fail against -- it only aggregates HazardLayer's
+  // already-fetched snapshot -- so a truly empty snapshot mirrors HazardLayer's
+  // OWN reported state (its "failed" is real news; this layer's own "nothing
+  // to bin" on a live snapshot is not).
+  useEffect(() => {
+    if (bins.length > 0) {
+      const totalEvents = bins.reduce((sum, b) => sum + b.total, 0);
+      setStatus("density", { state: "live", detail: `${bins.length} cells, ${totalEvents} events (quakes + fires, last day)` });
+    } else if (hazardsStatus?.state === "failed") {
+      setStatus("density", { state: "failed", detail: `nothing to aggregate — ${hazardsStatus.detail ?? "hazards feed unreachable"}` });
+    } else {
+      setStatus("density", { state: "snapshot", detail: "no quakes or fires to aggregate right now" });
+    }
+    return () => setStatus("density", undefined);
+  }, [bins, hazardsStatus, setStatus]);
 
   useEffect(() => {
     const mesh = meshRef.current;
