@@ -84,6 +84,42 @@ test.describe("seamless zoom into street level and back", () => {
     await expect(page.locator("[data-street-view]")).toBeVisible();
   });
 
+  // Two different orbit orientations, through the seam StreetView.tsx arms
+  // with (the exact StreetHandoff box the real zoom-hold gesture uses, not a
+  // shortcut around it) -- proving the hand-off actually reaches MapLibre's
+  // own camera, not just this lane's pure math module (cameraOrientation.test.ts
+  // already covers that in isolation). A separate `test()` per orientation
+  // (not a loop over one `page`) so each gets Playwright's own fresh
+  // page/context -- `addInitScript` accumulates across navigations on a
+  // reused page, which a loop would have to work around instead of just
+  // avoiding.
+  for (const { bearing, pitch } of [
+    { bearing: 0, pitch: 0 },
+    { bearing: 135, pitch: 55 },
+  ]) {
+    test(`street level opens with bearing ${bearing}/pitch ${pitch} matched to the globe camera, not the hardcoded defaults`, async ({ page }) => {
+      await seedIntroSeen(page);
+      await page.addInitScript(
+        ([lat, lon, b, p]) => {
+          (
+            window as unknown as { __GLOBE_TEST_STREET__: { lat: number; lon: number; bearing: number; pitch: number } }
+          ).__GLOBE_TEST_STREET__ = { lat, lon, bearing: b, pitch: p };
+        },
+        [18.5195, 73.8412, bearing, pitch] as const,
+      );
+      await openGlobe(page);
+      await expect(page.locator("[data-street-view]")).toBeVisible({ timeout: 15_000 });
+      await expect.poll(async () => page.evaluate(() => typeof window.__GLOBE_TEST_STREET_MAP__)).toBe("object");
+
+      const [gotBearing, gotPitch] = await page.evaluate(() => [
+        window.__GLOBE_TEST_STREET_MAP__!.getBearing(),
+        window.__GLOBE_TEST_STREET_MAP__!.getPitch(),
+      ]);
+      expect(gotBearing).toBeCloseTo(bearing, 0);
+      expect(gotPitch).toBeCloseTo(pitch, 0);
+    });
+  }
+
   test("zooming out of the street map past its own floor returns to orbit over the same point", async ({ page }) => {
     await seedIntroSeen(page);
     // This worktree has no trigger lane wired up to open street level from a
