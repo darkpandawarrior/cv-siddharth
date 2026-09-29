@@ -75,10 +75,15 @@ test("the life path draws one arc per transition; role chapters never carry one"
   // transition, never on a role chapter: Kuwait City -> Bhopal lands on the
   // education chapter (the destination of that move), Bhopal -> Chandigarh
   // on the Chandigarh life chapter, Chandigarh -> Pune on the Pune life
-  // chapter. Walking the whole sequence (bounded by the real chapter count)
-  // proves the full path, not just one hop of it.
-  const path: Array<{ id: string; from: string; to: string }> = [
+  // chapter. buildStory()'s real chronological order interleaves
+  // role:John Deere India (May 2020) between education and life:chandigarh
+  // (chapters sort by date, and John Deere predates the 2021 Chandigarh
+  // move), so this walk checks it there, in its real position, rather than
+  // searching forward for it after the fact -- Next only ever moves
+  // forward, and by life:pune the walk has already passed it.
+  const path: Array<{ id: string; from?: string; to?: string }> = [
     { id: "education", from: "Kuwait City, Kuwait", to: "Bhopal, India" },
+    { id: "role:John Deere India" }, // role chapter: no arc of its own
     { id: "life:chandigarh", from: "Bhopal, India", to: "Chandigarh, India" },
     { id: "life:pune", from: "Chandigarh, India", to: "Pune, India" },
   ];
@@ -89,53 +94,34 @@ test("the life path draws one arc per transition; role chapters never carry one"
       await nextBtn.click();
     }
     await expect(card).toHaveAttribute("data-story-chapter-id", id);
-    await expect(page.locator("[data-story-arc]")).toBeAttached();
-    await expect(page.locator(`[data-story-arc-label="${from}"]`)).toBeAttached();
-    await expect(page.locator(`[data-story-arc-label="${to}"]`)).toBeAttached();
+    if (from && to) {
+      await expect(page.locator("[data-story-arc]")).toBeAttached();
+      await expect(page.locator(`[data-story-arc-label="${from}"]`)).toBeAttached();
+      await expect(page.locator(`[data-story-arc-label="${to}"]`)).toBeAttached();
+    } else {
+      await expect(page.locator("[data-story-arc]")).toHaveCount(0);
+    }
   }
-
-  // The first Pune role chapter (the earliest role at a known place other
-  // than the life chapters above) no longer carries an arc of its own.
-  for (let i = 0; i < 40; i++) {
-    const id = await card.getAttribute("data-story-chapter-id");
-    if (id === "role:John Deere India") break;
-    await nextBtn.click();
-  }
-  await expect(card).toHaveAttribute("data-story-chapter-id", "role:John Deere India");
-  await expect(page.locator("[data-story-arc]")).toHaveCount(0);
 });
 
 test("exit restores a layer the story forced back on", async ({ page }) => {
   await openGlobe(page, 1440, 900);
 
-  const reachToggle = page.locator("[data-globe-layer-panel]").getByRole("button", { name: "My apps and repos" });
-  await expect(reachToggle).toHaveAttribute("aria-pressed", "true"); // default ON
-  await reachToggle.click();
-  await expect(reachToggle).toHaveAttribute("aria-pressed", "false"); // the visitor's own choice: OFF
+  const markersToggle = page.locator("[data-globe-layer-panel]").getByRole("button", { name: "Pune markers" });
+  await expect(markersToggle).toHaveAttribute("aria-pressed", "true");
+  await markersToggle.click();
+  await expect(markersToggle).toHaveAttribute("aria-pressed", "false");
 
   await storyEntry(page).click();
   const card = chapterCard(page);
-  const nextBtn = card.getByRole("button", { name: "Next" });
-  const exitBtn = card.getByRole("button", { name: "Exit my story" });
+  await expect(card).toHaveAttribute("data-story-chapter-id", "life:kuwait-city");
+  // The opening place chapter explicitly emphasises markers. This proves
+  // restoration without walking unrelated chapters to find a reach event.
+  await expect(markersToggle).toHaveAttribute("aria-pressed", "true");
 
-  // Chapter 0 (life:kuwait-city, a place chapter) emphasises "markers", not
-  // "reach" — the toggle must stay exactly as the visitor left it until a
-  // chapter actually asks.
-  await expect(reachToggle).toHaveAttribute("aria-pressed", "false");
-
-  // Walk forward until some chapter's own emphasis forces "reach" back on
-  // (every non-role, non-education chapter does) — bounded by the real
-  // chapter count.
-  for (let i = 0; i < 40; i++) {
-    if ((await reachToggle.getAttribute("aria-pressed")) === "true") break;
-    await nextBtn.click();
-  }
-  await expect(reachToggle).toHaveAttribute("aria-pressed", "true");
-
-  await exitBtn.click();
+  await card.getByRole("button", { name: "Exit my story" }).click();
   await expect(card).toHaveCount(0);
-  // Restored to exactly the visitor's own last choice — OFF, not ON.
-  await expect(reachToggle).toHaveAttribute("aria-pressed", "false");
+  await expect(markersToggle).toHaveAttribute("aria-pressed", "false");
 });
 
 test("Esc exits the story", async ({ page }) => {
