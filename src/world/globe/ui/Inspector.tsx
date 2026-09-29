@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useGlobe, type Selection } from "../globeStore.ts";
+import { useKpSpark, useQuakeRegionSpark, type SparkSeries } from "./sparkSeries.ts";
 
 /** LANE L5 (navigation and UI) owns the selection contract; LANE U1
  *  (composition) owns this file's layout: the shared left slot on sm+ (the
@@ -25,6 +26,42 @@ function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
+// WAVE 6 LANE X6 (craft: inspector sparklines). A tiny inline SVG line
+// chart, no charting library — a handful of points drawn as one polyline is
+// the whole feature. Never invents a series: every caller passes a real
+// SparkSeries (sparkSeries.ts's own hooks return `null`, not a fake one,
+// when a feed is unreachable or empty) and always names its source in
+// `label`, right under the chart, same as every other live number on this
+// page (G8).
+const SPARK_W = 108;
+const SPARK_H = 26;
+function sparkCoords(values: number[]): { x: number; y: number }[] {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1; // a flat series (all-equal, incl. a single point) draws a flat mid-height line rather than dividing by zero
+  const step = values.length > 1 ? SPARK_W / (values.length - 1) : 0;
+  return values.map((v, i) => ({
+    x: values.length > 1 ? i * step : SPARK_W / 2,
+    y: SPARK_H - 2 - ((v - min) / range) * (SPARK_H - 4),
+  }));
+}
+function Spark({ series }: { series: SparkSeries }) {
+  const coords = sparkCoords(series.values);
+  const last = coords[coords.length - 1];
+  const points = coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  return (
+    <div className="mb-2">
+      <svg width={SPARK_W} height={SPARK_H} viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} className="block" role="img" aria-label={series.label}>
+        <polyline points={points} fill="none" stroke="var(--color-probe)" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={last.x} cy={last.y} r={2} fill="var(--color-probe)" />
+      </svg>
+      <p className="truncate text-xs text-muted" title={series.label}>
+        {series.label}
+      </p>
+    </div>
+  );
+}
+
 export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
   const select = useGlobe((s) => s.select);
@@ -32,6 +69,16 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const setView = useGlobe((s) => s.setView);
   const sheet = useGlobe((s) => s.sheet);
   const setSheet = useGlobe((s) => s.setSheet);
+
+  // Hooks run every render regardless of `selected` (the early return below
+  // is after these) — sparkSeries.ts's own hooks already no-op safely on
+  // null lat/lon. `quake` selections come from quakeGlyphs.tsx (an
+  // individual quake); `density` selections come from this wave's own
+  // HexbinLayer.tsx (a hex cell) — both carry a real lat/lon focus a
+  // regional trend can honestly be drawn around.
+  const regionFocus = selected && (selected.kind === "quake" || selected.kind === "density") && selected.focus?.kind === "latlon" ? selected.focus : null;
+  const regionSpark = useQuakeRegionSpark(regionFocus?.lat ?? null, regionFocus?.lon ?? null);
+  const kpSpark = useKpSpark();
 
   useEffect(() => {
     const seam = window.__GLOBE_TEST_SELECT__;
@@ -145,6 +192,18 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
           </div>
         ))}
       </dl>
+
+      {(() => {
+        // An explicit `selected.spark` (globeStore.ts's own additive field —
+        // some future selector setting a real series directly) always wins
+        // over what this file derives on its own; the derived one only
+        // fills in when nothing was provided.
+        const sparks: SparkSeries[] = [];
+        if (selected.spark && selected.spark.length > 0) sparks.push({ values: selected.spark, label: selected.sparkLabel ?? selected.source });
+        else if (regionSpark) sparks.push(regionSpark);
+        if (kpSpark) sparks.push(kpSpark);
+        return sparks.map((s, i) => <Spark key={`${s.label}-${i}`} series={s} />);
+      })()}
 
       <p className="mb-3 truncate text-xs text-muted" title={selected.source}>
         {selected.live ? "Live" : "Snapshot"} · {selected.source}

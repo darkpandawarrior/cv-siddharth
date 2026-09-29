@@ -50,6 +50,12 @@ export default function HexbinLayer({ tier }: { now: Date; tier: 1 | 2 | 3 }) {
   const select = useGlobe((s) => s.select);
   const [hovered, setHovered] = useState<HexBin | null>(null);
   const [tick, setTick] = useState(0);
+  // e2e-only seam, same trick as LocalTraffic.tsx's own `data-aircraft-layer`
+  // (a hidden Html-portal node, imperatively written -- Html is already
+  // imported here for the hover tooltip, so this costs nothing extra in the
+  // Globe chunk unlike HazardLayer.tsx's own window-global seam, whose own
+  // comment explains why IT avoided a second Html portal).
+  const domRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), SNAPSHOT_POLL_MS);
@@ -100,6 +106,7 @@ export default function HexbinLayer({ tier }: { now: Date; tier: 1 | 2 | 3 }) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     hitMesh.count = bins.length;
     hitMesh.instanceMatrix.needsUpdate = true;
+    if (domRef.current) domRef.current.dataset.densityCount = String(bins.length);
   }, [bins, maxTotal]);
 
   const onPointerMove = useCallback(
@@ -162,6 +169,9 @@ export default function HexbinLayer({ tier }: { now: Date; tier: 1 | 2 | 3 }) {
           animation), so there is nothing motion-related to gate here --
           reducedMotion is read only for the tests/e2e contract every other
           layer in this file follows, not because the tooltip itself moves. */}
+      <Html style={{ display: "none" }}>
+        <div ref={domRef} data-density-layer aria-hidden />
+      </Html>
       {hovered && hoveredPos && (
         <Html position={hoveredPos} center distanceFactor={10} style={{ pointerEvents: "none" }}>
           <div
