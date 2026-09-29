@@ -245,7 +245,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
     // ExploreBar sits IN the topbar's reserved centre band beside the HUD
     // pills, not below the full stack, so it was never affected.
-    <div ref={host} data-explore-bar className="pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl border border-line bg-ink/90 p-2 font-mono text-xs text-zinc-200 backdrop-blur sm:top-[108px]">
+    <div ref={host} data-explore-bar className="pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]">
       <div className="flex items-center gap-1">
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
           placeholder="Search or ask the globe / ⌘K" value={query} className="h-9 min-w-0 flex-1 rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"

@@ -260,7 +260,7 @@ export default function HoverReadout() {
       data-hover-readout
       aria-hidden
       style={{ left: chip.x, top: chip.y }}
-      className="pointer-events-none absolute z-20 w-64 rounded-lg border border-line bg-ink/70 px-2 py-1.5 font-mono text-xs leading-snug text-zinc-100 backdrop-blur"
+      className="pointer-events-none absolute z-20 w-64 rounded-lg glass-panel px-2 py-1.5 font-mono text-xs leading-snug text-zinc-100"
     >
       <div data-hover-country>{chip.readout.country}</div>
       <div data-hover-time>{chip.readout.time}</div>

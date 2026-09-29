@@ -73,7 +73,7 @@ export default function SpaceWeather() {
 
   if (allFailed) {
     return (
-      <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full border border-line glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
+      <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
         <span data-space-weather-status="failed">Space weather feed unreachable</span>
       </div>
     );
@@ -83,7 +83,7 @@ export default function SpaceWeather() {
   if (!detail) return null;
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full border border-line glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
+    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
       {sun.error ? <span>Solar image unreachable</span> : sun.data && /^https:\/\/api\.helioviewer\.org\/v2\/downloadScreenshot\/\?id=\d+$/.test(sun.data.image) && Number.isFinite(sun.data.observedAt) ? <SolarDisc key={sun.data.image} image={sun.data.image} at={sun.data.observedAt} /> : <span>Solar image loading</span>}
       <span data-space-weather-status="live">{detail}</span>
     </div>

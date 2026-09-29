@@ -82,6 +82,16 @@ function computeCounts(): Record<string, number> {
 const WRITE = process.env.DS_WRITE_BASELINE === "1";
 const STRICT = process.env.DS_STRICT === "1";
 
+describe("globe glass surfaces", () => {
+  it("uses the glass token rather than private opacity and blur pairs", () => {
+    const offenders = walk(path.join(SRC, "world/globe")).filter((file) => {
+      const classes = fs.readFileSync(file, "utf8").match(/"[^"\n]*"|`[^`]*`/g) ?? [];
+      return classes.some((value) => /\bbg-ink\/\d+\b/.test(value) && /\bbackdrop-blur\b/.test(value));
+    });
+    expect(offenders.map((file) => path.relative(ROOT, file))).toEqual([]);
+  });
+});
+
 describe("design system ratchet (G-DS)", () => {
   const counts = computeCounts();
 

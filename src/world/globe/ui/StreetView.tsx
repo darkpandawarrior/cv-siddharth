@@ -522,7 +522,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           height regardless of which `position` wins. */}
       <div ref={mapContainerRef} data-street-map className="absolute inset-0 h-full w-full" />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-ink/70 px-3 py-2 font-mono text-xs text-zinc-200 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 glass-panel px-3 py-2 font-mono text-xs text-zinc-200">
         <div className="pointer-events-auto min-w-0 truncate">
           {placeTitle && <span className="mr-2 font-semibold text-zinc-100">{placeTitle}</span>}
           <span className="text-zinc-400">{formatLatLon(lat, lon)}</span>
@@ -548,7 +548,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
 
       <div
         data-street-status
-        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-ink/70 px-3 py-1 font-mono text-xs text-zinc-300 backdrop-blur"
+        className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full glass-panel px-3 py-1 font-mono text-xs text-zinc-300"
       >
         {photoStatus === "loading" && !noFeaturesTimedOut && "Looking for street photos…"}
         {photoStatus === "loading" && noFeaturesTimedOut && "No streets here"}
@@ -560,7 +560,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       {/* No `truncate` here on purpose: attribution text is required, not
           decorative, so on a 390px phone it wraps to a second line instead
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 border-t border-line bg-ink/70 px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 glass-panel px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
         {terrainOn ? ` · ${TERRAIN_ATTRIBUTION}` : ""}
         {terrainFailed ? " · Terrain unreachable; showing a flat map" : ""}

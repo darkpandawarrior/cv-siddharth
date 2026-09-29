@@ -1,3 +1,7 @@
+import { Legend } from "./LayerCatalog.tsx";
+import { WIND_LEGEND } from "../layers/windField.ts";
+import { DENSITY_LEGEND } from "../layers/hexbin.ts";
+import { QUAKE_DEPTH_LEGEND } from "../layers/quake.ts";
 import { useEffect, useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
 import type { Vector3 } from "three";
@@ -87,13 +91,13 @@ function dotStyle(health: LayerHealth | undefined): { color: string; pulse: bool
     case "snapshot":
       return { color: "var(--color-probe)", pulse: false };
     case "failed":
-      return { color: "var(--color-danger)", pulse: false };
+      return { color: /unreachable|unavailable|off at this tier/i.test(health.detail ?? "") ? "var(--color-degraded)" : "var(--color-danger)", pulse: false };
     default:
       return { color: "#71717a", pulse: true };
   }
 }
 
-function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, boolean>; status: Partial<Record<LayerId, LayerHealth>>; toggleLayer: (id: LayerId) => void }) {
+export function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, boolean>; status: Partial<Record<LayerId, LayerHealth>>; toggleLayer: (id: LayerId) => void }) {
   return (
     <ul className="space-y-1">
       {LAYER_IDS.map((id) => {
@@ -106,11 +110,14 @@ function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, bo
               type="button"
               onClick={() => toggleLayer(id)}
               aria-pressed={on}
-              className="flex min-h-8 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex min-h-11 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot.pulse ? "animate-pulse" : ""}`} style={{ backgroundColor: dot.color }} />
-              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500 line-through"}`}>{LABEL[id]}</span>
+              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500"}`}>{LABEL[id]}</span>
             </button>
+            {on && id === "wind" && <Legend legend={WIND_LEGEND} />}
+            {on && id === "density" && <Legend legend={DENSITY_LEGEND} />}
+            {on && id === "hazards" && <Legend legend={QUAKE_DEPTH_LEGEND} />}
             {health?.detail && (
               <p className="ml-4 truncate text-xs text-muted" title={health.detail}>
                 {health.detail}
@@ -394,7 +401,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {panelOpen ? (
         <div
           data-globe-layer-panel
-          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl border border-line bg-ink/90 font-mono text-xs text-zinc-300 backdrop-blur sm:bottom-4 sm:flex"
+          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:bottom-4 sm:flex"
         >
           <div className="flex items-center justify-between gap-2 border-b border-line p-3">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
@@ -445,7 +452,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           aria-pressed={false}
           aria-label="Open the layers panel"
           title="Layers (L)"
-          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
         >
           <Layers size={15} />
         </button>
@@ -460,7 +467,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {sheet === "layers" && (
         <div
           data-globe-layer-sheet
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>

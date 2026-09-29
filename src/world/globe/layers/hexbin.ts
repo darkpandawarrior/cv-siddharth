@@ -103,6 +103,11 @@ const RAMP: readonly [number, number, number][] = [
   [0xf6, 0xd1, 0x4b],
 ];
 
+export const DENSITY_LEGEND = {
+  unit: "of current maximum count",
+  stops: RAMP.map((rgb, i) => ({ color: "#" + rgb.map((v) => v.toString(16).padStart(2, "0")).join(""), label: ["0%", "50%", "100%"][i] })),
+};
+
 /** `t` in 0..1 (a bin's own fraction of the tallest bin) -> an sRGB 0..1
  *  triple. Clamped, so a caller never has to pre-clamp its own input. */
 export function densityColor(t: number): [number, number, number] {

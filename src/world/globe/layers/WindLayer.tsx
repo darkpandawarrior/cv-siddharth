@@ -9,7 +9,7 @@ import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { latLonToXyz, fibonacciLattice } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { useGlobe } from "../globeStore.ts";
-import { buildWindField, sampleWind, windSpeed, DEG2RAD, type WindField } from "./windField.ts";
+import { buildWindField, sampleWind, windSpeed, DEG2RAD, WIND_LEGEND, type WindField } from "./windField.ts";
 import { advectStep, randomSpherePoint, shouldRespawn, VISUAL_SPEED_SCALE } from "./windAdvect.ts";
 import type { WindResponse } from "../../../../api/_lib/wind-handler.ts";
 
@@ -65,9 +65,9 @@ const STATIC_STREAM_DEG = 1.4;
 // at a trail's tail so the fade reads as "disappearing into the sky" rather
 // than needing real alpha blending.
 const BG_COLOR = new THREE.Color("#05070a");
-const CALM_COLOR = new THREE.Color("#3f5e78");
-const MID_COLOR = new THREE.Color("#468f88");
-const FAST_COLOR = new THREE.Color("#d8c98a");
+const CALM_COLOR = new THREE.Color(WIND_LEGEND.stops[0].color);
+const MID_COLOR = new THREE.Color(WIND_LEGEND.stops[1].color);
+const FAST_COLOR = new THREE.Color(WIND_LEGEND.stops[2].color);
 const CALM_SPEED_MS = 2;
 const FAST_SPEED_MS = 22;
 // Reused scratch objects — the "zero per-frame allocation" rule applies to

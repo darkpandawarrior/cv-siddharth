@@ -110,7 +110,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
     <>
       <div
         data-autorotate={autoRotate ? "on" : "off"}
-        className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur"
+        className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300"
       >
         <span>
           Pune{daypart ? ` · ${daypart}` : ""}
@@ -135,7 +135,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
             aria-pressed={xrayOn}
             aria-label={xrayOn ? "Turn off X-ray mode" : "Turn on X-ray mode"}
             data-xray-toggle
-            className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-xs font-bold text-zinc-300 backdrop-blur hover:text-accent"
+            className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-xs font-bold text-zinc-300 hover:text-accent"
           >
             X
           </button>
@@ -158,9 +158,9 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           onClick={onToggleAutoRotate}
           aria-pressed={autoRotatePaused}
           aria-label={autoRotatePaused ? "Resume the globe's ambient rotation" : "Pause the globe's ambient rotation"}
-          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent"
         >
-          {autoRotatePaused ? <Play size={12} /> : <Pause size={12} />}
+          {autoRotatePaused ? <Play size={16} /> : <Pause size={16} />}
         </button>
       )}
       {hasWebGL && onToggleMarkers && (
@@ -170,18 +170,18 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           aria-pressed={markersHidden}
           aria-label={markersHidden ? "Show the Pune ring and reach columns" : "Hide the Pune ring and reach columns"}
           title={markersHidden ? "Show markers" : "Hide markers"}
-          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent"
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent"
         >
-          {markersHidden ? <MapPinOff size={12} /> : <MapPin size={12} />}
+          {markersHidden ? <MapPinOff size={16} /> : <MapPin size={16} />}
         </button>
       )}
       {hasWebGL && onZoomIn && onZoomOut && (
-        <div className="pointer-events-auto flex items-center rounded-full border border-line bg-ink/70 backdrop-blur">
+        <div className="pointer-events-auto flex items-center rounded-full glass-panel">
           <button type="button" onClick={onZoomOut} aria-label="Zoom out" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
-            <ZoomOut size={13} />
+            <ZoomOut size={16} />
           </button>
           <button type="button" onClick={onZoomIn} aria-label="Zoom in" className="ctrl-icon rounded-full p-1.5 text-zinc-300 hover:text-accent">
-            <ZoomIn size={13} />
+            <ZoomIn size={16} />
           </button>
         </div>
       )}

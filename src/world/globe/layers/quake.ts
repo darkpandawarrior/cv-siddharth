@@ -111,6 +111,11 @@ export function depthToColor(depthKm: number): string {
   return toHex(rgb);
 }
 
+export const QUAKE_DEPTH_LEGEND = {
+  unit: "km depth",
+  stops: [{ color: depthToColor(0), label: "0" }, { color: depthToColor(DEPTH_COOL_KM), label: `${DEPTH_COOL_KM}+` }],
+};
+
 /** "3 min ago" / "2 hr ago" / "5 d ago" for the inspector row. */
 export function formatTimeAgo(nowMs: number, eventMs: number): string {
   const deltaMin = Math.max(0, Math.floor((nowMs - eventMs) / 60_000));

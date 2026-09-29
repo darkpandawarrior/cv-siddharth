@@ -47,7 +47,7 @@ function overlayOpacity(imagery: ImageryStack, id: string): number {
 /** A compact colour-stop legend: a gradient bar built from the entry's own
  *  stops, plus its first/last labels — the full label list wouldn't fit an
  *  N stop legend into a 233px column without wrapping into unreadable text. */
-function Legend({ legend }: { legend: NonNullable<GibsCatalogEntry["legend"]> }) {
+export function Legend({ legend }: { legend: NonNullable<GibsCatalogEntry["legend"]> }) {
   const gradient = `linear-gradient(to right, ${legend.stops.map((s, i) => `${s.color} ${(i / Math.max(1, legend.stops.length - 1)) * 100}%`).join(", ")})`;
   return (
     <div className="mt-1" aria-hidden={false}>

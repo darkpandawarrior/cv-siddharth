@@ -79,12 +79,12 @@ export default function CompareDivider() {
   return createPortal(
     <div ref={rootRef} data-globe-compare className="pointer-events-none fixed inset-0 z-50">
       <div
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 truncate rounded-full border border-line bg-ink/70 px-2 py-1 font-mono text-xs text-zinc-300 backdrop-blur"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 truncate rounded-full glass-panel px-2 py-1 font-mono text-xs text-zinc-300"
         style={{ maxWidth: `max(0px, calc(${pct}% - 24px))` }}
       >
         {fmtDate(state.left.dateMs)}
       </div>
-      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-line bg-ink/70 px-2 py-1 font-mono text-xs text-zinc-300 backdrop-blur">
+      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-full glass-panel px-2 py-1 font-mono text-xs text-zinc-300">
         Today
       </div>
       <div
@@ -103,7 +103,7 @@ export default function CompareDivider() {
         style={{ left: `${pct}%` }}
       >
         <div className="h-full w-px bg-accent/70" />
-        <div className="absolute flex h-8 w-8 items-center justify-center rounded-full border border-line bg-ink/80 backdrop-blur">
+        <div className="absolute flex h-8 w-8 items-center justify-center rounded-full glass-panel">
           <div className="h-3 w-px bg-accent" />
         </div>
       </div>
@@ -111,9 +111,9 @@ export default function CompareDivider() {
         type="button"
         onClick={close}
         aria-label="Exit compare"
-        className="ctrl-icon pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="ctrl-icon pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
-        <X size={14} />
+        <X size={16} />
       </button>
     </div>,
     document.body

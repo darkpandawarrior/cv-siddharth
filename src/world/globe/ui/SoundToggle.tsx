@@ -190,7 +190,7 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
   }, [enabled, reducedMotion, focus]);
 
   const label = enabled ? "Mute globe sound" : "Enable globe sound";
-  const icon = enabled ? <Volume2 size={13} aria-hidden /> : <VolumeX size={13} aria-hidden />;
+  const icon = enabled ? <Volume2 size={16} aria-hidden /> : <VolumeX size={16} aria-hidden />;
 
   return (
     <>
@@ -206,7 +206,7 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
         title="Sound (opt-in)"
         data-sound-toggle
         data-sound-enabled={enabled}
-        className="ctrl-icon pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+        className="ctrl-icon pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
       >
         {icon}
       </button>

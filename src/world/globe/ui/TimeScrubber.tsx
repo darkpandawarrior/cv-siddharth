@@ -224,7 +224,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
       title={eclipseButtonTitle}
       className="ctrl-icon flex h-6 w-6 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
     >
-      <Eclipse size={12} />
+      <Eclipse size={16} />
     </button>
   );
   const eclipseButtonFull = (
@@ -235,7 +235,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
       title={eclipseButtonTitle}
       className="flex h-11 items-center gap-1.5 rounded-full border border-line px-3 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
     >
-      <Eclipse size={14} />
+      <Eclipse size={16} />
       {eclipseButtonLabel}
     </button>
   );
@@ -260,7 +260,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
       aria-label={playing ? "Pause simulated time" : "Play simulated time"}
       className="ctrl-icon flex h-6 w-6 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
     >
-      {playing ? <Pause size={11} /> : <Play size={11} />}
+      {playing ? <Pause size={16} /> : <Play size={16} />}
     </button>
   );
   const notLiveBadge = notLive && (
@@ -282,7 +282,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           Now, play, speed, not-live" actually fit in one row at 1024px. */}
       <div
         data-globe-time-scrubber
-        className="pointer-events-auto hidden items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur sm:flex"
+        className="pointer-events-auto hidden items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
       >
         <span className="whitespace-nowrap">
           {fmtCompact(now, "Asia/Kolkata")} IST · {fmtCompact(now, "UTC")} UTC
@@ -326,7 +326,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           data-globe-time-sheet
           role="dialog"
           aria-label="Simulated time"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Time</h2>
@@ -383,7 +383,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
                   aria-label={playing ? "Pause simulated time" : "Play simulated time"}
                   className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  {playing ? <Pause size={14} /> : <Play size={14} />}
+                  {playing ? <Pause size={16} /> : <Play size={16} />}
                 </button>
               )}
               {SPEEDS.map((s, i) => (
