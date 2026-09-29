@@ -383,7 +383,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2018,
     "views": 363808,
     "w": 480,
-    "h": 480,
+    "h": 360,
     "caption": "Qutub Minar complex"
   },
   {
@@ -392,7 +392,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Dahanu",
     "year": 2022,
     "views": 10173,
-    "w": 480,
+    "w": 270,
     "h": 480
   },
   {
@@ -401,7 +401,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Pune",
     "year": 2024,
     "views": 5765,
-    "w": 480,
+    "w": 270,
     "h": 480
   },
   {
@@ -410,7 +410,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Kuwait City",
     "year": 2017,
     "views": 5207,
-    "w": 480,
+    "w": 360,
     "h": 480
   },
   {
@@ -419,7 +419,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Mumbai",
     "year": 2022,
     "views": 4383,
-    "w": 480,
+    "w": 270,
     "h": 480
   },
   {
@@ -429,7 +429,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2018,
     "views": 4136,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/bengaluru-1.webp",
@@ -437,7 +437,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Bengaluru",
     "year": 2024,
     "views": 3923,
-    "w": 480,
+    "w": 360,
     "h": 480
   },
   {
@@ -446,7 +446,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Pune",
     "year": 2024,
     "views": 3882,
-    "w": 480,
+    "w": 270,
     "h": 480
   },
   {
@@ -455,7 +455,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Murud",
     "year": 2020,
     "views": 2953,
-    "w": 480,
+    "w": 360,
     "h": 480
   },
   {
@@ -465,7 +465,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2017,
     "views": 2274,
     "w": 480,
-    "h": 480,
+    "h": 360,
     "caption": "Kuwait Towers"
   },
   {
@@ -475,7 +475,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2018,
     "views": 2127,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/chitradurga-2.webp",
@@ -484,7 +484,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2018,
     "views": 962,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/kuwait-city-3.webp",
@@ -493,7 +493,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2018,
     "views": 117,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/sanchi-1.webp",
@@ -501,7 +501,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Sanchi",
     "year": 2018,
     "views": 58,
-    "w": 480,
+    "w": 270,
     "h": 480
   },
   {
@@ -510,7 +510,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "New Delhi",
     "year": 2018,
     "views": 25,
-    "w": 480,
+    "w": 270,
     "h": 480,
     "caption": "Lotus Temple"
   },
@@ -521,7 +521,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2017,
     "views": 22,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/new-delhi-3.webp",
@@ -529,7 +529,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "New Delhi",
     "year": 2018,
     "views": 17,
-    "w": 480,
+    "w": 360,
     "h": 480,
     "caption": "Qutub Minar"
   },
@@ -540,7 +540,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "year": 2017,
     "views": 10,
     "w": 480,
-    "h": 480
+    "h": 360
   },
   {
     "src": "/globe/maps/kottayam-1.webp",
@@ -548,7 +548,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "city": "Kottayam",
     "year": 2021,
     "views": 9,
-    "w": 480,
+    "w": 270,
     "h": 480
   }
 ];

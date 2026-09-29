@@ -172,13 +172,16 @@ for (const { curated, row } of curatedRows) {
     // strips metadata by default, which is exactly what this lane wants
     // (no EXIF, no XMP in the committed output) — asserted just below.
     await sharp(buf).rotate().resize(THUMB_SIZE, THUMB_SIZE, { fit: "inside", withoutEnlargement: true }).webp({ quality: 70, effort: 6 }).toFile(outPath);
-    const meta = await sharp(outPath).metadata();
-    if (meta.exif || meta.xmp) throw new Error(`[maps-places] ${fileName} still carries EXIF/XMP after encoding`);
   } else if (!existsSync(outPath)) {
     throw new Error(`[maps-places] no MAPS_PHOTOS_DIR and no committed thumbnail at public/globe/maps/${fileName}`);
   }
+  // Read back what is actually on disk, fresh or committed: the real
+  // dimensions (fit "inside" keeps each photo's own aspect) and the proof
+  // that no EXIF/XMP survived.
+  const meta = await sharp(outPath).metadata();
+  if (meta.exif || meta.xmp) throw new Error(`[maps-places] ${fileName} still carries EXIF/XMP after encoding`);
 
-  mapsPhotos.push({ src: `/globe/maps/${fileName}`, slug: row.city.slug, city: row.city.city, year: row.year, views: row.views, w: THUMB_SIZE, h: THUMB_SIZE, ...(curated.caption ? { caption: curated.caption } : {}) });
+  mapsPhotos.push({ src: `/globe/maps/${fileName}`, slug: row.city.slug, city: row.city.city, year: row.year, views: row.views, w: meta.width, h: meta.height, ...(curated.caption ? { caption: curated.caption } : {}) });
 }
 
 // Delete stale thumbnails this run did not produce.

@@ -144,7 +144,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       source: `Google Maps Takeout, exported ${mapsExport} · city level, years only`,
       live: false,
       focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
-      media: photos.length > 0 ? photos.map((ph) => ({ src: ph.src, alt: ph.caption ?? `Photo in ${ph.city}, ${ph.year}`, caption: ph.caption ? `${ph.year} · ${ph.views.toLocaleString("en-IN")} views` : String(ph.year) })) : undefined,
+      media: photos.length > 0 ? photos.map((ph) => ({ src: ph.src, alt: ph.caption ?? `Photo in ${ph.city}, ${ph.year}`, caption: `${ph.year} · ${ph.views.toLocaleString("en-IN")} views` })) : undefined,
     });
   };
   const setCursor = (hover: boolean) => {
