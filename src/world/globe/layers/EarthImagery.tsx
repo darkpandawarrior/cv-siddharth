@@ -341,6 +341,13 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
           if (!ice) return;
           if (!alive) return ice.tex.dispose();
           loaded.push(configureTexture(ice.tex));
+          // render.md finding 2: MUR ice concentration is data, not colour —
+          // earthImageryShader.ts reads ice.r/ice.a as a raw 0..1 fraction fed
+          // straight into a linear mix(), same as uRelief two blocks above.
+          // configureTexture() defaults every texture to SRGBColorSpace for
+          // the common (real-photo) case, so this one has to be overridden
+          // back, exactly like uRelief's own override.
+          ice.tex.colorSpace = THREE.NoColorSpace;
           uniforms.uIce.value = ice.tex;
         })
         .catch(() => {});
