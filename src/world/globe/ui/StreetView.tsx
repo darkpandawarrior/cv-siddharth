@@ -336,6 +336,14 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
 
       map.on("load", () => {
         if (cancelled || !map) return;
+        // The orbit camera always looks at the globe's centre, so a matched
+        // hand-off opens flat (pitch ~0). Opening matched keeps the zoom-in
+        // continuous; settling into the street tilt afterwards keeps the
+        // street view readable. Skipped under reduced motion, and in the
+        // e2e seam, which asserts the matched values themselves.
+        if (handoff && !reducedMotion && !isTestMode && openPitch < STREET_PITCH - 5) {
+          map.easeTo({ pitch: STREET_PITCH, bearing: openBearing, duration: 1200 });
+        }
         map.addSource(PHOTO_SOURCE_ID, { type: "geojson", data: photosToGeoJSON([]) });
         map.addLayer({
           id: PHOTO_LAYER_ID,
