@@ -49,15 +49,22 @@ function sparkCoords(values: number[]): { x: number; y: number }[] {
     y: SPARK_H - 2 - ((v - min) / range) * (SPARK_H - 4),
   }));
 }
-function Spark({ series }: { series: SparkSeries }) {
+function Spark({ series }: { series: SparkSeries & { kind?: "histogram" } }) {
   const coords = sparkCoords(series.values);
   const last = coords[coords.length - 1];
+  const maxCount = Math.max(1, ...series.values);
+  const barWidth = SPARK_W / series.values.length;
   const points = coords.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
   return (
     <div className="mb-2">
       <svg width={SPARK_W} height={SPARK_H} viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} className="block" role="img" aria-label={series.label}>
+        {series.kind === "histogram" ? series.values.map((value, i) => {
+          const height = Math.max(0, value) / maxCount * (SPARK_H - 2);
+          return <rect key={i} x={i * barWidth} y={SPARK_H - height} width={Math.max(0, barWidth - 1)} height={height} fill="var(--color-probe)"><title>{`${i}:00 IST: ${value} events`}</title></rect>;
+        }) : <>
         <polyline points={points} fill="none" stroke="var(--color-probe)" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={last.x} cy={last.y} r={2} fill="var(--color-probe)" />
+        </>}
       </svg>
       <p className="truncate text-xs text-muted" title={series.label}>
         {series.label}
@@ -215,8 +222,8 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         // some future selector setting a real series directly) always wins
         // over what this file derives on its own; the derived one only
         // fills in when nothing was provided.
-        const sparks: SparkSeries[] = [];
-        if (selected.spark && selected.spark.length > 0) sparks.push({ values: selected.spark, label: selected.sparkLabel ?? selected.source });
+        const sparks: (SparkSeries & { kind?: "histogram" })[] = [];
+        if (selected.spark && selected.spark.length > 0) sparks.push({ values: selected.spark, label: selected.sparkLabel ?? selected.source, kind: selected.sparkKind });
         else if (regionSpark) sparks.push(regionSpark);
         // Kp is geomagnetic activity: it belongs beside space and hazard
         // selections, never beside an owner card or a Maps place.
