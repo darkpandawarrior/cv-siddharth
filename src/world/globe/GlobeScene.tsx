@@ -32,6 +32,7 @@ const HistoryLayer = lazy(() => import("./layers/HistoryLayer.tsx"));
 const StoryArc = lazy(() => import("./layers/StoryArc.tsx"));
 const HexbinLayer = lazy(() => import("./layers/HexbinLayer.tsx"));
 const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
+const DaylightLayer = lazy(() => import("./layers/DaylightLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -396,6 +397,11 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         </Suspense>
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        {/* LANE C4 ("Living daylight"): the golden-hour and waking bands,
+            drawn from the same subsolar point the terminator uses -- kept at
+            every tier (the brief's own "tier 3 draws the bands only" caps
+            what tier 3 gets, it never turns the layer off). */}
+        <Suspense fallback={null}>{layers.daylight && <DaylightLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>

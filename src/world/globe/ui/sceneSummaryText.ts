@@ -32,6 +32,7 @@ export const LAYER_LABEL: Record<LayerId, string> = {
   together: "Explorers here now",
   density: "Quake and fire density",
   guide: "My Maps places",
+  daylight: "Golden hour and waking cities",
 };
 
 /** "Imagery: VIIRS true colour (NASA GIBS / VIIRS SNPP, 2026-09-28), plus 2

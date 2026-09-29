@@ -10,6 +10,10 @@ import { WMO_LABEL, type SkyState } from "../../lib/sky.ts";
 // raycast. `<ClientOnly>` is the same wrapper Globe.tsx already gives this
 // row's sibling, TimeScrubber, for the identical reason.
 const HoverReadout = lazy(() => import("./ui/HoverReadout.tsx"));
+// LANE C4 ("Living daylight"): same reasoning as HoverReadout above -- it
+// shares layers/daylight.ts with the R3F DaylightLayer (three-typed
+// uniform helpers live there too), so it is lazy for the same reason.
+const DaylightReadout = lazy(() => import("./ui/DaylightReadout.tsx"));
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
 // imported: that file also exports SceneActivity, which statically imports
@@ -92,6 +96,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
         {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
       </div>
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
+      {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><DaylightReadout /></Suspense></ClientOnly>}
       {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
           shown at every breakpoint (the drag hint above stays sm:-only, but
           this is the one accessible affordance a touch/keyboard visitor has
