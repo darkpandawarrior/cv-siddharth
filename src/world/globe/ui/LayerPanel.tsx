@@ -7,6 +7,10 @@ import { entityPositions, LAYER_IDS, useGlobe, type LayerId, type LayerHealth } 
 // below renders FeedRail for the "Live" tab; every other line in this file
 // is unchanged.
 import FeedRail from "./FeedRail.tsx";
+// WAVE 6 LANE X6 needed a true in-sheet row instead of floating a second
+// button over this sheet's own content (see that file's own "Needs from
+// integration" comment) — LANE H1 (integration) adds the slot here.
+import { SoundToggleSlot } from "./SoundToggle.tsx";
 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
@@ -337,22 +341,30 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
         </button>
       )}
 
-      {/* Phone (< 640): a bottom sheet, one of store.sheet's four. */}
+      {/* Phone (< 640): a bottom sheet, one of store.sheet's four. Height
+          capped from the measured topbar bottom (Globe.tsx's own
+          --globe-sheet-max-h, task H1 #3), not a bare 70vh — on a short
+          viewport a fixed 70vh reaches up over the topbar's own icon row
+          (measured: 390x844 puts the sheet's top edge above it), which then
+          intercepts clicks meant for the Time/Tour buttons underneath. */}
       {sheet === "layers" && (
         <div
           data-globe-layer-sheet
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
-            <button
-              type="button"
-              onClick={() => setSheet(null)}
-              aria-label="Close the layers sheet"
-              className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              <X size={16} />
-            </button>
+            <div className="flex items-center gap-2">
+              <SoundToggleSlot />
+              <button
+                type="button"
+                onClick={() => setSheet(null)}
+                aria-label="Close the layers sheet"
+                className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
           <TabSwitcher tab={tab} setTab={setTab} />
           {tab === "live" ? (

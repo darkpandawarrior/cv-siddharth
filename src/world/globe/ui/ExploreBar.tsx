@@ -244,7 +244,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
       {!query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
         {EXAMPLE_CHIPS.map(chip => (
           <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
-            className="rounded-full border border-line px-2 py-1 text-[11px] text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+            className="rounded-full border border-line px-2 py-1 text-xs text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
             {chip}
           </button>
         ))}

@@ -5,7 +5,7 @@
 // storage disabled outright all throw). Never invents a cue: every trigger
 // below reads a real, already-fetched signal this page has anyway (no new
 // fetch, same "read a sibling's snapshot" discipline as HexbinLayer.tsx).
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useGlobe, type Focus } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
@@ -46,6 +46,57 @@ function buzz(pattern: number | number[]): void {
   }
 }
 
+// LANE H1 (integration): the phone Layers sheet needs its own in-sheet
+// sound-toggle button (task 4 — see this file's own header, "Needs from
+// integration"), but every audio-cue effect below (hazard rumble, pulse
+// chime/thud, fly whoosh) has to keep running from exactly ONE mounted
+// component, never two — a second independent instance would double-poll
+// and double-fire cues. So "enabled" lives here as a tiny external store
+// (module scope, not React state), and BOTH the default export (desktop
+// icon + the effects) and `SoundToggleSlot` (the in-sheet row LayerPanel.tsx
+// renders) read it via `useSyncExternalStore` — one source of truth, one
+// set of side effects, two buttons.
+let soundEnabled = false;
+const soundListeners = new Set<() => void>();
+function setSoundEnabled(next: boolean): void {
+  soundEnabled = next;
+  writeEnabled(next);
+  for (const listener of soundListeners) listener();
+}
+function subscribeSound(listener: () => void): () => void {
+  soundListeners.add(listener);
+  return () => soundListeners.delete(listener);
+}
+function toggleSound(): void {
+  const next = !soundEnabled;
+  if (next) {
+    primeAudio(); // create/resume the AudioContext on this real click, before any cue needs it
+    buzz(15);
+  }
+  setSoundEnabled(next);
+}
+
+/** Phone-only in-sheet row: LayerPanel.tsx mounts this inside the Layers
+ *  sheet's own header, retiring the old `fixed bottom-4 right-4` floating
+ *  button that sat over the sheet's own content. */
+export function SoundToggleSlot() {
+  const enabled = useSyncExternalStore(subscribeSound, () => soundEnabled, () => false);
+  const label = enabled ? "Mute globe sound" : "Enable globe sound";
+  return (
+    <button
+      type="button"
+      onClick={toggleSound}
+      aria-pressed={enabled}
+      aria-label={label}
+      data-sound-toggle-sheet
+      data-sound-enabled={enabled}
+      className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      {enabled ? <Volume2 size={16} aria-hidden /> : <VolumeX size={16} aria-hidden />}
+    </button>
+  );
+}
+
 // HazardLayer.tsx's own feeds refresh every 5-15 min, so re-reading its
 // snapshot this often is comfortably ahead of anything actually changing —
 // same cadence and reasoning as HexbinLayer.tsx's own SNAPSHOT_POLL_MS.
@@ -64,7 +115,7 @@ const SIGNALS_POLL_MS = 120_000;
 const RIGHT_OFFSET = { open: 257, collapsed: 58 };
 
 export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
-  const [enabled, setEnabled] = useState(false);
+  const enabled = useSyncExternalStore(subscribeSound, () => soundEnabled, () => false);
   useEffect(() => {
     // A `0`-delay timeout, not a synchronous setState in the effect body —
     // same react-hooks/set-state-in-effect dodge sparkSeries.ts's own
@@ -73,12 +124,11 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
     // renders `false` regardless (localStorage doesn't exist there), so
     // this only delays the real value by one tick on mount, never shows a
     // wrong one.
-    const id = setTimeout(() => setEnabled(readEnabled()), 0);
+    const id = setTimeout(() => setSoundEnabled(readEnabled()), 0);
     return () => clearTimeout(id);
   }, []);
 
   const reducedMotion = useReducedMotion();
-  const sheet = useGlobe((s) => s.sheet);
   const panelOpen = useGlobe((s) => s.panelOpen);
   const focus = useGlobe((s) => s.focus);
 
@@ -146,16 +196,6 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
     prevFocus.current = focus;
   }, [enabled, reducedMotion, focus]);
 
-  const toggle = () => {
-    const next = !enabled;
-    if (next) {
-      primeAudio(); // create/resume the AudioContext on this real click, before any cue needs it
-      buzz(15);
-    }
-    setEnabled(next);
-    writeEnabled(next);
-  };
-
   const label = enabled ? "Mute globe sound" : "Enable globe sound";
   const icon = enabled ? <Volume2 size={13} aria-hidden /> : <VolumeX size={13} aria-hidden />;
 
@@ -172,7 +212,7 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
           offset, which silently ate every click (caught by e2e). */}
       <button
         type="button"
-        onClick={toggle}
+        onClick={toggleSound}
         aria-pressed={enabled}
         aria-label={label}
         title="Sound (opt-in)"
@@ -183,25 +223,9 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
       >
         {icon}
       </button>
-
-      {/* Phone: LayerPanel.tsx (another lane's file) owns the Layers sheet's
-          own DOM, so this can't add a literal row inside it — floated at
-          the sheet's own corner instead, above it (z-50 over its z-40),
-          only while that sheet is open. Needs from integration: a one-line
-          slot inside LayerPanel.tsx's phone sheet for a true in-sheet row. */}
-      {sheet === "layers" && (
-        <button
-          type="button"
-          onClick={toggle}
-          aria-pressed={enabled}
-          aria-label={label}
-          data-sound-toggle-sheet
-          data-sound-enabled={enabled}
-          className="ctrl-icon pointer-events-auto fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/90 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:hidden"
-        >
-          {enabled ? <Volume2 size={16} aria-hidden /> : <VolumeX size={16} aria-hidden />}
-        </button>
-      )}
+      {/* Phone: the in-sheet row is `SoundToggleSlot` above, rendered by
+          LayerPanel.tsx inside its own Layers-sheet header (task H1 #4) —
+          this file no longer floats a second button over that sheet. */}
     </>
   );
 }

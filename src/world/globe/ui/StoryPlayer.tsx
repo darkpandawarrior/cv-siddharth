@@ -180,14 +180,14 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           Exit
         </button>
       </div>
-      <p className="mb-1 text-[11px] text-muted" title={event.dateNote}>{formatEventDate(event)}</p>
+      <p className="mb-1 text-xs text-muted" title={event.dateNote}>{formatEventDate(event)}</p>
       <p className="mb-2 text-xs leading-relaxed text-zinc-300">{event.detail}</p>
       {event.metric && (
         <p className="mb-2 text-xs text-zinc-400" title={event.metric.source}>
           {event.metric.value} {event.metric.unit}
         </p>
       )}
-      <p className="mb-3 truncate text-[11px] text-muted" title={event.source}>evidence: {event.source}</p>
+      <p className="mb-3 truncate text-xs text-muted" title={event.source}>evidence: {event.source}</p>
       <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5" aria-hidden>
         {CHAPTERS.map((c, i) => (
           <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeIndex ? "var(--color-signal)" : "#3f3f46" }} />
