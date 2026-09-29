@@ -10,7 +10,7 @@ import type { Camera, Scene, Vector3 } from "three";
  */
 
 /** Every toggleable layer, in the order the layer panel lists them. */
-export const LAYER_IDS = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density"] as const;
+export const LAYER_IDS = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide"] as const;
 export type LayerId = (typeof LAYER_IDS)[number];
 
 /** "imagery" is the real NASA day/night earth; "dots" is the dot-matrix one. */
@@ -50,6 +50,11 @@ export interface Selection {
    *  (G8) any more than a `rows` value is. */
   spark?: number[];
   sparkLabel?: string;
+  /** LANE T1 (My Maps places): an optional horizontally scrolling photo
+   *  strip the Inspector renders below the rows — curated thumbnails only,
+   *  never an original filename or a live fetch. `alt` is required so every
+   *  image stays screen-reader legible even without a caption. */
+  media?: { src: string; alt: string; caption: string }[];
 }
 
 /** A layer's honest health, shown beside its toggle. `detail` is a short
@@ -145,7 +150,7 @@ function initialPanelOpen(): boolean {
 
 export const useGlobe = create<GlobeState>((set) => ({
   style: "imagery",
-  layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false },
+  layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true },
   view: "orbit",
   focus: null,
   selected: null,

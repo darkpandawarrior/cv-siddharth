@@ -3,8 +3,8 @@
 // Run `npm run gen:repo-stats` to refresh.
 export const repoStats = {
   "generatedAt": "2026-09-23",
-  "tests": 2417,
-  "testFiles": 248,
+  "tests": 2789,
+  "testFiles": 280,
   "kotlinLines": 35670,
   "kotlinFiles": 72,
   "kotlin": "2.4.20",

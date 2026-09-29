@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { education } from "../../../data/profile/core.ts";
 import { experience } from "../../../data/profile/experience.ts";
+import { lifePlaces } from "../../../data/profile/lifePlaces.ts";
 import { openSource, recentGrowth } from "../../../data/profile/openSource.ts";
 import { historyMonths } from "../../../data/history.ts";
 import { fleetStats, storeApps, storeVerifiedAt } from "../../../data/store.ts";
@@ -52,6 +53,15 @@ describe("story evidence", () => {
       ids.push(id);
       expect(byId(id)).toMatchObject({ source, title: text(title), detail: text(detail) });
     }
+    for (const p of lifePlaces) {
+      const raw = p.from ?? p.to;
+      if (raw === undefined) continue; // Mumbai: undated, no chapter
+      check(`life:${p.slug}`, "src/data/profile/lifePlaces.ts", `${p.city}, ${p.country}`, p.line);
+      expect(byId(`life:${p.slug}`).date).toBe(String(raw));
+      expect(byId(`life:${p.slug}`).dateNote).toContain("Owner's account; year only");
+      expect(byId(`life:${p.slug}`).place?.name).toBe(`${p.city}, ${p.country}`);
+    }
+    expect(byId("life:kuwait-city").dateNote).toContain("left in 2017, earlier years not recorded");
     check("education", "src/data/profile/core.ts", education.school, `${education.degree} · ${education.period}`);
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     for (const role of experience) {
@@ -119,21 +129,28 @@ describe("geography guards", () => {
       expect(chapter.camera.distance).toBeGreaterThan(0);
       expect(chapter.camera.emphasise.length).toBeGreaterThan(0);
       for (const layer of chapter.camera.emphasise) expect(LAYER_IDS).toContain(layer);
-      // Only roles (their location field) and education (the school names its
-      // city) may stand on a place; everything else is height over Pune.
-      if (!chapter.id.startsWith("role:") && chapter.id !== "education") expect(place).toBeUndefined();
+      // Only roles (their location field), education (the school names its
+      // city) and life chapters (the owner's own account) may stand on a
+      // place; everything else is height over Pune.
+      if (!chapter.id.startsWith("role:") && !chapter.id.startsWith("life:") && chapter.id !== "education") expect(place).toBeUndefined();
     }
   });
   it("never draws a journey between unknown places or between the same city", () => {
     const pune = STORY_GEO["Pune, India"];
     const fake = { name: "Invented", lat: 0, lon: 0 };
     for (const [a, b] of [[undefined, pune], [pune, undefined], [fake, pune], [pune, fake], [pune, pune]]) expect(storyArc(a, b)).toBeUndefined();
-    // Exactly the one journey both of whose ends the data names.
-    expect(chapters.flatMap((c) => c.arcs).map((a) => `${a.from.name}->${a.to.name}`)).toEqual(["Bhopal, India->Pune, India"]);
+    // The life path, city to city, in chronological chapter order — never a
+    // role chapter (the 2020 internship gets no arc).
+    expect(chapters.flatMap((c) => c.arcs).map((a) => `${a.from.name}->${a.to.name}`)).toEqual([
+      "Kuwait City, Kuwait->Bhopal, India",
+      "Bhopal, India->Chandigarh, India",
+      "Chandigarh, India->Pune, India",
+    ]);
     for (const arc of chapters.flatMap((c) => c.arcs)) {
       expect(isStoryPlace(arc.from)).toBe(true);
       expect(isStoryPlace(arc.to)).toBe(true);
     }
+    expect(chapters.filter((c) => c.id.startsWith("role:")).every((c) => c.arcs.length === 0)).toBe(true);
   });
 });
 
@@ -144,15 +161,32 @@ it("parses only unambiguous dates and validates the calendar", () => {
   for (const raw of ["Present", "Jun - Aug 2026", "2023-02-29", "2026-13", "2026-00", "2026-01-00", "2026-04-31", "06/01/2026", "Nope 2026", ""]) expect(storyDate(raw)).toBeUndefined();
 });
 
-describe("the university-to-Pune journey", () => {
-  it("places education in Bhopal (named by the data) and draws exactly one arc to the first Pune role", () => {
+describe("the life path", () => {
+  it("orders Kuwait before education (both 2017, stable sort on insertion order)", () => {
     const story = buildStory();
-    const edu = story.find((c) => c.id === "education")!;
-    expect(edu.events[0].place?.name).toBe("Bhopal, India");
+    const kuwaitIdx = story.findIndex((c) => c.id === "life:kuwait-city");
+    const eduIdx = story.findIndex((c) => c.id === "education");
+    expect(kuwaitIdx).toBeGreaterThanOrEqual(0);
+    expect(kuwaitIdx).toBeLessThan(eduIdx);
+  });
+
+  it("draws exactly three arcs, one per life transition, never touching a role chapter", () => {
+    const story = buildStory();
     const withArcs = story.filter((c) => c.arcs.length > 0);
-    expect(withArcs).toHaveLength(1);
-    expect(withArcs[0].id.startsWith("role:")).toBe(true);
-    expect(withArcs[0].arcs[0].from.name).toBe("Bhopal, India");
-    expect(withArcs[0].arcs[0].to.name).toBe("Pune, India");
+    expect(withArcs.map((c) => c.id)).toEqual(["education", "life:chandigarh", "life:pune"]);
+    expect(withArcs[0].arcs[0].from.name).toBe("Kuwait City, Kuwait");
+    expect(withArcs[0].arcs[0].to.name).toBe("Bhopal, India");
+    expect(withArcs[1].arcs[0].from.name).toBe("Bhopal, India");
+    expect(withArcs[1].arcs[0].to.name).toBe("Chandigarh, India");
+    expect(withArcs[2].arcs[0].from.name).toBe("Chandigarh, India");
+    expect(withArcs[2].arcs[0].to.name).toBe("Pune, India");
+  });
+
+  it("gives Mumbai no chapter (undated) and every other life place exactly one", () => {
+    const story = buildStory();
+    for (const p of lifePlaces) {
+      const hasChapter = story.some((c) => c.id === `life:${p.slug}`);
+      expect(hasChapter, p.slug).toBe(p.slug !== "mumbai");
+    }
   });
 });

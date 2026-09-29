@@ -205,6 +205,23 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         return sparks.map((s, i) => <Spark key={`${s.label}-${i}`} series={s} />);
       })()}
 
+      {selected.media && selected.media.length > 0 && (
+        <div
+          data-guide-media
+          role="group"
+          aria-label={`${selected.media.length} photo${selected.media.length === 1 ? "" : "s"}`}
+          tabIndex={0}
+          className="mb-3 flex gap-2 overflow-x-auto rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          {selected.media.map((m, i) => (
+            <figure key={`${m.src}-${i}`} className="m-0 shrink-0">
+              <img src={m.src} alt={m.alt} width={96} height={96} loading="lazy" decoding="async" className="h-24 w-24 rounded-md object-cover" />
+              <figcaption className="mt-1 max-w-24 truncate text-xs text-muted">{m.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+
       <p className="mb-3 truncate text-xs text-muted" title={selected.source}>
         {selected.live ? "Live" : "Snapshot"} · {selected.source}
       </p>

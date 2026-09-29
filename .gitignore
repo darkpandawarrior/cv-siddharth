@@ -60,6 +60,12 @@ heavy/world/concept/*-og.webp
 # machine has. Ignoring them fails surfaces.test.ts on a fresh clone and ships
 # a homepage wall of empty frames.
 !public/surfaces/*.webp
+# ...and except the "My Maps places" thumbnails. Same reasoning again: not
+# derivatives of anything in this repo — scripts/gen-maps-places.mjs curates
+# and EXIF-strips them from a private Google Maps Takeout export
+# (MAPS_TAKEOUT_DIR) that a build machine does not have. Ignoring them ships
+# the guide layer's photo strip with no photos in it.
+!public/globe/maps/*.webp
 # ...and except the Loopdown cast portraits and series covers. Same reasoning
 # again: they are not derivatives of anything in this repo — scripts/gen-
 # loopdown-art.mjs fetches the-loopdown's own pre-optimized .webp files over

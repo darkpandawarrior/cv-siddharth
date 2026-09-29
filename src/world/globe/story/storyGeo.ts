@@ -14,6 +14,12 @@ export const STORY_GEO = Object.freeze({
   // (23 deg 15' N, 77 deg 25' E, per Wikipedia and GeoNames id 1275841),
   // rounded to two decimals on purpose: city precision, not the campus.
   "Bhopal, India": Object.freeze({ name: "Bhopal, India", lat: 23.25, lon: 77.41 }),
+  // LANE T1 (life places): three more cities the owner's own account names
+  // (src/data/profile/lifePlaces.ts), city precision, same gazetteer as the
+  // Maps places layer (src/data/mapsGazetteer.ts) — no new coordinate claim.
+  "Kuwait City, Kuwait": Object.freeze({ name: "Kuwait City, Kuwait", lat: 29.37, lon: 47.98 }),
+  "Mumbai, India": Object.freeze({ name: "Mumbai, India", lat: 19.08, lon: 72.88 }),
+  "Chandigarh, India": Object.freeze({ name: "Chandigarh, India", lat: 30.73, lon: 76.78 }),
 });
 
 /** Exact membership also checks coordinates: a familiar city name attached to
