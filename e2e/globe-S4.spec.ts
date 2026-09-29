@@ -74,6 +74,8 @@ type GuideDebug = {
   orgMarker: { lat: number; lon: number };
   activityEvents: number;
   activityHistogram: number[] | null;
+  face: (slug: string) => void;
+  screenPoint: (slug: string) => { x: number; y: number } | null;
 };
 function readGuideDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __GUIDE_DEBUG__?: GuideDebug }).__GUIDE_DEBUG__);
@@ -154,30 +156,26 @@ test("career-ops-hq's org marker is a self-published, country-level location, di
   expect(debug?.orgMarker).toEqual({ lat: 40.0, lon: -4.0 });
 });
 
-const ORG_SELECTION = {
-  id: "guide-org:career-ops-hq",
-  kind: "guide-org",
-  title: "career-ops-hq · open source, out",
-  rows: [
-    { label: "Merged PRs", value: "" },
-    { label: "Upstream stars", value: "" },
-    { label: "Location", value: "Spain · org-published location, not a person or office" },
-  ],
-  source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only",
-  live: false,
-  focus: { kind: "latlon", lat: 40.0, lon: -4.0, distance: 14 },
-};
+async function clickGuideMarker(page: Page, slug: string) {
+  await page.evaluate((id) => window.__GUIDE_DEBUG__?.face(id), slug);
+  let previous: { x: number; y: number } | null = null;
+  let stable = 0;
+  await expect.poll(async () => {
+    const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
+    if (!point) return 0;
+    stable = previous && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.2 ? stable + 1 : 0;
+    previous = point;
+    return stable;
+  }, { timeout: 30_000 }).toBeGreaterThanOrEqual(3);
+  if (!previous) throw new Error("guide marker has no screen point");
+  const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
+  if (!point) throw new Error("guide marker has no screen point");
+  await page.mouse.click(point.x, point.y);
+}
 
-test("the org marker's Inspector carries the honesty-guard label, not just its coordinates", async ({ page }) => {
-  // GuideLayer.tsx's onOrgClick shape, same seam globe-T1.spec.ts uses for
-  // this layer's other marker type — a real raycast click needs camera
-  // framing this spec doesn't otherwise depend on (see this file's own
-  // header note on why T1's seam applies here too).
-  await page.addInitScript((sel) => {
-    (window as unknown as { __GLOBE_TEST_SELECT__: unknown }).__GLOBE_TEST_SELECT__ = sel;
-  }, ORG_SELECTION);
+test("clicking the real org marker opens its source-labelled Inspector", async ({ page }) => {
   await openGlobe(page, "2026-09-24T12:27:00+05:30");
-
+  await clickGuideMarker(page, "career-ops-hq");
   const inspector = page.locator("[data-globe-inspector]");
   await expect(inspector).toBeVisible({ timeout: 30_000 });
   await expect(inspector).toContainText("Spain · org-published location, not a person or office");
@@ -193,6 +191,11 @@ test("the recent-public-GitHub-activity histogram is computed only with >= 5 pub
   expect(debug?.activityHistogram).not.toBeNull();
   expect(debug?.activityHistogram).toHaveLength(24);
   expect(debug?.activityHistogram!.reduce((a, b) => a + b, 0)).toBe(6);
+  await clickGuideMarker(page, "pune");
+  const chart = page.locator("[data-globe-inspector]").getByRole("img", { name: /recent public GitHub activity only/ });
+  await expect(chart).toBeVisible();
+  await expect(chart.locator("rect")).toHaveCount(24);
+  await expect(chart.locator("polyline")).toHaveCount(0);
 });
 
 test("a quiet week (fewer than 5 events) renders no histogram at all", async ({ page }) => {
@@ -201,4 +204,16 @@ test("a quiet week (fewer than 5 events) renders no histogram at all", async ({ 
   await expect.poll(async () => (await readGuideDebug(page))?.activityEvents, { timeout: 15_000 }).toBe(3);
   const debug = await readGuideDebug(page);
   expect(debug?.activityHistogram).toBeNull();
+  await clickGuideMarker(page, "pune");
+  await expect(page.locator("[data-globe-inspector]")).toContainText("Pune");
+  await expect(page.locator("[data-globe-inspector]").getByRole("img", { name: /recent public GitHub activity only/ })).toHaveCount(0);
+});
+
+test("a disconnected public-activity feed cannot display a cached histogram", async ({ page }) => {
+  await openGlobe(page, "2026-09-24T12:27:00+05:30", { ...activityFixture, connected: false });
+  await expect.poll(async () => (await readGuideDebug(page))?.activityEvents).toBe(6);
+  expect((await readGuideDebug(page))?.activityHistogram).toBeNull();
+  await clickGuideMarker(page, "pune");
+  await expect(page.locator("[data-globe-inspector]")).toContainText("Pune");
+  await expect(page.locator("[data-globe-inspector]").getByRole("img", { name: /recent public GitHub activity only/ })).toHaveCount(0);
 });

@@ -50,6 +50,8 @@ export interface Selection {
    *  (G8) any more than a `rows` value is. */
   spark?: number[];
   sparkLabel?: string;
+  /** Frequency buckets use zero-based bars; time series keep their line. */
+  sparkKind?: "histogram";
   /** LANE T1 (My Maps places): an optional horizontally scrolling photo
    *  strip the Inspector renders below the rows — curated thumbnails only,
    *  never an original filename or a live fetch. `alt` is required so every

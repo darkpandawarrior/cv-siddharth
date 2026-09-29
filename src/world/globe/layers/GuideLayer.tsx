@@ -21,7 +21,7 @@ import * as THREE from "three";
 import { GLOBE_RADIUS, latLonToXyz } from "../geoMath.ts";
 import { readColor } from "../../../themeColorThree.ts";
 import { readToken } from "../../../themeColor.ts";
-import { simTime, useGlobe } from "../globeStore.ts";
+import { sceneHandles, simTime, useGlobe } from "../globeStore.ts";
 import { lifePlaces, lifePlaceGeo } from "../../../data/profile/lifePlaces.ts";
 import { mapsExport, mapsPhotos, mapsPlaces, mapsTotals } from "../../../data/generated/mapsPlaces.ts";
 import { upstreamMergedPRs } from "../../../data/profile/openSource.ts";
@@ -122,6 +122,8 @@ declare global {
       orgMarker: { lat: number; lon: number };
       activityEvents: number;
       activityHistogram: number[] | null;
+      face: (slug: string) => void;
+      screenPoint: (slug: string) => { x: number; y: number } | null;
     };
   }
 }
@@ -153,8 +155,8 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
   // second subscriber costs no extra request), bucketed by IST hour and fed
   // into Pune's own Inspector card as a `spark` series — see hourHistogram's
   // own honesty-guard comment for the >= 5-event gate.
-  const { data: activity } = useLiveSignal<GithubActivity>("/api/github-activity", ACTIVITY_POLL_MS);
-  const activityHistogram = useMemo(() => hourHistogram(activity?.items), [activity]);
+  const { data: activity, error: activityError } = useLiveSignal<GithubActivity>("/api/github-activity", ACTIVITY_POLL_MS);
+  const activityHistogram = useMemo(() => activityError || !activity?.connected ? null : hourHistogram(activity.items), [activity, activityError]);
 
   // Filled by the ring-building effect below, read by the debug-seam effect
   // further down: a ref, not state, so a 60s activity poll (which does not
@@ -242,6 +244,20 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       orgMarker: CAREER_OPS_HQ,
       activityEvents: activity?.items.length ?? 0,
       activityHistogram,
+      // Stage only the camera, never a selection: e2e must hit the real mesh.
+      face: (slug) => {
+        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug);
+        if (p) useGlobe.getState().flyTo({ kind: "latlon", lat: p.lat, lon: p.lon, distance: 14 });
+      },
+      screenPoint: (slug) => {
+        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug);
+        const { camera, canvas } = sceneHandles;
+        if (!p || !camera || !canvas) return null;
+        const xyz = latLonToXyz(p.lat, p.lon);
+        const point = new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + LIFT).project(camera);
+        const box = canvas.getBoundingClientRect();
+        return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
+      },
     };
   }, [simYear, activity, activityHistogram]);
 
@@ -272,7 +288,8 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       ...(p.slug === "pune" && activityHistogram
         ? {
             spark: activityHistogram,
-            sparkLabel: `recent public GitHub activity only, by IST hour of day (${activity?.items.length ?? 0} events, not employer work)`,
+            sparkKind: "histogram" as const,
+            sparkLabel: `recent public GitHub activity only, by IST hour of day (${activityHistogram.reduce((sum, count) => sum + count, 0)} events; latest ${new Date(Math.max(...(activity?.items ?? []).map((item) => Date.parse(item.at)).filter(Number.isFinite))).toISOString().slice(0, 10)}; not employer work)`,
           }
         : {}),
     });
