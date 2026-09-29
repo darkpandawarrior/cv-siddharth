@@ -27,6 +27,7 @@ const LAYER_LABEL: Record<LayerId, string> = {
   density: "quake/fire density",
   guide: "My Maps places",
   daylight: "golden hour and waking bands (computed from the sun position)",
+  eclipse: "computed solar eclipse paths",
 };
 
 export interface StampInput {

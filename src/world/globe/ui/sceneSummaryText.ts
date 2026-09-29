@@ -33,6 +33,7 @@ export const LAYER_LABEL: Record<LayerId, string> = {
   density: "Quake and fire density",
   guide: "My Maps places",
   daylight: "Golden hour and waking cities",
+  eclipse: "Eclipse paths",
 };
 
 /** "Imagery: VIIRS true colour (NASA GIBS / VIIRS SNPP, 2026-09-28), plus 2

@@ -48,6 +48,7 @@ declare global {
     __GLOBE_TEST_GET_DRAW_CALLS__?: () => number;
   }
 }
+const EclipseLayer = lazy(() => import("./layers/EclipseLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
 // zoom and keyboard zoom both drive the same dolly OrbitControls itself uses
@@ -433,6 +434,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
             what tier 3 gets, it never turns the layer off). */}
         <Suspense fallback={null}>{layers.daylight && <DaylightLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && xrayOn && <XRayTiles />}</Suspense>
+        <Suspense fallback={null}>{layers.eclipse && <EclipseLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
           <CameraDirector controlsRef={controlsRef} />
         </Suspense>

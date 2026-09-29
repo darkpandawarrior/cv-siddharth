@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, X } from "lucide-react";
+import type { GlobalEclipse } from "../layers/eclipse.ts";
+import { Eclipse, Pause, Play, X } from "lucide-react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { simTime, useGlobe } from "../globeStore.ts";
 import { MAX_OFFSET_MIN, MIN_OFFSET_MIN, labelOffset, offsetToSlider, sliderToOffset, snapOffset, snapStepMinutes } from "../timeMachine/rangeModel.ts";
@@ -74,6 +75,8 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   const reducedMotion = useReducedMotion();
   const [playing, setPlaying] = useState(false);
   const [speedIdx, setSpeedIdx] = useState(0);
+  const [eclipseLoading, setEclipseLoading] = useState(false);
+  const [nextEclipse, setNextEclipse] = useState<GlobalEclipse | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number | null>(null);
   const compareState = useCompare((s) => s.state);
@@ -180,6 +183,63 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     </button>
   );
 
+  // WAVE 7 LANE 8 (eclipse paths): astronomy-engine loads only when this is
+  // clicked (its own lazy chunk, shared with EclipseLayer.tsx if that layer
+  // is on) -- never a static import here, or its ~47 KB gzip would land in
+  // the eager Globe chunk. The jump sets a real offset past the normal +-30
+  // day/2 day range (rangeModel.ts, not owned by this lane); the slider
+  // visually pins to its end, and `label` below still prints an honest
+  // "in N days" for however far out the jump actually lands.
+  const jumpToNextEclipse = async () => {
+    setEclipseLoading(true);
+    try {
+      const { nextGlobalEclipses } = await import("../layers/eclipse.ts");
+      const [eclipse] = nextGlobalEclipses(new Date(), 1);
+      if (!eclipse) return;
+      setNextEclipse(eclipse);
+      setTimeOffset((eclipse.peak.getTime() - Date.now()) / 60_000);
+      setPlaying(false);
+    } finally {
+      setEclipseLoading(false);
+    }
+  };
+  const eclipseButtonLabel = eclipseLoading ? "Finding eclipse..." : "Next eclipse";
+  const eclipseButtonTitle = nextEclipse
+    ? `Jump to the greatest point of the next ${nextEclipse.kind} solar eclipse, ${nextEclipse.peak.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })}`
+    : "Jump to the next global solar eclipse's greatest point (computed with astronomy-engine)";
+  // Icon-only in the compact desktop pill: Globe.tsx reserves a centre band
+  // for ExploreBar (~377px, sm+) and caps this row's own container at
+  // max-w-[38%] to stay clear of it -- a full "Next eclipse" text label was
+  // wide enough to push the row past that cap and under ExploreBar's box
+  // (measured: the row ran to x=650 against ExploreBar's own x=531.5 start,
+  // a real overlap, not a visual near-miss). The phone sheet has no such
+  // reserved band (ExploreBar moves to its own line there), so it keeps the
+  // full label.
+  const eclipseButtonCompact = (
+    <button
+      type="button"
+      onClick={jumpToNextEclipse}
+      disabled={eclipseLoading}
+      aria-label={eclipseButtonLabel}
+      title={eclipseButtonTitle}
+      className="ctrl-icon flex h-6 w-6 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
+    >
+      <Eclipse size={12} />
+    </button>
+  );
+  const eclipseButtonFull = (
+    <button
+      type="button"
+      onClick={jumpToNextEclipse}
+      disabled={eclipseLoading}
+      title={eclipseButtonTitle}
+      className="flex h-11 items-center gap-1.5 rounded-full border border-line px-3 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
+    >
+      <Eclipse size={14} />
+      {eclipseButtonLabel}
+    </button>
+  );
+
   const nowButton = (
     <button
       type="button"
@@ -253,6 +313,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           {SPEEDS[speedIdx].label}
         </button>
         {compareButton}
+        {eclipseButtonCompact}
         {notLiveBadge}
       </div>
 
@@ -340,6 +401,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               ))}
             </div>
             {compareButton}
+            {eclipseButtonFull}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
         </div>
