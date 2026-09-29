@@ -291,6 +291,11 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-siblings.json"], stages: {} },
   { id: "store-flavours", script: "gen-store-flavours.mjs", npmName: null, kind: "private-env",
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
+  // Refuses to run without MAPS_TAKEOUT_DIR pointing at a private Google
+  // Maps Takeout export (same posture as gen-store-flavours.mjs above);
+  // MAPS_PHOTOS_DIR is optional (falls back to the committed thumbnails).
+  { id: "maps-places", script: "gen-maps-places.mjs", npmName: null, kind: "private-env",
+    inputs: [], outputs: ["src/data/generated/mapsPlaces.ts", "public/globe/maps/**"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
   // Manual annual refresh, deliberately NOT wired into any build/refresh/check

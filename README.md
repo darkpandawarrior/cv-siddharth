@@ -332,6 +332,11 @@ reasoning where a README reader can find it.
 - `gen-store-flavours.mjs`. Refuses to run without `SHELF_RIDER_REPO` and
   `SHELF_DRIVER_REPO` pointing at two private checkouts, so it cannot run on
   a CI box at all.
+- `gen-maps-places.mjs`. Refuses to run without `MAPS_TAKEOUT_DIR` pointing
+  at a private Google Maps Takeout export; `MAPS_PHOTOS_DIR` is optional and
+  falls back to the committed thumbnails when absent. Writes city-level
+  aggregates only, never a business name, address, review text, place URL
+  or original photo filename.
 - `gen-store-siblings.mjs`. Walks each shelf client's Play developer page
   live, looking for a merchant-side sibling app the rider/driver data misses.
   Writes a gitignored cache; `npm run gen:store` merges it.
