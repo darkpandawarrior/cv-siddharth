@@ -1,3 +1,6 @@
+import { fetchTide, tideLabel, loadStations, nearestStationWithin, type TideReading, type TideStation } from "../layers/tides.ts";
+import { fetchCape, capeLabel, type CapeReading } from "../layers/cape.ts";
+import { activeShowers, radiantRiseTime, meteorShowerLine } from "../layers/meteors.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { countryAt, type CountryIndex } from "../countryData.ts";
@@ -28,11 +31,9 @@ import { nearestQuakeWithin, windLabel } from "./hoverReadout.ts";
  * poller) and the nearest quake within 300km (the USGS all-day feed, same
  * shared-store read CountryLayer.tsx's own inspector row already uses).
  *
- * Zero network requests per hover: the ONE real fetch here is the Natural
- * Earth country boundary index, loaded once via loadCountries()'s
- * module-level singleton promise (shared with CountryLayer.tsx even when
- * that layer is off) the first time the pointer lands on the globe, never
- * per pointer move afterward.
+ * Country data and NOAA station data load once. Model/tide requests are
+ * throttled per settled hover cell with short-lived caches; pointer movement
+ * never launches a request per frame.
  *
  * Hidden while dragging, over other UI, or off the globe: all three fall
  * out of the architecture rather than needing their own checks --
@@ -46,7 +47,7 @@ const CHIP_OFFSET = 14;
 // LANE S3: widened/heightened from the pre-S3 210x96 guess -- up to three
 // more wrapping rows (marine/air-quality/flood) now share the chip.
 const CHIP_W_GUESS = 248;
-const CHIP_H_GUESS = 190;
+const CHIP_H_GUESS = 360;
 
 declare global {
   interface Window {
@@ -71,6 +72,9 @@ interface Readout {
   marine: string | null;
   airQuality: string | null;
   flood: string | null;
+  tide: string | null;
+  cape: string | null;
+  meteors: string[];
 }
 interface Chip { x: number; y: number; readout: Readout }
 
@@ -96,24 +100,25 @@ function hoverCellKey(point: LatLon): string {
   return `${Math.round(point.lat / HOVER_CELL_DEG)}:${Math.round(point.lon / HOVER_CELL_DEG)}`;
 }
 
-interface CellEntry<T> { data: T | null }
+interface CellEntry<T> { data: T | null; at?: number; failed?: boolean }
 
 /** Returns the cached entry for `key` once settled, `undefined` while still
- *  pending or not yet requested. A failed fetch is never cached (deleted in
- *  the `catch`) so the NEXT time the gate opens for this cell, it's retried
- *  rather than permanently reading as "no data" over a transient failure.
+ *  pending or not yet requested. A failed fetch is labelled failed for
+ *  30 seconds, then retried. Successful cells expire after five minutes,
+ *  so neither failure nor an empty response becomes permanent.
  *  `gateRef` is shared across all three domains (marine/airQuality/flood)
  *  by the caller, so the 1.5s cap is one budget for the whole feature, not
  *  one per domain. */
 function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number, gateRef: { current: number }, fetcher: () => Promise<T | null>): CellEntry<T> | undefined {
   const existing = cache.get(key);
-  if (existing) return existing;
+  if (existing && now - (existing.at ?? now) < (existing.failed ? 30000 : 300000)) return existing;
+  if (existing) cache.delete(key);
   if (cache.has(`${key}#pending`) || now - gateRef.current < HOVER_FETCH_GAP_MS) return undefined;
   gateRef.current = now;
   cache.set(`${key}#pending`, { data: null });
   fetcher()
-    .then((data) => cache.set(key, { data }))
-    .catch(() => {})
+    .then((data) => cache.set(key, { data, at: Date.now() }))
+    .catch(() => cache.set(key, { data: null, at: Date.now(), failed: true }))
     .finally(() => cache.delete(`${key}#pending`));
   return undefined;
 }
@@ -121,6 +126,7 @@ function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number,
 export default function HoverReadout() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [chip, setChip] = useState<Chip | null>(null);
+  const chipElement = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
   const indexRef = useRef<CountryIndex | null>(null);
   const windCache = useRef<{ data: WindResponse | null; field: WindField | null }>({ data: null, field: null });
@@ -128,6 +134,12 @@ export default function HoverReadout() {
   const marineCache = useRef(new Map<string, CellEntry<MarineReading>>());
   const airQualityCache = useRef(new Map<string, CellEntry<AirQualityReading>>());
   const floodCache = useRef(new Map<string, CellEntry<FloodReading>>());
+  const stations = useRef<TideStation[] | null>(null);
+  const stationsFailed = useRef(false);
+  const tideCache = useRef(new Map<string, CellEntry<TideReading>>());
+  const capeCache = useRef(new Map<string, CellEntry<CapeReading>>());
+  const settled = useRef({ key: "", since: 0 });
+  const meteorCache = useRef({ key: "", lines: [] as string[] });
   const hoverFetchGate = useRef(0);
   const lastChipRef = useRef<Chip | null>(null);
   // Kept current by the effect just below `tick`'s declaration, so the
@@ -198,14 +210,32 @@ export default function HoverReadout() {
     const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGate, () => fetchFlood(point.lat, point.lon));
     const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : "No river data here · Open-Meteo") : null;
 
-    const readout: Readout = { country, time: localTime(simTime(globe.timeOffsetMin), point.lon), wind, quake, marine, airQuality, flood };
+    if (settled.current.key !== cellKey) settled.current = { key: cellKey, since: now };
+    let tide: string | null = null, cape: string | null = null;
+    const simulated = simTime(globe.timeOffsetMin);
+    if (globe.timeOffsetMin === 0 && now - settled.current.since >= 600) {
+      const nearStation = stations.current ? nearestStationWithin(stations.current, point) : null;
+      if (stationsFailed.current) tide = "NOAA station index unreachable (US coastal coverage)";
+      else if (stations.current && !nearStation) tide = "No NOAA tide station within 50 km (US coastal coverage)";
+      else if (nearStation) {
+        const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGate, () => fetchTide(nearStation.station.id, new Date(now)));
+        tide = entry?.failed ? "NOAA tide feed unreachable" : entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : null;
+      }
+      const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGate, () => fetchCape(point.lat, point.lon, new Date(now)));
+      cape = entry?.failed ? "CAPE feed unreachable · Open-Meteo" : entry ? entry.data ? capeLabel(entry.data) : "No current CAPE model reading · Open-Meteo" : null;
+    }
+    // Horizon scans happen once per rounded cell and simulated minute,
+    // never in the animation-frame loop itself.
+    const meteorKey = `${cellKey}:${Math.floor(simulated.getTime() / 60000)}`;
+    if (meteorCache.current.key !== meteorKey) meteorCache.current = { key: meteorKey, lines: activeShowers(simulated).map((shower) => meteorShowerLine(shower, radiantRiseTime(shower.raHours, shower.decDeg, point.lat, point.lon, simulated), point.lon)) };
+    const readout: Readout = { country, time: localTime(simulated, point.lon), wind, quake, marine, airQuality, flood, tide, cape, meteors: meteorCache.current.lines };
     const box = root?.getBoundingClientRect();
     const x = Math.max(8, Math.min(point.clientX - (box?.left ?? 0) + CHIP_OFFSET, (box?.width ?? 1440) - CHIP_W_GUESS - 8));
-    const y = Math.max(8, Math.min(point.clientY - (box?.top ?? 0) + CHIP_OFFSET, (box?.height ?? 900) - CHIP_H_GUESS - 8));
+    const y = Math.max(8, Math.min(point.clientY - (box?.top ?? 0) + CHIP_OFFSET, (box?.height ?? 900) - (chipElement.current?.offsetHeight ?? CHIP_H_GUESS) - 8));
     const last = lastChipRef.current;
     if (!last || last.x !== x || last.y !== y || last.readout.country !== readout.country
       || last.readout.time !== readout.time || last.readout.wind !== readout.wind || last.readout.quake !== readout.quake
-      || last.readout.marine !== readout.marine || last.readout.airQuality !== readout.airQuality || last.readout.flood !== readout.flood) {
+      || last.readout.marine !== readout.marine || last.readout.airQuality !== readout.airQuality || last.readout.flood !== readout.flood || last.readout.tide !== readout.tide || last.readout.cape !== readout.cape || last.readout.meteors !== readout.meteors) {
       const next = { x, y, readout };
       lastChipRef.current = next;
       setChip(next);
@@ -219,6 +249,14 @@ export default function HoverReadout() {
     frameRef.current = requestAnimationFrame(() => tickRef.current());
   }, [root]);
   useEffect(() => { tickRef.current = tick; }, [tick]);
+  useEffect(() => {
+    let active = true, retry: ReturnType<typeof setTimeout> | undefined;
+    const run = () => { void loadStations().then((rows) => {
+      if (!active) return; stations.current = rows; stationsFailed.current = false;
+    }).catch(() => { if (active) { stationsFailed.current = true; retry = setTimeout(run, 30000); } }); };
+    run();
+    return () => { active = false; clearTimeout(retry); };
+  }, []);
 
   const scheduleFrame = useCallback(() => {
     if (frameRef.current != null) return;
@@ -257,10 +295,11 @@ export default function HoverReadout() {
   if (!root || !chip) return null;
   return createPortal(
     <div
+      ref={chipElement}
       data-hover-readout
       aria-hidden
       style={{ left: chip.x, top: chip.y }}
-      className="pointer-events-none absolute z-20 w-64 rounded-lg border border-line bg-ink/70 px-2 py-1.5 font-mono text-xs leading-snug text-zinc-100 backdrop-blur"
+      className="pointer-events-none absolute z-20 w-64 rounded-lg border border-line glass-panel px-2 py-1.5 font-mono text-xs leading-snug text-zinc-100"
     >
       <div data-hover-country>{chip.readout.country}</div>
       <div data-hover-time>{chip.readout.time}</div>
@@ -269,6 +308,9 @@ export default function HoverReadout() {
       {chip.readout.marine && <div data-hover-marine>{chip.readout.marine}</div>}
       {chip.readout.airQuality && <div data-hover-air-quality>{chip.readout.airQuality}</div>}
       {chip.readout.flood && <div data-hover-flood>{chip.readout.flood}</div>}
+      {chip.readout.tide && <div data-hover-tide>{chip.readout.tide}</div>}
+      {chip.readout.cape && <div data-hover-cape>{chip.readout.cape}</div>}
+      {chip.readout.meteors.map((line) => <div data-hover-meteor key={line}>{line}</div>)}
     </div>,
     root,
   );

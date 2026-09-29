@@ -60,6 +60,11 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
   const src = describeImagerySource(now);
 
   return [
+    { id: "tides-cape-meteors", title: "Tides, atmospheric instability and approximate meteor radiants", shaders: [], provenance: [
+      { label: "NOAA CO-OPS (stations within 50 km, US coastal coverage, MLLW datum, UTC)", endpoint: "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter", licence: "NOAA US government public domain" },
+      { label: "Open-Meteo hourly CAPE (atmospheric instability proxy, not lightning)", endpoint: "https://api.open-meteo.com/v1/forecast", licence: "CC BY 4.0, https://open-meteo.com/en/docs" },
+      { label: "IMO 2026 Table 5, scientific numeric facts; approximate annual windows and peak radiants", endpoint: "https://imo.net/files/meteor-shower/cal2026.pdf", licence: "Facts transcribed with citation, no copyrighted prose or artwork reproduced; parent bodies from NASA and AMS" },
+    ] },
     {
       id: "earth-imagery",
       title: `Earth imagery (photoreal earth style, radius ${GLOBE_RADIUS} world units = 6,371 km)`,
