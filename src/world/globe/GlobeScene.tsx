@@ -397,7 +397,12 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>
-          <CameraDirector controlsRef={controlsRef} />
+          {/* LANE I2 fix: the HUD zoom-in pill is a real "get closer" intent,
+              same as a wheel notch or a pinch (cameraZoomGate.ts's own
+              header) -- CameraDirector needs the tick to register it, since
+              this effect above drives the dolly directly rather than
+              through a DOM wheel event CameraDirector could observe. */}
+          <CameraDirector controlsRef={controlsRef} zoomInTick={zoomInTick} />
         </Suspense>
       </Canvas>
     </>

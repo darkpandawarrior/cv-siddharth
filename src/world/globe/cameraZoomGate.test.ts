@@ -4,30 +4,31 @@ import {
   armStreetHandoff,
   clearStreetHandoffForTest,
   consumeStreetHandoff,
+  INTENT_STALE_MS,
   stepZoomHold,
   streetZoomToAltitude,
   ZOOM_HOLD_MS,
 } from "./cameraZoomGate.ts";
 
 describe("stepZoomHold", () => {
-  it("accumulates while pinned at the minimum", () => {
+  it("accumulates while pinned at the minimum with fresh intent each step", () => {
     let hold = 0;
-    hold = stepZoomHold(hold, 9, 9, 0.2);
+    hold = stepZoomHold(hold, 9, 9, 0.2, 0);
     expect(hold).toBe(200);
-    hold = stepZoomHold(hold, 9.02, 9, 0.2); // inside AT_MIN_EPSILON
+    hold = stepZoomHold(hold, 9.02, 9, 0.2, 0); // inside AT_MIN_EPSILON
     expect(hold).toBe(400);
   });
 
   it("resets the instant the camera leaves the minimum", () => {
-    const hold = stepZoomHold(300, 12, 9, 0.2);
+    const hold = stepZoomHold(300, 12, 9, 0.2, 0);
     expect(hold).toBe(0);
   });
 
-  it("crosses the trigger threshold after ~400ms of continuous dt", () => {
+  it("crosses the trigger threshold after ~400ms of continuous dt and intent", () => {
     let hold = 0;
     let ms = 0;
     while (hold < ZOOM_HOLD_MS && ms < 2000) {
-      hold = stepZoomHold(hold, 9, 9, 1 / 60);
+      hold = stepZoomHold(hold, 9, 9, 1 / 60, 0); // fresh intent every frame
       ms += 1000 / 60;
     }
     expect(hold).toBeGreaterThanOrEqual(ZOOM_HOLD_MS);
@@ -35,8 +36,32 @@ describe("stepZoomHold", () => {
   });
 
   it("ignores a non-positive dt instead of corrupting the hold", () => {
-    expect(stepZoomHold(150, 9, 9, 0)).toBe(150);
-    expect(stepZoomHold(150, 9, 9, -1)).toBe(150);
+    expect(stepZoomHold(150, 9, 9, 0, 0)).toBe(150);
+    expect(stepZoomHold(150, 9, 9, -1, 0)).toBe(150);
+  });
+
+  // LANE I2 (root cause): resting at the floor with NO further zoom-in input
+  // must never accumulate toward the trigger -- this was the actual product
+  // bug (V1's deep-zoom base threw a visitor into street view after 400ms of
+  // just looking at the floor).
+  it("never accumulates while resting at the floor with stale intent", () => {
+    let hold = 0;
+    for (let i = 0; i < 30; i++) {
+      hold = stepZoomHold(hold, 9, 9, 1 / 60, 5000); // intent 5s stale
+    }
+    expect(hold).toBe(0);
+  });
+
+  it("resets mid-hold the moment intent goes stale, even while still at the floor", () => {
+    let hold = stepZoomHold(0, 9, 9, 0.2, 0);
+    expect(hold).toBe(200);
+    hold = stepZoomHold(hold, 9, 9, 0.2, INTENT_STALE_MS + 1);
+    expect(hold).toBe(0);
+  });
+
+  it("still accumulates right up to the intent-stale boundary", () => {
+    const hold = stepZoomHold(200, 9, 9, 0.2, INTENT_STALE_MS);
+    expect(hold).toBe(400);
   });
 });
 
