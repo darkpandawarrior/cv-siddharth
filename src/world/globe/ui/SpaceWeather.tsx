@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLiveSignal } from "../../../lib/useLiveSignal.ts";
 import { useGlobe } from "../globeStore.ts";
 import { publish } from "../feed.ts";
@@ -31,6 +31,7 @@ import {
  * be exactly the stale-dressed-as-live case the house rule forbids.
  */
 export default function SpaceWeather() {
+  const sun = useLiveSignal<{ image: string; observedAt: number }>("/api/sun", 1800000);
   const live = useGlobe((s) => s.timeOffsetMin === 0);
 
   const xraySnap = useLiveSignal<unknown>(XRAY_URL, SPACE_WEATHER_POLL_MS);
@@ -72,7 +73,7 @@ export default function SpaceWeather() {
 
   if (allFailed) {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur">
+      <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full border border-line glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
         <span data-space-weather-status="failed">Space weather feed unreachable</span>
       </div>
     );
@@ -82,8 +83,15 @@ export default function SpaceWeather() {
   if (!detail) return null;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur">
+    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full border border-line glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
+      {sun.error ? <span>Solar image unreachable</span> : sun.data && /^https:\/\/api\.helioviewer\.org\/v2\/downloadScreenshot\/\?id=\d+$/.test(sun.data.image) && Number.isFinite(sun.data.observedAt) ? <SolarDisc key={sun.data.image} image={sun.data.image} at={sun.data.observedAt} /> : <span>Solar image loading</span>}
       <span data-space-weather-status="live">{detail}</span>
     </div>
   );
+}
+
+function SolarDisc({ image, at }: { image: string; at: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <span>Solar image unreachable</span>;
+  return <figure className="max-w-24 shrink-0"><img src={image} alt="SDO AIA 171 solar disc" title="Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams." width={64} height={64} onError={() => setFailed(true)} /><figcaption className="break-words text-xs">Helioviewer / NASA SDO<br />{new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</figcaption></figure>;
 }

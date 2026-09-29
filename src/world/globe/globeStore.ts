@@ -10,7 +10,7 @@ import type { Camera, Scene, Vector3 } from "three";
  */
 
 /** Every toggleable layer, in the order the layer panel lists them. */
-export const LAYER_IDS = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide", "daylight", "eclipse"] as const;
+export const LAYER_IDS = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide", "daylight", "eclipse", "buoys"] as const;
 export type LayerId = (typeof LAYER_IDS)[number];
 
 /** "imagery" is the real NASA day/night earth; "dots" is the dot-matrix one. */
@@ -160,7 +160,7 @@ export const useGlobe = create<GlobeState>((set) => ({
   cloudsOn: true,
   setCloudsOn: (cloudsOn) => set({ cloudsOn }),
   style: "imagery",
-  layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
+  layers: { buoys: false, markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
   view: "orbit",
   focus: null,
   selected: null,

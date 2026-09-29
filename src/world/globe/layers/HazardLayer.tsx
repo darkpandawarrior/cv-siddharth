@@ -1,3 +1,5 @@
+import { VolcanoGlyphs } from "./VolcanoGlyphs.tsx";
+import { parseVolcanoResponse, volcanoGlyphs } from "./volcano.ts";
 // LANE L7: live earth events — quakes, EONET wildfires/volcanoes/storms,
 // GDACS alerts, the aurora oval and upcoming launches. This file is the
 // integration point: it owns every fetch, every parse-once memo, the
@@ -146,6 +148,15 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
   // the simulated future), so there is no separate "live" branch to keep in
   // sync with this one.
   const quakesShown = useMemo(() => quakesAtTime(quakesFiltered, simNowMs), [quakesFiltered, simNowMs]);
+  const volcanoSnap = useLiveSignal<unknown>("/api/volcanoes", 21600000);
+  const weeklyVolcanoes = useMemo(() => volcanoSnap.error ? [] : (parseVolcanoResponse(volcanoSnap.data) ?? []), [volcanoSnap.data, volcanoSnap.error]);
+  const weeklyGlyphs = useMemo(() => volcanoGlyphs(weeklyVolcanoes.filter((v) => v.at <= simNowMs)), [weeklyVolcanoes, simNowMs]);
+  useEffect(() => {
+    for (const v of weeklyVolcanoes) {
+      if (v.at > simNowMs) continue;
+      publish({ id: `gvp:${v.id}:${v.week}`, kind: "volcano", title: `${v.name} (${v.country})`, detail: `${v.week}: ${v.summary}`, whenMs: v.at, source: "Smithsonian GVP / USGS weekly report", live: false, severity: "warn", ...(v.lat !== null && v.lon !== null ? { focus: { kind: "latlon" as const, lat: v.lat, lon: v.lon } } : {}) });
+    }
+  }, [weeklyVolcanoes, simNowMs]);
   const eonetShown = useMemo(() => (eonetAll ? eventsAtTime(eonetAll, simNowMs) : []), [eonetAll, simNowMs]);
 
   const matchedAlerts = useMemo(
@@ -257,7 +268,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
   useEffect(() => {
     const fires = eonetShown.filter((e) => e.category === "wildfires").length;
     const storms = eonetShown.filter((e) => e.category === "severeStorms").length;
-    const volcanoes = eonetShown.filter((e) => e.category === "volcanoes").length;
+    const volcanoes = eonetShown.filter((e) => e.category === "volcanoes").length + weeklyGlyphs.length;
     const status = buildHazardStatus(
       {
         quakes: { ok: quakesAll !== null, value: quakesAll !== null ? { count: quakesShown.length } : null },
@@ -287,7 +298,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       nhcStatus === "failed" ? "NHC unreachable" : nhcCones.length > 0 ? `${nhcCones.length} NHC cones` : "No active NHC storms";
     const combinedStatus: LayerHealth = {
       state: status.state,
-      detail: [status.detail, `${nhcClause}, NHC basins only (Atlantic, East and Central Pacific)`].filter(Boolean).join(", "),
+      detail: [status.detail, volcanoSnap.error ? "Smithsonian weekly report unreachable" : weeklyVolcanoes.length ? `Smithsonian GVP / USGS weekly report, ${weeklyVolcanoes[0].week}` : "Smithsonian weekly report loading", `${nhcClause}, NHC basins only (Atlantic, East and Central Pacific)`].filter(Boolean).join(", "),
     };
     setStatus("hazards", combinedStatus);
     if (typeof window !== "undefined") {
@@ -314,6 +325,9 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       };
     }
   }, [
+    weeklyGlyphs,
+    weeklyVolcanoes,
+    volcanoSnap.error,
     quakesAll,
     quakesShown,
     quakesLoading,
@@ -416,6 +430,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
   return (
     <>
       <QuakeGlyphs quakes={quakesShown} staticTier={staticTier} simNowMs={simNowMs} />
+      <VolcanoGlyphs rows={weeklyVolcanoes.filter((v) => v.at <= simNowMs)} />
       <EonetGlyphs events={eonetShown} simNowMs={simNowMs} />
       <HazardHalos alerts={matchedAlerts} />
       <AuroraOval grid={auroraShown} now={now} reducedMotion={reducedMotion} />

@@ -5,7 +5,7 @@ import { executeActions, runGlobeAsk } from "./execute.ts";
 function freshStore() {
   useGlobe.setState({
     style: "imagery",
-    layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
+    layers: { buoys: false, markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
     view: "orbit",
     focus: null,
     selected: null,

@@ -7,7 +7,7 @@ const NOW = new Date("2026-09-28T12:00:00.000Z").getTime();
 function resetStore() {
   useGlobe.setState({
     style: "imagery",
-    layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
+    layers: { buoys: false, markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true, daylight: true, eclipse: false },
     view: "orbit",
     focus: null,
     selected: null,
