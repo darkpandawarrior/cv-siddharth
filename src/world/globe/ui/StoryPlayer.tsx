@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Pause, Play } from "lucide-react";
+import { BookOpen, Clapperboard, Pause, Play, SkipForward } from "lucide-react";
 import { useGlobe, type LayerId } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { buildStory, createStoryPlayer, type StoryChapter, type StoryEvent } from "../story/index.ts";
+import { buildStoryFilm, type FilmChapter } from "../story/storyFilm.ts";
 import { useStoryChapterState } from "./storyChapterState.ts";
+import { useStoryFilmState } from "./storyFilmState.ts";
+import StoryFilmstrip from "./storyFilmstrip.tsx";
 
 /** LANE X4 (story player UI): "My story", a chronological tour built purely
  *  from the site's own data modules (buildStory owns every claim and every
@@ -11,13 +14,23 @@ import { useStoryChapterState } from "./storyChapterState.ts";
  *  a fact of its own). Mounted once by Globe.tsx inside the same absolutely
  *  positioned stage Inspector/GlobeTour/StreetView/ExploreBar share, so
  *  every position below resolves against that stage, not the viewport
- *  (except the two `fixed` compact affordances, which deliberately don't --
- *  see their own comments). */
+ *  (except the `fixed` compact affordances, which deliberately don't --
+ *  see their own comments).
+ *
+ *  LANE C3 adds a second, independent player in this same file: "Life
+ *  journey film", the four dated life chapters (story/storyFilm.ts) played
+ *  in the owner's own fixed order -- Kuwait City, Bhopal, Chandigarh, Pune
+ *  -- each arriving with its own arc into that city drawn progressively
+ *  (layers/StoryArc.tsx) and a small filmstrip of that city's own Google
+ *  Maps photos (ui/storyFilmstrip.tsx). "My story" and the film share the
+ *  same entry-button row and the same forced-layer bookkeeping, but never
+ *  open at once -- entering one always closes the other first. */
 
 // Static, deterministic, and cheap -- computed once at module load (same
 // choice GlobeTour.tsx makes for its own STOPS) rather than re-derived every
 // render or refetched from a store no other lane may edit.
 const CHAPTERS: StoryChapter[] = buildStory();
+const FILM_CHAPTERS: FilmChapter[] = buildStoryFilm();
 const CHAPTER_MS = 6000; // brief: "auto-advance ~6s"
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -40,6 +53,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
 const FAB_RESERVE_RIGHT = { open: "sm:right-[273px]", collapsed: "sm:right-[74px]" };
 
 const btn = "rounded-full border border-line px-2 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
+const pill = "pointer-events-auto flex w-fit items-center gap-1.5 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
@@ -50,29 +64,45 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const flyTo = useGlobe((s) => s.flyTo);
   const toggleLayer = useGlobe((s) => s.toggleLayer);
   const setChapter = useStoryChapterState((s) => s.setChapter);
+  const setFilm = useStoryFilmState((s) => s.setFilm);
   const reducedMotion = useReducedMotion();
 
   const [open, setOpen] = useState(false);
+  const [filmOpen, setFilmOpen] = useState(false);
   const playerRef = useRef(createStoryPlayer(CHAPTERS, Date.now, CHAPTER_MS));
+  const filmPlayerRef = useRef(createStoryPlayer(FILM_CHAPTERS, Date.now, CHAPTER_MS));
   const [snap, setSnap] = useState(() => playerRef.current.snapshot());
-  // Layers this lane switched ON to emphasise a chapter, and only those --
-  // restoring means undoing exactly this set, never touching a layer the
-  // visitor already had on for their own reasons.
+  const [filmSnap, setFilmSnap] = useState(() => filmPlayerRef.current.snapshot());
+  // Layers either player switched ON to emphasise a chapter, and only those
+  // -- restoring means undoing exactly this set, never touching a layer the
+  // visitor already had on for their own reasons. Shared: "My story" and the
+  // film never run at once, so one set is enough for both.
   const forcedLayersRef = useRef<Set<LayerId>>(new Set());
 
   const activeIndex = snap.chapterIndex;
   const chapter = CHAPTERS[activeIndex];
   const event = chapter.events[0];
   const playing = snap.playing;
+
+  const activeFilmIndex = filmSnap.chapterIndex;
+  const filmChapter = FILM_CHAPTERS[activeFilmIndex];
+  const filmEvent = filmChapter.events[0];
+  const filmPlaying = filmSnap.playing;
+
   const busy = selected !== null || tourStep !== null;
 
-  // Auto-advance while playing: a plain poll of the player's own clock, not
+  // Auto-advance while playing: a plain poll of each player's own clock, not
   // a per-frame WebGL loop -- this is DOM text and dots, not a mesh.
   useEffect(() => {
     if (!playing) return;
     const id = setInterval(() => setSnap(playerRef.current.snapshot()), 200);
     return () => clearInterval(id);
   }, [playing]);
+  useEffect(() => {
+    if (!filmPlaying) return;
+    const id = setInterval(() => setFilmSnap(filmPlayerRef.current.snapshot()), 200);
+    return () => clearInterval(id);
+  }, [filmPlaying]);
 
   function applyChapter(c: StoryChapter) {
     flyTo({ kind: "latlon", lat: c.camera.anchor.lat, lon: c.camera.anchor.lon, distance: c.camera.distance });
@@ -101,10 +131,28 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- applyChapter closes over stable store actions
   }, [open, activeIndex]);
 
-  // Unmount safety net (route navigation away mid-story): the same cleanup
-  // `exit()` runs, so nothing is left forced on if this component just
-  // disappears instead of being explicitly exited.
-  useEffect(() => () => { restoreLayers(); setChapter(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Flies and forces layers only when the ACTIVE CHAPTER changes, never on
+  // every 200ms progress tick -- CameraDirector gets one flyTo per city, not
+  // five a second. layers/StoryArc.tsx grows the arc from the separate
+  // progress write below, which does run every tick.
+  useEffect(() => {
+    if (!filmOpen) return;
+    applyChapter(FILM_CHAPTERS[activeFilmIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- applyChapter closes over stable store actions
+  }, [filmOpen, activeFilmIndex]);
+
+  // The one thing that changes every tick: how far into this chapter's own
+  // arc the film has drawn. Separate from the chapter-change effect above on
+  // purpose -- StoryArc.tsx reads `progress` every render, `applyChapter`
+  // above must not re-run that often.
+  useEffect(() => {
+    setFilm(filmOpen ? FILM_CHAPTERS[filmSnap.chapterIndex] : null, filmSnap.chapterProgress);
+  }, [filmOpen, filmSnap, setFilm]);
+
+  // Unmount safety net (route navigation away mid-story/mid-film): the same
+  // cleanup exit()/exitFilm() run, so nothing is left forced on if this
+  // component just disappears instead of being explicitly exited.
+  useEffect(() => () => { restoreLayers(); setChapter(null); setFilm(null, 1); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!open) return;
@@ -119,7 +167,21 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- exit/next/back close over fresh state via the store/player
   }, [open, activeIndex]);
 
+  useEffect(() => {
+    if (!filmOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "Escape") exitFilm();
+      else if (e.key === "ArrowRight") filmNext();
+      else if (e.key === "ArrowLeft") filmBack();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- exitFilm/filmNext/filmBack close over fresh state via the store/player
+  }, [filmOpen, activeFilmIndex]);
+
   function enter() {
+    if (filmOpen) exitFilm();
     select(null);
     setTourStep(null);
     setSnap(playerRef.current.seekChapter(0));
@@ -138,106 +200,234 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   }
   function togglePlay() { setSnap(playing ? playerRef.current.pause() : playerRef.current.play()); }
 
-  if (!open) {
-    return (
-      <>
-        {/* Desktop/tablet, left column free: the full entry pill in the
-            shared slot Inspector/GlobeTour's card also use -- safe only
-            because neither renders anything there while !busy. */}
-        {!busy && (
-          <button
-            type="button"
-            data-story-entry
-            onClick={enter}
-            className="pointer-events-auto absolute left-4 top-20 z-30 hidden w-fit items-center gap-1.5 rounded-full border border-line bg-ink/70 px-3 py-1.5 font-mono text-xs text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:top-[var(--globe-top-offset,5rem)] sm:inline-flex"
-          >
-            <BookOpen size={12} aria-hidden /> My story
-          </button>
-        )}
-        {/* Compact fallback: phones always (there is no spare column
-            there), and desktop whenever the left slot is busy (a selection
-            or the guided tour already showing there). Fixed to the
-            viewport, not the stage, so it floats free of both. */}
+  function enterFilm() {
+    if (open) exit();
+    select(null);
+    setTourStep(null);
+    setFilmSnap(filmPlayerRef.current.seekChapter(0));
+    setFilmOpen(true);
+  }
+  function exitFilm() {
+    filmPlayerRef.current.pause();
+    restoreLayers();
+    setFilm(null, 1);
+    setFilmOpen(false);
+  }
+  function filmBack() { setFilmSnap(filmPlayerRef.current.prev()); }
+  function filmNext() {
+    if (activeFilmIndex === FILM_CHAPTERS.length - 1) { exitFilm(); return; }
+    setFilmSnap(filmPlayerRef.current.next());
+  }
+  function toggleFilmPlay() { setFilmSnap(filmPlaying ? filmPlayerRef.current.pause() : filmPlayerRef.current.play()); }
+  // seek() clamps to the player's own duration, so a value past the end
+  // (finite, so the player's own guard accepts it) always lands exactly on
+  // the last frame of the last chapter -- one line, no need to read
+  // `snap.duration` out first just to hand it straight back in.
+  function skipToEnd() { setFilmSnap(filmPlayerRef.current.seek(Number.MAX_SAFE_INTEGER)); }
+
+  // Compact FABs are fixed to the viewport, not the stage, so both can
+  // coexist with whichever dialog (if any) currently owns the left-column
+  // stage slot -- this is what makes "entering one always closes the
+  // other" actually reachable mid-story/mid-film, not just from the idle
+  // entry row. Each hides only for its OWN open dialog (that experience
+  // already has its own visible Exit); shows on desktop whenever a
+  // selection, the tour, OR the other player has claimed the busy slot.
+  const storyFabBusy = busy || filmOpen;
+  const filmFabBusy = busy || open;
+  const compactFabs = (
+    <>
+      {!open && (
         <button
           type="button"
           data-story-entry-compact
           onClick={enter}
           aria-label="My story"
           title="My story"
-          className={`pointer-events-auto fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${busy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+          className={`pointer-events-auto fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${storyFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
         >
           <BookOpen size={16} aria-hidden />
         </button>
+      )}
+      {!filmOpen && (
+        <button
+          type="button"
+          data-film-entry-compact
+          onClick={enterFilm}
+          aria-label="Life journey film"
+          title="Life journey film"
+          className={`pointer-events-auto fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${filmFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+        >
+          <Clapperboard size={16} aria-hidden />
+        </button>
+      )}
+    </>
+  );
+
+  if (open) {
+    const cardBody = (touchTarget: string) => (
+      <>
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <h2 className="min-w-0 truncate text-sm font-semibold text-zinc-100">{event.title}</h2>
+          <button type="button" onClick={exit} aria-label="Exit my story" className={`shrink-0 ${btn} ${touchTarget}`}>
+            Exit
+          </button>
+        </div>
+        <p className="mb-1 text-xs text-muted" title={event.dateNote}>{formatEventDate(event)}</p>
+        <p className="mb-2 text-xs leading-relaxed text-zinc-300">{event.detail}</p>
+        {event.metric && (
+          <p className="mb-2 text-xs text-zinc-400" title={event.metric.source}>
+            {event.metric.value} {event.metric.unit}
+          </p>
+        )}
+        <p className="mb-3 truncate text-xs text-muted" title={event.source}>evidence: {event.source}</p>
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5" aria-hidden>
+          {CHAPTERS.map((c, i) => (
+            <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeIndex ? "var(--color-signal)" : "#3f3f46" }} />
+          ))}
+        </div>
+        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+          <button type="button" onClick={back} disabled={activeIndex === 0} className={`${btn} disabled:opacity-30 ${touchTarget}`}>
+            Back
+          </button>
+          {!reducedMotion && (
+            <button type="button" onClick={togglePlay} aria-pressed={playing} aria-label={playing ? "Pause the story" : "Play the story"} className={`${btn} ${touchTarget}`}>
+              {playing ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+            </button>
+          )}
+          <span className="text-xs text-muted">{activeIndex + 1} / {CHAPTERS.length}</span>
+          <button type="button" onClick={next} className={`${btn} ${touchTarget}`}>
+            {activeIndex === CHAPTERS.length - 1 ? "Done" : "Next"}
+          </button>
+        </div>
+      </>
+    );
+
+    return (
+      <>
+        {/* Desktop/tablet: the shared left slot, same box Inspector.tsx and
+            GlobeTour's overlay use -- free for this card because `enter()`
+            clears both `selected` and `tourStep` before opening. */}
+        <div
+          data-story-chapter-card
+          data-story-chapter-id={chapter.id}
+          role="dialog"
+          aria-label="My story"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+        >
+          {cardBody("py-1")}
+        </div>
+
+        {/* Phone (< 640): a bottom sheet -- this lane's own local state, not
+            globeStore's `sheet` (that type is shared with every other wave-6
+            lane in parallel; adding a "story" variant to it is out of this
+            lane's owned files). */}
+        <div
+          data-story-chapter-sheet
+          data-story-chapter-id={chapter.id}
+          role="dialog"
+          aria-label="My story"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+        >
+          {cardBody("min-h-11 min-w-11")}
+        </div>
+        {compactFabs}
       </>
     );
   }
 
-  const cardBody = (touchTarget: string) => (
-    <>
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <h2 className="min-w-0 truncate text-sm font-semibold text-zinc-100">{event.title}</h2>
-        <button type="button" onClick={exit} aria-label="Exit my story" className={`shrink-0 ${btn} ${touchTarget}`}>
-          Exit
-        </button>
-      </div>
-      <p className="mb-1 text-xs text-muted" title={event.dateNote}>{formatEventDate(event)}</p>
-      <p className="mb-2 text-xs leading-relaxed text-zinc-300">{event.detail}</p>
-      {event.metric && (
-        <p className="mb-2 text-xs text-zinc-400" title={event.metric.source}>
-          {event.metric.value} {event.metric.unit}
-        </p>
-      )}
-      <p className="mb-3 truncate text-xs text-muted" title={event.source}>evidence: {event.source}</p>
-      <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5" aria-hidden>
-        {CHAPTERS.map((c, i) => (
-          <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeIndex ? "var(--color-signal)" : "#3f3f46" }} />
-        ))}
-      </div>
-      <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-2 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
-        <button type="button" onClick={back} disabled={activeIndex === 0} className={`${btn} disabled:opacity-30 ${touchTarget}`}>
-          Back
-        </button>
-        {!reducedMotion && (
-          <button type="button" onClick={togglePlay} aria-pressed={playing} aria-label={playing ? "Pause the story" : "Play the story"} className={`${btn} ${touchTarget}`}>
-            {playing ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+  if (filmOpen) {
+    const filmCardBody = (touchTarget: string) => (
+      <>
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <h2 className="min-w-0 truncate text-sm font-semibold text-zinc-100">{filmChapter.title}</h2>
+          <button type="button" onClick={exitFilm} aria-label="Exit the life journey film" className={`shrink-0 ${btn} ${touchTarget}`}>
+            Exit
           </button>
+        </div>
+        <p className="mb-1 text-xs text-muted" title={filmEvent.dateNote}>{formatEventDate(filmEvent)}</p>
+        <p className="mb-2 text-xs leading-relaxed text-zinc-300">{filmEvent.detail}</p>
+        {filmChapter.mapsLine && (
+          <p className="mb-1 text-xs text-zinc-400" title="src/data/generated/mapsPlaces.ts">{filmChapter.mapsLine}</p>
         )}
-        <span className="text-xs text-muted">{activeIndex + 1} / {CHAPTERS.length}</span>
-        <button type="button" onClick={next} className={`${btn} ${touchTarget}`}>
-          {activeIndex === CHAPTERS.length - 1 ? "Done" : "Next"}
-        </button>
-      </div>
-    </>
-  );
+        {/* Remounts per chapter (key) so .fade-in (src/index.css) replays
+            for the new city instead of firing once and staying spent. */}
+        <StoryFilmstrip key={filmChapter.id} photos={filmChapter.photos} reducedMotion={reducedMotion} />
+        <p className="mb-3 mt-2 truncate text-xs text-muted" title={filmEvent.source}>evidence: {filmEvent.source}</p>
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5" aria-hidden>
+          {FILM_CHAPTERS.map((c, i) => (
+            <span key={c.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: i === activeFilmIndex ? "var(--color-signal)" : "#3f3f46" }} />
+          ))}
+        </div>
+        <div className="sticky bottom-0 -mx-3 -mb-3 flex items-center justify-between gap-1 rounded-b-2xl bg-ink/95 px-3 pb-3 pt-2 backdrop-blur">
+          <button type="button" onClick={filmBack} disabled={activeFilmIndex === 0} className={`${btn} disabled:opacity-30 ${touchTarget}`}>
+            Back
+          </button>
+          {/* Unlike "My story", the film's own Play/Pause stays even under
+              reduced motion -- it is the film's transport control, not the
+              flight; CameraDirector already turns the flight itself into a
+              cut, and StoryArc.tsx already draws the arc fully formed
+              instead of animating it, so nothing here still moves. */}
+          <button type="button" onClick={toggleFilmPlay} aria-pressed={filmPlaying} aria-label={filmPlaying ? "Pause the film" : "Play the film"} className={`${btn} ${touchTarget}`}>
+            {filmPlaying ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
+          </button>
+          <button type="button" onClick={skipToEnd} aria-label="Skip to the end" title="Skip to the end" className={`${btn} ${touchTarget}`}>
+            <SkipForward size={14} aria-hidden />
+          </button>
+          <span className="text-xs text-muted">{activeFilmIndex + 1} / {FILM_CHAPTERS.length}</span>
+          <button type="button" onClick={filmNext} className={`${btn} ${touchTarget}`}>
+            {activeFilmIndex === FILM_CHAPTERS.length - 1 ? "Done" : "Next"}
+          </button>
+        </div>
+      </>
+    );
+
+    return (
+      <>
+        <div
+          data-film-chapter-card
+          data-film-chapter-id={filmChapter.id}
+          role="dialog"
+          aria-label="Life journey film"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+        >
+          {filmCardBody("py-1")}
+        </div>
+        <div
+          data-film-chapter-sheet
+          data-film-chapter-id={filmChapter.id}
+          role="dialog"
+          aria-label="Life journey film"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
+        >
+          {filmCardBody("min-h-11 min-w-11")}
+        </div>
+        {compactFabs}
+      </>
+    );
+  }
 
   return (
     <>
-      {/* Desktop/tablet: the shared left slot, same box Inspector.tsx and
-          GlobeTour's overlay use -- free for this card because `enter()`
-          clears both `selected` and `tourStep` before opening. */}
-      <div
-        data-story-chapter-card
-        data-story-chapter-id={chapter.id}
-        role="dialog"
-        aria-label="My story"
-        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl border border-line bg-ink/85 p-3 font-mono text-xs text-zinc-300 backdrop-blur sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
-      >
-        {cardBody("py-1")}
-      </div>
-
-      {/* Phone (< 640): a bottom sheet -- this lane's own local state, not
-          globeStore's `sheet` (that type is shared with every other wave-6
-          lane in parallel; adding a "story" variant to it is out of this
-          lane's owned files). */}
-      <div
-        data-story-chapter-sheet
-        data-story-chapter-id={chapter.id}
-        role="dialog"
-        aria-label="My story"
-        className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl border-t border-line bg-ink/90 p-4 font-mono text-xs text-zinc-300 backdrop-blur sm:hidden"
-      >
-        {cardBody("min-h-11 min-w-11")}
-      </div>
+      {/* Desktop/tablet, left column free: both entry pills stacked in the
+          shared slot Inspector/GlobeTour's card also use -- safe only
+          because neither renders anything there while !busy, and the column
+          layout means a future third pill needs no new offset math. */}
+      {!busy && (
+        <div className="absolute left-4 top-20 z-30 hidden flex-col items-start gap-2 sm:top-[var(--globe-top-offset,5rem)] sm:flex">
+          <button type="button" data-story-entry onClick={enter} className={pill}>
+            <BookOpen size={12} aria-hidden /> My story
+          </button>
+          <button type="button" data-film-entry onClick={enterFilm} className={pill}>
+            <Clapperboard size={12} aria-hidden /> Life journey film
+          </button>
+        </div>
+      )}
+      {/* Compact fallback: phones always (there is no spare column there),
+          and desktop whenever the left slot is busy (a selection, the
+          guided tour, or the other player already showing there). Fixed to
+          the viewport, not the stage, so it floats free of both; stacked
+          one above the other so neither ever overlaps the other. */}
+      {compactFabs}
     </>
   );
 }
