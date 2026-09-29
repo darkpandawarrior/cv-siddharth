@@ -3,12 +3,28 @@
 // nothing matched. One InstancedMesh (task 8) — the halo is just a bigger,
 // thinner ring than the event's own glyph, in the alert's colour.
 import { useEffect, useMemo, useRef } from "react";
-import { type ThreeEvent } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { latLonToXyz } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { useGlobe } from "../globeStore.ts";
 import type { MatchedAlert } from "./hazardAlerts.ts";
+
+// e2e seam only, owned entirely by this file (reachDebug.ts belongs to lane
+// W6, out of Q4's ownership) -- the first alert's current screen projection,
+// so e2e/globe-Q4.spec.ts can click a real, computed pixel to prove this
+// layer's own onClick wire, the same pattern reachAppRing.tsx's appProbeX/Y
+// uses for its ring.
+declare global {
+  interface Window {
+    __HAZARD_HALO_DEBUG__?: { probeX: number | null; probeY: number | null };
+  }
+}
+function ensureHazardDebug() {
+  if (typeof window === "undefined") return { probeX: null, probeY: null };
+  if (!window.__HAZARD_HALO_DEBUG__) window.__HAZARD_HALO_DEBUG__ = { probeX: null, probeY: null };
+  return window.__HAZARD_HALO_DEBUG__;
+}
 
 const HALO_GEOMETRY = new THREE.RingGeometry(0.85, 1, 32);
 const HALO_RADIUS = 0.22;
@@ -39,7 +55,36 @@ function placement(lat: number, lon: number, radius: number): { position: THREE.
 export function HazardHalos({ alerts }: { alerts: MatchedAlert[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const select = useGlobe((s) => s.select);
+  const { camera, size } = useThree();
   const capped = useMemo(() => alerts.slice(0, MAX_ALERTS), [alerts]);
+
+  // e2e probe only (see ensureHazardDebug above): a point on the first
+  // alert's own RING BAND (not its centre -- RingGeometry is an annulus, so
+  // the centre point is the donut hole a raycast falls straight through to
+  // the globe underneath), carried to screen space every frame the same way
+  // reachAppRing.tsx's own appProbeX/Y is. Cheap (a couple of vector ops)
+  // and only meaningful once capped.length > 0.
+  const _scratch = useMemo(() => new THREE.Vector3(), []);
+  const probe = useMemo(() => {
+    if (!capped.length) return null;
+    const a = capped[0];
+    const { position, normal } = placement(a.lat, a.lon, GLOBE_RADIUS + SURFACE_LIFT);
+    const tangent = new THREE.Vector3(1, 0, 0)
+      .applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, normal))
+      .multiplyScalar(HALO_RADIUS * 0.925);
+    return position.add(tangent);
+  }, [capped]);
+  useFrame(() => {
+    const dbg = ensureHazardDebug();
+    if (!probe) {
+      dbg.probeX = null;
+      dbg.probeY = null;
+      return;
+    }
+    _scratch.copy(probe).project(camera);
+    dbg.probeX = (_scratch.x * 0.5 + 0.5) * size.width;
+    dbg.probeY = (-_scratch.y * 0.5 + 0.5) * size.height;
+  });
 
   useEffect(() => {
     const mesh = meshRef.current;

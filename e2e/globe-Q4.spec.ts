@@ -100,6 +100,12 @@ function readDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __REACH_DEBUG__?: ReachDebug }).__REACH_DEBUG__);
 }
 
+type HazardDebug = { probeX: number | null; probeY: number | null };
+
+function readHazardDebug(page: Page) {
+  return page.evaluate(() => (window as unknown as { __HAZARD_HALO_DEBUG__?: HazardDebug }).__HAZARD_HALO_DEBUG__);
+}
+
 test("the whole Pune stack (columns, app ring, CI ring, live dot, hazard halo, together reticle) mounts together with no thrown JS error", async ({ page }) => {
   // pageerror only -- an UNCAUGHT exception (e.g. a broken shaderMaterial/
   // constructor arg from this lane's own edits). console "error" messages
@@ -185,4 +191,26 @@ test("the app ring's click wire still resolves after its SURFACE_EPS moved off t
   await page.mouse.click(canvasBox.x + debug!.appProbeX!, canvasBox.y + debug!.appProbeY!);
   await expect(panel).toBeVisible({ timeout: 10_000 });
   await expect(panel.locator("h2")).toHaveText(top.name);
+});
+
+test("the hazard halo's own click wire resolves the Pune-pinned GDACS alert", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedIntroSeen(page);
+  await withApiFixtures(page);
+  await page.goto("/globe");
+  await waitForHydration(page);
+
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
+
+  await expect.poll(async () => typeof (await readHazardDebug(page))?.probeX, { timeout: 30_000 }).toBe("number");
+  const canvasBox = await canvas.boundingBox();
+  if (!canvasBox) throw new Error("globe canvas has no bounding box");
+  const debug = (await readHazardDebug(page))!;
+
+  const panel = page.locator("[data-globe-inspector]");
+  await page.mouse.click(canvasBox.x + debug.probeX!, canvasBox.y + debug.probeY!);
+  await expect(panel).toBeVisible({ timeout: 10_000 });
+  await expect(panel.locator("h2")).toHaveText("Q4 fixture quake");
 });
