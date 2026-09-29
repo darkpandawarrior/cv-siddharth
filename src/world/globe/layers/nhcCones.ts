@@ -8,6 +8,16 @@ import type { GdacsAlert } from "./hazardAlerts.ts";
 
 export const NHC_POLL_MS = 30 * 60_000; // brief: "refresh every 30 minutes"
 
+/** Keep adjacent longitudes continuous for planar triangulation across 180 degrees. */
+export function unwrapConeRing(ring: readonly LatLon[]): LatLon[] {
+  let previous = ring[0]?.lon ?? 0;
+  return ring.map((point) => {
+    const lon = previous + ((point.lon - previous + 180) % 360 + 360) % 360 - 180;
+    previous = lon;
+    return { lat: point.lat, lon };
+  });
+}
+
 export interface ConePolygon {
   id: string;
   stormName: string;

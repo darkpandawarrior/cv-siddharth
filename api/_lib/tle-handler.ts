@@ -3,18 +3,15 @@
 // explicit extensions in ESM imports — same as aircraft-handler.ts.
 import { guarded } from "./guard.js";
 import { governed, type GovernorOptions } from "./upstream.js";
+import { TLE_SOURCE as SOURCE, TLE_SOURCE_URL as SOURCE_URL, TLE_STATIONS_URL as STATIONS_URL, TLE_VISUAL_URL as VISUAL_URL } from "../../src/world/globe/layers/tleSource.js";
 
 // open-data-spec.md §3 A2: two upstream groups, filtered to the stations we
 // actually show (ISS 25544, CSS 48274) plus every "visual" object (bright
 // enough to see by eye — 156 at the snapshot this route was measured on).
-const STATIONS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle";
-const VISUAL_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle";
 const USER_AGENT = "siddharth-pandalai.vercel.app portfolio";
 const FETCH_TIMEOUT_MS = 6_000; // open-data-spec.md §3 A2
 const KEPT_STATION_NORADS = new Set(["25544", "48274"]);
 const MAX_EPOCH_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-const SOURCE = "CelesTrak";
-const SOURCE_URL = "https://celestrak.org";
 const CACHE_CONTROL = "public, max-age=0, s-maxage=7200, stale-while-revalidate=86400";
 
 // CelesTrak refreshes GP data about every 2 h and blocks IPs that re-pull

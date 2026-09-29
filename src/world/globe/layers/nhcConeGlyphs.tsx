@@ -9,7 +9,7 @@ import * as THREE from "three";
 import { latLonToXyz, type LatLon } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { readColor } from "../../../themeColorThree.ts";
-import type { ConePolygon } from "./nhcCones.ts";
+import { unwrapConeRing, type ConePolygon } from "./nhcCones.ts";
 
 // Same surface-offset family as hazardHalos.tsx's 0.025 -- just above the
 // globe so the fill never z-fights with the earth shader underneath.
@@ -28,7 +28,7 @@ function buildGeometry(ring: LatLon[]): THREE.BufferGeometry | null {
   const pts = ring.length > 1 && first.lat === last.lat && first.lon === last.lon ? ring.slice(0, -1) : ring;
   if (pts.length < 3) return null;
 
-  const contour = pts.map((p) => new THREE.Vector2(p.lon, p.lat));
+  const contour = unwrapConeRing(pts).map((p) => new THREE.Vector2(p.lon, p.lat));
   const triangles = THREE.ShapeUtils.triangulateShape(contour, []);
   if (triangles.length === 0) return null;
 

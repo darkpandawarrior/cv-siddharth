@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchConeToGdacs, parseNhcCones } from "./nhcCones.ts";
+import { matchConeToGdacs, parseNhcCones, unwrapConeRing } from "./nhcCones.ts";
 import type { GdacsAlert } from "./hazardAlerts.ts";
 
 // A trimmed real sample (NHC MapServer layer 8, verified live 2026-09-29):
@@ -27,6 +27,13 @@ const oneStorm = {
 };
 
 const emptyCollection = { type: "FeatureCollection", features: [] };
+
+it("triangulates a dateline-crossing cone in a narrow continuous longitude strip", () => {
+  const ring = [{ lat: 10, lon: 179 }, { lat: 10, lon: -179 }, { lat: 12, lon: -178 }, { lat: 12, lon: 178 }];
+  expect(unwrapConeRing(ring).map((p) => p.lon)).toEqual([179, 181, 182, 178]);
+  expect(unwrapConeRing(ring.map((p) => ({ ...p, lon: -p.lon }))).map((p) => p.lon)).toEqual([-179, -181, -182, -178]);
+  expect(unwrapConeRing([])).toEqual([]);
+});
 
 describe("parseNhcCones", () => {
   it("parses at least one polygon and keeps GeoJSON's [lon, lat] order", () => {
