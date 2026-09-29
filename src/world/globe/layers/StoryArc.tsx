@@ -1,8 +1,10 @@
-// LANE X4: the one great-circle arc buildStory() ever draws -- school to the
-// first role with a known city (storyModel.ts's own comment: "the one
-// journey the data can draw honestly"). Reuses arcGeo.ts's pure sphere math
-// (ArcLayer.tsx's own dependency) rather than re-deriving slerp/apex/tube
-// sampling for a single arc.
+// LANE X4 (base arc), extended by LANE C3 (progressive draw for the life
+// journey film): the great-circle arc(s) the story can draw honestly --
+// either "My story"'s own single school-to-role arc, or, while the film
+// plays, the current film chapter's incoming arc, growing from origin to
+// destination over that chapter's own dwell time instead of appearing fully
+// formed. Reuses arcGeo.ts's pure sphere math (ArcLayer.tsx's own
+// dependency) rather than re-deriving slerp/apex/tube sampling.
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
@@ -11,12 +13,19 @@ import { readColor } from "../../../themeColorThree.ts";
 import { GLOBE_RADIUS, latLonToXyz } from "../geoMath.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useStoryChapterState } from "../ui/storyChapterState.ts";
+import { useStoryFilmState } from "../ui/storyFilmState.ts";
 import { arcApexHeight, arcPoint, centralAngleDeg, sampleArc } from "./arcGeo.ts";
 
 const DASH_SPEED = 0.2; // full traversals/second -- a slower, narrative pace than ArcLayer's live dashes
 
 export default function StoryArc({ tier }: { tier: 1 | 2 | 3 }) {
-  const chapter = useStoryChapterState((s) => s.chapter);
+  const storyChapter = useStoryChapterState((s) => s.chapter);
+  const filmChapter = useStoryFilmState((s) => s.chapter);
+  const filmProgress = useStoryFilmState((s) => s.progress);
+  // The film and "My story" can never both be open (ui/StoryPlayer.tsx's own
+  // mutual exclusion), so whichever has an active chapter wins; this file
+  // never has to reconcile two chapters at once.
+  const chapter = filmChapter ?? storyChapter;
   const reducedMotion = useReducedMotion();
   // living-ledger's own Colour rule: claim/live things use one of the four
   // globe semantic tokens, never a brand token -- --color-accent is the
@@ -29,6 +38,9 @@ export default function StoryArc({ tier }: { tier: 1 | 2 | 3 }) {
   // Off by design at T3 (living-ledger tier budgets: "T3 minimal or off"),
   // and whenever the current chapter has no arc of its own.
   const arc = tier === 3 ? undefined : chapter?.arcs[0];
+  // Outside the film (or under reduced motion, "flights become cuts") the
+  // arc is fully formed the instant it appears -- exactly the pre-C3 look.
+  const drawProgress = filmChapter && !reducedMotion ? filmProgress : 1;
 
   const built = useMemo(() => {
     if (!arc) return null;
@@ -36,27 +48,33 @@ export default function StoryArc({ tier }: { tier: 1 | 2 | 3 }) {
     const to = latLonToXyz(arc.to.lat, arc.to.lon);
     const apex = arcApexHeight(centralAngleDeg(from, to));
     const segments = tier === 1 ? 48 : 24;
-    const pts = sampleArc(from, to, apex, segments).map((p) => new THREE.Vector3(p.x, p.y, p.z));
+    const full = sampleArc(from, to, apex, segments);
+    // At least 2 points so the curve stays valid; never more than every
+    // sampled point, so this can't overshoot the finished arc mid-flight.
+    const shown = Math.max(2, Math.round(full.length * drawProgress));
+    const pts = full.slice(0, shown).map((p) => new THREE.Vector3(p.x, p.y, p.z));
     const curve = new THREE.CatmullRomCurve3(pts);
     return {
       from, to, apex,
-      tube: new THREE.TubeGeometry(curve, segments, 0.02, 6, false),
-      glow: new THREE.TubeGeometry(curve, segments, 0.05, 6, false),
+      tube: new THREE.TubeGeometry(curve, Math.max(1, shown - 1), 0.02, 6, false),
+      glow: new THREE.TubeGeometry(curve, Math.max(1, shown - 1), 0.05, 6, false),
     };
     // arc.from/to are STORY_GEO's own frozen literals (stable identity), so
     // the chapter id is the real change signal -- cheaper than a deep
     // compare of two {name,lat,lon} objects every chapter change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter?.id, tier]);
+  }, [chapter?.id, tier, drawProgress]);
 
   useEffect(() => () => { built?.tube.dispose(); built?.glow.dispose(); }, [built]);
 
   useFrame(({ clock }) => {
     const mesh = dashRef.current;
     if (!mesh || !built) return;
-    // Reduced motion parks the dash mid-arc instead of travelling -- same
-    // rule ArcLayer.tsx's own live dashes follow.
-    const t = reducedMotion ? 0.5 : (clock.elapsedTime * DASH_SPEED) % 1;
+    // In the film, the dash IS the growing tip -- it marks exactly how far
+    // the flight has drawn, not a looping decoration. Outside the film (or
+    // under reduced motion, which parks it mid-arc, same rule ArcLayer.tsx's
+    // own live dashes follow) it keeps "My story"'s original ambient loop.
+    const t = filmChapter ? drawProgress : reducedMotion ? 0.5 : (clock.elapsedTime * DASH_SPEED) % 1;
     const p = arcPoint(built.from, built.to, t, built.apex);
     mesh.position.set(p.x, p.y, p.z);
   });
