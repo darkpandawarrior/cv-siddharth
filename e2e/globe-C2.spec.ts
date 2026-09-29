@@ -98,7 +98,9 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
   await expect.poll(() => wmts.count, { timeout: 15_000, message: "expected at least one WMTS tile request" }).toBeGreaterThan(0);
 
   await toggle.click();
-  await expect(panel).toBeVisible();
+  // Generous timeout: this is the panel's own lazy chunk's first fetch
+  // (globe-L2/L3/L5/T1/U1's own convention for a first lazy-mounted panel).
+  await expect(panel).toBeVisible({ timeout: 15_000 });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
   // The legend must show real tiles, not the empty state, once TileLayer's
@@ -144,10 +146,11 @@ test("the keyboard shortcut (x) toggles X-ray the same as the topbar button", as
   // Move focus onto the canvas (not a typing target) first -- ExploreBar's
   // own search combobox is reachable by tab and this lane's own keydown
   // guard correctly refuses to fire while a real typing target has focus,
-  // same as it should.
-  await page.locator("[data-globe-root] canvas").first().click({ position: { x: 10, y: 10 } });
+  // same as it should. Click the canvas centre, not a corner: another
+  // lane's always-mounted anomaly-rail nav overlays the canvas's top-left.
+  await page.locator("[data-globe-root] canvas").first().click();
   await page.keyboard.press("x");
-  await expect(panel).toBeVisible();
+  await expect(panel).toBeVisible({ timeout: 15_000 });
 
   await page.keyboard.press("x");
   await expect(panel).toBeHidden();
