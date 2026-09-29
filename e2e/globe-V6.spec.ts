@@ -99,6 +99,12 @@ test("the scene summary has headings for Imagery, Live layers, Hazards, Sky and 
 });
 
 test("turning satellites on updates the scene summary exactly once", async ({ page }) => {
+  // Same headroom as the idle test below: this repo's own worktree fleet
+  // runs many lanes' preview servers and browsers at once (playwright.config.ts's
+  // own comment block on worker contention), and openGlobe's canvas wait
+  // alone can eat most of a 30s budget under that load with nothing wrong
+  // in the page itself.
+  test.setTimeout(60_000);
   await openGlobe(page);
   const panel = page.locator("[data-globe-layer-panel]");
   await expect(panel).toBeVisible();
