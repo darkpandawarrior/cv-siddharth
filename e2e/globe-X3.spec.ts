@@ -193,6 +193,34 @@ test("swipe compare: the divider drags and nudges, Esc exits", async ({ page }) 
   await expect(divider).toHaveAttribute("aria-valuenow", "50");
   await expect(page.locator("[data-globe-compare]").getByText("Today")).toBeVisible();
 
+  // Desktop first load pre-selects Pune (Globe.tsx), so Inspector's left-slot
+  // card is up by the time Compare opens here. That used to leave the left
+  // "chosen past date" chip visually painted behind Inspector's card: this
+  // component mounts from TimeScrubber, which Globe.tsx nests inside the
+  // topbar's own `relative z-20` div — a stacking context of its own, so a
+  // `fixed` descendant's z-index only ever competes *inside* it, and no
+  // number this file declares could outrank a sibling like Inspector's z-30
+  // card without first escaping that context (same trap StreetView.tsx
+  // already portals past). `toBeVisible()` alone can't catch this (the chip
+  // has a size and isn't display:none either way), and `elementFromPoint`
+  // can't either, since the chip is `pointer-events-none` and always gets
+  // skipped by hit-testing regardless of paint order — so this checks the
+  // actual fix's two structural properties instead: portaled out of the
+  // topbar's stacking context, at a z-index above Inspector's.
+  const leftChip = page.locator("[data-globe-compare] > div").first(); // CompareDivider.tsx's own JSX order: left date chip first
+  await expect(leftChip).toBeVisible();
+  const stacking = await page.evaluate(() => {
+    const compare = document.querySelector("[data-globe-compare]");
+    const inspector = document.querySelector("[data-globe-inspector]");
+    return {
+      portaledToBody: compare?.parentElement === document.body,
+      compareZ: compare ? Number(getComputedStyle(compare).zIndex) : NaN,
+      inspectorZ: inspector ? Number(getComputedStyle(inspector).zIndex) : NaN,
+    };
+  });
+  expect(stacking.portaledToBody).toBe(true);
+  expect(stacking.compareZ).toBeGreaterThan(stacking.inspectorZ);
+
   // Drag the handle a quarter of the way toward the left edge.
   const box = await divider.boundingBox();
   if (!box) throw new Error("compare divider has no bounding box");

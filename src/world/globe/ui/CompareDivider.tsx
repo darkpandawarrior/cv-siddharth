@@ -6,6 +6,7 @@
  *  than Globe.tsx, so the compose-layout owner (U1) never needs an edit for
  *  this lane's toggle — see that file's own comment. */
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useCompare } from "../timeMachine/compareStore.ts";
 
@@ -68,8 +69,15 @@ export default function CompareDivider() {
   if (!state) return null;
   const pct = state.split * 100;
 
-  return (
-    <div ref={rootRef} data-globe-compare className="pointer-events-none fixed inset-0 z-30">
+  // Body-level portal (same fix StreetView.tsx already uses for this exact
+  // trap): this component mounts from TimeScrubber, which Globe.tsx nests
+  // inside the topbar's `relative z-20` div. That div is a stacking context
+  // of its own, so a `fixed` descendant's z-index is only ever compared
+  // *inside* it — no z-index this root declares can outrank a sibling like
+  // Inspector's z-30 card, which sits outside that context entirely.
+  // Portalling to document.body escapes it, so z-50 here actually wins.
+  return createPortal(
+    <div ref={rootRef} data-globe-compare className="pointer-events-none fixed inset-0 z-50">
       <div
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 truncate rounded-full border border-line bg-ink/70 px-2 py-1 font-mono text-xs text-zinc-300 backdrop-blur"
         style={{ maxWidth: `max(0px, calc(${pct}% - 24px))` }}
@@ -107,6 +115,7 @@ export default function CompareDivider() {
       >
         <X size={14} />
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
