@@ -119,6 +119,9 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
       uCloudReady: { value: 0 },
       uRelief: { value: PLACEHOLDER as THREE.Texture },
       uReliefReady: { value: 0 },
+      // WAVE 7 LANE V2: night-lights gain feeding GlobePost.tsx's Bloom
+      // threshold (>= 1.0) — see earthImageryShader.ts's own comment.
+      uNightGain: { value: 1.6 },
       // WAVE 6 LANE X3: daily time-lapse (crossfade between two preloaded
       // VIIRS days) and swipe compare (a chosen past day vs literal today).
       // Both start inactive (0) so an ordinary visitor who never scrubs

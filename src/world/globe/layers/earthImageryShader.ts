@@ -21,6 +21,13 @@ uniform sampler2D uIce;
 uniform float uCloudReady;
 uniform sampler2D uRelief;
 uniform float uReliefReady;
+// WAVE 7 LANE V2 (city-light bloom): the multiplier that pushes ONLY the
+// night-lights term above 1.0 so a plain (non-selective) Bloom pass with
+// luminanceThreshold >= 1.0 picks out city clusters without touching the day
+// side, which this shader otherwise keeps <= 1.0. A named uniform (not a
+// literal) so GlobePost.tsx's threshold and this gain can be tuned together
+// without a shader recompile.
+uniform float uNightGain;
 // WAVE 6 LANE X3 (time machine): daily time-lapse (uTL*) and swipe compare
 // (uCompare*/uSplit) both only ever change what "the day photo" IS before
 // the rest of the pipeline (gap fill, clouds, relief, terminator, night
@@ -112,9 +119,10 @@ void main(){
   float shadow = cloudMask(shadowUv) * uCloudReady * smoothstep(0.0,0.12,mu);
   land *= 1.0 - 0.24 * shadow;
 
-  // City lights (item 3): brighten only — a cheap stand-in for bloom that
-  // needs no extra postprocessing pass.
-  vec3 nightLights = texture2D(uNight, vUv).rgb * 1.6;
+  // City lights (item 3): brighten past 1.0 so GlobePost.tsx's Bloom pass
+  // (luminanceThreshold >= 1.0) actually catches bright clusters — the HDR
+  // glow, not just a flat multiply, is Lane 2's whole point.
+  vec3 nightLights = texture2D(uNight, vUv).rgb * uNightGain;
 
   float sun = dot(normalize(vW), normalize(uSun));
   float lit = smoothstep(-0.12, 0.08, sun); // soft terminator band
