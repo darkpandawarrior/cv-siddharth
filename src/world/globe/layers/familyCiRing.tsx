@@ -18,7 +18,15 @@ import type { SignalsResponse } from "../../../../api/_lib/signals-handler.ts";
 const TUBE = 0.012;
 const PULSE_MS = 900;
 const PULSE_BOOST = 0.5;
-const SURFACE_EPS = 0.02; // same epsilon reachAppRing.tsx uses, against the same surface z-fight.
+// Pune declutter (P4, wave 9): this used to be the exact same 0.02 as
+// reachAppRing.tsx's SURFACE_EPS and layers/TogetherLayer.tsx's RING_LIFT,
+// which z-fought into the moire the design/perf audits both flagged over
+// Pune. Now the second step of that stack - see reachAppRing.tsx's own
+// comment for the full ordering (ReachColumns.tsx 0.008 < this 0.024 is
+// wrong on purpose too: the CI ring's arc (0.85) is the widest of the
+// three flat rings, so it sits above the app ring (0.55) but the actual
+// numeric height only needs to differ, not track arc size).
+export const SURFACE_EPS = 0.024;
 
 function statusText(s: CiSegmentStatus): string {
   return s === "pass" ? "passing" : s === "fail" ? "failing" : "unmeasured";
@@ -95,10 +103,15 @@ export function FamilyCiRing({ ci, animate }: { ci: SignalsResponse["ci"]; anima
               ref={(m) => {
                 meshRefs.current[i] = m;
               }}
+              renderOrder={2}
               onClick={() => onPick(s)}
             >
               <torusGeometry args={[CI_RING_RADIUS, TUBE, 6, 32, s.angleLength]} />
-              <meshBasicMaterial color={colorFor(s.status)} toneMapped={false} transparent opacity={0.9} />
+              {/* depthWrite false + polygonOffset: the second step of the
+                  Pune ring stack (reachAppRing.tsx's own comment has the
+                  full ordering) - stops this translucent arc fighting its
+                  neighbours for a shared pixel. */}
+              <meshBasicMaterial color={colorFor(s.status)} toneMapped={false} transparent opacity={0.9} depthWrite={false} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} />
             </mesh>
           </group>
         ))}

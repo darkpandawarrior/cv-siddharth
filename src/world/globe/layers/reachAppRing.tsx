@@ -16,10 +16,15 @@ import { fleet, storeGeneratedAt, storeVerifiedAt } from "../../../data/store.ts
 
 const COLUMN_RADIUS = 0.01;
 const COLUMN_GEOMETRY = new THREE.CylinderGeometry(COLUMN_RADIUS, COLUMN_RADIUS, 1, 6);
-// A small radial offset off the exact surface point -- Markers.tsx's own
-// employer ring uses the same +0.01-ish epsilon to keep a flat ring from
-// z-fighting the earth surface/imagery mesh right under it.
-const SURFACE_EPS = 0.02;
+// A small radial offset off the exact surface point. Pune declutter (P4,
+// wave 9): this used to be the SAME 0.02 as familyCiRing.tsx's own
+// SURFACE_EPS and layers/TogetherLayer.tsx's RING_LIFT - three separate
+// meshes hovering at an identical height above the globe, the z-fight the
+// design/perf audits saw as a green/magenta moire right over Pune. This is
+// now the lowest step in that stack (ReachColumns.tsx 0.008, this 0.016,
+// familyCiRing.tsx 0.024, hazardHalos.tsx 0.032, TogetherLayer.tsx 0.04) -
+// every one of those five constants is a distinct value on purpose.
+export const SURFACE_EPS = 0.016;
 const HOVER_BOOST = 1.5;
 const dummy = new THREE.Object3D();
 const _scratch = new THREE.Vector3();
@@ -168,12 +173,19 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
 
   return (
     <group ref={groupRef} position={position} quaternion={quaternion}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
         <torusGeometry args={[APP_RING_RADIUS, 0.004, 6, 96]} />
-        <meshBasicMaterial color={muted} toneMapped={false} transparent opacity={0.35} />
+        {/* Transparent + depthWrite kept the default (true) here used to let
+            this base arc fight neighbouring Pune layers for which translucent
+            surface wins a given pixel; false is correct for a translucent
+            overlay stacked with others at a nearly-coplanar radius.
+            polygonOffset is the lowest step of the ring stack (factor/units
+            -1), so it's never mistaken for a coplanar match against
+            familyCiRing.tsx's torus or TogetherLayer.tsx's ring above it. */}
+        <meshBasicMaterial color={muted} toneMapped={false} transparent opacity={0.35} depthWrite={false} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
       </mesh>
-      <instancedMesh ref={meshRef} args={[COLUMN_GEOMETRY, undefined, ENTRIES.length]} frustumCulled={false}>
-        <meshBasicMaterial toneMapped={false} transparent opacity={0.85} />
+      <instancedMesh ref={meshRef} args={[COLUMN_GEOMETRY, undefined, ENTRIES.length]} frustumCulled={false} renderOrder={1}>
+        <meshBasicMaterial toneMapped={false} transparent opacity={0.85} depthWrite={false} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
       </instancedMesh>
       <mesh
         geometry={HIT_GEOMETRY}

@@ -19,6 +19,17 @@ const HEIGHT_PER_DECADE = 0.25;
 // two columns by a fraction of a millimetre on a radius-6 globe. This is a
 // fixed sideways offset along the local tangent plane instead.
 const COLUMN_SPACING = 0.3;
+// Pune declutter (P4, wave 9): the column base used to stand at EXACTLY
+// GLOBE_RADIUS, the same radius EarthImagery/TileLayer's sphere surface
+// sits at directly underneath it - perf.md's own suspected cause of the
+// Pune moire ("check TileLayer.tsx's tile-patch radius against
+// ReachColumns.tsx's ring radius for an exact match, the classic
+// z-fight cause"). This lifts the base a hair off the surface, the lowest
+// step in the Pune marker stack (see familyCiRing.tsx/reachAppRing.tsx/
+// hazardHalos.tsx/layers/TogetherLayer.tsx for the rest of the stack -
+// every SURFACE_LIFT-equivalent constant across those five files is a
+// distinct value on purpose, so no two Pune layers share a height).
+export const SURFACE_LIFT = 0.008;
 
 function columnHeight(magnitude: number): number {
   return Math.max(MIN_HEIGHT, Math.log10(Math.max(1, magnitude)) * HEIGHT_PER_DECADE);
@@ -51,6 +62,7 @@ function Column({
     <group position={base} quaternion={quaternion}>
       <mesh
         position={[0, height / 2, 0]}
+        renderOrder={0}
         onClick={(e) => {
           e.stopPropagation();
           onSelect();
@@ -64,7 +76,10 @@ function Column({
         }}
       >
         <cylinderGeometry args={[COLUMN_RADIUS, COLUMN_RADIUS, height, 8]} />
-        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} />
+        {/* polygonOffset pulls the column's base cap toward the camera by a
+            tiny, consistent amount - belt-and-suspenders with SURFACE_LIFT
+            above against the earth sphere directly beneath it. */}
+        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
       </mesh>
     </group>
   );
@@ -94,8 +109,8 @@ export function ReachColumns() {
     return t.lengthSq() > 1e-6 ? t.normalize() : new THREE.Vector3(1, 0, 0);
   }, [normal]);
 
-  const baseA = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS).addScaledVector(tangent, -COLUMN_SPACING), [normal, tangent]);
-  const baseB = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS).addScaledVector(tangent, COLUMN_SPACING), [normal, tangent]);
+  const baseA = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS + SURFACE_LIFT).addScaledVector(tangent, -COLUMN_SPACING), [normal, tangent]);
+  const baseB = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS + SURFACE_LIFT).addScaledVector(tangent, COLUMN_SPACING), [normal, tangent]);
 
   return (
     <group>
