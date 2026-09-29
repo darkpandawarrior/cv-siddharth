@@ -107,12 +107,6 @@ const HAZARD_POLL_MS = 4000;
 const PULSE_POLL_MS = 60_000;
 const SIGNALS_POLL_MS = 120_000;
 
-// Mirrors Globe.tsx's own PANEL_RESERVE_RIGHT constants (that file doesn't
-// export them, and this lane doesn't own it) so this button sits in the gap
-// its topbar already reserves next to the layer-panel column, rather than
-// overlapping either one. "HUD row" per the brief: same top-4 strip
-// LayerPanel.tsx's own collapse icon sits in.
-const RIGHT_OFFSET = { open: 257, collapsed: 58 };
 
 export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
   const enabled = useSyncExternalStore(subscribeSound, () => soundEnabled, () => false);
@@ -129,7 +123,6 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
   }, []);
 
   const reducedMotion = useReducedMotion();
-  const panelOpen = useGlobe((s) => s.panelOpen);
   const focus = useGlobe((s) => s.focus);
 
   const seenQuakeIds = useRef<Set<string>>(new Set());
@@ -201,15 +194,10 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
 
   return (
     <>
-      {/* Desktop/tablet (sm+): a small icon button in the HUD row, in the
-          gap the topbar already reserves beside the layer-panel column.
-          `absolute`, not `fixed` — Globe.tsx's own comment on this block is
-          explicit that every panel here "resolves its own position against
-          this stage" (`data-globe-stage`, the `relative`/`absolute inset-0`
-          container these siblings mount inside), not the viewport. A fixed
-          position landed this button UNDER the site's own sticky route
-          header (z-40 there vs. z-30 here) at the stage's actual top
-          offset, which silently ate every click (caught by e2e). */}
+      {/* Desktop/tablet (sm+): an icon button IN the topbar's right
+          cluster (Globe.tsx mounts this component there, beside the tour
+          pill). In flow, not absolutely offset: a fixed right offset landed
+          on top of the tour pill, clipped its label and ate its clicks. */}
       <button
         type="button"
         onClick={toggleSound}
@@ -218,8 +206,7 @@ export default function SoundToggle({ tier: _tier }: { tier: 1 | 2 | 3 }) {
         title="Sound (opt-in)"
         data-sound-toggle
         data-sound-enabled={enabled}
-        className="ctrl-icon pointer-events-auto absolute top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
-        style={{ right: panelOpen ? RIGHT_OFFSET.open : RIGHT_OFFSET.collapsed }}
+        className="ctrl-icon pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-ink/70 text-zinc-300 backdrop-blur hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
       >
         {icon}
       </button>

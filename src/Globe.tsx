@@ -295,6 +295,7 @@ export function Globe() {
               <ClientOnly fallback={null}>
                 <Suspense fallback={null}>
                   <GlobeTour tier={tier} slot="row" />
+                  <SoundToggle tier={tier} />
                 </Suspense>
               </ClientOnly>
               {view !== "orbit" && (
@@ -359,7 +360,6 @@ export function Globe() {
               <ExploreBar tier={tier} />
               <StoryPlayer tier={tier} />
               <Intro tier={tier} />
-              <SoundToggle tier={tier} />
             </Suspense>
           </ClientOnly>
         )}
