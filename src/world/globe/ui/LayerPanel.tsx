@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
 import type { Vector3 } from "three";
 import { PUNE } from "../../../lib/sky.ts";
-import { entityPositions, LAYER_IDS, useGlobe, type LayerId, type LayerHealth } from "../globeStore.ts";
+import { entityPositions, LAYER_IDS, useGlobe, type EarthStyle, type ImageryStack, type LayerId, type LayerHealth } from "../globeStore.ts";
 // WAVE 6 LANE X1 (live world feed): the "Layers | Live" tab this file adds
 // below renders FeedRail for the "Live" tab; every other line in this file
 // is unchanged.
@@ -11,6 +11,9 @@ import FeedRail from "./FeedRail.tsx";
 // button over this sheet's own content (see that file's own "Needs from
 // integration" comment) — LANE H1 (integration) adds the slot here.
 import { SoundToggleSlot } from "./SoundToggle.tsx";
+// LANE P1 (wave 7): the preset chip row — pure preset data/diff logic lives
+// in its own file so it is unit-testable without mounting this component.
+import { LAYER_PRESETS, layerIdsToToggle, presetCaveat, presetImagery, presetLayerRecord, type LayerPreset } from "./layerPresets.ts";
 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
@@ -23,7 +26,7 @@ const ISS_ENTITY = "sat:25544";
 
 declare global {
   interface Window {
-    __GLOBE_TEST_SET_ENTITY__?: (id: string, pos: { x: number; y: number; z: number }) => void;
+    __GLOBE_TEST_SET_ENTITY__?: (id: string, pos: { x: number; y: number; z: number }, health?: LayerHealth) => void;
   }
 }
 
@@ -35,7 +38,8 @@ declare global {
 // about its scope: every real consumer (CameraDirector.tsx) only ever reads
 // .x/.y/.z off what an entityPositions getter returns.
 if (typeof window !== "undefined") {
-  window.__GLOBE_TEST_SET_ENTITY__ = (id, pos) => {
+  window.__GLOBE_TEST_SET_ENTITY__ = (id, pos, health) => {
+    if (health) useGlobe.getState().setStatus("satellites", health);
     entityPositions.set(id, () => ({ x: pos.x, y: pos.y, z: pos.z }) as unknown as Vector3);
   };
 }
@@ -109,6 +113,104 @@ function LayerRows({ layers, status, toggleLayer }: { layers: Record<LayerId, bo
         );
       })}
     </ul>
+  );
+}
+
+// Matches LayerCatalog.tsx's own (unexported) DEFAULT_OVERLAY_OPACITY — a
+// preset-added overlay should look the same as one a visitor turns on by
+// hand, not fainter or louder for no reason.
+const PRESET_OVERLAY_OPACITY = 0.75;
+
+interface PresetSnapshot {
+  storyArcsOn: boolean;
+  cloudsOn: boolean;
+  layers: Record<LayerId, boolean>;
+  style: EarthStyle;
+  imagery: ImageryStack;
+}
+
+/** A row of chips that set a curated layer/imagery combination in one tap
+ *  (brief: "layer presets"). Each apply snapshots the PRE-preset state so
+ *  the single "Restore" chip can undo it exactly, one level deep — a second
+ *  preset tap overwrites the snapshot rather than stacking undo levels,
+ *  since the brief only asks for "the previous set", not a full history. */
+function PresetChips({ touchTarget }: { touchTarget: string }) {
+  const layers = useGlobe((s) => s.layers);
+  const toggleLayer = useGlobe((s) => s.toggleLayer);
+  const style = useGlobe((s) => s.style);
+  const setStyle = useGlobe((s) => s.setStyle);
+  const imagery = useGlobe((s) => s.imagery);
+  const setImagery = useGlobe((s) => s.setImagery);
+  const status = useGlobe((s) => s.status);
+  const storyArcsOn = useGlobe((s) => s.storyArcsOn);
+  const setStoryArcsOn = useGlobe((s) => s.setStoryArcsOn);
+  const cloudsOn = useGlobe((s) => s.cloudsOn);
+  const setCloudsOn = useGlobe((s) => s.setCloudsOn);
+  const [activePreset, setActivePreset] = useState<LayerPreset | null>(null);
+  const previous = useRef<PresetSnapshot | null>(null);
+  const [hasPrevious, setHasPrevious] = useState(false);
+  const [announcement, setAnnouncement] = useState<string | null>(null);
+
+  const apply = (preset: LayerPreset) => {
+    previous.current = { layers, style, imagery, cloudsOn, storyArcsOn };
+    if (preset.storyArcsOn !== undefined) setStoryArcsOn(preset.storyArcsOn);
+    setActivePreset(preset);
+    if (preset.cloudsOn !== undefined) setCloudsOn(preset.cloudsOn);
+    setHasPrevious(true);
+    for (const id of layerIdsToToggle(layers, presetLayerRecord(LAYER_IDS, preset), LAYER_IDS)) toggleLayer(id);
+    if (preset.style !== undefined && preset.style !== style) setStyle(preset.style);
+    const nextImagery = presetImagery(imagery, preset, PRESET_OVERLAY_OPACITY);
+    if (nextImagery !== imagery) setImagery(nextImagery);
+    setAnnouncement(preset.summary);
+  };
+
+  const restore = () => {
+    const snapshot = previous.current;
+    if (!snapshot) return;
+    for (const id of layerIdsToToggle(layers, snapshot.layers, LAYER_IDS)) toggleLayer(id);
+    if (snapshot.style !== style) setStyle(snapshot.style);
+    if (JSON.stringify(snapshot.imagery) !== JSON.stringify(imagery)) setImagery(snapshot.imagery);
+    setCloudsOn(snapshot.cloudsOn);
+    setStoryArcsOn(snapshot.storyArcsOn);
+    setActivePreset(null);
+    previous.current = null;
+    setHasPrevious(false);
+    setAnnouncement("Restored the layers and imagery from before that preset.");
+  };
+
+  const caveat = activePreset ? presetCaveat(activePreset, status) : null;
+  return (
+    <section className="mb-3" data-globe-presets data-clouds-on={cloudsOn} data-story-arcs-on={storyArcsOn}>
+      <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Presets</h3>
+      <div className="flex flex-wrap gap-1">
+        {LAYER_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            title={preset.summary}
+            onClick={() => apply(preset)}
+            className={`rounded-full border border-line px-2 ${touchTarget} text-xs text-zinc-300 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
+          >
+            {preset.label}
+          </button>
+        ))}
+        {hasPrevious && (
+          <button
+            type="button"
+            onClick={restore}
+            className={`rounded-full border border-accent/60 px-2 ${touchTarget} text-xs text-accent hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
+          >
+            Restore
+          </button>
+        )}
+      </div>
+      {/* Says what the chip turned on for every visitor, not just a mouse
+          hover reading the `title` above (G8 + accessibility: a claim needs
+          a channel every visitor gets, not just a sighted mouse user). */}
+      <p data-preset-announcement role="status" aria-live="polite" className="mt-1 min-h-[1em] text-xs text-muted" style={caveat ? { color: "var(--color-warn)" } : undefined}>
+        {announcement} {caveat}
+      </p>
+    </section>
   );
 }
 
@@ -306,6 +408,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
               <FeedRail tier={tier} />
             ) : (
               <>
+                <PresetChips touchTarget="min-h-11" />
                 <section className="mb-3">
                   <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
                   {earthStyleToggle}
@@ -371,6 +474,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
             <FeedRail tier={tier} />
           ) : (
             <>
+              <PresetChips touchTarget="min-h-11" />
               <section className="mb-3">
                 <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
                 {earthStyleToggle}

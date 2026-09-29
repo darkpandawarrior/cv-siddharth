@@ -96,6 +96,10 @@ export interface TogetherState {
 }
 
 interface GlobeState {
+  storyArcsOn: boolean;
+  setStoryArcsOn: (on: boolean) => void;
+  cloudsOn: boolean;
+  setCloudsOn: (on: boolean) => void;
   style: EarthStyle;
   layers: Record<LayerId, boolean>;
   view: GlobeView;
@@ -149,6 +153,10 @@ function initialPanelOpen(): boolean {
 }
 
 export const useGlobe = create<GlobeState>((set) => ({
+  storyArcsOn: true,
+  setStoryArcsOn: (storyArcsOn) => set({ storyArcsOn }),
+  cloudsOn: true,
+  setCloudsOn: (cloudsOn) => set({ cloudsOn }),
   style: "imagery",
   layers: { markers: true, stars: true, satellites: true, aircraft: true, presence: true, pulses: true, hazards: true, wind: true, reach: true, countries: false, together: true, density: false, guide: true },
   view: "orbit",
