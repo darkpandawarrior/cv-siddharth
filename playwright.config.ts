@@ -47,7 +47,28 @@ export default defineConfig({
    */
   workers: 3,
   retries: process.env.CI ? 2 : 0,
-  use: { baseURL: `http://localhost:${PORT}` },
+  use: {
+    baseURL: `http://localhost:${PORT}`,
+    // The globe's cinematic first-visit intro (cameraIntro.ts) plays for any
+    // browser that has never seen it, flies the camera, and eats the first
+    // ~400ms of input -- covering click targets and keeping the Pune
+    // preselection alive underneath. Every globe spec except the one that
+    // actually tests the intro (e2e/globe-X5.spec.ts's own describe block)
+    // wants a browser that has already seen it, same as a returning visitor.
+    // Seeded via storageState (not an addInitScript in every file) so it is
+    // the suite-wide default; the intro's own tests opt back in with an
+    // empty storageState. Never branch product code on navigator.webdriver --
+    // this is a test-harness concern, not a runtime one.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: `http://localhost:${PORT}`,
+          localStorage: [{ name: "cv-siddharth:globe-intro-seen", value: "1" }],
+        },
+      ],
+    },
+  },
   webServer: {
     // Run against the production SSR server (`npm run serve` = vite preview
     // --port 4173 --strictPort), not `npm run dev` — dev doesn't full-SSR in

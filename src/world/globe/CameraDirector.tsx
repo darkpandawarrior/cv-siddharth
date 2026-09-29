@@ -101,7 +101,18 @@ function resolveFocusDirDist(focus: Focus | null, fallbackDir: Vec3, fallbackDis
   return { dir: { x: d.x / len, y: d.y / len, z: d.z / len }, dist: len };
 }
 
-export default function CameraDirector({ controlsRef }: { controlsRef: RefObject<OrbitControlsImpl | null> }) {
+export default function CameraDirector({
+  controlsRef,
+  zoomInTick = 0,
+}: {
+  controlsRef: RefObject<OrbitControlsImpl | null>;
+  /** GlobeHud's zoom-in pill (bumped in Globe.tsx, threaded through
+   *  GlobeScene.tsx's own `zoomInTick` prop) -- a real zoom-in intent that
+   *  drives OrbitControls' dolly directly rather than through a DOM wheel
+   *  event, so it can't be picked up by this component's own wheel/pinch
+   *  listeners below. */
+  zoomInTick?: number;
+}) {
   // Read through get() at the point of use (GlobeScene.tsx's own SceneRig
   // does the same) rather than destructuring `camera`/`gl` here: React
   // Compiler treats a value destructured straight off a hook's return as
@@ -128,6 +139,17 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
   // currently owns the camera, and whether this lane hid the markers layer
   // for the intro's "markers last" beat (so it can restore it unconditionally).
   const zoomHoldRef = useRef(0);
+  // LANE I2 (root cause fix): wall-clock ms (performance.now(), independent
+  // of useFrame's own dt) of the last real zoom-IN input -- a wheel notch
+  // with deltaY < 0, a two-finger pinch whose spread is growing, or the HUD
+  // zoom-in pill (zoomInTick, below). `zoomHoldRef` above now only advances
+  // while this stays fresh (cameraZoomGate.ts's stepZoomHold) -- resting at
+  // the floor with nothing arriving must never count toward the street
+  // hand-off. pinchSpanRef tracks the previous two-finger distance so only a
+  // GROWING pinch (zooming in) counts, not a shrinking one.
+  const zoomIntentRef = useRef(-Infinity);
+  const pinchSpanRef = useRef<number | null>(null);
+  const prevZoomInTickRef = useRef(zoomInTick);
   const introRef = useRef(false);
   const introMarkersHiddenRef = useRef(false);
   const prevViewRef = useRef(view);
@@ -380,6 +402,54 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
     };
   }, [view, get]);
 
+  // LANE I2 (root cause fix): registers zoom-IN intent for the seamless
+  // zoom-to-street gesture (useFrame's own orbit branch below). Attached
+  // once, not gated on `view`, the same as `get` reads elsewhere in this
+  // file -- a wheel/pinch that arrives outside orbit view just writes a
+  // timestamp nothing reads that frame, cheaper than tearing the listener
+  // down and rebuilding it on every view change.
+  useEffect(() => {
+    const el = get().gl.domElement;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0) zoomIntentRef.current = performance.now();
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      const [a, b] = [e.touches[0], e.touches[1]];
+      const span = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (pinchSpanRef.current !== null && span > pinchSpanRef.current) zoomIntentRef.current = performance.now();
+      pinchSpanRef.current = span;
+    };
+    const onTouchEnd = () => {
+      pinchSpanRef.current = null;
+    };
+    // passive: true -- unlike the ground-view wheel handler above, this
+    // listener never calls preventDefault (it only records a timestamp),
+    // and OrbitControls' own wheel handler on the same element still needs
+    // to see the event to actually zoom.
+    el.addEventListener("wheel", onWheel, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [get]);
+
+  // The HUD zoom-in pill drives OrbitControls' dolly directly from
+  // GlobeScene.tsx's own effect, never through a DOM wheel event -- a rising
+  // tick is the only signal this component gets that it happened. Guarded
+  // against the initial mount value (prevZoomInTickRef starts equal to it)
+  // so mounting with a non-zero tick already in flight never counts as a
+  // fresh click.
+  useEffect(() => {
+    if (zoomInTick > prevZoomInTickRef.current) zoomIntentRef.current = performance.now();
+    prevZoomInTickRef.current = zoomInTick;
+  }, [zoomInTick]);
+
   useFrame((state, dt) => {
     const { camera, gl } = state;
     const el = gl.domElement;
@@ -431,7 +501,15 @@ export default function CameraDirector({ controlsRef }: { controlsRef: RefObject
         const minDistance = controls?.minDistance ?? GLOBE_RADIUS * 1.5;
         const maxDistance = controls?.maxDistance ?? GLOBE_RADIUS * 7;
         const distance = camera.position.length();
-        zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt);
+        // Test/tooling seam only (same convention as GlobeScene.tsx's own
+        // data-subsolar-* probe): lets an e2e case confirm the camera has
+        // actually reached the zoom floor without depending on the 400ms
+        // trigger firing, so a "stays in orbit" assertion isn't just "never
+        // got the chance to trigger".
+        el.dataset.cameraDistance = distance.toFixed(3);
+        el.dataset.cameraMinDistance = minDistance.toFixed(3);
+        const msSinceIntent = performance.now() - zoomIntentRef.current;
+        zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt, msSinceIntent);
         if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
           zoomHoldRef.current = 0;
           const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };

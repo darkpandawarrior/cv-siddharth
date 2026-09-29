@@ -14,20 +14,31 @@ export const ZOOM_HOLD_MS = 400;
 // minDistance, it decays toward it), tight enough that "orbiting near the
 // min" (not pinned AT it) never counts.
 export const AT_MIN_EPSILON = 0.05;
+// LANE I2 (root cause fix): how stale a zoom-IN input can be and still count
+// as "still trying to get closer". Was previously unbounded -- resting at
+// the floor with NO further input still accumulated toward the 400ms
+// trigger, which threw a visitor who zoomed in to study the V1 deep-zoom
+// base into street view after 400ms of just looking. One notch of
+// deltaY/pinch/pill input per ~200ms of continuous scrolling comfortably
+// clears this; a visitor who has genuinely stopped clears it in well under
+// a second.
+export const INTENT_STALE_MS = 200;
 
 /**
- * One frame's worth of the zoom-hold state machine: `holdMs` grows while
- * the camera sits within AT_MIN_EPSILON of `minDistance`, resets the instant
- * it doesn't. Whether that pinning came from a wheel notch, a pinch, or the
- * HUD's zoom-in pill doesn't matter -- all three drive the same OrbitControls
- * dolly, and once clamped at the floor the camera stays there until the
- * visitor does something else, which is exactly the "keeps trying to get
- * closer" signal the brief asks for. Pure so the 400ms threshold and the
- * reset-on-leave edge are unit-testable without a mock three.js camera.
+ * One frame's worth of the zoom-hold state machine: `holdMs` grows only
+ * while the camera sits within AT_MIN_EPSILON of `minDistance` AND fresh
+ * zoom-IN intent is still arriving (a wheel notch, a growing pinch, or the
+ * HUD's zoom-in pill -- see `msSinceIntent`); it resets the instant either
+ * condition fails, whether that's the camera leaving the floor or the
+ * visitor simply stopping input while resting there. Pure so the 400ms
+ * threshold and both reset edges are unit-testable without a mock three.js
+ * camera or DOM events.
  */
-export function stepZoomHold(holdMs: number, distance: number, minDistance: number, dtSec: number): number {
+export function stepZoomHold(holdMs: number, distance: number, minDistance: number, dtSec: number, msSinceIntent: number): number {
   if (dtSec <= 0) return holdMs;
-  return distance <= minDistance + AT_MIN_EPSILON ? holdMs + dtSec * 1000 : 0;
+  const atFloor = distance <= minDistance + AT_MIN_EPSILON;
+  const freshIntent = msSinceIntent <= INTENT_STALE_MS;
+  return atFloor && freshIntent ? holdMs + dtSec * 1000 : 0;
 }
 
 /**
