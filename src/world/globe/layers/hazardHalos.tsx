@@ -13,6 +13,13 @@ import type { MatchedAlert } from "./hazardAlerts.ts";
 const HALO_GEOMETRY = new THREE.RingGeometry(0.85, 1, 32);
 const HALO_RADIUS = 0.22;
 const MAX_ALERTS = 60;
+// Pune declutter (P4, wave 9): when a real GDACS alert happens to sit near
+// Pune it used to hover only 0.005 above familyCiRing.tsx/reachAppRing.tsx's
+// old shared 0.02 lift - close enough to still z-fight at grazing camera
+// angles. Now the third step of the five-layer stack (reachAppRing.tsx's
+// own comment has the full ordering: 0.008 < 0.016 < 0.024 < this 0.032 <
+// 0.04).
+export const SURFACE_LIFT = 0.032;
 // Alert colours ARE this app's warn/danger tokens — unlike the ambient
 // glyphs, an alert IS a claim ("this is orange/red right now"), so it uses
 // the house palette rather than a natural-phenomenon hex (globe-lanes.md's
@@ -39,7 +46,7 @@ export function HazardHalos({ alerts }: { alerts: MatchedAlert[] }) {
     if (!mesh) return;
     for (let i = 0; i < capped.length; i++) {
       const a = capped[i];
-      const { position, normal } = placement(a.lat, a.lon, GLOBE_RADIUS + 0.025);
+      const { position, normal } = placement(a.lat, a.lon, GLOBE_RADIUS + SURFACE_LIFT);
       dummy.position.copy(position);
       dummy.quaternion.setFromUnitVectors(UP, normal);
       dummy.scale.setScalar(HALO_RADIUS);
@@ -79,11 +86,25 @@ export function HazardHalos({ alerts }: { alerts: MatchedAlert[] }) {
       ref={meshRef}
       args={[HALO_GEOMETRY, undefined, MAX_ALERTS]}
       frustumCulled={false}
+      renderOrder={3}
       onClick={onClick}
       onPointerOver={() => (document.body.style.cursor = "pointer")}
       onPointerOut={() => (document.body.style.cursor = "auto")}
     >
-      <meshBasicMaterial toneMapped={false} transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      {/* depthWrite was already false (additive blending never wants it);
+          polygonOffset is new - the third step of the Pune ring stack
+          (reachAppRing.tsx's own comment has the full ordering). */}
+      <meshBasicMaterial
+        toneMapped={false}
+        transparent
+        opacity={0.85}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+        polygonOffset
+        polygonOffsetFactor={-3}
+        polygonOffsetUnits={-3}
+      />
     </instancedMesh>
   );
 }

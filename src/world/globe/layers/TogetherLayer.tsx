@@ -42,7 +42,16 @@ const RING_GEOMETRY = new THREE.RingGeometry(0.085, RING_OUTER_RADIUS, 32);
 // real pointer both naturally aim) lands in that hole and hits nothing.
 const HIT_GEOMETRY = new THREE.CircleGeometry(1, 16);
 const HIT_RADIUS_MULTIPLIER = 1.8; // generous tap target beyond the ring's own thin annulus
-const RING_LIFT = 0.02; // just off the surface, matches LiveDots.tsx's own 0.03 lift
+// Pune declutter (P4, wave 9): this used to be 0.02, the exact same height
+// as familyCiRing.tsx's and reachAppRing.tsx's own old surface epsilons -
+// three translucent rings sharing one height above the globe is what the
+// design/perf audits saw as a green/magenta moire directly over Pune. This
+// reticle layer is the highest, most-active step of the five-layer stack
+// (reachAppRing.tsx's own comment carries the full ordering: 0.008 <
+// 0.016 < 0.024 < 0.032 < this 0.04) - a live "someone else is looking
+// here" glyph reads best floating just above the calmer, static rings
+// underneath it.
+export const RING_LIFT = 0.04;
 const dummy = new THREE.Object3D();
 
 const SCALE_BY_ZOOM: Record<ViewPresence["zoom"], number> = { close: 0.68, region: 1, orbit: 1.32 };
@@ -379,16 +388,19 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
       <Html style={{ display: "none" }}>
         <div ref={domRef} data-together-layer data-together-total={presence.total} aria-hidden />
       </Html>
-      <instancedMesh ref={ringRef} args={[RING_GEOMETRY, undefined, MAX_RENDERED]} frustumCulled={false}>
-        <meshBasicMaterial color={RETICLE_COLOR} transparent opacity={0.8} side={THREE.DoubleSide} toneMapped={false} depthWrite={false} />
+      <instancedMesh ref={ringRef} args={[RING_GEOMETRY, undefined, MAX_RENDERED]} frustumCulled={false} renderOrder={4}>
+        {/* Highest step of the Pune ring stack (reachAppRing.tsx's own
+            comment has the full ordering) - depthWrite was already false;
+            polygonOffset is new, matching every other layer in the stack. */}
+        <meshBasicMaterial color={RETICLE_COLOR} transparent opacity={0.8} side={THREE.DoubleSide} toneMapped={false} depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
       </instancedMesh>
       {/* Invisible, generously-sized hit target over each ring (see
           HIT_GEOMETRY's own comment) -- this is what actually owns the
           pointer handlers; the ring above is purely visual. */}
-      <instancedMesh ref={hitRef} args={[HIT_GEOMETRY, undefined, MAX_RENDERED]} frustumCulled={false} onPointerMove={onPointerMove} onPointerOut={onPointerOut} onClick={onClick}>
+      <instancedMesh ref={hitRef} args={[HIT_GEOMETRY, undefined, MAX_RENDERED]} frustumCulled={false} renderOrder={4} onPointerMove={onPointerMove} onPointerOut={onPointerOut} onClick={onClick}>
         <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
       </instancedMesh>
-      <lineSegments ref={trailRef} geometry={TRAIL_GEOMETRY} frustumCulled={false}>
+      <lineSegments ref={trailRef} geometry={TRAIL_GEOMETRY} frustumCulled={false} renderOrder={4}>
         <lineBasicMaterial vertexColors transparent opacity={0.5} toneMapped={false} depthWrite={false} />
       </lineSegments>
       {hovered && hoveredPos && (

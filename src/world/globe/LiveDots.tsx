@@ -28,6 +28,18 @@ const PULSE_KEYFRAMES = `@keyframes globe-live-dot-pulse{0%,100%{transform:scale
 .globe-live-dot-ring{animation:globe-live-dot-pulse 2.4s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){.globe-live-dot-ring{animation:none;opacity:0.6}}`;
 
+// Pune declutter (P4, wave 9): this is an <Html> portal, not a WebGL mesh,
+// so it never itself z-fights (drei's occlude does its own per-frame
+// raycast, not a depth-buffer write) - but it still keeps a distinct,
+// deliberate lift so its occlusion probe point can't land exactly inside
+// one of the five WebGL Pune layers. Highest of the whole stack: the six
+// files this wave's declutter touches use 0.008 / 0.016 / 0.024 / 0.032 /
+// 0.04 (ReachColumns.tsx / layers/reachAppRing.tsx / layers/familyCiRing.tsx
+// / layers/hazardHalos.tsx / layers/TogetherLayer.tsx, in that order) - this
+// is the sixth, above all of them, since a live "someone here now" dot is
+// the layer this stack most wants to read as unmissable.
+export const SURFACE_LIFT = 0.048;
+
 export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObject<Object3D>[] }) {
   const counts = usePresenceGeo();
   if (tier !== 1) return null;
@@ -38,7 +50,7 @@ export function LiveDots({ tier, occlude }: { tier: 1 | 2 | 3; occlude?: RefObje
         const centroid = centroidByCc.get(cc);
         if (!centroid) return null;
         const p = latLonToXyz(centroid.lat, centroid.lon);
-        const r = GLOBE_RADIUS + 0.03;
+        const r = GLOBE_RADIUS + SURFACE_LIFT;
         const position: [number, number, number] = [p.x * r, p.y * r, p.z * r];
         return (
           <Html key={cc} position={position} center distanceFactor={10} occlude={occlude} style={{ pointerEvents: "none" }}>
