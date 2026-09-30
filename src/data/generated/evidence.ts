@@ -409,6 +409,15 @@ export const generatorNodes: GeneratorNode[] = [
     "invocation": "node scripts/gen-store-flavours.mjs"
   },
   {
+    "id": "maps-places",
+    "script": "gen-maps-places.mjs",
+    "kind": "private-env",
+    "automated": false,
+    "stages": [],
+    "slaDays": null,
+    "invocation": "node scripts/gen-maps-places.mjs"
+  },
+  {
     "id": "excelsior",
     "script": "gen-excelsior.mjs",
     "kind": "network",
