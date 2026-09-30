@@ -69,3 +69,18 @@ describe("W11B panel regressions", () => {
     expect(panel).not.toContain('truncate');
   });
 });
+
+it("keys include X-ray and both search shortcuts", () => {
+  const previous = useGlobe.getState().panelOpen;
+  useGlobe.setState({ panelOpen: true });
+  const html = renderToStaticMarkup(<LayerPanel tier={1} />);
+  useGlobe.setState({ panelOpen: previous });
+  expect(html).toContain("X X-ray");
+  expect(html).toContain("/ or Cmd-K search");
+});
+
+it("enabled eclipse and daylight rows explain both rendered bands and the shadow point", () => {
+  const layers = { ...useGlobe.getState().layers, eclipse: true, daylight: true };
+  const html = renderToStaticMarkup(<LayerRows layers={layers} status={{}} toggleLayer={() => {}} />);
+  for (const label of ["Umbra / antumbra track", "Live shadow point", "Golden-hour band", "Waking-cities band"]) expect(html).toContain(label);
+});

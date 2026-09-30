@@ -1,3 +1,4 @@
+import { ADSB_URL } from "../../src/world/globe/layers/feedUrls.js";
 // `.js` extension on purpose: Vercel's @vercel/node builder type-checks this
 // file with its own tsconfig (moduleResolution "node16"), which requires
 // explicit extensions in ESM imports — same as weather-handler.ts.
@@ -8,7 +9,6 @@ import { lookAngles, SANGAM } from "../../src/lib/lookAngles.js";
 // One unified route (master-plan.md#M11): open-data's governor and strict
 // filters, plus living-ledger's server-side az/el from the Sangam. No global
 // aircraft anywhere — this is the local Pune cluster only.
-const ADSB_URL = "https://api.adsb.lol/v2/point/18.5316/73.8603/60";
 const USER_AGENT = "siddharth-pandalai.vercel.app portfolio";
 const FETCH_TIMEOUT_MS = 4_000;
 const RADIUS_NM = 60;

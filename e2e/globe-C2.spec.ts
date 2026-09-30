@@ -67,13 +67,13 @@ async function seedIntroSeen(page: Page) {
   });
 }
 
-async function gotoLiveGlobe(page: Page) {
+async function gotoLiveGlobe(page: Page, path = "/globe") {
   await page.setViewportSize({ width: 1440, height: 900 });
   await seedIntroSeen(page);
   await withApiFixtures(page);
   await withWholeGlobeFixtures(page);
   await page.clock.setFixedTime(new Date("2026-09-27T12:27:00+05:30"));
-  await page.goto("/globe");
+  await page.goto(path);
   await waitForHydration(page);
   await expect(page.locator("[data-earth-style]")).toHaveAttribute("data-earth-style", "imagery", { timeout: 30_000 });
 }
@@ -86,7 +86,15 @@ function parseStatValue(gridText: string, label: string): number {
 
 test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card; toggling off removes both and draw calls drop", async ({ page }) => {
   const wmts = withWmtsFixtures(page);
-  await gotoLiveGlobe(page);
+  // Compare the same stationary scene: late live-feed glyphs and moving
+  // tile generations otherwise add calls between the on/off snapshots.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await gotoLiveGlobe(page, "/globe?ly=");
+  const layers = page.locator("[data-globe-layer-panel] ul button[aria-pressed]");
+  await expect(layers).not.toHaveCount(0);
+  for (const layer of await layers.all()) await expect(layer).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("[data-globe-composer]")).toHaveCount(1);
+  await expect(page.locator("[data-cloud-shell]")).toHaveAttribute("data-cloud-shell", "ready");
 
   const toggle = page.locator("[data-xray-toggle]");
   await expect(toggle).toBeVisible();
@@ -108,7 +116,24 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
   await expect
     .poll(async () => (await page.locator("[data-xray-legend]").innerText()).includes("no tiles drawn"), { timeout: 15_000 })
     .toBe(false);
+  // Every requested base tile must have reached the drawn set, including
+  // bitmap decoding and the renderer's crossfade, before measuring calls.
+  await expect.poll(async () => {
+    const text = await page.locator("[data-xray-legend]").innerText();
+    const drawn = Number(text.match(/quadtree, (\d+)/)?.[1] ?? 0);
+    return drawn > 0 && drawn === wmts.count;
+  }).toBe(true);
 
+  // Tiles settle independently of XRayTiles' first renderer.info sample.
+  // Wait for that published sample, then read the grid as one snapshot.
+  await expect.poll(async () => {
+    const text = await page.locator("[data-xray-stats]").innerText();
+    return ["draw calls", "triangles", "geometries"].every((label) => parseStatValue(text, label) > 0);
+  }).toBe(true);
+  await expect.poll(async () => {
+    const text = await page.locator("[data-xray-stats]").innerText();
+    return await page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.()) === parseStatValue(text, "draw calls");
+  }).toBe(true);
   const statsText = await page.locator("[data-xray-stats]").innerText();
   const drawCallsOn = parseStatValue(statsText, "draw calls");
   const triangles = parseStatValue(statsText, "triangles");

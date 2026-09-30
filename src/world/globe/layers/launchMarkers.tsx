@@ -1,3 +1,4 @@
+import { LAUNCH, LAUNCH_BEAM } from "./layerKeys.ts";
 // LANE L7 (live earth events), task 5: upcoming launch pads as a small
 // upward chevron, with a thin vertical beam for anything lifting off inside
 // 24h. Two InstancedMeshes (task 8) — chevrons and beams are a different
@@ -21,8 +22,8 @@ const BEAM_RADIUS_WORLD = 0.006;
 const BEAM_HEIGHT = 0.35;
 const MAX_LAUNCHES = 16;
 
-const CHEVRON_COLOR = new THREE.Color("#c9d4d0"); // ambient, matches OrbitLayer/LocalTraffic's neutral hex
-const BEAM_COLOR = new THREE.Color("#5ee6ff"); // --color-probe: a beam IS a live claim ("launching within 24h")
+const CHEVRON_COLOR = new THREE.Color(LAUNCH); // ambient, matches OrbitLayer/LocalTraffic's neutral hex
+const BEAM_COLOR = new THREE.Color(LAUNCH_BEAM); // --color-probe: a beam IS a live claim ("launching within 24h")
 
 const dummy = new THREE.Object3D();
 const AXIS_Y = new THREE.Vector3(0, 1, 0);

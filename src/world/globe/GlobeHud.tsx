@@ -20,9 +20,6 @@ const DaylightReadout = lazy(() => import("./ui/DaylightReadout.tsx"));
 // above — this chunk must never join the eager "Globe" shell, and its own
 // live-signal fetches have no business running on the server.
 const SpaceWeather = lazy(() => import("./ui/SpaceWeather.tsx"));
-// LANE C2 (X-ray mode): same reasoning -- only fetched once a visitor
-// actually turns X-ray on (the `xrayOn &&` guard below), never eagerly.
-const XRay = lazy(() => import("./ui/XRay.tsx"));
 
 // Restated from SceneActivity.tsx's own useReducedMotion rather than
 // imported: that file also exports SceneActivity, which statically imports
@@ -122,13 +119,8 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><DaylightReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><SpaceWeather /></Suspense></ClientOnly>}
-      {/* LANE C2 (X-ray mode): a toggle reachable at every breakpoint (this
-          row is GlobeHud's own flat pill run, laid out by Globe.tsx's shared
-          topbar at both sm+ and phone widths -- this lane doesn't own
-          ui/LayerPanel.tsx's phone Layers sheet, so the toggle lives here
-          instead; see this lane's own report). */}
+      {/* The toggle stays here; LayerPanel owns the readout at every width. */}
       {hasWebGL && (
-        <>
           <button
             type="button"
             onClick={() => setXrayEnabled(!xrayOn)}
@@ -139,14 +131,6 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           >
             X
           </button>
-          {xrayOn && (
-            <ClientOnly fallback={null}>
-              <Suspense fallback={null}>
-                <XRay tier={tier} />
-              </Suspense>
-            </ClientOnly>
-          )}
-        </>
       )}
       {/* §2, Auto-rotate row: a real toggle, not just a passive fact — and
           shown at every breakpoint (the drag hint above stays sm:-only, but

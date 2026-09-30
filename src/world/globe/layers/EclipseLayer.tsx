@@ -21,9 +21,10 @@ import { nextGlobalEclipses, shadowAxisPoint, umbraTrack, type GlobalEclipse } f
 const DAY_MS = 86_400_000;
 const SEARCH_LOOKBACK_MS = 2 * DAY_MS;
 
-const UMBRA_DARK = new THREE.Color("#12121a");
-const BAND_CORE = new THREE.Color("#2a2440");
-const BAND_HALO = new THREE.Color("#3a3458");
+import { ECLIPSE_CORE, ECLIPSE_HALO, ECLIPSE_SHADOW, ECLIPSE_CORE_RADIUS, ECLIPSE_HALO_RADIUS, ECLIPSE_GSFC_NOTE } from "./layerKeys.ts";
+const UMBRA_DARK = new THREE.Color(ECLIPSE_SHADOW);
+const BAND_CORE = new THREE.Color(ECLIPSE_CORE);
+const BAND_HALO = new THREE.Color(ECLIPSE_HALO);
 
 function kindLabel(kind: GlobalEclipse["kind"]): string {
   return kind === "total" ? "Total" : kind === "annular" ? "Annular" : "Partial";
@@ -60,8 +61,8 @@ export default function EclipseLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
     });
     const curve = new THREE.CatmullRomCurve3(pts);
     return {
-      core: new THREE.TubeGeometry(curve, Math.max(pts.length, 8), 0.05, 10, false),
-      halo: new THREE.TubeGeometry(curve, Math.max(pts.length, 8), 0.12, 10, false),
+      core: new THREE.TubeGeometry(curve, Math.max(pts.length, 8), ECLIPSE_CORE_RADIUS, 10, false),
+      halo: new THREE.TubeGeometry(curve, Math.max(pts.length, 8), ECLIPSE_HALO_RADIUS, 10, false),
     };
   }, [track]);
 
@@ -118,7 +119,7 @@ export default function EclipseLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
           ? { label: "Ground point", value: `${primary.latitude.toFixed(2)}, ${primary.longitude.toFixed(2)}` }
           : { label: "Ground point", value: "none (partial eclipse everywhere)" },
       ],
-      source: "computed with astronomy-engine (MIT); greatest-eclipse point checked against NASA GSFC to within 0.5 deg",
+      source: ECLIPSE_GSFC_NOTE,
       live: true,
       focus: primary.latitude !== undefined && primary.longitude !== undefined ? { kind: "latlon", lat: primary.latitude, lon: primary.longitude } : undefined,
     });
@@ -142,10 +143,10 @@ export default function EclipseLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
       {curveGeometry && tier !== 3 && (
         <>
           <mesh geometry={curveGeometry.halo} onClick={(e) => { e.stopPropagation(); selectPath(); }}>
-            <meshBasicMaterial color={BAND_HALO} transparent opacity={0.22} side={THREE.DoubleSide} depthWrite={false} />
+            <meshBasicMaterial color={BAND_HALO} transparent opacity={0.3} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
           <mesh geometry={curveGeometry.core} onClick={(e) => { e.stopPropagation(); selectPath(); }}>
-            <meshBasicMaterial color={BAND_CORE} transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
+            <meshBasicMaterial color={BAND_CORE} transparent opacity={0.8} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
         </>
       )}

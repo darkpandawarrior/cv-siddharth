@@ -1,3 +1,4 @@
+import { EMBER, VOLCANO, STORM } from "./layerKeys.ts";
 // LANE L7 (live earth events), task 2: NASA EONET's three categories this
 // lane draws, one InstancedMesh per glyph kind (task 8) — wildfires as
 // ember glyphs, volcanoes as small cones, severe storms as a ring standing
@@ -26,9 +27,9 @@ const MAX_PER_KIND = 80;
 // Natural-phenomenon colours, not this app's brand tokens (globe-lanes.md's
 // "ambient never in brand colours" — these are what the thing IS, same
 // reasoning as EarthDots' literal hex).
-const EMBER_COLOR = new THREE.Color("#ff7a3d");
-const VOLCANO_COLOR = new THREE.Color("#b3452e");
-const STORM_COLOR = new THREE.Color("#8ecbff");
+const EMBER_COLOR = new THREE.Color(EMBER);
+const VOLCANO_COLOR = new THREE.Color(VOLCANO);
+const STORM_COLOR = new THREE.Color(STORM);
 const BACKGROUND = new THREE.Color("#05070a"); // see quakeGlyphs.tsx's own note on this fade trick
 
 const dummy = new THREE.Object3D();

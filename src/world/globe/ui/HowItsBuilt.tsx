@@ -81,11 +81,11 @@ function ProvenanceRow({ p }: { p: Provenance }) {
   return (
     <div className="mb-1.5 rounded-lg border border-line/60 p-2">
       <p className="text-zinc-300">{p.label}</p>
-      <p className="truncate text-muted" title={p.endpoint}>
+      <p className="break-all text-muted" title={p.endpoint}>
         {p.endpoint}
       </p>
       {p.fetchedAt && <p className="text-muted">fetched {p.fetchedAt}</p>}
-      <p className="text-muted">{p.licence}</p>
+      <p className="text-muted">{p.licenceUrl ? <a href={p.licenceUrl} target="_blank" rel="noopener noreferrer" className="underline">{p.licence}</a> : p.licence}</p>
     </div>
   );
 }
@@ -96,7 +96,8 @@ export default function HowItsBuilt() {
     <div data-how-its-built className="mt-2 max-h-64 overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300">
       {entries.map((e) => (
         <section key={e.id} className="mb-3 last:mb-0">
-          <h4 className="mb-1 truncate text-zinc-100">{e.title}</h4>
+          <h4 className="mb-1 break-words text-zinc-100">{e.title}</h4>
+          {e.description && <p className="mb-2 break-words">{e.description}</p>}
           {e.shaders.map((s, i) => (
             <ShaderBlock key={i} name={s.name} code={s.code} />
           ))}

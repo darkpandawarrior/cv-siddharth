@@ -1,3 +1,4 @@
+import { AURORA_RGB } from "./layerKeys.ts";
 // LANE L7 (live earth events), task 4: NOAA SWPC's OVATION aurora
 // probability grid as a soft glowing band, masked to the night side by the
 // real subsolar point (layers/sun.ts, this app's own sun math — no
@@ -36,7 +37,7 @@ void main() {
   // returned 0 everywhere) then inverted, not smoothstep(0.05,-0.15,x).
   float night = 1.0 - smoothstep(-0.15, 0.05, dot(normalize(vW), uSun));
   float shimmer = 1.0 + uShimmer * 0.15 * sin(uTime * 0.6 + lon * 0.05);
-  vec3 color = vec3(0.25, 0.95, 0.55) * 0.55 + vec3(0.4, 0.55, 1.0) * 0.45;
+  vec3 color = vec3(${AURORA_RGB.join(",")});
   float a = prob * night * shimmer;
   gl_FragColor = vec4(color * a, a * 0.9);
 }`;

@@ -3,7 +3,7 @@
 // layers/XRayTiles.tsx (the scene half, drawing the tile outlines this
 // legend counts). Everything here is read from what is already loaded and
 // already drawn: no new fetch, no invented numbers.
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { simTime, useGlobe, type StatusKey } from "../globeStore.ts";
 import { catalogDateLabel, GIBS_CATALOG } from "../layers/gibsCatalog.ts";
 import { drawnTileSet } from "../layers/TileLayer.tsx";
@@ -35,6 +35,8 @@ function summarizeDrawnTiles(): { total: number; byLevel: LevelCount[] } {
 }
 
 export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => panelRef.current?.scrollIntoView({ block: "nearest" }), []);
   const [stats, setStats] = useState<XrayStats>(getXrayStats);
   const [tiles, setTiles] = useState(summarizeDrawnTiles);
   const imagery = useGlobe((s) => s.imagery);
@@ -56,14 +58,15 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
 
   return (
     <div
+      ref={panelRef}
       data-xray-panel
-      className="pointer-events-none flex w-64 flex-col gap-2.5 rounded-lg glass-panel p-3 font-mono text-xs leading-snug text-zinc-300"
+      className="pointer-events-auto mb-3 flex max-h-[min(18rem,calc(var(--globe-sheet-max-h,70vh)-10rem))] w-full min-w-0 flex-col gap-2 overflow-y-auto rounded-lg border border-line p-2 font-mono break-words text-xs leading-4 text-zinc-300 sm:max-h-none sm:overflow-visible"
     >
       <p className="text-zinc-400">
-        X-ray mode <span aria-hidden>&middot;</span> read-only, reflects what is actually drawn
+        X-ray: drawn scene (read only)
       </p>
 
-      <div data-xray-stats className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+      <div data-xray-stats className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-2 gap-y-0.5 sm:grid-cols-2">
         <span>draw calls</span>
         <span>{stats.drawCalls}</span>
         <span>triangles</span>
@@ -81,19 +84,19 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
         {tiles.byLevel.length === 0 ? (
           <p>no tiles drawn</p>
         ) : (
-          <ul>
+          <ul className="flex flex-wrap gap-x-2">
             {tiles.byLevel.map(({ level, count }) => (
-              <li key={level} className="flex items-center gap-1.5">
+              <li key={level} aria-label={`level ${level}, ${count} tiles`} className="flex items-center gap-1.5">
                 <span aria-hidden className="h-2 w-2 rounded-sm" style={{ background: levelColorHex(level) }} />
-                level {level}, {count}
+                L{level}: {count}
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div data-xray-imagery>
-        <p className="text-zinc-400">imagery stack</p>
+      <details data-xray-imagery>
+        <summary className="min-h-11 cursor-pointer py-2 text-zinc-400">imagery stack</summary>
         <ul>
           {stack.map(({ role, id, key }) => {
             const entry = GIBS_CATALOG[id];
@@ -111,9 +114,7 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
             );
           })}
         </ul>
-      </div>
-
-      <div data-xray-tier>
+      <div data-xray-tier className="mt-2">
         <p className="text-zinc-400">
           tier {tier}, {TIER_WHY[tier]}
         </p>
@@ -121,6 +122,7 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
           dpr max {GLOBE_DPR_MAX[tier]}, ground segments {budget.groundSegments.join("/")}
         </p>
       </div>
+      </details>
     </div>
   );
 }

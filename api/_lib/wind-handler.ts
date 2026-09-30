@@ -1,3 +1,4 @@
+import { FORECAST_URL } from "../../src/world/globe/layers/feedUrls.js";
 // `.js` extension on purpose: Vercel's @vercel/node builder type-checks this
 // file with its own tsconfig (moduleResolution "node16"), which requires
 // explicit extensions in ESM imports — same as tle-handler.ts.
@@ -18,7 +19,6 @@ import { governed, type GovernorOptions } from "./upstream.js";
 //  - the hard cap is 1000 locations per request; this grid asks for 648.
 //  - the exact 10-degree grid below (18 lat rows x 36 lon columns) returned
 //    200 with a ~250 KB raw JSON body for wind_speed_10m + wind_direction_10m.
-const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 const USER_AGENT = "siddharth-pandalai.vercel.app portfolio";
 const FETCH_TIMEOUT_MS = 12_000; // a 648-location POST measured 2.5-20s upstream, well above the other routes' single-point calls
 const ATTRIBUTION = ["Wind: Open-Meteo.com (CC BY 4.0)"];
