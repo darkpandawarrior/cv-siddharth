@@ -6,7 +6,7 @@ import { formatTimeAgo } from "../layers/quake.ts";
 import { parseQuakes } from "../layers/quake.ts";
 import { parseEonetEvents } from "../layers/eonet.ts";
 import { parseVolcanoResponse } from "../layers/volcano.ts";
-import { parseLaunches, formatCountdown } from "../layers/launches.ts";
+import { parseLaunches, formatCountdown, getCachedLaunches } from "../layers/launches.ts";
 import { parseLatestKp } from "../layers/aurora.ts";
 import { feedItemSelection } from "./feedItemSelection.ts";
 export const briefingNumber = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -22,6 +22,10 @@ const DAY = 86_400_000;
 const clean = (text: string) => text.replaceAll("—", ",");
 const located = (lat: number, lon: number) => Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lon) && Math.abs(lon) <= 180;
 const inWindow = (at: number, now: number, age: number) => Number.isFinite(at) && at <= now && now - at <= age;
+/** Read HazardLayer's fresh session cache; opening this surface never fetches. */
+export function briefingLaunchSnapshot(nowMs: number, storage: Pick<Storage, "getItem" | "setItem"> | undefined, failed = false): LiveSignalSnapshot<unknown> {
+  return { data: storage && !failed ? getCachedLaunches(storage, nowMs) : null, error: failed, nextPollAt: null };
+}
 function missing(s: LiveSignalSnapshot<unknown>, rows: boolean, window: string): string {
   if (s.error) return "Latest request failed";
   if (s.data === null) return "Waiting for the shared feed";
@@ -68,8 +72,8 @@ export function buildBriefing(input: BriefingInput): { cards: BriefingCard[]; un
   else unavailable.push({ source: "NOAA SWPC", reason: missing(input.kp, kp !== null, "6 h") });
   if (input.iss) add({ id: input.iss.id, kind: "satellite", title: "ISS orbital position", detail: "Computed from CelesTrak TLE using SGP4", whenMs: nowMs, source: input.iss.source, live: false, focus: input.iss.focus, severity: "info" }, "computed", { ...input.iss, live: false });
   else unavailable.push({ source: "CelesTrak ISS", reason: input.satelliteReason, satellites: true });
-  const launches = input.launches.error ? [] : parseLaunches(input.launches.data, nowMs) ?? [];
-  const launch = launches.find(l => located(l.lat, l.lon));
+  const launches = input.launches.error ? [] : Array.isArray(input.launches.data) ? input.launches.data as import("../layers/launches.ts").Launch[] : parseLaunches(input.launches.data, nowMs) ?? [];
+  const launch = launches.find(l => l.netMs > nowMs && located(l.lat, l.lon));
   if (launch) add({ id: `launch:${launch.id}`, kind: "launch", title: launch.name, detail: `${launch.provider} · ${launch.padName} · ${formatCountdown(nowMs, launch.netMs)}`, whenMs: launch.netMs, source: "Launch Library 2", live: false, focus: { kind: "latlon", lat: launch.lat, lon: launch.lon }, severity: "info" }, "scheduled", {
     id: `launch-${launch.id}`, kind: "launch", title: launch.name, source: "Launch Library 2, cached 30 min", live: false, focus: { kind: "latlon", lat: launch.lat, lon: launch.lon },
     rows: [{ label: "Provider", value: launch.provider }, { label: "NET", value: new Date(launch.netMs).toISOString() }, { label: "Countdown", value: formatCountdown(nowMs, launch.netMs) }, { label: "Pad", value: `${launch.padName}${launch.locationName ? `, ${launch.locationName}` : ""}` }],

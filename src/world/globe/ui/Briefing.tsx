@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getLiveSignalSnapshot, subscribeLiveSignal } from "../../../lib/useLiveSignal.ts";
+import { getLiveSignalSnapshot } from "../../../lib/useLiveSignal.ts";
 import { useGlobe } from "../globeStore.ts";
-import { QUAKES_URL, EONET_URL, KP_URL, LAUNCHES_URL } from "../layers/feedUrls.ts";
+import { QUAKES_URL, EONET_URL, KP_URL } from "../layers/feedUrls.ts";
 import { issCandidate } from "./surpriseMe.ts";
 import { propagateState, type TleObject } from "../../../lib/satelliteEcef.ts";
-import { satelliteBriefingSelection } from "./feedItemSelection.ts";
-import { buildBriefing } from "./briefing.ts";
+import { tleEpoch } from "../../../lib/satellites.ts";
+import { inspectBriefingSatellite, satelliteBriefingSelection } from "./feedItemSelection.ts";
+import { briefingLaunchSnapshot, buildBriefing } from "./briefing.ts";
 
 const buttonClass = "min-h-11 min-w-11 rounded-full border border-line px-3 text-sm text-zinc-100 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
@@ -30,12 +31,11 @@ export default function Briefing() {
   }, []);
   useEffect(() => {
     if (!open) return;
-    const unsubscribe = subscribeLiveSignal(LAUNCHES_URL, 30 * 60_000, () => setNowMs(Date.now()));
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
     closeButton.current?.focus();
     const measure = () => { const box = trigger.current?.getBoundingClientRect(); const topbar = trigger.current?.closest("[data-globe-topbar]")?.getBoundingClientRect(); if (box) setTriggerBox({ right: box.right, bottom: topbar?.bottom ?? box.bottom }); };
     window.addEventListener("resize", measure);
-    return () => { clearInterval(timer); unsubscribe(); window.removeEventListener("resize", measure); };
+    return () => { clearInterval(timer); window.removeEventListener("resize", measure); };
   }, [open]);
   const close = () => {
     setDesktopOpen(false);
@@ -58,14 +58,15 @@ export default function Briefing() {
 
   const snapshot = (url: string) => getLiveSignalSnapshot<unknown>(url);
   const tle = getLiveSignalSnapshot<{ connected: boolean; epochNewest: string | null; objects: TleObject[] }>("/api/tle");
-  const epoch = Date.parse(tle.data?.epochNewest ?? "");
+  const issObject = tle.data?.objects?.find(object => object.norad === "25544");
+  const epoch = issObject ? tleEpoch(issObject.l1).getTime() : NaN;
   const satelliteReason = !layers.satellites ? "Satellites layer is off" : offset !== 0 ? "Position unavailable during time travel" : tle.error || status.satellites?.state === "failed" ? "Latest TLE request failed" : !Number.isFinite(epoch) || nowMs - epoch > 7 * 86_400_000 || epoch > nowMs ? "TLE epoch missing or stale (7 d limit)" : "Waiting for a registered ISS position";
   const iss = layers.satellites && offset === 0 && !tle.error && tle.data?.connected && Number.isFinite(epoch) && epoch <= nowMs && nowMs - epoch <= 7 * 86_400_000 ? issCandidate()?.selection ?? null : null;
-  const issObject = tle.data?.objects?.find(object => object.norad === "25544");
   const issState = issObject && iss ? propagateState(issObject, new Date(nowMs)) : null;
   const issSelection = iss && issObject && issState ? satelliteBriefingSelection(issObject, issState) : null;
-  if (issSelection) issSelection.source += ` · TLE epoch ${new Date(epoch).toISOString()}`;
-  const result = buildBriefing({ nowMs, quakes: snapshot(QUAKES_URL), eonet: snapshot(EONET_URL), gvp: snapshot("/api/volcanoes"), kp: snapshot(KP_URL), iss: issSelection, satelliteReason: iss && !issState ? "ISS element is stale or cannot be propagated" : satelliteReason, launches: snapshot(LAUNCHES_URL) });
+  let storage: Storage | undefined;
+  try { storage = window.sessionStorage; } catch { /* Storage can be disabled. */ }
+  const result = buildBriefing({ nowMs, quakes: snapshot(QUAKES_URL), eonet: snapshot(EONET_URL), gvp: snapshot("/api/volcanoes"), kp: snapshot(KP_URL), iss: issSelection, satelliteReason: iss && !issState ? "ISS element is stale or cannot be propagated" : satelliteReason, launches: briefingLaunchSnapshot(nowMs, storage, status.hazards?.detail?.includes("Launch Library unreachable")) });
   const panel = open ? (
     <section id="globe-briefing" data-globe-briefing role="region" aria-labelledby="globe-brief-title" style={phone ? { maxHeight: `min(70svh, ${Math.max(44, window.innerHeight - (triggerBox?.bottom ?? 200) - 16)}px)` } : { top: (triggerBox?.bottom ?? 140) + 8, left: Math.max(16, Math.min((triggerBox?.right ?? window.innerWidth - 16) - 320, window.innerWidth - 336)) }} className={phone ? "pointer-events-auto fixed inset-x-0 bottom-0 z-50 flex max-h-[70svh] flex-col rounded-t-2xl glass-panel text-zinc-200" : "pointer-events-auto fixed z-40 flex max-h-[65vh] w-80 flex-col rounded-2xl glass-panel text-zinc-200"}>
       <header className="flex shrink-0 items-center justify-between gap-2 border-b border-line p-3">
@@ -84,7 +85,7 @@ export default function Briefing() {
             <p className="mt-1 text-xs font-mono text-muted">{kind === "scheduled" ? "Scheduled" : kind === "computed" ? "Computed at" : "Observed / reported"} <time dateTime={new Date(item.whenMs).toISOString()}>{new Date(item.whenMs).toLocaleString("en-IN", { timeZone: "UTC", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false })} UTC</time></p>
             <div className="mt-2 flex flex-wrap gap-2">
               {selection.focus && <button type="button" className={buttonClass} onClick={() => { const s = useGlobe.getState(); s.setView("orbit"); s.flyTo(selection.focus!); close(); }}>Fly to<span className="sr-only"> {item.title}</span></button>}
-              <button type="button" className={buttonClass} onClick={() => { useGlobe.getState().select(selection); close(); }}>Inspect<span className="sr-only"> {item.title}</span></button>
+              <button type="button" className={buttonClass} onClick={() => { if (selection.id === "sat:25544" && issObject) void inspectBriefingSatellite(selection, issObject, new Date(nowMs)); else useGlobe.getState().select(selection); close(); }}>Inspect<span className="sr-only"> {item.title}</span></button>
             </div>
           </li>)}
         </ol>

@@ -1,9 +1,31 @@
-import { expect, it } from "vitest";
-import { buildBriefing, briefingNumber, type BriefingInput } from "./briefing.ts";
+import { expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { buildBriefing, briefingLaunchSnapshot, briefingNumber, type BriefingInput } from "./briefing.ts";
+import { LAUNCH_CACHE_TTL_MS, parseLaunches, setCachedLaunches } from "../layers/launches.ts";
 const now = Date.parse("2026-09-30T12:00:00Z");
 const snap = (data: unknown = null, error = false) => ({ data, error, nextPollAt: null });
 const quake = (id: string, mag: number, at = now - 1000) => ({ id, properties: { mag, place: id, time: at }, geometry: { coordinates: [70, 20, 10] } });
 const input = (): BriefingInput => ({ nowMs: now, quakes: snap(), eonet: snap(), gvp: snap(), kp: snap(), iss: null, satelliteReason: "Satellites layer is off", launches: snap() });
+it("opening and reopening reuse HazardLayer's fresh launch cache without requests", () => {
+  const data = new Map<string, string>();
+  const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); } };
+  const launches = parseLaunches({ results: [{ id: "next", name: "Next launch", net: new Date(now + 3600000).toISOString(), pad: { latitude: "10", longitude: "20" } }] }, now)!;
+  setCachedLaunches(storage, launches, now);
+  const fetchSpy = vi.spyOn(globalThis, "fetch");
+  try {
+    for (const at of [now, now + 1000]) {
+      const cards = buildBriefing({ ...input(), nowMs: at, launches: briefingLaunchSnapshot(at, storage) }).cards;
+      expect(cards.map(card => card.item.id)).toEqual(["launch:next"]);
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(briefingLaunchSnapshot(now + LAUNCH_CACHE_TTL_MS + 1, storage).data).toBeNull();
+    expect(briefingLaunchSnapshot(now, storage, true)).toMatchObject({ data: null, error: true });
+    expect(briefingLaunchSnapshot(now, undefined).data).toBeNull();
+    // An accidental subscriber would open another provider request on mount.
+    const surface = readFileSync(new URL("./Briefing.tsx", import.meta.url), "utf8");
+    expect(surface).not.toMatch(/subscribeLiveSignal|useLiveSignal\s*\(|\bfetch\s*\(/);
+  } finally { fetchSpy.mockRestore(); }
+});
 it("discloses five slots in a fixed order with source, instant, kind and en-IN numbers", () => {
   const i = input();
   i.quakes = snap({ features: [quake("smaller", 3), quake("strongest", 6), quake("stale", 9, now - 86400001), quake("future", 10, now + 1)] });
