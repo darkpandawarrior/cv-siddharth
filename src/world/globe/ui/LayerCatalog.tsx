@@ -27,7 +27,7 @@ function FrameDetails({ entry, health, now, realNow }: { entry: GibsCatalogEntry
   return <>
     <p className="break-words text-xs font-mono text-muted">{entry.attribution}{entry.legend ? ` · ${entry.legend.unit}` : ""}</p>
     {health?.state === "failed" ? (
-      <p role="status" className="mt-1 break-words text-xs font-mono text-[var(--color-warn)]">{health.detail ?? "feed unavailable"}</p>
+      <p role="status" className="mt-1 break-words text-xs font-mono text-warn">{health.detail ?? "feed unavailable"}</p>
     ) : health?.state === "live" ? (
       <>
         <p className="mt-1 break-words text-xs font-mono text-muted">
