@@ -160,6 +160,10 @@ test("clicking a reticle flies the camera to look where that explorer looks", as
   await page.getByRole("button", { name: "Pause the globe's ambient rotation" }).click();
   await expect(page.locator("[data-autorotate]")).toHaveAttribute("data-autorotate", "off");
 
+  // The first peer can project behind the search controls. Orbit it into
+  // the exposed canvas before targeting its actual rendered position.
+  await dragOrbit(page, canvas);
+
   // OrbitControls' own enableDamping (GlobeScene.tsx, dampingFactor 0.08)
   // keeps bleeding off the autoRotate spin for a few more rendered frames
   // after autoRotate itself flips off, so the reticle can still be sliding
@@ -175,6 +179,7 @@ test("clicking a reticle flies the camera to look where that explorer looks", as
   // paused and proven stable above, so there is nothing left to wait on.
   const box = await canvas.boundingBox();
   if (!box) throw new Error("canvas has no bounding box");
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x: box.x + x, y: box.y + y })).toBe("CANVAS");
   await page.mouse.click(box.x + x, box.y + y);
 
   // A click-to-fly in orbit view re-arms CameraDirector's flight without
