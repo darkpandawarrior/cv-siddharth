@@ -100,9 +100,8 @@ describe("mapsPlaces", () => {
 
   it("a residential review (housing society, co-op/CHS, residency, apartments, society) never publishes a name", () => {
     for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(RESIDENTIAL);
-    const dump = JSON.stringify({ mapsPlaces, mapsPhotos, mapsReviews, mapsByYear, mapsTotals });
-    expect(dump).not.toContain("Aum Residency Co-op Housing Society");
-    expect(dump).not.toContain("Shubhada CHS Ltd.");
+    // Never name the excluded buildings here: this file is public, and naming them to assert
+    // their absence would publish exactly what the rule protects.
   });
 
   it("no photo anchors a pin to a residential review (it is never in mapsReviews)", () => {
