@@ -105,6 +105,13 @@ describe("mapsPlaces", () => {
     }
   });
 
+  // The above only proves consistency against the *published* reviews. The
+  // real 300m-from-a-home exclusion (a photo must not get an exact pin even
+  // when a public review is ALSO nearby) needs the residential coordinates
+  // the generator deliberately never exports -- proved with synthetic
+  // fixtures against the generator's own pure functions instead, in
+  // scripts/gen-maps-places.test.ts.
+
   it("mapsTotals.photoViews matches the expected sanity total", () => {
     expect(mapsTotals.photoViews).toBe(740119);
   });
