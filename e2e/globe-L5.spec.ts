@@ -184,6 +184,10 @@ test("following the ISS works once an entity is registered (stand-in for lane L3
   const panel = page.locator("[data-globe-layer-panel]");
   const followBtn = panel.getByRole("button", { name: /Follow the ISS/ });
   await expect(followBtn).toBeDisabled();
+  // The setter exists at module load, before the scene's first frame.
+  // Wait out render bootstrap before starting the panel's 2s poll budget.
+  await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+  await expect(canvas).toHaveAttribute("data-camera-flying", "false");
 
   // LayerPanel.tsx's own e2e seam: registers a stand-in entity so this test
   // does not depend on lane L3's SatelliteLayer being present in this
@@ -196,5 +200,5 @@ test("following the ISS works once an entity is registered (stand-in for lane L3
   await expect(followBtn).toBeEnabled({ timeout: 2_000 });
 
   await followBtn.click();
-  await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 5_000 }).toBe("follow");
+  await expect(canvas).toHaveAttribute("data-camera-view", "follow", { timeout: 5_000 });
 });
