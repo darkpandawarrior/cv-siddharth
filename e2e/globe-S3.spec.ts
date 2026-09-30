@@ -89,10 +89,20 @@ test("hovering a landlocked point shows a graceful \"no marine data here\" state
 });
 
 test("moving across many cells fast still fires at most one Open-Meteo request per 1.5s", async ({ page }) => {
-  const requestTimes: number[] = [];
-  await page.route("https://marine-api.open-meteo.com/**", (route) => { requestTimes.push(Date.now()); route.fulfill({ json: MARINE_READING }); });
-  await page.route("https://air-quality-api.open-meteo.com/**", (route) => { requestTimes.push(Date.now()); route.fulfill({ json: AQ_READING }); });
-  await page.route("https://flood-api.open-meteo.com/**", (route) => { requestTimes.push(Date.now()); route.fulfill({ json: FLOOD_READING }); });
+  // Route callbacks run in Node after IPC delivery; measure at fetch fire time
+  // in the browser so scheduling delay cannot compress two request timestamps.
+  await page.addInitScript(() => {
+    const times: number[] = [];
+    (window as unknown as { __s3RequestTimes: number[] }).__s3RequestTimes = times;
+    const originalFetch = window.fetch;
+    window.fetch = (...args) => {
+      if (/^https:\/\/(marine|air-quality|flood)-api\.open-meteo\.com\//.test(String(args[0]))) times.push(performance.now());
+      return originalFetch(...args);
+    };
+  });
+  await page.route("https://marine-api.open-meteo.com/**", (route) => route.fulfill({ json: MARINE_READING }));
+  await page.route("https://air-quality-api.open-meteo.com/**", (route) => route.fulfill({ json: AQ_READING }));
+  await page.route("https://flood-api.open-meteo.com/**", (route) => route.fulfill({ json: FLOOD_READING }));
   await openGlobe(page);
 
   // 8 distinct cells (2deg apart, past HOVER_CELL_DEG's 0.5deg rounding),
@@ -108,6 +118,7 @@ test("moving across many cells fast still fires at most one Open-Meteo request p
     await page.waitForTimeout(100);
   }
 
+  const requestTimes = await page.evaluate(() => (window as unknown as { __s3RequestTimes: number[] }).__s3RequestTimes);
   expect(requestTimes.length).toBeGreaterThanOrEqual(2);
   requestTimes.sort((a, b) => a - b);
   for (let i = 1; i < requestTimes.length; i++) {

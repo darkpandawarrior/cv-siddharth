@@ -26,7 +26,6 @@ export default function SceneSummary() {
     <section data-scene-summary aria-label="Scene summary" className="sr-only">
       <h3>Imagery</h3><p>{imageryText} {age}</p>
       <h3>Live layers</h3><p>{liveLayersSummary(layers, status)}</p>
-      {rows.map((row) => <p key={row.id}>{row.label}: {row.text}</p>)}
       <h3>Hazards</h3><p>{hazardsSummary(status.hazards)}</p>
       <h3>Sky</h3><p>{skySummary(sky)}</p>
       <h3>Selection</h3><p>{selectionSummary(selected)}</p>
