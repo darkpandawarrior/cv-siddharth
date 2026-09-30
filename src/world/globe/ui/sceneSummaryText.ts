@@ -49,7 +49,7 @@ export function imagerySummary(base: GibsCatalogEntry | undefined, dateLabel: st
   return `Imagery: ${base.title}${dateLabel ? ` (${dateLabel})` : ""}${overlayText}.`;
 }
 
-/** "Live layers: on — Pune markers, Satellites. Off — Countries. Unreachable:
+/** "Live layers: on: Pune markers, Satellites. Off: Countries. Unreachable:
  *  Wind." — a layer's own health (globeStore.ts `setStatus`) is what "no
  *  stale value shown as live" already gates on, so a failed feed that is
  *  still toggled "on" is named rather than left indistinguishable from one
@@ -60,7 +60,7 @@ export function liveLayersSummary(layers: Record<LayerId, boolean>, status: Part
   const failed = on.filter((id) => status[id]?.state === "failed");
   const list = (ids: readonly LayerId[]) => (ids.length > 0 ? ids.map((id) => LAYER_LABEL[id]).join(", ") : "none");
   const failedText = failed.length > 0 ? ` Unreachable: ${list(failed)}.` : "";
-  return `Live layers: on — ${list(on)}. Off — ${list(off)}.${failedText}`;
+  return `Live layers: on: ${list(on)}. Off: ${list(off)}.${failedText}`;
 }
 
 /** Reuses HazardLayer's own composite detail line (hazardStatus.ts's

@@ -123,6 +123,18 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
     else if (useGlobe.getState().sheet === "inspector") setSheet(null);
   }, [selected, setSheet]);
 
+  const selectionId = selected?.id;
+  useEffect(() => {
+    if (selectionId === undefined) return;
+    const prior = document.activeElement;
+    return () => {
+      // A replacement already has its own focused opener. Leave it focused
+      // so the next effect captures it instead of the previous selection's.
+      const nextId = useGlobe.getState().selected?.id;
+      if ((nextId === undefined || nextId === selectionId) && prior instanceof HTMLElement && prior.isConnected) prior.focus({ preventScroll: true });
+    };
+  }, [selectionId]);
+
   useEffect(() => {
     if (!selected) return;
     const onKeyDown = (e: KeyboardEvent) => {

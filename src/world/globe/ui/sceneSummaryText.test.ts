@@ -29,18 +29,18 @@ describe("liveLayersSummary", () => {
   it("splits on/off and never invents a layer not in globeStore's own list", () => {
     const layers = { ...allOff, satellites: true, markers: true };
     const text = liveLayersSummary(layers, {});
-    expect(text).toContain("on — Pune markers, Satellites");
-    expect(text).toContain("Off — Stars and Moon");
+    expect(text).toContain("on: Pune markers, Satellites");
+    expect(text).toContain("Off: Stars and Moon");
   });
 
-  it("names a failed feed even while its toggle reads on — never a stale value shown as live", () => {
+  it("names a failed feed even while its toggle reads on: never a stale value shown as live", () => {
     const layers = { ...allOff, wind: true };
     const status: Partial<Record<LayerId, LayerHealth>> = { wind: { state: "failed", detail: "feed unreachable" } };
     expect(liveLayersSummary(layers, status)).toContain("Unreachable: Wind.");
   });
 
   it("reads 'none' rather than an empty list when every layer is off", () => {
-    expect(liveLayersSummary(allOff, {})).toContain("on — none");
+    expect(liveLayersSummary(allOff, {})).toContain("on: none");
   });
 });
 

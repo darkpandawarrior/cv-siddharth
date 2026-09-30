@@ -28,6 +28,7 @@ beforeEach(() => {
   vi.resetModules();
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
@@ -215,5 +216,42 @@ describe("handleSpotify", () => {
     const { handleSpotify } = await import("./spotify-handler");
     const response = await handleSpotify(new Request("http://localhost/api/spotify"));
     expect(response.headers.get("cache-control")).toBe("s-maxage=60, stale-while-revalidate=300");
+  });
+});
+
+
+describe("Spotify upstream bounds", () => {
+  const env = { SPOTIFY_CLIENT_ID: "id", SPOTIFY_CLIENT_SECRET: "secret", SPOTIFY_REFRESH_TOKEN: "refresh" };
+  for (const endpoint of ["token", "currently-playing", "recently-played"]) {
+    it(`aborts a stalled ${endpoint} request and returns disconnected`, async () => {
+      const { getSpotifyNow } = await import("./spotify-handler");
+      vi.useFakeTimers();
+      vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(new DOMException("Timed out", "TimeoutError")), ms);
+        return controller.signal;
+      });
+      const fetchImpl = vi.fn((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        const url = String(input);
+        expect(init?.signal).toBeInstanceOf(AbortSignal);
+        if (url.includes(endpoint)) return new Promise((_resolve, reject) => {
+          init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason), { once: true });
+        });
+        return Promise.resolve(url.includes("api/token")
+          ? Response.json({ access_token: "tok", expires_in: 3600 })
+          : new Response(null, { status: 204 }));
+      });
+      const result = getSpotifyNow(env, fetchImpl, Date.now(), freshCache());
+      await vi.advanceTimersByTimeAsync(8000);
+      expect(await result).toEqual({ connected: false, isPlaying: false, recent: [] });
+      vi.restoreAllMocks();
+    });
+  }
+  it("rejects an oversized token body before parsing it", async () => {
+    const { getSpotifyNow } = await import("./spotify-handler");
+    const cache = freshCache();
+    const fetchImpl = vi.fn(async () => Response.json({ access_token: "x".repeat(128 * 1024) }));
+    expect(await getSpotifyNow(env, fetchImpl, Date.now(), cache)).toEqual({ connected: false, isPlaying: false, recent: [] });
+    expect(cache.value).toBeNull();
   });
 });

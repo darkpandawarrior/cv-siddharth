@@ -132,11 +132,12 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
   // HIT_GEOMETRY's own comment) -- this is just the visual column's own
   // local point, carried to world space by the same group transform the
   // renderer uses.
+  const probePosition = useMemo(() => ENTRIES.length ? localPosition(ENTRIES[0]) : new THREE.Vector3(), []);
   useFrame(() => {
     if (ENTRIES.length === 0) return;
     const dbg = ensureReachDebug();
     dbg.appCount = ENTRIES.length;
-    _scratch.copy(localPosition(ENTRIES[0])).applyQuaternion(quaternion).add(position).project(camera);
+    _scratch.copy(probePosition).applyQuaternion(quaternion).add(position).project(camera);
     dbg.appProbeX = (_scratch.x * 0.5 + 0.5) * size.width;
     dbg.appProbeY = (-_scratch.y * 0.5 + 0.5) * size.height;
   });

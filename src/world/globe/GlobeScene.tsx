@@ -5,8 +5,9 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { SceneActivity, useReducedMotion } from "../../SceneActivity.tsx";
-import { PUNE, subsolarPoint } from "../../lib/sky.ts";
+import { PUNE } from "../../lib/sky.ts";
 import { latLonToXyz } from "./geoMath.ts";
+import { createSceneProbe } from "./sceneProbe.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
@@ -159,6 +160,8 @@ function SceneRig({
   // pill's text arriving and rewrapping the row) can't snap a visitor's own
   // zoom back out from under them.
   const framedForReal = useRef(false);
+  const probe = useRef(createSceneProbe());
+  useEffect(() => { probe.current.time(now); }, [now]);
 
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
@@ -270,25 +273,7 @@ function SceneRig({
 
     const el = probeRef.current;
     if (!el) return;
-    const toScreen = (v: THREE.Vector3) => {
-      v.project(camera);
-      return [(v.x * 0.5 + 0.5) * size.width, (-v.y * 0.5 + 0.5) * size.height];
-    };
-    const sub = subsolarPoint(now);
-    const p = latLonToXyz(sub.lat, sub.lon);
-    const [x, y] = toScreen(new THREE.Vector3(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS));
-    // The globe's own screen disk: the view is lifted off the canvas centre,
-    // so day/night halves are split at the globe's centre, not the canvas's.
-    const [cx, cy] = toScreen(new THREE.Vector3());
-    const [ex] = toScreen(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS));
-    const dx = x - cx;
-    const dy = y - cy;
-    el.dataset.subsolarX = String(Math.round(x));
-    el.dataset.subsolarY = String(Math.round(y));
-    el.dataset.globeX = String(Math.round(cx));
-    el.dataset.globeY = String(Math.round(cy));
-    el.dataset.globeR = String(Math.round(Math.abs(ex - cx)));
-    el.dataset.daySide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "right" : "left") : dy >= 0 ? "bottom" : "top";
+    probe.current.update(el.dataset, camera, size);
   });
 
   useEffect(() => {

@@ -17,6 +17,8 @@ import { fetchMarine, marineLabel, type MarineReading } from "../layers/marine.t
 import { parseQuakes, type Quake } from "../layers/quake.ts";
 import { buildWindField, sampleWind, type WindField } from "../layers/windField.ts";
 import type { WindResponse } from "../../../../api/_lib/wind-handler.ts";
+import PinnedReadoutPanel from "./pinnedReadoutPanel.tsx";
+import { modelObservationTime, utc, type PinnedValue } from "./pinnedReadout.ts";
 import { nearestQuakeWithin, windLabel } from "./hoverReadout.ts";
 
 /**
@@ -100,7 +102,7 @@ function hoverCellKey(point: LatLon): string {
   return `${Math.round(point.lat / HOVER_CELL_DEG)}:${Math.round(point.lon / HOVER_CELL_DEG)}`;
 }
 
-interface CellEntry<T> { data: T | null; at?: number; failed?: boolean }
+interface CellEntry<T> { data: T | null; at?: number; observedAt?: string | null; failed?: boolean }
 
 /** Returns the cached entry for `key` once settled, `undefined` while still
  *  pending or not yet requested. A failed fetch is labelled failed for
@@ -109,15 +111,21 @@ interface CellEntry<T> { data: T | null; at?: number; failed?: boolean }
  *  `gateRef` is shared across all three domains (marine/airQuality/flood)
  *  by the caller, so the 1.5s cap is one budget for the whole feature, not
  *  one per domain. */
-function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number, gateRef: { current: number }, fetcher: () => Promise<T | null>): CellEntry<T> | undefined {
+function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number, gateRef: { current: number }, fetcher: (fetchImpl: typeof fetch) => Promise<T | null>): CellEntry<T> | undefined {
   const existing = cache.get(key);
   if (existing && now - (existing.at ?? now) < (existing.failed ? 30000 : 300000)) return existing;
   if (existing) cache.delete(key);
   if (cache.has(`${key}#pending`) || now - gateRef.current < HOVER_FETCH_GAP_MS) return undefined;
   gateRef.current = now;
   cache.set(`${key}#pending`, { data: null });
-  fetcher()
-    .then((data) => cache.set(key, { data, at: Date.now() }))
+  let observedAt: string | null = null;
+  const timedFetch: typeof fetch = async (...args) => {
+    const response = await fetch(...args);
+    try { observedAt = modelObservationTime(await response.clone().json()); } catch { /* Missing model period stays explicit. */ }
+    return response;
+  };
+  fetcher(timedFetch)
+    .then((data) => cache.set(key, { data, at: Date.now(), observedAt }))
     .catch(() => cache.set(key, { data: null, at: Date.now(), failed: true }))
     .finally(() => cache.delete(`${key}#pending`));
   return undefined;
@@ -125,6 +133,7 @@ function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number,
 
 export default function HoverReadout() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const pinCount = useExplore(s => s.pins.length);
   const [chip, setChip] = useState<Chip | null>(null);
   const chipElement = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
@@ -170,7 +179,7 @@ export default function HoverReadout() {
     frameRef.current = null;
     const point = hoverPoint.current;
     const globe = useGlobe.getState();
-    if (!point || useExplore.getState().mode || globe.view !== "orbit") { setChip(null); lastChipRef.current = null; return; }
+    if (!point || (useExplore.getState().mode && useExplore.getState().mode !== "pin") || globe.view !== "orbit") { setChip(null); lastChipRef.current = null; return; }
 
     const countryId = globe.layers.countries && hoverPoint.countryId >= 0
       ? hoverPoint.countryId
@@ -203,11 +212,11 @@ export default function HoverReadout() {
     // plainly when the point has no data rather than staying blank forever.
     const now = Date.now();
     const cellKey = hoverCellKey(point);
-    const marineEntry = pollCell(marineCache.current, cellKey, now, hoverFetchGate, () => fetchMarine(point.lat, point.lon));
+    const marineEntry = pollCell(marineCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchMarine(point.lat, point.lon, fetchImpl));
     const marine = marineEntry ? (marineEntry.data ? `${marineLabel(marineEntry.data)} · Open-Meteo` : "No marine data here · Open-Meteo") : null;
-    const airQualityEntry = pollCell(airQualityCache.current, cellKey, now, hoverFetchGate, () => fetchAirQuality(point.lat, point.lon));
+    const airQualityEntry = pollCell(airQualityCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchAirQuality(point.lat, point.lon, fetchImpl));
     const airQuality = airQualityEntry ? (airQualityEntry.data ? `${airQualityLabel(airQualityEntry.data)} · Open-Meteo` : "No air-quality data here · Open-Meteo") : null;
-    const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGate, () => fetchFlood(point.lat, point.lon));
+    const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchFlood(point.lat, point.lon, fetchImpl));
     const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : "No river data here · Open-Meteo") : null;
 
     if (settled.current.key !== cellKey) settled.current = { key: cellKey, since: now };
@@ -218,10 +227,10 @@ export default function HoverReadout() {
       if (stationsFailed.current) tide = "NOAA station index unreachable (US coastal coverage)";
       else if (stations.current && !nearStation) tide = "No NOAA tide station within 50 km (US coastal coverage)";
       else if (nearStation) {
-        const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGate, () => fetchTide(nearStation.station.id, new Date(now)));
+        const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGate, fetchImpl => fetchTide(nearStation.station.id, new Date(now), fetchImpl));
         tide = entry?.failed ? "NOAA tide feed unreachable" : entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : null;
       }
-      const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGate, () => fetchCape(point.lat, point.lon, new Date(now)));
+      const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchCape(point.lat, point.lon, new Date(now), fetchImpl));
       cape = entry?.failed ? "CAPE feed unreachable · Open-Meteo" : entry ? entry.data ? capeLabel(entry.data) : "No current CAPE model reading · Open-Meteo" : null;
     }
     // Horizon scans happen once per rounded cell and simulated minute,
@@ -292,8 +301,29 @@ export default function HoverReadout() {
     };
   }, [canvas, scheduleFrame]);
 
-  if (!root || !chip) return null;
-  return createPortal(
+  // Read only the hover's settled caches. Pinning never schedules a request.
+  const extras = (point: LatLon): PinnedValue[] => {
+    const key = hoverCellKey(point);
+    const cached = <T,>(label: string, cache: Map<string, CellEntry<T>>, format: (data: T) => string, source: string): PinnedValue => {
+      const entry = cache.get(key);
+      const fresh = entry?.at && Date.now() - entry.at < 300000;
+      return { label, value: fresh && entry.data ? format(entry.data) : "Unavailable: No cached reading", source: `${source}, sampled model snapshot`, time: entry?.observedAt ? `Model time: ${entry.observedAt}` : "Observation time unavailable" };
+    };
+    const station = stations.current ? nearestStationWithin(stations.current, point) : null;
+    const tide = station ? tideCache.current.get(station.station.id) : null;
+    const cape = capeCache.current.get(key);
+    return [
+      { label: "Country", value: indexRef.current ? indexRef.current.countries[countryAt(indexRef.current, point)]?.name ?? "International waters" : "Unavailable: country index not loaded", source: "Natural Earth, coarse boundary index snapshot", time: "Dataset date unavailable" },
+      cached("Marine", marineCache.current, marineLabel, "Open-Meteo (CC BY 4.0)"),
+      cached("Air quality", airQualityCache.current, airQualityLabel, "Open-Meteo CAMS (CC BY 4.0)"),
+      cached("River discharge", floodCache.current, floodLabel, "Open-Meteo GloFAS (CC BY 4.0)"),
+      { label: "Tides", value: tide?.data ? `${station?.station.name}: ${tideLabel(tide.data)}` : "Unavailable: No cached reading (US coastal coverage)", source: "NOAA CO-OPS, station measurement / predicted tide snapshot", time: tide?.data?.water ? `Observed ${tide.data.water.time} UTC` : "Observation time unavailable" },
+      { label: "CAPE", value: cape?.data ? capeLabel(cape.data) : "Unavailable: No cached reading", source: "Open-Meteo (CC BY 4.0), model snapshot", time: cape?.data ? `Model time: ${utc(cape.data.at)}` : "Observation time unavailable" },
+    ];
+  };
+  return <>
+    <PinnedReadoutPanel canvas={canvas} extras={extras} />
+    {root && chip && !pinCount && createPortal(
     <div
       ref={chipElement}
       data-hover-readout
@@ -313,5 +343,6 @@ export default function HoverReadout() {
       {chip.readout.meteors.map((line) => <div data-hover-meteor key={line}>{line}</div>)}
     </div>,
     root,
-  );
+  )}
+  </>;
 }

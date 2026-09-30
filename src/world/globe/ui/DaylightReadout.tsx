@@ -30,7 +30,7 @@ function selectionFor(status: DaylightCityStatus): Selection {
       { label: "sun", value: `${phase}, ${altitudeDeg >= 0 ? "+" : ""}${altitudeDeg.toFixed(1)}° altitude` },
       { label: "population", value: city.pop.toLocaleString("en-US") },
     ],
-    source: "Natural Earth 110m populated places, public domain — sun position computed for the simulated time",
+    source: "Natural Earth 110m populated places, public domain, sun position computed for the simulated time",
     live: false,
     focus: { kind: "latlon", lat: city.lat, lon: city.lon },
   };

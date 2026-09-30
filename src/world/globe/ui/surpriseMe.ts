@@ -46,7 +46,7 @@ export function issCandidate(): SurpriseResult | null {
   return {
     selection: {
       id: ISS_ENTITY_ID,
-      kind: "surprise",
+      kind: "satellite",
       title: "The ISS, right now",
       rows: [{ label: "Position", value: `${round1(lat)}, ${round1(lon)}` }],
       source: "CelesTrak TLE, computed orbital position",
