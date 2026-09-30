@@ -164,11 +164,11 @@ test("the inspector renders a seeded selection and closes on Escape", async ({ p
 
 test("pressing G switches to ground view and Escape returns to orbit", async ({ page }) => {
   const canvas = await openGlobe(page);
-  await expect.poll(async () => canvas.getAttribute("data-camera-view")).toBe("orbit");
+  await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
   await page.keyboard.press("g");
-  await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 5_000 }).toBe("ground");
+  await expect(canvas).toHaveAttribute("data-camera-view", "ground", { timeout: 5_000 });
   await page.keyboard.press("Escape");
-  await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 5_000 }).toBe("orbit");
+  await expect(canvas).toHaveAttribute("data-camera-view", "orbit", { timeout: 5_000 });
 });
 
 test("following the ISS is disabled with a reason when no ISS is registered", async ({ page }) => {

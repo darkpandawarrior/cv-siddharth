@@ -76,23 +76,34 @@ test("a fully aborted GIBS feed falls back to the dot earth with status failed",
   await expect(page.locator("[data-globe-root] canvas")).toBeVisible();
 });
 
-test("day, dusk and night crops at 1440 and 390 (visual record, no assertion beyond a visible canvas)", async ({ page }, testInfo) => {
-  await withApiFixtures(page);
-  await withGibsFixtures(page);
+test.describe("day, dusk and night crops at 1440 and 390", () => {
   const times = [
     ["day", "2026-09-24T12:27:00+05:30"],
     ["dusk", "2026-09-24T18:27:00+05:30"],
     ["night", "2026-09-25T00:27:00+05:30"],
   ] as const;
+  // Each crop has its own cold navigation and render, rather than six
+  // independent captures competing for one test's total time budget.
   for (const width of [1440, 390]) {
     for (const [label, iso] of times) {
-      await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
-      await page.clock.setFixedTime(new Date(iso));
-      await page.goto("/globe");
-      await waitForHydration(page);
-      await expect(page.locator("[data-earth-style]")).toHaveAttribute("data-earth-style", "imagery", { timeout: 30_000 });
-      await page.waitForTimeout(300); // let the just-swapped-in mesh's first coloured frame settle
-      await page.screenshot({ path: testInfo.outputPath(`globe-l1-${label}-${width}.png`) });
+      test(`${label} at ${width}`, async ({ page }, testInfo) => {
+        await withApiFixtures(page);
+        await withGibsFixtures(page);
+        await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
+        await page.clock.setFixedTime(new Date(iso));
+        await page.goto("/globe");
+        await waitForHydration(page);
+        const earth = page.locator("[data-earth-style]");
+        await expect(earth).toHaveAttribute("data-earth-style", "imagery", { timeout: 30_000 });
+        await expect(earth).toHaveAttribute("data-earth-status", "live");
+        const canvas = page.locator("[data-globe-root] canvas");
+        await expect(canvas).toBeVisible();
+        // CameraDirector writes these from the frame loop, after the
+        // scene has mounted; root hydration alone cannot prove that.
+        await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+        await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+        await page.screenshot({ path: testInfo.outputPath(`globe-l1-${label}-${width}.png`) });
+      });
     }
   }
 });
