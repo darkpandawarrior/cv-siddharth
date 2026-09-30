@@ -130,7 +130,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   // TERRAIN_MIN_ZOOM (never claim a credit for a layer that isn't drawing).
   const [terrainOn, setTerrainOn] = useState(false);
   const [terrainFailed, setTerrainFailed] = useState(false);
-  // WAVE 6 LANE X5: "No streets here" if nothing has loaded within 3s (a
+  // Pending requests remain explicitly pending after 3s (a
   // watchdog, not a repeat of the "loaded, zero results" message below —
   // that one only ever fires once a query has actually FINISHED).
   const [noFeaturesTimedOut, setNoFeaturesTimedOut] = useState(false);
@@ -539,7 +539,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           <button
             type="button"
             onClick={onBackToGlobe}
-            className="rounded-full border border-line px-2 py-1 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            className="min-h-11 min-w-11 rounded-full border border-line px-2 py-1 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
             Back to globe
           </button>
@@ -551,9 +551,9 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         className="pointer-events-none absolute left-1/2 top-14 z-10 -translate-x-1/2 whitespace-nowrap rounded-full glass-panel px-3 py-1 font-mono text-xs text-zinc-300"
       >
         {photoStatus === "loading" && !noFeaturesTimedOut && "Looking for street photos…"}
-        {photoStatus === "loading" && noFeaturesTimedOut && "No streets here"}
+        {photoStatus === "loading" && noFeaturesTimedOut && "Still looking for streets"}
         {photoStatus === "failed" && "Street photo search failed"}
-        {photoStatus === "loaded" && photos.length === 0 && "No open street photos here yet"}
+        {photoStatus === "loaded" && photos.length === 0 && "No streets here"}
         {photoStatus === "loaded" && photos.length > 0 && `${photos.length} street photo${photos.length === 1 ? "" : "s"}`}
       </div>
 

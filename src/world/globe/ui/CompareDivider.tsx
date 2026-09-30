@@ -8,11 +8,8 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { isTypingTarget, ownsKey } from "./shortcutTarget.ts";
 import { useCompare } from "../timeMachine/compareStore.ts";
-
-function isTypingTarget(el: EventTarget | null): boolean {
-  return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
-}
 
 const NUDGE_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]);
 
@@ -26,6 +23,7 @@ export default function CompareDivider() {
   const nudge = useCompare((s) => s.nudge);
   const close = useCompare((s) => s.close);
   const draggingRef = useRef(false);
+  const seamRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // One window-level listener for both Esc-to-exit and the arrow/Home/End
@@ -35,11 +33,12 @@ export default function CompareDivider() {
   useEffect(() => {
     if (!state) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (isTypingTarget(e.target as HTMLElement | null)) return;
       if (e.key === "Escape") {
         e.preventDefault();
         close();
       } else if (NUDGE_KEYS.has(e.key)) {
+        if (e.defaultPrevented || (e.target !== seamRef.current && ownsKey(e.target as HTMLElement | null, e.key))) return;
         e.preventDefault();
         nudge(e.key, e.shiftKey);
       }
@@ -55,16 +54,16 @@ export default function CompareDivider() {
       const rect = rootRef.current.getBoundingClientRect();
       setSplit((e.clientX - rect.left) / rect.width);
     };
-    const onUp = () => {
-      draggingRef.current = false;
-    };
     window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
     };
   }, [state, setSplit]);
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  };
 
   if (!state) return null;
   const pct = state.split * 100;
@@ -88,6 +87,7 @@ export default function CompareDivider() {
         Today
       </div>
       <div
+        ref={seamRef}
         data-globe-compare-divider
         role="slider"
         aria-label="Compare divider: drag or use arrow keys to reveal the past or today"
@@ -97,9 +97,13 @@ export default function CompareDivider() {
         tabIndex={0}
         onPointerDown={(e) => {
           draggingRef.current = true;
-          (e.target as HTMLElement).focus();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          e.currentTarget.focus();
         }}
-        className="pointer-events-auto absolute inset-y-0 flex w-8 -translate-x-1/2 cursor-ew-resize items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onLostPointerCapture={endDrag}
+        className="pointer-events-auto absolute inset-y-0 flex w-11 touch-none -translate-x-1/2 cursor-ew-resize items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         style={{ left: `${pct}%` }}
       >
         <div className="h-full w-px bg-accent/70" />
@@ -111,7 +115,7 @@ export default function CompareDivider() {
         type="button"
         onClick={close}
         aria-label="Exit compare"
-        className="ctrl-icon pointer-events-auto absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="ctrl-icon pointer-events-auto absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <X size={16} />
       </button>

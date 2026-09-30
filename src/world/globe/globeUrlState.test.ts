@@ -35,12 +35,12 @@ describe("serializeShareState / parseShareState round trip", () => {
     expect(parseShareState(qs).lon).toBeCloseTo(-170, 3);
   });
 
-  it("clamps out-of-range lat/alt/time rather than dropping them", () => {
+  it("clamps camera bounds and rejects a time beyond the share window", () => {
     const qs = serializeShareState({ ...FULL, lat: 999, alt: -50, timeOffsetMin: 999_999 });
     const parsed = parseShareState(qs);
     expect(parsed.lat).toBe(90);
     expect(parsed.alt).toBeGreaterThan(6);
-    expect(parsed.timeOffsetMin).toBeLessThanOrEqual(2 * 24 * 60);
+    expect(parsed.timeOffsetMin).toBeUndefined();
   });
 
   it("drops an empty state to an empty (but not absent-vs-empty-layers-ambiguous) query", () => {
@@ -141,5 +141,45 @@ describe("cameraToLatLonAlt", () => {
     expect(Number.isFinite(lat)).toBe(true);
     expect(Number.isFinite(lon)).toBe(true);
     expect(Number.isFinite(alt)).toBe(true);
+  });
+});
+
+const NOW = Date.UTC(2026, 8, 30, 12);
+describe("honest shared layers and time", () => {
+  it("preserves an explicitly all-off layer set", () => {
+    const qs = serializeShareState({ ...FULL, layers: [] }, NOW);
+    expect(qs).toContain("ly=");
+    expect(parseShareState(qs, NOW).layers).toEqual([]);
+  });
+  it("shares an out-of-range time as the same absolute UTC minute", () => {
+    const qs = serializeShareState({ ...FULL, timeOffsetMin: 144000 }, NOW);
+    const params = new URLSearchParams(qs);
+    expect(params.has("t")).toBe(false);
+    expect(params.get("at")).toBe("2027-01-08T12:00Z");
+    expect(parseShareState(qs, NOW).timeOffsetMin).toBe(144000);
+    expect(parseShareState(qs, NOW + 1440 * 60000).timeOffsetMin).toBe(142560);
+    expect(new URLSearchParams(serializeShareState({ ...FULL, timeOffsetMin: 144000.9 }, NOW)).get("at")).toBe(params.get("at"));
+    params.set("t", "5");
+    expect(parseShareState(params, NOW).timeOffsetMin).toBe(144000);
+  });
+  it("rejects malformed, non-UTC, invalid calendar and outside-window instants", () => {
+    for (const at of ["2027-11-05T12:01Z", "2026-08-31T11:59Z", "garbage", "2027-01-08T12:00+00:00", "2027-01-08T12:00:00Z", "2027-02-30T12:00Z", "2027-01-08T24:00Z"]) {
+      expect(parseShareState(new URLSearchParams({ at }), NOW).timeOffsetMin).toBeUndefined();
+      expect(parseShareState(new URLSearchParams({ at, t: "15" }), NOW).timeOffsetMin).toBe(15);
+    }
+    for (const minutes of [-30 * 1440, 400 * 1440]) {
+      const at = new Date(NOW + minutes * 60000).toISOString().slice(0, 16) + "Z";
+      expect(parseShareState(new URLSearchParams({ at }), NOW).timeOffsetMin).toBe(minutes);
+    }
+  });
+  it("keeps relative minutes and the parser's original clamps", () => {
+    for (const minutes of [-43200, -120, 0, 2880]) {
+      const params = new URLSearchParams(serializeShareState({ ...FULL, timeOffsetMin: minutes }, NOW));
+      expect(params.has("at")).toBe(false);
+      expect(params.get("t")).toBe(String(minutes));
+      expect(parseShareState(params, NOW).timeOffsetMin).toBe(minutes);
+    }
+    expect(parseShareState("t=999999", NOW).timeOffsetMin).toBe(2880);
+    expect(parseShareState("t=-999999", NOW).timeOffsetMin).toBe(-43200);
   });
 });
