@@ -128,7 +128,7 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
 for (const viewport of viewports.filter(v => v.width < 640)) {
   test.describe(`native touch at ${viewport.width}px`, () => {
     test.use({ hasTouch: true });
-    test("a canvas tap keeps the desktop hover chip hidden", async ({ page }) => {
+    test("a canvas tap keeps the desktop hover chip hidden", async ({ page }, testInfo) => {
       await page.setViewportSize(viewport);
       await prepare(page);
       await page.goto("/globe");
@@ -137,9 +137,25 @@ for (const viewport of viewports.filter(v => v.width < 640)) {
       await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
       const probe = page.locator("[data-subsolar-probe]");
       await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(0);
-      const box = (await canvas.boundingBox())!;
-      const x = box.x + Number(await probe.getAttribute("data-globe-x"));
-      const y = box.y + Number(await probe.getAttribute("data-globe-y")) + Number(await probe.getAttribute("data-globe-r")) * 0.7;
+      const target = await canvas.evaluate(el => {
+        const probe = document.querySelector("[data-subsolar-probe]")!;
+        const box = el.getBoundingClientRect();
+        const cx = box.x + Number(probe.getAttribute("data-globe-x"));
+        const cy = box.y + Number(probe.getAttribute("data-globe-y"));
+        const radius = Number(probe.getAttribute("data-globe-r"));
+        const covered: { x: number; y: number; hit: string | undefined }[] = [];
+        // Stay inside the lower disc, choosing a point the current chrome exposes.
+        for (const dy of [0.7, 0.5, 0.3, 0.1]) for (const dx of [0, -0.35, 0.35, -0.6, 0.6]) {
+          if (dx * dx + dy * dy > 0.8 * 0.8) continue;
+          const x = cx + dx * radius, y = cy + dy * radius;
+          const hit = document.elementFromPoint(x, y);
+          if (hit === el) return { x, y, radius, covered };
+          covered.push({ x, y, hit: hit?.tagName });
+        }
+        throw new Error(`No canvas point on lower disc: ${JSON.stringify({ width: box.width, height: box.height, cx, cy, radius, covered })}`);
+      });
+      const { x, y } = target;
+      await testInfo.attach("touch-canvas-point", { body: JSON.stringify(target), contentType: "application/json" });
       expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, { x, y })).toBe("CANVAS");
       await expect(page.locator("[data-hover-readout]")).toBeHidden();
       await page.touchscreen.tap(x, y);
