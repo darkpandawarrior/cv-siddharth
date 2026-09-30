@@ -13,7 +13,8 @@
 // only importer, is shielded behind Hydrate's own `split`).
 import { readToken } from "../../themeColor.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
-import { globeFacts } from "./globeRows.ts";
+import { storeGeneratedAt } from "../../data/store.ts";
+import { globeFacts, weeksAgoLabel } from "./globeRows.ts";
 import type { Selection } from "./globeStore.ts";
 
 /** The id every Pune selection carries, so the HUD's markers toggle
@@ -36,12 +37,17 @@ export function buildPuneSelection(): Selection | null {
   const names = employerMarkers.map((m) => m.company).join(", ");
   const unresolvedNote = employersUnresolved.length > 0 ? ` - ${employersUnresolved.join(", ")} listed, never geocoded` : "";
   const fact = (id: string) => globeFacts.find((r) => r.id === id)!.label;
+  // Only ever called post-mount (a ring click or Globe.tsx's desktop
+  // preselect effect), never during SSR - a live `new Date()` here is safe
+  // the way it is not in globeFacts's own module-eval-time label (see
+  // weeksAgoLabel's comment).
+  const reachInstalls = `${fact("reach-installs")} (${weeksAgoLabel(storeGeneratedAt, new Date())})`;
   return {
     id: PUNE_SELECTION_ID,
     kind: "origin",
     title: `${home.location.split(",")[0].toUpperCase()} · ${home.lat.toFixed(2)}°N ${home.lon.toFixed(2)}°E`,
     rows: [
-      { label: "Reach", value: fact("reach-installs"), swatch: signal },
+      { label: "Reach", value: reachInstalls, swatch: signal },
       { label: "Upstream", value: fact("reach-upstream"), swatch: probe },
       { label: "Employers", value: names + unresolvedNote, swatch: probe },
     ],

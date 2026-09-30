@@ -32,6 +32,7 @@ import type { GithubActivity } from "../../../../api/_lib/github-activity-handle
 import { localGuide } from "../../../data/profile/localGuide.ts";
 import { guideMedia, guideReviewSelection } from "./guideReviewSelection.ts";
 import { scaleForYear, hourHistogram } from "./guideActivity.ts";
+import { useMarkerClick } from "../useMarkerClick.ts";
 
 const PIN_GEOMETRY = new THREE.SphereGeometry(0.018, 8, 6);
 const PIN_HIT_GEOMETRY = new THREE.SphereGeometry(0.03, 8, 6);
@@ -112,6 +113,26 @@ function buildGuidePlaces(): GuidePlace[] {
 
 const GUIDE_PLACES = buildGuidePlaces();
 
+// Two cities close enough together (e.g. Pune and Mumbai, ~120km apart) can
+// each earn a MAX_SCALE*HIT_RADIUS_MULTIPLIER hit-disc (up to ~276km radius)
+// that reaches well past the other's own ring -- whichever disc the ray
+// happens to graze marginally closer wins, even for a click aimed dead
+// centre at the OTHER city. Capped once, at module load (GUIDE_PLACES is
+// static), to at most half the gap to its nearest neighbour, so no two
+// discs can ever swallow each other's centre.
+const GUIDE_PLACE_WORLD_POS = GUIDE_PLACES.map((p) => {
+  const xyz = latLonToXyz(p.lat, p.lon);
+  return new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + LIFT);
+});
+const GUIDE_PLACE_HIT_CAP = GUIDE_PLACE_WORLD_POS.map((pos, i) => {
+  let nearest = Infinity;
+  for (let j = 0; j < GUIDE_PLACE_WORLD_POS.length; j++) {
+    if (j === i) continue;
+    nearest = Math.min(nearest, pos.distanceTo(GUIDE_PLACE_WORLD_POS[j]));
+  }
+  return Number.isFinite(nearest) ? nearest * 0.45 : Infinity;
+});
+
 /** e2e-only read seam, same convention as HazardLayer's `__HAZARD_DEBUG__`
  *  and HistoryLayer's `__HISTORY_DEBUG__` (a plain global, not a DOM node —
  *  those files' own comments measured a chunk-budget regression from an
@@ -130,6 +151,13 @@ declare global {
       activityHistogram: number[] | null;
       face: (slug: string) => void;
       screenPoint: (slug: string) => { x: number; y: number } | null;
+      /** The camera's own distance from the globe centre, right now -- a
+       *  flyTo's dolly keeps looking straight at the target throughout its
+       *  whole transition, so a target's own `screenPoint` can read as
+       *  "stable" well before the distance animation actually finishes.
+       *  e2e needs this second signal too, or it can click mid-flight. */
+      cameraDistance: () => number | null;
+      screenRadii: () => { horizontal: number; vertical: number } | null;
     };
   }
 }
@@ -144,6 +172,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
   const orgRef = useRef<THREE.Mesh>(null);
   const orgHitRef = useRef<THREE.Mesh>(null);
   const select = useGlobe((s) => s.select);
+  const markerClick = useMarkerClick();
   const setView = useGlobe((s) => s.setView);
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
   const accent = useMemo(() => readColor("--color-accent", "#f2a13d"), []);
@@ -192,7 +221,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
       mesh.setColorAt(i, probe);
-      dummy.scale.setScalar(scale * HIT_RADIUS_MULTIPLIER);
+      dummy.scale.setScalar(Math.min(scale * HIT_RADIUS_MULTIPLIER, GUIDE_PLACE_HIT_CAP[i]));
       dummy.updateMatrix();
       hit.setMatrixAt(i, dummy.matrix);
     }
@@ -267,6 +296,16 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         const box = canvas.getBoundingClientRect();
         return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
       },
+      cameraDistance: () => sceneHandles.camera?.position.length() ?? null,
+      screenRadii: () => {
+        const { camera, canvas } = sceneHandles;
+        if (!camera || !canvas) return null;
+        const centre = new THREE.Vector3().project(camera);
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS).project(camera);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).multiplyScalar(GLOBE_RADIUS).project(camera);
+        const box = canvas.getBoundingClientRect();
+        return { horizontal: Math.abs(right.x - centre.x) * box.width / 2, vertical: Math.abs(up.y - centre.y) * box.height / 2 };
+      },
     };
   }, [simYear, activity, activityHistogram]);
 
@@ -275,50 +314,54 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     const i = e.instanceId;
     if (i === undefined || !GUIDE_PLACES[i]) return;
     const p = GUIDE_PLACES[i];
-    const photos = mapsPhotos.filter((ph) => ph.slug === p.slug);
-    const notLive = simYear !== new Date().getFullYear();
-    setView("orbit");
-    select({
-      id: `guide-place:${p.slug}`,
-      kind: "guide-place",
-      title: `${p.city}, ${p.country === "IN" ? "India" : p.country === "KW" ? "Kuwait" : p.country}`,
-      rows: [
-        { label: "Reviews", value: String(p.reviews) },
-        { label: "Photos", value: String(p.photos) },
-        { label: "Photo views", value: p.photoViews.toLocaleString("en-IN") },
-        { label: "Years active", value: p.years.join(", ") || "Not recorded" },
-        ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
-        ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
-      ],
-      source: `Google Maps Takeout, exported ${mapsExport} · city rings, reviewed public places at exact pins`,
-      guide: { places: mapsReviews.filter((review) => review.slug === p.slug).sort((a, b) => b.month.localeCompare(a.month)) },
-      live: false,
-      focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
-      media: photos.length > 0 ? guideMedia(photos) : undefined,
-      ...(p.slug === "pune" && activityHistogram
-        ? {
-            spark: activityHistogram,
-            sparkKind: "histogram" as const,
-            sparkLabel: `recent public GitHub activity only, by IST hour of day (${activityHistogram.reduce((sum, count) => sum + count, 0)} events; latest ${new Date(Math.max(...(activity?.items ?? []).map((item) => Date.parse(item.at)).filter(Number.isFinite))).toISOString().slice(0, 10)}; not employer work)`,
-          }
-        : {}),
+    markerClick(e.nativeEvent, () => {
+      const photos = mapsPhotos.filter((ph) => ph.slug === p.slug);
+      const notLive = simYear !== new Date().getFullYear();
+      setView("orbit");
+      select({
+        id: `guide-place:${p.slug}`,
+        kind: "guide-place",
+        title: `${p.city}, ${p.country === "IN" ? "India" : p.country === "KW" ? "Kuwait" : p.country}`,
+        rows: [
+          { label: "Reviews", value: String(p.reviews) },
+          { label: "Photos", value: String(p.photos) },
+          { label: "Photo views", value: p.photoViews.toLocaleString("en-IN") },
+          { label: "Years active", value: p.years.join(", ") || "Not recorded" },
+          ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
+          ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
+        ],
+        source: `Google Maps Takeout, exported ${mapsExport} · city rings, reviewed public places at exact pins`,
+        guide: { places: mapsReviews.filter((review) => review.slug === p.slug).sort((a, b) => b.month.localeCompare(a.month)) },
+        live: false,
+        focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
+        media: photos.length > 0 ? guideMedia(photos) : undefined,
+        ...(p.slug === "pune" && activityHistogram
+          ? {
+              spark: activityHistogram,
+              sparkKind: "histogram" as const,
+              sparkLabel: `recent public GitHub activity only, by IST hour of day (${activityHistogram.reduce((sum, count) => sum + count, 0)} events; latest ${new Date(Math.max(...(activity?.items ?? []).map((item) => Date.parse(item.at)).filter(Number.isFinite))).toISOString().slice(0, 10)}; not employer work)`,
+            }
+          : {}),
+      });
     });
   };
   const onOrgClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    setView("orbit");
-    select({
-      id: "guide-org:career-ops-hq",
-      kind: "guide-org",
-      title: "career-ops-hq · open source, out",
-      rows: [
-        { label: "Merged PRs", value: String(upstreamMergedPRs) },
-        { label: "Upstream stars", value: upstreamStars },
-        { label: "Location", value: "Spain · org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
-      ],
-      source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only · checked 2026-09-30",
-      live: false,
-      focus: { kind: "latlon" as const, lat: CAREER_OPS_HQ.lat, lon: CAREER_OPS_HQ.lon, distance: 14 },
+    markerClick(e.nativeEvent, () => {
+      setView("orbit");
+      select({
+        id: "guide-org:career-ops-hq",
+        kind: "guide-org",
+        title: "career-ops-hq · open source, out",
+        rows: [
+          { label: "Merged PRs", value: String(upstreamMergedPRs) },
+          { label: "Upstream stars", value: upstreamStars },
+          { label: "Location", value: "Spain · org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
+        ],
+        source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only · checked 2026-09-30",
+        live: false,
+        focus: { kind: "latlon" as const, lat: CAREER_OPS_HQ.lat, lon: CAREER_OPS_HQ.lon, distance: 14 },
+      });
     });
   };
   const setCursor = (hover: boolean) => {
@@ -345,10 +388,18 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     if (pinHitRef.current) pinHitRef.current.visible = visible;
   });
   const onReviewClick = (event: ThreeEvent<MouseEvent>) => {
-    if (!pinHitRef.current?.visible) return;
+    // Re-derive the same "close enough to see review pins" gate that the
+    // useFrame above draws every frame, straight from this event's own
+    // camera -- never from `pinHitRef.current.visible`. That ref is only
+    // ever written a frame late (the mesh stays raycastable even while
+    // `visible={false}`, since Three's raycaster never checks `.visible`),
+    // so under load a click could land inside the hit sphere before that
+    // write catches up, silently no-op past `stopPropagation()` and fall
+    // through to the city ring's own onClick underneath it.
+    if (event.camera.position.length() >= PIN_ZOOM_DISTANCE) return;
     event.stopPropagation();
     const review = mapsReviews[event.instanceId ?? -1];
-    if (review) { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); }
+    if (review) markerClick(event.nativeEvent, () => { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); });
   };
   const hover = hoverReview === null ? undefined : mapsReviews[hoverReview];
   const hoverPoint = hover ? latLonToXyz(hover.lat, hover.lon) : null;

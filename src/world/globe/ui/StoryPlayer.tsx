@@ -59,6 +59,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
   const tourStep = useGlobe((s) => s.tourStep);
   const panelOpen = useGlobe((s) => s.panelOpen);
+  const sheet = useGlobe((s) => s.sheet);
   const select = useGlobe((s) => s.select);
   const setTourStep = useGlobe((s) => s.setTourStep);
   const flyTo = useGlobe((s) => s.flyTo);
@@ -234,9 +235,15 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   // selection, the tour, OR the other player has claimed the busy slot.
   const storyFabBusy = busy || filmOpen;
   const filmFabBusy = busy || open;
+  // A phone bottom sheet (`sheet !== null`) already spans the full viewport
+  // width at the same fixed bottom edge these FABs occupy -- on top of it, a
+  // floating FAB only steals pointer events from whatever the sheet put in
+  // that same corner (e.g. the tour sheet's sticky "Next" button). Hide both
+  // FABs outright while any sheet or guided tour owns that screen.
+  const sheetOpen = sheet !== null || tourStep !== null;
   const compactFabs = (
     <>
-      {!open && (
+      {!open && !sheetOpen && (
         <button
           type="button"
           data-story-entry-compact
@@ -248,7 +255,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           <BookOpen size={16} aria-hidden />
         </button>
       )}
-      {!filmOpen && (
+      {!filmOpen && !sheetOpen && (
         <button
           type="button"
           data-film-entry-compact

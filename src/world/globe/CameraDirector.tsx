@@ -153,6 +153,7 @@ export default function CameraDirector({
   const introRef = useRef(false);
   const introMarkersHiddenRef = useRef(false);
   const prevViewRef = useRef(view);
+  const focusOffsetY = useRef<number | null>(null);
 
   // Horizon glow ring: ambient scene furniture, never a brand/live colour
   // (house rule: "ambient things never use brand tokens"). A warm, dim band
@@ -257,12 +258,43 @@ export default function CameraDirector({
       camera.position.set(resolved.dir.x * resolved.dist, resolved.dir.y * resolved.dist, resolved.dir.z * resolved.dist);
       flightRef.current = null;
       settledRef.current = true;
+      // OrbitControls caches its own spherical offset from `target` and
+      // only re-derives it from `camera.position` lazily; setting position
+      // directly (its usual path is dragging, which it observes) leaves
+      // that cache stale, and its own per-frame update() (drei's own
+      // useFrame, damping-driven, independent of this component's) then
+      // re-applies the STALE cache and silently snaps the camera straight
+      // back to wherever it was a moment ago. Sync it immediately so this
+      // jump is durable instead of visible for one frame and gone.
+      controlsRef.current?.update();
     } else {
       flightRef.current = { from: fromDir, fromDist, to: resolved.dir, toDist: resolved.dist, elapsed: 0, duration: FLY_SECONDS };
       settledRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-arm on an actual focus identity change, get() is stable
   }, [focus]);
+
+  // Search and the HUD finish laying out independently of a fly-to. Keep
+  // the focused phone target below both even when that layout arrives late.
+  useEffect(() => {
+    focusOffsetY.current = null;
+    if (view !== "orbit" || !focus) return;
+    const canvas = get().gl.domElement;
+    const search = document.querySelector("[data-explore-bar]");
+    const topbar = document.querySelector("[data-globe-topbar]");
+    const update = () => {
+      const box = canvas.getBoundingClientRect();
+      const clearTop = Math.max(box.top, search?.getBoundingClientRect().bottom ?? box.top, topbar?.getBoundingClientRect().bottom ?? box.top) + 12;
+      focusOffsetY.current = box.width < 640 && clearTop < box.bottom
+        ? 0.5 - ((clearTop + box.bottom) / 2 - box.top) / box.height : null;
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(canvas);
+    if (search) observer.observe(search);
+    if (topbar) observer.observe(topbar);
+    return () => { observer.disconnect(); focusOffsetY.current = null; };
+  }, [focus, view, get]);
 
   // WAVE 6 LANE X5: the cinematic first-visit intro. ui/Intro.tsx (a DOM
   // overlay mounted OUTSIDE the Canvas -- see cameraIntro.ts's own header
@@ -453,6 +485,10 @@ export default function CameraDirector({
   useFrame((state, dt) => {
     const { camera, gl } = state;
     const el = gl.domElement;
+    if (focusOffsetY.current !== null && camera instanceof THREE.PerspectiveCamera && camera.view && camera.view.offsetY !== focusOffsetY.current) {
+      camera.view.offsetY = focusOffsetY.current;
+      camera.updateProjectionMatrix();
+    }
 
     // In-flight: interpolate position, ignore drag/follow until it lands.
     const flight = flightRef.current;

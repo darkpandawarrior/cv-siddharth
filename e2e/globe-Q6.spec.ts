@@ -5,8 +5,10 @@ import { fleetStats } from "../src/data/store.ts";
 async function openGlobe(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.route(/^https:\/\//, route => route.abort());
   await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
+  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.goto("/globe");
   await waitForHydration(page);
   await expect(page.getByRole("combobox", { name: "Search places or ask the globe" })).toBeVisible({ timeout: 30_000 });
@@ -34,6 +36,7 @@ for (const width of [1440, 390]) {
     const dialog = page.getByRole("dialog", { name: "Guided tour" });
     await expect(dialog).toBeVisible();
     await expect.poll(() => dialog.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    await expect(page.locator("[data-story-entry-compact], [data-film-entry-compact]")).toHaveCount(0);
     await dialog.getByRole("button", { name: "Next", exact: true }).click();
     await expect(dialog).toContainText(`${fleetStats.installFloor.toLocaleString("en-IN")} installs`);
     await page.keyboard.press("Escape");

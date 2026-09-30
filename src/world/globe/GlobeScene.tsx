@@ -11,13 +11,17 @@ import { createSceneProbe } from "./sceneProbe.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
-import { LiveDots } from "./LiveDots.tsx";
-import { LocalTraffic } from "./LocalTraffic.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
 import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
+// LiveDots/LocalTraffic are toggleable layers like every other lazy layer
+// below (default-on, but gated the same way SkyLayer/SatelliteLayer already
+// are) — the eager Globe chunk only needs the always-on markers/reach
+// columns for first paint (task Z1 budget: they added ~6KB to the shell).
+const LiveDots = lazy(() => import("./LiveDots.tsx").then((m) => ({ default: m.LiveDots })));
+const LocalTraffic = lazy(() => import("./LocalTraffic.tsx").then((m) => ({ default: m.LocalTraffic })));
 const EarthImagery = lazy(() => import("./layers/EarthImagery.tsx"));
 const SkyLayer = lazy(() => import("./layers/SkyLayer.tsx"));
 const SatelliteLayer = lazy(() => import("./layers/SatelliteLayer.tsx"));
@@ -117,6 +121,14 @@ const LEFT_SLOT_RESERVE_PX = 304;
 // screen centre never needs a horizontal nudge on phones.
 const DOCKED_MIN_WIDTH = 640;
 const H_OFFSET_HALF_LIFE = 0.25; // seconds - smooths the shift when a panel opens/closes
+
+// Keep normalized offsets for CameraDirector, but restore the canvas aspect:
+// setViewOffset(1, 1, ...) sets aspect to 1 as well as changing the frustum.
+function frameCamera(camera: THREE.PerspectiveCamera, size: { width: number; height: number }, x: number, y: number) {
+  camera.setViewOffset(1, 1, x, y, 1, 1);
+  camera.aspect = size.width / size.height;
+  camera.updateProjectionMatrix();
+}
 
 function SceneRig({
   now,
@@ -218,9 +230,7 @@ function SceneRig({
     // Fractions (a 1x1 "full" view), so the lift survives R3F's own resize
     // handling. setViewOffset also sets aspect to fullWidth/fullHeight, i.e.
     // 1, which stretched the globe sideways until the real aspect went back.
-    cam.setViewOffset(1, 1, 0, offsetYRef.current, 1, 1);
-    cam.aspect = size.width / size.height;
-    cam.updateProjectionMatrix();
+    frameCamera(cam, size, 0, offsetYRef.current);
     if (topOffsetPx != null) framedForReal.current = true;
   }, [get, topOffsetPx]);
 
@@ -255,10 +265,11 @@ function SceneRig({
     // mount-time effect's two framings (see its own comment) - re-applied
     // here unchanged because setViewOffset takes both axes in one call.
     if (Math.abs(next) > 1e-6 || Math.abs(targetOffsetX) > 1e-6) {
-      const cam = camera as THREE.PerspectiveCamera;
-      cam.setViewOffset(1, 1, next, offsetYRef.current, 1, 1);
-      cam.updateProjectionMatrix();
+      frameCamera(camera as THREE.PerspectiveCamera, size, next, offsetYRef.current);
     }
+    // Reduced motion uses demand rendering. Finish recentering without
+    // waiting for another hover or live-feed update to request the next frame.
+    if (Math.abs(next - targetOffsetX) > 1e-6) _state.invalidate();
 
     const el = probeRef.current;
     if (!el) return;
@@ -282,7 +293,7 @@ function SceneRig({
 
   useEffect(() => {
     const canvas = get().gl.domElement;
-    const zoom = (event: MouseEvent) => {
+    const zoom = (event: Event) => {
       const controls = controlsRef.current;
       if (!controls || useGlobe.getState().view !== "orbit") return;
       event.preventDefault();
@@ -290,7 +301,31 @@ function SceneRig({
       controls.update();
     };
     canvas.addEventListener("dblclick", zoom);
-    return () => canvas.removeEventListener("dblclick", zoom);
+    // Native `dblclick` never fires for a touch double-tap (it is a mouse
+    // event; Chromium/WebKit only synthesize it from an actual mouse device)
+    // — W10D's own recheck note. `pointerup` fires for touch, mouse and pen
+    // alike, so a manual two-tap-within-a-window/distance gate here covers
+    // the touch case without duplicating the mouse one (a real mouse click
+    // also fires `pointerup`, but its own native `dblclick` already zoomed
+    // by the time this fires a second time, and dollying twice for one
+    // mouse double-click is harmless — same end distance, OrbitControls
+    // clamps at minDistance either way).
+    let lastTap: { at: number; x: number; y: number } | null = null;
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      const now = performance.now();
+      const prev = lastTap;
+      lastTap = { at: now, x: event.clientX, y: event.clientY };
+      if (prev && now - prev.at < 350 && Math.hypot(event.clientX - prev.x, event.clientY - prev.y) < 40) {
+        lastTap = null;
+        zoom(event);
+      }
+    };
+    canvas.addEventListener("pointerup", onPointerUp);
+    return () => {
+      canvas.removeEventListener("dblclick", zoom);
+      canvas.removeEventListener("pointerup", onPointerUp);
+    };
   }, [controlsRef, get]);
 
   return null;
@@ -403,8 +438,16 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
             <Markers occlude={[earthRef]} />
           </>
         )}
-        {layers.presence && live && <LiveDots tier={tier} occlude={[earthRef]} />}
-        {layers.aircraft && live && tier !== 3 && <LocalTraffic tier={tier} />}
+        {layers.presence && live && (
+          <Suspense fallback={null}>
+            <LiveDots tier={tier} occlude={[earthRef]} />
+          </Suspense>
+        )}
+        {layers.aircraft && live && tier !== 3 && (
+          <Suspense fallback={null}>
+            <LocalTraffic tier={tier} />
+          </Suspense>
+        )}
         {/* Separate boundaries: one slow chunk never holds up another. */}
         <Suspense fallback={null}>{layers.stars && <><SkyLayer now={now} tier={tier} /><MeteorRadiant now={now} tier={tier} /></>}</Suspense>
         <Suspense fallback={null}>{layers.satellites && <SatelliteLayer now={now} tier={tier} />}</Suspense>

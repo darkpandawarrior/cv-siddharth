@@ -44,11 +44,34 @@ async function openGlobe(page: Page) {
   // Playwright dispatches to the MOST RECENTLY registered matching route
   // first, so the specific overrides go last -- a catch-all registered
   // after `**/api/wind` would otherwise win and 503 it too.
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
+  await page.route("https://**", route => route.abort());
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: {} }));
   await page.route("**/api/wind", (route) => route.fulfill({ json: windFixture }));
   await page.route("https://earthquake.usgs.gov/**", (route) => route.fulfill({ json: { type: "FeatureCollection", features: [NEAR_QUAKE, FAR_QUAKE] } }));
   await page.route("https://gibs.earthdata.nasa.gov/wms/**", (route) => route.fulfill({ contentType: "image/jpeg", body: GIBS_DAY_JPG }));
   await page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route) => route.fulfill({ contentType: "image/jpeg", body: GIBS_TILE_JPG }));
+  // LANE P10C settled-hover fetches (HoverReadout.tsx's tide/CAPE rows):
+  // neither host matches the `**/api/**` catch-all above (they are external
+  // NOAA/Open-Meteo hosts, not this app's own /api/ routes), so without
+  // these two mocks a slow settled hover in CI would reach the real internet.
+  await page.route("https://api.tidesandcurrents.noaa.gov/**", (route) => route.fulfill({ json: { stations: [] } }));
+  await page.route("https://api.open-meteo.com/**", (route) => {
+    const at = new Date(NOW.getTime() - 30 * 60 * 1000).toISOString().slice(0, 16);
+    return route.fulfill({ json: { hourly: { time: [at], cape: [500] } } });
+  });
+  // LANE S3's marine/air-quality/flood rows share HoverReadout's ONE
+  // hoverFetchGate with tide/cape (pollCell's own comment: "one shared
+  // timestamp gate across all three domains"). These three tick on every
+  // hover frame regardless of settling, so leaving them unmocked would have
+  // a real, unmocked fetch hold that shared gate for however long the real
+  // network takes - the file's own G10 header ("no live network for a
+  // Playwright run") already promised this, this just closes the gap now
+  // that a settled hover exercises the same shared gate these do.
+  await page.route("https://marine-api.open-meteo.com/**", (route) => route.fulfill({ json: { current: {} } }));
+  await page.route("https://air-quality-api.open-meteo.com/**", (route) => route.fulfill({ json: { current: {} } }));
+  await page.route("https://flood-api.open-meteo.com/**", (route) => route.fulfill({ json: { daily: { river_discharge: [] } } }));
+  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.goto("/globe");
   await waitForHydration(page);
   const canvas = page.locator("[data-globe-root] canvas").first();
@@ -104,6 +127,8 @@ const MOUNT_TIME_NOISE = [
   /^https:\/\/services\.swpc\.noaa\.gov\//,
   /^https:\/\/ll\.thespacedevs\.com\//,
   /^https:\/\/gibs\.earthdata\.nasa\.gov\//, // base-imagery WMS/WMTS, mocked above -- EarthImagery/TileLayer's own mount cost, not HoverReadout's
+  /^https:\/\/api\.tidesandcurrents\.noaa\.gov\/mdapi\//, // HoverReadout's loadStations(): one mount-time singleton fetch, not per-hover
+  /^https:\/\/mapservices\.weather\.noaa\.gov\//, // HazardLayer's own NHC hurricane-cone poll (feedUrls.ts) - mount/interval cost, not HoverReadout's
 ];
 
 test("50 pointer moves over the globe trigger zero network requests", async ({ page }) => {
@@ -120,9 +145,10 @@ test("50 pointer moves over the globe trigger zero network requests", async ({ p
   const canvas = page.locator("[data-globe-root] canvas").first();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("globe canvas has no bounding box");
-  for (let i = 0; i < 50; i++) {
-    await page.mouse.move(box.x + box.width / 2 + (i % 20) - 10, box.y + box.height / 2 + (i % 14) - 7);
-  }
+  // Dispatch all 50 real inputs without paying a software-rendered frame
+  // round trip between each one. Await every dispatch before checking.
+  await Promise.all(Array.from({ length: 50 }, (_, i) =>
+    page.mouse.move(box.x + box.width / 2 + (i % 20) - 10, box.y + box.height / 2 + (i % 14) - 7)));
   const hoverCaused = requests.filter((u) => !MOUNT_TIME_NOISE.some((p) => p.test(u)));
   expect(hoverCaused, `hovering triggered network requests:\n${hoverCaused.join("\n")}`).toEqual([]);
 });
@@ -146,4 +172,74 @@ test("the chip hides while dragging (the button-held guard), then reappears on r
   // Guard restored: a fresh hover (not a drag) shows the chip again.
   await page.evaluate((p) => window.__V4_HOVER__!.move(p), MUMBAI);
   await expect(chip).toBeVisible();
+});
+
+// LANE P10C widened the "zero requests" contract above: it added
+// settled-hover fetches (tide/CAPE, HoverReadout.tsx's own comment) on top
+// of the always-zero wind/quake reads. The real contract is now two-sided:
+// a MOVING pointer never fetches (asserted above and again here, with real
+// mouse moves rather than the synthetic seam so surfaceHover's own path is
+// exercised), and a SETTLED pointer fetches at most once per cell inside
+// its cache window, never once per animation-frame tick even though `tick`
+// keeps re-scheduling itself every frame while hovering (its own comment).
+test("a settled hover fetches CAPE once; a moving hover fetches nothing", async ({ page }) => {
+  // Unlike this file's other tests (all driven through the __V4_HOVER__
+  // seam, immune to camera movement), this one drives a REAL mouse
+  // position over the canvas - auto-rotate would keep drifting the
+  // raycast under a genuinely still cursor, so the "settled" cell would
+  // never actually settle. reducedMotion freezes it, same as every other
+  // globe spec that holds a real screen position steady.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openGlobe(page);
+  const capeRequests: string[] = [];
+  page.on("request", (req) => { if (/^https:\/\/api\.open-meteo\.com\//.test(req.url())) capeRequests.push(req.url()); });
+
+  // Real mouse moves throughout (never the __V4_HOVER__ seam): surfaceHover
+  // tracks the real pointer every frame, and mixing a synthetic seam call
+  // into a test that also drives real moves fights that per-frame raycast
+  // for control of `hoverPoint.current` - one path or the other, not both.
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("globe canvas has no bounding box");
+  const cy = box.y + box.height / 2 - 40;
+  // Continuously moving: every step lands in a different 0.5deg cell
+  // (hoverCellKey), so `settled.since` keeps resetting and the 600ms
+  // settle floor is never reached.
+  for (let i = 0; i < 10; i++) {
+    await page.mouse.move(box.x + box.width / 2 + i * 15, cy);
+  }
+  expect(capeRequests, "moving the pointer must never itself trigger a CAPE request").toEqual([]);
+
+  // Settle: one last move, then hold still past the 600ms floor. This
+  // file freezes the clock (openGlobe's own setFixedTime, up top) so
+  // `Date.now()` inside HoverReadout's tick() never advances on its own -
+  // a real wall-clock wait here would poll forever. Nudging the frozen
+  // clock forward (still a real value HoverReadout reads on its next real
+  // rAF tick) is what actually satisfies the 600ms settle floor.
+  // The frozen clock (openGlobe's own setFixedTime) means Date.now() inside
+  // HoverReadout never advances on its own, so pollCell's shared
+  // hoverFetchGate has to be nudged forward by hand. Marine/air-quality/
+  // flood all queue on the SAME gate ahead of tide/cape in source order
+  // (pollCell's own "one shared timestamp gate" comment) and none of them
+  // had a cache entry yet for this cell (the moving phase above visited
+  // ten different cells, never staying long enough for any domain to
+  // finish queueing), so each needs its own turn at the gate before CAPE
+  // gets one - repeatedly bumping the clock inside the poll, rather than
+  // one big jump, lets each domain's pollCell call claim and release the
+  // gate in its own tick instead of all landing on the same frozen instant.
+  const settleX = box.x + box.width / 2 + 9 * 15;
+  await page.mouse.move(settleX, cy);
+  let bump = 0;
+  await expect.poll(async () => {
+    bump += 1600;
+    await page.clock.setFixedTime(new Date(NOW.getTime() + bump));
+    return capeRequests.length;
+  }, { timeout: 15_000, intervals: [200] }).toBe(1);
+
+  // Stay settled well past another 1.5s gate window: the per-cell cache,
+  // not the gate, is what keeps this at one -- a naive "refetch every gate
+  // window" bug would show up here as a second request.
+  await page.clock.setFixedTime(new Date(NOW.getTime() + bump + 1700));
+  await page.waitForTimeout(500);
+  expect(capeRequests.length, "the same settled cell must not refetch inside its cache window").toBe(1);
 });
