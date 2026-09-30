@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, Clapperboard, Pause, Play, SkipForward } from "lucide-react";
 import { useGlobe, type LayerId } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
@@ -45,20 +46,12 @@ function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-// Mirrors Globe.tsx's own PANEL_RESERVE_RIGHT (249px open / 50px collapsed)
-// plus this button's own margin, so the busy-state compact button never
-// slides under the right-edge LayerPanel column. Recreated locally rather
-// than imported: Globe.tsx doesn't export it, and this lane may not edit
-// that file to add an export just for one button.
-const FAB_RESERVE_RIGHT = { open: "sm:right-[273px]", collapsed: "sm:right-[74px]" };
-
 const btn = "rounded-full border border-line px-2 text-xs hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 const pill = "pointer-events-auto flex w-fit items-center gap-1.5 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const selected = useGlobe((s) => s.selected);
   const tourStep = useGlobe((s) => s.tourStep);
-  const panelOpen = useGlobe((s) => s.panelOpen);
   const sheet = useGlobe((s) => s.sheet);
   const select = useGlobe((s) => s.select);
   const setTourStep = useGlobe((s) => s.setTourStep);
@@ -181,11 +174,19 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- exitFilm/filmNext/filmBack close over fresh state via the store/player
   }, [filmOpen, activeFilmIndex]);
 
+  useEffect(() => {
+    if (sheet === "story" && !selected && tourStep === null) return;
+    if (open) exit();
+    if (filmOpen) exitFilm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- player cleanup uses stable store actions
+  }, [sheet, selected, tourStep]);
+
   function enter() {
     if (filmOpen) exitFilm();
     select(null);
     setTourStep(null);
     setSnap(playerRef.current.seekChapter(0));
+    useGlobe.getState().setSheet("story");
     setOpen(true);
   }
   function exit() {
@@ -193,6 +194,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     restoreLayers();
     setChapter(null);
     setOpen(false);
+    if (useGlobe.getState().sheet === "story") useGlobe.getState().setSheet(null);
   }
   function back() { setSnap(playerRef.current.prev()); }
   function next() {
@@ -206,6 +208,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     select(null);
     setTourStep(null);
     setFilmSnap(filmPlayerRef.current.seekChapter(0));
+    useGlobe.getState().setSheet("story");
     setFilmOpen(true);
   }
   function exitFilm() {
@@ -213,6 +216,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
     restoreLayers();
     setFilm(null, 1);
     setFilmOpen(false);
+    if (useGlobe.getState().sheet === "story") useGlobe.getState().setSheet(null);
   }
   function filmBack() { setFilmSnap(filmPlayerRef.current.prev()); }
   function filmNext() {
@@ -226,22 +230,13 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   // `snap.duration` out first just to hand it straight back in.
   function skipToEnd() { setFilmSnap(filmPlayerRef.current.seek(Number.MAX_SAFE_INTEGER)); }
 
-  // Compact FABs are fixed to the viewport, not the stage, so both can
-  // coexist with whichever dialog (if any) currently owns the left-column
-  // stage slot -- this is what makes "entering one always closes the
-  // other" actually reachable mid-story/mid-film, not just from the idle
-  // entry row. Each hides only for its OWN open dialog (that experience
-  // already has its own visible Exit); shows on desktop whenever a
-  // selection, the tour, OR the other player has claimed the busy slot.
+  // Entry icons share the measured topbar, never the fact band or sheet.
   const storyFabBusy = busy || filmOpen;
   const filmFabBusy = busy || open;
-  // A phone bottom sheet (`sheet !== null`) already spans the full viewport
-  // width at the same fixed bottom edge these FABs occupy -- on top of it, a
-  // floating FAB only steals pointer events from whatever the sheet put in
-  // that same corner (e.g. the tour sheet's sticky "Next" button). Hide both
-  // FABs outright while any sheet or guided tour owns that screen.
-  const sheetOpen = sheet !== null || tourStep !== null;
-  const compactFabs = (
+  const compact = getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() === "1";
+  const sheetOpen = (sheet !== null && (compact || sheet !== "story")) || tourStep !== null;
+  const entryHost = document.querySelector("[data-globe-topbar] > div:last-child");
+  const compactFabs = entryHost && createPortal(
     <>
       {!open && !sheetOpen && (
         <button
@@ -250,7 +245,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           onClick={enter}
           aria-label="My story"
           title="My story"
-          className={`pointer-events-auto fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${storyFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+          className={`pointer-events-auto relative z-20 h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${storyFabBusy ? "flex" : "hidden compact:flex"}`}
         >
           <BookOpen size={16} aria-hidden />
         </button>
@@ -262,12 +257,12 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           onClick={enterFilm}
           aria-label="Life journey film"
           title="Life journey film"
-          className={`pointer-events-auto fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${filmFabBusy ? "sm:flex" : "sm:hidden"} ${panelOpen ? FAB_RESERVE_RIGHT.open : FAB_RESERVE_RIGHT.collapsed}`}
+          className={`pointer-events-auto relative z-20 h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${filmFabBusy ? "flex" : "hidden compact:flex"}`}
         >
           <Clapperboard size={16} aria-hidden />
         </button>
       )}
-    </>
+    </>, entryHost
   );
 
   if (open) {
@@ -319,21 +314,18 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-story-chapter-id={chapter.id}
           role="dialog"
           aria-label="My story"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-left-slot-top,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[var(--globe-facts-reserve,calc(45%+16px))] sm:max-h-[calc(100%-var(--globe-facts-reserve,calc(45%+16px))-var(--globe-left-slot-top,5rem))]"
         >
           {cardBody("py-1")}
         </div>
 
-        {/* Phone (< 640): a bottom sheet -- this lane's own local state, not
-            globeStore's `sheet` (that type is shared with every other wave-6
-            lane in parallel; adding a "story" variant to it is out of this
-            lane's owned files). */}
+        {/* Compact viewports share globeStore's exclusive sheet. */}
         <div
           data-story-chapter-sheet
           data-story-chapter-id={chapter.id}
           role="dialog"
           aria-label="My story"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 compact:!block sm:hidden"
         >
           {cardBody("min-h-11 min-w-11")}
         </div>
@@ -395,7 +387,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-film-chapter-id={filmChapter.id}
           role="dialog"
           aria-label="Life journey film"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-left-slot-top,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[var(--globe-facts-reserve,calc(45%+16px))] sm:max-h-[calc(100%-var(--globe-facts-reserve,calc(45%+16px))-var(--globe-left-slot-top,5rem))]"
         >
           {filmCardBody("py-1")}
         </div>
@@ -404,7 +396,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           data-film-chapter-id={filmChapter.id}
           role="dialog"
           aria-label="Life journey film"
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 compact:!block sm:hidden"
         >
           {filmCardBody("min-h-11 min-w-11")}
         </div>
@@ -420,7 +412,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
           because neither renders anything there while !busy, and the column
           layout means a future third pill needs no new offset math. */}
       {!busy && (
-        <div className="absolute left-4 top-20 z-30 hidden flex-col items-start gap-2 sm:top-[var(--globe-top-offset,5rem)] sm:flex">
+        <div className="absolute left-4 top-20 z-30 hidden flex-col items-start gap-2 sm:top-[var(--globe-left-slot-top,5rem)] sm:flex">
           <button type="button" data-story-entry onClick={enter} className={pill}>
             <BookOpen size={16} aria-hidden /> My story
           </button>

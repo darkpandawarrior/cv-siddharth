@@ -169,7 +169,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768
       });
       const withReceipt = await measure();
       await receipt.evaluate((el) => { el.style.display = "none"; });
-      await page.waitForTimeout(200);
+      await expect(receipt).toBeHidden();
       const withoutReceipt = await measure();
       await receipt.evaluate((el) => { el.style.removeProperty("display"); });
       const measurements = info.outputPath("layout-measurements.json");

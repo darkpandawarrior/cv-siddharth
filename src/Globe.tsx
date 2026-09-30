@@ -136,32 +136,6 @@ export function Globe() {
   const setSheet = useGlobe((s) => s.setSheet);
   const tourStep = useGlobe((s) => s.tourStep);
   const setTourStep = useGlobe((s) => s.setTourStep);
-  const rootRef = useRef<HTMLDivElement>(null);
-  // sm+ only: the room's <main> is a flex item (RoomFrame's own sticky-
-  // footer column) with no `height` declared, only a flexed size - Chromium
-  // measured at 0px against it for every percentage-height descendant here
-  // (`h-full`, confirmed via getBoundingClientRect during this lane's own
-  // QA: an 841px <main> gave this root a 0px box, not 70vh, not full - the
-  // dead-space defect this lane exists to fix, just further than reported).
-  // RoomFrame is a shared file this lane may not edit, so the fix lives
-  // here: measure the real parent height and set it explicitly. Phones are
-  // exempt - the root there sizes itself from its own flow content (a
-  // 62svh stage plus the fact list), which needs no measurement.
-  const [desktopHeightPx, setDesktopHeightPx] = useState<number | null>(null);
-  useEffect(() => {
-    const parent = rootRef.current?.parentElement;
-    if (!parent) return;
-    const update = () => setDesktopHeightPx(window.innerWidth >= 640 ? parent.clientHeight : null);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(parent);
-    window.addEventListener("resize", update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
   // Phones: the topbar wraps the HUD pills into 1-3 rows depending on
   // viewport width, so its real height varies - measured here and handed to
   // GlobeScene as `topOffsetPx` (SceneRig's own comment has the why) rather
@@ -199,8 +173,7 @@ export function Globe() {
   }, [capable]);
 
   useEffect(() => {
-    setCapable(hasWebGL());
-    setTier(deviceTier());
+    queueMicrotask(() => { setCapable(hasWebGL()); setTier(deviceTier()); });
   }, []);
 
   // Desktop first load only (task 4): preselect Pune so the Inspector isn't
@@ -208,7 +181,7 @@ export function Globe() {
   // overwrite `selected` same as ever - this only fires once, and only if
   // nothing has claimed the slot by the time it runs.
   useEffect(() => {
-    if (!capable || typeof window === "undefined" || window.innerWidth < 640) return;
+    if (!capable || typeof window === "undefined" || getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() === "1") return;
     if (useGlobe.getState().selected) return;
     const selection = buildPuneSelection();
     if (selection) select(selection);
@@ -224,9 +197,7 @@ export function Globe() {
     <div
       data-globe-root
       tabIndex={-1}
-      ref={rootRef}
       className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block"
-      style={desktopHeightPx != null ? { height: desktopHeightPx } : undefined}
     >
       {/* STAGE: the canvas and every overlay whose position resolves against
           the room, not the viewport. ~62svh block on phones (flow, above
@@ -382,7 +353,7 @@ export function Globe() {
       <div
         className={
           capable
-            ? `relative z-10 order-2 max-h-[38svh] overflow-y-auto bg-gradient-to-t from-ink/95 via-ink/70 to-transparent p-4 sm:absolute sm:bottom-0 sm:left-0 sm:order-none sm:max-h-[45%] sm:p-6 ${panelReserveRight}`
+            ? `relative z-10 order-2 max-h-[min(38svh,var(--globe-facts-max-h,38svh))] overflow-y-auto bg-gradient-to-t from-ink/95 via-ink/70 to-transparent p-4 sm:absolute sm:bottom-0 sm:left-0 sm:order-none sm:max-h-[45%] sm:p-6 ${panelReserveRight}`
             : "relative z-10 mx-auto max-w-2xl px-6 py-16"
         }
       >

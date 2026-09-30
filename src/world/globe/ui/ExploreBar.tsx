@@ -61,6 +61,56 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const view = useGlobe(s => s.view);
   const sheet = useGlobe(s => s.sheet);
 
+  useEffect(() => {
+    const bar = host.current, stage = bar?.closest<HTMLElement>("[data-globe-stage]"), root = stage?.parentElement;
+    const topbar = stage?.querySelector<HTMLElement>("[data-globe-topbar]");
+    const facts = root?.querySelector<HTMLElement>("[data-globe-panel]")?.parentElement;
+    if (!bar || !stage || !root || !topbar || !facts) return;
+    let frame = 0;
+    const measure = () => {
+      const parent = root.parentElement!;
+      root.style.height = innerWidth >= 640 ? `${Math.max(0, Math.min(parent.clientHeight, innerHeight - parent.getBoundingClientRect().top))}px` : "";
+      root.style.setProperty("--globe-room-top", `${root.getBoundingClientRect().top}px`);
+      const room = stage.getBoundingClientRect();
+      let top = topbar.getBoundingClientRect();
+      const [left, right] = [...topbar.children].map(el => el.getBoundingClientRect());
+      const width = bar.offsetWidth, gap = 8;
+      const centred = room.width >= 640 && right.left - left.right - gap * 2 >= width;
+      if (getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() !== "1") {
+        const slot = stage.querySelector<HTMLElement>("[data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card]");
+        const title = slot?.querySelector("h2")?.getBoundingClientRect().height ?? 0;
+        const actions = slot?.lastElementChild?.getBoundingClientRect().height ?? 0;
+        const reserve = slot?.checkVisibility() ? title + actions + gap * 4 : 0;
+        const limit = Math.max(0, facts.getBoundingClientRect().top - room.top - reserve - (centred ? 0 : bar.offsetHeight) - gap * 3);
+        topbar.style.maxHeight = `${limit}px`;
+        const padding = getComputedStyle(topbar);
+        topbar.style.setProperty("--globe-rail-max-h", `${Math.max(0, limit - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom))}px`);
+        top = topbar.getBoundingClientRect();
+      } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
+      const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
+      const short = getComputedStyle(document.documentElement).getPropertyValue("--globe-short").trim() === "1";
+      bar.style.left = `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : room.width / 2}px`;
+      bar.style.top = `${y}px`;
+      bar.style.maxHeight = `${Math.max(0, Math.min(room.bottom, innerHeight) - room.top - y - gap)}px`;
+      const bottom = bar.checkVisibility() ? y + bar.getBoundingClientRect().height : 0;
+      stage.style.setProperty("--globe-left-slot-top", `${Math.max(top.bottom - room.top, centred ? 0 : bottom) + gap}px`);
+      stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - facts.getBoundingClientRect().top) + gap}px`);
+      root.style.setProperty("--globe-facts-max-h", `${Math.max(0, innerHeight - facts.getBoundingClientRect().top)}px`);
+      root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - top.bottom - gap)}px`);
+      stage.dataset.chromeMeasured = "true";
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    const resize = new ResizeObserver(schedule);
+    for (const el of [root.parentElement!, stage, topbar, ...topbar.children, bar, facts]) resize.observe(el);
+    // Site header and sheet state can move the stage without resizing it.
+    const mutation = new MutationObserver(schedule);
+    mutation.observe(root.parentElement!, { childList: true, subtree: true });
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, true);
+    schedule();
+    return () => { cancelAnimationFrame(frame); resize.disconnect(); mutation.disconnect(); window.removeEventListener("resize", schedule); window.removeEventListener("scroll", schedule, true); };
+  }, [sheet]);
+
   const topRow = useMemo(() => classify(query), [query]);
   const examples = phone && focused && !query && !answer;
   const rows: Row[] = useMemo(() => examples
@@ -254,24 +304,12 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    // Mobile top offset tracks the topbar's REAL measured height
-    // (Globe.tsx's `--globe-top-offset`, the same var Inspector.tsx and
-    // GlobeTour.tsx already consume at sm+) instead of a guessed constant.
-    // On mobile the topbar's own icon row (Layers/Time/Tour) is part of
-    // that measured height, and a real weather/status line makes the whole
-    // stack taller than the old fixed 104px assumed - which put this box's
-    // top edge OVER those icon buttons and silently ate every click meant
-    // for them (globe-U1.spec.ts's "phones open one sheet at a time" is
-    // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
-    // ExploreBar sits IN the topbar's reserved centre band beside the HUD
-    // pills, not below the full stack, so it was never affected.
-    // Below the z-20 topbar so Share's popover stays clickable.
-    <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
+    <div ref={host} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
       </div>}
-      <div className={mode === "pin" ? "hidden" : "flex flex-wrap items-center gap-1"}>
+      <div className={mode === "pin" ? "hidden" : "flex flex-wrap items-center"}>
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
           placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-48px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
           onFocus={() => { setFocused(true); setActive(-1); }}
@@ -288,7 +326,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         {mode !== "pin" && <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed={false} disabled={view !== "orbit"} onClick={() => toggle("pin")}>Pin</button>}
         {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
-      {mode !== "pin" && !query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
+      {mode !== "pin" && focused && !query && !answer && <div className="hidden compact:!hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
         {EXAMPLE_CHIPS.map(chip => (
           <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
             className="rounded-full border border-line px-2 py-1 text-xs text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
@@ -320,7 +358,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
         </p>}
       </div>
-      <p className={mode === "pin" ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
+      <p className={mode === "pin" || (!results.length && !answer && !message) ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
       <ExploreMeasure canvas={canvas} tier={tier} />
     </div>
   );

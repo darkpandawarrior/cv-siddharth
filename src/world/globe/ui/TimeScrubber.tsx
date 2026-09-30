@@ -68,6 +68,8 @@ function fmtFull(d: Date, timeZone: string): string {
   return d.toLocaleString("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short", hour12: false });
 }
 
+const SpaceWeather = lazy(() => import("./SpaceWeather.tsx"));
+
 export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   const offset = useGlobe((s) => s.timeOffsetMin);
   const setTimeOffset = useGlobe((s) => s.setTimeOffset);
@@ -365,6 +367,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             {beyondRange ? `${now.toISOString().slice(0, 16).replace("T", " ")} UTC · beyond the slider range` : label}
           </p>
 
+          <Suspense fallback={null}><SpaceWeather /></Suspense>
           {eventStrip}
           <div className="relative flex items-center">
             <DayTicks />
@@ -423,7 +426,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             {eclipseButtonFull}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
-        </div>, document.body
+        </div>, document.querySelector("[data-globe-stage]") ?? document.body
       )}
 
       <CompareDivider />
