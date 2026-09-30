@@ -34,16 +34,16 @@ const QUAKE_SELECTION = {
   focus: { kind: "latlon", lat: 18.5204, lon: 73.8567 },
 };
 
-async function openGlobeWithSelection(page: Page) {
+async function openGlobeWithSelection(page: Page, width = 1440, height = 900) {
   await page.addInitScript((sel) => {
     (window as unknown as { __GLOBE_TEST_SELECT__: unknown }).__GLOBE_TEST_SELECT__ = sel;
   }, QUAKE_SELECTION);
-  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.setViewportSize({ width, height });
   await withApiFixtures(page);
   await page.clock.setFixedTime(new Date("2026-09-29T12:00:00Z"));
   await page.goto("/globe");
   await waitForHydration(page);
-  const inspector = page.locator("[data-globe-inspector]");
+  const inspector = page.locator(width < 640 ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
   await expect(inspector).toBeVisible({ timeout: 30_000 });
   return inspector;
 }
@@ -71,7 +71,10 @@ test("the 'How it's built' toggle is closed by default and opens a per-layer pan
   // the honestly-scoped Maps Takeout line the brief requires verbatim.
   await expect(panel).toContainText("gibs.earthdata.nasa.gov");
   await expect(panel).toContainText("public domain");
-  await expect(panel).toContainText("Google Maps Takeout, owner export, city level, years only");
+  await expect(panel.getByRole("link", { name: "CC BY 4.0, Open-Meteo.com", exact: true }).first()).toHaveAttribute("href", "https://open-meteo.com/en/licence");
+  await expect(panel).toContainText("exact place pins and names, star ratings, review text, month-level dates");
+  await expect(panel).not.toContainText("city level, years only");
+  for (const text of ["Daylight: golden hour", "Eclipse paths", "Bloom: night lights", "adsb.lol", "marine-api.open-meteo.com", "air-quality-api.open-meteo.com", "flood-api.open-meteo.com", "services.swpc.noaa.gov"]) await expect(panel).toContainText(text);
 
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -92,3 +95,19 @@ test("the toggle and a copy button are keyboard reachable", async ({ page }) => 
   await copyButtons.first().focus();
   await expect(copyButtons.first()).toBeFocused();
 });
+
+for (const [width, height] of [[390, 844], [360, 740]]) {
+  test(`How it's built is legible and scrolls at ${width}`, async ({ page }) => {
+    const inspector = await openGlobeWithSelection(page, width, height);
+    await inspector.getByRole("button", { name: "How it's built" }).click();
+    const panel = inspector.locator("[data-how-its-built]");
+    await expect(panel).toBeVisible();
+    expect(await panel.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(12);
+    expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth && el.scrollHeight > el.clientHeight)).toBe(true);
+    await panel.getByText("My Maps places (Local Guide contributions)", { exact: true }).scrollIntoViewIfNeeded();
+    expect(await panel.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    await expect(panel.getByText("My Maps places (Local Guide contributions)", { exact: true })).toBeVisible();
+    await expect(panel).not.toContainText("city level, years only");
+    await page.screenshot({ path: `test-results/Y2-how-built-${width}.png` });
+  });
+}

@@ -1,3 +1,4 @@
+import { ALERT_WARN, ALERT_DANGER } from "./layerKeys.ts";
 // LANE L7 (live earth events), task 3: GDACS orange/red alerts as a halo
 // ring around their matched quake/EONET event, or a standalone marker when
 // nothing matched. One InstancedMesh (task 8) — the halo is just a bigger,
@@ -40,8 +41,8 @@ export const SURFACE_LIFT = 0.032;
 // glyphs, an alert IS a claim ("this is orange/red right now"), so it uses
 // the house palette rather than a natural-phenomenon hex (globe-lanes.md's
 // colour rule cuts the other way here on purpose).
-const ORANGE = new THREE.Color("#f0883e");
-const RED = new THREE.Color("#ff5c5c");
+const ORANGE = new THREE.Color(ALERT_WARN);
+const RED = new THREE.Color(ALERT_DANGER);
 
 const dummy = new THREE.Object3D();
 const UP = new THREE.Vector3(0, 0, 1);

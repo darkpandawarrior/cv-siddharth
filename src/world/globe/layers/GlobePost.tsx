@@ -17,8 +17,7 @@ import { Bloom, EffectComposer, SMAA } from "@react-three/postprocessing";
 // imports must stay OUT of the Globe shell chunk). Tier 3 never mounts this
 // component at all — that IS its "no composer" case, so nothing here has to
 // branch on tier 3.
-const BLOOM_THRESHOLD = 1.0; // matches uNightGain's floor exactly (earthImageryShader.ts)
-const BLOOM_INTENSITY = 0.6;
+import { BLOOM_THRESHOLD, BLOOM_INTENSITY } from "./layerKeys.ts";
 const BLOOM_LEVELS_T1 = 6;
 const BLOOM_LEVELS_T2 = 4;
 

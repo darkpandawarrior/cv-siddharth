@@ -32,3 +32,6 @@ export const NHC_CONE_LAYER_IDS = [8, 34, 60, 86, 112, 138, 164, 190, 216, 242, 
 export function nhcConeUrl(layerId: number): string {
   return `${NHC_MAPSERVER_BASE}/${layerId}/query?where=1%3D1&outFields=*&f=geojson`;
 }
+
+export const ADSB_URL = "https://api.adsb.lol/v2/point/18.5316/73.8603/60";
+export const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";

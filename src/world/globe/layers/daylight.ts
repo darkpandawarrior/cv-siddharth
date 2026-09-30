@@ -114,21 +114,7 @@ export function updateDaylightUniforms(now: Date, uniforms: ReturnType<typeof da
 export const VERT = `varying vec3 vW;
 void main(){vW=normal;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 
-export const DAYLIGHT_FRAG = `uniform vec3 uSun;uniform float uWakeCenter;varying vec3 vW;
-const float PI=3.14159265;
-void main(){
-  float cosSun=dot(normalize(vW),uSun);
-  float golden=smoothstep(-0.104528,-0.069756,cosSun)*(1.0-smoothstep(0.104528,0.139173,cosSun));
-  float lon=atan(-vW.z,vW.x);
-  float d=lon-uWakeCenter;
-  d-=2.0*PI*floor((d+PI)/(2.0*PI));
-  float wake=1.0-smoothstep(0.0,0.3927,abs(d));
-  wake*=wake;
-  vec3 goldC=vec3(.95,.62,.32);
-  vec3 wakeC=vec3(.85,.86,.78);
-  vec3 col=goldC*golden*.5+wakeC*wake*.32;
-  gl_FragColor=vec4(col,1.0);
-}`;
+export { DAYLIGHT_FRAG } from "./layerKeys.ts";
 
 // ---------------------------------------------------------------------------
 // (c) The readout: up to five cities rising, five setting, right now.

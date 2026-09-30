@@ -1,3 +1,4 @@
+import { ALERT_WARN, ALERT_DANGER } from "./layerKeys.ts";
 // LANE V5 (wave 7, lane 5, step A). Draws each active NHC forecast cone as a
 // translucent fill on the sphere surface -- the same "hazard = a claim,
 // house colour tokens" rule hazardHalos.tsx uses, just a filled polygon
@@ -8,7 +9,6 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { latLonToXyz, type LatLon } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
-import { readColor } from "../../../themeColorThree.ts";
 import { unwrapConeRing, type ConePolygon } from "./nhcCones.ts";
 
 // Same surface-offset family as hazardHalos.tsx's 0.025 -- just above the
@@ -66,8 +66,8 @@ export function NhcConeGlyphs({ cones, dangerIds }: { cones: ConePolygon[]; dang
     };
   }, [meshes]);
 
-  const warn = readColor("--color-warn", "#f0883e");
-  const danger = readColor("--color-danger", "#ff5c5c");
+  const warn = ALERT_WARN;
+  const danger = ALERT_DANGER;
 
   if (meshes.length === 0) return null;
 

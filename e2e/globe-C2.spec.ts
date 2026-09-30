@@ -109,6 +109,12 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
     .poll(async () => (await page.locator("[data-xray-legend]").innerText()).includes("no tiles drawn"), { timeout: 15_000 })
     .toBe(false);
 
+  // Tiles settle independently of XRayTiles' first renderer.info sample.
+  // Wait for that published sample, then read the grid as one snapshot.
+  await expect.poll(async () => {
+    const text = await page.locator("[data-xray-stats]").innerText();
+    return ["draw calls", "triangles", "geometries"].every((label) => parseStatValue(text, label) > 0);
+  }).toBe(true);
   const statsText = await page.locator("[data-xray-stats]").innerText();
   const drawCallsOn = parseStatValue(statsText, "draw calls");
   const triangles = parseStatValue(statsText, "triangles");

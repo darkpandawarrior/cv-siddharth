@@ -8,11 +8,11 @@ import { buildHowItsBuiltEntries } from "./howItsBuiltData.ts";
 import { VERT, ATMO_FRAG, OCEAN_FRAG } from "../layers/sun.ts";
 import { CLOUD_FRAG } from "../layers/cloudShader.ts";
 import { EARTH_IMAGERY_FRAG, INNER_HAZE_FRAG } from "../layers/earthImageryShader.ts";
-import { GIBS_CATALOG, tileUrl } from "../layers/gibsCatalog.ts";
+import { GIBS_CATALOG, GIBS_OVERLAYS, tileUrl } from "../layers/gibsCatalog.ts";
 import { dayImageryAttempts, gapFillUrl, reliefUrl, nightLightsUrl, seaIceAttempts, type GibsSize } from "../layers/gibs.ts";
 import { LIBERTY_STYLE_URL, PANORAMAX_SEARCH_ENDPOINT } from "../streetPhotos.ts";
 import { mapsExport } from "../../../data/generated/mapsPlaces.ts";
-import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
+import { ADSB_URL, FORECAST_URL, QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
 
 const NOW = new Date("2026-09-29T12:00:00Z");
 const SIZE: GibsSize = { width: 2048, height: 1024 };
@@ -58,7 +58,7 @@ describe("howItsBuiltData", () => {
   it("guide places provenance's fetched-at is the same generated Maps Takeout snapshot GuideLayer.tsx reads, and states scope honestly", () => {
     const provenance = byId(entries, "guide-places").provenance[0];
     expect(provenance.fetchedAt).toBe(mapsExport);
-    expect(provenance.licence).toBe("Google Maps Takeout, owner export, city level, years only");
+    expect(provenance.licence).toBe("Google Maps Takeout, owner export: exact place pins and names, star ratings, review text, month-level dates");
   });
 
   it("hazard provenance endpoints are the same feedUrls.ts constants HazardLayer.tsx fetches, in order", () => {
@@ -72,4 +72,25 @@ describe("howItsBuiltData", () => {
     expect(byId(later, "earth-imagery").shaders.map((s) => s.code)).toEqual([VERT, EARTH_IMAGERY_FRAG]);
     expect(byId(later, "earth-imagery").provenance[0].fetchedAt).not.toBe(byId(entries, "earth-imagery").provenance[0].fetchedAt);
   });
+});
+
+import { DAYLIGHT_FRAG, ECLIPSE_GSFC_NOTE, BLOOM_THRESHOLD, BLOOM_INTENSITY } from "../layers/layerKeys.ts";
+import { XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL } from "../layers/solarFlare.ts";
+import { MARINE_HOST } from "../layers/marine.ts";
+import { AIR_QUALITY_HOST } from "../layers/airQuality.ts";
+import { FLOOD_HOST } from "../layers/flood.ts";
+import astronomyPackage from "../../../../node_modules/astronomy-engine/package.json";
+import r3PostPackage from "../../../../node_modules/@react-three/postprocessing/package.json";
+import postPackage from "../../../../node_modules/postprocessing/package.json";
+
+const NEW_ENTRIES = [
+  ["daylight", { shaders: [{ name: "fragment", code: DAYLIGHT_FRAG }], description: "Computed from the subsolar point, not fetched" }],
+  ["eclipse", { description: ECLIPSE_GSFC_NOTE, provenance: [{ licence: astronomyPackage.license }, { label: "NASA GSFC cross-check" }] }],
+  ["bloom", { description: `Luminance threshold ${BLOOM_THRESHOLD}, intensity ${BLOOM_INTENSITY}. Imagery only, tiers 1 and 2.`, provenance: [{ licence: r3PostPackage.license }, { licence: postPackage.license }] }],
+  ["space-weather", { provenance: [XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL].map((endpoint) => ({ endpoint })) }],
+  ...[["aircraft", ADSB_URL], ["wind", FORECAST_URL], ["marine", MARINE_HOST], ["air-quality", AIR_QUALITY_HOST], ["flood", FLOOD_HOST]].map(([id, endpoint]) => [id, { provenance: [{ endpoint }] }] as const),
+  ["gibs-overlays", { provenance: GIBS_OVERLAYS.map((entry) => ({ label: entry.title, endpoint: tileUrl(entry, 0, 0, 0, NOW), licence: entry.attribution })) }],
+] as const;
+it.each(NEW_ENTRIES)("%s cites the same literal source, settings, endpoint or licence as the layer", (id, expected) => {
+  expect(byId(buildHowItsBuiltEntries(NOW), id)).toMatchObject(expected);
 });

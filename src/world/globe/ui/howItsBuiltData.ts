@@ -8,12 +8,21 @@ import { GLOBE_RADIUS } from "../geoMath.ts";
 import { VERT, ATMO_FRAG, OCEAN_FRAG } from "../layers/sun.ts";
 import { CLOUD_FRAG } from "../layers/cloudShader.ts";
 import { EARTH_IMAGERY_FRAG, INNER_HAZE_FRAG } from "../layers/earthImageryShader.ts";
-import { GIBS_CATALOG, tileUrl } from "../layers/gibsCatalog.ts";
+import { GIBS_CATALOG, GIBS_OVERLAYS, tileUrl } from "../layers/gibsCatalog.ts";
 import { dayImageryAttempts, gapFillUrl, reliefUrl, nightLightsUrl, seaIceAttempts, describeImagerySource, type GibsSize } from "../layers/gibs.ts";
 import { LIBERTY_STYLE_URL, PANORAMAX_SEARCH_ENDPOINT } from "../streetPhotos.ts";
 import { mapsExport } from "../../../data/generated/mapsPlaces.ts";
-import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
+import { ADSB_URL, FORECAST_URL, QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, NHC_CONE_LAYER_IDS, nhcConeUrl } from "../layers/feedUrls.ts";
 import { TLE_SOURCE, TLE_STATIONS_URL, TLE_VISUAL_URL } from "../layers/tleSource.ts";
+
+import { DAYLIGHT_FRAG, ECLIPSE_GSFC_NOTE, BLOOM_THRESHOLD, BLOOM_INTENSITY } from "../layers/layerKeys.ts";
+import { XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL } from "../layers/solarFlare.ts";
+import { MARINE_HOST } from "../layers/marine.ts";
+import { AIR_QUALITY_HOST } from "../layers/airQuality.ts";
+import { FLOOD_HOST } from "../layers/flood.ts";
+import astronomyPackage from "../../../../node_modules/astronomy-engine/package.json";
+import r3PostPackage from "../../../../node_modules/@react-three/postprocessing/package.json";
+import postPackage from "../../../../node_modules/postprocessing/package.json";
 
 export interface ShaderSource {
   name: string;
@@ -25,11 +34,13 @@ export interface Provenance {
   endpoint: string;
   fetchedAt?: string;
   licence: string;
+  licenceUrl?: string;
 }
 
 export interface HowItsBuiltEntry {
   id: string;
   title: string;
+  description?: string;
   shaders: ShaderSource[];
   provenance: Provenance[];
 }
@@ -54,6 +65,22 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
   const src = describeImagerySource(now);
 
   return [
+    { id: "daylight", title: "Daylight: golden hour and waking cities", description: "Computed from the subsolar point, not fetched", shaders: [{ name: "fragment", code: DAYLIGHT_FRAG }], provenance: [] },
+    { id: "eclipse", title: "Eclipse paths", description: ECLIPSE_GSFC_NOTE, shaders: [], provenance: [
+      { label: "astronomy-engine", endpoint: "https://github.com/cosinekitty/astronomy", licence: astronomyPackage.license },
+      { label: "NASA GSFC cross-check", endpoint: "https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/SE2027Aug02Tpath.html", licence: "NASA US government public domain" },
+    ] },
+    { id: "bloom", title: "Bloom: night lights", description: `Luminance threshold ${BLOOM_THRESHOLD}, intensity ${BLOOM_INTENSITY}. Imagery only, tiers 1 and 2.`, shaders: [], provenance: [
+      { label: "@react-three/postprocessing", endpoint: "https://github.com/pmndrs/react-postprocessing", licence: r3PostPackage.license },
+      { label: "postprocessing", endpoint: "https://github.com/pmndrs/postprocessing", licence: postPackage.license },
+    ] },
+    { id: "space-weather", title: "Space weather: GOES X-ray, proton flux and solar wind", shaders: [], provenance: [XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL].map((endpoint) => ({ label: "NOAA SWPC", endpoint, licence: "NOAA US government public domain" })) },
+    { id: "aircraft", title: "Aircraft: local ADS-B cluster", shaders: [], provenance: [{ label: "adsb.lol", endpoint: ADSB_URL, licence: "adsb.lol, ODbL 1.0" }] },
+    { id: "wind", title: "Wind: 10 m global model grid", shaders: [], provenance: [{ label: "Open-Meteo", endpoint: FORECAST_URL, licence: "CC BY 4.0, Open-Meteo.com", licenceUrl: "https://open-meteo.com/en/licence" }] },
+    { id: "marine", title: "Marine: waves and swell", shaders: [], provenance: [{ label: "Open-Meteo marine", endpoint: MARINE_HOST, licence: "CC BY 4.0, Open-Meteo.com", licenceUrl: "https://open-meteo.com/en/licence" }] },
+    { id: "air-quality", title: "Air quality: CAMS model", shaders: [], provenance: [{ label: "Open-Meteo / CAMS", endpoint: AIR_QUALITY_HOST, licence: "CC BY 4.0, Open-Meteo.com / CAMS", licenceUrl: "https://open-meteo.com/en/licence" }] },
+    { id: "flood", title: "Flood: GloFAS river discharge model", shaders: [], provenance: [{ label: "Open-Meteo / GloFAS", endpoint: FLOOD_HOST, licence: "CC BY 4.0, Open-Meteo.com / GloFAS", licenceUrl: "https://open-meteo.com/en/licence" }] },
+    { id: "gibs-overlays", title: "GIBS imagery overlays (complete catalogue)", shaders: [], provenance: GIBS_OVERLAYS.map((entry) => gibsProvenance(entry.id, now)) },
     { id: "tides-cape-meteors", title: "Tides, atmospheric instability and approximate meteor radiants", shaders: [], provenance: [
       { label: "NOAA CO-OPS (stations within 50 km, US coastal coverage, MLLW datum, UTC)", endpoint: "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter", licence: "NOAA US government public domain" },
       { label: "Open-Meteo hourly CAPE (atmospheric instability proxy, not lightning)", endpoint: "https://api.open-meteo.com/v1/forecast", licence: "CC BY 4.0, https://open-meteo.com/en/docs" },
@@ -149,13 +176,14 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
     {
       id: "guide-places",
       title: "My Maps places (Local Guide contributions)",
+      description: "Exact place pins and names, star ratings, review text and month-level dates from the owner export.",
       shaders: [],
       provenance: [
         {
           label: "Places, reviews, photos",
           endpoint: "local snapshot, no live endpoint (a data build step, not a browser fetch)",
           fetchedAt: mapsExport,
-          licence: "Google Maps Takeout, owner export, city level, years only",
+          licence: "Google Maps Takeout, owner export: exact place pins and names, star ratings, review text, month-level dates",
         },
       ],
     },

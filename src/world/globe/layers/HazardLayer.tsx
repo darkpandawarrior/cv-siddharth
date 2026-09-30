@@ -1,3 +1,4 @@
+import { setHazardKeys, resetHazardKeys } from "./layerKeys.ts";
 import { startVisibilityPolling } from "../../../lib/visibilityPolling.ts";
 import { VolcanoGlyphs } from "./VolcanoGlyphs.tsx";
 import { parseVolcanoResponse, volcanoGlyphs } from "./volcano.ts";
@@ -300,6 +301,8 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       state: status.state,
       detail: [status.detail, volcanoSnap.error ? "Smithsonian weekly report unreachable" : weeklyVolcanoes.length ? `Smithsonian GVP / USGS weekly report, ${weeklyVolcanoes[0].week}` : "Smithsonian weekly report loading", `${nhcClause}, NHC basins only (Atlantic, East and Central Pacific)`].filter(Boolean).join(", "),
     };
+    setHazardKeys({ quakes: quakesShown.length, fires, storms, volcanoes, alerts: matchedAlerts.length,
+      launches: launches?.length ?? 0, cones: nhcCones.length, aurora: auroraShown !== null, kp: kpReading?.kp ?? null });
     setStatus("hazards", combinedStatus);
     if (typeof window !== "undefined") {
       window.__HAZARD_DEBUG__ = {
@@ -350,6 +353,8 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     setStatus,
     filters,
   ]);
+
+  useEffect(() => resetHazardKeys, []);
 
   // WAVE 6 LANE X1 (live world feed): every qualifying item is published on
   // every poll, not just "the first time seen" — the feed store's own

@@ -476,7 +476,6 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>{layers.together && live && tier !== 3 && <TogetherLayer tier={tier} />}</Suspense>
         {/* Wave 6 seams: replay (renders only off "now"), story arcs (only while
             a story plays), density columns (toggle). */}
-        <Suspense fallback={null}>{layers.buoys && <BuoyLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.hazards && <HistoryLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
           {storyArcsOn && <StoryArc tier={tier} />}

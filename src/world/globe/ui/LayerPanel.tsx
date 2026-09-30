@@ -1,9 +1,11 @@
-import { Legend } from "./Legend.tsx";
+import { HazardLegend, Legend } from "./Legend.tsx";
 import { GIBS_BASES } from "../layers/gibsCatalog.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
 import { DENSITY_LEGEND } from "../layers/hexbin.ts";
-import { QUAKE_DEPTH_LEGEND } from "../layers/quake.ts";
-import { useEffect, useRef, useState } from "react";
+import { DAYLIGHT_LEGEND, ECLIPSE_LEGEND } from "../layers/layerKeys.ts";
+import { isXrayEnabled, setXrayEnabled, subscribeXray } from "../layers/xrayState.ts";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Layers, X } from "lucide-react";
 import { flushSync } from "react-dom";
 import type { Vector3 } from "three";
@@ -24,6 +26,15 @@ import { ShareSlot } from "./ShareView.tsx";
 // LANE P1 (wave 7): the preset chip row — pure preset data/diff logic lives
 // in its own file so it is unit-testable without mounting this component.
 import { LAYER_PRESETS, layerIdsToToggle, presetCaveat, presetImagery, presetLayerRecord, type LayerPreset } from "./layerPresets.ts";
+
+const XRay = lazy(() => import("./XRay.tsx"));
+const PHONE_QUERY = "(max-width: 639px)";
+function subscribePhone(listener: () => void) {
+  const query = window.matchMedia(PHONE_QUERY);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+}
+function isPhone() { return window.matchMedia(PHONE_QUERY).matches; }
 
 function ImagerySection() {
   const imagery = useGlobe((s) => s.imagery);
@@ -151,7 +162,9 @@ export function LayerRows({ layers, status, toggleLayer }: { layers: Record<Laye
             </button>
             {on && id === "wind" && <Legend legend={WIND_LEGEND} />}
             {on && id === "density" && <Legend legend={DENSITY_LEGEND} />}
-            {on && id === "hazards" && <Legend legend={QUAKE_DEPTH_LEGEND} />}
+            {on && id === "hazards" && <HazardLegend />}
+            {on && id === "eclipse" && <Legend legend={ECLIPSE_LEGEND} />}
+            {on && id === "daylight" && <Legend legend={DAYLIGHT_LEGEND} />}
             {health?.detail && (
               <p className="ml-4 break-words font-mono text-xs text-muted">
                 {health.detail}
@@ -291,6 +304,8 @@ function TabSwitcher({ tab, setTab }: { tab: PanelTab; setTab: (t: PanelTab) => 
 
 export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
   const [tab, setTab] = useState<PanelTab>("layers");
+  const xrayOn = useSyncExternalStore(subscribeXray, isXrayEnabled, () => false);
+  const phone = useSyncExternalStore(subscribePhone, isPhone, () => false);
   const panelOpen = useGlobe((s) => s.panelOpen);
   const setPanelOpen = useGlobe((s) => s.setPanelOpen);
   const sheet = useGlobe((s) => s.sheet);
@@ -305,6 +320,14 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
   const flyTo = useGlobe((s) => s.flyTo);
   const status = useGlobe((s) => s.status);
   const setTourStep = useGlobe((s) => s.setTourStep);
+
+  useEffect(() => {
+    if (!xrayOn) return;
+    if (phone) setSheet("layers");
+    else setPanelOpen(true);
+  }, [xrayOn, phone, setPanelOpen, setSheet]);
+
+  const xrayReadout = xrayOn && <ClientOnly fallback={null}><Suspense fallback={<p role="status">Loading X-ray readings…</p>}><XRay tier={tier} /></Suspense></ClientOnly>;
 
   // entityPositions is a plain module-level Map (living-earth's "one globe"
   // seam, not a store slice), so whether the ISS is registered can only be
@@ -435,7 +458,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {panelOpen ? (
         <div
           data-globe-layer-panel
-          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-body text-sm text-zinc-300 sm:bottom-4 sm:flex"
+          className="pointer-events-auto absolute right-4 top-[var(--globe-top-offset,5rem)] z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-body text-sm text-zinc-300 sm:bottom-4 sm:flex"
         >
           <div className="flex items-center justify-between gap-2 border-b border-line p-3">
             <h2 className="text-base font-semibold text-zinc-200">Layers</h2>
@@ -451,6 +474,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {!phone && xrayReadout}
             <TabSwitcher tab={tab} setTab={setTab} />
             {tab === "live" ? (
               <FeedRail tier={tier} />
@@ -474,7 +498,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
                 <section>
                   <h3 className="mb-1 text-sm font-semibold text-muted">Keys</h3>
                   <p className="text-sm leading-relaxed text-zinc-400">
-                    L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
+                    X X-ray · / or Cmd-K search · L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
                   </p>
                 </section>
               </>
@@ -520,6 +544,16 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
               </button>
             </div>
           </div>
+          <button
+            type="button"
+            data-xray-sheet-toggle
+            aria-pressed={xrayOn}
+            onClick={() => setXrayEnabled(!xrayOn)}
+            className="mb-2 flex min-h-11 min-w-11 w-full items-center justify-between rounded border border-line px-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <span>X-ray mode</span><span>{xrayOn ? "On" : "Off"}</span>
+          </button>
+          {phone && xrayReadout}
           <TabSwitcher tab={tab} setTab={setTab} />
           {tab === "live" ? (
             <FeedRail tier={tier} />
