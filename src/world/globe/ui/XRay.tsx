@@ -60,13 +60,13 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
     <div
       ref={panelRef}
       data-xray-panel
-      className="pointer-events-auto mb-3 flex w-full min-w-0 flex-col gap-2 rounded-lg border border-line p-2 font-mono break-words text-xs leading-4 text-zinc-300"
+      className="pointer-events-auto mb-3 flex max-h-[min(18rem,calc(var(--globe-sheet-max-h,70vh)-10rem))] w-full min-w-0 flex-col gap-2 overflow-y-auto rounded-lg border border-line p-2 font-mono break-words text-xs leading-4 text-zinc-300 sm:max-h-none sm:overflow-visible"
     >
       <p className="text-zinc-400">
-        X-ray: actual drawn scene (read only)
+        X-ray: drawn scene (read only)
       </p>
 
-      <div data-xray-stats className="grid grid-cols-4 gap-x-2 gap-y-0.5 sm:grid-cols-2">
+      <div data-xray-stats className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-2 gap-y-0.5 sm:grid-cols-2">
         <span>draw calls</span>
         <span>{stats.drawCalls}</span>
         <span>triangles</span>

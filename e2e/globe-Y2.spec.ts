@@ -105,6 +105,8 @@ for (const [width, height] of [[390, 844], [360, 740]]) {
     await expect.poll(async () => Number((await sheet.locator("[data-xray-stats]").innerText()).match(/draw calls\s+(\d+)/)?.[1] ?? 0)).toBeGreaterThan(0);
     await page.screenshot({ path: `test-results/Y2-xray-${width}.png` });
     await contained(readout, sheet);
+    await contained(sheet.getByRole("button", { name: "Close the layers sheet" }), sheet);
+    await contained(toggle, sheet);
     expect(await sheet.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     expect(await readout.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(12);
     const controls = (await toggle.boundingBox())!, box = (await readout.boundingBox())!;
