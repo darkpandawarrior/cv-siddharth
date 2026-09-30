@@ -225,3 +225,32 @@ for (const width of [1440, 1024]) {
     await expect(page.locator("[data-explore-bar]")).toBeVisible();
   });
 }
+
+
+test("desktop canvas centre stays exposed at the zoom floor", async ({ page }, info) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
+  await page.routeWebSocket("**/*", socket => socket.close());
+  await page.route("https://**", route => route.abort());
+  await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
+  for (const [key, fixture] of Object.entries({ ...fixtures, aircraft: JSON.parse(readFileSync(new URL("./fixtures/aircraft.json", import.meta.url), "utf8")) })) await page.route(`**/api/${key}`, route => route.fulfill({ json: fixture }));
+  await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
+  await page.goto("/globe");
+  await waitForHydration(page);
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+  await expect.poll(() => canvas.getAttribute("data-camera-min-distance")).toBeTruthy();
+  for (let i = 0; i < 12; i++) {
+    const distance = Number(await canvas.getAttribute("data-camera-distance")), minimum = Number(await canvas.getAttribute("data-camera-min-distance"));
+    if (distance <= minimum + .05) break;
+    await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await expect.poll(async () => Number(await canvas.getAttribute("data-camera-distance"))).toBeLessThanOrEqual(Math.max(minimum, distance / 1.35) + .05);
+  }
+  expect(Number(await canvas.getAttribute("data-camera-distance"))).toBeLessThanOrEqual(Number(await canvas.getAttribute("data-camera-min-distance")) + .05);
+  const box = (await canvas.boundingBox())!, point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(point.x, point.y);
+  const hit = await page.evaluate(p => document.elementsFromPoint(p.x, p.y).slice(0, 8).map(el => ({ tag: el.tagName, html: el.outerHTML.slice(0, 400), box: el.getBoundingClientRect().toJSON() })), point);
+  writeFileSync(info.outputPath("centre-hit.json"), JSON.stringify({ point, hit }, null, 2));
+  await page.screenshot({ path: info.outputPath("centre.png") });
+  expect(hit[0].tag).toBe("CANVAS");
+});

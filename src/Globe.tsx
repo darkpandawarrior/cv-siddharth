@@ -67,7 +67,8 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
     const measure = () => {
       root.style.height = innerWidth >= 640 ? `${Math.max(0, innerHeight - parent.getBoundingClientRect().top)}px` : "";
       root.style.setProperty("--globe-room-top", `${root.getBoundingClientRect().top}px`);
-      const room = stage.getBoundingClientRect(), gap = 8;
+      const room = stage.getBoundingClientRect(), band = facts.getBoundingClientRect(), gap = 8;
+      stage.style.setProperty("--globe-explore-room-w", `${band.width}px`);
       if (topbar) {
         const slot = stage.querySelector<HTMLElement>("[data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card]");
         for (const el of [slot, slot?.querySelector("h2"), slot?.lastElementChild]) if (el) resize.observe(el);
@@ -79,7 +80,7 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
           const title = slot?.querySelector("h2")?.getBoundingClientRect().height ?? 0;
           const actions = slot?.lastElementChild?.getBoundingClientRect().height ?? 0;
           const reserve = slot?.checkVisibility() ? title + actions + gap * 4 : 0;
-          const limit = Math.max(0, facts.getBoundingClientRect().top - room.top - reserve - (centred ? 0 : height) - gap * 3);
+          const limit = Math.max(0, band.top - room.top - reserve - (centred ? 0 : height) - gap * 3);
           topbar.style.maxHeight = `${limit}px`;
           const padding = getComputedStyle(topbar);
           topbar.style.setProperty("--globe-rail-max-h", `${Math.max(0, limit - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom))}px`);
@@ -87,17 +88,17 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
         } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
         const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
         const short = getComputedStyle(document.documentElement).getPropertyValue("--globe-short").trim() === "1";
-        stage.style.setProperty("--globe-explore-left", `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : room.width / 2}px`);
+        stage.style.setProperty("--globe-explore-left", `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : width / 2 + gap * 2}px`);
         stage.style.setProperty("--globe-explore-top", `${y}px`);
         stage.style.setProperty("--globe-explore-max-h", `${Math.max(0, Math.min(room.bottom, innerHeight) - room.top - y - gap)}px`);
         const bottom = bar?.checkVisibility() ? y + height : 0;
         stage.style.setProperty("--globe-left-slot-top", `${Math.max(top.bottom - room.top, centred ? 0 : bottom) + gap}px`);
         stage.style.setProperty("--globe-top-offset", `${top.height + 16}px`);
-        root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - top.bottom - gap)}px`);
+        root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - Math.max(top.bottom, room.top + bottom) - gap)}px`);
         setTopOffsetPx(top.height);
       }
-      stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - facts.getBoundingClientRect().top) + gap}px`);
-      root.style.setProperty("--globe-facts-max-h", `${Math.max(0, innerHeight - facts.getBoundingClientRect().top)}px`);
+      stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - band.top) + gap}px`);
+      root.style.setProperty("--globe-facts-max-h", `${Math.max(0, innerHeight - band.top)}px`);
       stage.dataset.chromeMeasured = "true";
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };

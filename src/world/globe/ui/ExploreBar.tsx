@@ -256,7 +256,7 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    <div ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
+    <div ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[min(377px,calc(var(--globe-explore-room-w,100%)-32px))] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>

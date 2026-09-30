@@ -1483,6 +1483,7 @@ html.resume-mode .palette-trigger {
   :root { --globe-compact: 1; }
   [data-globe-root] .glass-panel.fixed.bottom-0,
   [data-globe-time-sheet], [data-globe-briefing] {
+    z-index: 60;
     background: rgba(17, 22, 25, .96);
     max-height: min(70svh, var(--globe-sheet-max-h, 70svh));
   }
@@ -1507,8 +1508,8 @@ html.resume-mode .palette-trigger {
   [data-globe-layer-panel], [aria-label="Open the layers panel"],
   [data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card] { display: none; }
   [data-globe-layer-sheet], [data-globe-inspector-sheet], [data-globe-time-sheet], [data-globe-tour-sheet], [data-story-chapter-sheet], [data-film-chapter-sheet] { display: block; }
-  [data-pinned-readouts] { position: fixed; bottom: 8px; max-height: min(40svh, var(--globe-sheet-max-h, 70svh)); }
-  [data-pinned-readouts]:has([data-pinned-point]:only-child) { max-height: min(32svh, var(--globe-sheet-max-h, 70svh)); }
+  [data-pinned-readouts] { position: fixed; bottom: 8px; max-height: min(40svh, calc(var(--globe-sheet-max-h, 70svh) - 8px)); }
+  [data-pinned-readouts]:has([data-pinned-point]:only-child) { max-height: min(32svh, calc(var(--globe-sheet-max-h, 70svh) - 8px)); }
   [data-globe-panel] { max-height: 44px; overflow-y: auto; }
   [data-story-entry], [data-film-entry] { display: none; }
 }
