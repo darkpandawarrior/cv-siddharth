@@ -76,6 +76,18 @@ test("F1 F4 F5 F6: reachable lazy catalog, real URL state and full legends", asy
   await expect(panel(page).locator("[data-earth-status-line]")).toContainText(/\d{4}-\d{2}-\d{2}/, { timeout: 30000 });
 });
 
+test("F1: a rejected lazy catalog offers recovery instead of endless loading", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route("**/assets/LayerCatalog-*.js", route => route.abort());
+  await open(page);
+  await layers(page);
+  const imagery = panel(page).locator("details").filter({ has: page.locator("summary").filter({ hasText: "Imagery" }) });
+  await imagery.locator("summary").click();
+  await expect(imagery.getByRole("status")).toHaveText("Imagery choices unavailable. Reload to try again.");
+  await expect(imagery.locator("[data-globe-layer-catalog]")).toHaveCount(0);
+  await expect(page.locator("[data-globe-root] canvas").first()).toBeVisible();
+});
+
 test("F2 F5: narrow desktop panel wraps provenance beside existing scene controls", async ({ page }, info) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.addInitScript(() => {

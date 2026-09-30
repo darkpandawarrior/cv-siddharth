@@ -3,8 +3,9 @@ import { GIBS_BASES } from "../layers/gibsCatalog.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
 import { DENSITY_LEGEND } from "../layers/hexbin.ts";
 import { QUAKE_DEPTH_LEGEND } from "../layers/quake.ts";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
+import { flushSync } from "react-dom";
 import type { Vector3 } from "three";
 import { PUNE } from "../../../lib/sky.ts";
 import { entityPositions, LAYER_IDS, useGlobe, type EarthStyle, type ImageryStack, type LayerId, type LayerHealth } from "../globeStore.ts";
@@ -24,18 +25,29 @@ import { ShareSlot } from "./ShareView.tsx";
 // in its own file so it is unit-testable without mounting this component.
 import { LAYER_PRESETS, layerIdsToToggle, presetCaveat, presetImagery, presetLayerRecord, type LayerPreset } from "./layerPresets.ts";
 
-const LayerCatalog = lazy(() => import("./LayerCatalog.tsx"));
-
 function ImagerySection() {
   const imagery = useGlobe((s) => s.imagery);
   const [opened, setOpened] = useState(false);
+  const [Catalog, setCatalog] = useState<typeof import("./LayerCatalog.tsx").default | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!opened || Catalog || failed) return;
+    let active = true;
+    // The continuous scene loop can starve a Suspense retry. Commit this
+    // user-requested DOM update once the lazy module settles instead.
+    import("./LayerCatalog.tsx").then(
+      ({ default: catalog }) => { if (active) flushSync(() => setCatalog(() => catalog)); },
+      () => { if (active) flushSync(() => setFailed(true)); },
+    );
+    return () => { active = false; };
+  }, [opened, Catalog, failed]);
   const base = GIBS_BASES.find((entry) => entry.id === imagery.base);
   return <details className="mt-3" onToggle={(event) => setOpened(event.currentTarget.open)}>
     <summary className="min-h-11 cursor-pointer rounded py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
       Imagery
       <span className="block break-words text-xs font-mono text-muted">{base?.title ?? imagery.base} · {imagery.overlays.length} active overlays</span>
     </summary>
-    {opened && <Suspense fallback={<p role="status" className="text-sm text-muted">Loading imagery choices…</p>}><LayerCatalog /></Suspense>}
+    {opened && (Catalog ? <Catalog /> : <p role="status" className="text-sm text-muted">{failed ? "Imagery choices unavailable. Reload to try again." : "Loading imagery choices…"}</p>)}
   </details>;
 }
 
