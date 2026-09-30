@@ -104,10 +104,9 @@ async function clickGuideMarker(page: Page, slug: string) {
   await page.mouse.click(point.x, point.y);
 }
 
-// The residential name pattern gen-maps-places.mjs itself classifies on. If
-// this test ever finds a match, the generator's boundary broke -- these
-// exact names must never publish, whatever slug they used to sit under.
-const RESIDENTIAL_NAMES = ["Aum Residency Co-op Housing Society", "Shubhada CHS Ltd."];
+// A pattern, never the real names: this spec is public, and naming the excluded
+// buildings to assert their absence would publish exactly what the rule protects.
+const RESIDENTIAL = /\b(co-?op(erative)?|housing society|CHS)\b/i;
 
 test("a Local Guide photo opens in the lightbox in AVIF, and no residential name ever renders", async ({ page }) => {
   await openGlobe(page);
@@ -129,6 +128,6 @@ test("a Local Guide photo opens in the lightbox in AVIF, and no residential name
   // component -- a residential name can never surface anywhere, name card,
   // inspector, filmstrip caption or otherwise.
   const bodyText = await page.locator("body").innerText();
-  for (const name of RESIDENTIAL_NAMES) expect(bodyText).not.toContain(name);
-  expect(mapsReviews.some((review) => RESIDENTIAL_NAMES.includes(review.name))).toBe(false);
+  expect(bodyText).not.toMatch(RESIDENTIAL);
+  expect(mapsReviews.some((review) => RESIDENTIAL.test(review.name))).toBe(false);
 });

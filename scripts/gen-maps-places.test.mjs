@@ -15,8 +15,8 @@ import { isResidentialReview, nearResidential, RESIDENTIAL } from "./gen-maps-pl
 // here silently never runs.
 describe("gen-maps-places privacy rules", () => {
   it("classifies by name (housing society, CHS, residency, etc.)", () => {
-    expect(isResidentialReview({ location: { name: "Aum Residency Co-op Housing Society" } })).toBe(true);
-    expect(isResidentialReview({ location: { name: "Shubhada CHS Ltd." } })).toBe(true);
+    expect(isResidentialReview({ location: { name: "Lotus Residency Co-op Housing Society" } })).toBe(true);
+    expect(isResidentialReview({ location: { name: "Kamal CHS Ltd." } })).toBe(true);
     expect(isResidentialReview({ location: { name: "Cafe Coffee Day" } })).toBe(false);
   });
 
@@ -27,7 +27,7 @@ describe("gen-maps-places privacy rules", () => {
   });
 
   it("matches every required residential token, one pattern at a time", () => {
-    for (const name of ["Green Housing Complex", "Silver Oak Society", "Shubhada CHS", "Aum Residency", "Palm Residences", "Marked Residential Plot", "Lotus Apartment", "Lotus Apartments", "Sea View Flat", "Sea View Flats"]) {
+    for (const name of ["Green Housing Complex", "Silver Oak Society", "Kamal CHS", "Lotus Residency", "Palm Residences", "Marked Residential Plot", "Lotus Apartment", "Lotus Apartments", "Sea View Flat", "Sea View Flats"]) {
       expect(RESIDENTIAL.test(name), name).toBe(true);
     }
   });
