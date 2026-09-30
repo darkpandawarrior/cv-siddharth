@@ -220,6 +220,8 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
       metaRef.current[i] = a;
     }
     mesh.count = list.length;
+    // Rendering an empty feed caches an empty bound; moving instances must refresh it for raycasts.
+    mesh.computeBoundingSphere();
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 

@@ -139,15 +139,11 @@ export default function CameraDirector({
   // currently owns the camera, and whether this lane hid the markers layer
   // for the intro's "markers last" beat (so it can restore it unconditionally).
   const zoomHoldRef = useRef(0);
-  // LANE I2 (root cause fix): wall-clock ms (performance.now(), independent
-  // of useFrame's own dt) of the last real zoom-IN input -- a wheel notch
-  // with deltaY < 0, a two-finger pinch whose spread is growing, or the HUD
-  // zoom-in pill (zoomInTick, below). `zoomHoldRef` above now only advances
-  // while this stays fresh (cameraZoomGate.ts's stepZoomHold) -- resting at
-  // the floor with nothing arriving must never count toward the street
-  // hand-off. pinchSpanRef tracks the previous two-finger distance so only a
-  // GROWING pinch (zooming in) counts, not a shrinking one.
+  // Most recent discrete zoom-in input: wheel, growing pinch or pill/keyboard click.
+  // A held pill has its own pointer lifetime and needs no repeated events.
+  // Resting at the floor with neither kind of intent must never open street view.
   const zoomIntentRef = useRef(-Infinity);
+  const zoomPillPointerRef = useRef<number | null>(null);
   const pinchSpanRef = useRef<number | null>(null);
   const prevZoomInTickRef = useRef(zoomInTick);
   const introRef = useRef(false);
@@ -455,6 +451,25 @@ export default function CameraDirector({
     const onTouchEnd = () => {
       pinchSpanRef.current = null;
     };
+    // Pointer capture makes a physical pill hold fresh until its release,
+    // cancellation or capture loss, independent of event frequency or frame rate.
+    // Keep this wiring in the lazy camera chunk rather than the eager HUD shell.
+    const root = el.closest<HTMLElement>("[data-globe-root]");
+    const onPillDown = (event: PointerEvent) => {
+      const pill = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('button[aria-label="Zoom in"]') : null;
+      if (!pill || !event.isPrimary || event.button !== 0 || zoomPillPointerRef.current !== null || useGlobe.getState().view !== "orbit") return;
+      zoomPillPointerRef.current = event.pointerId;
+      zoomHoldRef.current = 0;
+      pill.setPointerCapture(event.pointerId);
+      get().invalidate();
+    };
+    const onPillEnd = (event: PointerEvent) => {
+      if (event.pointerId !== zoomPillPointerRef.current) return;
+      zoomPillPointerRef.current = null;
+      zoomHoldRef.current = 0;
+    };
+    root?.addEventListener("pointerdown", onPillDown, true);
+    for (const type of ["pointerup", "pointercancel", "lostpointercapture"] as const) root?.addEventListener(type, onPillEnd, true);
     // passive: true -- unlike the ground-view wheel handler above, this
     // listener never calls preventDefault (it only records a timestamp),
     // and OrbitControls' own wheel handler on the same element still needs
@@ -468,12 +483,16 @@ export default function CameraDirector({
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
       el.removeEventListener("touchcancel", onTouchEnd);
+      root?.removeEventListener("pointerdown", onPillDown, true);
+      for (const type of ["pointerup", "pointercancel", "lostpointercapture"] as const) root?.removeEventListener(type, onPillEnd, true);
+      zoomPillPointerRef.current = null;
+      zoomHoldRef.current = 0;
     };
   }, [get]);
 
   // The HUD zoom-in pill drives OrbitControls' dolly directly from
   // GlobeScene.tsx's own effect, never through a DOM wheel event -- a rising
-  // tick is the only signal this component gets that it happened. Guarded
+  // tick records a discrete click or keyboard activation. Guarded
   // against the initial mount value (prevZoomInTickRef starts equal to it)
   // so mounting with a non-zero tick already in flight never counts as a
   // fresh click.
@@ -484,6 +503,7 @@ export default function CameraDirector({
 
   useFrame((state, rawDt) => {
     const dt = clampCameraFrameDelta(rawDt);
+    if (view === "orbit" && zoomPillPointerRef.current !== null) state.invalidate();
     const { camera, gl } = state;
     const el = gl.domElement;
     if (focusOffsetY.current !== null && camera instanceof THREE.PerspectiveCamera && camera.view && camera.view.offsetY !== focusOffsetY.current) {
@@ -546,7 +566,7 @@ export default function CameraDirector({
         el.dataset.cameraDistance = distance.toFixed(3);
         el.dataset.cameraMinDistance = minDistance.toFixed(3);
         const msSinceIntent = performance.now() - zoomIntentRef.current;
-        zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt, msSinceIntent);
+        zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt, msSinceIntent, zoomPillPointerRef.current !== null);
         if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
           zoomHoldRef.current = 0;
           const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };
