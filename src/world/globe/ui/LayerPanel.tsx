@@ -39,9 +39,9 @@ function ImagerySection() {
   </details>;
 }
 
-export function EarthStatus({ health }: { health: LayerHealth | undefined }) {
+export function EarthStatus({ health, style, tier }: { health: LayerHealth | null | undefined; style: EarthStyle; tier: 1 | 2 | 3 }) {
   return <p data-earth-status-line role="status" className={`mt-2 break-words text-muted ${health?.state === "live" || health?.state === "snapshot" ? "text-xs font-mono" : "text-sm"}`}>
-    {health?.state === "failed" ? `Imagery unavailable, showing dots. ${health.detail ?? ""}` : !health || health.state === "loading" ? "Loading imagery…" : health.detail ?? "Imagery loaded"}
+    {style === "dots" ? "Showing dots. Real imagery is off." : tier === 3 ? "Showing dots. Real imagery is unavailable at this graphics tier." : health?.state === "failed" ? `Imagery unavailable, showing dots. ${health.detail ?? ""}` : !health ? "Showing dots while imagery starts." : health.state === "loading" ? "Loading imagery…" : health.detail ?? "Imagery loaded"}
   </p>;
 }
 
@@ -448,7 +448,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
                 <section className="mb-4">
                   <h3 className="mb-2 text-sm font-semibold text-muted">Earth</h3>
                   {earthStyleToggle}
-                  <EarthStatus health={status.earth} />
+                  <EarthStatus health={status.earth} style={style} tier={tier} />
                   <div className="mt-4">
                     <h3 className="mb-2 text-sm font-semibold text-muted">Layers</h3>
                     <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
@@ -517,7 +517,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
               <section className="mb-4">
                   <h3 className="mb-2 text-sm font-semibold text-muted">Earth</h3>
                   {earthStyleToggle}
-                  <EarthStatus health={status.earth} />
+                  <EarthStatus health={status.earth} style={style} tier={tier} />
                   <div className="mt-4">
                     <h3 className="mb-2 text-sm font-semibold text-muted">Layers</h3>
                     <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />

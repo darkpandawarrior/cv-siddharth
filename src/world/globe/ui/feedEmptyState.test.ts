@@ -20,5 +20,10 @@ describe("feed empty state precedence", () => {
       expect(feedEmptyState([], "satellite", on, status).text).toContain("Nothing yet");
     }
     expect(feedEmptyState([], null, on, failed).text).toContain("Nothing yet");
+    // HazardLayer cannot report the independent SpaceWeather publisher's health.
+    for (const hazards of [false, true]) {
+      expect(feedEmptyState([], "hazard", { ...on, hazards }, { hazards: { state: "failed" } })).toEqual({ text: "Nothing yet. The feed fills as things happen.", action: null, layers: [] });
+    }
+    expect(feedEmptyState([{ kind: "satellite" }], "hazard", { ...on, hazards: false }, { hazards: { state: "failed" } }).action).toBe("all");
   });
 });

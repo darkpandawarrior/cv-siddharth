@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import LayerPanel, { LayerRows } from "./LayerPanel.tsx";
+import LayerPanel, { EarthStatus, LayerRows } from "./LayerPanel.tsx";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useGlobe } from "../globeStore.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
@@ -44,6 +44,14 @@ describe("W11B panel regressions", () => {
       expect(html).toContain(text);
       expect(html).toContain('data-earth-status-line');
     }
+    for (const health of [undefined, null, { state: "loading" as const }, { state: "live" as const, detail: "Old imagery" }, { state: "failed" as const }]) {
+      const dots = renderToStaticMarkup(<EarthStatus health={health} style="dots" tier={1} />);
+      const lowTier = renderToStaticMarkup(<EarthStatus health={health} style="imagery" tier={3} />);
+      expect(dots).toContain("Showing dots. Real imagery is off.");
+      expect(lowTier).toContain("Showing dots. Real imagery is unavailable at this graphics tier.");
+      expect(dots + lowTier).not.toContain("Loading imagery");
+    }
+    expect(renderToStaticMarkup(<EarthStatus health={undefined} style="imagery" tier={1} />)).toContain("Showing dots while imagery starts.");
   });
   it("includes a native Imagery disclosure without eagerly rendering the picker", () => {
     const html = renderToStaticMarkup(<LayerPanel tier={1} />);
