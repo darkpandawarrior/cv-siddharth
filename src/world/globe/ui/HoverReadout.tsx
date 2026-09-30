@@ -84,6 +84,7 @@ const _windSample = { u: 0, v: 0 };
 
 // Per-cell caches share one rate gate per remote host.
 const HOVER_CELL_DEG = 0.5;
+const HOVER_SETTLE_MS = 600;
 
 function hoverCellKey(point: LatLon): string {
   return `${Math.round(point.lat / HOVER_CELL_DEG)}:${Math.round(point.lon / HOVER_CELL_DEG)}`;
@@ -130,6 +131,7 @@ export default function HoverReadout() {
   const tideCache = useRef(new Map<string, CellEntry<TideReading>>());
   const capeCache = useRef(new Map<string, CellEntry<CapeReading>>());
   const settled = useRef({ key: "", since: 0 });
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const meteorCache = useRef({ key: "", lines: [] as string[] });
   const hoverFetchGates = useRef(new Map<HoverFetchHost, number>());
   const lastChipRef = useRef<Chip | null>(null);
@@ -195,11 +197,22 @@ export default function HoverReadout() {
     const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGates.current, "flood", fetchImpl => fetchFlood(point.lat, point.lon, fetchImpl));
     const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : floodEntry.failed ? "River feed unreachable · Open-Meteo" : "No river data here · Open-Meteo") : "River discharge: loading… · Open-Meteo";
 
-    if (settled.current.key !== cellKey) settled.current = { key: cellKey, since: now };
+    if (settled.current.key !== cellKey) {
+      settled.current = { key: cellKey, since: now };
+      clearTimeout(settleTimer.current);
+      // A slow compositor can stop painting before the settle floor. Network
+      // readiness must not wait for another paint; the cell/cache guards still apply.
+      settleTimer.current = setTimeout(() => {
+        settleTimer.current = undefined;
+        if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+        tickRef.current();
+      }, HOVER_SETTLE_MS);
+    }
     let tide: string | null = globe.timeOffsetMin === 0 ? "Tides: loading… · NOAA (US coastal coverage)" : null;
     let cape: string | null = globe.timeOffsetMin === 0 ? "CAPE: loading… · Open-Meteo" : null;
     const simulated = simTime(globe.timeOffsetMin);
-    if (globe.timeOffsetMin === 0 && now - settled.current.since >= 600) {
+    if (globe.timeOffsetMin === 0 && now - settled.current.since >= HOVER_SETTLE_MS) {
       const nearStation = stations.current ? nearestStationWithin(stations.current, point) : null;
       if (stationsFailed.current) tide = "NOAA station index unreachable (US coastal coverage)";
       else if (stations.current && !nearStation) tide = "No NOAA tide station within 50 km (US coastal coverage)";
@@ -265,12 +278,14 @@ export default function HoverReadout() {
     const pick = surfacePicker(canvas, () => canvasState(canvas));
     const onMove = (point: (LatLon & { clientX: number; clientY: number }) | null) => {
       hoverPoint.current = point;
+      if (!point) clearTimeout(settleTimer.current);
       scheduleFrame();
     };
     const detach = surfaceHover(canvas, pick, onMove);
     if (window.__W11_TEST__) window.__V4_HOVER__ = { move: (point) => onMove({ ...point, clientX: 0, clientY: 0 }), leave: () => onMove(null) };
     return () => {
       detach();
+      clearTimeout(settleTimer.current);
       hoverPoint.current = null;
       if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
       frameRef.current = null;

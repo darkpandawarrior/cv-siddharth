@@ -3,6 +3,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
+type FrameStallWindow = Window & { __Y3_RESUME_FRAMES__?: () => void };
 const dem = readFileSync(new URL("./fixtures/street/terrarium-tile.png", import.meta.url));
 const viewports = [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 360, height: 740 }];
 
@@ -101,7 +102,27 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
       await waitForHydration(page);
       await page.waitForFunction(() => !!window.__V4_HOVER__);
       const began = Date.now();
-      await page.evaluate(p => window.__V4_HOVER__!.move(p), point);
+      await page.evaluate(p => {
+        const frames = new Map<number, FrameRequestCallback>();
+        const raf = window.requestAnimationFrame.bind(window), cancel = window.cancelAnimationFrame.bind(window);
+        let id = -1;
+        // Withhold paint after the initial pending rows. Settling data must
+        // still start on a slow compositor without another animation frame.
+        window.requestAnimationFrame = callback => {
+          if (!document.querySelector("[data-hover-cape]")) return raf(callback);
+          frames.set(--id, callback);
+          return id;
+        };
+        window.cancelAnimationFrame = handle => { if (!frames.delete(handle)) cancel(handle); };
+        (window as FrameStallWindow).__Y3_RESUME_FRAMES__ = () => {
+          window.requestAnimationFrame = raf;
+          window.cancelAnimationFrame = cancel;
+          frames.forEach(callback => raf(callback));
+          frames.clear();
+          delete (window as FrameStallWindow).__Y3_RESUME_FRAMES__;
+        };
+        window.__V4_HOVER__!.move(p);
+      }, point);
       const rows = page.locator("[data-hover-marine], [data-hover-air-quality], [data-hover-flood], [data-hover-tide], [data-hover-cape]");
       await expect(rows).toHaveCount(5, { timeout: 2500 });
       const rowMs = Date.now() - began;
@@ -111,6 +132,7 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
         expect(text).not.toMatch(/^No /);
       }
       await expect.poll(() => Object.keys(starts).length, { timeout: 2500 }).toBe(5);
+      await page.evaluate(() => (window as FrameStallWindow).__Y3_RESUME_FRAMES__?.());
       release();
       await expect(page.locator("[data-hover-air-quality]")).toContainText("No air-quality data here");
       await expect(page.locator("[data-hover-marine]")).toContainText("No marine data here");
@@ -121,7 +143,10 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
       const path = testInfo.outputPath("hover-timings.json");
       writeFileSync(path, JSON.stringify(timings));
       await testInfo.attach("hover-timings", { path, contentType: "application/json" });
-    } finally { release(); }
+    } finally {
+      await page.evaluate(() => (window as FrameStallWindow).__Y3_RESUME_FRAMES__?.());
+      release();
+    }
   });
 }
 
