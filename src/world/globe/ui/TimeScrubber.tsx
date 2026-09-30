@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { GlobalEclipse } from "../layers/eclipse.ts";
 import { Eclipse, Pause, Play, X } from "lucide-react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
@@ -21,6 +22,8 @@ import CompareDivider from "./CompareDivider.tsx";
  *  day-scale steps far from it), added the day-per-second speed and the
  *  Compare toggle, and kept every L5/U1 shape (compact pill, phone sheet,
  *  not-live badge) unchanged. */
+
+const EventStrip = lazy(() => import("../timeMachine/eventStrip.tsx"));
 
 const rangeEnd = (value: number) => Math.max(MIN_OFFSET_MIN, Math.min(MAX_OFFSET_MIN, value));
 const MIN_OFFSET = MIN_OFFSET_MIN;
@@ -281,6 +284,8 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     </span>
   );
 
+  const eventStrip = <Suspense fallback={null}><EventStrip onSelect={() => setPlaying(false)} /></Suspense>;
+
   return (
     <>
       {/* Wrap inside the topbar cap when coarse targets or a full date
@@ -289,6 +294,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
         data-globe-time-scrubber
         className="pointer-events-auto hidden min-w-0 max-w-full sm:max-w-[calc(50vw-13.25rem)] flex-wrap items-center gap-2 rounded-2xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
       >
+        {eventStrip}
         <span className="min-w-0">
           {fmtCompact(now, "Asia/Kolkata")} IST · {fmtCompact(now, "UTC")} UTC
         </span>
@@ -329,11 +335,12 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           the top row's clock icon button (Globe.tsx). Fuller layout (real
           date, three explicit speed buttons, 44px touch targets) since a
           sheet has the full sheet width instead of a top-row slice. */}
-      {sheet === "time" && (
+      {sheet === "time" && createPortal(
         <div
           data-globe-time-sheet
           role="dialog"
           aria-label="Simulated time"
+          style={{ background: "var(--color-ink)" }}
           className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -358,6 +365,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             {beyondRange ? `${now.toISOString().slice(0, 16).replace("T", " ")} UTC · beyond the slider range` : label}
           </p>
 
+          {eventStrip}
           <div className="relative flex items-center">
             <DayTicks />
             <input
@@ -415,7 +423,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             {eclipseButtonFull}
           </div>
           {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
-        </div>
+        </div>, document.body
       )}
 
       <CompareDivider />

@@ -13,12 +13,10 @@ import * as THREE from "three";
 import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useGlobe } from "../globeStore.ts";
-import { parseUsgsHistory, pulseState, type UsgsHistory } from "../timeMachine/usgsHistory.ts";
+import { pulseState, type UsgsHistory } from "../timeMachine/usgsHistory.ts";
 import { estimatePlaybackSpeed } from "../timeMachine/replayWindow.ts";
 import { magnitudeToRadius } from "./quake.ts";
-
-const MONTH_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
-const WEEK_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson";
+import { loadReplaySnapshot } from "../timeMachine/eventStripHistory.ts";
 
 const RING_GEOMETRY = new THREE.RingGeometry(0.72, 1, 24);
 const MAX_REPLAY = 48;
@@ -48,35 +46,6 @@ declare global {
   }
 }
 
-async function fetchJsonOrNull(url: string): Promise<unknown | null> {
-  try {
-    const res = await fetch(url);
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
-}
-
-let historyPromise: Promise<UsgsHistory | null> | null = null;
-/** Fetches both USGS feeds exactly once per page (module-scope memory
- *  cache, not sessionStorage: a reload is meant to ask NASA again). If
- *  BOTH feeds are unreachable this resolves `null` — an honest failure,
- *  never the empty-but-valid history `parseUsgsHistory()` with no
- *  arguments would otherwise hand back (see that function's own test:
- *  called with nothing, it's a real zero-quake month, not a failure). If
- *  only one feed answers, replay runs on that one feed alone rather than
- *  discarding it — a live single-feed reading beats no reading. */
-function loadHistoryOnce(): Promise<UsgsHistory | null> {
-  if (!historyPromise) {
-    historyPromise = Promise.all([fetchJsonOrNull(MONTH_URL), fetchJsonOrNull(WEEK_URL)]).then(([month, week]) => {
-      const feeds = [month, week].filter((f): f is object => f !== null && typeof f === "object");
-      if (feeds.length === 0) return null;
-      return parseUsgsHistory(...feeds);
-    });
-  }
-  return historyPromise;
-}
-
 export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 }) {
   const reducedMotion = useReducedMotion();
   const offset = useGlobe((s) => s.timeOffsetMin);
@@ -84,18 +53,20 @@ export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
   const historyRef = useRef<UsgsHistory | null | undefined>(undefined); // undefined: not requested yet
   const speedRef = useRef(0);
   const prevRef = useRef({ wall: 0, sim: 0 });
-  const requestedRef = useRef(false);
+
+  // The strip and renderer select from the same cached records. Key delivery
+  // on replay activation so a bin/time change cannot cancel the pending load.
+  const replaying = offset !== 0;
 
   // Fetch lazily, once: only once the visitor has actually scrubbed away
   // from "now". A component-instance ref (not React state) holds the
   // result — re-rendering on arrival would fight the useFrame loop below
   // for who owns "is there anything to draw this frame".
   useEffect(() => {
-    if (offset === 0 || requestedRef.current || tier === 3) return;
-    requestedRef.current = true;
+    if (!replaying || tier === 3) return;
     if (typeof window !== "undefined") window.__HISTORY_DEBUG__ = { status: "loading", total: 0, activePulses: 0 };
     let alive = true;
-    loadHistoryOnce().then((h) => {
+    loadReplaySnapshot().then(({ history: h }) => {
       if (!alive) return;
       historyRef.current = h;
       if (typeof window !== "undefined") {
@@ -105,7 +76,7 @@ export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
     return () => {
       alive = false;
     };
-  }, [offset, tier]);
+  }, [replaying, tier]);
 
   useFrame(() => {
     const mesh = meshRef.current;
