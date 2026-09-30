@@ -9,13 +9,17 @@ import { latLonToXyz } from "./geoMath.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
-import { LiveDots } from "./LiveDots.tsx";
-import { LocalTraffic } from "./LocalTraffic.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
 import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
+// LiveDots/LocalTraffic are toggleable layers like every other lazy layer
+// below (default-on, but gated the same way SkyLayer/SatelliteLayer already
+// are) — the eager Globe chunk only needs the always-on markers/reach
+// columns for first paint (task Z1 budget: they added ~6KB to the shell).
+const LiveDots = lazy(() => import("./LiveDots.tsx").then((m) => ({ default: m.LiveDots })));
+const LocalTraffic = lazy(() => import("./LocalTraffic.tsx").then((m) => ({ default: m.LocalTraffic })));
 const EarthImagery = lazy(() => import("./layers/EarthImagery.tsx"));
 const SkyLayer = lazy(() => import("./layers/SkyLayer.tsx"));
 const SatelliteLayer = lazy(() => import("./layers/SatelliteLayer.tsx"));
@@ -417,8 +421,16 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
             <Markers occlude={[earthRef]} />
           </>
         )}
-        {layers.presence && live && <LiveDots tier={tier} occlude={[earthRef]} />}
-        {layers.aircraft && live && tier !== 3 && <LocalTraffic tier={tier} />}
+        {layers.presence && live && (
+          <Suspense fallback={null}>
+            <LiveDots tier={tier} occlude={[earthRef]} />
+          </Suspense>
+        )}
+        {layers.aircraft && live && tier !== 3 && (
+          <Suspense fallback={null}>
+            <LocalTraffic tier={tier} />
+          </Suspense>
+        )}
         {/* Separate boundaries: one slow chunk never holds up another. */}
         <Suspense fallback={null}>{layers.stars && <><SkyLayer now={now} tier={tier} /><MeteorRadiant now={now} tier={tier} /></>}</Suspense>
         <Suspense fallback={null}>{layers.satellites && <SatelliteLayer now={now} tier={tier} />}</Suspense>

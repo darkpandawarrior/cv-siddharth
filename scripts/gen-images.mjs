@@ -92,6 +92,12 @@ for (const src of walkRoots([publicDir, heavyDir])) {
   // from Google's CDN — about a kilobyte each. An .avif derivative of a 1 kB
   // icon is not smaller, and there are 87 of them to redo on every build.
   if (src.includes(`${sep}store${sep}`)) continue;
+  // globe/maps thumbnails (scripts/gen-maps-places.mjs) are rendered as plain
+  // <img src> in Inspector.tsx/GuideLightbox.tsx/storyFilmstrip.tsx, never
+  // through a <picture> avif source — an .avif sibling here was pure dead
+  // weight (1.4MB, unreferenced by any code) that only grew dist/client's
+  // budget total. Task Z1 budget pass, 2026-09-30.
+  if (src.includes(`${sep}globe${sep}maps${sep}`)) continue;
   const base = src.slice(0, -ext.length);
   // A .webp sitting next to a same-name .png/.jpg/.jpeg is OUR OWN derivative
   // (generated below from that raster), not a real source — skip it, or the
