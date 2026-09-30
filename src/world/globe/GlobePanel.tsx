@@ -4,13 +4,16 @@ import { storeGeneratedAt } from "../../data/store.ts";
 import { useNow } from "../../lib/useSky.ts";
 import { globeFacts, liveDotsLabel, weeksAgoLabel } from "./globeRows.ts";
 import { usePresenceGeo } from "./presenceGeo.ts";
-import SceneSummary from "./ui/SceneSummary.tsx";
+import { lazy, Suspense } from "react";
+
+const SceneSummary = lazy(() => import("./ui/SceneSummary.tsx"));
 
 const STAMP_BY_ROW: Record<string, string | undefined> = {
   "reach-installs": storeGeneratedAt,
 };
 
-const NO_PRESENCE_ROW = <li data-globe-live>{liveDotsLabel({})}</li>;
+const PRESENCE_ROW_CLASS = "sm:flex sm:min-h-12 sm:items-center sm:pr-[392px]";
+const NO_PRESENCE_ROW = <li data-globe-live className={PRESENCE_ROW_CLASS}>{liveDotsLabel({})}</li>;
 
 /** The one piece of GlobePanel that needs a browser: `usePresenceGeo` calls
  *  `@playhtml/react`'s `usePresence`, which the import-protection plugin
@@ -20,7 +23,7 @@ const NO_PRESENCE_ROW = <li data-globe-live>{liveDotsLabel({})}</li>;
  *  around it. */
 function GlobeLiveRow() {
   const counts = usePresenceGeo();
-  return <li data-globe-live>{liveDotsLabel(counts)}</li>;
+  return <li data-globe-live className={PRESENCE_ROW_CLASS}>{liveDotsLabel(counts)}</li>;
 }
 
 /**
@@ -42,8 +45,9 @@ export function GlobePanel() {
   // mount, same as the rest of the page's clock-driven text.
   const now = useNow();
   return (
-    <div data-globe-panel className="pointer-events-auto">
+    <div data-globe-panel className="pointer-events-auto relative">
       <h2 className="sr-only">GLOBE - reach, in numbers</h2>
+      <Suspense fallback={null}><SceneSummary /></Suspense>
       <ul className="space-y-2 font-mono text-sm text-zinc-300">
         {globeFacts.map((row) => {
           const stamp = STAMP_BY_ROW[row.id];
@@ -64,13 +68,6 @@ export function GlobePanel() {
           <GlobeLiveRow />
         </ClientOnly>
       </ul>
-      {/* WAVE 7 LANE V6: the non-visual scene summary — a screen-reader-only
-          region describing the 3D scene itself (imagery, layers, hazards,
-          sky, selection), not the reach facts above. Mounted here rather
-          than Globe.tsx/GlobeHud.tsx (lanes this worktree may not touch)
-          because this component already renders unconditionally, SSR and
-          no-WebGL included, and SceneSummary needs exactly that floor. */}
-      <SceneSummary />
     </div>
   );
 }
