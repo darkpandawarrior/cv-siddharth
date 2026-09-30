@@ -100,13 +100,33 @@ test("quake Time row pairs the relative age with an absolute UTC clock reading",
   await waitForHydration(page);
 
   const probe = page.locator("[data-subsolar-probe]");
-  await expect.poll(async () => probe.getAttribute("data-globe-x")).not.toBeNull();
+  // Hydration/projection can precede the quake fetch and the reduced-motion
+  // camera's recentering. Wait for the glyph and a settled projection together.
+  let previous: { x: number; y: number } | null = null;
+  let stable = 0;
+  await expect.poll(async () => {
+    const state = await probe.evaluate((el) => ({
+      x: Number(el.getAttribute("data-globe-x") ?? NaN),
+      y: Number(el.getAttribute("data-globe-y") ?? NaN),
+      quakes: window.__HAZARD_DEBUG__?.quakes ?? 0,
+    }));
+    stable = previous && Math.hypot(state.x - previous.x, state.y - previous.y) < 0.2 ? stable + 1 : 0;
+    previous = state;
+    return state.quakes === 1 && stable >= 3;
+  }, { intervals: [50], message: "quake must be loaded and its camera-facing probe settled before clicking" }).toBe(true);
   const canvas = page.locator("[data-globe-root] canvas").first();
   const canvasBox = await canvas.boundingBox();
   if (!canvasBox) throw new Error("globe canvas has no bounding box");
   const [gx, gy] = await Promise.all(["x", "y"].map(async (k) => Number(await probe.getAttribute(`data-globe-${k}`))));
 
+  const hit = await canvas.evaluate((el, point) => {
+    const box = el.getBoundingClientRect();
+    const target = document.elementFromPoint(box.x + point.x, box.y + point.y);
+    return { isCanvas: target === el, target: target?.outerHTML.slice(0, 500) };
+  }, { x: gx, y: gy });
+  expect(hit, "quake probe must hit bare canvas, clear of HUD chrome").toMatchObject({ isCanvas: true });
   await page.mouse.click(canvasBox.x + gx, canvasBox.y + gy);
+  await expect.poll(() => page.evaluate(() => window.__HAZARD_DEBUG__?.selectedKind)).toBe("quake");
 
   // data.md #3: "3 min ago" paired with the absolute UTC instant it refers
   // to — the same shape the top HUD clock and TimeScrubber already use.
