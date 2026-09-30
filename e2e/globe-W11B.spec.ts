@@ -57,7 +57,7 @@ test("F1 F4 F5 F6: reachable lazy catalog, real URL state and full legends", asy
   await panel(page).locator("summary").filter({ hasText: "Imagery" }).click();
   const catalog = panel(page).locator("[data-globe-layer-catalog]");
   await expect(catalog.getByRole("radio")).toHaveCount(5);
-  await expect(catalog.locator('button[aria-pressed]')).toHaveCount(22);
+  await expect(catalog.locator('button[aria-pressed]')).toHaveCount(GIBS_OVERLAYS.length);
   await expect.poll(() => chunks.length).toBeGreaterThan(0);
   const base = catalog.getByRole("radio", { name: new RegExp(GIBS_BASES[1].title) });
   await base.click();
@@ -70,7 +70,7 @@ test("F1 F4 F5 F6: reachable lazy catalog, real URL state and full legends", asy
   await expect(panel(page).getByRole("radio", { name: new RegExp(GIBS_BASES[1].title) })).toHaveAttribute("aria-checked", "true");
   const overlay = GIBS_OVERLAYS[0];
   await panel(page).getByRole("button", { name: overlay.title, exact: true }).click();
-  for (const stop of overlay.legend!.stops) await expect(panel(page).getByText(`${stop.label} ${overlay.legend!.unit}`, { exact: true })).toBeVisible();
+  for (const stop of overlay.legend!.stops) await expect(panel(page).locator(`[data-globe-active-overlay="${overlay.id}"] [data-globe-legend]`).first().getByText(`${stop.label} ${overlay.legend!.unit}`, { exact: true })).toBeVisible();
   await panel(page).getByRole("region", { name: "Active imagery" }).scrollIntoViewIfNeeded();
   await shot(page, info, "desktop-imagery-legend");
   await expect(panel(page).locator("[data-earth-status-line]")).toContainText(/\d{4}-\d{2}-\d{2}/, { timeout: 30000 });

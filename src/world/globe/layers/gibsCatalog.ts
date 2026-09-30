@@ -58,6 +58,8 @@ export interface GibsCatalogEntry {
   dateRule: DateRule;
   legend?: Legend;
   attribution: string;
+  /** IMERG has separate rain and snow colour scales, in the same unit. */
+  snowLegend?: Legend;
   /** LANE V1 (wave 7, step B): which WMTS endpoint/URL shape `tileUrl` below
    *  builds. `undefined` (every existing entry) means NASA GIBS, unchanged —
    *  this field only exists so `tileUrl` can dispatch without every one of
@@ -142,22 +144,67 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
   {
     id: "IMERG_Precipitation_Rate",
     title: "Precipitation rate",
-    description: "Half-hourly rain and snow rate, merged from satellite and gauge data.",
+    description: "Daily satellite precipitation from GPM IMERG, not live radar. Rain and snow have separate colour scales; transparent pixels mean no data or less than 0.1 mm/hr.",
     format: "png",
     matrixSet: "2km",
     maxLevel: 5,
-    dateRule: { kind: "daily", lagDays: 3 },
+    // Verified 2026-09-30: Default 2026-09-29, latest period P1D.
+    // The source observations are half-hourly; THIS GIBS feed is daily.
+    dateRule: { kind: "daily", lagDays: 1 },
     legend: {
       unit: "mm/hr",
       stops: [
-        { color: "#0b1d51", label: "0" },
-        { color: "#2e6f95", label: "2" },
-        { color: "#3ddc84", label: "8" },
-        { color: "#f0883e", label: "20" },
-        { color: "#ff5c5c", label: "50+" },
+        { color: "#00764e", label: "0.1" },
+        { color: "#009424", label: "0.2" },
+        { color: "#45c000", label: "0.5" },
+        { color: "#c3e400", label: "1.0" },
+        { color: "#ffb006", label: "2.0" },
+        { color: "#ff4730", label: "5.0" },
+        { color: "#e70000", label: "10.0" },
+        { color: "#9c0000", label: "20.0" },
+        { color: "#330000", label: "≥ 53.0" },
+      ],
+    },
+    snowLegend: {
+      unit: "mm/hr",
+      stops: [
+        { color: "#b1faee", label: "0.1" },
+        { color: "#8febf1", label: "0.2" },
+        { color: "#66abdc", label: "0.5" },
+        { color: "#4f73c4", label: "1.0" },
+        { color: "#4048d2", label: "2.0" },
+        { color: "#5f2fe4", label: "5.0" },
+        { color: "#770bd1", label: "10.0" },
+        { color: "#770792", label: "20.0" },
+        { color: "#3a0330", label: "≥ 53.0" },
       ],
     },
     attribution: "NASA GIBS / GPM IMERG",
+  },
+  {
+    id: "OMPS_Ozone_Total_Column",
+    title: "Total-column ozone",
+    description: "Daily total-column ozone from Suomi NPP OMPS, in Dobson units. Swath gaps are transparent, not zero ozone.",
+    format: "png",
+    matrixSet: "2km",
+    maxLevel: 5,
+    // Verified 2026-09-30: Default 2026-09-30, latest period P1D.
+    dateRule: { kind: "daily", lagDays: 0 },
+    legend: {
+      unit: "DU",
+      stops: [
+        { color: "#5e4fa2", label: "< 100.0" },
+        { color: "#5db8a9", label: "150.0" },
+        { color: "#93d3a4", label: "200.0" },
+        { color: "#c8e99e", label: "250.0" },
+        { color: "#eeee93", label: "300.0" },
+        { color: "#fdd783", label: "350.0" },
+        { color: "#fdae61", label: "400.0" },
+        { color: "#f57748", label: "450.0" },
+        { color: "#9e0142", label: "≥ 500.0" },
+      ],
+    },
+    attribution: "NASA GIBS / OMPS Suomi NPP",
   },
   {
     id: "GHRSST_L4_MUR_Sea_Surface_Temperature",
@@ -355,7 +402,7 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
   // audit alone; every lagDays value below is the REAL gap between today's
   // GetCapabilities Default and today's date for that product, not copied
   // blind from the audit's slightly earlier check. Legend stops reuse this
-  // catalog's own established palette (the same hex values IMERG/AOD/cloud-
+  // catalog's own established palette (the same hex values AOD/cloud-
   // top-temp already use above) rather than inventing a new one per layer.
   {
     id: "MODIS_Aqua_L2_Chlorophyll_A",
