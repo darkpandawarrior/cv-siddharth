@@ -300,7 +300,7 @@ function SceneRig({
 
   useEffect(() => {
     const canvas = get().gl.domElement;
-    const zoom = (event: MouseEvent) => {
+    const zoom = (event: Event) => {
       const controls = controlsRef.current;
       if (!controls || useGlobe.getState().view !== "orbit") return;
       event.preventDefault();
@@ -308,7 +308,31 @@ function SceneRig({
       controls.update();
     };
     canvas.addEventListener("dblclick", zoom);
-    return () => canvas.removeEventListener("dblclick", zoom);
+    // Native `dblclick` never fires for a touch double-tap (it is a mouse
+    // event; Chromium/WebKit only synthesize it from an actual mouse device)
+    // — W10D's own recheck note. `pointerup` fires for touch, mouse and pen
+    // alike, so a manual two-tap-within-a-window/distance gate here covers
+    // the touch case without duplicating the mouse one (a real mouse click
+    // also fires `pointerup`, but its own native `dblclick` already zoomed
+    // by the time this fires a second time, and dollying twice for one
+    // mouse double-click is harmless — same end distance, OrbitControls
+    // clamps at minDistance either way).
+    let lastTap: { at: number; x: number; y: number } | null = null;
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      const now = performance.now();
+      const prev = lastTap;
+      lastTap = { at: now, x: event.clientX, y: event.clientY };
+      if (prev && now - prev.at < 350 && Math.hypot(event.clientX - prev.x, event.clientY - prev.y) < 40) {
+        lastTap = null;
+        zoom(event);
+      }
+    };
+    canvas.addEventListener("pointerup", onPointerUp);
+    return () => {
+      canvas.removeEventListener("dblclick", zoom);
+      canvas.removeEventListener("pointerup", onPointerUp);
+    };
   }, [controlsRef, get]);
 
   return null;
