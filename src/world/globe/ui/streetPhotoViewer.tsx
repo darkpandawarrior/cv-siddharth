@@ -141,7 +141,7 @@ export default function StreetPhotoViewer({ photo, onClose }: { photo: StreetPho
       className="pointer-events-auto absolute inset-0 z-10 flex flex-col glass-panel"
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-3 py-2 font-mono text-xs text-zinc-300">
-        <span>{photo.is360 ? "360 photo — drag to look, scroll to zoom" : "Street photo"}</span>
+        <span>{photo.is360 ? "360 photo: drag to look, scroll to zoom" : "Street photo"}</span>
         <button
           type="button"
           onClick={onClose}

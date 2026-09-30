@@ -11,9 +11,10 @@ import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLOBE_RADIUS } from "../geoMath.ts";
+import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useGlobe } from "../globeStore.ts";
 import { parseUsgsHistory, pulseState, type UsgsHistory } from "../timeMachine/usgsHistory.ts";
-import { estimatePlaybackSpeed, replayWindow } from "../timeMachine/replayWindow.ts";
+import { estimatePlaybackSpeed } from "../timeMachine/replayWindow.ts";
 import { magnitudeToRadius } from "./quake.ts";
 
 const MONTH_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
@@ -77,11 +78,12 @@ function loadHistoryOnce(): Promise<UsgsHistory | null> {
 }
 
 export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 }) {
+  const reducedMotion = useReducedMotion();
   const offset = useGlobe((s) => s.timeOffsetMin);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const historyRef = useRef<UsgsHistory | null | undefined>(undefined); // undefined: not requested yet
   const speedRef = useRef(0);
-  const prevRef = useRef<{ wall: number; sim: number } | null>(null);
+  const prevRef = useRef({ wall: 0, sim: 0 });
   const requestedRef = useRef(false);
 
   // Fetch lazily, once: only once the visitor has actually scrubbed away
@@ -111,10 +113,11 @@ export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
 
     const wallNow = performance.now();
     const simNowMs = now.getTime();
-    if (prevRef.current) {
+    if (prevRef.current.wall !== 0) {
       speedRef.current = estimatePlaybackSpeed(speedRef.current, simNowMs - prevRef.current.sim, wallNow - prevRef.current.wall);
     }
-    prevRef.current = { wall: wallNow, sim: simNowMs };
+    prevRef.current.wall = wallNow;
+    prevRef.current.sim = simNowMs;
 
     const history = historyRef.current;
     if (offset === 0 || tier === 3 || !history || history.times.length === 0) {
@@ -122,11 +125,12 @@ export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
       return;
     }
 
-    const [start, end] = replayWindow(simNowMs, speedRef.current);
+    const end = simNowMs;
+    const start = end - 2000 * Math.max(Math.abs(speedRef.current), 1);
     history.eventsBetween(start, end, rangeOut);
     let n = 0;
     for (let i = rangeOut[0]; i < rangeOut[1] && n < MAX_REPLAY; i++) {
-      const strength = pulseState(history.times[i], simNowMs, speedRef.current);
+      const strength = reducedMotion ? 1 : pulseState(history.times[i], simNowMs, speedRef.current);
       if (strength <= 0) continue;
 
       // Inlined geoMath.latLonToXyz formula, writing straight into the

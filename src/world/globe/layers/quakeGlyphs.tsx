@@ -11,9 +11,16 @@ import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { latLonToXyz } from "../geoMath.ts";
 import { GLOBE_RADIUS } from "../EarthDots.tsx";
+import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useGlobe } from "../globeStore.ts";
 import { type Quake, RIPPLE_MIN_MAG, magnitudeToRadius, depthToColor, quakeFadeAlpha } from "./quake.ts";
 import { formatQuakeTime } from "./quakeTimeFormat.ts";
+
+declare global {
+  interface Window {
+    __Z3_QUAKE_MOTION__?: () => { resting: number; ripples: number; scale: number };
+  }
+}
 
 // A flat annulus, scaled per instance to magnitudeToRadius(mag) — thin
 // enough to read as a ring, not a filled disc, at every size this draws.
@@ -53,6 +60,8 @@ function surfacePlacement(lat: number, lon: number, radius: number): { position:
 }
 
 export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[]; staticTier: boolean; simNowMs: number }) {
+  const reducedMotion = useReducedMotion();
+  const motionOff = staticTier || reducedMotion;
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const flashRef = useRef<THREE.InstancedMesh>(null);
@@ -61,6 +70,15 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
   // not React state, so a new quake arriving never triggers a re-render.
   const arrivalsRef = useRef<Map<string, number>>(new Map());
   const select = useGlobe((s) => s.select);
+
+  useEffect(() => {
+    window.__Z3_QUAKE_MOTION__ = () => ({
+      resting: meshRef.current?.count ?? 0,
+      ripples: rippleRef.current?.count ?? 0,
+      scale: rippleRef.current?.instanceMatrix.array[0] ?? 0,
+    });
+    return () => { delete window.__Z3_QUAKE_MOTION__; };
+  }, []);
 
   const capped = useMemo(() => quakes.slice(0, MAX_QUAKES), [quakes]);
 
@@ -94,30 +112,35 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
   // T3 is a static read (this lane's task 1): no arrival flash, no ripple,
   // ever — arrivalsRef stays empty so the two overlay meshes always draw 0.
   useEffect(() => {
-    if (staticTier) return;
+    if (motionOff) return;
     const seen = new Set(capped.map((q) => q.id));
     for (const q of capped) if (!arrivalsRef.current.has(q.id)) arrivalsRef.current.set(q.id, performance.now());
     for (const id of arrivalsRef.current.keys()) if (!seen.has(id)) arrivalsRef.current.delete(id);
-  }, [capped, staticTier]);
+  }, [capped, motionOff]);
 
+  const placements = useMemo(() => new Map(capped.map((q) => [q.id, {
+    ...surfacePlacement(q.lat, q.lon, GLOBE_RADIUS + 0.02),
+    color: new THREE.Color(depthToColor(q.depthKm)),
+  }])), [capped]);
   const rippleCandidates = useMemo(
-    () => (staticTier ? [] : capped.filter((q) => q.mag >= RIPPLE_MIN_MAG).slice(0, MAX_RIPPLES)),
-    [capped, staticTier],
+    () => (motionOff ? [] : capped.filter((q) => q.mag >= RIPPLE_MIN_MAG).slice(0, MAX_RIPPLES)),
+    [capped, motionOff],
   );
 
   useFrame(({ clock }) => {
+    if (motionOff) return;
     const flashMesh = flashRef.current;
     if (flashMesh) {
       const now = performance.now();
       let n = 0;
-      for (const q of capped) {
-        if (n >= MAX_FLASHES) break;
+      for (let i = 0; i < capped.length && n < MAX_FLASHES; i++) {
+        const q = capped[i];
         const arrival = arrivalsRef.current.get(q.id);
         if (arrival === undefined) continue;
         const age = now - arrival;
         if (age >= ARRIVAL_MS) continue;
         const t = age / ARRIVAL_MS;
-        const { position, normal } = surfacePlacement(q.lat, q.lon, GLOBE_RADIUS + 0.02);
+        const { position, normal, color } = placements.get(q.id)!;
         dummy.position.copy(position);
         dummy.quaternion.setFromUnitVectors(UP, normal);
         // A one-shot bump: grows past its resting size then settles — sin(t*pi)
@@ -125,7 +148,7 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
         dummy.scale.setScalar(magnitudeToRadius(q.mag) * (1 + Math.sin(t * Math.PI) * 0.8));
         dummy.updateMatrix();
         flashMesh.setMatrixAt(n, dummy.matrix);
-        tmpColor.set(depthToColor(q.depthKm)).multiplyScalar(1 - t);
+        tmpColor.copy(color).multiplyScalar(1 - t);
         flashMesh.setColorAt(n, tmpColor);
         n++;
       }
@@ -142,13 +165,13 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
         // Each ripple's phase is offset by its own index so a screen with
         // several M5+ quakes doesn't pulse them all in lockstep.
         const phase = ((t + i * 0.37) % RIPPLE_PERIOD_S) / RIPPLE_PERIOD_S;
-        const { position, normal } = surfacePlacement(q.lat, q.lon, GLOBE_RADIUS + 0.02);
+        const { position, normal, color } = placements.get(q.id)!;
         dummy.position.copy(position);
         dummy.quaternion.setFromUnitVectors(UP, normal);
         dummy.scale.setScalar(magnitudeToRadius(q.mag) * (1 + phase * 1.6));
         dummy.updateMatrix();
         rippleMesh.setMatrixAt(i, dummy.matrix);
-        tmpColor.set(depthToColor(q.depthKm)).multiplyScalar(1 - phase);
+        tmpColor.copy(color).multiplyScalar(1 - phase);
         rippleMesh.setColorAt(i, tmpColor);
       }
       rippleMesh.count = rippleCandidates.length;
@@ -198,12 +221,12 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
       >
         <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
       </instancedMesh>
-      {!staticTier && (
+      {!motionOff && (
         <instancedMesh ref={flashRef} args={[RING_GEOMETRY, undefined, MAX_FLASHES]} count={0} frustumCulled={false}>
           <meshBasicMaterial toneMapped={false} transparent blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
         </instancedMesh>
       )}
-      {!staticTier && rippleCandidates.length > 0 && (
+      {!motionOff && rippleCandidates.length > 0 && (
         <instancedMesh ref={rippleRef} args={[RING_GEOMETRY, undefined, MAX_RIPPLES]} frustumCulled={false}>
           <meshBasicMaterial toneMapped={false} transparent blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
         </instancedMesh>

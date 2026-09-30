@@ -147,6 +147,18 @@ function SceneRig({
   // pill's text arriving and rewrapping the row) can't snap a visitor's own
   // zoom back out from under them.
   const framedForReal = useRef(false);
+  const probeVectors = useRef([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]);
+  const screen = useRef([0, 0]);
+  const toScreen = useRef((v: THREE.Vector3, cam: THREE.Camera, width: number, height: number, out: number[]) => {
+    v.project(cam);
+    out[0] = (v.x * 0.5 + 0.5) * width;
+    out[1] = (-v.y * 0.5 + 0.5) * height;
+  });
+  useEffect(() => {
+    const sub = subsolarPoint(now);
+    const p = latLonToXyz(sub.lat, sub.lon);
+    probeVectors.current[0].set(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS);
+  }, [now]);
 
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
@@ -259,17 +271,15 @@ function SceneRig({
 
     const el = probeRef.current;
     if (!el) return;
-    const toScreen = (v: THREE.Vector3) => {
-      v.project(camera);
-      return [(v.x * 0.5 + 0.5) * size.width, (-v.y * 0.5 + 0.5) * size.height];
-    };
-    const sub = subsolarPoint(now);
-    const p = latLonToXyz(sub.lat, sub.lon);
-    const [x, y] = toScreen(new THREE.Vector3(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS));
-    // The globe's own screen disk: the view is lifted off the canvas centre,
-    // so day/night halves are split at the globe's centre, not the canvas's.
-    const [cx, cy] = toScreen(new THREE.Vector3());
-    const [ex] = toScreen(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS));
+    const vectors = probeVectors.current;
+    const out = screen.current;
+    toScreen.current(vectors[1].copy(vectors[0]), camera, size.width, size.height, out);
+    const x = out[0], y = out[1];
+    // Screen centre and rim use the same scratch vector and output buffer.
+    toScreen.current(vectors[1].set(0, 0, 0), camera, size.width, size.height, out);
+    const cx = out[0], cy = out[1];
+    toScreen.current(vectors[2].setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS), camera, size.width, size.height, out);
+    const ex = out[0];
     const dx = x - cx;
     const dy = y - cy;
     el.dataset.subsolarX = String(Math.round(x));

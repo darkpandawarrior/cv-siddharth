@@ -123,6 +123,13 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
     else if (useGlobe.getState().sheet === "inspector") setSheet(null);
   }, [selected, setSheet]);
 
+  const selectionOpen = selected !== null;
+  useEffect(() => {
+    if (!selectionOpen) return;
+    const prior = document.activeElement;
+    return () => { if (prior instanceof HTMLElement && prior.isConnected) prior.focus(); };
+  }, [selectionOpen]);
+
   useEffect(() => {
     if (!selected) return;
     const onKeyDown = (e: KeyboardEvent) => {

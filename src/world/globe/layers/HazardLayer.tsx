@@ -1,3 +1,4 @@
+import { startVisibilityPolling } from "../visibilityPolling.ts";
 import { VolcanoGlyphs } from "./VolcanoGlyphs.tsx";
 import { parseVolcanoResponse, volcanoGlyphs } from "./volcano.ts";
 // LANE L7: live earth events — quakes, EONET wildfires/volcanoes/storms,
@@ -233,11 +234,10 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
       setNhcCones(cones);
       setNhcStatus(anyOk ? "live" : "failed");
     }
-    void poll();
-    const id = setInterval(() => void poll(), NHC_POLL_MS);
+    const stop = startVisibilityPolling(poll, NHC_POLL_MS);
     return () => {
       alive = false;
-      clearInterval(id);
+      stop();
     };
   }, []);
 

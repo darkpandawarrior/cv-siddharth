@@ -20,6 +20,18 @@ const GOVERNOR_OPT: GovernorOptions = {
   maxCooldownMs: 5 * 60_000,
 };
 const OK_CACHE_CONTROL = "s-maxage=60, stale-while-revalidate=300";
+const UPSTREAM_TIMEOUT_MS = 8000;
+
+// Reuse the router's private readCapped via governed. These body reads have
+// no cache/backoff; the outer poll governor owns both policies.
+async function cappedJson<T>(key: string, res: Response): Promise<T> {
+  const { value } = await governed<T>(`spotify-body:${key}`,
+    async () => new Response(res.body, { status: 200 }),
+    (text) => JSON.parse(text) as T,
+    { ...GOVERNOR_OPT, minIntervalMs: 0, maxStaleMs: -1, cooldownMs: 0, maxCooldownMs: 0 });
+  if (value === null) throw new Error("Spotify upstream body unavailable");
+  return value;
+}
 
 export type SpotifyTrack = { track: string; artist: string; albumArt?: string; url?: string; playedAt?: string };
 export type SpotifyNow = {
@@ -83,6 +95,7 @@ async function getAccessToken(
   if (!id || !secret || !refresh) return null;
   const res = await fetchImpl("https://accounts.spotify.com/api/token", {
     method: "POST",
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     headers: {
       "content-type": "application/x-www-form-urlencoded",
       authorization: `Basic ${btoa(`${id}:${secret}`)}`,
@@ -90,7 +103,7 @@ async function getAccessToken(
     body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }).toString(),
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as { access_token: string; expires_in?: number };
+  const json = await cappedJson<{ access_token: string; expires_in?: number }>("token", res);
   // Refresh a little early (60s of slack) so a token that's about to expire
   // is never handed out only to die mid-request.
   const ttlMs = Math.max(0, ((json.expires_in ?? 3600) - 60) * 1000);
@@ -112,7 +125,7 @@ type SpotifyPoll =
   | { kind: "idle"; recent: { played_at: string; track: SpotifyApiTrack }[] };
 
 async function fetchSpotifyPoll(fetchImpl: typeof fetch, auth: Record<string, string>): Promise<Response> {
-  const nowRes = await fetchImpl("https://api.spotify.com/v1/me/player/currently-playing", { headers: auth });
+  const nowRes = await fetchImpl("https://api.spotify.com/v1/me/player/currently-playing", { headers: auth, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
 
   // A refusal is not "nothing playing". Dev-mode apps get 403 "Active premium
   // subscription required for the owner of the app"; a revoked token gets 401.
@@ -122,16 +135,16 @@ async function fetchSpotifyPoll(fetchImpl: typeof fetch, auth: Record<string, st
   }
 
   if (nowRes.status === 200) {
-    const json = (await nowRes.json()) as { is_playing: boolean; item: SpotifyApiTrack | null };
+    const json = await cappedJson<{ is_playing: boolean; item: SpotifyApiTrack | null }>("playing", nowRes);
     if (json.item) {
       const poll: SpotifyPoll = { kind: "playing", isPlaying: json.is_playing, item: json.item };
       return new Response(JSON.stringify(poll), { status: 200 });
     }
   }
 
-  const recentRes = await fetchImpl("https://api.spotify.com/v1/me/player/recently-played?limit=5", { headers: auth });
+  const recentRes = await fetchImpl("https://api.spotify.com/v1/me/player/recently-played?limit=5", { headers: auth, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   const recent = recentRes.ok
-    ? ((await recentRes.json()) as { items: { played_at: string; track: SpotifyApiTrack }[] }).items
+    ? (await cappedJson<{ items: { played_at: string; track: SpotifyApiTrack }[] }>("recent", recentRes)).items
     : [];
   const poll: SpotifyPoll = { kind: "idle", recent };
   return new Response(JSON.stringify(poll), { status: 200 });
@@ -144,7 +157,7 @@ export async function getSpotifyNow(
   now: number = Date.now(),
   cache: SpotifyTokenCacheBox = tokenCache,
 ): Promise<SpotifyNow> {
-  const token = await getAccessToken(env, fetchImpl, now, cache);
+  const token = await getAccessToken(env, fetchImpl, now, cache).catch(() => null);
   if (!token) return EMPTY;
 
   const auth = { authorization: `Bearer ${token}` };

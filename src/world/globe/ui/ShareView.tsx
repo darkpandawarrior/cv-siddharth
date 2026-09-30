@@ -105,9 +105,9 @@ const STATUS_TEXT: Record<ActionStatus, string | null> = {
   idle: null,
   busy: null,
   "link-ok": "Link copied",
-  "link-failed": "Couldn't copy — select the address bar instead",
+  "link-failed": "Couldn't copy. Select the address bar instead",
   "postcard-ok": "Postcard saved",
-  "postcard-failed": "Nothing to capture yet — the globe hasn't loaded",
+  "postcard-failed": "Nothing to capture yet. The globe hasn't loaded",
 };
 
 /** The shared popover: a Share icon that opens two actions. Both render
@@ -152,7 +152,7 @@ function SharePopoverButton({ buttonClassName, iconSize }: { buttonClassName: st
     // already use, not `tier` (a performance/GPU tier, not a form factor).
     if (typeof navigator.share === "function" && typeof window !== "undefined" && window.innerWidth < 640) {
       try {
-        await navigator.share({ url: buildShareUrl(), title: "Siddharth Pandalai — the globe" });
+        await navigator.share({ url: buildShareUrl(), title: "Siddharth Pandalai · the globe" });
         setOpen(false);
         setStatus("idle");
         return;
