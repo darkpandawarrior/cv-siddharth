@@ -106,13 +106,13 @@ test("ground view shows constellation names; at least one is legible", async ({ 
   // LayerPanel.tsx's own "g" shortcut (LANE L5): fly to Pune and switch to
   // ground view — the real production path a visitor uses, not a test-only
   // store poke.
-  // x: 10 sat under AnomalyRail.tsx's own sitewide, always-mounted left
-  // rail (.anomaly-rail-nav, 24px wide, real pointer-events above 768px
-  // viewport width — not this lane's file to change), which intercepted
-  // the click every time at this viewport size. Mid-canvas is clear of
-  // every other spine element and of any object worth accidentally
-  // selecting at this clock/camera combination.
-  await canvas.click({ position: { x: 700, y: 300 } }); // focus the canvas so the keydown listener's window-level handler sees it
+  // Right of ExploreBar and left of LayerPanel, above GlobePanel.
+  const focusPoint = { x: 1000, y: 400 };
+  expect(await canvas.evaluate((el, point) => {
+    const box = el.getBoundingClientRect();
+    return document.elementFromPoint(box.x + point.x, box.y + point.y) === el;
+  }, focusPoint), "Canvas focus point must hit bare canvas, clear of HUD chrome").toBe(true);
+  await canvas.click({ position: focusPoint });
   await page.keyboard.press("g");
   await expect.poll(async () => canvas.getAttribute("data-camera-view"), { timeout: 10_000 }).toBe("ground");
 

@@ -123,7 +123,8 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
   expect(fps).toBeLessThan(1000);
 
   const drawCallsWhileOn = await page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.());
-  expect(drawCallsWhileOn).toBeGreaterThan(0);
+  // Include the scene and composer passes, not just the final full-screen quad.
+  expect(drawCallsWhileOn).toBeGreaterThan(1);
 
   await toggle.click();
   await expect(panel).toBeHidden();

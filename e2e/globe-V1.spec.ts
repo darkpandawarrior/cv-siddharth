@@ -197,14 +197,20 @@ test("the EOX deep-zoom base requests the real tiles.maps.eox.at WGS84 matrix, a
   const openingMaxLevel = Math.max(...requests.map((r) => r!.level));
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   await expect(zoomIn).toBeVisible();
-  for (let i = 0; i < 6; i++) {
-    await zoomIn.click();
-    await page.waitForTimeout(150);
-  }
-  await page.waitForTimeout(500);
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  // Poll the real camera seam; stop sending zoom intent at the floor so
+  // the designed hold-to-open Street View gesture cannot steal this test.
 
   await expect
-    .poll(() => requests.filter((r) => r && r.level > openingMaxLevel).length, { timeout: 15_000, message: `expected a tile deeper than opening level ${openingMaxLevel}` })
+    .poll(async () => {
+      const deeper = requests.filter((r) => r && r.level > openingMaxLevel);
+      if (deeper.length === 0) {
+        const distance = Number(await canvas.getAttribute("data-camera-distance") ?? NaN);
+        const floor = Number(await canvas.getAttribute("data-camera-min-distance") ?? NaN);
+        if (distance > floor + 0.01) await zoomIn.click();
+      }
+      return deeper.length;
+    }, { timeout: 15_000, message: `expected a tile deeper than opening level ${openingMaxLevel}` })
     .toBeGreaterThan(0);
 });
 

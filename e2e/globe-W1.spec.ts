@@ -106,20 +106,19 @@ test("zooming in requests a deeper (finer) tile level than the opening view", as
 
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   await expect(zoomIn).toBeVisible();
-  // Several clicks: OrbitControls dollies with damping (GlobeScene.tsx's own
-  // dampingFactor), so one click's worth of distance change needs a few
-  // settled frames, and only a real jump past minDistance's own floor
-  // guarantees a coarser level's texel no longer fits the screen.
-  for (let i = 0; i < 6; i++) {
-    await zoomIn.click();
-    await page.waitForTimeout(150);
-  }
-  await page.waitForTimeout(500); // let damping settle and TileLayer's own throttle fire its recompute
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  // Poll the real camera seam; stop sending zoom intent at the floor so
+  // the designed hold-to-open Street View gesture cannot steal this test.
 
   await expect
     .poll(
-      () => {
+      async () => {
         const deeper = requests.filter((r) => r && r.level > openingMaxLevel);
+        if (deeper.length === 0) {
+          const distance = Number(await canvas.getAttribute("data-camera-distance") ?? NaN);
+          const floor = Number(await canvas.getAttribute("data-camera-min-distance") ?? NaN);
+          if (distance > floor + 0.01) await zoomIn.click();
+        }
         return deeper.length;
       },
       { timeout: 15_000, message: `expected a tile request deeper than opening level ${openingMaxLevel}` },

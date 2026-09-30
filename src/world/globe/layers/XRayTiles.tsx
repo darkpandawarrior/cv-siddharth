@@ -69,7 +69,7 @@ function buildOutlineGeometry(tiles: DrawnTile[]): THREE.BufferGeometry {
   return geometry;
 }
 
-export default function XRayTiles() {
+export default function XRayTiles({ frameStats }: { frameStats: { calls: number; triangles: number } }) {
   const { gl } = useThree();
   const lineRef = useRef<THREE.LineSegments>(null!);
   const lastSampleMsRef = useRef<number | null>(null);
@@ -114,13 +114,12 @@ export default function XRayTiles() {
     lastSampleMsRef.current = nowMs;
     framesSinceSampleRef.current = 0;
 
-    // renderer.info: the real counters three.js already keeps for this
-    // exact frame, not a simulated/estimated number — "reflects what is
-    // actually drawn" (the brief, verbatim).
+    // SceneRig snapshots the whole previous frame before resetting counters,
+    // so the composer and callback ordering cannot expose a partial frame.
     const info = gl.info;
     setXrayStats({
-      drawCalls: info.render.calls,
-      triangles: info.render.triangles,
+      drawCalls: frameStats.calls,
+      triangles: frameStats.triangles,
       geometries: info.memory.geometries,
       textures: info.memory.textures,
       fps: Math.round(fps),

@@ -54,13 +54,11 @@ async function maxLumaOutsideCircle(buffer: Buffer, cx: number, cy: number, r: n
   return max;
 }
 
-// 2026-09-21T00:00:00Z: computed offline (moonPosition + substellarLatLon,
-// same formulas this lane ships) against the default opening camera
-// (GlobeScene.tsx's START/START_DISTANCE, unchanged by this lane) to sit
-// well inside the view frustum AND well clear of the globe's own angular
-// radius - so a click here can only ever hit the Moon mesh, never the
-// globe. Verified with a ray-sphere test, not eyeballed.
-const MOON_ONSCREEN_TIME = "2026-09-21T00:00:00.000Z";
+// Computed offline with moonPosition + substellarLatLon and SceneRig's
+// golden-ratio framing (1440x841 canvas, fov 42, aspect restored). The Moon
+// projects near (1023, 256), outside the globe's ray-sphere intersection
+// and clear of the time scrubber and ExploreBar. Assert the real hit below.
+const MOON_ONSCREEN_TIME = "2026-09-15T00:00:00.000Z";
 // The USNO-recorded full-moon oracle moon.test.ts already pins (fraction >=
 // 0.99 at 2026-09-26 22:19 IST) - reused here rather than a second guess at
 // "is this actually near full."
@@ -117,6 +115,11 @@ test("clicking the Moon selects it, with its computed phase/distance/rise-set ro
   const mx = Number(await moonProbe.getAttribute("data-moon-x"));
   const my = Number(await moonProbe.getAttribute("data-moon-y"));
 
+  expect(await canvas.evaluate((el, point) => {
+    const box = el.getBoundingClientRect();
+    return document.elementFromPoint(box.x + point.x, box.y + point.y) === el;
+  }, { x: mx, y: my }), "Moon probe must hit bare canvas, clear of HUD chrome").toBe(true);
+
   await canvas.click({ position: { x: mx, y: my } });
 
   const statusEl = page.locator("[data-sky-selected]");
@@ -143,15 +146,25 @@ test("hovering the Moon shows a pointer cursor", async ({ page }) => {
   const mx = Number(await moonProbe.getAttribute("data-moon-x"));
   const my = Number(await moonProbe.getAttribute("data-moon-y"));
 
+  expect(await canvas.evaluate((el, point) => {
+    const box = el.getBoundingClientRect();
+    return document.elementFromPoint(box.x + point.x, box.y + point.y) === el;
+  }, { x: mx, y: my }), "Moon probe must hit bare canvas, clear of HUD chrome").toBe(true);
+
   await canvas.hover({ position: { x: mx, y: my } });
   await expect.poll(() => page.evaluate(() => document.body.style.cursor)).toBe("pointer");
-  // A canvas-relative corner, well clear of the Moon's own on-screen spot
+  // A canvas-relative point, well clear of the Moon's own on-screen spot
   // computed above - the canvas itself is shorter than the viewport (the
   // nav bar and the fact-list panel take the rest), so a viewport-relative
   // guess can land outside it entirely and hit unrelated page chrome.
   const box = await canvas.boundingBox();
   if (!box) throw new Error("globe canvas has no bounding box");
-  await canvas.hover({ position: { x: box.width * 0.5, y: box.height - 15 } });
+  const away = { x: box.width - 280, y: box.height * 0.6 };
+  expect(await canvas.evaluate((el, point) => {
+    const rect = el.getBoundingClientRect();
+    return document.elementFromPoint(rect.x + point.x, rect.y + point.y) === el;
+  }, away), "Moon pointer-out point must hit bare canvas").toBe(true);
+  await canvas.hover({ position: away });
   await expect.poll(() => page.evaluate(() => document.body.style.cursor)).toBe("auto");
 });
 

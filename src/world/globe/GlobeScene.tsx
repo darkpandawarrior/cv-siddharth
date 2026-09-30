@@ -56,6 +56,8 @@ declare global {
     __GLOBE_TEST_GET_DRAW_CALLS__?: () => number;
   }
 }
+// Like sceneHandles, these counters belong to the one mounted globe canvas.
+const frameStats = { calls: 0, triangles: 0 };
 const EclipseLayer = lazy(() => import("./layers/EclipseLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
@@ -114,7 +116,6 @@ const LIFT = 0.5 - 1 / PHI ** 2;
 // left-slot constants (288px card + 16px edge). Duplicated as plain numbers
 // rather than imported - Globe.tsx's constants are Tailwind class strings,
 // and this file may only touch SceneRig, not add a shared-constants module.
-const PANEL_RESERVE_PX = { open: 249, collapsed: 50 };
 const LEFT_SLOT_RESERVE_PX = 304;
 // Below this width the layer panel and the inspector/tour slot are bottom
 // sheets, not docked columns (Globe.tsx's own `sm` breakpoint) - the globe's
@@ -166,19 +167,22 @@ function SceneRig({
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
     const { camera: c, gl, scene, invalidate } = get();
+    const autoReset = gl.info.autoReset;
+    gl.info.autoReset = false;
     sceneHandles.camera = c;
     sceneHandles.canvas = gl.domElement;
     sceneHandles.scene = scene;
-    sceneHandles.invalidate = () => invalidate();
-    // LANE C2 (X-ray mode e2e seam): renderer.info.render.calls, readable
+    sceneHandles.invalidate = invalidate;
+    // LANE C2 (X-ray mode e2e seam): completed-frame calls, readable
     // whether or not X-ray is actually mounted -- so e2e/globe-C2.spec.ts can
     // grade "toggling X-ray off removes its own draw call" against the real
     // renderer instead of against the debug card's own number, which would
     // only be proving X-ray agrees with itself. A no-op in production --
     // nothing outside a test ever calls it (same convention TileLayer.tsx's
     // own __GLOBE_TEST_* seams already use).
-    window.__GLOBE_TEST_GET_DRAW_CALLS__ = () => gl.info.render.calls;
+    window.__GLOBE_TEST_GET_DRAW_CALLS__ = () => frameStats.calls;
     return () => {
+      gl.info.autoReset = autoReset;
       sceneHandles.camera = null;
       sceneHandles.canvas = null;
       sceneHandles.scene = null;
@@ -186,6 +190,13 @@ function SceneRig({
       window.__GLOBE_TEST_GET_DRAW_CALLS__ = undefined;
     };
   }, [get]);
+
+  // Capture the completed frame, including every composer pass, before
+  // clearing counters for the next frame's work. Readers share this snapshot.
+  useFrame(({ gl }) => {
+    Object.assign(frameStats, gl.info.render);
+    gl.info.reset();
+  }, -1000);
 
   useEffect(() => {
     if (framedForReal.current && topOffsetPx == null) return;
@@ -251,7 +262,7 @@ function SceneRig({
     let targetOffsetX = 0;
     if (docked) {
       const s = useGlobe.getState();
-      const rightReserve = s.panelOpen ? PANEL_RESERVE_PX.open : PANEL_RESERVE_PX.collapsed;
+      const rightReserve = s.panelOpen ? 249 : 50;
       const leftReserve = s.selected || s.tourStep !== null ? LEFT_SLOT_RESERVE_PX : 0;
       targetOffsetX = (rightReserve - leftReserve) / (2 * size.width);
     }
@@ -378,6 +389,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
   const now = useSimNow(realNow);
   const xrayOn = useSyncExternalStore(subscribeXray, isXrayEnabled, () => false);
   const count = TIER_DOT_COUNT[tier];
+  const imagery = style === "imagery" && tier !== 3;
   const dotsEarth = <EarthDots count={count} now={now} earthRef={earthRef} />;
 
   // Zoom-pill ticks — bump-and-consume, same pattern as Blueprint3D.tsx's
@@ -459,7 +471,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         <Suspense fallback={null}>{layers.wind && live && tier !== 3 && <WindLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.reach && <ReachLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.guide && <GuideLayer tier={tier} />}</Suspense>
-        <Suspense fallback={null}>{style === "imagery" && cloudsOn && tier !== 3 && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        <Suspense fallback={null}>{imagery && cloudsOn && <CloudShell now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         <Suspense fallback={null}>{layers.countries && <CountryLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.together && live && tier !== 3 && <TogetherLayer tier={tier} />}</Suspense>
         {/* Wave 6 seams: replay (renders only off "now"), story arcs (only while
@@ -470,16 +482,16 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
           {storyArcsOn && <StoryArc tier={tier} />}
         </Suspense>
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
-        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
+        <Suspense fallback={null}>{imagery && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
         {/* WAVE 7 LANE V2: city-light bloom, tier 1/2 imagery only — tier 3
             (and the dot-matrix style) never mount a composer at all. */}
-        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && <GlobePost tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{imagery && <GlobePost tier={tier} />}</Suspense>
         {/* LANE C4 ("Living daylight"): the golden-hour and waking bands,
             drawn from the same subsolar point the terminator uses -- kept at
             every tier (the brief's own "tier 3 draws the bands only" caps
             what tier 3 gets, it never turns the layer off). */}
         <Suspense fallback={null}>{layers.daylight && <DaylightLayer now={now} tier={tier} />}</Suspense>
-        <Suspense fallback={null}>{style === "imagery" && tier !== 3 && xrayOn && <XRayTiles />}</Suspense>
+        <Suspense fallback={null}>{imagery && xrayOn && <XRayTiles frameStats={frameStats} />}</Suspense>
         <Suspense fallback={null}>{layers.eclipse && <EclipseLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>
           {/* LANE I2 fix: the HUD zoom-in pill is a real "get closer" intent,
