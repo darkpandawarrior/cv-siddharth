@@ -271,7 +271,7 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
           tabIndex={-1}
           role="dialog"
           aria-label="Guided tour"
-          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
+          className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-left-slot-top,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[var(--globe-facts-reserve,calc(45%+16px))] sm:max-h-[calc(100%-var(--globe-facts-reserve,calc(45%+16px))-var(--globe-left-slot-top,5rem))]"
         >
           {cardBody("py-1")}
         </div>

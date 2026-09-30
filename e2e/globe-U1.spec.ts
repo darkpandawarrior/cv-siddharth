@@ -31,8 +31,8 @@ async function openGlobe(page: Page, width: number, height: number) {
   await waitForHydration(page);
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
-  // Camera settle + the subsolar probe's first frame.
-  await page.waitForTimeout(700);
+  await expect(page.locator("[data-globe-stage]")).toHaveAttribute("data-chrome-measured", "true");
+  await expect.poll(() => page.locator("[data-subsolar-probe]").getAttribute("data-globe-r")).not.toBeNull();
   return canvas;
 }
 

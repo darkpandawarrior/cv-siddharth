@@ -21,13 +21,12 @@ export default function Briefing() {
   const layers = useGlobe(s => s.layers);
   const status = useGlobe(s => s.status);
   const offset = useGlobe(s => s.timeOffsetMin);
-  const [phone, setPhone] = useState(() => window.matchMedia("(max-width: 639px)").matches);
+  const [phone, setPhone] = useState(() => getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() === "1");
   const open = phone ? sheet === "brief" : desktopOpen;
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 639px)");
-    const update = () => setPhone(query.matches);
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    const update = () => setPhone(getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() === "1");
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
   useEffect(() => {
     if (!open) return;
@@ -68,7 +67,7 @@ export default function Briefing() {
   try { storage = window.sessionStorage; } catch { /* Storage can be disabled. */ }
   const result = buildBriefing({ nowMs, quakes: snapshot(QUAKES_URL), eonet: snapshot(EONET_URL), gvp: snapshot("/api/volcanoes"), kp: snapshot(KP_URL), iss: issSelection, satelliteReason: iss && !issState ? "ISS element is stale or cannot be propagated" : satelliteReason, launches: briefingLaunchSnapshot(nowMs, storage, status.hazards?.detail?.includes("Launch Library unreachable")) });
   const panel = open ? (
-    <section id="globe-briefing" data-globe-briefing role="region" aria-labelledby="globe-brief-title" style={phone ? { maxHeight: `min(70svh, ${Math.max(44, window.innerHeight - (triggerBox?.bottom ?? 200) - 16)}px)` } : { top: (triggerBox?.bottom ?? 140) + 8, maxHeight: `min(65vh, ${Math.max(44, window.innerHeight - (triggerBox?.bottom ?? 140) - 16)}px)`, left: Math.max(16, Math.min((triggerBox?.right ?? window.innerWidth - 16) - 320, window.innerWidth - 336)) }} className={phone ? "pointer-events-auto fixed inset-x-0 bottom-0 z-50 flex max-h-[70svh] flex-col rounded-t-2xl glass-panel text-zinc-200" : "pointer-events-auto fixed z-40 flex max-h-[65vh] w-80 flex-col rounded-2xl glass-panel text-zinc-200"}>
+    <section id="globe-briefing" data-globe-briefing role="region" aria-labelledby="globe-brief-title" style={phone ? { maxHeight: `min(70svh, ${Math.max(0, window.innerHeight - (triggerBox?.bottom ?? 0) - 8)}px)` } : { top: Math.min((triggerBox?.bottom ?? 0) + 8, window.innerHeight - 128), maxHeight: `min(65vh, ${Math.max(120, window.innerHeight - (triggerBox?.bottom ?? 0) - 16)}px)`, left: Math.max(16, Math.min((triggerBox?.right ?? window.innerWidth - 16) - 320, window.innerWidth - 336)) }} className={phone ? "pointer-events-auto fixed inset-x-0 bottom-0 z-50 flex max-h-[70svh] flex-col rounded-t-2xl glass-panel text-zinc-200" : "pointer-events-auto fixed z-40 flex max-h-[65vh] w-80 flex-col rounded-2xl glass-panel text-zinc-200"}>
       <header className="flex shrink-0 items-center justify-between gap-2 border-b border-line p-3">
         <div><h2 id="globe-brief-title" className="text-base font-semibold">Tonight on Earth</h2><p className="text-xs text-muted">A briefing from this session's loaded feeds</p></div>
         <button ref={closeButton} type="button" aria-label="Close briefing" className={buttonClass} onClick={close}>Close</button>
@@ -93,5 +92,5 @@ export default function Briefing() {
       </div>
     </section>
   ) : null;
-  return <><button ref={trigger} type="button" data-brief-trigger aria-expanded={open} aria-controls={open ? "globe-briefing" : undefined} className={`pointer-events-auto glass-panel ${buttonClass}`} onClick={() => { if (open) close(); else { const box = trigger.current?.getBoundingClientRect(); const topbar = trigger.current?.closest("[data-globe-topbar]")?.getBoundingClientRect(); if (box) setTriggerBox({ right: box.right, bottom: topbar?.bottom ?? box.bottom }); setNowMs(Date.now()); if (phone) useGlobe.getState().setSheet("brief"); else setDesktopOpen(true); } }}>Tonight on Earth</button>{panel && createPortal(panel, document.body)}</>;
+  return <><button ref={trigger} type="button" data-brief-trigger aria-expanded={open} aria-controls={open ? "globe-briefing" : undefined} className={`pointer-events-auto glass-panel ${buttonClass}`} onClick={() => { if (open) close(); else { const box = trigger.current?.getBoundingClientRect(); const topbar = trigger.current?.closest("[data-globe-topbar]")?.getBoundingClientRect(); if (box) setTriggerBox({ right: box.right, bottom: topbar?.bottom ?? box.bottom }); setNowMs(Date.now()); if (phone) useGlobe.getState().setSheet("brief"); else setDesktopOpen(true); } }}>Tonight on Earth</button>{panel && createPortal(panel, document.querySelector("[data-globe-stage]") ?? document.body)}</>;
 }

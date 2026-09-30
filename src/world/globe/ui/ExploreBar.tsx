@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { debounce, distanceAndBearing, rateLimit } from "../exploreMath.ts";
 import { placeSelection, pointSelection, searchPlaces, type Place } from "../exploreApi.ts";
 import { canvasState, surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
@@ -42,8 +42,9 @@ function classify(query: string): TopRow | null {
 
 /** Lazy DOM surface. Tiers share five results; only the measurement's
  * fixed vertex cap changes. No background geolocation/weather requests. */
-export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
+export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layoutRef: (el: HTMLDivElement | null) => void }) {
   const host = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null);
+  const register = useCallback((el: HTMLDivElement | null) => { host.current = el; layoutRef(el); }, [layoutRef]);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [focused, setFocused] = useState(false);
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
@@ -60,6 +61,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const mode = useExplore(s => s.mode), points = useExplore(s => s.points);
   const view = useGlobe(s => s.view);
   const sheet = useGlobe(s => s.sheet);
+
 
   const topRow = useMemo(() => classify(query), [query]);
   const examples = phone && focused && !query && !answer;
@@ -254,24 +256,12 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    // Mobile top offset tracks the topbar's REAL measured height
-    // (Globe.tsx's `--globe-top-offset`, the same var Inspector.tsx and
-    // GlobeTour.tsx already consume at sm+) instead of a guessed constant.
-    // On mobile the topbar's own icon row (Layers/Time/Tour) is part of
-    // that measured height, and a real weather/status line makes the whole
-    // stack taller than the old fixed 104px assumed - which put this box's
-    // top edge OVER those icon buttons and silently ate every click meant
-    // for them (globe-U1.spec.ts's "phones open one sheet at a time" is
-    // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
-    // ExploreBar sits IN the topbar's reserved centre band beside the HUD
-    // pills, not below the full stack, so it was never affected.
-    // Below the z-20 topbar so Share's popover stays clickable.
-    <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
+    <div ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
       </div>}
-      <div className={mode === "pin" ? "hidden" : "flex flex-wrap items-center gap-1"}>
+      <div className={mode === "pin" ? "hidden" : "flex flex-wrap items-center"}>
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
           placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-48px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
           onFocus={() => { setFocused(true); setActive(-1); }}
@@ -288,7 +278,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         {mode !== "pin" && <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed={false} disabled={view !== "orbit"} onClick={() => toggle("pin")}>Pin</button>}
         {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
-      {mode !== "pin" && !query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
+      {mode !== "pin" && focused && !query && !answer && <div className="hidden compact:!hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
         {EXAMPLE_CHIPS.map(chip => (
           <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
             className="rounded-full border border-line px-2 py-1 text-xs text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
@@ -320,7 +310,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
         </p>}
       </div>
-      <p className={mode === "pin" ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
+      <p className={mode === "pin" || (!results.length && !answer && !message) ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
       <ExploreMeasure canvas={canvas} tier={tier} />
     </div>
   );
