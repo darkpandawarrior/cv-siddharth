@@ -133,9 +133,10 @@ describe("the README's numbers are the repo's numbers", () => {
    * asked for this test found the README saying 115 against a suite that had
    * already grown past it. This asks Playwright itself, the same source
    * `npm run test:e2e` runs against, so the number can only be wrong in one
-   * place going forward.
+   * place going forward. Listing loads every spec module, and on a 2-core CI
+   * runner 110 files take longer than vitest's default 5 s, hence the timeout.
    */
-  it("states the real Playwright test count, not just the file count", () => {
+  it("states the real Playwright test count, not just the file count", { timeout: 60_000 }, () => {
     const out = execFileSync("npx", ["playwright", "test", "--list"], {
       encoding: "utf8",
       cwd: ROOT,
