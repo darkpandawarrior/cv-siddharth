@@ -73,7 +73,7 @@ test.describe('W11A desktop', () => {
     await expect(page.locator('[data-xray-toggle]')).toHaveAttribute('aria-pressed', 'true');
     await shot(page, info, 'desktop-xray');
   });
-  test('all-off layers and an absolute eclipse restore faithfully', async ({ page, context }, info) => {
+  test('all-off layers restore faithfully', async ({ page, context }) => {
     await open(page);
     await page.getByRole('button', { name: 'Clean', exact: true }).click();
     await expect.poll(() => new URL(page.url()).searchParams.get('ly'), { timeout: 2000 }).toBe('');
@@ -82,13 +82,22 @@ test.describe('W11A desktop', () => {
       await open(restored, page.url());
       const layers = restored.locator('[data-globe-layer-panel] ul button[aria-pressed]');
       await expect(layers).toHaveCount(16);
-      for (const button of await layers.all()) await expect(button).toHaveAttribute('aria-pressed', 'false');
-      await page.getByRole('button', { name: 'Next eclipse', exact: true }).click();
-      const beyond = page.locator('[data-globe-time-scrubber] [data-time-beyond-range]');
-      await expect(beyond).toContainText('beyond the slider range');
-      const date = await beyond.innerText();
-      await expect.poll(() => new URL(page.url()).searchParams.has('at'), { timeout: 2000 }).toBe(true);
-      await shot(page, info, 'desktop-eclipse');
+      await expect.poll(() => layers.evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed'))))
+        .toEqual(Array(16).fill('false'));
+    } finally { await restored.close(); }
+  });
+  test('an absolute eclipse restores faithfully', async ({ page, context }, info) => {
+    await open(page);
+    await page.getByRole('button', { name: 'Clean', exact: true }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('ly'), { timeout: 2000 }).toBe('');
+    await page.getByRole('button', { name: 'Next eclipse', exact: true }).click();
+    const beyond = page.locator('[data-globe-time-scrubber] [data-time-beyond-range]');
+    await expect(beyond).toContainText('beyond the slider range');
+    const date = await beyond.innerText();
+    await expect.poll(() => new URL(page.url()).searchParams.has('at'), { timeout: 2000 }).toBe(true);
+    await shot(page, info, 'desktop-eclipse');
+    const restored = await context.newPage();
+    try {
       await open(restored, page.url());
       await expect(restored.locator('[data-globe-time-scrubber] [data-time-beyond-range]')).toHaveText(date);
     } finally { await restored.close(); }
