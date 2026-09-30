@@ -1,19 +1,23 @@
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 import { briefingFixtures } from "./fixtures/briefing/live.ts";
-const shots = process.env.GLOBE_SHOTS_DIR ?? "/private/tmp/claude-501/-Users-darkpandawarrior-Repos/740d63f5-5ee4-444c-898d-1c7247dd41ab/scratchpad/lanes/W11C/screenshots";
-async function shot(page: Page, name: string) { await mkdir(shots, { recursive: true }); await page.screenshot({ path: join(shots, `${name}.png`), fullPage: false }); }
 async function setup(page: Page, down = false, url = "/globe", iss = false) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
-  const fixtures = briefingFixtures(Date.now());
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  // Keep scene time and fixture ages deterministic, as X6 does.
+  const fixtureNow = new Date("2026-09-30T12:00:00Z");
+  await page.clock.setFixedTime(fixtureNow);
+  const fixtures = briefingFixtures(+fixtureNow);
   let launchRequests = 0;
   page.on("request", request => { if (request.url().startsWith("https://ll.thespacedevs.com/")) launchRequests++; });
   await page.route("**/api/**", route => {
     const path = new URL(route.request().url()).pathname;
     if (down && ["/api/tle", "/api/volcanoes"].includes(path)) return route.fulfill({ status: 503, body: "Unavailable" });
-    return route.fulfill({ json: path === "/api/volcanoes" ? fixtures.gvp : path === "/api/tle" ? iss ? fixtures.tle : { connected: false, objects: [], epochNewest: null } : path === "/api/whereami" ? { country: "IN", countryName: "India" } : {} });
+    if (path === "/api/volcanoes") return route.fulfill({ json: fixtures.gvp });
+    if (path === "/api/tle") return route.fulfill({ json: iss ? fixtures.tle : { connected: false, objects: [], epochNewest: null } });
+    if (path === "/api/whereami") return route.fulfill({ json: { country: "IN", countryName: "India" } });
+    // Unrelated APIs are unavailable, never successful malformed envelopes.
+    return route.fulfill({ status: 503, body: "Unavailable" });
   });
   for (const [pattern, json] of [["https://earthquake.usgs.gov/**", fixtures.quakes], ["https://eonet.gsfc.nasa.gov/**", fixtures.eonet], ["https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json", fixtures.kp], ["https://ll.thespacedevs.com/**", fixtures.launches]] as const) {
     await page.route(pattern, route => down ? route.fulfill({ status: 503, body: "Unavailable" }) : route.fulfill({ json }));
@@ -47,7 +51,6 @@ test("keyboard open, Inspect, Escape and Fly to; lazy chunk and desktop views", 
   expect(chunks.length).toBeGreaterThan(0);
   await keyboardOpen(page);
   await expect(page.locator("[data-brief-card]")).toHaveCount(4, { timeout: 30000 });
-  await shot(page, "1440-open");
   await page.keyboard.press("Tab"); // first Fly to
   await expect(page.getByRole("button", { name: "Fly to M6.2 Briefing quake fixture", exact: true })).toBeFocused();
   await page.keyboard.press("Tab"); // first Inspect
@@ -55,7 +58,6 @@ test("keyboard open, Inspect, Escape and Fly to; lazy chunk and desktop views", 
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-globe-inspector]")).toContainText("Briefing quake");
   await expect(page.locator("[data-brief-trigger]")).toBeFocused();
-  await shot(page, "1440-inspect");
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
   await expect(page.locator("[data-globe-briefing]")).toHaveCount(0);
@@ -66,7 +68,6 @@ test("keyboard open, Inspect, Escape and Fly to; lazy chunk and desktop views", 
   await page.keyboard.press("Enter");
   await expect.poll(() => page.url(), { timeout: 15000 }).not.toBe(before);
   await page.setViewportSize({ width: 1024, height: 768 });
-  await shot(page, "1024-trigger");
   const trigger = await page.locator("[data-brief-trigger]").boundingBox();
   expect(trigger).not.toBeNull();
   expect(trigger!.x + trigger!.width).toBeLessThanOrEqual(1024);
@@ -107,20 +108,17 @@ test("all feeds down names every source with zero cards", async ({ page }) => {
   const panel = page.locator("[data-globe-briefing]");
   for (const source of ["USGS", "NASA EONET", "Smithsonian GVP", "NOAA SWPC", "CelesTrak ISS", "Launch Library 2"]) await expect(panel).toContainText(source);
   await expect(panel).toContainText("Latest request failed", { timeout: 30000 });
-  await shot(page, "1440-unavailable");
 });
 test.describe("phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   test("sheet, 44 px targets and real Satellites action", async ({ page }) => {
     // Load the share state before waiting for hydrated controls and feeds.
     await setup(page, false, "/globe?ly=hazards,markers,stars,wind,reach,guide,daylight");
-    await shot(page, "390-bar");
     await page.locator("[data-brief-trigger]").tap();
     const panel = page.locator("[data-globe-briefing]");
     await expect(panel).toBeVisible();
     const enable = page.getByRole("button", { name: "Turn on Satellites" });
     await expect(enable).toBeVisible();
-    await shot(page, "390-sheet");
     for (const button of await panel.getByRole("button").all()) {
       const box = await button.boundingBox();
       expect(box!.height).toBeGreaterThanOrEqual(44);

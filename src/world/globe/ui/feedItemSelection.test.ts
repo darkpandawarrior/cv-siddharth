@@ -1,13 +1,15 @@
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { feedItemSelection, inspectBriefingSatellite, satelliteBriefingSelection } from "./feedItemSelection.ts";
 import { propagateState } from "../../../lib/satelliteEcef.ts";
 import { tleEpoch } from "../../../lib/satellites.ts";
 import { useGlobe } from "../globeStore.ts";
 import * as passes from "../layers/satPasses.ts";
+import * as satellites from "../../../lib/satellites.ts";
 import tle from "../../../../e2e/fixtures/tle.json";
 const object = tle.objects.find(object => object.norad === "25544")!;
 const now = new Date(tleEpoch(object.l1).getTime() + 86400000);
 const state = propagateState(object, now)!;
+beforeEach(() => { vi.spyOn(satellites, "nextVisiblePass").mockResolvedValue({ start: now, maxElDeg: 42 }); });
 afterEach(() => { vi.restoreAllMocks(); useGlobe.getState().select(null); });
 it("mirrors a feed click including optional focus and snapshot status", () => {
   const item = { id: "quake:1", kind: "quake" as const, title: "Quake", detail: "10 km", source: "USGS", live: false, whenMs: 1000, severity: "warn" as const, focus: { kind: "latlon" as const, lat: 20, lon: 70 } };
@@ -58,4 +60,15 @@ it("reports no pass and a failed scan honestly, preserving later selections", as
   resolve(null);
   await pending;
   expect(useGlobe.getState().selected).toBe(later);
+});
+
+it("bounds the scan in half-day batches without the shared idle boundary", async () => {
+  const scan = vi.mocked(satellites.nextVisiblePass).mockResolvedValue(null);
+  const detail = vi.spyOn(passes, "nextVisiblePassDetail");
+  await inspectBriefingSatellite(satelliteBriefingSelection(object, state), object, now);
+  expect(scan).toHaveBeenCalledTimes(14);
+  expect(scan.mock.calls.every(call => call[3] === 0.5)).toBe(true);
+  expect(scan.mock.calls.at(-1)?.[1].getTime()).toBe(+now + 13 * 43_200_000);
+  expect(detail).not.toHaveBeenCalled();
+  expect(useGlobe.getState().selected?.rows.at(-1)?.value).toBe("none in the next 7 days");
 });

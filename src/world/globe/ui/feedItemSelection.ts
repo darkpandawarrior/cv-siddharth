@@ -21,14 +21,23 @@ export function satelliteBriefingSelection(object: import("../../../lib/satellit
   ] };
 }
 
-/** Same idle scan as a scene click; never overwrite a later selection. */
+/** Same pass scan as a scene click; never overwrite a later selection. */
 export async function inspectBriefingSatellite(selection: Selection, object: import("../../../lib/satelliteEcef.ts").TleObject, now: Date): Promise<void> {
   useGlobe.getState().select(selection);
   if (object.norad !== "25544") return;
   let rows: Selection["rows"];
   try {
     const { nextVisiblePassDetail, formatPuneClock, azimuthToCompass, formatDurationMin } = await import("../layers/satPasses.ts");
-    const pass = await nextVisiblePassDetail(object, now);
+    // The shared seven-day scan yields only to requestIdleCallback, which
+    // can starve beside WebGL. Half-day batches never reach its 2,000-step
+    // idle boundary; timers let frames run between batches.
+    const { nextVisiblePass } = await import("../../../lib/satellites.ts");
+    let start: Date | null = null;
+    for (let halfDay = 0; halfDay < 14 && !start; halfDay++) {
+      start = (await nextVisiblePass(object, new Date(+now + halfDay * 43_200_000), undefined, 0.5))?.start ?? null;
+      if (!start) await new Promise<void>(resolve => setTimeout(resolve, 0));
+    }
+    const pass = start ? await nextVisiblePassDetail(object, start) : null;
     rows = pass ? [
       { label: "Next visible pass (Pune)", value: formatPuneClock(pass.start) },
       { label: "Max elevation", value: `${pass.maxElDeg.toFixed(0)}°` },
