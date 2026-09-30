@@ -22,6 +22,7 @@ const SatelliteLayer = lazy(() => import("./layers/SatelliteLayer.tsx"));
 const PulseLayer = lazy(() => import("./layers/PulseLayer.tsx"));
 const ArcLayer = lazy(() => import("./layers/ArcLayer.tsx"));
 const BuoyLayer = lazy(() => import("./layers/BuoyLayer.tsx"));
+const MeteorRadiant = lazy(() => import("./layers/MeteorRadiant.tsx"));
 const HazardLayer = lazy(() => import("./layers/HazardLayer.tsx"));
 const CameraDirector = lazy(() => import("./CameraDirector.tsx"));
 const TileLayer = lazy(() => import("./layers/TileLayer.tsx"));
@@ -419,7 +420,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         {layers.presence && live && <LiveDots tier={tier} occlude={[earthRef]} />}
         {layers.aircraft && live && tier !== 3 && <LocalTraffic tier={tier} />}
         {/* Separate boundaries: one slow chunk never holds up another. */}
-        <Suspense fallback={null}>{layers.stars && <SkyLayer now={now} tier={tier} />}</Suspense>
+        <Suspense fallback={null}>{layers.stars && <><SkyLayer now={now} tier={tier} /><MeteorRadiant now={now} tier={tier} /></>}</Suspense>
         <Suspense fallback={null}>{layers.satellites && <SatelliteLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.pulses && live && <PulseLayer tier={tier} />}</Suspense>
         <Suspense fallback={null}>{layers.presence && live && <ArcLayer tier={tier} />}</Suspense>
