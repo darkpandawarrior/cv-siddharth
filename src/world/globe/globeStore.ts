@@ -69,7 +69,7 @@ export type LayerHealth = { state: "loading" | "live" | "snapshot" | "failed"; d
 export type StatusKey = LayerId | "earth";
 
 /** Phones show one bottom sheet at a time; opening one closes the others. */
-export type GlobeSheet = "layers" | "time" | "tour" | "inspector" | null;
+export type GlobeSheet = "layers" | "time" | "tour" | "inspector" | "brief" | null;
 
 /** The NASA GIBS imagery stack (ui/LayerCatalog.tsx edits it, layers/
  *  TileLayer.tsx draws it): one base layer plus overlays drawn above it in
