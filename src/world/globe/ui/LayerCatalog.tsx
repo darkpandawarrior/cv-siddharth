@@ -37,13 +37,14 @@ function FrameDetails({ entry, health, now, realNow }: { entry: GibsCatalogEntry
         {entry.legend && <Legend legend={entry.legend} />}
         {entry.snowLegend && <><p className="mt-2 text-xs">Snow</p><Legend legend={entry.snowLegend} /></>}
       </>
-    ) : <p role="status" className="mt-1 text-xs text-muted">Loading tiles · requested {catalogDate(entry, now) ?? "static imagery"}</p>}
+    ) : <p role="status" className="mt-1 text-xs text-muted">Tiles not loaded · requested {catalogDate(entry, now) ?? "static imagery"}</p>}
   </>;
 }
 
 export default function LayerCatalog() {
   const controlId = useId();
   const imagery = useGlobe((s) => s.imagery);
+  const style = useGlobe((s) => s.style);
   const setImagery = useGlobe((s) => s.setImagery);
   const timeOffsetMin = useGlobe((s) => s.timeOffsetMin);
   // LANE V1 (wave 7, step A): TileLayer.tsx reports a subdaily overlay's own
@@ -76,7 +77,7 @@ export default function LayerCatalog() {
   if (!realNow) return null;
 
   return (
-    <div data-globe-layer-catalog className="w-full font-body text-sm text-zinc-300">
+    <div data-globe-layer-catalog className="w-full rounded-lg bg-ink p-2 font-body text-sm text-zinc-300">
       <section className={MB_21} aria-label="Active imagery">
         <p className="break-words text-xs font-mono text-muted">{activeBase.title}: {activeBase.dateRule.kind === "static" ? "Static imagery · " : ""}{catalogDateLabel(activeBase, now)}</p>
         {imagery.overlays.map((overlay) => {
@@ -84,7 +85,7 @@ export default function LayerCatalog() {
           return entry ? <div key={entry.id} data-globe-active-overlay={entry.id} className="mt-3">
             <p className="break-words">{entry.title}</p>
             <p className="mb-2 break-words text-xs text-muted">{entry.description}</p>
-            <FrameDetails entry={entry} health={status[entry.id as StatusKey]} now={now} realNow={realNow} />
+            <FrameDetails entry={entry} health={style === "dots" || status.earth?.state === "failed" ? { state: "failed", detail: "Imagery unavailable; showing dots" } : status[entry.id as StatusKey]} now={now} realNow={realNow} />
           </div> : null;
         })}
       </section>

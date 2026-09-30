@@ -204,12 +204,8 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          {/* weeb-1 / blueprint-title-hidden-mobile / compose-no-title-below-desktop:
-              this used to be `hidden ... lg:flex`, so below 1024px a visitor
-              had no on-screen answer to "what page am I on" - the sr-only
-              <h1> below carries the same text but announces to nobody
-              looking at the screen. Always shown now; it truncates instead
-              of pushing the launcher or the Ask button off a narrow row. */}
+          {/* Phones keep the room title beside every navigation control.
+              The full tagline returns at sm; the h1 below always keeps it. */}
           <span className="kicker min-w-0 flex-1 truncate">
             {title}<span className="hidden sm:inline"> · {tagline}</span>
           </span>

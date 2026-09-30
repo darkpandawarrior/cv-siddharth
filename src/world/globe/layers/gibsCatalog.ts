@@ -154,69 +154,31 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
     legend: {
       unit: "mm/hr",
       stops: [
-            {
-                  color: "#009424",
-                  label: "0.2"
-            },
-            {
-                  color: "#45c000",
-                  label: "0.5"
-            },
-            {
-                  color: "#c3e400",
-                  label: "1.0"
-            },
-            {
-                  color: "#ffb006",
-                  label: "2.0"
-            },
-            {
-                  color: "#ff4730",
-                  label: "5.0"
-            },
-            {
-                  color: "#e70000",
-                  label: "10.0"
-            },
-            {
-                  color: "#9c0000",
-                  label: "20.0"
-            }
-      ]
-},
+        { color: "#00764e", label: "0.1" },
+        { color: "#009424", label: "0.2" },
+        { color: "#45c000", label: "0.5" },
+        { color: "#c3e400", label: "1.0" },
+        { color: "#ffb006", label: "2.0" },
+        { color: "#ff4730", label: "5.0" },
+        { color: "#e70000", label: "10.0" },
+        { color: "#9c0000", label: "20.0" },
+        { color: "#330000", label: "≥ 53.0" },
+      ],
+    },
     snowLegend: {
       unit: "mm/hr",
       stops: [
-            {
-                  color: "#8febf1",
-                  label: "0.2"
-            },
-            {
-                  color: "#66abdc",
-                  label: "0.5"
-            },
-            {
-                  color: "#4f73c4",
-                  label: "1.0"
-            },
-            {
-                  color: "#4048d2",
-                  label: "2.0"
-            },
-            {
-                  color: "#5f2fe4",
-                  label: "5.0"
-            },
-            {
-                  color: "#770bd1",
-                  label: "10.0"
-            },
-            {
-                  color: "#770792",
-                  label: "20.0"
-            }
-      ]
-},
+        { color: "#b1faee", label: "0.1" },
+        { color: "#8febf1", label: "0.2" },
+        { color: "#66abdc", label: "0.5" },
+        { color: "#4f73c4", label: "1.0" },
+        { color: "#4048d2", label: "2.0" },
+        { color: "#5f2fe4", label: "5.0" },
+        { color: "#770bd1", label: "10.0" },
+        { color: "#770792", label: "20.0" },
+        { color: "#3a0330", label: "≥ 53.0" },
+      ],
+    },
     attribution: "NASA GIBS / GPM IMERG",
   },
   {
@@ -231,36 +193,17 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
     legend: {
       unit: "DU",
       stops: [
-            {
-                  color: "#5db8a9",
-                  label: "150.0"
-            },
-            {
-                  color: "#93d3a4",
-                  label: "200.0"
-            },
-            {
-                  color: "#c8e99e",
-                  label: "250.0"
-            },
-            {
-                  color: "#eeee93",
-                  label: "300.0"
-            },
-            {
-                  color: "#fdd783",
-                  label: "350.0"
-            },
-            {
-                  color: "#fdae61",
-                  label: "400.0"
-            },
-            {
-                  color: "#f57748",
-                  label: "450.0"
-            }
-      ]
-},
+        { color: "#5e4fa2", label: "< 100.0" },
+        { color: "#5db8a9", label: "150.0" },
+        { color: "#93d3a4", label: "200.0" },
+        { color: "#c8e99e", label: "250.0" },
+        { color: "#eeee93", label: "300.0" },
+        { color: "#fdd783", label: "350.0" },
+        { color: "#fdae61", label: "400.0" },
+        { color: "#f57748", label: "450.0" },
+        { color: "#9e0142", label: "≥ 500.0" },
+      ],
+    },
     attribution: "NASA GIBS / OMPS Suomi NPP",
   },
   {
@@ -459,7 +402,7 @@ export const GIBS_OVERLAYS: GibsCatalogEntry[] = [
   // audit alone; every lagDays value below is the REAL gap between today's
   // GetCapabilities Default and today's date for that product, not copied
   // blind from the audit's slightly earlier check. Legend stops reuse this
-  // catalog's own established palette (the same hex values IMERG/AOD/cloud-
+  // catalog's own established palette (the same hex values AOD/cloud-
   // top-temp already use above) rather than inventing a new one per layer.
   {
     id: "MODIS_Aqua_L2_Chlorophyll_A",

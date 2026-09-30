@@ -171,8 +171,8 @@ describe("Y4 verified precipitation and total-column ozone", () => {
     expect(entry.dateRule).toEqual({ kind: "daily", lagDays: 1 });
     expect(entry.description).toContain("not live radar");
     expect(entry.legend?.unit).toBe("mm/hr");
-    expect(entry.legend?.stops[0]).toEqual({ color: "#009424", label: "0.2" });
-    expect(entry.snowLegend?.stops[0]).toEqual({ color: "#8febf1", label: "0.2" });
+    expect(entry.legend?.stops[1]).toEqual({ color: "#009424", label: "0.2" });
+    expect(entry.snowLegend?.stops[1]).toEqual({ color: "#8febf1", label: "0.2" });
     expect(tileUrl(entry, 0, 0, 0, verifiedNow)).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/IMERG_Precipitation_Rate/default/2026-09-29/2km/0/0/0.png");
   });
   it("OMPS has today's P1D frame and the verified Dobson-unit colormap", () => {
@@ -181,8 +181,24 @@ describe("Y4 verified precipitation and total-column ozone", () => {
     expect(entry!.dateRule).toEqual({ kind: "daily", lagDays: 0 });
     expect(entry!.legend?.unit).toBe("DU");
     expect(entry!.legend!.stops.length).toBeGreaterThanOrEqual(3);
-    expect(entry!.legend!.stops[0]).toEqual({ color: "#5db8a9", label: "150.0" });
+    expect(entry!.legend!.stops[1]).toEqual({ color: "#5db8a9", label: "150.0" });
     expect(entry!.attribution).toBe("NASA GIBS / OMPS Suomi NPP");
     expect(tileUrl(entry!, 0, 0, 0, verifiedNow)).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/OMPS_Ozone_Total_Column/default/2026-09-30/2km/0/0/0.png");
+  });
+});
+
+
+describe("Y4 colormap range boundaries", () => {
+  it("includes the rain and snow scale endpoints and saturation colours", () => {
+    const entry = GIBS_CATALOG.IMERG_Precipitation_Rate;
+    expect(entry.legend!.stops[0]).toEqual({ color: "#00764e", label: "0.1" });
+    expect(entry.legend!.stops.at(-1)).toEqual({ color: "#330000", label: "≥ 53.0" });
+    expect(entry.snowLegend!.stops[0]).toEqual({ color: "#b1faee", label: "0.1" });
+    expect(entry.snowLegend!.stops.at(-1)).toEqual({ color: "#3a0330", label: "≥ 53.0" });
+  });
+  it("includes the ozone underflow and overflow classes", () => {
+    const legend = GIBS_CATALOG.OMPS_Ozone_Total_Column.legend!;
+    expect(legend.stops[0]).toEqual({ color: "#5e4fa2", label: "< 100.0" });
+    expect(legend.stops.at(-1)).toEqual({ color: "#9e0142", label: "≥ 500.0" });
   });
 });

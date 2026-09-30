@@ -220,6 +220,9 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
 
   useEffect(() => {
     sunDirection(now, sunRef.current);
+    // A clock/scrubber change can select a new frame without camera motion.
+    lastCamPos.current.set(Infinity, Infinity, Infinity);
+    lastRecomputeAtMs.current = -Infinity;
   }, [now]);
 
   useEffect(() => {
@@ -500,7 +503,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // here alone is enough — the first real recompute (and its fetches)
     // simply waits for the base sphere's own load to settle first, no extra
     // effect/timer needed to "wake up" once it does.
-    if (earthReady && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS && (moved || turned || [...rolesRef.current.values()].some((role) => catalogDate(role.catalogEntry, now) !== role.frame))) {
+    if (earthReady && (moved || turned) && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS) {
       const t0 = performance.now();
       for (const role of rolesRef.current.values()) recomputeRole(role);
       tileLayerStats.lastRecomputeMs = performance.now() - t0;
