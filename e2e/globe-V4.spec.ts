@@ -69,6 +69,7 @@ async function openGlobe(page: Page) {
   await page.route("https://marine-api.open-meteo.com/**", (route) => route.fulfill({ json: { current: {} } }));
   await page.route("https://air-quality-api.open-meteo.com/**", (route) => route.fulfill({ json: { current: {} } }));
   await page.route("https://flood-api.open-meteo.com/**", (route) => route.fulfill({ json: { daily: { river_discharge: [] } } }));
+  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.goto("/globe");
   await waitForHydration(page);
   const canvas = page.locator("[data-globe-root] canvas").first();

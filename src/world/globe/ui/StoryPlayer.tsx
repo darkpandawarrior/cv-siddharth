@@ -239,8 +239,8 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   // width at the same fixed bottom edge these FABs occupy -- on top of it, a
   // floating FAB only steals pointer events from whatever the sheet put in
   // that same corner (e.g. the tour sheet's sticky "Next" button). Hide both
-  // FABs outright while any sheet owns that screen, mobile or not.
-  const sheetOpen = sheet !== null;
+  // FABs outright while any sheet or guided tour owns that screen.
+  const sheetOpen = sheet !== null || tourStep !== null;
   const compactFabs = (
     <>
       {!open && !sheetOpen && (

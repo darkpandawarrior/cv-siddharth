@@ -66,6 +66,7 @@ async function openGlobe(page: Page, isoNow: string, activity: unknown = activit
   await abortUnrelatedFeeds(page);
   await withApiFixtures(page, activity);
   await page.clock.setFixedTime(new Date(isoNow));
+  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.goto("/globe");
   await waitForHydration(page);
   await expect(page.locator("[data-globe-root] canvas")).toBeVisible({ timeout: 30_000 });
@@ -73,6 +74,8 @@ async function openGlobe(page: Page, isoNow: string, activity: unknown = activit
 }
 
 async function clickGuideMarker(page: Page, slug: string) {
+  // Clear the preselection through the UI before aiming at the canvas.
+  await page.getByRole("region", { name: "Selection details" }).getByRole("button", { name: "Close", exact: true }).click();
   await page.evaluate((id) => window.__GUIDE_DEBUG__?.face(id), slug);
   let previous: { x: number; y: number } | null = null;
   let previousDist: number | null = null;
@@ -113,19 +116,23 @@ const isolated = mapsReviews.filter((review) => review.text.length > 0).sort((a,
   const gap = (r: typeof a) => Math.min(...mapsReviews.filter((p) => p.id !== r.id).map((p) => Math.hypot(p.lat-r.lat, (p.lon-r.lon)*Math.cos(r.lat*Math.PI/180))));
   return gap(b)-gap(a);
 })[0];
-test("a genuine public review pin opens its rating, month and source", async ({ page }) => {
-  await openGlobe(page, "2026-09-30T12:00:00+05:30");
-  await clickGuideMarker(page, isolated.id);
-  const inspector = page.locator("[data-globe-inspector]");
-  await expect(inspector).toBeVisible();
-  await expect(inspector).toContainText(isolated.name);
-  await expect(inspector).toContainText(`${isolated.rating} / 5`);
-  await expect(inspector).toContainText(isolated.month);
-  await expect(inspector).toContainText("Google Maps review by Siddharth");
-  if (isolated.text.length > 220) await inspector.getByText("More", { exact: true }).click();
-  await expect(inspector).toContainText(isolated.text);
-});
 for (const mobile of [false, true]) {
+  test.describe(mobile ? "phone" : "desktop", () => {
+    test.use({ hasTouch: mobile });
+  test(`a genuine public review pin opens its rating, month and source (${mobile ? "phone" : "desktop"})`, async ({ page }) => {
+    await openGlobe(page, "2026-09-30T12:00:00+05:30");
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    await clickGuideMarker(page, isolated.id);
+    const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
+    await expect(inspector).toBeVisible();
+    await expect(inspector).toContainText(isolated.name);
+    await expect(inspector).toContainText(`${isolated.rating} / 5`);
+    await expect(inspector).toContainText(isolated.month);
+    await expect(inspector).toContainText("Google Maps review by Siddharth");
+    if (isolated.text.length > 220) await inspector.getByText("More", { exact: true }).click();
+    await expect(inspector).toContainText(isolated.text);
+  });
+
   test(`city places and photo keyboard viewer (${mobile ? "phone" : "desktop"})`, async ({ page }, testInfo) => {
     await openGlobe(page, "2026-09-30T12:00:00+05:30");
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });
@@ -151,11 +158,14 @@ for (const mobile of [false, true]) {
     await expect(viewer).toHaveCount(0);
     await expect(photo).toBeFocused();
     await expect(inspector).toBeVisible();
-    const review = mapsReviews.find((r) => r.slug === "pune")!;
-    await inspector.getByRole("button", { name: new RegExp(review.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) }).click();
+    const review = mapsReviews.find((r) => r.slug === "pune" && r.text.length > 0)!;
+    await inspector.getByRole("button", { name: `${review.name} · ${review.rating} / 5 · ${review.month}`, exact: true }).click();
+    await expect(inspector).toContainText(review.name);
+    await expect(inspector).toContainText(`Google Maps review by Siddharth, ${review.month}`);
     await expect(inspector).toContainText(`${review.rating} / 5`);
     if (review.text.length > 220) await inspector.getByText("More", { exact: true }).click();
     if (review.text) await expect(inspector).toContainText(review.text);
     await testInfo.attach("place-card", { body: await page.screenshot(), contentType: "image/png" });
+  });
   });
 }
