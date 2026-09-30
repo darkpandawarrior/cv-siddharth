@@ -2,9 +2,10 @@
 // Photo pins are within 300m of a reviewed public place, else city centres/0.1 degree cells.
 // No private labels, commute, street address, original filenames or image metadata.
 // A review whose place name reads as a home publishes no name/text/rating/pin,
-// only its count toward the city total; it never anchors a photo pin.
+// only its count toward the city total, unless the owner confirmed it is not a
+// home (confirmedNotHome). Either way no photo within 300m of it gets an exact pin.
 export interface MapsPlace { slug: string; city: string; country: string; lat: number; lon: number; reviews: number; photos: number; photoViews: number; years: number[] }
-export interface MapsReview { id: string; slug: string; city: string; country: string; lat: number; lon: number; name: string; rating: number; text: string; month: string }
+export interface MapsReview { id: string; slug: string; city: string; country: string; lat: number; lon: number; name: string; rating: number; text: string; month: string; confirmedNotHome?: true }
 export interface MapsPhoto { src: string; slug: string; city: string; year: number; month: string; lat: number; lon: number; precision: "city" | "grid" | "review-nearby"; reviewId?: string; views: number; w: number; h: number; caption?: string; unavailable?: string }
 
 export const mapsExport = "2026-09";
@@ -705,6 +706,19 @@ export const mapsReviews: MapsReview[] = [
   },
   {
     "id": "review-28",
+    "slug": "mumbai",
+    "city": "Mumbai",
+    "country": "IN",
+    "lat": 19.25846,
+    "lon": 73.14739,
+    "name": "Aum Residency Co-op Housing Society",
+    "rating": 4,
+    "text": "",
+    "month": "2020-12",
+    "confirmedNotHome": true
+  },
+  {
+    "id": "review-29",
     "slug": "kashid",
     "city": "Kashid",
     "country": "IN",
@@ -716,7 +730,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2020-12"
   },
   {
-    "id": "review-29",
+    "id": "review-30",
     "slug": "murud",
     "city": "Murud",
     "country": "IN",
@@ -728,7 +742,20 @@ export const mapsReviews: MapsReview[] = [
     "month": "2020-12"
   },
   {
-    "id": "review-30",
+    "id": "review-31",
+    "slug": "mumbai",
+    "city": "Mumbai",
+    "country": "IN",
+    "lat": 19.16237,
+    "lon": 72.84289,
+    "name": "Shubhada CHS Ltd.",
+    "rating": 5,
+    "text": "Good and calm housing society. A bit towards the inside of MG Road so you don't have the hustle and bustle or disturbances caused by a building situated on the main road. Is at a favorable distance for traveling to Andheri, Malad and other Malls and restaurants. The Goregaon Local Station is just 10 mins walking distance from here",
+    "month": "2020-06",
+    "confirmedNotHome": true
+  },
+  {
+    "id": "review-32",
     "slug": "mumbai",
     "city": "Mumbai",
     "country": "IN",
@@ -740,7 +767,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2019-07"
   },
   {
-    "id": "review-31",
+    "id": "review-33",
     "slug": "mumbai",
     "city": "Mumbai",
     "country": "IN",
@@ -752,7 +779,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2019-06"
   },
   {
-    "id": "review-32",
+    "id": "review-34",
     "slug": "mumbai",
     "city": "Mumbai",
     "country": "IN",
@@ -764,7 +791,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2019-06"
   },
   {
-    "id": "review-33",
+    "id": "review-35",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -776,7 +803,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2019-03"
   },
   {
-    "id": "review-34",
+    "id": "review-36",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -788,7 +815,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-08"
   },
   {
-    "id": "review-35",
+    "id": "review-37",
     "slug": "chitradurga",
     "city": "Chitradurga",
     "country": "IN",
@@ -800,7 +827,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-07"
   },
   {
-    "id": "review-36",
+    "id": "review-38",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -812,7 +839,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-06"
   },
   {
-    "id": "review-37",
+    "id": "review-39",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -824,7 +851,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-05"
   },
   {
-    "id": "review-38",
+    "id": "review-40",
     "slug": "sanchi",
     "city": "Sanchi",
     "country": "IN",
@@ -836,7 +863,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-01"
   },
   {
-    "id": "review-39",
+    "id": "review-41",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -848,7 +875,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2018-01"
   },
   {
-    "id": "review-40",
+    "id": "review-42",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -860,7 +887,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-12"
   },
   {
-    "id": "review-41",
+    "id": "review-43",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -872,7 +899,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-12"
   },
   {
-    "id": "review-42",
+    "id": "review-44",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -884,7 +911,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-12"
   },
   {
-    "id": "review-43",
+    "id": "review-45",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -896,7 +923,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-12"
   },
   {
-    "id": "review-44",
+    "id": "review-46",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -908,7 +935,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-12"
   },
   {
-    "id": "review-45",
+    "id": "review-47",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -920,7 +947,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-09"
   },
   {
-    "id": "review-46",
+    "id": "review-48",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -932,7 +959,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-09"
   },
   {
-    "id": "review-47",
+    "id": "review-49",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -944,7 +971,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-09"
   },
   {
-    "id": "review-48",
+    "id": "review-50",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -956,7 +983,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-09"
   },
   {
-    "id": "review-49",
+    "id": "review-51",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -968,7 +995,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-50",
+    "id": "review-52",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -980,7 +1007,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-51",
+    "id": "review-53",
     "slug": "kottayam",
     "city": "Kottayam",
     "country": "IN",
@@ -992,7 +1019,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-52",
+    "id": "review-54",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -1004,7 +1031,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-53",
+    "id": "review-55",
     "slug": "kottayam",
     "city": "Kottayam",
     "country": "IN",
@@ -1016,7 +1043,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-54",
+    "id": "review-56",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -1028,7 +1055,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-55",
+    "id": "review-57",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -1040,7 +1067,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-56",
+    "id": "review-58",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -1052,7 +1079,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-57",
+    "id": "review-59",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "country": "KW",
@@ -1064,7 +1091,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-58",
+    "id": "review-60",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -1076,7 +1103,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-59",
+    "id": "review-61",
     "slug": "kottayam",
     "city": "Kottayam",
     "country": "IN",
@@ -1088,7 +1115,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-60",
+    "id": "review-62",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -1100,7 +1127,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-61",
+    "id": "review-63",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -1112,7 +1139,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-62",
+    "id": "review-64",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -1124,7 +1151,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-08"
   },
   {
-    "id": "review-63",
+    "id": "review-65",
     "slug": "bhopal",
     "city": "Bhopal",
     "country": "IN",
@@ -1136,7 +1163,7 @@ export const mapsReviews: MapsReview[] = [
     "month": "2017-07"
   },
   {
-    "id": "review-64",
+    "id": "review-66",
     "slug": "kochi",
     "city": "Kochi",
     "country": "IN",
@@ -1174,7 +1201,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.23853,
     "lon": 77.40232,
     "precision": "review-nearby",
-    "reviewId": "review-60",
+    "reviewId": "review-62",
     "w": 360,
     "h": 480
   },
@@ -1227,7 +1254,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.21514,
     "lon": 77.3749,
     "precision": "review-nearby",
-    "reviewId": "review-43",
+    "reviewId": "review-45",
     "w": 480,
     "h": 360
   },
@@ -1241,7 +1268,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.24279,
     "lon": 77.38111,
     "precision": "review-nearby",
-    "reviewId": "review-49",
+    "reviewId": "review-51",
     "w": 480,
     "h": 360
   },
@@ -1255,7 +1282,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.2329,
     "lon": 77.43618,
     "precision": "review-nearby",
-    "reviewId": "review-47",
+    "reviewId": "review-49",
     "w": 480,
     "h": 360
   },
@@ -1269,7 +1296,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.23262,
     "lon": 77.42997,
     "precision": "review-nearby",
-    "reviewId": "review-42",
+    "reviewId": "review-44",
     "w": 271,
     "h": 480
   },
@@ -1283,7 +1310,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.23262,
     "lon": 77.42997,
     "precision": "review-nearby",
-    "reviewId": "review-42",
+    "reviewId": "review-44",
     "w": 360,
     "h": 480
   },
@@ -1297,7 +1324,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 14.21333,
     "lon": 76.40059,
     "precision": "review-nearby",
-    "reviewId": "review-35",
+    "reviewId": "review-37",
     "w": 480,
     "h": 360
   },
@@ -1311,7 +1338,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 14.21333,
     "lon": 76.40059,
     "precision": "review-nearby",
-    "reviewId": "review-35",
+    "reviewId": "review-37",
     "w": 480,
     "h": 360
   },
@@ -1325,7 +1352,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 14.21333,
     "lon": 76.40059,
     "precision": "review-nearby",
-    "reviewId": "review-35",
+    "reviewId": "review-37",
     "w": 480,
     "h": 360
   },
@@ -1529,7 +1556,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.27265,
     "lon": 47.96663,
     "precision": "review-nearby",
-    "reviewId": "review-41",
+    "reviewId": "review-43",
     "w": 271,
     "h": 480
   },
@@ -1543,7 +1570,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.27265,
     "lon": 47.96663,
     "precision": "review-nearby",
-    "reviewId": "review-41",
+    "reviewId": "review-43",
     "w": 271,
     "h": 480
   },
@@ -1557,7 +1584,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.27265,
     "lon": 47.96663,
     "precision": "review-nearby",
-    "reviewId": "review-41",
+    "reviewId": "review-43",
     "w": 271,
     "h": 480
   },
@@ -1741,7 +1768,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1768,7 +1795,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1782,7 +1809,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1822,7 +1849,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1836,7 +1863,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1850,7 +1877,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1877,7 +1904,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1891,7 +1918,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.33988,
     "lon": 48.0656,
     "precision": "review-nearby",
-    "reviewId": "review-54",
+    "reviewId": "review-56",
     "w": 480,
     "h": 360
   },
@@ -1905,7 +1932,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -1932,7 +1959,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -1946,7 +1973,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -1960,7 +1987,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -1974,7 +2001,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -1988,7 +2015,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 29.34972,
     "lon": 48.08996,
     "precision": "review-nearby",
-    "reviewId": "review-56",
+    "reviewId": "review-58",
     "w": 480,
     "h": 360
   },
@@ -2083,7 +2110,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 19.13473,
     "lon": 72.83295,
     "precision": "review-nearby",
-    "reviewId": "review-32",
+    "reviewId": "review-34",
     "w": 286,
     "h": 480
   },
@@ -2150,7 +2177,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 19.13164,
     "lon": 72.83565,
     "precision": "review-nearby",
-    "reviewId": "review-31",
+    "reviewId": "review-33",
     "w": 286,
     "h": 480
   },
@@ -2164,7 +2191,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 19.13164,
     "lon": 72.83565,
     "precision": "review-nearby",
-    "reviewId": "review-31",
+    "reviewId": "review-33",
     "w": 286,
     "h": 480
   },
@@ -2178,7 +2205,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 19.13473,
     "lon": 72.83295,
     "precision": "review-nearby",
-    "reviewId": "review-32",
+    "reviewId": "review-34",
     "w": 286,
     "h": 480
   },
@@ -2192,7 +2219,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 19.13473,
     "lon": 72.83295,
     "precision": "review-nearby",
-    "reviewId": "review-32",
+    "reviewId": "review-34",
     "w": 286,
     "h": 480
   },
@@ -2719,7 +2746,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.48412,
     "lon": 77.73944,
     "precision": "review-nearby",
-    "reviewId": "review-38",
+    "reviewId": "review-40",
     "w": 480,
     "h": 270
   },
@@ -2733,7 +2760,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.48412,
     "lon": 77.73944,
     "precision": "review-nearby",
-    "reviewId": "review-38",
+    "reviewId": "review-40",
     "w": 270,
     "h": 480
   },
@@ -2747,7 +2774,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "lat": 23.48412,
     "lon": 77.73944,
     "precision": "review-nearby",
-    "reviewId": "review-38",
+    "reviewId": "review-40",
     "w": 270,
     "h": 480
   }

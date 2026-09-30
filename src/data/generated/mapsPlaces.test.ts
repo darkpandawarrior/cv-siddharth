@@ -17,7 +17,7 @@ const gazetteerBySlug = new Map(mapsGazetteer.map((c) => [c.slug, c]));
 
 describe("mapsPlaces", () => {
   it("represents every geotagged still, including one undecodable source, without fake images", () => {
-    expect(mapsReviews).toHaveLength(64);
+    expect(mapsReviews).toHaveLength(66);
     expect(mapsPhotos).toHaveLength(118);
     expect(mapsPhotos.filter((photo) => photo.src)).toHaveLength(117);
     const unavailable = mapsPhotos.filter((photo) => photo.unavailable);
@@ -98,16 +98,19 @@ describe("mapsPlaces", () => {
     }
   });
 
-  it("a residential review (housing society, co-op/CHS, residency, apartments, society) never publishes a name", () => {
-    for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(RESIDENTIAL);
-    // Never name the excluded buildings here: this file is public, and naming them to assert
-    // their absence would publish exactly what the rule protects.
+  it("a residential review (housing society, co-op/CHS, residency, apartments, society) publishes a name only when the owner confirmed it is not a home", () => {
+    // confirmedNotHome comes only from the owner's private curation allowlist
+    // (two buildings, confirmed 2026-09-30); any other residential name is withheld.
+    for (const review of mapsReviews) if (RESIDENTIAL.test(review.name)) expect(review.confirmedNotHome, review.id).toBe(true);
+    expect(mapsReviews.filter((review) => review.confirmedNotHome)).toHaveLength(2);
   });
 
-  it("no photo anchors a pin to a residential review (it is never in mapsReviews)", () => {
+  it("no photo anchors an exact pin to a residential review, confirmed or not", () => {
+    const confirmed = new Set(mapsReviews.filter((review) => review.confirmedNotHome).map((review) => review.id));
     for (const photo of mapsPhotos) {
       if (photo.precision !== "review-nearby") continue;
       expect(mapsReviews.some((review) => review.id === photo.reviewId), photo.src).toBe(true);
+      expect(confirmed.has(photo.reviewId ?? ""), photo.src).toBe(false);
     }
   });
 

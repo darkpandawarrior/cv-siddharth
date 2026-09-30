@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { haversineKm } from "../src/data/mapsGazetteer.ts";
-import { isResidentialReview, nearResidential, RESIDENTIAL } from "./gen-maps-places.mjs";
+import { isResidentialReview, nearResidential, publishesReview, RESIDENTIAL } from "./gen-maps-places.mjs";
 
 // Synthetic fixtures only -- no real Takeout data, no network. Proves the
 // rules a Codex verifier found missing: a broad-enough name match (co-op
@@ -41,6 +41,14 @@ describe("gen-maps-places privacy rules", () => {
   it("classifies by a Takeout residential marker even when the name doesn't match", () => {
     expect(isResidentialReview({ residential: true, location: { name: "Cafe Coffee Day" } })).toBe(true);
     expect(isResidentialReview({ location: { name: "Cafe Coffee Day", residential: true } })).toBe(true);
+  });
+
+  it("publishes a residential review only when the owner confirmed it is not a home, by exact name", () => {
+    const society = { location: { name: "Kamal CHS Ltd." } };
+    expect(publishesReview(society, new Set())).toBe(false);
+    expect(publishesReview(society, new Set(["Kamal CHS Ltd."]))).toBe(true);
+    expect(publishesReview(society, new Set(["Kamal CHS"]))).toBe(false);
+    expect(publishesReview({ location: { name: "Cafe Coffee Day" } }, new Set())).toBe(true);
   });
 
   it("a photo within 300m of a home gets no exact pin, even with a public place also in range", () => {

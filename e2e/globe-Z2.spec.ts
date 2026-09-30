@@ -108,7 +108,7 @@ async function clickGuideMarker(page: Page, slug: string) {
 // buildings to assert their absence would publish exactly what the rule protects.
 const RESIDENTIAL = /\b(co-?op(erative)?|housing society|CHS)\b/i;
 
-test("a Local Guide photo opens in the lightbox in AVIF, and no residential name ever renders", async ({ page }) => {
+test("a Local Guide photo opens in the lightbox in AVIF, and no unconfirmed residential name ever renders", async ({ page }) => {
   await openGlobe(page);
   await clickGuideMarker(page, "pune");
   const inspector = page.locator("[data-globe-inspector]");
@@ -125,9 +125,11 @@ test("a Local Guide photo opens in the lightbox in AVIF, and no residential name
   await expect(viewer).toHaveCount(0);
 
   // The strongest possible check: read the entire rendered page, not a
-  // component -- a residential name can never surface anywhere, name card,
-  // inspector, filmstrip caption or otherwise.
+  // component -- a residential name the owner has not confirmed as "not a
+  // home" can never surface anywhere, name card, inspector, filmstrip
+  // caption or otherwise.
+  const confirmed = mapsReviews.filter((review) => review.confirmedNotHome).map((review) => review.name);
   const bodyText = await page.locator("body").innerText();
-  expect(bodyText).not.toMatch(RESIDENTIAL);
-  expect(mapsReviews.some((review) => RESIDENTIAL.test(review.name))).toBe(false);
+  expect(confirmed.reduce((text, name) => text.split(name).join(""), bodyText)).not.toMatch(RESIDENTIAL);
+  expect(mapsReviews.filter((review) => RESIDENTIAL.test(review.name)).every((review) => review.confirmedNotHome)).toBe(true);
 });
