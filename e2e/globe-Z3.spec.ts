@@ -4,9 +4,12 @@ import type { Page } from "@playwright/test";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`fixtures/${name}.json`, import.meta.url), "utf8"));
 
-async function openGlobe(page: Page) {
+async function openGlobe(page: Page, animate = false) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
-  await page.clock.setFixedTime(new Date("2026-09-27T12:00:00Z"));
+  const time = new Date("2026-09-27T12:00:00Z");
+  // Installed clocks control performance.now during the synchronous tier
+  // benchmark. Keep callbacks running until hydration and Canvas are ready.
+  await page.clock.install({ time });
   await page.route("**/api/**", route => {
     const name = new URL(route.request().url()).pathname.split("/").pop();
     if (name === "weather") return route.fulfill({ json: fixture("weather-2026-09-24") });
@@ -22,10 +25,23 @@ async function openGlobe(page: Page) {
   await page.route("https://services.swpc.noaa.gov/**", route => route.abort());
   await page.route("https://ll.thespacedevs.com/**", route => route.fulfill({ json: { results: [] } }));
   await page.route("https://services*.arcgis.com/**", route => route.fulfill({ json: { features: [] } }));
+  await page.route("https://mapservices.weather.noaa.gov/**", route => route.fulfill({ json: { features: [] } }));
   await page.goto("/globe");
   await waitForHydration(page);
   await expect(page.locator("[data-globe-root] canvas").first()).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => page.evaluate(() => window.__HAZARD_DEBUG__?.quakes ?? 0), { timeout: 30_000 }).toBe(1);
+  if (animate) await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 100));
 }
+
+test("the initial Pune selection has a reachable Close button", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openGlobe(page);
+  const inspector = page.locator("[data-globe-inspector]");
+  await expect(inspector).toBeVisible();
+  await inspector.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(inspector).toHaveCount(0);
+});
 
 for (const close of ["Escape", "Close"] as const) {
   test(`Inspector returns focus to the clicked live-feed control on ${close}`, async ({ page }, testInfo) => {
@@ -33,13 +49,14 @@ for (const close of ["Escape", "Close"] as const) {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openGlobe(page);
     const inspector = page.locator("[data-globe-inspector]");
-    // Close the desktop's initial Pune selection before testing a new opening.
-    await inspector.getByRole("button", { name: "Close", exact: true }).click();
+    // Replace Pune while its Inspector is still open: closing it first
+    // would miss the selection-ID focus regression.
+    await expect(inspector).toBeVisible();
     await page.getByRole("tab", { name: "Live", exact: true }).click();
     const opener = page.locator("[data-globe-feed-rail]").getByRole("button", { name: /Z3 Test Trench/ });
     await expect(opener).toBeVisible({ timeout: 15_000 });
     await opener.click();
-    await expect(inspector).toBeVisible();
+    await expect(inspector.getByRole("heading", { name: /Z3 Test Trench/ })).toBeVisible();
     await inspector.getByRole("button", { name: "Close", exact: true }).focus();
     if (close === "Escape") await page.keyboard.press("Escape");
     else await inspector.getByRole("button", { name: "Close", exact: true }).click();
@@ -52,15 +69,25 @@ for (const close of ["Escape", "Close"] as const) {
 test("changing reduced motion stops the actual quake ripple buffers", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await openGlobe(page);
-  await expect.poll(() => page.evaluate(() => window.__Z3_QUAKE_MOTION__?.().ripples ?? 0), { timeout: 15_000 }).toBeGreaterThan(0);
+  await openGlobe(page, true);
+  await expect.poll(async () => {
+    await page.clock.runFor(100);
+    return page.evaluate(() => window.__HAZARD_DEBUG__?.quakes ?? 0);
+  }, { timeout: 15_000 }).toBe(1);
+  await expect.poll(async () => {
+    await page.clock.runFor(100);
+    return page.evaluate(() => window.__Z3_QUAKE_MOTION__?.().ripples ?? 0);
+  }, { timeout: 15_000 }).toBeGreaterThan(0);
   const before = await page.evaluate(() => window.__Z3_QUAKE_MOTION__!().scale);
-  await expect.poll(() => page.evaluate(() => window.__Z3_QUAKE_MOTION__!().scale)).not.toBe(before);
+  await expect.poll(async () => {
+    await page.clock.runFor(100);
+    return page.evaluate(() => window.__Z3_QUAKE_MOTION__!().scale);
+  }).not.toBe(before);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect.poll(() => page.evaluate(() => window.__Z3_QUAKE_MOTION__!().ripples)).toBe(0);
   const resting = await page.evaluate(() => window.__Z3_QUAKE_MOTION__!().resting);
   expect(resting).toBeGreaterThan(0);
-  await page.waitForTimeout(600);
+  await page.clock.runFor(600);
   expect(await page.evaluate(() => window.__Z3_QUAKE_MOTION__!())).toEqual({ resting, ripples: 0, scale: 0 });
 });
 
@@ -71,5 +98,20 @@ test.describe("phone touch composition", () => {
     await openGlobe(page);
     await expect.poll(() => page.locator("[data-subsolar-probe]").getAttribute("data-globe-x")).not.toBeNull();
     await page.screenshot({ path: testInfo.outputPath("phone-390x844.png") });
+  });
+
+  test("Layers, Time and Tour replace each other on touch", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await openGlobe(page);
+    const sheets = ["layer", "time", "tour"];
+    for (const [index, name] of ["Open the layers sheet", "Open the time sheet", "Open the guided tour", "Open the layers sheet"].entries()) {
+      await page.getByRole("button", { name, exact: true }).click();
+      for (const [sheetIndex, sheet] of sheets.entries()) {
+        const panel = page.locator(`[data-globe-${sheet}-sheet]`);
+        if (sheetIndex === index % 3) await expect(panel).toBeVisible();
+        else await expect(panel).toBeHidden();
+      }
+      await expect(page.locator("[data-globe-inspector-sheet]")).toHaveCount(0);
+    }
   });
 });

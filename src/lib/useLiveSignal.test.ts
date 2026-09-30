@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fetchLiveSignal, subscribeLiveSignal, getLiveSignalSnapshot } from "./useLiveSignal";
+import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL } from "../world/globe/layers/feedUrls.ts";
+import { QUAKE_POLL_MS } from "../world/globe/layers/quake.ts";
+import { EONET_POLL_MS } from "../world/globe/layers/eonet.ts";
+import { GDACS_POLL_MS } from "../world/globe/layers/hazardAlerts.ts";
+import { AURORA_POLL_MS, KP_POLL_MS } from "../world/globe/layers/aurora.ts";
+import { XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL, SPACE_WEATHER_POLL_MS } from "../world/globe/layers/solarFlare.ts";
 
 // ponytail: @testing-library/react isn't a devDependency, so this tests the
 // extracted fetchLiveSignal(url, fetchImpl) helper directly instead of
@@ -119,11 +125,15 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
       vi.unstubAllGlobals();
     }
   });
-  it("resumes only overdue feeds and coalesces repeated visibility events", async () => {
+  it.each([
+    [QUAKES_URL, QUAKE_POLL_MS], [EONET_URL, EONET_POLL_MS],
+    [GDACS_URL, GDACS_POLL_MS], [OVATION_URL, AURORA_POLL_MS], [KP_URL, KP_POLL_MS],
+    ...[XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL].map(url => [url, SPACE_WEATHER_POLL_MS] as const),
+  ] as const)("resumes only overdue %s and coalesces visibility events", async (feedUrl, cadence) => {
     const doc = Object.assign(new EventTarget(), { hidden: false });
     vi.stubGlobal("document", doc);
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: 1 })));
-    const unsub = subscribeLiveSignal("/api/visibility-freshness", 60_000, vi.fn(), fetchImpl);
+    const unsub = subscribeLiveSignal(feedUrl, cadence, vi.fn(), fetchImpl);
     try {
       await vi.advanceTimersByTimeAsync(0);
       for (let i = 0; i < 2; i++) {
@@ -134,13 +144,13 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
       await vi.advanceTimersByTimeAsync(0);
       expect(fetchImpl).toHaveBeenCalledTimes(1);
       doc.hidden = true; doc.dispatchEvent(new Event("visibilitychange"));
-      await vi.advanceTimersByTimeAsync(60_000);
+      await vi.advanceTimersByTimeAsync(cadence);
       expect(fetchImpl).toHaveBeenCalledTimes(1);
       doc.hidden = false; doc.dispatchEvent(new Event("visibilitychange"));
       doc.dispatchEvent(new Event("visibilitychange"));
       await vi.advanceTimersByTimeAsync(0);
       expect(fetchImpl).toHaveBeenCalledTimes(2);
-      await vi.advanceTimersByTimeAsync(60_000);
+      await vi.advanceTimersByTimeAsync(cadence);
       expect(fetchImpl).toHaveBeenCalledTimes(3);
     } finally {
       unsub();
