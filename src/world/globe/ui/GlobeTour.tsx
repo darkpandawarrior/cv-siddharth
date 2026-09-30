@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { EvidenceChip } from "../../../EvidenceChip.tsx";
 import { PUNE } from "../../../lib/sky.ts";
 import { experience } from "../../../data/profile/experience.ts";
@@ -72,7 +72,7 @@ const STOPS: Stop[] = [
     title: "Reach",
     body: () => (
       <div>
-        <p className="mb-2">{fleetStats.installFloor.toLocaleString("en-US")} installs, as a floor across the fleet:</p>
+        <p className="mb-2">{fleetStats.installFloor.toLocaleString("en-IN")} installs, as a floor across the fleet:</p>
         <ul className="mb-2 space-y-1">
           {storeApps.map((a) => (
             <li key={a.id} className="truncate">
@@ -139,6 +139,8 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
   const setSheet = useGlobe((s) => s.setSheet);
   const presence = usePresenceGeo();
 
+  const desktopDialog = useRef<HTMLDivElement>(null);
+  const phoneDialog = useRef<HTMLDivElement>(null);
   const running = tourStep !== null;
   const step = running ? Math.max(0, Math.min(STOPS.length - 1, tourStep!)) : 0;
 
@@ -169,6 +171,19 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- exit/setTourStep close over fresh state via the store
   }, [running, step, slot]);
+
+  useEffect(() => {
+    if (slot !== "overlay" || !running) return;
+    const previous = document.activeElement;
+    // The T shortcut sets the tour step; it must also open its phone sheet.
+    if (window.innerWidth < 640) setSheet("tour");
+    else desktopDialog.current?.focus();
+    return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus(); };
+  }, [running, slot, setSheet]);
+
+  useEffect(() => {
+    if (slot === "overlay" && running && sheet === "tour" && window.innerWidth < 640) phoneDialog.current?.focus();
+  }, [running, sheet, slot]);
 
   const stopBody = useMemo(() => STOPS[step].body({ presence }), [step, presence]);
 
@@ -253,6 +268,8 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
       {running && (
         <div
           data-globe-tour
+          ref={desktopDialog}
+          tabIndex={-1}
           role="dialog"
           aria-label="Guided tour"
           className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] overflow-y-auto rounded-2xl glass-panel p-3 font-mono text-xs text-zinc-300 sm:top-[var(--globe-top-offset,5rem)] sm:block sm:inset-x-auto sm:left-4 sm:bottom-[calc(45%+16px)] sm:max-h-[calc(100%-45%-16px-var(--globe-top-offset,5rem))]"
@@ -265,6 +282,8 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
       {sheet === "tour" && running && (
         <div
           data-globe-tour-sheet
+          ref={phoneDialog}
+          tabIndex={-1}
           role="dialog"
           aria-label="Guided tour"
           className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"

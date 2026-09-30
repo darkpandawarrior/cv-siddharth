@@ -43,7 +43,7 @@ export function GlobePanel() {
                 here (e.g. "install floor across 88 live l...") never wrapped
                 and instead overflowed past the flex row, silently clipped by
                 html's overflow-x:hidden (e2e/overflow.spec.ts). */}
-            <span className="min-w-0">{row.label}</span>
+            <span className="min-w-0 basis-full whitespace-normal break-words">{row.label}</span>
             <EvidenceChip file={row.file} source={row.source} cadence="manual" stamp={STAMP_BY_ROW[row.id]} />
           </li>
         ))}
