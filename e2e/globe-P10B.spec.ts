@@ -29,7 +29,13 @@ for (const width of [1440, 390]) {
       const map = window.__GLOBE_TEST_STREET_MAP__!;
       return { source: map.getTerrain()?.source, encoding: (map.getStyle().sources["terrain-dem"] as { encoding?: string }).encoding, pitch: map.getPitch() };
     });
-    expect(terrain).toMatchObject({ source: "terrain-dem", encoding: "terrarium", pitch: 55 });
+    // MapLibre's own degree/radian round trip through setPitch/getPitch lands
+    // a float a few ULPs off the integer (measured: 55.00000000000001, not a
+    // product bug) - toMatchObject's Object.is-style equality has no
+    // tolerance for that, toBeCloseTo does.
+    expect(terrain.source).toBe("terrain-dem");
+    expect(terrain.encoding).toBe("terrarium");
+    expect(terrain.pitch).toBeCloseTo(55, 5);
     await expect(street).toContainText("U.S. Geological Survey");
     await testInfo.attach("terrain-session-tiles", { body: JSON.stringify({ width, tiles }), contentType: "application/json" });
     await page.screenshot({ path: testInfo.outputPath(`terrain-${width}.png`) });
