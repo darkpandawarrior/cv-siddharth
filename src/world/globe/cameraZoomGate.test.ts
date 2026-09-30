@@ -13,6 +13,14 @@ import {
 } from "./cameraZoomGate.ts";
 
 describe("stepZoomHold", () => {
+  it("a held pill advances without repeat events and release stops it", () => {
+    let hold = stepZoomHold(0, 9, 9, clampCameraFrameDelta(0.2), 1000, true);
+    expect(hold).toBe(200);
+    hold = stepZoomHold(hold, 9, 9, clampCameraFrameDelta(0.2), 1200, true);
+    expect(hold).toBe(ZOOM_HOLD_MS);
+    expect(stepZoomHold(hold, 9, 9, clampCameraFrameDelta(0.2), 1400, false)).toBe(0);
+  });
+
   it("accumulates while pinned at the minimum with fresh intent each step", () => {
     let hold = 0;
     hold = stepZoomHold(hold, 9, 9, 0.2, 0);
@@ -118,6 +126,7 @@ describe("street hand-off box", () => {
 it("a stalled frame cannot complete the zoom hold in one step", () => {
   expect(clampCameraFrameDelta(5)).toBe(MAX_CAMERA_FRAME_SEC);
   expect(stepZoomHold(0, 9, 9, clampCameraFrameDelta(5), 0)).toBeLessThan(ZOOM_HOLD_MS);
+  expect(stepZoomHold(0, 9, 9, clampCameraFrameDelta(5), 1000, true)).toBeLessThan(ZOOM_HOLD_MS);
   expect(clampCameraFrameDelta(-1)).toBe(0);
   expect(clampCameraFrameDelta(NaN)).toBe(0);
   expect(clampCameraFrameDelta(1 / 60)).toBe(1 / 60);

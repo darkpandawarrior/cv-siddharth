@@ -33,17 +33,16 @@ export function clampCameraFrameDelta(dtSec: number): number {
 /**
  * One frame's worth of the zoom-hold state machine: `holdMs` grows only
  * while the camera sits within AT_MIN_EPSILON of `minDistance` AND fresh
- * zoom-IN intent is still arriving (a wheel notch, a growing pinch, or the
- * HUD's zoom-in pill -- see `msSinceIntent`); it resets the instant either
+ * zoom-IN intent is fresh or the zoom-in pill remains held; it resets the instant either
  * condition fails, whether that's the camera leaving the floor or the
  * visitor simply stopping input while resting there. Pure so the 400ms
  * threshold and both reset edges are unit-testable without a mock three.js
  * camera or DOM events.
  */
-export function stepZoomHold(holdMs: number, distance: number, minDistance: number, dtSec: number, msSinceIntent: number): number {
+export function stepZoomHold(holdMs: number, distance: number, minDistance: number, dtSec: number, msSinceIntent: number, pillHeld = false): number {
   if (dtSec <= 0) return holdMs;
   const atFloor = distance <= minDistance + AT_MIN_EPSILON;
-  const freshIntent = msSinceIntent <= INTENT_STALE_MS;
+  const freshIntent = pillHeld || msSinceIntent <= INTENT_STALE_MS;
   return atFloor && freshIntent ? holdMs + dtSec * 1000 : 0;
 }
 

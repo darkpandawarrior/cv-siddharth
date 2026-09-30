@@ -95,28 +95,28 @@ async function zoomToFloor(page: Page, canvas: Locator, width: number) {
 for (const width of [1440, 390, 360]) {
 test.describe(`seamless zoom into street level and back at ${width}px`, () => {
   test.use({ hasTouch: width < 640 });
-  if (width === 1440) {
   test("holding at the closest zoom for ~400ms opens street level", async ({ page }) => {
     test.slow();
     await seedIntroSeen(page);
-    const canvas = await openGlobe(page);
+    const canvas = await openGlobe(page, width);
     await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
     await zoomToFloor(page, canvas, width);
-    const box = (await canvas.boundingBox())!;
+    const pill = page.getByRole("button", { name: "Zoom in", exact: true });
+    const box = (await pill.boundingBox())!;
     const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    await page.mouse.move(point.x, point.y);
-    expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
-    // Software GL can put pill taps more than 200ms apart, so intent goes
-    // stale. The old test passed from one oversized dt, not a sustained hold.
-    // Native wheel input stays fresh while the rendered camera remains clamped.
-    await expect.poll(async () => {
-      if (await canvas.getAttribute("data-camera-view") === "street") return "street";
-      await page.mouse.wheel(0, -20);
-      return canvas.getAttribute("data-camera-view");
-    }, { timeout: 8_000, intervals: [25] }).toBe("street");
-    await expect(page.locator("[data-street-view]")).toBeVisible();
+    expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.closest("button")?.getAttribute("aria-label"), point)).toBe("Zoom in");
+    const touch = width < 640 ? await page.context().newCDPSession(page) : null;
+    try {
+      if (touch) await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [point] });
+      else { await page.mouse.move(point.x, point.y); await page.mouse.down(); }
+      // One native press, with no repeated input events keeping intent fresh.
+      await expect(canvas).toHaveAttribute("data-camera-view", "street", { timeout: 8_000 });
+      await expect(page.locator("[data-street-view]")).toBeVisible();
+    } finally {
+      if (touch) { await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); await touch.detach(); }
+      else await page.mouse.up();
+    }
   });
-  }
 
   // LANE I2 (root cause fix): the product bug this covers -- resting AT the
   // floor with no further input used to keep accumulating toward the 400ms
