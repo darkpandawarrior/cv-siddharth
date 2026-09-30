@@ -3,7 +3,9 @@ import { EvidenceChip } from "../../EvidenceChip.tsx";
 import { storeGeneratedAt } from "../../data/store.ts";
 import { globeFacts, liveDotsLabel } from "./globeRows.ts";
 import { usePresenceGeo } from "./presenceGeo.ts";
-import SceneSummary from "./ui/SceneSummary.tsx";
+import { lazy, Suspense } from "react";
+
+const SceneSummary = lazy(() => import("./ui/SceneSummary.tsx"));
 
 const STAMP_BY_ROW: Record<string, string | undefined> = {
   "reach-installs": storeGeneratedAt,
@@ -35,6 +37,7 @@ export function GlobePanel() {
   return (
     <div data-globe-panel className="pointer-events-auto">
       <h2 className="sr-only">GLOBE - reach, in numbers</h2>
+      <Suspense fallback={null}><SceneSummary /></Suspense>
       <ul className="space-y-2 font-mono text-sm text-zinc-300">
         {globeFacts.map((row) => (
           <li key={row.id} className="flex flex-wrap items-center gap-2">
@@ -51,13 +54,6 @@ export function GlobePanel() {
           <GlobeLiveRow />
         </ClientOnly>
       </ul>
-      {/* WAVE 7 LANE V6: the non-visual scene summary — a screen-reader-only
-          region describing the 3D scene itself (imagery, layers, hazards,
-          sky, selection), not the reach facts above. Mounted here rather
-          than Globe.tsx/GlobeHud.tsx (lanes this worktree may not touch)
-          because this component already renders unconditionally, SSR and
-          no-WebGL included, and SceneSummary needs exactly that floor. */}
-      <SceneSummary />
     </div>
   );
 }

@@ -10,7 +10,7 @@
 // even where a subscribed field (the time offset) DOES change continuously.
 import type { GibsCatalogEntry } from "../layers/gibsCatalog.ts";
 import { GIBS_CATALOG } from "../layers/gibsCatalog.ts";
-import { LAYER_IDS, type LayerHealth, type LayerId, type Selection } from "../globeStore.ts";
+import { LAYER_IDS, type LayerHealth, type LayerId, type Selection, type EarthStyle, type ImageryStack } from "../globeStore.ts";
 import { WMO_LABEL, subsolarPoint, type SkyState } from "../../../lib/sky.ts";
 
 // Restated from ui/LayerPanel.tsx's own `LABEL` map rather than imported:
@@ -68,6 +68,7 @@ export function liveLayersSummary(layers: Record<LayerId, boolean>, status: Part
  *  truth for "47 quakes, 3 fires, Kp 3.67". */
 export function hazardsSummary(status: LayerHealth | undefined): string {
   if (!status) return "Hazards: not reporting yet.";
+  if (status.state === "loading") return "Hazards: loading, no events confirmed.";
   if (status.state === "failed") return `Hazards: ${status.detail || "every feed unreachable"}.`;
   return `Hazards: ${status.detail || "no active events"}.`;
 }
@@ -104,4 +105,118 @@ export function selectionSummary(selected: Selection | null): string {
  *  a fresh "nothing selected" interruption. */
 export function selectionAnnouncement(selected: Selection | null): string {
   return selected ? `Now showing ${selected.title}.` : "";
+}
+
+
+/** Loaded producer reports only. Never derive a drawn date from simTime or
+ * catalogDate: requested tiles can fail or remain on an older generation. */
+export function loadedImagerySummary(style: EarthStyle, earth: LayerHealth | undefined): string {
+  if (style === "dots") return "Imagery: dots, computed geometry. Real imagery is off.";
+  if (!earth) return "Imagery: no loaded texture report. No imagery date confirmed.";
+  if (earth.state === "loading") return "Imagery: dots while the whole-globe texture loads. No imagery date confirmed.";
+  if (earth.state === "failed") return `Imagery: dots fallback. ${cleanCopy(earth.detail || "imagery unavailable")}. No imagery date confirmed.`;
+  return `Imagery: whole-globe texture, ${cleanCopy(earth.detail || "product and date not reported")}. Snapshot imagery, not live.`;
+}
+
+/** The phone's one-line receipt puts the loaded product/date before source
+ * prose. Unknown products keep the producer text rather than a catalog guess. */
+export function loadedImageryHeadline(style: EarthStyle, earth: LayerHealth | undefined): string {
+  if (style === "dots") return "Dots · computed";
+  if (!earth) return "Awaiting imagery report";
+  if (earth.state === "loading") return "Imagery loading";
+  if (earth.state === "failed") return "Dots · imagery unavailable";
+  const product = earth.detail?.match(/VIIRS|MODIS Terra/)?.[0];
+  const date = earth.detail?.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0];
+  return product && date ? `${product} · ${date}` : cleanCopy(earth.detail || "Loaded texture, date not reported");
+}
+
+function cleanCopy(text: string): string {
+  return text.replaceAll("\u2014", ",");
+}
+
+export interface ReceiptRow {
+  id: string;
+  label: string;
+  available: boolean;
+  text: string;
+}
+
+// Sources are the same producers named by these layers' status/selection
+// builders. A missing observation time stays missing, even for healthy feeds.
+const LAYER_SOURCE: Record<LayerId, string> = {
+  markers: "portfolio evidence snapshot",
+  stars: "astronomy-engine and star catalog",
+  satellites: "CelesTrak TLE",
+  aircraft: "adsb.lol",
+  presence: "shared presence and edge country header",
+  pulses: "GitHub, ops and /api/signals",
+  hazards: "USGS, EONET, GDACS, NOAA SWPC and Launch Library",
+  wind: "Open-Meteo",
+  reach: "store snapshot, GitHub CI and /api/signals",
+  countries: "Natural Earth, public domain",
+  together: "shared session presence",
+  density: "USGS quakes and EONET fires",
+  guide: "Google Maps Takeout snapshot",
+  daylight: "subsolar geometry",
+  eclipse: "NASA eclipse catalog and astronomy-engine",
+  buoys: "NOAA NDBC",
+};
+const NOWCAST: readonly LayerId[] = ["aircraft", "presence", "pulses", "wind", "together"];
+
+function valueKind(id: LayerId, health: LayerHealth): string {
+  const kind = ["stars", "daylight", "density", "eclipse"].includes(id) ? "Computed"
+    : ["satellites", "wind", "aircraft"].includes(id) ? "Modelled"
+    : ["markers", "guide", "countries", "reach", "buoys"].includes(id) || health.state === "snapshot" ? "Snapshot" : "Feed report";
+  return health.state === "snapshot" && kind !== "Snapshot" ? `${kind}, snapshot` : kind;
+}
+
+/** UTC daily imagery has day precision, so its age must not imply an exact
+ * observation instant. This is the loaded report's date, never a request. */
+export function imageryObservationAge(detail: string | undefined, now: Date | null): string {
+  const date = detail?.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0];
+  if (!date || !now) return "Observation age not reported.";
+  const ms = Date.parse(`${date}T00:00:00Z`);
+  if (!Number.isFinite(ms) || new Date(ms).toISOString().slice(0, 10) !== date) return "Observation age not reported.";
+  const days = Math.floor(now.getTime() / 86_400_000) - Math.floor(ms / 86_400_000);
+  return days < 0 ? "Reported imagery date is ahead of the real clock."
+    : `Observation age: ${days} UTC calendar day${days === 1 ? "" : "s"}, daily mosaic.`;
+}
+
+export function sceneReceiptRows(
+  layers: Record<LayerId, boolean>,
+  status: Partial<Record<string, LayerHealth>>,
+  imagery: ImageryStack,
+  style: EarthStyle,
+  offset: number,
+): ReceiptRow[] {
+  const rows = imagery.overlays.map(({ id, opacity }): ReceiptRow => {
+    const entry = GIBS_CATALOG[id];
+    const health = status[id];
+    const reason = style === "dots" ? "hidden because real imagery is off"
+      : opacity === 0 ? "hidden at zero opacity"
+      : health?.state === "failed" ? `unavailable: ${cleanCopy(health.detail || "feed failed")}`
+      : health?.state === "loading" ? "loading, drawing unconfirmed"
+      : "drawing and loaded date unconfirmed by tile producer";
+    const kind = /model|analysis/i.test(entry?.description ?? "") ? "Modelled" : "Snapshot imagery";
+    return { id, label: entry?.title ?? id, available: false,
+      text: `${reason}. ${entry?.attribution ?? "Source not reported"}. ${kind}. Observation age not reported.` };
+  });
+  for (const id of LAYER_IDS) {
+    if (!layers[id]) continue;
+    const health = status[id];
+    const hidden = offset !== 0 && NOWCAST.includes(id);
+    const available = !hidden && !!health && health.state !== "loading" && health.state !== "failed";
+    const reason = hidden ? "Hidden during simulated time"
+      : !health ? "Drawing unconfirmed, no status reported"
+      : health.state === "failed" ? "Unavailable"
+      : health.state === "loading" ? "Loading, drawing unconfirmed"
+      : valueKind(id, health);
+    const detail = health?.detail ? ` ${cleanCopy(health.detail)}.` : "";
+    const age = ["stars", "daylight", "eclipse", "density"].includes(id)
+      ? "Computed values are not observations."
+      : "Observation age not reported in layer status.";
+    rows.push({ id, label: LAYER_LABEL[id], available,
+      text: `${reason}.${detail} Source: ${LAYER_SOURCE[id]}. ${age}` });
+  }
+  return rows;
 }
