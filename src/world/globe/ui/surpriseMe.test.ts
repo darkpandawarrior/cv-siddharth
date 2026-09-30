@@ -34,6 +34,7 @@ describe("issCandidate", () => {
   test("flies to the entity, not a computed lat/lon, when the ISS is tracked", () => {
     entityPositions.set("sat:25544", () => new Vector3(6, 0, 0));
     const result = issCandidate();
+    expect(result?.selection.kind).toBe("satellite");
     expect(result?.selection.focus).toEqual({ kind: "entity", id: "sat:25544" });
     expect(result?.reason).toContain("ISS");
   });
