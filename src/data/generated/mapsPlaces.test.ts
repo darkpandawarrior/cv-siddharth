@@ -9,7 +9,7 @@ const gazetteerBySlug = new Map(mapsGazetteer.map((c) => [c.slug, c]));
 
 describe("mapsPlaces", () => {
   it("represents every geotagged still, including one undecodable source, without fake images", () => {
-    expect(mapsReviews).toHaveLength(66);
+    expect(mapsReviews).toHaveLength(64);
     expect(mapsPhotos).toHaveLength(118);
     expect(mapsPhotos.filter((photo) => photo.src)).toHaveLength(117);
     const unavailable = mapsPhotos.filter((photo) => photo.unavailable);
@@ -86,6 +86,21 @@ describe("mapsPlaces", () => {
       expect(meta.iptc, photo.src).toBeUndefined();
       expect(meta.width).toBe(photo.w); expect(meta.height).toBe(photo.h);
       expect(photo.w).toBeLessThanOrEqual(480); expect(photo.h).toBeLessThanOrEqual(480);
+    }
+  });
+
+  it("a residential review (housing society, co-op/CHS, residency, apartments, society) never publishes a name", () => {
+    const residential = /housing society|co-?op(?:erative)?\s+housing|\bchs\b|\bresidency\b|\bapartments\b|\bsociety\b/i;
+    for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(residential);
+    const dump = JSON.stringify({ mapsPlaces, mapsPhotos, mapsReviews, mapsByYear, mapsTotals });
+    expect(dump).not.toContain("Aum Residency Co-op Housing Society");
+    expect(dump).not.toContain("Shubhada CHS Ltd.");
+  });
+
+  it("no photo anchors a pin to a residential review (it is never in mapsReviews)", () => {
+    for (const photo of mapsPhotos) {
+      if (photo.precision !== "review-nearby") continue;
+      expect(mapsReviews.some((review) => review.id === photo.reviewId), photo.src).toBe(true);
     }
   });
 
