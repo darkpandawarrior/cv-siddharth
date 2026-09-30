@@ -38,6 +38,21 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
     vi.useRealTimers();
   });
 
+  it("starts the first visible fetch without advancing an installed clock", async () => {
+    const doc = Object.assign(new EventTarget(), { hidden: false });
+    vi.stubGlobal("document", doc);
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ features: [] })));
+    const unsub = subscribeLiveSignal("/first-poll-frozen-clock", QUAKE_POLL_MS, vi.fn(), fetchImpl);
+    try {
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(getLiveSignalSnapshot("/first-poll-frozen-clock").data).toEqual({ features: [] });
+    } finally {
+      unsub();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("makes one fetch per interval no matter how many subscribers share the URL", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: 1 }), { status: 200 }));
     const onChange = vi.fn();

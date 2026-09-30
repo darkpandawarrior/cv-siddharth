@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`fixtures/${name}.json`, import.meta.url), "utf8"));
 
-async function openGlobe(page: Page, animate = false) {
+async function openGlobe(page: Page) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   const time = new Date("2026-09-27T12:00:00Z");
   // Installed clocks control performance.now during the synchronous tier
@@ -15,11 +15,13 @@ async function openGlobe(page: Page, animate = false) {
     if (name === "weather") return route.fulfill({ json: fixture("weather-2026-09-24") });
     if (name === "tle" || name === "aircraft") return route.fulfill({ json: fixture(name) });
     if (name === "whereami") return route.fulfill({ json: fixture("whereami-IN") });
-    return route.fulfill({ json: { connected: false, recent: [] } });
+    // Unmocked feeds are unavailable, never a successful body with the wrong schema.
+    return route.abort();
   });
-  await page.route("https://earthquake.usgs.gov/**", route => route.fulfill({ json: {
+  await page.route("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson", route => route.fulfill({ json: {
     type: "FeatureCollection", features: [{ id: "z3-quake", properties: { mag: 6.5, place: "Z3 Test Trench", time: Date.parse("2026-09-27T11:00:00Z"), url: "https://earthquake.usgs.gov/" }, geometry: { type: "Point", coordinates: [73.8567, 30.5204, 12] } }],
   } }));
+  await page.route("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson", route => route.fulfill({ json: { type: "FeatureCollection", features: [] } }));
   await page.route("https://eonet.gsfc.nasa.gov/**", route => route.fulfill({ json: { events: [] } }));
   await page.route("https://www.gdacs.org/**", route => route.fulfill({ json: { features: [] } }));
   await page.route("https://services.swpc.noaa.gov/**", route => route.abort());
@@ -30,7 +32,6 @@ async function openGlobe(page: Page, animate = false) {
   await waitForHydration(page);
   await expect(page.locator("[data-globe-root] canvas").first()).toBeVisible({ timeout: 30_000 });
   await expect.poll(() => page.evaluate(() => window.__HAZARD_DEBUG__?.quakes ?? 0), { timeout: 30_000 }).toBe(1);
-  if (animate) await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 100));
 }
 
 test("the initial Pune selection has a reachable Close button", async ({ page }) => {
@@ -69,7 +70,7 @@ for (const close of ["Escape", "Close"] as const) {
 test("changing reduced motion stops the actual quake ripple buffers", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await openGlobe(page, true);
+  await openGlobe(page);
   await expect.poll(async () => {
     await page.clock.runFor(100);
     return page.evaluate(() => window.__HAZARD_DEBUG__?.quakes ?? 0);
