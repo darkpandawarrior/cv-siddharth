@@ -286,7 +286,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Forty `gen:` scripts over forty-five generator files. The ones you will
+Forty `gen:` scripts over forty-six generator files. The ones you will
 actually reach for:
 
 ```bash
@@ -396,8 +396,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 2417 unit tests across 248 files (vitest)
-npm run test:e2e  # 658 Playwright tests across 53 files, every registry route
+npm test          # 3224 unit tests across 336 files (vitest)
+npm run test:e2e  # 829 Playwright tests across 96 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
