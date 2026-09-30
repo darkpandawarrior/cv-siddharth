@@ -197,8 +197,13 @@ async function dragOrbit(page: Page, canvas: ReturnType<Page["locator"]>) {
   const box = await canvas.boundingBox();
   if (!box) throw new Error("canvas has no bounding box");
   const cx = box.x + box.width / 2;
-  const cy = box.y + box.height / 2;
+  // The search controls can cover the canvas centre. Start on its exposed
+  // lower disc, as W10D's native orbit gestures do, and prove the hit target.
+  const explore = await page.locator("[data-explore-bar]").boundingBox();
+  if (!explore) throw new Error("exploration controls have no bounding box");
+  const cy = Math.max(box.y + box.height / 2, explore.y + explore.height + 8);
   await page.mouse.move(cx, cy);
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x: cx, y: cy })).toBe("CANVAS");
   await page.mouse.down();
   await page.mouse.move(cx + 220, cy, { steps: 12 });
   await page.mouse.up();
