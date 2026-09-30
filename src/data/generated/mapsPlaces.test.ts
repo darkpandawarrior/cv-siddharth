@@ -5,11 +5,19 @@ import sharp from "sharp";
 import { mapsGazetteer, haversineKm } from "../mapsGazetteer.ts";
 import { mapsByYear, mapsPhotos, mapsPlaces, mapsReviews, mapsTotals } from "./mapsPlaces.ts";
 
+// Mirrors scripts/gen-maps-places.mjs's own RESIDENTIAL (kept in that plain
+// .mjs, not imported here: a .ts importing a bare .mjs across this repo's
+// tsconfig has no declaration to check against). The generator's own
+// scripts/gen-maps-places.test.mjs is the source of truth for this pattern's
+// behaviour, per token; this is a consistency check on the *published*
+// output.
+const RESIDENTIAL = /co-?op(?:erative)?|\bhousing\b|\bsociety\b|\bchs\b|\bresidenc(?:y|es)\b|\bresidential\b|\bapartments?\b|\bflats?\b/i;
+
 const gazetteerBySlug = new Map(mapsGazetteer.map((c) => [c.slug, c]));
 
 describe("mapsPlaces", () => {
   it("represents every geotagged still, including one undecodable source, without fake images", () => {
-    expect(mapsReviews).toHaveLength(66);
+    expect(mapsReviews).toHaveLength(64);
     expect(mapsPhotos).toHaveLength(118);
     expect(mapsPhotos.filter((photo) => photo.src)).toHaveLength(117);
     const unavailable = mapsPhotos.filter((photo) => photo.unavailable);
@@ -73,7 +81,7 @@ describe("mapsPlaces", () => {
 
   it("every photo's src matches the naming rule and the file exists under public/", () => {
     for (const photo of mapsPhotos.filter((photo) => !photo.unavailable)) {
-      expect(photo.src).toMatch(/^\/globe\/maps\/[a-z-]+-\d+\.webp$/);
+      expect(photo.src).toMatch(/^\/globe\/maps\/[a-z-]+-\d+\.avif$/);
       expect(existsSync(resolve("public", photo.src.slice(1))), photo.src).toBe(true);
     }
   });
@@ -84,10 +92,31 @@ describe("mapsPlaces", () => {
       expect(meta.exif, photo.src).toBeUndefined();
       expect(meta.xmp, photo.src).toBeUndefined();
       expect(meta.iptc, photo.src).toBeUndefined();
+      expect(meta.icc, photo.src).toBeUndefined();
       expect(meta.width).toBe(photo.w); expect(meta.height).toBe(photo.h);
       expect(photo.w).toBeLessThanOrEqual(480); expect(photo.h).toBeLessThanOrEqual(480);
     }
   });
+
+  it("a residential review (housing society, co-op/CHS, residency, apartments, society) never publishes a name", () => {
+    for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(RESIDENTIAL);
+    // Never name the excluded buildings here: this file is public, and naming them to assert
+    // their absence would publish exactly what the rule protects.
+  });
+
+  it("no photo anchors a pin to a residential review (it is never in mapsReviews)", () => {
+    for (const photo of mapsPhotos) {
+      if (photo.precision !== "review-nearby") continue;
+      expect(mapsReviews.some((review) => review.id === photo.reviewId), photo.src).toBe(true);
+    }
+  });
+
+  // The above only proves consistency against the *published* reviews. The
+  // real 300m-from-a-home exclusion (a photo must not get an exact pin even
+  // when a public review is ALSO nearby) needs the residential coordinates
+  // the generator deliberately never exports -- proved with synthetic
+  // fixtures against the generator's own pure functions instead, in
+  // scripts/gen-maps-places.test.ts.
 
   it("mapsTotals.photoViews matches the expected sanity total", () => {
     expect(mapsTotals.photoViews).toBe(740119);
