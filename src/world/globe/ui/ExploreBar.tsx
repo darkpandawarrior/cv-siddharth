@@ -247,7 +247,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     store.setView("orbit"); store.flyTo(selection.focus!); store.select(selection); store.setSheet("inspector");
     setQuery(place.name); setResults([]); setActive(-1); setMessage("");
   };
-  const toggle = (next: "here" | "measure") => {
+  const toggle = (next: "here" | "measure" | "pin") => {
     scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
     setResults([]); setMessage("");
     useExplore.getState().setMode(mode === next ? null : next);
@@ -280,6 +280,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         <button type="button" className={buttonClass} onClick={clear} aria-label="Clear exploration">×</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "here"} disabled={view !== "orbit"} onClick={() => toggle("here")}>What's here</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
+        <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed={mode === "pin"} disabled={view !== "orbit"} onClick={() => toggle("pin")}>Pin</button>
         {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
       {!query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
@@ -309,6 +310,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           {(answer.restore || answer.undo.length > 0) && <button type="button" onClick={undoLast} className="shrink-0 whitespace-nowrap rounded-lg px-1 text-zinc-400 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Undo</button>}
         </p>}
         {!asking && !answer && message && <p className="px-2 py-1">{message}</p>}
+        {mode === "pin" && <p className="px-2 py-1">Tap or click a point. Enter pins the hovered point or globe centre. Esc clears pins.</p>}
         {mode === "here" && !message && <p className="px-2 py-1">Click the globe to look up a point</p>}
         {mode === "measure" && <p data-measure-result className="px-2 py-1">
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
