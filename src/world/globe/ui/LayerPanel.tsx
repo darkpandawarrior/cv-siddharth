@@ -458,7 +458,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {panelOpen ? (
         <div
           data-globe-layer-panel
-          className="pointer-events-auto absolute right-4 top-[var(--globe-top-offset,5rem)] z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-body text-sm text-zinc-300 sm:bottom-4 sm:flex"
+          className="pointer-events-auto absolute right-4 top-[min(var(--globe-top-offset,5rem),20rem)] z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-body text-sm text-zinc-300 sm:bottom-4 sm:flex"
         >
           <div className="flex items-center justify-between gap-2 border-b border-line p-3">
             <h2 className="text-base font-semibold text-zinc-200">Layers</h2>
