@@ -9,6 +9,14 @@ import { buildPuneSelection } from "./puneSelection.ts";
 
 const RING_RADIUS = 0.18;
 const RING_TUBE = 0.012;
+// GuideLayer.tsx's own city hit-disc sits at GLOBE_RADIUS + 0.008 (its LIFT
+// constant, deliberately kept below quakes/launches so THOSE stay
+// clickable over a city). This ring's own 0.01 sat only 0.002 above that --
+// close enough that which one a raycast reaches first for the same lat/lon
+// (Pune has both) came down to per-viewport floating-point noise, not
+// design. Lower, clearly, so the richer guide-place card always wins over
+// this decorative employer ring where the two coincide.
+const RING_LIFT = 0.005;
 
 /**
  * Employer marker (G17, living-ledger-spec.md#6.3 task 2): city precision
@@ -30,7 +38,7 @@ export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Objec
   const placements = useMemo(() => [...new Map(employerMarkers.map((marker) => [marker.location, marker])).values()].map((marker) => {
     const p = latLonToXyz(marker.lat, marker.lon);
     const normal = new THREE.Vector3(p.x, p.y, p.z);
-    return { ...marker, position: normal.clone().multiplyScalar(GLOBE_RADIUS + 0.01), quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal) };
+    return { ...marker, position: normal.clone().multiplyScalar(GLOBE_RADIUS + RING_LIFT), quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal) };
   }), []);
 
   return (

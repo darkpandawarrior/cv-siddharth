@@ -112,6 +112,26 @@ function buildGuidePlaces(): GuidePlace[] {
 
 const GUIDE_PLACES = buildGuidePlaces();
 
+// Two cities close enough together (e.g. Pune and Mumbai, ~120km apart) can
+// each earn a MAX_SCALE*HIT_RADIUS_MULTIPLIER hit-disc (up to ~276km radius)
+// that reaches well past the other's own ring -- whichever disc the ray
+// happens to graze marginally closer wins, even for a click aimed dead
+// centre at the OTHER city. Capped once, at module load (GUIDE_PLACES is
+// static), to at most half the gap to its nearest neighbour, so no two
+// discs can ever swallow each other's centre.
+const GUIDE_PLACE_WORLD_POS = GUIDE_PLACES.map((p) => {
+  const xyz = latLonToXyz(p.lat, p.lon);
+  return new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + LIFT);
+});
+const GUIDE_PLACE_HIT_CAP = GUIDE_PLACE_WORLD_POS.map((pos, i) => {
+  let nearest = Infinity;
+  for (let j = 0; j < GUIDE_PLACE_WORLD_POS.length; j++) {
+    if (j === i) continue;
+    nearest = Math.min(nearest, pos.distanceTo(GUIDE_PLACE_WORLD_POS[j]));
+  }
+  return Number.isFinite(nearest) ? nearest * 0.45 : Infinity;
+});
+
 /** e2e-only read seam, same convention as HazardLayer's `__HAZARD_DEBUG__`
  *  and HistoryLayer's `__HISTORY_DEBUG__` (a plain global, not a DOM node —
  *  those files' own comments measured a chunk-budget regression from an
@@ -130,6 +150,12 @@ declare global {
       activityHistogram: number[] | null;
       face: (slug: string) => void;
       screenPoint: (slug: string) => { x: number; y: number } | null;
+      /** The camera's own distance from the globe centre, right now -- a
+       *  flyTo's dolly keeps looking straight at the target throughout its
+       *  whole transition, so a target's own `screenPoint` can read as
+       *  "stable" well before the distance animation actually finishes.
+       *  e2e needs this second signal too, or it can click mid-flight. */
+      cameraDistance: () => number | null;
     };
   }
 }
@@ -192,7 +218,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
       mesh.setColorAt(i, probe);
-      dummy.scale.setScalar(scale * HIT_RADIUS_MULTIPLIER);
+      dummy.scale.setScalar(Math.min(scale * HIT_RADIUS_MULTIPLIER, GUIDE_PLACE_HIT_CAP[i]));
       dummy.updateMatrix();
       hit.setMatrixAt(i, dummy.matrix);
     }
@@ -267,6 +293,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         const box = canvas.getBoundingClientRect();
         return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
       },
+      cameraDistance: () => sceneHandles.camera?.position.length() ?? null,
     };
   }, [simYear, activity, activityHistogram]);
 
@@ -345,7 +372,15 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     if (pinHitRef.current) pinHitRef.current.visible = visible;
   });
   const onReviewClick = (event: ThreeEvent<MouseEvent>) => {
-    if (!pinHitRef.current?.visible) return;
+    // Re-derive the same "close enough to see review pins" gate that the
+    // useFrame above draws every frame, straight from this event's own
+    // camera -- never from `pinHitRef.current.visible`. That ref is only
+    // ever written a frame late (the mesh stays raycastable even while
+    // `visible={false}`, since Three's raycaster never checks `.visible`),
+    // so under load a click could land inside the hit sphere before that
+    // write catches up, silently no-op past `stopPropagation()` and fall
+    // through to the city ring's own onClick underneath it.
+    if (event.camera.position.length() >= PIN_ZOOM_DISTANCE) return;
     event.stopPropagation();
     const review = mapsReviews[event.instanceId ?? -1];
     if (review) { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); }

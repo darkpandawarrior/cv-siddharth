@@ -257,6 +257,15 @@ export default function CameraDirector({
       camera.position.set(resolved.dir.x * resolved.dist, resolved.dir.y * resolved.dist, resolved.dir.z * resolved.dist);
       flightRef.current = null;
       settledRef.current = true;
+      // OrbitControls caches its own spherical offset from `target` and
+      // only re-derives it from `camera.position` lazily; setting position
+      // directly (its usual path is dragging, which it observes) leaves
+      // that cache stale, and its own per-frame update() (drei's own
+      // useFrame, damping-driven, independent of this component's) then
+      // re-applies the STALE cache and silently snaps the camera straight
+      // back to wherever it was a moment ago. Sync it immediately so this
+      // jump is durable instead of visible for one frame and gone.
+      controlsRef.current?.update();
     } else {
       flightRef.current = { from: fromDir, fromDist, to: resolved.dir, toDist: resolved.dist, elapsed: 0, duration: FLY_SECONDS };
       settledRef.current = false;

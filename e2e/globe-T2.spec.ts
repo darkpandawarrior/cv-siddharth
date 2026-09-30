@@ -8,7 +8,6 @@ import { mapsReviews } from "../src/data/generated/mapsPlaces.ts";
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
 const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
-const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
 const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
 const activityFixture = JSON.parse(readFileSync(join(FIXTURES, "activity.json"), "utf8"));
 
@@ -17,12 +16,19 @@ const ALL_DAY_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/a
 async function withApiFixtures(page: Page, activity: unknown) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
-  await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
   await page.route("**/api/github-activity", (route) => route.fulfill({ json: activity }));
   // PulseLayer's other two feeds (this lane never draws anything from
   // them) — aborted so they settle into their own honest "failed" state
-  // instead of reaching a real network (G10).
+  // instead of reaching a real network (G10). LocalTraffic is the same:
+  // this lane's fixture places a real aircraft (adsb.lol AIC864) within a
+  // few km of Pune, which the Time Machine's own local air-traffic cluster
+  // renders well above the surface -- close enough to camera, at Pune's own
+  // flown-to distance, to sit on the identical ray as the guide marker's
+  // click point and steal it. This spec never asserts on aircraft, so it
+  // aborts the feed rather than fulfilling a fixture it doesn't use, the
+  // same as ops/signals below.
+  await page.route("**/api/aircraft", (route) => route.abort());
   await page.route("**/api/ops", (route) => route.abort());
   await page.route("**/api/signals", (route) => route.abort());
 }
@@ -48,6 +54,7 @@ type GuideDebug = {
   activityHistogram: number[] | null;
   face: (slug: string) => void;
   screenPoint: (slug: string) => { x: number; y: number } | null;
+  cameraDistance: () => number | null;
 };
 function readGuideDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __GUIDE_DEBUG__?: GuideDebug }).__GUIDE_DEBUG__);
@@ -68,15 +75,32 @@ async function openGlobe(page: Page, isoNow: string, activity: unknown = activit
 async function clickGuideMarker(page: Page, slug: string) {
   await page.evaluate((id) => window.__GUIDE_DEBUG__?.face(id), slug);
   let previous: { x: number; y: number } | null = null;
+  let previousDist: number | null = null;
   let stable = 0;
   await expect.poll(async () => {
     const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
-    if (!point) return 0;
-    stable = previous && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.2 ? stable + 1 : 0;
+    const dist = await page.evaluate(() => window.__GUIDE_DEBUG__?.cameraDistance());
+    if (!point || dist == null) return 0;
+    // A flyTo's dolly keeps looking straight at the target throughout its
+    // whole transition, so the target's own 2D screen point can already
+    // read "stable" while the camera is still animating in on the radial
+    // axis -- both this point AND the camera's own distance from centre
+    // must hold steady for three consecutive polls, or a click can land
+    // mid-flight, at a distance the click-precision math downstream (pin
+    // visibility, hit-disc radius) never intended.
+    const pointStable = previous !== null && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.2;
+    const distStable = previousDist !== null && Math.abs(dist - previousDist) < 0.01;
+    stable = pointStable && distStable ? stable + 1 : 0;
     previous = point;
+    previousDist = dist;
     return stable;
-  }, { timeout: 30_000 }).toBeGreaterThanOrEqual(3);
-  if (!previous) throw new Error("guide marker has no screen point");
+  }, { timeout: 30_000, intervals: [50] }).toBeGreaterThanOrEqual(3);
+  // A settled *reading* isn't the same guarantee as a settled camera --
+  // CameraDirector's own direct (reducedMotion) position set is
+  // synchronous, but OrbitControls' per-frame update() (drei's own
+  // useFrame, damping-driven) runs on the NEXT rendered frame regardless,
+  // so give it one to land before trusting the point above.
+  await page.waitForTimeout(120);
   const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
   if (!point) throw new Error("guide marker has no screen point");
   await page.mouse.click(point.x, point.y);
