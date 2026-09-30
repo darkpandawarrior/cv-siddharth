@@ -9,7 +9,6 @@ import { PUNE } from "../../lib/sky.ts";
 import { latLonToXyz } from "./geoMath.ts";
 import { createSceneProbe } from "./sceneProbe.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
-import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
 import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
@@ -18,8 +17,9 @@ import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
 // LiveDots/LocalTraffic are toggleable layers like every other lazy layer
 // below (default-on, but gated the same way SkyLayer/SatelliteLayer already
-// are) — the eager Globe chunk only needs the always-on markers/reach
-// columns for first paint (task Z1 budget: they added ~6KB to the shell).
+// are) — the eager Globe chunk keeps the Earth and employer markers for
+// first paint; the reach columns load alongside the other marker layers.
+const ReachColumns = lazy(() => import("./ReachColumns.tsx").then((m) => ({ default: m.ReachColumns })));
 const LiveDots = lazy(() => import("./LiveDots.tsx").then((m) => ({ default: m.LiveDots })));
 const LocalTraffic = lazy(() => import("./LocalTraffic.tsx").then((m) => ({ default: m.LocalTraffic })));
 const EarthImagery = lazy(() => import("./layers/EarthImagery.tsx"));
@@ -434,7 +434,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         )}
         {layers.markers && (
           <>
-            <ReachColumns />
+            <Suspense fallback={null}><ReachColumns /></Suspense>
             <Markers occlude={[earthRef]} />
           </>
         )}
