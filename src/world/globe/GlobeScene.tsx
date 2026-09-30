@@ -378,7 +378,9 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
       {/* Test/tooling seam only - zero footprint, never painted. */}
       <div ref={probeRef} data-subsolar-probe aria-hidden style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }} />
       <Canvas
-        dpr={[1, tier === 3 ? 1 : 1.5]}
+        // Owner decision 2026-09-30: DPR 2 on tier 1 only (Retina-sharp on strong GPUs);
+        // tier 2 keeps 1.5 so mid-range laptops hold frame rate, tier 3 stays at 1.
+        dpr={[1, tier === 1 ? 2 : tier === 2 ? 1.5 : 1]}
         camera={{ position: [START.x * START_DISTANCE, START.y * START_DISTANCE, START.z * START_DISTANCE], fov: 42 }}
         gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
         style={{ position: "absolute", inset: 0 }}
