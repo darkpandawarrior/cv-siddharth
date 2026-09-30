@@ -134,7 +134,7 @@ test("the time scrubber moves the subsolar probe and shows the not-live notice",
   await expect(page.locator("[data-globe-not-live]")).toBeVisible();
   await expect.poll(async () => probe.getAttribute("data-subsolar-x")).not.toBe(before);
 
-  await page.getByRole("button", { name: "Now" }).click();
+  await page.getByRole("button", { name: "Now", exact: true }).click();
   await expect(page.locator("[data-globe-not-live]")).toHaveCount(0);
 });
 

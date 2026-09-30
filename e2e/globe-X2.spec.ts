@@ -26,6 +26,8 @@ function box(page: Page) {
   return page.getByRole("combobox", { name: "Search places or ask the globe" });
 }
 
+const options = (page: Page) => page.locator("[data-explore-bar]").getByRole("option");
+
 test("a deterministic command runs instantly, with no network call", async ({ page }) => {
   await openGlobe(page);
   let chatCalled = false;
@@ -33,7 +35,7 @@ test("a deterministic command runs instantly, with no network call", async ({ pa
 
   const input = box(page);
   await input.fill("show quakes above 5");
-  await expect(page.getByRole("option").first()).toContainText("Run:");
+  await expect(options(page).first()).toContainText("Run:");
   await input.press("Enter");
 
   const answer = page.locator("[data-onebox-answer]");
@@ -79,7 +81,7 @@ test("a mocked LLM answer narrates and applies its actions", async ({ page }) =>
 
   const input = box(page);
   await input.fill("what's happening with the earthquakes lately");
-  await expect(page.getByRole("option").first()).toContainText("Ask the globe");
+  await expect(options(page).first()).toContainText("Ask the globe");
   await input.press("Enter");
   await expect(page.locator("[data-onebox-thinking]")).toBeVisible();
 
@@ -115,7 +117,7 @@ test("LLM asks are rate limited to one per 3 seconds, and say why", async ({ pag
 
   await input.fill("what about the storms");
   await input.press("Enter");
-  await expect(page.locator('[role="status"]')).toContainText("limited to one question every 3 seconds");
+  await expect(page.locator('[data-explore-bar] [role="status"]')).toContainText("limited to one question every 3 seconds");
 });
 
 test("keyboard: / focuses the box, Esc clears it, and Cmd/Ctrl-K only steals focus from inside the globe", async ({ page }) => {

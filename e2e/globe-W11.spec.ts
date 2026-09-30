@@ -28,6 +28,7 @@ test("Paris search supports keyboard selection and populates the place inspector
   await search.fill("Pa"); await page.waitForTimeout(400); expect(requests).toBe(0);
   await search.fill("Paris"); await expect(page.getByRole("option")).toContainText("Paris");
   // The one-box command/ask row precedes the first place result.
+  await expect(page.getByRole("option", { name: /^Paris\b/ })).toBeVisible();
   await search.press("ArrowDown"); await search.press("ArrowDown");
   await expect(page.getByRole("option", { name: /^Paris\b/ })).toHaveAttribute("aria-selected", "true");
   await search.press("Enter");

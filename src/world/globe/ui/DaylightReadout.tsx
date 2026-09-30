@@ -125,13 +125,15 @@ export default function DaylightReadout() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label="Cities rising and setting right now"
         className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent"
       >
+        <span className="sr-only">Cities rising and setting right now: </span>
         <Sunrise size={13} aria-hidden />
         {rising.length}
+        <span className="sr-only"> rising, </span>
         <Sunset size={13} aria-hidden />
         {setting.length}
+        <span className="sr-only"> setting</span>
       </button>
       {open &&
         anchor &&

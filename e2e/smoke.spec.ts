@@ -1,5 +1,6 @@
 import { test, expect } from "./lib/test.ts";
 import { surfaces } from "../src/data/surfaces.ts";
+import { readFileSync } from "node:fs";
 
 /**
  * Four hand-listed routes used to be the whole of this file, so fifteen of the
@@ -95,6 +96,12 @@ const EXPECTED_404 = [
   "/api/aircraft",
   "/api/signals",
   "/api/tle",
+  // Registered in api/_lib/router.ts, but vite preview cannot serve these
+  // serverless handlers. Re-check /api/sun, /api/volcanoes and /api/wind
+  // after deployment and remove any entry whose production response is not 200.
+  "/api/sun",
+  "/api/volcanoes",
+  "/api/wind",
 ];
 const isExpected404 = (url: string) => EXPECTED_404.some((p) => url.includes(p));
 
@@ -102,7 +109,7 @@ for (const r of routes) {
   test(`${r.path} renders with no console errors`, async ({ page }) => {
     const errors: string[] = [];
     page.on("response", (resp) => {
-      if (resp.status() >= 400 && !isExpected404(resp.url())) {
+      if (resp.status() >= 400 && !(resp.status() === 404 && isExpected404(resp.url()))) {
         errors.push(`HTTP ${resp.status()} ${resp.url()}`);
       }
     });
@@ -121,6 +128,12 @@ for (const r of routes) {
       errors.push(m.text());
     });
     page.on("pageerror", (e) => errors.push(e.message));
+    if (r.path === "/globe") {
+      // The Launch Library free-tier quota is shared outside this test.
+      // Keep every error assertion and use the same committed feed as globe-L7.
+      const launches = readFileSync(new URL("./fixtures/hazards/launches.json", import.meta.url), "utf8");
+      await page.route("https://ll.thespacedevs.com/**", (route) => route.fulfill({ contentType: "application/json", body: launches }));
+    }
     await page.goto(r.path, { waitUntil: "networkidle" });
     // Derived from the registry: proves the route rendered its own identity,
     // not merely that something rendered.
