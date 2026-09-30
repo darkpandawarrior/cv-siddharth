@@ -197,18 +197,6 @@ export default function HoverReadout() {
     const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGates.current, "flood", fetchImpl => fetchFlood(point.lat, point.lon, fetchImpl));
     const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : floodEntry.failed ? "River feed unreachable · Open-Meteo" : "No river data here · Open-Meteo") : "River discharge: loading… · Open-Meteo";
 
-    if (settled.current.key !== cellKey) {
-      settled.current = { key: cellKey, since: now };
-      clearTimeout(settleTimer.current);
-      // A slow compositor can stop painting before the settle floor. Network
-      // readiness must not wait for another paint; the cell/cache guards still apply.
-      settleTimer.current = setTimeout(() => {
-        settleTimer.current = undefined;
-        if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-        tickRef.current();
-      }, HOVER_SETTLE_MS);
-    }
     let tide: string | null = globe.timeOffsetMin === 0 ? "Tides: loading… · NOAA (US coastal coverage)" : null;
     let cape: string | null = globe.timeOffsetMin === 0 ? "CAPE: loading… · Open-Meteo" : null;
     const simulated = simTime(globe.timeOffsetMin);
@@ -278,7 +266,19 @@ export default function HoverReadout() {
     const pick = surfacePicker(canvas, () => canvasState(canvas));
     const onMove = (point: (LatLon & { clientX: number; clientY: number }) | null) => {
       hoverPoint.current = point;
-      if (!point) clearTimeout(settleTimer.current);
+      const key = point ? hoverCellKey(point) : "";
+      if (settled.current.key !== key) {
+        settled.current = { key, since: Date.now() };
+        clearTimeout(settleTimer.current);
+        // Settling follows input, independently of paint. Leaving cancels;
+        // returning to the same cell re-arms even on a stalled compositor.
+        if (point) settleTimer.current = setTimeout(() => {
+          settleTimer.current = undefined;
+          if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+          tickRef.current();
+        }, HOVER_SETTLE_MS);
+      }
       scheduleFrame();
     };
     const detach = surfaceHover(canvas, pick, onMove);

@@ -131,6 +131,9 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
         expect(text).toContain("loading");
         expect(text).not.toMatch(/^No /);
       }
+      // Leaving cancels the settle timer; returning to the same cell must
+      // re-arm it even while paint remains withheld.
+      await page.evaluate(p => { window.__V4_HOVER__!.leave(); window.__V4_HOVER__!.move(p); }, point);
       await expect.poll(() => Object.keys(starts).length, { timeout: 2500 }).toBe(5);
       await page.evaluate(() => (window as FrameStallWindow).__Y3_RESUME_FRAMES__?.());
       release();
