@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { briefingFixtures } from "./fixtures/briefing/live.ts";
 async function setup(page: Page, down = false, url = "/globe", iss = false) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
+  await page.route("**/*", route => new URL(route.request().url()).hostname === "localhost" ? route.fallback() : route.fulfill({ status: 503, body: "Unavailable" }));
   await page.emulateMedia({ reducedMotion: "reduce" });
   // Keep scene time and fixture ages deterministic, as X6 does.
   const fixtureNow = new Date("2026-09-30T12:00:00Z");
@@ -109,8 +110,40 @@ test("all feeds down names every source with zero cards", async ({ page }) => {
   for (const source of ["USGS", "NASA EONET", "Smithsonian GVP", "NOAA SWPC", "CelesTrak ISS", "Launch Library 2"]) await expect(panel).toContainText(source);
   await expect(panel).toContainText("Latest request failed", { timeout: 30000 });
 });
+test("camera URL updates never start a route view transition", async ({ page }) => {
+  await page.addInitScript(() => {
+    let calls = 0;
+    Object.defineProperty(window, "__W11C_TRANSITIONS__", { get: () => calls });
+    const original = document.startViewTransition.bind(document);
+    document.startViewTransition = (...args: Parameters<typeof original>) => {
+      calls++;
+      return original(...args);
+    };
+  });
+  await setup(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const before = page.url();
+  const entry = await page.evaluate(() => history.state);
+  await expect.poll(() => page.url()).not.toBe(before);
+  expect(await page.evaluate(() => Reflect.get(window, "__W11C_TRANSITIONS__"))).toBe(0);
+  expect(await page.evaluate(() => history.state)).toEqual(entry);
+});
 test.describe("phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  test("tour keeps the phone controls reachable beside the briefing", async ({ page }) => {
+    await setup(page);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const layers = page.getByRole("button", { name: "Open the layers sheet" });
+    await layers.click();
+    await expect(page.locator("[data-globe-layer-sheet]")).toBeVisible();
+    await page.getByRole("button", { name: "Open the time sheet" }).click();
+    await expect(page.locator("[data-globe-time-sheet]")).toBeVisible();
+    await page.getByRole("button", { name: "Open the guided tour" }).click();
+    await expect(page.locator("[data-globe-tour-sheet]")).toBeVisible();
+    await layers.click();
+    await expect(page.locator("[data-globe-layer-sheet]")).toBeVisible();
+    await expect(page.locator("[data-globe-tour-sheet]")).toBeHidden();
+  });
   test("sheet, 44 px targets and real Satellites action", async ({ page }) => {
     // Load the share state before waiting for hydrated controls and feeds.
     await setup(page, false, "/globe?ly=hazards,markers,stars,wind,reach,guide,daylight");
