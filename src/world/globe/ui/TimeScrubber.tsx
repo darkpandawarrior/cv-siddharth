@@ -289,7 +289,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
         data-globe-time-scrubber
         className="pointer-events-auto hidden min-w-0 max-w-full sm:max-w-[calc(50vw-13.25rem)] flex-wrap items-center gap-2 rounded-2xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
       >
-        <span className="whitespace-nowrap">
+        <span className="min-w-0">
           {fmtCompact(now, "Asia/Kolkata")} IST · {fmtCompact(now, "UTC")} UTC
         </span>
         <span data-time-beyond-range={beyondRange || undefined} className="text-zinc-400">
