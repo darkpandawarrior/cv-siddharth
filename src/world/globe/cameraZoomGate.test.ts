@@ -122,3 +122,11 @@ it("a stalled frame cannot complete the zoom hold in one step", () => {
   expect(clampCameraFrameDelta(NaN)).toBe(0);
   expect(clampCameraFrameDelta(1 / 60)).toBe(1 / 60);
 });
+
+it("three fresh 150ms frames complete the hold while every dt remains clamped", () => {
+  let hold = 0;
+  for (let frame = 0; frame < 3; frame++) hold = stepZoomHold(hold, 9, 9, clampCameraFrameDelta(0.15), 0);
+  expect(hold).toBeCloseTo(450);
+  expect(hold).toBeGreaterThanOrEqual(ZOOM_HOLD_MS);
+  expect(MAX_CAMERA_FRAME_SEC * 1000).toBe(INTENT_STALE_MS);
+});

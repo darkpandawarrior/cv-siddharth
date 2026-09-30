@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /**
  * LANE X5 (wave 6): seamless zoom -> street level and back, plus the
@@ -63,36 +63,60 @@ async function openGlobe(page: Page, width = 1440) {
   return canvas;
 }
 
+async function zoomToFloor(page: Page, canvas: Locator, width: number) {
+  // Under suite load a fixed 150ms delay could read a pre-click frame,
+  // issue more zoom intent at the floor, then accidentally test a hold.
+  await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+  await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBeTruthy();
+  await expect.poll(() => canvas.getAttribute("data-camera-min-distance")).toBeTruthy();
+  const zoomInRole = page.getByRole("button", { name: "Zoom in" });
+  let atFloor = false;
+  for (let i = 0; i < 12 && !atFloor; i++) {
+    const before = Number(await canvas.getAttribute("data-camera-distance"));
+    const minimum = Number(await canvas.getAttribute("data-camera-min-distance"));
+    const target = Math.max(minimum, before / 1.35);
+    const box = await zoomInRole.boundingBox();
+    if (!box) throw new Error("zoom control has no bounding box");
+    if (width < 640) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    else {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.up();
+    }
+    await expect.poll(async () => ({
+      view: await canvas.getAttribute("data-camera-view"),
+      reached: Number(await canvas.getAttribute("data-camera-distance")) <= target + 0.05,
+    })).toEqual({ view: "orbit", reached: true });
+    atFloor = Number(await canvas.getAttribute("data-camera-distance")) <= minimum + 0.05;
+  }
+  expect(atFloor).toBe(true);
+}
+
 for (const width of [1440, 390, 360]) {
 test.describe(`seamless zoom into street level and back at ${width}px`, () => {
   test.use({ hasTouch: width < 640 });
+  if (width === 1440) {
   test("holding at the closest zoom for ~400ms opens street level", async ({ page }) => {
-    test.slow(); // real OrbitControls damping settle, not instant
+    test.slow();
     await seedIntroSeen(page);
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    const canvas = await openGlobe(page, width);
+    const canvas = await openGlobe(page);
     await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
-
-    await expect(canvas).toHaveAttribute("data-camera-flying", "false");
-    await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBeTruthy();
-    await expect.poll(() => canvas.getAttribute("data-camera-min-distance")).toBeTruthy();
-    const zoomInRole = page.getByRole("button", { name: "Zoom in" });
-    // Keep sending real input until the hand-off. Twelve fixed-delay clicks
-    // could end before enough rendered frames had registered fresh intent.
+    await zoomToFloor(page, canvas, width);
+    const box = (await canvas.boundingBox())!;
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.mouse.move(point.x, point.y);
+    expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
+    // Software GL can put pill taps more than 200ms apart, so intent goes
+    // stale. The old test passed from one oversized dt, not a sustained hold.
+    // Native wheel input stays fresh while the rendered camera remains clamped.
     await expect.poll(async () => {
       if (await canvas.getAttribute("data-camera-view") === "street") return "street";
-      const box = await zoomInRole.boundingBox();
-      if (!box) throw new Error("zoom control has no bounding box");
-      if (width < 640) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-      else {
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-        await page.mouse.up();
-      }
+      await page.mouse.wheel(0, -20);
       return canvas.getAttribute("data-camera-view");
-    }, { timeout: 8_000, intervals: [100] }).toBe("street");
+    }, { timeout: 8_000, intervals: [25] }).toBe("street");
     await expect(page.locator("[data-street-view]")).toBeVisible();
   });
+  }
 
   // LANE I2 (root cause fix): the product bug this covers -- resting AT the
   // floor with no further input used to keep accumulating toward the 400ms
@@ -108,32 +132,7 @@ test.describe(`seamless zoom into street level and back at ${width}px`, () => {
     const canvas = await openGlobe(page, width);
     await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
 
-    // Under suite load a fixed 150ms delay could read a pre-click frame,
-    // issue more zoom intent at the floor, then accidentally test a hold.
-    await expect(canvas).toHaveAttribute("data-camera-flying", "false");
-    await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBeTruthy();
-    await expect.poll(() => canvas.getAttribute("data-camera-min-distance")).toBeTruthy();
-    const zoomInRole = page.getByRole("button", { name: "Zoom in" });
-    let atFloor = false;
-    for (let i = 0; i < 12 && !atFloor; i++) {
-      const before = Number(await canvas.getAttribute("data-camera-distance"));
-      const minimum = Number(await canvas.getAttribute("data-camera-min-distance"));
-      const target = Math.max(minimum, before / 1.35);
-      const box = await zoomInRole.boundingBox();
-      if (!box) throw new Error("zoom control has no bounding box");
-      if (width < 640) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-      else {
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-        await page.mouse.up();
-      }
-      await expect.poll(async () => ({
-        view: await canvas.getAttribute("data-camera-view"),
-        reached: Number(await canvas.getAttribute("data-camera-distance")) <= target + 0.05,
-      })).toEqual({ view: "orbit", reached: true });
-      atFloor = Number(await canvas.getAttribute("data-camera-distance")) <= minimum + 0.05;
-    }
-    expect(atFloor).toBe(true);
+    await zoomToFloor(page, canvas, width);
 
     // Observe every rendered frame for two seconds without sending more input.
     await canvas.evaluate(el => new Promise<void>((resolve, reject) => {

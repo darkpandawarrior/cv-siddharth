@@ -99,14 +99,15 @@ function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number,
   if (existing) cache.delete(key);
   if (cache.has(`${key}#pending`) || !allowHoverFetch(gates, host, now)) return undefined;
   cache.set(`${key}#pending`, { data: null });
-  let observedAt: string | null = null;
+  let observedAt: string | null = null, requestFailed = false;
   const timedFetch: typeof fetch = async (...args) => {
-    const response = await fetch(...args);
+    const response = await fetch(...args).catch(error => { requestFailed = true; throw error; });
+    if (!response.ok) { requestFailed = true; throw new Error(`HTTP ${response.status}`); }
     try { observedAt = modelObservationTime(await response.clone().json()); } catch { /* Missing model period stays explicit. */ }
     return response;
   };
   fetcher(timedFetch)
-    .then((data) => cache.set(key, { data, at: Date.now(), observedAt }))
+    .then((data) => cache.set(key, { data, at: Date.now(), observedAt, failed: requestFailed }))
     .catch(() => cache.set(key, { data: null, at: Date.now(), failed: true }))
     .finally(() => cache.delete(`${key}#pending`));
   return undefined;
@@ -204,7 +205,7 @@ export default function HoverReadout() {
       else if (stations.current && !nearStation) tide = "No NOAA tide station within 50 km (US coastal coverage)";
       else if (nearStation) {
         const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGates.current, "tide", fetchImpl => fetchTide(nearStation.station.id, new Date(now), fetchImpl));
-        tide = entry?.failed ? "NOAA tide feed unreachable" : entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : entry ? "No tide data here · NOAA" : "Tides: loading… · NOAA";
+        tide = entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : entry?.failed ? "NOAA tide feed unreachable" : entry ? "No tide data here · NOAA" : "Tides: loading… · NOAA";
       }
       const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGates.current, "cape", fetchImpl => fetchCape(point.lat, point.lon, new Date(now), fetchImpl));
       cape = entry?.failed ? "CAPE feed unreachable · Open-Meteo" : entry ? entry.data ? capeLabel(entry.data) : "No current CAPE model reading · Open-Meteo" : "CAPE: loading… · Open-Meteo";

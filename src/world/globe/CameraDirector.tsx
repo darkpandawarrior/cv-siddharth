@@ -547,8 +547,6 @@ export default function CameraDirector({
         el.dataset.cameraMinDistance = minDistance.toFixed(3);
         const msSinceIntent = performance.now() - zoomIntentRef.current;
         zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt, msSinceIntent);
-        el.dataset.cameraZoomHold = zoomHoldRef.current.toFixed(0);
-        el.dataset.cameraIntentAge = msSinceIntent.toFixed(0);
         if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
           zoomHoldRef.current = 0;
           const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };

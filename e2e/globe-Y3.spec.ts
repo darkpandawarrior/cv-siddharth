@@ -124,3 +124,46 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
     } finally { release(); }
   });
 }
+
+for (const viewport of viewports.filter(v => v.width < 640)) {
+  test.describe(`native touch at ${viewport.width}px`, () => {
+    test.use({ hasTouch: true });
+    test("a canvas tap keeps the desktop hover chip hidden", async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await prepare(page);
+      await page.goto("/globe");
+      await waitForHydration(page);
+      const canvas = page.locator("[data-globe-root] canvas").first();
+      await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+      const probe = page.locator("[data-subsolar-probe]");
+      await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(0);
+      const box = (await canvas.boundingBox())!;
+      const x = box.x + Number(await probe.getAttribute("data-globe-x"));
+      const y = box.y + Number(await probe.getAttribute("data-globe-y")) + Number(await probe.getAttribute("data-globe-r")) * 0.7;
+      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, { x, y })).toBe("CANVAS");
+      await expect(page.locator("[data-hover-readout]")).toBeHidden();
+      await page.touchscreen.tap(x, y);
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+      await expect(page.locator("[data-hover-readout]")).toBeHidden();
+    });
+  });
+}
+
+for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
+  test(`HTTP failures stay distinct from no-data at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await prepare(page);
+    for (const host of ["marine-api.open-meteo.com", "air-quality-api.open-meteo.com", "flood-api.open-meteo.com", "api.open-meteo.com", "api.tidesandcurrents.noaa.gov"]) {
+      await page.route(`https://${host}/**`, r => r.fulfill({ status: 503, body: "Feed unavailable" }));
+    }
+    await page.route("https://api.tidesandcurrents.noaa.gov/mdapi/**", r => r.fulfill({ json: { stations: [{ id: "9414290", name: "San Francisco", lat: 37.8063, lng: -122.4659 }] } }));
+    await page.goto("/globe");
+    await waitForHydration(page);
+    await page.waitForFunction(() => !!window.__V4_HOVER__);
+    await page.evaluate(() => window.__V4_HOVER__!.move({ lat: 37.8063, lon: -122.4659 }));
+    for (const row of ["marine", "air-quality", "flood", "tide", "cape"]) {
+      await expect(page.locator(`[data-hover-${row}]`)).toContainText("unreachable");
+      await expect(page.locator(`[data-hover-${row}]`)).not.toContainText("No ");
+    }
+  });
+}
