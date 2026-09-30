@@ -1151,7 +1151,7 @@ export const mapsReviews: MapsReview[] = [
 
 export const mapsPhotos: MapsPhoto[] = [
   {
-    "src": "/globe/maps/bengaluru-1.webp",
+    "src": "/globe/maps/bengaluru-1.avif",
     "slug": "bengaluru",
     "city": "Bengaluru",
     "month": "2024-05",
@@ -1165,7 +1165,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/bhopal-1.webp",
+    "src": "/globe/maps/bhopal-1.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-10",
@@ -1179,7 +1179,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/bhopal-2.webp",
+    "src": "/globe/maps/bhopal-2.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-07",
@@ -1192,7 +1192,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 270
   },
   {
-    "src": "/globe/maps/bhopal-3.webp",
+    "src": "/globe/maps/bhopal-3.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-07",
@@ -1205,7 +1205,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-4.webp",
+    "src": "/globe/maps/bhopal-4.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-07",
@@ -1218,7 +1218,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-5.webp",
+    "src": "/globe/maps/bhopal-5.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-12",
@@ -1232,7 +1232,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-6.webp",
+    "src": "/globe/maps/bhopal-6.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-08",
@@ -1246,7 +1246,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-7.webp",
+    "src": "/globe/maps/bhopal-7.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2018-11",
@@ -1260,7 +1260,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-8.webp",
+    "src": "/globe/maps/bhopal-8.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-08",
@@ -1274,7 +1274,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/bhopal-9.webp",
+    "src": "/globe/maps/bhopal-9.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-08",
@@ -1288,7 +1288,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/chitradurga-1.webp",
+    "src": "/globe/maps/chitradurga-1.avif",
     "slug": "chitradurga",
     "city": "Chitradurga",
     "month": "2018-07",
@@ -1302,7 +1302,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/chitradurga-2.webp",
+    "src": "/globe/maps/chitradurga-2.avif",
     "slug": "chitradurga",
     "city": "Chitradurga",
     "month": "2018-07",
@@ -1316,7 +1316,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/chitradurga-3.webp",
+    "src": "/globe/maps/chitradurga-3.avif",
     "slug": "chitradurga",
     "city": "Chitradurga",
     "month": "2018-07",
@@ -1330,7 +1330,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/dahanu-1.webp",
+    "src": "/globe/maps/dahanu-1.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1344,7 +1344,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/dahanu-2.webp",
+    "src": "/globe/maps/dahanu-2.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1358,7 +1358,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/dahanu-3.webp",
+    "src": "/globe/maps/dahanu-3.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1372,7 +1372,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/dahanu-4.webp",
+    "src": "/globe/maps/dahanu-4.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1386,7 +1386,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/dahanu-5.webp",
+    "src": "/globe/maps/dahanu-5.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1400,7 +1400,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/dahanu-6.webp",
+    "src": "/globe/maps/dahanu-6.avif",
     "slug": "dahanu",
     "city": "Dahanu",
     "month": "2022-01",
@@ -1414,7 +1414,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/hubballi-1.webp",
+    "src": "/globe/maps/hubballi-1.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1427,7 +1427,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/hubballi-2.webp",
+    "src": "/globe/maps/hubballi-2.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1440,7 +1440,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/hubballi-3.webp",
+    "src": "/globe/maps/hubballi-3.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1453,7 +1453,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/hubballi-4.webp",
+    "src": "/globe/maps/hubballi-4.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1466,7 +1466,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/hubballi-5.webp",
+    "src": "/globe/maps/hubballi-5.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1479,7 +1479,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/hubballi-6.webp",
+    "src": "/globe/maps/hubballi-6.avif",
     "slug": "hubballi",
     "city": "Hubballi",
     "month": "2018-06",
@@ -1492,7 +1492,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kottayam-1.webp",
+    "src": "/globe/maps/kottayam-1.avif",
     "slug": "kottayam",
     "city": "Kottayam",
     "month": "2021-12",
@@ -1506,7 +1506,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kottayam-2.webp",
+    "src": "/globe/maps/kottayam-2.avif",
     "slug": "kottayam",
     "city": "Kottayam",
     "month": "2021-12",
@@ -1520,7 +1520,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-1.webp",
+    "src": "/globe/maps/kuwait-city-1.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1534,7 +1534,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-2.webp",
+    "src": "/globe/maps/kuwait-city-2.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1548,7 +1548,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-3.webp",
+    "src": "/globe/maps/kuwait-city-3.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1562,7 +1562,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-4.webp",
+    "src": "/globe/maps/kuwait-city-4.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1575,7 +1575,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-5.webp",
+    "src": "/globe/maps/kuwait-city-5.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1588,7 +1588,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-6.webp",
+    "src": "/globe/maps/kuwait-city-6.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1601,7 +1601,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-7.webp",
+    "src": "/globe/maps/kuwait-city-7.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1615,7 +1615,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-8.webp",
+    "src": "/globe/maps/kuwait-city-8.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1628,7 +1628,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-9.webp",
+    "src": "/globe/maps/kuwait-city-9.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1641,7 +1641,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-10.webp",
+    "src": "/globe/maps/kuwait-city-10.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1654,7 +1654,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-11.webp",
+    "src": "/globe/maps/kuwait-city-11.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1667,7 +1667,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-12.webp",
+    "src": "/globe/maps/kuwait-city-12.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1680,7 +1680,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-13.webp",
+    "src": "/globe/maps/kuwait-city-13.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1693,7 +1693,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-14.webp",
+    "src": "/globe/maps/kuwait-city-14.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1706,7 +1706,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-15.webp",
+    "src": "/globe/maps/kuwait-city-15.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1719,7 +1719,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-16.webp",
+    "src": "/globe/maps/kuwait-city-16.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1732,7 +1732,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-17.webp",
+    "src": "/globe/maps/kuwait-city-17.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1746,7 +1746,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-18.webp",
+    "src": "/globe/maps/kuwait-city-18.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1759,7 +1759,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-19.webp",
+    "src": "/globe/maps/kuwait-city-19.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1773,7 +1773,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-20.webp",
+    "src": "/globe/maps/kuwait-city-20.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1787,7 +1787,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-21.webp",
+    "src": "/globe/maps/kuwait-city-21.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1800,7 +1800,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-22.webp",
+    "src": "/globe/maps/kuwait-city-22.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1813,7 +1813,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-23.webp",
+    "src": "/globe/maps/kuwait-city-23.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1827,7 +1827,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-24.webp",
+    "src": "/globe/maps/kuwait-city-24.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-05",
@@ -1841,7 +1841,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-25.webp",
+    "src": "/globe/maps/kuwait-city-25.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-05",
@@ -1855,7 +1855,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-26.webp",
+    "src": "/globe/maps/kuwait-city-26.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1868,7 +1868,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/kuwait-city-27.webp",
+    "src": "/globe/maps/kuwait-city-27.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1882,7 +1882,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-28.webp",
+    "src": "/globe/maps/kuwait-city-28.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2018-06",
@@ -1896,7 +1896,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-29.webp",
+    "src": "/globe/maps/kuwait-city-29.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1910,7 +1910,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-30.webp",
+    "src": "/globe/maps/kuwait-city-30.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -1923,7 +1923,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 271
   },
   {
-    "src": "/globe/maps/kuwait-city-31.webp",
+    "src": "/globe/maps/kuwait-city-31.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1937,7 +1937,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-32.webp",
+    "src": "/globe/maps/kuwait-city-32.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1951,7 +1951,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-33.webp",
+    "src": "/globe/maps/kuwait-city-33.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1965,7 +1965,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-34.webp",
+    "src": "/globe/maps/kuwait-city-34.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1979,7 +1979,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-35.webp",
+    "src": "/globe/maps/kuwait-city-35.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-06",
@@ -1993,7 +1993,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-36.webp",
+    "src": "/globe/maps/kuwait-city-36.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -2006,7 +2006,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/kuwait-city-37.webp",
+    "src": "/globe/maps/kuwait-city-37.avif",
     "slug": "kuwait-city",
     "city": "Kuwait City",
     "month": "2017-07",
@@ -2019,7 +2019,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/mumbai-1.webp",
+    "src": "/globe/maps/mumbai-1.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2032,7 +2032,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-2.webp",
+    "src": "/globe/maps/mumbai-2.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2022-01",
@@ -2046,7 +2046,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-3.webp",
+    "src": "/globe/maps/mumbai-3.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2022-01",
@@ -2060,7 +2060,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-4.webp",
+    "src": "/globe/maps/mumbai-4.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2022-01",
@@ -2074,7 +2074,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-5.webp",
+    "src": "/globe/maps/mumbai-5.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2088,7 +2088,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-6.webp",
+    "src": "/globe/maps/mumbai-6.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2101,7 +2101,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-7.webp",
+    "src": "/globe/maps/mumbai-7.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2114,7 +2114,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-8.webp",
+    "src": "/globe/maps/mumbai-8.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2022-03",
@@ -2128,7 +2128,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-9.webp",
+    "src": "/globe/maps/mumbai-9.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2141,7 +2141,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-10.webp",
+    "src": "/globe/maps/mumbai-10.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2155,7 +2155,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-11.webp",
+    "src": "/globe/maps/mumbai-11.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2169,7 +2169,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-12.webp",
+    "src": "/globe/maps/mumbai-12.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2183,7 +2183,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/mumbai-13.webp",
+    "src": "/globe/maps/mumbai-13.avif",
     "slug": "mumbai",
     "city": "Mumbai",
     "month": "2019-06",
@@ -2197,7 +2197,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/murud-1.webp",
+    "src": "/globe/maps/murud-1.avif",
     "slug": "murud",
     "city": "Murud",
     "month": "2020-12",
@@ -2210,7 +2210,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/murud-2.webp",
+    "src": "/globe/maps/murud-2.avif",
     "slug": "murud",
     "city": "Murud",
     "month": "2020-12",
@@ -2223,7 +2223,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-1.webp",
+    "src": "/globe/maps/new-delhi-1.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2237,7 +2237,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/new-delhi-2.webp",
+    "src": "/globe/maps/new-delhi-2.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2250,7 +2250,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-3.webp",
+    "src": "/globe/maps/new-delhi-3.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2263,7 +2263,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-4.webp",
+    "src": "/globe/maps/new-delhi-4.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2276,7 +2276,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/new-delhi-5.webp",
+    "src": "/globe/maps/new-delhi-5.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2289,7 +2289,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-6.webp",
+    "src": "/globe/maps/new-delhi-6.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2302,7 +2302,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-7.webp",
+    "src": "/globe/maps/new-delhi-7.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2315,7 +2315,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-8.webp",
+    "src": "/globe/maps/new-delhi-8.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2328,7 +2328,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-9.webp",
+    "src": "/globe/maps/new-delhi-9.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2341,7 +2341,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-10.webp",
+    "src": "/globe/maps/new-delhi-10.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2355,7 +2355,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-11.webp",
+    "src": "/globe/maps/new-delhi-11.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2369,7 +2369,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-12.webp",
+    "src": "/globe/maps/new-delhi-12.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2382,7 +2382,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-13.webp",
+    "src": "/globe/maps/new-delhi-13.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2395,7 +2395,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-14.webp",
+    "src": "/globe/maps/new-delhi-14.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2408,7 +2408,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-15.webp",
+    "src": "/globe/maps/new-delhi-15.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2421,7 +2421,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-16.webp",
+    "src": "/globe/maps/new-delhi-16.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2434,7 +2434,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-17.webp",
+    "src": "/globe/maps/new-delhi-17.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2447,7 +2447,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-18.webp",
+    "src": "/globe/maps/new-delhi-18.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2460,7 +2460,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-19.webp",
+    "src": "/globe/maps/new-delhi-19.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2473,7 +2473,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-20.webp",
+    "src": "/globe/maps/new-delhi-20.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2486,7 +2486,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-1.webp",
+    "src": "/globe/maps/pune-1.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2500,7 +2500,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-2.webp",
+    "src": "/globe/maps/pune-2.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2514,7 +2514,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-3.webp",
+    "src": "/globe/maps/pune-3.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2528,7 +2528,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-4.webp",
+    "src": "/globe/maps/pune-4.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2542,7 +2542,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-5.webp",
+    "src": "/globe/maps/pune-5.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2571,7 +2571,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "unavailable": "Source still image could not be decoded"
   },
   {
-    "src": "/globe/maps/pune-7.webp",
+    "src": "/globe/maps/pune-7.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2585,7 +2585,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-8.webp",
+    "src": "/globe/maps/pune-8.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-05",
@@ -2599,7 +2599,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-9.webp",
+    "src": "/globe/maps/pune-9.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2612,7 +2612,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-10.webp",
+    "src": "/globe/maps/pune-10.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2626,7 +2626,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-11.webp",
+    "src": "/globe/maps/pune-11.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2640,7 +2640,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-12.webp",
+    "src": "/globe/maps/pune-12.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2654,7 +2654,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-13.webp",
+    "src": "/globe/maps/pune-13.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2668,7 +2668,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-14.webp",
+    "src": "/globe/maps/pune-14.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2682,7 +2682,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-15.webp",
+    "src": "/globe/maps/pune-15.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2696,7 +2696,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/pune-16.webp",
+    "src": "/globe/maps/pune-16.avif",
     "slug": "pune",
     "city": "Pune",
     "month": "2024-04",
@@ -2710,7 +2710,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/sanchi-1.webp",
+    "src": "/globe/maps/sanchi-1.avif",
     "slug": "sanchi",
     "city": "Sanchi",
     "month": "2018-01",
@@ -2724,7 +2724,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 270
   },
   {
-    "src": "/globe/maps/sanchi-2.webp",
+    "src": "/globe/maps/sanchi-2.avif",
     "slug": "sanchi",
     "city": "Sanchi",
     "month": "2018-01",
@@ -2738,7 +2738,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/sanchi-3.webp",
+    "src": "/globe/maps/sanchi-3.avif",
     "slug": "sanchi",
     "city": "Sanchi",
     "month": "2018-01",

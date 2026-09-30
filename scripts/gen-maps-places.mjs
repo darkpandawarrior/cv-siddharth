@@ -91,10 +91,13 @@ thumbnailPlans.sort((a, b) => a.slug.localeCompare(b.slug) || b.views - a.views 
 const counters = new Map(), encoded = [];
 for (const photo of thumbnailPlans) {
   const n = (counters.get(photo.slug) ?? 0) + 1; counters.set(photo.slug, n);
-  const file = `${photo.slug}-${n}.webp`;
+  const file = `${photo.slug}-${n}.avif`;
   const { input: _input, title: _title, ...record } = photo;
   let buffer;
-  try { buffer = await sharp(photo.input).rotate().resize(480, 480, { fit: "inside", withoutEnlargement: true }).webp({ quality: 70, effort: 6 }).toBuffer(); }
+  // AVIF quality 50 is visually indistinguishable from the WebP q70 it
+  // replaces (checked by eye against crops of the previously-shipped set)
+  // while running smaller: single delivered format, no duplicate derivative.
+  try { buffer = await sharp(photo.input).rotate().resize(480, 480, { fit: "inside", withoutEnlargement: true }).avif({ quality: 50, effort: 6 }).toBuffer(); }
   catch {
     photosUnavailable++;
     const metadata = await sharp(photo.input).metadata();
@@ -102,7 +105,7 @@ for (const photo of thumbnailPlans) {
     continue;
   }
   const metadata = await sharp(buffer).metadata();
-  if (metadata.exif || metadata.xmp || metadata.iptc || metadata.width > 480 || metadata.height > 480) throw new Error("Thumbnail privacy/size check failed");
+  if (metadata.exif || metadata.xmp || metadata.iptc || metadata.icc || metadata.width > 480 || metadata.height > 480) throw new Error("Thumbnail privacy/size check failed");
   mapsPhotos.push({ src: `/globe/maps/${file}`, ...record, w: metadata.width, h: metadata.height });
   encoded.push({ file, buffer });
 }
@@ -121,7 +124,7 @@ const declarations = [["mapsExport", mapsExport, ""], ["mapsTotals", mapsTotals,
 const out = resolve("public/globe/maps"); mkdirSync(out, { recursive: true });
 for (const { file, buffer } of encoded) writeFileSync(join(out, file), buffer);
 const produced = new Set(encoded.map((photo) => photo.file));
-for (const file of readdirSync(out)) if (file.endsWith(".webp") && !produced.has(file)) unlinkSync(join(out, file));
+for (const file of readdirSync(out)) if ((file.endsWith(".avif") || file.endsWith(".webp")) && !produced.has(file)) unlinkSync(join(out, file));
 writeFileSync(resolve("src/data/generated/mapsPlaces.ts"), `${banner}${interfaces}\n${declarations}\n`);
 console.log(`[maps-places] ${mapsTotals.reviews} reviews (${reviewsPlaced} placed, ${mapsReviews.length} published, ${reviewsPlaced - mapsReviews.length} residential), ${mapsTotals.photos} photo sidecars, ${mapsTotals.photoViews} views, ${mapsTotals.answers} automated answers, ${mapsTotals.qaAnswers} Q&A answers, ${mapsTotals.edits} edits, ${mapsTotals.dishes} dishes`);
 console.log(`[maps-places] ${mapsPlaces.length} cities, ${encoded.length} sanitized still thumbnails, ${photosUnavailable} unavailable still records, ${videosExcluded} geotagged videos excluded; metadata stripped on every thumbnail`);

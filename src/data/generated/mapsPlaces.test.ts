@@ -73,7 +73,7 @@ describe("mapsPlaces", () => {
 
   it("every photo's src matches the naming rule and the file exists under public/", () => {
     for (const photo of mapsPhotos.filter((photo) => !photo.unavailable)) {
-      expect(photo.src).toMatch(/^\/globe\/maps\/[a-z-]+-\d+\.webp$/);
+      expect(photo.src).toMatch(/^\/globe\/maps\/[a-z-]+-\d+\.avif$/);
       expect(existsSync(resolve("public", photo.src.slice(1))), photo.src).toBe(true);
     }
   });
@@ -84,6 +84,7 @@ describe("mapsPlaces", () => {
       expect(meta.exif, photo.src).toBeUndefined();
       expect(meta.xmp, photo.src).toBeUndefined();
       expect(meta.iptc, photo.src).toBeUndefined();
+      expect(meta.icc, photo.src).toBeUndefined();
       expect(meta.width).toBe(photo.w); expect(meta.height).toBe(photo.h);
       expect(photo.w).toBeLessThanOrEqual(480); expect(photo.h).toBeLessThanOrEqual(480);
     }
