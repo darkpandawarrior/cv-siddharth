@@ -9,6 +9,7 @@ const day = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { timeZone:
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function EventStrip({ onSelect }: { onSelect: () => void }) {
+  const [open, setOpen] = useState(false);
   const [snapshot, setSnapshot] = useState<HistorySnapshot | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [minimum, setMinimum] = useState(4.5);
@@ -29,10 +30,11 @@ export default function EventStrip({ onSelect }: { onSelect: () => void }) {
     setSelected(index);
     useGlobe.getState().setTimeOffset((bins[index].start - wallNow) / 60_000);
   };
-  return <details data-event-strip className="w-full min-w-0 basis-full rounded-xl border border-line bg-zinc-950 p-2 text-xs text-zinc-300" aria-label="USGS replay event density">
+  return <details data-event-strip onToggle={(event) => setOpen(event.currentTarget.open)} className="w-full min-w-0 basis-full rounded-xl border border-line bg-zinc-950 p-2 text-xs text-zinc-300" aria-label="USGS replay event density">
     <summary className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-lg ${focus}`}>
       <span className="text-sm font-semibold text-zinc-100">USGS quake history</span><span>{snapshot ? history ? "Explore bins ▾" : "Unavailable" : "Loading…"}</span>
     </summary>
+    {open && <>
     <div className="flex flex-wrap items-center justify-between gap-2">
       <h3 className="font-semibold text-zinc-100"><span className="font-normal text-zinc-300">{snapshot ? history ? `${total} loaded record${total === 1 ? "" : "s"}` : "unavailable" : "loading"}</span></h3>
       <label className="flex items-center gap-1">Min M
@@ -78,6 +80,6 @@ export default function EventStrip({ onSelect }: { onSelect: () => void }) {
         </ul>
       </div>}
     </>}
-
+    </>}
   </details>;
 }

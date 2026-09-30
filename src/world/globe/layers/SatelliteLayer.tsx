@@ -235,7 +235,7 @@ function StationMarker({ object, tier, drawGroundTrack }: { object: TleObject; t
             multi-hundred-px text (caught in this lane's own visual QA). A
             fixed CSS px size, like Markers.tsx's Pune card, reads the same
             small badge at every zoom level. */}
-        <Html center style={{ pointerEvents: "none" }}>
+        <Html center zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
           <div
             ref={labelRef}
             data-sat-label={object.norad}

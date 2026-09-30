@@ -99,6 +99,8 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     "https://eonet.gsfc.nasa.gov",
     "https://www.gdacs.org",
     "https://services.swpc.noaa.gov",
+    "https://api.tidesandcurrents.noaa.gov", // src/world/globe/layers/tides.ts fetches NOAA stations and tide readings.
+    "https://gibs.earthdata.nasa.gov", // src/world/globe/layers/TileLayer.tsx fetches WMTS tiles.
     "https://ll.thespacedevs.com",
     // /globe's street level (src/world/globe/ui/StreetView.tsx, streetPhotos.ts):
     // OpenFreeMap's keyless "liberty" style (style JSON, vector .pbf tiles,
