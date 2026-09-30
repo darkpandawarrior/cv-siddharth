@@ -6,9 +6,11 @@ import { GIBS_BASES, GIBS_OVERLAYS } from "../src/world/globe/layers/gibsCatalog
 
 // Source audit reproductions: F1 dormant picker, F2 clipped health, F3 generic
 // empty copy, F4 inactive contrast, F5 tiny hierarchy, F6 missing ticks, F8 hidden health.
+test.use({ serviceWorkers: 'block' });
+
 async function open(page: Page, failed = false, rows = false) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
-  await page.route("https://**", async (route) => {
+  await page.route(/^https:\/\//, async (route) => {
     if (rows && new URL(route.request().url()).hostname === "earthquake.usgs.gov") {
       return route.fulfill({ path: join(process.cwd(), "e2e/fixtures/hazards/quakes.json"), contentType: "application/json" });
     }
@@ -19,6 +21,7 @@ async function open(page: Page, failed = false, rows = false) {
     return route.abort();
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, body: "Unavailable" }));
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.goto("/globe");
   await waitForHydration(page);
   await expect(page.locator("[data-globe-root] canvas").first()).toBeVisible({ timeout: 30_000 });
@@ -35,7 +38,9 @@ function panel(page: Page) {
   return page.locator("[data-globe-layer-panel]:visible, [data-globe-layer-sheet]:visible");
 }
 async function layers(page: Page) {
-  if (!await panel(page).count()) await page.getByRole("button", { name: /Open.*layers/i }).click();
+  const expand = page.getByRole("button", { name: /Open.*layers/i });
+  await expect(panel(page).or(expand)).toBeVisible();
+  if (!await panel(page).count()) await expand.click();
   await expect(panel(page)).toBeVisible();
 }
 
@@ -102,6 +107,7 @@ test("F3 F8: aborted imagery and feed sources have honest visible failures", asy
   await panel(page).getByRole("tab", { name: "Layers" }).click();
   await panel(page).getByRole("button", { name: "Satellites", exact: true }).click();
   await panel(page).getByRole("tab", { name: "Live" }).click();
+  await panel(page).getByRole("button", { name: "Satellites", exact: true }).click();
   await expect(panel(page).locator("[data-feed-empty]")).toContainText("Layers off: Satellites");
   await shot(page, info, "desktop-live-layers-off");
   await panel(page).getByRole("button", { name: "Turn on layers" }).click();
