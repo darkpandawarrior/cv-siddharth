@@ -135,7 +135,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
             aria-pressed={xrayOn}
             aria-label={xrayOn ? "Turn off X-ray mode" : "Turn on X-ray mode"}
             data-xray-toggle
-            className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-xs font-bold text-zinc-300 hover:text-accent"
+            className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-xs font-bold text-zinc-300 hover:text-accent aria-pressed:text-accent aria-pressed:bg-white/10"
           >
             X
           </button>
@@ -158,7 +158,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           onClick={onToggleAutoRotate}
           aria-pressed={autoRotatePaused}
           aria-label={autoRotatePaused ? "Resume the globe's ambient rotation" : "Pause the globe's ambient rotation"}
-          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent"
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent aria-pressed:text-accent aria-pressed:bg-white/10"
         >
           {autoRotatePaused ? <Play size={16} /> : <Pause size={16} />}
         </button>
@@ -170,7 +170,7 @@ export function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotateP
           aria-pressed={markersHidden}
           aria-label={markersHidden ? "Show the Pune ring and reach columns" : "Hide the Pune ring and reach columns"}
           title={markersHidden ? "Show markers" : "Hide markers"}
-          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent"
+          className="ctrl-icon pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent aria-pressed:text-accent aria-pressed:bg-white/10"
         >
           {markersHidden ? <MapPinOff size={16} /> : <MapPin size={16} />}
         </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { debounce, distanceAndBearing, rateLimit } from "../exploreMath.ts";
 import { placeSelection, pointSelection, searchPlaces, type Place } from "../exploreApi.ts";
 import { canvasState, surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
@@ -16,13 +16,20 @@ import ExploreMeasure from "./exploreMeasure.tsx";
 
 declare global { interface Window { __W11_POINT__?: (point: LatLon) => void } }
 const typing = (target: EventTarget | null) => target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-const buttonClass = "min-h-9 whitespace-nowrap rounded-lg px-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent aria-pressed:bg-white/10";
+const buttonClass = "min-h-11 whitespace-nowrap rounded-lg px-2 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent aria-pressed:bg-white/10";
+
+const PHONE_QUERY = "(max-width: 639px)";
+const subscribePhone = (notify: () => void) => {
+  const media = window.matchMedia(PHONE_QUERY);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+};
 
 // LANE X2 ("ONE BOX"): a place-search result and the box's own leading
 // command/ask row share one keyboard-navigable list, so both live behind a
 // single discriminated type instead of two parallel index spaces.
 type TopRow = { kind: "surprise"; label: string } | { kind: "run"; label: string; actions: GlobeAction[] } | { kind: "ask"; text: string };
-type Row = TopRow | { kind: "place"; place: Place };
+type Row = TopRow | { kind: "example"; text: string } | { kind: "place"; place: Place };
 
 /** No network call, no store import: safe to run on every keystroke. */
 function classify(query: string): TopRow | null {
@@ -38,6 +45,8 @@ function classify(query: string): TopRow | null {
 export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const host = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [focused, setFocused] = useState(false);
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [active, setActive] = useState(-1);
@@ -53,7 +62,10 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const sheet = useGlobe(s => s.sheet);
 
   const topRow = useMemo(() => classify(query), [query]);
-  const rows: Row[] = useMemo(() => [...(topRow ? [topRow] : []), ...results.map((place): Row => ({ kind: "place", place }))], [topRow, results]);
+  const examples = phone && focused && !query && !answer;
+  const rows: Row[] = useMemo(() => examples
+    ? EXAMPLE_CHIPS.map((text): Row => ({ kind: "example", text }))
+    : [...(topRow ? [topRow] : []), ...results.map((place): Row => ({ kind: "place", place }))], [examples, topRow, results]);
 
   useEffect(() => {
     const root = host.current?.closest("[data-globe-root]");
@@ -91,6 +103,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
       if (event.key === "Escape") {
         scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
         askToken.current++;
+        setFocused(false);
         setQuery(""); setResults([]); setActive(-1); setMessage(""); setAsking(false); setAnswer(null);
         useExplore.getState().setMode(null);
       }
@@ -179,6 +192,12 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   };
 
   const runRow = (row: Row) => {
+    setFocused(false);
+    if (row.kind === "example") {
+      const command = classify(row.text);
+      if (command) runRow(command);
+      return;
+    }
     scheduler.current?.cancel(); searchAbort.current?.abort();
     if (row.kind === "surprise") { runSurprise(); return; }
     if (row.kind === "place") { choose(row.place); return; }
@@ -249,7 +268,9 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
       <div className="flex flex-wrap items-center gap-1">
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
-          placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-44px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
+          placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-48px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
+          onFocus={() => { setFocused(true); setActive(-1); }}
+          onBlur={() => { setFocused(false); setActive(-1); }}
           onChange={event => applyQuery(event.target.value)}
           onKeyDown={event => {
             if ((event.key === "ArrowDown" || event.key === "ArrowUp") && rows.length) {
@@ -261,14 +282,6 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
         {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
-      {/* ponytail: hidden below sm (the phone bottom-sheet breakpoint) - at
-          390px the gap between this box and the topbar's wrapped icon-button
-          row is already single digits of px (measured), and this row's own
-          height was enough to push into it and block the layers/time/tour
-          buttons (globe-U1.spec.ts's "phones open one sheet at a time"
-          caught it). Desktop has no such squeeze, so the chips stay there
-          unconditionally. Upgrade path: give phones the chips too once the
-          topbar/box vertical budget is re-measured and given real room. */}
       {!query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
         {EXAMPLE_CHIPS.map(chip => (
           <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
@@ -278,10 +291,11 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         ))}
       </div>}
       {rows.length > 0 && <ul id="explore-results" role="listbox" aria-label="Commands and places" className="max-h-52 overflow-y-auto border-t border-line py-1">
-        {rows.map((row, i) => <li key={row.kind === "place" ? `${row.place.lat}:${row.place.lon}:${i}` : row.kind} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
-          <button type="button" tabIndex={-1} onClick={() => runRow(row)} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent">
+        {rows.map((row, i) => <li key={row.kind === "place" ? `${row.place.lat}:${row.place.lon}:${i}` : `${row.kind}:${i}`} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
+          <button type="button" tabIndex={-1} onPointerDown={event => event.preventDefault()} onClick={() => runRow(row)} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent">
             {row.kind === "place"
               ? <><span className="block truncate">{row.place.name}</span><span className="block truncate text-zinc-400">{row.place.country} · {row.place.type}</span></>
+              : row.kind === "example" ? <span className="block truncate">{row.text}</span>
               : (row.kind === "run" || row.kind === "surprise")
                 ? <span className="block truncate">{row.label}</span>
                 : <><span className="block truncate">Ask the globe</span><span className="block truncate text-zinc-400">"{row.text}"</span></>}
