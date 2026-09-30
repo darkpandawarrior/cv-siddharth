@@ -3,16 +3,22 @@ import type { Page, Locator, TestInfo } from '@playwright/test';
 import { mkdir, copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+test.use({ serviceWorkers: 'block' });
+
 async function open(page: Page, url = '/globe') {
   await page.addInitScript(() => localStorage.setItem('cv-siddharth:globe-intro-seen', '1'));
   await page.clock.setFixedTime(new Date('2026-09-30T12:00:00Z'));
   await page.route(/^https:\/\//, route => route.abort());
   await page.route('**/api/**', route => route.fulfill({ status: 503, json: {} }));
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.goto(url);
   await waitForHydration(page);
   await expect(page.getByRole('combobox', { name: 'Search places or ask the globe' })).toBeVisible({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
-  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  // Shared URLs already carry the camera framing; setup must preserve it.
+  if (url === '/globe') {
+    await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+    await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  }
   const pause = page.getByRole('button', { name: "Pause the globe's ambient rotation", exact: true });
   if (await pause.isVisible()) await pause.click();
   const panel = page.getByRole('button', { name: 'Open the layers panel' });
@@ -138,7 +144,7 @@ test.describe('W11A touch', () => {
 });
 
 test('W11A tablet coarse targets and compact-row containment', async ({ browser }, info) => {
-  const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
+  const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true, serviceWorkers: 'block' });
   const page = await context.newPage();
   try {
     await open(page);
