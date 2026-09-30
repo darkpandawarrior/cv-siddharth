@@ -65,7 +65,9 @@ function Column({
         renderOrder={0}
         onClick={(e) => {
           e.stopPropagation();
-          onSelect();
+          void import("./useMarkerClick.ts").then(({ claimGuideClick }) => {
+            if (!claimGuideClick(e.nativeEvent)) onSelect();
+          });
         }}
         onPointerOver={(e) => {
           e.stopPropagation();

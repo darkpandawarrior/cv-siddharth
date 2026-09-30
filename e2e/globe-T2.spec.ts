@@ -9,6 +9,7 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
 const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
 const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
+const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
 const activityFixture = JSON.parse(readFileSync(join(FIXTURES, "activity.json"), "utf8"));
 
 const ALL_DAY_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
@@ -18,17 +19,8 @@ async function withApiFixtures(page: Page, activity: unknown) {
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
   await page.route("**/api/github-activity", (route) => route.fulfill({ json: activity }));
-  // PulseLayer's other two feeds (this lane never draws anything from
-  // them) — aborted so they settle into their own honest "failed" state
-  // instead of reaching a real network (G10). LocalTraffic is the same:
-  // this lane's fixture places a real aircraft (adsb.lol AIC864) within a
-  // few km of Pune, which the Time Machine's own local air-traffic cluster
-  // renders well above the surface -- close enough to camera, at Pune's own
-  // flown-to distance, to sit on the identical ray as the guide marker's
-  // click point and steal it. This spec never asserts on aircraft, so it
-  // aborts the feed rather than fulfilling a fixture it doesn't use, the
-  // same as ops/signals below.
-  await page.route("**/api/aircraft", (route) => route.abort());
+  // Keep the nearby aircraft present: curated markers must win on their ray.
+  await page.route("**/api/aircraft", route => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/ops", (route) => route.abort());
   await page.route("**/api/signals", (route) => route.abort());
 }
@@ -61,15 +53,15 @@ function readGuideDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __GUIDE_DEBUG__?: GuideDebug }).__GUIDE_DEBUG__);
 }
 
-async function openGlobe(page: Page, isoNow: string, mobile: boolean, activity: unknown = activityFixture) {
-  await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+async function openGlobe(page: Page, isoNow: string, width: number, activity: unknown = activityFixture) {
+  await page.setViewportSize({ width, height: width === 360 ? 740 : width === 390 ? 844 : 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("https://**", route => route.abort());
   await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
   await abortUnrelatedFeeds(page);
   await withApiFixtures(page, activity);
   await page.clock.setFixedTime(new Date(isoNow));
-  await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
+  await page.addInitScript(() => { window.__W11_TEST__ = true; localStorage.setItem("cv-siddharth:globe-intro-seen", "1"); });
   await page.goto("/globe");
   await waitForHydration(page);
   await expect(page.locator("[data-globe-root] canvas")).toBeVisible({ timeout: 30_000 });
@@ -83,6 +75,10 @@ async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
   if (mobile) await expect(selection).toHaveCount(0);
   else await selection.getByRole("button", { name: "Close", exact: true }).click();
   await page.evaluate((id) => window.__GUIDE_DEBUG__?.face(id), slug);
+  const canvas = page.locator("[data-globe-root] canvas");
+  await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
+  await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+  await expect(canvas).toHaveAttribute("data-camera-distance", slug.startsWith("review-") ? "9.500" : "14.000");
   let previous: { x: number; y: number } | null = null;
   let previousDist: number | null = null;
   let stable = 0;
@@ -94,7 +90,7 @@ async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
     if (!point || dist == null) return 0;
     // Hover can invalidate a reduced-motion demand frame. Exercise it
     // while settling, so its frame cannot move the target after this gate.
-    await page.mouse.move(point.x, point.y);
+    if (!mobile) await page.mouse.move(point.x, point.y);
     // A flyTo's dolly keeps looking straight at the target throughout its
     // whole transition, so the target's own 2D screen point can already
     // read "stable" while the camera is still animating in on the radial
@@ -111,8 +107,11 @@ async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
   }, { timeout: 30_000, intervals: [50] }).toBeGreaterThanOrEqual(3);
   const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
   if (!point) throw new Error("guide marker has no screen point");
-  await page.mouse.move(point.x, point.y);
-  await expect.poll(() => page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
+  if (!mobile) await page.mouse.move(point.x, point.y);
+  await expect.poll(() => page.evaluate(p => {
+    const hit = document.elementFromPoint(p.x, p.y);
+    return hit?.tagName === "CANVAS" ? "CANVAS" : hit?.outerHTML;
+  }, point)).toBe("CANVAS");
   if (mobile) await page.touchscreen.tap(point.x, point.y);
   else await page.mouse.click(point.x, point.y);
 }
@@ -124,11 +123,12 @@ const isolated = mapsReviews.filter((review) => review.text.length > 0).sort((a,
   const gap = (r: typeof a) => Math.min(...mapsReviews.filter((p) => p.id !== r.id).map((p) => Math.hypot(p.lat-r.lat, (p.lon-r.lon)*Math.cos(r.lat*Math.PI/180))));
   return gap(b)-gap(a);
 })[0];
-for (const mobile of [false, true]) {
-  test.describe(mobile ? "phone" : "desktop", () => {
+for (const width of [1440, 390, 360]) {
+  const mobile = width < 640;
+  test.describe(`${width}px`, () => {
     test.use({ hasTouch: mobile });
   test(`a genuine public review pin opens its rating, month and source (${mobile ? "phone" : "desktop"})`, async ({ page }) => {
-    await openGlobe(page, "2026-09-30T12:00:00+05:30", mobile);
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", width);
     await clickGuideMarker(page, isolated.id, mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toBeVisible();
@@ -141,8 +141,46 @@ for (const mobile of [false, true]) {
     await expect(inspector).toContainText(isolated.text);
   });
 
+  test("review-1 beats the Pune stack with nearby aircraft present", async ({ page }) => {
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", width);
+    await expect(page.locator("[data-aircraft-layer]")).toHaveAttribute("data-aircraft-count", String(aircraftFixture.aircraft.length));
+    await clickGuideMarker(page, "review-1", mobile);
+    const review = mapsReviews.find(review => review.id === "review-1")!;
+    const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
+    await expect(inspector).toContainText(review.name);
+    await expect(inspector).toContainText(`${review.rating} / 5`);
+    await expect(inspector).toContainText(`Google Maps review by Siddharth, ${review.month}`);
+  });
+
+  test("an aircraft away from curated markers still opens its card", async ({ page }) => {
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", width);
+    // A test-only airspace position, deliberately outside the guide radius.
+    // The original fixture remains present in the guide precedence cases.
+    const away = { ...aircraftFixture, aircraft: [{ ...aircraftFixture.aircraft[0], lat: 19.5, lon: 74.5, gsKt: 0 }] };
+    await page.route("**/api/aircraft", route => route.fulfill({ json: away }));
+    // Reload so the fixture is the initial signal, without waiting on polling.
+    await page.reload();
+    await waitForHydration(page);
+    await expect(page.locator("[data-aircraft-layer]")).toHaveAttribute("data-aircraft-count", "1");
+    const selection = page.getByRole("region", { name: "Selection details" });
+    if (!mobile) await selection.getByRole("button", { name: "Close", exact: true }).click();
+    await page.evaluate(cs => window.__G3_AIRCRAFT__!.face(cs), away.aircraft[0].cs);
+    const canvas = page.locator("[data-globe-root] canvas");
+    await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBe("9.500");
+    await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+    const point = await page.evaluate(cs => window.__G3_AIRCRAFT__!.screenPoint(cs), away.aircraft[0].cs);
+    if (!point) throw new Error("aircraft has no screen point");
+    await expect.poll(() => page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
+    if (mobile) await page.touchscreen.tap(point.x, point.y);
+    else await page.mouse.click(point.x, point.y);
+    const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
+    await expect(inspector).toContainText(away.aircraft[0].cs);
+    await expect(inspector).toContainText("adsb.lol");
+  });
+
   test(`city places and photo keyboard viewer (${mobile ? "phone" : "desktop"})`, async ({ page }, testInfo) => {
-    await openGlobe(page, "2026-09-30T12:00:00+05:30", mobile);
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", width);
+    await expect(page.locator("[data-aircraft-layer]")).toHaveAttribute("data-aircraft-count", String(aircraftFixture.aircraft.length));
     await clickGuideMarker(page, "pune", mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toContainText("Reviewed public places");

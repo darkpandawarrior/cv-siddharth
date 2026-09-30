@@ -88,15 +88,17 @@ test("hovering a landlocked point shows a graceful \"no marine data here\" state
   await expect(chip.locator("[data-hover-flood]")).toHaveText("No river data here · Open-Meteo", { timeout: 15000 });
 });
 
-test("moving across many cells fast still fires at most one Open-Meteo request per 1.5s", async ({ page }) => {
-  // Route callbacks run in Node after IPC delivery; measure at fetch fire time
-  // in the browser so scheduling delay cannot compress two request timestamps.
+test("moving across many cells rate limits each Open-Meteo host to one request per 1.5s", async ({ page }) => {
+  // Capture at browser fetch time: IPC delivery can compress Node timestamps.
+  // https://open-meteo.com/en/terms allows 600 calls/min. Four hover hosts
+  // at 1 request/1.5s each cap one visitor at 160/min before cell caching.
   await page.addInitScript(() => {
-    const times: number[] = [];
-    (window as unknown as { __s3RequestTimes: number[] }).__s3RequestTimes = times;
+    const times: { host: string; at: number }[] = [];
+    (window as unknown as { __s3RequestTimes: typeof times }).__s3RequestTimes = times;
     const originalFetch = window.fetch;
     window.fetch = (...args) => {
-      if (/^https:\/\/(marine|air-quality|flood)-api\.open-meteo\.com\//.test(String(args[0]))) times.push(performance.now());
+      const url = String(args[0]);
+      if (/^https:\/\/(marine|air-quality|flood)-api\.open-meteo\.com\//.test(url)) times.push({ host: new URL(url).host, at: performance.now() });
       return originalFetch(...args);
     };
   });
@@ -105,11 +107,8 @@ test("moving across many cells fast still fires at most one Open-Meteo request p
   await page.route("https://flood-api.open-meteo.com/**", (route) => route.fulfill({ json: FLOOD_READING }));
   await openGlobe(page);
 
-  // 8 distinct cells (2deg apart, past HOVER_CELL_DEG's 0.5deg rounding),
-  // revisited throughout a 5s window -- a naive per-move fetch would fire up
-  // to 24 requests (3 domains x 8 cells) almost instantly; the shared 1.5s
-  // gate caps the whole feature to about 3 requests over that window
-  // regardless of how many new cells the pointer crosses.
+  // Eight cells, each beyond the 0.5deg rounding boundary. Independent
+  // hosts can start together; each host still has its own 1.5s budget.
   const deadline = Date.now() + 5000;
   let i = 0;
   while (Date.now() < deadline) {
@@ -118,11 +117,13 @@ test("moving across many cells fast still fires at most one Open-Meteo request p
     await page.waitForTimeout(100);
   }
 
-  const requestTimes = await page.evaluate(() => (window as unknown as { __s3RequestTimes: number[] }).__s3RequestTimes);
+  const requestTimes = await page.evaluate(() => (window as unknown as { __s3RequestTimes: { host: string; at: number }[] }).__s3RequestTimes);
   expect(requestTimes.length).toBeGreaterThanOrEqual(2);
-  requestTimes.sort((a, b) => a - b);
-  for (let i = 1; i < requestTimes.length; i++) {
-    expect(requestTimes[i] - requestTimes[i - 1]).toBeGreaterThanOrEqual(1450); // 1500ms gate, 50ms slack for scheduling jitter
+  for (const host of new Set(requestTimes.map(request => request.host))) {
+    const times = requestTimes.filter(request => request.host === host).map(request => request.at).sort((a, b) => a - b);
+    for (let i = 1; i < times.length; i++) {
+      expect(times[i] - times[i - 1]).toBeGreaterThanOrEqual(1450);
+    }
   }
 });
 

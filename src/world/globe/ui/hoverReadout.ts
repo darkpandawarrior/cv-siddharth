@@ -38,3 +38,14 @@ export function windLabel(u: number, v: number): { speed: number; compass: strin
   const bearing = ((Math.atan2(u, v) * 180) / Math.PI + 360) % 360;
   return { speed, compass: COMPASS[Math.round(bearing / 45) % 8] };
 }
+
+export const HOVER_FETCH_GAP_MS = 1500;
+export type HoverFetchHost = "marine" | "airQuality" | "flood" | "tide" | "cape";
+
+/** Each name maps to a different origin. A fresh origin can start at t=0. */
+export function allowHoverFetch(gates: Map<HoverFetchHost, number>, host: HoverFetchHost, now: number): boolean {
+  const last = gates.get(host);
+  if (last !== undefined && now - last < HOVER_FETCH_GAP_MS) return false;
+  gates.set(host, now);
+  return true;
+}

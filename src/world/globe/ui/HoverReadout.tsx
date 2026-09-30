@@ -19,7 +19,7 @@ import { buildWindField, sampleWind, type WindField } from "../layers/windField.
 import type { WindResponse } from "../../../../api/_lib/wind-handler.ts";
 import PinnedReadoutPanel from "./pinnedReadoutPanel.tsx";
 import { modelObservationTime, utc, type PinnedValue } from "./pinnedReadout.ts";
-import { nearestQuakeWithin, windLabel } from "./hoverReadout.ts";
+import { allowHoverFetch, type HoverFetchHost, nearestQuakeWithin, windLabel } from "./hoverReadout.ts";
 
 /**
  * WAVE 7 LANE V4 (hover readout, Windy-picker pattern): on desktop pointer
@@ -82,21 +82,8 @@ interface Chip { x: number; y: number; readout: Readout }
 
 const _windSample = { u: 0, v: 0 };
 
-/**
- * LANE S3 (wave 9): marine/air-quality/flood, each its own Open-Meteo
- * subdomain (layers/marine.ts, airQuality.ts, flood.ts) -- unlike wind/quake
- * above, nothing else on `/globe` already polls these, so a hover chip that
- * fetched on every rAF tick would flood the API the moment the pointer swept
- * across the globe. `pollCell` below is this lane's own throttle: one cache
- * entry per ~55km rounded cell (repeat hovers over the same cell never
- * refetch) and one shared timestamp gate across all three domains capping
- * the whole feature to at most one new request per 1.5s, however fast the
- * pointer moves. `tick` already reruns every animation frame while hovering
- * (see its own comment below), so a fetch that misses the gate this frame
- * just gets picked up on a later one -- no separate scheduling needed.
- */
+// Per-cell caches share one rate gate per remote host.
 const HOVER_CELL_DEG = 0.5;
-const HOVER_FETCH_GAP_MS = 1500;
 
 function hoverCellKey(point: LatLon): string {
   return `${Math.round(point.lat / HOVER_CELL_DEG)}:${Math.round(point.lon / HOVER_CELL_DEG)}`;
@@ -104,28 +91,23 @@ function hoverCellKey(point: LatLon): string {
 
 interface CellEntry<T> { data: T | null; at?: number; observedAt?: string | null; failed?: boolean }
 
-/** Returns the cached entry for `key` once settled, `undefined` while still
- *  pending or not yet requested. A failed fetch is labelled failed for
- *  30 seconds, then retried. Successful cells expire after five minutes,
- *  so neither failure nor an empty response becomes permanent.
- *  `gateRef` is shared across all three domains (marine/airQuality/flood)
- *  by the caller, so the 1.5s cap is one budget for the whole feature, not
- *  one per domain. */
-function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number, gateRef: { current: number }, fetcher: (fetchImpl: typeof fetch) => Promise<T | null>): CellEntry<T> | undefined {
+/** Settled cells expire after five minutes, failed cells after 30 seconds.
+ * Undefined means waiting for a request or its result, never no data. */
+function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number, gates: Map<HoverFetchHost, number>, host: HoverFetchHost, fetcher: (fetchImpl: typeof fetch) => Promise<T | null>): CellEntry<T> | undefined {
   const existing = cache.get(key);
   if (existing && now - (existing.at ?? now) < (existing.failed ? 30000 : 300000)) return existing;
   if (existing) cache.delete(key);
-  if (cache.has(`${key}#pending`) || now - gateRef.current < HOVER_FETCH_GAP_MS) return undefined;
-  gateRef.current = now;
+  if (cache.has(`${key}#pending`) || !allowHoverFetch(gates, host, now)) return undefined;
   cache.set(`${key}#pending`, { data: null });
-  let observedAt: string | null = null;
+  let observedAt: string | null = null, requestFailed = false;
   const timedFetch: typeof fetch = async (...args) => {
-    const response = await fetch(...args);
+    const response = await fetch(...args).catch(error => { requestFailed = true; throw error; });
+    if (!response.ok) { requestFailed = true; throw new Error(`HTTP ${response.status}`); }
     try { observedAt = modelObservationTime(await response.clone().json()); } catch { /* Missing model period stays explicit. */ }
     return response;
   };
   fetcher(timedFetch)
-    .then((data) => cache.set(key, { data, at: Date.now(), observedAt }))
+    .then((data) => cache.set(key, { data, at: Date.now(), observedAt, failed: requestFailed }))
     .catch(() => cache.set(key, { data: null, at: Date.now(), failed: true }))
     .finally(() => cache.delete(`${key}#pending`));
   return undefined;
@@ -149,7 +131,7 @@ export default function HoverReadout() {
   const capeCache = useRef(new Map<string, CellEntry<CapeReading>>());
   const settled = useRef({ key: "", since: 0 });
   const meteorCache = useRef({ key: "", lines: [] as string[] });
-  const hoverFetchGate = useRef(0);
+  const hoverFetchGates = useRef(new Map<HoverFetchHost, number>());
   const lastChipRef = useRef<Chip | null>(null);
   // Kept current by the effect just below `tick`'s declaration, so the
   // self-rescheduling rAF chain inside `tick` always calls the CURRENT
@@ -204,34 +186,29 @@ export default function HoverReadout() {
     const nearest = nearestQuakeWithin(quakeCache.current.quakes, point);
     const quake = nearest ? `M${nearest.quake.mag.toFixed(1)} · ${Math.round(nearest.km)} km away` : null;
 
-    // LANE S3: marine wave/swell, air quality and flood discharge, each
-    // throttled and cached per rounded hover cell (see pollCell's own
-    // comment) -- "undefined" (still pending/never requested) and "cached
-    // but the feed itself returned nothing here" are both real, distinct
-    // outcomes: a row only appears once a fetch settles, and it says
-    // plainly when the point has no data rather than staying blank forever.
     const now = Date.now();
     const cellKey = hoverCellKey(point);
-    const marineEntry = pollCell(marineCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchMarine(point.lat, point.lon, fetchImpl));
-    const marine = marineEntry ? (marineEntry.data ? `${marineLabel(marineEntry.data)} · Open-Meteo` : "No marine data here · Open-Meteo") : null;
-    const airQualityEntry = pollCell(airQualityCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchAirQuality(point.lat, point.lon, fetchImpl));
-    const airQuality = airQualityEntry ? (airQualityEntry.data ? `${airQualityLabel(airQualityEntry.data)} · Open-Meteo` : "No air-quality data here · Open-Meteo") : null;
-    const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchFlood(point.lat, point.lon, fetchImpl));
-    const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : "No river data here · Open-Meteo") : null;
+    const marineEntry = pollCell(marineCache.current, cellKey, now, hoverFetchGates.current, "marine", fetchImpl => fetchMarine(point.lat, point.lon, fetchImpl));
+    const marine = marineEntry ? (marineEntry.data ? `${marineLabel(marineEntry.data)} · Open-Meteo` : marineEntry.failed ? "Marine feed unreachable · Open-Meteo" : "No marine data here · Open-Meteo") : "Marine: loading… · Open-Meteo";
+    const airQualityEntry = pollCell(airQualityCache.current, cellKey, now, hoverFetchGates.current, "airQuality", fetchImpl => fetchAirQuality(point.lat, point.lon, fetchImpl));
+    const airQuality = airQualityEntry ? (airQualityEntry.data ? `${airQualityLabel(airQualityEntry.data)} · Open-Meteo` : airQualityEntry.failed ? "Air quality feed unreachable · Open-Meteo" : "No air-quality data here · Open-Meteo") : "Air quality: loading… · Open-Meteo";
+    const floodEntry = pollCell(floodCache.current, cellKey, now, hoverFetchGates.current, "flood", fetchImpl => fetchFlood(point.lat, point.lon, fetchImpl));
+    const flood = floodEntry ? (floodEntry.data ? `${floodLabel(floodEntry.data)} · Open-Meteo` : floodEntry.failed ? "River feed unreachable · Open-Meteo" : "No river data here · Open-Meteo") : "River discharge: loading… · Open-Meteo";
 
     if (settled.current.key !== cellKey) settled.current = { key: cellKey, since: now };
-    let tide: string | null = null, cape: string | null = null;
+    let tide: string | null = globe.timeOffsetMin === 0 ? "Tides: loading… · NOAA (US coastal coverage)" : null;
+    let cape: string | null = globe.timeOffsetMin === 0 ? "CAPE: loading… · Open-Meteo" : null;
     const simulated = simTime(globe.timeOffsetMin);
     if (globe.timeOffsetMin === 0 && now - settled.current.since >= 600) {
       const nearStation = stations.current ? nearestStationWithin(stations.current, point) : null;
       if (stationsFailed.current) tide = "NOAA station index unreachable (US coastal coverage)";
       else if (stations.current && !nearStation) tide = "No NOAA tide station within 50 km (US coastal coverage)";
       else if (nearStation) {
-        const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGate, fetchImpl => fetchTide(nearStation.station.id, new Date(now), fetchImpl));
-        tide = entry?.failed ? "NOAA tide feed unreachable" : entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : null;
+        const entry = pollCell(tideCache.current, nearStation.station.id, now, hoverFetchGates.current, "tide", fetchImpl => fetchTide(nearStation.station.id, new Date(now), fetchImpl));
+        tide = entry?.data ? `${nearStation.station.name} (${nearStation.km.toFixed(0)} km): ${tideLabel(entry.data)}` : entry?.failed ? "NOAA tide feed unreachable" : entry ? "No tide data here · NOAA" : "Tides: loading… · NOAA";
       }
-      const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGate, fetchImpl => fetchCape(point.lat, point.lon, new Date(now), fetchImpl));
-      cape = entry?.failed ? "CAPE feed unreachable · Open-Meteo" : entry ? entry.data ? capeLabel(entry.data) : "No current CAPE model reading · Open-Meteo" : null;
+      const entry = pollCell(capeCache.current, cellKey, now, hoverFetchGates.current, "cape", fetchImpl => fetchCape(point.lat, point.lon, new Date(now), fetchImpl));
+      cape = entry?.failed ? "CAPE feed unreachable · Open-Meteo" : entry ? entry.data ? capeLabel(entry.data) : "No current CAPE model reading · Open-Meteo" : "CAPE: loading… · Open-Meteo";
     }
     // Horizon scans happen once per rounded cell and simulated minute,
     // never in the animation-frame loop itself.

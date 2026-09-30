@@ -16,7 +16,7 @@ import {
   type Vec3,
 } from "./cameraMath.ts";
 import { finishIntro, getIntroPhase, INTRO_DURATION_MS, introStartDirectionFromLatLon, subscribeIntro, type IntroPhase } from "./cameraIntro.ts";
-import { altitudeToStreetZoom, armStreetHandoff, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
+import { altitudeToStreetZoom, armStreetHandoff, clampCameraFrameDelta, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
 import { cameraForwardToBearingPitch } from "./cameraOrientation.ts";
 import { entityPositions, useGlobe, type Focus } from "./globeStore.ts";
 
@@ -482,7 +482,8 @@ export default function CameraDirector({
     prevZoomInTickRef.current = zoomInTick;
   }, [zoomInTick]);
 
-  useFrame((state, dt) => {
+  useFrame((state, rawDt) => {
+    const dt = clampCameraFrameDelta(rawDt);
     const { camera, gl } = state;
     const el = gl.domElement;
     if (focusOffsetY.current !== null && camera instanceof THREE.PerspectiveCamera && camera.view && camera.view.offsetY !== focusOffsetY.current) {

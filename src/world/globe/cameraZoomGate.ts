@@ -24,6 +24,12 @@ export const AT_MIN_EPSILON = 0.05;
 // a second.
 export const INTENT_STALE_MS = 200;
 
+// Preserve fresh-input frames up to the intent window without accepting a stall.
+export const MAX_CAMERA_FRAME_SEC = INTENT_STALE_MS / 1000;
+export function clampCameraFrameDelta(dtSec: number): number {
+  return Number.isFinite(dtSec) ? Math.max(0, Math.min(dtSec, MAX_CAMERA_FRAME_SEC)) : 0;
+}
+
 /**
  * One frame's worth of the zoom-hold state machine: `holdMs` grows only
  * while the camera sits within AT_MIN_EPSILON of `minDistance` AND fresh
