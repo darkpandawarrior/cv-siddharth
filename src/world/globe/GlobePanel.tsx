@@ -11,7 +11,8 @@ const STAMP_BY_ROW: Record<string, string | undefined> = {
   "reach-installs": storeGeneratedAt,
 };
 
-const NO_PRESENCE_ROW = <li data-globe-live>{liveDotsLabel({})}</li>;
+const PRESENCE_ROW_CLASS = "sm:flex sm:min-h-12 sm:items-center sm:pr-[392px]";
+const NO_PRESENCE_ROW = <li data-globe-live className={PRESENCE_ROW_CLASS}>{liveDotsLabel({})}</li>;
 
 /** The one piece of GlobePanel that needs a browser: `usePresenceGeo` calls
  *  `@playhtml/react`'s `usePresence`, which the import-protection plugin
@@ -21,7 +22,7 @@ const NO_PRESENCE_ROW = <li data-globe-live>{liveDotsLabel({})}</li>;
  *  around it. */
 function GlobeLiveRow() {
   const counts = usePresenceGeo();
-  return <li data-globe-live>{liveDotsLabel(counts)}</li>;
+  return <li data-globe-live className={PRESENCE_ROW_CLASS}>{liveDotsLabel(counts)}</li>;
 }
 
 /**
@@ -35,7 +36,7 @@ function GlobeLiveRow() {
  */
 export function GlobePanel() {
   return (
-    <div data-globe-panel className="pointer-events-auto">
+    <div data-globe-panel className="pointer-events-auto relative">
       <h2 className="sr-only">GLOBE - reach, in numbers</h2>
       <Suspense fallback={null}><SceneSummary /></Suspense>
       <ul className="space-y-2 font-mono text-sm text-zinc-300">
