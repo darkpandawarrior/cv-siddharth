@@ -3,11 +3,12 @@
 // physically right, at a distance compressed from reality (comment below)
 // so it reads as the Moon instead of vanishing as a point.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { moonPhase, moonPosition, moonTimes } from "../../../lib/moon.ts";
 import { latLonToXyz } from "../geoMath.ts";
 import { useGlobe } from "../globeStore.ts";
+import { useMarkerClick } from "../useMarkerClick.ts";
 import { substellarLatLon } from "./skyMath.ts";
 import { moonDistanceKm } from "./skyMoonMath.ts";
 import { moonPhaseLabel } from "./skyMoonText.ts";
@@ -53,6 +54,7 @@ export function SkyMoon({ now }: { now: Date }) {
   const [map, setMap] = useState<THREE.Texture | null>(null);
   const [hovered, setHovered] = useState(false);
   const select = useGlobe((s) => s.select);
+  const markerClick = useMarkerClick(true);
   const probeRef = useRef<HTMLSpanElement | null>(null);
 
   // Test seam only (this lane's brief): a plain DOM node, created and
@@ -132,26 +134,28 @@ export function SkyMoon({ now }: { now: Date }) {
     el.dataset.moonY = String(Math.round((-scratch.y * 0.5 + 0.5) * state.size.height));
   });
 
-  function handleClick(e: { stopPropagation: () => void }) {
+  function handleClick(e: ThreeEvent<MouseEvent>) {
     e.stopPropagation();
-    const phase = moonPhase(now);
-    const times = moonTimes(now);
-    select({
-      id: "moon",
-      kind: "moon",
-      title: "The Moon",
-      rows: [
-        { label: "Phase", value: moonPhaseLabel(phase) },
-        { label: "Illumination", value: `${Math.round(phase.fraction * 100)}%` },
-        { label: "True distance", value: `${Math.round(moonDistanceKm(now)).toLocaleString("en-IN")} km` },
-        { label: "Rises / sets (Pune)", value: `${istClock(times.rise)} / ${istClock(times.set)}` },
-      ],
-      // Computed for the shown instant (Meeus series, not a fetch) -
-      // `live: false` because it never goes stale on a feed outage the way
-      // a fetched reading could, but it also isn't a live poll: it is
-      // whatever `now` (the real clock, or the time scrubber) currently is.
-      source: "computed (Meeus series via src/lib/moon.ts)",
-      live: false,
+    markerClick(e.nativeEvent, () => {
+      const phase = moonPhase(now);
+      const times = moonTimes(now);
+      select({
+        id: "moon",
+        kind: "moon",
+        title: "The Moon",
+        rows: [
+          { label: "Phase", value: moonPhaseLabel(phase) },
+          { label: "Illumination", value: `${Math.round(phase.fraction * 100)}%` },
+          { label: "True distance", value: `${Math.round(moonDistanceKm(now)).toLocaleString("en-IN")} km` },
+          { label: "Rises / sets (Pune)", value: `${istClock(times.rise)} / ${istClock(times.set)}` },
+        ],
+        // Computed for the shown instant (Meeus series, not a fetch) -
+        // `live: false` because it never goes stale on a feed outage the way
+        // a fetched reading could, but it also isn't a live poll: it is
+        // whatever `now` (the real clock, or the time scrubber) currently is.
+        source: "computed (Meeus series via src/lib/moon.ts)",
+        live: false,
+      });
     });
   }
 

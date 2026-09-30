@@ -3,6 +3,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
+type FrameStallWindow = Window & { __Y3_RESUME_FRAMES__?: () => void };
 const dem = readFileSync(new URL("./fixtures/street/terrarium-tile.png", import.meta.url));
 const viewports = [{ width: 1440, height: 900 }, { width: 390, height: 844 }, { width: 360, height: 740 }];
 
@@ -101,7 +102,27 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
       await waitForHydration(page);
       await page.waitForFunction(() => !!window.__V4_HOVER__);
       const began = Date.now();
-      await page.evaluate(p => window.__V4_HOVER__!.move(p), point);
+      await page.evaluate(p => {
+        const frames = new Map<number, FrameRequestCallback>();
+        const raf = window.requestAnimationFrame.bind(window), cancel = window.cancelAnimationFrame.bind(window);
+        let id = -1;
+        // Withhold paint after the initial pending rows. Settling data must
+        // still start on a slow compositor without another animation frame.
+        window.requestAnimationFrame = callback => {
+          if (!document.querySelector("[data-hover-cape]")) return raf(callback);
+          frames.set(--id, callback);
+          return id;
+        };
+        window.cancelAnimationFrame = handle => { if (!frames.delete(handle)) cancel(handle); };
+        (window as FrameStallWindow).__Y3_RESUME_FRAMES__ = () => {
+          window.requestAnimationFrame = raf;
+          window.cancelAnimationFrame = cancel;
+          frames.forEach(callback => raf(callback));
+          frames.clear();
+          delete (window as FrameStallWindow).__Y3_RESUME_FRAMES__;
+        };
+        window.__V4_HOVER__!.move(p);
+      }, point);
       const rows = page.locator("[data-hover-marine], [data-hover-air-quality], [data-hover-flood], [data-hover-tide], [data-hover-cape]");
       await expect(rows).toHaveCount(5, { timeout: 2500 });
       const rowMs = Date.now() - began;
@@ -110,7 +131,11 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
         expect(text).toContain("loading");
         expect(text).not.toMatch(/^No /);
       }
+      // Leaving cancels the settle timer; returning to the same cell must
+      // re-arm it even while paint remains withheld.
+      await page.evaluate(p => { window.__V4_HOVER__!.leave(); window.__V4_HOVER__!.move(p); }, point);
       await expect.poll(() => Object.keys(starts).length, { timeout: 2500 }).toBe(5);
+      await page.evaluate(() => (window as FrameStallWindow).__Y3_RESUME_FRAMES__?.());
       release();
       await expect(page.locator("[data-hover-air-quality]")).toContainText("No air-quality data here");
       await expect(page.locator("[data-hover-marine]")).toContainText("No marine data here");
@@ -121,7 +146,10 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
       const path = testInfo.outputPath("hover-timings.json");
       writeFileSync(path, JSON.stringify(timings));
       await testInfo.attach("hover-timings", { path, contentType: "application/json" });
-    } finally { release(); }
+    } finally {
+      await page.evaluate(() => (window as FrameStallWindow).__Y3_RESUME_FRAMES__?.());
+      release();
+    }
   });
 }
 
@@ -181,5 +209,61 @@ for (const viewport of [...viewports, { width: 1024, height: 768 }]) {
       await expect(page.locator(`[data-hover-${row}]`)).toContainText("unreachable");
       await expect(page.locator(`[data-hover-${row}]`)).not.toContainText("No ");
     }
+  });
+}
+
+for (const viewport of viewports.filter(v => v.width < 640)) {
+  test.describe(`scene picks at ${viewport.width}px`, () => {
+    test.use({ hasTouch: true });
+    test("the biggest app column remains tappable", async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await prepare(page);
+      await page.clock.setFixedTime(new Date("2026-09-28T10:30:00Z"));
+      await page.route("**/api/signals", r => r.fulfill({ json: { ...fixture("live/signals.json"), ci: undefined } }));
+      await page.goto("/globe");
+      await waitForHydration(page);
+      const canvas = page.locator("[data-globe-root] canvas");
+      await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+      const point = await canvas.evaluate(async el => {
+        const read = () => (window as unknown as { __REACH_DEBUG__?: { appProbeX: number; appProbeY: number } }).__REACH_DEBUG__;
+        for (let frame = 0; frame < 3; frame++) await new Promise(resolve => requestAnimationFrame(resolve));
+        const box = el.getBoundingClientRect(), p = read();
+        if (!p || !Number.isFinite(p.appProbeX) || !Number.isFinite(p.appProbeY)) throw new Error("App projection is not ready");
+        return { x: box.x + p.appProbeX, y: box.y + p.appProbeY };
+      });
+      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
+      await page.touchscreen.tap(point.x, point.y);
+      await expect(page.locator("[data-globe-inspector] h2")).toHaveText("SmartBike");
+    });
+
+    test("a Moon single tap selects it and a double tap zooms without a card", async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await prepare(page);
+      await page.clock.setFixedTime(new Date("2026-09-30T22:30:00Z"));
+      await page.goto("/globe");
+      await waitForHydration(page);
+      const canvas = page.locator("[data-globe-root] canvas");
+      await expect(canvas).toHaveAttribute("data-camera-flying", "false");
+      const moon = page.locator("[data-moon-probe]");
+      await expect(moon).toHaveAttribute("data-moon-x", /^-?\d+$/);
+      const point = () => canvas.evaluate(el => {
+        const box = el.getBoundingClientRect(), moon = document.querySelector("[data-moon-probe]")!;
+        return { x: box.x + Math.max(8, Math.min(box.width - 8, Number(moon.getAttribute("data-moon-x")))), y: box.y + Math.max(8, Math.min(box.height - 8, Number(moon.getAttribute("data-moon-y")))) };
+      });
+      let p = await point();
+      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, p)).toBe("CANVAS");
+      await page.touchscreen.tap(p.x, p.y);
+      const selection = page.getByRole("region", { name: "Selection details" });
+      await expect(selection.locator("h2")).toHaveText("The Moon");
+      await selection.getByRole("button", { name: "Close", exact: true }).click();
+      const probe = page.locator("[data-subsolar-probe]");
+      const before = Number(await probe.getAttribute("data-globe-r"));
+      p = await point();
+      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, p)).toBe("CANVAS");
+      await page.touchscreen.tap(p.x, p.y);
+      await page.touchscreen.tap(p.x, p.y);
+      await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(before * 1.1);
+      await expect(selection).toBeHidden();
+    });
   });
 }
