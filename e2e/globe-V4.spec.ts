@@ -49,6 +49,15 @@ async function openGlobe(page: Page) {
   await page.route("https://earthquake.usgs.gov/**", (route) => route.fulfill({ json: { type: "FeatureCollection", features: [NEAR_QUAKE, FAR_QUAKE] } }));
   await page.route("https://gibs.earthdata.nasa.gov/wms/**", (route) => route.fulfill({ contentType: "image/jpeg", body: GIBS_DAY_JPG }));
   await page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route) => route.fulfill({ contentType: "image/jpeg", body: GIBS_TILE_JPG }));
+  // LANE P10C settled-hover fetches (HoverReadout.tsx's tide/CAPE rows):
+  // neither host matches the `**/api/**` catch-all above (they are external
+  // NOAA/Open-Meteo hosts, not this app's own /api/ routes), so without
+  // these two mocks a slow settled hover in CI would reach the real internet.
+  await page.route("https://api.tidesandcurrents.noaa.gov/**", (route) => route.fulfill({ json: { stations: [] } }));
+  await page.route("https://api.open-meteo.com/**", (route) => {
+    const at = new Date(NOW.getTime() - 30 * 60 * 1000).toISOString().slice(0, 16);
+    return route.fulfill({ json: { hourly: { time: [at], cape: [500] } } });
+  });
   await page.goto("/globe");
   await waitForHydration(page);
   const canvas = page.locator("[data-globe-root] canvas").first();
@@ -104,6 +113,7 @@ const MOUNT_TIME_NOISE = [
   /^https:\/\/services\.swpc\.noaa\.gov\//,
   /^https:\/\/ll\.thespacedevs\.com\//,
   /^https:\/\/gibs\.earthdata\.nasa\.gov\//, // base-imagery WMS/WMTS, mocked above -- EarthImagery/TileLayer's own mount cost, not HoverReadout's
+  /^https:\/\/api\.tidesandcurrents\.noaa\.gov\/mdapi\//, // HoverReadout's loadStations(): one mount-time singleton fetch, not per-hover
 ];
 
 test("50 pointer moves over the globe trigger zero network requests", async ({ page }) => {
@@ -146,4 +156,40 @@ test("the chip hides while dragging (the button-held guard), then reappears on r
   // Guard restored: a fresh hover (not a drag) shows the chip again.
   await page.evaluate((p) => window.__V4_HOVER__!.move(p), MUMBAI);
   await expect(chip).toBeVisible();
+});
+
+// LANE P10C widened the "zero requests" contract above: it added
+// settled-hover fetches (tide/CAPE, HoverReadout.tsx's own comment) on top
+// of the always-zero wind/quake reads. The real contract is now two-sided:
+// a MOVING pointer never fetches (asserted above and again here, with real
+// mouse moves rather than the synthetic seam so surfaceHover's own path is
+// exercised), and a SETTLED pointer fetches at most once per cell inside
+// its cache window, never once per animation-frame tick even though `tick`
+// keeps re-scheduling itself every frame while hovering (its own comment).
+test("a settled hover fetches CAPE once; a moving hover fetches nothing", async ({ page }) => {
+  await openGlobe(page);
+  const capeRequests: string[] = [];
+  page.on("request", (req) => { if (/^https:\/\/api\.open-meteo\.com\//.test(req.url())) capeRequests.push(req.url()); });
+
+  // Real, continuously moving pointer: every step lands in a different
+  // 0.5deg cell (hoverCellKey), so `settled.since` keeps resetting and the
+  // 600ms settle floor is never reached.
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("globe canvas has no bounding box");
+  for (let i = 0; i < 10; i++) {
+    await page.mouse.move(box.x + box.width / 2 + i * 15, box.y + box.height / 2 - 40);
+  }
+  expect(capeRequests, "moving the pointer must never itself trigger a CAPE request").toEqual([]);
+
+  // Settle on one cell past the 600ms floor: exactly one CAPE request.
+  await page.evaluate((p) => window.__V4_HOVER__!.move(p), MUMBAI);
+  await page.waitForTimeout(900);
+  expect(capeRequests.length, "a settled hover should fetch CAPE exactly once").toBe(1);
+
+  // Stay settled well past the 1.5s cross-domain gate: the per-cell cache,
+  // not the gate, is what keeps this at one -- a naive "refetch every gate
+  // window" bug would show up here as a second request.
+  await page.waitForTimeout(1700);
+  expect(capeRequests.length, "the same settled cell must not refetch inside its cache window").toBe(1);
 });
