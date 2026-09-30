@@ -14,13 +14,13 @@ const activityFixture = JSON.parse(readFileSync(join(FIXTURES, "activity.json"),
 
 const ALL_DAY_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 
-async function withApiFixtures(page: Page, activity: unknown) {
+async function withApiFixtures(page: Page, activity: unknown, aircraft: unknown) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
   await page.route("**/api/github-activity", (route) => route.fulfill({ json: activity }));
   // Keep the nearby aircraft present: curated markers must win on their ray.
-  await page.route("**/api/aircraft", route => route.fulfill({ json: aircraftFixture }));
+  await page.route("**/api/aircraft", async route => route.fulfill({ json: await aircraft }));
   await page.route("**/api/ops", (route) => route.abort());
   await page.route("**/api/signals", (route) => route.abort());
 }
@@ -53,13 +53,13 @@ function readGuideDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __GUIDE_DEBUG__?: GuideDebug }).__GUIDE_DEBUG__);
 }
 
-async function openGlobe(page: Page, isoNow: string, width: number, activity: unknown = activityFixture) {
+async function openGlobe(page: Page, isoNow: string, width: number, activity: unknown = activityFixture, aircraft: unknown = aircraftFixture) {
   await page.setViewportSize({ width, height: width === 360 ? 740 : width === 390 ? 844 : 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("https://**", route => route.abort());
   await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
   await abortUnrelatedFeeds(page);
-  await withApiFixtures(page, activity);
+  await withApiFixtures(page, activity, aircraft);
   await page.clock.setFixedTime(new Date(isoNow));
   await page.addInitScript(() => { window.__W11_TEST__ = true; localStorage.setItem("cv-siddharth:globe-intro-seen", "1"); });
   await page.goto("/globe");
@@ -152,15 +152,19 @@ for (const width of [1440, 390, 360]) {
     await expect(inspector).toContainText(`Google Maps review by Siddharth, ${review.month}`);
   });
 
-  test("an aircraft away from curated markers still opens its card", async ({ page }) => {
-    await openGlobe(page, "2026-09-30T12:00:00+05:30", width);
+  test("an aircraft away from curated markers still opens its card", async ({ page }, testInfo) => {
     // A test-only airspace position, deliberately outside the guide radius.
     // The original fixture remains present in the guide precedence cases.
     const away = { ...aircraftFixture, aircraft: [{ ...aircraftFixture.aircraft[0], lat: 19.5, lon: 74.5, gsKt: 0 }] };
-    await page.route("**/api/aircraft", route => route.fulfill({ json: away }));
-    // Reload so the fixture is the initial signal, without waiting on polling.
-    await page.reload();
-    await waitForHydration(page);
+    let releaseAircraft = () => {};
+    const pendingAircraft = new Promise(resolve => { releaseAircraft = () => resolve(away); });
+    try {
+      await openGlobe(page, "2026-09-30T12:00:00+05:30", width, activityFixture, pendingAircraft);
+      await page.waitForFunction(() => !!window.__G3_AIRCRAFT__);
+      await expect(page.locator("[data-aircraft-layer]")).toHaveAttribute("data-aircraft-count", "0");
+      // Render the empty mesh before filling it: its raycast bounds must recover.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+    } finally { releaseAircraft(); }
     await expect(page.locator("[data-aircraft-layer]")).toHaveAttribute("data-aircraft-count", "1");
     const selection = page.getByRole("region", { name: "Selection details" });
     if (!mobile) await selection.getByRole("button", { name: "Close", exact: true }).click();
@@ -168,8 +172,21 @@ for (const width of [1440, 390, 360]) {
     const canvas = page.locator("[data-globe-root] canvas");
     await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBe("9.500");
     await expect(canvas).toHaveAttribute("data-camera-flying", "false");
-    const point = await page.evaluate(cs => window.__G3_AIRCRAFT__!.screenPoint(cs), away.aircraft[0].cs);
+    let point = await page.evaluate(cs => window.__G3_AIRCRAFT__!.screenPoint(cs), away.aircraft[0].cs);
+    const beforeHover = point;
+    let stable = 0;
+    // Hover can wake a demand frame and change the camera projection.
+    // Settle that interaction before projecting the small chevron for its click.
+    await expect.poll(async () => {
+      if (point && !mobile) await page.mouse.move(point.x, point.y);
+      const next = await page.evaluate(cs => window.__G3_AIRCRAFT__!.screenPoint(cs), away.aircraft[0].cs);
+      stable = point && next && Math.hypot(next.x - point.x, next.y - point.y) < 0.2 ? stable + 1 : 0;
+      point = next;
+      return stable;
+    }, { intervals: [50] }).toBeGreaterThanOrEqual(3);
+    point = await page.evaluate(cs => window.__G3_AIRCRAFT__!.screenPoint(cs), away.aircraft[0].cs);
     if (!point) throw new Error("aircraft has no screen point");
+    await testInfo.attach("aircraft-projection", { body: JSON.stringify({ beforeHover, beforeClick: point }), contentType: "application/json" });
     await expect.poll(() => page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
     if (mobile) await page.touchscreen.tap(point.x, point.y);
     else await page.mouse.click(point.x, point.y);
