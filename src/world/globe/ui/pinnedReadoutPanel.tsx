@@ -33,7 +33,11 @@ export default function PinnedReadoutPanel({ canvas, extras }: { canvas: HTMLCan
       const mode = useExplore.getState().mode;
       if (useGlobe.getState().view === "orbit" && (!mode || mode === "pin")) useExplore.getState().pin(point);
     };
-    const detach = surfaceClicks(canvas, pick, pin);
+    // Pointer pinning is opt-in: a pointerup must not mount a panel over
+    // a marker's click or the second half of a native zoom gesture.
+    const detach = surfaceClicks(canvas, pick, point => {
+      if (useExplore.getState().mode === "pin") pin(point);
+    });
     // Pin mode owns canvas clicks, including clicks over scene markers.
     const capture = (event: MouseEvent) => {
       if (useExplore.getState().mode === "pin") event.stopPropagation();

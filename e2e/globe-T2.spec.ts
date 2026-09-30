@@ -132,6 +132,7 @@ for (const mobile of [false, true]) {
     await clickGuideMarker(page, isolated.id, mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toBeVisible();
+    await expect(page.locator("[data-pinned-readouts]")).toHaveCount(0);
     await expect(inspector).toContainText(isolated.name);
     await expect(inspector).toContainText(`${isolated.rating} / 5`);
     await expect(inspector).toContainText(isolated.month);
@@ -145,6 +146,7 @@ for (const mobile of [false, true]) {
     await clickGuideMarker(page, "pune", mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toContainText("Reviewed public places");
+    await expect(page.locator("[data-pinned-readouts]")).toHaveCount(0);
     await expect(inspector).toContainText("Local Guide Level 6");
     await expect(inspector).toContainText("as of 30 Sep 2026");
     const profile = inspector.getByRole("link", { name: "My Google Maps profile" });
