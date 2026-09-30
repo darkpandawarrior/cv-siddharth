@@ -8,13 +8,16 @@ import { basename, join, resolve } from "node:path";
 import sharp from "sharp";
 import { mapsGazetteer, nearestGazetteerCity, haversineKm } from "../src/data/mapsGazetteer.ts";
 
-// A review whose place name reads as a home (housing society, co-op/CHS,
-// residency, apartments) publishes nothing identifying: no name, text,
-// rating or exact pin, only its count toward the city total. It also never
-// anchors a photo's pin, because it is never added to mapsReviews at all.
+// A review whose place name reads as a home (co-op/cooperative anywhere,
+// housing, society, CHS, residency, residences, residential, apartment(s),
+// flat(s)) publishes nothing identifying: no name, text, rating or exact
+// pin, only its count toward the city total. It also never anchors a
+// photo's pin, because it is never added to mapsReviews at all. Deliberately
+// broad: "co-op" alone (not just "co-op housing") must catch a name like
+// "Sunset Co-op" that never says the word "housing".
 // The Takeout record can also mark a place residential directly (no name
 // match needed) -- checked wherever that marker could plausibly land.
-const RESIDENTIAL = /housing society|co-?op(?:erative)?\s+housing|\bchs\b|\bresidency\b|\bapartments\b|\bsociety\b/i;
+export const RESIDENTIAL = /co-?op(?:erative)?|\bhousing\b|\bsociety\b|\bchs\b|\bresidenc(?:y|es)\b|\bresidential\b|\bapartments?\b|\bflats?\b/i;
 export function isResidentialReview(props) {
   return RESIDENTIAL.test(props?.location?.name ?? "") || props?.residential === true || props?.location?.residential === true;
 }

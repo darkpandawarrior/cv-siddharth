@@ -5,6 +5,14 @@ import sharp from "sharp";
 import { mapsGazetteer, haversineKm } from "../mapsGazetteer.ts";
 import { mapsByYear, mapsPhotos, mapsPlaces, mapsReviews, mapsTotals } from "./mapsPlaces.ts";
 
+// Mirrors scripts/gen-maps-places.mjs's own RESIDENTIAL (kept in that plain
+// .mjs, not imported here: a .ts importing a bare .mjs across this repo's
+// tsconfig has no declaration to check against). The generator's own
+// scripts/gen-maps-places.test.mjs is the source of truth for this pattern's
+// behaviour, per token; this is a consistency check on the *published*
+// output.
+const RESIDENTIAL = /co-?op(?:erative)?|\bhousing\b|\bsociety\b|\bchs\b|\bresidenc(?:y|es)\b|\bresidential\b|\bapartments?\b|\bflats?\b/i;
+
 const gazetteerBySlug = new Map(mapsGazetteer.map((c) => [c.slug, c]));
 
 describe("mapsPlaces", () => {
@@ -91,8 +99,7 @@ describe("mapsPlaces", () => {
   });
 
   it("a residential review (housing society, co-op/CHS, residency, apartments, society) never publishes a name", () => {
-    const residential = /housing society|co-?op(?:erative)?\s+housing|\bchs\b|\bresidency\b|\bapartments\b|\bsociety\b/i;
-    for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(residential);
+    for (const review of mapsReviews) expect(review.name, review.id).not.toMatch(RESIDENTIAL);
     const dump = JSON.stringify({ mapsPlaces, mapsPhotos, mapsReviews, mapsByYear, mapsTotals });
     expect(dump).not.toContain("Aum Residency Co-op Housing Society");
     expect(dump).not.toContain("Shubhada CHS Ltd.");
