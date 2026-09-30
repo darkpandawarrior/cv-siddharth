@@ -10,6 +10,7 @@
 // evaluates, interpolates into HTML, or dynamically imports based on a URL
 // value -- a hostile query string can only ever fail validation and be
 // dropped, never run.
+import { MIN_OFFSET_MIN, MAX_OFFSET_MIN } from "./timeMachine/rangeModel.ts";
 import type { GlobeView, LayerId } from "./globeStore.ts";
 
 /** Mirrors globeStore.ts's own LAYER_IDS -- restated rather than imported so
@@ -21,13 +22,6 @@ import type { GlobeView, LayerId } from "./globeStore.ts";
  *  disagree). */
 const KNOWN_LAYER_IDS: readonly LayerId[] = ["markers", "stars", "satellites", "aircraft", "presence", "pulses", "hazards", "wind", "reach", "countries", "together", "density", "guide", "daylight", "eclipse", "buoys"];
 const KNOWN_VIEWS: readonly GlobeView[] = ["orbit", "ground", "follow", "street"];
-
-// TimeScrubber.tsx's own range ("30 days back to 2 days ahead", its slider's
-// aria-label) -- restated as the same duplicate-constant convention
-// cameraMath.ts documents at its own header, since importing from a
-// component file would pull React/DOM types into this leaf module.
-const TIME_OFFSET_MIN_LIMIT = -30 * 24 * 60;
-const TIME_OFFSET_MAX_LIMIT = 2 * 24 * 60;
 
 // Sane world-unit bounds for a shared camera altitude: never inside the
 // globe (GLOBE_RADIUS = 6, per cameraMath.ts), never absurdly far out.
@@ -80,14 +74,19 @@ function parseFiniteNumber(raw: string | null): number | undefined {
  * is under 11m at the equator, 2dp on altitude is under a centimetre in
  * world-unit terms, both far tighter than anything a fly-in could show.
  */
-export function serializeShareState(s: ShareState): string {
+export function serializeShareState(s: ShareState, nowMs = Date.now()): string {
   const params = new URLSearchParams();
   params.set("lat", clamp(s.lat, -90, 90).toFixed(4));
   params.set("lon", wrapLon(s.lon).toFixed(4));
   params.set("alt", clamp(s.alt, ALT_MIN, ALT_MAX).toFixed(2));
   params.set("view", s.view);
-  params.set("t", String(Math.round(clamp(s.timeOffsetMin, TIME_OFFSET_MIN_LIMIT, TIME_OFFSET_MAX_LIMIT))));
-  if (s.layers.length > 0) params.set("ly", s.layers.join(","));
+  if (Number.isFinite(s.timeOffsetMin) && (s.timeOffsetMin < MIN_OFFSET_MIN || s.timeOffsetMin > MAX_OFFSET_MIN)) {
+    const minuteMs = Math.floor((nowMs + s.timeOffsetMin * 60_000) / 60_000) * 60_000;
+    params.set("at", new Date(minuteMs).toISOString().slice(0, 16) + "Z");
+  } else {
+    params.set("t", String(Math.round(clamp(s.timeOffsetMin, MIN_OFFSET_MIN, MAX_OFFSET_MIN))));
+  }
+  params.set("ly", s.layers.join(","));
   if (s.base) params.set("base", s.base);
   if (s.overlays.length > 0) {
     params.set(
@@ -111,7 +110,7 @@ export function serializeShareState(s: ShareState): string {
  * rest of an otherwise-good link, and a link with nothing valid at all
  * parses to `{}` rather than throwing.
  */
-export function parseShareState(search: string | URLSearchParams): Partial<ShareState> {
+export function parseShareState(search: string | URLSearchParams, nowMs = Date.now()): Partial<ShareState> {
   const params = typeof search === "string" ? new URLSearchParams(search.startsWith("?") ? search.slice(1) : search) : search;
   const out: Partial<ShareState> = {};
 
@@ -128,7 +127,18 @@ export function parseShareState(search: string | URLSearchParams): Partial<Share
   if (view !== null && (KNOWN_VIEWS as readonly string[]).includes(view)) out.view = view as GlobeView;
 
   const t = parseFiniteNumber(params.get("t"));
-  if (t !== undefined) out.timeOffsetMin = Math.round(clamp(t, TIME_OFFSET_MIN_LIMIT, TIME_OFFSET_MAX_LIMIT));
+  if (t !== undefined) out.timeOffsetMin = Math.round(clamp(t, MIN_OFFSET_MIN, MAX_OFFSET_MIN));
+
+  const at = params.get("at");
+  if (at && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(at)) {
+    const ms = Date.parse(at);
+    // Successive global solar eclipses are less than a year apart; 400 days
+    // covers the next eclipse without accepting an unbounded future clock.
+    if (Number.isFinite(ms) && new Date(ms).toISOString().slice(0, 16) + "Z" === at
+      && ms >= nowMs + MIN_OFFSET_MIN * 60_000 && ms <= nowMs + 400 * 86_400_000) {
+      out.timeOffsetMin = (ms - nowMs) / 60_000;
+    }
+  }
 
   const ly = params.get("ly");
   if (ly !== null) {

@@ -6,6 +6,7 @@ import { simTime, useGlobe } from "../globeStore.ts";
 import { MAX_OFFSET_MIN, MIN_OFFSET_MIN, labelOffset, offsetToSlider, sliderToOffset, snapOffset, snapStepMinutes } from "../timeMachine/rangeModel.ts";
 import { useCompare } from "../timeMachine/compareStore.ts";
 import { VIIRS_TRUE_COLOR } from "../layers/gibs.ts";
+import { ownsKey } from "./shortcutTarget.ts";
 import CompareDivider from "./CompareDivider.tsx";
 
 /** LANE L5 (navigation and UI) built the original single floating card;
@@ -21,6 +22,7 @@ import CompareDivider from "./CompareDivider.tsx";
  *  Compare toggle, and kept every L5/U1 shape (compact pill, phone sheet,
  *  not-live badge) unchanged. */
 
+const rangeEnd = (value: number) => Math.max(MIN_OFFSET_MIN, Math.min(MAX_OFFSET_MIN, value));
 const MIN_OFFSET = MIN_OFFSET_MIN;
 const MAX_OFFSET = MAX_OFFSET_MIN;
 // `mul` is simulated SECONDS per wall second (usgsHistory.pulseState's own
@@ -43,10 +45,6 @@ const DAY_TICKS = Array.from({ length: MAX_OFFSET_MIN / 1440 - MIN_OFFSET_MIN / 
   const minutes = MIN_OFFSET_MIN + i * 1440;
   return { minutes, pct: (offsetToSlider(minutes) + 1) * 50 };
 });
-
-function isTypingTarget(el: EventTarget | null): boolean {
-  return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
-}
 
 function DayTicks() {
   return (
@@ -87,6 +85,11 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   // effect, so a mid-session OS toggle takes effect on the very next render
   // with no extra state or cascading setState.
   const effectivePlaying = playing && !reducedMotion;
+  const beyondRange = offset < MIN_OFFSET || offset > MAX_OFFSET;
+  const togglePlayback = () => {
+    if (beyondRange) setTimeOffset(rangeEnd(offset));
+    setPlaying((p) => !p);
+  };
 
   useEffect(() => {
     if (!effectivePlaying) return;
@@ -115,16 +118,18 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (e.defaultPrevented || ownsKey(e.target as HTMLElement | null, e.key)) return;
       // Step size follows rangeModel's own coarseness (15/60/1440 min), not
       // a fixed 60 min, now that the range spans 30 real days: a fixed step
       // would take 720 presses to cross the far end.
       const current = useGlobe.getState().timeOffsetMin;
-      if (e.key === "[") setTimeOffset(Math.max(MIN_OFFSET, current - snapStepMinutes(current)));
-      else if (e.key === "]") setTimeOffset(Math.min(MAX_OFFSET, current + snapStepMinutes(current)));
+      const outside = current < MIN_OFFSET || current > MAX_OFFSET;
+      if (e.key === "[") setTimeOffset(rangeEnd(outside ? current : current - snapStepMinutes(current)));
+      else if (e.key === "]") setTimeOffset(rangeEnd(outside ? current : current + snapStepMinutes(current)));
       else if (e.key === " " || e.code === "Space") {
         if (!reducedMotion) {
           e.preventDefault();
+          if (outside) setTimeOffset(rangeEnd(current));
           setPlaying((p) => !p);
         }
       } else return;
@@ -137,10 +142,13 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     const step = snapStepMinutes(offset) * (e.shiftKey ? 4 : 1);
     if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
       e.preventDefault();
-      setTimeOffset(Math.max(MIN_OFFSET, offset - step));
+      setTimeOffset(rangeEnd(beyondRange ? offset : offset - step));
     } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
       e.preventDefault();
-      setTimeOffset(Math.min(MAX_OFFSET, offset + step));
+      setTimeOffset(rangeEnd(beyondRange ? offset : offset + step));
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      setTimeOffset(e.key === "Home" ? MIN_OFFSET : MAX_OFFSET);
     }
   };
 
@@ -187,9 +195,8 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   // clicked (its own lazy chunk, shared with EclipseLayer.tsx if that layer
   // is on) -- never a static import here, or its ~47 KB gzip would land in
   // the eager Globe chunk. The jump sets a real offset past the normal +-30
-  // day/2 day range (rangeModel.ts, not owned by this lane); the slider
-  // visually pins to its end, and `label` below still prints an honest
-  // "in N days" for however far out the jump actually lands.
+  // day/2 day range. The visible date and beyond-range warning explain
+  // the pinned thumb; moving or playing returns to the nearest range end.
   const jumpToNextEclipse = async () => {
     setEclipseLoading(true);
     try {
@@ -255,7 +262,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
   const playButton = !reducedMotion && (
     <button
       type="button"
-      onClick={() => setPlaying((p) => !p)}
+      onClick={togglePlayback}
       aria-pressed={playing}
       aria-label={playing ? "Pause simulated time" : "Play simulated time"}
       className="ctrl-icon flex h-6 w-6 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
@@ -276,19 +283,19 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
 
   return (
     <>
-      {/* Desktop/tablet (sm+): one compact row in the shared top bar, the
-          same ~30px pill height as the HUD. A single speed button cycling
-          x60/x600/x3600 (rather than three) is what makes "slider ~144px,
-          Now, play, speed, not-live" actually fit in one row at 1024px. */}
+      {/* Wrap inside the topbar cap when coarse targets or a full date
+          need more room; the slider shrinks without entering the centre band. */}
       <div
         data-globe-time-scrubber
-        className="pointer-events-auto hidden items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
+        className="pointer-events-auto hidden min-w-0 max-w-full sm:max-w-[calc(50vw-13.25rem)] flex-wrap items-center gap-2 rounded-2xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
       >
-        <span className="whitespace-nowrap">
+        <span className="min-w-0">
           {fmtCompact(now, "Asia/Kolkata")} IST · {fmtCompact(now, "UTC")} UTC
         </span>
-        <span className="whitespace-nowrap text-zinc-500">{label}</span>
-        <div className="relative flex w-36 items-center">
+        <span data-time-beyond-range={beyondRange || undefined} className="text-zinc-400">
+          {beyondRange ? `${now.toISOString().slice(0, 16).replace("T", " ")} UTC · beyond the slider range` : label}
+        </span>
+        <div className="relative flex min-w-11 flex-1 basis-36 items-center">
           <DayTicks />
           <input
             type="range"
@@ -298,8 +305,9 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             value={offsetToSlider(offset)}
             onChange={(e) => onSliderChange(Number(e.target.value))}
             onKeyDown={onSliderKeyDown}
+            aria-valuetext={beyondRange ? "Beyond the slider range; move to return to the range" : label}
             aria-label="Simulated time offset, non-linear, 30 days back to 2 days ahead"
-            className="relative h-1 w-36 accent-accent"
+            className="relative h-11 min-w-11 w-full accent-accent"
           />
         </div>
         {nowButton}
@@ -346,7 +354,9 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             </span>
             {notLiveBadge}
           </div>
-          <p className="mb-2 text-zinc-500">{label}</p>
+          <p data-time-beyond-range={beyondRange || undefined} className="mb-2 text-zinc-400">
+            {beyondRange ? `${now.toISOString().slice(0, 16).replace("T", " ")} UTC · beyond the slider range` : label}
+          </p>
 
           <div className="relative flex items-center">
             <DayTicks />
@@ -358,8 +368,9 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               value={offsetToSlider(offset)}
               onChange={(e) => onSliderChange(Number(e.target.value))}
               onKeyDown={onSliderKeyDown}
+              aria-valuetext={beyondRange ? "Beyond the slider range; move to return to the range" : label}
               aria-label="Simulated time offset, non-linear, 30 days back to 2 days ahead (sheet)"
-              className="relative h-2 w-full accent-accent"
+              className="relative h-11 w-full accent-accent"
             />
           </div>
 
@@ -378,7 +389,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
               {!reducedMotion && (
                 <button
                   type="button"
-                  onClick={() => setPlaying((p) => !p)}
+                  onClick={togglePlayback}
                   aria-pressed={playing}
                   aria-label={playing ? "Pause simulated time" : "Play simulated time"}
                   className="ctrl-icon flex h-11 w-11 items-center justify-center rounded-full border border-line hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"

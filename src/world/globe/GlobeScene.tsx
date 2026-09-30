@@ -1,3 +1,4 @@
+import { GLOBE_DPR_MAX } from "../deviceTier.ts";
 import { Suspense, lazy, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -406,7 +407,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
       {/* Test/tooling seam only - zero footprint, never painted. */}
       <div ref={probeRef} data-subsolar-probe aria-hidden style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }} />
       <Canvas
-        dpr={[1, tier === 3 ? 1 : 1.5]}
+        dpr={[1, GLOBE_DPR_MAX[tier]]}
         camera={{ position: [START.x * START_DISTANCE, START.y * START_DISTANCE, START.z * START_DISTANCE], fov: 42 }}
         gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
         style={{ position: "absolute", inset: 0 }}

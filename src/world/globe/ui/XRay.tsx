@@ -8,7 +8,7 @@ import { simTime, useGlobe, type StatusKey } from "../globeStore.ts";
 import { catalogDateLabel, GIBS_CATALOG } from "../layers/gibsCatalog.ts";
 import { drawnTileSet } from "../layers/TileLayer.tsx";
 import { getXrayStats, levelColorHex, subscribeXrayStats, type XrayStats } from "../layers/xrayState.ts";
-import { tierBudget } from "../../deviceTier.ts";
+import { GLOBE_DPR_MAX, tierBudget } from "../../deviceTier.ts";
 
 // Same cadence as XRayTiles.tsx's own renderer.info sample (brief: "at most
 // 4 times a second") — this is the ONE setInterval driving a real (if
@@ -118,7 +118,7 @@ export default function XRay({ tier }: { tier: 1 | 2 | 3 }) {
           tier {tier}, {TIER_WHY[tier]}
         </p>
         <p>
-          dpr max {budget.dprMax}, ground segments {budget.groundSegments.join("/")}
+          dpr max {GLOBE_DPR_MAX[tier]}, ground segments {budget.groundSegments.join("/")}
         </p>
       </div>
     </div>
