@@ -141,7 +141,7 @@ describe("the README's numbers are the repo's numbers", () => {
       cwd: ROOT,
     });
     const m = /Total: (\d+) tests in (\d+) files/.exec(out);
-    expect(m, "playwright test --list should print a Total line").not.toBeNull();
+    expect(m, `playwright test --list should print a Total line; it printed:\n${out.slice(-1500)}`).not.toBeNull();
     const [, total] = m!;
     expect(README, `README should say ${total} Playwright tests`).toContain(`${total} Playwright tests across`);
   });
