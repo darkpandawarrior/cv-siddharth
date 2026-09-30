@@ -93,7 +93,7 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
         const bottom = bar?.checkVisibility() ? y + height : 0;
         stage.style.setProperty("--globe-left-slot-top", `${Math.max(top.bottom - room.top, centred ? 0 : bottom) + gap}px`);
         stage.style.setProperty("--globe-top-offset", `${top.height + 16}px`);
-        root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - top.bottom - gap)}px`);
+        root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - Math.max(top.bottom, room.top + bottom) - gap)}px`);
         setTopOffsetPx(top.height);
       }
       stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - facts.getBoundingClientRect().top) + gap}px`);
