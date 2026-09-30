@@ -9,8 +9,8 @@
   ],
   "namedChunks": {
     "dist-esm": 1666666,
-    "Globe": 22428
+    "Globe": 20736
   },
   "largestChunkBytes": 1666798,
-  "totalDeploySizeBytes": 28311552
+  "totalDeploySizeBytes": 31719424
 }

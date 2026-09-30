@@ -8,8 +8,8 @@
     }
   ],
   "namedChunks": {
-    "SketchBoard": 1666666
+    "dist-esm": 1666666
   },
   "largestChunkBytes": 1666798,
-  "totalDeploySizeBytes": 28311552
+  "totalDeploySizeBytes": 31719424
 }
