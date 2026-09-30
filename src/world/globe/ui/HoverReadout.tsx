@@ -133,6 +133,7 @@ function pollCell<T>(cache: Map<string, CellEntry<T>>, key: string, now: number,
 
 export default function HoverReadout() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const pinCount = useExplore(s => s.pins.length);
   const [chip, setChip] = useState<Chip | null>(null);
   const chipElement = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
@@ -322,7 +323,7 @@ export default function HoverReadout() {
   };
   return <>
     <PinnedReadoutPanel canvas={canvas} extras={extras} />
-    {root && chip && createPortal(
+    {root && chip && !pinCount && createPortal(
     <div
       ref={chipElement}
       data-hover-readout

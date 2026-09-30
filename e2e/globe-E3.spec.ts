@@ -28,23 +28,43 @@ export async function openPinnedGlobe(page: Page, failed = false) {
   return canvas;
 }
 export async function surfacePosition(page: Page, shift = 0) {
-  const probe = page.locator("[data-subsolar-probe]");
-  await expect.poll(() => probe.getAttribute("data-globe-x")).not.toBeNull();
-  const canvas = await page.locator("[data-globe-root] canvas").first().boundingBox();
-  if (!canvas) throw new Error("Canvas missing");
-  const x = Number(await probe.getAttribute("data-globe-x"));
-  const y = Number(await probe.getAttribute("data-globe-y"));
-  const r = Number(await probe.getAttribute("data-globe-r"));
-  return { x: canvas.x + x + shift * r, y: canvas.y + y - r * 0.3 };
+  // Camera framing and DOM overlays both change after Escape. Require two
+  // settled probe reads and a real canvas hit; never reuse old coordinates.
+  let previous: { x: number; y: number } | null = null;
+  let point: { x: number; y: number } | null = null;
+  await expect.poll(async () => {
+    const current = await page.evaluate(shift => {
+      const canvas = document.querySelector<HTMLCanvasElement>("[data-globe-root] canvas");
+      const probe = document.querySelector<HTMLElement>("[data-subsolar-probe]");
+      if (!canvas || !probe?.dataset.globeX || !probe.dataset.globeY || !probe.dataset.globeR) return null;
+      const box = canvas.getBoundingClientRect();
+      const x = Number(probe.dataset.globeX), y = Number(probe.dataset.globeY), r = Number(probe.dataset.globeR);
+      for (const dx of [shift < 0 ? -0.75 : 0.75, shift < 0 ? -0.85 : 0.85, shift]) {
+        for (const dy of [0, -0.2, 0.2, -0.45, 0.45]) {
+          const point = { x: box.x + x + dx * r, y: box.y + y + dy * r };
+          if (document.elementFromPoint(point.x, point.y) === canvas) return { x, y, point };
+        }
+      }
+      return { x, y, point: null };
+    }, shift);
+    const settled = current && previous && Math.abs(current.x - previous.x) <= 1 && Math.abs(current.y - previous.y) <= 1;
+    previous = current;
+    point = settled ? current?.point ?? null : null;
+    return point;
+  }, { message: "A settled, exposed globe surface must remain available for pinning" }).not.toBeNull();
+  return point!;
 }
 for (const mobile of [false, true]) test.describe(mobile ? "touch" : "desktop", () => {
   test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 }, hasTouch: mobile, isMobile: mobile });
-  test("pins compares scrubs removes and clears", async ({ page }) => {
+  test("pins compares scrubs removes and clears", async ({ page }, testInfo) => {
+    const shot = async (state: string) => { await page.mouse.move(0, 0); await page.screenshot({ animations: "disabled", path: testInfo.outputPath(`${state}.png`) }); };
     const canvas = await openPinnedGlobe(page);
+    await shot("pin-mode");
     const first = await surfacePosition(page, -0.2);
     if (mobile) await page.touchscreen.tap(first.x, first.y);
     else { await page.mouse.move(first.x, first.y); await canvas.focus(); await page.keyboard.press("Enter"); }
     await expect(page.locator("[data-pinned-point]")).toHaveCount(1);
+    await shot("one-pin");
     const second = await surfacePosition(page, 0.2);
     if (mobile) await page.touchscreen.tap(second.x, second.y); else await page.mouse.click(second.x, second.y);
     await expect(page.locator("[data-pinned-point]")).toHaveCount(2);
@@ -53,32 +73,53 @@ for (const mobile of [false, true]) test.describe(mobile ? "touch" : "desktop", 
     await expect(panel).toContainText("5.0 m/s");
     await expect(panel).toContainText("2026-09-30 11:00 UTC");
     await expect(panel).toContainText("Unavailable: no event within 300 km");
-    const before = await panel.locator("[data-pinned-point]").allTextContents();
+    await shot("compare");
+    await panel.locator("[data-pin-scroll]").evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await expect(page.getByRole("button", { name: "Close pinned readouts" })).toBeInViewport();
+    await shot("compare-observations");
+    await panel.locator("[data-pin-scroll]").evaluate(el => { el.scrollTop = 0; });
+    const solarBefore = await panel.locator('[data-pin-value="Local solar time"]').allTextContents();
+    const sunBefore = await panel.locator('[data-pin-value="Sun position"]').allTextContents();
+    const windBefore = await panel.locator('[data-pin-value="Wind"]').allTextContents();
     await canvas.focus(); await page.keyboard.press("[");
     await expect(panel.locator("[data-pin-time]")).not.toHaveText("Viewing 2026-09-30 12:00 UTC");
-    await expect.poll(() => panel.locator("[data-pinned-point]").allTextContents()).not.toEqual(before);
+    await expect.poll(() => panel.locator('[data-pin-value="Local solar time"]').allTextContents()).not.toEqual(solarBefore);
+    await expect.poll(() => panel.locator('[data-pin-value="Sun position"]').allTextContents()).not.toEqual(sunBefore);
+    await expect(panel.locator('[data-pin-value="Wind"]')).toHaveText(windBefore);
+    await shot("scrubbed");
     await page.getByRole("button", { name: "Close pinned readouts" }).focus();
     await page.keyboard.press("Tab");
     await expect(panel.locator("[data-pinned-point]").first()).toBeFocused();
-    await page.getByRole("button", { name: "Remove point A", exact: true }).click();
+    const remove = page.getByRole("button", { name: "Remove point A", exact: true });
+    if (mobile) await remove.tap(); else await remove.click();
     await expect(page.locator("[data-pinned-point]")).toHaveCount(1);
+    await shot("removed");
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
-    if (mobile) await page.touchscreen.tap(first.x, first.y); else await page.mouse.click(first.x, first.y);
+    const again = await surfacePosition(page, -0.2);
+    if (mobile) await page.touchscreen.tap(again.x, again.y); else await page.mouse.click(again.x, again.y);
     await expect(panel).toBeVisible();
-    await page.getByRole("button", { name: "Close pinned readouts" }).click();
+    const close = page.getByRole("button", { name: "Close pinned readouts" });
+    if (mobile) await close.tap(); else await close.click();
     await expect(panel).toHaveCount(0);
+    await shot("cleared");
   });
-  test("failed sources remain explicitly unavailable", async ({ page }) => {
+  test("failed sources remain explicitly unavailable", async ({ page }, testInfo) => {
     await openPinnedGlobe(page, true);
     const point = await surfacePosition(page);
     if (mobile) await page.touchscreen.tap(point.x, point.y); else await page.mouse.click(point.x, point.y);
     const panel = page.getByRole("region", { name: "Pinned point comparison" });
     await expect(panel).toContainText("Unavailable: feed not loaded or failed");
     await expect(panel).toContainText("Observation time unavailable");
-    await panel.getByText("More readings", { exact: true }).click();
+    await page.mouse.move(0, 0);
+    await panel.locator("[data-pin-scroll]").evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await page.screenshot({ path: testInfo.outputPath("unavailable.png") });
+    const more = panel.getByText("More readings", { exact: true });
+    if (mobile) await more.tap(); else await more.click();
     await expect(panel).toContainText("Marine");
     await expect(panel).toContainText("NOAA CO-OPS");
     await expect(panel).toContainText("No cached reading");
+    await panel.locator("[data-pin-scroll]").evaluate(el => { el.scrollTop = el.scrollHeight; });
+    await page.screenshot({ path: testInfo.outputPath("more-readings.png") });
   });
 });

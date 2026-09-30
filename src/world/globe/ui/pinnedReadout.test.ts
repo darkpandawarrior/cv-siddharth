@@ -16,7 +16,7 @@ it("recomputes astronomy and filters future events while retaining source model 
 });
 it("never fabricates a reading or timestamp from failed or malformed sources", () => {
   const point = { lat: 0, lon: 0 }, at = new Date("2026-09-30T12:00:00Z");
-  for (const w of [null, { ...wind, u: [] }, { ...wind, modelTime: null }, { ...wind, v: [NaN,4,4,4] }]) expect(pinnedValues(point, at, w, null)[2].value).toBe("Unavailable");
+  for (const w of [null, { ...wind, u: [] }, { ...wind, modelTime: null }, { ...wind, v: [NaN,4,4,4] }, { ...wind, u: null } as unknown as WindResponse, { ...wind, grid: { ...wind.grid!, latCount: 1.5 } }]) expect(pinnedValues(point, at, w, null)[2].value).toBe("Unavailable");
   const failed = pinnedValues(point, at, wind, quake, true, true);
   expect(failed[2].value).toBe("Unavailable"); expect(failed[3].value).toContain("failed");
   expect(pinnedValues(point, at, wind, { features: [null] })[3].value).toContain("Unavailable");

@@ -266,7 +266,11 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     // ExploreBar sits IN the topbar's reserved centre band beside the HUD
     // pills, not below the full stack, so it was never affected.
     <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
-      <div className="flex flex-wrap items-center gap-1">
+      {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
+        <p className="text-zinc-200">Tap, click or Enter to pin.</p>
+        <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
+      </div>}
+      <div className={mode === "pin" ? "hidden" : "flex flex-wrap items-center gap-1"}>
         <input ref={input} type="search" role="combobox" aria-label="Search places or ask the globe" aria-autocomplete="list" aria-controls="explore-results" aria-expanded={rows.length > 0} aria-activedescendant={active >= 0 ? `explore-result-${active}` : undefined}
           placeholder="Search or ask" value={query} className="h-11 min-w-0 flex-1 basis-[calc(100%-48px)] rounded-lg bg-transparent px-2 outline-offset-2 focus-visible:outline focus-visible:outline-accent"
           onFocus={() => { setFocused(true); setActive(-1); }}
@@ -280,10 +284,10 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
         <button type="button" className={buttonClass} onClick={clear} aria-label="Clear exploration">×</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "here"} disabled={view !== "orbit"} onClick={() => toggle("here")}>What's here</button>
         <button type="button" className={buttonClass} aria-pressed={mode === "measure"} disabled={view !== "orbit"} onClick={() => toggle("measure")}>Measure</button>
-        <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed={mode === "pin"} disabled={view !== "orbit"} onClick={() => toggle("pin")}>Pin</button>
+        {mode !== "pin" && <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed={false} disabled={view !== "orbit"} onClick={() => toggle("pin")}>Pin</button>}
         {!query && !answer && <button type="button" className={buttonClass} onClick={runSurprise}>Surprise me</button>}
       </div>
-      {!query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
+      {mode !== "pin" && !query && !answer && <div className="hidden flex-wrap gap-1 border-t border-line px-2 py-1.5 sm:flex">
         {EXAMPLE_CHIPS.map(chip => (
           <button key={chip} type="button" onClick={() => { applyQuery(chip); input.current?.focus(); }}
             className="rounded-full border border-line px-2 py-1 text-xs text-zinc-400 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
@@ -291,7 +295,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           </button>
         ))}
       </div>}
-      {rows.length > 0 && <ul id="explore-results" role="listbox" aria-label="Commands and places" className="max-h-52 overflow-y-auto border-t border-line py-1">
+      {mode !== "pin" && rows.length > 0 && <ul id="explore-results" role="listbox" aria-label="Commands and places" className="max-h-52 overflow-y-auto border-t border-line py-1">
         {rows.map((row, i) => <li key={row.kind === "place" ? `${row.place.lat}:${row.place.lon}:${i}` : `${row.kind}:${i}`} id={`explore-result-${i}`} role="option" aria-selected={i === active} className={i === active ? "rounded-lg bg-white/10" : ""}>
           <button type="button" tabIndex={-1} onPointerDown={event => event.preventDefault()} onClick={() => runRow(row)} className="min-h-11 w-full px-2 py-2 text-left hover:text-accent">
             {row.kind === "place"
@@ -303,20 +307,19 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
           </button>
         </li>)}
       </ul>}
-      <div role="status" aria-live="polite">
+      <div role="status" aria-live="polite" className={mode === "pin" ? "hidden" : undefined}>
         {asking && <p data-onebox-thinking className="px-2 py-1">Thinking…</p>}
         {!asking && answer && <p data-onebox-answer className="flex items-start justify-between gap-2 px-2 py-1">
           <span>{answer.text}</span>
           {(answer.restore || answer.undo.length > 0) && <button type="button" onClick={undoLast} className="shrink-0 whitespace-nowrap rounded-lg px-1 text-zinc-400 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Undo</button>}
         </p>}
         {!asking && !answer && message && <p className="px-2 py-1">{message}</p>}
-        {mode === "pin" && <p className="px-2 py-1">Tap or click a point. Enter pins the hovered point or globe centre. Esc clears pins.</p>}
         {mode === "here" && !message && <p className="px-2 py-1">Click the globe to look up a point</p>}
         {mode === "measure" && <p data-measure-result className="px-2 py-1">
           {measurement ? `${measurement.km.toFixed(1)} km · ${measurement.nauticalMiles.toFixed(1)} nm · ${measurement.bearing === null ? "bearing undefined" : `${measurement.bearing.toFixed(1)}° initial`}` : points.length ? "Choose the second point" : "Choose two points"}
         </p>}
       </div>
-      <p className="px-2 pt-1 text-zinc-400"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
+      <p className={mode === "pin" ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
       <ExploreMeasure canvas={canvas} tier={tier} />
     </div>
   );

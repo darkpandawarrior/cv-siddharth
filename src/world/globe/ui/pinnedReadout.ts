@@ -20,7 +20,7 @@ export function pinnedValues(point: LatLon, at: Date, wind: WindResponse | null,
     { label: "Local solar time", value: localTime(at, point.lon), source: "Computed from longitude, approximate", time: computedTime },
     { label: "Sun position", value: `${sun.altitudeDeg.toFixed(1)}° altitude · ${sun.azimuthDeg.toFixed(1)}° azimuth`, source: "Computed, NOAA solar equations", time: computedTime },
   ];
-  const validWind = !windFailed && wind?.connected && wind.grid && Object.values(wind.grid).every(Number.isFinite) && wind.grid.latCount > 0 && wind.grid.lonCount > 0 && wind.grid.latStep > 0 && wind.grid.lonStep > 0 && wind.modelTime && Number.isFinite(Date.parse(wind.modelTime)) && wind.u.length === wind.grid.latCount * wind.grid.lonCount && wind.v.length === wind.u.length && wind.u.every(Number.isFinite) && wind.v.every(Number.isFinite);
+  const validWind = !windFailed && wind?.connected && wind.grid && Object.values(wind.grid).every(Number.isFinite) && Number.isInteger(wind.grid.latCount) && Number.isInteger(wind.grid.lonCount) && wind.grid.latCount > 0 && wind.grid.lonCount > 0 && wind.grid.latStep > 0 && wind.grid.lonStep > 0 && wind.modelTime && Number.isFinite(Date.parse(wind.modelTime)) && Array.isArray(wind.u) && Array.isArray(wind.v) && wind.u.length === wind.grid.latCount * wind.grid.lonCount && wind.v.length === wind.u.length && wind.u.every(Number.isFinite) && wind.v.every(Number.isFinite);
   let windValue = "Unavailable";
   if (validWind && wind?.grid) {
     const sampled = sampleWind(buildWindField(wind.grid, wind.u, wind.v), point.lat, point.lon);
