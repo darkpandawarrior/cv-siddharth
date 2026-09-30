@@ -1,4 +1,4 @@
-import { startVisibilityPolling } from "../visibilityPolling.ts";
+import { startVisibilityPolling } from "../../../lib/visibilityPolling.ts";
 import { VolcanoGlyphs } from "./VolcanoGlyphs.tsx";
 import { parseVolcanoResponse, volcanoGlyphs } from "./volcano.ts";
 // LANE L7: live earth events — quakes, EONET wildfires/volcanoes/storms,

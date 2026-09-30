@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { pollDelay } from "../world/globe/visibilityPolling";
+import { pollDelay } from "./visibilityPolling";
 
 /**
  * Fetches `url` and parses the JSON body, or throws. Extracted so it's
