@@ -294,7 +294,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
           need more room; the slider shrinks without entering the centre band. */}
       <div
         data-globe-time-scrubber
-        className="pointer-events-auto hidden min-w-0 max-w-full sm:max-w-[calc(50vw-13.25rem)] flex-wrap items-center gap-2 rounded-2xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
+        className="pointer-events-auto hidden min-w-0 max-w-full max-h-[var(--globe-time-max-h)] overflow-y-auto sm:max-w-[calc(50vw-13.25rem)] flex-wrap items-center gap-2 rounded-2xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 sm:flex"
       >
         {eventStrip}
         <span className="min-w-0">

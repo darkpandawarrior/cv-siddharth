@@ -74,9 +74,9 @@ export default function CompareDivider() {
   // of its own, so a `fixed` descendant's z-index is only ever compared
   // *inside* it — no z-index this root declares can outrank a sibling like
   // Inspector's z-30 card, which sits outside that context entirely.
-  // Portalling to document.body escapes it, so z-50 here actually wins.
+  // Compare stays above the Time sheet and below the command palette.
   return createPortal(
-    <div ref={rootRef} data-globe-compare className="pointer-events-none fixed inset-0 z-50">
+    <div ref={rootRef} data-globe-compare className="pointer-events-none fixed inset-0 z-[52]">
       <div
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 truncate rounded-full glass-panel px-2 py-1 font-mono text-xs text-zinc-300"
         style={{ maxWidth: `max(0px, calc(${pct}% - 24px))` }}

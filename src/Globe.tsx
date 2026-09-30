@@ -72,6 +72,8 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
       if (topbar) {
         const slot = stage.querySelector<HTMLElement>("[data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card]");
         for (const el of [slot, slot?.querySelector("h2"), slot?.lastElementChild]) if (el) resize.observe(el);
+        const scrubber = topbar.querySelector<HTMLElement>("[data-globe-time-scrubber]");
+        if (scrubber) resize.observe(scrubber);
         let top = topbar.getBoundingClientRect();
         const [left, right] = [...topbar.children].map(el => el.getBoundingClientRect());
         const width = bar?.offsetWidth ?? 0, height = bar?.offsetHeight ?? 0;
@@ -84,6 +86,7 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
           topbar.style.maxHeight = `${limit}px`;
           const padding = getComputedStyle(topbar);
           topbar.style.setProperty("--globe-rail-max-h", `${Math.max(0, limit - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom))}px`);
+          if (scrubber) topbar.style.setProperty("--globe-time-max-h", `${Math.max(0, limit - (scrubber.getBoundingClientRect().top - top.top) - parseFloat(padding.paddingBottom))}px`);
           top = topbar.getBoundingClientRect();
         } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
         const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
