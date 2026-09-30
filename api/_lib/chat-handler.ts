@@ -5,6 +5,11 @@ import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt.js";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt.js";
 import { condenseJd } from "./jd-condense.js";
 import { applyPromptGuard } from "./prompt-guard.js";
+// LANE W12 ("Ask the globe"): mode:"globe" is a different request shape
+// ({ text, context }, not { messages }) with its own validation, prompt and
+// non-streaming response — see that file's own header for why this is a
+// dispatch rather than a new ChatMode branch through the rest of this file.
+import { handleGlobeAsk } from "./globe-ask.js";
 import {
   isAllowedOrigin,
   clientIp,
@@ -156,6 +161,66 @@ const JD_RATE_WINDOWS = [
   { ms: 3_600_000, max: envInt(process.env.CHAT_JD_RATE_PER_HOUR, 12) },
 ];
 const hits = new Map<string, number[]>();
+
+// ---------------------------------------------------------------------------
+// Daily spend ceiling — the PAID Anthropic fallback only.
+//
+// Every OTHER provider (groq/gemini/cerebras) is a free tier the per-IP
+// windows above already bound. Anthropic is the last rung of the ladder —
+// reached only once every free provider has failed — and until now it had no
+// ceiling of its own: a wide outage across the free tiers (or a distributed
+// caller spread across enough IPs to dodge the per-IP windows) could push an
+// unbounded amount of traffic onto the owner's paid key.
+//
+// DEFAULT = 25/day. At claude-sonnet-4-6 pricing, this endpoint's system
+// prompt (~6,580 tokens, see estimateTokens's comment above) plus a JD
+// reply's 2,048-token ceiling runs roughly $0.05-0.10/call, so 25/day caps
+// worst-case exposure around $1.25-2.50/day (~$40-75/month) — and that
+// ceiling is spent SITE-WIDE, across every visitor combined, not per IP, so
+// it binds well before the per-IP JD bucket (12/hour = up to 288/day for one
+// address) would. Override with CHAT_ANTHROPIC_DAILY_CAP if this is measured
+// to be too tight or too loose once real usage is observed.
+const CHAT_ANTHROPIC_DAILY_CAP = envInt(process.env.CHAT_ANTHROPIC_DAILY_CAP, 25);
+
+export type AnthropicCapBox = { day: string; count: number };
+const anthropicCapBox: AnthropicCapBox = { day: "", count: 0 };
+
+function utcDayKey(now: number): string {
+  return new Date(now).toISOString().slice(0, 10); // "YYYY-MM-DD"
+}
+
+/**
+ * True when this call may proceed against today's UTC-day cap — and, when it
+ * may, the call is already counted (an attempt, not a successful reply:
+ * Anthropic bills what it received regardless of how the stream ends, so
+ * counting the attempt errs toward UNDER- never over-counting real spend).
+ *
+ * HONEST LIMITATION: `box` defaults to a module-scope counter, which lives in
+ * the memory of ONE Edge isolate and resets on cold start — same tradeoff as
+ * the per-IP rate limiter above, and for the same reason (no new paid
+ * dependency for one ceiling). This repo has no Vercel KV / Upstash / Edge
+ * Config configured (checked 2026-09-28: no such env var or package appears
+ * anywhere in this repo), so a durable shared counter isn't free to add. This
+ * is a SOFT cap: it bounds the common case (one warm isolate serving a burst
+ * of traffic after the free tiers go down) but a caller spread across enough
+ * isolates, or one that survives several cold starts, can exceed it. Upgrade
+ * path: a KV increment-with-TTL the day this site adds one for another
+ * reason.
+ */
+export function tryAnthropicCall(
+  now: number,
+  cap: number = CHAT_ANTHROPIC_DAILY_CAP,
+  box: AnthropicCapBox = anthropicCapBox,
+): boolean {
+  const day = utcDayKey(now);
+  if (box.day !== day) {
+    box.day = day;
+    box.count = 0;
+  }
+  if (box.count >= cap) return false;
+  box.count++;
+  return true;
+}
 
 // clientIp and rateLimitKey moved to guard.ts (re-exported above) — same
 // header-preference and /64-bucketing rationale, now shared with
@@ -1030,7 +1095,17 @@ export async function handleChat(request: Request): Promise<Response> {
     return jsonError(503, "Chat is not configured right now.", allowedOrigin);
   }
 
-  const parsed = validateRequest(parseJson(raw));
+  const bodyJson = parseJson(raw);
+  // LANE W12 dispatch: globe mode's own body shape doesn't fit
+  // validateRequest's `{ messages }` contract, so it's handled here, before
+  // validateRequest ever sees it. Everything above this line (origin,
+  // general rate limit, provider-configured check) already ran — see
+  // globe-ask.ts's own doc comment.
+  if ((bodyJson as { mode?: unknown } | null)?.mode === "globe") {
+    return handleGlobeAsk(bodyJson, { allowedOrigin });
+  }
+
+  const parsed = validateRequest(bodyJson);
   if (!parsed) return jsonError(400, 'Expected { messages: [{role, content}, ...], mode?: "compose" | "jd" }.', allowedOrigin);
 
   // The second, tighter budget for the expensive mode — spent on top of the
@@ -1088,6 +1163,17 @@ export async function handleChat(request: Request): Promise<Response> {
   const failures: { provider: string; kind: FailureKind; retryAfter: string | null }[] = [];
 
   for (const candidate of providers) {
+    // The paid rung only: a free-tier provider (groq/gemini/cerebras) never
+    // touches this cap. Treated as a "down" failure — same as a thrown
+    // request — so a cap hit falls through to exhaustedResponse's existing
+    // "model unavailable" reply (502) rather than a new error shape; never a
+    // NEEDS ATTENTION log, since this is the ceiling working as designed.
+    if (candidate.provider.name === "anthropic" && !tryAnthropicCall(Date.now())) {
+      console.warn(`[chat] anthropic daily cap (${CHAT_ANTHROPIC_DAILY_CAP}/day) reached — skipping the paid fallback`);
+      failures.push({ provider: "anthropic", kind: "down", retryAfter: null });
+      continue;
+    }
+
     let res: Response;
     try {
       res = await candidate.provider.request(candidate.key, guarded, system, maxTokens);

@@ -42,9 +42,14 @@ describe("handleWhereami", () => {
     expect(text).not.toMatch(IP_CANARY);
   });
 
-  it("cache-control is exactly no-store", async () => {
+  it("cache-control is private (never public/shared) with a 1h max-age", async () => {
+    // "private": derived from THIS request's own edge-observed country
+    // header, so a shared/CDN cache must never serve visitor A's response to
+    // visitor B. usePresenceGeo() (presenceGeo.ts) fetches this once per
+    // mount and never re-polls, so a 1h browser-side cache costs nothing in
+    // freshness and saves a function invocation on a within-the-hour revisit.
     const req = new Request("http://localhost/api/whereami", { headers: { "x-vercel-ip-country": "IN" } });
     const res = await handleWhereami(req);
-    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
   });
 });

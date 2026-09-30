@@ -3,6 +3,7 @@ import { Html } from "@react-three/drei";
 import { MathUtils } from "three";
 import type { Ops, OpsRun } from "../api/_lib/ops-handler.ts";
 import { useStudioModel } from "./three/models.ts";
+import { subscribeOpsPoll } from "./opsPoll.ts";
 
 /**
  * The Blueprint Room's centrepiece — a real lathe-turned Blender asset
@@ -41,26 +42,24 @@ export const NEEDLE_RANGE_DEG = 180;
 const OPS_URL = "/api/ops";
 const OPS_INTERVAL_MS = 120_000;
 
-/** Fetches `url` once on mount and every `intervalMs` after, keeping the
- *  last-good value on a failed fetch (same "stale beats null" contract as
- *  useLiveSignal.ts), a single-caller poll, not a cross-component bus. */
+/** Keeps the last-good value on a failed fetch (same "stale beats null"
+ *  contract as useLiveSignal.ts) — the thin React wrapper over
+ *  opsPoll.ts's subscribeOpsPoll (audit fix, 2026-09-28: this used to be a
+ *  bare setInterval with no document.hidden awareness, burning a fetch every
+ *  2 min in a background tab; subscribeOpsPoll now pauses while hidden and
+ *  polls immediately on regain, the same visibility contract P4's shared bus
+ *  (useLiveSignal.ts) uses — split into its own file rather than actually
+ *  importing that module, see opsPoll.ts's header for why). */
 function useOpsPoll(url: string, intervalMs: number): Ops | null {
   const [ops, setOps] = useState<Ops | null>(null);
   useEffect(() => {
     let cancelled = false;
-    const poll = () => {
-      fetch(url)
-        .then((res) => (res.ok ? (res.json() as Promise<Ops>) : Promise.reject(new Error(String(res.status)))))
-        .then((data) => {
-          if (!cancelled) setOps(data);
-        })
-        .catch(() => {});
-    };
-    poll();
-    const id = setInterval(poll, intervalMs);
+    const unsubscribe = subscribeOpsPoll(url, intervalMs, (data) => {
+      if (!cancelled) setOps(data);
+    });
     return () => {
       cancelled = true;
-      clearInterval(id);
+      unsubscribe();
     };
   }, [url, intervalMs]);
   return ops;

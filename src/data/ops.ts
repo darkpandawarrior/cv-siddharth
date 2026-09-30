@@ -128,7 +128,7 @@ export const leverage = [
   },
   {
     "id": "shared.android.library",
-    "modules": 11,
+    "modules": 12,
     "repos": [
       "kmp-toolkit"
     ]
@@ -236,7 +236,7 @@ export const drift: Drift[] = [
     "repo": "Doori",
     "upstream": "kmp-toolkit",
     "pin": "db8ffcc",
-    "behind": 13,
+    "behind": 14,
     "pinnedAt": "2026-09-22"
   },
   {
@@ -250,7 +250,7 @@ export const drift: Drift[] = [
     "repo": "Gaddi",
     "upstream": "kmp-toolkit",
     "pin": "ce21dce",
-    "behind": 11,
+    "behind": 12,
     "pinnedAt": "2026-09-23"
   },
   {
@@ -264,7 +264,7 @@ export const drift: Drift[] = [
     "repo": "PaymentsLab-KMP",
     "upstream": "kmp-toolkit",
     "pin": "db8ffcc",
-    "behind": 13,
+    "behind": 14,
     "pinnedAt": "2026-09-22"
   },
   {
@@ -278,7 +278,7 @@ export const drift: Drift[] = [
     "repo": "kmp-app-template",
     "upstream": "kmp-toolkit",
     "pin": "2324a3a",
-    "behind": 56,
+    "behind": 57,
     "pinnedAt": "2026-09-21"
   },
   {
@@ -292,7 +292,7 @@ export const drift: Drift[] = [
     "repo": "Candidai",
     "upstream": "kmp-toolkit",
     "pin": "db8ffcc",
-    "behind": 13,
+    "behind": 14,
     "pinnedAt": "2026-09-22"
   }
 ];

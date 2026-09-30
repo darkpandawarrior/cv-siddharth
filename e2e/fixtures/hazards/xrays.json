@@ -1,0 +1,6 @@
+[
+  { "time_tag": "2026-09-29T19:35:00Z", "satellite": 18, "flux": 3.1e-7, "energy": "0.05-0.4nm" },
+  { "time_tag": "2026-09-29T19:35:00Z", "satellite": 18, "flux": 2.4e-6, "energy": "0.1-0.8nm" },
+  { "time_tag": "2026-09-29T19:36:00Z", "satellite": 18, "flux": 3.5e-7, "energy": "0.05-0.4nm" },
+  { "time_tag": "2026-09-29T19:36:00Z", "satellite": 18, "flux": 1.2e-5, "energy": "0.1-0.8nm" }
+]

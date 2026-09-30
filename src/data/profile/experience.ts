@@ -202,7 +202,7 @@ export const experience: Experience[] = [
     company: "Jugnoo (Jungleworks / Tookan)",
     role: "Software Engineer, Android & Vertical Owner",
     period: "January 2021 - May 2023",
-    location: "Remote, India",
+    location: "Chandigarh, India",
     points: [
       {
                 text: "I carried Android across a multi-vertical super-app (ride-hailing, carpool, delivery, grocery, bike and car rental, shuttle and wallet) spanning customer, driver and merchant apps with 5M+ Play Store installs. Joined a nine-year-old codebase seven years in, and became one of its primary maintainers.",

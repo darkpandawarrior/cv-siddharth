@@ -1,0 +1,280 @@
+{
+  "title": "EONET Events",
+  "events": [
+    {
+      "id": "EONET_24809",
+      "title": "Wildfire Merit Creek, Greene, Mississippi",
+      "description": "4 Miles S from McLain, MS",
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_24809",
+      "closed": null,
+      "categories": [
+        {
+          "id": "wildfires",
+          "title": "Wildfires"
+        }
+      ],
+      "sources": [
+        {
+          "id": "IRWIN",
+          "url": "https://irwin.doi.gov/observer/incidents/2026-MSMNF-000578"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 828.0,
+          "magnitudeUnit": "acres",
+          "date": "2026-09-23T10:12:00Z",
+          "type": "Point",
+          "coordinates": [
+            -88.83785,
+            31.052583
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_24710",
+      "title": "Wildfire Round Prarie, Morehouse, Louisiana",
+      "description": "8 Miles NW from Bastrop, LA",
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_24710",
+      "closed": null,
+      "categories": [
+        {
+          "id": "wildfires",
+          "title": "Wildfires"
+        }
+      ],
+      "sources": [
+        {
+          "id": "IRWIN",
+          "url": "https://irwin.doi.gov/observer/incidents/2026-LALAS-000390"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 738.55,
+          "magnitudeUnit": "acres",
+          "date": "2026-09-20T17:32:00Z",
+          "type": "Point",
+          "coordinates": [
+            -91.989455,
+            32.858241
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_24810",
+      "title": "Prescribed Fire CRAWFORD CORRAL RX, Tulare, California",
+      "description": null,
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_24810",
+      "closed": null,
+      "categories": [
+        {
+          "id": "wildfires",
+          "title": "Wildfires"
+        }
+      ],
+      "sources": [
+        {
+          "id": "IRWIN",
+          "url": "https://irwin.doi.gov/observer/incidents/2026-CATUU-000092"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 690.0,
+          "magnitudeUnit": "acres",
+          "date": "2026-09-19T13:26:00Z",
+          "type": "Point",
+          "coordinates": [
+            -118.9721,
+            36.601661
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_24786",
+      "title": "Hurricane Nolo",
+      "description": null,
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_24786",
+      "closed": null,
+      "categories": [
+        {
+          "id": "severeStorms",
+          "title": "Severe Storms"
+        }
+      ],
+      "sources": [
+        {
+          "id": "JTWC",
+          "url": "https://www.metoc.navy.mil/jtwc/products/ep1526.tcw"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": 40.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-24T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.8,
+            14.6
+          ]
+        },
+        {
+          "magnitudeValue": 40.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-24T06:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -156,
+            14.8
+          ]
+        },
+        {
+          "magnitudeValue": 50.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-24T12:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -156.2,
+            14.6
+          ]
+        },
+        {
+          "magnitudeValue": 55.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-24T18:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -156.2,
+            14.7
+          ]
+        },
+        {
+          "magnitudeValue": 60.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-25T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -156,
+            14.9
+          ]
+        },
+        {
+          "magnitudeValue": 70.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-25T06:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.8,
+            15.2
+          ]
+        },
+        {
+          "magnitudeValue": 75.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-25T12:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.6,
+            15.8
+          ]
+        },
+        {
+          "magnitudeValue": 90.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-25T18:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.4,
+            16.3
+          ]
+        },
+        {
+          "magnitudeValue": 90.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-26T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.4,
+            16.7
+          ]
+        },
+        {
+          "magnitudeValue": 90.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-26T06:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.2,
+            16.9
+          ]
+        },
+        {
+          "magnitudeValue": 90.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-26T12:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.3,
+            16.9
+          ]
+        },
+        {
+          "magnitudeValue": 85.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-26T18:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -155.7,
+            16.8
+          ]
+        },
+        {
+          "magnitudeValue": 80.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-09-27T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -156.1,
+            16.7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EONET_20710",
+      "title": "Nevados del Chillan Volcano, Chile",
+      "description": null,
+      "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_20710",
+      "closed": null,
+      "categories": [
+        {
+          "id": "volcanoes",
+          "title": "Volcanoes"
+        }
+      ],
+      "sources": [
+        {
+          "id": "SIVolcano",
+          "url": "https://volcano.si.edu/volcano.cfm?vn=357070"
+        }
+      ],
+      "geometry": [
+        {
+          "magnitudeValue": null,
+          "magnitudeUnit": null,
+          "date": "2026-06-15T00:00:00Z",
+          "type": "Point",
+          "coordinates": [
+            -71.378,
+            -36.868
+          ]
+        }
+      ]
+    }
+  ]
+}

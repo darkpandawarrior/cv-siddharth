@@ -38,7 +38,7 @@ export function AltitudeRail() {
   }
 
   return (
-    <div role="group" aria-label="Altitude" data-altitude={here} className="flex items-center gap-1 rounded-full border border-line bg-ink/60 p-1 text-xs">
+    <div role="group" aria-label="Altitude" data-altitude={here} className="flex items-center gap-0 rounded-full border border-line bg-ink/60 p-0 text-xs sm:gap-1">
       {STOPS.map((stop) => {
         const active = stop.altitude === here;
         // A real <Link> (real href, crawlable, keyboard-activatable) rather
@@ -54,11 +54,12 @@ export function AltitudeRail() {
             }}
             aria-current={active ? "true" : undefined}
             data-altitude-stop={stop.altitude}
-            className={`ctrl rounded-full px-2.5 py-1 font-mono ${
+            className={`ctrl flex min-h-11 min-w-11 items-center justify-center rounded-full px-1 py-1 font-mono sm:px-2.5 ${
               active ? "bg-accent text-ink" : "text-muted hover:text-zinc-100"
             }`}
           >
-            {stop.label}
+            <span aria-hidden className="sm:hidden">{stop.label[0]}</span>
+            <span className="sr-only sm:not-sr-only">{stop.label}</span>
           </Link>
         );
       })}

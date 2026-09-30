@@ -64,6 +64,18 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // rendered by SiteFooter) — the URL comes from Spotify's own API
     // response, so it never appears as a literal in this repo's source.
     "https://i.scdn.co",
+    // NASA GIBS WMS (src/world/globe/layers/gibs.ts): /globe's real-imagery
+    // earth loads yesterday's VIIRS mosaic plus the Blue and Black Marble
+    // bases as textures, straight from NASA (CORS *), never proxied.
+    "https://gibs.earthdata.nasa.gov",
+    // Panoramax's photo storage host (src/world/globe/ui/streetPhotoViewer.tsx
+    // and StreetView.tsx's click-to-open lightbox/360 viewer): the search
+    // API (api.panoramax.xyz, below) answers with asset URLs on THIS
+    // different host — plain <img> and THREE.TextureLoader loads, CORS "*",
+    // keyless. Not tiles.openfreemap.org: MapLibre fetches every style/tile/
+    // sprite/glyph resource with `fetch()` (confirmed in its own bundled
+    // source), which CSP scopes under connect-src, never img-src.
+    "https://panoramax.openstreetmap.fr",
     ...(heavyOrigin ? [heavyOrigin] : []),
   ],
   "media-src": ["'self'", ...(heavyOrigin ? [heavyOrigin] : [])], // ShowcaseFilm's project videos
@@ -77,6 +89,49 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
     // websocket for the room state plus its presence channel.
     "wss://api.playhtml.fun",
     "https://api.playhtml.fun",
+    // /globe's live earth events (src/world/globe/layers/{quake,eonet,
+    // hazardAlerts,aurora,launches}.ts): keyless public feeds that answer
+    // with CORS *, fetched straight from the browser, never proxied.
+    "https://photon.komoot.io", // W11 user-initiated place search (OpenStreetMap).
+    "https://api.bigdatacloud.net", // W11 user-initiated reverse geocoding.
+    "https://api.open-meteo.com", // W11 user-initiated current weather (CC BY 4.0).
+    "https://earthquake.usgs.gov",
+    "https://eonet.gsfc.nasa.gov",
+    "https://www.gdacs.org",
+    "https://services.swpc.noaa.gov",
+    "https://api.tidesandcurrents.noaa.gov", // src/world/globe/layers/tides.ts fetches NOAA stations and tide readings.
+    "https://gibs.earthdata.nasa.gov", // src/world/globe/layers/TileLayer.tsx fetches WMTS tiles.
+    "https://ll.thespacedevs.com",
+    // /globe's street level (src/world/globe/ui/StreetView.tsx, streetPhotos.ts):
+    // OpenFreeMap's keyless "liberty" style (style JSON, vector .pbf tiles,
+    // sprite JSON/PNG, glyph .pbf, and the fallback raster base) — MapLibre
+    // GL fetches every one of these with `fetch()`, never `<img>`, so this
+    // whole family sits under connect-src, not img-src. CORS "*", verified.
+    "https://tiles.openfreemap.org",
+    // Panoramax's search API (StreetView.tsx's bbox photo query) — CORS
+    // echoes the request Origin rather than "*", still keyless.
+    "https://api.panoramax.xyz",
+    // LANE V1 (wave 7, step B): EOX's s2cloudless deep-zoom base
+    // (src/world/globe/layers/gibsCatalog.ts's "s2cloudless" entry) —
+    // TileLayer.tsx loads every tile, GIBS and EOX alike, with
+    // `fetch()` + `createImageBitmap()`, which CSP governs under
+    // connect-src, not img-src (same fetch()-vs-img-src distinction this
+    // file already draws for OpenFreeMap above). CORS *, keyless, verified
+    // 2026-09-29.
+    "https://tiles.maps.eox.at",
+    // LANE V5 (wave 7, lane 5 step A): NOAA NHC's forecast-cone MapServer
+    // (src/world/globe/layers/feedUrls.ts's NHC_MAPSERVER_BASE) — queried
+    // straight from the browser, CORS echoes the request Origin with
+    // credentials, keyless, verified 2026-09-29.
+    "https://mapservices.weather.noaa.gov",
+    // LANE S3 (wave 9): Open-Meteo's marine/air-quality/flood sibling
+    // subdomains (src/world/globe/layers/{marine,airQuality,flood}.ts) --
+    // same free, keyless, CC BY 4.0, CORS "*" family as api.open-meteo.com
+    // above, fetched straight from the browser on hover, never proxied.
+    // Verified live 2026-09-30.
+    "https://marine-api.open-meteo.com",
+    "https://air-quality-api.open-meteo.com",
+    "https://flood-api.open-meteo.com",
     // useLivePaint.ts pings a DeviceWall/DeviceMorph target's own URL to
     // detect when its Wasm runtime has actually painted — a fetch this
     // repo's source makes, on top of frame-src's embedding grant below.

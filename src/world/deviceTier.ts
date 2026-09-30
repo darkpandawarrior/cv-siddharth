@@ -95,6 +95,12 @@ export function resetDeviceTierForTest(): void {
   cached = null;
 }
 
+/** /globe's own `<Canvas dpr>` cap, separate from /world's `dprMax`. Owner
+ *  decision 2026-09-30: 2 on tier 1 (Retina-sharp on strong GPUs), 1.5 on
+ *  tier 2 so mid-range laptops hold frame rate, 1 on tier 3. X-ray reads the
+ *  same constant, so the number it shows is the one the canvas uses. */
+export const GLOBE_DPR_MAX: Record<DeviceTier, number> = { 1: 2, 2: 1.5, 3: 1 };
+
 export interface TierBudget {
   /** Fog distance — §4/§10: desktop vs mobile. */
   fogNearFar: readonly [number, number];
