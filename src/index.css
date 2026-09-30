@@ -1454,7 +1454,7 @@ html.resume-mode .palette-trigger {
 }
 
 /* Globe controls keep a full touch target even when the glyph is compact. */
-@media (max-width: 639px) {
+@media (max-width: 639px), (pointer: coarse) {
   [data-globe-root] button {
     min-width: calc(var(--spacing) * 11);
     min-height: calc(var(--spacing) * 11);
