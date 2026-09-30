@@ -1483,6 +1483,7 @@ html.resume-mode .palette-trigger {
   :root { --globe-compact: 1; }
   [data-globe-root] .glass-panel.fixed.bottom-0,
   [data-globe-time-sheet], [data-globe-briefing] {
+    z-index: 60;
     background: rgba(17, 22, 25, .96);
     max-height: min(70svh, var(--globe-sheet-max-h, 70svh));
   }
