@@ -9,7 +9,7 @@ const matrix = [
 ];
 const histories = Object.fromEntries(["4.5_month", "2.5_week"].map(name => [name, JSON.parse(readFileSync(new URL(`./fixtures/history/usgs-${name.replace("_", "-")}.geojson`, import.meta.url), "utf8"))]));
 const fixtures = Object.fromEntries(Object.entries({ weather: "weather-2026-09-24.json", tle: "tle.json", whereami: "whereami-IN.json" }).map(([key, file]) => [key, JSON.parse(readFileSync(new URL(`./fixtures/${file}`, import.meta.url), "utf8"))]));
-async function openGlobe(page: Page, selection = false) {
+async function openGlobe(page: Page, selection = false, holdExplore?: Promise<void>) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.clock.setFixedTime(new Date("2026-09-30T12:00:00Z"));
   await page.addInitScript((selected) => {
@@ -19,6 +19,7 @@ async function openGlobe(page: Page, selection = false) {
   await page.routeWebSocket("**/*", socket => socket.close());
   await page.route("**/*", route => {
     const url = new URL(route.request().url());
+    if (holdExplore && /\/assets\/ExploreBar-[^/]+\.js$/.test(url.pathname)) return holdExplore.then(() => route.continue());
     const history = histories[url.pathname.split("/").pop()!.replace(".geojson", "")];
     if (url.hostname === "earthquake.usgs.gov" && history) return route.fulfill({ json: history });
     if (!["localhost", "127.0.0.1"].includes(url.hostname)) return route.abort();
@@ -29,6 +30,7 @@ async function openGlobe(page: Page, selection = false) {
   await page.goto("/globe");
   await waitForHydration(page);
   const canvas = page.locator("[data-globe-root] canvas").first();
+  if (holdExplore) return canvas;
   await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
   await expect(page.locator("[data-space-weather-status]")).toHaveAttribute("data-space-weather-status", "failed");
   await expect(page.locator("[data-explore-bar]")).toBeAttached();
@@ -201,5 +203,25 @@ for (const viewport of matrix) {
         }
       });
     }
+  });
+}
+
+for (const width of [1440, 1024]) {
+  test(`desktop room stays sized with the ExploreBar chunk blocked at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    let release!: () => void;
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const requested = page.waitForRequest(/\/assets\/ExploreBar-[^/]+\.js$/);
+    try {
+      const canvas = await openGlobe(page, false, held);
+      await requested;
+      await expect(canvas).toBeAttached();
+      await expect(page.locator("[data-explore-bar]")).toHaveCount(0);
+      await expect.poll(() => page.locator("[data-globe-root]").evaluate(el => {
+        const box = el.getBoundingClientRect(), parent = el.parentElement!.getBoundingClientRect();
+        return box.height > 0 && Math.abs(box.height - parent.height) <= 1;
+      })).toBe(true);
+    } finally { release(); }
+    await expect(page.locator("[data-explore-bar]")).toBeVisible();
   });
 }

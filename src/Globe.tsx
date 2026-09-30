@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState, type CSSProperties } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -10,7 +10,7 @@ import { GlobeScene } from "./world/globe/GlobeScene.tsx";
 import { GlobeHud } from "./world/globe/GlobeHud.tsx";
 import { GlobePanel } from "./world/globe/GlobePanel.tsx";
 import { buildPuneSelection, PUNE_SELECTION_ID } from "./world/globe/puneSelection.ts";
-import { useGlobe } from "./world/globe/globeStore.ts";
+import { useGlobe, type GlobeSheet } from "./world/globe/globeStore.ts";
 
 // The living-earth UI (layer panel, inspector, time scrubber, tour): client
 // only, one lazy chunk each, mounted beside the canvas they drive.
@@ -50,6 +50,69 @@ const sceneLoadingFallback = (
 // PANEL_RESERVE_RIGHT sets `left-0` explicitly instead of `inset-x-0`.
 const PANEL_RESERVE_PAD = { open: "sm:pr-[249px]", collapsed: "sm:pr-[50px]" };
 const PANEL_RESERVE_RIGHT = { open: "sm:right-[249px]", collapsed: "sm:right-[50px]" };
+
+/** The room owns its height and chrome slots, including while lazy UI is pending. */
+function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: number | null) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [bar, setBar] = useState<HTMLDivElement | null>(null);
+  const [topOffsetPx, setTopOffsetPx] = useState<number | null>(null);
+  const selectionId = useGlobe(s => s.selected?.id);
+  useEffect(() => {
+    const root = rootRef.current, stage = root?.querySelector<HTMLElement>("[data-globe-stage]");
+    const facts = root?.querySelector<HTMLElement>("[data-globe-panel]")?.parentElement;
+    if (!root || !stage || !facts) return;
+    const parent = root.parentElement!, topbar = stage.querySelector<HTMLElement>("[data-globe-topbar]");
+    delete stage.dataset.chromeMeasured;
+    let frame = 0;
+    const measure = () => {
+      root.style.height = innerWidth >= 640 ? `${Math.max(0, innerHeight - parent.getBoundingClientRect().top)}px` : "";
+      root.style.setProperty("--globe-room-top", `${root.getBoundingClientRect().top}px`);
+      const room = stage.getBoundingClientRect(), gap = 8;
+      if (topbar) {
+        const slot = stage.querySelector<HTMLElement>("[data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card]");
+        for (const el of [slot, slot?.querySelector("h2"), slot?.lastElementChild]) if (el) resize.observe(el);
+        let top = topbar.getBoundingClientRect();
+        const [left, right] = [...topbar.children].map(el => el.getBoundingClientRect());
+        const width = bar?.offsetWidth ?? 0, height = bar?.offsetHeight ?? 0;
+        const centred = room.width >= 640 && right.left - left.right - gap * 2 >= width;
+        if (getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() !== "1") {
+          const title = slot?.querySelector("h2")?.getBoundingClientRect().height ?? 0;
+          const actions = slot?.lastElementChild?.getBoundingClientRect().height ?? 0;
+          const reserve = slot?.checkVisibility() ? title + actions + gap * 4 : 0;
+          const limit = Math.max(0, facts.getBoundingClientRect().top - room.top - reserve - (centred ? 0 : height) - gap * 3);
+          topbar.style.maxHeight = `${limit}px`;
+          const padding = getComputedStyle(topbar);
+          topbar.style.setProperty("--globe-rail-max-h", `${Math.max(0, limit - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom))}px`);
+          top = topbar.getBoundingClientRect();
+        } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
+        const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
+        const short = getComputedStyle(document.documentElement).getPropertyValue("--globe-short").trim() === "1";
+        stage.style.setProperty("--globe-explore-left", `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : room.width / 2}px`);
+        stage.style.setProperty("--globe-explore-top", `${y}px`);
+        stage.style.setProperty("--globe-explore-max-h", `${Math.max(0, Math.min(room.bottom, innerHeight) - room.top - y - gap)}px`);
+        const bottom = bar?.checkVisibility() ? y + height : 0;
+        stage.style.setProperty("--globe-left-slot-top", `${Math.max(top.bottom - room.top, centred ? 0 : bottom) + gap}px`);
+        stage.style.setProperty("--globe-top-offset", `${top.height + 16}px`);
+        root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - top.bottom - gap)}px`);
+        setTopOffsetPx(top.height);
+      }
+      stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - facts.getBoundingClientRect().top) + gap}px`);
+      root.style.setProperty("--globe-facts-max-h", `${Math.max(0, innerHeight - facts.getBoundingClientRect().top)}px`);
+      stage.dataset.chromeMeasured = "true";
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    const resize = new ResizeObserver(schedule);
+    for (const el of [parent, parent.previousElementSibling, stage, facts, topbar, ...(topbar?.children ?? []), bar]) if (el) resize.observe(el);
+    // Direct control mounts can change the clusters; nested readouts use ResizeObserver.
+    const mutation = new MutationObserver(schedule);
+    if (topbar) for (const el of [topbar, ...topbar.children]) mutation.observe(el, { childList: true });
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, true);
+    schedule();
+    return () => { cancelAnimationFrame(frame); resize.disconnect(); mutation.disconnect(); window.removeEventListener("resize", schedule); window.removeEventListener("scroll", schedule, true); };
+  }, [bar, capable, sheet, tourStep, selectionId]);
+  return { rootRef, setBar, topOffsetPx };
+}
 
 /**
  * /globe - the third altitude (living-ledger-spec.md#6.3): real Earth as a
@@ -101,14 +164,10 @@ const PANEL_RESERVE_RIGHT = { open: "sm:right-[249px]", collapsed: "sm:right-[50
  *     regardless of z-index) - which is exactly why GlobeTour's running
  *     card is a SEPARATE mount ("overlay" slot) rather than nested inside
  *     this row: nested here, its own `position:absolute` coordinates would
- *     resolve against the row instead of the stage. Split left/right into
- *     two clusters with a % max-width each, leaving a reserved centre band
- *     for LANE W1's ExploreBar (search/measure), which mounts here later,
- *     right after StreetView below - not in this worktree yet.
- *   - The left slot (Inspector / the tour's running card) and the right
- *     LayerPanel column both stop short of GlobePanel's fact-list band
- *     (bottom ~45% of the stage) via percentage `bottom`/`right` math that
- *     resolves against the stage's own height/width, not a guessed pixel.
+ *     resolve against the row instead of the stage. ExploreBar uses the
+ *     measured centre band when it fits, or stacks below both clusters.
+ *   - The hook publishes the left-slot top and fact-list reservation from
+ *     their actual bounds. The right LayerPanel column keeps its own band.
  *
  * Phones (< 640): the canvas stage is a fixed ~62svh block ABOVE the fact
  * list in normal flow (not an overlay on top of it) - the previous 70vh
@@ -136,41 +195,7 @@ export function Globe() {
   const setSheet = useGlobe((s) => s.setSheet);
   const tourStep = useGlobe((s) => s.tourStep);
   const setTourStep = useGlobe((s) => s.setTourStep);
-  // Phones: the topbar wraps the HUD pills into 1-3 rows depending on
-  // viewport width, so its real height varies - measured here and handed to
-  // GlobeScene as `topOffsetPx` (SceneRig's own comment has the why) rather
-  // than guessed, the same fix as `desktopHeightPx` above for RoomFrame.
-  const topbarRef = useRef<HTMLDivElement>(null);
-  const [topOffsetPx, setTopOffsetPx] = useState<number | null>(null);
-  // Phone bottom sheets (Layers/Time/Tour) are `position: fixed; bottom: 0`,
-  // so their max-height is what keeps their TOP edge off the topbar's own
-  // icon row (task H1 #3) - a bare 70vh reaches into that row on a short
-  // viewport (measured: 390x844 puts a 70vh sheet's top above the topbar's
-  // real bottom). `topOffsetPx` alone isn't enough here: it's a height, not
-  // a position, and the topbar doesn't start at the viewport's top (site
-  // chrome sits above the stage) - the sheet cap needs the topbar's real
-  // BOTTOM edge in viewport coordinates, from the same rect this effect
-  // already reads.
-  const [sheetMaxPx, setSheetMaxPx] = useState<number | null>(null);
-  useEffect(() => {
-    const el = topbarRef.current;
-    if (!el) return;
-    const update = () => {
-      const rect = el.getBoundingClientRect();
-      setTopOffsetPx(rect.height);
-      setSheetMaxPx(Math.max(0, window.innerHeight - rect.bottom - 8));
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    window.addEventListener("resize", update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-    // showScene (via capable) gates the topbar's own mount below - this
-    // effect has to re-run once that ref actually exists.
-  }, [capable]);
+  const { rootRef, setBar, topOffsetPx } = useGlobeChromeLayout(capable, sheet, tourStep);
 
   useEffect(() => {
     queueMicrotask(() => { setCapable(hasWebGL()); setTier(deviceTier()); });
@@ -196,6 +221,7 @@ export function Globe() {
   return (
     <div
       data-globe-root
+      ref={rootRef}
       tabIndex={-1}
       className="relative flex h-full w-full flex-col overflow-hidden bg-void sm:block"
     >
@@ -206,16 +232,6 @@ export function Globe() {
       <div
         data-globe-stage
         className="relative h-[62svh] w-full shrink-0 sm:absolute sm:inset-0 sm:h-auto"
-        // The real topbar height (+16px margin), consumed by Inspector.tsx
-        // and GlobeTour.tsx's left-slot card instead of a guessed `top-20` -
-        // at narrower sm+ widths (1024px) the HUD row wraps to two lines and
-        // a fixed 80px let the card's top edge cover the zoom/layer icon row
-        // underneath it (caught via screenshot QA). Falls back to 5rem
-        // (the old constant) before the first measurement lands.
-        style={{
-          ["--globe-top-offset" as string]: topOffsetPx != null ? `${topOffsetPx + 16}px` : "5rem",
-          ["--globe-sheet-max-h" as string]: sheetMaxPx != null ? `${sheetMaxPx}px` : "70vh",
-        } as CSSProperties}
       >
         {showScene && (
           <ClientOnly fallback={sceneLoadingFallback}>
@@ -244,7 +260,6 @@ export function Globe() {
         {showScene && (
           <div
             data-globe-topbar
-            ref={topbarRef}
             className={`pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-2 p-2 sm:p-4 ${panelReservePad}`}
           >
             <div className="pointer-events-none flex flex-wrap items-center gap-2 sm:max-w-[38%]">
@@ -340,7 +355,7 @@ export function Globe() {
               <LayerPanel tier={tier} />
               <GlobeTour tier={tier} slot="overlay" />
               <StreetView tier={tier} />
-              <ExploreBar tier={tier} />
+              <ExploreBar tier={tier} layoutRef={setBar} />
               <StoryPlayer tier={tier} />
               <Intro tier={tier} />
             </Suspense>

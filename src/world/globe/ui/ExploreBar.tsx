@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { debounce, distanceAndBearing, rateLimit } from "../exploreMath.ts";
 import { placeSelection, pointSelection, searchPlaces, type Place } from "../exploreApi.ts";
 import { canvasState, surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
@@ -42,8 +42,9 @@ function classify(query: string): TopRow | null {
 
 /** Lazy DOM surface. Tiers share five results; only the measurement's
  * fixed vertex cap changes. No background geolocation/weather requests. */
-export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
+export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layoutRef: (el: HTMLDivElement | null) => void }) {
   const host = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null);
+  const register = useCallback((el: HTMLDivElement | null) => { host.current = el; layoutRef(el); }, [layoutRef]);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [focused, setFocused] = useState(false);
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
@@ -61,55 +62,6 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   const view = useGlobe(s => s.view);
   const sheet = useGlobe(s => s.sheet);
 
-  useEffect(() => {
-    const bar = host.current, stage = bar?.closest<HTMLElement>("[data-globe-stage]"), root = stage?.parentElement;
-    const topbar = stage?.querySelector<HTMLElement>("[data-globe-topbar]");
-    const facts = root?.querySelector<HTMLElement>("[data-globe-panel]")?.parentElement;
-    if (!bar || !stage || !root || !topbar || !facts) return;
-    let frame = 0;
-    const measure = () => {
-      const parent = root.parentElement!;
-      root.style.height = innerWidth >= 640 ? `${Math.max(0, Math.min(parent.clientHeight, innerHeight - parent.getBoundingClientRect().top))}px` : "";
-      root.style.setProperty("--globe-room-top", `${root.getBoundingClientRect().top}px`);
-      const room = stage.getBoundingClientRect();
-      let top = topbar.getBoundingClientRect();
-      const [left, right] = [...topbar.children].map(el => el.getBoundingClientRect());
-      const width = bar.offsetWidth, gap = 8;
-      const centred = room.width >= 640 && right.left - left.right - gap * 2 >= width;
-      if (getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() !== "1") {
-        const slot = stage.querySelector<HTMLElement>("[data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card]");
-        const title = slot?.querySelector("h2")?.getBoundingClientRect().height ?? 0;
-        const actions = slot?.lastElementChild?.getBoundingClientRect().height ?? 0;
-        const reserve = slot?.checkVisibility() ? title + actions + gap * 4 : 0;
-        const limit = Math.max(0, facts.getBoundingClientRect().top - room.top - reserve - (centred ? 0 : bar.offsetHeight) - gap * 3);
-        topbar.style.maxHeight = `${limit}px`;
-        const padding = getComputedStyle(topbar);
-        topbar.style.setProperty("--globe-rail-max-h", `${Math.max(0, limit - parseFloat(padding.paddingTop) - parseFloat(padding.paddingBottom))}px`);
-        top = topbar.getBoundingClientRect();
-      } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
-      const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
-      const short = getComputedStyle(document.documentElement).getPropertyValue("--globe-short").trim() === "1";
-      bar.style.left = `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : room.width / 2}px`;
-      bar.style.top = `${y}px`;
-      bar.style.maxHeight = `${Math.max(0, Math.min(room.bottom, innerHeight) - room.top - y - gap)}px`;
-      const bottom = bar.checkVisibility() ? y + bar.getBoundingClientRect().height : 0;
-      stage.style.setProperty("--globe-left-slot-top", `${Math.max(top.bottom - room.top, centred ? 0 : bottom) + gap}px`);
-      stage.style.setProperty("--globe-facts-reserve", `${Math.max(0, room.bottom - facts.getBoundingClientRect().top) + gap}px`);
-      root.style.setProperty("--globe-facts-max-h", `${Math.max(0, innerHeight - facts.getBoundingClientRect().top)}px`);
-      root.style.setProperty("--globe-sheet-max-h", `${Math.max(0, innerHeight - top.bottom - gap)}px`);
-      stage.dataset.chromeMeasured = "true";
-    };
-    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
-    const resize = new ResizeObserver(schedule);
-    for (const el of [root.parentElement!, stage, topbar, ...topbar.children, bar, facts]) resize.observe(el);
-    // Site header and sheet state can move the stage without resizing it.
-    const mutation = new MutationObserver(schedule);
-    mutation.observe(root.parentElement!, { childList: true, subtree: true });
-    window.addEventListener("resize", schedule);
-    window.addEventListener("scroll", schedule, true);
-    schedule();
-    return () => { cancelAnimationFrame(frame); resize.disconnect(); mutation.disconnect(); window.removeEventListener("resize", schedule); window.removeEventListener("scroll", schedule, true); };
-  }, [sheet]);
 
   const topRow = useMemo(() => classify(query), [query]);
   const examples = phone && focused && !query && !answer;
@@ -304,7 +256,7 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    <div ref={host} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
+    <div ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
