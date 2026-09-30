@@ -87,7 +87,7 @@ function useGlobeChromeLayout(capable: boolean, sheet: GlobeSheet, tourStep: num
         } else { topbar.style.removeProperty("max-height"); topbar.style.removeProperty("--globe-rail-max-h"); }
         const y = (centred ? top.top + 16 : top.bottom + gap) - room.top;
         const short = getComputedStyle(document.documentElement).getPropertyValue("--globe-short").trim() === "1";
-        stage.style.setProperty("--globe-explore-left", `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : room.width / 2}px`);
+        stage.style.setProperty("--globe-explore-left", `${centred ? (left.right + right.left) / 2 - room.left : short ? room.width - width / 2 - gap * 2 : facts.getBoundingClientRect().width / 2}px`);
         stage.style.setProperty("--globe-explore-top", `${y}px`);
         stage.style.setProperty("--globe-explore-max-h", `${Math.max(0, Math.min(room.bottom, innerHeight) - room.top - y - gap)}px`);
         const bottom = bar?.checkVisibility() ? y + height : 0;
