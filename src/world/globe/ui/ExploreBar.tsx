@@ -265,7 +265,8 @@ export default function ExploreBar({ tier }: { tier: 1 | 2 | 3 }) {
     // what catches it). Desktop keeps its own fixed sm:top-[108px]: there
     // ExploreBar sits IN the topbar's reserved centre band beside the HUD
     // pills, not below the full stack, so it was never affected.
-    <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-30 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
+    // Below the z-20 topbar so Share's popover stays clickable.
+    <div ref={host} data-explore-bar className={`${sheet ? "hidden sm:block" : ""} pointer-events-auto absolute left-1/2 top-[var(--globe-top-offset,6.5rem)] z-10 w-[calc(100%-32px)] max-w-[377px] -translate-x-1/2 rounded-xl glass-panel p-2 font-mono text-xs text-zinc-200 sm:top-[108px]`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
