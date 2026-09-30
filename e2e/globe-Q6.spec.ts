@@ -5,6 +5,7 @@ import { fleetStats } from "../src/data/store.ts";
 async function openGlobe(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.route(/^https:\/\//, route => route.abort());
   await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));

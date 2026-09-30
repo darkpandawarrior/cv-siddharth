@@ -44,6 +44,8 @@ async function openGlobe(page: Page) {
   // Playwright dispatches to the MOST RECENTLY registered matching route
   // first, so the specific overrides go last -- a catch-all registered
   // after `**/api/wind` would otherwise win and 503 it too.
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
+  await page.route("https://**", route => route.abort());
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: {} }));
   await page.route("**/api/wind", (route) => route.fulfill({ json: windFixture }));
   await page.route("https://earthquake.usgs.gov/**", (route) => route.fulfill({ json: { type: "FeatureCollection", features: [NEAR_QUAKE, FAR_QUAKE] } }));

@@ -38,6 +38,7 @@ async function withApiFixtures(page: Page, activity: unknown) {
  *  e2e/globe-X3.spec.ts's own `abortUnrelatedFeeds`). */
 async function abortUnrelatedFeeds(page: Page) {
   await page.route(ALL_DAY_URL, (route) => route.abort());
+  await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.route("https://eonet.gsfc.nasa.gov/api/v3/events**", (route) => route.abort());
   await page.route("https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH", (route) => route.abort());
   await page.route("https://services.swpc.noaa.gov/json/ovation_aurora_latest.json", (route) => route.abort());
@@ -63,6 +64,8 @@ function readGuideDebug(page: Page) {
 async function openGlobe(page: Page, isoNow: string, mobile: boolean, activity: unknown = activityFixture) {
   await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("https://**", route => route.abort());
+  await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
   await abortUnrelatedFeeds(page);
   await withApiFixtures(page, activity);
   await page.clock.setFixedTime(new Date(isoNow));
@@ -84,9 +87,14 @@ async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
   let previousDist: number | null = null;
   let stable = 0;
   await expect.poll(async () => {
-    const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
-    const dist = await page.evaluate(() => window.__GUIDE_DEBUG__?.cameraDistance());
+    const { point, dist } = await page.evaluate((id) => ({
+      point: window.__GUIDE_DEBUG__?.screenPoint(id),
+      dist: window.__GUIDE_DEBUG__?.cameraDistance(),
+    }), slug);
     if (!point || dist == null) return 0;
+    // Hover can invalidate a reduced-motion demand frame. Exercise it
+    // while settling, so its frame cannot move the target after this gate.
+    await page.mouse.move(point.x, point.y);
     // A flyTo's dolly keeps looking straight at the target throughout its
     // whole transition, so the target's own 2D screen point can already
     // read "stable" while the camera is still animating in on the radial
@@ -101,12 +109,6 @@ async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
     previousDist = dist;
     return stable;
   }, { timeout: 30_000, intervals: [50] }).toBeGreaterThanOrEqual(3);
-  // A settled *reading* isn't the same guarantee as a settled camera --
-  // CameraDirector's own direct (reducedMotion) position set is
-  // synchronous, but OrbitControls' per-frame update() (drei's own
-  // useFrame, damping-driven) runs on the NEXT rendered frame regardless,
-  // so give it one to land before trusting the point above.
-  await page.waitForTimeout(120);
   const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
   if (!point) throw new Error("guide marker has no screen point");
   await page.mouse.move(point.x, point.y);

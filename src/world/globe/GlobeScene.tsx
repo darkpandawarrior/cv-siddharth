@@ -121,6 +121,14 @@ const LEFT_SLOT_RESERVE_PX = 304;
 const DOCKED_MIN_WIDTH = 640;
 const H_OFFSET_HALF_LIFE = 0.25; // seconds - smooths the shift when a panel opens/closes
 
+// Keep normalized offsets for CameraDirector, but restore the canvas aspect:
+// setViewOffset(1, 1, ...) sets aspect to 1 as well as changing the frustum.
+function frameCamera(camera: THREE.PerspectiveCamera, size: { width: number; height: number }, x: number, y: number) {
+  camera.setViewOffset(1, 1, x, y, 1, 1);
+  camera.aspect = size.width / size.height;
+  camera.updateProjectionMatrix();
+}
+
 function SceneRig({
   now,
   probeRef,
@@ -219,9 +227,7 @@ function SceneRig({
     // Fractions (a 1x1 "full" view), so the lift survives R3F's own resize
     // handling. setViewOffset also sets aspect to fullWidth/fullHeight, i.e.
     // 1, which stretched the globe sideways until the real aspect went back.
-    cam.setViewOffset(1, 1, 0, offsetYRef.current, 1, 1);
-    cam.aspect = size.width / size.height;
-    cam.updateProjectionMatrix();
+    frameCamera(cam, size, 0, offsetYRef.current);
     if (topOffsetPx != null) framedForReal.current = true;
   }, [get, topOffsetPx]);
 
@@ -256,10 +262,11 @@ function SceneRig({
     // mount-time effect's two framings (see its own comment) - re-applied
     // here unchanged because setViewOffset takes both axes in one call.
     if (Math.abs(next) > 1e-6 || Math.abs(targetOffsetX) > 1e-6) {
-      const cam = camera as THREE.PerspectiveCamera;
-      cam.setViewOffset(1, 1, next, offsetYRef.current, 1, 1);
-      cam.updateProjectionMatrix();
+      frameCamera(camera as THREE.PerspectiveCamera, size, next, offsetYRef.current);
     }
+    // Reduced motion uses demand rendering. Finish recentering without
+    // waiting for another hover or live-feed update to request the next frame.
+    if (Math.abs(next - targetOffsetX) > 1e-6) _state.invalidate();
 
     const el = probeRef.current;
     if (!el) return;

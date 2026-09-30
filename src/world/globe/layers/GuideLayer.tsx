@@ -157,6 +157,7 @@ declare global {
        *  "stable" well before the distance animation actually finishes.
        *  e2e needs this second signal too, or it can click mid-flight. */
       cameraDistance: () => number | null;
+      screenRadii: () => { horizontal: number; vertical: number } | null;
     };
   }
 }
@@ -296,6 +297,15 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
       },
       cameraDistance: () => sceneHandles.camera?.position.length() ?? null,
+      screenRadii: () => {
+        const { camera, canvas } = sceneHandles;
+        if (!camera || !canvas) return null;
+        const centre = new THREE.Vector3().project(camera);
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS).project(camera);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).multiplyScalar(GLOBE_RADIUS).project(camera);
+        const box = canvas.getBoundingClientRect();
+        return { horizontal: Math.abs(right.x - centre.x) * box.width / 2, vertical: Math.abs(up.y - centre.y) * box.height / 2 };
+      },
     };
   }, [simYear, activity, activityHistogram]);
 

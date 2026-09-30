@@ -15,7 +15,9 @@ for (const touch of [false, true]) {
       await page.setViewportSize({ width: touch ? 390 : 1440, height: touch ? 844 : 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
+      await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
       await page.route("https://**", route => route.abort());
+      await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
       // AIC864's fixture sits on Pune's ray, above the guide ring. This
       // marker gesture must hit the ring, not an unrelated aircraft.
       await page.route("**/api/aircraft", route => route.abort());
@@ -48,7 +50,7 @@ for (const touch of [false, true]) {
       if (await selection.isVisible()) await selection.getByRole("button", { name: "Close", exact: true }).click();
       await page.waitForFunction(() => !!window.__GUIDE_DEBUG__);
       await page.evaluate(() => window.__GUIDE_DEBUG__!.face("pune"));
-      await expect.poll(() => page.evaluate(() => window.__GUIDE_DEBUG__!.cameraDistance())).toBeCloseTo(14, 1);
+      await expect.poll(async () => Number(await canvas.getAttribute("data-camera-distance"))).toBeCloseTo(14, 1);
       let point = (await page.evaluate(() => window.__GUIDE_DEBUG__!.screenPoint("pune")))!;
       await expect.poll(async () => {
         point = (await page.evaluate(() => window.__GUIDE_DEBUG__!.screenPoint("pune")))!;

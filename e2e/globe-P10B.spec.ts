@@ -16,6 +16,9 @@ for (const width of [1440, 390]) {
           localStorage.setItem("cv-siddharth:globe-intro-seen", "1");
           window.__GLOBE_TEST_STREET__ = { lat: 18.5195, lon: 73.8412, bearing: 135, pitch: 55 };
         });
+        await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
+        await page.route("https://**", route => route.abort());
+        await page.route("**/api/**", route => route.fulfill({ status: 503, json: {} }));
         for (const [route, file] of Object.entries({ weather: "weather-2026-09-24.json", tle: "tle.json", aircraft: "aircraft.json", whereami: "whereami-IN.json" })) {
           await page.route(`**/api/${route}`, r => r.fulfill({ json: fixture(file) }));
         }
