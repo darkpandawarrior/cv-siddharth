@@ -6,6 +6,7 @@ import { employerMarkers } from "../../data/globeGeo.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
 import { useGlobe } from "./globeStore.ts";
 import { buildPuneSelection } from "./puneSelection.ts";
+import { useMarkerClick } from "./useMarkerClick.ts";
 
 const RING_RADIUS = 0.18;
 const RING_TUBE = 0.012;
@@ -33,6 +34,7 @@ const RING_LIFT = 0.005;
 export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Object3D>[] }) {
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
   const select = useGlobe((s) => s.select);
+  const markerClick = useMarkerClick();
   const setView = useGlobe((s) => s.setView);
 
   const placements = useMemo(() => [...new Map(employerMarkers.map((marker) => [marker.location, marker])).values()].map((marker) => {
@@ -46,15 +48,17 @@ export function Markers({ occlude: _occlude }: { occlude?: RefObject<THREE.Objec
       <mesh
         onClick={(e) => {
           e.stopPropagation();
-          const selection = placement.location === "Pune, India" ? buildPuneSelection() : {
-            id: `employer:${placement.location}`, kind: "employer", title: placement.location,
-            rows: employerMarkers.filter((marker) => marker.location === placement.location).map((marker) => ({ label: marker.company, value: marker.role })),
-            source: "src/data/profile/experience.ts, city-level employer location", live: false,
-            focus: { kind: "latlon" as const, lat: placement.lat, lon: placement.lon, distance: 14 },
-          };
-          if (!selection) return;
-          setView("orbit");
-          select(selection);
+          markerClick(e.nativeEvent, () => {
+            const selection = placement.location === "Pune, India" ? buildPuneSelection() : {
+              id: `employer:${placement.location}`, kind: "employer", title: placement.location,
+              rows: employerMarkers.filter((marker) => marker.location === placement.location).map((marker) => ({ label: marker.company, value: marker.role })),
+              source: "src/data/profile/experience.ts, city-level employer location", live: false,
+              focus: { kind: "latlon" as const, lat: placement.lat, lon: placement.lon, distance: 14 },
+            };
+            if (!selection) return;
+            setView("orbit");
+            select(selection);
+          });
         }}
         onPointerOver={(e) => {
           e.stopPropagation();

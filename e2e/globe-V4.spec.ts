@@ -143,9 +143,10 @@ test("50 pointer moves over the globe trigger zero network requests", async ({ p
   const canvas = page.locator("[data-globe-root] canvas").first();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("globe canvas has no bounding box");
-  for (let i = 0; i < 50; i++) {
-    await page.mouse.move(box.x + box.width / 2 + (i % 20) - 10, box.y + box.height / 2 + (i % 14) - 7);
-  }
+  // Dispatch all 50 real inputs without paying a software-rendered frame
+  // round trip between each one. Await every dispatch before checking.
+  await Promise.all(Array.from({ length: 50 }, (_, i) =>
+    page.mouse.move(box.x + box.width / 2 + (i % 20) - 10, box.y + box.height / 2 + (i % 14) - 7)));
   const hoverCaused = requests.filter((u) => !MOUNT_TIME_NOISE.some((p) => p.test(u)));
   expect(hoverCaused, `hovering triggered network requests:\n${hoverCaused.join("\n")}`).toEqual([]);
 });

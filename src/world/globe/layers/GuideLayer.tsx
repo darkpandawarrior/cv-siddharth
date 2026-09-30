@@ -32,6 +32,7 @@ import type { GithubActivity } from "../../../../api/_lib/github-activity-handle
 import { localGuide } from "../../../data/profile/localGuide.ts";
 import { guideMedia, guideReviewSelection } from "./guideReviewSelection.ts";
 import { scaleForYear, hourHistogram } from "./guideActivity.ts";
+import { useMarkerClick } from "../useMarkerClick.ts";
 
 const PIN_GEOMETRY = new THREE.SphereGeometry(0.018, 8, 6);
 const PIN_HIT_GEOMETRY = new THREE.SphereGeometry(0.03, 8, 6);
@@ -170,6 +171,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
   const orgRef = useRef<THREE.Mesh>(null);
   const orgHitRef = useRef<THREE.Mesh>(null);
   const select = useGlobe((s) => s.select);
+  const markerClick = useMarkerClick();
   const setView = useGlobe((s) => s.setView);
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
   const accent = useMemo(() => readColor("--color-accent", "#f2a13d"), []);
@@ -302,50 +304,54 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     const i = e.instanceId;
     if (i === undefined || !GUIDE_PLACES[i]) return;
     const p = GUIDE_PLACES[i];
-    const photos = mapsPhotos.filter((ph) => ph.slug === p.slug);
-    const notLive = simYear !== new Date().getFullYear();
-    setView("orbit");
-    select({
-      id: `guide-place:${p.slug}`,
-      kind: "guide-place",
-      title: `${p.city}, ${p.country === "IN" ? "India" : p.country === "KW" ? "Kuwait" : p.country}`,
-      rows: [
-        { label: "Reviews", value: String(p.reviews) },
-        { label: "Photos", value: String(p.photos) },
-        { label: "Photo views", value: p.photoViews.toLocaleString("en-IN") },
-        { label: "Years active", value: p.years.join(", ") || "Not recorded" },
-        ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
-        ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
-      ],
-      source: `Google Maps Takeout, exported ${mapsExport} · city rings, reviewed public places at exact pins`,
-      guide: { places: mapsReviews.filter((review) => review.slug === p.slug).sort((a, b) => b.month.localeCompare(a.month)) },
-      live: false,
-      focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
-      media: photos.length > 0 ? guideMedia(photos) : undefined,
-      ...(p.slug === "pune" && activityHistogram
-        ? {
-            spark: activityHistogram,
-            sparkKind: "histogram" as const,
-            sparkLabel: `recent public GitHub activity only, by IST hour of day (${activityHistogram.reduce((sum, count) => sum + count, 0)} events; latest ${new Date(Math.max(...(activity?.items ?? []).map((item) => Date.parse(item.at)).filter(Number.isFinite))).toISOString().slice(0, 10)}; not employer work)`,
-          }
-        : {}),
+    markerClick(e.nativeEvent, () => {
+      const photos = mapsPhotos.filter((ph) => ph.slug === p.slug);
+      const notLive = simYear !== new Date().getFullYear();
+      setView("orbit");
+      select({
+        id: `guide-place:${p.slug}`,
+        kind: "guide-place",
+        title: `${p.city}, ${p.country === "IN" ? "India" : p.country === "KW" ? "Kuwait" : p.country}`,
+        rows: [
+          { label: "Reviews", value: String(p.reviews) },
+          { label: "Photos", value: String(p.photos) },
+          { label: "Photo views", value: p.photoViews.toLocaleString("en-IN") },
+          { label: "Years active", value: p.years.join(", ") || "Not recorded" },
+          ...(notLive ? [{ label: "Ring shown", value: `recorded active years through ${simYear} (computed, not contribution totals)` }] : []),
+          ...(p.isLifePlace && p.lifeLine ? [{ label: "Life", value: p.lifeLine, swatch: readToken("--color-accent", "#f2a13d") }] : []),
+        ],
+        source: `Google Maps Takeout, exported ${mapsExport} · city rings, reviewed public places at exact pins`,
+        guide: { places: mapsReviews.filter((review) => review.slug === p.slug).sort((a, b) => b.month.localeCompare(a.month)) },
+        live: false,
+        focus: { kind: "latlon" as const, lat: p.lat, lon: p.lon, distance: 14 },
+        media: photos.length > 0 ? guideMedia(photos) : undefined,
+        ...(p.slug === "pune" && activityHistogram
+          ? {
+              spark: activityHistogram,
+              sparkKind: "histogram" as const,
+              sparkLabel: `recent public GitHub activity only, by IST hour of day (${activityHistogram.reduce((sum, count) => sum + count, 0)} events; latest ${new Date(Math.max(...(activity?.items ?? []).map((item) => Date.parse(item.at)).filter(Number.isFinite))).toISOString().slice(0, 10)}; not employer work)`,
+            }
+          : {}),
+      });
     });
   };
   const onOrgClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    setView("orbit");
-    select({
-      id: "guide-org:career-ops-hq",
-      kind: "guide-org",
-      title: "career-ops-hq · open source, out",
-      rows: [
-        { label: "Merged PRs", value: String(upstreamMergedPRs) },
-        { label: "Upstream stars", value: upstreamStars },
-        { label: "Location", value: "Spain · org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
-      ],
-      source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only · checked 2026-09-30",
-      live: false,
-      focus: { kind: "latlon" as const, lat: CAREER_OPS_HQ.lat, lon: CAREER_OPS_HQ.lon, distance: 14 },
+    markerClick(e.nativeEvent, () => {
+      setView("orbit");
+      select({
+        id: "guide-org:career-ops-hq",
+        kind: "guide-org",
+        title: "career-ops-hq · open source, out",
+        rows: [
+          { label: "Merged PRs", value: String(upstreamMergedPRs) },
+          { label: "Upstream stars", value: upstreamStars },
+          { label: "Location", value: "Spain · org-published location, not a person or office", swatch: readToken("--color-alt", "#db61ff") },
+        ],
+        source: "api.github.com/orgs/career-ops-hq, org-published location field · country level only · checked 2026-09-30",
+        live: false,
+        focus: { kind: "latlon" as const, lat: CAREER_OPS_HQ.lat, lon: CAREER_OPS_HQ.lon, distance: 14 },
+      });
     });
   };
   const setCursor = (hover: boolean) => {
@@ -383,7 +389,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     if (event.camera.position.length() >= PIN_ZOOM_DISTANCE) return;
     event.stopPropagation();
     const review = mapsReviews[event.instanceId ?? -1];
-    if (review) { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); }
+    if (review) markerClick(event.nativeEvent, () => { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); });
   };
   const hover = hoverReview === null ? undefined : mapsReviews[hoverReview];
   const hoverPoint = hover ? latLonToXyz(hover.lat, hover.lon) : null;

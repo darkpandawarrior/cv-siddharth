@@ -60,8 +60,8 @@ function readGuideDebug(page: Page) {
   return page.evaluate(() => (window as unknown as { __GUIDE_DEBUG__?: GuideDebug }).__GUIDE_DEBUG__);
 }
 
-async function openGlobe(page: Page, isoNow: string, activity: unknown = activityFixture) {
-  await page.setViewportSize({ width: 1440, height: 900 });
+async function openGlobe(page: Page, isoNow: string, mobile: boolean, activity: unknown = activityFixture) {
+  await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await abortUnrelatedFeeds(page);
   await withApiFixtures(page, activity);
@@ -73,9 +73,12 @@ async function openGlobe(page: Page, isoNow: string, activity: unknown = activit
   await expect.poll(async () => (await readGuideDebug(page))?.statusDetail, { timeout: 15_000 }).toBeTruthy();
 }
 
-async function clickGuideMarker(page: Page, slug: string) {
-  // Clear the preselection through the UI before aiming at the canvas.
-  await page.getByRole("region", { name: "Selection details" }).getByRole("button", { name: "Close", exact: true }).click();
+async function clickGuideMarker(page: Page, slug: string, mobile: boolean) {
+  const selection = page.getByRole("region", { name: "Selection details" });
+  // Only desktop preselects Pune. Start at the tested viewport so a resize
+  // cannot strand that desktop selection behind a closed phone sheet.
+  if (mobile) await expect(selection).toHaveCount(0);
+  else await selection.getByRole("button", { name: "Close", exact: true }).click();
   await page.evaluate((id) => window.__GUIDE_DEBUG__?.face(id), slug);
   let previous: { x: number; y: number } | null = null;
   let previousDist: number | null = null;
@@ -106,7 +109,10 @@ async function clickGuideMarker(page: Page, slug: string) {
   await page.waitForTimeout(120);
   const point = await page.evaluate((id) => window.__GUIDE_DEBUG__?.screenPoint(id), slug);
   if (!point) throw new Error("guide marker has no screen point");
-  await page.mouse.click(point.x, point.y);
+  await page.mouse.move(point.x, point.y);
+  await expect.poll(() => page.evaluate(p => document.elementFromPoint(p.x, p.y)?.tagName, point)).toBe("CANVAS");
+  if (mobile) await page.touchscreen.tap(point.x, point.y);
+  else await page.mouse.click(point.x, point.y);
 }
 
 
@@ -120,9 +126,8 @@ for (const mobile of [false, true]) {
   test.describe(mobile ? "phone" : "desktop", () => {
     test.use({ hasTouch: mobile });
   test(`a genuine public review pin opens its rating, month and source (${mobile ? "phone" : "desktop"})`, async ({ page }) => {
-    await openGlobe(page, "2026-09-30T12:00:00+05:30");
-    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
-    await clickGuideMarker(page, isolated.id);
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", mobile);
+    await clickGuideMarker(page, isolated.id, mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toBeVisible();
     await expect(inspector).toContainText(isolated.name);
@@ -134,9 +139,8 @@ for (const mobile of [false, true]) {
   });
 
   test(`city places and photo keyboard viewer (${mobile ? "phone" : "desktop"})`, async ({ page }, testInfo) => {
-    await openGlobe(page, "2026-09-30T12:00:00+05:30");
-    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
-    await clickGuideMarker(page, "pune");
+    await openGlobe(page, "2026-09-30T12:00:00+05:30", mobile);
+    await clickGuideMarker(page, "pune", mobile);
     const inspector = page.locator(mobile ? "[data-globe-inspector-sheet]" : "[data-globe-inspector]");
     await expect(inspector).toContainText("Reviewed public places");
     await expect(inspector).toContainText("Local Guide Level 6");
