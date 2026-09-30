@@ -12,6 +12,7 @@ import { readColor } from "../../../themeColorThree.ts";
 import { useGlobe } from "../globeStore.ts";
 import { buildAppRing, freshestStoreDate, APP_RING_RADIUS, type AppRingEntry } from "./reachApps.ts";
 import { ensureReachDebug } from "./reachDebug.ts";
+import { nearestScreenPointIndex } from "../useMarkerClick.ts";
 import { fleet, storeGeneratedAt, storeVerifiedAt } from "../../../data/store.ts";
 
 const COLUMN_RADIUS = 0.01;
@@ -33,43 +34,16 @@ const _scratch = new THREE.Vector3();
 // scope rather than re-derived per mount.
 const ENTRIES: AppRingEntry[] = buildAppRing(fleet);
 const STORE_DATE = freshestStoreDate(storeGeneratedAt, storeVerifiedAt);
-const ANGLE_STEP = (Math.PI * 2) / Math.max(ENTRIES.length, 1);
 const MAX_ENTRY_HEIGHT = ENTRIES.reduce((max, e) => Math.max(max, e.height), 0);
 
-// One shared, invisible, generously-fat hit cylinder standing over the whole
-// ring -- not one hit volume per app. At the real fleet's count, individual
-// columns sit only ~2*pi*APP_RING_RADIUS/count world units apart (a fraction
-// of a screen pixel at the globe's default framing): a per-instance hit
-// volume fat enough to tap either overlaps its neighbours (several instances
-// answer the same ray) or, sized to avoid that, shrinks to a sub-pixel
-// target no click can land in reliably (both measured, this lane's own
-// report). A single fat cylinder has no such ceiling -- ANY click that lands
-// on the ring at all resolves to a real hit, and `nearestEntryIndex` below
-// turns *where* on that cylinder's rim it landed into *which* app, the same
-// way a real visitor reads "the nearest column to where I tapped".
-// The wall sits at EXACTLY APP_RING_RADIUS, the same radius the visible
-// columns stand at -- padding it outward (tried first, this lane's own
-// report) moves the surface a click actually lands on off the columns'
-// own radius, and at a shallow viewing angle that shift reads back as a
-// large swing in angle once re-derived from (x, z), landing on an entry
-// many places away from the one the pixel was aimed at. Height is padded
-// (a little above the tallest column) since that dimension has no such
-// parallax problem -- any point up the wall at the right angle is fine.
+// One shared cylinder supplies a generous hit area for the dense ring.
+// Selection uses projected column midpoints: decoding the rim angle from
+// a rounded native pixel can jump several columns at this framing.
 const HIT_HEIGHT_PAD = 0.15;
 const HIT_GEOMETRY = new THREE.CylinderGeometry(APP_RING_RADIUS, APP_RING_RADIUS, MAX_ENTRY_HEIGHT + HIT_HEIGHT_PAD, 128, 1, true);
 
 function localPosition(entry: AppRingEntry): THREE.Vector3 {
   return new THREE.Vector3(Math.cos(entry.angle) * APP_RING_RADIUS, entry.height / 2, Math.sin(entry.angle) * APP_RING_RADIUS);
-}
-
-/** Which entry a click on the shared hit cylinder belongs to: entries sit at
- *  even `ANGLE_STEP` multiples starting at 0 (buildAppRing's own "spread
- *  evenly around a full turn"), so the nearest one is a direct round, not a
- *  scan -- robust to which HEIGHT along the cylinder's wall the ray actually
- *  struck, since only the strike point's (x, z) angle is read, never y. */
-function nearestEntryIndex(localX: number, localZ: number): number {
-  const angle = (Math.atan2(localZ, localX) + Math.PI * 2) % (Math.PI * 2);
-  return Math.round(angle / ANGLE_STEP) % ENTRIES.length;
 }
 
 /** `interactive` gates hover highlighting only -- click stays live at every
@@ -78,7 +52,7 @@ function nearestEntryIndex(localX: number, localZ: number): number {
  *  and click wiring runs. */
 export function ReachAppRing({ interactive }: { interactive: boolean }) {
   const select = useGlobe((s) => s.select);
-  const { camera, size } = useThree();
+  const { camera, size, gl } = useThree();
   const signal = useMemo(() => readColor("--color-signal", "#3ddc84"), []);
   const alt = useMemo(() => readColor("--color-alt", "#db61ff"), []);
   const muted = useMemo(() => readColor("--color-muted", "#8b909a"), []);
@@ -160,16 +134,17 @@ export function ReachAppRing({ interactive }: { interactive: boolean }) {
     });
   }
 
-  /** Both click and hover resolve the SAME way: the event's world-space hit
-   *  point, carried into the group's own local frame (`worldToLocal`, not a
-   *  hand-rolled inverse -- correct even if a future edit nests this group
-   *  under another transform), then the nearest entry by angle. */
+  /** Click and hover share the same screen-space resolution. The cylinder
+   * remains the hit area; its quantized rim angle cannot name a column. */
   function entryAt(e: ThreeEvent<PointerEvent | MouseEvent>): AppRingEntry | null {
     const group = groupRef.current;
     if (!group || ENTRIES.length === 0) return null;
-    _scratch.copy(e.point);
-    group.worldToLocal(_scratch);
-    return ENTRIES[nearestEntryIndex(_scratch.x, _scratch.z)];
+    const box = gl.domElement.getBoundingClientRect();
+    const points = ENTRIES.map(entry => {
+      const projected = group.localToWorld(localPosition(entry)).project(camera);
+      return { x: (projected.x * 0.5 + 0.5) * box.width, y: (-projected.y * 0.5 + 0.5) * box.height };
+    });
+    return ENTRIES[nearestScreenPointIndex(points, { x: e.nativeEvent.clientX - box.left, y: e.nativeEvent.clientY - box.top })] ?? null;
   }
 
   return (

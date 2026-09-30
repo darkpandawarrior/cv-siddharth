@@ -47,3 +47,13 @@ export function claimGuideClick(event: { clientX: number; clientY: number }): bo
   target.select(event);
   return true;
 }
+
+/** Dense columns can share a native pixel; choose their projected midpoint. */
+export function nearestScreenPointIndex(points: readonly { x: number; y: number }[], point: { x: number; y: number }): number {
+  let nearest = -1, distance = Infinity;
+  points.forEach((target, index) => {
+    const gap = (target.x - point.x) ** 2 + (target.y - point.y) ** 2;
+    if (gap < distance) { nearest = index; distance = gap; }
+  });
+  return nearest;
+}
