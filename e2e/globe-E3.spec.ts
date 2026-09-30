@@ -99,6 +99,9 @@ for (const mobile of [false, true]) test.describe(mobile ? "touch" : "desktop", 
     await shot("removed");
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
+    // Escape exits pin mode; pointer pinning must be explicitly re-enabled.
+    await page.getByRole("button", { name: "Pin points", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Pin points", exact: true })).toHaveAttribute("aria-pressed", "true");
     const again = await surfacePosition(page, -0.2);
     if (mobile) await page.touchscreen.tap(again.x, again.y); else await page.mouse.click(again.x, again.y);
     await expect(panel).toBeVisible();

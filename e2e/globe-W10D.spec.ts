@@ -43,6 +43,7 @@ for (const touch of [false, true]) {
         await page.touchscreen.tap(x, y);
       } else await page.mouse.dblclick(x, y);
       await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(before * 1.1);
+      await expect(page.locator("[data-pinned-readouts]")).toHaveCount(0);
 
       // A marker must honour the same dolly gesture. Its first tap must not
       // open a sheet over the second tap or turn this into a fly-to.
@@ -60,6 +61,7 @@ for (const touch of [false, true]) {
       const markerBefore = Number(await probe.getAttribute("data-globe-r"));
       await gesture(page, touch, point.x, point.y);
       await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(markerBefore * 1.1);
+      await expect(page.locator("[data-pinned-readouts]")).toHaveCount(0);
       await expect(selection).toBeHidden();
     });
   });
