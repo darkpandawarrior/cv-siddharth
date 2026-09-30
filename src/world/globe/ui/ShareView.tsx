@@ -246,7 +246,9 @@ export default function ShareView({ tier: _tier }: { tier: 1 | 2 | 3 }) {
       const qs = serializeShareState(currentShareState());
       if (qs === lastWrittenRef.current) return;
       lastWrittenRef.current = qs;
-      window.history.replaceState(null, "", `${location.pathname}?${qs}`);
+      // Scene state is restored only on mount. Keep this entry's router state
+      // and avoid TanStack's patched writer starting a navigation/transition.
+      History.prototype.replaceState.call(window.history, window.history.state, "", `${location.pathname}?${qs}`);
     }, WRITE_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);

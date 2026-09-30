@@ -30,6 +30,7 @@ const SoundToggle = lazy(() => import("./world/globe/ui/SoundToggle.tsx"));
 // right cluster (see the mount site below) — see that file's own header for
 // why one instance also owns the restore-on-load and debounced address-bar
 // write, regardless of which of its two render sites is on screen.
+const Briefing = lazy(() => import("./world/globe/ui/Briefing.tsx"));
 const ShareView = lazy(() => import("./world/globe/ui/ShareView.tsx"));
 
 const sceneLoadingFallback = (
@@ -306,6 +307,7 @@ export function Globe() {
                 <Suspense fallback={null}>
                   <GlobeTour tier={tier} slot="row" />
                   <ShareView tier={tier} />
+                  <Briefing />
                   <SoundToggle tier={tier} />
                 </Suspense>
               </ClientOnly>
