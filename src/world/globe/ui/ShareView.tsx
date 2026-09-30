@@ -7,7 +7,7 @@
 // file's own popover and click handlers; only the DEFAULT export's two
 // effects (the mount-once restore, the debounced address-bar writer) ever
 // run, so mounting both never double-restores or double-writes.
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Check, Copy, Download, Share2 } from "lucide-react";
 import { LAYER_IDS, sceneHandles, useGlobe, type Focus, type GlobeView, type ImageryStack, type LayerId } from "../globeStore.ts";
 import { cameraToLatLonAlt, hasShareFields, parseShareState, serializeShareState, type ShareState } from "../globeUrlState.ts";
@@ -23,6 +23,7 @@ import { capturePostcard } from "./postcard.ts";
 // write (see the effect below), satisfies the brief's own words ("at most
 // every 500ms, never per frame") without a second timer.
 const WRITE_INTERVAL_MS = 500;
+const SavedViews = lazy(() => import("./savedViewsPanel.tsx"));
 // A fallback camera altitude/lat/lon for the rare tick where the scene
 // hasn't published a camera yet (sceneHandles.camera is null before
 // GlobeScene's SceneRig mounts) — GlobeScene's own opening camera position
@@ -173,7 +174,8 @@ function SharePopoverButton({ buttonClassName, iconSize }: { buttonClassName: st
   const statusText = STATUS_TEXT[status];
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative flex items-center gap-1">
+      <Suspense fallback={null}><SavedViews capture={currentShareState} className={buttonClassName} /></Suspense>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="true" aria-label="Share this view" title="Share" data-share-button className={buttonClassName}>
         <Share2 size={iconSize} aria-hidden />
       </button>
@@ -253,7 +255,7 @@ export default function ShareView({ tier: _tier }: { tier: 1 | 2 | 3 }) {
 
   return (
     <SharePopoverButton
-      buttonClassName="pointer-events-auto hidden h-7 w-7 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+      buttonClassName="pointer-events-auto hidden h-11 w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
       iconSize={13}
     />
   );
