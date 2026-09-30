@@ -1,7 +1,8 @@
 import { useId } from "react";
+import { useNow } from "../../../lib/useSky.ts";
 import { Legend } from "./Legend.tsx";
-import { GIBS_BASES, GIBS_OVERLAYS, catalogDateLabel } from "../layers/gibsCatalog.ts";
-import { simTime, useGlobe, type ImageryStack, type StatusKey } from "../globeStore.ts";
+import { GIBS_BASES, GIBS_OVERLAYS, catalogDateLabel, catalogDate, type GibsCatalogEntry } from "../layers/gibsCatalog.ts";
+import { simTime, useGlobe, type ImageryStack, type StatusKey, type LayerHealth } from "../globeStore.ts";
 
 const DEFAULT_OVERLAY_OPACITY = 0.75;
 const GAP_8 = "gap-2";
@@ -18,6 +19,28 @@ function overlayOpacity(imagery: ImageryStack, id: string): number {
   return imagery.overlays.find((o) => o.id === id)?.opacity ?? DEFAULT_OVERLAY_OPACITY;
 }
 
+function FrameDetails({ entry, health, now, realNow }: { entry: GibsCatalogEntry; health?: LayerHealth; now: Date; realNow: Date }) {
+  // Only a settled tile generation supplies a frame. A requested date is not
+  // evidence that the data loaded, and a step-back must report its older date.
+  const frame = health?.state === "live" ? health.detail : undefined;
+  const ageHours = frame ? Math.max(0, Math.floor((realNow.getTime() - Date.parse(frame)) / 3_600_000)) : 0;
+  return <>
+    <p className="break-words text-xs font-mono text-muted">{entry.attribution}{entry.legend ? ` · ${entry.legend.unit}` : ""}</p>
+    {health?.state === "failed" ? (
+      <p role="status" className="mt-1 break-words text-xs font-mono text-[var(--color-warn)]">{health.detail ?? "feed unavailable"}</p>
+    ) : health?.state === "live" ? (
+      <>
+        <p className="mt-1 break-words text-xs font-mono text-muted">
+          {frame ? `${entry.dateRule.kind === "daily" ? "Daily frame" : "Frame"} ${frame.replace("T", " ").replace("Z", "")} UTC · ${ageHours} h since frame${entry.dateRule.kind === "daily" ? " date" : ""}` : "Static imagery"}
+        </p>
+        {entry.snowLegend && <p className="mt-2 text-xs">Rain</p>}
+        {entry.legend && <Legend legend={entry.legend} />}
+        {entry.snowLegend && <><p className="mt-2 text-xs">Snow</p><Legend legend={entry.snowLegend} /></>}
+      </>
+    ) : <p role="status" className="mt-1 text-xs text-muted">Loading tiles · requested {catalogDate(entry, now) ?? "static imagery"}</p>}
+  </>;
+}
+
 export default function LayerCatalog() {
   const controlId = useId();
   const imagery = useGlobe((s) => s.imagery);
@@ -32,7 +55,8 @@ export default function LayerCatalog() {
   // reactive channel for the same idea. See TileLayer.tsx's own comment
   // where it writes this same key.
   const status = useGlobe((s) => s.status);
-  const now = simTime(timeOffsetMin);
+  const realNow = useNow();
+  const now = simTime(timeOffsetMin, realNow?.getTime() ?? 0);
 
   const activeBase = GIBS_BASES.find((b) => b.id === imagery.base) ?? GIBS_BASES[0];
 
@@ -49,16 +73,18 @@ export default function LayerCatalog() {
     setImagery({ ...imagery, overlays: imagery.overlays.map((o) => (o.id === id ? { ...o, opacity } : o)) });
   }
 
+  if (!realNow) return null;
+
   return (
     <div data-globe-layer-catalog className="w-full font-body text-sm text-zinc-300">
       <section className={MB_21} aria-label="Active imagery">
         <p className="break-words text-xs font-mono text-muted">{activeBase.title}: {activeBase.dateRule.kind === "static" ? "Static imagery · " : ""}{catalogDateLabel(activeBase, now)}</p>
         {imagery.overlays.map((overlay) => {
           const entry = GIBS_OVERLAYS.find((candidate) => candidate.id === overlay.id);
-          return entry ? <div key={entry.id} className="mt-3">
+          return entry ? <div key={entry.id} data-globe-active-overlay={entry.id} className="mt-3">
             <p className="break-words">{entry.title}</p>
-            <p className="break-words text-xs font-mono text-muted">{entry.dateRule.kind === "static" ? "Static imagery · " : ""}{catalogDateLabel(entry, now)}</p>
-            {entry.legend && <Legend legend={entry.legend} />}
+            <p className="mb-2 break-words text-xs text-muted">{entry.description}</p>
+            <FrameDetails entry={entry} health={status[entry.id as StatusKey]} now={now} realNow={realNow} />
           </div> : null;
         })}
       </section>
@@ -122,15 +148,7 @@ export default function LayerCatalog() {
                       onChange={(e) => setOpacity(entry.id, Number(e.target.value))}
                       className="min-h-11 min-w-11 w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent accent-[var(--color-signal)]"
                     />
-                    {status[entry.id as StatusKey]?.state === "failed" ? (
-                      <p className="mt-1 break-words text-xs font-mono" style={{ color: "var(--color-warn)" }}>
-                        {status[entry.id as StatusKey]?.detail ?? "feed unavailable"}
-                      </p>
-                    ) : (
-                      <p className="mt-1 break-words text-xs font-mono text-muted" title={catalogDateLabel(entry, now)}>
-                        {entry.dateRule.kind === "static" ? "Static imagery · " : ""}{catalogDateLabel(entry, now)}
-                      </p>
-                    )}
+                    <p className="mt-1 break-words text-xs font-mono text-muted">{entry.attribution}</p>
                   </div>
                 )}
               </li>

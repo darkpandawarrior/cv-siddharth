@@ -47,7 +47,7 @@ describe("catalogDate", () => {
   it("daily layers subtract their own verified lag, not a uniform one", () => {
     expect(catalogDate(GIBS_CATALOG.VIIRS_SNPP_CorrectedReflectance_TrueColor, NOW)).toBe("2026-09-27"); // lag 1
     expect(catalogDate(GIBS_CATALOG.MODIS_Combined_Value_Added_AOD, NOW)).toBe("2026-09-26"); // lag 2
-    expect(catalogDate(GIBS_CATALOG.IMERG_Precipitation_Rate, NOW)).toBe("2026-09-25"); // lag 3
+    expect(catalogDate(GIBS_CATALOG.IMERG_Precipitation_Rate, NOW)).toBe("2026-09-27"); // verified daily lag 1
     expect(catalogDate(GIBS_CATALOG.GHRSST_L4_MUR_Sea_Surface_Temperature, NOW)).toBe("2026-09-25"); // lag 3
   });
 
@@ -160,5 +160,29 @@ describe("S1 overlay pack", () => {
 
   it("NDVI's own description flags the real compositing lag honestly", () => {
     expect(GIBS_CATALOG.MODIS_Terra_L3_NDVI_16Day.description).toMatch(/lag/i);
+  });
+});
+
+
+describe("Y4 verified precipitation and total-column ozone", () => {
+  const verifiedNow = new Date("2026-09-30T17:30:00Z");
+  it("IMERG follows the published P1D time dimension, not its half-hourly source observations", () => {
+    const entry = GIBS_CATALOG.IMERG_Precipitation_Rate;
+    expect(entry.dateRule).toEqual({ kind: "daily", lagDays: 1 });
+    expect(entry.description).toContain("not live radar");
+    expect(entry.legend?.unit).toBe("mm/hr");
+    expect(entry.legend?.stops[0]).toEqual({ color: "#009424", label: "0.2" });
+    expect(entry.snowLegend?.stops[0]).toEqual({ color: "#8febf1", label: "0.2" });
+    expect(tileUrl(entry, 0, 0, 0, verifiedNow)).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/IMERG_Precipitation_Rate/default/2026-09-29/2km/0/0/0.png");
+  });
+  it("OMPS has today's P1D frame and the verified Dobson-unit colormap", () => {
+    const entry = GIBS_OVERLAYS.find((layer) => layer.id === "OMPS_Ozone_Total_Column");
+    expect(entry).toBeDefined();
+    expect(entry!.dateRule).toEqual({ kind: "daily", lagDays: 0 });
+    expect(entry!.legend?.unit).toBe("DU");
+    expect(entry!.legend!.stops.length).toBeGreaterThanOrEqual(3);
+    expect(entry!.legend!.stops[0]).toEqual({ color: "#5db8a9", label: "150.0" });
+    expect(entry!.attribution).toBe("NASA GIBS / OMPS Suomi NPP");
+    expect(tileUrl(entry!, 0, 0, 0, verifiedNow)).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/OMPS_Ozone_Total_Column/default/2026-09-30/2km/0/0/0.png");
   });
 });

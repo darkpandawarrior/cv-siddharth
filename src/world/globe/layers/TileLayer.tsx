@@ -11,7 +11,7 @@ import { selectVisibleEoxTiles } from "./tileSelectEox.ts";
 import { buildTilePatchGeometry } from "./tileGeometry.ts";
 import { TILE_FRAG_DAY, TILE_FRAG_PLAIN } from "./tileShader.ts";
 import { TileLRU } from "./tileCache.ts";
-import { GIBS_CATALOG, tileUrl, type GibsCatalogEntry } from "./gibsCatalog.ts";
+import { GIBS_CATALOG, catalogDate, tileUrl, type GibsCatalogEntry } from "./gibsCatalog.ts";
 import type { StatusKey } from "../globeStore.ts";
 
 /**
@@ -129,6 +129,8 @@ interface RoleState {
    *  comment in the useFrame loop below). 0 once any tile of the current
    *  frame has loaded. Unused (stays 0) for daily/static roles. */
   subdailyBackoffSteps: number;
+  frame?: string;
+  displayedFrame?: string;
 }
 
 /** Module-level integration seam (brief: "keep your own detail in a module
@@ -321,6 +323,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     for (const entry of role.entries.values()) disposeEntry(entry);
     role.group.parent?.remove(role.group);
     rolesRef.current.delete(roleId);
+    useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, undefined);
   }
 
   function ensureRole(roleId: string, catalogId: string, shader: "day" | "plain", opacity: number): void {
@@ -367,7 +370,16 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     );
     let same = newKeys.size === currentGenKeys.size;
     if (same) for (const k of newKeys) if (!currentGenKeys.has(k)) { same = false; break; }
-    if (same) return; // nothing actually changed — don't churn a generation for it
+    const frame = catalogDate(role.catalogEntry, now);
+    if (same && frame === role.frame) return;
+    if (frame !== role.frame) {
+      for (const entry of role.entries.values()) disposeEntry(entry);
+      role.entries.clear();
+      role.subdailyBackoffSteps = 0;
+    }
+    role.frame = frame;
+    role.displayedFrame = frame;
+    useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, { state: "loading" });
 
     const nextGeneration = ++role.generationCounter;
     const date = now;
@@ -449,6 +461,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
    *  row/col/level set and bail out as "nothing changed", never reissuing
    *  the fetch at the new time). */
   function retrySubdailyRole(role: RoleState, effectiveNow: Date): void {
+    role.displayedFrame = catalogDate(role.catalogEntry, effectiveNow);
     const nextGeneration = ++role.generationCounter;
     for (const entry of role.entries.values()) {
       if (entry.generation !== role.pendingGeneration) continue;
@@ -487,7 +500,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // here alone is enough — the first real recompute (and its fetches)
     // simply waits for the base sphere's own load to settle first, no extra
     // effect/timer needed to "wake up" once it does.
-    if (earthReady && (moved || turned) && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS) {
+    if (earthReady && nowMs - lastRecomputeAtMs.current >= RECOMPUTE_MIN_INTERVAL_MS && (moved || turned || [...rolesRef.current.values()].some((role) => catalogDate(role.catalogEntry, now) !== role.frame))) {
       const t0 = performance.now();
       for (const role of rolesRef.current.values()) recomputeRole(role);
       tileLayerStats.lastRecomputeMs = performance.now() - t0;
@@ -527,11 +540,12 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
               continue; // this role's frame isn't settled yet — re-enter next frame
             }
             useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, { state: "failed", detail: "feed unavailable" });
-          } else if (dateRule.kind === "subdaily" && pendingEntries.some((e) => e.status === "loaded")) {
-            // Recovered (or a normal first success): clear any earlier
-            // "feed unavailable" and reset the backoff counter for next time.
-            if (role.subdailyBackoffSteps > 0) role.subdailyBackoffSteps = 0;
-            useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, undefined);
+          } else if (pendingEntries.length > 0) {
+            const failed = pendingEntries.some((entry) => entry.status === "error");
+            role.subdailyBackoffSteps = 0;
+            useGlobe.getState().setStatus(role.catalogEntry.id as StatusKey, failed
+              ? { state: "failed", detail: pendingEntries.some((entry) => entry.status === "loaded") ? "some tiles unavailable" : "feed unavailable" }
+              : { state: "live", detail: role.displayedFrame });
           }
           role.transitionStart = reducedMotion ? nowMs - FADE_MS : nowMs;
         }
