@@ -1,3 +1,5 @@
+import { derivableExtensions } from "../data/derivableExtensions.ts";
+
 /**
  * The AVIF/WebP siblings `scripts/gen-images.mjs` produces beside a raster
  * image, or null when there are none — an animated gif (the generator skips
@@ -12,8 +14,8 @@
  * AVIF sibling.
  */
 /**
- * Only these get derivatives. It is the same list gen-images.mjs walks
- * (`[".png", ".jpg", ".jpeg", ".webp"]`), and it is an ALLOW-list on purpose:
+ * Only these get derivatives. The list is shared with gen-images.mjs,
+ * and it is an ALLOW-list on purpose:
  * the old check excluded `gif` and let everything else through, so an SVG got
  * `<source srcSet="....avif">` pointing at a file no generator ever writes.
  *
@@ -23,7 +25,7 @@
  * four broken images on its case study. Naming what IS derivable means the
  * next vector or exotic format is handled by default instead of by luck.
  */
-const DERIVABLE = new Set(["png", "jpg", "jpeg", "webp"]);
+const DERIVABLE = new Set(derivableExtensions);
 
 export function rasterSources(src: string): { avif: string; webp: string | null } | null {
   const dot = src.lastIndexOf(".");

@@ -7,6 +7,7 @@ import { join, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import sharp from "sharp";
+import { derivableExtensions } from "../src/data/derivableExtensions.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(root, "public");
@@ -83,7 +84,7 @@ for (const src of walkRoots([publicDir, heavyDir])) {
     }
     continue;
   }
-  if (![".png", ".jpg", ".jpeg", ".webp"].includes(ext)) continue;
+  if (!derivableExtensions.includes(ext.slice(1))) continue;
   // public/globe/maps is scripts/gen-maps-places.mjs's own output: it already
   // emits the single delivered format (AVIF) itself, sized and privacy-
   // checked at generation time. A second derivative pass here would just
@@ -98,18 +99,12 @@ for (const src of walkRoots([publicDir, heavyDir])) {
   // from Google's CDN — about a kilobyte each. An .avif derivative of a 1 kB
   // icon is not smaller, and there are 87 of them to redo on every build.
   if (src.includes(`${sep}store${sep}`)) continue;
-  // globe/maps thumbnails (scripts/gen-maps-places.mjs) are rendered as plain
-  // <img src> in Inspector.tsx/GuideLightbox.tsx/storyFilmstrip.tsx, never
-  // through a <picture> avif source — an .avif sibling here was pure dead
-  // weight (1.4MB, unreferenced by any code) that only grew dist/client's
-  // budget total. Task Z1 budget pass, 2026-09-30.
-  if (src.includes(`${sep}globe${sep}maps${sep}`)) continue;
   const base = src.slice(0, -ext.length);
   // A .webp sitting next to a same-name .png/.jpg/.jpeg is OUR OWN derivative
   // (generated below from that raster), not a real source — skip it, or the
   // next run treats it as a fresh "source" and re-derives the .avif from the
   // lossy .webp instead of the original raster.
-  if (ext === ".webp" && [".png", ".jpg", ".jpeg"].some((e) => existsSync(base + e))) continue;
+  if (ext === ".webp" && derivableExtensions.some((e) => e !== "webp" && existsSync(`${base}.${e}`))) continue;
   const avif = `${base}.avif`;
   if (!fresher(src, avif)) {
     await sharp(src).avif({ quality: 50 }).toFile(avif);
