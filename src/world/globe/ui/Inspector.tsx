@@ -1,4 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { localGuide } from "../../../data/profile/localGuide.ts";
+import { guideReviewSelection } from "../layers/guideReviewSelection.ts";
+import GuideLightbox from "./GuideLightbox.tsx";
 import { useGlobe, type Selection } from "../globeStore.ts";
 import { useKpSpark, useQuakeRegionSpark, type SparkSeries } from "./sparkSeries.ts";
 
@@ -101,6 +104,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   // files outside this lane's scope. The panel always lists every layer it
   // knows, organised per layer inside itself.
   const [showBuild, setShowBuild] = useState(false);
+  const [lightbox, setLightbox] = useState<{ selectionId: string; index: number } | null>(null);
 
   useEffect(() => {
     const seam = window.__GLOBE_TEST_SELECT__;
@@ -122,7 +126,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   useEffect(() => {
     if (!selected) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (isTypingTarget(e.target) || (e.target instanceof Element && e.target.closest("dialog[open]"))) return;
       if (e.key === "Escape") select(null);
     };
     window.addEventListener("keydown", onKeyDown);
@@ -217,6 +221,19 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         ))}
       </dl>
 
+      {(selected.kind === "guide-place" || selected.kind === "guide-review") && <div className="mb-3 text-xs">
+        <p>{localGuide.label}</p>
+        <a href={localGuide.profileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-accent underline">My Google Maps profile</a>
+      </div>}
+      {selected.guide?.review && <section className="mb-3" aria-label="Review text">
+        {selected.guide.review.text.length > 220 ? <><p>{selected.guide.review.text.slice(0, 220)}...</p><details key={selected.id}><summary className="min-h-11 cursor-pointer py-3">More</summary><p className="whitespace-pre-wrap">{selected.guide.review.text}</p></details></> : <p className="whitespace-pre-wrap">{selected.guide.review.text || "No written review"}</p>}
+      </section>}
+      {selected.guide?.places && <section className="mb-3" aria-label="Reviewed places in this city">
+        <h3 className="mb-1">Reviewed public places</h3>
+        {selected.guide.places.length === 0 && <p>No located reviews in this city.</p>}
+        <ul>{selected.guide.places.map((review) => <li key={review.id}><button type="button" onClick={() => { select(guideReviewSelection(review)); setView("orbit"); }} className="min-h-11 w-full rounded px-2 py-2 text-left hover:text-accent focus-visible:outline focus-visible:outline-accent">{review.name} · {review.rating} / 5 · {review.month}</button></li>)}</ul>
+      </section>}
+
       {(() => {
         // An explicit `selected.spark` (globeStore.ts's own additive field —
         // some future selector setting a real series directly) always wins
@@ -241,7 +258,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         >
           {selected.media.map((m, i) => (
             <figure key={`${m.src}-${i}`} className="m-0 shrink-0">
-              <img src={m.src} alt={m.alt} width={96} height={96} loading="lazy" decoding="async" className="h-24 w-24 rounded-md object-cover" />
+              {m.src ? <button type="button" aria-label={`Open photo ${i + 1}: ${m.alt}`} onClick={() => setLightbox({ selectionId: selected.id, index: i })} className="rounded-md focus-visible:outline focus-visible:outline-accent"><img src={m.src} alt={m.alt} width={96} height={96} loading="lazy" decoding="async" className="h-24 w-24 rounded-md object-cover" /></button> : <p role="img" aria-label={m.alt} className="flex h-24 w-24 items-center justify-center rounded-md border border-line p-2 text-xs">Photo unavailable</p>}
               <figcaption className="mt-1 max-w-24 truncate text-xs text-muted">{m.caption}</figcaption>
             </figure>
           ))}
@@ -269,8 +286,12 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
     </>
   );
 
+  const viewerPhotos = selected.media?.filter((photo) => photo.src) ?? [];
+  const viewed = lightbox && lightbox.selectionId === selected.id ? selected.media?.[lightbox.index] : undefined;
+  const viewedIndex = viewed ? viewerPhotos.findIndex((photo) => photo.src === viewed.src) : -1;
   return (
     <>
+      {viewedIndex >= 0 && <GuideLightbox photos={viewerPhotos} index={viewedIndex} onClose={() => setLightbox(null)} onChange={(index) => setLightbox({ selectionId: selected.id, index: selected.media!.indexOf(viewerPhotos[index]) })} />}
       {/* Desktop/tablet (sm+): the shared left slot. */}
       <div
         data-globe-inspector

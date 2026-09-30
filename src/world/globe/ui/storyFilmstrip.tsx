@@ -17,7 +17,7 @@ export default function StoryFilmstrip({ photos, reducedMotion }: { photos: read
           data-story-filmstrip-slug={photo.slug}
           className={`w-16 shrink-0 overflow-hidden rounded border border-line bg-ink/60 ${reducedMotion ? "" : "fade-in"}`}
         >
-          <img src={photo.src} alt={photo.caption ?? `${photo.city}, ${photo.year}`} loading="lazy" width={photo.w} height={photo.h} className="h-16 w-16 object-cover" />
+          {photo.unavailable ? <span className="flex h-16 w-16 items-center justify-center text-xs">Photo unavailable</span> : <img src={photo.src} alt={photo.caption ?? `${photo.city}, ${photo.year}`} loading="lazy" width={photo.w} height={photo.h} className="h-16 w-16 object-cover" />}
           <figcaption className="truncate px-1 py-0.5 text-xs leading-tight text-muted">
             {photo.year} · {photo.views.toLocaleString()} views
           </figcaption>

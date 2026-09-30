@@ -819,7 +819,7 @@ const G16_REACH_UPSTREAM: GrowthRule<ReachUpstream> = {
 // G17 employer-marker — experience[].location resolved by a fixed GEOCODE
 // ─────────────────────────────────────────────────────────────────────────
 // Fixed on purpose (living-ledger §3.3 G17): only city-precision strings
-// resolve. "Remote, India" and "Contract, India" are listed, never guessed
+// resolve. "Contract, India" is listed, never guessed; Jugnoo resolves to Chandigarh
 // at with a geocoder.
 const GEOCODE: Readonly<Record<string, { lat: number; lng: number; city: string }>> = {
   "Pune, India": { lat: 18.5204, lng: 73.8567, city: "Pune" },

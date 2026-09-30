@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
+import type { MapsReview } from "../../data/generated/mapsPlaces.ts";
 import type { Camera, Scene, Vector3 } from "three";
 
 /**
@@ -29,6 +30,7 @@ export type Focus = { kind: "latlon"; lat: number; lon: number; distance?: numbe
  *  where the numbers come from (G8: a number always sits beside its
  *  source); `live` false means a snapshot, which the card must say. */
 export interface Selection {
+  guide?: { review?: MapsReview; places?: MapsReview[] };
   id: string;
   kind: string;
   title: string;

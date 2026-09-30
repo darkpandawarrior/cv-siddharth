@@ -87,13 +87,13 @@ export default function StoryArc({ tier }: { tier: 1 | 2 | 3 }) {
           click handlers exist in this worktree to observe a Three.js scene
           directly, so a hidden data attribute is the real seam. */}
       <Html style={{ display: "none" }}>
-        <div data-story-arc aria-hidden />
+        <div data-story-arc data-family-move={arc.familyMove || undefined} aria-hidden />
       </Html>
       <mesh geometry={built.glow}>
-        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.12} depthWrite={false} />
+        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={arc.familyMove ? 0.06 : 0.12} depthWrite={false} />
       </mesh>
       <mesh geometry={built.tube}>
-        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} />
+        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={arc.familyMove ? 0.35 : 0.85} />
       </mesh>
       <mesh ref={dashRef}>
         <sphereGeometry args={[0.035, 8, 8]} />

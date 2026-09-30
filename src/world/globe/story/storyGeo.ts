@@ -32,7 +32,7 @@ export function storyPlace(name: string): StoryPlace | undefined {
   return Object.values(STORY_GEO).find((p) => p.name === name);
 }
 
-export interface StoryArc { from: StoryPlace; to: StoryPlace }
+export interface StoryArc { from: StoryPlace; to: StoryPlace; familyMove?: boolean }
 
 /** Unknown endpoints produce no arc. The visual cue must never imply a journey
  * to a remote employer, an app audience, or a guessed university coordinate. */

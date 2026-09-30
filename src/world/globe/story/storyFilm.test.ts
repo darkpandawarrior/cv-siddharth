@@ -4,11 +4,11 @@ import { mapsPlaces, mapsPhotos } from "../../../data/generated/mapsPlaces.ts";
 import { buildStoryFilm } from "./storyFilm.ts";
 
 describe("story film (LANE C3, life journey)", () => {
-  it("plays exactly Kuwait, Bhopal, Chandigarh, Pune in that order and never Mumbai", () => {
+  it("inserts the dated family move between college and the first job", () => {
     const film = buildStoryFilm();
-    expect(film.map((c) => c.id)).toEqual(["film:kuwait-city", "film:bhopal", "film:chandigarh", "film:pune"]);
-    expect(film.some((c) => c.id.includes("mumbai"))).toBe(false);
-    expect(lifePlaces.find((p) => p.slug === "mumbai")?.from).toBeUndefined();
+    expect(film.map((c) => c.id)).toEqual(["film:kuwait-city", "film:bhopal", "film:mumbai", "film:chandigarh", "film:pune"]);
+    expect(film.find((chapter) => chapter.id === "film:mumbai")!.arcs[0].familyMove).toBe(true);
+    expect(lifePlaces.find((p) => p.slug === "mumbai")?.from).toBe("2019-07");
   });
 
   it("draws exactly one arc per chapter after the first, city to city, and none on Kuwait", () => {
@@ -17,6 +17,7 @@ describe("story film (LANE C3, life journey)", () => {
     expect(film.map((c) => c.arcs[0] && `${c.arcs[0].from.name}->${c.arcs[0].to.name}`)).toEqual([
       undefined,
       "Kuwait City, Kuwait->Bhopal, India",
+      "Kuwait City, Kuwait->Mumbai, India",
       "Bhopal, India->Chandigarh, India",
       "Chandigarh, India->Pune, India",
     ]);
@@ -34,8 +35,10 @@ describe("story film (LANE C3, life journey)", () => {
     for (const chapter of film) {
       const slug = chapter.id.replace("film:", "");
       const lp = lifePlaces.find((p) => p.slug === slug)!;
-      const lo = Math.min(lp.from ?? Infinity, lp.to ?? Infinity) - 1;
-      const hi = Math.max(lp.from ?? -Infinity, lp.to ?? -Infinity) + 1;
+      const from = lp.from === undefined ? undefined : Number(String(lp.from).slice(0, 4));
+      const to = lp.to === undefined ? undefined : Number(String(lp.to).slice(0, 4));
+      const lo = Math.min(from ?? Infinity, to ?? Infinity) - 1;
+      const hi = Math.max(from ?? -Infinity, to ?? -Infinity) + 1;
       for (const photo of chapter.photos) {
         expect(photo.slug).toBe(slug); // never a photo from another city
         expect(photo.year).toBeGreaterThanOrEqual(lo);
@@ -56,8 +59,8 @@ describe("story film (LANE C3, life journey)", () => {
     for (const chapter of buildStoryFilm()) {
       expect(chapter.events).toHaveLength(1);
       expect(chapter.events[0].source).toBe("src/data/profile/lifePlaces.ts");
-      expect(chapter.events[0].precision).toBe("year");
-      expect(chapter.events[0].date).toMatch(/^\d{4}$/);
+      expect(chapter.events[0].precision).toBe(chapter.events[0].date.length === 7 ? "month" : "year");
+      expect(chapter.events[0].date).toMatch(/^\d{4}(-\d{2})?$/);
     }
   });
 
